@@ -1,7 +1,7 @@
 # Section 10.2 composite path-proof status
 
 Date: 2026-08-12
-Status: `ROUND-7-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
+Status: `ROUND-8-AUTHORED-SELF-QA-PASS-PENDING-INDEPENDENT-ACCEPTANCE`
 Audit tier: T1 - local-only non-economic Python tooling and fixtures. Round 2 was audited by
 the Claude flagship (verdict **BLOCK**, two CRITICAL). Round 3 repaired that BLOCK and was
 audited by Codex `gpt-5.6-sol` (`SEC102_CODEX_T1_AUDIT_R3_2026-08-11.md`, verdict
@@ -15,8 +15,77 @@ interpreter). Round 6 repaired that CRITICAL and was audited by Codex
 (`SEC102_CODEX_T1_AUDIT_R6_2026-08-12.md`, verdict **REQUEST_CHANGES**, materially narrowed: the
 interpreter-vocabulary residual and the conservative false stops were **ACCEPTED** as scoped
 limitations, and one finding was raised - **R6-F1**, the round-6 expansion blacklist missed the
-`extglob` operator family). Round 7 is the repair of R6-F1, implemented by `claude-opus-5` xhigh.
-No audit or acceptance is claimed by the implementer.
+`extglob` operator family). Round 7 is the repair of R6-F1. Round 7 was audited by Codex
+(`SEC102_CODEX_T1_AUDIT_R7_2026-08-12.md`, verdict **REQUEST_CHANGES**, and materially narrowed
+again): **the command-word whitelist was CONFIRMED a FIXPOINT for its class - the one-class
+command-word regress that ran from round 4 to round 7 is over** - the interpreter-vocabulary
+residual was **ACCEPTED** as an honestly disclosed production-gate decision, the conservative
+false stops were **ACCEPTED** as fail-closed behaviour, and one finding was raised: **R7-F1**, in
+the SELF-QA EVIDENCE HARNESS rather than in the module. Round 8 is the repair of R7-F1,
+implemented by `claude-opus-5` xhigh. No audit or acceptance is claimed by the implementer.
+
+## Round 8 - what changed and why
+
+### R7-F1 - the evidence harness read output before it proved execution
+
+The section-13 paste-and-run wrapper published in `SELF_QA_SEC102_R7.md` extracted every
+`powershell` block from the self-QA, ran it from outside the repository, and compared its stdout
+with the published transcript. **It never read the child's process status and never read the
+child's stderr**, and it based its own exit solely on the mismatch counter. A child could
+therefore emit exactly the published subset and *then* fail, or emit an unadjudicated diagnostic,
+and the wrapper would report the block reproduced. Design Defect Pattern 6 (output interpreted
+before execution completeness is proved) overlaid by Pattern 10 (the reusable verifier can
+false-accept).
+
+The defect was in the INSTRUMENT, not the subject. That is the reason it is not a minor finding:
+every carried GREEN in the self-QA is quoted on that harness's authority, so a harness that can
+false-accept devalues the whole evidence chain behind it.
+
+Round 8 replaces the single stdout test with **three tests in a fixed order**:
+
+1. the child's process status must be `0`;
+2. the child's stderr must be empty, or the block must be named in an explicit `STDERR_CONTRACT`
+   with a written reason;
+3. **only then** is stdout read and compared with the published transcript.
+
+**The order is the repair, not the counters.** A block failing (1) or (2) is REJECTED with
+`STDOUT_NOT_INTERPRETED` and reaches `continue` before the comparison exists, so there is no path
+through the wrapper on which an incomplete run's output is interpreted. `RC=` and
+`STDERR_BYTES=` are printed for *every* block whether it passed or not, so the real status of
+each child is published rather than merely tested. `STDERR_CONTRACT` is currently **empty**,
+which is its strongest form: no block published in the self-QA may write anything to stderr, and
+an entry would never waive test (1), because an adjudicated diagnostic is not an adjudicated
+failure.
+
+### The repair is measured, not asserted - D026 RED before GREEN
+
+`SELF_QA_SEC102_R8.md` section 13b runs the **published round-7 wrapper** (extracted
+byte-for-byte from the frozen `SELF_QA_SEC102_R7.md`) and the **published round-8 wrapper**
+(extracted byte-for-byte from the round-8 self-QA) over four synthetic documents written outside
+the repository. Neither wrapper is re-typed, and the SHA-256 of the exact bytes executed is
+printed, so the instrument under test is the instrument on the page.
+
+| Case | The child | Round 7 | Round 8 |
+|---|---|---|---|
+| `well_behaved_child` | prints the published summary, exits `0` | ACCEPTED | ACCEPTED |
+| `fails_after_summary` | prints the published summary, then `exit 7` | **ACCEPTED - the finding** | **REJECTED** |
+| `stderr_after_summary` | prints the published summary, then writes one diagnostic to stderr | **ACCEPTED - the finding** | **REJECTED** |
+| `published_line_absent` | prints a different line | REJECTED | REJECTED |
+
+`RED_UNDER_R7_GREEN_UNDER_R8=2`, `D026_OFF_EXPECTATION=0`. Both REDs also report
+`UNREAD_STDOUT=1`, which is the ordering measurement: the round-8 wrapper refused to interpret
+the child's stdout **at all**, rather than counting the failure and comparing anyway. The two
+controls are load-bearing in the other direction - round 8 is not a blanket reject, and the
+round-7 subset comparison survives the repair unchanged. The children are harmless: they print a
+line, exit non-zero, or write one diagnostic. No attack fixture was authored.
+
+### Round 8 changed no code
+
+`composite_pathproof.py` is **untouched**: same `129658` B / `adbf27fd…c05a` as round 7, and the
+round-8 hygiene block asserts `CARRIED_CLEAN=composite_pathproof.py WORKTREE_CHANGES=0`. No
+fixture was added, so `.gitattributes` is unchanged at `1630` B / `40e356f8…5077` and is also
+asserted worktree-clean. Every classification, rc, reason token and transcript in the round-8
+self-QA is the round-7 record re-executed by the repaired harness, not a new claim.
 
 ## Round 7 - what changed and why
 
@@ -142,6 +211,10 @@ at this stage, and no claim here weakens it.
 
 ## Stage coverage
 
+**Round 8 changed no stage.** The three subsections below are the round-7 record; round 8 touched
+only the self-QA evidence harness, and the hygiene block asserts `composite_pathproof.py` has no
+worktree modification.
+
 ### ALLOCATE
 
 Unchanged from round 1. Six RED fixtures and one GREEN, same rc and reason tokens.
@@ -158,7 +231,32 @@ a proven-static safe-set literal reaches a named STOP.
 Everything round 6 implemented. FREEZE inherits the round-7 repair unchanged through the shared
 `_derive_graph`, so `F3`/`F9` gain the same conservation; no FREEZE-specific code changed.
 
-## Self-QA result (round 7)
+## Self-QA result (round 8)
+
+- **The harness's own D026: 4 synthetic children x 2 published wrappers.**
+  `RED_UNDER_R7_GREEN_UNDER_R8=2`, `D026_OFF_EXPECTATION=0`, both REDs with `UNREAD_STDOUT=1`.
+  Each wrapper is extracted from the document that publishes it and its SHA-256 printed, so no
+  re-typed instrument can pass for the published one.
+- **All eleven blocks re-run from outside the repository with their REAL status published:**
+  `BLOCKS=11 STATUS_PROVED_COMPLETE=11 REJECTED_ON_STATUS=0 REJECTED_ON_STDERR=0 COMPARED=11
+  MISMATCHED=0 REJECTED=0`. Every child returned `RC=0` with `STDERR_BYTES=0`, so no block relied
+  on the empty `STDERR_CONTRACT` and every stdout comparison was made over a run already proved
+  complete. The ten round-7 blocks are the first ten; the D026 discriminator is the eleventh.
+- **The outer wrapper's own status, witnessed by the shell that launched it, not by itself:**
+  `OUTER_WRAPPER_RC=0`, `OUTER_WRAPPER_STDERR_BYTES=0`. The published section-13d transcript was
+  then re-derived on the final document and is byte-identical across runs.
+- **No code changed.** `CARRIED_CLEAN=composite_pathproof.py WORKTREE_CHANGES=0` and
+  `CARRIED_CLEAN=.gitattributes WORKTREE_CHANGES=0`, alongside `pathscope_prover.py` and
+  `sec102_r1..r7_fixtures`. `HYGIENE_OFF_EXPECTATION=0`.
+- Every round-7 measurement below was re-executed by the repaired harness and reproduced: the
+  58-case matrix, the scanner-boundary probe, the D026 pre-feature block, the 112-cell mutation
+  matrix, the grammar battery, the 1919-variant fixpoint sweep, the round-5 prefix battery, the
+  five round-3/round-4 discriminators, hygiene and artifact identity.
+- Round 8 added no fixture, no reason token, no output surface and no module behaviour.
+
+Literal commands and real output are in `SELF_QA_SEC102_R8.md`.
+
+## Self-QA result (round 7, carried record)
 
 - 58 cases, `FAILED_COUNT=0`. **All 52 round-6 cases carried unchanged in rc and reason token**;
   6 are round-7 additions. No carried fixture file was edited.
@@ -244,7 +342,8 @@ Literal commands and real output are in `SELF_QA_SEC102_R6.md`.
 
 Items 1-27 carry forward from round 5, with items 8 and 12 corrected as the round-5 audit
 required. Items 28-31 are round-6 additions; items 30 and 31 are corrected below for round 7.
-Items 32-36 are round-7 additions. **Item 8 is the production-gate blocker.**
+Items 32-36 are round-7 additions. Items 37-40 are round-8 additions and are all about the
+EVIDENCE HARNESS. **Item 8 is the production-gate blocker.**
 
 1. These are synthetic fixture proofs. The production P0 and RO entrypoints, RP0 library and
    bootstrap, RP6, RP7, inline Python bodies, and exact candidate `verify_lock.py` blob have
@@ -314,7 +413,8 @@ Items 32-36 are round-7 additions. **Item 8 is the production-gate blocker.**
     new arm; the count and classification are unchanged from round 4.
 21. **The `.gitattributes` repair is inert until the Lead commits it**, because Git reads
     checkout attributes from the committed tree. Round 7 adds `sec102_r7_fixtures/** -text` to
-    the same scoped file; the round-4 demonstration of the mechanism is not re-run.
+    the same scoped file; the round-4 demonstration of the mechanism is not re-run. **Round 8
+    adds no fixture and therefore no line**, and asserts the file worktree-clean instead.
 22. The `.gitattributes` covers this directory only. Every other byte-pinned artifact in the
     repository - RP6, RP7, the block files, the preregistration drafts - carries the same
     pre-existing line-ending exposure and is outside this fence.
@@ -384,9 +484,29 @@ Items 32-36 are round-7 additions. **Item 8 is the production-gate blocker.**
     construct begins at a `)`. This is an argument from the Bash grammar, not a sweep. It is
     also not load-bearing on its own: mutation `M3` turns the conservation off and kills no
     RED, because the safe set already refuses the fragments.
+37. **The harness proves each child ran to completion; it does not prove the child ran the right
+    thing.** Process status `0` plus empty stderr plus a published-subset match is a far stronger
+    acceptance than round 7's, and it is still an acceptance of observed output from a process
+    the self-QA itself wrote. The comparison is also still a SUBSET check: a block may emit more
+    than it publishes, and a declared excerpt passes on the lines it publishes. Round 8 does not
+    make the published transcripts exhaustive.
+38. **The empty `STDERR_CONTRACT` is a property of the round-8 self-QA, not a general rule.** A
+    future round whose block legitimately writes to stderr must add a named entry with a written
+    reason; the mechanism exists so such a block is adjudicated rather than silently tolerated.
+    An entry never waives the process-status test.
+39. **The outer wrapper's own status is adjudicated by whoever runs it, not by itself.** Section
+    13e of the round-8 self-QA publishes `OUTER_WRAPPER_RC` and `OUTER_WRAPPER_STDERR_BYTES` as
+    measured by the launching shell. A wrapper cannot be the sole witness to its own completion,
+    and this one does not claim to be.
+40. **Round 8 measures no new property of `composite_pathproof.py`.** Every classification claim
+    in the round-8 self-QA is the round-7 claim re-executed. If the round-7 evidence was wrong
+    about the module, round 8 does not detect that; it guarantees only that a block which *fails*
+    can no longer be reported as reproduced. The command-word whitelist that Codex r7 judged a
+    fixpoint is unchanged, and so is the item-8 residual underneath it.
 
 ## Artifact identity record
 
-The complete per-artifact byte-count and SHA-256 table is in `SEC102_R7_REPORT_2026-08-11.md`
-section 6, and in `SELF_QA_SEC102_R7.md` section 10, both re-derivable by the published command.
-No commit was made.
+The complete per-artifact byte-count and SHA-256 table is in `SEC102_R8_REPORT_2026-08-11.md`
+section 6, and in `SELF_QA_SEC102_R8.md` section 10, both re-derivable by the published command.
+**Every entry is byte-identical to the round-7 table**, because round 8 changed no code and added
+no fixture. No commit was made.
