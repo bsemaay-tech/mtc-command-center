@@ -40,11 +40,20 @@ infer the earlier two-failure description.
 
 ## 3. Final D026 map for current WP-I work
 
-[refreshed 2026-08-12] Open dispatch blocker: the corrected older WP-L/B3 mappings are
+~~[refreshed 2026-08-12] Open dispatch blocker: the corrected older WP-L/B3 mappings are
 present, but the complete current RP6, RP7, transport, SEC102, pathscope, and future rows
-1-9 map is not. Require exact RED command/output, pre-fix or mutation identity, GREEN
-command/output, and final accepted identity per closure test. Current audit REDs without
-accepted GREEN remain open; helper-only or non-literal evidence remains supplemental.
+1-9 map is not.~~ **[corrected 2026-08-12 ~20:50 — this question is ANSWERED and is no longer a
+dispatch blocker.]** The current map exists:
+`AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md` covers RP6, RP7, transport, SEC102 and pathscope —
+**39 rows, 29 fully closed, 10 unlocated/supplemental, 15 disclosed residuals, 0 open** — each
+with exact RED command/output, mutation identity, GREEN command/output and final accepted bytes,
+and with execution provenance split three ways rather than blurred. Counts independently
+re-derived by three lanes, zero disagreement.
+
+**One genuine residual remains:** rows 1-9 are absent because they are **not built yet**, so no
+map can cover them. That is a build dependency, not a mapping gap. Current audit REDs without an
+accepted GREEN would still remain open — there are currently **none**; helper-only or
+non-literal evidence remains supplemental as before.
 
 ## 4. Freeze-time ledger ratification
 

@@ -141,18 +141,35 @@ after Commit 2. The two concrete commits and capture evidence are NOT-YET-AVAILA
 
 ### Packet 7 - current WP-I D026 map
 
-[refreshed 2026-08-12] NOT-YET-AVAILABLE AS A COMPLETE PACKET. Partial exact sources
-and their missing fields are indexed in `AUDIT2_D026_RED_LOCATIONS.md`. Final coverage must
-map RP6, RP7, transport, SEC102, pathscope, and rows 1-9 to exact RED/GREEN commands and
-outputs, pre-fix/mutation identity, and final accepted bytes.
+~~[refreshed 2026-08-12] NOT-YET-AVAILABLE AS A COMPLETE PACKET.~~ **[corrected 2026-08-12
+~20:50 — this detail contradicted the changelog's own 16/1/3 headline, which records packet 7 as
+CLOSED.]** The packet EXISTS: `AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md` maps **39 closure
+rows** across RP6, RP7, transport, SEC102 and pathscope to exact RED/GREEN commands, mutation
+identity and final accepted bytes — **29 fully closed, 10 unlocated/supplemental, 15 disclosed
+residuals, 0 open**, counts independently re-derived by **three** lanes with zero disagreement.
+Execution provenance is split three ways (Lead-run verbatim / auditor-reproduced /
+author-claimed) rather than blurred.
+
+**Rows 1-9 remain absent because they are not built yet** — that is the packet's stated residual,
+not a gap in the map. Partial exact sources and missing fields remain indexed in
+`AUDIT2_D026_RED_LOCATIONS.md`.
 
 ### Packet 8 - final freeze-input ledger
 
-[refreshed 2026-08-12] NOT-YET-AVAILABLE. It must reconcile RP6 embedded pins, RP7
-projection/trusted-Python/evidence-root pins, both tool maps, five row-8 attestation values
-and wrapper copies, transport mount/OpenSSH/credential digests, close-script and archive
-identities, block/wrapper hashes, allocations, accepting-input arms, and evidence-root
-provenance. No final filled composite exists.
+~~[refreshed 2026-08-12] NOT-YET-AVAILABLE.~~ **[corrected 2026-08-12 ~20:50 — the changelog
+records packet 8 as PARTIAL, and this detail said nothing existed.]** The reconciliation EXISTS:
+`WPI_FREEZE_INPUT_LEDGER_2026-08-12.md` covers **45 rows** — FILLED 3, LITERAL-MARKER 29,
+MISSING-CONSUMER 0, CONTRADICTED 0, REQUIRES-HOST 13 — spanning RP6 embedded pins, RP7
+projection/trusted-Python/evidence-root pins, both tool maps, the five attestation values and
+their wrapper copies, transport mount/OpenSSH/credential digests, close-script and archive
+identities, block/wrapper hashes, allocations and evidence-root provenance. It answers freeze
+blockers 7, 8 and 9 with `file:line` evidence, and establishes that RP6 cannot produce an
+end-to-end P0 PASS while the freeze literals stand — so the Codex r16 acceptance is a
+source/audit acceptance, not a host end-to-end PASS.
+
+**What genuinely does not exist is the FINAL filled composite**, which needs the actual fills,
+allocations and accepting-input evidence that only the Stage-1 run produces. Hence PARTIAL, not
+NOT-YET-AVAILABLE.
 
 ### Packet 9 - WP-I execution and closure evidence
 

@@ -77,7 +77,7 @@ Status meanings:
 | 42 | SSH identity key digest | REQUIRES-HOST - not determinable locally | Transport runner names the identity file at `transport_runner.ps1:122-126`, leaves its digest `<PIN-AT-FREEZE>` at `transport_runner.ps1:129`, and verifies config pins at `transport_runner.ps1:704-722`. Credential bytes were not read locally. |
 | 43 | User `known_hosts` digest | REQUIRES-HOST - not determinable locally | Transport runner names the user known-hosts path at `transport_runner.ps1:123-124`, leaves its digest `<PIN-AT-FREEZE>` at `transport_runner.ps1:130`, and verifies config pins at `transport_runner.ps1:704-722`. |
 | 44 | Global `ssh_known_hosts` digest | REQUIRES-HOST - not determinable locally | Transport runner names the global known-hosts path at `transport_runner.ps1:125-126`, leaves its digest `<PIN-AT-FREEZE>` at `transport_runner.ps1:131`, and verifies config pins at `transport_runner.ps1:704-722`. |
-| 45 | Close-script argv, `WORK_ROOT`, scratch, and launch-domain contract | CONTRADICTED | Current transport plan passes three args for close ops at `TRANSPORT_PLAN.tsv:8-9`; current close script requires exactly three args and assigns `EV_DIR`, `RUNID`, and `WORK_ROOT` at `remote_close_tree_wpi.sh:282-286`. A stale current record still says the composition passes two args and exits before RUNID/EV_DIR at `RUNID_MINTING_REVIEW_CODEX_2026-08-11.md:167`. R3 keeps blocker 8 open until the prereg section 4.7, plan rows 07/08, derivation contract, launch-domain claim, scratch semantics, and bytes describe one byte-identical contract at `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:410-414`; the blocker map keeps item 8 open at `WPI_FREEZE_BLOCKER_MAP_2026-08-12.md:20`. |
+| 45 | Close-script argv, `WORK_ROOT`, scratch, and launch-domain contract | **FILLED** *(reclassified 2026-08-12 ~19:40 — was CONTRADICTED. The stale two-arg record at `RUNID_MINTING_REVIEW_CODEX_2026-08-11.md:167` has since been corrected in BOTH respects it was wrong about — the two-arg claim, and the "exits FAIL on argc" claim, since an argv-count violation returns rc 3 STOP not rc 1 FAIL. Plan, script and record now describe one contract, so no documentary contradiction survives. The residual `EXPECT_UID`/`EXPECT_GID` identity pins are deliberately NOT counted here — they belong to row 7's REQUIRES-HOST scope, and counting them twice would inflate the tally.)* | Current transport plan passes three args for close ops at `TRANSPORT_PLAN.tsv:8-9`; current close script requires exactly three args and assigns `EV_DIR`, `RUNID`, and `WORK_ROOT` at `remote_close_tree_wpi.sh:282-286`. A stale current record still says the composition passes two args and exits before RUNID/EV_DIR at `RUNID_MINTING_REVIEW_CODEX_2026-08-11.md:167`. R3 keeps blocker 8 open until the prereg section 4.7, plan rows 07/08, derivation contract, launch-domain claim, scratch semantics, and bytes describe one byte-identical contract at `WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:410-414`; the blocker map keeps item 8 open at `WPI_FREEZE_BLOCKER_MAP_2026-08-12.md:20`. |
 
 ## Blocker 7 - P0 attested values are not wired
 
@@ -131,10 +131,10 @@ Counts use one primary status per ledger row:
 
 | Status | Count |
 |---|---:|
-| FILLED | 2 |
+| FILLED | 3 |
 | LITERAL-MARKER | 29 |
 | MISSING-CONSUMER | 0 |
-| CONTRADICTED | 1 |
+| CONTRADICTED | 0 | *(was 1 — row 45 reclassified to FILLED 2026-08-12 ~19:40 after the stale record it cited was corrected in both respects; the tally moves with it so the table still sums to 45)*
 | REQUIRES-HOST - not determinable locally | 13 |
 | Total rows | 45 |
 
