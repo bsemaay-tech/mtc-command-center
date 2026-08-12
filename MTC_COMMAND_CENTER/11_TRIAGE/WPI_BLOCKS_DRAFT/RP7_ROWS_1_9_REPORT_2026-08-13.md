@@ -66,8 +66,8 @@ final executable identity changed from the pre-rebuild rows 1-9 identity.
 Current `RP7-WPI-RO.sh` identity:
 
 ```text
-bytes=126182
-sha256=8355cb00fda8af2140d99ff9e97fe458376215dbd39267b2f2958d29fb9aba85
+bytes=127046
+sha256=a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad
 cr_bytes=0
 identity_changed=yes
 ```
@@ -94,7 +94,7 @@ embedded fence, a published extraction command, and the executed transcript. The
 fence asserts the block identity before and after, extracts the delivered block
 functions from `RP7-WPI-RO.sh`, and executes the block's own B2/B4 functions
 against fixture `systemctl show` captures and fixture unit fragments. It
-produced 20 RED/GREEN pairs and 4 controls. The folded documentary repairs from
+produced 23 RED/GREEN pairs and 3 controls. The folded documentary repairs from
 the earlier kickoff remain below: stale GREEN identities were corrected, the
 round-5 fence body is `21263 B`, the six wrapper stream lines are pasted beside
 `RUN_ONE_STDERR_BYTES=210`, the `wpi_alloc_leaf` deletion proof is present, and
@@ -110,12 +110,13 @@ sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_EN
 Result: rc 0. The transcript starts with:
 
 ```text
-HARNESS_BLOCK_ID stage=before bytes=126182 sha256=8355cb00fda8af2140d99ff9e97fe458376215dbd39267b2f2958d29fb9aba85 cr_bytes=0 bash_n=0
+HARNESS_BLOCK_ID stage=before bytes=127046 sha256=a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad cr_bytes=0 bash_n=0
 HARNESS_EXTRACT method=sed_drop_terminal_wpi_main_call source=RP7-WPI-RO.sh functions_invoked=wpi_assert_b2_rows_1_7,wpi_assert_fragment_has_no_install_section,wpi_assert_regular_digest,wpi_assert_b4_rows_8_9
+HARNESS_DISCLOSURE row=8 sandbox_pins=asserted_rendered_systemctl_show_literals host_derivation=freeze_time_act fixture_fidelity_not_established
 D026 row=1 arm=inactive mutation=ActiveState=inactive RED rc=1 line=B2_FAIL reason=unit_not_active state=inactive expected=active
 D026 row=1 arm=inactive mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
 ...
-D026_SUMMARY rows=1-9 red_green_pairs=20 controls=4 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+D026_SUMMARY rows=1-9 red_green_pairs=23 controls=3 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
 ```
 
 The mutation identities are named in each transcript line (`mutation=...`). For
@@ -149,8 +150,8 @@ Result: no matches in the block.
 RP7-WPI-RO.sh bytes/SHA/CR derivation
 ```
 
-Result: `126182` bytes,
-`8355cb00fda8af2140d99ff9e97fe458376215dbd39267b2f2958d29fb9aba85`, `0` CR
+Result: `127046` bytes,
+`a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad`, `0` CR
 bytes.
 
 ## Rebuild note
@@ -160,3 +161,67 @@ reason for this rebuild. The accepting transcript in `SELF_QA_RP7.md` is produce
 by executing the block's own shell functions. The row-8 GREEN lines are the
 block's real terminal `B4_environment ...` line; the fence separately asserts
 that each row-8 GREEN run emitted all ten `B4_property ... value=matches` lines.
+
+## Round-2 repair - GLM advance-read findings
+
+Session-header model visible to this Codex session: Codex / GPT-5. The kickoff
+requested Codex free, xhigh. No sub-delegation and no git mutation occurred.
+Only the four kickoff-owned files were edited.
+
+Round-2 identity changed again and was re-derived after code edits:
+
+```text
+previous_rows_1_9_bytes=126182
+previous_rows_1_9_sha256=8355cb00fda8af2140d99ff9e97fe458376215dbd39267b2f2958d29fb9aba85
+current_bytes=127046
+current_sha256=a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad
+cr_bytes=0
+identity_changed=yes
+```
+
+Finding resolution:
+
+- R1 FIX: `SELF_QA_RP7.md` now discloses that row-8 sandbox pins are asserted
+  rendered `systemctl show` literals. The fence proves comparator behavior
+  against fixtures; host derivation of those renderings remains a freeze-time
+  act. The executed transcript prints `HARNESS_DISCLOSURE row=8 ...`.
+- R2 FIX: `wpi_assert_unit_execstart` now splits only on top-level semicolons,
+  tolerates unknown keyed runtime fields, and still requires exact `path`,
+  `argv[]`, and `ignore_errors`. The fence adds
+  `realistic_execstart` RED/GREEN over a started-unit style rendering containing
+  `start_time=[...; ...]`.
+- R3 FIX: this is recorded as an explicit preregistration amendment in
+  `SELF_QA_RP7.md` and `STATUS_RP7.md`: row 1 reads `ActiveState` from the
+  bounded `systemctl show` property table instead of executing verbatim
+  `systemctl is-active`. Rationale is property-table consistency and avoiding a
+  raw tool rc as the row verdict.
+- R4 FIX: the fence adds the section-D.5 row-5 decoy fixture
+  `decoy_fragment_only`, where expected release/venv strings occur only in
+  comment/environment text while rendered `ExecStart.path` is wrong. The RED
+  fails on `ExecStart.path`; repaired GREEN passes.
+- N1 FIX: B2 rc-0 show-output parse failures now use
+  `unit_definition_unreadable`, and the `truncated_show` RED transcript line
+  reflects that token.
+- N2 FIX: row-6 Install-section parsing is now case-insensitive. The former
+  `[install]` control is now a RED fixture for `install_section_present`, with a
+  repaired GREEN line beside it.
+
+Validation rerun:
+
+```text
+bash -n MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh
+rc=0
+
+sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_END$/p' SELF_QA_RP7.md | bash --noprofile --norc
+rc=0
+D026_SUMMARY rows=1-9 red_green_pairs=23 controls=3 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+```
+
+Repo-wide identity grep was run on the exact old and new SHA strings. The old
+SHA remains intentionally in `previous_rows_1_9_sha256` fields in the owned
+status/report files, in historical kickoff/advance-read/run-log records, and in
+`MTC_COMMAND_CENTER/11_TRIAGE/AUDIT2_READINESS_PACKAGE/AUDIT2_ACCEPTANCE_MATRIX_2026-08-12.md`,
+which is outside this kickoff's four-file write whitelist. A byte-count grep
+also found an abbreviated stale handoff reference in
+`MTC_COMMAND_CENTER/11_TRIAGE/FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md`;
+that file is also outside the whitelist and was not edited.

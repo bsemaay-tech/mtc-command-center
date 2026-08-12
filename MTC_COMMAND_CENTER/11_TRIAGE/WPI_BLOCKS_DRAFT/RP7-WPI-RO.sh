@@ -578,9 +578,21 @@ wpi_assert_unit_execstart() {
     local value="$1" expected_path="$WPI_VENV_ROOT/bin/python"
     local expected_argv="$WPI_VENV_ROOT/bin/python -m bridge.app"
     local body part trimmed key val path="" argv="" ignore_errors="" seen_path=no seen_argv=no seen_ignore=no
+    local token="" depth=0 i ch
     [[ "$value" == \{*\} ]] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_grammar"
     body="${value#\{}"; body="${body%\}}"
-    IFS=';' read -r -a WPI_EXECSTART_PARTS <<< "$body"
+    WPI_EXECSTART_PARTS=()
+    for (( i=0; i<${#body}; i++ )); do
+        ch="${body:i:1}"
+        case "$ch" in
+            '[') depth=$(( depth + 1 )) ;;
+            ']') [ "$depth" -gt 0 ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_bracket_grammar"; depth=$(( depth - 1 )) ;;
+            ';') if [ "$depth" -eq 0 ]; then WPI_EXECSTART_PARTS+=("$token"); token=""; continue; fi ;;
+        esac
+        token+="$ch"
+    done
+    [ "$depth" -eq 0 ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_bracket_grammar"
+    WPI_EXECSTART_PARTS+=("$token")
     for part in "${WPI_EXECSTART_PARTS[@]}"; do
         trimmed="${part#"${part%%[![:space:]]*}"}"
         trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
@@ -589,9 +601,14 @@ wpi_assert_unit_execstart() {
             *) wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_field_grammar" ;;
         esac
         case "$key" in
+            path|argv\[\]|ignore_errors) : ;;
+            *) [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_field_key_grammar" ;;
+        esac
+        case "$key" in
             path) [ "$seen_path" = no ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_duplicate_path"; path="$val"; seen_path=yes ;;
             argv\[\]) [ "$seen_argv" = no ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_duplicate_argv"; argv="$val"; seen_argv=yes ;;
             ignore_errors) [ "$seen_ignore" = no ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_duplicate_ignore_errors"; ignore_errors="$val"; seen_ignore=yes ;;
+            *) : ;;
         esac
     done
     [ "$seen_path" = yes ] || wpi_stop B2 "unit_definition_unreadable operation=show rc=0 detail=execstart_path_absent"
@@ -647,8 +664,8 @@ for physical in text.splitlines():
  m=section_re.match(line)
  if m:
   sections+=1
-  if m.group(1)=="Install":
-   print("INSTALL section=Install"); sys.exit(1)
+  if m.group(1).lower()=="install":
+   print("INSTALL section=%s"%m.group(1)); sys.exit(1)
  elif stripped.startswith("["):
   print("PARSE section_header_grammar"); sys.exit(3)
  continued=line.endswith("\\")
@@ -662,7 +679,7 @@ print("OK install_section=absent sections=%d"%sections)
     wpi_mount_guard_end
     case "$parser_rc:$record" in
         0:OK\ install_section=absent\ sections=*) printf 'B2_fragment_install_section path=%s install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed\n' "$WPI_UNIT_FRAGMENT" ;;
-        1:INSTALL\ section=Install) wpi_fail B2 "install_section_present path=$WPI_UNIT_FRAGMENT" ;;
+        1:INSTALL\ section=*) wpi_fail B2 "install_section_present path=$WPI_UNIT_FRAGMENT" ;;
         3:PARSE\ *) wpi_stop B2 "fragment_unreadable_or_unparseable rc=0 path=$WPI_UNIT_FRAGMENT detail=${record#PARSE }" ;;
         *) wpi_stop B2 "fragment_unreadable_or_unparseable rc=$parser_rc path=$WPI_UNIT_FRAGMENT detail=parser_result_grammar" ;;
     esac
@@ -746,7 +763,7 @@ wpi_assert_b2_rows_1_7() {
         --property=ExecStart --property=WorkingDirectory
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B2 "system_manager_unreachable operation=show rc=$WPI_CAP_RC detail=unit_query_nonzero diagnostic_file=$WPI_CAP_ERR"
     wpi_require_empty_captured B2 "system_manager_unreachable operation=show rc=0" err
-    wpi_parse_show_capture B2 "system_manager_unreachable operation=show rc=0" "$b2_allowed"
+    wpi_parse_show_capture B2 "unit_definition_unreadable operation=show rc=0" "$b2_allowed"
 
     wpi_show_get B2 "system_manager_unreachable prop=ActiveState" ActiveState; active="$WPI_LINE"
     wpi_require_show_value_grammar B2 unit_property_unreadable ActiveState "$active"

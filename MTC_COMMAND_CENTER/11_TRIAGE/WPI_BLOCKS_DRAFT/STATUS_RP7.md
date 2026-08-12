@@ -28,14 +28,35 @@ Material state added in this extension:
   `wpi_assert_fragment_has_no_install_section` preserved the parser rc and now
   consumes the parser capture before `wpi_mount_guard_end` overwrites the active
   capture descriptors.
+- Round-2 repair hardens `ExecStart` parsing for richer started-unit
+  `systemctl show` renderings: semicolons inside bracketed runtime fields no
+  longer split top-level fields, unknown keyed runtime fields are ignored, and
+  `path`, `argv[]`, and `ignore_errors` are still presence-checked and matched
+  exactly.
+- Row 6 now treats `[Install]` section names case-insensitively, matching
+  systemd section parsing. The former lowercase `[install]` control is now a
+  RED fixture for `install_section_present`.
+- B2 rc-0 show-output parse failures are labelled
+  `unit_definition_unreadable`, not `system_manager_unreachable`, so the row-5
+  truncated-show fixture uses the row-5 inability token from section D.5.
 
 Documentary state:
 
 - `SELF_QA_RP7.md` replaces the rejected simulated rows 1-9 matrix with an
   embedded `sed | bash` rebuild fence and its executed transcript. The fence
   extracts the delivered `RP7-WPI-RO.sh` bytes, asserts identity before and
-  after, and drives the block's own B2/B4 functions. It produced 20 RED/GREEN
-  pairs and 4 controls.
+  after, and drives the block's own B2/B4 functions. It produced 23 RED/GREEN
+  pairs and 3 controls.
+- Row-8 sandbox pins are disclosed as asserted rendered `systemctl show`
+  literals. The rebuild fence proves comparator behavior against fixtures; host
+  derivation of those renderings remains a freeze-time act for the flagship
+  auditor and owner-visible record.
+- Preregistration amendment note for row 1: the block implements the active
+  predicate by reading `ActiveState` from the bounded `systemctl show`
+  property table, not by executing the preregistered verbatim
+  `systemctl is-active` command. Rationale: the property-table read keeps row 1
+  in the same capture contract as rows 2-5 and avoids raw tool rc becoming the
+  row verdict. This is an explicit amendment for flagship audit review.
 - The C1 mount-projection digest residual is stated separately: that digest still
   uses a re-resolved name and is intentionally not repaired in this rows-1-9
   round.
@@ -43,10 +64,12 @@ Documentary state:
 Final executable identity:
 
 ```text
-bytes=126182
-sha256=8355cb00fda8af2140d99ff9e97fe458376215dbd39267b2f2958d29fb9aba85
-previous_bytes=108301
-previous_sha256=0e93f90de7fcefe86fee4137f3ba11ea34b69b120d6a06c304fdde0e9b921e62
+bytes=127046
+sha256=a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad
+previous_rows_1_9_bytes=126182
+previous_rows_1_9_sha256=8355cb00fda8af2140d99ff9e97fe458376215dbd39267b2f2958d29fb9aba85
+previous_accepted_round9_bytes=108301
+previous_accepted_round9_sha256=0e93f90de7fcefe86fee4137f3ba11ea34b69b120d6a06c304fdde0e9b921e62
 identity_changed=yes
 ```
 
