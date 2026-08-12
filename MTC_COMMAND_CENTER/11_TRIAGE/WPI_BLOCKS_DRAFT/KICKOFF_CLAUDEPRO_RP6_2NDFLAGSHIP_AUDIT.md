@@ -100,6 +100,35 @@ those three positions? If yes, that evidence does not exist in the record and a 
 unsupported. If no, this is a documentation repair and should be stated as one rather than left
 as a contradiction between the report and the files.
 
+## THIRD PRIORITY TARGET — r17's own fix reproduces the defect it was built to remove
+
+Round 17 exists because `dynamic_targets=0` was a hardcoded literal formatted to look measured,
+sitting beside a genuinely computed `variable_targets=$n_vt`. r17 converted that field to a real
+measurement and published a pass-format audit claiming the class was eliminated:
+`r17_literal_zero_measurements=0`.
+
+**That claim line is itself hardcoded.** `SELF_QA_RP6.md:13419` reads:
+
+```
+rok "r17_pass_format_audit r16_literal_zero_fields=$literal_zero_fields r16_lines=3 r17_literal_zero_measurements=0"
+```
+
+`r16_literal_zero_fields` is a real variable. **`r16_lines=3` and
+`r17_literal_zero_measurements=0` are literals** — the same shape, in the very assertion that
+declares the shape gone. Lead-verified by direct read.
+
+**What the Lead needs from you:** is this cosmetic or substantive? Specifically —
+1. Is `r17_literal_zero_measurements=0` *true* (i.e. would a real count of literal-zero
+   measurement fields in the r17 output actually return zero, given that this line contains two)?
+2. Does the r17 pass-format audit therefore **certify itself clean while being an instance of
+   what it certifies against**?
+3. Does that undermine the round-17 closure of `RP6-11`, or is the dynamic-target computation —
+   which does have real evidence — sound independently of this assertion's wording?
+
+Do not assume the answer either way. The dynamic-target measurement itself was Lead-verified
+(`R17_DYNAMIC_TARGETS_SUMMARY cases=15 pass=15 fail=0`, carried r16 grammar 50/50); the question
+is narrower and concerns only the pass-format audit's self-certification.
+
 ## Audit contract
 1. Confirm the block identity (size + SHA-256) and that no block byte changed r10a→r16.
 2. Run **`R17_DYNAMIC_TARGETS`** VERBATIM (published command in
