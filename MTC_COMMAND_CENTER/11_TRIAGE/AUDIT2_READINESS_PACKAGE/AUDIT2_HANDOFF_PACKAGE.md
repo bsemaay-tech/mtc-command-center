@@ -1,48 +1,183 @@
 # Audit 2 handoff package
 
-Status: readiness assembly only. This document does not dispatch Audit 2, make an
-acceptance decision, contact a host, or create authority.
+Status: readiness assembly only; NOT READY FOR DISPATCH. [refreshed 2026-08-12]
 
-State meanings:
+[refreshed 2026-08-12] This document does not dispatch Audit 2, make an acceptance
+decision, contact a host, execute an artifact, create either freeze, or create authority.
 
-- PRESENT: the permitted source records identify an existing artifact.
-- PRODUCED-AT-FREEZE: the item must be created or fixed when the checkpoint is frozen.
-- BLOCKED-UPSTREAM: a prerequisite or required evidence element is still missing.
+## Refresh changelog - the 20 coherence items
+
+[refreshed 2026-08-12] `CLOSED` below means the package defect or missing packet has
+been repaired with a current source or an honest current-state stub. It does not mean the
+underlying WP-I freeze gate is closed.
+
+| Coherence-review item | Refresh result | Reason |
+|---|---|---|
+| Stale claim groups 1-9 | **CLOSED (9/9)** [refreshed 2026-08-12] | Ordering, exact T0 roster, current artifact paths/verdicts, corrected D026 locations, about-40-hour ledger estimate, and wholly unresolved suite baseline now replace the stale statements. |
+| Missing material 1 - current acceptance matrix | **CLOSED** [refreshed 2026-08-12] | `AUDIT2_ACCEPTANCE_MATRIX_2026-08-12.md` records exact current identities, latest verdicts, and PENDING rows. |
+| Missing material 2 - rows 1-9 disposition | **CLOSED AS A PACKET; IMPLEMENTATION OPEN** [refreshed 2026-08-12] | Owner decision is BUILD ALL NINE after RP7 dual acceptance; no implementation exists yet. |
+| Missing material 3 - section 10.1 delta/access grammar | **CLOSED AS A PACKET; FREEZE IMPLEMENTATION OPEN** [refreshed 2026-08-12] | R3 contains the delta; FAM-01..03 / MC-01..03 are owner-ratified. Frozen-composite implementation remains a freeze gate. |
+| Missing material 4 - section 10.2 prover status | **CLOSED AS A PACKET; EXECUTION ACCEPTANCE OPEN** [refreshed 2026-08-12] | Pathscope r2 identity and honest residual are recorded; GLM is supplemental and Claude execution audit is pending. |
+| Missing material 5 - successor-preregistration review | **CLOSED AS A PACKET; FINAL SUCCESSOR OPEN** [refreshed 2026-08-12] | R3 merged the 13 skeleton gaps and Lead reports 34/34 conservation; final fills/freeze/review do not yet exist. |
+| Missing material 6 - two-commit Stage-1/attestation order | **CLOSED AS A PACKET; EXECUTION OPEN** [refreshed 2026-08-12] | R3 section 5.2 contains the binding capture-first, consume-second procedure. Neither commit exists yet. |
+| Missing material 7 - D026 map for current WP-I work | **OPEN** [refreshed 2026-08-12] | Partial exact sources are indexed, but a final per-test map across RP6, RP7, transport, SEC102, pathscope, and rows 1-9 cannot exist until final accepted bytes and GREENs exist. |
+| Missing material 8 - final freeze-input ledger | **OPEN - NOT-YET-AVAILABLE** [refreshed 2026-08-12] | Final pins, allocations, duplicate-consumer reconciliation, frozen composite, and accepting-input evidence do not exist. |
+| Missing material 9 - WP-I execution/closure evidence | **OPEN - NOT-YET-AVAILABLE** [refreshed 2026-08-12] | No host run, concrete RUNID, immutable evidence tree, rows 1-24 results, or closure index exists. |
+| Missing material 10 - authoritative frozen-SHA bundle | **OPEN - NOT-YET-AVAILABLE** [refreshed 2026-08-12] | WP-I has not closed, so the pre-WP-A SHA/diff/baseline bundle cannot yet be produced. |
+| Missing material 11 - final authority and ledger closure | **OPEN** [refreshed 2026-08-12] | Existing grants/decisions are known, but one consolidated final authority record and owner-ratified freeze-time ledger do not exist. |
+
+[refreshed 2026-08-12] Result: **15 of the 20 package-coherence items are closed by
+this refresh; 5 remain open for evidence that cannot yet exist.** The package is still not
+dispatchable because WP-I is not closed.
+
+## State meanings
+
+- [refreshed 2026-08-12] `PRESENT` - an exact current or historical artifact is indexed.
+- [refreshed 2026-08-12] `PENDING-ACCEPTANCE` - exact working bytes exist but required
+  review is incomplete.
+- [refreshed 2026-08-12] `NOT-YET-AVAILABLE` - the artifact/evidence can only be created
+  by a future authorized stage and must not be inferred.
+- [refreshed 2026-08-12] `PRODUCED-AT-FREEZE` - a dispatch input must be derived from the
+  exact frozen checkpoint.
 
 ## Checklist index
 
-| ID | Checklist item | State | Exact path if present | How the auditor verifies it |
-|---|---|---|---|---|
-| F1 | Exact frozen checkpoint commit SHA after WP-L Phase 2 and WP-I close | PRODUCED-AT-FREEZE | N/A until freeze | In each isolated audit worktree, run `git rev-parse HEAD`; compare the full SHA with the dispatch record and every freeze-time manifest. |
-| F2 | Frozen product candidate identity `2ce41e34bceb599d80af24c5c33d835820ec321b` plus artifact and manifest hashes | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\02_PREREG\CANDIDATE_RELEASE_DERIVATION.md`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\02_PREREG\CANDIDATE_RELEASE_SHA256SUMS`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\02_PREREG\PREREGISTRATION.md` | Recompute every listed artifact SHA-256 from the frozen candidate, recompute the release-manifest hash, and compare the candidate identity with the stated full SHA. |
-| F3 | Statement that candidate bits are unchanged since Gate-A acceptance, or exact diff if changed | PRODUCED-AT-FREEZE | N/A until freeze | Compare the frozen candidate artifact and manifest hashes with the Gate-A immutable set. If any differ, reproduce an exact binary/file diff and ensure the freeze statement records it. |
-| L1 | Final accepted WP-L P2 command-gap proposal, block digests, and syntax results | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_COMMAND_GAP_PROPOSALS_2026-08-09.md`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_PROPOSALS_LEAD_ACCEPTANCE_2026-08-09.md`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\01_RUNKIT\syntax_validation.txt`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\07_RUNKIT_B\syntax_validation_b.txt` | Re-extract every accepted block using the recorded extraction convention, recompute its line count and SHA-256, compare with the proposal digest table and run-kit identities, then rerun the recorded `bash -n` and `py_compile` checks. |
-| L2 | D026 RED/GREEN records for every closed falsification row | BLOCKED-UPSTREAM | Located R4-5 record: `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\05_TRANSPORT_R45B\STAGE3B_TRANSPORT_RECORD.md`<br>Location register: `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\AUDIT2_READINESS_PACKAGE\AUDIT2_D026_RED_LOCATIONS.md` | For each claimed closure test, reproduce the exact deliberate mutation or pre-fix behavior and require the recorded RED, then restore the accepted bytes and require GREEN. Only R4-5 has an exact RED/GREEN record location in the permitted inputs. Treat every unlocated row as supplemental, not closure. |
-| L3 | Honest BLOCKED registry restated at freeze time | PRODUCED-AT-FREEZE | Current source: `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\UNIT_CLOSURE_RECORD.md` | At freeze, compare the registry with the closure record: original B3 STOP is history, repaired B3 and R4-5 are recorded PASS, while RPD-VERIFY, C1, C2-A/B, C3, C4-A/B/C, C5, WP-I F3/F4, and the `bridge.env` naming risk remain open as recorded. Do not convert an open item to closed without a cited closure artifact. |
-| L4 | WP-L P2 repair-round ledger, including an exact RED file for every closed non-R4-5 row | BLOCKED-UPSTREAM | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\06_B3_REPAIR\B3_REPAIR_CYCLE_RECORD.md`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\EVIDENCE_INDEX.md` | Confirm the round count, implementer, auditor, tier, and verdict for each round. Then follow each closed row to a named file containing the real RED command and output. The permitted inputs index candidate audit and self-QA files but do not provide the required per-test mapping, so that portion is blocked. |
-| T1 | Operator-side transport records for original B3 and R4-5 retry, plus the later B3B close | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\03_TRANSPORT\operator_record`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\05_TRANSPORT_R45B\operator_record`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\09_TRANSPORT_B3B\operator_record` | Recompute each file SHA-256 and byte count against `EVIDENCE_INDEX.md`; reconstruct each operation from argv, stdout, stderr, and rc; compare with `TRANSPORT_RECORD.txt` and `TRANSPORT_SHA256SUMS.txt`. |
-| T2 | Remote-versus-local digest-set bindings for git-excluded evidence logs | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\03_TRANSPORT\operator_record`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\05_TRANSPORT_R45B\operator_record`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\09_TRANSPORT_B3B\operator_record` | From the create-once roots named in `EVIDENCE_INDEX.md`, recompute per-file hashes, byte counts, and the exact `CLOSE_DIGEST_SET_SHA256` rendering. Match B3 `079d6ac9...` / `b25612df...`, R45B `00078e7e...` / `1f74d69a...`, and B3B set `d572afe7...`. |
-| T3 | Burned-RUNID accounting | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\EVIDENCE_INDEX.md` | Reconcile every preregistered and invoked RUNID with the ledger and transport records: `-B3` BURNED, `-R45` BURNED, `-R45B` CONSUMED, and `-B3B` CONSUMED. Confirm that no RUNID was replayed. |
-| T4 | Preregistration-before-invocation ordering | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\02_PREREG`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\03_TRANSPORT`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\04_PREREG_R45B`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\05_TRANSPORT_R45B`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\08_PREREG_B3B`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\09_TRANSPORT_B3B` | At the frozen SHA, inspect commit history and timestamps. Require each preregistration commit to precede its first invocation; specifically reproduce the recorded Stage 2 `210b0168` before Stage 3 `7e9d1c4a` ordering and the equivalent R45B and B3B ordering. |
-| T5 | First-FAIL cascade for original B3 transport | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\03_TRANSPORT\operator_record\ops`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\03_TRANSPORT\STAGE3_TRANSPORT_RECORD.md` | Reconstruct the recorded sequence and rc values: 05=3, 06=0, 07 skipped with no `07.*` files, 08=1, 10=1, 12=3. Confirm the absence of operation 07 files and that the original R4-5 skip followed the cascade. |
-| I1 | WP-I static minimum-security, secret-scan, and egress inventory at frozen SHA | BLOCKED-UPSTREAM | N/A: WP-I is still draft round 1.2 according to `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\UNIT_CLOSURE_RECORD.md` | After WP-I closes, rerun the named static checks at the frozen SHA and compare their complete outputs and hashes with the WP-I close record. No exact artifact path is recorded in the permitted inputs. |
-| I2 | Executed read-only WP-I host-check logs with no-clobber path, SHA-256, and byte count | BLOCKED-UPSTREAM | N/A: WP-I lacks explicit host-contact authority and a budget lift | After authority and execution, verify each no-clobber log path, byte count, SHA-256, command, output, rc, and RUNID against the WP-I close record. |
-| I3 | WP-I current-state proofs: DISARMED, state version, loopback-only, `Restart=no`, and no credentials loaded | BLOCKED-UPSTREAM | N/A: WP-I has not closed | Reproduce each named read-only proof from the authorized host-check record and compare output, rc, hash, and byte count. An auditor unable to access the recorded evidence must not infer the state. |
-| I4 | Preregistered record for every mutating WP-I check | BLOCKED-UPSTREAM | N/A: WP-I has not closed and no mutating-check package is identified | Compare every executed mutating command with a preregistration committed before invocation. Anything unmatched is a finding, not evidence. |
-| A1 | Owner tier policy, cadence, and baseline ledger ratification | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` | Confirm Audit 2 is T0, requires two fresh independent flagship sessions at xhigh, and starts from the ratified 20.5 h used / 29.5 h remaining baseline at WP-L P2 start. |
-| A2 | Ratified ledger figure at freeze, including WP-L P2 and WP-I consumption | PRODUCED-AT-FREEZE | Current sources: `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\OWNER_DECISION_AUDIT_TIERS_2026-08-09.md`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\UNIT_CLOSURE_RECORD.md` | Start with the ratified 29.5 h remaining at WP-L P2 start, subtract the recorded WP-L P2 2.6 h, add the final WP-I booking, and compare with an owner-ratified freeze-time source. The current `~26.9 h` is explicitly provisional pending owner adjustment. |
-| A3 | WP-L P2 plus WP-I authorization record and hard exclusions | BLOCKED-UPSTREAM | WP-L records: `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\UNIT_CLOSURE_RECORD.md`<br>`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_PROPOSALS_LEAD_ACCEPTANCE_2026-08-09.md` | Confirm both work packages have explicit authority records and reproduce the exclusions: no ARM, credentials, TESTNET/mainnet, master merge, or economic action. WP-I authority is absent because host-contact authority and a budget lift are still missing. |
-| S1 | Auditor scope contract | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\AUDIT2_READINESS_PACKAGE\AUDIT2_AUDITOR_SESSION_INPUTS.md` | Before review, each auditor restates the accepted and rejected scope and confirms that no implementation or host action is authorized. |
-| S2 | Actual diff and files at frozen SHA, with no implementer-session context | PRODUCED-AT-FREEZE | N/A until freeze | Generate the exact base-to-freeze diff and file list from the frozen worktree. Confirm the session is fresh, receives no prior model transcript, and is not resumed or continued. |
-| S3 | Mandated test-suite command and exact expected baseline, including accepted anomalies | BLOCKED-UPSTREAM | Missing from the permitted inputs; recorded as a dispatch blocker in `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\AUDIT2_READINESS_PACKAGE\AUDIT2_AUDITOR_SESSION_INPUTS.md` | The dispatcher must supply one exact command and a complete expected result, including the exact identities and output for the two permitted `test_order_state.py` gc-referent failures. Each auditor must execute it. Inability to execute requires BLOCK. |
-| S4 | Isolated-worktree instructions and cleanliness proof | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\AUDIT2_READINESS_PACKAGE\AUDIT2_AUDITOR_SESSION_INPUTS.md` | For each auditor, create a separate worktree at the full frozen SHA, record `git rev-parse HEAD`, and require `git status --porcelain` to be empty before and after the session. |
-| S5 | D026 per-test RED-location checklist | PRESENT | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\AUDIT2_READINESS_PACKAGE\AUDIT2_D026_RED_LOCATIONS.md` | For every new test claimed as closure evidence, reproduce RED against the exact pre-fix behavior or equivalent mutation, then GREEN with accepted bytes. Treat all rows marked UNLOCATED as supplemental. |
-| V1 | Two independent flagship verdicts and Lead reproduction notes | PRODUCED-AT-FREEZE | N/A; produced by Audit 2 | Confirm separate fresh verdict artifacts exist for Claude Opus 5 xhigh and Codex gpt-5.6-sol xhigh. For every required finding, require Lead reproduction evidence or an explicit unreproduced record. |
-| V2 | Acceptance decision against the D025 floor and repair-loop bookkeeping | PRODUCED-AT-FREEZE | N/A; produced by Audit 2 | Require accepting verdicts from both flagships, no unresolved reproduced required finding, and no more than three repair/re-audit rounds. |
-| V3 | Proof that Audit 2 accepted before WP-A began | PRODUCED-AT-FREEZE | N/A; produced by Audit 2 closeout | Compare the timestamp and commit order of the accepting Audit 2 close record with the first WP-A authorization, preregistration, or execution record. If WP-A began first, STOP for a sequence violation. |
+| ID | Checklist item | State and exact source | How the auditor verifies it |
+|---|---|---|---|
+| F1 | Exact pre-WP-A checkpoint SHA after WP-I closure | `NOT-YET-AVAILABLE` [refreshed 2026-08-12] | At dispatch, compare `git rev-parse HEAD` in both isolated worktrees to the same full frozen SHA. Audit 2 audits that SHA; it does not create it. |
+| F2 | Candidate/artifact/manifest identity | Current candidate anchor `2ce41e34bceb599d80af24c5c33d835820ec321b`; historical derivation under `WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/02_PREREG/`; final bundle `PRODUCED-AT-FREEZE` [refreshed 2026-08-12] | Recompute every final artifact and manifest SHA-256 from the frozen candidate and bind them to the full freeze SHA. |
+| F3 | Unchanged-bits statement or exact candidate diff | `NOT-YET-AVAILABLE` [refreshed 2026-08-12] | Compare frozen artifact/manifest hashes with the Gate-A immutable set; if any differ, reproduce exact file/binary diffs. |
+| L1 | Final accepted WP-L P2 proposal, block digests, syntax results | PRESENT under `WPL_P2_COMMAND_GAP_PROPOSALS_2026-08-09.md`, `WPL_P2_PROPOSALS_LEAD_ACCEPTANCE_2026-08-09.md`, and the WP-L P2 run-kit records [refreshed 2026-08-12] | Re-extract accepted blocks, recompute line counts and SHA-256 values, and rerun only the frozen dispatch-authorized validation commands. |
+| L2 | D026 RED/GREEN records for every closed WP-L falsification | PARTIAL-PRESENT via `AUDIT2_D026_RED_LOCATIONS.md` [refreshed 2026-08-12] | Follow the corrected exact mappings; every row still marked UNLOCATED remains supplemental. |
+| L3 | Honest WP-L open/BLOCKED registry | `PRODUCED-AT-FREEZE`; source `WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/UNIT_CLOSURE_RECORD.md` [refreshed 2026-08-12] | Preserve original B3 STOP as history, later B3B and R4-5 PASS, and every still-open item without inference. |
+| L4 | WP-L repair-round ledger | PARTIAL-PRESENT via `06_B3_REPAIR/B3_REPAIR_CYCLE_RECORD.md`, its audit reports, and the corrected D026 register [refreshed 2026-08-12] | Confirm round identities/verdicts and per-test RED/GREEN locations; unlocated RR2-1..4 remain supplemental. |
+| T1 | Historical WP-L transport records | PRESENT under `03_TRANSPORT`, `05_TRANSPORT_R45B`, and `09_TRANSPORT_B3B` [refreshed 2026-08-12] | Recompute file hashes/bytes against `EVIDENCE_INDEX.md` and reconstruct argv/stdout/stderr/rc per operation. |
+| T2 | Remote/local digest-set bindings | PRESENT in those three operator records [refreshed 2026-08-12] | Recompute each create-once evidence set and its exact close-digest rendering. |
+| T3 | Burned-RUNID accounting | PRESENT in the WP-L P2 `EVIDENCE_INDEX.md` [refreshed 2026-08-12] | Reconcile BURNED and CONSUMED identifiers and prove none was replayed. |
+| T4 | Historical preregistration-before-invocation ordering | PRESENT across WP-L P2 preregistration and transport stage directories [refreshed 2026-08-12] | Compare commit/timestamp order for B3, R45B, and B3B. |
+| T5 | Original B3 first-FAIL cascade | PRESENT in `03_TRANSPORT/operator_record/ops` and `STAGE3_TRANSPORT_RECORD.md` [refreshed 2026-08-12] | Reconstruct rc sequence 05=3, 06=0, 07 skipped, 08=1, 10=1, 12=3 and verify operation-07 files are absent. |
+| I1 | Current WP-I artifacts and final closure/index | Working artifacts PRESENT in `WPI_BLOCKS_DRAFT/` and `WPI_PREREG_DRAFT_ROUND1/`; final closure/index `NOT-YET-AVAILABLE` [refreshed 2026-08-12] | Use `AUDIT2_ACCEPTANCE_MATRIX_2026-08-12.md` for current identities; accept only the later final WP-I close record and evidence index as closure. |
+| I2 | Executed read-only WP-I host-check logs | `NOT-YET-AVAILABLE` [refreshed 2026-08-12] | After authorized execution, verify each create-once path, command, output, rc, byte count, SHA-256, and RUNID. |
+| I3 | WP-I current-state proofs | `NOT-YET-AVAILABLE` [refreshed 2026-08-12] | Reproduce DISARMED state, state version, loopback listener, restart policy/count, MainPID, candidate binding, sandbox state, package parity, and transport chain only from the immutable host evidence. |
+| I4 | Preregistered record for every WP-I observation/operation | R3 procedure PRESENT; concrete two commits and run record `NOT-YET-AVAILABLE` [refreshed 2026-08-12] | Prove the attestation procedure existed in Commit 1 before capture and all observed values were consumed only after Commit 2. |
+| A1 | Audit-tier policy | PRESENT in `OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` and `AGENTS.md` [refreshed 2026-08-12] | Require Audit 2 T0: exactly fresh Claude Opus 5 xhigh plus fresh Codex gpt-5.6-sol xhigh; do not silently add GLM. |
+| A2 | Freeze-time ledger | Current estimate about 40 h used / about 10 h remaining; final ratification `NOT-YET-AVAILABLE` [refreshed 2026-08-12] | Start from the ledger records, include all prospective WP-I work, and compare to one owner-ratified freeze-time source. The obsolete 26.9 h remaining figure is not current. |
+| A3 | Consolidated WP-I authority and hard exclusions | Existing grants/owner decisions PRESENT across the morning handoff and owner records; final consolidated record `NOT-YET-AVAILABLE` [refreshed 2026-08-12] | Reproduce the exact authorized scope and every exclusion; separately identify any final go/no-go still required. |
+| S1 | Auditor scope contract | PRESENT in `AUDIT2_AUDITOR_SESSION_INPUTS.md` [refreshed 2026-08-12] | Each auditor restates accepted/rejected scope and confirms that no implementation or host action is authorized. |
+| S2 | Exact diff/files at frozen SHA | `PRODUCED-AT-FREEZE` [refreshed 2026-08-12] | Generate from the frozen worktree and provide without implementer-session context. |
+| S3 | Mandated suite and exact anomaly baseline | `NOT-YET-AVAILABLE` [refreshed 2026-08-12] | Pin one exact command, rc/counts, test IDs, signatures, and baseline source. The anomaly set is wholly unresolved; do not infer two gc-referent failures. |
+| S4 | Isolated-worktree instructions | PRESENT in `AUDIT2_AUDITOR_SESSION_INPUTS.md` [refreshed 2026-08-12] | Require exact HEAD and empty pre/post `git status --porcelain` in separate worktrees. |
+| S5 | D026 checklist | PARTIAL-PRESENT in `AUDIT2_D026_RED_LOCATIONS.md` [refreshed 2026-08-12] | Reproduce every located pair; do not promote entries explicitly marked supplemental or current-work incomplete. |
+| V1 | Two independent Audit 2 flagship verdicts | `PRODUCED-BY-AUDIT-2` [refreshed 2026-08-12] | Require separate fresh verdict artifacts and Lead reproduction notes for every required finding. |
+| V2 | Audit 2 acceptance decision | `PRODUCED-BY-AUDIT-2` [refreshed 2026-08-12] | Require accepting verdicts from both flagships and no unresolved reproduced required finding. |
+| V3 | Proof Audit 2 accepted before WP-A | `PRODUCED-BY-AUDIT-2-CLOSEOUT` [refreshed 2026-08-12] | Compare accepting close-record order against the first WP-A authorization, preregistration, or action; STOP if WP-A began first. |
+
+## Eleven material packets
+
+### Packet 1 - current per-artifact acceptance matrix
+
+[refreshed 2026-08-12] PRESENT at
+`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\AUDIT2_READINESS_PACKAGE\AUDIT2_ACCEPTANCE_MATRIX_2026-08-12.md`.
+It records exact current identities, latest reviewer results, and a PENDING row per artifact.
+RP6, RP7, and transport each hold only the Codex slot; none has dual-flagship acceptance.
+
+### Packet 2 - section 8.2 rows 1-9 disposition
+
+[refreshed 2026-08-12] DECISION PRESENT at
+`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\OWNER_DECISIONS_2026-08-11.md`:
+BUILD ALL NINE inside RP7, only after RP7's current bytes gain dual acceptance. No
+implementation or first-divergence evidence exists, so freeze remains blocked until the new
+bytes are built and accepted.
+
+### Packet 3 - section 10.1 delta and access grammar
+
+[refreshed 2026-08-12] TEXT AND OWNER DECISIONS PRESENT in
+`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md`,
+especially sections 4.5 and 4.5.4, with adjudication in `LEAD_MC_ADJUDICATION_2026-08-11.md`.
+The bounded families use capability-qualified access classes including `read-exact`,
+`read-tree`, `read-terminal`, `read-execute-exact`, `write-tree`, and `connect`; `/dev/null`
+requires block treatment rather than allowlisting. FAM-01 twelve exact P0 pins with no PATH
+fallback, FAM-02 exact candidate venv root, and FAM-03 complete frozen-composite evidence
+derivation are owner-ratified. Implementing and proving them in the frozen composite remains
+open.
+
+### Packet 4 - section 10.2 pathscope prover
+
+[refreshed 2026-08-12] CURRENT ARTIFACT PRESENT:
+`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\pathscope_prover.py`,
+122446 B, SHA-256 `890016f0b9a8cde4eed33f8733f69055471b07c6096f6bc07450457e6c52af1d`.
+Round 2 closes 9+5 silent-sink classes. Finding 6 is an honest `ALLOW-LEXICAL` disclosure
+with residual R1, not a host-object proof. Codex is filter-blocked; GLM's favorable read is
+SUPPLEMENTAL because it could not execute. The pending flagship execution kickoff is
+`KICKOFF_CLAUDEPRO_PATHSCOPE_EXECUTION_AUDIT.md`.
+
+### Packet 5 - successor-preregistration review state
+
+[refreshed 2026-08-12] CURRENT DRAFT PRESENT:
+`C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md`,
+66205 B, SHA-256 `22954e2f41e4ab21c04eff9ad51abdd657f628892f8dc81c983b6473f9c85bcd`.
+R3 supersedes the old skeleton's NEEDS-WORK state by merging all 13 gaps plus six RUNID
+changes, section 10.1, and the attestation ordering; the Lead reports 34/34 conservation.
+MC-01..03 are resolved by owner ratification. R3 is still a draft, not a dispatch record;
+final fills, frozen-composite implementation, and final review remain missing.
+
+### Packet 6 - two-commit Stage-1/attestation order
+
+[refreshed 2026-08-12] PROCEDURE PRESENT in R3 section 5.2. Commit 1 must contain the
+exact read-only attestation command and evidence grammar before grant-#6 capture. The
+capture runs outside the login domain and binds Commit 1. Only then may targeted consumers
+be filled and the final successor/runkit become Commit 2; WP-I operations 01-12 may run only
+after Commit 2. The two concrete commits and capture evidence are NOT-YET-AVAILABLE.
+
+### Packet 7 - current WP-I D026 map
+
+[refreshed 2026-08-12] NOT-YET-AVAILABLE AS A COMPLETE PACKET. Partial exact sources
+and their missing fields are indexed in `AUDIT2_D026_RED_LOCATIONS.md`. Final coverage must
+map RP6, RP7, transport, SEC102, pathscope, and rows 1-9 to exact RED/GREEN commands and
+outputs, pre-fix/mutation identity, and final accepted bytes.
+
+### Packet 8 - final freeze-input ledger
+
+[refreshed 2026-08-12] NOT-YET-AVAILABLE. It must reconcile RP6 embedded pins, RP7
+projection/trusted-Python/evidence-root pins, both tool maps, five row-8 attestation values
+and wrapper copies, transport mount/OpenSSH/credential digests, close-script and archive
+identities, block/wrapper hashes, allocations, accepting-input arms, and evidence-root
+provenance. No final filled composite exists.
+
+### Packet 9 - WP-I execution and closure evidence
+
+[refreshed 2026-08-12] NOT-YET-AVAILABLE. There is no host run, concrete RUNID,
+no-clobber evidence tree, rows 1-24 result set, retrieval/binding record, final evidence
+index, or WP-I closure record. Local QA cannot establish the host state.
+
+### Packet 10 - authoritative frozen-SHA Audit 2 bundle
+
+[refreshed 2026-08-12] NOT-YET-AVAILABLE. After WP-I closes, the Lead must supply the
+full pre-WP-A SHA, base and diff, frozen file list, candidate/artifact/manifest identities,
+mandated-suite command, exact rc/counts, accepted anomaly IDs/signatures, and isolated
+worktree instructions. None may be inferred from a pre-freeze tree.
+
+### Packet 11 - authority and ledger closure
+
+[refreshed 2026-08-12] PARTIAL SOURCES PRESENT but final packet OPEN. The morning
+handoff and owner records carry existing grants, rows 1-9, FAM-01..03, transport F1, SEC102
+vocabulary, hard exclusions, and the 10-hour-stop waiver. The final packet must consolidate
+those grants/exclusions, identify any final go/no-go, book all remaining work, and cite one
+owner-ratified freeze-time balance. Current estimate: about 40 h used of 50; not ratified.
+
+## Honest-start condition
+
+[refreshed 2026-08-12] Audit 2 can honestly begin only after final post-repair RP6,
+rows 1-9/RP7, transport, SEC102, pathscope, and successor artifacts hold their required
+accepting reviews on exact frozen identities; section 10.1 and the composite section 10.2
+proof are accepted; every freeze input and D026 pair is mapped; the authorized WP-I run has
+produced closed immutable evidence; the pre-WP-A SHA/diff/candidate identities and mandated
+suite baseline are frozen; and authority plus the 50-hour ledger are ratified.
 
 ## Current dispatch status
 
-Audit 2 is not dispatchable today. WP-I is not closed, the freeze SHA does not exist,
-the freeze-time ledger is not ratified, and the exact mandated suite command/baseline is
-not present in the permitted inputs.
+[refreshed 2026-08-12] Audit 2 is not dispatchable. WP-I is not closed, none of RP6/RP7/
+transport has dual-flagship acceptance, rows 1-9 are not built, SEC102 and pathscope still
+have pending review work, the Stage-1 and pre-WP-A freezes do not exist, the current-work
+D026/freeze-input/host evidence packets do not exist, and the exact mandated suite baseline
+and freeze-time ledger are unresolved.

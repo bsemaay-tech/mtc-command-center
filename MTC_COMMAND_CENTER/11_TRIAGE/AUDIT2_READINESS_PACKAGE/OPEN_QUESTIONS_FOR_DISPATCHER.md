@@ -1,122 +1,75 @@
 # Open questions for the Audit 2 dispatcher
 
-These decisions remain with the dispatching Lead. This readiness assembly makes no audit
-or acceptance decision.
+Status: NOT READY FOR DISPATCH. [refreshed 2026-08-12]
 
-## 1. GLM-5.2 supplemental detection or omission
+[refreshed 2026-08-12] These are only the decisions or inputs that remain open for the
+dispatching Lead. This readiness assembly makes no audit, acceptance, host, or authority
+decision.
 
-Context: the checklist records an earlier four-auditor wording, while the newer owner
-decision keeps Audit 2 two-flagship. DeepSeek V4 Flash is recorded as unavailable because
-the ClinePass subscription is paused. The two flagship verdicts remain the acceptance floor.
+## Closed decisions - do not reopen at dispatch
 
-Options:
+- [refreshed 2026-08-12] **Audit roster:** Audit 2 is T0 and requires exactly two fresh,
+  independent xhigh flagships: Claude `claude-opus-5` and Codex `gpt-5.6-sol`. GLM is not
+  silently added. The former supplemental-versus-omitted question is CLOSED.
+- [refreshed 2026-08-12] **Section 8.2 rows 1-9:** BUILD ALL NINE, only after RP7 has
+  dual-flagship acceptance. Source: `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\OWNER_DECISIONS_2026-08-11.md`.
+- [refreshed 2026-08-12] **Section 10.1 FAM-01..03 / MC-01..03:** owner-ratified on
+  2026-08-12. Source and implementation contract:
+  `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md`
+  plus `LEAD_MC_ADJUDICATION_2026-08-11.md`. Frozen-composite implementation remains a
+  freeze gate.
+- [refreshed 2026-08-12] **Transport F1:** the outer SSH account-shell boundary remains
+  honestly OPEN and is owner-ratified as accept-with-disclosure, not a freeze blocker.
+- [refreshed 2026-08-12] **SEC102 interpreter vocabulary:** owner-ratified as a disclosed
+  production-gate item, not an open static-tool defect.
 
-1. Omit GLM-5.2 and run only the two owner-mandated flagship sessions.
-2. Add GLM-5.2 as supplemental detection, without changing the acceptance floor or allowing
-   an unexecuted suite to count as acceptance.
+## 1. How to keep the two flagship sessions independent
 
-Recommendation: choose option 1 unless the owner explicitly adds supplemental GLM-5.2 at
-dispatch. It follows the newer binding two-flagship directive and avoids silently reviving
-the earlier roster wording.
+[refreshed 2026-08-12] Open operational choice: create two separate audit-only
+worktrees at the same full frozen SHA, issue fresh standalone prompts, and seal both initial
+verdicts before sharing either output. Record worktree path, `git rev-parse HEAD`, and empty
+`git status --porcelain` before and after each session. A shared worktree or a second auditor
+who sees the first verdict weakens independence and should not be selected.
 
-## 2. How to keep the two flagship sessions independent
+## 2. Mandated suite command and exact baseline
 
-Options:
+[refreshed 2026-08-12] Open dispatch blocker: no authoritative freeze-time command,
+counts, accepted anomaly IDs, or output signatures exist. Stop dispatch until all fields in
+`AUDIT2_AUDITOR_SESSION_INPUTS.md` section 5 are pinned from one frozen-SHA source. Do not
+infer the earlier two-failure description.
 
-1. Use two separately created audit-only worktrees at the same full frozen SHA; issue each
-   a fresh standalone prompt; seal both initial verdicts before sharing either output.
-2. Use one shared worktree but separate fresh sessions.
-3. Let the second auditor see the first verdict before reviewing.
+## 3. Final D026 map for current WP-I work
 
-Recommendation: option 1. Record the resolved worktree path, `git rev-parse HEAD`, and empty
-`git status --porcelain` before and after each session. Do not use resume/continue or share
-implementer context. Option 3 is not independent.
+[refreshed 2026-08-12] Open dispatch blocker: the corrected older WP-L/B3 mappings are
+present, but the complete current RP6, RP7, transport, SEC102, pathscope, and future rows
+1-9 map is not. Require exact RED command/output, pre-fix or mutation identity, GREEN
+command/output, and final accepted identity per closure test. Current audit REDs without
+accepted GREEN remain open; helper-only or non-literal evidence remains supplemental.
 
-## 3. Missing mandated suite command and exact baseline
+## 4. Freeze-time ledger ratification
 
-Context: the permitted inputs require a mandated command and baseline but do not provide
-the command, exact counts, exact two failing test IDs, or accepted failure signatures.
+[refreshed 2026-08-12] Open dispatch blocker: the current record is about 40 h used of
+50, explicitly an estimate requiring owner ratification. The owner waived the 10-hour
+remaining stop gate on 2026-08-11 with honest booking; that waiver is not a freeze-time
+ledger signature. Book remaining work and obtain one exact owner-ratified source.
 
-Options:
+## 5. Access to immutable transport and WP-I evidence at audit time
 
-1. Stop dispatch until an authoritative freeze-time source supplies and pins every field in
-   `AUDIT2_AUDITOR_SESSION_INPUTS.md` section 5.
-2. Let each auditor choose a plausible suite or infer the anomaly set.
+[refreshed 2026-08-12] Open operational choice after evidence exists: provide each
+auditor an immutable read-only snapshot with exact root identity and recomputation
+instructions, or separately authorize read-only access to the create-once roots. Copied
+digest strings alone do not satisfy recomputation. No new access authority is created here.
 
-Recommendation: option 1. Option 2 makes results incomparable and violates the rule that an
-auditor unable to execute the mandated suite must return BLOCK.
+## 6. Freeze identity and unchanged-bits statement
 
-## 4. Unlocated D026 RED demonstrations
+[refreshed 2026-08-12] Open dispatch blocker: generate the full pre-WP-A SHA,
+base-to-freeze diff, frozen file list, candidate/artifact/manifest identities, and either a
+verified unchanged-bits statement or an exact diff. Reusing a pre-freeze working-tree
+description is not acceptable.
 
-Context: R4-5 has an exact RED/GREEN location. The B3 repair findings are described in the
-closure record and candidate files are indexed, but the permitted inputs do not map each
-named test to its RED command and real output.
+## 7. Final authority consolidation
 
-Options:
-
-1. Before dispatch, add a verified per-test map to exact file sections and commands, then
-   require each auditor to reproduce RED and GREEN.
-2. Leave the mappings absent and label every unlocated test supplemental, so none supports
-   a closure claim.
-3. Treat the presence of audit/self-QA files as sufficient.
-
-Recommendation: option 1 if those tests are needed to support closure; otherwise option 2.
-Option 3 is not D026 evidence.
-
-## 5. Freeze-time ledger ratification
-
-Context: the owner ratified a 29.5 h remaining baseline at WP-L P2 start. WP-L P2 booked
-2.6 h and reports about 26.9 h remaining, explicitly subject to owner adjustment. WP-I has
-not closed, so its final consumption is unknown.
-
-Options:
-
-1. After WP-I close, book its hours prospectively, produce one exact freeze-time source,
-   and obtain owner ratification before dispatch.
-2. Use the provisional 26.9 h figure as final.
-
-Recommendation: option 1. It preserves the prospective-ledger rule and gives auditors one
-reproducible source figure.
-
-## 6. Freeze-time blocked registry and B3 chronology
-
-Context: the draft checklist records original B3 as BLOCKED-UPSTREAM. The later unit closure
-record preserves that original STOP as history and separately records repaired B3B PASS.
-Other items remain open.
-
-Options:
-
-1. Produce a freeze-time registry that states both events in order: original B3 STOP,
-   repaired B3B PASS, and the still-open RPD-VERIFY, C1, C2-A/B, C3, C4-A/B/C, C5, WP-I
-   F3/F4, and `bridge.env` naming risk.
-2. Copy the older checklist wording without the later B3B result.
-3. Remove the original B3 STOP because B3B later passed.
-
-Recommendation: option 1. It preserves chain of custody without softening or erasing either
-the historical STOP or the current open items.
-
-## 7. Access to create-once transport evidence at audit time
-
-Context: the checklist requires recomputation from three create-once roots under
-`C:\WPI_ARTIFACTS`. This assembly did not contact a host or read those roots.
-
-Options:
-
-1. At dispatch, hand each auditor an immutable, read-only evidence snapshot plus the exact
-   root identity and recomputation instructions.
-2. Grant separately authorized read-only access to the create-once roots.
-3. Rely only on copied digest strings in repository documents.
-
-Recommendation: option 1 where operationally possible, otherwise option 2 under explicit
-authority. Option 3 does not satisfy the required recomputation.
-
-## 8. Freeze identity and unchanged-bits statement
-
-Options:
-
-1. Generate both at freeze from the exact isolated checkpoint and attach the recomputation
-   commands and outputs.
-2. Reuse the current candidate identity without proving how it relates to the freeze SHA.
-
-Recommendation: option 1. Record the full freeze SHA, candidate SHA, artifact/manifest
-hashes, and either a verified unchanged statement or an exact diff before dispatch.
+[refreshed 2026-08-12] Open dispatch blocker: carry every existing WP-I owner grant and
+hard exclusion into one final authority record, and separately identify any still-required
+go/no-go. Technical interlocks, the budget-stop waiver, and this package do not substitute
+for that record.

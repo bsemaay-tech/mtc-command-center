@@ -1,61 +1,64 @@
-# KICKOFF — Audit 2 readiness package (assembly only, no audit dispatched)
+# KICKOFF - Audit 2 readiness package (assembly only, no audit dispatched)
 
-Authorized private-repo documentation assembly. You are building the package an Audit 2
-auditor will be HANDED. You are NOT auditing anything and NOT dispatching anything. No
-host contact, no git mutation, nothing executed against any machine. Write ONLY into this
-directory. ASCII only. English only.
+Authorized private-repo documentation assembly. Build the package an Audit 2 auditor will
+be handed. Do not audit, dispatch, contact a host, mutate Git, or execute any block or
+harness. Write only in this directory. ASCII only. English only.
 
 ## Why this exists
 
-Audit 2 is the two-flagship T0 round that freezes the pre-WP-A SHA. It cannot start yet:
-by the D2 sequencing rule it runs only after WP-L Phase 2 **and** WP-I both close, and WP-I
-is not dispatchable (it still needs explicit host-contact authority and a budget lift).
-This package makes the eventual dispatch immediate rather than a fresh research effort —
-everything an auditor needs, assembled, with each item either present or explicitly marked
-as produced-at-freeze.
+[refreshed 2026-08-12] Audit 2 is a T0 review of an already frozen pre-WP-A
+checkpoint. It does not create the Stage-1 artifact freeze or the later pre-WP-A
+checkpoint freeze. It cannot start until WP-I has closed, the checkpoint SHA and its
+inputs are frozen, and the freeze-time ledger is owner-ratified.
 
-## Inputs (read these, nothing else)
+[refreshed 2026-08-12] The Audit 2 roster is settled by the permanent tier policy:
+exactly two fresh, independent flagship auditors, Claude `claude-opus-5` xhigh and Codex
+`gpt-5.6-sol` xhigh. GLM is not silently added. A broader roster would require a later
+explicit owner contract.
 
-- This file.
-- `../AUDIT2_EVIDENCE_CHECKLIST_DRAFT_2026-08-09.md` — the v2 checklist, including the
-  §2b transport-evidence package. This is your table of contents.
-- `../WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/UNIT_CLOSURE_RECORD.md` — what WP-L P2
-  achieved and what it left open.
-- `../WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/EVIDENCE_INDEX.md` — the per-stage file
-  and hash inventory plus the RUNID ledger.
-- `../OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` — tier policy, cadence, acceptance floor.
-- `../WPL_P2_PROPOSALS_LEAD_ACCEPTANCE_2026-08-09.md` — what was accepted and by whom.
+[refreshed 2026-08-12] The package remains a readiness assembly, not a dispatchable
+input bundle. Current working artifacts and review records are indexed so the Lead can
+distinguish known but not finally accepted bytes from evidence that does not yet exist.
 
-Do not read the audit reports themselves; you are indexing, not re-adjudicating.
+## Current source set for this refresh
+
+- [refreshed 2026-08-12] `../AUDIT2_COHERENCE_CODEX_2026-08-10.md` - the 20-item
+  coherence review that this refresh closes or converts to explicit open packets.
+- [refreshed 2026-08-12] `../FRESH_SESSION_HANDOFF_2026-08-12_MORNING.md` - current
+  block, preregistration, owner-decision, and ledger snapshot.
+- [refreshed 2026-08-12] `../WPI_BLOCKS_DRAFT/RP6_CODEX_T0_AUDIT_R16_2026-08-12.md`,
+  `RP7_CODEX_T0_AUDIT_R9_2026-08-11.md`, and
+  `TRANSPORT_CODEX_R6B_CONFIRM_2026-08-11.md` - current Codex acceptances.
+- [refreshed 2026-08-12] `../WPI_BLOCKS_DRAFT/KICKOFF_CLAUDEPRO_{TRANSPORT,RP7,RP6}_2NDFLAGSHIP_AUDIT.md`
+  - pending second-flagship audits.
+- [refreshed 2026-08-12] `../WPI_PREREG_DRAFT_ROUND1/SEC102_CODEX_T1_AUDIT_R8_2026-08-12.md`,
+  `KICKOFF_SEC102_BUILD_R9.md`, `PATHSCOPE_R2_GLM_AUDIT_2026-08-11.md`, and
+  `KICKOFF_CLAUDEPRO_PATHSCOPE_EXECUTION_AUDIT.md` - current proof-tool state.
+- [refreshed 2026-08-12] `../WPI_PREREG_DRAFT_ROUND1/WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md`
+  and `LEAD_MC_ADJUDICATION_2026-08-11.md` - current successor and section 10.1
+  decisions.
+- [refreshed 2026-08-12] `../OWNER_DECISIONS_2026-08-11.md` - binding rows 1-9
+  disposition and sequencing.
 
 ## Deliverables
 
-1. `AUDIT2_HANDOFF_PACKAGE.md` — the auditor-facing document. For every checklist item,
-   one row: item, **state** (PRESENT / PRODUCED-AT-FREEZE / BLOCKED-UPSTREAM), the exact
-   file path if present, and **how the auditor verifies it** (what to recompute or
-   compare). An item with no verification method is a defect in this package — flag it
-   rather than papering over it.
-2. `AUDIT2_FREEZE_PREREQUISITES.md` — the ordered list of what must be true before Audit 2
-   may be dispatched at all: WP-L P2 closed (done, cite it), WP-I closed (not done, cite
-   the two missing authorities), the freeze SHA cut, the ledger figure ratified. State
-   plainly which are satisfied today and which are not.
-3. `AUDIT2_AUDITOR_SESSION_INPUTS.md` — what each auditor session receives: scope contract
-   (what Audit 2 accepts and rejects), isolated-worktree instructions at the frozen SHA
-   with the required cleanliness proof, the mandated test-suite command and its expected
-   baseline including the currently accepted anomaly set, and the D026 rule that an
-   auditor unable to execute the suite must return BLOCK.
-4. `AUDIT2_D026_RED_LOCATIONS.md` — for every test offered as closure evidence, where its
-   RED demonstration lives. Use the evidence index and the closure record. Where a RED
-   location is not recorded anywhere, say so explicitly — an unlocated RED is supplemental,
-   not closure, and the auditor must be told which ones those are.
-5. `OPEN_QUESTIONS_FOR_DISPATCHER.md` — decisions the dispatching Lead must make, each with
-   the options and a recommendation. At minimum: the unresolved GLM supplemental-vs-omitted
-   flag from the checklist's §0, and how the two flagship sessions are kept independent.
+1. `AUDIT2_HANDOFF_PACKAGE.md` - checklist, 20-item refresh changelog, and the eleven
+   material packets or honest not-yet-available stubs.
+2. `AUDIT2_FREEZE_PREREQUISITES.md` - ordered gates before Audit 2 dispatch.
+3. `AUDIT2_AUDITOR_SESSION_INPUTS.md` - exact two-flagship session contract and frozen
+   bundle placeholders.
+4. `AUDIT2_D026_RED_LOCATIONS.md` - corrected WP-L/B3 map and current WP-I D026 status.
+5. `OPEN_QUESTIONS_FOR_DISPATCHER.md` - only questions still open; settled roster and
+   owner decisions are recorded separately.
+6. `AUDIT2_ACCEPTANCE_MATRIX_2026-08-12.md` - exact current artifact identities, latest
+   auditor verdicts, and missing acceptance.
 
 ## Hard constraints
 
-- Assemble and index; do not re-audit, do not re-adjudicate, do not soften any recorded
-  BLOCKED or open item.
-- Where the checklist says an item is produced by the round itself, mark it
-  PRODUCED-AT-FREEZE rather than inventing content for it.
-- Cite exact paths. A claim without a path is not usable by an auditor.
+- [refreshed 2026-08-12] Assemble and index; do not re-audit, re-adjudicate, soften an
+  open item, or present an owner-ratified residual as an unclosed defect.
+- [refreshed 2026-08-12] Where evidence can exist only after execution or freeze, mark
+  it `NOT-YET-AVAILABLE`; never infer or fabricate it.
+- [refreshed 2026-08-12] Cite exact paths and identities. A claim without a source or
+  verification method is not auditor-usable.
+- [refreshed 2026-08-12] Do not claim this package is dispatchable. WP-I is not closed.

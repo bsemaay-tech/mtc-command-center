@@ -1,26 +1,37 @@
 # Audit 2 freeze prerequisites
 
-Status: NOT READY FOR DISPATCH.
+Status: NOT READY FOR DISPATCH. [refreshed 2026-08-12]
 
-Audit 2 may be dispatched only after all four ordered gates below are satisfied.
+[refreshed 2026-08-12] Audit 2 reviews an already frozen pre-WP-A checkpoint. It
+does not create that checkpoint, and it does not create the separate Stage-1 artifact
+freeze required before WP-I host invocation.
 
-| Order | Prerequisite | Status today | Evidence or missing authority | Required close action |
+## Ordered prerequisite gates
+
+| Order | Prerequisite | Status at refresh | Evidence or honest missing state | Required close action |
 |---:|---|---|---|---|
-| 1 | WP-L Phase 2 is closed | SATISFIED | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\UNIT_CLOSURE_RECORD.md` states that the unit's executable scope is CLOSED. It records R4-5 PASS and repaired B3 PASS, and preserves the remaining open items. | At freeze, cite this record and carry its open-item registry forward without softening it. |
-| 2 | WP-I staging verification is closed | NOT SATISFIED | The same closure record says WP-I is draft round 1.2, F3/F4 remain OPEN, and WP-I is not dispatchable. The two missing authorities are (a) explicit host-contact authority and (b) a budget lift. | Obtain both authorities, execute only the authorized WP-I scope, close it with evidence, and preserve all exclusions. Audit 2 cannot start before this happens. |
-| 3 | The pre-WP-A checkpoint SHA is frozen | NOT SATISFIED | No frozen checkpoint SHA can be cut until both WP-L Phase 2 and WP-I are closed. No freeze SHA is recorded in the permitted inputs. | After WP-I closes, cut the exact checkpoint before any WP-A step. Record the full SHA, candidate identity, hashes, actual diff/files, and the unchanged-bits statement or exact diff. |
-| 4 | The freeze-time 50-hour ledger figure is ratified | NOT SATISFIED | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` ratifies the starting baseline of 20.5 h used / 29.5 h remaining. `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\UNIT_CLOSURE_RECORD.md` books WP-L P2 at 2.6 h and reports about 26.9 h remaining, but says the owner may adjust at ratification. WP-I consumption is not yet known. | Add the final WP-I booking to the prospective ledger and obtain a freeze-time ratified figure with an exact source path. Do not present the provisional 26.9 h figure as final. |
+| 1 | WP-L Phase 2 is closed | SATISFIED [refreshed 2026-08-12] | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\UNIT_CLOSURE_RECORD.md` closes its executable scope while preserving open items. | [refreshed 2026-08-12] Carry that closure and its open-item registry into the later freeze; do not reclassify an open item by inference. |
+| 2 | Repair/design closure and final artifact acceptances | NOT SATISFIED [refreshed 2026-08-12] | `AUDIT2_ACCEPTANCE_MATRIX_2026-08-12.md` records Codex acceptance for RP6, RP7, and transport, but none has the required current-byte Claude acceptance. SEC102 round 9 and its Codex audit are pending; pathscope lacks an executing flagship verdict; rows 1-9 are owner-directed but unimplemented. | [refreshed 2026-08-12] Complete the pending reviews and repairs on exact final bytes. After RP7 gains dual acceptance, build all nine rows and put the changed RP7 bytes through their required review sequence. |
+| 3 | Successor preregistration and Stage-1 two-commit freeze are complete | NOT SATISFIED [refreshed 2026-08-12] | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md` contains the section 10.1 delta and mandatory two-commit ordering. MC-01..03 are owner-resolved, but the frozen composite, allocations, pins, attestation capture, targeted fills, and final Stage-1 commit do not exist. | [refreshed 2026-08-12] Commit the exact read-only attestation procedure first; acquire grant-#6 inputs; then fill all consumers, prove the complete composite, and commit the final successor/runkit before WP-I op 01. |
+| 4 | Authorized WP-I execution and closure are complete | NOT SATISFIED [refreshed 2026-08-12] | Current artifacts are known under `WPI_BLOCKS_DRAFT/` and `WPI_PREREG_DRAFT_ROUND1/`, but there is no concrete WP-I RUNID, no host execution evidence root, no rows 1-24 result set, and no WP-I closure record or final evidence index. | [refreshed 2026-08-12] Execute only the already authorized scope after Stage-1 freeze, preserve every hard exclusion, bind and retrieve immutable evidence, and issue the WP-I closure/index. |
+| 5 | Pre-WP-A checkpoint and authoritative audit bundle are frozen | NOT SATISFIED [refreshed 2026-08-12] | No pre-WP-A full SHA, base-to-freeze diff, frozen file list, final artifact/manifest identity bundle, or mandated-suite baseline exists. | [refreshed 2026-08-12] After WP-I closure, freeze the exact checkpoint and publish one authoritative bundle for both auditors. Audit 2 then reviews that SHA; it does not freeze it. |
+| 6 | Freeze-time 50-hour ledger is owner-ratified | NOT SATISFIED [refreshed 2026-08-12] | `C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\FRESH_SESSION_HANDOFF_2026-08-12_MORNING.md` records about 40 h used / about 10 h remaining as an ESTIMATE and records the 2026-08-11 waiver of the 10-hour stop gate. It still requires owner ratification. | [refreshed 2026-08-12] Book all remaining WP-I work prospectively and obtain one owner-ratified freeze-time used/remaining figure with an exact source path. Do not reuse the obsolete 26.9 h remaining figure. |
 
-## Sequencing stop rule
+## Binding sequence
 
-The required sequence is:
+[refreshed 2026-08-12] The high-level order remains:
 
-`WP-L Phase 2 closed -> WP-I closed -> freeze SHA and ledger ratified -> Audit 2 accepted -> WP-A begins`
+`WP-L Phase 2 closure -> WP-I closure -> pre-WP-A checkpoint freeze/ledger ratification -> Audit 2 acceptance -> WP-A -> Gate B`
 
-Any Audit 2 dispatch before WP-I close, or any WP-A action before an accepting Audit 2
-close record, is a sequence violation and requires STOP.
+[refreshed 2026-08-12] The expanded WP-I segment is:
+
+`repair/design closure -> final artifact acceptances -> committed pre-attestation command -> grant-#6 input acquisition -> targeted fills + final successor/runkit Stage-1 commit -> authorized WP-I execution -> WP-I closure -> pre-WP-A checkpoint freeze + ledger ratification -> Audit 2`
+
+[refreshed 2026-08-12] Any Audit 2 dispatch before WP-I closure, or any WP-A action
+before an accepting Audit 2 close record, is a sequence violation and requires STOP.
 
 ## Boundaries preserved
 
-This readiness package grants no host, credential, broker, exchange, ARM/order,
-TESTNET/mainnet, master-merge, WP-V/KVM2, deployment, or economic authority.
+[refreshed 2026-08-12] This readiness package grants no host, credential, broker,
+exchange, ARM/order, TESTNET/mainnet, master-merge, WP-V/KVM2, deployment, or economic
+authority.
