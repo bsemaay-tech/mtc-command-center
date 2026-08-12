@@ -203,7 +203,7 @@ effect model, with `dynamic_targets` now genuinely computed. Lead ran the fence 
 | RP7-WPI-RO | PASS (r9) | **PASS-WITH-NITS 2026-08-13 ~00:00 — DUAL FLAGSHIP ACCEPTANCE on 108301 B / `0e93f90d…`; rows 1-9 build unlocked.** Six doc repairs + C1 disclosure repair required before freeze, none gating | GLM advance: PASS-WITH-NITS, zero required repairs |
 | Transport set | PASS (r6b) | see §7 | GLM advance: PASS-WITH-NITS, zero required repairs. F1 owner-ratified accept-with-disclosure, NOT a blocker |
 | SEC102 | — | — | **ACCEPTED-WITH-DISCLOSURE** by owner decision |
-| pathscope r2 | Codex FILTER-BLOCKED on the source | see §7 (execution audit) | GLM disclosure-honesty audit: all seven residuals honest; every count field derived, zero hardcoded — the inverse of RP6's defect |
+| pathscope r2 | Codex FILTER-BLOCKED on the source | **REQUEST_CHANGES ~00:10 — harness reproduced byte-for-byte, r2 honest (13/16 closed), but new CRITICAL C-1: assignment prefixes silently discarded (out-of-allowlist loader path → PASS rc=0). r3 repair dispatched (GLM source-level, Lead executes harness)** | GLM disclosure-honesty audit: all seven residuals honest; every count field derived, zero hardcoded — the inverse of RP6's defect |
 
 ## 5. FREEZE BLOCKERS — current shape
 
