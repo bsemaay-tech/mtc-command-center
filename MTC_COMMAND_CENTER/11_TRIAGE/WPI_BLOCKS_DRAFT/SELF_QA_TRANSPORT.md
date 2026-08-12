@@ -14,14 +14,23 @@ records which round-2 arms were re-driven this round and which were not.
 
 **Integrity.** No host was contacted. No SSH or SCP connection was opened, no host key
 was offered, no credential was read, no RUNID was allocated, no archive was built,
-nothing was frozen, and nothing was committed. `C:\WPI_ARTIFACTS` contains **no**
-`WPI_TRANSPORT_*` entry (checked after every fixture). The only sockets attempted were
-loopback with port 9 closed. The real pinned `ssh.exe` and `scp.exe` were executed
-locally — `ssh -G` evaluates configuration and exits, `scp` copied one local file to
-another local file — and neither opens a connection; the only hostname passed to `ssh`
-was the non-resolving literal `qa-target`, and it was never resolved because `-G`
-returns before name resolution. All fixture scratch was removed; the last line of each
-transcript proves it.
+nothing was frozen, and nothing was committed. The delivered runner cannot create a
+`C:\WPI_ARTIFACTS\WPI_TRANSPORT_*` record root while shipped with markers: the marker
+gate stops at `BASE_RUN`/`RECORD_ROOT` before record-root creation, and `Flush-Log`
+writes nothing while `RecordReady` is false. The QA arms redirected `RECORD_ROOT` into
+fixture scratch (`TR_RUN PASS base_run=WPIQA record=C:\Users\Public\wpi_r3\qb\rec\WPI_TRANSPORT_WPIQA`).
+The only sockets attempted were loopback with port 9 closed. The real pinned `ssh.exe`
+and `scp.exe` were executed locally — `ssh -G` evaluates configuration and exits,
+`scp` copied one local file to another local file — and neither opens a connection; the
+only hostname passed to `ssh` was the non-resolving literal `qa-target`, and it was
+never resolved because `-G` returns before name resolution. Fixture cleanup did not
+fully succeed: three fixtures printed closing removal lines, but Fixture D's cleanup
+failed access-denied on
+`C:\Users\Public\wpi_r3\qb\pd_evil\ssh\ssh_config` and printed no closing
+`removed ... exists=False` line. That residue is inert for the recorded conclusions:
+the failure happened at teardown after all round-3 arms had run, rounds 4-6 run under
+WSL2 scratch rooted at `/root/wpi_r4*` or `/root/wpi_r5`, and the delivered runner uses
+run-owned `PROGRAMDATA` plus `-F none`.
 
 **Environment.** Windows PowerShell **5.1.26100.8875**; WSL2 running as uid 0 with
 **uutils** coreutils and bash 5.3.9; Git Bash 5.2.37;
@@ -38,9 +47,12 @@ transcripts that follow each body are the real output of running exactly that bo
 
 To re-execute: write each body below to the path named in the command beside it — the
 paths this round used, and the paths the transcripts therefore contain — with **LF line
-endings**, then run it. Nothing else is needed; no fixture takes an argument, reads an
-environment variable, or depends on state another fixture left behind. The scratch this
-round created has been removed, which is why the paths do not currently exist.
+endings**, then run it. Fixture D has a bounded reproducibility disclosure: the
+published `f2_config_qa.ps1` body is not idempotent on a host where its prior
+access-denied residue still exists, because the ACL restore
+(`icacls ... | Out-Null`) does not check `$LASTEXITCODE` and the cleanup has no
+post-condition assertion. That is a fixture reproducibility defect, not evidence
+contamination of the delivered set.
 
 | fixture | closes | run it with |
 |---|---|---|
@@ -1596,9 +1608,10 @@ Two residuals are disclosed rather than claimed away, both in the script's own h
 ## 7. Coverage accounting
 
 **Driven this round, with real output above:** F3 RED/G0/GREEN/CTL; F4 RED/GREEN/CTL/PIN
-and reader arms N1–N5; F1 arms J1–J6 (RED and GREEN, ten runner executions) and K1–K2;
-F2 arms M1–M7, K3, L1–L3. Twelve of those executions are the real pinned OpenSSH
-programs.
+and reader arms N1–N5; F1 arms J1–J4 and J6 have RED/GREEN pairs, J5 is GREEN-only
+(eleven runner executions total), and K1–K2; F2 arms M1–M7, K3, L1–L3. Counting real
+pinned OpenSSH starts yields 17 executions if M7's eight bisect rows are counted as
+rows, or 10 executions if M7 is counted as one arm. L1–L3 start no OpenSSH program.
 
 **Deliberately not driven, and the direction each fails in:**
 

@@ -47,12 +47,22 @@ wording gap the Lead applied directly (R5-F1). **No transport target byte change
 round 6**; the only executable change is the harness beside them.
 
 No host contact, RUNID allocation, archive build, freeze, execution, or Git commit was
-performed. `C:\WPI_ARTIFACTS` contains no `WPI_TRANSPORT_*` entry.
+performed. No external listing is claimed here; the delivered runner cannot create a
+`C:\WPI_ARTIFACTS\WPI_TRANSPORT_*` record root while shipped with markers because the
+marker gate fires before record-root creation and `Flush-Log` writes nothing until
+`RecordReady` is true. The QA arms used fixture scratch for `RECORD_ROOT`.
 
 Rounds 4, 5 and 6 ran their shell fixtures against a **local WSL2 Ubuntu kernel**;
 every path they touch is under `/root/wpi_r4*` or `/root/wpi_r5` on that local
 filesystem. The operator-side fixtures start no process at all. No socket was opened to
 any host in any round, and no `ssh.exe`, `scp.exe` or `sshd` process was started.
+
+Round-3 Fixture D has a bounded reproducibility disclosure: its cleanup failed
+access-denied on `C:\Users\Public\wpi_r3\qb\pd_evil\ssh\ssh_config`, and the published
+fixture body does not check the `icacls` restore exit code or assert the cleanup
+post-condition. The residue is inert for the delivered set and later WSL2 rounds, but a
+re-auditor on the same host may need to clear it or repair the fixture before re-running
+that historical body.
 
 `<ALLOCATE-AT-DISPATCH>` and `<PIN-AT-FREEZE>` remain literal, and that is enforced
 rather than incidental: a preflight marker gate STOPs the runner on the first unfilled

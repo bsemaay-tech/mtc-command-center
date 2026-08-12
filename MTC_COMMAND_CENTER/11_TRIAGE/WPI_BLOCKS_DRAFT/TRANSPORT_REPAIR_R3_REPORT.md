@@ -11,12 +11,16 @@ identities both re-audit reports recorded.
 
 **Safety state.** No host contact, no SSH/SCP connection, no host key offered, no
 credential read, no RUNID allocated, no archive built, nothing frozen, no Git commit.
-`C:\WPI_ARTIFACTS` contains no `WPI_TRANSPORT_*` entry. The real pinned `ssh.exe` and
-`scp.exe` were executed locally without connecting — `ssh -G` evaluates configuration
-and exits; `scp` copied one local file to another — which round-2 F2 required and
-which cannot be established any other way. The only sockets attempted were loopback
-with port 9 closed. `RP6-P0.sh`, `SELF_QA_RP6.md` and `STATUS_RP6_P0.md` were neither
-read nor written: they are under concurrent repair.
+`C:\WPI_ARTIFACTS` contains no `WPI_TRANSPORT_*` entry. **2026-08-12 transport prose
+repair marker:** this historical sentence did not paste a directory listing and must
+not be treated as external-listing evidence; the repaired proof is construction-based:
+the shipped runner's marker gate fires before record-root creation and `Flush-Log`
+writes nothing before `RecordReady`. The real pinned `ssh.exe` and `scp.exe` were
+executed locally without connecting — `ssh -G` evaluates configuration and exits; `scp`
+copied one local file to another — which round-2 F2 required and which cannot be
+established any other way. The only sockets attempted were loopback with port 9
+closed. `RP6-P0.sh`, `SELF_QA_RP6.md` and `STATUS_RP6_P0.md` were neither read nor
+written: they are under concurrent repair.
 
 ---
 
@@ -42,8 +46,11 @@ remains reachable only for an operation that ran and returned the deviant value 
 contract defines. `TR_FIRST_FAIL` is renamed `TR_FIRST_MISMATCH` and `first_fail=` to
 `first_mismatch=`, because the old token labelled a STOP as a FAIL in the record.
 
-**Evidence** (`SELF_QA_TRANSPORT.md` §4, ten runner executions plus two with the real
-pinned OpenSSH):
+**Evidence** (`SELF_QA_TRANSPORT.md` §4; 2026-08-12 transport prose repair marker:
+this report's original shorthand under-counted the J-family runner executions and did
+not state the supported OpenSSH count. Corrected coverage is eleven J-family runner
+executions because J5 is GREEN-only, plus K1-K2; real pinned OpenSSH starts are 17 by
+M7-row reading or 10 by M7-arm reading, with L1-L3 starting none):
 
 | arm | RED — round-2 bytes `2f076ed9…` | GREEN — round-3 bytes |
 |---|---|---|
