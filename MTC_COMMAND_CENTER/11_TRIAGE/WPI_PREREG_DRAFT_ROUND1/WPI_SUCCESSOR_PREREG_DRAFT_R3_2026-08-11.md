@@ -170,6 +170,50 @@ All section-1 values, every section-2 manifest member, every section-3 allocatio
 
 ### 4.4 Composite path-scope proof
 
+#### 4.4.1 Accepted trusted-base assumptions (disclosed, not proven)
+
+The owner accepted SEC102 with disclosure on 2026-08-12. The following are explicit
+trusted-base assumptions, not checks, controls, or measurements:
+
+1. **The outer Python runtime.** The `python` that runs the §13 evidence harness, its
+   startup mode, import graph, startup environment, and standard library are **TRUSTED,
+   not bound**. The published launch is bare `python -B`
+   (`isolated=0 safe_path=0 no_site=0 ignore_environment=0`), so an actor controlling the
+   wrapper directory or the Python startup/import environment could shadow `subprocess`
+   and fabricate transport or completion. Source: Codex R11-F1,
+   `SEC102_CODEX_T1_AUDIT_R11_2026-08-12.md`.
+2. **The interpreter image.** `powershell.exe` is located by name from `PATH`; a different
+   program could receive the intended bytes. Codex adjudicated this disclosure HONEST as
+   written. Source: STATUS residual 51; `SEC102_CODEX_T1_AUDIT_R11_2026-08-12.md`.
+3. **On-disk document versus a fresh clone.** Byte identity is asserted against the
+   document as materialized on this disk, not a pinned checkout. A CRLF-materializing
+   fresh clone changes the published LF/CRLF/SHA cross-check and makes block 11 fail
+   **LOUDLY**; it does not pass silently. Source: STATUS residual 41. See also
+   `../WPI_GITATTRIBUTES_DURABILITY_ANALYSIS_2026-08-12.md`, which measures the same
+   exposure repo-wide: 365 identity-quoted artifacts, 186 of which would change bytes on
+   a fresh Windows checkout; its proposed rules are not yet applied.
+4. **The interpreter vocabulary.** The recognized-interpreter name set is a
+   production-gate item to be pinned at production-gate time, not a static-tool defect.
+   Source: owner decision C, ratified 2026-08-12 and recorded in `STATUS_SEC102.md`.
+
+**Additional disclosed static-tool limitation.** A safe-set leaf that re-consumes a
+declared member's deploy path as a literal operand is missed by the orphan-only reachability
+gate. This is disclosed, not claimed closed. Source:
+`SEC102_GLM_T1_2ND_OPINION_2026-08-12.md`.
+
+Disclosure accounting: four trusted-base assumptions plus one additional static-tool
+limitation. This new disclosure set is disjoint from the 34-member section-8 disposition
+universe and changes none of its conservation counts or rows.
+
+All four numbered assumptions are properties of the developer host rather than of the
+security logic, each requires an actor who already controls that host, and no other section
+of this preregistration may describe any of them as a check, a control, or a measurement.
+
+#### 4.4.2 §10.2 acceptance boundary
+
+The §10.2 acceptance discussion below is expressly subject to section 4.4.1: accepting the
+composite path-scope proof does not prove or measure these disclosed limitations.
+
 The Stage-1 proof unit is each complete frozen same-shell composition: `run_p0.sh + RP0-LIB.sh + RP0-BOOTSTRAP.sh + RP6-P0.sh`, and `run_ro.sh + RP0-LIB.sh + RP0-BOOTSTRAP.sh + RP7-WPI-RO.sh`, with the concrete allocation and freeze manifest applied; the RO graph also includes every executed inline program and the exact executed `verify_lock.py` source.
 
 The accepted analyzer follows sourced values and registered production-call contracts; derives `RUNID`, `EV_STAGE_ID`, `EV_DIR`, and `EV_LOG` from the exact frozen `REMOTE_BASE`; enumerates every reachable path-bearing argument, redirection, test, executable object, endpoint, nested source, and closed runtime family; and assigns every admitted member exactly one terminal disposition.
