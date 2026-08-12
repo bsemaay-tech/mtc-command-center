@@ -50,10 +50,25 @@ nonfunction_bare=10
 R17 effect-model misses. No literal zero is published as a measurement in the R17
 pass format.
 
-The pass-format audit found **six literal-zero fields across three R16 success
-lines** that could be read as measurements (`expand_aliases_enabled=0`, the
-three shadow counts, `inventory_targets=0`, and `dynamic_targets=0`). R17 does
-not republish those as literals; it emits measured counts or omits the detail.
+**SCOPE CORRECTION 2026-08-12 ~20:30 — the broader pass-format claim is NOT
+supported and is withdrawn.** This section previously read "No literal zero is
+published as a measurement in the R17 pass format" and reported the pass-format
+audit as finding **six literal-zero fields across three R16 success lines**.
+Those figures are **asserted, not measured**: `SELF_QA_RP6.md:13417-13418`
+assigns `literal_zero_fields=6` and `literal_zero_lines=3` as constants, and
+`:13419` emits `r17_literal_zero_measurements=0` as a source literal — that
+published field is itself a literal zero presented as a measurement, i.e. an
+instance of the very class it declares eliminated.
+
+The true count is **INDETERMINATE pending execution** of a measured scan and
+transcript regeneration (`WPI_STALE_REMEDIATION_PLAN_2026-08-12.md` §3.1.3).
+**No value for it, including zero, may be published until that scan has run.**
+
+What remains TRUE and is deliberately preserved: `dynamic_targets` itself IS a
+real measurement, computed from tokenizer records, with a published RED/GREEN
+falsification pair. The narrow claim stands; only the broader
+"no literal zero is published anywhere in the R17 pass format" claim is
+withdrawn.
 
 Executed evidence, all from the published R17 fence:
 
