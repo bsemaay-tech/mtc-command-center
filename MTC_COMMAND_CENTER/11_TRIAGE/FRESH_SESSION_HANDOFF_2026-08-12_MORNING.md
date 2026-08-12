@@ -79,21 +79,50 @@ Full record: `LEDGER_STATUS_2026-08-10.md`.
 | Claude Max `Invoke-ClaudeMax.ps1` | heavily used overnight (owner wanted it spent before Sat 08:00 reset) — still the routine implementer |
 | DeepSeek `_deepseek_driver` | ~$2.90, last-resort narrow coder only |
 
-## 6. IMMEDIATE NEXT ACTIONS
+## 5b. STATUS AT CLEAN STOP (2026-08-12 ~09:20 — owner ended the autonomous run here)
 
-1. Two lanes are finishing: **RP6 r16 Codex audit** and **SEC102 r8 (Max)**. Verify each
-   verbatim on completion, commit exact sets, then dispatch **Codex SEC102 r8 audit** and (if r16
-   passes) close the RP6 Codex slot.
-2. **SEC102 GLM 2nd-opinion** — kickoff pattern like `KICKOFF_GLM_PATHSCOPE_R2_AUDIT.md`; GLM is
-   open now. This + a clean Codex r8 = SEC102 accepted (freeze blocker #4).
-3. **Owner decisions** (put plainly): ratify MC-01..03 (one yes/no); decide the 3 §10.1 families;
-   authorize rows 1–9 after RP7 dual acceptance.
-4. **Tonight 23:00 (Claude Pro):** run the 2nd-flagship audits — transport, RP7, RP6 (if slot
-   closed), and the pathscope EXECUTION-audit. That is the gate that turns Codex-PASS into dual
-   acceptance for freeze.
-5. Refresh the **Audit-2 readiness package** (was NEEDS-UPDATE ×20; bytes have moved all night).
+- **RP6 Codex flagship slot CLOSED** — r16 exact-byte-span census PASS-WITH-NITS
+  (`RP6_CODEX_T0_AUDIT_R16`); the r10→r16 census regress is over, fail-closed fixpoint reached.
+- **RP7 + transport** hold Codex flagship PASS. So **RP6 + RP7 + transport = 3/5 Codex-accepted.**
+- **SEC102 is 1 MEDIUM round from its Codex slot.** r8 CLOSED the r7 child-completion finding, but
+  the r8 audit (`SEC102_CODEX_T1_AUDIT_R8`) raised one MEDIUM (Pattern 10/11): the §13 paste-run
+  wrapper writes temp `.ps1` through newline-translating I/O (LF→CRLF) while claiming byte-for-byte
+  — a 110-LF block was written as 110 CRLF. Current 11 blocks pass under both, prover itself sound.
+  **r9 = write the temp files with newline translation disabled** (`newline=''` / binary), re-run
+  the §13 harness verbatim. Then Codex r9 audit closes the slot; the prover, both CRITICALs, the
+  command-word whitelist fixpoint, and R3-F2/F3 all stay closed.
+- Per owner: NO new lane was dispatched after the r8 audit — clean stop.
+
+## 6. IMMEDIATE NEXT ACTIONS (fresh session)
+
+1. **SEC102 r9 (Max)** — fix the §13 wrapper's LF→CRLF newline translation (write temp files with
+   translation disabled); re-run §13 harness verbatim; Lead-verify; commit. Then **Codex r9 audit**
+   → closes the SEC102 Codex flagship slot.
+2. **SEC102 GLM 2nd-opinion** on the accepted bytes — kickoff pattern like
+   `KICKOFF_GLM_PATHSCOPE_R2_AUDIT.md`. Clean Codex r9 + GLM = SEC102 accepted (freeze blocker #4).
+3. **Execute the owner decisions** recorded in §9 (MC-01..03, transport F1, SEC102 vocabulary).
+4. **Tonight 23:00 (Claude Pro):** the 2nd-flagship audits — transport, RP7, RP6, and the pathscope
+   EXECUTION-audit. That gate turns Codex-PASS into dual acceptance for freeze.
+5. Refresh the **Audit-2 readiness package** (NEEDS-UPDATE ×20; bytes moved all night).
 6. Then the **10-item freeze-blocker map** → Stage-1 freeze → host run (P0→RO→attestation→
    RPD-VERIFY as root) → WP-I closure → Audit 2. **We are NOT close to freeze.**
+
+## 9. OWNER DECISIONS (fill in the owner's answers before executing §6.3)
+
+- **A. MC-01..03 / §10.1 three families** — the R2 binding text and the lane-B proposals AGREE, so
+  one YES ratifies all three closures (MC-01 twelve exact P0 tool pins no PATH fallback; MC-02
+  venv root `= /opt/mtc-bridge/venvs/$P0_CAND`; MC-03 evidence-root full frozen-composite
+  derivation). Doc: `WPI_PREREG_DRAFT_ROUND1/LEAD_MC_ADJUDICATION_2026-08-11.md`. **Lead rec: YES.**
+  → OWNER ANSWER: _______
+- **B. Transport F1 (outer SSH account-shell boundary, honestly OPEN)** — (1) accept-with-disclosure
+  as an inherent SSH-trust-model limit, freeze not blocked [Lead rec]; or (2) require closure before
+  freeze (new server-side-contract design round). → OWNER ANSWER: _______
+- **C. SEC102 interpreter-vocabulary residual** — (1) accept as a disclosed production-gate decision,
+  SEC102 acceptable now [Lead rec, Codex concurs]; or (2) pin/decide the recognized-interpreter set
+  before SEC102 counts as accepted (separate round). → OWNER ANSWER: _______
+- Already decided (reminder): rows 1–9 = BUILD ALL NINE, applied only AFTER RP7 dual acceptance.
+- Owner action item (not a decision): disable Windows Update auto-reboot / set active hours so
+  overnight runs are not interrupted (a reboot at 01:32 killed two lanes this cycle).
 
 ## 7. STANDING LESSONS THIS CYCLE PAID FOR (binding)
 
