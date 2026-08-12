@@ -1,0 +1,46 @@
+# KICKOFF — Claude Pro T1 EXECUTION-audit: pathscope_prover.py round 2 (flagship slot)
+
+You are `claude-opus-5` xhigh via the default Claude Pro account, AUDITOR. This tool has no
+Codex flagship audit and cannot get one: the Codex provider content filter terminates the
+run while merely READING `pathscope_prover.py` (its sink-detection source carries attack
+grammar as data — forbidden-path tables, exfil URL patterns, ssh/nss host grammar). GLM-5.2
+gave a favorable READ-audit, but GLM gates execution, so that opinion is SUPPLEMENTAL. You
+are the flagship EXECUTION auditor: a fresh session, non-implementer (Max implemented r2),
+and you CAN run the harness. Working dir `C:\LAB\Tradingview_LAB_CLEAN`. Read-only on the
+repo: edit nothing except your verdict file, no git mutation, no host, no network beyond
+local execution of the published harness.
+
+## Bytes under audit
+`pathscope_prover.py` 122446 B, SHA-256
+`890016f0b9a8cde4eed33f8733f69055471b07c6096f6bc07450457e6c52af1d` — re-derive and confirm
+first. Context files: `SELF_QA_PATHSCOPE.md`, `STATUS_PATHSCOPE.md`,
+`PATHSCOPE_REPAIR_R2_REPORT.md`, round-1 Codex findings
+(`PATHSCOPE_CODEX_T1_AUDIT_2026-08-10.md`), GLM read-audit
+(`PATHSCOPE_GLM_T1_AUDIT_R2_2026-08-11.md`).
+
+## Round-2 state you must independently re-establish
+9+5 silent-sink classes closed. Structural change: `NO_PATH_COMMANDS`/`nonoption_operands()`
+removed; an explicit `Spec` registry declares per command every accepted option and its
+value role; unlisted option or unregistered command → a specific rc-3 coverage record
+(fail-closed). Finding 6 repaired as DISCLOSURE: `ALLOW-LEXICAL` +
+`symlink_resolution=not_established mount_boundary=not_established`, residual R1 (symlink/
+mount binding) honestly out of reach for a static reader. The Lead ran the harness verbatim:
+RED 511 / GREEN 644, determinism `equal=True` (find_exec, RP6-P0, RP7-WPI-RO).
+
+## Audit contract
+1. EXECUTE the published harness VERBATIM (`SELF_QA_PATHSCOPE.md` §"How to reproduce"):
+   62 fixtures + 4 real-block runs + RED-before-GREEN (D026). Record real counts. This
+   execution is the point of your slot — a read-only opinion here is supplemental, and we
+   already have one.
+2. Adversarially construct NEW Bash fragments that reach a filesystem/network primitive
+   while the prover emits no path, no coverage record, and `PASS rc=0`. Any surviving
+   silent sink is CRITICAL. (Local, harmless fixtures only; keep bodies symbolic.)
+3. Judge finding-6/R1 honesty: does any output still present lexical membership as an
+   unconditional host ALLOW?
+4. Verify fail-closed coverage-error behaviour on unmodeled syntax and determinism.
+5. Thirteen-pattern adjudication table. Verdict: PASS / PASS-WITH-NITS / REQUEST_CHANGES /
+   BLOCK. If accepting, state that pathscope holds a flagship EXECUTION acceptance (Codex
+   unavailability on record + GLM supplemental favorable).
+
+Write ONE new file: `PATHSCOPE_CLAUDE_T1_EXEC_AUDIT_2026-08-12.md` (this directory).
+Prove `git status --porcelain` shows only that file at the end.
