@@ -89,6 +89,17 @@ What `run_p0.sh` currently does instead: it defines, exports, and logs marker st
 
 ## Blocker 8 - close-script contract is not reconciled
 
+> **SUPERSEDED 2026-08-12 ~19:40 — read this first.** This section was written before the stale
+> record was fixed. `RUNID_MINTING_REVIEW_CODEX_2026-08-11.md:167` has since been **corrected in
+> both respects** it was wrong about (the two-arg claim *and* the "exits FAIL on argc" claim — an
+> argv-count violation returns **rc 3 STOP**, not rc 1 FAIL). The documentary contradiction this
+> section describes **no longer exists**. Blocker 8 is **RECLASSIFIED**: the contract
+> disagreement is gone, and what remains is a freeze-input fill — `EXPECT_UID`/`EXPECT_GID` are
+> still `<PIN-AT-FREEZE>`, which STOPs execution before the RUNID/`EV_DIR` grammar checks. That
+> places it in blocker 7's class, not its own. The GLM advance transport read-audit independently
+> confirmed this reading. See `WPI_FREEZE_BLOCKER_MAP_2026-08-12.md`. The analysis below is
+> retained as the record of how the reclassification was reached.
+
 Current bytes and current transport plan now agree on a three-argument close invocation. Plan rows 07/08 pass `EV_DIR`, `RUNID`, and `WORK_ROOT` at `TRANSPORT_PLAN.tsv:8-9`; the close script requires exactly three args and assigns them at `remote_close_tree_wpi.sh:282-286`. If a stale two-argument composition were used, the script would stop at argv count before any RUNID or EV_DIR grammar validation at `remote_close_tree_wpi.sh:282-286` and `remote_close_tree_wpi.sh:295-306`.
 
 With the current three-argument plan, argv shape itself no longer blocks. However, because close `EXPECT_UID` and `EXPECT_GID` are still `<PIN-AT-FREEZE>` at `remote_close_tree_wpi.sh:202-203`, current execution would stop at `remote_close_tree_wpi.sh:288-291` before reaching RUNID/EV_DIR validation at `remote_close_tree_wpi.sh:295-306`. After those host identity pins are filled, the current script reaches RUNID/EV_DIR grammar checks, then validates `WORK_ROOT` at `remote_close_tree_wpi.sh:308-331`.
@@ -130,5 +141,5 @@ Counts use one primary status per ledger row:
 Actionable blockers:
 
 - Blocker 7 remains open: five P0 attested values have real RP6 consumers, but current wrapper and embedded literals are still markers.
-- Blocker 8 remains open: current plan/script bytes agree on three args, but the prereg/plan/derivation/scratch/launch-domain record is not yet reconciled and a stale two-arg record still contradicts current bytes.
+- ~~Blocker 8 remains open: current plan/script bytes agree on three args, but the prereg/plan/derivation/scratch/launch-domain record is not yet reconciled and a stale two-arg record still contradicts~~ **[corrected 2026-08-12 ~19:40]** Blocker 8 is **RECLASSIFIED, not open as a contract contradiction**: the stale two-arg record was fixed (in both respects — the arg count and the rc-3-vs-rc-1 failure mode), so plan, script and record now agree. What remains is the `EXPECT_UID`/`EXPECT_GID` freeze-input fill, which belongs to blocker 7's class. Original wording retained above as history. It formerly read: current plan/script bytes agree on three args, but the record is not yet reconciled and a stale two-arg record still contradicts current bytes.
 - Blocker 9 remains open: allocation-dependent P0, RO, transport, and evidence-root values are still markers, and FAM-03 requires allocation before RO evidence-root freeze and composite conservation proof.

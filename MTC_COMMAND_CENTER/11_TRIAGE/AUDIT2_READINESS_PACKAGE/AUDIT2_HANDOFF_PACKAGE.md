@@ -187,7 +187,9 @@ suite baseline are frozen; and authority plus the 50-hour ledger are ratified.
 ## Current dispatch status
 
 [refreshed 2026-08-12] Audit 2 is not dispatchable. WP-I is not closed, none of RP6/RP7/
-transport has dual-flagship acceptance, rows 1-9 are not built, SEC102 and pathscope still
-have pending review work, the Stage-1 and pre-WP-A freezes do not exist, the current-work
+transport has dual-flagship acceptance, rows 1-9 are not built, ~~SEC102 and pathscope still
+have pending review work~~ **pathscope still has pending review work (SEC102 is
+ACCEPTED-WITH-DISCLOSURE by owner decision 2026-08-12 and freeze blocker #4 is CLEARED —
+corrected ~19:40)**, the Stage-1 and pre-WP-A freezes do not exist, the current-work
 D026/freeze-input/host evidence packets do not exist, and the exact mandated suite baseline
 and freeze-time ledger are unresolved.
