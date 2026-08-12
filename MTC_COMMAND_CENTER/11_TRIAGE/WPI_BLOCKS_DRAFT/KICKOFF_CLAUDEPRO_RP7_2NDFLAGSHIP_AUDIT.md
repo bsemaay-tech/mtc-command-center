@@ -25,6 +25,36 @@ open; parser reads the same descriptor as stdin and digests exactly what it pars
 `wpi_alloc_leaf` deleted). Also: descriptor-bind STOP reports measured child rc, not a
 caller literal; row-22 `detail` field emitted on both nonzero namespace-read branches.
 
+## KNOWN DOCUMENTARY DEFECTS — found 2026-08-12 evening, NOT yet repaired
+A prose-vs-transcript audit (`WPI_SELFQA_CLAIM_AUDIT_RP7_2026-08-12.md`, 461 output lines
+checked) found that **`SELF_QA_RP7.md`'s narration of WHICH BYTES its fences ran against is
+stale, while the pasted transcripts themselves are correct.** Disclosed so you judge rather than
+rediscover:
+
+- **FALSE — `:1768-1769`** says the round-7 fence proves the GREEN subject is `92853 B /
+  e695a67b…`. The transcript at `:1725` records `green_bytes=108301
+  green_sha256=0e93f90d…921e62`.
+- **FALSE — `:2552-2556`** says the round-5 fence body is exactly `20050 B`. The pasted output at
+  `:197` and `:4391` records `21263`.
+- **FALSE — `:4353-4354`** says the round-4 final identity line is `BYTES=77179
+  SHA256=393a16ce…`. The actual line at `:4349` records `BYTES=108301 SHA256=0e93f90d…921e62`.
+- **SCOPE-WRONG — `:1354`, `:1368-1369`, `:1808`, `:1849-1850`, `:2565-2566`, `:2970-2972`** say
+  carried fences were re-executed against "round-8 bytes"; the transcript identity lines at
+  `:1725`, `:2403`, `:2915`, `:4349` all show the current round-9 bytes.
+- **UNSUPPORTED — `:4421-4429`** states absolutely that the status body is "no longer addressed by
+  name at all" and that `wpi_alloc_leaf` is deleted. No pasted line proves `wpi_alloc_leaf=0`.
+  *(A GLM advance read-audit independently grepped and found zero `wpi_alloc_leaf` matches, so
+  the claim appears TRUE but its evidence lives outside this document.)*
+- **UNSUPPORTED — `:4375-4380`** claims six `WRAPPER_STREAM` stderr lines; only
+  `RUN_ONE_STDERR_BYTES=210` is pasted.
+
+**The question only you can settle.** The transcripts consistently show `108301 /
+0e93f90d…921e62`, which IS the current accepted RP7 identity — so the *evidence* looks sound and
+the *narration* looks stale. **Verify that reading rather than assuming it.** If every carried
+fence really did run against the current bytes, this is a documentation repair. If any carried
+gate genuinely ran against older bytes, then that gate does not cover the artifact under review,
+and that is a real finding that changes the acceptance answer.
+
 ## Audit contract
 1. Run the published SELF-QA harness VERBATIM (record real rc/summary lines). No
    extract-and-run.
