@@ -1240,6 +1240,32 @@ class Analyzer:
         self.env[name] = expand_word(rhs, self.env)
         return True
 
+    def record_assignment_value(self, token: Token, primitive: str) -> None:
+        # C-1 repair: an assignment value can name a path the dynamic loader or
+        # an interpreter opens at execve time (LD_PRELOAD, LD_LIBRARY_PATH,
+        # BASH_ENV, PYTHONPATH, PERL5LIB, GIT_SSH_COMMAND, ...). An assignment is
+        # neither an option nor a command, so it fell through the fail-closed
+        # machinery and a fragment like `LD_PRELOAD=/etc/evil.so cat "$ROOT/f"`
+        # returned PASS rc=0 with the out-of-allowlist path invisible. Treat the
+        # construct as first-class: a resolved path-shaped value gets a PATH row
+        # bound to the assignment site; an unresolvable value gets a coverage
+        # record; a known non-path value (IFS=:, count=1) carries no path and is
+        # left alone. This fails closed on the construct, not on a variable-name
+        # allowlist, so it does not repeat the round-1 NO_PATH_COMMANDS mistake.
+        match = ASSIGN_RE.fullmatch(token.text)
+        if not match:
+            return
+        _name, rhs = match.groups()
+        value = expand_word(rhs, self.env)
+        if not value.known:
+            self.issue(token.line, KIND_COVERAGE,
+                       f"assignment value is not statically known: {value.reason}",
+                       token.text)
+            return
+        rendered = value.text or ""
+        if rendered.startswith(("/", "./", "../")):
+            self.record_path_text(rendered, value.sources, token.line, primitive, token.text)
+
     # -- generic argv grammar --------------------------------------------
     def consume_value(
         self,
@@ -1517,6 +1543,7 @@ class Analyzer:
                                args[index].text)
                     return
                 if ASSIGN_RE.fullmatch(rendered):
+                    self.record_assignment_value(args[index], "env assignment")
                     index += 1
                     continue
                 break
@@ -2292,6 +2319,7 @@ class Analyzer:
             return
         index = 0
         while index < len(tokens) and self.assignment(tokens[index]):
+            self.record_assignment_value(tokens[index], "assignment prefix")
             index += 1
         if index >= len(tokens):
             return
@@ -2300,7 +2328,10 @@ class Analyzer:
             for token in tokens[index + 1:]:
                 if token.text.startswith("-"):
                     continue
-                if not self.assignment(token) and NAME_RE.fullmatch(token.text) and token.text not in self.env:
+                if self.assignment(token):
+                    self.record_assignment_value(token, f"{first.text} assignment")
+                    continue
+                if NAME_RE.fullmatch(token.text) and token.text not in self.env:
                     self.env[token.text] = Value(
                         None, f"declared variable {token.text} has no static value"
                     )

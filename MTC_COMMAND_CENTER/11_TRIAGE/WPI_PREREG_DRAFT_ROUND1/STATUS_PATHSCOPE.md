@@ -1,6 +1,21 @@
 # Path-scope prover status
 
-Status: `REPAIRED-R2-PENDING-REAUDIT`
+Status: `REPAIRED-R3-PENDING-REAUDIT`
+
+**Round 3 (2026-08-13).** The Claude Pro T1 execution audit
+(`PATHSCOPE_CLAUDE_T1_EXEC_AUDIT_2026-08-12.md`) returned REQUEST_CHANGES with one CRITICAL,
+C-1: assignment-prefix/declaration/`env` assignment values were silently dropped, so an
+out-of-allowlist loader path returned `PASS rc=0`. Round 3 (GLM-5.2 source-level implementer,
+`PATHSCOPE_GLM_T1_R3_REPAIR_REPORT_2026-08-13.md`) adds `record_assignment_value` at the
+three holes — fail-closed on the construct, not a variable-name allowlist. **Lead executed
+the full harness 2026-08-13: rc 0; all seven P9 fixtures confirmed (five silent sinks now
+RED `PASS rc=0` → GREEN `rc=1` with the path visible; two controls hold); both real blocks
+still rc=3 deterministically.** New identity: 124251 B, SHA-256
+`0724967E919C6576A5A18EA5606B947F3A617A6601AEE89C486C4A6E6C8225F7`. Disclosed residual:
+bare sonames (`LD_PRELOAD=libc.so`) are not path-shaped and stay lexical-contract-outside —
+flagged for the re-auditor's call. Fresh T1 execution re-audit over the r3 bytes is the
+pending step; implementers so far are `claude-opus-5` (r2) and GLM-5.2 (r3), so the
+re-auditor must be neither.
 
 Round 1 status was `AUTHORED-PENDING-AUDIT`. `PATHSCOPE_CODEX_T1_AUDIT_2026-08-10.md`
 returned `REQUEST_CHANGES: 9`, four of them CRITICAL silent-sink-loss. Round 2 is the

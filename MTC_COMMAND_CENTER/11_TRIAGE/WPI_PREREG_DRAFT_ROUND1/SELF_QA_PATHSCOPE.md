@@ -1,5 +1,23 @@
 # Self-QA — Stage-1 path-scope prover, repair round 2
 
+> **⚠ ROUND-3 AMENDMENT (2026-08-13) — C-1 repair; all transcripts/counts/digests
+> below are ROUND-2 and STALE.** The flagship execution audit
+> (`PATHSCOPE_CLAUDE_T1_EXEC_AUDIT_2026-08-12.md`, verdict REQUEST_CHANGES) found
+> CRITICAL **C-1**: assignment prefixes and declaration-builtin assignments
+> (`LD_PRELOAD=/etc/evil.so cat …`, `export LD_PRELOAD=…`, `env LD_PRELOAD=… …`)
+> were silently dropped — the out-of-allowlist path was invisible and the verdict
+> was `PASS rc=0`. The round-3 source fix adds `record_assignment_value` and
+> calls it at the three holes; seven P9 fixtures + CASES + a determinism pair
+> were added to the harness below. **EXECUTED 2026-08-13 ~00:30 by the Lead:** the
+> complete harness (including the seven P9 fixtures and the `assign_prefix`
+> determinism pair) ran from the repository root, rc 0, stderr 0 bytes. All seven
+> P9 predictions were confirmed by measurement — five silent sinks show
+> RED `PASS rc=0` → GREEN `rc=1` with the out-of-allowlist path visible, both
+> controls stay rc 0 with no false positive. The round-3 stdout below replaces the
+> round-2 stdout (the harness changed, so the round-2 line counts 511/644 no
+> longer reproduce; current counts are 552/1189). The prediction table in
+> §"Round 3 — C-1 repair" is retained with its executed confirmation.
+
 Date: 2026-08-11
 Audit tier: T1 (local-only static analysis)
 Working directory: `C:\LAB\Tradingview_LAB_CLEAN`
@@ -15,7 +33,8 @@ call was made. Fixture files are written only under the Windows temporary direct
 | artefact | bytes | SHA-256 | git blob |
 |---|---|---|---|
 | `pathscope_prover.py` round 1 (the audited bytes) | 49820 | `3D6AF544F5CBADB0A1432D4784848F68F4BFDDF22AA52C9369FD9729853D43E6` | `3f0820a9a6412f769b59b23a41df3bc6808bf6dc` |
-| `pathscope_prover.py` round 2 (this repair) | 122446 | `890016F0B9A8CDE4EED33F8733F69055471B07C6096F6BC07450457E6C52AF1D` | uncommitted |
+| `pathscope_prover.py` round 2 | 122446 | `890016F0B9A8CDE4EED33F8733F69055471B07C6096F6BC07450457E6C52AF1D` | historical (r2 audit anchor) |
+| `pathscope_prover.py` round 3 (this repair) | 124251 | `0724967E919C6576A5A18EA5606B947F3A617A6601AEE89C486C4A6E6C8225F7` | uncommitted |
 | `WPI_BLOCKS_DRAFT/RP6-P0.sh` | 107252 | `A090AE736CBECD9973E8AE948B052504B21CBE8B61602F4B5AC592394FAD0617` | `3c7b7d26a763f3904ea4fa4c0be3d39dc598c64c` |
 | `WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh` | 99903 | `11621044D0ADC21AF93E1CFC7B88EF88DE8ACA4683A69AB16CBC542A124141A4` | `5c9a2f597cceaef80d1cbd0fc100732f4b216cf5` |
 
@@ -41,18 +60,27 @@ contains no placeholder that must be edited before it runs. Its own stdout was:
 
 ```text
 R1_BASELINE bytes=49820 sha256=3D6AF544F5CBADB0A1432D4784848F68F4BFDDF22AA52C9369FD9729853D43E6
-R2_REPAIRED bytes=122446 sha256=890016F0B9A8CDE4EED33F8733F69055471B07C6096F6BC07450457E6C52AF1D
+R2_REPAIRED bytes=124251 sha256=0724967E919C6576A5A18EA5606B947F3A617A6601AEE89C486C4A6E6C8225F7
 BLOCK RP6-P0.sh bytes=107252 sha256=A090AE736CBECD9973E8AE948B052504B21CBE8B61602F4B5AC592394FAD0617 git_blob=3c7b7d26a763f3904ea4fa4c0be3d39dc598c64c
 BLOCK RP7-WPI-RO.sh bytes=99903 sha256=11621044D0ADC21AF93E1CFC7B88EF88DE8ACA4683A69AB16CBC542A124141A4 git_blob=5c9a2f597cceaef80d1cbd0fc100732f4b216cf5
-WROTE C:\Users\BarışSemaay\AppData\Local\Temp\pathscope-repair-r2\RED_R1.txt lines=511
-WROTE C:\Users\BarışSemaay\AppData\Local\Temp\pathscope-repair-r2\GREEN_R2.txt lines=644
+WROTE C:\Users\BarışSemaay\AppData\Local\Temp\pathscope-repair-r2\RED_R1.txt lines=552
+WROTE C:\Users\BarışSemaay\AppData\Local\Temp\pathscope-repair-r2\GREEN_R2.txt lines=1189
 DETERMINISM find_exec rc1=1 rc2=1 equal=True sha1=11c5cb8e39a2e9061e8c1d159817794b75b3ec2479649b146176f699d28067dd sha2=11c5cb8e39a2e9061e8c1d159817794b75b3ec2479649b146176f699d28067dd
-DETERMINISM RP6-P0 rc1=3 rc2=3 equal=True sha1=6695936088b55c1d0565344a5f45d1e1f179a2a70ede691444012b40477ddc0e sha2=6695936088b55c1d0565344a5f45d1e1f179a2a70ede691444012b40477ddc0e
-DETERMINISM RP7-WPI-RO rc1=3 rc2=3 equal=True sha1=1ebedc0d9de1589e90aa2da6e2ca8a1fc74e87dbfbce0f816d4687e9628e7f4b sha2=1ebedc0d9de1589e90aa2da6e2ca8a1fc74e87dbfbce0f816d4687e9628e7f4b
+DETERMINISM assign_prefix rc1=1 rc2=1 equal=True sha1=32da284224350fdb4a236c4d2238aad2f718b8b48cd89f04cf3fd1b57c30317a sha2=32da284224350fdb4a236c4d2238aad2f718b8b48cd89f04cf3fd1b57c30317a
+DETERMINISM RP6-P0 rc1=3 rc2=3 equal=True sha1=2e9d6f4465fcd4a6ee0cee9edfe6fc883725ef3b6dd8f6fa9eb97dec1fa605db sha2=2e9d6f4465fcd4a6ee0cee9edfe6fc883725ef3b6dd8f6fa9eb97dec1fa605db
+DETERMINISM RP7-WPI-RO rc1=3 rc2=3 equal=True sha1=1f59ab2eb1759e958a046e2e7e1115261df2aee4028a08dcf64b11d3182cb395 sha2=1f59ab2eb1759e958a046e2e7e1115261df2aee4028a08dcf64b11d3182cb395
 ```
 
-`R2_REPAIRED` is the size and digest of the repaired file at the moment the transcripts
-below were produced; it is the same pair recorded in the identity table.
+This stdout is the **Lead's executed round-3 run (2026-08-13, from the repository root,
+outer rc 0, stderr 0 bytes)**. `R2_REPAIRED` is the size and digest of the round-3 repaired
+file at the moment the transcripts were produced; it matches the identity table. The
+round-2 stdout (`R2_REPAIRED bytes=122446 … RED lines=511 / GREEN lines=644`, RP6-P0 output
+sha `66959360…dc0e`, RP7 output sha `1ebedc0d…7f4b`) is history recorded in
+`PATHSCOPE_CLAUDE_T1_EXEC_AUDIT_2026-08-12.md`, which reproduced it byte-for-byte. The two
+real-block runs still return rc=3 deterministically after the repair; their output digests
+changed because allowlisted assignment values now emit `ALLOW-LEXICAL` rows (`External
+evidence:` the Lead's run transcript archived at the session scratchpad
+`pathscope_r3_run.out`).
 
 The `<QA>` token inside both transcripts is the literal fixture directory
 `C:\Users\BarışSemaay\AppData\Local\Temp\pathscope-repair-r2`, normalised by the
@@ -169,6 +197,18 @@ New-Fixture 'case_loop.sh'      @('#!/bin/bash', 'for n in a b; do', '  case "$n
 New-Fixture 'terminal_stat.sh'  @('#!/bin/bash', 'stat /safe/conf')
 New-Fixture 'terminal_cat.sh'   @('#!/bin/bash', 'cat /safe/conf')
 
+# --- C-1 repair (round 3): assignment-prefix silent sink, adversarial family P9 ---
+# These exercise the three holes that shared one defect class: the assignment
+# prefix loop, the declaration builtins, and the env wrapper. Every fixture is a
+# local symbolic body; none is executed as shell.
+New-Fixture 'assign_prefix.sh'       @('#!/bin/bash', 'LD_PRELOAD=/etc/evil.so cat "$ROOT/f"')
+New-Fixture 'assign_prefix_allow.sh' @('#!/bin/bash', 'LD_PRELOAD="$ROOT/ok.so" cat "$ROOT/f"')
+New-Fixture 'assign_bare.sh'         @('#!/bin/bash', 'X=/etc/passwd')
+New-Fixture 'assign_benign.sh'       @('#!/bin/bash', 'IFS=: cat "$ROOT/f"')
+New-Fixture 'assign_export.sh'       @('#!/bin/bash', 'export LD_PRELOAD=/etc/evil.so', 'cat "$ROOT/f"')
+New-Fixture 'assign_env.sh'          @('#!/bin/bash', 'env LD_PRELOAD=/etc/evil.so cat "$ROOT/f"')
+New-Fixture 'assign_multi.sh'        @('#!/bin/bash', 'LD_PRELOAD=/etc/a.so BASH_ENV=/etc/b.sh cat "$ROOT/f"')
+
 # --- the real blocks, extracted from their pinned committed blobs ---
 cmd /c "git cat-file blob 3c7b7d26a763f3904ea4fa4c0be3d39dc598c64c > `"$QA\RP6-P0.sh`""
 cmd /c "git cat-file blob 5c9a2f597cceaef80d1cbd0fc100732f4b216cf5 > `"$QA\RP7-WPI-RO.sh`""
@@ -274,7 +314,14 @@ $CASES = @(
   @('func_body','constants.env','allowlist.txt'),
   @('case_loop','constants.env','allowlist.txt'),
   @('terminal_stat','constants.env','allowlist_terminal.txt'),
-  @('terminal_cat','constants.env','allowlist_terminal.txt')
+  @('terminal_cat','constants.env','allowlist_terminal.txt'),
+  @('assign_prefix','constants.env','allowlist.txt'),
+  @('assign_prefix_allow','constants.env','allowlist.txt'),
+  @('assign_bare','constants.env','allowlist.txt'),
+  @('assign_benign','constants.env','allowlist.txt'),
+  @('assign_export','constants.env','allowlist.txt'),
+  @('assign_env','constants.env','allowlist.txt'),
+  @('assign_multi','constants.env','allowlist.txt')
 )
 
 function Invoke-Suite([string]$Prover, [string]$OutFile) {
@@ -305,6 +352,7 @@ Invoke-Suite $TOOL (Join-Path $QA 'GREEN_R2.txt')
 
 # --- determinism: same input, same bytes, same order ---
 foreach ($pair in @(@('find_exec','constants.env','allowlist.txt'),
+                    @('assign_prefix','constants.env','allowlist.txt'),
                     @('RP6-P0','real.constants','real.allowlist'),
                     @('RP7-WPI-RO','real.constants','real.allowlist'))) {
   $name, $constants, $allowlist = $pair
@@ -319,12 +367,47 @@ foreach ($pair in @(@('find_exec','constants.env','allowlist.txt'),
 }
 ```
 
-## D026 RED/GREEN pairs
+## Round 3 — C-1 repair (assignment-prefix silent sink, family P9)
+
+**Status: EXECUTED 2026-08-13 by the Lead — all seven predictions CONFIRMED by
+measurement.** The table below was written as an implementer prediction; the Lead's run of
+the complete harness confirmed every row. Measured results (exact lines from the run's
+`RED_R1.txt` / `GREEN_R2.txt`):
+
+```text
+assign_prefix       R1: PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted   (silent sink)
+assign_prefix       R2: PATH value=/etc/evil.so verdict=FORBID uses=line=2:assignment prefix → REJECT rc=1
+assign_export       R1: PASS rc=0 (sink)  R2: PATH value=/etc/evil.so verdict=FORBID uses=line=2:export assignment → REJECT rc=1
+assign_env          R1: PASS rc=0 (sink)  R2: PATH value=/etc/evil.so verdict=FORBID uses=line=2:env assignment → REJECT rc=1
+assign_multi        R1: PASS rc=0 (sink)  R2: /etc/a.so FORBID + /etc/b.sh FORBID → REJECT rc=1
+assign_bare         R1: PASS rc=0 (sink)  R2: PATH value=/etc/passwd verdict=FORBID → REJECT rc=1
+assign_prefix_allow R1: rc=0              R2: /safe/ok.so ALLOW-LEXICAL + /safe/f ALLOW-LEXICAL → PASS rc=0 (control holds)
+assign_benign       R1: rc=0              R2: /safe/f ALLOW-LEXICAL → PASS rc=0 (control holds)
+```
+
+| fixture | shell fragment | hole | R1 RED (predicted) | R2 GREEN (predicted) |
+|---|---|---|---|---|
+| `assign_prefix` | `LD_PRELOAD=/etc/evil.so cat "$ROOT/f"` | prefix loop | rc 0 — /safe/f ALLOW (sink: `/etc/evil.so` invisible) | rc 1 — `/etc/evil.so` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `assign_prefix_allow` | `LD_PRELOAD="$ROOT/ok.so" cat "$ROOT/f"` | prefix loop | rc 0 — /safe/f ALLOW (allowlisted path also invisible) | rc 0 — `/safe/ok.so` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL |
+| `assign_bare` | `X=/etc/passwd` | prefix loop (bare) | rc 0 — (no row) | rc 1 — `/etc/passwd` FORBID |
+| `assign_benign` | `IFS=: cat "$ROOT/f"` | prefix loop (control) | rc 0 — /safe/f ALLOW | rc 0 — /safe/f ALLOW-LEXICAL (no false positive) |
+| `assign_export` | `export LD_PRELOAD=/etc/evil.so` ; `cat "$ROOT/f"` | declaration builtin | rc 0 — /safe/f ALLOW (sink) | rc 1 — `/etc/evil.so` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `assign_env` | `env LD_PRELOAD=/etc/evil.so cat "$ROOT/f"` | env wrapper | rc 0 — /safe/f ALLOW (sink) | rc 1 — `/etc/evil.so` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `assign_multi` | `LD_PRELOAD=/etc/a.so BASH_ENV=/etc/b.sh cat "$ROOT/f"` | prefix loop (×2) | rc 0 — /safe/f ALLOW (both dropped) | rc 1 — `/etc/a.so` FORBID; `/etc/b.sh` FORBID; `/safe/f` ALLOW-LEXICAL |
+
+The R1 RED predictions assume round 1 already dropped assignment values (the defect class
+predates round 2); `assign_env`/`assign_export` R1 behaviour in particular must be
+**measured**, not trusted. The `cat "$ROOT/f"` operand resolves to `/safe/f` in every row
+because `ROOT=/safe`.
+
+## D026 RED/GREEN pairs (round 2 — see ROUND-3 AMENDMENT above; STALE)
 
 `R1 RED` is the round-1 artefact at SHA-256 `3D6AF544…D43E6`. `R2 GREEN` is the repair.
-The rows that read `rc 0 — (no row)` in the RED column are the four CRITICAL findings: a
-complete Bash fragment reaching a filesystem or network primitive with **no path, no
-`UNRESOLVED` marker and `PASS rc=0`**.
+The rows that read `rc 0 — (no row)` in the RED column are sixteen fragments exhibiting
+the silent-sink pattern of CRITICAL findings 1 and 2 and the F1-EXT class found during
+repair; CRITICAL findings 3 and 4 instead emit a misleading partial path. Thirteen of the
+sixteen are closed in GREEN; `popd_stack`, `fddup` and `herestring` remain zero-record
+because no path or endpoint is reached.
 
 | fixture | shell fragment | finding | R1 RED | R2 GREEN |
 |---|---|---|---|---|
