@@ -1,4 +1,63 @@
-# RP6-P0 - status: ROUND-18-REPAIRED-PENDING-SECOND-FLAGSHIP-T0-AUDIT
+# RP6-P0 - status: ROUND-19-REPAIRED-PENDING-T0-DUAL-FLAGSHIP-AUDIT
+
+Updated 2026-08-13 by the round-19 implementer, Codex session header model
+`GPT-5` (requested kickoff route: Codex `-Account free`, xhigh). Audit tier:
+**T0** because this is a host-targeting run-kit/evidence surface. No
+sub-delegation and no Git mutation occurred. The block remains a draft: not
+frozen, not accepted, not dispatchable, and not authorised for host execution.
+The next required action is fresh dual-flagship T0 audit of these round-19 bytes
+per the permanent audit-tier policy.
+
+Full disposition: `RP6_R19_REPORT_2026-08-13.md`. Evidence:
+`SELF_QA_RP6.md` sections ROUND 17 and ROUND 19.
+
+**`RP6-P0.sh` remains byte-identical from round 11 through round 19:** 110817
+bytes, SHA-256
+`5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330`.
+
+The fresh Claude round-18 T0 second-flagship audit returned
+**REQUEST_CHANGES**. Round 19 repairs its minimum-required findings:
+
+1. **R1 - repaired at the token layer.** Delivered round-18 bytes certified a
+   token-carried assigning mutant at rc 0 / `16/16 PASS` with
+   `dynamic_targets=0` and zero token records. The shipped R16 tokenizer now
+   emits terminal `UNMODELED kind=token_assignment_capable_expansion:*` records
+   before command-word classification can hide an assigning operand. The GREEN
+   run refuses the same mutant with `token_assignments=8`, including
+   `${name:=...}`, `${!runtime_name:=...}`, `$((name=...))`, array-subscript
+   arithmetic assignment, and `((name=...))`.
+2. **R2 - repaired in the shipped policy.** `waittarget` now lives in the
+   shipped R16 fence, so the document's own published R17 command refuses the
+   wait mutant without harness-side policy injection:
+   `UNMODELED kind=dynamic_variable_target:wait_p`.
+3. **R3 - pass-format scan widened.** The published R17 command now reports
+   `scanned_producers=48 uncomputed_numeric_fields=0`, and its executed
+   falsifications include the two-level indirection shape plus an eight-shape
+   matrix with `producers=8 detected=8`.
+
+Executed round-19 summaries:
+
+```text
+R17_DYNAMIC_TARGETS_SUMMARY cases=18 pass=18 fail=0 result=PASS
+R19_ASSERT_MET D026_RED_DELIVERED_R18 mutant=token_assignment_layer rc=0 summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=16 pass=16 fail=0 result=PASS] target=[R17_ASSERT_MET r17_dynamic_targets_measured variable_targets=113 inventory_targets=0 dynamic_targets=0 dynamic_variable_targets=0 opaque_mutators=0 effect_unmodeled=0 nonfunction_bare=11] token_records=0
+R19_ASSERT_MET D026_GREEN_R19 mutant=token_assignment_layer rc=1 records=24 target=[R17_ASSERT_UNMET r17_clean_verdict_failed rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=8 dynamic_variable_targets=0 opaque_mutators=0 token_assignments=8 effect_unmodeled=0 nonfunction_bare=11]] summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=17 pass=13 fail=4 result=FAIL]
+R19_ASSERT_MET SHIPPED_R17_WAIT_GREEN mutant=wait_p rc=1 record=[UNMODELED kind=dynamic_variable_target:wait_p line=1567 raw=["$P0_R19_WAIT_NAME"]] target=[R17_ASSERT_UNMET r17_clean_verdict_failed rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=1 opaque_mutators=0 token_assignments=0 effect_unmodeled=0 nonfunction_bare=11]] summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=17 pass=13 fail=4 result=FAIL]
+R19_TOKEN_LAYER_SUMMARY cases=9 pass=9 fail=0 result=PASS
+```
+
+Nits disposition from the Claude verdict: N1 done (`bash_n=0` is no longer
+printed from a stale `$?`); N2 skipped because the historical round-18 report is
+outside this kickoff's owned files; N3 skipped because changing historical
+line-number citations broadly is outside this three-file repair.
+
+**Round-19 author attestation:** no host, SSH, network, deployment, backtest,
+broker, exchange, ARM, order, trading, or Git mutation occurred. This is a
+whole-session attestation, not a transcript-proved negative. The path-scoped
+delta gate is recorded separately in the round-19 report.
+
+---
+
+# Prior status: ROUND-18-REPAIRED-PENDING-SECOND-FLAGSHIP-T0-AUDIT (superseded; Claude r18 audit returned REQUEST_CHANGES)
 
 Updated 2026-08-12 by the round-18 implementer, Codex `gpt-5.6-sol`, xhigh.
 Audit tier remains **T0** because this is a host-targeting run-kit evidence

@@ -305,10 +305,12 @@ resets 04:00.
   adjudicated NOT reached**: r16–r18 were all command-word enumeration; the true inversion is a
   token-layer model. **r19 delivered same night** (shipped `waittarget`, token-layer
   dispositions, widened scan; block byte-identical; new `SELF_QA_RP6.md` 1088259 B /
-  `3c2f3844…`; lane's own runs: R17 18/18, R19 9/9). **NOT yet committed at write time —
-  waiting on the Lead's verbatim r19/r17 fence runs, still executing (fences take 25–55 min).
-  The next session verifies those transcripts against the round report, then commits the r19
-  file set** (`SELF_QA_RP6.md`, `STATUS_RP6_P0.md`, `RP6_R19_REPORT_2026-08-13.md`).
+  `3c2f3844…`; lane's own runs: R17 18/18, R19 9/9). **COMMITTED ~09:15 after the Lead's verbatim runs completed and verified: R19 fence 9/9
+  PASS, published R17 command 18/18 PASS, both rc 0 / stderr 0, block identity unchanged, and
+  the SHIPPED policy (no harness injection) refuses the wait mutant —
+  `SHIPPED_R17_WAIT_GREEN mutant=wait_p rc=1 UNMODELED` — so the R2 delivery defect is closed
+  for real. Remaining for RP6: fresh Claude audit of the r19 bytes (next Pro window) + fresh
+  Codex audit (blocked to 08-16/08-18), or the owner's accept-with-disclosure call.**
 - **Extended RP7 audited** (`WPI_BLOCKS_DRAFT/RP7_CLAUDE_T0_EXT_AUDIT_2026-08-13.md`,
   REQUEST_CHANGES, 2 REQUIRED both small, PASS expected on repair) → **r3 repair delivered**:
   case-insensitive `[install]` match REVERTED (GLM's justification was factually false —

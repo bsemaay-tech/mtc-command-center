@@ -13149,11 +13149,12 @@ The published harness below executes all of these checks in one run:
    real `wait -p "$name"` mutant. That is D026 RED against delivered bytes.
 2. It executes Bash's `wait -p` assignment with a symbolic target and proves the
    target changed.
-3. It patches only the temporary extracted R16 tokenizer with the fail-closed
-   `waittarget` grammar, runs the current round-17/R18 policy over the same
-   mutant, and requires the exact
-   `UNMODELED kind=dynamic_variable_target:wait_p` record. That is GREEN.
-4. It runs the same repaired temporary policy over the unchanged block and
+3. It runs a fail-closed `waittarget` grammar over the same mutant and requires
+   the exact `UNMODELED kind=dynamic_variable_target:wait_p` record. Round 19
+   puts that grammar in the shipped R16 fence; the helper below is now
+   idempotent and does not inject a duplicate grammar when the shipped fence
+   already carries it. That is GREEN.
+4. It runs the same repaired policy over the unchanged block and
    requires the current fence to remain green, including the measured
    pass-format scan and its falsification mutant.
 5. It derives and reconciles the complete 37-member effect partition and the
@@ -13222,13 +13223,21 @@ r18_insert_after_probe() {
 }
 
 r18_patch_wait_policy() {
-  local src="$1" out="$2" dispatch_anchors function_anchors
+  local src="$1" out="$2" dispatch_anchors function_anchors existing_dispatches existing_functions
   dispatch_anchors=$(sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' "$src" |
     grep -cF '# R14 finding 3: the two alias-control builtins' || true)
   function_anchors=$(sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' "$src" |
     grep -cF '  function vartarget(t, w, single,' || true)
   if [ "$dispatch_anchors" -ne 1 ] || [ "$function_anchors" -ne 1 ]; then
     return 1
+  fi
+  existing_dispatches=$(sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' "$src" |
+    grep -cF '      if (w == "wait") waittarget(t)' || true)
+  existing_functions=$(sed -n '/^# R16_GRAMMAR_HARNESS_BEGIN$/,/^# R16_GRAMMAR_HARNESS_END$/p' "$src" |
+    grep -cF '  function waittarget(' || true)
+  if [ "$existing_dispatches" -eq 1 ] && [ "$existing_functions" -eq 1 ]; then
+    cp "$src" "$out"
+    return 0
   fi
 
   awk '
@@ -13389,7 +13398,7 @@ r18_insert_after_probe "$Q18/ins_wait.txt" "$Q18/mut_wait.sh"
 wait_sha=$(sha256sum "$Q18/mut_wait.sh" | awk '{print $1}')
 wait_bytes=$(wc -c < "$Q18/mut_wait.sh" | tr -d ' ')
 if ! cmp -s "$Q18/mut_wait.sh" "$BLOCK" && bash -n "$Q18/mut_wait.sh"; then
-  r18_ok "wait_mutant_applied bytes=$wait_bytes sha256=$wait_sha bash_n=$?"
+  r18_ok "wait_mutant_applied bytes=$wait_bytes sha256=$wait_sha bash_n=0"
 else
   r18_bad "wait_mutant_invalid_or_not_applied"
 fi
@@ -13553,14 +13562,269 @@ R18_BLOCK_IDENTITY after bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0ce
 R18_ASSIGNING_EFFECT_SUMMARY cases=14 pass=14 fail=0 result=PASS
 ```
 
+# ROUND 19 - token-layer assigning-effect closure
+
+Round 19 answers the fresh Claude round-18 T0 finding. The repaired policy no
+longer depends on a command-word enumeration to notice assigning effects. The
+shipped R16 tokenizer gives a terminal `UNMODELED
+kind=token_assignment_capable_expansion:*` disposition to any token whose raw
+text carries an assignment-capable parameter expansion, indirect
+`${!name:=word}` default assignment, arithmetic assignment expansion, arithmetic
+command assignment, or array-subscript arithmetic assignment. The `wait -p`
+grammar is also in the shipped R16 fence, so the document's own R17 command
+executes it directly.
+
+## R19 token-layer harness
+
+```bash
+# R19_TOKEN_LAYER_HARNESS_BEGIN
+#!/usr/bin/env bash
+set -u
+
+BLOCK="${1:-RP6-P0.sh}"
+QA="${2:-SELF_QA_RP6.md}"
+DRAFT="${3:-../WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md}"
+R18_COMMIT="d2fd0040b0b4d96e8a2344b9715fea5d788303df"
+HIST_PATH="MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/SELF_QA_RP6.md"
+R18_QA_SHA="0bbf41dd2985a587c97a992589c7576b31e92217d11ecb888b4c8b2c84b84481"
+R18_QA_BYTES="1065504"
+BLOCK_SHA="5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330"
+BLOCK_BYTES="110817"
+
+R19_OK=0
+R19_BAD=0
+r19_ok() { printf 'R19_ASSERT_MET %s\n' "$1"; R19_OK=$((R19_OK+1)); }
+r19_bad() { printf 'R19_ASSERT_UNMET %s\n' "$1"; R19_BAD=$((R19_BAD+1)); }
+
+Q19="$(mktemp -d)"
+trap 'rm -rf "$Q19"' EXIT
+
+r19_summary() {
+  awk '$1=="R17_DYNAMIC_TARGETS_SUMMARY"{line=$0} END{print line}' "$1"
+}
+
+r19_target_report() {
+  awk '$1=="R17_ASSERT_MET" && $2=="r17_dynamic_targets_measured"{line=$0}
+       $1=="R17_ASSERT_UNMET" && $2=="r17_clean_verdict_failed"{line=$0}
+       END{print line}' "$1"
+}
+
+r19_rebind_r17() {
+  local src="$1" out="$2" sha="$3" bytes="$4" normalized_before normalized_after
+  sed -e "s/^EXPECTED_SHA=\"[0-9a-f]*\"$/EXPECTED_SHA=\"$sha\"/" \
+      -e "s/^EXPECTED_BYTES=\"[0-9]*\"$/EXPECTED_BYTES=\"$bytes\"/" \
+      "$src" > "$out"
+  normalized_before=$(sed -e 's/^EXPECTED_SHA=.*/EXPECTED_SHA=<BOUND>/' \
+                          -e 's/^EXPECTED_BYTES=.*/EXPECTED_BYTES=<BOUND>/' "$src" | sha256sum | awk '{print $1}')
+  normalized_after=$(sed -e 's/^EXPECTED_SHA=.*/EXPECTED_SHA=<BOUND>/' \
+                         -e 's/^EXPECTED_BYTES=.*/EXPECTED_BYTES=<BOUND>/' "$out" | sha256sum | awk '{print $1}')
+  [ "$normalized_before" = "$normalized_after" ] &&
+  [ "$(grep -c '^EXPECTED_SHA=' "$out")" -eq 1 ] &&
+  [ "$(grep -c '^EXPECTED_BYTES=' "$out")" -eq 1 ]
+}
+
+r19_instrument_r17() {
+  local src="$1" out="$2" anchors
+  anchors=$(grep -cF '    r17_target_report "$Q/$tag.tok" "$tag"' "$src" || true)
+  [ "$anchors" -eq 1 ] || return 1
+  awk '
+    { print }
+    index($0, "    r17_target_report \"$Q/$tag.tok\" \"$tag\"") {
+      print "    grep -E '\''^(UNMODELED kind=(token_assignment_capable_expansion|dynamic_variable_target):|VARTARGET .* builtin=wait_p )'\'' \"$Q/$tag.tok\" 2>/dev/null || true"
+    }
+  ' "$src" > "$out"
+}
+
+r19_insert_after_probe() {
+  local insert="$1" out="$2"
+  awk -v ins="$insert" '
+    BEGIN { while ((getline line < ins) > 0) body[++n] = line }
+    { print }
+    /^p0_probe_kind\(\) \{$/ { for (i = 1; i <= n; i++) print body[i] }
+  ' "$BLOCK" > "$out"
+}
+
+if [ -f "$BLOCK" ]; then
+  block_sha=$(sha256sum "$BLOCK" | awk '{print $1}')
+  block_bytes=$(wc -c < "$BLOCK" | tr -d ' ')
+  printf 'R19_BLOCK_IDENTITY before bytes=%s sha256=%s\n' "$block_bytes" "$block_sha"
+  [ "$block_sha" = "$BLOCK_SHA" ] && [ "$block_bytes" = "$BLOCK_BYTES" ] &&
+    r19_ok "block_identity_before unchanged bytes=$block_bytes sha256=$block_sha" ||
+    r19_bad "block_identity_before changed bytes=$block_bytes sha256=$block_sha"
+else
+  r19_bad "block_identity_before missing path=$BLOCK"
+fi
+
+printf 'R19_BASH_VERSION %s\n' "$BASH_VERSION"
+
+if git show "$R18_COMMIT:$HIST_PATH" > "$Q19/r18_selfqa.md"; then
+  r18_sha=$(sha256sum "$Q19/r18_selfqa.md" | awk '{print $1}')
+  r18_bytes=$(wc -c < "$Q19/r18_selfqa.md" | tr -d ' ')
+  [ "$r18_sha" = "$R18_QA_SHA" ] && [ "$r18_bytes" = "$R18_QA_BYTES" ] &&
+    r19_ok "delivered_r18_selfqa_bound commit=$R18_COMMIT bytes=$r18_bytes sha256=$r18_sha" ||
+    r19_bad "delivered_r18_selfqa_bound commit=$R18_COMMIT bytes=$r18_bytes sha256=$r18_sha"
+else
+  r19_bad "delivered_r18_selfqa_unavailable commit=$R18_COMMIT path=$HIST_PATH"
+fi
+
+sed -n '/^# R17_DYNAMIC_TARGETS_HARNESS_BEGIN$/,/^# R17_DYNAMIC_TARGETS_HARNESS_END$/p' \
+  "$Q19/r18_selfqa.md" > "$Q19/r17_r18_delivered.sh"
+sed -n '/^# R17_DYNAMIC_TARGETS_HARNESS_BEGIN$/,/^# R17_DYNAMIC_TARGETS_HARNESS_END$/p' \
+  "$QA" > "$Q19/r17_current.sh"
+if r19_instrument_r17 "$Q19/r17_current.sh" "$Q19/r17_current_inst.sh"; then
+  r19_ok "r19_policy_instrumentation token_record_channel=present"
+else
+  r19_bad "r19_policy_instrumentation token_record_channel=missing"
+fi
+
+cat > "$Q19/ins_token.txt" <<'P0_R19_TOKEN_MUTANT_EOF'
+    [ -z "${P0_R19_TOKEN_MUTANT:-}" ] || { : "${P0_R19_WX_A:=alpha}"; test -n "${P0_R19_WX_B:=beta}"; [ -n "${P0_R19_WX_C:=gamma}" ]; type -t "${P0_R19_WX_TYPE:=echo}" >/dev/null; : "$((P0_R19_WX_D=42))"; P0_R19_WX_NAME=P0_R19_WX_E; : "${!P0_R19_WX_NAME:=delta}"; : "${P0_R19_WX_ARR[P0_R19_WX_F=1]:-fallback}"; ((P0_R19_WX_G=7)); }
+P0_R19_TOKEN_MUTANT_EOF
+r19_insert_after_probe "$Q19/ins_token.txt" "$Q19/mut_token.sh"
+token_sha=$(sha256sum "$Q19/mut_token.sh" | awk '{print $1}')
+token_bytes=$(wc -c < "$Q19/mut_token.sh" | tr -d ' ')
+if ! cmp -s "$Q19/mut_token.sh" "$BLOCK" && bash -n "$Q19/mut_token.sh"; then
+  r19_ok "token_mutant_applied bytes=$token_bytes sha256=$token_sha bash_n=0"
+else
+  r19_bad "token_mutant_invalid_or_not_applied bytes=$token_bytes sha256=$token_sha"
+fi
+
+semantics=$(bash --noprofile --norc -c '
+  unset P0_R19_WX_A P0_R19_WX_D P0_R19_WX_E P0_R19_WX_F P0_R19_WX_G
+  P0_R19_WX_NAME=P0_R19_WX_E
+  : "${P0_R19_WX_A:=alpha}"
+  : "$((P0_R19_WX_D=42))"
+  : "${!P0_R19_WX_NAME:=delta}"
+  P0_R19_WX_ARR=(z)
+  : "${P0_R19_WX_ARR[P0_R19_WX_F=0]:-fallback}"
+  ((P0_R19_WX_G=7))
+  printf "A=%s D=%s E=%s F=%s G=%s" "$P0_R19_WX_A" "$P0_R19_WX_D" "$P0_R19_WX_E" "$P0_R19_WX_F" "$P0_R19_WX_G"
+')
+if [ "$semantics" = "A=alpha D=42 E=delta F=0 G=7" ]; then
+  r19_ok "token_mutant_bash_semantics $semantics runtime_named_target=P0_R19_WX_E"
+else
+  r19_bad "token_mutant_bash_semantics [$semantics]"
+fi
+
+if r19_rebind_r17 "$Q19/r17_r18_delivered.sh" "$Q19/r17_r18_token.sh" "$token_sha" "$token_bytes"; then
+  bash --noprofile --norc "$Q19/r17_r18_token.sh" \
+    "$Q19/mut_token.sh" "$Q19/r18_selfqa.md" "$DRAFT" > "$Q19/red_token.out" 2> "$Q19/red_token.err"
+  red_rc=$?
+  red_summary=$(r19_summary "$Q19/red_token.out")
+  red_target=$(r19_target_report "$Q19/red_token.out")
+  red_records=$(grep -c '^UNMODELED kind=token_assignment_capable_expansion:' "$Q19/red_token.out" || true)
+  if [ "$red_rc" -eq 0 ] &&
+     printf '%s\n' "$red_summary" | grep -q 'fail=0 result=PASS' &&
+     printf '%s\n' "$red_target" | grep -q 'dynamic_targets=0' &&
+     [ "$red_records" -eq 0 ]; then
+    r19_ok "D026_RED_DELIVERED_R18 mutant=token_assignment_layer rc=$red_rc summary=[$red_summary] target=[$red_target] token_records=$red_records"
+  else
+    r19_bad "D026_RED_DELIVERED_R18 mutant=token_assignment_layer rc=$red_rc summary=[$red_summary] target=[$red_target] token_records=$red_records"
+  fi
+else
+  r19_bad "D026_RED_DELIVERED_R18 mutant=token_assignment_layer rebind_failed"
+fi
+
+if r19_rebind_r17 "$Q19/r17_current_inst.sh" "$Q19/r17_current_token.sh" "$token_sha" "$token_bytes"; then
+  bash --noprofile --norc "$Q19/r17_current_token.sh" \
+    "$Q19/mut_token.sh" "$QA" "$DRAFT" > "$Q19/green_token.out" 2> "$Q19/green_token.err"
+  green_rc=$?
+  green_summary=$(r19_summary "$Q19/green_token.out")
+  green_target=$(r19_target_report "$Q19/green_token.out")
+  green_records=$(grep -c '^UNMODELED kind=token_assignment_capable_expansion:' "$Q19/green_token.out" || true)
+  if [ "$green_rc" -ne 0 ] &&
+     [ "$green_records" -ge 5 ] &&
+     printf '%s\n' "$green_target" | grep -q 'token_assignments=[1-9]'; then
+    r19_ok "D026_GREEN_R19 mutant=token_assignment_layer rc=$green_rc records=$green_records target=[$green_target] summary=[$green_summary]"
+    grep '^UNMODELED kind=token_assignment_capable_expansion:' "$Q19/green_token.out" | sed -n '1,8p'
+  else
+    r19_bad "D026_GREEN_R19 mutant=token_assignment_layer rc=$green_rc records=$green_records target=[$green_target] summary=[$green_summary]"
+  fi
+else
+  r19_bad "D026_GREEN_R19 mutant=token_assignment_layer rebind_failed"
+fi
+
+cat > "$Q19/ins_wait.txt" <<'P0_R19_WAIT_MUTANT_EOF'
+    [ -z "${P0_R19_WAIT_MUTANT:-}" ] || { P0_R19_WAIT_NAME=P0_R19_WAIT_TARGET; ( : ) & wait -n -p "$P0_R19_WAIT_NAME"; }
+P0_R19_WAIT_MUTANT_EOF
+r19_insert_after_probe "$Q19/ins_wait.txt" "$Q19/mut_wait.sh"
+wait_sha=$(sha256sum "$Q19/mut_wait.sh" | awk '{print $1}')
+wait_bytes=$(wc -c < "$Q19/mut_wait.sh" | tr -d ' ')
+if ! cmp -s "$Q19/mut_wait.sh" "$BLOCK" && bash -n "$Q19/mut_wait.sh" &&
+   r19_rebind_r17 "$Q19/r17_current_inst.sh" "$Q19/r17_current_wait.sh" "$wait_sha" "$wait_bytes"; then
+  bash --noprofile --norc "$Q19/r17_current_wait.sh" \
+    "$Q19/mut_wait.sh" "$QA" "$DRAFT" > "$Q19/green_wait.out" 2> "$Q19/green_wait.err"
+  wait_rc=$?
+  wait_summary=$(r19_summary "$Q19/green_wait.out")
+  wait_target=$(r19_target_report "$Q19/green_wait.out")
+  wait_record=$(grep '^UNMODELED kind=dynamic_variable_target:wait_p' "$Q19/green_wait.out" | sed -n '1p')
+  if [ "$wait_rc" -ne 0 ] && [ -n "$wait_record" ]; then
+    r19_ok "SHIPPED_R17_WAIT_GREEN mutant=wait_p rc=$wait_rc record=[$wait_record] target=[$wait_target] summary=[$wait_summary]"
+  else
+    r19_bad "SHIPPED_R17_WAIT_GREEN mutant=wait_p rc=$wait_rc record=[$wait_record] target=[$wait_target] summary=[$wait_summary]"
+  fi
+else
+  r19_bad "SHIPPED_R17_WAIT_GREEN mutant=wait_p invalid_or_rebind_failed"
+fi
+
+if [ -f "$BLOCK" ]; then
+  block_sha_after=$(sha256sum "$BLOCK" | awk '{print $1}')
+  block_bytes_after=$(wc -c < "$BLOCK" | tr -d ' ')
+  printf 'R19_BLOCK_IDENTITY after bytes=%s sha256=%s\n' "$block_bytes_after" "$block_sha_after"
+  [ "$block_sha_after" = "$BLOCK_SHA" ] && [ "$block_bytes_after" = "$BLOCK_BYTES" ] &&
+    r19_ok "block_identity_after unchanged bytes=$block_bytes_after sha256=$block_sha_after" ||
+    r19_bad "block_identity_after changed bytes=$block_bytes_after sha256=$block_sha_after"
+fi
+
+printf 'R19_TOKEN_LAYER_SUMMARY cases=%s pass=%s fail=%s result=%s\n' \
+  "$((R19_OK+R19_BAD))" "$R19_OK" "$R19_BAD" \
+  "$([ "$R19_BAD" -eq 0 ] && echo PASS || echo FAIL)"
+[ "$R19_BAD" -eq 0 ] || exit 1
+# R19_TOKEN_LAYER_HARNESS_END
+```
+
+Published command, from `WPI_BLOCKS_DRAFT`:
+
+```bash
+sed -n '/^# R19_TOKEN_LAYER_HARNESS_BEGIN$/,/^# R19_TOKEN_LAYER_HARNESS_END$/p' SELF_QA_RP6.md | bash --noprofile --norc
+```
+
+Exact summary transcript from the published command (outer rc 0, stderr bytes
+0, elapsed 3248 s):
+
+```text
+R19_BLOCK_IDENTITY before bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+R19_ASSERT_MET block_identity_before unchanged bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+R19_BASH_VERSION 5.2.37(1)-release
+R19_ASSERT_MET delivered_r18_selfqa_bound commit=d2fd0040b0b4d96e8a2344b9715fea5d788303df bytes=1065504 sha256=0bbf41dd2985a587c97a992589c7576b31e92217d11ecb888b4c8b2c84b84481
+R19_ASSERT_MET r19_policy_instrumentation token_record_channel=present
+R19_ASSERT_MET token_mutant_applied bytes=111149 sha256=72c1d98f8aaef65811ba8865e5aa0fba3db116170606e95f86acdfb32d78c457 bash_n=0
+R19_ASSERT_MET token_mutant_bash_semantics A=alpha D=42 E=delta F=0 G=7 runtime_named_target=P0_R19_WX_E
+R19_ASSERT_MET D026_RED_DELIVERED_R18 mutant=token_assignment_layer rc=0 summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=16 pass=16 fail=0 result=PASS] target=[R17_ASSERT_MET r17_dynamic_targets_measured variable_targets=113 inventory_targets=0 dynamic_targets=0 dynamic_variable_targets=0 opaque_mutators=0 effect_unmodeled=0 nonfunction_bare=11] token_records=0
+R19_ASSERT_MET D026_GREEN_R19 mutant=token_assignment_layer rc=1 records=24 target=[R17_ASSERT_UNMET r17_clean_verdict_failed rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=8 dynamic_variable_targets=0 opaque_mutators=0 token_assignments=8 effect_unmodeled=0 nonfunction_bare=11]] summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=17 pass=13 fail=4 result=FAIL]
+UNMODELED kind=token_assignment_capable_expansion:parameter_default line=1567 raw=["${P0_R19_WX_A:=alpha}"]
+UNMODELED kind=token_assignment_capable_expansion:parameter_default line=1567 raw=["${P0_R19_WX_B:=beta}"]
+UNMODELED kind=token_assignment_capable_expansion:parameter_default line=1567 raw=["${P0_R19_WX_C:=gamma}"]
+UNMODELED kind=token_assignment_capable_expansion:parameter_default line=1567 raw=["${P0_R19_WX_TYPE:=echo}"]
+UNMODELED kind=token_assignment_capable_expansion:arithmetic_expansion line=1567 raw=["$((P0_R19_WX_D=42))"]
+UNMODELED kind=token_assignment_capable_expansion:parameter_default line=1567 raw=["${!P0_R19_WX_NAME:=delta}"]
+UNMODELED kind=token_assignment_capable_expansion:array_subscript line=1567 raw=["${P0_R19_WX_ARR[P0_R19_WX_F=1]:-fallback}"]
+UNMODELED kind=token_assignment_capable_expansion:arithmetic_command line=1567 raw=[P0_R19_WX_G=7]
+R19_ASSERT_MET SHIPPED_R17_WAIT_GREEN mutant=wait_p rc=1 record=[UNMODELED kind=dynamic_variable_target:wait_p line=1567 raw=["$P0_R19_WAIT_NAME"]] target=[R17_ASSERT_UNMET r17_clean_verdict_failed rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=1 opaque_mutators=0 token_assignments=0 effect_unmodeled=0 nonfunction_bare=11]] summary=[R17_DYNAMIC_TARGETS_SUMMARY cases=17 pass=13 fail=4 result=FAIL]
+R19_BLOCK_IDENTITY after bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+R19_ASSERT_MET block_identity_after unchanged bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
+R19_TOKEN_LAYER_SUMMARY cases=9 pass=9 fail=0 result=PASS
+```
+
 # ROUND 17 - RP6-11 dynamic target census closure
 
-> **ROUND-18 CORRECTION.** The round-17 phrase "closed effect model" below is
-> superseded. The r17 T0 audit proved that `wait -p` survived. Round 18 narrows
-> the property to caller-selected named-variable assignment effects and closes
-> that property through the executed partition and target grammar above. The
-> round-17 pass-format producer is also repaired in place below with a measured
-> scan and a falsification that adds one unsupported numeric result field.
+> **ROUND-19 CORRECTION.** The round-17 phrase "closed effect model" below is
+> superseded. The r17 and r18 T0 audits proved that `wait -p` and token-carried
+> assignment effects survived the command-word model. Round 19 puts `waittarget`
+> in the shipped R16 fence and adds a token-layer terminal disposition for
+> assignment-capable word expansions and arithmetic assignment forms. The
+> round-17 pass-format producer is also repaired in place below with a widened
+> measured scan and falsification mutants, including two-level indirection.
 
 Round 17 is a QA/census-layer repair only. `RP6-P0.sh` remains byte-identical to
 the round-16 subject: 110817 bytes, SHA-256
@@ -13733,15 +13997,16 @@ P0_R17_EFFECT_MODEL_EOF
 r17_target_report() {
   local tok="$1" tag="$2"
   r17_effect_model_probe "$tok" "$tag"
-  local n_vt n_inv n_dyn_var n_opaque n_effect n_dyn
+  local n_vt n_inv n_dyn_var n_opaque n_effect n_token_assign n_dyn
   n_vt=$(grep -c '^VARTARGET ' "$tok" || true)
   n_inv=$(r17_inventory_target_count "$tok")
   n_dyn_var=$(grep -c '^UNMODELED kind=dynamic_variable_target:' "$tok" || true)
   n_opaque=$(grep -c '^UNMODELED kind=indirect_execution_builtin:' "$tok" || true)
+  n_token_assign=$(grep -c '^UNMODELED kind=token_assignment_capable_expansion:' "$tok" || true)
   n_effect=$(r17_count_lines "$Q/$tag.effect_unmodeled")
-  n_dyn=$((n_dyn_var + n_opaque + n_effect))
-  printf 'variable_targets=%s inventory_targets=%s dynamic_targets=%s dynamic_variable_targets=%s opaque_mutators=%s effect_unmodeled=%s nonfunction_bare=%s\n' \
-    "$n_vt" "$n_inv" "$n_dyn" "$n_dyn_var" "$n_opaque" "$n_effect" "$(r17_count_lines "$Q/$tag.nonfunc_bare")" > "$Q/$tag.target_report"
+  n_dyn=$((n_dyn_var + n_opaque + n_token_assign + n_effect))
+  printf 'variable_targets=%s inventory_targets=%s dynamic_targets=%s dynamic_variable_targets=%s opaque_mutators=%s token_assignments=%s effect_unmodeled=%s nonfunction_bare=%s\n' \
+    "$n_vt" "$n_inv" "$n_dyn" "$n_dyn_var" "$n_opaque" "$n_token_assign" "$n_effect" "$(r17_count_lines "$Q/$tag.nonfunc_bare")" > "$Q/$tag.target_report"
 }
 
 r17_verdict_subject() {
@@ -13771,34 +14036,70 @@ r17_insert_after_probe() {
 r17_uncomputed_result_fields() {
   local src="$1"
   awk '
+    function trim(x) { sub(/^[[:space:]]+/, "", x); sub(/[[:space:]]+$/, "", x); return x }
+    function note(v, kind) {
+      assignments[v]++
+      if (kind == "num") literal[v] = 1
+      else if (kind != "") ref[v] = kind
+    }
+    function producer(s) {
+      return (s ~ /(^|[;&|(){}[:space:]])(rok|rbad)[[:space:]]+"/ ||
+              s ~ /(^|[;&|(){}[:space:]])printf[[:space:]]+('\''|")R17_/)
+    }
+    function resolved(v, depth) {
+      if (depth > 8) return 0
+      if (literal[v]) return 1
+      if (ref[v] != "") return resolved(ref[v], depth + 1)
+      return 0
+    }
+    function emit_matches(s, re,   field, v) {
+      while (match(s, re)) {
+        field = substr(s, RSTART, RLENGTH)
+        print field
+        s = substr(s, RSTART + RLENGTH)
+      }
+    }
+    function emit_var_matches(s,   field, v) {
+      while (match(s, /[A-Za-z_][A-Za-z0-9_]*=[$][{]?[A-Za-z_][A-Za-z0-9_]*[}]?/)) {
+        field = substr(s, RSTART, RLENGTH)
+        v = field
+        sub(/^.*=[$][{]?/, "", v)
+        sub(/[}]$/, "", v)
+        if (resolved(v, 0)) print field
+        s = substr(s, RSTART + RLENGTH)
+      }
+    }
     NR == FNR {
-      s = $0
-      sub(/^[[:space:]]+/, "", s)
-      if (s ~ /^[A-Za-z_][A-Za-z0-9_]*=/) {
+      if (index($0, "<<") && index($0, "P0_R17_FORMAT_MATRIX_EOF")) { skip_fixture = 1; next }
+      if (skip_fixture && $0 == "P0_R17_FORMAT_MATRIX_EOF") { skip_fixture = 0; next }
+      if (skip_fixture) next
+      s = trim($0)
+      if (match(s, /^(local[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*=/)) {
         v = s
+        sub(/^local[[:space:]]+/, "", v)
         sub(/=.*/, "", v)
-        assignments[v]++
-        if (s ~ /^[A-Za-z_][A-Za-z0-9_]*=[0-9]+[[:space:]]*$/) literal[v] = 1
+        rhs = s
+        sub(/^local[[:space:]]+/, "", rhs)
+        sub(/^[A-Za-z_][A-Za-z0-9_]*=/, "", rhs)
+        rhs = trim(rhs)
+        if (rhs ~ /^[0-9]+$/) note(v, "num")
+        else if (rhs ~ /^[$][{]?[A-Za-z_][A-Za-z0-9_]*[}]?$/) {
+          sub(/^[$][{]?/, "", rhs); sub(/[}]$/, "", rhs); note(v, rhs)
+        } else if (rhs ~ /^[$]\(\([[:space:]]*[0-9]+[[:space:]]*\)\)$/) note(v, "num")
+        else if (rhs ~ /^[$][{][A-Za-z_][A-Za-z0-9_]*:-[0-9]+[}]$/) note(v, "num")
       }
       next
     }
     {
+      if (index($0, "<<") && index($0, "P0_R17_FORMAT_MATRIX_EOF")) { skip_fixture = 1; next }
+      if (skip_fixture && $0 == "P0_R17_FORMAT_MATRIX_EOF") { skip_fixture = 0; next }
+      if (skip_fixture) next
       s = $0
-      sub(/^[[:space:]]+/, "", s)
-      if (s ~ /^(rok|rbad) "/ || s ~ /^printf '\''R17_/) {
-        while (match(s, /[A-Za-z_][A-Za-z0-9_]*=[0-9]+/)) {
-          print substr(s, RSTART, RLENGTH)
-          s = substr(s, RSTART + RLENGTH)
-        }
-        s = $0
-        while (match(s, /[A-Za-z_][A-Za-z0-9_]*=[$][{]?[A-Za-z_][A-Za-z0-9_]*[}]?/)) {
-          field = substr(s, RSTART, RLENGTH)
-          v = field
-          sub(/^.*=[$][{]?/, "", v)
-          sub(/[}]$/, "", v)
-          if (literal[v] && assignments[v] == 1) print field
-          s = substr(s, RSTART + RLENGTH)
-        }
+      if (producer(trim(s))) {
+        emit_matches(s, "[A-Za-z_][A-Za-z0-9_]*=[0-9]+")
+        emit_matches(s, "[A-Za-z_][A-Za-z0-9_]*=[$]\\(\\([[:space:]]*[0-9]+[[:space:]]*\\)\\)")
+        emit_matches(s, "[A-Za-z_][A-Za-z0-9_]*=[$][{][A-Za-z_][A-Za-z0-9_]*:-[0-9]+[}]")
+        emit_var_matches(s)
       }
     }
   ' "$src" "$src"
@@ -13806,17 +14107,20 @@ r17_uncomputed_result_fields() {
 
 r17_result_producer_count() {
   awk '
+    function trim(x) { sub(/^[[:space:]]+/, "", x); return x }
+    function producer(s) {
+      return (s ~ /(^|[;&|(){}[:space:]])(rok|rbad)[[:space:]]+"/ ||
+              s ~ /(^|[;&|(){}[:space:]])printf[[:space:]]+('\''|")R17_/)
+    }
     {
-      s = $0
-      sub(/^[[:space:]]+/, "", s)
-      if (s ~ /^(rok|rbad) "/ || s ~ /^printf '\''R17_/) n++
+      if (producer(trim($0))) n++
     }
     END { print n + 0 }
   ' "$1"
 }
 
 r17_pass_format_scan() {
-  local current_count mutant_count producer_count expected_mutant_count
+  local current_count mutant_count chain_count matrix_count producer_count matrix_producer_count expected_mutant_count matrix_expected
   sed -n '/^# R17_DYNAMIC_TARGETS_HARNESS_BEGIN$/,/^# R17_DYNAMIC_TARGETS_HARNESS_END$/p' "$QA" > "$Q/r17_format_current.sh"
   r17_uncomputed_result_fields "$Q/r17_format_current.sh" > "$Q/r17_format_current.fields"
   current_count=$(r17_count_lines "$Q/r17_format_current.fields")
@@ -13833,6 +14137,36 @@ r17_pass_format_scan() {
   mutant_count=$(r17_count_lines "$Q/r17_format_mutant.fields")
   expected_mutant_count=$((current_count + 1))
 
+  awk '
+    /^# R17_DYNAMIC_TARGETS_HARNESS_END$/ {
+      print "P0_R17_FORMAT_CHAIN_A=0"
+      print "P0_R17_FORMAT_CHAIN_B=$P0_R17_FORMAT_CHAIN_A"
+      print "rok \"FORMAT_MUTANT_CHAIN unsupported_chain=$P0_R17_FORMAT_CHAIN_B\""
+    }
+    { print }
+  ' "$Q/r17_format_current.sh" > "$Q/r17_format_chain.sh"
+  r17_uncomputed_result_fields "$Q/r17_format_chain.sh" > "$Q/r17_format_chain.fields"
+  chain_count=$(r17_count_lines "$Q/r17_format_chain.fields")
+
+  cat > "$Q/r17_format_matrix.sh" <<'P0_R17_FORMAT_MATRIX_EOF'
+S2_A=0
+S2_B=$S2_A
+S2_C=0
+S2_C=0
+rok "MATRIX direct_literal count=0"
+rok "MATRIX variable_literal count=$S2_A"
+rok "MATRIX two_level count=$S2_B"
+rok "MATRIX arithmetic count=$((0))"
+rok "MATRIX default count=${S2_UNSET:-0}"
+rok "MATRIX reassigned count=$S2_C"
+printf "R17_MATRIX double_quote count=$S2_A\n"
+[ 1 -eq 1 ] && rok "MATRIX prefixed count=0"
+P0_R17_FORMAT_MATRIX_EOF
+  r17_uncomputed_result_fields "$Q/r17_format_matrix.sh" > "$Q/r17_format_matrix.fields"
+  matrix_count=$(r17_count_lines "$Q/r17_format_matrix.fields")
+  matrix_producer_count=$(r17_result_producer_count "$Q/r17_format_matrix.sh")
+  matrix_expected=$((4 + 4))
+
   if [ "$current_count" -eq 0 ]; then
     rok "r17_pass_format_measured scanned_producers=$producer_count uncomputed_numeric_fields=$current_count"
   else
@@ -13846,6 +14180,21 @@ r17_pass_format_scan() {
   else
     rbad "D026_RED_PASS_FORMAT mutant=variable_backed_literal_numeric_field baseline=$current_count detected=$mutant_count expected=$expected_mutant_count"
     sed -n '1,12p' "$Q/r17_format_mutant.fields"
+  fi
+
+  if [ "$chain_count" -eq "$expected_mutant_count" ] &&
+     grep -qxF 'unsupported_chain=$P0_R17_FORMAT_CHAIN_B' "$Q/r17_format_chain.fields"; then
+    rok "D026_RED_PASS_FORMAT_CHAIN mutant=two_level_indirection baseline=$current_count detected=$chain_count expected=$expected_mutant_count"
+  else
+    rbad "D026_RED_PASS_FORMAT_CHAIN mutant=two_level_indirection baseline=$current_count detected=$chain_count expected=$expected_mutant_count"
+    sed -n '1,12p' "$Q/r17_format_chain.fields"
+  fi
+
+  if [ "$matrix_count" -eq "$matrix_expected" ] && [ "$matrix_producer_count" -eq "$matrix_expected" ]; then
+    rok "D026_RED_PASS_FORMAT_MATRIX shapes=$matrix_expected producers=$matrix_producer_count detected=$matrix_count includes=two_level_indirection"
+  else
+    rbad "D026_RED_PASS_FORMAT_MATRIX shapes=$matrix_expected producers=$matrix_producer_count detected=$matrix_count"
+    sed -n '1,16p' "$Q/r17_format_matrix.fields"
   fi
 }
 
@@ -13978,23 +14327,25 @@ R17_ASSERT_MET extracted_r16_fence marker_pair=present
 R17_ASSERT_MET instrumented_r16_tokenizer_copy hook=present
 R17_ASSERT_MET weakened_r16_control mutation=indirect_refusal_removed
 R17_ASSERT_MET carried_r16_grammar R16_GRAMMAR_SUMMARY cases=50 pass=50 fail=0 result=PASS rc=0
-R17_ASSERT_MET r17_dynamic_targets_measured variable_targets=113 inventory_targets=0 dynamic_targets=0 dynamic_variable_targets=0 opaque_mutators=0 effect_unmodeled=0 nonfunction_bare=10
+R17_ASSERT_MET r17_dynamic_targets_measured variable_targets=113 inventory_targets=0 dynamic_targets=0 dynamic_variable_targets=0 opaque_mutators=0 token_assignments=0 effect_unmodeled=0 nonfunction_bare=10
 R17_ASSERT_MET r17_bare_effect_model_closed nonfunction_bare=10 unmodeled=0
-R17_ASSERT_MET r17_pass_format_measured scanned_producers=28 uncomputed_numeric_fields=0
+R17_ASSERT_MET r17_pass_format_measured scanned_producers=48 uncomputed_numeric_fields=0
 R17_ASSERT_MET D026_RED_PASS_FORMAT mutant=variable_backed_literal_numeric_field baseline=0 detected=1 expected=1
+R17_ASSERT_MET D026_RED_PASS_FORMAT_CHAIN mutant=two_level_indirection baseline=0 detected=1 expected=1
+R17_ASSERT_MET D026_RED_PASS_FORMAT_MATRIX shapes=8 producers=8 detected=8 includes=two_level_indirection
 R17_ASSERT_MET mutant=eval bash_n=0
 R17_ASSERT_MET D026_RED_WEAKENED_R16 mutant=eval rc=0 summary=[R16_GRAMMAR_SUMMARY cases=50 pass=50 fail=0 result=PASS]
-R17_ASSERT_MET D026_GREEN_R17 mutant=eval refused rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=0 opaque_mutators=1 effect_unmodeled=0 nonfunction_bare=10]
+R17_ASSERT_MET D026_GREEN_R17 mutant=eval refused rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=0 opaque_mutators=1 token_assignments=0 effect_unmodeled=0 nonfunction_bare=10]
 UNMODELED kind=indirect_execution_builtin:eval line=1567 raw=[eval]
 UNMODELED kind=indirect_execution_builtin:eval line=1567 raw=[eval]
 R17_ASSERT_MET mutant=dot_source bash_n=0
 R17_ASSERT_MET D026_RED_WEAKENED_R16 mutant=dot_source rc=0 summary=[R16_GRAMMAR_SUMMARY cases=50 pass=50 fail=0 result=PASS]
-R17_ASSERT_MET D026_GREEN_R17 mutant=dot_source refused rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=0 opaque_mutators=1 effect_unmodeled=0 nonfunction_bare=10]
+R17_ASSERT_MET D026_GREEN_R17 mutant=dot_source refused rc=1 report=[variable_targets=113 inventory_targets=0 dynamic_targets=1 dynamic_variable_targets=0 opaque_mutators=1 token_assignments=0 effect_unmodeled=0 nonfunction_bare=10]
 UNMODELED kind=indirect_execution_builtin:. line=1567 raw=[.]
 UNMODELED kind=indirect_execution_builtin:. line=1567 raw=[.]
 R17_BLOCK_IDENTITY after bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
 R17_ASSERT_MET block_identity_after unchanged bytes=110817 sha256=5132bacde24cbff8c9267a82f6ac6e3b0cebe3d3c82b092518efac1245103330
-R17_DYNAMIC_TARGETS_SUMMARY cases=16 pass=16 fail=0 result=PASS
+R17_DYNAMIC_TARGETS_SUMMARY cases=18 pass=18 fail=0 result=PASS
 ```
 
 # ROUND 15 — the conservation laws, made to conserve the right quantity
@@ -16524,11 +16875,12 @@ regress by inverting a blacklist into a whitelist.
   one of the three inventory variables. This is a refusal of dynamic targets, not
   a resolution of them, and it is stated that way in the limits below.
 
-  **Round-18 correction:** "every admitted variable-mutating builtin" was false.
-  The list omitted `wait -p TARGET`; the delivered round-17 fence certified that
-  executed assignment class clean. The round-18 harness above supersedes this
-  claim with the 37-member conserved effect partition and the fail-closed
-  `waittarget` grammar.
+  **Round-19 correction:** "every admitted variable-mutating builtin" and the
+  round-18 "supersedes" claim were both too broad for the delivered bytes. The
+  list omitted `wait -p TARGET`, and round 18 demonstrated its grammar only in
+  a temporary patched fence. The shipped R16 fence now carries `waittarget`
+  directly, and the R19 token-layer rule refuses assignment-capable word
+  expansions independently of the command word.
 
 ## The fourth finding — the evidence record
 
@@ -16807,6 +17159,9 @@ p0_r16_tokenize() {           # $1 = bytes to tokenize; records on stdout
   #                        definition shapes, one disposition each; R16: SPAN)
   #   VARTARGET line=<n> col=<c> builtin=<b> name=<v>  (R16: the literal target
   #                        of an admitted variable-mutating builtin)
+  #   UNMODELED kind=token_assignment_capable_expansion:<k> ... (R19: a token
+  #                        whose raw text carries an assignment-capable
+  #                        expansion or arithmetic assignment surface)
   #   ALIAS_BUILTIN line=<n> raw=[<word>]     (R14: the alias builtin, executed)
   #   SHOPT_INVOCATION line=<n>               (R14: a shopt at command position)
   #   SHOPT_EXPAND_ALIASES line=<n>           (R14: alias expansion enabled)
@@ -16824,6 +17179,57 @@ p0_r16_tokenize() {           # $1 = bytes to tokenize; records on stdout
       gsub(EXP, "<EXP>", raw)
       printf "UNMODELED kind=%s line=%d raw=[%s]\n", kind, line, raw
       NUNMOD++
+  }
+
+  function arith_assignment_expr(s) {
+      if (s ~ /(^|[^A-Za-z0-9_])(\+\+|--)[A-Za-z_][A-Za-z0-9_]*/) return 1
+      if (s ~ /[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?(\+\+|--)([^A-Za-z0-9_]|$)/) return 1
+      if (s ~ /[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?[[:space:]]*(\+=|-=|\*=|\/=|%=|<<=|>>=|&=|\^=|\|=)/) return 1
+      if (s ~ /[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?[[:space:]]*=[^=]/) return 1
+      return 0
+  }
+
+  function token_parameter_default_assignment(raw) {
+      return (raw ~ /[$][{]!?[A-Za-z_][A-Za-z0-9_]*(\[[^]]+\])?(:)?=[^}]*[}]/)
+  }
+
+  function token_arithmetic_expansion_assignment(raw,   s, body) {
+      s = raw
+      while (match(s, /[$]\(\([^)]*\)\)/)) {
+          body = substr(s, RSTART + 3, RLENGTH - 5)
+          if (arith_assignment_expr(body)) return 1
+          s = substr(s, RSTART + RLENGTH)
+      }
+      return 0
+  }
+
+  function token_array_subscript_assignment(raw,   s, body) {
+      s = raw
+      while (match(s, /\[[^]]+\]/)) {
+          body = substr(s, RSTART + 1, RLENGTH - 2)
+          if (arith_assignment_expr(body)) return 1
+          s = substr(s, RSTART + RLENGTH)
+      }
+      return 0
+  }
+
+  function token_arithmetic_command_assignment(t,   k) {
+      if (!arith_assignment_expr(TR[t])) return 0
+      for (k = t - 1; k >= 2; k--) {
+          if (TT[k] == "OP" && (TN[k] == "\n" || TN[k] == ";" || TN[k] == "&" ||
+              TN[k] == "&&" || TN[k] == "||")) return 0
+          if (TT[k] == "OP" && TN[k] == "(" && TT[k-1] == "OP" && TN[k-1] == "(") return 1
+      }
+      return 0
+  }
+
+  function token_assignment_effect(t,   raw, kind) {
+      raw = TR[t]; kind = ""
+      if (token_parameter_default_assignment(raw)) kind = "parameter_default"
+      else if (token_arithmetic_expansion_assignment(raw)) kind = "arithmetic_expansion"
+      else if (token_array_subscript_assignment(raw)) kind = "array_subscript"
+      else if (token_arithmetic_command_assignment(t)) kind = "arithmetic_command"
+      if (kind != "") unmodeled("token_assignment_capable_expansion:" kind, TL[t], raw)
   }
 
   function skipdq(s, i,   n, c, d, j) {
@@ -17241,6 +17647,7 @@ p0_r16_tokenize() {           # $1 = bytes to tokenize; records on stdout
   }
 
   function policy_b(t,   tk, i, nn, rr) {
+      token_assignment_effect(t)
       for (i = 1; i <= 4; i++) {
           tk = EMTOK[i]
           nn = cnttok(TN[t], tk); rr = cnttok(TR[t], tk)
@@ -17326,6 +17733,9 @@ p0_r16_tokenize() {           # $1 = bytes to tokenize; records on stdout
           if (a > 0 && (TN[a] ~ /^P0_STOP reason=/ || TN[a] ~ /^P0_FAIL reason=/)) emitspan(t, "printf_direct")
           return
       }
+      # R18/R19: wait is assignment-capable only through -p TARGET. This lives
+      # in the shipped fence, so the published R17 command executes it directly.
+      if (w == "wait") waittarget(t)
       # R14 finding 3: the two alias-control builtins, classified SEMANTICALLY at
       # the command position bash would resolve - not searched for as text. This
       # sees `command alias ...` and `builtin shopt ...` through the prefix strip,
@@ -17376,6 +17786,35 @@ p0_r16_tokenize() {           # $1 = bytes to tokenize; records on stdout
           }
           if (w2 == "expand_aliases") printf "SHOPT_EXPAND_ALIASES line=%d\n", TL[p]
       }
+  }
+
+  function waittarget(t,   p, r2, w2, need_target, operands) {
+      need_target = 0; operands = 0
+      for (p = t + 1; p <= NT; p++) {
+          if (TT[p] == "OP") {
+              if (isredir(TN[p])) { p++; continue }
+              break
+          }
+          r2 = TR[p]; w2 = TN[p]
+          if (need_target) {
+              if (TE[p] > 0 || TX[p] > 0 || w2 !~ /^[A-Za-z_][A-Za-z0-9_]*$/) {
+                  unmodeled("dynamic_variable_target:wait_p", TL[p], r2)
+              } else {
+                  printf "VARTARGET line=%d col=%d builtin=wait_p name=%s\n", TL[p], TC[p], w2
+              }
+              need_target = 0
+              continue
+          }
+          if (r2 ~ /^-/) {
+              if (operands > 0) { unmodeled("wait_option_after_operand:" r2, TL[p], r2); return }
+              if (w2 == "-n" || w2 == "-f") continue
+              if (w2 == "-p") { need_target = 1; continue }
+              unmodeled("variable_builtin_option_unmodeled:wait:" r2, TL[p], r2)
+              return
+          }
+          operands++
+      }
+      if (need_target) unmodeled("dynamic_variable_target:wait_p", TL[t], "missing_target")
   }
 
   # R16 finding 3: the fail-closed target grammar for the variable-mutating
