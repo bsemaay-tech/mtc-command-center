@@ -33,6 +33,33 @@ harness; extract and execute the actual block functions. Keep scratch outside
 the repository, execute strictly sequentially, and use a run-owned scratch root
 to avoid the prior fixed `/tmp` collision.
 
+Idle-window GLM-5.2 review plus Lead execution adds these binding constraints:
+
+- Execute round-4 and repaired subjects in separate processes. Both define the
+  same function names; sourcing both in one shell silently overwrites the first
+  parser and can fabricate D026 evidence. Assert exact per-case rc and terminal
+  line for each subject; the six existing row-6 pairs have heterogeneous
+  polarities, so there is no valid uniform "GREEN means rc 0" template.
+- Each subject and case needs a unique run-owned scratch namespace. Assert that
+  capture leaves opened normally before treating rc 3 as a predicate STOP.
+- A re-sourced subject reinstalls `set -e` and the block ERR trap. Separate
+  processes are preferred; do not allow harness errors to masquerade as parser
+  STOPs.
+- The CRLF fix must strip trailing `\r` exactly, not all trailing whitespace.
+  Add a mutation showing that broad `rstrip()`/`rstrip(WS)` would swallow a
+  real `[Install]`, plus a repaired trailing-space-after-backslash control.
+- The Lead reproduced a row-9 false PASS: raw token
+  `MTC_BRIDGE"_START_MODE=credential_free_disarmed` is accepted by the current
+  `shlex` tokenizer after quote removal, while local `systemd-analyze verify`
+  reports `Invalid syntax, ignoring`. Reject partial/mid-name quoting before it
+  can normalize into the protected target name; add literal D026 evidence and
+  a fully quoted valid-token control.
+- Local systemd accepts two identical target assignments while the checker
+  rejects them. Preserve strict single-occurrence policy only if it is stated
+  explicitly as an intentional stronger invariant and add a same-value-
+  duplicate fixture; otherwise align to the effective systemd value. Do not
+  silently change this boundary.
+
 Owned files only:
 
 - `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh`
