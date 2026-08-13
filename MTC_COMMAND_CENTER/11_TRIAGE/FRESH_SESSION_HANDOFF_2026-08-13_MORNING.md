@@ -294,9 +294,37 @@ affects: fresh Codex on RP6 r18, on the RP7 extension, and the pathscope re-audi
 neither claude-opus-5 nor GLM, both implemented rounds). Claude Pro session limit hit ~00:45,
 resets 04:00.
 
-**Pending at 04:00 (timer set):** (1) RP6 audit completion lane (foreground-only clause added);
-(2) Claude audit of the extended RP7 bytes. GLM advance read of the RP7 extension dispatched
-meanwhile.
+**The 04:00–09:00 wave (results, written ~09:00):**
+
+- **RP6 completion audit delivered its verdict** (`WPI_BLOCKS_DRAFT/RP6_CLAUDE_T0_2NDFLAG_AUDIT_2026-08-12.md`,
+  REQUEST_CHANGES): R1 HIGH — word-expansion assignment (`${n:=v}`, `$((E=42))`, indirect
+  `${!n:=v}`) unmodeled, executed 16/16-PASS counterexample; **R2 HIGH — the r18 `waittarget`
+  grammar was harness-INJECTED, not in the shipped policy bytes** (the Lead's earlier verbatim
+  run faithfully reproduced published lines but on the fence-injected instrument — caught only
+  by the independent auditor); R3 MEDIUM — pass-format scan blind on 6 of 8 shapes. **Rule 8
+  adjudicated NOT reached**: r16–r18 were all command-word enumeration; the true inversion is a
+  token-layer model. **r19 delivered same night** (shipped `waittarget`, token-layer
+  dispositions, widened scan; block byte-identical; new `SELF_QA_RP6.md` 1088259 B /
+  `3c2f3844…`; lane's own runs: R17 18/18, R19 9/9). **NOT yet committed at write time —
+  waiting on the Lead's verbatim r19/r17 fence runs, still executing (fences take 25–55 min).
+  The next session verifies those transcripts against the round report, then commits the r19
+  file set** (`SELF_QA_RP6.md`, `STATUS_RP6_P0.md`, `RP6_R19_REPORT_2026-08-13.md`).
+- **Extended RP7 audited** (`WPI_BLOCKS_DRAFT/RP7_CLAUDE_T0_EXT_AUDIT_2026-08-13.md`,
+  REQUEST_CHANGES, 2 REQUIRED both small, PASS expected on repair) → **r3 repair delivered**:
+  case-insensitive `[install]` match REVERTED (GLM's justification was factually false —
+  flagship caught it), row-1 `ActiveState` amendment carried into the preregistration as a
+  labelled amendment block (engineering-accepted by the auditor). New block identity
+  **127038 B / `ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3`**, fence
+  24 pairs + 4 controls PASS (lane run). **NOT yet committed at write time — next session:
+  Lead verbatim fence run (WSL), verify, then commit the five-file r3 set and re-dispatch the
+  Claude flagship for the expected PASS.**
+- GLM advance read of the extension: 3 genuine REQUIRED + 1 factually false finding — the
+  night's second proof that weaker-model findings need flagship cross-check.
+
+**IN FLIGHT at handoff (~09:00):** the Lead's verbatim r19 + r17 fence runs (background bash,
+outputs `r19_lead_run.out` / `r17_lead_run3.out` in the session scratchpad; compare against
+`RP6_R19_REPORT_2026-08-13.md` before committing r19). Working tree carries the UNCOMMITTED
+r19 + RP7-r3 file sets — verify-then-commit is the next session's first job.
 
 **Incidents worth knowing:** the Codex correction lane sub-delegated two gates to the Claude
 Max reserve on its own initiative (Rule 3 violation — "do not sub-delegate" is now in every

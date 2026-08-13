@@ -43,6 +43,14 @@ Workstreams not listed: add a row before writing.
 
 ## Log
 
+- **2026-08-13 ~09:00: all rows remain UNCLAIMED — released** by the Fable overnight session
+  (2026-08-12 20:50 → 2026-08-13 09:00). Honest note: that session wrote to RP6/RP7/transport/
+  pathscope/prereg/Audit-2 workstreams via dispatched lanes without first claiming rows (it was
+  the only active Lead; no collision occurred — the RP7 auditor detected the Lead's own
+  concurrent commits and attributed them correctly). Everything committed and pushed through
+  the rows-1-9 r3 repair. In-flight at release: the Lead's verbatim r19/r17 RP6 fence runs
+  (results go to the next session; see FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md §7 tail).
+
 - 2026-08-11: file rewritten from stub to ownership mechanism after the 2026-08-10
   transport collision (two sessions writing the same artifact family; detected, work
   dropped by one session, no data lost — see the concurrent-session notice).

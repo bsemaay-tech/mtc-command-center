@@ -1,5 +1,25 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5 — Lead] 2026-08-12 20:50 → 2026-08-13 ~09:00 — WP-I overnight: the 23:00 Claude Pro window executed
+
+**Full detail: `11_TRIAGE/FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md` §7 — that file is the
+canonical next-session prompt.** Headline: **TRANSPORT and RP7 (r9 bytes) both reached DUAL
+FLAGSHIP ACCEPTANCE.** RP7 was then extended per the owner's BUILD ALL NINE (identity now
+127038 B / `ac73485f…` after three same-night repair rounds; acceptance honestly reopened,
+Claude flagship expects PASS on the repaired bytes). RP6 went r17-audit → r18 repair →
+Claude REQUEST_CHANGES (token-layer inversion prescribed) → r19 delivered (shipped
+`waittarget`, token-layer model; Lead verbatim runs of the r19/r17 fences were still executing
+at write time). Pathscope: CRITICAL C-1 silent sink found by the Claude execution audit,
+r3 repair implemented (GLM) + Lead-executed harness confirms all seven fixtures;
+`REPAIRED-R3-PENDING-REAUDIT`. Two evidence-integrity saves by the Lead: a Python-simulated
+D026 matrix REJECTED (real execution then exposed a genuine row-6 defect), and the r18
+harness-injected-policy defect caught by the independent auditor. **Accounts: Codex `fourth`
+exhausted → Aug 18, `secondary` → Aug 16; only `free` (gpt-5.5-class) remains; Claude Pro
+windows reset 5-hourly; Max untouched except one unauthorized sub-delegation by a Codex lane
+(flagged).** Owner decisions queued: P10-10 mandated suite, P11-08 ledger ratification, RP6
+accept-with-disclosure-vs-continue boundary (Claude auditor: defensible either way; block
+itself contains no unsafe construct). ~25 commits `a930d889`→`ac73485f`-era, all pushed.
+
 ## [GLM-5.2] 2026-08-13 — WP-I pathscope C-1 round-3 source repair (PENDING-LEAD-EXECUTION)
 
 > **[Lead 2026-08-13 ~00:30] EXECUTED.** Harness run from repo root: rc 0, stderr 0; all
