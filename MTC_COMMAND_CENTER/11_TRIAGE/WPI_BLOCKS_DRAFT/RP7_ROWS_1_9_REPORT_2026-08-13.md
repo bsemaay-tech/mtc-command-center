@@ -66,8 +66,8 @@ final executable identity changed from the pre-rebuild rows 1-9 identity.
 Current `RP7-WPI-RO.sh` identity:
 
 ```text
-bytes=127046
-sha256=a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad
+bytes=127038
+sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
 cr_bytes=0
 identity_changed=yes
 ```
@@ -110,13 +110,13 @@ sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_EN
 Result: rc 0. The transcript starts with:
 
 ```text
-HARNESS_BLOCK_ID stage=before bytes=127046 sha256=a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad cr_bytes=0 bash_n=0
+HARNESS_BLOCK_ID stage=before bytes=127038 sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3 cr_bytes=0 bash_n=0
 HARNESS_EXTRACT method=sed_drop_terminal_wpi_main_call source=RP7-WPI-RO.sh functions_invoked=wpi_assert_b2_rows_1_7,wpi_assert_fragment_has_no_install_section,wpi_assert_regular_digest,wpi_assert_b4_rows_8_9
 HARNESS_DISCLOSURE row=8 sandbox_pins=asserted_rendered_systemctl_show_literals host_derivation=freeze_time_act fixture_fidelity_not_established
 D026 row=1 arm=inactive mutation=ActiveState=inactive RED rc=1 line=B2_FAIL reason=unit_not_active state=inactive expected=active
 D026 row=1 arm=inactive mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
 ...
-D026_SUMMARY rows=1-9 red_green_pairs=23 controls=3 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+D026_SUMMARY rows=1-9 red_green_pairs=24 controls=4 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
 ```
 
 The mutation identities are named in each transcript line (`mutation=...`). For
@@ -150,8 +150,8 @@ Result: no matches in the block.
 RP7-WPI-RO.sh bytes/SHA/CR derivation
 ```
 
-Result: `127046` bytes,
-`a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad`, `0` CR
+Result: `127038` bytes,
+`ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3`, `0` CR
 bytes.
 
 ## Rebuild note
@@ -173,8 +173,10 @@ Round-2 identity changed again and was re-derived after code edits:
 ```text
 previous_rows_1_9_bytes=126182
 previous_rows_1_9_sha256=8355cb00fda8af2140d99ff9e97fe458376215dbd39267b2f2958d29fb9aba85
-current_bytes=127046
-current_sha256=a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad
+round2_bytes=127046
+round2_sha256=a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad
+current_bytes=127038
+current_sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
 cr_bytes=0
 identity_changed=yes
 ```
@@ -202,9 +204,10 @@ Finding resolution:
 - N1 FIX: B2 rc-0 show-output parse failures now use
   `unit_definition_unreadable`, and the `truncated_show` RED transcript line
   reflects that token.
-- N2 FIX: row-6 Install-section parsing is now case-insensitive. The former
-  `[install]` control is now a RED fixture for `install_section_present`, with a
-  repaired GREEN line beside it.
+- N2 SUPERSEDED BY ROUND 3: the round-2 row-6 case-insensitive change was wrong.
+  Round 3 reverts row 6 to exact-case `Install`; lowercase `[install]` is again
+  a CONTROL because systemd ignores it rather than treating it as an install
+  section.
 
 Validation rerun:
 
@@ -214,7 +217,7 @@ rc=0
 
 sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_END$/p' SELF_QA_RP7.md | bash --noprofile --norc
 rc=0
-D026_SUMMARY rows=1-9 red_green_pairs=23 controls=3 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+D026_SUMMARY rows=1-9 red_green_pairs=24 controls=4 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
 ```
 
 Repo-wide identity grep was run on the exact old and new SHA strings. The old
@@ -225,3 +228,101 @@ which is outside this kickoff's four-file write whitelist. A byte-count grep
 also found an abbreviated stale handoff reference in
 `MTC_COMMAND_CENTER/11_TRIAGE/FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md`;
 that file is also outside the whitelist and was not edited.
+
+## Round-3 repair - Claude T0 audit required findings
+
+Actual session-header model visible to this Codex session: Codex / GPT-5. The
+kickoff states Codex `-Account free`, xhigh; this session did not expose a more
+specific model header. No sub-delegation occurred.
+
+Scope executed exactly against the five-file whitelist:
+
+- `RP7-WPI-RO.sh`
+- `SELF_QA_RP7.md`
+- `STATUS_RP7.md`
+- `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md`
+- `RP7_ROWS_1_9_REPORT_2026-08-13.md`
+
+Audit tier: T0, because this is a protected WP-I remote read-only verification
+block touching systemd/host-verification predicates. This round is an
+implementer repair against `RP7_CLAUDE_T0_EXT_AUDIT_2026-08-13.md`, not an
+acceptance audit.
+
+Repairs:
+
+- REQUIRED-1 closed: row 6 now matches only exact parsed section name `Install`.
+  Lowercase `[install]` is restored to CONTROL, matching the design-of-record
+  row-6 fixture and the preregistration sentence "exact parsed name is
+  `Install`". The round-2 case-insensitive change was a verify-before-fix
+  failure: it was justified by the false claim that systemd treats lowercase
+  `[install]` as an install section, when the Claude audit showed systemd
+  ignores it as an unknown section.
+- REQUIRED-2 closed: the preregistration draft now has a labelled row-1
+  amendment block immediately below the section-8.2 table. It quotes the
+  original `systemctl is-active`/`operation=is-active` sentence, declares the
+  amended `ActiveState` predicate over bounded `systemctl show`, declares the
+  amended STOP token `operation=show`, and cites both section D.4 option 3(b)
+  and the Claude T0 audit verdict. `SELF_QA_RP7.md` and `STATUS_RP7.md` mirror
+  that the amendment is now present in the preregistration.
+
+NIT disposition:
+
+- NIT-1 done: row-3 `Restart` and row-4 `MainPID` absent-property RED/GREEN arms
+  were added to the fence, so all four named absent-record rows 2, 3, 4 and 8
+  are now directly driven through the block's own `wpi_show_get` path.
+- NIT-2 done: row-9 duplicate assignment now uses two different values,
+  `credential_free_disarmed` and `manual_override`.
+- NIT-3 skipped: parent-component unreadability is not cheap in this fixture
+  because the current runnable arm relies on `runuser -u nobody` and file-level
+  permission control. The existing row-7 STOP still proves
+  `fragment_unreadable`, but this round did not add a parent-traversal variant.
+- NIT-4 done: `SELF_QA_RP7.md` and `STATUS_RP7.md` now call out
+  `CapabilityBoundingSet=''` as the highest-risk row-8 pin for freeze-time
+  derivation.
+
+Round-3 executable identity, re-derived after the final code edit:
+
+```text
+bytes=127038
+sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
+cr_bytes=0
+previous_round2_bytes=127046
+previous_round2_sha256=a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad
+```
+
+Executed validation:
+
+```text
+wsl bash -lc "cd /mnt/c/LAB/Tradingview_LAB_CLEAN && bash -n MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh"
+rc=0
+
+wsl bash -lc "cd /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT && sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_END$/p' SELF_QA_RP7.md | bash --noprofile --norc"
+rc=0
+D026 row=6 arm=case_variant mutation=lower_case_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=9 arm=duplicate mutation=two_start_mode_assignments_different_values RED rc=1 line=B4_FAIL reason=start_mode_missing_or_altered observed=count=2 observed_sha256=8519edda80e7968b7c4653502aaffd6f21102c02384f8ddb661084731524069f
+D026_SUMMARY rows=1-9 red_green_pairs=24 controls=4 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+```
+
+Rule 9b / Pattern 9 pass: row-1 prose now names the amended predicate and
+emitted STOP token where the amendment is declared; row-6 prose no longer claims
+case-insensitive systemd section parsing. The original row-1 table sentence is
+intentionally preserved only as quoted original text under the labelled
+amendment rule.
+
+Repo-wide grep after repair:
+
+- Stale row-6 false-justification strings are absent from the five owned active
+  artifacts. Remaining hits are historical records: the Claude audit, the GLM
+  advance-read note, earlier kickoff/audit records, and run logs.
+- `operation=is-active` remains in the preregistration only in the preserved
+  original row-1 table row and the labelled amendment's quoted-original block;
+  the same amendment declares the active predicate and STOP token as
+  `operation=show`.
+- The superseded round-2 identity
+  `a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad`
+  remains only as historical/superseded identity in owned files, plus
+  out-of-scope historical audit/kickoff/log/readiness records. The current block
+  identity is `ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3`.
+
+No git mutation: no stage, commit, checkout, reset, stash, branch or push was
+executed.

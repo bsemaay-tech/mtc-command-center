@@ -317,9 +317,10 @@ resets 04:00.
   flagship caught it), row-1 `ActiveState` amendment carried into the preregistration as a
   labelled amendment block (engineering-accepted by the auditor). New block identity
   **127038 B / `ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3`**, fence
-  24 pairs + 4 controls PASS (lane run). **NOT yet committed at write time — next session:
-  Lead verbatim fence run (WSL), verify, then commit the five-file r3 set and re-dispatch the
-  Claude flagship for the expected PASS.**
+  24 pairs + 4 controls PASS. **COMMITTED ~09:30 after the Lead's verbatim WSL fence run
+  verified: rc 0, stderr 0, block identity `127038 / ac73485f…` bound before/after, all 52
+  transcript lines byte-matching the doc. Next: re-dispatch the Claude flagship on these bytes
+  for the expected PASS (next Pro window), then the Codex half when accounts reset.**
 - GLM advance read of the extension: 3 genuine REQUIRED + 1 factually false finding — the
   night's second proof that weaker-model findings need flagship cross-check.
 

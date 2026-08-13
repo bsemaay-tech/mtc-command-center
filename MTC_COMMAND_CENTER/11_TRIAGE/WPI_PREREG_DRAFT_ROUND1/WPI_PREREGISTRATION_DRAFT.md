@@ -1112,6 +1112,20 @@ split into the correlated tuples that actually exist:
 | 23 | B6 no wildcard | no structurally parsed port-8790 row has local address `0.0.0.0`, `::` or the VM IP, subject to row 22 | `B6_FAIL reason=nonloopback_listener addr=<a>` admissible only after row 22's namespace binding and complete table parse held; substring matching of `ss` text is not admissible |
 | 24 | B6 external closed | a bounded operator-side TCP probe completes with the classified result `connection_refused` or `timeout` for `172.24.55.233:8790` | `B6_FAIL reason=host_reachable_8790 outcome=connected` only after a completed connection; `B6_STOP reason=external_probe_not_evaluable outcome=<o> rc=<n> detail=<d>` for invocation, local socket, routing, cancellation, clock or unclassified errors |
 
+> **ROW-1 AMENDMENT - 2026-08-13 RP7 rows 1-9 round 3.** Original row text preserved above:
+> "`systemctl is-active` returns a parseable unit state and that state is `active`"; original
+> first-divergence STOP token preserved above: `B2_STOP reason=system_manager_unreachable
+> operation=is-active rc=<n> detail=<d>`. Amended predicate: read `ActiveState` from the same
+> bounded `systemctl show` property table used for B2 rows 1-5, require the `ActiveState`
+> record to be present and require its value to be `active`; a valid `inactive` remains an
+> evaluable `B2_FAIL reason=unit_not_active state=<s> expected=active`. Amended STOP token:
+> `B2_STOP reason=system_manager_unreachable operation=show rc=<n> detail=<d>` for invocation,
+> bus, namespace, authorization, timeout, incomplete-output or grammar failure before any
+> active-state comparison. Authority: `ROWS_1_9_OPTIONS_CODEX_2026-08-10.md` section D.4
+> option 3(b) permits the `ActiveState` property route, and the Claude T0 audit
+> `RP7_CLAUDE_T0_EXT_AUDIT_2026-08-13.md` REQUIRED-2 accepts that route on engineering
+> grounds because it avoids the Pattern-1 `is-active` rc/result collision.
+
 **Path-object binding rule (catalogue Pattern 3).** Rows 6-7, 10-11, 15 and 17-19
 bind paths, not only leaves. In the same frozen block and before content or metadata
 comparison, the wrapper walks every literal component with non-following metadata,
@@ -1222,12 +1236,13 @@ requires `systemctl`, then separately proves query readiness against the intende
 system manager. Every B2/B4 manager probe captures stdout, stderr, rc and elapsed
 time. Invocation, missing-tool, D-Bus, polkit, PID/mount-namespace, authorization,
 timeout, incomplete-output and parse errors are adjudicated as P0/B2/B4 STOP before
-any stdout is compared. `systemctl is-active` is not classified by numeric rc alone:
-if the manager returned a valid state such as `inactive`, the probe ran and the state
-is an evaluable B2 FAIL; if no valid state was obtained, it is STOP. `show` and `cat`
-must likewise return complete, parseable results before a missing value or mismatch
-may FAIL. If readiness cannot be established as `gatea`, the affected manager-backed
-checks move to RPD-VERIFY.
+any stdout is compared. The row-1 round-3 amendment supersedes the original
+`systemctl is-active` route: B2 active reads `ActiveState` from the complete
+`systemctl show` property table, so a valid `inactive` is an evaluable B2 FAIL and
+an unevaluable manager/query/parse result is `B2_STOP ... operation=show ...`.
+`show` and `cat` must likewise return complete, parseable results before a missing
+value or mismatch may FAIL. If readiness cannot be established as `gatea`, the
+affected manager-backed checks move to RPD-VERIFY.
 
 **General probe-output precedence (binding on every interpreted stdout).** Every
 external command and local transport primitive - including `command -v`, `getent`,

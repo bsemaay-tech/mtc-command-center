@@ -664,7 +664,7 @@ for physical in text.splitlines():
  m=section_re.match(line)
  if m:
   sections+=1
-  if m.group(1).lower()=="install":
+  if m.group(1)=="Install":
    print("INSTALL section=%s"%m.group(1)); sys.exit(1)
  elif stripped.startswith("["):
   print("PARSE section_header_grammar"); sys.exit(3)
