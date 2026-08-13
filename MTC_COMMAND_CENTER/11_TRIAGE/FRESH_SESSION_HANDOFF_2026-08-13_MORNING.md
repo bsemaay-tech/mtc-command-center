@@ -349,7 +349,13 @@ because repo writes were unapproved (moved verbatim by the Lead, then permission
   freeze-time figure before Audit 2 (that is Audit-2 packet component **P11-08**, which is
   explicitly an owner action no automation can produce).
 
-## 8b. WAITING ON THE OWNER — surface these, do not decide them
+## 8b. WAITING ON THE OWNER — **ALL THREE CLOSED 2026-08-13 ~10:00** (`WPI_OWNER_DECISIONS_2026-08-13.md`)
+
+**1 = RP6 ACCEPTED-WITH-DISCLOSURE (no further hardening rounds); 2 = ledger RATIFIED ~55h
+(P11-08 closed); 3 = P10-10 DECIDED: full Bridge suite at the frozen SHA.** Also that morning:
+Codex `fourth`'s weekly limit reset EARLY (98% available) — the RP7-extension T0 audit and the
+pathscope-r3 T1 re-audit were dispatched on it immediately; RP6's Codex audit is NOT needed
+(closed by decision 1). The original questions below are retained as history:
 
 1. **P10-10 — what IS the mandated test suite?** This is the highest-value open decision: three
    Audit-2 components cascade from it. `AUDIT2_READINESS_PACKAGE/AUDIT2_MANDATED_SUITE_OPTIONS_2026-08-12.md`

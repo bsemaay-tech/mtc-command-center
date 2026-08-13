@@ -1,4 +1,16 @@
-# RP6-P0 - status: ROUND-19-REPAIRED-PENDING-T0-DUAL-FLAGSHIP-AUDIT
+# RP6-P0 - status: **ACCEPTED-WITH-DISCLOSURE — owner decision 2026-08-13**
+
+**Owner decision 2026-08-13 ~10:00 (option A, recorded in
+`MTC_COMMAND_CENTER/11_TRIAGE/WPI_OWNER_DECISIONS_2026-08-13.md`):** RP6-P0 is accepted with
+written disclosure, per the option the fresh Claude second-flagship verdict framed as
+defensible — the block (110817 B / `5132bacd…`, byte-identical r11→r19) contains none of the
+surviving assignment forms; the residual is an analyzer guarantee gap, not an unsafe construct.
+The r19 token-layer evidence (Lead-verified: R19 9/9, shipped-policy R17 18/18) is the evidence
+of record; residual classes ride forward as explicit non-controls into the successor
+preregistration, mirroring SEC102. **No further hardening rounds.** The acceptance does not
+grant freeze, host, deployment, or dispatch authority.
+
+Prior status line (historical): ROUND-19-REPAIRED-PENDING-T0-DUAL-FLAGSHIP-AUDIT
 
 Updated 2026-08-13 by the round-19 implementer, Codex session header model
 `GPT-5` (requested kickoff route: Codex `-Account free`, xhigh). Audit tier:
