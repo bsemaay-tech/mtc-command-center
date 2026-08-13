@@ -34,3 +34,23 @@ reconciling README/cwd/ACL/plugin requirements
 (`AUDIT2_READINESS_PACKAGE/AUDIT2_MANDATED_SUITE_OPTIONS_2026-08-12.md`). Historical baselines
 ("1359 passed" etc.) are explicitly non-referent. This unblocks P10-10 → P10-11 → P10-12 and
 the packet-10 build.
+
+## 4. Audit-cap overrides - one additional cycle per blocked lane
+
+At approximately 14:30 Europe/Chisinau on 2026-08-13, after the Lead reported the
+two independently reproduced non-accepting verdicts and exhausted default caps, the
+owner stated verbatim: **"I authorize both additional audit-cap overrides"**.
+
+This authorizes exactly:
+
+1. one additional Pathscope T1 repair plus one fresh T1 flagship audit; and
+2. one additional RP7 T0 repair plus the two fresh mandatory T0 flagship audits.
+
+The authorization does not waive any finding, acceptance standard, model identity,
+effort requirement, fresh-session requirement, D026 requirement, or Lead
+reproduction duty. It does not authorize any further audit cycle beyond these two
+named overrides.
+
+It also grants no host, deployment, credential, service, broker/exchange, ARM,
+order, TESTNET, mainnet, or other economic authorization. Hostinger Stage 1 remains
+a separate hard gate requiring a later explicit owner decision.
