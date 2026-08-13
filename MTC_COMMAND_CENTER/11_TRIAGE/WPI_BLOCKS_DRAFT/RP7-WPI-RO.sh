@@ -574,6 +574,13 @@ wpi_require_show_value_grammar() {
     case "$value" in *[![:print:]]*) wpi_stop "$prefix" "$reason prop=$prop rc=0 detail=value_charset" ;; esac
 }
 
+wpi_require_active_state_grammar() {
+    case "$1" in
+        active|reloading|inactive|failed|activating|deactivating|maintenance|refreshing) : ;;
+        *) wpi_stop B2 "system_manager_unreachable operation=show rc=0 detail=active_state_value_grammar" ;;
+    esac
+}
+
 wpi_assert_unit_execstart() {
     local value="$1" expected_path="$WPI_VENV_ROOT/bin/python"
     local expected_argv="$WPI_VENV_ROOT/bin/python -m bridge.app"
@@ -656,10 +663,11 @@ for physical in text.splitlines():
  line=physical.rstrip("\r")
  stripped=line.lstrip()
  if continued:
+  if not stripped or stripped.startswith("#") or stripped.startswith(";"):
+   continue
   continued=line.endswith("\\")
   continue
  if not stripped or stripped.startswith("#") or stripped.startswith(";"):
-  continued=line.endswith("\\")
   continue
  m=section_re.match(line)
  if m:
@@ -712,7 +720,7 @@ wpi_assert_environment_start_mode() {
     local env_value="$1" record
     wpi_capture_bind_stop B4 "unit_property_unreadable prop=Environment" no_rc
     wpi_capture environment_tokenizer "$WPI_PYTHON3" -I -S -c '
-import hashlib,shlex,sys
+import hashlib,re,shlex,sys
 if not (sys.flags.isolated and sys.flags.no_site):
  print("PARSE startup_not_isolated"); sys.exit(3)
 for _m in ("site","sitecustomize","usercustomize"):
@@ -731,8 +739,10 @@ count=0
 observed=[]
 for tok in tokens:
  if "=" not in tok:
-  continue
+  print("PARSE environment_token_without_assignment"); sys.exit(3)
  name,value=tok.split("=",1)
+ if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+  print("PARSE environment_name_grammar"); sys.exit(3)
  if name==target:
   count+=1
   observed.append(value)
@@ -763,10 +773,10 @@ wpi_assert_b2_rows_1_7() {
         --property=ExecStart --property=WorkingDirectory
     [ "$WPI_CAP_RC" -eq 0 ] || wpi_stop B2 "system_manager_unreachable operation=show rc=$WPI_CAP_RC detail=unit_query_nonzero diagnostic_file=$WPI_CAP_ERR"
     wpi_require_empty_captured B2 "system_manager_unreachable operation=show rc=0" err
-    wpi_parse_show_capture B2 "unit_definition_unreadable operation=show rc=0" "$b2_allowed"
+    wpi_parse_show_capture B2 "system_manager_unreachable operation=show rc=0" "$b2_allowed"
 
-    wpi_show_get B2 "system_manager_unreachable prop=ActiveState" ActiveState; active="$WPI_LINE"
-    wpi_require_show_value_grammar B2 unit_property_unreadable ActiveState "$active"
+    wpi_show_get B2 "system_manager_unreachable operation=show" ActiveState; active="$WPI_LINE"
+    wpi_require_active_state_grammar "$active"
     [ "$active" = active ] || wpi_fail B2 "unit_not_active state=$active expected=active"
     printf 'B2_active state=active source=system_manager_show property=ActiveState\n'
 

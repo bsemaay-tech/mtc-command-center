@@ -38,9 +38,15 @@ Material state added in this extension:
   section rather than treating it as an install section. The round-2
   case-insensitive change was a verify-before-fix failure based on a false
   systemd-section parsing claim.
-- B2 rc-0 show-output parse failures are labelled
-  `unit_definition_unreadable`, not `system_manager_unreachable`, so the row-5
-  truncated-show fixture uses the row-5 inability token from section D.5.
+- Round-4 repair implements the full row-1 amended STOP domain: B2
+  manager/query/table-parse failures, absent `ActiveState`, and empty or
+  unrecognized `ActiveState` values all stop as
+  `system_manager_unreachable operation=show` before the first state
+  comparison. The row-5 truncated-show fixture was moved to row 1 because this
+  is now the first divergence.
+- Round-4 repair also carries row-6 systemd continuation state across ignored
+  comment/blank lines and makes row 9 fail closed on environment tokens without
+  a valid `NAME=` assignment before target semantics.
 
 Documentary state:
 
@@ -48,7 +54,8 @@ Documentary state:
   embedded `sed | bash` rebuild fence and its executed transcript. The fence
   extracts the delivered `RP7-WPI-RO.sh` bytes, asserts identity before and
   after, and drives the block's own B2/B4 functions. It produced 24 RED/GREEN
-  pairs and 4 controls after round-3 repair.
+  pairs and 4 controls after round-3 repair, then 29 RED/GREEN pairs and 5
+  controls after round-4 repair.
 - Row-8 sandbox pins are disclosed as asserted rendered `systemctl show`
   literals. The rebuild fence proves comparator behavior against fixtures; host
   derivation of those renderings remains a freeze-time act for the flagship
@@ -68,8 +75,10 @@ Documentary state:
 Final executable identity:
 
 ```text
-bytes=127038
-sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
+bytes=127491
+sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3
+previous_round3_rows_1_9_bytes=127038
+previous_round3_rows_1_9_sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
 previous_rows_1_9_bytes=126182
 previous_rows_1_9_sha256=8355cb00fda8af2140d99ff9e97fe458376215dbd39267b2f2958d29fb9aba85
 superseded_round2_rows_1_9_bytes=127046

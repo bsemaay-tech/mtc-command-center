@@ -63,13 +63,21 @@ final executable identity changed from the pre-rebuild rows 1-9 identity.
 
 ## Identity
 
-Current `RP7-WPI-RO.sh` identity:
+Current `RP7-WPI-RO.sh` identity after round-4 repair:
+
+```text
+bytes=127491
+sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3
+cr_bytes=0
+identity_changed=yes
+```
+
+Superseded round-3 rows 1-9 identity:
 
 ```text
 bytes=127038
 sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
-cr_bytes=0
-identity_changed=yes
+superseded_reason=Codex T0 round-4 repair changed row-1 STOP domain, row-6 continuation parsing, and row-9 environment tokenization
 ```
 
 Superseded pre-rebuild rows 1-9 identity:
@@ -94,7 +102,7 @@ embedded fence, a published extraction command, and the executed transcript. The
 fence asserts the block identity before and after, extracts the delivered block
 functions from `RP7-WPI-RO.sh`, and executes the block's own B2/B4 functions
 against fixture `systemctl show` captures and fixture unit fragments. It
-produced 23 RED/GREEN pairs and 3 controls. The folded documentary repairs from
+produced 29 RED/GREEN pairs and 5 controls after round-4 repair. The folded documentary repairs from
 the earlier kickoff remain below: stale GREEN identities were corrected, the
 round-5 fence body is `21263 B`, the six wrapper stream lines are pasted beside
 `RUN_ONE_STDERR_BYTES=210`, the `wpi_alloc_leaf` deletion proof is present, and
@@ -110,13 +118,15 @@ sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_EN
 Result: rc 0. The transcript starts with:
 
 ```text
-HARNESS_BLOCK_ID stage=before bytes=127038 sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3 cr_bytes=0 bash_n=0
+HARNESS_BLOCK_ID stage=before bytes=127491 sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3 cr_bytes=0 bash_n=0
 HARNESS_EXTRACT method=sed_drop_terminal_wpi_main_call source=RP7-WPI-RO.sh functions_invoked=wpi_assert_b2_rows_1_7,wpi_assert_fragment_has_no_install_section,wpi_assert_regular_digest,wpi_assert_b4_rows_8_9
 HARNESS_DISCLOSURE row=8 sandbox_pins=asserted_rendered_systemctl_show_literals host_derivation=freeze_time_act fixture_fidelity_not_established
 D026 row=1 arm=inactive mutation=ActiveState=inactive RED rc=1 line=B2_FAIL reason=unit_not_active state=inactive expected=active
 D026 row=1 arm=inactive mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
 ...
-D026_SUMMARY rows=1-9 red_green_pairs=24 controls=4 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+D026 row=1 arm=active_absent mutation=delete_ActiveState RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=property_record_absent query=ActiveState
+...
+D026_SUMMARY rows=1-9 red_green_pairs=29 controls=5 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
 ```
 
 The mutation identities are named in each transcript line (`mutation=...`). For
@@ -150,8 +160,8 @@ Result: no matches in the block.
 RP7-WPI-RO.sh bytes/SHA/CR derivation
 ```
 
-Result: `127038` bytes,
-`ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3`, `0` CR
+Result: `127491` bytes,
+`5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3`, `0` CR
 bytes.
 
 ## Rebuild note
@@ -175,8 +185,8 @@ previous_rows_1_9_bytes=126182
 previous_rows_1_9_sha256=8355cb00fda8af2140d99ff9e97fe458376215dbd39267b2f2958d29fb9aba85
 round2_bytes=127046
 round2_sha256=a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad
-current_bytes=127038
-current_sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
+post_round3_bytes=127038
+post_round3_sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
 cr_bytes=0
 identity_changed=yes
 ```
@@ -321,8 +331,124 @@ Repo-wide grep after repair:
 - The superseded round-2 identity
   `a2ec1d0c47db53a756b7abe0803e7c6e62d42dd4c6b69934332c2eb501c714ad`
   remains only as historical/superseded identity in owned files, plus
-  out-of-scope historical audit/kickoff/log/readiness records. The current block
-  identity is `ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3`.
+  out-of-scope historical audit/kickoff/log/readiness records. The round-3 block
+  identity was `ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3`.
+
+No git mutation: no stage, commit, checkout, reset, stash, branch or push was
+executed.
+
+## Round-4 repair - Codex T0 audit required findings
+
+Actual session-header model visible to this Codex session: Codex / GPT-5. The
+kickoff states Codex `-Account free`, xhigh; this session did not expose a more
+specific model header. No sub-delegation occurred.
+
+Scope executed exactly against the four-file whitelist:
+
+- `RP7-WPI-RO.sh`
+- `SELF_QA_RP7.md`
+- `STATUS_RP7.md`
+- `RP7_ROWS_1_9_REPORT_2026-08-13.md`
+
+Audit tier: T0, because this is a protected WP-I remote read-only verification
+block touching systemd/host-verification predicates. This round is an
+implementer repair against `RP7_CODEX_T0_EXT_AUDIT_2026-08-13.md`, not an
+acceptance audit.
+
+Pre-repair verification against the 127038-byte round-3 block reproduced the
+three required findings before code changes:
+
+```text
+PROBE r1_table_parse rc=3
+STDOUT B2_STOP reason=unit_definition_unreadable operation=show rc=0 detail=unterminated_final_record source=/tmp/rp7_rows_1_9_rebuild_evidence/cases/r1_table_parse/evidence/ro.0001.b2_unit_show.stdout
+PROBE r1_active_absent rc=3
+STDOUT B2_STOP reason=system_manager_unreachable prop=ActiveState rc=0 detail=property_record_absent query=ActiveState
+PROBE r1_active_empty rc=1
+STDOUT B2_FAIL reason=unit_not_active state= expected=active
+PROBE r1_active_unknown rc=1
+STDOUT B2_FAIL reason=unit_not_active state=maybe expected=active
+PROBE r6_comment_bridge rc=1
+STDOUT B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service
+PROBE r9_env_unmodeled rc=0
+STDOUT B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+```
+
+Repairs:
+
+- REQUIRED-1 closed: B2 row 1 now uses the amended
+  `system_manager_unreachable operation=show` STOP grammar for every inability
+  before the first `ActiveState` comparison: nonzero manager/query rc, stderr,
+  incomplete or malformed show table, absent `ActiveState`, and empty or
+  unrecognized `ActiveState` tokens. Valid non-active systemd states still
+  remain evaluable row-1 FAILs.
+- REQUIRED-2 closed: the row-6 parser carries continuation state across
+  ignored comment/blank lines. The new `continued_comment_install` control now
+  parses a continued directive followed by a comment block and `[Install]` as
+  `install_section=absent`, matching systemd's documented continuation form.
+- REQUIRED-3 closed: the row-9 tokenizer now refuses every token without `=`
+  and every token whose name is not a valid environment variable name before
+  target semantics. The exact audited malformed record
+  `UNMODELED_TOKEN MTC_BRIDGE_START_MODE=credential_free_disarmed` now STOPs
+  instead of disappearing.
+- NIT-1 adopted: the earlier `23 RED/GREEN pairs and 3 controls` sentence is
+  updated to the current round-4 count, `29 RED/GREEN pairs and 5 controls`.
+
+Round-4 executable identity, re-derived after the final code edit:
+
+```text
+bytes=127491
+sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3
+cr_bytes=0
+previous_round3_bytes=127038
+previous_round3_sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
+```
+
+Executed validation:
+
+```text
+wsl bash -lc "cd /mnt/c/LAB/Tradingview_LAB_CLEAN && bash -n MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh"
+rc=0
+
+Published fence command executed from WSL scratch driver:
+cd /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT
+sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_END$/p' SELF_QA_RP7.md | bash --noprofile --norc
+rc=0
+D026 row=1 arm=show_table_parse mutation=missing_final_newline RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=unterminated_final_record source=/tmp/rp7_rows_1_9_rebuild_evidence/cases/r1_table_parse/evidence/ro.0001.b2_unit_show.stdout
+D026 row=1 arm=active_absent mutation=delete_ActiveState RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=property_record_absent query=ActiveState
+D026 row=6 arm=continued_comment_install mutation=continued_line_comment_then_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=9 arm=unmodeled_token mutation=token_without_assignment RED rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_token_without_assignment
+D026 row=9 arm=malformed_name mutation=name_starts_digit RED rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_name_grammar
+D026_SUMMARY rows=1-9 red_green_pairs=29 controls=5 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+```
+
+Rule 9b / Pattern pass:
+
+- No `@@` marker or empty transcript fence was introduced in the four owned
+  files. Existing `PENDING` hits are status labels for reopened acceptance, not
+  unfilled evidence slots under a resolved claim.
+- Every round-4 count, byte count, SHA and rc in this section is backed by the
+  pasted transcript or the identity derivation above.
+- The carried row-5 truncated-show arm was re-derived after the code edit and
+  moved to row 1 because the first divergence is now the amended
+  `ActiveState` table-parse STOP.
+
+Repo-wide grep after repair:
+
+- The superseded round-3 SHA
+  `ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3`
+  remains in owned files only as `previous_round3` or historical round-3
+  identity text. Outside the four-file whitelist it remains in historical
+  kickoff/audit/readiness records:
+  `KICKOFF_CODEX_RP7_EXT_T0_AUDIT.md`,
+  `RP7_CODEX_T0_EXT_AUDIT_2026-08-13.md`,
+  `AUDIT2_ACCEPTANCE_MATRIX_2026-08-12.md`, and
+  `FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md`.
+- The new SHA
+  `5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3`
+  appears only in the four owned files.
+- Stale `23 RED/GREEN pairs and 3 controls` text is absent from the owned
+  files. Historical `red_green_pairs=24 controls=4` lines remain only inside
+  the earlier round-2/round-3 report sections.
 
 No git mutation: no stage, commit, checkout, reset, stash, branch or push was
 executed.

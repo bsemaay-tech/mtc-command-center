@@ -24,6 +24,13 @@ treating it as an install section. The round-2 case-insensitive change was a
 verify-before-fix failure based on a false statement about systemd section
 parsing.
 
+Round-4 repair disclosure: row 1 now treats every manager/query/table-parse,
+missing `ActiveState`, and invalid `ActiveState` token before the state
+comparison as `B2_STOP reason=system_manager_unreachable operation=show ...`;
+row 6 carries systemd continuation state across ignored comment/blank lines;
+row 9 refuses unconsumed or malformed environment tokens before target
+semantics.
+
 Row-8 sandbox expected values are asserted rendered `systemctl show` literals.
 The fence proves the comparator and presence-before-value logic against fixture
 renderings; host derivation of those pins is a freeze-time act and is not
@@ -37,8 +44,8 @@ preregistration draft: the block reads the `ActiveState` property from
 command. The amended STOP token is `operation=show`, matching the emitted block
 line and avoiding raw tool rc as the row verdict.
 
-The final identity asserted by the fence is `127038` bytes /
-`ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3`.
+The final identity asserted by the fence is `127491` bytes /
+`5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3`.
 
 Published extraction command:
 
@@ -54,8 +61,8 @@ set -f
 export LC_ALL=C
 REPO=/mnt/c/LAB/Tradingview_LAB_CLEAN
 BLOCK="$REPO/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh"
-EXPECTED_BYTES=127038
-EXPECTED_SHA=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
+EXPECTED_BYTES=127491
+EXPECTED_SHA=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3
 ROOT=/tmp/rp7_rows_1_9_rebuild_evidence
 case "$ROOT" in /tmp/rp7_rows_1_9_rebuild_evidence) rm -rf "$ROOT" ;; *) printf 'HARNESS_ABORT unsafe_root=%s\n' "$ROOT"; exit 97 ;; esac
 mkdir -p "$ROOT/logs"
@@ -114,6 +121,7 @@ make_fragment() {
         clean) printf '[Unit]\nDescription=RP7 rows 1-9 fixture\n[Service]\nExecStart=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python -m bridge.app\n' > "$path" ;;
         comment_decoy) printf '# [Install]\n[Unit]\nDescription=comment decoy\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
         continued_decoy) printf '[Unit]\nDescription=continued \\\n[Install]\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        continued_comment_install) printf '[Unit]\nDescription=continued \\\n# ignored comment under continuation\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
         case_variant) printf '[Unit]\nDescription=case variant\n[install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
         real_install) printf '[Unit]\nDescription=real install\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
         row5_decoy) printf '[Unit]\nDescription=release decoy /opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b\n[Service]\nEnvironment=COMMENT_ONLY_VENV=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python\n# ExecStart=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python -m bridge.app\nExecStart=/tmp/comment-only\n' > "$path" ;;
@@ -209,6 +217,14 @@ run_case 1 inactive 'ActiveState=inactive' RED 1 'B2_FAIL reason=unit_not_active
 run_case 1 inactive repaired_expected GREEN 0 'B2_active state=active source=system_manager_show property=ActiveState' r1_green 'prepare_case r1_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; wpi_assert_b2_rows_1_7'
 run_case 1 manager_stop systemctl_show_rc_7 RED 3 'B2_STOP reason=system_manager_unreachable operation=show rc=7 detail=unit_query_nonzero diagnostic_file=/tmp/rp7_rows_1_9_rebuild_evidence/cases/r1_manager_stop/evidence/ro.0001.b2_unit_show.stderr' r1_manager_stop 'prepare_case r1_manager_stop; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; : > "$EV_DIR/systemctl.stdout"; printf "manager unavailable\n" > "$EV_DIR/systemctl.stderr"; printf "7\n" > "$EV_DIR/systemctl.rc"; wpi_assert_b2_rows_1_7'
 run_case 1 manager_stop repaired_expected GREEN 0 'B2_active state=active source=system_manager_show property=ActiveState' r1_manager_green 'prepare_case r1_manager_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; wpi_assert_b2_rows_1_7'
+run_case 1 show_table_parse missing_final_newline RED 3 'B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=unterminated_final_record source=/tmp/rp7_rows_1_9_rebuild_evidence/cases/r1_table_parse/evidence/ro.0001.b2_unit_show.stdout' r1_table_parse 'prepare_case r1_table_parse; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show active 0 no 189813 loaded "$WPI_UNIT_FRAGMENT" "" "$WPI_VENV_ROOT/bin/python" no; wpi_assert_b2_rows_1_7'
+run_case 1 show_table_parse repaired_expected GREEN 0 'B2_active state=active source=system_manager_show property=ActiveState' r1_table_parse_green 'prepare_case r1_table_parse_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; wpi_assert_b2_rows_1_7'
+run_case 1 active_absent delete_ActiveState RED 3 'B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=property_record_absent query=ActiveState' r1_active_absent 'prepare_case r1_active_absent; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; grep -v "^ActiveState=" "$EV_DIR/systemctl.stdout" > "$EV_DIR/systemctl.next"; mv "$EV_DIR/systemctl.next" "$EV_DIR/systemctl.stdout"; wpi_assert_b2_rows_1_7'
+run_case 1 active_absent repaired_expected GREEN 0 'B2_active state=active source=system_manager_show property=ActiveState' r1_active_absent_green 'prepare_case r1_active_absent_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; wpi_assert_b2_rows_1_7'
+run_case 1 active_empty ActiveState_empty RED 3 'B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=active_state_value_grammar' r1_active_empty 'prepare_case r1_active_empty; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; sed -i "s/^ActiveState=.*/ActiveState=/" "$EV_DIR/systemctl.stdout"; wpi_assert_b2_rows_1_7'
+run_case 1 active_empty repaired_expected GREEN 0 'B2_active state=active source=system_manager_show property=ActiveState' r1_active_empty_green 'prepare_case r1_active_empty_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; wpi_assert_b2_rows_1_7'
+run_case 1 active_unknown ActiveState_maybe RED 3 'B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=active_state_value_grammar' r1_active_unknown 'prepare_case r1_active_unknown; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; sed -i "s/^ActiveState=.*/ActiveState=maybe/" "$EV_DIR/systemctl.stdout"; wpi_assert_b2_rows_1_7'
+run_case 1 active_unknown repaired_expected GREEN 0 'B2_active state=active source=system_manager_show property=ActiveState' r1_active_unknown_green 'prepare_case r1_active_unknown_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; wpi_assert_b2_rows_1_7'
 run_case 2 missing_property delete_NRestarts RED 3 'B2_STOP reason=unit_property_unreadable prop=NRestarts rc=0 detail=property_record_absent query=NRestarts' r2_missing 'prepare_case r2_missing; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show active __DELETE__; wpi_assert_b2_rows_1_7'
 run_case 2 missing_property repaired_expected GREEN 0 'B2_restart_count prop=NRestarts value=0' r2_missing_green 'prepare_case r2_missing_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; wpi_assert_b2_rows_1_7'
 run_case 2 wrong_value NRestarts_2 RED 1 'B2_FAIL reason=nrestarts_nonzero value=2 expected=0' r2_wrong 'prepare_case r2_wrong; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show active 2; wpi_assert_b2_rows_1_7'
@@ -234,11 +250,10 @@ run_case 5 decoy_fragment_only comment_inactive_env_paths_not_binding RED 1 'B2_
 run_case 5 decoy_fragment_only repaired_expected GREEN 0 "$row5_green" r5_decoy_green 'prepare_case r5_decoy_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; wpi_assert_b2_rows_1_7'
 run_case 5 not_found LoadState_not-found RED 1 'B2_FAIL reason=unit_not_loaded' r5_notfound 'prepare_case r5_notfound; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show active 0 no 189813 not-found; wpi_assert_b2_rows_1_7'
 run_case 5 not_found repaired_expected GREEN 0 "$row5_green" r5_notfound_green 'prepare_case r5_notfound_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; wpi_assert_b2_rows_1_7'
-run_case 5 truncated_show missing_final_newline RED 3 'B2_STOP reason=unit_definition_unreadable operation=show rc=0 detail=unterminated_final_record source=/tmp/rp7_rows_1_9_rebuild_evidence/cases/r5_truncated/evidence/ro.0001.b2_unit_show.stdout' r5_truncated 'prepare_case r5_truncated; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show active 0 no 189813 loaded "$WPI_UNIT_FRAGMENT" "" "$WPI_VENV_ROOT/bin/python" no; wpi_assert_b2_rows_1_7'
-run_case 5 truncated_show repaired_expected GREEN 0 "$row5_green" r5_truncated_green 'prepare_case r5_truncated_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; write_b2_show; wpi_assert_b2_rows_1_7'
 row6_green="B2_fragment_install_section path=$WPI_UNIT_FRAGMENT install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed"
 run_case 6 comment_decoy comment_contains_install CONTROL 0 "$row6_green" r6_comment 'prepare_case r6_comment; make_fragment comment_decoy 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
 run_case 6 continued_decoy continued_line_then_install CONTROL 0 "$row6_green" r6_continued 'prepare_case r6_continued; make_fragment continued_decoy 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 continued_comment_install continued_line_comment_then_install CONTROL 0 "$row6_green" r6_comment_bridge 'prepare_case r6_comment_bridge; make_fragment continued_comment_install 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
 run_case 6 case_variant lower_case_install CONTROL 0 "$row6_green" r6_case 'prepare_case r6_case; make_fragment case_variant 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
 run_case 6 real_install real_Install_section RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_real 'prepare_case r6_real; make_fragment real_install 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
 run_case 6 real_install repaired_expected GREEN 0 "$row6_green" r6_real_green 'prepare_case r6_real_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
@@ -275,6 +290,10 @@ run_case 9 duplicate two_start_mode_assignments_different_values RED 1 'B4_FAIL 
 run_case 9 duplicate repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r9_duplicate_green 'prepare_case r9_duplicate_green; write_b4_show; wpi_assert_b4_rows_8_9'
 run_case 9 substring different_variable_contains_token RED 1 'B4_FAIL reason=start_mode_missing_or_altered observed=count=0 observed_sha256=' r9_substring 'prepare_case r9_substring; write_b4_show yes strict "OTHER_MTC_BRIDGE_START_MODE=credential_free_disarmed"; wpi_assert_b4_rows_8_9'
 run_case 9 substring repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r9_substring_green 'prepare_case r9_substring_green; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 9 unmodeled_token token_without_assignment RED 3 'B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_token_without_assignment' r9_unmodeled 'prepare_case r9_unmodeled; write_b4_show yes strict "UNMODELED_TOKEN MTC_BRIDGE_START_MODE=credential_free_disarmed"; wpi_assert_b4_rows_8_9'
+run_case 9 unmodeled_token repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r9_unmodeled_green 'prepare_case r9_unmodeled_green; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 9 malformed_name name_starts_digit RED 3 'B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_name_grammar' r9_bad_name 'prepare_case r9_bad_name; write_b4_show yes strict "1BAD=value MTC_BRIDGE_START_MODE=credential_free_disarmed"; wpi_assert_b4_rows_8_9'
+run_case 9 malformed_name repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r9_bad_name_green 'prepare_case r9_bad_name_green; write_b4_show; wpi_assert_b4_rows_8_9'
 run_case 9 quoted quoted_assignment CONTROL 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r9_quoted 'prepare_case r9_quoted; write_b4_show yes strict "\"MTC_BRIDGE_START_MODE=credential_free_disarmed\""; wpi_assert_b4_rows_8_9'
 for cid in r8_mismatch_green r8_missing_green; do
     count=$(grep -c '^B4_property ' "$ROOT/logs/$cid.stdout.txt")
@@ -286,21 +305,29 @@ after_sha=$(sha256sum "$BLOCK" | awk '{print $1}')
 after_cr=$(tr -cd '\r' < "$BLOCK" | wc -c | tr -d ' ')
 [ "$after_bytes" = "$EXPECTED_BYTES" ] && [ "$after_sha" = "$EXPECTED_SHA" ] && [ "$after_cr" = 0 ] || { printf 'HARNESS_BLOCK_ID_MISMATCH stage=after bytes=%s sha256=%s cr_bytes=%s\n' "$after_bytes" "$after_sha" "$after_cr"; exit 98; }
 printf 'HARNESS_BLOCK_ID stage=after bytes=%s sha256=%s cr_bytes=%s bash_n=0\n' "$after_bytes" "$after_sha" "$after_cr"
-printf 'D026_SUMMARY rows=1-9 red_green_pairs=24 controls=4 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no\n'
+printf 'D026_SUMMARY rows=1-9 red_green_pairs=29 controls=5 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no\n'
 # RP7_ROWS_1_9_REBUILD_FENCE_END
 ```
 
 Executed transcript from the published extraction command:
 
 ```text
-HARNESS_BLOCK_ID stage=before bytes=127038 sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3 cr_bytes=0 bash_n=0
+HARNESS_BLOCK_ID stage=before bytes=127491 sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3 cr_bytes=0 bash_n=0
 HARNESS_EXTRACT method=sed_drop_terminal_wpi_main_call source=RP7-WPI-RO.sh functions_invoked=wpi_assert_b2_rows_1_7,wpi_assert_fragment_has_no_install_section,wpi_assert_regular_digest,wpi_assert_b4_rows_8_9
-HARNESS_ATTESTED_MOUNTINFO sha256=78388f0d1e330a9e2f49700f241d10c96c9df704f8dd99a15e3b01edb98b1e15 fixture_root=/tmp/rp7_rows_1_9_rebuild_evidence unit_fragment=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service clean_fragment_bytes=3736 clean_fragment_sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49
+HARNESS_ATTESTED_MOUNTINFO sha256=be94739e05e58b6b5f5d8c94865cef8d512f8bcd79475b7944941a829a82dbb2 fixture_root=/tmp/rp7_rows_1_9_rebuild_evidence unit_fragment=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service clean_fragment_bytes=3736 clean_fragment_sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49
 HARNESS_DISCLOSURE row=8 sandbox_pins=asserted_rendered_systemctl_show_literals host_derivation=freeze_time_act fixture_fidelity_not_established
 D026 row=1 arm=inactive mutation=ActiveState=inactive RED rc=1 line=B2_FAIL reason=unit_not_active state=inactive expected=active
 D026 row=1 arm=inactive mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
 D026 row=1 arm=manager_stop mutation=systemctl_show_rc_7 RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=7 detail=unit_query_nonzero diagnostic_file=/tmp/rp7_rows_1_9_rebuild_evidence/cases/r1_manager_stop/evidence/ro.0001.b2_unit_show.stderr
 D026 row=1 arm=manager_stop mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
+D026 row=1 arm=show_table_parse mutation=missing_final_newline RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=unterminated_final_record source=/tmp/rp7_rows_1_9_rebuild_evidence/cases/r1_table_parse/evidence/ro.0001.b2_unit_show.stdout
+D026 row=1 arm=show_table_parse mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
+D026 row=1 arm=active_absent mutation=delete_ActiveState RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=property_record_absent query=ActiveState
+D026 row=1 arm=active_absent mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
+D026 row=1 arm=active_empty mutation=ActiveState_empty RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=active_state_value_grammar
+D026 row=1 arm=active_empty mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
+D026 row=1 arm=active_unknown mutation=ActiveState_maybe RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=active_state_value_grammar
+D026 row=1 arm=active_unknown mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
 D026 row=2 arm=missing_property mutation=delete_NRestarts RED rc=3 line=B2_STOP reason=unit_property_unreadable prop=NRestarts rc=0 detail=property_record_absent query=NRestarts
 D026 row=2 arm=missing_property mutation=repaired_expected GREEN rc=0 line=B2_restart_count prop=NRestarts value=0
 D026 row=2 arm=wrong_value mutation=NRestarts_2 RED rc=1 line=B2_FAIL reason=nrestarts_nonzero value=2 expected=0
@@ -325,10 +352,9 @@ D026 row=5 arm=decoy_fragment_only mutation=comment_inactive_env_paths_not_bindi
 D026 row=5 arm=decoy_fragment_only mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
 D026 row=5 arm=not_found mutation=LoadState_not-found RED rc=1 line=B2_FAIL reason=unit_not_loaded
 D026 row=5 arm=not_found mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
-D026 row=5 arm=truncated_show mutation=missing_final_newline RED rc=3 line=B2_STOP reason=unit_definition_unreadable operation=show rc=0 detail=unterminated_final_record source=/tmp/rp7_rows_1_9_rebuild_evidence/cases/r5_truncated/evidence/ro.0001.b2_unit_show.stdout
-D026 row=5 arm=truncated_show mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
 D026 row=6 arm=comment_decoy mutation=comment_contains_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
 D026 row=6 arm=continued_decoy mutation=continued_line_then_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=continued_comment_install mutation=continued_line_comment_then_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
 D026 row=6 arm=case_variant mutation=lower_case_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
 D026 row=6 arm=real_install mutation=real_Install_section RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service
 D026 row=6 arm=real_install mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
@@ -348,11 +374,15 @@ D026 row=9 arm=duplicate mutation=two_start_mode_assignments_different_values RE
 D026 row=9 arm=duplicate mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
 D026 row=9 arm=substring mutation=different_variable_contains_token RED rc=1 line=B4_FAIL reason=start_mode_missing_or_altered observed=count=0 observed_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 D026 row=9 arm=substring mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026 row=9 arm=unmodeled_token mutation=token_without_assignment RED rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_token_without_assignment
+D026 row=9 arm=unmodeled_token mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026 row=9 arm=malformed_name mutation=name_starts_digit RED rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_name_grammar
+D026 row=9 arm=malformed_name mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
 D026 row=9 arm=quoted mutation=quoted_assignment CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
 D026_CONTROL row=8 case=r8_mismatch_green executed_B4_property_lines=10
 D026_CONTROL row=8 case=r8_missing_green executed_B4_property_lines=10
-HARNESS_BLOCK_ID stage=after bytes=127038 sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3 cr_bytes=0 bash_n=0
-D026_SUMMARY rows=1-9 red_green_pairs=24 controls=4 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+HARNESS_BLOCK_ID stage=after bytes=127491 sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3 cr_bytes=0 bash_n=0
+D026_SUMMARY rows=1-9 red_green_pairs=29 controls=5 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
 ```
 
 Round 9 answers the Codex T0 part-B re-audit of the round-8 bytes
