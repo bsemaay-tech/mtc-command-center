@@ -1,6 +1,6 @@
 # Audit 2 Packet 11 Skeleton - authority and ledger closure
 
-Status: SKELETON ONLY.
+Status: **PARTIALLY FILLED** (was SKELETON ONLY; updated 2026-08-13 at repository HEAD `c2861d88`, branch `feature/donchian-crypto-ladder`).
 
 Scope source: `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md`.
 
@@ -9,6 +9,8 @@ Binding authoring rule: every unfilled field is held under a `PENDING` heading. 
 External evidence: all grant numbers, decision labels, component numbers, named exclusions, and required field names in this skeleton are inherited from `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md`; they are not fresh measurements or generated results.
 
 Packet-level boundary: Packet 11 consolidates existing authority and provenance. It does not create new authority and cannot ratify the final freeze-time ledger balance.
+
+**What the 2026-08-13 update filled, and what it deliberately did not.** Only fields directly established by a cited owner decision record or a permanent repository rule were filled: P11-03 (the three 2026-08-13 owner decisions), P11-04 (Audit-2 audit authority, from the permanent tier policy and the auditor-session contract), P11-06 (budget waiver), P11-08 (the owner-ratified approximate ledger figure), and P11-09 (the current go/no-go answer). Everything requiring a source file this update did not read, a Stage-1 product, a host result, or a freeze-time binding stays `<PENDING-STAGE-1>`. In particular the **final packet identity**, **P11-07's exact arithmetic**, and **P11-10's host/order proof** remain pending. No suite was run, no host was contacted, and no Git state was mutated by this update.
 
 ## PENDING - Packet 11 final identity
 
@@ -30,6 +32,8 @@ One row per actual authority source is required.
 - Superseding record, if any: `<PENDING-STAGE-1>`
 - Final path, bytes and SHA-256 binding: `<PENDING-STAGE-1>`
 
+**Known member, not yet bound:** `MTC_COMMAND_CENTER/11_TRIAGE/WPI_OWNER_DECISIONS_2026-08-13.md`, dated 2026-08-13 ~10:00, carrying the three decisions consolidated at P11-03 below. Its path, bytes and SHA-256 binding are `<PENDING-STAGE-1>` because the binding is a freeze-time act.
+
 ## PENDING - P11-02 Owner grants #1-#7 with limits
 
 The scope names these grants as existing authority to consolidate, without broadening them.
@@ -43,9 +47,13 @@ The scope names these grants as existing authority to consolidate, without broad
 - Grant #7, block-set-specific T0 round-cap lift: `<PENDING-STAGE-1>`
 - Limits and non-broadening statement for each grant: `<PENDING-STAGE-1>`
 
-## PENDING - P11-03 Subsequent owner decisions
+The labels above are inherited from `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md:80`, which cites `NEW_SESSION_KICKOFF_PROMPT_2026-08-09_NIGHT.md:16-34` as the grant source. That source was not read by this update, so no grant text, scope or limit is transcribed here.
+
+## PARTIALLY FILLED - P11-03 Subsequent owner decisions
 
 The scope names these decisions as existing records to consolidate.
+
+Inherited from `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md:81`, source not read by this update:
 
 - Rows 1-9 BUILD ALL NINE after RP7 dual acceptance: `<PENDING-STAGE-1>`
 - FAM-01 exact pins: `<PENDING-STAGE-1>`
@@ -53,17 +61,30 @@ The scope names these decisions as existing records to consolidate.
 - FAM-03 composite provenance: `<PENDING-STAGE-1>`
 - Transport outer-shell F1 accepted as OPEN disclosure: `<PENDING-STAGE-1>`
 - SEC102 vocabulary accepted as a production-gate disclosure: `<PENDING-STAGE-1>`
-- Source path, date, limits and final binding for each decision: `<PENDING-STAGE-1>`
 
-## PENDING - P11-04 Audit-2 audit authority
+**Added 2026-08-13 — three decisions taken after this skeleton was written.** All three are recorded verbatim-in-substance in `MTC_COMMAND_CENTER/11_TRIAGE/WPI_OWNER_DECISIONS_2026-08-13.md`, dated 2026-08-13 ~10:00, owner answer `1. A / 2. ok / 3. ok`:
 
-- T0 classification: `<PENDING-STAGE-1>`
-- Fresh Claude Opus 5 xhigh auditor requirement: `<PENDING-STAGE-1>`
-- Fresh Codex `gpt-5.6-sol` xhigh auditor requirement: `<PENDING-STAGE-1>`
-- Independence/no-resume rule: `<PENDING-STAGE-1>`
-- Acceptance floor: `<PENDING-STAGE-1>`
-- Applicable loop bound/cadence: `<PENDING-STAGE-1>`
-- Final source bindings: `<PENDING-STAGE-1>`
+| Decision | Substance | Source | Limit |
+|---|---|---|---|
+| D-2026-08-13-1 | RP6 boundary **ACCEPTED-WITH-DISCLOSURE** (option A). The r19 token-layer model plus its Lead-verified executed evidence is the evidence of record; the residual classes ride forward as explicit non-controls. **No further hardening rounds are to be dispatched.** | `WPI_OWNER_DECISIONS_2026-08-13.md:7-20` | The freeze-time carry is the disclosure text, which must travel verbatim into the successor preregistration's trusted-base section alongside SEC102's four assumptions (`:18-20`). Acceptance of a disclosure is not a control. |
+| D-2026-08-13-2 | Ledger figure **RATIFIED at approximately 55 h** of the 50 h plan; P11-08 CLOSED. | `WPI_OWNER_DECISIONS_2026-08-13.md:22-28` | Approximate, not exact. See P11-08 and P11-07 below. |
+| D-2026-08-13-3 | P10-10 mandated suite **DECIDED: full Bridge suite at the frozen SHA**; historical baselines explicitly non-referent. | `WPI_OWNER_DECISIONS_2026-08-13.md:30-37` | Decides scope only. The exact command is settled during freeze prep after reconciling README/CWD/ACL/plugin requirements (`:33-35`); no count, rc or anomaly set was decided. See `AUDIT2_PACKET10_SUITE_FILL_2026-08-13.md`. |
+
+- Source path, date, limits and final binding for each decision: source path and date filled above for the three 2026-08-13 decisions; **final path/bytes/SHA-256 binding `<PENDING-STAGE-1>`** for all decisions, as it is a freeze-time act.
+
+## FILLED - P11-04 Audit-2 audit authority
+
+Established by permanent repository rule, not by a Stage-1 product.
+
+- T0 classification: **Audit 2 is T0.** `AUDIT2_AUDITOR_SESSION_INPUTS.md:11`; permanent tier policy `AGENTS.md` "AUDIT TIER POLICY — PERMANENT DEFAULT".
+- Fresh Claude Opus 5 xhigh auditor requirement: **required** — exact model `claude-opus-5`, effort `xhigh`, no Sonnet, no implicit or latest alias, no silent fallback. `AUDIT2_AUDITOR_SESSION_INPUTS.md:13`; `AGENTS.md` "Claude auditor (G5 and G6)".
+- Fresh Codex `gpt-5.6-sol` xhigh auditor requirement: **required** — exact model `gpt-5.6-sol`, effort `xhigh`, no implicit alias. `AUDIT2_AUDITOR_SESSION_INPUTS.md:14`; `AGENTS.md` "Codex auditor (G5 and G6)".
+- Independence/no-resume rule: **no `--resume`, no `--continue`, no implementer-session context, and neither auditor is given the other's response, verdict, reasoning or findings before both initial verdicts are sealed.** `AUDIT2_AUDITOR_SESSION_INPUTS.md:16-18`.
+- Roster closure: **GLM is neither an open dispatcher choice nor an automatic third auditor**; only a later explicit owner contract may designate a broader review. `AUDIT2_AUDITOR_SESSION_INPUTS.md:20-22`; governing adjudication at `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md:96`.
+- Acceptance floor: **accepting verdicts from both flagship auditors, plus no unresolved reproduced required finding from any auditor.** A required finding is binding after the Lead reproduces it on real source; an unreproduced finding is recorded with its evidence, never silently dropped. `AGENTS.md` D025 rules 2-3. Non-execution of the mandated suite is **BLOCK**, never acceptance (`AGENTS.md` D025 rule 1; `AUDIT2_AUDITOR_SESSION_INPUTS.md:102-104`).
+- Applicable loop bound/cadence: **T0 round cap = 3.** After the cap is exhausted with no accepting verdict, stop and report the blocker to the owner; agents must not silently add rounds. Cadence is at work-package boundaries, except that T0 surface changes are audited immediately. `AGENTS.md` "Repair loop bound" and "Cadence".
+- Verdict vocabulary: exactly one of PASS, PASS-WITH-NITS, REQUEST_CHANGES, BLOCK; PASS-WITH-NITS may contain optional nits only. `AUDIT2_AUDITOR_SESSION_INPUTS.md:120-124`.
+- Final source bindings: `<PENDING-STAGE-1>` (path/bytes/SHA-256 binding is a freeze-time act).
 
 ## PENDING - P11-05 Hard exclusions and non-authorities
 
@@ -81,43 +102,57 @@ The scope names these decisions as existing records to consolidate.
 - Any other action not explicitly granted: `<PENDING-STAGE-1>`
 - Final source bindings: `<PENDING-STAGE-1>`
 
-## PENDING - P11-06 Budget-waiver scope
+The exclusion labels are inherited from `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md:83`. Its cited sources were not read by this update, so no exclusion text is transcribed. Independently standing and unaffected: `AGENTS.md` keeps the hard safety gates — no Pine/parity/MTC/trading changes without explicit approval, no destructive Git, no secrets, no deployment or live action without explicit authorization.
 
-- WP-I lift source/date/text effect: `<PENDING-STAGE-1>`
-- Authority to continue past the 10-hour flag/50-hour line: `<PENDING-STAGE-1>`
-- Honest booking unchanged statement: `<PENDING-STAGE-1>`
-- Hard safety gates unchanged statement: `<PENDING-STAGE-1>`
-- Final source bindings: `<PENDING-STAGE-1>`
+## PARTIALLY FILLED - P11-06 Budget-waiver scope
+
+- WP-I lift source/date/text effect: `<PENDING-STAGE-1>` (grant #2; source at `NEW_SESSION_KICKOFF_PROMPT_2026-08-09_NIGHT.md:23-25` per `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md:84`, not read by this update).
+- Authority to continue past the 10-hour flag/50-hour line: **granted.** The owner waived the 10-hours-remaining stop gate on **2026-08-11 18:30**: "continue past 10h/50h, honest booking, hard safety gates unchanged." Recorded at `FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md:346-348`. Effect: passing the 50 h line is **not a blocker**, but every hour from that point is over the original plan.
+- Honest booking unchanged statement: **unchanged** — same waiver text, same source.
+- Hard safety gates unchanged statement: **unchanged** — same waiver text, same source; corroborated by `AGENTS.md`.
+- Final source bindings: `<PENDING-STAGE-1>`.
 
 ## PENDING - P11-07 Technical freeze-time ledger calculation
 
 This is a technical calculation only. It is not owner ratification.
 
-- Prior ratified anchor: `<PENDING-STAGE-1>`
-- Every prospective work-package booking through final Stage-1/WP-I closure: `<PENDING-STAGE-1>`
-- Exact used-hours arithmetic: `<PENDING-STAGE-1>`
-- Exact remaining-hours arithmetic: `<PENDING-STAGE-1>`
-- Unit/hour ledger source paths: `<PENDING-STAGE-1>`
-- Ratified versus merely booked entries distinction: `<PENDING-STAGE-1>`
-- Obsolete-estimate exclusion check: `<PENDING-STAGE-1>`
+- Prior ratified anchor: **~24.9 h of the 50 h plan** was the last ratified balance before 2026-08-13 (`FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md:340`). Superseded as a *ratified* figure by P11-08 below; retained here as the anchor the arithmetic runs from.
+- Every prospective work-package booking through final Stage-1/WP-I closure: `<PENDING-STAGE-1>` — the 08-10, 08-11, 08-12 and 08-12/13 overnight bookings are described but not itemised to a closing figure (`FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md:340-345`), and Stage-1/WP-I closure has not occurred.
+- **Exact used-hours arithmetic:** `<PENDING-STAGE-1>`. **Blocked on Stage-1 closure.** The owner-ratified figure at P11-08 is explicitly approximate and does not supply it.
+- **Exact remaining-hours arithmetic:** `<PENDING-STAGE-1>`. Same blocker.
+- Unit/hour ledger source paths: `<PENDING-STAGE-1>`.
+- Ratified versus merely booked entries distinction: partially available — `~24.9 h` was ratified, the 08-10/08-11/08-12/08-12-13 bookings were prospective and unratified at the time of the morning handoff, and the 2026-08-13 owner action ratified the **approximate** aggregate only. The exact per-entry split is `<PENDING-STAGE-1>`.
+- Obsolete-estimate exclusion check: `<PENDING-STAGE-1>`. Note the governing rule: no obsolete estimate may be reused, and the older ~28.3-h-remaining and ~40-used/10-remaining figures are obsolete (`AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md:102`).
 
-## PENDING - P11-08 Owner-ratified freeze-time balance
+## FILLED (approximate, owner-ratified) - P11-08 Owner-ratified freeze-time balance
 
-Scope conclusion: OWNER-DECISION-REQUIRED. No Stage-1, transport, host, freeze, closure, or Lead step can produce owner ratification.
+Scope conclusion: OWNER-DECISION-REQUIRED. No Stage-1, transport, host, freeze, closure, or Lead step can produce owner ratification. **That owner action has now occurred.**
 
-- Owner ratification action: `<OWNER-DECISION-REQUIRED>`
-- Exact used hours ratified by owner: `<OWNER-DECISION-REQUIRED>`
-- Exact remaining hours ratified by owner: `<OWNER-DECISION-REQUIRED>`
-- Ratification timestamp/source: `<OWNER-DECISION-REQUIRED>`
-- Owner explicit acceptance of P11-07 calculation: `<OWNER-DECISION-REQUIRED>`
+- Owner ratification action: **performed.** The owner ratified the ledger figure in plain language (answer `2. ok`) on **2026-08-13 ~10:00**.
+- **Used hours ratified by owner: approximately 55 h of the 50 h plan.** This figure is **approximate and is ratified as approximate.** It is not an exact figure and must never be presented, quoted or recomputed as one.
+- **Remaining hours ratified by owner: approximately -5 h — that is, an overrun of approximately 5 h beyond the 50 h plan.** Also approximate, derived from the same ratified statement, not from an independent calculation.
+- Stated cause of the overrun, per the owner record: the unplanned adversarial repair rounds, all documented.
+- Ratification timestamp/source: **2026-08-13 ~10:00**, `MTC_COMMAND_CENTER/11_TRIAGE/WPI_OWNER_DECISIONS_2026-08-13.md:22-28` ("P11-08 … is **CLOSED** — packet 11's `OWNER-DECISION-REQUIRED` marker can be filled with this figure and this file as citation"). Path/bytes/SHA-256 binding: `<PENDING-STAGE-1>`.
+- Owner explicit acceptance of the P11-07 calculation: **not given, and not available to give.** P11-07's exact arithmetic does not yet exist (it is blocked on Stage-1 closure), so what the owner ratified is the approximate aggregate, not a P11-07 output. If Stage-1 closure produces an exact figure that differs materially from ~55 h, that figure requires its **own** owner ratification; this one does not cover it.
 
-## PENDING - P11-09 Final go/no-go matrix
+**Boundary, stated so it cannot be lost:** P11-08 is closed *as an approximate owner-ratified balance*. P11-07 remains open *as exact arithmetic*. The two are not interchangeable, and the approximate figure must not be laundered into an exact one by later restatement.
 
-- Audit 2 dispatch allowed? `<PENDING-STAGE-1>`
-- Already granted actions that remain available: `<PENDING-STAGE-1>`
-- Actions still needing fresh owner decision: `<PENDING-STAGE-1>`
-- Exact blocker/source for each NO/STOP: `<PENDING-STAGE-1>`
-- No silent missing-YES conversion check: `<PENDING-STAGE-1>`
+## PARTIALLY FILLED - P11-09 Final go/no-go matrix
+
+- **Audit 2 dispatch allowed? NO — as of 2026-08-13 midday.**
+- Exact blocker/source for each NO/STOP:
+
+| Blocker | State | Source |
+|---|---|---|
+| **Pathscope T1 acceptance** | **NO.** Round-3 Codex T1 execution re-audit returned **REQUEST_CHANGES** with a new CRITICAL **C-2**: a known assignment value is recorded only when the complete rendered value starts with `/`, `./` or `../`, so loader lists with a later absolute member and ordinary relative pathnames disappear with no PATH or coverage record — reproduced at all three repaired call sites, each returning `PASS rc=0` with the out-of-allowlist sink absent. The auditor states the **T1 round cap is now exhausted** and the Lead must surface the boundary rather than open another round without an explicit owner override. | `WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_CODEX_T1_EXEC_AUDIT_R3_2026-08-13.md:11-24`, `:83-134`, `:186-194`; commit `5abd997e` |
+| **RP7 T0 acceptance** | **NO.** The post-round-4 Claude T0 flagship audit returned **REQUEST_CHANGES** (2 REQUIRED, 1 NIT): REQUIRED-1, the row-6 parser mis-classifies a CRLF fragment and contradicts real systemd in the predicate the repair targeted — a regression against round-4 bytes; REQUIRED-2, the six new row-6 RED/GREEN pairs are labelled but never falsified inside the package, the exact D026 shortfall. The auditor states the **T0 round cap is reached with no accepting verdict**, so the repair loop stops and the findings go to the owner. | `WPI_BLOCKS_DRAFT/RP7_CLAUDE_T0_POST_R4_AUDIT_2026-08-13.md:3-16`, `:64-166`, `:287-290`; commit `c2861d88` |
+| **Packet 10 P10-10/11/12** | **NO.** Scope decided; command string, execution record and anomaly register unfilled and unfillable from a pre-freeze tree. | `AUDIT2_PACKET10_SUITE_FILL_2026-08-13.md`; `AUDIT2_AUDITOR_SESSION_INPUTS.md:84-104` |
+| **Frozen SHA / bundle** | **NO.** The pre-WP-A checkpoint does not exist; frozen SHA, base-to-freeze diff, frozen file list and final WP-I closure are all `NOT-YET-AVAILABLE`. | `AUDIT2_AUDITOR_SESSION_INPUTS.md:53-60`; `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md:119-122` |
+| **Packet 9** | **NO.** Host execution and closure evidence do not exist; Packet 9 must be complete and immutable before the freeze. | `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md:9`, `:119` |
+
+- Already granted actions that remain available: `<PENDING-STAGE-1>` — depends on P11-02/P11-05, which this update left unfilled.
+- Actions still needing fresh owner decision: **two are known and open now** — (a) an explicit cap override, or an accept-with-disclosure boundary call, for **pathscope** after the exhausted T1 cap; (b) the same for **RP7** after the exhausted T0 cap. Both are owner-class under `AGENTS.md` (repair loop bound) and the handoff's Rule 10 / Rule 8. Any further items: `<PENDING-STAGE-1>`.
+- No silent missing-YES conversion check: **applied.** No NO above has been converted to a YES by inference, and no missing authority has been supplied by this document.
 
 ## PENDING - P11-10 Authority/order compliance proof
 
@@ -128,3 +163,5 @@ Scope conclusion: OWNER-DECISION-REQUIRED. No Stage-1, transport, host, freeze, 
 - No excluded action occurred: `<PENDING-STAGE-1>`
 - Packet 9 closed before the pre-WP-A freeze: `<PENDING-STAGE-1>`
 - Audit 2 precedes WP-A: `<PENDING-STAGE-1>`
+
+Every field here depends on a host execution chain that has not occurred. None can be filled from documentation.
