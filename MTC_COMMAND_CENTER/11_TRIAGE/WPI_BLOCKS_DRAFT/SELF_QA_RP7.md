@@ -1,6 +1,17 @@
 # SELF-QA - RP7-WPI-RO rows 1-9 extension over repair round 9
 
-Status: `ROWS-1-9-EXTENDED-PENDING-REAUDIT`
+Status: `ROWS-1-9-EXTENDED-PENDING-FRESH-SAME-BYTE-T0-AUDITS`
+
+The bytes now on disk are `127655` /
+`beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8`. These are
+**post-round-4** bytes: they carry the post-round-4 regression repair recorded in
+the section "Post-round-4 regression repair - row-6 blank-line false PASS" below.
+No auditor has yet accepted these exact bytes. Both required T0 auditor slots are
+PENDING and must run fresh against this same byte identity. The round-4 repair
+commit `90cbeac4` closed three Codex T0 REQUIRED findings against the superseded
+`127491` bytes with Lead verification; that is a repair record, not an audit
+acceptance, and it is **not** carried forward to `127655`. Nothing in this file
+claims flagship acceptance of any RP7 rows-1-9 byte identity.
 
 ## Rows 1-9 D026 rebuild - executed block-code evidence
 
@@ -24,12 +35,26 @@ treating it as an install section. The round-2 case-insensitive change was a
 verify-before-fix failure based on a false statement about systemd section
 parsing.
 
-Round-4 repair disclosure: row 1 now treats every manager/query/table-parse,
-missing `ActiveState`, and invalid `ActiveState` token before the state
-comparison as `B2_STOP reason=system_manager_unreachable operation=show ...`;
-row 6 carries systemd continuation state across ignored comment/blank lines;
-row 9 refuses unconsumed or malformed environment tokens before target
-semantics.
+Round-4 repair disclosure (historical, `127491` bytes): row 1 now treats every
+manager/query/table-parse, missing `ActiveState`, and invalid `ActiveState`
+token before the state comparison as
+`B2_STOP reason=system_manager_unreachable operation=show ...`; row 9 refuses
+unconsumed or malformed environment tokens before target semantics. Both of
+those round-4 repairs still stand in the current bytes.
+
+**Round-4 row-6 claim - SUPERSEDED AND WAS FALSE.** Round 4 wrote that row 6
+"carries systemd continuation state across ignored comment/blank lines". That
+sentence described what round 4 actually built, and what it built was wrong: a
+blank line inside a continuation was skipped, so the continuation kept running
+past it and a following real `[Install]` section was swallowed as continuation
+text and reported `install_section=absent`. That is a false PASS on a row-6
+safety predicate. The post-round-4 regression repair below corrects it. The
+current rule of record for row 6 is:
+
+- a comment line (`#` or `;` after leading whitespace) **bridges** an open
+  continuation - it is ignored and the continuation stays open;
+- a blank line **terminates** an open continuation - the accumulated logical
+  line is classified immediately and the next physical line starts fresh.
 
 Row-8 sandbox expected values are asserted rendered `systemctl show` literals.
 The fence proves the comparator and presence-before-value logic against fixture
@@ -44,8 +69,8 @@ preregistration draft: the block reads the `ActiveState` property from
 command. The amended STOP token is `operation=show`, matching the emitted block
 line and avoiding raw tool rc as the row verdict.
 
-The final identity asserted by the fence is `127491` bytes /
-`5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3`.
+The final identity asserted by the fence is `127655` bytes /
+`beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8`.
 
 Published extraction command:
 
@@ -61,8 +86,8 @@ set -f
 export LC_ALL=C
 REPO=/mnt/c/LAB/Tradingview_LAB_CLEAN
 BLOCK="$REPO/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh"
-EXPECTED_BYTES=127491
-EXPECTED_SHA=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3
+EXPECTED_BYTES=127655
+EXPECTED_SHA=beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8
 ROOT=/tmp/rp7_rows_1_9_rebuild_evidence
 case "$ROOT" in /tmp/rp7_rows_1_9_rebuild_evidence) rm -rf "$ROOT" ;; *) printf 'HARNESS_ABORT unsafe_root=%s\n' "$ROOT"; exit 97 ;; esac
 mkdir -p "$ROOT/logs"
@@ -115,13 +140,21 @@ exit "$rc"
 SH
 chmod 755 "$WPI_SYSTEMCTL"
 make_fragment() {
-    local variant="$1" target="${2:-3736}" path="$WPI_UNIT_FRAGMENT" size need
+    local variant="$1" target="${2:-3736}" path="$WPI_UNIT_FRAGMENT" size need suffix=""
     : > "$path"
     case "$variant" in
         clean) printf '[Unit]\nDescription=RP7 rows 1-9 fixture\n[Service]\nExecStart=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python -m bridge.app\n' > "$path" ;;
         comment_decoy) printf '# [Install]\n[Unit]\nDescription=comment decoy\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
         continued_decoy) printf '[Unit]\nDescription=continued \\\n[Install]\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
         continued_comment_install) printf '[Unit]\nDescription=continued \\\n# ignored comment under continuation\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        multi_comment_bridge) printf '[Unit]\nDescription=continued \\\n# hash comment under continuation\n; semicolon comment under continuation\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        odd_backslash_three) printf '[Unit]\nDescription=continued \\\\\\\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        blank_no_bridge) printf '[Unit]\nDescription=continued \\\n\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        comment_then_blank) printf '[Unit]\nDescription=continued \\\n# bridged comment\n\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        even_backslash_no_bridge) printf '[Unit]\nDescription=continued \\\\\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        bare_backslash_line) printf '[Unit]\nDescription=bare backslash\n   \\\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        header_trailing_comment) printf '[Unit]\nDescription=header trailing comment\n[Install] # trailing comment\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        eof_dangling_install) printf '[Unit]\nDescription=eof dangling\n[Service]\nExecStart=/bin/true\n' > "$path"; suffix='[Install] \' ;;
         case_variant) printf '[Unit]\nDescription=case variant\n[install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
         real_install) printf '[Unit]\nDescription=real install\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
         row5_decoy) printf '[Unit]\nDescription=release decoy /opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b\n[Service]\nEnvironment=COMMENT_ONLY_VENV=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python\n# ExecStart=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python -m bridge.app\nExecStart=/tmp/comment-only\n' > "$path" ;;
@@ -131,10 +164,12 @@ make_fragment() {
     esac
     if [ "$variant" != nul ]; then
         size=$(wc -c < "$path" | tr -d ' ')
+        target=$(( target - ${#suffix} ))
         [ "$size" -le "$target" ] || { printf 'HARNESS_ABORT fragment_too_large variant=%s size=%s target=%s\n' "$variant" "$size" "$target"; exit 97; }
         need=$(( target - size ))
         if [ "$need" -eq 1 ]; then printf '\n' >> "$path"
         elif [ "$need" -gt 1 ]; then printf '#' >> "$path"; head -c $(( need - 2 )) /dev/zero | tr '\0' 'x' >> "$path"; printf '\n' >> "$path"; fi
+        [ -z "$suffix" ] || printf '%s' "$suffix" >> "$path"
     fi
     chmod 0644 "$path"
 }
@@ -254,7 +289,21 @@ row6_green="B2_fragment_install_section path=$WPI_UNIT_FRAGMENT install_section=
 run_case 6 comment_decoy comment_contains_install CONTROL 0 "$row6_green" r6_comment 'prepare_case r6_comment; make_fragment comment_decoy 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
 run_case 6 continued_decoy continued_line_then_install CONTROL 0 "$row6_green" r6_continued 'prepare_case r6_continued; make_fragment continued_decoy 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
 run_case 6 continued_comment_install continued_line_comment_then_install CONTROL 0 "$row6_green" r6_comment_bridge 'prepare_case r6_comment_bridge; make_fragment continued_comment_install 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 multi_comment_bridge continued_line_hash_and_semicolon_comments_then_install CONTROL 0 "$row6_green" r6_multi_comment 'prepare_case r6_multi_comment; make_fragment multi_comment_bridge 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 odd_backslash_three three_trailing_backslashes_continue CONTROL 0 "$row6_green" r6_odd_backslash 'prepare_case r6_odd_backslash; make_fragment odd_backslash_three 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
 run_case 6 case_variant lower_case_install CONTROL 0 "$row6_green" r6_case 'prepare_case r6_case; make_fragment case_variant 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 blank_no_bridge blank_line_terminates_continuation_real_install RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_blank_no_bridge 'prepare_case r6_blank_no_bridge; make_fragment blank_no_bridge 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 blank_no_bridge repaired_expected GREEN 0 "$row6_green" r6_blank_no_bridge_green 'prepare_case r6_blank_no_bridge_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
+run_case 6 comment_then_blank comment_bridges_then_blank_terminates_real_install RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_comment_then_blank 'prepare_case r6_comment_then_blank; make_fragment comment_then_blank 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 comment_then_blank repaired_expected GREEN 0 "$row6_green" r6_comment_then_blank_green 'prepare_case r6_comment_then_blank_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
+run_case 6 even_backslash_no_bridge two_trailing_backslashes_do_not_continue RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_even_backslash 'prepare_case r6_even_backslash; make_fragment even_backslash_no_bridge 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 even_backslash_no_bridge repaired_expected GREEN 0 "$row6_green" r6_even_backslash_green 'prepare_case r6_even_backslash_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
+run_case 6 bare_backslash_line whitespace_only_continuation_prefix_keeps_install RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_bare_backslash 'prepare_case r6_bare_backslash; make_fragment bare_backslash_line 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 bare_backslash_line repaired_expected GREEN 0 "$row6_green" r6_bare_backslash_green 'prepare_case r6_bare_backslash_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
+run_case 6 eof_dangling_install dangling_continuation_flushed_at_eof RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_eof_dangling 'prepare_case r6_eof_dangling; make_fragment eof_dangling_install 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 eof_dangling_install repaired_expected GREEN 0 "$row6_green" r6_eof_dangling_green 'prepare_case r6_eof_dangling_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
+run_case 6 header_trailing_comment section_header_with_trailing_comment RED 3 "B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=$WPI_UNIT_FRAGMENT detail=section_header_grammar" r6_header_trailing_comment 'prepare_case r6_header_trailing_comment; make_fragment header_trailing_comment 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 header_trailing_comment repaired_expected GREEN 0 "$row6_green" r6_header_trailing_comment_green 'prepare_case r6_header_trailing_comment_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
 run_case 6 real_install real_Install_section RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_real 'prepare_case r6_real; make_fragment real_install 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
 run_case 6 real_install repaired_expected GREEN 0 "$row6_green" r6_real_green 'prepare_case r6_real_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
 run_case 6 nul NUL_byte RED 3 "B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=$WPI_UNIT_FRAGMENT detail=nul_byte" r6_nul 'prepare_case r6_nul; make_fragment nul; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
@@ -305,14 +354,14 @@ after_sha=$(sha256sum "$BLOCK" | awk '{print $1}')
 after_cr=$(tr -cd '\r' < "$BLOCK" | wc -c | tr -d ' ')
 [ "$after_bytes" = "$EXPECTED_BYTES" ] && [ "$after_sha" = "$EXPECTED_SHA" ] && [ "$after_cr" = 0 ] || { printf 'HARNESS_BLOCK_ID_MISMATCH stage=after bytes=%s sha256=%s cr_bytes=%s\n' "$after_bytes" "$after_sha" "$after_cr"; exit 98; }
 printf 'HARNESS_BLOCK_ID stage=after bytes=%s sha256=%s cr_bytes=%s bash_n=0\n' "$after_bytes" "$after_sha" "$after_cr"
-printf 'D026_SUMMARY rows=1-9 red_green_pairs=29 controls=5 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no\n'
+printf 'D026_SUMMARY rows=1-9 red_green_pairs=35 controls=7 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no\n'
 # RP7_ROWS_1_9_REBUILD_FENCE_END
 ```
 
 Executed transcript from the published extraction command:
 
 ```text
-HARNESS_BLOCK_ID stage=before bytes=127491 sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3 cr_bytes=0 bash_n=0
+HARNESS_BLOCK_ID stage=before bytes=127655 sha256=beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8 cr_bytes=0 bash_n=0
 HARNESS_EXTRACT method=sed_drop_terminal_wpi_main_call source=RP7-WPI-RO.sh functions_invoked=wpi_assert_b2_rows_1_7,wpi_assert_fragment_has_no_install_section,wpi_assert_regular_digest,wpi_assert_b4_rows_8_9
 HARNESS_ATTESTED_MOUNTINFO sha256=be94739e05e58b6b5f5d8c94865cef8d512f8bcd79475b7944941a829a82dbb2 fixture_root=/tmp/rp7_rows_1_9_rebuild_evidence unit_fragment=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service clean_fragment_bytes=3736 clean_fragment_sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49
 HARNESS_DISCLOSURE row=8 sandbox_pins=asserted_rendered_systemctl_show_literals host_derivation=freeze_time_act fixture_fidelity_not_established
@@ -355,7 +404,21 @@ D026 row=5 arm=not_found mutation=repaired_expected GREEN rc=0 line=B2_unit_bind
 D026 row=6 arm=comment_decoy mutation=comment_contains_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
 D026 row=6 arm=continued_decoy mutation=continued_line_then_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
 D026 row=6 arm=continued_comment_install mutation=continued_line_comment_then_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=multi_comment_bridge mutation=continued_line_hash_and_semicolon_comments_then_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=odd_backslash_three mutation=three_trailing_backslashes_continue CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
 D026 row=6 arm=case_variant mutation=lower_case_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=blank_no_bridge mutation=blank_line_terminates_continuation_real_install RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service
+D026 row=6 arm=blank_no_bridge mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=comment_then_blank mutation=comment_bridges_then_blank_terminates_real_install RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service
+D026 row=6 arm=comment_then_blank mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=even_backslash_no_bridge mutation=two_trailing_backslashes_do_not_continue RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service
+D026 row=6 arm=even_backslash_no_bridge mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=bare_backslash_line mutation=whitespace_only_continuation_prefix_keeps_install RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service
+D026 row=6 arm=bare_backslash_line mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=eof_dangling_install mutation=dangling_continuation_flushed_at_eof RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service
+D026 row=6 arm=eof_dangling_install mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=header_trailing_comment mutation=section_header_with_trailing_comment RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service detail=section_header_grammar
+D026 row=6 arm=header_trailing_comment mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
 D026 row=6 arm=real_install mutation=real_Install_section RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service
 D026 row=6 arm=real_install mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
 D026 row=6 arm=nul mutation=NUL_byte RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service detail=nul_byte
@@ -381,9 +444,218 @@ D026 row=9 arm=malformed_name mutation=repaired_expected GREEN rc=0 line=B4_envi
 D026 row=9 arm=quoted mutation=quoted_assignment CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
 D026_CONTROL row=8 case=r8_mismatch_green executed_B4_property_lines=10
 D026_CONTROL row=8 case=r8_missing_green executed_B4_property_lines=10
-HARNESS_BLOCK_ID stage=after bytes=127491 sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3 cr_bytes=0 bash_n=0
-D026_SUMMARY rows=1-9 red_green_pairs=29 controls=5 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+HARNESS_BLOCK_ID stage=after bytes=127655 sha256=beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8 cr_bytes=0 bash_n=0
+D026_SUMMARY rows=1-9 red_green_pairs=35 controls=7 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
 ```
+
+### Transcript provenance and exact-line comparison - stated honestly
+
+The transcript above is the verbatim stdout of one execution of the published
+extraction command against the `127655`-byte block. It was captured as
+`... | bash --noprofile --norc > out 2> err` and pasted whole. Nothing in it was
+reordered, elided or reworded.
+
+The pasted 85 lines are the stdout of a run executed by **this** implementer
+session on 2026-08-13 under `wsl -d Ubuntu` (Ubuntu WSL2, root), from the repo
+working tree at
+`/mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT`.
+Measured directly on that run:
+
+```text
+rc=0
+stderr_bytes=0
+stdout_lines=85
+RED_arms=35        (grep -c ' RED ')
+GREEN_arms=35      (grep -c ' GREEN ')
+CONTROL_arms=7     (grep -c ' CONTROL ')
+D026_SUMMARY       red_green_pairs=35 controls=7 result=PASS
+identity           before/after 127655 / beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8, cr_bytes=0, bash_n=0
+```
+
+The published fence was executed **twice** in this session, back to back, in the
+same distro. Both runs produced rc 0, 0 stderr bytes, and 85 stdout lines that
+are byte-identical to each other and to the block pasted above.
+
+The Lead independently ran the same published fence against the same locked
+source and reported rc 0, stderr 0 bytes, 85 stdout lines, 35 RED/GREEN pairs
+and 7 controls. Those four numbers agree with both runs here. **That remains an
+agreement of counts and identity, not a proven byte-for-byte comparison against
+the Lead's copy** - the Lead's own 85 lines were not supplied to this session, so
+no diff against the Lead's output was performed and none is claimed.
+
+#### The one host-derived line, and a correction to what was previously written here
+
+Exactly one line of the transcript is host-derived rather than block- or
+fixture-derived:
+
+```text
+HARNESS_ATTESTED_MOUNTINFO sha256=... fixture_root=/tmp/rp7_rows_1_9_rebuild_evidence ...
+```
+
+Its `sha256=` field is the mount-projection digest of the executing machine's
+`/proc/self/mountinfo`. It is a property of the executing mount namespace, not of
+`RP7-WPI-RO.sh`, and it is not evidence for or against any row predicate.
+
+**Correction.** An earlier draft of this section pasted
+`78388f0d1e330a9e2f49700f241d10c96c9df704f8dd99a15e3b01edb98b1e15` for this field
+and stated that the change away from the previously recorded
+`be94739e05e58b6b5f5d8c94865cef8d512f8bcd79475b7944941a829a82dbb2` was a stable
+property of the executing host. That was wrong on the facts available now. Both
+of this session's runs recorded
+`be94739e05e58b6b5f5d8c94865cef8d512f8bcd79475b7944941a829a82dbb2` - the *older*
+value - and `78388f0d...` did not reproduce here at all. The pasted line has
+therefore been replaced with the value this session actually observed, so the 85
+lines above are the verbatim stdout of a single reproducible run rather than a
+mixture of two. `78388f0d...` is retained in this paragraph as the observed value
+from the earlier session's mount namespace, not deleted.
+
+What this means, stated plainly: this field is **not** stable across execution
+environments and must not be treated as reproducible evidence. It is stable
+across repeated runs inside one mount namespace (proved twice here) and differs
+between namespaces (proved by the `78388f0d...` / `be94739e...` pair). No
+normalisation, masking or placeholder substitution has been applied to it or to
+any other line; the only edit was replacing the earlier session's observed value
+with this session's observed value, and that edit is disclosed in this paragraph.
+
+Every other line is fixture-derived or block-derived and reproduces exactly,
+including the `fixture_root` and `unit_fragment` paths, which are fixed literals
+under `/tmp/rp7_rows_1_9_rebuild_evidence`. A byte-level `diff -u` of the pasted
+85 lines against this session's captured stdout is clean on all 85 lines.
+
+The C1 mount-projection digest residual disclosed elsewhere in this file is
+unchanged by this round: that digest still uses a re-resolved name and is
+intentionally not repaired here.
+
+## Post-round-4 regression repair - row-6 blank-line false PASS
+
+**This section is not an audit round and does not renumber the audit rounds.**
+The historical rounds keep their numbers: round 2, round 3 and round 4 are the
+recorded implementer repair rounds against the GLM advance-read, the Claude T0
+extension audit and the Codex T0 extension audit respectively. This is a
+post-round-4 regression repair carried out by the counterpart implementer after
+round 4 was committed, and it is documented separately for that reason.
+
+### What happened, factually
+
+1. Round 4 (committed as `90cbeac4`, block identity `127491` /
+   `5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3`) closed the
+   three REQUIRED findings raised by the Codex T0 extension flagship: the row-1
+   amended STOP domain, the row-6 continuation handling, and the row-9
+   environment tokenizer. Those three closures were real and the row-1 and row-9
+   closures still stand.
+2. The round-4 row-6 change **introduced a new defect while closing the finding
+   it was aimed at.** Its parser, once a continuation was open, skipped any line
+   that was empty *or* a comment and kept the continuation open. Comment bridging
+   was the behaviour the audit asked for. Blank-line bridging was not asked for,
+   was not tested, and is wrong: a blank line ends the continuation.
+3. The consequence was a false PASS on a safety predicate. A unit fragment of the
+   form
+
+   ```text
+   [Unit]
+   Description=continued \
+                                 <- blank line
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   was reported by round-4 bytes as `install_section=absent` with rc 0, because
+   `[Install]` was consumed as continuation text. Row 6 exists to refuse exactly
+   that fragment.
+4. Round 4 also asserted that this behaviour matched "systemd's documented
+   continuation form". That justification was not verified before it was written,
+   and the blank-line half of it is false. This is the same failure mode already
+   recorded against round 2 in this file - justifying a change by an unverified
+   claim about how systemd parses - and it is recorded here again rather than
+   quietly dropped.
+5. This is a concurrency incident in the ordinary sense used in `AGENTS.md`
+   "PARALLEL AGENT SAFETY": round-4 work and the follow-on documentation work
+   overlapped on the same uncommitted files, and the false PASS reached committed
+   documentation before it was caught. Nothing was lost or overwritten; no
+   `git checkout`, `reset` or `stash` was run at any point.
+
+### The rule of record now implemented
+
+Exactly:
+
+- **A comment line bridges a continuation.** A physical line whose first
+  non-whitespace character is `#` or `;` is ignored entirely; if a continuation
+  is open it stays open across that line.
+- **A blank line terminates a continuation.** A physical line that is empty after
+  stripping whitespace closes the open logical line; the accumulated text is
+  classified immediately and the following physical line starts a fresh logical
+  line.
+- Continuation is decided by an **odd** count of trailing backslashes; an even
+  count does not continue.
+- A dangling continuation still open at EOF is flushed and classified rather than
+  discarded.
+- A section header must be exactly `[Name]` after stripping; a header with a
+  trailing comment is a grammar STOP, not a silently accepted header.
+
+This rule set is the block's design of record for row 6 as directed for this
+repair. It is proved implemented by the executed arms below. It is **not** a
+fresh re-derivation from systemd source in this round, and this section makes no
+claim about systemd internals beyond what the executed fixtures show.
+
+### Row-6 arms in the current fence - what each one is, accurately
+
+The transcript labels are the fence's own: `CONTROL` for an arm that must stay
+accepting, `RED`/`GREEN` for a falsification pair. Row 6 now carries **6 CONTROL
+arms and 8 RED/GREEN pairs**.
+
+| Arm | Label in transcript | Purpose |
+|---|---|---|
+| `comment_decoy` | CONTROL | a `# [Install]` comment must not be an install section |
+| `continued_decoy` | CONTROL | `[Install]` directly inside an open continuation is continuation text |
+| `continued_comment_install` | CONTROL | **no-weakening:** one comment line still bridges the continuation |
+| `multi_comment_bridge` | CONTROL | **no-weakening:** a `#` line *and* a `;` line still bridge, added this repair |
+| `odd_backslash_three` | CONTROL | three trailing backslashes still continue, added this repair |
+| `case_variant` | CONTROL | lowercase `[install]` stays a control (round-3 disposition, unchanged) |
+| `blank_no_bridge` | RED/GREEN pair | **the regression guard:** blank line inside a continuation must terminate it, so the following real `[Install]` is caught |
+| `comment_then_blank` | RED/GREEN pair | comment bridges, then a blank still terminates - the two rules interact correctly |
+| `even_backslash_no_bridge` | RED/GREEN pair | two trailing backslashes do not continue |
+| `bare_backslash_line` | RED/GREEN pair | a whitespace-only line ending in a backslash does not hide a following `[Install]` |
+| `eof_dangling_install` | RED/GREEN pair | a continuation still open at EOF is flushed and classified |
+| `header_trailing_comment` | RED/GREEN pair | `[Install] # comment` STOPs on `section_header_grammar` |
+| `real_install` | RED/GREEN pair | plain `[Install]` section (carried) |
+| `nul` | RED/GREEN pair | NUL byte STOPs `nul_byte` (carried) |
+
+Two statements about `blank_no_bridge` that must not be blurred:
+
+- It is a **RED/GREEN pair in the transcript, not a `CONTROL`-labelled arm.** Its
+  RED arm is the falsification: against round-4 bytes this fragment returned
+  rc 0 `install_section=absent`; against the current bytes it returns
+  rc 1 `B2_FAIL reason=install_section_present`. Its GREEN arm is the clean
+  fragment returning rc 0.
+- The **no-weakening** guarantee for this repair is carried by the CONTROL arms
+  `continued_comment_install` and `multi_comment_bridge`, which both still report
+  `install_section=absent` at rc 0. They prove the fix did not simply delete
+  comment bridging to make the blank-line case pass.
+
+### Count delta
+
+```text
+round-4 (127491): red_green_pairs=29 controls=5
+current (127655): red_green_pairs=35 controls=7
+
++6 pairs   : blank_no_bridge, comment_then_blank, even_backslash_no_bridge,
+             bare_backslash_line, eof_dangling_install, header_trailing_comment
++2 controls: multi_comment_bridge, odd_backslash_three
+```
+
+### Status of these bytes
+
+`127655` / `beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8` has
+implementer self-QA (this section and the executed transcript above) and an
+independent Lead run of the published fence. It has **no** auditor verdict. Both
+required T0 auditor slots are PENDING and must run fresh against these same
+bytes. No acceptance is claimed.
+
+The row-8 disclosure is unchanged and still stands: the row-8 sandbox pins are
+asserted rendered `systemctl show` literals, the fence proves comparator and
+presence-before-value behaviour against fixtures only, host derivation of those
+renderings remains a freeze-time act, and `CapabilityBoundingSet=''` remains the
+highest-risk pin for that derivation.
 
 Round 9 answers the Codex T0 part-B re-audit of the round-8 bytes
 (`RP7_CODEX_T0_AUDIT_R8_PART_B_2026-08-11.md`, BLOCK, five findings). Everything below ran

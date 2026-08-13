@@ -656,27 +656,40 @@ try:
  text=raw.decode("utf-8")
 except (OSError,UnicodeError):
  print("PARSE unreadable_or_encoding"); sys.exit(3)
-section_re=re.compile(r"^\s*\[([A-Za-z][A-Za-z0-9_-]*)\]\s*(?:[#;].*)?$")
-continued=False
+WS=" \t\r\n"
+section_re=re.compile(r"^\[([A-Za-z][A-Za-z0-9_-]*)\]$")
+continuation=None
 sections=0
-for physical in text.splitlines():
- line=physical.rstrip("\r")
- stripped=line.lstrip()
- if continued:
-  if not stripped or stripped.startswith("#") or stripped.startswith(";"):
-   continue
-  continued=line.endswith("\\")
-  continue
- if not stripped or stripped.startswith("#") or stripped.startswith(";"):
-  continue
- m=section_re.match(line)
+def classify(logical):
+ global sections
+ if not logical:
+  return
+ m=section_re.match(logical)
  if m:
   sections+=1
   if m.group(1)=="Install":
    print("INSTALL section=%s"%m.group(1)); sys.exit(1)
- elif stripped.startswith("["):
+ elif logical.startswith("["):
   print("PARSE section_header_grammar"); sys.exit(3)
- continued=line.endswith("\\")
+def continues(logical):
+ n=0
+ i=len(logical)
+ while i>0 and logical[i-1]=="\\":
+  n+=1
+  i-=1
+ return n%2==1
+for physical in text.split("\n"):
+ line=physical.lstrip(WS)
+ if line[:1] in ("#",";"):
+  continue
+ logical=line if continuation is None else continuation+line
+ if continues(logical):
+  continuation=logical[:-1]+" "
+  continue
+ continuation=None
+ classify(logical.strip(WS))
+if continuation is not None:
+ classify(continuation.strip(WS))
 print("OK install_section=absent sections=%d"%sections)
 '
     parser_rc="$WPI_CAP_RC"

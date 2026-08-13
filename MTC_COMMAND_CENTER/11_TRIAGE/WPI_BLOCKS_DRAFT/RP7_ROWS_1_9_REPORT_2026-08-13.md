@@ -1,5 +1,16 @@
 # RP7 rows 1-9 build report - 2026-08-13
 
+> **Current state of record.** Block identity is `127655` /
+> `beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8`, fence count
+> `35` RED/GREEN pairs and `7` controls. Status:
+> **rows-1-9-EXTENDED-PENDING-FRESH-SAME-BYTE-T0-AUDITS** - no auditor has
+> accepted these bytes and both required T0 slots are PENDING against this same
+> byte identity. Everything below is written round by round; earlier sections
+> record the identities and counts that were current *at the time of that round*
+> and are retained as history. Where a round's prose was later found false it is
+> marked SUPERSEDED in place rather than deleted. The authoritative current
+> record is the "Post-round-4 regression repair" section at the end of this file.
+
 Actual session-header model visible to this Codex session: Codex / GPT-5. The
 kickoff states this route is the Codex free gpt-5.5-class implementer lane; this
 session did not expose `gpt-5.6-sol` as its active model header, and I did not
@@ -63,13 +74,28 @@ final executable identity changed from the pre-rebuild rows 1-9 identity.
 
 ## Identity
 
-Current `RP7-WPI-RO.sh` identity after round-4 repair:
+Current `RP7-WPI-RO.sh` identity, after the post-round-4 regression repair
+recorded at the end of this file:
+
+```text
+bytes=127655
+sha256=beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8
+cr_bytes=0
+red_green_pairs=35
+controls=7
+identity_changed=yes
+auditor_acceptance=none_yet_both_T0_slots_pending_same_bytes
+```
+
+Superseded round-4 identity:
 
 ```text
 bytes=127491
 sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3
-cr_bytes=0
-identity_changed=yes
+red_green_pairs=29
+controls=5
+committed_as=90cbeac4
+superseded_reason=round-4 row-6 continuation change bridged blank lines as well as comments, producing a false PASS on the row-6 install-section predicate
 ```
 
 Superseded round-3 rows 1-9 identity:
@@ -101,8 +127,10 @@ sha256=0e93f90de7fcefe86fee4137f3ba11ea34b69b120d6a06c304fdde0e9b921e62
 embedded fence, a published extraction command, and the executed transcript. The
 fence asserts the block identity before and after, extracts the delivered block
 functions from `RP7-WPI-RO.sh`, and executes the block's own B2/B4 functions
-against fixture `systemctl show` captures and fixture unit fragments. It
-produced 29 RED/GREEN pairs and 5 controls after round-4 repair. The folded documentary repairs from
+against fixture `systemctl show` captures and fixture unit fragments. Count
+history: 24 pairs / 4 controls after round-3 repair, then 29 pairs / 5 controls
+after round-4 repair. **Current count against the `127655` bytes: 35 RED/GREEN
+pairs and 7 controls.** The folded documentary repairs from
 the earlier kickoff remain below: stale GREEN identities were corrected, the
 round-5 fence body is `21263 B`, the six wrapper stream lines are pasted beside
 `RUN_ONE_STDERR_BYTES=210`, the `wpi_alloc_leaf` deletion proof is present, and
@@ -115,10 +143,11 @@ cd /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAF
 sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_END$/p' SELF_QA_RP7.md | bash --noprofile --norc
 ```
 
-Result: rc 0. The transcript starts with:
+Result against the current `127655` bytes: rc 0, 0 stderr bytes, 85 stdout
+lines. The transcript starts with:
 
 ```text
-HARNESS_BLOCK_ID stage=before bytes=127491 sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3 cr_bytes=0 bash_n=0
+HARNESS_BLOCK_ID stage=before bytes=127655 sha256=beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8 cr_bytes=0 bash_n=0
 HARNESS_EXTRACT method=sed_drop_terminal_wpi_main_call source=RP7-WPI-RO.sh functions_invoked=wpi_assert_b2_rows_1_7,wpi_assert_fragment_has_no_install_section,wpi_assert_regular_digest,wpi_assert_b4_rows_8_9
 HARNESS_DISCLOSURE row=8 sandbox_pins=asserted_rendered_systemctl_show_literals host_derivation=freeze_time_act fixture_fidelity_not_established
 D026 row=1 arm=inactive mutation=ActiveState=inactive RED rc=1 line=B2_FAIL reason=unit_not_active state=inactive expected=active
@@ -126,8 +155,18 @@ D026 row=1 arm=inactive mutation=repaired_expected GREEN rc=0 line=B2_active sta
 ...
 D026 row=1 arm=active_absent mutation=delete_ActiveState RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=property_record_absent query=ActiveState
 ...
-D026_SUMMARY rows=1-9 red_green_pairs=29 controls=5 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+D026 row=6 arm=multi_comment_bridge mutation=continued_line_hash_and_semicolon_comments_then_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=blank_no_bridge mutation=blank_line_terminates_continuation_real_install RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service
+D026 row=6 arm=blank_no_bridge mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+...
+HARNESS_BLOCK_ID stage=after bytes=127655 sha256=beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8 cr_bytes=0 bash_n=0
+D026_SUMMARY rows=1-9 red_green_pairs=35 controls=7 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
 ```
+
+The full 85-line transcript is not duplicated here; it lives verbatim in
+`SELF_QA_RP7.md` under "Executed transcript from the published extraction
+command", together with its provenance and the disclosure of the single
+host-derived `HARNESS_ATTESTED_MOUNTINFO sha256=` field.
 
 The mutation identities are named in each transcript line (`mutation=...`). For
 clean transcript extraction from the delivered file:
@@ -160,9 +199,11 @@ Result: no matches in the block.
 RP7-WPI-RO.sh bytes/SHA/CR derivation
 ```
 
-Result: `127491` bytes,
-`5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3`, `0` CR
-bytes.
+Result: `127655` bytes,
+`beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8`, `0` CR
+bytes. (The `127491` /
+`5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3` derivation
+recorded earlier in this file belongs to the superseded round-4 bytes.)
 
 ## Rebuild note
 
@@ -381,10 +422,18 @@ Repairs:
   incomplete or malformed show table, absent `ActiveState`, and empty or
   unrecognized `ActiveState` tokens. Valid non-active systemd states still
   remain evaluable row-1 FAILs.
-- REQUIRED-2 closed: the row-6 parser carries continuation state across
-  ignored comment/blank lines. The new `continued_comment_install` control now
-  parses a continued directive followed by a comment block and `[Install]` as
-  `install_section=absent`, matching systemd's documented continuation form.
+- REQUIRED-2 closed **[SUPERSEDED - THIS ROUND-4 CLAIM WAS FALSE; see
+  "Post-round-4 regression repair" below]**: the round-4 text read "the row-6
+  parser carries continuation state across ignored comment/blank lines. The new
+  `continued_comment_install` control now parses a continued directive followed
+  by a comment block and `[Install]` as `install_section=absent`, matching
+  systemd's documented continuation form." The comment half was correct and was
+  what the audit asked for. The **blank** half was not asked for, was not tested,
+  and is wrong: bridging blank lines let a following real `[Install]` be consumed
+  as continuation text and reported `install_section=absent`, a false PASS on the
+  row-6 predicate. The "matching systemd's documented continuation form"
+  justification was also not verified before it was written. The claim is
+  preserved verbatim here as the round-4 record and is corrected below.
 - REQUIRED-3 closed: the row-9 tokenizer now refuses every token without `=`
   and every token whose name is not a valid environment variable name before
   target semantics. The exact audited malformed record
@@ -393,7 +442,8 @@ Repairs:
 - NIT-1 adopted: the earlier `23 RED/GREEN pairs and 3 controls` sentence is
   updated to the current round-4 count, `29 RED/GREEN pairs and 5 controls`.
 
-Round-4 executable identity, re-derived after the final code edit:
+Round-4 executable identity, re-derived after the final code edit
+(**superseded** by the post-round-4 regression repair below):
 
 ```text
 bytes=127491
@@ -432,7 +482,9 @@ Rule 9b / Pattern pass:
   moved to row 1 because the first divergence is now the amended
   `ActiveState` table-parse STOP.
 
-Repo-wide grep after repair:
+Repo-wide grep after repair (**as measured at round 4; superseded** - `127491` /
+`5b00207a...` is itself now a superseded identity, and the current identity is
+`127655` / `beacf85b...`):
 
 - The superseded round-3 SHA
   `ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3`
@@ -452,3 +504,135 @@ Repo-wide grep after repair:
 
 No git mutation: no stage, commit, checkout, reset, stash, branch or push was
 executed.
+
+## Post-round-4 regression repair - row-6 blank-line false PASS
+
+**This is not an audit round and it does not renumber the audit rounds.** Rounds
+2, 3 and 4 above keep their numbers and their records. This section documents a
+regression repair carried out after round 4 was committed, and it makes **no
+acceptance claim** of any kind.
+
+### What round 4 closed, and what it broke
+
+Round 4 was committed as `90cbeac4` at block identity `127491` /
+`5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3`. It closed the
+three REQUIRED findings raised by the Codex T0 extension flagship - the row-1
+amended STOP domain, the row-6 continuation handling, and the row-9 environment
+tokenizer - and the Lead verified that repair verbatim (29 pairs + 5 controls,
+63 lines byte-matched).
+
+The row-1 and row-9 closures stand unchanged.
+
+The row-6 closure **introduced a new defect while closing the finding it was
+aimed at**. Its parser, once a continuation was open, skipped any physical line
+that was empty *or* a comment and kept the continuation open. Comment bridging is
+correct and is what the audit asked for. Blank-line bridging is not correct, was
+never asked for, and was never tested. A fragment of the form
+
+```text
+[Unit]
+Description=continued \
+                              <- blank line
+[Install]
+WantedBy=multi-user.target
+```
+
+was reported by the round-4 bytes as `install_section=absent` at rc 0, because
+`[Install]` was swallowed as continuation text. Row 6 exists to refuse exactly
+that fragment, so this was a **false PASS on a safety predicate**.
+
+Round 4 also justified the change as "matching systemd's documented continuation
+form". That justification was not verified before it was written and its
+blank-line half is false. This repeats the failure mode already recorded against
+round 2 in this file - justifying a row-6 change by an unverified claim about how
+systemd parses unit files - and it is recorded here rather than quietly dropped.
+
+### Row-6 rule of record now implemented
+
+- A **comment** line - first non-whitespace character `#` or `;` - is ignored
+  entirely and **bridges** an open continuation.
+- A **blank** line - empty after stripping whitespace - **terminates** an open
+  continuation; the accumulated logical line is classified immediately and the
+  next physical line starts fresh.
+- Continuation is decided by an **odd** count of trailing backslashes; an even
+  count does not continue.
+- A continuation still open at EOF is flushed and classified, not discarded.
+- A section header must be exactly `[Name]` after stripping; a header carrying a
+  trailing comment is a `section_header_grammar` STOP, not a silently accepted
+  header.
+
+This rule set is proved implemented by the executed arms in `SELF_QA_RP7.md`. It
+is not a fresh re-derivation from systemd source in this round, and no claim
+about systemd internals is made here beyond what the executed fixtures show.
+
+### Arms added, and the no-weakening guarantee
+
+```text
+round-4 (127491): red_green_pairs=29 controls=5
+current (127655): red_green_pairs=35 controls=7
+
++6 RED/GREEN pairs : blank_no_bridge, comment_then_blank,
+                     even_backslash_no_bridge, bare_backslash_line,
+                     eof_dangling_install, header_trailing_comment
++2 CONTROL arms    : multi_comment_bridge, odd_backslash_three
+```
+
+`blank_no_bridge` is the regression guard and is a **RED/GREEN pair, not a
+CONTROL**: its RED arm returned rc 0 `install_section=absent` against round-4
+bytes and returns rc 1 `B2_FAIL reason=install_section_present` against the
+current bytes.
+
+The **no-weakening** guarantee is carried by the two CONTROL arms
+`continued_comment_install` and `multi_comment_bridge`, which both still report
+`install_section=absent` at rc 0. They prove the fix did not simply delete
+comment bridging in order to make the blank-line case pass.
+
+### Executed validation for these bytes
+
+```text
+identity derivation
+bytes=127655
+sha256=beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8
+cr_bytes=0
+
+published fence, executed twice back to back under wsl -d Ubuntu from
+/mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT:
+sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_END$/p' SELF_QA_RP7.md | bash --noprofile --norc
+
+rc=0
+stderr_bytes=0
+stdout_lines=85
+RED_arms=35   GREEN_arms=35   CONTROL_arms=7
+D026_SUMMARY rows=1-9 red_green_pairs=35 controls=7 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+diff -u <embedded SELF_QA transcript> <captured stdout>  ->  clean, all 85 lines
+```
+
+The transcript embedded in `SELF_QA_RP7.md` is the verbatim stdout of one of
+those runs. Its single host-derived field,
+`HARNESS_ATTESTED_MOUNTINFO sha256=`, is a projection digest of the executing
+mount namespace; it is stable across repeated runs in one namespace and differs
+between namespaces, it is disclosed as such in `SELF_QA_RP7.md`, and it is not
+evidence for or against any row predicate. No other normalisation was applied to
+any line.
+
+### Status of these bytes
+
+`127655` / `beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8` has
+implementer self-QA and an independent Lead run of the published fence (rc 0,
+0 stderr bytes, 85 lines, 35 RED/GREEN pairs, 7 controls). It has **no auditor
+verdict**. Both required T0 auditor slots are PENDING and must run fresh against
+these same bytes. Commit `90cbeac4` is a repair record against the superseded
+`127491` bytes and does not carry forward as acceptance. **No acceptance is
+claimed.**
+
+The row-8 disclosure is unchanged and still stands: the row-8 sandbox pins are
+asserted rendered `systemctl show` literals, the fence proves comparator and
+presence-before-value behaviour against fixtures only, host derivation of those
+renderings remains a freeze-time act, and `CapabilityBoundingSet=''` remains the
+highest-risk pin for that derivation. The C1 mount-projection digest residual is
+likewise unchanged and intentionally not repaired in this round.
+
+No git mutation occurred in this repair: no stage, commit, checkout, reset,
+stash, branch or push. `RP7-WPI-RO.sh` was not edited in this documentation
+reconciliation - it remains locked at `127655` /
+`beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8`.

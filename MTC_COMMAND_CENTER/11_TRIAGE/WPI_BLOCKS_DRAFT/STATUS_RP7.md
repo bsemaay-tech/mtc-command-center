@@ -1,6 +1,13 @@
 # RP7 status
 
-Status: **rows-1-9-EXTENDED-PENDING-REAUDIT**
+Status: **rows-1-9-EXTENDED-PENDING-FRESH-SAME-BYTE-T0-AUDITS**
+
+Current block identity is `127655` /
+`beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8`. No auditor
+has accepted these exact bytes. Both required T0 auditor slots are PENDING and
+must run fresh **against this same byte identity**. Commit `90cbeac4` is a
+recorded implementer repair against the superseded `127491` bytes, not an
+acceptance, and it does not carry forward. No acceptance is claimed here.
 
 Scope: `RP7-WPI-RO.sh` now implements the remote RO-stage predicates for rows
 1-23 and still records row 24 as operator-side only. This is the owner-decided
@@ -44,18 +51,40 @@ Material state added in this extension:
   `system_manager_unreachable operation=show` before the first state
   comparison. The row-5 truncated-show fixture was moved to row 1 because this
   is now the first divergence.
-- Round-4 repair also carries row-6 systemd continuation state across ignored
-  comment/blank lines and makes row 9 fail closed on environment tokens without
-  a valid `NAME=` assignment before target semantics.
+- Round-4 repair also made row 9 fail closed on environment tokens without a
+  valid `NAME=` assignment before target semantics. That row-9 repair stands.
+- Round-4 additionally claimed to carry "row-6 systemd continuation state across
+  ignored comment/blank lines". **That claim was false and is superseded.** Blank
+  lines were bridged as well as comments, which let a real `[Install]` section be
+  swallowed as continuation text and reported `install_section=absent` — a false
+  PASS on a row-6 safety predicate. See the post-round-4 regression repair below.
+- Post-round-4 regression repair (current bytes `127655`): the row-6 rule of
+  record is now exactly — a **comment** line (`#` or `;` after leading
+  whitespace) **bridges** an open continuation; a **blank** line **terminates**
+  it, and the accumulated logical line is classified immediately. Continuation is
+  decided by an **odd** count of trailing backslashes; a continuation still open
+  at EOF is flushed and classified; a section header carrying a trailing comment
+  is a `section_header_grammar` STOP rather than a silently accepted header. The
+  repair adds a `blank_no_bridge` RED/GREEN regression guard plus five further
+  pairs, and two no-weakening CONTROL arms (`multi_comment_bridge`,
+  `odd_backslash_three`) proving comment bridging was not deleted to make the
+  blank-line case pass. This is a repair record, not an acceptance.
 
 Documentary state:
 
 - `SELF_QA_RP7.md` replaces the rejected simulated rows 1-9 matrix with an
   embedded `sed | bash` rebuild fence and its executed transcript. The fence
   extracts the delivered `RP7-WPI-RO.sh` bytes, asserts identity before and
-  after, and drives the block's own B2/B4 functions. It produced 24 RED/GREEN
-  pairs and 4 controls after round-3 repair, then 29 RED/GREEN pairs and 5
-  controls after round-4 repair.
+  after, and drives the block's own B2/B4 functions. Count history: 24 RED/GREEN
+  pairs and 4 controls after round-3 repair; 29 pairs and 5 controls after
+  round-4 repair. **Current count for the `127655` bytes: 35 RED/GREEN pairs and
+  7 controls**, `result=PASS`, rc 0, 0 stderr bytes, 85 stdout lines.
+- The `SELF_QA_RP7.md` transcript is the verbatim stdout of a real fence run
+  against the `127655` bytes and byte-matches a re-run on this workstation on all
+  85 lines. The single host-derived field
+  (`HARNESS_ATTESTED_MOUNTINFO sha256=`) is a mount-namespace projection digest,
+  is explicitly disclosed as non-reproducible across execution environments, and
+  is not evidence for or against any row predicate.
 - Row-8 sandbox pins are disclosed as asserted rendered `systemctl show`
   literals. The rebuild fence proves comparator behavior against fixtures; host
   derivation of those renderings remains a freeze-time act for the flagship
@@ -75,8 +104,15 @@ Documentary state:
 Final executable identity:
 
 ```text
-bytes=127491
-sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3
+bytes=127655
+sha256=beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8
+cr_bytes=0
+red_green_pairs=35
+controls=7
+auditor_acceptance=none_yet_both_T0_slots_pending_same_bytes
+previous_round4_bytes=127491
+previous_round4_sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3
+previous_round4_superseded_reason=post_round4_regression_repair_row6_blank_line_false_PASS
 previous_round3_rows_1_9_bytes=127038
 previous_round3_rows_1_9_sha256=ac73485ff75ab6e731bf1bc137ae77f7074cab04700603ab71cba1c591141fe3
 previous_rows_1_9_bytes=126182
