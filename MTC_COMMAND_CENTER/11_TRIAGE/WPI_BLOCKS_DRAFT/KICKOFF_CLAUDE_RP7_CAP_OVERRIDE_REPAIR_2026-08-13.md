@@ -6,13 +6,25 @@ beyond the normal cap. No sub-delegation and no git mutation.
 
 Working directory: `C:\LAB\Tradingview_LAB_CLEAN`.
 
-Read, in order:
+Read, in order, using the owner-approved compact-context order (this changes the
+read order only — every scope, finding, D026 requirement, fence requirement,
+identity assertion, safety gate, and acceptance standard below stays in force):
 
 1. root `AGENTS.md` and `MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md`;
 2. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_OWNER_DECISIONS_2026-08-13.md`, section 4;
-3. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7_CLAUDE_T0_POST_R4_AUDIT_2026-08-13.md` in full;
-4. current `RP7-WPI-RO.sh`, `SELF_QA_RP7.md`, `STATUS_RP7.md`, and
-   `RP7_ROWS_1_9_REPORT_2026-08-13.md`.
+3. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7_OPUS_COMPACT_CONTINUATION_PACKET_2026-08-14.md`
+   (the staged read order, evidence map, and exact required repairs);
+4. prior audit findings sections only: the REQUIRED-1/REQUIRED-2/NIT-1 sections
+   of `RP7_CLAUDE_T0_POST_R4_AUDIT_2026-08-13.md`, the three REQUIRED-findings
+   sections of `RP7_CODEX_T0_EXT_AUDIT_2026-08-13.md`, and
+   `RP7_CAP_OVERRIDE_LEAD_CONTINUATION_2026-08-14.md` in full;
+5. targeted ranges of the four owned current files, not full reads at startup:
+   `RP7-WPI-RO.sh` lines 630–825 plus the exact current `git diff` hunks;
+   `SELF_QA_RP7.md` via the `rg` anchors and line windows in the packet
+   (50–130, 360–449, 600–730); `STATUS_RP7.md` in full (small); and the
+   post-round-4 regression repair/identity sections of
+   `RP7_ROWS_1_9_REPORT_2026-08-13.md`. Full-file reads only when a concrete
+   unresolved dependency requires one.
 
 The two REQUIRED findings are the binding work order:
 

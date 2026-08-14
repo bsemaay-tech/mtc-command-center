@@ -97,3 +97,16 @@ Only `RP7-WPI-RO.sh` differs from Git, still at 53 insertions and 5 deletions.
 No Claude or Codex CLI writer remained after the quota stop. Resume only in a
 fresh exact `claude-opus-5` xhigh session after the reset; do not discard,
 stash, reset, checkout, or overwrite this partial diff.
+
+## 2026-08-14 owner-approved compact-context launch
+
+The next fresh exact `claude-opus-5` xhigh session must use the new
+`RP7_OPUS_COMPACT_CONTINUATION_PACKET_2026-08-14.md` as its staged read order and
+evidence map. This is an owner-approved quota optimization only: it changes the
+read order, not any acceptance standard, finding, D026 requirement, fence
+requirement, identity assertion, or safety gate.
+`KICKOFF_CLAUDE_RP7_CAP_OVERRIDE_REPAIR_2026-08-13.md` now points to that read
+order instead of a startup full-read of all four current files. The repair is
+**not complete**: REQUIRED-1 (CRLF continuation), REQUIRED-2 (two-subject
+six-pair fence), and the row-9 literal D026 fixtures remain open. No acceptance
+is claimed here or in the packet.
