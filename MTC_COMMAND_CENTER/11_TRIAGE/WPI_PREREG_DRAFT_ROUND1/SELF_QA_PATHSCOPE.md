@@ -1,5 +1,34 @@
 # Self-QA — Stage-1 path-scope prover, repair round 2
 
+> **⚠ ROUND-5 AMENDMENT (2026-08-14) — C-3, C-4 and the literal-harness
+> portability defect; every transcript, count and digest in this file has been
+> REGENERATED at round 5 and is current.** The final owner-authorized Codex T1
+> execution audit of the committed round-4 candidate
+> `2fb3eac05f8da716609549179a7961aa692eae6b`
+> (`PATHSCOPE_CAP_OVERRIDE_CODEX_T1_AUDIT_2026-08-13.md`, verdict
+> REQUEST_CHANGES) recorded three required findings. **C-3:** the assignment
+> member grammar still had adjacent silent sinks — a whitespace list with a
+> later relative member, a URI-shaped loader list with a later absolute member,
+> a colon-bearing whole pathname reading, an empty-only loader list
+> (`LD_LIBRARY_PATH=:`), and executable command text without `/`
+> (`GIT_SSH_COMMAND="ssh -v"`) — each returning `PASS rc=0` with zero terminal
+> accounting. **C-4:** the declaration builtins gated every operand on a RAW
+> `ASSIGN_RE` match, so `export "LD_PRELOAD=/etc/escape.so"` and
+> `export 'X=/safe dir/escape'` never reached the repaired grammar that the
+> identical `env` shape did reach. **Portability:** the published harness did
+> not reproduce its recorded transcripts and determinism digests under its own
+> literal command, because it never pinned the child interpreter's stdout
+> encoding and carried an absolute user-profile path through every transcript.
+> Round 5 closes all three: `record_assignment_members` conserves the whole
+> value *and* every member, `split_list_members` protects only a URI's
+> scheme-and-authority span, an empty list member is resolved to the pinned PWD
+> instead of vanishing, `analyze_declaration` classifies every operand on its
+> expanded form so the prefix, `env` and declaration sites are one grammar, and
+> the harness pins its encodings, drives the prover from the fixture directory
+> with relative arguments so no user path can enter a transcript at all, and
+> aborts if one does anyway. **The round-4 amendment below is retained for
+> history; the fences in this file are the round-5 run.**
+>
 > **⚠ ROUND-4 AMENDMENT (2026-08-13) — C-2 repair; every transcript, count and
 > digest in this file has been REGENERATED at round 4 and is current.** The Codex
 > T1 execution re-audit of the round-3 bytes
@@ -41,22 +70,22 @@
 > *(Round-4 note: the harness changed again, so the current counts are 660/1363/150 —
 > see the round-4 stdout fence, which is the authoritative one.)*
 
-Date: 2026-08-11 (rounds 1–2) · 2026-08-13 (rounds 3–4)
+Date: 2026-08-11 (rounds 1–2) · 2026-08-13 (rounds 3–4) · 2026-08-14 (round 5)
 Audit tier: T1 (local-only static analysis)
 Working directory: `C:\LAB\Tradingview_LAB_CLEAN`
-Implementer: rounds 2 and 4 `claude-opus-5` (round 2 effort xhigh, round 4 effort high);
-round 3 GLM-5.2. No implementer is the auditor of record, so the round-4 T1 execution
-re-audit must be a fresh independent session of a flagship that is **not** `claude-opus-5`
-and **not** GLM-5.2.
+Implementer: rounds 2, 4 and 5 `claude-opus-5` (round 2 effort xhigh, rounds 4 and 5
+effort high); round 3 GLM-5.2. No implementer is the auditor of record, so the round-5 T1
+execution re-audit must be a fresh independent session of a flagship that is **not**
+`claude-opus-5` and **not** GLM-5.2. Round 5 is the single repair authorized by
+`WPI_OWNER_DECISION_PATHSCOPE_FINAL_OVERRIDE_2026-08-14.md`; no further repair or audit
+cycle is authorized after the one `gpt-5.6-sol` high execution audit that follows it.
 
 Every run below used CPython 3.14.2 with `-B`; the repaired source also parses with
-`ast.parse(..., feature_version=(3, 12))`. A Python 3.12 executable is not installed on
-this workstation — `py -3.12 -V` reports no such runtime. These three facts were
-independently re-verified by the Codex round-3 execution re-audit
-(`PATHSCOPE_CODEX_T1_EXEC_AUDIT_R3_2026-08-13.md` §5, item U-3, which recorded them as
-"facts re-verified true; citation still absent"); this citation closes that nit. No shell
-fixture was executed, no host was contacted, and no network call was made. Fixture files
-are written only under the Windows temporary directory.
+`ast.parse(..., feature_version=(3, 12))`, re-verified at round 5 on the round-5 bytes. A
+Python 3.12 executable is not installed on this workstation — `py -3.12 -V` reports no such
+runtime. No shell fixture was executed, no host was contacted, and no network call was
+made. Fixture files are written only under the Windows temporary directory; the mutation
+copies are written only under `C:\tmp\ps_final_r5`.
 
 ## Identities
 
@@ -65,79 +94,108 @@ are written only under the Windows temporary directory.
 | `pathscope_prover.py` round 1 (the audited bytes) | 49820 | `3D6AF544F5CBADB0A1432D4784848F68F4BFDDF22AA52C9369FD9729853D43E6` | `3f0820a9a6412f769b59b23a41df3bc6808bf6dc` |
 | `pathscope_prover.py` round 2 | 122446 | `890016F0B9A8CDE4EED33F8733F69055471B07C6096F6BC07450457E6C52AF1D` | historical (r2 audit anchor) |
 | `pathscope_prover.py` round 3 (the C-2 pre-repair subject, RED column of family P10) | 124251 | `0724967E919C6576A5A18EA5606B947F3A617A6601AEE89C486C4A6E6C8225F7` | `e600a107f2e2a790653cc544a94cd7436b7b070a` |
-| `pathscope_prover.py` round 4 (this repair) | 131599 | `553A97E932A190B4967B8F1F39C546D7558D9066ABD30B3AECA1913FED27E2EB` | uncommitted |
+| `pathscope_prover.py` round 4 (the C-3/C-4 pre-repair subject, RED column of family P11) | 131599 | `553A97E932A190B4967B8F1F39C546D7558D9066ABD30B3AECA1913FED27E2EB` | `55ea3a852f7781d03d57483f554c1b8ac62007c6` |
+| `pathscope_prover.py` round 5 (this repair) | 137520 | `28848D60F74A7C668DB3019BBAC58550F4A55C1C02038C013153316C711EDF9C` | uncommitted |
 | `WPI_BLOCKS_DRAFT/RP6-P0.sh` | 107252 | `A090AE736CBECD9973E8AE948B052504B21CBE8B61602F4B5AC592394FAD0617` | `3c7b7d26a763f3904ea4fa4c0be3d39dc598c64c` |
 | `WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh` | 99903 | `11621044D0ADC21AF93E1CFC7B88EF88DE8ACA4683A69AB16CBC542A124141A4` | `5c9a2f597cceaef80d1cbd0fc100732f4b216cf5` |
 
-The round-1 artefact is reconstructed **from its pinned blob**, not from the working tree,
-so the RED column stays reproducible after the repair is committed. The two blocks are
-likewise read from their pinned blobs: a concurrent session owns the RP6 working-tree file,
-and a Stage-1 proof must in any case be taken over frozen bytes rather than a live file.
+The round-4 blob is the exact committed candidate the final Codex T1 audit froze and
+rejected: `git rev-parse 2fb3eac05f8da716609549179a7961aa692eae6b:MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/pathscope_prover.py`
+prints `55ea3a852f7781d03d57483f554c1b8ac62007c6`. The round-1, round-3 and round-4
+artefacts are all reconstructed **from their pinned blobs**, not from the working tree, so
+every RED column stays reproducible after the repair is committed. The two real blocks are
+likewise read from their pinned blobs.
 
 ## How to reproduce every RED and every GREEN in one command
 
-Save the fenced block below as `%TEMP%\pathscope_r2_harness.ps1`, then from
+Save the fenced block below as `%TEMP%\pathscope_r5_harness.ps1`, then from
 `C:\LAB\Tradingview_LAB_CLEAN`:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "$env:TEMP\pathscope_r2_harness.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:TEMP\pathscope_r5_harness.ps1"
 ```
 
-It writes every fixture, reconstructs the round-1 **and** round-3 provers from their pinned
-blobs, extracts both real blocks from their pinned blobs, runs the complete case list
-against the round-1 and the repaired prover, runs the C-2 family P10 additionally against
-the round-3 pre-repair prover, writes `RED_R1.txt`, `GREEN_R2.txt` and `RED_R3.txt` next to
-the fixtures, and finishes with the determinism check. Nothing in it depends on shell state
-established elsewhere, and it contains no placeholder that must be edited before it runs.
-Its own stdout was:
+It writes every fixture, reconstructs the round-1, round-3 and round-4 provers from their
+pinned blobs, extracts both real blocks from their pinned blobs, runs the complete case
+list against the round-1 prover and the repaired prover, runs family P10 additionally
+against the round-3 blob and families P10+P11 against the round-4 blob, writes
+`RED_R1.txt`, `GREEN_R5.txt`, `RED_R3.txt` and `RED_R4.txt` next to the fixtures, and
+finishes with the determinism check. Nothing in it depends on shell state established
+elsewhere, and it contains no placeholder that must be edited before it runs. Its own
+stdout was:
 
 ```text
-﻿R1_BASELINE bytes=49820 sha256=3D6AF544F5CBADB0A1432D4784848F68F4BFDDF22AA52C9369FD9729853D43E6
+R1_BASELINE bytes=49820 sha256=3D6AF544F5CBADB0A1432D4784848F68F4BFDDF22AA52C9369FD9729853D43E6
 R3_PREREPAIR bytes=124251 sha256=0724967E919C6576A5A18EA5606B947F3A617A6601AEE89C486C4A6E6C8225F7
-R2_REPAIRED bytes=131599 sha256=553A97E932A190B4967B8F1F39C546D7558D9066ABD30B3AECA1913FED27E2EB
+R4_PREREPAIR bytes=131599 sha256=553A97E932A190B4967B8F1F39C546D7558D9066ABD30B3AECA1913FED27E2EB
+R5_REPAIRED bytes=137520 sha256=28848D60F74A7C668DB3019BBAC58550F4A55C1C02038C013153316C711EDF9C
 BLOCK RP6-P0.sh bytes=107252 sha256=A090AE736CBECD9973E8AE948B052504B21CBE8B61602F4B5AC592394FAD0617 git_blob=3c7b7d26a763f3904ea4fa4c0be3d39dc598c64c
 BLOCK RP7-WPI-RO.sh bytes=99903 sha256=11621044D0ADC21AF93E1CFC7B88EF88DE8ACA4683A69AB16CBC542A124141A4 git_blob=5c9a2f597cceaef80d1cbd0fc100732f4b216cf5
-WROTE C:\Users\BarışSemaay\AppData\Local\Temp\pathscope-repair-r2\RED_R1.txt lines=660
-WROTE C:\Users\BarışSemaay\AppData\Local\Temp\pathscope-repair-r2\GREEN_R2.txt lines=1363
-WROTE C:\Users\BarışSemaay\AppData\Local\Temp\pathscope-repair-r2\RED_R3.txt lines=150
-DETERMINISM find_exec rc1=1 rc2=1 equal=True sha1=11c5cb8e39a2e9061e8c1d159817794b75b3ec2479649b146176f699d28067dd sha2=11c5cb8e39a2e9061e8c1d159817794b75b3ec2479649b146176f699d28067dd
-DETERMINISM assign_prefix rc1=1 rc2=1 equal=True sha1=32da284224350fdb4a236c4d2238aad2f718b8b48cd89f04cf3fd1b57c30317a sha2=32da284224350fdb4a236c4d2238aad2f718b8b48cd89f04cf3fd1b57c30317a
-DETERMINISM c2_list_prefix rc1=1 rc2=1 equal=True sha1=40e458dc11a9040bb4208e93097f19a3b5a9fd46c0d2043515ceb6ce3188bf62 sha2=40e458dc11a9040bb4208e93097f19a3b5a9fd46c0d2043515ceb6ce3188bf62
-DETERMINISM RP6-P0 rc1=3 rc2=3 equal=True sha1=2e9d6f4465fcd4a6ee0cee9edfe6fc883725ef3b6dd8f6fa9eb97dec1fa605db sha2=2e9d6f4465fcd4a6ee0cee9edfe6fc883725ef3b6dd8f6fa9eb97dec1fa605db
-DETERMINISM RP7-WPI-RO rc1=3 rc2=3 equal=True sha1=224cda7292d5e1b60f77b558e4b986d1ed39defdaa843f3a09e60a0625bb2ad2 sha2=224cda7292d5e1b60f77b558e4b986d1ed39defdaa843f3a09e60a0625bb2ad2
+WROTE RED_R1.txt lines=768 sha256=667BF364D0008B3A5869C3ECC2CA16FDAC0C1D60086B3F8FB50CC3E93E70E89D
+WROTE GREEN_R5.txt lines=1557 sha256=A534BDCFBBD7B21D874602EB5E90336CBF0796881BE650C3EEC973AF4DBE328C
+WROTE RED_R3.txt lines=150 sha256=599B4482C91FCC22F5CA9BCE09261F193F25A4321BF53F650EAA31EEE8C4CBCC
+WROTE RED_R4.txt lines=324 sha256=BC142778035AE9B759A47869CCEA86D8C23D9406735BBDB189009188C36CC01B
+DETERMINISM find_exec rc1=1 rc2=1 equal=True sha1=f0f0bf2d14d9b504daa6528f230bc1bd4186dc8e9bcc5fd65d8d59b4016f11bd sha2=f0f0bf2d14d9b504daa6528f230bc1bd4186dc8e9bcc5fd65d8d59b4016f11bd
+DETERMINISM assign_prefix rc1=1 rc2=1 equal=True sha1=dc1ab295175cb8cf28c9a0bfae247c2311957244714d1108a9e4b13297449ae1 sha2=dc1ab295175cb8cf28c9a0bfae247c2311957244714d1108a9e4b13297449ae1
+DETERMINISM c2_list_prefix rc1=1 rc2=1 equal=True sha1=eed53413c5b972bae048263a7304aaeb5b6039f4abc5033d13b54b94596e53bd sha2=eed53413c5b972bae048263a7304aaeb5b6039f4abc5033d13b54b94596e53bd
+DETERMINISM c3_ws_relative rc1=3 rc2=3 equal=True sha1=7c905b083423f11b616c6979c5d87b93aaa76b71f16325ea082a495971f38d6c sha2=7c905b083423f11b616c6979c5d87b93aaa76b71f16325ea082a495971f38d6c
+DETERMINISM c4_export_quoted rc1=1 rc2=1 equal=True sha1=fa1ff7ce5b208da50c1dc11be72119ec0b906aec22afe15f7e2b124d32230581 sha2=fa1ff7ce5b208da50c1dc11be72119ec0b906aec22afe15f7e2b124d32230581
+DETERMINISM RP6-P0 rc1=3 rc2=3 equal=True sha1=01bffdd3692a39ad2bdd025952b2dcba9d793162c2e83e8d83f92ed697ddfdc0 sha2=01bffdd3692a39ad2bdd025952b2dcba9d793162c2e83e8d83f92ed697ddfdc0
+DETERMINISM RP7-WPI-RO rc1=3 rc2=3 equal=True sha1=2d87cffcc9f7fee241b5944fa8db62d5d6f652ea4b6af00760540f8e93c7c10a sha2=2d87cffcc9f7fee241b5944fa8db62d5d6f652ea4b6af00760540f8e93c7c10a
 ```
 
-This stdout is the **round-4 implementer run (2026-08-13, from the repository root, outer
-rc 0, stderr 0 bytes)**. `R2_REPAIRED` is the size and digest of the round-4 repaired file
-at the moment the transcripts were produced; it matches the identity table. `R3_PREREPAIR`
-is the committed round-3 blob, the exact bytes the Codex re-audit rejected, reconstructed by
-the harness itself so the RED column of the C-2 family cannot be a prediction.
+### Why this stdout is now a property of the harness and not of the machine
 
-Round history for the same stdout lines, all reproduced by an independent auditor at the
-time: the round-2 stdout (`R2_REPAIRED bytes=122446 … RED lines=511 / GREEN lines=644`,
-RP6-P0 output sha `66959360…dc0e`, RP7 output sha `1ebedc0d…7f4b`) is recorded in
-`PATHSCOPE_CLAUDE_T1_EXEC_AUDIT_2026-08-12.md`; the round-3 stdout (`R2_REPAIRED
-bytes=124251 sha256=0724967E…25F7`, `RED lines=552 / GREEN lines=1189`, RP7 output sha
-`1f59ab2e…b395`) is recorded and byte-reproduced in
-`PATHSCOPE_CODEX_T1_EXEC_AUDIT_R3_2026-08-13.md` §2.
+The round-4 harness recorded five determinism digests that a fresh auditor could not
+reproduce. The cause was measured this round, not inferred:
 
-Two round-4 facts about the real blocks are worth stating explicitly:
+* the harness never pinned the child interpreter's stdout encoding, so `python` fell back
+  to the locale encoding (`cp1254` on a Turkish Windows profile) whenever the ambient
+  `PYTHONIOENCODING` was not already set — and it *was* set in the implementer's session,
+  which is why the round-4 run looked clean;
+* PowerShell decoded that stream with `[Console]::OutputEncoding` (UTF-8 under code page
+  65001), so the `ı` in the user profile name came back as U+FFFD while `$QA` — a .NET
+  string — still held the real character, and `.Replace($QA, '<QA>')` therefore replaced
+  nothing;
+* the absolute user path then survived into every transcript and into the harness's own
+  `WROTE …` lines, so the recorded SHA-256 digests could not reproduce.
 
-* `RP6-P0` output is **byte-identical to round 3** — its determinism digest
-  `2e9d6f44…05db` is unchanged. The C-2 member grammar adds nothing to that block, which is
-  the measured form of the premise behind owner decision §1 of
-  `WPI_OWNER_DECISIONS_2026-08-13.md` ("the audited block contains none of the surviving
-  assignment forms").
-* `RP7-WPI-RO` gains **exactly one** coverage record (line 681,
-  `seen_roots="$seen_roots$r "`, a whitespace-separated word list carrying `/`) and loses
-  none: `coverage_issue_count` 336 → 337, every other count unchanged, rc 3 unchanged. Its
-  digest therefore moves from `1f59ab2e…b395` to `224cda72…2ad2`.
+Re-running the exact round-4 command against the round-4 bytes with the ambient
+`PYTHONIOENCODING` removed reproduces the auditor's observed digests exactly, all five of
+them:
 
-Neither block changes verdict direction. The tool was not tuned to admit either.
+```text
+R4_UNDER_STRIPPED_ENV find_exec rc=1 sha=b3119f99152c865da799f5ac638327d32458fc9f02e6c73e07e7c496320d5620
+R4_UNDER_STRIPPED_ENV assign_prefix rc=1 sha=f77f67147f87fdcdc2f5b8891e7e3c4a062c0da7c0197c568ab4264e1cb04d81
+R4_UNDER_STRIPPED_ENV c2_list_prefix rc=1 sha=b2f153c2c0ade040cc39c8d0df1c7a7956be5a076c1842c325bd132d57e4f611
+R4_UNDER_STRIPPED_ENV RP6-P0 rc=3 sha=8ce5571bd2e4f8f24135c860324e6c67bd84358fc77a095a1b53d768abe61ecf
+R4_UNDER_STRIPPED_ENV RP7-WPI-RO rc=3 sha=c0e4b8073e7c387bf17e80435ddcfbd3d5ddf7d1b1db956cdbb1812c468bf452
+```
 
-The `<QA>` token inside both transcripts is the literal fixture directory
-`C:\Users\BarışSemaay\AppData\Local\Temp\pathscope-repair-r2`, normalised by the
-harness so the transcripts do not carry a user-specific path.
+against the round-4 recorded `11c5cb8e…67dd`, `32da2842…317a`, `40e458dc…8bf62`,
+`2e9d6f44…05db`, `224cda72…2ad2`. The first line is the auditor's `b3119f99…5620`
+character for character, and so are the other four.
+
+The round-5 harness is not "two broken runs agreeing". It was run twice under two
+deliberately different environments — once with `PYTHONIOENCODING=utf-8` and code page
+65001 present, once with `PYTHONIOENCODING` and `PYTHONUTF8` **removed** and both the
+console code page and `[Console]::OutputEncoding` forced to `windows-1254` — and produced
+byte-identical stdout, byte-identical transcript digests
+(`667BF364…E89D`, `A534BDCF…328C`, `599B4482…CBCC`, `BC142778…C01B`) and byte-identical
+determinism digests. Three independent defences make that true, and none of them is a
+substitution the reader has to perform:
+
+1. the harness pins `PYTHONUTF8`, `PYTHONIOENCODING` and `[Console]::OutputEncoding`;
+2. it runs the prover from the fixture directory with **relative** arguments, so no
+   user-specific absolute path can enter a transcript and no `<QA>` normalisation exists
+   to fail — the transcripts are pure ASCII;
+3. it fails closed: if any transcript line contains the scratch directory, the temporary
+   root or the repository root, the run aborts with `TRANSCRIPT_LEAK` instead of writing a
+   transcript that cannot be re-derived.
+
+Blob extraction and the `git hash-object` check no longer route a non-ASCII path through
+`cmd /c` or through native-command argument encoding: the blob is streamed to disk through
+.NET and the blob id is computed in process.
 
 ### The harness, verbatim
 
@@ -146,29 +204,86 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 # Run from the repository root C:\LAB\Tradingview_LAB_CLEAN.
-$TOOL = 'MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\pathscope_prover.py'
-$QA   = Join-Path ([System.IO.Path]::GetTempPath()) 'pathscope-repair-r2'
-$R1   = Join-Path $QA 'pathscope_prover_R1.py'
-$R3   = Join-Path $QA 'pathscope_prover_R3.py'
+#
+# Round-5 portability repair.  The round-4 harness recorded digests that were a
+# property of the environment that happened to run it, not of the harness:
+#   * it never pinned the child interpreter's stdout encoding, so `python` used
+#     the locale encoding (cp1254 on a Turkish Windows profile) unless the
+#     ambient PYTHONIOENCODING happened to be set;
+#   * PowerShell decoded that stream with [Console]::OutputEncoding (UTF-8 under
+#     chcp 65001), so a user profile containing a non-ASCII character came back
+#     mangled while $QA - a .NET string - kept the real character, and the
+#     `.Replace($QA, '<QA>')` normalisation therefore replaced nothing;
+#   * the transcripts and the harness's own stdout carried that absolute user
+#     path, so the recorded SHA-256 digests could not reproduce.
+# Three independent defences are applied and none of them is a substitution the
+# reader has to perform: the child encoding is pinned, every prover argument is
+# relative so no user path can enter a transcript at all, and a fail-closed
+# assertion aborts the run if a scratch path leaks into any transcript anyway.
+
+$env:PYTHONUTF8 = '1'
+$env:PYTHONIOENCODING = 'utf-8'
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
+
+$REPO = (Get-Location).Path
+$TOOL = (Resolve-Path 'MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\pathscope_prover.py').Path
+$TEMPROOT = [System.IO.Path]::GetTempPath()
+$QA   = Join-Path $TEMPROOT 'pathscope-repair-r5'
 New-Item -ItemType Directory -Path $QA -Force | Out-Null
 
 function New-Fixture([string]$Name, [string[]]$Lines) {
   [System.IO.File]::WriteAllText((Join-Path $QA $Name), (($Lines -join "`n") + "`n"))
 }
 
+# Byte-exact blob extraction with no shell in the path: `cmd /c "... > path"`
+# re-encodes the destination path through the console code page, which is the
+# same class of defect this round is closing.
+function Save-Blob([string]$Sha, [string]$Name) {
+  $psi = New-Object System.Diagnostics.ProcessStartInfo
+  $psi.FileName = 'git'
+  $psi.Arguments = "cat-file blob $Sha"
+  $psi.WorkingDirectory = $REPO
+  $psi.UseShellExecute = $false
+  $psi.RedirectStandardOutput = $true
+  $proc = [System.Diagnostics.Process]::Start($psi)
+  $fs = [System.IO.File]::Create((Join-Path $QA $Name))
+  $proc.StandardOutput.BaseStream.CopyTo($fs)
+  $fs.Close()
+  $proc.WaitForExit()
+  if ($proc.ExitCode -ne 0) { throw "git cat-file blob $Sha failed rc=$($proc.ExitCode)" }
+}
+
+# git's own blob identity, computed in process, so the check does not depend on
+# how the shell encodes a file name argument.
+function Get-BlobId([string]$Name) {
+  $bytes = [System.IO.File]::ReadAllBytes((Join-Path $QA $Name))
+  $header = [Text.Encoding]::ASCII.GetBytes("blob $($bytes.Length)`0")
+  $buf = New-Object byte[] ($header.Length + $bytes.Length)
+  [Array]::Copy($header, 0, $buf, 0, $header.Length)
+  [Array]::Copy($bytes, 0, $buf, $header.Length, $bytes.Length)
+  $sha1 = [System.Security.Cryptography.SHA1]::Create()
+  return (($sha1.ComputeHash($buf) | ForEach-Object { $_.ToString('x2') }) -join '')
+}
+
+function Get-Sha256([string]$Name) {
+  return (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $QA $Name)).Hash
+}
+function Get-Size([string]$Name) {
+  return (Get-Item -LiteralPath (Join-Path $QA $Name)).Length
+}
+
 # --- the round-1 artefact under audit, reconstructed from its pinned blob ---
-cmd /c "git cat-file blob 3f0820a9a6412f769b59b23a41df3bc6808bf6dc > `"$R1`""
-$h1 = (Get-FileHash -Algorithm SHA256 -LiteralPath $R1).Hash
-$l1 = (Get-Item -LiteralPath $R1).Length
-"R1_BASELINE bytes=$l1 sha256=$h1"
+Save-Blob '3f0820a9a6412f769b59b23a41df3bc6808bf6dc' 'pathscope_prover_R1.py'
+"R1_BASELINE bytes=$(Get-Size 'pathscope_prover_R1.py') sha256=$(Get-Sha256 'pathscope_prover_R1.py')"
 # --- the round-3 artefact, the pre-repair subject of the C-2 finding ---
-cmd /c "git cat-file blob e600a107f2e2a790653cc544a94cd7436b7b070a > `"$R3`""
-$h3 = (Get-FileHash -Algorithm SHA256 -LiteralPath $R3).Hash
-$l3 = (Get-Item -LiteralPath $R3).Length
-"R3_PREREPAIR bytes=$l3 sha256=$h3"
-$h2 = (Get-FileHash -Algorithm SHA256 -LiteralPath $TOOL).Hash
-$l2 = (Get-Item -LiteralPath $TOOL).Length
-"R2_REPAIRED bytes=$l2 sha256=$h2"
+Save-Blob 'e600a107f2e2a790653cc544a94cd7436b7b070a' 'pathscope_prover_R3.py'
+"R3_PREREPAIR bytes=$(Get-Size 'pathscope_prover_R3.py') sha256=$(Get-Sha256 'pathscope_prover_R3.py')"
+# --- the round-4 artefact, the committed pre-repair subject of C-3 and C-4 ---
+Save-Blob '55ea3a852f7781d03d57483f554c1b8ac62007c6' 'pathscope_prover_R4.py'
+"R4_PREREPAIR bytes=$(Get-Size 'pathscope_prover_R4.py') sha256=$(Get-Sha256 'pathscope_prover_R4.py')"
+$h5 = (Get-FileHash -Algorithm SHA256 -LiteralPath $TOOL).Hash
+$l5 = (Get-Item -LiteralPath $TOOL).Length
+"R5_REPAIRED bytes=$l5 sha256=$h5"
 
 # --- the round-1 audit's own constants and allowlist, unchanged ---
 New-Fixture 'constants.env' @(
@@ -186,6 +301,10 @@ New-Fixture 'constants_pwd_outside.env' @(
   'PWD=/elsewhere',
   'URL=http://127.0.0.1:8790/api/status',
   'HOST=198.51.100.10')
+# A relative constant plus exact allowlist rules, for the C-3 colon-bearing
+# single-pathname reading.
+New-Fixture 'constants_base.env' @('ROOT=/safe', 'PWD=/safe', 'BASE=dir/file')
+New-Fixture 'allowlist_base.txt' @('<BASE>', '<ROOT>/f')
 
 # --- kickoff deliverable 2 of round 1: the original GREEN/RED set ---
 New-Fixture 'green.sh'          @('#!/bin/bash', 'leaf="$ROOT/input"', 'cat "$leaf"')
@@ -303,15 +422,41 @@ New-Fixture 'c2_benign_scalars.sh'   @('#!/bin/bash', 'IFS=: LC_ALL=C count=1 ca
 New-Fixture 'c2_benign_words.sh'     @('#!/bin/bash', 'MSG="Permission denied" cat "$ROOT/f"')
 New-Fixture 'c2_words_with_path.sh'  @('#!/bin/bash', 'MSG="denied /etc/secret" cat "$ROOT/f"')
 
+# --- C-3 and C-4 repair (round 5): member conservation and declaration
+# reachability, adversarial family P11 ---
+# C-3: every reading the round-4 member grammar admitted but left without a
+# terminal disposition - a later relative word behind a path-shaped first word,
+# a later word behind a path-shaped first word generally, a mixed URI/pathname
+# list, a colon-bearing single pathname, an empty-only list, and executable
+# command text carrying no '/' at all.
+# C-4: the declaration builtins reached the repaired grammar only through a RAW
+# ASSIGN_RE match, so every quoted declaration argument bypassed it. The family
+# drives all five declaration keywords plus the env control, so the three
+# assignment sites are re-audited as one grammar rather than as examples.
+New-Fixture 'c3_ws_relative.sh'      @('#!/bin/bash', 'LD_PRELOAD="$ROOT/lib relative/escape.so" cat "$ROOT/f"')
+New-Fixture 'c3_ws_later_word.sh'    @('#!/bin/bash', 'X="$ROOT/a plain" cat "$ROOT/f"')
+New-Fixture 'c3_uri_list.sh'         @('#!/bin/bash', 'LD_LIBRARY_PATH=$URL:/etc/escape cat "$ROOT/f"')
+New-Fixture 'c3_uri_pair.sh'         @('#!/bin/bash', 'X=$URL:http://198.51.100.10:9999/y cat "$ROOT/f"')
+New-Fixture 'c3_colon_whole.sh'      @('#!/bin/bash', 'X=relative:$BASE cat "$ROOT/f"')
+New-Fixture 'c3_empty_only.sh'       @('#!/bin/bash', 'LD_LIBRARY_PATH=: cat "$ROOT/f"')
+New-Fixture 'c3_empty_only_out.sh'   @('#!/bin/bash', 'LD_LIBRARY_PATH=: cat "$ROOT/f"')
+New-Fixture 'c3_cmdtext_noslash.sh'  @('#!/bin/bash', 'GIT_SSH_COMMAND="ssh -v" cat "$ROOT/f"')
+New-Fixture 'c4_export_quoted.sh'    @('#!/bin/bash', 'export "LD_PRELOAD=/etc/escape.so"', 'cat "$ROOT/f"')
+New-Fixture 'c4_export_quoted_space.sh' @('#!/bin/bash', 'export ''X=/safe dir/escape''', 'cat "$ROOT/f"')
+New-Fixture 'c4_declare_quoted.sh'   @('#!/bin/bash', 'declare "LD_PRELOAD=/etc/escape.so"', 'cat "$ROOT/f"')
+New-Fixture 'c4_readonly_quoted.sh'  @('#!/bin/bash', 'readonly "BASH_ENV=/etc/escape.sh"', 'cat "$ROOT/f"')
+New-Fixture 'c4_typeset_quoted.sh'   @('#!/bin/bash', 'typeset "PYTHONPATH=$ROOT/lib:/etc/escape"', 'cat "$ROOT/f"')
+New-Fixture 'c4_local_quoted.sh'     @('#!/bin/bash', 'f() { local "PERL5LIB=/etc/escape"; }', 'f', 'cat "$ROOT/f"')
+New-Fixture 'c4_export_opaque.sh'    @('#!/bin/bash', 'export "not an assignment"', 'cat "$ROOT/f"')
+New-Fixture 'c4_env_quoted_ctl.sh'   @('#!/bin/bash', 'env "LD_PRELOAD=/etc/escape.so" cat "$ROOT/f"')
+New-Fixture 'c4_export_plain_ctl.sh' @('#!/bin/bash', 'export LD_PRELOAD="$ROOT/ok.so"', 'cat "$ROOT/f"')
+New-Fixture 'c3_scalar_ctl.sh'       @('#!/bin/bash', 'LC_ALL=C count=1 cat "$ROOT/f"')
+
 # --- the real blocks, extracted from their pinned committed blobs ---
-cmd /c "git cat-file blob 3c7b7d26a763f3904ea4fa4c0be3d39dc598c64c > `"$QA\RP6-P0.sh`""
-cmd /c "git cat-file blob 5c9a2f597cceaef80d1cbd0fc100732f4b216cf5 > `"$QA\RP7-WPI-RO.sh`""
+Save-Blob '3c7b7d26a763f3904ea4fa4c0be3d39dc598c64c' 'RP6-P0.sh'
+Save-Blob '5c9a2f597cceaef80d1cbd0fc100732f4b216cf5' 'RP7-WPI-RO.sh'
 foreach ($b in @('RP6-P0.sh', 'RP7-WPI-RO.sh')) {
-  $p = Join-Path $QA $b
-  $bh = (Get-FileHash -Algorithm SHA256 -LiteralPath $p).Hash
-  $bl = (Get-Item -LiteralPath $p).Length
-  $bg = (git hash-object $p)
-  "BLOCK $b bytes=$bl sha256=$bh git_blob=$bg"
+  "BLOCK $b bytes=$(Get-Size $b) sha256=$(Get-Sha256 $b) git_blob=$(Get-BlobId $b)"
 }
 New-Fixture 'real.constants' @(
   'WPI_CANDIDATE_SHA=2ce41e34bceb599d80af24c5c33d835820ec321b',
@@ -419,7 +564,7 @@ $CASES = @(
 )
 
 # The C-2 family is run against three provers: round 1, the round-3 pre-repair
-# subject of the finding, and the repaired bytes.
+# subject of that finding, and the repaired bytes.
 $C2CASES = @(
   @('c2_list_prefix','constants.env','allowlist.txt'),
   @('c2_list_env','constants.env','allowlist.txt'),
@@ -440,7 +585,34 @@ $C2CASES = @(
   @('c2_benign_words','constants.env','allowlist.txt'),
   @('c2_words_with_path','constants.env','allowlist.txt')
 )
-$CASES = $CASES + $C2CASES
+# The C-3/C-4 family is run against the committed round-4 blob - the exact bytes
+# the final Codex T1 audit rejected - and against the repaired bytes.
+$C3CASES = @(
+  @('c3_ws_relative','constants_pwd_outside.env','allowlist.txt'),
+  @('c3_ws_later_word','constants.env','allowlist.txt'),
+  @('c3_uri_list','constants.env','allowlist.txt'),
+  @('c3_uri_pair','constants.env','allowlist.txt'),
+  @('c3_colon_whole','constants_base.env','allowlist_base.txt'),
+  @('c3_empty_only','constants.env','allowlist.txt'),
+  @('c3_empty_only_out','constants_pwd_outside.env','allowlist.txt'),
+  @('c3_cmdtext_noslash','constants.env','allowlist.txt'),
+  @('c4_export_quoted','constants.env','allowlist.txt'),
+  @('c4_export_quoted_space','constants.env','allowlist.txt'),
+  @('c4_declare_quoted','constants.env','allowlist.txt'),
+  @('c4_readonly_quoted','constants.env','allowlist.txt'),
+  @('c4_typeset_quoted','constants.env','allowlist.txt'),
+  @('c4_local_quoted','constants.env','allowlist.txt'),
+  @('c4_export_opaque','constants.env','allowlist.txt'),
+  @('c4_env_quoted_ctl','constants.env','allowlist.txt'),
+  @('c4_export_plain_ctl','constants.env','allowlist.txt'),
+  @('c3_scalar_ctl','constants.env','allowlist.txt')
+)
+$CASES = $CASES + $C2CASES + $C3CASES
+
+# Every prover argument below is a bare file name resolved against $QA, which is
+# the current directory for the whole run. No user-specific absolute path can
+# therefore enter a transcript, and no `<QA>` substitution is needed or made.
+Push-Location -LiteralPath $QA
 
 function Invoke-Suite([string]$Prover, [string]$OutFile, [object[]]$List, [bool]$WithBlocks) {
   if ($null -eq $List) { $List = $CASES }
@@ -448,9 +620,9 @@ function Invoke-Suite([string]$Prover, [string]$OutFile, [object[]]$List, [bool]
   foreach ($case in $List) {
     $name, $constants, $allowlist = $case
     $lines.Add("=== $name ===")
-    $out = & python -B $Prover (Join-Path $QA "$name.sh") (Join-Path $QA $constants) (Join-Path $QA $allowlist) 2>&1
+    $out = & python -B $Prover "$name.sh" $constants $allowlist 2>&1
     $rc = $LASTEXITCODE
-    foreach ($line in $out) { $lines.Add(([string]$line).Replace($QA, '<QA>')) }
+    foreach ($line in $out) { $lines.Add([string]$line) }
     $lines.Add("COMMAND_RC=$rc")
   }
   if ($WithBlocks) {
@@ -458,36 +630,48 @@ function Invoke-Suite([string]$Prover, [string]$OutFile, [object[]]$List, [bool]
                       @('RP6-P0','real.constants'), @('RP7-WPI-RO','real.constants'))) {
     $block, $constants = $pair
     $lines.Add("=== $block with $constants ===")
-    $out = & python -B $Prover (Join-Path $QA "$block.sh") (Join-Path $QA $constants) (Join-Path $QA 'real.allowlist') 2>&1
+    $out = & python -B $Prover "$block.sh" $constants 'real.allowlist' 2>&1
     $rc = $LASTEXITCODE
-    foreach ($line in $out) { $lines.Add(([string]$line).Replace($QA, '<QA>')) }
+    foreach ($line in $out) { $lines.Add([string]$line) }
     $lines.Add("COMMAND_RC=$rc")
   }
   }
-  [System.IO.File]::WriteAllText($OutFile, (($lines -join "`n") + "`n"))
-  "WROTE $OutFile lines=$($lines.Count)"
+  # Fail closed: a transcript that carries a machine-specific path is not
+  # reproducible evidence, and round 4 shipped one silently.
+  foreach ($line in $lines) {
+    if ($line.Contains($QA) -or $line.Contains($TEMPROOT) -or $line.Contains($REPO)) {
+      throw "TRANSCRIPT_LEAK $OutFile : $line"
+    }
+  }
+  [System.IO.File]::WriteAllText((Join-Path $QA $OutFile), (($lines -join "`n") + "`n"))
+  "WROTE $OutFile lines=$($lines.Count) sha256=$(Get-Sha256 $OutFile)"
 }
 
-Invoke-Suite $R1   (Join-Path $QA 'RED_R1.txt')   $CASES   $true
-Invoke-Suite $TOOL (Join-Path $QA 'GREEN_R2.txt') $CASES   $true
-Invoke-Suite $R3   (Join-Path $QA 'RED_R3.txt')   $C2CASES $false
+Invoke-Suite 'pathscope_prover_R1.py' 'RED_R1.txt' $CASES   $true
+Invoke-Suite $TOOL                    'GREEN_R5.txt' $CASES $true
+Invoke-Suite 'pathscope_prover_R3.py' 'RED_R3.txt' $C2CASES $false
+Invoke-Suite 'pathscope_prover_R4.py' 'RED_R4.txt' ($C2CASES + $C3CASES) $false
 
 # --- determinism: same input, same bytes, same order ---
 foreach ($pair in @(@('find_exec','constants.env','allowlist.txt'),
                     @('assign_prefix','constants.env','allowlist.txt'),
                     @('c2_list_prefix','constants.env','allowlist.txt'),
+                    @('c3_ws_relative','constants_pwd_outside.env','allowlist.txt'),
+                    @('c4_export_quoted','constants.env','allowlist.txt'),
                     @('RP6-P0','real.constants','real.allowlist'),
                     @('RP7-WPI-RO','real.constants','real.allowlist'))) {
   $name, $constants, $allowlist = $pair
-  $a = (& python -B $TOOL (Join-Path $QA "$name.sh") (Join-Path $QA $constants) (Join-Path $QA $allowlist) 2>&1) -join "`n"
+  $a = (& python -B $TOOL "$name.sh" $constants $allowlist 2>&1) -join "`n"
   $ra = $LASTEXITCODE
-  $b = (& python -B $TOOL (Join-Path $QA "$name.sh") (Join-Path $QA $constants) (Join-Path $QA $allowlist) 2>&1) -join "`n"
+  $b = (& python -B $TOOL "$name.sh" $constants $allowlist 2>&1) -join "`n"
   $rb = $LASTEXITCODE
   $sha = [System.Security.Cryptography.SHA256]::Create()
   $ha = ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($a)))).Replace('-','').ToLowerInvariant()
   $hb = ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($b)))).Replace('-','').ToLowerInvariant()
   "DETERMINISM $name rc1=$ra rc2=$rb equal=$($a -ceq $b) sha1=$ha sha2=$hb"
 }
+
+Pop-Location
 ```
 
 ## Round 3 — C-1 repair (assignment-prefix silent sink, family P9)
@@ -525,124 +709,287 @@ because `ROOT=/safe`.
 
 ## Round 4 — C-2 repair (assignment-value MEMBER grammar, family P10)
 
-**Status: EXECUTED 2026-08-13. Every cell below is measured, not predicted.** The RED
-column of this family is the committed round-3 blob
-`e600a107f2e2a790653cc544a94cd7436b7b070a` (124251 B, SHA-256 `0724967E…25F7`) — the exact
-bytes the Codex re-audit rejected — reconstructed by the harness and run by the harness, in
-`RED_R3.txt`. The `R1 rc` column is the round-1 blob, from `RED_R1.txt`. The `R4 rc` column
-and the terminal accounting are from `GREEN_R2.txt`.
+**Status: RE-EXECUTED 2026-08-14 at round 5. Every cell below is measured, not
+predicted**, read out of `RED_R1.txt`, `RED_R3.txt`, `RED_R4.txt` and `GREEN_R5.txt` by the
+generator that wrote this file. `R3` is the committed round-3 blob
+`e600a107f2e2a790653cc544a94cd7436b7b070a` — the bytes the C-2 finding rejected. `R4` is
+the committed round-4 blob `55ea3a852f7781d03d57483f554c1b8ac62007c6` — the bytes the C-3
+and C-4 findings rejected. `R5` is this repair. The C-2 closures are therefore shown to
+survive the round-5 grammar change rather than being asserted to.
 
-| fixture | shell fragment | R1 rc | **R3 rc (pre-repair)** | **R4 rc** | round-4 terminal accounting |
+| fixture | shell fragment | R1 rc | R3 rc | R4 rc | R5 rc | round-5 terminal accounting |
+|---|---|---:|---:|---:|---:|---|
+| `c2_list_prefix` | `LD_LIBRARY_PATH=$ROOT/lib:/etc/escape cat "$ROOT/f"` | 0 | 0 | 1 | 1 | `/etc/escape` FORBID; `/safe/f` ALLOW-LEXICAL; `/safe/lib` ALLOW-LEXICAL; `/safe/lib:/etc/escape` ALLOW-LEXICAL |
+| `c2_list_env` | `env LD_LIBRARY_PATH=$ROOT/lib:/etc/escape cat "$ROOT/f"` | 0 | 0 | 1 | 1 | `/etc/escape` FORBID; `/safe/f` ALLOW-LEXICAL; `/safe/lib` ALLOW-LEXICAL; `/safe/lib:/etc/escape` ALLOW-LEXICAL |
+| `c2_list_export` | `export LD_LIBRARY_PATH=$ROOT/lib:/etc/escape ; cat "$ROOT/f"` | 0 | 0 | 1 | 1 | `/etc/escape` FORBID; `/safe/f` ALLOW-LEXICAL; `/safe/lib` ALLOW-LEXICAL; `/safe/lib:/etc/escape` ALLOW-LEXICAL |
+| `c2_list_bare_first` | `LD_PRELOAD=bare.so:/etc/escape.so cat "$ROOT/f"` | 0 | 0 | 1 | 3 | `/etc/escape.so` FORBID; `/safe/bare.so:/etc/escape.so` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL; 1 provenance record |
+| `c2_list_space` | `LD_PRELOAD="bare.so /etc/escape.so" cat "$ROOT/f"` | 0 | 0 | 3 | 3 | `/etc/escape.so` FORBID; `/safe/bare.so /etc/escape.so` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL; 1 coverage record; 1 provenance record |
+| `c2_relative` | `LD_PRELOAD=relative/path.so cat "$ROOT/f"` | 0 | 0 | 1 | 1 | `/elsewhere/relative/path.so` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `c2_empty_member` | `LD_LIBRARY_PATH=:/etc/escape cat "$ROOT/f"` | 0 | 0 | 3 | 3 | `/etc/escape` FORBID; `/safe` ALLOW-LEXICAL; `/safe/:/etc/escape` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL; 1 provenance record |
+| `c2_quoted_space` | `X="$ROOT dir/escape" cat "$ROOT/f"` | 0 | 1 | 1 | 3 | `/safe` ALLOW-LEXICAL; `/safe dir/escape` FORBID; `/safe/dir/escape` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL; 1 coverage record |
+| `c2_escaped_space` | `X=$ROOT/a\ b:/etc/escape cat "$ROOT/f"` | 0 | 0 | 1 | 3 | `/etc/escape` FORBID; `/safe/a` ALLOW-LEXICAL; `/safe/a b` ALLOW-LEXICAL; `/safe/a b:/etc/escape` ALLOW-LEXICAL; `/safe/b:/etc/escape` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL; 1 coverage record |
+| `c2_command_text` | `GIT_SSH_COMMAND="ssh -i /etc/key" cat "$ROOT/f"` | 0 | 0 | 3 | 3 | `/etc/key` FORBID; `/safe/f` ALLOW-LEXICAL; `/safe/ssh -i /etc/key` ALLOW-LEXICAL; 1 coverage record; 1 provenance record |
+| `c2_uri_forbid` | `WEBHOOK=http://198.51.100.10:9999/x cat "$ROOT/f"` | 0 | 0 | 1 | 1 | `/safe/f` ALLOW-LEXICAL; `198.51.100.10:9999` FORBID |
+| `c2_uri_allow` | `WEBHOOK="$URL" cat "$ROOT/f"` | 0 | 0 | 0 | 0 | `/safe/f` ALLOW-LEXICAL; `127.0.0.1:8790` ALLOW-LEXICAL |
+| `c2_env_quoted` | `env "LD_PRELOAD=/etc/evil.so" cat "$ROOT/f"` | 0 | 0 | 1 | 1 | `/etc/evil.so` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `c2_bare_soname` | `LD_PRELOAD=libc.so cat "$ROOT/f"` | 0 | 0 | 0 | 0 | `/safe/f` ALLOW-LEXICAL |
+| `c2_allow_list` | `LD_LIBRARY_PATH=$ROOT/lib:$ROOT/lib64 cat "$ROOT/f"` | 0 | 0 | 0 | 0 | `/safe/f` ALLOW-LEXICAL; `/safe/lib` ALLOW-LEXICAL; `/safe/lib64` ALLOW-LEXICAL; `/safe/lib:/safe/lib64` ALLOW-LEXICAL |
+| `c2_benign_scalars` | `IFS=: LC_ALL=C count=1 cat "$ROOT/f"` | 0 | 0 | 0 | 0 | `/safe` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL |
+| `c2_benign_words` | `MSG="Permission denied" cat "$ROOT/f"` | 0 | 0 | 0 | 0 | `/safe/f` ALLOW-LEXICAL |
+| `c2_words_with_path` | `MSG="denied /etc/secret" cat "$ROOT/f"` | 0 | 0 | 3 | 3 | `/etc/secret` FORBID; `/safe/denied /etc/secret` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL; 1 coverage record; 1 provenance record |
+
+Every out-of-allowlist lexeme that round 4 printed is still printed at round 5; no FORBID
+row was lost. Eight of these eighteen fixtures changed shape at round 5 — `c2_list_bare_first`,
+`c2_list_space`, `c2_empty_member`, `c2_quoted_space`, `c2_escaped_space`, `c2_command_text`,
+`c2_benign_scalars` and `c2_words_with_path` — and each change is itemised, with its
+discriminating-power proof, under *Carried fences that changed* below.
+
+## Round 5 — C-3 and C-4 repair (member conservation and declaration reachability, family P11)
+
+**Status: EXECUTED 2026-08-14. Every cell below is measured.** The RED column is the
+committed round-4 blob, run by the harness itself, so it is the actual rejected bytes and
+not a prediction. Eight fixtures carry C-3, eight carry C-4, and the last two are controls
+whose verdict must not move.
+
+| fixture | shell fragment | R1 rc | R4 rc (pre-repair) | R5 rc | round-5 terminal accounting |
 |---|---|---:|---:|---:|---|
-| `c2_list_prefix` | `LD_LIBRARY_PATH=$ROOT/lib:/etc/escape cat "$ROOT/f"` | 0 | **0** | **1** | `/etc/escape` FORBID; `/safe/f`, `/safe/lib`, `/safe/lib:/etc/escape` ALLOW-LEXICAL |
-| `c2_list_env` | `env LD_LIBRARY_PATH=$ROOT/lib:/etc/escape cat "$ROOT/f"` | 0 | **0** | **1** | `/etc/escape` FORBID; `/safe/f`, `/safe/lib`, `/safe/lib:/etc/escape` ALLOW-LEXICAL |
-| `c2_list_export` | `export LD_LIBRARY_PATH=$ROOT/lib:/etc/escape` ; `cat "$ROOT/f"` | 0 | **0** | **1** | `/etc/escape` FORBID; `/safe/f`, `/safe/lib`, `/safe/lib:/etc/escape` ALLOW-LEXICAL |
-| `c2_list_bare_first` | `LD_PRELOAD=bare.so:/etc/escape.so cat "$ROOT/f"` | 0 | **0** | **1** | `/etc/escape.so` FORBID; `/safe/f` ALLOW-LEXICAL |
-| `c2_list_space` | `LD_PRELOAD="bare.so /etc/escape.so" cat "$ROOT/f"` | 0 | **0** | **3** | `/etc/escape.so` FORBID; `/safe/f` ALLOW-LEXICAL; 1 coverage record (word-list reading) |
-| `c2_relative` | `LD_PRELOAD=relative/path.so cat "$ROOT/f"` (PWD `/elsewhere`) | 0 | **0** | **1** | `/elsewhere/relative/path.so` FORBID; `/safe/f` ALLOW-LEXICAL |
-| `c2_empty_member` | `LD_LIBRARY_PATH=:/etc/escape cat "$ROOT/f"` | 0 | **0** | **3** | `/etc/escape` FORBID; `/safe/f` ALLOW-LEXICAL; 1 coverage record (empty member) |
-| `c2_quoted_space` | `X="$ROOT dir/escape" cat "$ROOT/f"` | 0 | **1** | **1** | `/safe dir/escape` FORBID; `/safe/f` ALLOW-LEXICAL |
-| `c2_escaped_space` | `X=$ROOT/a\ b:/etc/escape cat "$ROOT/f"` | 0 | **0** | **1** | `/etc/escape` FORBID; `/safe/a b`, `/safe/a b:/etc/escape`, `/safe/f` ALLOW-LEXICAL |
-| `c2_command_text` | `GIT_SSH_COMMAND="ssh -i /etc/key" cat "$ROOT/f"` | 0 | **0** | **3** | `/etc/key` FORBID; `/safe/f` ALLOW-LEXICAL; 1 coverage record (command text) |
-| `c2_uri_forbid` | `WEBHOOK=http://198.51.100.10:9999/x cat "$ROOT/f"` | 0 | **0** | **1** | ENDPOINT `198.51.100.10:9999` FORBID; `/safe/f` ALLOW-LEXICAL |
-| `c2_uri_allow` | `WEBHOOK="$URL" cat "$ROOT/f"` | 0 | **0** | **0** | ENDPOINT `127.0.0.1:8790` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL (control) |
-| `c2_env_quoted` | `env "LD_PRELOAD=/etc/evil.so" cat "$ROOT/f"` | 0 | **0** | **1** | `/etc/evil.so` FORBID; `/safe/f` ALLOW-LEXICAL |
-| `c2_bare_soname` | `LD_PRELOAD=libc.so cat "$ROOT/f"` | 0 | **0** | **0** | `/safe/f` ALLOW-LEXICAL — the **disclosed residual**, see below |
-| `c2_allow_list` | `LD_LIBRARY_PATH=$ROOT/lib:$ROOT/lib64 cat "$ROOT/f"` | 0 | **0** | **0** | 4 ALLOW-LEXICAL rows, no false positive (control) |
-| `c2_benign_scalars` | `IFS=: LC_ALL=C count=1 cat "$ROOT/f"` | 0 | **0** | **0** | `/safe/f` ALLOW-LEXICAL only (control) |
-| `c2_benign_words` | `MSG="Permission denied" cat "$ROOT/f"` | 0 | **0** | **0** | `/safe/f` ALLOW-LEXICAL only (control) |
-| `c2_words_with_path` | `MSG="denied /etc/secret" cat "$ROOT/f"` | 0 | **0** | **3** | `/etc/secret` FORBID; `/safe/f` ALLOW-LEXICAL; 1 coverage record — the positive twin of the row above |
+| `c3_ws_relative` | `LD_PRELOAD="$ROOT/lib relative/escape.so" cat "$ROOT/f"` | 0 | 0 | 3 | `/elsewhere/relative/escape.so` FORBID; `/safe/f` ALLOW-LEXICAL; `/safe/lib` ALLOW-LEXICAL; `/safe/lib relative/escape.so` ALLOW-LEXICAL; 1 coverage record |
+| `c3_ws_later_word` | `X="$ROOT/a plain" cat "$ROOT/f"` | 0 | 0 | 3 | `/safe/a` ALLOW-LEXICAL; `/safe/a plain` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL; 1 coverage record |
+| `c3_uri_list` | `LD_LIBRARY_PATH=$URL:/etc/escape cat "$ROOT/f"` | 0 | 0 | 1 | `/etc/escape` FORBID; `/safe/f` ALLOW-LEXICAL; `127.0.0.1:8790` ALLOW-LEXICAL |
+| `c3_uri_pair` | `X=$URL:http://198.51.100.10:9999/y cat "$ROOT/f"` | 0 | 0 | 1 | `/safe/f` ALLOW-LEXICAL; `127.0.0.1:8790` ALLOW-LEXICAL; `198.51.100.10:9999` FORBID |
+| `c3_colon_whole` | `X=relative:$BASE cat "$ROOT/f"` | 0 | 0 | 1 | `/safe/dir/file` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL; `/safe/relative:dir/file` FORBID |
+| `c3_empty_only` | `LD_LIBRARY_PATH=: cat "$ROOT/f"` | 0 | 0 | 0 | `/safe` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL |
+| `c3_empty_only_out` | `LD_LIBRARY_PATH=: cat "$ROOT/f"` | 0 | 0 | 1 | `/elsewhere` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `c3_cmdtext_noslash` | `GIT_SSH_COMMAND="ssh -v" cat "$ROOT/f"` | 0 | 0 | 3 | `/safe/f` ALLOW-LEXICAL; 1 coverage record |
+| `c4_export_quoted` | `export "LD_PRELOAD=/etc/escape.so" ; cat "$ROOT/f"` | 0 | 0 | 1 | `/etc/escape.so` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `c4_export_quoted_space` | `export 'X=/safe dir/escape' ; cat "$ROOT/f"` | 0 | 0 | 3 | `/safe` ALLOW-LEXICAL; `/safe dir/escape` FORBID; `/safe/dir/escape` ALLOW-LEXICAL; `/safe/f` ALLOW-LEXICAL; 1 coverage record; 1 provenance record |
+| `c4_declare_quoted` | `declare "LD_PRELOAD=/etc/escape.so" ; cat "$ROOT/f"` | 0 | 0 | 1 | `/etc/escape.so` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `c4_readonly_quoted` | `readonly "BASH_ENV=/etc/escape.sh" ; cat "$ROOT/f"` | 0 | 0 | 1 | `/etc/escape.sh` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `c4_typeset_quoted` | `typeset "PYTHONPATH=$ROOT/lib:/etc/escape" ; cat "$ROOT/f"` | 0 | 0 | 1 | `/etc/escape` FORBID; `/safe/f` ALLOW-LEXICAL; `/safe/lib` ALLOW-LEXICAL; `/safe/lib:/etc/escape` ALLOW-LEXICAL |
+| `c4_local_quoted` | `f() { local "PERL5LIB=/etc/escape"; } ; f ; cat "$ROOT/f"` | 0 | 0 | 1 | `/etc/escape` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `c4_export_opaque` | `export "not an assignment" ; cat "$ROOT/f"` | 0 | 0 | 3 | `/safe/f` ALLOW-LEXICAL; 1 coverage record |
+| `c4_env_quoted_ctl` | `env "LD_PRELOAD=/etc/escape.so" cat "$ROOT/f"` | 0 | 1 | 1 | `/etc/escape.so` FORBID; `/safe/f` ALLOW-LEXICAL |
+| `c4_export_plain_ctl` | `export LD_PRELOAD="$ROOT/ok.so" ; cat "$ROOT/f"` | 0 | 0 | 0 | `/safe/f` ALLOW-LEXICAL; `/safe/ok.so` ALLOW-LEXICAL |
+| `c3_scalar_ctl` | `LC_ALL=C count=1 cat "$ROOT/f"` | 0 | 0 | 0 | `/safe/f` ALLOW-LEXICAL |
 
-**Twelve** fixtures move from a silent `PASS rc=0` on the pre-repair bytes to a non-zero
-verdict with the out-of-allowlist lexeme printed. **Five** are controls whose rc must not
-move and does not — two of them, `c2_uri_allow` and `c2_allow_list`, additionally print the
-ALLOW-LEXICAL rows that round 3 dropped entirely, which is the same defect seen from the
-allowed side. `c2_quoted_space` is not a closure — it is the **regression guard** for the defect
-the Lead reproduced in the incomplete first attempt: round 3 already returned rc 1 there and
-round 4 must keep returning rc 1 with the same single FORBID row for the whole quoted
-pathname. Its falsification is MUT-A below.
+Mapping to the audit's required list:
+
+| audit item | fixture | pre-repair behaviour on the committed bytes | round-5 behaviour |
+|---|---|---|---|
+| C-3.1 whitespace list with a later relative member | `c3_ws_relative` | rc 0; only the allowed whole value `/safe/lib relative/escape.so`; the consumer's `/elsewhere/relative/escape.so` had no disposition | rc 3; `/elsewhere/relative/escape.so` FORBID, whole value and `/safe/lib` also accounted, one coverage record |
+| C-3.1 (generalised) later word behind an fs-shaped first word | `c3_ws_later_word` | rc 0; only the whole value | rc 3; the whole value, `/safe/a` and the coverage record |
+| C-3.2 URI-shaped loader list with a later absolute member | `c3_uri_list` | rc 0; allowed endpoint only, `/etc/escape` absent | rc 1; `/etc/escape` FORBID plus the endpoint |
+| C-3.2 (generalised) two URIs in one list | `c3_uri_pair` | rc 0; the second endpoint absent | rc 1; `198.51.100.10:9999` FORBID plus the allowed endpoint |
+| C-3.3 colon-bearing whole pathname reading | `c3_colon_whole` | rc 0; the admitted single-pathname reading emitted no row | rc 1; `/safe/relative:dir/file` FORBID alongside the allowed member |
+| C-3.4 empty-only loader list | `c3_empty_only` | rc 0; **no assignment row at all** | rc 0 **with a row**: the empty member resolves to the pinned PWD `/safe` |
+| C-3.4 (the case that matters) empty member naming a CWD outside scope | `c3_empty_only_out` | rc 0; nothing | rc 1; `/elsewhere` FORBID |
+| C-3.5 executable command text without `/` | `c3_cmdtext_noslash` | rc 0; nothing | rc 3; one coverage record naming the word-list/command-text reading |
+| C-4 `export "LD_PRELOAD=/etc/escape.so"` | `c4_export_quoted` | rc 0; `/etc/escape.so` absent | rc 1; `/etc/escape.so` FORBID |
+| C-4 `export 'X=/safe dir/escape'` | `c4_export_quoted_space` | rc 0; nothing | rc 3; `/safe dir/escape` FORBID, unsplit, plus the word-list members and a coverage record |
+| C-4 one grammar, not examples | `c4_declare_quoted`, `c4_readonly_quoted`, `c4_typeset_quoted`, `c4_local_quoted` | rc 0 for all four | rc 1 for all four |
+| C-4 fail-closed on an unparsable operand | `c4_export_opaque` | rc 0; silently ignored | rc 3; a specific coverage record |
+| C-4 control that already worked | `c4_env_quoted_ctl` | rc 1 | rc 1, unchanged |
+| controls that must not move | `c4_export_plain_ctl`, `c3_scalar_ctl` | rc 0 | rc 0 |
 
 ### The rule, stated so it can be attacked
 
 `record_assignment_members` (`pathscope_prover.py`) decides on the grammar of the value,
 never on the variable name:
 
-1. **URI.** A value (or member) matching `^[A-Za-z][A-Za-z0-9+.-]*://` belongs to the
-   **endpoint** domain and is never colon-split into fragments.
-2. **Whitespace.** The lexer already guarantees an assignment word contains no *unquoted*
-   whitespace, and the shell does not word-split assignment values — so no blank here is a
-   shell separator, and `X="$ROOT dir/escape"` stays one pathname. A *consumer* may still
-   split it. The consumer reading is treated as live — one specific coverage record plus a
-   row for every path-carrying word — when some word contains `/` **and** (some word is
-   option-shaped, or a word after the first is absolute, or the first word is not
-   path-shaped). A value where no word contains `/` carries no pathname under any reading
-   and stays benign.
-3. **Colon members.** Always applied, including when the value starts with `/`, because a
-   consumer splits a path list regardless of shell quoting. The whole candidate is recorded
-   as well, so neither the single-pathname reading nor any member can disappear.
-4. **Empty member.** An empty member is fail-closed with a coverage record **only when the
-   same value also has a path member** — so `IFS=:` is untouched by grammar, not by name.
-5. **Terminal disposition for every member:** endpoint, path, empty, or `bare`.
+1. **URI.** A value or member matching `^[A-Za-z][A-Za-z0-9+.-]*://` belongs to the
+   **endpoint** domain. Only its `scheme://authority` span is protected from colon
+   splitting; a colon after the authority is a list separator, and a member that itself
+   begins a new URI re-arms the protection.
+2. **Whitespace.** The lexer guarantees an assignment word contains no *unquoted*
+   whitespace and the shell does not word-split assignment values, so `X="$ROOT
+   dir/escape"` is one pathname and is always recorded as one. A *consumer* may still
+   split it, so the word-list reading is treated as live — one specific coverage record
+   plus a row for every path-carrying word — whenever the value has more than one word and
+   any word is option-shaped or any word carries `/`. A value where no word is
+   option-shaped and no word carries `/` (`MSG="Permission denied"`) carries neither a
+   pathname nor an argv under either reading and stays benign.
+3. **Colon members.** Always applied, including when the value starts with `/`.
+4. **The whole value is always a candidate.** Members are added, never substituted, so
+   neither the single-pathname reading nor any member can disappear.
+5. **Empty member.** An empty member exists only because a separator does. It names the
+   consumer's current directory, which is the pinned PWD, so it is *resolved* to that
+   directory and gets a real row — an inability to evaluate is not manufactured where the
+   fact is available. A whole value that is simply empty (`X=`) is an empty scalar, not a
+   one-element list, and is left alone. If PWD is unpinned the row fails closed as an
+   unresolved path.
+6. **Terminal disposition for every member:** endpoint, path, resolved-CWD, or `bare`.
+7. **One grammar for three sites.** The assignment prefix, the `env` wrapper and the five
+   declaration builtins all terminate in `record_assignment_value`. The prefix site
+   matches the raw token because a quoted *name* is not an assignment in Bash either; the
+   other two classify the **expanded** word, so a quoted argument cannot bypass the
+   parser. A declaration operand that is neither an option, a NAME, nor NAME=VALUE after
+   expansion emits a coverage record rather than being ignored.
 
-### Disclosed residual, stated precisely this time
+### Disclosed residual, stated precisely
 
-A member with **no `/`** — a bare soname `libc.so`, a scalar `1`, a tool name, an option
-word — is resolved by the consumer's own search rules and is not an argv pathname, so it is
-outside the lexical-argv-scope contract this tool proves and carries no row. That is the
-whole residual. Unlike the round-3 disclosure, it no longer hides mixed lists
-(`bare.so:/etc/escape.so` is caught), whitespace lists (`bare.so /etc/escape.so` is caught),
-or relative pathnames (`relative/path.so` is caught).
+A member with **no `/`** and no option shape — a bare soname `libc.so`, a scalar `1`, a
+tool name — is resolved by the consumer's own search rules and is not an argv pathname, so
+it carries no row. Two further limits are disclosed rather than claimed away:
 
-Two consequences are disclosed rather than claimed away:
+* **An option word carrying an attached pathname is not decomposed.** `-I/usr/include` or
+  `ssh -i/etc/key` produces the word-list coverage record, not a row for the embedded
+  path. The construct is therefore visible and fail-closed at rc 3, but the pathname
+  inside the option word is not extracted. This limitation is named in the coverage
+  reason text itself, so it cannot be read off as a resolved fact.
+* **The union of readings is conservative, not exact.** `MSG="denied /etc/secret"` is
+  rejected although no consumer opens `/etc/secret` there, and a whole-value row such as
+  `/safe/bare.so:/etc/escape.so` is the single-pathname reading of a value whose list
+  reading is also recorded. A fail-closed prover is allowed to over-reject; it is not
+  allowed to under-report. `c2_words_with_path` records that behaviour deliberately.
 
-* The union of readings is **conservative, not exact**. `MSG="denied /etc/secret"` is
-  rejected even though no consumer opens `/etc/secret` there. A fail-closed prover is
-  allowed to over-reject; it is not allowed to under-report. `c2_words_with_path` records
-  that behaviour deliberately.
-* A whole-value row such as `/safe/lib:/etc/escape` ALLOW-LEXICAL is the single-pathname
-  reading of a value whose list reading is also recorded. It never stands alone: the same
-  run prints `/etc/escape` FORBID and the run rejects.
+### D026 falsification — the committed pre-repair bytes, then deliberate mutations
 
-### D026 falsification — deliberate mutations of the round-4 source
+The primary RED column for every round-5 closure is the **committed round-4 blob**
+`55ea3a852f7781d03d57483f554c1b8ac62007c6`, extracted and run by the harness itself
+(`RED_R4.txt`). Nothing in family P11 is a prediction.
 
-D026 requires that a test offered as closure evidence be shown to fail without the fix. The
-round-3 blob is the primary RED column above. Three additional mutations were applied to
-copies of the round-4 source outside the repository (`C:\tmp\ps_c2\MUT_*.py`) and executed
-against the same fixtures:
+Seven single-line mutations were then applied to copies of the round-5 source **outside
+the repository** (`C:\tmp\ps_final_r5\MUT_*.py`) and executed against the same fixtures.
+Each mutation restores exactly one round-4 behaviour or deletes exactly one round-5
+property; each is checked to have exactly one anchor in the source before it is applied.
 
-| mutation | one-line change | measured effect |
+| mutation | one-line change | property it destroys |
 |---|---|---|
-| **MUT-A** naive word split | `candidates = [rendered]` → `candidates = words if words else [rendered]` | `c2_quoted_space` **rc 1 → rc 0**, printing `/safe` and `/safe/dir/escape` as two ALLOW-LEXICAL rows and no FORBID. This is exactly the false PASS the Lead reproduced in the incomplete first attempt. |
-| **MUT-B** no colon members | the member loop guard → `if False:` | `c2_list_prefix` **rc 1 → rc 0** (only `/safe/lib:/etc/escape` ALLOW remains), `c2_escaped_space` **rc 1 → rc 0**, `c2_empty_member` **rc 3 → rc 0** with no assignment row at all. |
-| **MUT-C** no word-list reading | `if word_list_reading:` → `if False:` | `c2_command_text` and `c2_list_space` keep rc 3, but for the wrong reason: `/etc/key` and `/etc/escape.so` **vanish from the report** and are replaced by a bogus allowlisted relative path (`/safe/ssh -i /etc/key`, `/safe/bare.so /etc/escape.so`), leaving only a provenance issue. The sink-visibility property, not the rc, is what MUT-C falsifies. |
+| **MUT-A** whole value dropped | `candidates: list[str] = [rendered]` → `= []` | the quoted-space regression guard: `/safe dir/escape` FORBID vanishes and only the two fabricated ALLOW rows remain |
+| **MUT-B** no colon members | `if len(members) > 1:` → `if False:` | `c2_list_prefix`, `c3_uri_list`, `c3_empty_only_out` all fall back to `PASS rc=0` |
+| **MUT-C** no word-list reading | `word_list_reading = … ` → `= False` | `c3_ws_relative` and `c3_cmdtext_noslash` fall back to `PASS rc=0` — C-3.1 and C-3.5 reopen |
+| **MUT-D** round-4 URI behaviour | early `return [text]` when `URI_SCHEME_RE` matches | `c3_uri_list` and `c3_uri_pair` fall back to `PASS rc=0` — C-3.2 reopens |
+| **MUT-E** empty member ignored | `if empty_member:` → `if False:` | `c3_empty_only` loses its only row and `c3_empty_only_out` falls back to `PASS rc=0` — C-3.4 reopens |
+| **MUT-F** round-4 member kind | `":" not in text` restored in `assignment_member_kind` | `c3_colon_whole` falls back to `PASS rc=0` — C-3.3 reopens |
+| **MUT-G** round-4 declaration gate | `continue` inserted before the expanded-operand arm | every quoted declaration falls back to `PASS rc=0` — C-4 reopens |
 
-MUT-A's measured output, verbatim:
+Measured output of the complete mutation run, verbatim:
 
 ```text
-PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
-PATH value=/safe/dir/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
-PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
-PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_A / c2_quoted_space : rc repaired=3 mutant=3 DIFFERS ===
+    mutant| PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+    mutant| PATH value=/safe/dir/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+    mutant| UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression=X="$ROOT dir/escape"
+    mutant| PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+=== MUT_B / c2_list_prefix : rc repaired=1 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+    mutant| PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_B / c3_uri_list : rc repaired=1 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+    mutant| ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=URL uses=line=2:assignment prefix
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_B / c3_empty_only_out : rc repaired=1 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_C / c3_ws_relative : rc repaired=3 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+    mutant| PATH value=/safe/lib relative/escape.so verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_C / c3_cmdtext_noslash : rc repaired=3 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_D / c3_uri_list : rc repaired=1 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+    mutant| ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=URL uses=line=2:assignment prefix
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_D / c3_uri_pair : rc repaired=1 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+    mutant| ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=URL uses=line=2:assignment prefix
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_E / c3_empty_only : rc repaired=0 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_E / c3_empty_only_out : rc repaired=1 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_F / c3_colon_whole : rc repaired=1 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/dir/file verdict=ALLOW-LEXICAL rule=/safe/dir/file sources=BASE uses=line=2:assignment prefix
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/f sources=ROOT uses=line=2:cat
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_G / c4_export_quoted : rc repaired=1 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_G / c4_export_quoted_space : rc repaired=3 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+=== MUT_G / c4_typeset_quoted : rc repaired=1 mutant=0 DIFFERS ===
+    mutant| PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+    mutant| PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 ```
 
-### Regression surface of round 4
+MUT-A is the falsification of the **regression guard**, which has no pre-repair RED column
+because round 4 already handled it correctly. The guard property is stated at row level
+rather than at rc level: `c2_quoted_space` must print `PATH value=/safe dir/escape
+verdict=FORBID` as one row, and must not be replaced by `/safe` plus `/safe/dir/escape`.
+The repaired prover prints all three (the whole reading *and* the two word-list members)
+and rejects; MUT-A prints only the two allowed members and no FORBID row at all. The rc is
+3 in both because the word-list coverage record is emitted in both, so an rc comparison
+would *not* discriminate here and is not offered as if it did.
 
-Every one of the 87 fixture cases was run under the round-3 blob and the round-4 source and
-compared byte for byte. Exactly **seventeen** differ:
+### Carried fences that changed, with discriminating power
 
-* **fourteen** of the eighteen C-2 fixtures above. The other four — `c2_quoted_space`,
-  `c2_bare_soname`, `c2_benign_scalars`, `c2_benign_words` — are byte-identical under both
-  provers, which is the point of a regression guard and of three controls.
-* **three** pre-existing endpoint cases — `curl_upload`, `curl_net`, `devtcp_allow` — whose
-  only change is the NIT-1 label, `verdict=ALLOW` → `verdict=ALLOW-LEXICAL`. Their rc values
-  are unchanged (1, 0, 3).
+Round 5 changes the shape of ten previously carried fences — one base fixture, eight P10
+fixtures and one real block — listed here in nine rows because two of them share a cause.
+None loses a FORBID row; every change adds rows, adds a coverage or provenance record, or
+replaces an unevaluable record with a resolved one.
 
-The remaining **sixty-six** pre-existing fixture cases are byte-identical under round 3 and
-round 4. On the two real blocks, `RP6-P0` is byte-identical and `RP7-WPI-RO` gains one
-coverage record and loses nothing.
+| fence | round-4 | round-5 | why, and what still discriminates |
+|---|---|---|---|
+| `c2_quoted_space` (guard) | rc 1, one FORBID row | rc 3, same FORBID row plus `/safe`, `/safe/dir/escape` and one coverage record | the value is a multi-word value carrying `/`, which is now uniformly a live word list — the same rule that closes C-3.1. The whole-pathname reading is still recorded and still FORBID. Falsified by MUT-A above. |
+| `c2_list_bare_first` | rc 1 | rc 3, adds `/safe/bare.so:/etc/escape.so` and its provenance record | C-3.3: a relative value carrying `:` is a pathname reading. `/etc/escape.so` FORBID is unchanged. Falsified by MUT-F. |
+| `c2_list_space` | rc 3 | rc 3, adds the whole-value row and its provenance record | same rule; `/etc/escape.so` FORBID unchanged. Falsified by MUT-A. |
+| `c2_empty_member` | rc 3 with a coverage record | rc 3, coverage record replaced by a resolved `/safe` row | C-3.4: the empty member is resolvable, so it is resolved rather than declared unevaluable. Falsified by MUT-E. |
+| `c2_escaped_space` | rc 1 | rc 3, adds `/safe/a` and `/safe/b:/etc/escape` and one coverage record | the value has two words and carries `/`, so the word-list reading is live. `/etc/escape` FORBID unchanged. Falsified by MUT-C. |
+| `c2_command_text` | rc 3 | rc 3, coverage reason text extended | the reason now names the undecomposed option-word limitation. `/etc/key` FORBID unchanged. |
+| `c2_words_with_path` | rc 3 | rc 3, coverage reason text extended | as above; `/etc/secret` FORBID unchanged. |
+| `assign_benign` and `c2_benign_scalars` (`IFS=:`) | rc 0, one row | rc 0, adds `/safe` with `sources=PWD` | C-3.4 is decided on grammar, and `IFS=:` and `LD_LIBRARY_PATH=:` are the same lexeme. The control property is that the rc does not move, and it does not. |
+| `RP7-WPI-RO` with `real.constants` | rc 3 | rc 3, `unresolved_path_count` 34 → 35 | line 681 `seen_roots="$seen_roots$r "` now also yields the whole-value reading, which fails closed because `real.constants` pins no PWD. |
 
-All seven round-3 P9 assignment fixtures are **byte-identical** under round 3 and round 4:
-the C-1 closure is preserved, not re-derived.
+`RP6-P0` is **byte-identical** under round 4 and round 5.
+
+### Regression surface of round 5
+
+Every one of the 105 fixture cases and 4 real-block cases was run under the committed
+round-4 blob and the round-5 source and compared byte for byte:
+
+```text
+total=109 identical=84 differ=25
+  DIFF base   assign_benign            rc R4=0 -> R5=0
+  DIFF P10    c2_list_bare_first       rc R4=1 -> R5=3
+  DIFF P10    c2_list_space            rc R4=3 -> R5=3
+  DIFF P10    c2_empty_member          rc R4=3 -> R5=3
+  DIFF P10    c2_quoted_space          rc R4=1 -> R5=3
+  DIFF P10    c2_escaped_space         rc R4=1 -> R5=3
+  DIFF P10    c2_command_text          rc R4=3 -> R5=3
+  DIFF P10    c2_benign_scalars        rc R4=0 -> R5=0
+  DIFF P10    c2_words_with_path       rc R4=3 -> R5=3
+  DIFF P11    c3_ws_relative           rc R4=0 -> R5=3
+  DIFF P11    c3_ws_later_word         rc R4=0 -> R5=3
+  DIFF P11    c3_uri_list              rc R4=0 -> R5=1
+  DIFF P11    c3_uri_pair              rc R4=0 -> R5=1
+  DIFF P11    c3_colon_whole           rc R4=0 -> R5=1
+  DIFF P11    c3_empty_only            rc R4=0 -> R5=0
+  DIFF P11    c3_empty_only_out        rc R4=0 -> R5=1
+  DIFF P11    c3_cmdtext_noslash       rc R4=0 -> R5=3
+  DIFF P11    c4_export_quoted         rc R4=0 -> R5=1
+  DIFF P11    c4_export_quoted_space   rc R4=0 -> R5=3
+  DIFF P11    c4_declare_quoted        rc R4=0 -> R5=1
+  DIFF P11    c4_readonly_quoted       rc R4=0 -> R5=1
+  DIFF P11    c4_typeset_quoted        rc R4=0 -> R5=1
+  DIFF P11    c4_local_quoted          rc R4=0 -> R5=1
+  DIFF P11    c4_export_opaque         rc R4=0 -> R5=3
+  DIFF block  RP7-WPI-RO with real.constants rc R4=3 -> R5=3
+```
+
+All 25 differences are accounted for: the ten carried fences itemised above (1 base + 8
+P10 + 1 real block) plus the 15 family-P11 fixtures whose whole point is to differ. The
+other 3 P11 fixtures are the controls `c4_env_quoted_ctl`, `c4_export_plain_ctl` and
+`c3_scalar_ctl`, which are byte-identical under both provers. The remaining 84 cases are
+byte-identical, so the round-1, round-2, round-3 and round-4 closures are preserved rather
+than re-derived — in particular all seven round-3 P9 assignment fixtures and 68 of the 69
+base fixtures are byte-identical under round 4 and round 5.
 
 ## D026 RED/GREEN pairs (round 2 — see ROUND-3 AMENDMENT above; STALE)
 
@@ -722,216 +1069,216 @@ because no path or endpoint is reached.
 
 ```text
 === green ===
-PATHSCOPE shell=<QA>\green.sh
+PATHSCOPE shell=green.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/input verdict=ALLOW rule=/safe/** sources=ROOT uses=line=3:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === literal ===
-PATHSCOPE shell=<QA>\literal.sh
+PATHSCOPE shell=literal.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === assembled ===
-PATHSCOPE shell=<QA>\assembled.sh
+PATHSCOPE shell=assembled.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/etc/mtc-bridge/x verdict=FORBID rule=- sources=NONE uses=line=4:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === dynamic ===
-PATHSCOPE shell=<QA>\dynamic.sh
+PATHSCOPE shell=dynamic.sh
 PATHSCOPE resolved_count=0 unresolved_count=1
 UNRESOLVED line=3 reason=command substitution expression="$p/x"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === nested ===
-PATHSCOPE shell=<QA>\nested.sh
+PATHSCOPE shell=nested.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/etc/shadow verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === pushd ===
-PATHSCOPE shell=<QA>\pushd.sh
+PATHSCOPE shell=pushd.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === pushd_forbidden ===
-PATHSCOPE shell=<QA>\pushd_forbidden.sh
+PATHSCOPE shell=pushd_forbidden.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === popd_stack ===
-PATHSCOPE shell=<QA>\popd_stack.sh
+PATHSCOPE shell=popd_stack.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === trap ===
-PATHSCOPE shell=<QA>\trap.sh
+PATHSCOPE shell=trap.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === ssh ===
-PATHSCOPE shell=<QA>\ssh.sh
+PATHSCOPE shell=ssh.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === ssh_command ===
-PATHSCOPE shell=<QA>\ssh_command.sh
+PATHSCOPE shell=ssh_command.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === getent ===
-PATHSCOPE shell=<QA>\getent.sh
+PATHSCOPE shell=getent.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === find_exec ===
-PATHSCOPE shell=<QA>\find_exec.sh
+PATHSCOPE shell=find_exec.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:find
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === find_unknown ===
-PATHSCOPE shell=<QA>\find_unknown.sh
+PATHSCOPE shell=find_unknown.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:find
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === curl_upload ===
-PATHSCOPE shell=<QA>\curl_upload.sh
+PATHSCOPE shell=curl_upload.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=127.0.0.1:8790 verdict=ALLOW rule=127.0.0.1:8790 sources=URL uses=line=2:curl
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === curl_net ===
-PATHSCOPE shell=<QA>\curl_net.sh
+PATHSCOPE shell=curl_net.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=127.0.0.1:8790 verdict=ALLOW rule=127.0.0.1:8790 sources=URL uses=line=2:curl
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === tar_option ===
-PATHSCOPE shell=<QA>\tar_option.sh
+PATHSCOPE shell=tar_option.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:tar
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === cp_option ===
-PATHSCOPE shell=<QA>\cp_option.sh
+PATHSCOPE shell=cp_option.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/input verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cp
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === cp_unknown ===
-PATHSCOPE shell=<QA>\cp_unknown.sh
+PATHSCOPE shell=cp_unknown.sh
 PATHSCOPE resolved_count=2 unresolved_count=0
 PATH value=/safe/a verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cp
 PATH value=/safe/b verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cp
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === python_c ===
-PATHSCOPE shell=<QA>\python_c.sh
+PATHSCOPE shell=python_c.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === alias ===
-PATHSCOPE shell=<QA>\alias.sh
+PATHSCOPE shell=alias.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === hash_p ===
-PATHSCOPE shell=<QA>\hash_p.sh
+PATHSCOPE shell=hash_p.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === mapfile_cb ===
-PATHSCOPE shell=<QA>\mapfile_cb.sh
+PATHSCOPE shell=mapfile_cb.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === systemctl_link ===
-PATHSCOPE shell=<QA>\systemctl_link.sh
+PATHSCOPE shell=systemctl_link.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === jobs_x ===
-PATHSCOPE shell=<QA>\jobs_x.sh
+PATHSCOPE shell=jobs_x.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === tilde ===
-PATHSCOPE shell=<QA>\tilde.sh
+PATHSCOPE shell=tilde.sh
 PATHSCOPE resolved_count=1 unresolved_count=1
 PATH value=/safe/~/secret verdict=ALLOW rule=/safe/** sources=NONE uses=line=2:cat
 UNRESOLVED line=2 reason=allowlisted path has no preregistered-constant provenance expression=~/secret
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === tilde_user ===
-PATHSCOPE shell=<QA>\tilde_user.sh
+PATHSCOPE shell=tilde_user.sh
 PATHSCOPE resolved_count=1 unresolved_count=1
 PATH value=/safe/~gatea/secret verdict=ALLOW rule=/safe/** sources=NONE uses=line=2:cat
 UNRESOLVED line=2 reason=allowlisted path has no preregistered-constant provenance expression=~gatea/secret
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === tilde_home ===
-PATHSCOPE shell=<QA>\tilde_home.sh
+PATHSCOPE shell=tilde_home.sh
 PATHSCOPE resolved_count=1 unresolved_count=1
 PATH value=/safe/~/secret verdict=ALLOW rule=/safe/** sources=NONE uses=line=2:cat
 UNRESOLVED line=2 reason=allowlisted path has no preregistered-constant provenance expression=~/secret
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === symlink_lexical ===
-PATHSCOPE shell=<QA>\symlink_lexical.sh
+PATHSCOPE shell=symlink_lexical.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/link/passwd verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === redir_rw ===
-PATHSCOPE shell=<QA>\redir_rw.sh
+PATHSCOPE shell=redir_rw.sh
 PATHSCOPE resolved_count=1 unresolved_count=1
 PATH value=/safe/> verdict=ALLOW rule=/safe/** sources=NONE uses=line=2:redirection <
 UNRESOLVED line=2 reason=allowlisted path has no preregistered-constant provenance expression=>
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === redir_clobber ===
-PATHSCOPE shell=<QA>\redir_clobber.sh
+PATHSCOPE shell=redir_clobber.sh
 PATHSCOPE resolved_count=0 unresolved_count=2
 UNRESOLVED line=2 reason=opaque command y has no registered path-argument contract expression=y
 UNRESOLVED line=2 reason=redirection has no target expression=>
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === redir_amp ===
-PATHSCOPE shell=<QA>\redir_amp.sh
+PATHSCOPE shell=redir_amp.sh
 PATHSCOPE resolved_count=1 unresolved_count=1
 PATH value=/etc/z verdict=FORBID rule=- sources=NONE uses=line=2:redirection &>
 UNRESOLVED line=2 reason=opaque command ls has no registered path-argument contract expression=ls
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === fddup ===
-PATHSCOPE shell=<QA>\fddup.sh
+PATHSCOPE shell=fddup.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === exec_redir ===
-PATHSCOPE shell=<QA>\exec_redir.sh
+PATHSCOPE shell=exec_redir.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/out verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:redirection >
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === devtcp ===
-PATHSCOPE shell=<QA>\devtcp.sh
+PATHSCOPE shell=devtcp.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/dev/tcp/198.51.100.10/8790 verdict=FORBID rule=- sources=NONE uses=line=2:redirection <
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === devtcp_allow ===
-PATHSCOPE shell=<QA>\devtcp_allow.sh
+PATHSCOPE shell=devtcp_allow.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/dev/tcp/127.0.0.1/8790 verdict=FORBID rule=- sources=NONE uses=line=2:redirection <
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === heredoc ===
-PATHSCOPE shell=<QA>\heredoc.sh
+PATHSCOPE shell=heredoc.sh
 PATHSCOPE resolved_count=0 unresolved_count=3
 UNRESOLVED line=2 reason=here input is outside the accepted static path subset expression=EOF
 UNRESOLVED line=3 reason=opaque command passwd has no registered path-argument contract expression=passwd
@@ -939,7 +1286,7 @@ UNRESOLVED line=4 reason=opaque command EOF has no registered path-argument cont
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === heredoc_subst ===
-PATHSCOPE shell=<QA>\heredoc_subst.sh
+PATHSCOPE shell=heredoc_subst.sh
 PATHSCOPE resolved_count=1 unresolved_count=3
 PATH value=/etc/shadow verdict=FORBID rule=- sources=NONE uses=line=3:cat
 UNRESOLVED line=2 reason=here input is outside the accepted static path subset expression=EOF
@@ -948,7 +1295,7 @@ UNRESOLVED line=4 reason=opaque command EOF has no registered path-argument cont
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === heredoc_quoted ===
-PATHSCOPE shell=<QA>\heredoc_quoted.sh
+PATHSCOPE shell=heredoc_quoted.sh
 PATHSCOPE resolved_count=1 unresolved_count=3
 PATH value=/etc/shadow verdict=FORBID rule=- sources=NONE uses=line=3:cat
 UNRESOLVED line=2 reason=here input is outside the accepted static path subset expression='EOF'
@@ -957,19 +1304,19 @@ UNRESOLVED line=4 reason=opaque command EOF has no registered path-argument cont
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === herestring ===
-PATHSCOPE shell=<QA>\herestring.sh
+PATHSCOPE shell=herestring.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === array ===
-PATHSCOPE shell=<QA>\array.sh
+PATHSCOPE shell=array.sh
 PATHSCOPE resolved_count=0 unresolved_count=2
 UNRESOLVED line=2 reason=array assignment is outside the accepted scalar subset expression=A=(...)
 UNRESOLVED line=3 reason=unsupported parameter expansion ${A[0]} expression="${A[0]}"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === brace ===
-PATHSCOPE shell=<QA>\brace.sh
+PATHSCOPE shell=brace.sh
 PATHSCOPE resolved_count=1 unresolved_count=2
 PATH value=/safe verdict=ALLOW rule=/safe/** sources=NONE uses=line=2:cat
 UNRESOLVED line=2 reason=allowlisted path has no preregistered-constant provenance expression=/safe/
@@ -977,278 +1324,386 @@ UNRESOLVED line=2 reason=opaque command a,b has no registered path-argument cont
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === arith ===
-PATHSCOPE shell=<QA>\arith.sh
+PATHSCOPE shell=arith.sh
 PATHSCOPE resolved_count=0 unresolved_count=1
 UNRESOLVED line=2 reason=command substitution expression="/safe/$((1+1))"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === param_default ===
-PATHSCOPE shell=<QA>\param_default.sh
+PATHSCOPE shell=param_default.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === param_subst ===
-PATHSCOPE shell=<QA>\param_subst.sh
+PATHSCOPE shell=param_subst.sh
 PATHSCOPE resolved_count=0 unresolved_count=1
 UNRESOLVED line=2 reason=unsupported parameter expansion ${ROOT/x/y} expression="${ROOT/x/y}"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === ansic ===
-PATHSCOPE shell=<QA>\ansic.sh
+PATHSCOPE shell=ansic.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === continuation ===
-PATHSCOPE shell=<QA>\continuation.sh
+PATHSCOPE shell=continuation.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/input verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === backtick ===
-PATHSCOPE shell=<QA>\backtick.sh
+PATHSCOPE shell=backtick.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/etc/shadow verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === glob ===
-PATHSCOPE shell=<QA>\glob.sh
+PATHSCOPE shell=glob.sh
 PATHSCOPE resolved_count=0 unresolved_count=1
 UNRESOLVED line=2 reason=glob expansion makes the path set dynamic expression="$ROOT"/*
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === source ===
-PATHSCOPE shell=<QA>\source.sh
+PATHSCOPE shell=source.sh
 PATHSCOPE resolved_count=1 unresolved_count=1
 PATH value=/safe/lib.sh verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:source
 UNRESOLVED line=2 reason=sourced values are outside the closed scalar input set expression=source
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === dot_source ===
-PATHSCOPE shell=<QA>\dot_source.sh
+PATHSCOPE shell=dot_source.sh
 PATHSCOPE resolved_count=1 unresolved_count=1
 PATH value=/safe/lib.sh verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:.
 UNRESOLVED line=2 reason=sourced values are outside the closed scalar input set expression=.
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === xargs ===
-PATHSCOPE shell=<QA>\xargs.sh
+PATHSCOPE shell=xargs.sh
 PATHSCOPE resolved_count=0 unresolved_count=2
 UNRESOLVED line=2 reason=opaque command xargs has no registered path-argument contract expression=xargs
 UNRESOLVED line=2 reason=opaque command xargs may forward a path or endpoint expression="$ROOT/list"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === multipath ===
-PATHSCOPE shell=<QA>\multipath.sh
+PATHSCOPE shell=multipath.sh
 PATHSCOPE resolved_count=2 unresolved_count=0
 PATH value=/etc/b verdict=FORBID rule=- sources=NONE uses=line=2:install
 PATH value=/safe/a verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:install
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === scp_remote ===
-PATHSCOPE shell=<QA>\scp_remote.sh
+PATHSCOPE shell=scp_remote.sh
 PATHSCOPE resolved_count=0 unresolved_count=2
 UNRESOLVED line=2 reason=remote-path grammar needs an explicit transport parser expression="$ROOT/a"
 UNRESOLVED line=2 reason=remote-path grammar needs an explicit transport parser expression=gatea@198.51.100.10:/tmp/b
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === nc_client ===
-PATHSCOPE shell=<QA>\nc_client.sh
+PATHSCOPE shell=nc_client.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === grep_files ===
-PATHSCOPE shell=<QA>\grep_files.sh
+PATHSCOPE shell=grep_files.sh
 PATHSCOPE resolved_count=0 unresolved_count=2
 UNRESOLVED line=2 reason=opaque command grep has no registered path-argument contract expression=grep
 UNRESOLVED line=2 reason=opaque command grep may forward a path or endpoint expression="$ROOT/f"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === sed_prog ===
-PATHSCOPE shell=<QA>\sed_prog.sh
+PATHSCOPE shell=sed_prog.sh
 PATHSCOPE resolved_count=0 unresolved_count=2
 UNRESOLVED line=2 reason=opaque command sed has no registered path-argument contract expression=sed
 UNRESOLVED line=2 reason=opaque command sed may forward a path or endpoint expression="$ROOT/f"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === func_positional ===
-PATHSCOPE shell=<QA>\func_positional.sh
+PATHSCOPE shell=func_positional.sh
 PATHSCOPE resolved_count=0 unresolved_count=1
 UNRESOLVED line=2 reason=dynamic shell parameter $1 expression="$1"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === func_body ===
-PATHSCOPE shell=<QA>\func_body.sh
+PATHSCOPE shell=func_body.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/ok verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === case_loop ===
-PATHSCOPE shell=<QA>\case_loop.sh
+PATHSCOPE shell=case_loop.sh
 PATHSCOPE resolved_count=2 unresolved_count=0
 PATH value=/etc/other verdict=FORBID rule=- sources=NONE uses=line=5:cat
 PATH value=/safe/a verdict=ALLOW rule=/safe/** sources=ROOT uses=line=4:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === terminal_stat ===
-PATHSCOPE shell=<QA>\terminal_stat.sh
+PATHSCOPE shell=terminal_stat.sh
 PATHSCOPE resolved_count=1 unresolved_count=1
 PATH value=/safe/conf verdict=ALLOW rule=/safe/conf [terminal] sources=NONE uses=line=2:stat
 UNRESOLVED line=2 reason=allowlisted path has no preregistered-constant provenance expression=/safe/conf
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === terminal_cat ===
-PATHSCOPE shell=<QA>\terminal_cat.sh
+PATHSCOPE shell=terminal_cat.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/conf verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === assign_prefix ===
-PATHSCOPE shell=<QA>\assign_prefix.sh
+PATHSCOPE shell=assign_prefix.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === assign_prefix_allow ===
-PATHSCOPE shell=<QA>\assign_prefix_allow.sh
+PATHSCOPE shell=assign_prefix_allow.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === assign_bare ===
-PATHSCOPE shell=<QA>\assign_bare.sh
+PATHSCOPE shell=assign_bare.sh
 PATHSCOPE resolved_count=0 unresolved_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === assign_benign ===
-PATHSCOPE shell=<QA>\assign_benign.sh
+PATHSCOPE shell=assign_benign.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === assign_export ===
-PATHSCOPE shell=<QA>\assign_export.sh
+PATHSCOPE shell=assign_export.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=3:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === assign_env ===
-PATHSCOPE shell=<QA>\assign_env.sh
+PATHSCOPE shell=assign_env.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === assign_multi ===
-PATHSCOPE shell=<QA>\assign_multi.sh
+PATHSCOPE shell=assign_multi.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_list_prefix ===
-PATHSCOPE shell=<QA>\c2_list_prefix.sh
+PATHSCOPE shell=c2_list_prefix.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_list_env ===
-PATHSCOPE shell=<QA>\c2_list_env.sh
+PATHSCOPE shell=c2_list_env.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_list_export ===
-PATHSCOPE shell=<QA>\c2_list_export.sh
+PATHSCOPE shell=c2_list_export.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=3:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_list_bare_first ===
-PATHSCOPE shell=<QA>\c2_list_bare_first.sh
+PATHSCOPE shell=c2_list_bare_first.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_list_space ===
-PATHSCOPE shell=<QA>\c2_list_space.sh
+PATHSCOPE shell=c2_list_space.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_relative ===
-PATHSCOPE shell=<QA>\c2_relative.sh
+PATHSCOPE shell=c2_relative.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_empty_member ===
-PATHSCOPE shell=<QA>\c2_empty_member.sh
+PATHSCOPE shell=c2_empty_member.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_quoted_space ===
-PATHSCOPE shell=<QA>\c2_quoted_space.sh
+PATHSCOPE shell=c2_quoted_space.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_escaped_space ===
-PATHSCOPE shell=<QA>\c2_escaped_space.sh
+PATHSCOPE shell=c2_escaped_space.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_command_text ===
-PATHSCOPE shell=<QA>\c2_command_text.sh
+PATHSCOPE shell=c2_command_text.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_uri_forbid ===
-PATHSCOPE shell=<QA>\c2_uri_forbid.sh
+PATHSCOPE shell=c2_uri_forbid.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_uri_allow ===
-PATHSCOPE shell=<QA>\c2_uri_allow.sh
+PATHSCOPE shell=c2_uri_allow.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_env_quoted ===
-PATHSCOPE shell=<QA>\c2_env_quoted.sh
+PATHSCOPE shell=c2_env_quoted.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_bare_soname ===
-PATHSCOPE shell=<QA>\c2_bare_soname.sh
+PATHSCOPE shell=c2_bare_soname.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_allow_list ===
-PATHSCOPE shell=<QA>\c2_allow_list.sh
+PATHSCOPE shell=c2_allow_list.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_benign_scalars ===
-PATHSCOPE shell=<QA>\c2_benign_scalars.sh
+PATHSCOPE shell=c2_benign_scalars.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_benign_words ===
-PATHSCOPE shell=<QA>\c2_benign_words.sh
+PATHSCOPE shell=c2_benign_words.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
 COMMAND_RC=0
 === c2_words_with_path ===
-PATHSCOPE shell=<QA>\c2_words_with_path.sh
+PATHSCOPE shell=c2_words_with_path.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c3_ws_relative ===
+PATHSCOPE shell=c3_ws_relative.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c3_ws_later_word ===
+PATHSCOPE shell=c3_ws_later_word.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c3_uri_list ===
+PATHSCOPE shell=c3_uri_list.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c3_uri_pair ===
+PATHSCOPE shell=c3_uri_pair.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c3_colon_whole ===
+PATHSCOPE shell=c3_colon_whole.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/f sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c3_empty_only ===
+PATHSCOPE shell=c3_empty_only.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c3_empty_only_out ===
+PATHSCOPE shell=c3_empty_only_out.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c3_cmdtext_noslash ===
+PATHSCOPE shell=c3_cmdtext_noslash.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c4_export_quoted ===
+PATHSCOPE shell=c4_export_quoted.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c4_export_quoted_space ===
+PATHSCOPE shell=c4_export_quoted_space.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c4_declare_quoted ===
+PATHSCOPE shell=c4_declare_quoted.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c4_readonly_quoted ===
+PATHSCOPE shell=c4_readonly_quoted.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c4_typeset_quoted ===
+PATHSCOPE shell=c4_typeset_quoted.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c4_local_quoted ===
+PATHSCOPE shell=c4_local_quoted.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=4:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c4_export_opaque ===
+PATHSCOPE shell=c4_export_opaque.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c4_env_quoted_ctl ===
+PATHSCOPE shell=c4_env_quoted_ctl.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c4_export_plain_ctl ===
+PATHSCOPE shell=c4_export_plain_ctl.sh
+PATHSCOPE resolved_count=1 unresolved_count=0
+PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
+COMMAND_RC=0
+=== c3_scalar_ctl ===
+PATHSCOPE shell=c3_scalar_ctl.sh
 PATHSCOPE resolved_count=1 unresolved_count=0
 PATH value=/safe/f verdict=ALLOW rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted
@@ -1260,7 +1715,7 @@ COMMAND_RC=3
 PATHSCOPE verdict=REJECT rc=3 reason=input_parse_error line=7 detail=path contains an unresolved angle-bracket placeholder
 COMMAND_RC=3
 === RP6-P0 with real.constants ===
-PATHSCOPE shell=<QA>\RP6-P0.sh
+PATHSCOPE shell=RP6-P0.sh
 PATHSCOPE resolved_count=1 unresolved_count=39
 PATH value=/dev/null verdict=FORBID rule=- sources=NONE uses=line=398:redirection >,line=400:redirection >
 UNRESOLVED line=398 reason=opaque command builtin has no registered path-argument contract expression=builtin
@@ -1305,7 +1760,7 @@ UNRESOLVED line=1766 reason=opaque command argument: unpinned variable py expres
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === RP7-WPI-RO with real.constants ===
-PATHSCOPE shell=<QA>\RP7-WPI-RO.sh
+PATHSCOPE shell=RP7-WPI-RO.sh
 PATHSCOPE resolved_count=3 unresolved_count=69
 PATH value=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python verdict=ALLOW rule=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/** sources=WPI_VENV_ROOT uses=line=999:test
 PATH value=/proc/self/mountinfo verdict=FORBID rule=- sources=NONE uses=line=633:redirection <
@@ -1383,11 +1838,11 @@ PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 ```
 
-## Complete GREEN transcript (repaired bytes)
+## Complete GREEN transcript (repaired round-5 bytes, `28848D60…DF9C`)
 
 ```text
 === green ===
-PATHSCOPE shell=<QA>\green.sh
+PATHSCOPE shell=green.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1395,7 +1850,7 @@ PATH value=/safe/input verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=lin
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === literal ===
-PATHSCOPE shell=<QA>\literal.sh
+PATHSCOPE shell=literal.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1403,7 +1858,7 @@ PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === assembled ===
-PATHSCOPE shell=<QA>\assembled.sh
+PATHSCOPE shell=assembled.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1412,7 +1867,7 @@ PATH value=/etc/mtc-bridge/x verdict=FORBID rule=- sources=NONE uses=line=4:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === dynamic ===
-PATHSCOPE shell=<QA>\dynamic.sh
+PATHSCOPE shell=dynamic.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=1 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1421,7 +1876,7 @@ UNRESOLVED line=3 kind=unresolved_path reason=cat argument is not statically kno
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === nested ===
-PATHSCOPE shell=<QA>\nested.sh
+PATHSCOPE shell=nested.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1430,7 +1885,7 @@ UNRESOLVED line=2 kind=coverage reason=assignment value is not statically known:
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === pushd ===
-PATHSCOPE shell=<QA>\pushd.sh
+PATHSCOPE shell=pushd.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1438,7 +1893,7 @@ PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:pu
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === pushd_forbidden ===
-PATHSCOPE shell=<QA>\pushd_forbidden.sh
+PATHSCOPE shell=pushd_forbidden.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1446,14 +1901,14 @@ PATH value=/etc verdict=FORBID rule=- sources=NONE uses=line=2:pushd
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === popd_stack ===
-PATHSCOPE shell=<QA>\popd_stack.sh
+PATHSCOPE shell=popd_stack.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === trap ===
-PATHSCOPE shell=<QA>\trap.sh
+PATHSCOPE shell=trap.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1461,7 +1916,7 @@ PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === ssh ===
-PATHSCOPE shell=<QA>\ssh.sh
+PATHSCOPE shell=ssh.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=1
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1469,7 +1924,7 @@ ENDPOINT value=198.51.100.10:22 verdict=FORBID rule=- sources=HOST uses=line=2:s
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === ssh_command ===
-PATHSCOPE shell=<QA>\ssh_command.sh
+PATHSCOPE shell=ssh_command.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=1
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1478,7 +1933,7 @@ UNRESOLVED line=2 kind=coverage reason=ssh remote command text executes on the r
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === getent ===
-PATHSCOPE shell=<QA>\getent.sh
+PATHSCOPE shell=getent.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=1 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1486,7 +1941,7 @@ UNRESOLVED line=2 kind=unresolved_endpoint reason=getent resolves the hosts data
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === find_exec ===
-PATHSCOPE shell=<QA>\find_exec.sh
+PATHSCOPE shell=find_exec.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1495,7 +1950,7 @@ PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:fi
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === find_unknown ===
-PATHSCOPE shell=<QA>\find_unknown.sh
+PATHSCOPE shell=find_unknown.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1504,7 +1959,7 @@ UNRESOLVED line=2 kind=coverage reason=find has no modeled grammar for the predi
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === curl_upload ===
-PATHSCOPE shell=<QA>\curl_upload.sh
+PATHSCOPE shell=curl_upload.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=1
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1513,7 +1968,7 @@ ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === curl_net ===
-PATHSCOPE shell=<QA>\curl_net.sh
+PATHSCOPE shell=curl_net.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=1
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1521,7 +1976,7 @@ ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === tar_option ===
-PATHSCOPE shell=<QA>\tar_option.sh
+PATHSCOPE shell=tar_option.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1530,7 +1985,7 @@ PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:ta
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === cp_option ===
-PATHSCOPE shell=<QA>\cp_option.sh
+PATHSCOPE shell=cp_option.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1539,7 +1994,7 @@ PATH value=/safe/input verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=lin
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === cp_unknown ===
-PATHSCOPE shell=<QA>\cp_unknown.sh
+PATHSCOPE shell=cp_unknown.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1549,7 +2004,7 @@ UNRESOLVED line=2 kind=coverage reason=cp has no modeled grammar for option --pa
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === python_c ===
-PATHSCOPE shell=<QA>\python_c.sh
+PATHSCOPE shell=python_c.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1557,7 +2012,7 @@ UNRESOLVED line=2 kind=coverage reason=python3 -c program text is opaque to stat
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === alias ===
-PATHSCOPE shell=<QA>\alias.sh
+PATHSCOPE shell=alias.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1565,7 +2020,7 @@ PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === hash_p ===
-PATHSCOPE shell=<QA>\hash_p.sh
+PATHSCOPE shell=hash_p.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1573,7 +2028,7 @@ PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:hash
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === mapfile_cb ===
-PATHSCOPE shell=<QA>\mapfile_cb.sh
+PATHSCOPE shell=mapfile_cb.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1581,7 +2036,7 @@ PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === systemctl_link ===
-PATHSCOPE shell=<QA>\systemctl_link.sh
+PATHSCOPE shell=systemctl_link.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1589,7 +2044,7 @@ UNRESOLVED line=2 kind=coverage reason=systemctl verb link is not in the modeled
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === jobs_x ===
-PATHSCOPE shell=<QA>\jobs_x.sh
+PATHSCOPE shell=jobs_x.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1597,7 +2052,7 @@ UNRESOLVED line=2 kind=coverage reason=jobs option -x changes the operand gramma
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === tilde ===
-PATHSCOPE shell=<QA>\tilde.sh
+PATHSCOPE shell=tilde.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=1 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1605,7 +2060,7 @@ UNRESOLVED line=2 kind=unresolved_path reason=cat argument is not statically kno
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === tilde_user ===
-PATHSCOPE shell=<QA>\tilde_user.sh
+PATHSCOPE shell=tilde_user.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=1 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1613,7 +2068,7 @@ UNRESOLVED line=2 kind=unresolved_path reason=cat argument is not statically kno
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === tilde_home ===
-PATHSCOPE shell=<QA>\tilde_home.sh
+PATHSCOPE shell=tilde_home.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1621,7 +2076,7 @@ PATH value=/home/gatea/secret verdict=FORBID rule=- sources=HOME uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === symlink_lexical ===
-PATHSCOPE shell=<QA>\symlink_lexical.sh
+PATHSCOPE shell=symlink_lexical.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1629,7 +2084,7 @@ PATH value=/safe/link/passwd verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT us
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === redir_rw ===
-PATHSCOPE shell=<QA>\redir_rw.sh
+PATHSCOPE shell=redir_rw.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1637,7 +2092,7 @@ PATH value=/etc/x verdict=FORBID rule=- sources=NONE uses=line=2:redirection <>
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === redir_clobber ===
-PATHSCOPE shell=<QA>\redir_clobber.sh
+PATHSCOPE shell=redir_clobber.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1645,7 +2100,7 @@ PATH value=/etc/y verdict=FORBID rule=- sources=NONE uses=line=2:redirection >|
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === redir_amp ===
-PATHSCOPE shell=<QA>\redir_amp.sh
+PATHSCOPE shell=redir_amp.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1653,14 +2108,14 @@ PATH value=/etc/z verdict=FORBID rule=- sources=NONE uses=line=2:redirection &>
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === fddup ===
-PATHSCOPE shell=<QA>\fddup.sh
+PATHSCOPE shell=fddup.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === exec_redir ===
-PATHSCOPE shell=<QA>\exec_redir.sh
+PATHSCOPE shell=exec_redir.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1668,7 +2123,7 @@ PATH value=/safe/out verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === devtcp ===
-PATHSCOPE shell=<QA>\devtcp.sh
+PATHSCOPE shell=devtcp.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=1
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1676,7 +2131,7 @@ ENDPOINT value=198.51.100.10:8790 verdict=FORBID rule=- sources=NONE uses=line=2
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === devtcp_allow ===
-PATHSCOPE shell=<QA>\devtcp_allow.sh
+PATHSCOPE shell=devtcp_allow.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=1
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=1 parse_issue_count=0
@@ -1685,14 +2140,14 @@ UNRESOLVED line=2 kind=provenance reason=allowlisted endpoint has no preregister
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === heredoc ===
-PATHSCOPE shell=<QA>\heredoc.sh
+PATHSCOPE shell=heredoc.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === heredoc_subst ===
-PATHSCOPE shell=<QA>\heredoc_subst.sh
+PATHSCOPE shell=heredoc_subst.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1700,21 +2155,21 @@ PATH value=/etc/shadow verdict=FORBID rule=- sources=NONE uses=line=3:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === heredoc_quoted ===
-PATHSCOPE shell=<QA>\heredoc_quoted.sh
+PATHSCOPE shell=heredoc_quoted.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === herestring ===
-PATHSCOPE shell=<QA>\herestring.sh
+PATHSCOPE shell=herestring.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === array ===
-PATHSCOPE shell=<QA>\array.sh
+PATHSCOPE shell=array.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=1 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1723,7 +2178,7 @@ UNRESOLVED line=3 kind=unresolved_path reason=cat argument is not statically kno
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === brace ===
-PATHSCOPE shell=<QA>\brace.sh
+PATHSCOPE shell=brace.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=1 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1731,7 +2186,7 @@ UNRESOLVED line=2 kind=unresolved_path reason=cat argument is not statically kno
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === arith ===
-PATHSCOPE shell=<QA>\arith.sh
+PATHSCOPE shell=arith.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=1 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1739,7 +2194,7 @@ UNRESOLVED line=2 kind=unresolved_path reason=cat argument is not statically kno
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === param_default ===
-PATHSCOPE shell=<QA>\param_default.sh
+PATHSCOPE shell=param_default.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1747,7 +2202,7 @@ PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === param_subst ===
-PATHSCOPE shell=<QA>\param_subst.sh
+PATHSCOPE shell=param_subst.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=1 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1755,7 +2210,7 @@ UNRESOLVED line=2 kind=unresolved_path reason=cat argument is not statically kno
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === ansic ===
-PATHSCOPE shell=<QA>\ansic.sh
+PATHSCOPE shell=ansic.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1763,7 +2218,7 @@ PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === continuation ===
-PATHSCOPE shell=<QA>\continuation.sh
+PATHSCOPE shell=continuation.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1771,7 +2226,7 @@ PATH value=/safe/input verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=lin
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === backtick ===
-PATHSCOPE shell=<QA>\backtick.sh
+PATHSCOPE shell=backtick.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1780,7 +2235,7 @@ UNRESOLVED line=2 kind=coverage reason=assignment value is not statically known:
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === glob ===
-PATHSCOPE shell=<QA>\glob.sh
+PATHSCOPE shell=glob.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=1 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1788,7 +2243,7 @@ UNRESOLVED line=2 kind=unresolved_path reason=glob expansion makes the path set 
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === source ===
-PATHSCOPE shell=<QA>\source.sh
+PATHSCOPE shell=source.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1797,7 +2252,7 @@ UNRESOLVED line=2 kind=coverage reason=sourced file content is outside the analy
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === dot_source ===
-PATHSCOPE shell=<QA>\dot_source.sh
+PATHSCOPE shell=dot_source.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1806,7 +2261,7 @@ UNRESOLVED line=2 kind=coverage reason=sourced file content is outside the analy
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === xargs ===
-PATHSCOPE shell=<QA>\xargs.sh
+PATHSCOPE shell=xargs.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1815,7 +2270,7 @@ UNRESOLVED line=2 kind=coverage reason=xargs appends operands read from standard
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === multipath ===
-PATHSCOPE shell=<QA>\multipath.sh
+PATHSCOPE shell=multipath.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1824,7 +2279,7 @@ PATH value=/safe/a verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === scp_remote ===
-PATHSCOPE shell=<QA>\scp_remote.sh
+PATHSCOPE shell=scp_remote.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=1
 PATHSCOPE unresolved_path_count=1 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1834,7 +2289,7 @@ UNRESOLVED line=2 kind=unresolved_path reason=scp remote path operand is a path 
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === nc_client ===
-PATHSCOPE shell=<QA>\nc_client.sh
+PATHSCOPE shell=nc_client.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=1
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1842,7 +2297,7 @@ ENDPOINT value=198.51.100.10:8790 verdict=FORBID rule=- sources=HOST uses=line=2
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === grep_files ===
-PATHSCOPE shell=<QA>\grep_files.sh
+PATHSCOPE shell=grep_files.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1850,7 +2305,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === sed_prog ===
-PATHSCOPE shell=<QA>\sed_prog.sh
+PATHSCOPE shell=sed_prog.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
@@ -1859,7 +2314,7 @@ UNRESOLVED line=2 kind=coverage reason=sed program text can open files of its ow
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === func_positional ===
-PATHSCOPE shell=<QA>\func_positional.sh
+PATHSCOPE shell=func_positional.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=0 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=1 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1867,7 +2322,7 @@ UNRESOLVED line=2 kind=unresolved_path reason=cat argument is not statically kno
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === func_body ===
-PATHSCOPE shell=<QA>\func_body.sh
+PATHSCOPE shell=func_body.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1875,7 +2330,7 @@ PATH value=/safe/ok verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === case_loop ===
-PATHSCOPE shell=<QA>\case_loop.sh
+PATHSCOPE shell=case_loop.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1884,7 +2339,7 @@ PATH value=/safe/a verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=4:
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === terminal_stat ===
-PATHSCOPE shell=<QA>\terminal_stat.sh
+PATHSCOPE shell=terminal_stat.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=1 parse_issue_count=0
@@ -1893,7 +2348,7 @@ UNRESOLVED line=2 kind=provenance reason=allowlisted path has no preregistered-c
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === terminal_cat ===
-PATHSCOPE shell=<QA>\terminal_cat.sh
+PATHSCOPE shell=terminal_cat.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1901,7 +2356,7 @@ PATH value=/safe/conf verdict=FORBID rule=- sources=NONE uses=line=2:cat
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === assign_prefix ===
-PATHSCOPE shell=<QA>\assign_prefix.sh
+PATHSCOPE shell=assign_prefix.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1910,7 +2365,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === assign_prefix_allow ===
-PATHSCOPE shell=<QA>\assign_prefix_allow.sh
+PATHSCOPE shell=assign_prefix_allow.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1919,7 +2374,7 @@ PATH value=/safe/ok.so verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=lin
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === assign_bare ===
-PATHSCOPE shell=<QA>\assign_bare.sh
+PATHSCOPE shell=assign_bare.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1927,15 +2382,16 @@ PATH value=/etc/passwd verdict=FORBID rule=- sources=NONE uses=line=2:assignment
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === assign_benign ===
-PATHSCOPE shell=<QA>\assign_benign.sh
+PATHSCOPE shell=assign_benign.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
-PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=PWD uses=line=2:assignment prefix
 PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === assign_export ===
-PATHSCOPE shell=<QA>\assign_export.sh
+PATHSCOPE shell=assign_export.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1944,7 +2400,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === assign_env ===
-PATHSCOPE shell=<QA>\assign_env.sh
+PATHSCOPE shell=assign_env.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1953,7 +2409,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === assign_multi ===
-PATHSCOPE shell=<QA>\assign_multi.sh
+PATHSCOPE shell=assign_multi.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=3 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1963,7 +2419,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === c2_list_prefix ===
-PATHSCOPE shell=<QA>\c2_list_prefix.sh
+PATHSCOPE shell=c2_list_prefix.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1974,7 +2430,7 @@ PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROO
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === c2_list_env ===
-PATHSCOPE shell=<QA>\c2_list_env.sh
+PATHSCOPE shell=c2_list_env.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1985,7 +2441,7 @@ PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROO
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === c2_list_export ===
-PATHSCOPE shell=<QA>\c2_list_export.sh
+PATHSCOPE shell=c2_list_export.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -1996,26 +2452,30 @@ PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROO
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === c2_list_bare_first ===
-PATHSCOPE shell=<QA>\c2_list_bare_first.sh
+PATHSCOPE shell=c2_list_bare_first.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
-PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
-PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATHSCOPE resolved_fs_path_count=3 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=1 parse_issue_count=0
 PATH value=/etc/escape.so verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATH value=/safe/bare.so:/etc/escape.so verdict=ALLOW-LEXICAL rule=/safe/** sources=NONE uses=line=2:assignment prefix
 PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
-PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
-COMMAND_RC=1
+UNRESOLVED line=2 kind=provenance reason=allowlisted path has no preregistered-constant provenance expression=LD_PRELOAD=bare.so:/etc/escape.so
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
 === c2_list_space ===
-PATHSCOPE shell=<QA>\c2_list_space.sh
+PATHSCOPE shell=c2_list_space.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
-PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
-PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATHSCOPE resolved_fs_path_count=3 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=1 parse_issue_count=0
 PATH value=/etc/escape.so verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATH value=/safe/bare.so /etc/escape.so verdict=ALLOW-LEXICAL rule=/safe/** sources=NONE uses=line=2:assignment prefix
 PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
-UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ and this tool does not model which consumer splits it expression=LD_PRELOAD="bare.so /etc/escape.so"
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression=LD_PRELOAD="bare.so /etc/escape.so"
+UNRESOLVED line=2 kind=provenance reason=allowlisted path has no preregistered-constant provenance expression=LD_PRELOAD="bare.so /etc/escape.so"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === c2_relative ===
-PATHSCOPE shell=<QA>\c2_relative.sh
+PATHSCOPE shell=c2_relative.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2024,47 +2484,57 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === c2_empty_member ===
-PATHSCOPE shell=<QA>\c2_empty_member.sh
+PATHSCOPE shell=c2_empty_member.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
-PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
-PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=1 parse_issue_count=0
 PATH value=/etc/escape verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=PWD uses=line=2:assignment prefix
+PATH value=/safe/:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=NONE uses=line=2:assignment prefix
 PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
-UNRESOLVED line=2 kind=coverage reason=assignment path list contains an empty member, which names the consumer's current directory rather than a static pathname expression=LD_LIBRARY_PATH=:/etc/escape
+UNRESOLVED line=2 kind=provenance reason=allowlisted path has no preregistered-constant provenance expression=LD_LIBRARY_PATH=:/etc/escape
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === c2_quoted_space ===
-PATHSCOPE shell=<QA>\c2_quoted_space.sh
-PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
-PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
-PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
-PATH value=/safe dir/escape verdict=FORBID rule=- sources=ROOT uses=line=2:assignment prefix
-PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
-PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
-COMMAND_RC=1
-=== c2_escaped_space ===
-PATHSCOPE shell=<QA>\c2_escaped_space.sh
+PATHSCOPE shell=c2_quoted_space.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
-PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe dir/escape verdict=FORBID rule=- sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/dir/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression=X="$ROOT dir/escape"
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
+=== c2_escaped_space ===
+PATHSCOPE shell=c2_escaped_space.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=6 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
 PATH value=/etc/escape verdict=FORBID rule=- sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/a verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
 PATH value=/safe/a b verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
 PATH value=/safe/a b:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/b:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
 PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
-PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
-COMMAND_RC=1
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression=X=$ROOT/a\ b:/etc/escape
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
 === c2_command_text ===
-PATHSCOPE shell=<QA>\c2_command_text.sh
+PATHSCOPE shell=c2_command_text.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
-PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
-PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATHSCOPE resolved_fs_path_count=3 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=1 parse_issue_count=0
 PATH value=/etc/key verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
 PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
-UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ and this tool does not model which consumer splits it expression=GIT_SSH_COMMAND="ssh -i /etc/key"
+PATH value=/safe/ssh -i /etc/key verdict=ALLOW-LEXICAL rule=/safe/** sources=NONE uses=line=2:assignment prefix
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression=GIT_SSH_COMMAND="ssh -i /etc/key"
+UNRESOLVED line=2 kind=provenance reason=allowlisted path has no preregistered-constant provenance expression=GIT_SSH_COMMAND="ssh -i /etc/key"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === c2_uri_forbid ===
-PATHSCOPE shell=<QA>\c2_uri_forbid.sh
+PATHSCOPE shell=c2_uri_forbid.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=1
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2073,7 +2543,7 @@ ENDPOINT value=198.51.100.10:9999 verdict=FORBID rule=- sources=NONE uses=line=2
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === c2_uri_allow ===
-PATHSCOPE shell=<QA>\c2_uri_allow.sh
+PATHSCOPE shell=c2_uri_allow.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=1
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2082,7 +2552,7 @@ ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_env_quoted ===
-PATHSCOPE shell=<QA>\c2_env_quoted.sh
+PATHSCOPE shell=c2_env_quoted.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2091,7 +2561,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === c2_bare_soname ===
-PATHSCOPE shell=<QA>\c2_bare_soname.sh
+PATHSCOPE shell=c2_bare_soname.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2099,7 +2569,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_allow_list ===
-PATHSCOPE shell=<QA>\c2_allow_list.sh
+PATHSCOPE shell=c2_allow_list.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2110,15 +2580,16 @@ PATH value=/safe/lib:/safe/lib64 verdict=ALLOW-LEXICAL rule=/safe/** sources=ROO
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_benign_scalars ===
-PATHSCOPE shell=<QA>\c2_benign_scalars.sh
+PATHSCOPE shell=c2_benign_scalars.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
-PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=PWD uses=line=2:assignment prefix
 PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_benign_words ===
-PATHSCOPE shell=<QA>\c2_benign_words.sh
+PATHSCOPE shell=c2_benign_words.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2126,15 +2597,192 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_words_with_path ===
-PATHSCOPE shell=<QA>\c2_words_with_path.sh
+PATHSCOPE shell=c2_words_with_path.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
-PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
-PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATHSCOPE resolved_fs_path_count=3 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=1 parse_issue_count=0
 PATH value=/etc/secret verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATH value=/safe/denied /etc/secret verdict=ALLOW-LEXICAL rule=/safe/** sources=NONE uses=line=2:assignment prefix
 PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
-UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ and this tool does not model which consumer splits it expression=MSG="denied /etc/secret"
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression=MSG="denied /etc/secret"
+UNRESOLVED line=2 kind=provenance reason=allowlisted path has no preregistered-constant provenance expression=MSG="denied /etc/secret"
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
+=== c3_ws_relative ===
+PATHSCOPE shell=c3_ws_relative.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATH value=/elsewhere/relative/escape.so verdict=FORBID rule=- sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATH value=/safe/lib verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/lib relative/escape.so verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression=LD_PRELOAD="$ROOT/lib relative/escape.so"
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
+=== c3_ws_later_word ===
+PATHSCOPE shell=c3_ws_later_word.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=3 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/a verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/a plain verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression=X="$ROOT/a plain"
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
+=== c3_uri_list ===
+PATHSCOPE shell=c3_uri_list.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=1
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape verdict=FORBID rule=- sources=URL uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=URL uses=line=2:assignment prefix
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c3_uri_pair ===
+PATHSCOPE shell=c3_uri_pair.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=2
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=URL uses=line=2:assignment prefix
+ENDPOINT value=198.51.100.10:9999 verdict=FORBID rule=- sources=URL uses=line=2:assignment prefix
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c3_colon_whole ===
+PATHSCOPE shell=c3_colon_whole.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=3 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/dir/file verdict=ALLOW-LEXICAL rule=/safe/dir/file sources=BASE uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/f sources=ROOT uses=line=2:cat
+PATH value=/safe/relative:dir/file verdict=FORBID rule=- sources=BASE uses=line=2:assignment prefix
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c3_empty_only ===
+PATHSCOPE shell=c3_empty_only.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=PWD uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c3_empty_only_out ===
+PATHSCOPE shell=c3_empty_only_out.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/elsewhere verdict=FORBID rule=- sources=PWD uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c3_cmdtext_noslash ===
+PATHSCOPE shell=c3_cmdtext_noslash.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression=GIT_SSH_COMMAND="ssh -v"
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
+=== c4_export_quoted ===
+PATHSCOPE shell=c4_export_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape.so verdict=FORBID rule=- sources=NONE uses=line=2:export assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c4_export_quoted_space ===
+PATHSCOPE shell=c4_export_quoted_space.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=1 parse_issue_count=0
+PATH value=/safe verdict=ALLOW-LEXICAL rule=/safe/** sources=NONE uses=line=2:export assignment
+PATH value=/safe dir/escape verdict=FORBID rule=- sources=NONE uses=line=2:export assignment
+PATH value=/safe/dir/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=NONE uses=line=2:export assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression='X=/safe dir/escape'
+UNRESOLVED line=2 kind=provenance reason=allowlisted path has no preregistered-constant provenance expression='X=/safe dir/escape'
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
+=== c4_declare_quoted ===
+PATHSCOPE shell=c4_declare_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape.so verdict=FORBID rule=- sources=NONE uses=line=2:declare assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c4_readonly_quoted ===
+PATHSCOPE shell=c4_readonly_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape.sh verdict=FORBID rule=- sources=NONE uses=line=2:readonly assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c4_typeset_quoted ===
+PATHSCOPE shell=c4_typeset_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape verdict=FORBID rule=- sources=ROOT uses=line=2:typeset assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATH value=/safe/lib verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:typeset assignment
+PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:typeset assignment
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c4_local_quoted ===
+PATHSCOPE shell=c4_local_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape verdict=FORBID rule=- sources=NONE uses=line=2:local assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=4:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c4_export_opaque ===
+PATHSCOPE shell=c4_export_opaque.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+UNRESOLVED line=2 kind=coverage reason=export operand is neither an option, a NAME, nor NAME=VALUE after expansion expression="not an assignment"
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
+=== c4_env_quoted_ctl ===
+PATHSCOPE shell=c4_env_quoted_ctl.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape.so verdict=FORBID rule=- sources=NONE uses=line=2:env assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c4_export_plain_ctl ===
+PATHSCOPE shell=c4_export_plain_ctl.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATH value=/safe/ok.so verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:export assignment
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c3_scalar_ctl ===
+PATHSCOPE shell=c3_scalar_ctl.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
 === RP6-P0 with placeholder.constants ===
 PATHSCOPE verdict=REJECT rc=3 reason=input_parse_error line=7 detail=path contains an unresolved angle-bracket placeholder
 COMMAND_RC=3
@@ -2142,7 +2790,7 @@ COMMAND_RC=3
 PATHSCOPE verdict=REJECT rc=3 reason=input_parse_error line=7 detail=path contains an unresolved angle-bracket placeholder
 COMMAND_RC=3
 === RP6-P0 with real.constants ===
-PATHSCOPE shell=<QA>\RP6-P0.sh
+PATHSCOPE shell=RP6-P0.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=7 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=3 unresolved_endpoint_count=0 coverage_issue_count=200 provenance_issue_count=0 parse_issue_count=0
@@ -2365,10 +3013,10 @@ UNRESOLVED line=1799 kind=coverage reason=assignment value is not statically kno
 PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
 COMMAND_RC=3
 === RP7-WPI-RO with real.constants ===
-PATHSCOPE shell=<QA>\RP7-WPI-RO.sh
+PATHSCOPE shell=RP7-WPI-RO.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=7 resolved_net_endpoint_count=0
-PATHSCOPE unresolved_path_count=34 unresolved_endpoint_count=0 coverage_issue_count=337 provenance_issue_count=0 parse_issue_count=0
+PATHSCOPE unresolved_path_count=35 unresolved_endpoint_count=0 coverage_issue_count=337 provenance_issue_count=0 parse_issue_count=0
 PATH value=/ verdict=FORBID rule=- sources=NONE uses=line=542:assignment prefix,line=679:assignment prefix,line=681:assignment prefix
 PATH value=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py verdict=ALLOW-LEXICAL rule=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/** sources=WPI_RELEASE_ROOT uses=line=1150:local assignment
 PATH value=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE/requirements.lock verdict=ALLOW-LEXICAL rule=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/** sources=WPI_RELEASE_ROOT uses=line=1151:local assignment
@@ -2576,7 +3224,8 @@ UNRESOLVED line=660 kind=coverage reason=assignment value is not statically know
 UNRESOLVED line=662 kind=coverage reason=array assignment is outside the accepted scalar subset expression=points=(...)
 UNRESOLVED line=671 kind=coverage reason=array assignment is outside the accepted scalar subset expression=root_candidates=(...)
 UNRESOLVED line=677 kind=coverage reason=array assignment is outside the accepted scalar subset expression=roots=(...)
-UNRESOLVED line=681 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ and this tool does not model which consumer splits it expression=seen_roots="$seen_roots$r "
+UNRESOLVED line=681 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ, this tool does not model which consumer splits it, and an option word carrying an attached pathname is not decomposed expression=seen_roots="$seen_roots$r "
+UNRESOLVED line=681 kind=unresolved_path reason=relative path depends on unpinned PWD expression=seen_roots="$seen_roots$r "
 UNRESOLVED line=682 kind=coverage reason=compound assignment is outside the accepted scalar subset expression=roots+=
 UNRESOLVED line=682 kind=coverage reason=opaque command  has no registered argv grammar expression=
 UNRESOLVED line=685 kind=coverage reason=assignment value is not statically known: arithmetic expansion expression=WPI_PROBE_SEQ=$(( WPI_PROBE_SEQ + 1 ))
@@ -2753,17 +3402,9 @@ COMMAND_RC=3
 
 ## Complete pre-repair transcript for family P10 (round-3 bytes, `0724967E…25F7`)
 
-This is `RED_R3.txt` in full: the eighteen C-2 fixtures run by the same harness against
-the committed round-3 blob `e600a107f2e2a790653cc544a94cd7436b7b070a`. It is the RED side
-of the D026 pairs in §"Round 4". Seventeen of the eighteen sections end `COMMAND_RC=0`;
-twelve of those are the silent sinks (the out-of-allowlist lexeme is absent from the
-report), and five are the controls, which are expected to end `COMMAND_RC=0` in both
-columns. The eighteenth, `c2_quoted_space`, already ended `COMMAND_RC=1` here and must keep
-doing so after the repair.
-
 ```text
 === c2_list_prefix ===
-PATHSCOPE shell=<QA>\c2_list_prefix.sh
+PATHSCOPE shell=c2_list_prefix.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2772,7 +3413,7 @@ PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROO
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_list_env ===
-PATHSCOPE shell=<QA>\c2_list_env.sh
+PATHSCOPE shell=c2_list_env.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2781,7 +3422,7 @@ PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROO
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_list_export ===
-PATHSCOPE shell=<QA>\c2_list_export.sh
+PATHSCOPE shell=c2_list_export.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2790,7 +3431,7 @@ PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROO
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_list_bare_first ===
-PATHSCOPE shell=<QA>\c2_list_bare_first.sh
+PATHSCOPE shell=c2_list_bare_first.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2798,7 +3439,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_list_space ===
-PATHSCOPE shell=<QA>\c2_list_space.sh
+PATHSCOPE shell=c2_list_space.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2806,7 +3447,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_relative ===
-PATHSCOPE shell=<QA>\c2_relative.sh
+PATHSCOPE shell=c2_relative.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2814,7 +3455,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_empty_member ===
-PATHSCOPE shell=<QA>\c2_empty_member.sh
+PATHSCOPE shell=c2_empty_member.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2822,7 +3463,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_quoted_space ===
-PATHSCOPE shell=<QA>\c2_quoted_space.sh
+PATHSCOPE shell=c2_quoted_space.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2831,7 +3472,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
 COMMAND_RC=1
 === c2_escaped_space ===
-PATHSCOPE shell=<QA>\c2_escaped_space.sh
+PATHSCOPE shell=c2_escaped_space.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2840,7 +3481,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_command_text ===
-PATHSCOPE shell=<QA>\c2_command_text.sh
+PATHSCOPE shell=c2_command_text.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2848,7 +3489,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_uri_forbid ===
-PATHSCOPE shell=<QA>\c2_uri_forbid.sh
+PATHSCOPE shell=c2_uri_forbid.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2856,7 +3497,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_uri_allow ===
-PATHSCOPE shell=<QA>\c2_uri_allow.sh
+PATHSCOPE shell=c2_uri_allow.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2864,7 +3505,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_env_quoted ===
-PATHSCOPE shell=<QA>\c2_env_quoted.sh
+PATHSCOPE shell=c2_env_quoted.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2872,7 +3513,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_bare_soname ===
-PATHSCOPE shell=<QA>\c2_bare_soname.sh
+PATHSCOPE shell=c2_bare_soname.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2880,7 +3521,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_allow_list ===
-PATHSCOPE shell=<QA>\c2_allow_list.sh
+PATHSCOPE shell=c2_allow_list.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2889,7 +3530,7 @@ PATH value=/safe/lib:/safe/lib64 verdict=ALLOW-LEXICAL rule=/safe/** sources=ROO
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_benign_scalars ===
-PATHSCOPE shell=<QA>\c2_benign_scalars.sh
+PATHSCOPE shell=c2_benign_scalars.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2897,7 +3538,7 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_benign_words ===
-PATHSCOPE shell=<QA>\c2_benign_words.sh
+PATHSCOPE shell=c2_benign_words.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2905,7 +3546,336 @@ PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:
 PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
 COMMAND_RC=0
 === c2_words_with_path ===
-PATHSCOPE shell=<QA>\c2_words_with_path.sh
+PATHSCOPE shell=c2_words_with_path.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+```
+
+## Complete pre-repair transcript for families P10 and P11 (round-4 bytes, `553A97E9…E2EB`)
+
+```text
+=== c2_list_prefix ===
+PATHSCOPE shell=c2_list_prefix.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape verdict=FORBID rule=- sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATH value=/safe/lib verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c2_list_env ===
+PATHSCOPE shell=c2_list_env.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape verdict=FORBID rule=- sources=ROOT uses=line=2:env assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATH value=/safe/lib verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:env assignment
+PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:env assignment
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c2_list_export ===
+PATHSCOPE shell=c2_list_export.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape verdict=FORBID rule=- sources=ROOT uses=line=2:export assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATH value=/safe/lib verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:export assignment
+PATH value=/safe/lib:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:export assignment
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c2_list_bare_first ===
+PATHSCOPE shell=c2_list_bare_first.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape.so verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c2_list_space ===
+PATHSCOPE shell=c2_list_space.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape.so verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ and this tool does not model which consumer splits it expression=LD_PRELOAD="bare.so /etc/escape.so"
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
+=== c2_relative ===
+PATHSCOPE shell=c2_relative.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/elsewhere/relative/path.so verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c2_empty_member ===
+PATHSCOPE shell=c2_empty_member.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+UNRESOLVED line=2 kind=coverage reason=assignment path list contains an empty member, which names the consumer's current directory rather than a static pathname expression=LD_LIBRARY_PATH=:/etc/escape
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
+=== c2_quoted_space ===
+PATHSCOPE shell=c2_quoted_space.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe dir/escape verdict=FORBID rule=- sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c2_escaped_space ===
+PATHSCOPE shell=c2_escaped_space.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape verdict=FORBID rule=- sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/a b verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/a b:/etc/escape verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c2_command_text ===
+PATHSCOPE shell=c2_command_text.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/key verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ and this tool does not model which consumer splits it expression=GIT_SSH_COMMAND="ssh -i /etc/key"
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
+=== c2_uri_forbid ===
+PATHSCOPE shell=c2_uri_forbid.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=1
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+ENDPOINT value=198.51.100.10:9999 verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c2_uri_allow ===
+PATHSCOPE shell=c2_uri_allow.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=1
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=URL uses=line=2:assignment prefix
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c2_env_quoted ===
+PATHSCOPE shell=c2_env_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/evil.so verdict=FORBID rule=- sources=NONE uses=line=2:env assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c2_bare_soname ===
+PATHSCOPE shell=c2_bare_soname.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c2_allow_list ===
+PATHSCOPE shell=c2_allow_list.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=4 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATH value=/safe/lib verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/lib64 verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/lib:/safe/lib64 verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c2_benign_scalars ===
+PATHSCOPE shell=c2_benign_scalars.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c2_benign_words ===
+PATHSCOPE shell=c2_benign_words.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c2_words_with_path ===
+PATHSCOPE shell=c2_words_with_path.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=1 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/secret verdict=FORBID rule=- sources=NONE uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+UNRESOLVED line=2 kind=coverage reason=assignment value is a whitespace-separated word list or command text; the single-pathname and word-list readings differ and this tool does not model which consumer splits it expression=MSG="denied /etc/secret"
+PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete
+COMMAND_RC=3
+=== c3_ws_relative ===
+PATHSCOPE shell=c3_ws_relative.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATH value=/safe/lib relative/escape.so verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c3_ws_later_word ===
+PATHSCOPE shell=c3_ws_later_word.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/a plain verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c3_uri_list ===
+PATHSCOPE shell=c3_uri_list.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=1
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=URL uses=line=2:assignment prefix
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c3_uri_pair ===
+PATHSCOPE shell=c3_uri_pair.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=1
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+ENDPOINT value=127.0.0.1:8790 verdict=ALLOW-LEXICAL rule=127.0.0.1:8790 sources=URL uses=line=2:assignment prefix
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c3_colon_whole ===
+PATHSCOPE shell=c3_colon_whole.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/dir/file verdict=ALLOW-LEXICAL rule=/safe/dir/file sources=BASE uses=line=2:assignment prefix
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/f sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c3_empty_only ===
+PATHSCOPE shell=c3_empty_only.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c3_empty_only_out ===
+PATHSCOPE shell=c3_empty_only_out.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c3_cmdtext_noslash ===
+PATHSCOPE shell=c3_cmdtext_noslash.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c4_export_quoted ===
+PATHSCOPE shell=c4_export_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c4_export_quoted_space ===
+PATHSCOPE shell=c4_export_quoted_space.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c4_declare_quoted ===
+PATHSCOPE shell=c4_declare_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c4_readonly_quoted ===
+PATHSCOPE shell=c4_readonly_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c4_typeset_quoted ===
+PATHSCOPE shell=c4_typeset_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c4_local_quoted ===
+PATHSCOPE shell=c4_local_quoted.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=4:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c4_export_opaque ===
+PATHSCOPE shell=c4_export_opaque.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c4_env_quoted_ctl ===
+PATHSCOPE shell=c4_env_quoted_ctl.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/etc/escape.so verdict=FORBID rule=- sources=NONE uses=line=2:env assignment
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:cat
+PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist
+COMMAND_RC=1
+=== c4_export_plain_ctl ===
+PATHSCOPE shell=c4_export_plain_ctl.sh
+PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
+PATHSCOPE resolved_fs_path_count=2 resolved_net_endpoint_count=0
+PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
+PATH value=/safe/f verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=3:cat
+PATH value=/safe/ok.so verdict=ALLOW-LEXICAL rule=/safe/** sources=ROOT uses=line=2:export assignment
+PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope
+COMMAND_RC=0
+=== c3_scalar_ctl ===
+PATHSCOPE shell=c3_scalar_ctl.sh
 PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established mount_boundary=not_established host_probe=none
 PATHSCOPE resolved_fs_path_count=1 resolved_net_endpoint_count=0
 PATHSCOPE unresolved_path_count=0 unresolved_endpoint_count=0 coverage_issue_count=0 provenance_issue_count=0 parse_issue_count=0
@@ -2916,20 +3886,20 @@ COMMAND_RC=0
 
 ## Determinism
 
-The last **five** lines of the harness stdout above run each of `find_exec`,
-`assign_prefix`, `c2_list_prefix`, `RP6-P0` and `RP7-WPI-RO` twice in memory and compare the
-complete stdout byte for byte plus the rc. All five report `equal=True` with identical
-digests, so ordering and output are stable. (Round 2 had three such pairs, round 3 four;
-round 4 adds the `c2_list_prefix` pair so the C-2 member grammar is covered too. The Codex
-round-3 re-audit flagged the stale "last three lines" wording as an optional nit — this
-sentence closes it.) Determinism is not soundness; it is only the property that the recorded
-transcripts can be re-derived.
+The last **seven** lines of the harness stdout above run each of `find_exec`,
+`assign_prefix`, `c2_list_prefix`, `c3_ws_relative`, `c4_export_quoted`, `RP6-P0` and
+`RP7-WPI-RO` twice in memory and compare the complete stdout byte for byte plus the rc.
+All seven report `equal=True` with identical digests. Round 2 had three such pairs, round 3
+four, round 4 five; round 5 adds one C-3 pair and one C-4 pair so both new grammars are
+covered. Determinism is not soundness; it is only the property that the recorded
+transcripts can be re-derived — and at round 5 that property was additionally checked
+across two deliberately different console/interpreter encodings, which is the defect this
+round closed.
 
 ## Real-block diagnostic — literally re-runnable
 
-Finding 9 was that the round-1 real-input evidence could not be pasted and re-run. The
-four real-block cases are the last four sections of both transcripts above, produced by the
-same single harness command, and they carry their own identity check:
+The four real-block cases are the last four sections of `RED_R1.txt` and `GREEN_R5.txt`,
+produced by the same single harness command, and they carry their own identity check:
 
 * `=== RP6-P0 with placeholder.constants ===` and `=== RP7-WPI-RO with placeholder.constants ===`
   use the draft §1 value `REMOTE_BASE=/home/gatea/wpi_staging_<ALLOCATE-AT-DISPATCH>`
@@ -2943,43 +3913,25 @@ same single harness command, and they carry their own identity check:
 Both constants files and the machine-form §10.1 allowlist are written literally by the
 harness (`real.constants`, `placeholder.constants`, `real.allowlist`); no value has to be
 substituted by hand. The block bytes come from `git cat-file blob`, and the harness prints
-`git hash-object` of what it extracted so the reader can confirm the extraction is the
-committed blob.
+the git blob id it computed over what it extracted, so the reader can confirm the
+extraction is the committed blob.
 
-Round-1 versus round-2 on the same bytes:
-
-```text
-RP6-P0.sh  round 1: resolved_count=1 unresolved_count=39                       rc 3
-RP6-P0.sh  round 2: resolved_fs_path_count=1 resolved_net_endpoint_count=0
-                    unresolved_path_count=3 unresolved_endpoint_count=0
-                    coverage_issue_count=35 provenance_issue_count=0 parse_issue_count=0   rc 3
-
-RP7-WPI-RO round 1: resolved_count=3 unresolved_count=69                       rc 3
-RP7-WPI-RO round 2: resolved_fs_path_count=3 resolved_net_endpoint_count=0
-                    unresolved_path_count=34 unresolved_endpoint_count=0
-                    coverage_issue_count=38 provenance_issue_count=0 parse_issue_count=0   rc 3
-```
-
-Rounds 3 and 4 on the same bytes, with `real.constants` (measured this round):
+Rounds 4 and 5 on the same bytes, with `real.constants` (measured this round):
 
 ```text
-RP6-P0.sh  round 3: resolved_fs_path_count=7 resolved_net_endpoint_count=0
+RP6-P0.sh  round 4: resolved_fs_path_count=7 resolved_net_endpoint_count=0
                     unresolved_path_count=3 unresolved_endpoint_count=0
                     coverage_issue_count=200 provenance_issue_count=0 parse_issue_count=0  rc 3
-RP6-P0.sh  round 4: byte-identical to round 3 (same counts, same rows, same digest)        rc 3
+RP6-P0.sh  round 5: byte-identical to round 4 (same counts, same rows, same digest)        rc 3
 
-RP7-WPI-RO round 3: resolved_fs_path_count=7 resolved_net_endpoint_count=0
-                    unresolved_path_count=34 unresolved_endpoint_count=0
-                    coverage_issue_count=336 provenance_issue_count=0 parse_issue_count=0  rc 3
 RP7-WPI-RO round 4: resolved_fs_path_count=7 resolved_net_endpoint_count=0
                     unresolved_path_count=34 unresolved_endpoint_count=0
                     coverage_issue_count=337 provenance_issue_count=0 parse_issue_count=0  rc 3
+RP7-WPI-RO round 5: resolved_fs_path_count=7 resolved_net_endpoint_count=0
+                    unresolved_path_count=35 unresolved_endpoint_count=0
+                    coverage_issue_count=337 provenance_issue_count=0 parse_issue_count=0  rc 3
 ```
 
-The round-2 to round-3 rise in `coverage_issue_count` is the C-1 assignment repair making
-previously invisible constructs speak. The single round-3 to round-4 addition is named
-above. No round has ever moved either block off rc 3.
-
-The single round-1 number `unresolved_count` is gone. It was an `Issue` cardinality and was
-being read as a path-set cardinality. Nothing about these counts converts either block into
-a PASS, and they remain a lower-bound diagnostic until a fresh T1 audit accepts the tool.
+The single round-4 to round-5 addition is named above. No round has ever moved either
+block off rc 3, and nothing about these counts converts either block into a PASS; they
+remain a lower-bound diagnostic until a fresh T1 audit accepts the tool.

@@ -41,6 +41,10 @@ FD_PREFIX_RE = re.compile(r"\{[A-Za-z_][A-Za-z0-9_]*\}(?=[<>])")
 # an option word marks a value that a consumer reads as command text.
 URI_SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*://")
 OPTION_WORD_RE = re.compile(r"^--?[A-Za-z0-9?]")
+# C-3: only a URI's scheme and authority are colon-protected.  Round 4 used
+# URI_SCHEME_RE to disable colon splitting for the COMPLETE value, so a mixed
+# loader list whose first member happened to be a URI lost every later member.
+URI_PREFIX_RE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://[^/]*")
 
 # Issue kinds.  These are deliberately distinct fields with distinct names:
 # an Issue cardinality is not a path-set cardinality (round-1 finding 8).
@@ -1245,6 +1249,73 @@ class Analyzer:
         self.env[name] = expand_word(rhs, self.env)
         return True
 
+    def bind_assignment(
+        self, token: Token, name: str, literal: str, sources: frozenset[str]
+    ) -> None:
+        """Bind an already-expanded NAME=VALUE, as `assignment` binds a raw one.
+
+        The pinned-constant override check is the same in both, so a quoted
+        declaration cannot silently redefine a preregistered constant either.
+        """
+        if name in self.pinned:
+            if literal != (self.env[name].text or ""):
+                self.issue(token.line, KIND_COVERAGE,
+                           f"script can override pinned constant {name}", token.text)
+            return
+        self.env[name] = Value(literal, sources=sources)
+
+    def analyze_declaration(self, keyword: Token, operands: list[Token]) -> None:
+        """Declaration builtins, as ONE grammar with the prefix and `env` sites.
+
+        C-4 repair (round 5): the round-4 loop gated every operand on
+        `assignment(token)`, which matches ASSIGN_RE against the RAW token text.
+        A quoted but perfectly ordinary declaration argument -- `export
+        "LD_PRELOAD=/etc/escape.so"`, `export 'X=/safe dir/escape'` -- is a
+        NAME=VALUE assignment only after expansion, so it matched nothing, fell
+        past the NAME_RE arm, and disappeared with no row and no coverage
+        record, while the identical `env "LD_PRELOAD=/etc/escape.so"` shape
+        reached the repaired member grammar and returned rc 1. The correct
+        parser existed; the declaration site simply could not reach it.
+
+        Every operand is now expanded first and classified on the expanded word,
+        so all three assignment sites -- assignment prefix, `env` wrapper,
+        declaration builtin -- terminate in `record_assignment_value`. The
+        unquoted arm is kept byte-identical to round 4 so the C-1 closure is
+        preserved rather than re-derived, and an operand that is neither an
+        option, a NAME, nor NAME=VALUE after expansion now fails closed with a
+        coverage record instead of vanishing.
+        """
+        primitive = f"{keyword.text} assignment"
+        for token in operands:
+            if ASSIGN_RE.fullmatch(token.text):
+                self.assignment(token)
+                self.record_assignment_value(token, primitive)
+                continue
+            value = expand_word(token.text, self.env)
+            if not value.known:
+                self.issue(token.line, KIND_COVERAGE,
+                           f"{keyword.text} operand is not statically known: "
+                           f"{value.reason}", token.text)
+                continue
+            rendered = value.text or ""
+            if OPTION_WORD_RE.match(rendered) or rendered in {"-", "--"}:
+                continue
+            expanded = ASSIGN_RE.fullmatch(rendered)
+            if expanded is not None:
+                self.bind_assignment(token, expanded.group(1), expanded.group(2),
+                                     value.sources)
+                self.record_assignment_value(token, primitive)
+                continue
+            if NAME_RE.fullmatch(rendered):
+                if rendered not in self.env:
+                    self.env[rendered] = Value(
+                        None, f"declared variable {rendered} has no static value"
+                    )
+                continue
+            self.issue(token.line, KIND_COVERAGE,
+                       f"{keyword.text} operand is neither an option, a NAME, nor "
+                       "NAME=VALUE after expansion", token.text)
+
     def record_assignment_value(self, token: Token, primitive: str) -> None:
         # C-1 repair: an assignment value can name a path the dynamic loader or
         # an interpreter opens at execve time (LD_PRELOAD, LD_LIBRARY_PATH,
@@ -1307,8 +1378,14 @@ class Analyzer:
         residual of this construct: a member with no `/` (a soname like
         `libc.so`, a scalar like `1`, an option word) is resolved by the
         consumer's own search rules, not by an argv pathname, so it is outside
-        the lexical-argv-scope contract this tool proves. A member that carries
-        `:` is not itself a pathname candidate -- its own members are.
+        the lexical-argv-scope contract this tool proves.
+
+        C-3 repair (round 5): a relative value carrying `:` used to fall through
+        to `bare`, so the admitted single-pathname reading of `X=relative:$BASE`
+        -- `<PWD>/relative:dir/file` -- had no terminal disposition at all even
+        though the whole candidate was carried into the pool. `:` is a list
+        separator for the *members*; it does not stop the whole value from being
+        a pathname, exactly as it never did for a value starting with `/`.
         """
         if text == "":
             return "empty"
@@ -1316,9 +1393,39 @@ class Analyzer:
             return "net"
         if text.startswith(("/", "./", "../")):
             return "fs"
-        if "/" in text and ":" not in text and not text.startswith("-"):
+        if "/" in text and not text.startswith("-"):
             return "fs"  # ordinary relative pathname, resolved against pinned PWD
         return "bare"
+
+    @staticmethod
+    def split_list_members(text: str) -> list[str]:
+        """Split one assignment value into the consumer's `:` list members.
+
+        A path list is split by the consumer regardless of shell quoting, so
+        this runs on every candidate, including one that starts with `/`. Only
+        a URI's `scheme://authority` span is protected from splitting: round 4
+        protected the complete value whenever it merely *started* with a scheme,
+        so `LD_LIBRARY_PATH=$URL:/etc/escape` produced an allowed endpoint and
+        no row at all for `/etc/escape` (C-3). A member that itself begins a new
+        URI re-arms the protection, so `a://h/x:b://h/y` splits into two URIs.
+        """
+        members: list[str] = []
+        start = 0
+        index = 0
+        while index < len(text):
+            if index == start:
+                prefix = URI_PREFIX_RE.match(text, index)
+                if prefix is not None and prefix.end() > index:
+                    index = prefix.end()
+                    continue
+            if text[index] == ":":
+                members.append(text[start:index])
+                start = index + 1
+                index = start
+                continue
+            index += 1
+        members.append(text[start:])
+        return members
 
     def record_assignment_members(
         self,
@@ -1334,67 +1441,73 @@ class Analyzer:
         # pathname `/safe dir/escape` and splitting it on whitespace would
         # manufacture two allowed paths out of one forbidden one. A *consumer*
         # (the dynamic loader, `sh -c`, ssh) may still read the same bytes as a
-        # word list or as command text. Those two readings are decided on
-        # grammar, never on the variable name: a blank-separated value is read
-        # as one pathname only when its first word is path-shaped and no later
-        # word is an option or an absolute path. Otherwise the word-list reading
-        # is live, which this tool does not model, so it emits a specific
-        # coverage record AND still records every word that carries a path, so
-        # the sink is visible rather than silent.
+        # word list or as command text. Both readings are therefore admitted
+        # together and decided on grammar, never on the variable name.
+        #
+        # C-3 repair (round 5). The round-4 predicate made the word-list reading
+        # live only when some word carried `/` AND (an option word was present,
+        # or a LATER word was ABSOLUTE, or the first word was not path-shaped).
+        # Two admitted readings therefore reached zero terminal accounting: a
+        # later *relative* word behind an fs-shaped first word
+        # (`LD_PRELOAD="$ROOT/lib relative/escape.so"`), and executable command
+        # text carrying no `/` at all (`GIT_SSH_COMMAND="ssh -v"`). The rule is
+        # now one line: a multi-word value is a live word list when any word is
+        # option-shaped or any word carries `/`. A value in which no word is
+        # option-shaped and no word carries `/` -- `MSG="Permission denied"`, a
+        # prose scalar, a tool-name list -- carries neither a pathname nor an
+        # argv under either reading and stays in the disclosed `bare` residual.
         words = rendered.split()
-        word_list_reading = (
-            len(words) > 1
-            # A value in which no word carries `/` carries no pathname under
-            # either reading -- `P0_TEXT="Permission denied"`, a tool-name list --
-            # and stays in the same disclosed `bare` residual as a lone soname.
-            # This is the grammar of the value, not a variable-name allowlist.
-            and any("/" in word for word in words)
-            and (
-                any(OPTION_WORD_RE.match(word) for word in words)
-                or any(word.startswith("/") for word in words[1:])
-                or self.assignment_member_kind(words[0]) != "fs"
-            )
-        )
+        option_word = any(OPTION_WORD_RE.match(word) for word in words)
+        carries_path = any("/" in word for word in words)
+        word_list_reading = len(words) > 1 and (option_word or carries_path)
         if word_list_reading:
             self.issue(line, KIND_COVERAGE,
                        "assignment value is a whitespace-separated word list or command "
-                       "text; the single-pathname and word-list readings differ and this "
-                       "tool does not model which consumer splits it", expression)
-            candidates = words
-        else:
-            candidates = [rendered]
-        # Colon members: a path list is split by the consumer regardless of shell
-        # quoting, so this runs on every candidate, including one that starts
-        # with `/`. The whole candidate is kept as well, so neither the
-        # single-pathname reading nor any member can disappear.
+                       "text; the single-pathname and word-list readings differ, this "
+                       "tool does not model which consumer splits it, and an option word "
+                       "carrying an attached pathname is not decomposed", expression)
+        # The whole value is ALWAYS a candidate and members are ADDED, never
+        # substituted: the single-pathname reading is admitted for every value,
+        # and replacing it with the words is exactly the MUT-A false PASS that
+        # turned one forbidden `/safe dir/escape` into two allowed paths.
+        candidates: list[str] = [rendered]
+        if word_list_reading:
+            candidates.extend(words)
         pool: list[str] = []
+        empty_member = False
         for candidate in candidates:
             if candidate not in pool:
                 pool.append(candidate)
-            if ":" in candidate and not URI_SCHEME_RE.match(candidate):
-                for member in candidate.split(":"):
-                    if member not in pool:
+            members = self.split_list_members(candidate)
+            if len(members) > 1:
+                for member in members:
+                    if member == "":
+                        # An empty member exists only because a separator does.
+                        # A whole value that is simply empty (`X=`) is an empty
+                        # scalar, not a one-element list, and is left alone.
+                        empty_member = True
+                    elif member not in pool:
                         pool.append(member)
-        empty_member = False
-        path_member = False
         for item in pool:
             kind = self.assignment_member_kind(item)
-            if kind == "empty":
-                empty_member = True
-            elif kind == "net":
+            if kind == "net":
                 self.record_network_text(item, sources, line, primitive, expression)
             elif kind == "fs":
-                path_member = True
                 self.record_path_text(item, sources, line, primitive, expression)
-        if empty_member and path_member:
-            # An empty member of a loader path list names the current working
-            # directory to the consumer. `IFS=:` carries no path member at all
-            # and is therefore untouched by this rule -- the discriminator is the
-            # presence of a path member, not the variable name.
-            self.issue(line, KIND_COVERAGE,
-                       "assignment path list contains an empty member, which names the "
-                       "consumer's current directory rather than a static pathname",
-                       expression)
+            # `bare` and `empty` are the two disclosed non-path dispositions.
+        if empty_member:
+            # An empty member of a list names the consumer's current directory.
+            # That directory is the pinned PWD, so this is a resolvable fact and
+            # not an inability to evaluate (pattern 1): resolve it and give it a
+            # real row. Round 4 emitted a coverage record only when some OTHER
+            # member was already a path, so `LD_LIBRARY_PATH=:` -- the case that
+            # most needs consumer semantics -- had zero accounting (C-3). If PWD
+            # is unpinned, record_path_text fails closed with an unresolved-path
+            # record instead. The row is attributed to PWD because PWD is the
+            # preregistered constant that produced it; claiming no provenance
+            # for a value derived from a pinned constant would be false.
+            cwd_sources = sources | frozenset({"PWD"} if "PWD" in self.pinned else ())
+            self.record_path_text(".", cwd_sources, line, primitive, expression)
 
     # -- generic argv grammar --------------------------------------------
     def consume_value(
@@ -2455,16 +2568,7 @@ class Analyzer:
             return
         first = tokens[index]
         if first.text in {"local", "declare", "typeset", "export", "readonly"}:
-            for token in tokens[index + 1:]:
-                if token.text.startswith("-"):
-                    continue
-                if self.assignment(token):
-                    self.record_assignment_value(token, f"{first.text} assignment")
-                    continue
-                if NAME_RE.fullmatch(token.text) and token.text not in self.env:
-                    self.env[token.text] = Value(
-                        None, f"declared variable {token.text} has no static value"
-                    )
+            self.analyze_declaration(first, tokens[index + 1:])
             return
         command_value = expand_word(first.text, self.env)
         if not command_value.known:

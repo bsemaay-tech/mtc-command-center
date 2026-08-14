@@ -1,6 +1,73 @@
 # Path-scope prover status
 
-Status: `REPAIRED-R4-PENDING-REAUDIT`
+Status: `REPAIRED-R5-PENDING-FINAL-REAUDIT`
+
+**Round 5 (2026-08-14) — the final owner-authorized repair.** The Codex T1 execution audit
+of the committed round-4 candidate `2fb3eac05f8da716609549179a7961aa692eae6b`
+(`PATHSCOPE_CAP_OVERRIDE_CODEX_T1_AUDIT_2026-08-13.md`) returned REQUEST_CHANGES with three
+required findings. **C-3:** `record_assignment_members` still dropped admitted readings — a
+whitespace list with a later relative member, a URI-shaped loader list with a later
+absolute member, a colon-bearing whole-pathname reading, an empty-only loader list
+(`LD_LIBRARY_PATH=:`), and executable command text without `/` (`GIT_SSH_COMMAND="ssh
+-v"`) — each returning `PASS rc=0` with zero terminal accounting. **C-4:** the declaration
+builtins gated every operand on a RAW `ASSIGN_RE` match, so `export
+"LD_PRELOAD=/etc/escape.so"` and `export 'X=/safe dir/escape'` never reached the repaired
+grammar that the identical `env` shape did reach. **Portability:** the published harness did
+not reproduce its recorded transcripts and determinism digests under its literal command.
+
+Round 5 (`claude-opus-5` implementer, effort high;
+`PATHSCOPE_FINAL_OVERRIDE_REPAIR_REPORT_2026-08-14.md`) closes all three. The member
+grammar is now one rule — the whole value is always a candidate and members are added,
+never substituted; a multi-word value is a live word list when any word is option-shaped
+or any word carries `/`; `split_list_members` protects only a URI's `scheme://authority`
+span; a relative value carrying `:` is still a pathname reading; an empty list member is
+*resolved* to the pinned PWD instead of vanishing, and fails closed when PWD is unpinned.
+`analyze_declaration` classifies every declaration operand on its **expanded** form, so the
+assignment prefix, the `env` wrapper and all five declaration builtins terminate in one
+parser, and an operand that is neither an option, a NAME, nor NAME=VALUE after expansion
+now emits a coverage record instead of being ignored.
+
+**Executed by the implementer 2026-08-14.** Every required finding was first reproduced
+against the committed pre-repair blob `55ea3a852f7781d03d57483f554c1b8ac62007c6`, then
+closed against the repaired bytes, through the real prover. The RED column of the new
+eighteen-fixture P11 family is that committed blob, extracted and run by the harness
+itself. Seven single-line mutations of the round-5 source were executed and every one
+destroys a claimed property, including MUT-A which falsifies the quoted-space regression
+guard. Regression surface against the round-4 blob: 109 cases run, **84 byte-identical, 25
+differ** — 15 P11 fixtures, 8 P10 fixtures, 1 base fixture and `RP7-WPI-RO`; every changed
+fence is itemised with its discriminating-power proof, and no FORBID row was lost anywhere.
+`RP6-P0` is byte-identical; `RP7-WPI-RO` moves `unresolved_path_count` 34 → 35 at line 681
+and stays rc 3. Both blocks remain rc 3 in both constants modes.
+
+**The harness portability defect is closed at the root, not papered over.** The cause was
+measured: the harness never pinned the child interpreter's stdout encoding, so `python`
+used the locale encoding (`cp1254`) whenever the ambient `PYTHONIOENCODING` was unset,
+PowerShell decoded that stream as UTF-8, and the `ı` in the user profile path was
+destroyed — leaving `.Replace($QA, '<QA>')` matching nothing and the user path embedded in
+every transcript. Re-running the round-4 command against the round-4 bytes with
+`PYTHONIOENCODING` removed reproduces all five of the auditor's observed digests exactly
+(`b3119f99…5620`, `f77f6714…4d81`, `b2f153c2…f611`, `8ce5571b…1ecf`, `c0e4b807…f452`). The
+round-5 harness pins `PYTHONUTF8`/`PYTHONIOENCODING`/`[Console]::OutputEncoding`, drives
+the prover from the fixture directory with relative arguments so no user path can enter a
+transcript at all, extracts blobs and computes blob ids in process instead of through
+`cmd /c`, and aborts with `TRANSCRIPT_LEAK` if a scratch path appears anyway. The published
+fence was extracted from `SELF_QA_PATHSCOPE.md` without changing a character and run twice
+— once with UTF-8 I/O and code page 65001, once with `PYTHONIOENCODING`/`PYTHONUTF8`
+removed and both the code page and `[Console]::OutputEncoding` forced to `windows-1254` —
+and produced byte-identical stdout, transcript digests and determinism digests. This is not
+two broken runs agreeing: the round-4 harness demonstrably diverges in the second
+environment and the round-5 harness does not.
+
+New identity: 137520 B, SHA-256
+`28848D60F74A7C668DB3019BBAC58550F4A55C1C02038C013153316C711EDF9C`. Disclosed residual is
+unchanged in kind and now stated with one addition: a member with no `/` and no option
+shape carries no argv pathname and gets no row; an option word carrying an **attached**
+pathname (`-I/usr/include`) is not decomposed and is disclosed inside the coverage reason
+text itself; and the union-of-readings model remains deliberately conservative, so values
+like `MSG="denied /etc/secret"` over-reject. This round is the single repair authorized by
+`WPI_OWNER_DECISION_PATHSCOPE_FINAL_OVERRIDE_2026-08-14.md`; exactly one fresh independent
+`gpt-5.6-sol` high execution audit follows it, and no further cycle is authorized without a
+new owner decision. **Not accepted and not committed by this implementer session.**
 
 **Round 4 (2026-08-13).** The Codex T1 execution re-audit of the round-3 bytes
 (`PATHSCOPE_CODEX_T1_EXEC_AUDIT_R3_2026-08-13.md`) returned REQUEST_CHANGES with one
@@ -58,8 +125,8 @@ executed RED/GREEN evidence is in `SELF_QA_PATHSCOPE.md`.
 
 Audit tier: T1 — local-only Stage-1 static analysis; no host, network, trading, Pine,
 parity, MTC, deployment, transport, or runtime action. Codex remains the auditor of
-record; rounds 2 and 4 were implemented by `claude-opus-5` and round 3 by GLM-5.2, so the
-re-audit must be neither.
+record; rounds 2, 4 and 5 were implemented by `claude-opus-5` and round 3 by GLM-5.2, so
+the re-audit must be neither.
 
 Identity of the round-2 artefact: 122446 B,
 SHA-256 `890016F0B9A8CDE4EED33F8733F69055471B07C6096F6BC07450457E6C52AF1D`.
