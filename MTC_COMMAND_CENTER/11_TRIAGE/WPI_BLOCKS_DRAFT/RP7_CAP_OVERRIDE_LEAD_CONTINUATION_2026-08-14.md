@@ -110,3 +110,47 @@ order instead of a startup full-read of all four current files. The repair is
 **not complete**: REQUIRED-1 (CRLF continuation), REQUIRED-2 (two-subject
 six-pair fence), and the row-9 literal D026 fixtures remain open. No acceptance
 is claimed here or in the packet.
+
+## 2026-08-14 19:35 Europe/Chisinau continuation update
+
+A fresh exact `claude-opus-5` xhigh run used the compact launch at 18:54 and
+worked for about 33 minutes before HTTP 429/session-limit termination. Claude
+reported the next Pro reset as 23:50 Europe/Chisinau. The run changed only the
+script and SELF_QA; no writer remains. Preserve this partial exactly:
+
+- `RP7-WPI-RO.sh`: 131662 bytes; SHA-256
+  `0B8EBF40A328225750B651D3511E71A9F7C550295492E75807A4497DA758484B`.
+- `SELF_QA_RP7.md`: 476484 bytes; SHA-256
+  `1CCFF50C23C0A15302E9DC4420F42131012282CDD1F896608D8AF7E95483B0C3`.
+- `STATUS_RP7.md` and the report remain at the identities recorded above.
+- Diff: script +64/-5; SELF_QA +316/-6. `bash -n` and `git diff --check`
+  passed (line-ending warnings only).
+
+The partial materially advances REQUIRED-2 and row 9: its rows-1-9 fence ran
+to rc 0 in 119.6 s and independently reproduced the named round-4/current
+subjects, six row-6 pairs, and row-9 mid-name/quoted/duplicate cases. Preserve
+that work, but do not accept its summary yet.
+
+**REQUIRED-1 is still open and the new SELF_QA polarity is wrong.** The partial
+kept `line=physical.lstrip(WS)`, expanded the false comment, and classified
+`rstrip("\r")` as a RED mutant. The Lead repeated the direct local systemd 259
+probe after this run:
+
+```text
+PROBE_FILE=crlf.service
+crlf.service:4: Unknown key 'WantedBy' in section [Unit], ignoring.
+PROBE_RC=0
+PROBE_FILE=space.service
+PROBE_RC=0
+```
+
+The CRLF diagnostic proves `[Install]` was absorbed into `[Unit]`; absence of
+that diagnostic for backslash-plus-spaces preserves the real-section control.
+The next fresh continuation must surgically apply
+`line=physical.rstrip("\r").lstrip(WS)`, correct the comments, invert the
+`crlf_install` RED/GREEN subjects to the binding polarity, retain the broad
+`rstrip()` trailing-space RED, then rerun and repaste the complete fence. It
+must also replace the fixed `/tmp/rp7_rows_1_9_rebuild_evidence` root with a
+unique run-owned scratch root as required by the compact packet. Finally update
+STATUS and the report, which this interrupted run did not touch. No audit or
+freeze is eligible before those items are complete and Lead-reproduced.

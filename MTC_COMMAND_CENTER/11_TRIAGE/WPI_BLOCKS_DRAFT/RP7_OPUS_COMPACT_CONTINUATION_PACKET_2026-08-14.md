@@ -352,3 +352,42 @@ rg -n "git cat-file blob|red_green_pairs|D026_SUMMARY|HARNESS_ABORT|HARNESS_BLOC
 finding, D026 requirement, fence requirement, identity assertion, safety gate,
 and acceptance standard from the kickoff, the Lead continuation, and the binding
 prior audits remains in force unchanged.*
+
+## 11. Superseding live delta — 2026-08-14 19:35 Europe/Chisinau
+
+Read this delta before the older identity/read-window sections above. The 18:54
+fresh Opus continuation stopped on HTTP 429 after about 33 minutes. Preserve its
+partial; no writer remains:
+
+| File | Bytes | SHA-256 | State |
+|---|---:|---|---|
+| `RP7-WPI-RO.sh` | 131662 | `0B8EBF40A328225750B651D3511E71A9F7C550295492E75807A4497DA758484B` | modified, +64/-5 |
+| `SELF_QA_RP7.md` | 476484 | `1CCFF50C23C0A15302E9DC4420F42131012282CDD1F896608D8AF7E95483B0C3` | modified, +316/-6 |
+| `STATUS_RP7.md` | 7725 | `4CF27CA778BB7D056648CC9880733285589B2E3814EFBEB50ADD138E7357A054` | unchanged |
+| `RP7_ROWS_1_9_REPORT_2026-08-13.md` | 31982 | `2A6CFF5CDEC28DF1174AA8E62EEC491C001CB10227F5FFF5BBD5BE69A20A0284` | unchanged |
+
+The new fence genuinely executes the two-subject row-6 matrix and row-9
+mid-name/quote/duplicate cases; preserve those additions. Its reproduced run
+ended `D026_SUMMARY ... result=PASS`, but that is not acceptable because the
+CRLF expected polarity contradicts direct systemd 259 evidence.
+
+Focused completion only:
+
+1. Read current script lines 650–715 and SELF_QA lines 360–610 plus the current
+   diff hunks; do not initially reread either full file.
+2. Apply the binding surgical repair
+   `line=physical.rstrip("\r").lstrip(WS)` and correct the adjacent false
+   systemd commentary.
+3. In the multi-subject fence, make the pre-fix/current parser the CRLF RED
+   (`install_section_present`, rc 1) and repaired CR-strip parser the GREEN
+   (`install_section=absent`, rc 0). Keep broad `rstrip()` as the trailing-space
+   RED and keep the trailing-space no-weakening controls.
+4. Replace the fixed top-level `/tmp/rp7_rows_1_9_rebuild_evidence` root with a
+   unique run-owned scratch root; preserve case isolation and cleanup guards.
+5. Rerun the complete published fence, repaste real output, recompute all pins,
+   then update STATUS and the report. Finish with `bash -n`, extracted-fence
+   syntax, and `git diff --check`.
+
+The next Pro reset reported by Claude is 23:50 Europe/Chisinau. This remains a
+fresh continuation of the same owner-authorized repair, not another repair or
+audit cycle.
