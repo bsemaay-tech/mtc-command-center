@@ -75,3 +75,25 @@ audit in full, with this continuation as an additional repair input.
 Stop only after all four owned files are internally complete and report exact
 commands and real outputs. The Lead will independently reproduce the evidence,
 pin the candidate, and dispatch the two mandatory fresh T0 flagship audits.
+
+## 2026-08-14 14:53 Europe/Chisinau continuation update
+
+A fresh exact `claude-opus-5` xhigh continuation was launched at 14:47 after
+the earlier Pro reset. It hit the session limit at 14:53 and reported the next
+reset as 18:50 Europe/Chisinau. The session changed no bytes.
+
+The isolated partial remains exactly:
+
+- `RP7-WPI-RO.sh`: 130788 bytes; SHA-256
+  `7126AD78737C481C56149D87B41A089D23279C7E1EDFEDF403311702CF883A50`.
+- `SELF_QA_RP7.md`: 445965 bytes; SHA-256
+  `54B115D0BFE25B45B52FBA50DC8C2893EB99007D4021F07B310F50E83A3419FA`.
+- `STATUS_RP7.md`: 7725 bytes; SHA-256
+  `4CF27CA778BB7D056648CC9880733285589B2E3814EFBEB50ADD138E7357A054`.
+- `RP7_ROWS_1_9_REPORT_2026-08-13.md`: 31982 bytes; SHA-256
+  `2A6CFF5CDEC28DF1174AA8E62EEC491C001CB10227F5FFF5BBD5BE69A20A0284`.
+
+Only `RP7-WPI-RO.sh` differs from Git, still at 53 insertions and 5 deletions.
+No Claude or Codex CLI writer remained after the quota stop. Resume only in a
+fresh exact `claude-opus-5` xhigh session after the reset; do not discard,
+stash, reset, checkout, or overwrite this partial diff.
