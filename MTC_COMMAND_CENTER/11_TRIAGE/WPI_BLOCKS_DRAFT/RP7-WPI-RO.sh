@@ -657,6 +657,44 @@ try:
 except (OSError,UnicodeError):
  print("PARSE unreadable_or_encoding"); sys.exit(3)
 WS=" \t\r\n"
+# Physical-line rule for row 6, EXECUTED against systemd 259, not asserted.
+# systemd normalises the LINE TERMINATOR - and only the terminator - before it
+# runs the trailing-backslash escape scan. A trailing CR is part of the
+# terminator and is removed first, so it does not reach the scan. Trailing
+# SPACES are part of the line content, are not removed, and do reach the scan,
+# where they mean the last character is not a backslash and the line does not
+# continue.
+# Executed discriminator - `systemd-analyze verify` on a fragment whose
+# `[Install]` is followed by a key unknown in every section, which makes systemd
+# NAME the section the key landed in ([Unit] = `[Install]` was swallowed as
+# continuation text; [Install] = it is a real section):
+#   value line ends `\` + LF            -> key lands in [Unit]    -> CONTINUES
+#   value line ends `\` + CRLF          -> key lands in [Unit]    -> CONTINUES
+#   value line ends `\` + CR + LF in an
+#     otherwise-LF file                 -> key lands in [Unit]    -> CONTINUES
+#   value line ends `\` + spaces + LF   -> key lands in [Install] -> DOES NOT
+#   value line ends `\` + spaces + CRLF -> key lands in [Install] -> DOES NOT
+#   value line ends `\\` + LF (even)    -> key lands in [Install] -> DOES NOT
+# `rstrip("\r")` before the continuation test is therefore the faithful
+# normalisation, and it must be exactly that. A broad `rstrip()` or `rstrip(WS)`
+# would also eat the trailing spaces, fabricate a continuation systemd does not
+# perform, and swallow a REAL `[Install]` - a false PASS on this safety
+# predicate. `lstrip(WS)` alone is the opposite error: it leaves the CR on, the
+# line stops continuing, and a fragment systemd reads as having NO install
+# section is reported as having one - a false FAIL on the same predicate.
+# Both errors are executed as deliberate mutants in the fence (mut_broad,
+# mut_nocr) beside the round-4 blob and the current committed blob, so this is
+# falsified rather than stated - fixtures crlf_install and
+# trailing_space_after_backslash.
+# The rule above is only readable off a fixture whose terminator bytes are the
+# ones intended. A fixture whose backslash line silently loses its CR - one
+# shell layer too many between the author and the file - reproduces the OPPOSITE
+# reading and looks entirely healthy. That single mis-construction is the
+# recorded cause of two contradicting reproductions of this rule during this
+# repair. The fence therefore asserts a per-line terminator census of every CR
+# fixture BEFORE it reads any answer, and RUNS the systemd oracle itself in the
+# published body (HARNESS_SYSTEMD_ORACLE / ORACLE arms) instead of citing a past
+# run of it.
 section_re=re.compile(r"^\[([A-Za-z][A-Za-z0-9_-]*)\]$")
 continuation=None
 sections=0
@@ -679,7 +717,7 @@ def continues(logical):
   i-=1
  return n%2==1
 for physical in text.split("\n"):
- line=physical.lstrip(WS)
+ line=physical.rstrip("\r").lstrip(WS)
  if line[:1] in ("#",";"):
   continue
  logical=line if continuation is None else continuation+line
@@ -741,24 +779,63 @@ for _m in ("site","sitecustomize","usercustomize"):
   print("PARSE startup_hook_present"); sys.exit(3)
 target="MTC_BRIDGE_START_MODE"; expected="credential_free_disarmed"
 raw=sys.argv[1]
+def lex_tokens(text,posix_mode):
+ lx=shlex.shlex(text,posix=posix_mode)
+ lx.whitespace_split=True
+ lx.commenters=""
+ return list(lx)
 try:
- lex=shlex.shlex(raw,posix=True)
- lex.whitespace_split=True
- lex.commenters=""
- tokens=list(lex)
+ tokens=lex_tokens(raw,True)
+ raw_tokens=lex_tokens(raw,False)
 except ValueError as e:
  print("PARSE "+type(e).__name__); sys.exit(3)
+# The two lexes must agree on how many tokens the rendering contains. They are
+# the same splitter with quote removal on and off, so a disagreement means the
+# rendering is not one this block can attribute token-for-token; that is an
+# inability to evaluate, not a failure of the row.
+if len(tokens)!=len(raw_tokens):
+ print("PARSE environment_token_lexing_disagreement"); sys.exit(3)
 count=0
 observed=[]
-for tok in tokens:
+for idx,tok in enumerate(tokens):
  if "=" not in tok:
   print("PARSE environment_token_without_assignment"); sys.exit(3)
  name,value=tok.split("=",1)
  if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
   print("PARSE environment_name_grammar"); sys.exit(3)
+ # A name is not an identity. Executed against systemd 259: the unit-file line
+ # Environment=MTC_BRIDGE"_START_MODE=credential_free_disarmed" draws NO
+ # diagnostic from systemd-analyze verify, because systemd removes the quotes
+ # BEFORE it validates the assignment and stores the spliced name as though it
+ # had been written literally. The rendering contract this row accepts is
+ # narrower, and is DECLARED here rather than inferred from that: a genuine
+ # assignment of the protected variable is bare, or wrapped in ONE outer quote
+ # pair. A token whose name only becomes the protected target AFTER quote removal
+ # splices a name the rendering never carried, so it is refused before target
+ # semantics rather than normalised into them. The whole-assignment and
+ # value-only quoted forms stay accepted (fixtures whole_quoted, value_quoted).
+ rawtok=raw_tokens[idx]
+ q=rawtok[:1]
+ core=rawtok
+ if len(core)>=2 and q in (chr(34),chr(39)) and core[-1:]==q:
+  core=core[1:-1]
+ if not core.startswith(name+"="):
+  print("PARSE environment_token_name_not_literal"); sys.exit(3)
  if name==target:
   count+=1
   observed.append(value)
+# DELIBERATE STRONGER INVARIANT THAN SYSTEMD, stated so it is not mistaken for a
+# systemd-fidelity claim. systemd applies last-assignment-wins, so a rendering
+# that assigns this variable TWICE with the SAME value has the correct effective
+# value and systemd accepts it (executed: systemd-analyze verify emits no
+# diagnostic for it). This row still refuses it. Row 9 is not asking what the
+# effective environment is; it is asserting that the frozen unit assigns the ARM
+# mode exactly once, because a second assignment of this variable is a change to
+# the credential-free-disarmed contract whatever value it carries and whatever
+# order the manager happened to resolve. The refusal is a FAIL, not a STOP: the
+# rendering was fully evaluable and it did not match the preregistered shape. The
+# reason token start_mode_missing_or_altered covers that whole domain, and the
+# observed=count=N field is what distinguishes a duplicate from an absence.
 if count==1 and observed[0]==expected:
  print("OK target=%s value=%s tokens=%d"%(target,expected,len(tokens))); sys.exit(0)
 h=hashlib.sha256("\n".join(observed).encode()).hexdigest()

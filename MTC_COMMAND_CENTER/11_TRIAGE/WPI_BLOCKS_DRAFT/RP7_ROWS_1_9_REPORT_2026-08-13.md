@@ -1,15 +1,18 @@
 # RP7 rows 1-9 build report - 2026-08-13
 
-> **Current state of record.** Block identity is `127655` /
-> `beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8`, fence count
-> `35` RED/GREEN pairs and `7` controls. Status:
-> **rows-1-9-EXTENDED-PENDING-FRESH-SAME-BYTE-T0-AUDITS** - no auditor has
-> accepted these bytes and both required T0 slots are PENDING against this same
-> byte identity. Everything below is written round by round; earlier sections
-> record the identities and counts that were current *at the time of that round*
-> and are retained as history. Where a round's prose was later found false it is
-> marked SUPERSEDED in place rather than deleted. The authoritative current
-> record is the "Post-round-4 regression repair" section at the end of this file.
+> **Current state of record.** Block identity is `132886` /
+> `a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243`, fence count
+> `36` single-subject RED/GREEN pairs and `9` controls, plus `48` multi-subject
+> arms over 5 named subjects and `9` executed systemd `ORACLE` arms. Status:
+> **rows-1-9-EXTENDED-PENDING-FRESH-SAME-BYTE-T0-AUDITS** - the Lead independently
+> reproduced the complete fence against these exact bytes on 2026-08-15 (rc 0,
+> 124.8 s, all 9 oracle arms and final D026 summary matched), no auditor has
+> accepted them, and both required T0 slots are PENDING against this same byte identity. Everything below is
+> written round by round; earlier sections record the identities and counts that
+> were current *at the time of that round* and are retained as history. Where a
+> round's prose was later found false it is marked SUPERSEDED in place rather
+> than deleted. The authoritative current record is the "Cap-override repair"
+> section at the end of this file.
 
 Actual session-header model visible to this Codex session: Codex / GPT-5. The
 kickoff states this route is the Codex free gpt-5.5-class implementer lane; this
@@ -74,17 +77,31 @@ final executable identity changed from the pre-rebuild rows 1-9 identity.
 
 ## Identity
 
-Current `RP7-WPI-RO.sh` identity, after the post-round-4 regression repair
-recorded at the end of this file:
+Current `RP7-WPI-RO.sh` identity, after the cap-override repair recorded at the
+end of this file:
+
+```text
+bytes=132886
+sha256=a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243
+cr_bytes=0
+bash_n=0
+red_green_pairs=36
+controls=9
+multi_subject_arms=48
+systemd_oracle_arms=9
+identity_changed=yes
+auditor_acceptance=none_yet_both_T0_slots_pending_same_bytes
+independent_lead_run=none_yet_against_these_bytes
+```
+
+Superseded post-round-4 identity:
 
 ```text
 bytes=127655
 sha256=beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8
-cr_bytes=0
 red_green_pairs=35
 controls=7
-identity_changed=yes
-auditor_acceptance=none_yet_both_T0_slots_pending_same_bytes
+superseded_reason=REQUIRED_1_row6_CR_normalisation_missing_false_FAIL
 ```
 
 Superseded round-4 identity:
@@ -615,7 +632,13 @@ between namespaces, it is disclosed as such in `SELF_QA_RP7.md`, and it is not
 evidence for or against any row predicate. No other normalisation was applied to
 any line.
 
-### Status of these bytes
+### Status of these bytes — SUPERSEDED, see "Cap-override repair" below
+
+**These bytes are no longer the bytes on disk.** `127655` was superseded by the
+cap-override repair (REQUIRED-1: its row-6 parser was missing the CR
+normalisation and produced a false FAIL). The paragraph below is retained as the
+round-time record for `127655`; the Lead run it reports was against those bytes
+and that fence, and **does not carry forward** to `132886`.
 
 `127655` / `beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8` has
 implementer self-QA and an independent Lead run of the published fence (rc 0,
@@ -636,3 +659,174 @@ No git mutation occurred in this repair: no stage, commit, checkout, reset,
 stash, branch or push. `RP7-WPI-RO.sh` was not edited in this documentation
 reconciliation - it remains locked at `127655` /
 `beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8`.
+
+## Cap-override repair - REQUIRED-1, REQUIRED-2, row-9 D026
+
+**Authoritative current section.** This is the single owner-authorized T0
+cap-override repair round (`WPI_OWNER_DECISIONS_2026-08-13.md` §4). It is a
+repair record. **No acceptance is claimed and none may be inferred.** The two
+fresh mandatory T0 flagship audits and the Lead decide acceptance.
+
+Resulting identity: `132886` /
+`a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243`, `0` CR
+bytes, `bash -n` rc 0.
+
+### REQUIRED-1 - row-6 carriage-return normalisation restored
+
+The post-round-4 regression repair fixed blank-line bridging but silently dropped
+round 4's `physical.rstrip("\r")`, leaving `physical.lstrip(WS)`. One line is
+changed back:
+
+```text
+-  line=physical.lstrip(WS)
++  line=physical.rstrip("\r").lstrip(WS)
+```
+
+Why it matters, in the direction that was actually broken: systemd reads a value
+line ending in backslash + CRLF as **continuing**, so the `[Install]` that
+follows is continuation text and the fragment has no install section. The
+`127655` bytes reported `B2_FAIL reason=install_section_present` at rc 1 for that
+fragment - a **false FAIL** on the row-6 safety predicate. The strip is CR-only
+on purpose: a broad `rstrip()` would also eat trailing spaces, fabricate a
+continuation systemd does not perform, and swallow a **real** `[Install]` - the
+**false PASS** direction. Both errors are executed as one-line mutants
+(`mut_nocr`, `mut_broad`).
+
+An earlier partial of this repair asserted the opposite rule in a code comment
+and instructed the next agent not to add any strip. That comment was false and is
+replaced.
+
+### The rule is now executed, not asserted - and was reproduced wrongly twice
+
+Row 6 contains the only claim in this block that is about *systemd* rather than
+about the block. It is now executed in the published fence by nine `ORACLE` arms
+that run `systemd-analyze verify` on fixtures whose unknown key names the section
+it landed in, three controls first. Executed against systemd 259
+(259.5-0ubuntu3):
+
+```text
+backslash + LF                            -> [Unit]    CONTINUES
+backslash + CRLF                          -> [Unit]    CONTINUES
+backslash + CR + LF in otherwise-LF file  -> [Unit]    CONTINUES
+backslash + spaces + LF                   -> [Install] DOES NOT
+backslash + spaces + CRLF                 -> [Install] DOES NOT
+two backslashes + LF (even count)         -> [Install] DOES NOT
+```
+
+**This rule was reproduced wrongly twice during this repair, once in each
+direction.** Both failures had one cause: a fixture that passed through one shell
+layer too many lost a backslash or a CR, and a fixture that has silently lost a
+byte still looks entirely healthy while inverting every conclusion drawn from it.
+One reproduction was rescued only because this fence's oracle refused to agree
+with the comment it had been asked to confirm; the other by rewriting the
+fixtures with `python3` byte literals. The full account, including the
+reconstruction of the contradicting output, is in the "REQUIRED-1" section of
+`SELF_QA_RP7.md`.
+
+The consequence is mechanical, not a resolution to be careful: `fixture_terms`
+computes a per-line terminator census (`bs_lf`, `bs_cr`, `bs_space`,
+`bs_space_cr`, `cr_bytes`) and `fixture_expect_terms` asserts the exact expected
+census for every CR/space-sensitive fixture **before** any parser or oracle sees
+it. The census is printed on each `ORACLE` line, so the transcript shows what was
+tested rather than what was intended.
+
+### REQUIRED-2 - every row-6 pair executed against named other bytes
+
+The fence previously ran one subject - the delivered bytes - so an arm labelled
+RED was only a fixture the already-fixed code rejected. It now runs five named
+subjects, each in a **separate process** (they define the same function names;
+sourcing two into one shell silently overwrites the first parser) with a scratch
+namespace unique to (subject, arm), asserting each subject's exact rc and exact
+terminal line by string equality:
+
+```text
+round4     git 90cbeac4  127491 B  5b00207a...
+current    git 8ec89675  127655 B  beacf85b...
+repaired   delivered worktree bytes  132886 B  a4af307c...
+mut_nocr   repaired with the one line replaced by lstrip(WS)      (false FAIL direction)
+mut_broad  repaired with the one line replaced by rstrip()        (false PASS direction)
+```
+
+48 multi-subject arms: 11 RED, 10 GREEN, 27 CONTROL. Before an rc 3 is read as a
+predicate STOP the fence asserts the capture opened and closed normally - empty
+child stderr, no non-empty captured stderr leaf, exactly one single-line parser
+record, no harness/guard `RP7_STOP` - so a harness error cannot masquerade as a
+parser disposition.
+
+`round4` reports `absent` on `crlf_install` and is labelled CONTROL there: round 4
+was right about the CR and wrong about blank lines. The six row-6 pairs falsify
+the blank-line half against those same bytes in the same run.
+
+### Row-9 D026 completion
+
+Literal fixtures added and executed: mid-name quote rejection
+(`MTC_BRIDGE"_START_MODE=...` -> rc 3
+`detail=environment_token_name_not_literal`, RED against the `127655` bytes that
+accepted it), the fully quoted and value-quoted valid controls on both subjects,
+and the same-value duplicate refused at rc 1 `observed=count=2` under the
+explicitly **declared stronger-than-systemd** single-occurrence invariant.
+
+### Run-owned scratch root
+
+The fixed `/tmp/rp7_rows_1_9_rebuild_evidence` root was a collision hazard - two
+runs shared one directory and each start-up `rm -rf` destroyed the other's
+fixtures mid-run. It is replaced by a `mktemp -d` root created per run, mode
+widened once to 0755 because the row-7 arm drops privileges to `nobody`, with the
+recursive-removal guard kept and matched to the run-owned shape.
+
+### Executed validation for these bytes
+
+```text
+identity derivation
+bytes=132886
+sha256=a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243
+cr_bytes=0
+bash -n RP7-WPI-RO.sh            rc=0
+bash -n <extracted fence body>   rc=0
+git diff --check                 clean (owned files)
+
+published fence, executed three times under wsl -d Ubuntu (systemd 259) from
+/mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT:
+sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_END$/p' SELF_QA_RP7.md | bash --noprofile --norc
+
+rc=0   stderr_bytes=0   stdout_lines=156   elapsed_s=125
+single subject   RED=36  GREEN=36  CONTROL=9
+multi subject    RED=11  GREEN=10  CONTROL=27   subjects=5
+systemd oracle   arms=9  (3 controls + 6 rule arms)
+D026_SUMMARY rows=1-9 red_green_pairs=36 controls=9 multi_subject_red=11 multi_subject_green=10 multi_subject_controls=27 subjects=5 systemd_oracle_fixtures=9 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+
+comparison of the embedded SELF_QA transcript against a fresh run of the
+published fence, after substituting each run's own HARNESS_SCRATCH_ROOT path:
+  identical on 155 of 156 lines
+  differing line: HARNESS_ATTESTED_MOUNTINFO sha256=
+```
+
+That one differing field is a mount-namespace projection digest and is not
+evidence for or against any row predicate. Its per-run variation is explained
+rather than tolerated: `wpi_build_mount_projection` writes a
+`kind=point path=$WPI_UNIT_FRAGMENT` record into the projection it hashes, and
+that path now lives under a run-owned root, so the digest **must** differ per
+run. The block requires only intra-run consistency, which `wpi_mount_guard_begin`
+re-checks and which held on every arm of every run.
+
+### Status of these bytes, stated plainly
+
+`132886` / `a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243`
+has implementer self-QA plus an independent Lead run of the complete published
+fence on 2026-08-15. The Lead run returned rc 0 in 124.8 s; the before/after
+identity, all 9 live systemd oracle arms, and
+`D026_SUMMARY ... result=PASS` matched these bytes. It has **no auditor verdict**.
+The Lead agreement recorded earlier in this file against the superseded
+`127655` bytes is not carried forward; this is a fresh reproduction against
+`132886`. Both required T0 auditor slots are PENDING and must run fresh against
+these same bytes. **No acceptance is claimed.**
+
+Unchanged and still standing: the row-8 disclosure (sandbox pins are asserted
+rendered `systemctl show` literals; host derivation is a freeze-time act;
+`CapabilityBoundingSet=''` is the highest-risk pin) and the C1 mount-projection
+digest residual, which is intentionally not repaired in this round.
+
+No git mutation occurred in this round: no stage, commit, checkout, reset, stash,
+branch or push. No host contact, network probe, SSH/SCP, RUNID minting,
+deployment, service action, credential handling, or trading/ARM/order surface was
+touched. Scratch was confined to run-owned directories outside the repository.
