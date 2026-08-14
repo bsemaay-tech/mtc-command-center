@@ -1,8 +1,7 @@
 # Pathscope final additional T1 execution audit — Codex
 
-**DISPATCH BLOCKED until every `PENDING-FILL-AFTER-REPAIR` field below is
-replaced from a committed, Lead-verified candidate.** An unfilled field is a
-workflow BLOCK, not permission to infer identity.
+**DISPATCH READY.** The identity below was re-derived from the committed,
+Lead-verified candidate before audit dispatch.
 
 Auditor: fresh independent `gpt-5.6-sol`, effort `high`, T1. Use an ephemeral
 fresh session; no resume/continue and no implementer-session context. Read-only
@@ -14,14 +13,14 @@ Owner authority:
 authorizes this one fresh execution audit after the one final repair. It waives
 no finding or acceptance standard and authorizes no later cycle.
 
-Frozen subject commit: `PENDING-FILL-AFTER-REPAIR`
+Frozen subject commit: `40091b2b795be3339dc0df7014df6bfc091e4eca`
 
 | artifact | bytes | SHA-256 |
 |---|---:|---|
-| `pathscope_prover.py` | `PENDING-FILL-AFTER-REPAIR` | `PENDING-FILL-AFTER-REPAIR` |
-| `SELF_QA_PATHSCOPE.md` | `PENDING-FILL-AFTER-REPAIR` | `PENDING-FILL-AFTER-REPAIR` |
-| `STATUS_PATHSCOPE.md` | `PENDING-FILL-AFTER-REPAIR` | `PENDING-FILL-AFTER-REPAIR` |
-| `PATHSCOPE_FINAL_OVERRIDE_REPAIR_REPORT_2026-08-14.md` | `PENDING-FILL-AFTER-REPAIR` | `PENDING-FILL-AFTER-REPAIR` |
+| `pathscope_prover.py` | `137520` | `28848D60F74A7C668DB3019BBAC58550F4A55C1C02038C013153316C711EDF9C` |
+| `SELF_QA_PATHSCOPE.md` | `311577` | `F99D972F46C12AB1EEA3FB426B9F9F39D98B6A3724CFCD229140D1433DA0703D` |
+| `STATUS_PATHSCOPE.md` | `12359` | `6C2C409A338A9084C40A660150B803C916C3383940E5BE6CB531E66C0D58A804` |
+| `PATHSCOPE_FINAL_OVERRIDE_REPAIR_REPORT_2026-08-14.md` | `21579` | `3DAE5D6D245963254DB368BC11F8295CD0B98EF78C16C44A14D690DFA8DF5BB0` |
 
 Read in full: root `AGENTS.md`, `START_HERE.md`, Patterns 10/12/13 in
 `DESIGN_DEFECT_PATTERNS_2026-08-10.md`, the owner decision, the prior
