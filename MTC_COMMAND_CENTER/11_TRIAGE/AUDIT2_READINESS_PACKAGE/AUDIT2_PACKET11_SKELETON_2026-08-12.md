@@ -12,6 +12,15 @@ Packet-level boundary: Packet 11 consolidates existing authority and provenance.
 
 **What the 2026-08-13 update filled, and what it deliberately did not.** Only fields directly established by a cited owner decision record or a permanent repository rule were filled: P11-03 (the three 2026-08-13 owner decisions), P11-04 (Audit-2 audit authority, from the permanent tier policy and the auditor-session contract), P11-06 (budget waiver), P11-08 (the owner-ratified approximate ledger figure), and P11-09 (the current go/no-go answer). Everything requiring a source file this update did not read, a Stage-1 product, a host result, or a freeze-time binding stays `<PENDING-STAGE-1>`. In particular the **final packet identity**, **P11-07's exact arithmetic**, and **P11-10's host/order proof** remain pending. No suite was run, no host was contacted, and no Git state was mutated by this update.
 
+## Status addendum — 2026-08-14
+
+Documentation-only refresh. The delegated editor ran no Git command; no suite was run and no host was contacted. The 2026-08-13 owner decision record (`WPI_OWNER_DECISIONS_2026-08-13.md` §4) authorized one additional audit-cap override per blocked lane: one Pathscope T1 repair plus one fresh T1 flagship audit, and one RP7 T0 repair plus the two fresh mandatory T0 flagship audits. As of 2026-08-14:
+
+- **Pathscope:** the authorized final cap-override T1 audit (fresh `gpt-5.6-sol`, effort high) returned **REQUEST_CHANGES** with required C-3/C-4 and literal-harness portability findings; the lane is returned to the owner boundary (`PATHSCOPE_OWNER_BOUNDARY_2026-08-14.md`). A new explicit owner override is required before any further Pathscope cycle.
+- **RP7:** the owner-authorized repair is in progress. The first Claude Opus repair session hit its session limit after modifying only `RP7-WPI-RO.sh`; the repair continues under the durable continuation record (`RP7_CAP_OVERRIDE_LEAD_CONTINUATION_2026-08-14.md`). No further owner decision is required for the already-authorized RP7 repair and its two fresh T0 audits.
+
+No acceptance, freeze readiness, host authority, or additional Pathscope cycle is implied by this addendum. All `<PENDING-STAGE-1>` fields remain pending on Stage 1, host execution, the frozen SHA, exact ledger arithmetic, or owner ratification as marked.
+
 ## PENDING - Packet 11 final identity
 
 - Packet 11 root: `<PENDING-STAGE-1>`
@@ -139,19 +148,19 @@ Scope conclusion: OWNER-DECISION-REQUIRED. No Stage-1, transport, host, freeze, 
 
 ## PARTIALLY FILLED - P11-09 Final go/no-go matrix
 
-- **Audit 2 dispatch allowed? NO — as of 2026-08-13 midday.**
+- **Audit 2 dispatch allowed? NO — as of 2026-08-14.**
 - Exact blocker/source for each NO/STOP:
 
 | Blocker | State | Source |
 |---|---|---|
-| **Pathscope T1 acceptance** | **NO.** Round-3 Codex T1 execution re-audit returned **REQUEST_CHANGES** with a new CRITICAL **C-2**: a known assignment value is recorded only when the complete rendered value starts with `/`, `./` or `../`, so loader lists with a later absolute member and ordinary relative pathnames disappear with no PATH or coverage record — reproduced at all three repaired call sites, each returning `PASS rc=0` with the out-of-allowlist sink absent. The auditor states the **T1 round cap is now exhausted** and the Lead must surface the boundary rather than open another round without an explicit owner override. | `WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_CODEX_T1_EXEC_AUDIT_R3_2026-08-13.md:11-24`, `:83-134`, `:186-194`; commit `5abd997e` |
-| **RP7 T0 acceptance** | **NO.** The post-round-4 Claude T0 flagship audit returned **REQUEST_CHANGES** (2 REQUIRED, 1 NIT): REQUIRED-1, the row-6 parser mis-classifies a CRLF fragment and contradicts real systemd in the predicate the repair targeted — a regression against round-4 bytes; REQUIRED-2, the six new row-6 RED/GREEN pairs are labelled but never falsified inside the package, the exact D026 shortfall. The auditor states the **T0 round cap is reached with no accepting verdict**, so the repair loop stops and the findings go to the owner. | `WPI_BLOCKS_DRAFT/RP7_CLAUDE_T0_POST_R4_AUDIT_2026-08-13.md:3-16`, `:64-166`, `:287-290`; commit `c2861d88` |
+| **Pathscope T1 acceptance** | **NO.** The final authorized cap-override T1 audit (fresh `gpt-5.6-sol`, effort high) returned **REQUEST_CHANGES** with required C-3 (alternate member readings still disappear) and C-4 (quoted declaration assignments bypass the repair) findings plus a literal-harness portability defect; the lane is returned to the owner boundary and no further Pathscope cycle may begin without a new explicit owner override. | `WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_CAP_OVERRIDE_CODEX_T1_AUDIT_2026-08-13.md`, verdict commit `4070ef36`; `WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_OWNER_BOUNDARY_2026-08-14.md`, boundary commit `fe4e370d` |
+| **RP7 T0 acceptance** | **NO — repair in progress under owner authorization.** The owner already authorized one extra RP7 T0 repair plus the two fresh mandatory T0 flagship audits (`WPI_OWNER_DECISIONS_2026-08-13.md` §4). The first Claude Opus repair session hit its session limit after modifying only `RP7-WPI-RO.sh`; the repair remains in progress under the durable continuation record, which keeps REQUIRED-1 open and prescribes the remaining mandatory work. No further owner decision is required for this already-authorized repair. | `WPI_BLOCKS_DRAFT/RP7_CAP_OVERRIDE_LEAD_CONTINUATION_2026-08-14.md`, continuation commit `accaa7a0`; `WPI_OWNER_DECISIONS_2026-08-13.md` §4 |
 | **Packet 10 P10-10/11/12** | **NO.** Scope decided; command string, execution record and anomaly register unfilled and unfillable from a pre-freeze tree. | `AUDIT2_PACKET10_SUITE_FILL_2026-08-13.md`; `AUDIT2_AUDITOR_SESSION_INPUTS.md:84-104` |
 | **Frozen SHA / bundle** | **NO.** The pre-WP-A checkpoint does not exist; frozen SHA, base-to-freeze diff, frozen file list and final WP-I closure are all `NOT-YET-AVAILABLE`. | `AUDIT2_AUDITOR_SESSION_INPUTS.md:53-60`; `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md:119-122` |
 | **Packet 9** | **NO.** Host execution and closure evidence do not exist; Packet 9 must be complete and immutable before the freeze. | `AUDIT2_PACKETS_9_10_11_SCOPE_2026-08-12.md:9`, `:119` |
 
 - Already granted actions that remain available: `<PENDING-STAGE-1>` — depends on P11-02/P11-05, which this update left unfilled.
-- Actions still needing fresh owner decision: **two are known and open now** — (a) an explicit cap override, or an accept-with-disclosure boundary call, for **pathscope** after the exhausted T1 cap; (b) the same for **RP7** after the exhausted T0 cap. Both are owner-class under `AGENTS.md` (repair loop bound) and the handoff's Rule 10 / Rule 8. Any further items: `<PENDING-STAGE-1>`.
+- Actions still needing fresh owner decision: **one is known and open now** — an explicit cap override, or an accept-with-disclosure boundary call, for **Pathscope** after the exhausted T1 cap and the returned owner boundary. **RP7 does not need a new owner decision**: the owner already authorized one extra RP7 T0 repair plus the two fresh mandatory T0 flagship audits, and that repair is in progress under the durable continuation record. Both lanes are owner-class under `AGENTS.md` (repair loop bound) and the handoff's Rule 10 / Rule 8. Any further items: `<PENDING-STAGE-1>`.
 - No silent missing-YES conversion check: **applied.** No NO above has been converted to a YES by inference, and no missing authority has been supplied by this document.
 
 ## PENDING - P11-10 Authority/order compliance proof
