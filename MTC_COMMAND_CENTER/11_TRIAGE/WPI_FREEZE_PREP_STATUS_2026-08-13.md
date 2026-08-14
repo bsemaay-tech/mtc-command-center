@@ -23,12 +23,13 @@ as historical.
 
 | Area | State | Meaning |
 |---|---|---|
-| Pathscope | BLOCKED — owner boundary | The authorized final cap-override T1 audit (fresh `gpt-5.6-sol`, effort high) returned `REQUEST_CHANGES` (C-3, C-4, literal-harness portability); the lane is returned to the owner boundary and needs a new explicit owner override before any further cycle. |
+| Pathscope | IN PROGRESS — final owner-authorized cycle | The prior cap-override audit returned `REQUEST_CHANGES` (C-3, C-4, literal-harness portability). On 2026-08-14 the owner authorized exactly one final additional T1 repair plus one fresh `gpt-5.6-sol` high execution audit; repair dispatch is pending the exact Claude Pro window. |
 | RP7 rows 1-9 | IN PROGRESS — owner-authorized | The owner already authorized one extra RP7 T0 repair plus the two fresh mandatory T0 flagship audits. The first Claude Opus repair session hit its session limit after modifying only `RP7-WPI-RO.sh`; the repair continues under the durable continuation record. |
 | Packet 10 | PARTIAL | Suite scope and command template recorded; frozen-SHA execution and observed anomaly register remain pending. |
 | Packet 11 | PARTIAL | Approximate owner ratification recorded; exact final Stage-1 arithmetic and order proof remain pending. |
-| Freeze / Audit 2 / WP-A | NOT REACHABLE | Pathscope is non-accepting and at the owner boundary, RP7 repair is not yet accepting, Packet 9 does not exist, and no frozen SHA exists. |
+| Freeze / Audit 2 / WP-A | NOT REACHABLE | Pathscope and RP7 repairs are owner-authorized but not yet accepting, Packet 9 does not exist, and no frozen SHA exists. |
 | Host execution | NOT AUTHORIZED HERE | No host, SSH, service, credential, ARM, order, or deployment action occurred. |
 
-No acceptance, freeze readiness, or host authority is implied. Pathscope needs a
-new explicit owner override; RP7 does not — its already-authorized repair continues.
+No acceptance, freeze readiness, or host authority is implied. Both repair
+lanes now have the exact owner authority recorded for their remaining bounded
+cycles. No additional cycle beyond those records is authorized.
