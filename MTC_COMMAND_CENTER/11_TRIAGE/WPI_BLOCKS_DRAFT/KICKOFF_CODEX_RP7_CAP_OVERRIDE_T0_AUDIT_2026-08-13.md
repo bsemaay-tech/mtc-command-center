@@ -11,14 +11,14 @@ credentials, ARM, orders, TESTNET, mainnet, Pine, parity, or trading action.
 Owner authority: `WPI_OWNER_DECISIONS_2026-08-13.md` section 4 authorizes this
 single extra repair/audit cycle; it waives no acceptance standard.
 
-Frozen subject commit: `PENDING-FILL-AFTER-REPAIR`
+Frozen subject commit: `2d0f24d0965c4ba7e7942dddac4fcac3bbb3240b`
 
 | artifact | bytes | SHA-256 |
 |---|---:|---|
-| `RP7-WPI-RO.sh` | `PENDING-FILL-AFTER-REPAIR` | `PENDING-FILL-AFTER-REPAIR` |
-| `SELF_QA_RP7.md` | `PENDING-FILL-AFTER-REPAIR` | `PENDING-FILL-AFTER-REPAIR` |
-| `STATUS_RP7.md` | `PENDING-FILL-AFTER-REPAIR` | `PENDING-FILL-AFTER-REPAIR` |
-| `RP7_ROWS_1_9_REPORT_2026-08-13.md` | `PENDING-FILL-AFTER-REPAIR` | `PENDING-FILL-AFTER-REPAIR` |
+| `RP7-WPI-RO.sh` | `132886` | `a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243` |
+| `SELF_QA_RP7.md` | `504144` | `72aab351fc9f0d5881bbac995985338dc983777978b1787b4b5abe3bf0fda58f` |
+| `STATUS_RP7.md` | `12213` | `df44704c4099459d2860fd6ddbfc0b659b981eb4ecbe06a7f1ef89b99499ad65` |
+| `RP7_ROWS_1_9_REPORT_2026-08-13.md` | `41843` | `4e5d38d422ab836aca3e2421f0430b4cdb72680c5d34de86e33d14b2c0fd7cde` |
 
 Read the prior Claude T0 verdict, supplemental findings, repair report sections,
 and frozen artifacts. Re-derive identities before execution.
