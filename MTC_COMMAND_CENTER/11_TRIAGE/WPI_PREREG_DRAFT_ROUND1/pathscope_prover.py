@@ -36,6 +36,11 @@ NETWORK_RE = re.compile(r"^(?:\[[0-9A-Fa-f:]+\]|[A-Za-z0-9_.-]+):[0-9]{1,5}$")
 GLOB_RE = re.compile(r"[*?[]")
 DEV_NET_RE = re.compile(r"^/dev/(tcp|udp)/([^/]*)/([^/]*)$")
 FD_PREFIX_RE = re.compile(r"\{[A-Za-z_][A-Za-z0-9_]*\}(?=[<>])")
+# C-2: assignment-value member grammar.  A scheme URI belongs to the endpoint
+# domain, not the filesystem domain, and must not be colon-split into fragments;
+# an option word marks a value that a consumer reads as command text.
+URI_SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*://")
+OPTION_WORD_RE = re.compile(r"^--?[A-Za-z0-9?]")
 
 # Issue kinds.  These are deliberately distinct fields with distinct names:
 # an Issue cardinality is not a path-set cardinality (round-1 finding 8).
@@ -1252,19 +1257,144 @@ class Analyzer:
         # record; a known non-path value (IFS=:, count=1) carries no path and is
         # left alone. This fails closed on the construct, not on a variable-name
         # allowlist, so it does not repeat the round-1 NO_PATH_COMMANDS mistake.
-        match = ASSIGN_RE.fullmatch(token.text)
-        if not match:
-            return
-        _name, rhs = match.groups()
-        value = expand_word(rhs, self.env)
-        if not value.known:
-            self.issue(token.line, KIND_COVERAGE,
-                       f"assignment value is not statically known: {value.reason}",
-                       token.text)
-            return
-        rendered = value.text or ""
-        if rendered.startswith(("/", "./", "../")):
-            self.record_path_text(rendered, value.sources, token.line, primitive, token.text)
+        #
+        # C-2 repair: the round-3 form tested only `rendered.startswith(("/",
+        # "./", "../"))` and had no `else`, so an assignment value whose FIRST
+        # member is not path-shaped -- a loader list (`bare.so:/etc/escape.so`),
+        # an ordinary relative pathname (`relative/path.so`), command text
+        # (`ssh -i /etc/key`) -- disappeared with no PATH and no coverage row,
+        # and a value that DID start with `/` was recorded only as one whole
+        # blob, so a later absolute member of `/safe/lib:/etc/escape` never
+        # reached the allowlist. Member parsing now runs on every statically
+        # known value regardless of its first character, and every member gets a
+        # terminal disposition (path, endpoint, empty, or bare name) or a
+        # specific coverage record. See record_assignment_members.
+        raw = token.text
+        match = ASSIGN_RE.fullmatch(raw)
+        if match is not None:
+            value = expand_word(match.group(2), self.env)
+            if not value.known:
+                self.issue(token.line, KIND_COVERAGE,
+                           f"assignment value is not statically known: {value.reason}",
+                           raw)
+                return
+            rendered, sources = value.text or "", value.sources
+        else:
+            # A quoted assignment word (`env "LD_PRELOAD=/etc/evil.so" cat …`)
+            # is a NAME=VALUE assignment only after expansion. Recover the value
+            # from the rendered word rather than returning silently.
+            whole = expand_word(raw, self.env)
+            if not whole.known:
+                self.issue(token.line, KIND_COVERAGE,
+                           f"assignment value is not statically known: {whole.reason}",
+                           raw)
+                return
+            expanded = ASSIGN_RE.fullmatch(whole.text or "")
+            if expanded is None:
+                self.issue(token.line, KIND_COVERAGE,
+                           "assignment word does not parse as NAME=VALUE after expansion",
+                           raw)
+                return
+            rendered, sources = expanded.group(2), whole.sources
+        self.record_assignment_members(rendered, sources, token.line, primitive, raw)
+
+    @staticmethod
+    def assignment_member_kind(text: str) -> str:
+        """Terminal classification of one assignment-value member.
+
+        `net` a scheme URI, `fs` a pathname, `empty` an empty member, `bare` a
+        name that carries no pathname at all. `bare` is the single disclosed
+        residual of this construct: a member with no `/` (a soname like
+        `libc.so`, a scalar like `1`, an option word) is resolved by the
+        consumer's own search rules, not by an argv pathname, so it is outside
+        the lexical-argv-scope contract this tool proves. A member that carries
+        `:` is not itself a pathname candidate -- its own members are.
+        """
+        if text == "":
+            return "empty"
+        if URI_SCHEME_RE.match(text):
+            return "net"
+        if text.startswith(("/", "./", "../")):
+            return "fs"
+        if "/" in text and ":" not in text and not text.startswith("-"):
+            return "fs"  # ordinary relative pathname, resolved against pinned PWD
+        return "bare"
+
+    def record_assignment_members(
+        self,
+        rendered: str,
+        sources: frozenset[str],
+        line: int,
+        primitive: str,
+        expression: str,
+    ) -> None:
+        # The lexer already guarantees an assignment word contains no *unquoted*
+        # whitespace, and the shell never word-splits an assignment value, so no
+        # blank here is a shell separator: `X="$ROOT dir/escape"` is exactly one
+        # pathname `/safe dir/escape` and splitting it on whitespace would
+        # manufacture two allowed paths out of one forbidden one. A *consumer*
+        # (the dynamic loader, `sh -c`, ssh) may still read the same bytes as a
+        # word list or as command text. Those two readings are decided on
+        # grammar, never on the variable name: a blank-separated value is read
+        # as one pathname only when its first word is path-shaped and no later
+        # word is an option or an absolute path. Otherwise the word-list reading
+        # is live, which this tool does not model, so it emits a specific
+        # coverage record AND still records every word that carries a path, so
+        # the sink is visible rather than silent.
+        words = rendered.split()
+        word_list_reading = (
+            len(words) > 1
+            # A value in which no word carries `/` carries no pathname under
+            # either reading -- `P0_TEXT="Permission denied"`, a tool-name list --
+            # and stays in the same disclosed `bare` residual as a lone soname.
+            # This is the grammar of the value, not a variable-name allowlist.
+            and any("/" in word for word in words)
+            and (
+                any(OPTION_WORD_RE.match(word) for word in words)
+                or any(word.startswith("/") for word in words[1:])
+                or self.assignment_member_kind(words[0]) != "fs"
+            )
+        )
+        if word_list_reading:
+            self.issue(line, KIND_COVERAGE,
+                       "assignment value is a whitespace-separated word list or command "
+                       "text; the single-pathname and word-list readings differ and this "
+                       "tool does not model which consumer splits it", expression)
+            candidates = words
+        else:
+            candidates = [rendered]
+        # Colon members: a path list is split by the consumer regardless of shell
+        # quoting, so this runs on every candidate, including one that starts
+        # with `/`. The whole candidate is kept as well, so neither the
+        # single-pathname reading nor any member can disappear.
+        pool: list[str] = []
+        for candidate in candidates:
+            if candidate not in pool:
+                pool.append(candidate)
+            if ":" in candidate and not URI_SCHEME_RE.match(candidate):
+                for member in candidate.split(":"):
+                    if member not in pool:
+                        pool.append(member)
+        empty_member = False
+        path_member = False
+        for item in pool:
+            kind = self.assignment_member_kind(item)
+            if kind == "empty":
+                empty_member = True
+            elif kind == "net":
+                self.record_network_text(item, sources, line, primitive, expression)
+            elif kind == "fs":
+                path_member = True
+                self.record_path_text(item, sources, line, primitive, expression)
+        if empty_member and path_member:
+            # An empty member of a loader path list names the current working
+            # directory to the consumer. `IFS=:` carries no path member at all
+            # and is therefore untouched by this rule -- the discriminator is the
+            # presence of a path member, not the variable name.
+            self.issue(line, KIND_COVERAGE,
+                       "assignment path list contains an empty member, which names the "
+                       "consumer's current directory rather than a static pathname",
+                       expression)
 
     # -- generic argv grammar --------------------------------------------
     def consume_value(
@@ -2745,7 +2875,10 @@ def output_report(shell: Path, rules: list[Rule], uses: list[Use], issues: list[
         f"parse_issue_count={counts[KIND_PARSE]}"
     )
     forbidden = False
-    for domain, label, allow in (("fs", "PATH", "ALLOW-LEXICAL"), ("net", "ENDPOINT", "ALLOW")):
+    # NIT-1 (r3 audit §5): both domains carry the same lexical-argv-scope claim,
+    # so both allow verdicts read ALLOW-LEXICAL.  A bare ALLOW on the endpoint
+    # row implied a stronger guarantee for network than for filesystem operands.
+    for domain, label, allow in (("fs", "PATH", "ALLOW-LEXICAL"), ("net", "ENDPOINT", "ALLOW-LEXICAL")):
         table = tables[domain]
         for value in sorted(table):
             per_use = [
