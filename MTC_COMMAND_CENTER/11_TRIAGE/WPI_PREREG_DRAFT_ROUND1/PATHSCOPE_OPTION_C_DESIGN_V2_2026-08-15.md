@@ -2,9 +2,9 @@ Status: AMENDED DESIGN — SUPERSEDES V1 — NO CODE CHANGE, NOT ACCEPTED
 
 # Pathscope Option C — occurrence-accounting redesign, amended design V2
 
-Date: 2026-08-15  
-Design-worktree baseline: `87a4edb7f7cb0ab9263f9f28419d30355159fccb`  
-Frozen R5 prover blob: `695ca9c951e31f53da9580d41326583d71086bb3`  
+Date: 2026-08-15
+Design-worktree baseline: `87a4edb7f7cb0ab9263f9f28419d30355159fccb`
+Frozen R5 prover blob: `695ca9c951e31f53da9580d41326583d71086bb3`
 Frozen R5 prover SHA-256: `28848D60F74A7C668DB3019BBAC58550F4A55C1C02038C013153316C711EDF9C`
 
 ## 0. Review-closure map
@@ -426,12 +426,10 @@ projection and generic UNRESOLVED rows. Existing earlier CLI input-read/input-pa
 
 The accounting block admits exactly these new record prefixes:
 
-```text
-PATHSCOPE accounting_summary=
-VALUE_ACCOUNT 
-MEMBER 
-ACCOUNTING_FAULT 
-```
+- `PATHSCOPE accounting_summary=`;
+- `VALUE_ACCOUNT` followed by one ASCII space;
+- `MEMBER` followed by one ASCII space; and
+- `ACCOUNTING_FAULT` followed by one ASCII space.
 
 The composite adds those exact prefixes to `known_lines`; all other unknown lines still
 STOP as `prover_output_unknown_record` (`composite_pathproof.py:2287-2293`). Strict regular
