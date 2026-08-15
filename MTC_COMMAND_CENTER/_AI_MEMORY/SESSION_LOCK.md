@@ -28,9 +28,9 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **UNCLAIMED** — accepted and released 2026-08-15 11:45 +03 | — |
 | Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
-| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Claude Opus 5 Lead `192dd112`** (session "R7FINAL 12h autonomous") | 2026-08-15 19:20 +03 |
+| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **UNCLAIMED** — released 2026-08-16 06:30 +03 at the Pathscope owner boundary | — |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
-| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Claude Opus 5 Lead `192dd112`** (session "R7FINAL 12h autonomous") | 2026-08-15 19:20 +03 |
+| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **UNCLAIMED** — released 2026-08-16 06:30 +03 | — |
 | Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | UNCLAIMED | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
@@ -42,6 +42,21 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 06:30 +03:** Claude Opus 5 Lead `192dd112` released both rows at a
+  clean stop. Everything committed and pushed on `codex/rp7-r1-r4-repair-20260815`
+  (~60 commits), plus `codex/pathscope-accounting-redesign-20260815` and
+  `codex/bridge-suite-anomaly-repairs-20260815`. No foreign uncommitted edit was
+  found in either owned workstream. The Pathscope lane is **stopped at the owner
+  boundary** — the Option C cycle is consumed and returned REQUEST_CHANGES; a sixth
+  cycle needs a new explicit owner decision. Five owner decisions are queued; the
+  privileged staging-channel choice blocks the whole WP-I chain. No active writer
+  remains.
+
+  Process note for the next fan-out: dispatched lanes correctly refused to proceed
+  three times on work they could not account for, and one lane amended a commit it
+  did not author. Kickoffs must forbid `--amend` explicitly, and the Lead should
+  clear blocking state rather than instruct a lane to work around it.
 
 - **2026-08-15 19:20 +03:** Claude Opus 5 Lead `192dd112` claimed the Pathscope
   and Audit-2 readiness rows for an owner-authorized 12-hour autonomous session
