@@ -79,7 +79,21 @@ current RP7 disposition by this record and the 137981-byte accepted candidate.
 
 WP-I Stage-1 freeze is still not reachable because Pathscope's final authorized
 T1 audit ended in a transport `BLOCK` without execution. That Pathscope cycle is
-exhausted and must not be rerun without a new explicit owner decision. Packet 10
+exhausted and must not be rerun without a new explicit owner decision.
+
+> **[correction 2026-08-15, later the same day]** The paragraph above was true
+> when written and is now superseded on its Pathscope facts only. Barış
+> authorized one fresh execution-audit **retry** because the previous attempt
+> never executed. That retry ran under `sandbox: danger-full-access` and
+> returned **REQUEST_CHANGES** with three REQUIRED findings — it did not end in
+> a transport block. Pathscope remains NON-ACCEPTED and its lane is stopped at
+> the owner boundary pending one of Options A-D. See
+> `WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_FINAL_OVERRIDE_RETRY_CODEX_T1_AUDIT_2026-08-15.md`,
+> `.../PATHSCOPE_OWNER_BOUNDARY_2026-08-15.md`, and
+> `.../PATHSCOPE_DECISION_OPTIONS_2026-08-15.md`. **The RP7 disposition recorded
+> in this file is unaffected**; RP7 rows 1-9 stay T0 accepted at `80cbed46`.
+
+Packet 10
 still needs the frozen-SHA Bridge-suite execution; Packet 11 remains partial;
 Packet 9 and freeze-time bindings remain downstream of an accepted Pathscope and
 the Stage-1 allocation/fill sequence.

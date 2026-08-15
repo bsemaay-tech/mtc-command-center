@@ -1,0 +1,328 @@
+<title>Bridge Deployment Runway</title>
+<style>
+  :root {
+    --paper:      #F3F5F8;
+    --surface:    #FFFFFF;
+    --surface-2:  #EDF0F4;
+    --ink:        #141C27;
+    --muted:      #5B6675;
+    --rule:       #D9DEE6;
+    --accent:     #2C4A7C;
+    --accent-soft:#E6ECF6;
+    --clear:      #2C6B4F;
+    --partial:    #93670F;
+    --blocked:    #A2302B;
+    --clear-bg:   #E3F0E9;
+    --partial-bg: #F6EBD4;
+    --blocked-bg: #F7E3E1;
+    --shadow:     0 1px 2px rgba(20,28,39,.06), 0 8px 24px rgba(20,28,39,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #0E141B;
+      --surface:    #161E29;
+      --surface-2:  #1D2734;
+      --ink:        #E3E9F0;
+      --muted:      #94A1B2;
+      --rule:       #27323F;
+      --accent:     #86ABE6;
+      --accent-soft:#1B2637;
+      --clear:      #5BB98C;
+      --partial:    #DBA646;
+      --blocked:    #E37B75;
+      --clear-bg:   #162C24;
+      --partial-bg: #302615;
+      --blocked-bg: #331C1B;
+      --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #0E141B;
+    --surface:    #161E29;
+    --surface-2:  #1D2734;
+    --ink:        #E3E9F0;
+    --muted:      #94A1B2;
+    --rule:       #27323F;
+    --accent:     #86ABE6;
+    --accent-soft:#1B2637;
+    --clear:      #5BB98C;
+    --partial:    #DBA646;
+    --blocked:    #E37B75;
+    --clear-bg:   #162C24;
+    --partial-bg: #302615;
+    --blocked-bg: #331C1B;
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+
+  h1, h2, h3 { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif; font-weight: 600; text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(30px, 4.4vw, 42px); letter-spacing: -.015em; line-height: 1.15; }
+  h2 { font-size: 21px; letter-spacing: -.005em; }
+  h3 { font-size: 16px; }
+
+  .eyebrow {
+    font-size: 11.5px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .lede { color: var(--muted); max-width: 62ch; margin: 0; }
+
+  header .rule {
+    height: 3px;
+    width: 56px;
+    background: var(--accent);
+    border-radius: 2px;
+    margin: 20px 0 0;
+  }
+
+  section { display: flex; flex-direction: column; gap: 16px; }
+  .sechead { display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid var(--rule); padding-bottom: 10px; }
+
+  /* summary tiles */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 12px; }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 16px 16px 14px;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .tile .num {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 28px; font-weight: 600; letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile .cap { font-size: 13px; color: var(--muted); }
+
+  /* decision cards */
+  .decisions { display: flex; flex-direction: column; gap: 12px; }
+  .decision {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .decision h3 { display: flex; align-items: baseline; gap: 9px; }
+  .decision h3::before {
+    content: ""; flex: none;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--blocked);
+    transform: translateY(-1px);
+  }
+  .decision.soft h3::before { background: var(--partial); }
+  .decision p { margin: 0; }
+  .decision .ask { color: var(--muted); font-size: 14.5px; }
+  .decision .opts { display: flex; flex-direction: column; gap: 5px; margin: 2px 0 0; padding: 0; list-style: none; }
+  .decision .opts li { font-size: 14.5px; padding-left: 18px; position: relative; }
+  .decision .opts li::before {
+    content: ""; position: absolute; left: 2px; top: .62em;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  }
+  .rec { color: var(--accent); font-weight: 600; }
+
+  /* gate list */
+  .gates { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  .gate { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 13px 18px; border-top: 1px solid var(--rule); align-items: baseline; }
+  .gate:first-child { border-top: none; }
+  .gate .name { font-weight: 550; }
+  .gate .note { grid-column: 1 / 2; font-size: 14px; color: var(--muted); }
+  .pill {
+    grid-row: 1 / 2; grid-column: 2 / 3;
+    font-size: 11.5px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase;
+    padding: 3px 9px; border-radius: 3px; white-space: nowrap;
+  }
+  .p-clear   { background: var(--clear-bg);   color: var(--clear); }
+  .p-partial { background: var(--partial-bg); color: var(--partial); }
+  .p-blocked { background: var(--blocked-bg); color: var(--blocked); }
+  .p-todo    { background: var(--surface-2);  color: var(--muted); }
+
+  /* hours */
+  .bar { display: flex; height: 30px; border-radius: 4px; overflow: hidden; border: 1px solid var(--rule); }
+  .bar span { display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; color: var(--muted); }
+  .legend b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--surface); box-shadow: var(--shadow); }
+  th, td { text-align: left; padding: 11px 16px; border-top: 1px solid var(--rule); }
+  th { font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); font-weight: 650; border-top: none; }
+  td.n { text-align: right; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .callout {
+    background: var(--accent-soft);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 16px 18px;
+    font-size: 15px;
+  }
+  .callout p { margin: 0 0 8px; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  footer { color: var(--muted); font-size: 13.5px; border-top: 1px solid var(--rule); padding-top: 16px; }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Status for Barış · 15 August 2026, 21:00</p>
+    <h1>What is left before the bridge runs on your Hostinger server</h1>
+    <div class="rule"></div>
+  </header>
+
+  <section>
+    <div class="tiles">
+      <div class="tile"><span class="num">4</span><span class="cap">decisions waiting on you</span></div>
+      <div class="tile"><span class="num">55–85</span><span class="cap">work hours left to first start</span></div>
+      <div class="tile"><span class="num">7–10</span><span class="cap">sessions like tonight</span></div>
+      <div class="tile"><span class="num">~64</span><span class="cap">hours spent so far</span></div>
+    </div>
+    <p class="lede">The finish line counted here is the one you chose: the bridge installed on the Hostinger KVM2 server as a locked-down service, started <strong>disarmed</strong>, testnet only, reachable only from the machine itself. No live trading, no real money, no arming.</p>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <p class="eyebrow">Blocked on you</p>
+      <h2>Four things only you can decide</h2>
+    </div>
+    <div class="decisions">
+
+      <div class="decision">
+        <h3>1 · The safety checker (Pathscope)</h3>
+        <p class="ask">Tonight's audit finally ran properly and failed it again — the fourth time in a row that a repair closed the reported holes and a fresh reviewer immediately found more of the same kind next door. Everything downstream is stuck behind this.</p>
+        <ul class="opts">
+          <li>Patch the three new holes and re-audit. ~3–5 h. Honest odds: this is the same move that failed three times.</li>
+          <li>Accept it as a helper rather than a gate, with the gap written down. ~1–2 h, unblocks everything.</li>
+          <li class="rec">Recommended — rebuild one layer so the whole class of hole becomes impossible. ~6–10 h, ends the cycle.</li>
+          <li>Drop the checker from this work package entirely. ~2–3 h.</li>
+        </ul>
+      </div>
+
+      <div class="decision soft">
+        <h3>2 · Sign the hours figure</h3>
+        <p class="ask">Measured, not guessed: your ratified 55 hours plus 8 h 45 m of measured work since, giving <strong>about 63.75 hours</strong>. One sentence from you closes this item. The old "50-hour plan" is no longer a countdown — remaining work is counted by gates now, not by subtracting.</p>
+      </div>
+
+      <div class="decision soft">
+        <h3>3 · The testnet wallet</h3>
+        <p class="ask">The server needs its own testnet-only wallet, stored in a protected file on the machine. Only you can create it. Nothing else about it is automatable, and it must never touch a real-money key.</p>
+      </div>
+
+      <div class="decision soft">
+        <h3>4 · What happens to the risk history at cutover</h3>
+        <p class="ask">When the bridge moves from your PC to the server, its record of daily losses, losing streaks and open orders either moves with it or starts clean. Moving it is recommended and already supported; starting clean is safer but loses the history. Your call, and it has to be made before the move.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <p class="eyebrow">The runway</p>
+      <h2>Every gate between here and the first start</h2>
+    </div>
+    <div class="gates">
+
+      <div class="gate"><span class="name">Safety checker signed off</span><span class="pill p-blocked">Your call</span><span class="note">Failed tonight's audit. Four options above.</span></div>
+      <div class="gate"><span class="name">Repaired safety rules accepted</span><span class="pill p-clear">Done</span><span class="note">Passed both independent flagship reviewers today with no required fixes.</span></div>
+      <div class="gate"><span class="name">Work package frozen</span><span class="pill p-blocked">Blocked</span><span class="note">Waits on the safety-checker decision.</span></div>
+      <div class="gate"><span class="name">The authorized server job runs</span><span class="pill p-blocked">Blocked</span><span class="note">Cannot start until the freeze exists.</span></div>
+      <div class="gate"><span class="name">Hours ledger signed</span><span class="pill p-partial">Your signature</span><span class="note">Figure measured tonight and ready.</span></div>
+      <div class="gate"><span class="name">Big independent review (Audit 2)</span><span class="pill p-blocked">Blocked</span><span class="note">Two fresh flagship reviewers, after the job closes.</span></div>
+      <div class="gate"><span class="name">Release candidate for the server</span><span class="pill p-todo">Not started</span><span class="note">Needs one clean commit plus two independent sign-offs.</span></div>
+      <div class="gate"><span class="name">Test suite green at that exact commit</span><span class="pill p-partial">1 real fix</span><span class="note">Measured tonight: 1019 pass, 2 fail. One fails only on Windows and will pass on the server; the other is a genuinely out-of-date test that must be corrected.</span></div>
+      <div class="gate"><span class="name">Python install reproducible on Ubuntu</span><span class="pill p-partial">Prepared</span><span class="note">Locked and enforced locally; never yet installed on a real Ubuntu machine.</span></div>
+      <div class="gate"><span class="name">Service locked down on Ubuntu</span><span class="pill p-partial">Prepared</span><span class="note">Dedicated user, read-only release folder, hardened startup — all written, none verified on the target.</span></div>
+      <div class="gate"><span class="name">Testnet wallet in place</span><span class="pill p-blocked">Your call</span><span class="note">You provision it; nobody else touches it.</span></div>
+      <div class="gate"><span class="name">Risk history policy chosen and tested</span><span class="pill p-blocked">Your call</span><span class="note">Move it or start clean.</span></div>
+      <div class="gate"><span class="name">Backups, rollback and monitoring proven</span><span class="pill p-partial">Partial</span><span class="note">Scripts and templates exist; no proven restore, no rollback rehearsal, no monitoring evidence.</span></div>
+      <div class="gate"><span class="name">Old writer shut down, single-writer proof</span><span class="pill p-todo">Not started</span><span class="note">A strict ordered checklist you run once, at cutover. Any ambiguous step stops it.</span></div>
+      <div class="gate"><span class="name">Final audit, then your deploy authorization</span><span class="pill p-todo">Not started</span><span class="note">One fresh independent review of the exact candidate, then one sentence from you.</span></div>
+      <div class="gate"><span class="name">First disarmed start on the server</span><span class="pill p-todo">Finish line</span><span class="note">Disarmed, testnet only, loopback only. Arming is a separate decision, later.</span></div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <p class="eyebrow">Where the hours go</p>
+      <h2>55 to 85 hours, split three ways</h2>
+    </div>
+    <div class="bar" role="img" aria-label="Roughly half the remaining hours are the current work package, most of the rest is deployment preparation, and a small slice is server-side work and your own decisions.">
+      <span style="width:42%;background:var(--accent)"></span>
+      <span style="width:44%;background:var(--partial)"></span>
+      <span style="width:9%;background:var(--clear)"></span>
+      <span style="width:5%;background:var(--blocked)"></span>
+    </div>
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--accent)"></i>Current work package <b>25–40 h</b></span>
+      <span><i class="swatch" style="background:var(--partial)"></i>Deploy preparation <b>25–35 h</b></span>
+      <span><i class="swatch" style="background:var(--clear)"></i>On the server itself <b>5–8 h</b></span>
+      <span><i class="swatch" style="background:var(--blocked)"></i>Your own time <b>3–4 h</b></span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Path</th><th class="n">Hours</th><th>What decides it</th></tr></thead>
+        <tbody>
+          <tr><td>Fastest — safety checker accepted as a helper</td><td class="n">55–65</td><td>Unblocks tonight, at the cost of a written-down gap in the safety proof.</td></tr>
+          <tr><td>Recommended — rebuild the checker layer once</td><td class="n">62–75</td><td>Costs about ten more hours now, removes the repeating repair cycle.</td></tr>
+          <tr><td>If a repair cycle repeats twice more</td><td class="n">80–100</td><td>What the last three weeks actually did, twice over.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <p><strong>How much to trust these numbers.</strong> The gate list is exact — it comes from the deployment checklist and tonight's measurements. The hours are an estimate, and this project's own history is the warning: repair-and-re-audit cycles have roughly doubled several previous estimates.</p>
+      <p>The single biggest swing is decision 1. Everything downstream of it is idle until you answer.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sechead">
+      <p class="eyebrow">Tonight</p>
+      <h2>What ran while you were away</h2>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Item</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>Safety-checker audit retry</td><td>Ran properly this time. Failed with three required fixes. Lane stopped at your boundary, exactly as you instructed — no repair opened.</td></tr>
+          <tr><td>Bridge test suite, run twice</td><td>1019 pass, 2 fail, identical both runs. Both failures diagnosed to root cause.</td></tr>
+          <tr><td>Hours measurement</td><td>Done, with the exact commands to reproduce every number.</td></tr>
+          <tr><td>Deploy readiness and freeze-blocker reviews</td><td>Running now on separate Codex lanes.</td></tr>
+          <tr><td>Credit protection</td><td>Three helper lanes tried to spawn Claude sessions on their own. All were stopped and the instructions tightened. Your Claude Max is untouched.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Nothing in this page has touched the server, a credential, an exchange, an order, or real money. Every one of those remains a separate gate needing your explicit word.
+  </footer>
+
+</div>
