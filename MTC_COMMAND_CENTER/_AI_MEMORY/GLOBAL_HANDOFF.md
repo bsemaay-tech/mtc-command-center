@@ -1,5 +1,71 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5 Lead] 2026-08-15 late night — owner decisions applied, 14-lane fan-out
+
+Barış made five decisions (`11_TRIAGE/WPI_OWNER_DECISIONS_2026-08-15_NIGHT.md`):
+Pathscope **Option C authorized**; the narrow read-only host sentence **approved
+but recorded as not yet spendable**, because it names an "exact preregistered and
+committed" capture that does not exist; Packet 11 **signed at ~63.75 h**; the
+TESTNET wallet **deferred**; and the cutover risk state set to **start clean**,
+with the "preserves or blocks on" clause explicitly not waived.
+
+He then asked why lanes were running two or three at a time. Fair — the limit was
+the Lead's serialization, not the tooling. Fourteen lanes were dispatched across
+three Codex accounts and GLM-5.3, sharing one read-only worktree at `C:\RO` with
+per-lane scratch outputs. Three dispatcher bugs, all Lead-caused, are worth
+knowing: a hard-coded `C:\Users\BarışSemaay\…` path in a BOM-less script is read
+as ANSI by PowerShell 5.1 and mangles to `BarÄ±ÅŸSemaay` — **derive it from
+`$env:USERPROFILE`**; an age-based `node.exe` sweep kills healthy Codex lanes,
+because the Codex CLI runs on node; and GLM needs every path it must read in
+`--add-dir`, including the kickoff directory. GLM refused correctly on that last
+one and wrote a precise failure report rather than guessing its task.
+
+**The most valuable result of the night is a design review.** GLM-5.3 attacked the
+Pathscope Option C design before implementation and returned `SOUND-WITH-GAPS`
+with four MUST-FIX findings. The first would have caused a fifth failed cycle:
+
+```text
+: ${LD_PRELOAD:=/etc/evil.so}   ->   PASS rc=0
+```
+
+Assignment-bearing parameter expansions on path-free carriers are exempted at
+`pathscope_prover.py:1564-1570`, so the value is never **admitted** — and
+conservation over admitted values says nothing about a value that never enters
+the universe. F1's class, one step outside the new invariant. Also: the closed
+disposition set was closed only on paper; the composite integration was called
+"mechanical" while its rc-3 branch is unspecified; one bullet would have changed
+every fixture's rows and falsified the design's own byte-identity promise; and
+conservation checked member-ID uniqueness per value but not across values. A
+design-amendment round is running at xhigh; implementation follows, then the one
+authorized flagship audit.
+
+**Landed and committed** (`9a6bf407` → `885ea979`): Stage-1 allocation draft and
+Commit-1 preregistration draft — both halves of what makes the host permission
+spendable, now needing review-and-commit rather than authorship; the Packet 10
+frozen suite contract, which sets `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` and names its
+plugins rather than inheriting whatever is installed; the Packet 11 binding and
+ledger-refresh procedure; both freeze procedures; the Audit 2/Audit 3 dispatch
+plan; KVM2 Phase 0/1/2/3 scope, procedure, inventory and status reconciliation;
+and the cutover tabletop with the start-clean safety proof.
+
+**Second consequential finding, for the owner.** The active plan's **6 h audit
+reserve is one aggregate pool** for Audit 2 + Audit 3 + Gate 6 + every re-audit,
+and exhaustion while an audit remains means **BLOCK**. Current tier rules need
+four independent xhigh flagship first-pass sessions, i.e. an average of **1.5
+pool-hours per session** with nothing for Lead reproduction or re-audits. The lane
+refused to invent a replacement figure and prescribed metering instead. Before
+Audit 2, Barış must choose: hard cap and accept the BLOCK risk, or authorize a
+larger audit-only reserve. Do not borrow the repair contingency — the plan funds
+them separately. Open UNKNOWN: whether the 6 h means auditor labour or wall-clock.
+
+Outstanding owner decisions: the plan-authority reading, the audit-reserve
+question above, and whether to archive the pre-cutover risk state off-host (the
+lane recommends archiving — the machine being demoted is the least-trusted host,
+so leaving the only copy of the paper period there is the weakest option).
+
+No host, deployment, credential, service, broker/exchange, ARM, order,
+TESTNET/mainnet, Pine, parity, MTC, trading, or economic action occurred.
+
 ## [Claude Opus 5 Lead] 2026-08-15 evening — Pathscope retry executed and failed; deploy path priced
 
 Owner authorized one fresh Pathscope `gpt-5.6-sol` high execution-audit **retry**,
