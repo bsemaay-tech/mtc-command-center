@@ -2,18 +2,41 @@
 
 Status: `ROWS-1-9-EXTENDED-PENDING-FRESH-SAME-BYTE-T0-AUDITS`
 
-The bytes now on disk are `132886` /
-`a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243`. These carry
+The bytes now on disk are `137981` /
+`4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c`. These carry
 the post-round-4 regression repair recorded in the section "Post-round-4
-regression repair - row-6 blank-line false PASS" below, **and** the cap-override
-repair recorded in "REQUIRED-1 - row-6 carriage-return handling, closed".
-No auditor has yet accepted these exact bytes, and no independent Lead run of
-them exists. Both required T0 auditor slots are PENDING and must run fresh
-against this same byte identity. The round-4 repair commit `90cbeac4` closed
-three Codex T0 REQUIRED findings against the superseded `127491` bytes with Lead
-verification; that is a repair record, not an audit acceptance, and it is **not**
-carried forward to `127655` or to `132886`. Nothing in this file claims flagship
-acceptance of any RP7 rows-1-9 byte identity.
+regression repair - row-6 blank-line false PASS" below, the cap-override repair
+recorded in "REQUIRED-1 - row-6 carriage-return handling, closed", **and** the
+owner-authorized R1-R4 repair recorded in "R1-R4 repair" at the end of this file.
+
+## Provenance of record - one chronology, no other reading
+
+This section is the single provenance statement for this file. Any older
+sentence anywhere in this document is scoped to the byte identity it names and
+does not carry forward.
+
+| byte identity | implementer self-QA | independent Lead run | flagship auditor verdicts |
+|---|---|---|---|
+| `108301` (round 9) | yes | yes | two accepting verdicts - superseded, does not carry forward |
+| `127491` (round 4, `90cbeac4`) | yes | yes, recorded at the time | none |
+| `127655` (post-round-4, `8ec89675`) | yes | yes, recorded at the time, against a different fence | none |
+| `132886` (cap-override, `2d0f24d0`) | yes | yes - complete fence, 2026-08-15, rc 0, 124.8 s | Codex `gpt-5.6-sol` **BLOCK**, Claude `claude-opus-5` **REQUEST_CHANGES** |
+| `137981` (R1-R4 repair) | yes | yes - two complete retained fence runs, 2026-08-15, rc 0, raw `cmp` identical | **not yet - both T0 slots PENDING** |
+
+Read as a chronology: the `132886` bytes were run by the Lead on 2026-08-15 and
+then audited by both mandatory T0 flagships, neither of which accepted them. The
+four REQUIRED findings they left - R1, R2, R3, R4 - are what this repair closes,
+and the bytes that close them are new (`137981`). After this implementer session,
+the Lead independently ran the complete fence twice: both runs returned rc 0
+with zero stderr and raw published stdout compared identical. No auditor has
+seen these bytes. Both required T0 auditor slots are PENDING against this new
+byte identity; this file must not be read as claiming auditor acceptance.
+
+Nothing in this file claims flagship acceptance of any RP7 rows-1-9 byte
+identity. Repair records are not acceptances: `90cbeac4` closed three Codex T0
+REQUIRED findings against the superseded `127491` bytes with Lead verification,
+and that is a repair record which does not carry forward to `127655`, `132886`
+or `137981`.
 
 ## Rows 1-9 D026 rebuild - executed block-code evidence
 
@@ -57,11 +80,15 @@ current rule of record for row 6 is:
   continuation - it is ignored and the continuation stays open;
 - a blank line **terminates** an open continuation - the accumulated logical
   line is classified immediately and the next physical line starts fresh;
-- a trailing **CR** is part of the line terminator, is normalised away before the
-  continuation test, and therefore does **not** stop a continuation; trailing
-  **spaces** are line content, are not normalised away, and therefore do stop
-  one. This half was reintroduced by the cap-override repair and is executed
-  against systemd 259 by the `ORACLE` arms of the fence - see "REQUIRED-1".
+- the line **terminator set** is exactly `CRLF`, bare `CR`, and bare `LF`. Every
+  other byte - `VT`, `FF`, `FS`, `GS`, `RS`, `NEL`, `U+2028`, `U+2029` - is line
+  content. This half was repaired by the R1-R4 repair; the previous bytes modelled
+  only `LF` and produced two executed false PASSes;
+- because a `CR` that ends a line is a **terminator**, it is gone before the
+  trailing-backslash escape scan and therefore does **not** stop a continuation;
+  trailing **spaces** are line content, are not removed, and therefore do stop
+  one. Both halves are executed against systemd 259 by the fourteen `ORACLE` arms
+  of the fence - see "REQUIRED-1" and "R1-R4 repair".
 
 Row-8 sandbox expected values are asserted rendered `systemctl show` literals.
 The fence proves the comparator and presence-before-value logic against fixture
@@ -76,21 +103,30 @@ preregistration draft: the block reads the `ActiveState` property from
 command. The amended STOP token is `operation=show`, matching the emitted block
 line and avoiding raw tool rc as the row verdict.
 
-The final identity asserted by the fence is `132886` bytes /
-`a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243`.
+The final identity asserted by the fence is `137981` bytes /
+`4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c`.
 
-The fence requires `systemd-analyze` on the executing machine: its row-6 `ORACLE`
-arms execute the continuation rule against the real systemd parser instead of
-citing a past run. If the tool is absent the fence aborts loudly with
-`HARNESS_ABORT systemd_oracle_unavailable=systemd-analyze` rather than skipping
-the arms. It also uses a run-owned `mktemp -d` scratch root, so every path in the
-transcript carries a per-run suffix; see "Transcript provenance" for how to
-compare two runs.
+The fence requires `systemd-analyze` on the executing machine, at major version
+259 or above: its row-6 `ORACLE` arms and its row-9 `ENV_ORACLE` arms execute
+their claims against the real systemd parser instead of citing a past run. If the
+tool is absent, or its major version is below the version the rule of record was
+established on, the fence aborts loudly
+(`HARNESS_ABORT systemd_oracle_unavailable=systemd-analyze`,
+`HARNESS_ABORT systemd_version_below_rule_of_record`) rather than skipping the
+arms.
+
+The fence uses a run-owned `mktemp -d` scratch root, so every real path in the
+run carries a per-run suffix - and it nonetheless publishes a **byte-identical
+transcript on every run**, because the raw transcript is canonicalised at the
+publication boundary rather than after the fact by the reader. The repository
+path is derived rather than hard-coded, so the published body runs unedited in
+any checkout. See "Transcript determinism" below for the accounting and the
+fail-closed gates.
 
 Published extraction command:
 
 ```bash
-cd /mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT
+cd <any checkout>/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT
 sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_END$/p' SELF_QA_RP7.md | bash --noprofile --norc
 ```
 
@@ -99,10 +135,18 @@ sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_EN
 set -Eeuo pipefail
 set -f
 export LC_ALL=C
-REPO=/mnt/c/LAB/Tradingview_LAB_CLEAN
-BLOCK="$REPO/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh"
-EXPECTED_BYTES=132886
-EXPECTED_SHA=a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243
+# The repository root is DERIVED from the directory the published extraction
+# command cds into, not hard-coded. A hard-coded absolute path made the published
+# body unrunnable in any other checkout, so every reproduction had to edit the
+# fence first - and an edited fence is not the published fence. RP7_REPO exists
+# only so a run-owned materialisation of the frozen Git-object bytes can be named
+# explicitly; unset, the fence resolves the checkout it was extracted from.
+REPO="${RP7_REPO:-$(cd ../../.. && pwd)}"
+BLOCK_REL=MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh
+BLOCK="$REPO/$BLOCK_REL"
+[ -f "$BLOCK" ] || { printf 'HARNESS_ABORT repo_root_not_resolved repo=%s\n' "$REPO"; exit 97; }
+EXPECTED_BYTES=137981
+EXPECTED_SHA=4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c
 # Run-owned scratch root. The earlier fixed name /tmp/rp7_rows_1_9_rebuild_evidence
 # was a collision hazard: two runs of this fence, or a run beside any other agent
 # using that name, shared one namespace and each `rm -rf` at start-up destroyed
@@ -114,11 +158,124 @@ EXPECTED_SHA=a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243
 # be able to traverse it, so the mode is widened once, deliberately, here.
 ROOT=$(mktemp -d "${TMPDIR:-/tmp}/rp7_rows_1_9_rebuild_evidence.XXXXXXXX")
 case "$ROOT" in */rp7_rows_1_9_rebuild_evidence.????????) : ;; *) printf 'HARNESS_ABORT unsafe_root=%s\n' "$ROOT"; exit 97 ;; esac
+case "$ROOT" in "$REPO"/*) printf 'HARNESS_ABORT scratch_root_inside_repo\n'; exit 97 ;; esac
 chmod 0755 "$ROOT"
-mkdir -p "$ROOT/logs"
-cleanup() { case "$ROOT" in */rp7_rows_1_9_rebuild_evidence.????????) rm -rf "$ROOT" ;; esac; }
-trap cleanup EXIT
-printf 'HARNESS_SCRATCH_ROOT shape=run_owned_mktemp template=rp7_rows_1_9_rebuild_evidence.XXXXXXXX fixed_root=no path=%s\n' "$ROOT"
+mkdir -p "$ROOT/logs" "$ROOT/raw"
+# ===========================================================================
+# CANONICAL PUBLICATION LAYER.
+#
+# Run-owned scratch isolation and a byte-reproducible transcript were previously
+# in direct conflict: every transcript line carrying a path carried a per-run
+# mktemp suffix, so two runs could only be compared after an EXTERNAL sed, and
+# one host-derived digest was excluded from the comparison altogether. A
+# transcript that needs an external edit before it can be compared is not a
+# reproducible transcript.
+#
+# The resolution is to separate the RAW transcript from the PUBLISHED one. All
+# fence output is written to a run-owned raw file; on exit it is canonicalised
+# and only then written to the real stdout. Runtime isolation is untouched - the
+# scratch root is still a per-run mktemp directory and every real path is still
+# real while the run executes.
+#
+# Only PRESENTATION is canonicalised, and each substitution is accounted for:
+#   %RUNROOT%                 this run's mktemp scratch root
+#   %REPO%                    the resolved repository root (expected 0 hits)
+#   %HOST_MOUNT_PROJECTION%   the live mount-projection digest of this namespace
+#   %SYSTEMD_ANALYZE%         the resolved absolute oracle tool path
+#   %SYSTEMD_VERSION%         the oracle version string
+#
+# The layer FAILS CLOSED. The exact number of hits for every token is declared
+# below and enforced on any rc-0 run, so a canonicalisation that swallowed more
+# or fewer occurrences than the fence accounts for aborts instead of producing a
+# quietly-different transcript. The raw run-owned root template may not survive
+# anywhere in the published text. The mount digest is not merely masked: before
+# it is replaced it is re-derived in the same run and required to match, its
+# binding record for the run-owned fragment is required to be present, and a
+# decoy rebuild is required to produce a DIFFERENT digest, so the field is
+# proved live and path-sensitive rather than assumed. No row predicate reads that
+# field; the predicate that does read the mount table
+# (`wpi_mount_guard_begin`/`_end`) compares intra-run and is exercised on every
+# row-6 and row-7 arm, so a real mount change still surfaces as a published STOP.
+#
+# The raw, uncanonicalised transcript and the real values are kept in the
+# run-owned tree. Export RP7_RAW_EVIDENCE_DIR to have them copied out before
+# cleanup; that variable changes no published byte.
+# ===========================================================================
+RAW="$ROOT/raw/transcript.txt"
+CANON_MAP="$ROOT/raw/canon_map.txt"
+CANON_EXPECT='%RUNROOT%=133,%REPO%=0,%HOST_MOUNT_PROJECTION%=1,%SYSTEMD_ANALYZE%=1,%SYSTEMD_VERSION%=1'
+cat > "$ROOT/raw/canon.py" <<'CANONPY'
+import sys
+raw_path, map_path, run_rc, expect_spec = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+text = open(raw_path, "rb").read().decode("utf-8", "surrogateescape")
+raw_lines = text.count("\n")
+pairs = []
+for line in open(map_path, "r", encoding="utf-8"):
+    line = line.rstrip("\n")
+    if not line:
+        continue
+    tok, lit = line.split("\t", 1)
+    pairs.append((tok, lit))
+pairs.sort(key=lambda p: -len(p[1]))
+counts = {}
+for tok, lit in pairs:
+    counts[tok] = text.count(lit)
+    text = text.replace(lit, tok)
+problems = []
+# Any surviving mention of the scratch template must be the literal TEMPLATE
+# printed by HARNESS_SCRATCH_ROOT, never a realised per-run directory name.
+TEMPLATE = "rp7_rows_1_9_rebuild_evidence."
+pos = text.find(TEMPLATE)
+while pos != -1:
+    if text[pos + len(TEMPLATE):pos + len(TEMPLATE) + 8] != "XXXXXXXX":
+        problems.append("run_owned_root_realised_name_survived")
+        break
+    pos = text.find(TEMPLATE, pos + 1)
+if run_rc == "0":
+    for item in expect_spec.split(","):
+        tok, want = item.split("=", 1)
+        got = counts.get(tok, 0)
+        if str(got) != want:
+            problems.append("count_mismatch:%s expected=%s observed=%s" % (tok, want, got))
+canon_lines = text.count("\n")
+if raw_lines != canon_lines:
+    problems.append("line_count_changed:%d->%d" % (raw_lines, canon_lines))
+sys.stdout.write(text)
+if problems:
+    sys.stdout.write("HARNESS_CANON_FAIL %s\n" % " ".join(problems))
+    sys.exit(94)
+order = ["%RUNROOT%", "%REPO%", "%HOST_MOUNT_PROJECTION%", "%SYSTEMD_ANALYZE%", "%SYSTEMD_VERSION%"]
+sys.stdout.write(
+    "HARNESS_CANON published=canonical raw_lines=%d canon_lines=%d residue=none "
+    "substitutions=[%s] raw_evidence_env=RP7_RAW_EVIDENCE_DIR\n"
+    % (raw_lines, canon_lines,
+       " ".join("%s:%d" % (t, counts.get(t, 0)) for t in order)))
+CANONPY
+canon_publish() {
+    local prc="$1"
+    : > "$CANON_MAP"
+    printf '%s\t%s\n' '%RUNROOT%' "$ROOT" >> "$CANON_MAP"
+    printf '%s\t%s\n' '%REPO%' "$REPO" >> "$CANON_MAP"
+    [ -z "${WPI_ATTESTED_MOUNTINFO_SHA256:-}" ] || printf '%s\t%s\n' '%HOST_MOUNT_PROJECTION%' "$WPI_ATTESTED_MOUNTINFO_SHA256" >> "$CANON_MAP"
+    [ -z "${SYSTEMD_ANALYZE:-}" ] || printf '%s\t%s\n' '%SYSTEMD_ANALYZE%' "$SYSTEMD_ANALYZE" >> "$CANON_MAP"
+    [ -z "${SYSTEMD_VERSION:-}" ] || printf '%s\t%s\n' '%SYSTEMD_VERSION%' "$SYSTEMD_VERSION" >> "$CANON_MAP"
+    /usr/bin/python3 -I -S "$ROOT/raw/canon.py" "$RAW" "$CANON_MAP" "$prc" "$CANON_EXPECT"
+}
+publish_and_cleanup() {
+    local rc=$?
+    if [ -f "$RAW" ]; then
+        canon_publish "$rc" >&3 || { printf 'HARNESS_ABORT canonicalisation_failed\n' >&3; [ "$rc" -ne 0 ] || rc=94; }
+    fi
+    if [ -n "${RP7_RAW_EVIDENCE_DIR:-}" ] && [ -d "$ROOT/raw" ]; then
+        mkdir -p "$RP7_RAW_EVIDENCE_DIR" 2>/dev/null && cp -R "$ROOT/raw/." "$RP7_RAW_EVIDENCE_DIR/" 2>/dev/null || :
+    fi
+    case "$ROOT" in */rp7_rows_1_9_rebuild_evidence.????????) rm -rf "$ROOT" ;; esac
+    exit "$rc"
+}
+exec 3>&1
+exec > "$RAW"
+trap publish_and_cleanup EXIT
+printf 'HARNESS_SCRATCH_ROOT shape=run_owned_mktemp template=rp7_rows_1_9_rebuild_evidence.XXXXXXXX fixed_root=no published=canonical path=%s\n' "$ROOT"
 block_bytes=$(wc -c < "$BLOCK" | tr -d ' ')
 block_sha=$(sha256sum "$BLOCK" | awk '{print $1}')
 block_cr=$(tr -cd '\r' < "$BLOCK" | wc -c | tr -d ' ')
@@ -194,6 +351,23 @@ fixture_expect_terms() {
     got=$(fixture_terms "$f")
     [ "$got" = "$want" ] || { printf 'HARNESS_ABORT fixture_terminator file=%s expected=[%s] observed=[%s]\n' "$f" "$want" "$got"; exit 97; }
 }
+# Whole-file byte census. `fixture_terms` reads its input as awk RECORDS, which
+# are LF-delimited, so it cannot describe a fixture whose loaded byte is a bare
+# CR in the middle of a record, a CR-only file, or a VT. Every R4 terminator
+# fixture is therefore additionally pinned by an exact count of the four bytes
+# that decide it. This is the gate that catches the recorded failure mode - a
+# fixture that silently loses a backslash or a CR still looks healthy and inverts
+# every conclusion drawn from it - for the fixtures the record census cannot see.
+fixture_bytes_census() {
+    LC_ALL=C /usr/bin/python3 -I -S -c 'import sys
+b=open(sys.argv[1],"rb").read()
+sys.stdout.write("bs=%d cr=%d lf=%d vt=%d dq=%d total=%d\n"%(b.count(b"\\"),b.count(b"\r"),b.count(b"\n"),b.count(b"\v"),b.count(b"\""),len(b)))' "$1"
+}
+fixture_expect_bytes() {
+    local f="$1" want="$2" got
+    got=$(fixture_bytes_census "$f")
+    [ "$got" = "$want" ] || { printf 'HARNESS_ABORT fixture_bytes file=%s expected=[%s] observed=[%s]\n' "$f" "$want" "$got"; exit 97; }
+}
 make_fragment() {
     local variant="$1" target="${2:-3736}" path="$WPI_UNIT_FRAGMENT" size need suffix=""
     : > "$path"
@@ -219,6 +393,19 @@ make_fragment() {
         row5_decoy) printf '[Unit]\nDescription=release decoy /opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b\n[Service]\nEnvironment=COMMENT_ONLY_VENV=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python\n# ExecStart=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python -m bridge.app\nExecStart=/tmp/comment-only\n' > "$path" ;;
         nul) printf '[Unit]\nDescription=nul\n\0\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
         same_size_wrong_digest) printf '[Unit]\nDescription=RP7 rows 1-9 wrong digest fixture\n[Service]\nExecStart=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python -m bridge.app\n' > "$path" ;;
+        # --- R4 terminator-identity fixtures. Every one of these varies the
+        # --- TERMINATOR itself rather than what precedes it, which is the whole
+        # --- dimension the previous fixture set was blind to.
+        bare_cr_install) printf '[Unit]\nDescription=x\r[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        multi_cr_install) printf '[Unit]\nDescription=continued \\\r\r\n[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        bs_cr_then_header) printf '[Unit]\nDescription=continued \\\r[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        cr_only_file) printf '[Unit]\rDescription=x\r[Install]\rWantedBy=multi-user.target\r[Service]\rExecStart=/bin/true\r' > "$path" ;;
+        vt_after_backslash) printf '[Unit]\nDescription=continued \\\n\v[Install]\nWantedBy=multi-user.target\n[Service]\nExecStart=/bin/true\n' > "$path" ;;
+        # --- R1 source-binding fixtures. Identical in every byte except the
+        # --- spelling of the Environment assignment, and padded to the same size,
+        # --- so the digest predicate can only be discriminating on content.
+        env_source_clean) printf '[Unit]\nDescription=env source\n[Service]\nExecStart=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python -m bridge.app\nEnvironment=MTC_BRIDGE_START_MODE=credential_free_disarmed\n' > "$path" ;;
+        env_source_midname_quote) printf '[Unit]\nDescription=env source\n[Service]\nExecStart=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python -m bridge.app\nEnvironment=MTC_BRIDGE"_START_MODE=credential_free_disarmed"\n' > "$path" ;;
         *) printf 'HARNESS_ABORT unknown_fragment_variant=%s\n' "$variant"; exit 97 ;;
     esac
     # Terminator integrity, asserted before any parser is allowed to see the
@@ -229,6 +416,13 @@ make_fragment() {
         crlf_no_install)                fixture_expect_terms "$path" 'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=4' ;;
         crlf_real_install)              fixture_expect_terms "$path" 'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=6' ;;
         trailing_space_after_backslash) fixture_expect_terms "$path" 'bs_lf=0 bs_cr=0 bs_space=1 bs_space_cr=0 cr_bytes=0' ;;
+        bare_cr_install)          fixture_expect_bytes "$path" 'bs=0 cr=1 lf=5 vt=0 dq=0 total=88' ;;
+        multi_cr_install)         fixture_expect_bytes "$path" 'bs=1 cr=2 lf=6 vt=0 dq=0 total=100' ;;
+        bs_cr_then_header)        fixture_expect_bytes "$path" 'bs=1 cr=1 lf=5 vt=0 dq=0 total=98' ;;
+        cr_only_file)             fixture_expect_bytes "$path" 'bs=0 cr=6 lf=0 vt=0 dq=0 total=88' ;;
+        vt_after_backslash)       fixture_expect_bytes "$path" 'bs=1 cr=0 lf=6 vt=1 dq=0 total=99' ;;
+        env_source_clean)         fixture_expect_bytes "$path" 'bs=0 cr=0 lf=5 vt=0 dq=0 total=197' ;;
+        env_source_midname_quote) fixture_expect_bytes "$path" 'bs=0 cr=0 lf=5 vt=0 dq=2 total=199' ;;
         continued_decoy|continued_comment_install|multi_comment_bridge|odd_backslash_three|blank_no_bridge|comment_then_blank|even_backslash_no_bridge|bare_backslash_line)
                                         fixture_expect_terms "$path" 'bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0' ;;
     esac
@@ -251,14 +445,54 @@ CLEAN_FRAGMENT_BYTES=$(fragment_bytes)
 [ "$CLEAN_FRAGMENT_BYTES" = 3736 ] || { printf 'HARNESS_ABORT clean_fragment_bytes=%s\n' "$CLEAN_FRAGMENT_BYTES"; exit 97; }
 WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"
 WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"
+# Row 9 refuses to speak about an unattested unit source. In production that
+# attestation is set at the end of `wpi_assert_b2_rows_1_7`; the single-subject
+# arms below drive B4 on its own, so the fence supplies the same attestation
+# explicitly and the arms that test its absence remove it explicitly.
+WPI_UNIT_SOURCE_ATTESTED="$CLEAN_FRAGMENT_SHA"
 WPI_PROBE_SEQ=0
 EV_DIR="$ROOT/attest/evidence"; mkdir -p "$EV_DIR"
 WPI_CAP_OUT_FD=""; WPI_CAP_ERR_FD=""; WPI_CAP_BIND_PREFIX=""; WPI_CAP_BIND_REASON=""; WPI_CAP_BIND_RC_STYLE=""; WPI_CAP_CHILD_FD=""; WPI_CAP_CHILD_SLOT=""; WPI_MOUNT_GUARD_ACTIVE=no; WPI_MOUNT_SNAPSHOT_SEQ=0
 wpi_capture_mountinfo_snapshot
 attest_snapshot="$WPI_LINE"
-wpi_build_mount_projection "$attest_snapshot" >/dev/null
+wpi_build_mount_projection "$attest_snapshot" > "$ROOT/raw/mount_projection_1.txt"
 WPI_ATTESTED_MOUNTINFO_SHA256="$WPI_MOUNT_PROJECTION_DIGEST"
-printf 'HARNESS_ATTESTED_MOUNTINFO sha256=%s fixture_root=%s unit_fragment=%s clean_fragment_bytes=%s clean_fragment_sha256=%s\n' "$WPI_ATTESTED_MOUNTINFO_SHA256" "$ROOT" "$WPI_UNIT_FRAGMENT" "$CLEAN_FRAGMENT_BYTES" "$CLEAN_FRAGMENT_SHA"
+ATTEST_PROJECTION_FILE=$(sed -n 's/.* projection=\([^ ]*\) .*/\1/p' "$ROOT/raw/mount_projection_1.txt")
+# ---------------------------------------------------------------------------
+# MOUNT-BINDING GATE. The published transcript renders this digest as
+# %HOST_MOUNT_PROJECTION%, so the fence has to prove - inside the run, before the
+# substitution is allowed - that the value it is hiding is a live, re-derivable,
+# path-sensitive function of THIS namespace and not a constant or a stale
+# leftover. Four checks, all fail-closed:
+#   1. shape       - exactly 64 lower-case hex characters
+#   2. re-derived  - a second independent build in the same run must agree
+#   3. bound       - the projection must carry a kind=point record for the
+#                    run-owned unit fragment, which is exactly why the digest is
+#                    per-run and therefore why it must be canonicalised at all
+#   4. sensitive   - rebuilding with a decoy fragment path must produce a
+#                    DIFFERENT digest, so the field demonstrably tracks the
+#                    binding rather than merely existing
+# The real value is written to the run-owned raw evidence, never to stdout.
+# ---------------------------------------------------------------------------
+case "$WPI_ATTESTED_MOUNTINFO_SHA256" in
+    [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) : ;;
+    *) printf 'HARNESS_ABORT mount_projection_digest_shape=[%s]\n' "$WPI_ATTESTED_MOUNTINFO_SHA256"; exit 97 ;;
+esac
+wpi_capture_mountinfo_snapshot
+wpi_build_mount_projection "$WPI_LINE" > "$ROOT/raw/mount_projection_2.txt"
+[ "$WPI_MOUNT_PROJECTION_DIGEST" = "$WPI_ATTESTED_MOUNTINFO_SHA256" ] || { printf 'HARNESS_ABORT mount_projection_not_rederivable\n'; exit 97; }
+grep -q -F -- "kind=point	path=$WPI_UNIT_FRAGMENT	" "$ATTEST_PROJECTION_FILE" || { printf 'HARNESS_ABORT mount_projection_unit_fragment_record_absent\n'; exit 97; }
+MOUNT_BOUND_REAL="$WPI_ATTESTED_MOUNTINFO_SHA256"
+saved_fragment="$WPI_UNIT_FRAGMENT"
+WPI_UNIT_FRAGMENT="$ROOT/decoy-not-a-fragment/mtc-bridge-first-start.service"
+wpi_capture_mountinfo_snapshot
+wpi_build_mount_projection "$WPI_LINE" > "$ROOT/raw/mount_projection_decoy.txt"
+MOUNT_DECOY_DIGEST="$WPI_MOUNT_PROJECTION_DIGEST"
+WPI_UNIT_FRAGMENT="$saved_fragment"
+[ "$MOUNT_DECOY_DIGEST" != "$MOUNT_BOUND_REAL" ] || { printf 'HARNESS_ABORT mount_projection_not_path_sensitive\n'; exit 97; }
+printf 'REAL_ATTESTED_MOUNTINFO %s\nREAL_DECOY_PROJECTION %s\nREAL_SCRATCH_ROOT %s\n' "$MOUNT_BOUND_REAL" "$MOUNT_DECOY_DIGEST" "$ROOT" > "$ROOT/raw/real_identities.txt"
+WPI_MOUNT_PROJECTION_DIGEST="$MOUNT_BOUND_REAL"
+printf 'HARNESS_ATTESTED_MOUNTINFO sha256=%s fixture_root=%s unit_fragment=%s clean_fragment_bytes=%s clean_fragment_sha256=%s rederived=match decoy_rebuild=differs binding=kind_point_record_present\n' "$WPI_ATTESTED_MOUNTINFO_SHA256" "$ROOT" "$WPI_UNIT_FRAGMENT" "$CLEAN_FRAGMENT_BYTES" "$CLEAN_FRAGMENT_SHA"
 write_b2_show() {
     local active="${1:-active}" nrestarts="${2:-0}" restart="${3:-no}" mainpid="${4:-189813}" load_state="${5:-loaded}" fragment="${6:-$WPI_UNIT_FRAGMENT}" dropins="${7:-}" exec_path="${8:-$WPI_VENV_ROOT/bin/python}" final_newline="${9:-yes}" exec_rendering="${10:-simple}"
     {
@@ -301,6 +535,7 @@ prepare_case() {
     WPI_CAP_BIND_PREFIX=""; WPI_CAP_BIND_REASON=""; WPI_CAP_BIND_RC_STYLE=""; WPI_CAP_CHILD_FD=""; WPI_CAP_CHILD_SLOT=""
     WPI_CAP_RC=0; WPI_CAP_ELAPSED_MS=0; WPI_READ_DIAG=""; WPI_READ_DIAG_FD=""; WPI_LEAF_FD=""
     WPI_MOUNT_GUARD_ACTIVE=no; WPI_MOUNT_SNAPSHOT_SEQ=0; WPI_SHOW_VALUES=(); WPI_SHOW_SEEN=()
+    WPI_UNIT_SOURCE_ATTESTED="$CLEAN_FRAGMENT_SHA"
 }
 RED_N=0; GREEN_N=0; CTRL_N=0
 run_case() {
@@ -389,20 +624,40 @@ run_case 5 not_found repaired_expected GREEN 0 "$row5_green" r5_notfound_green '
 # reproductions of this rule during this repair, in both directions, and is the
 # reason the census is a hard gate rather than a comment.
 #
-# What the arms below establish, and what the block is built to: a trailing CR
-# is part of the line TERMINATOR, is normalised away before the escape scan, and
-# therefore CONTINUES; trailing SPACES are line CONTENT, are not normalised
-# away, and therefore DO NOT continue. `rstrip("\r")` before the continuation
-# test is exactly that rule; a broad `rstrip()` is not.
+# What the arms below establish, and what the block is built to.
+#
+# The TERMINATOR SET first, because the previous arm set never varied it: every
+# arm below used LF or CRLF as the terminator itself and only varied what
+# preceded it, so the whole dimension in which the block was wrong was invisible
+# to its own evidence. The arms `bare_cr`, `multi_cr`, `bs_cr_then_header`,
+# `cr_only_file` and `vt_after_backslash` vary the terminator identity, and they
+# establish that systemd ends a line at CRLF, at a bare CR and at a bare LF - and
+# at nothing else, VT included.
+#
+# Then the escape rule, unchanged: a trailing CR belongs to the TERMINATOR and is
+# gone before the escape scan, so a value line ending backslash + CRLF CONTINUES;
+# trailing SPACES are line CONTENT, are not removed, and DO NOT continue.
+# `re.split("\r\n|\r|\n", text)` is exactly that terminator set; `split("\n")`
+# plus `rstrip("\r")` is not, and neither is `str.splitlines()`.
 # ===========================================================================
 SYSTEMD_ANALYZE=$(command -v systemd-analyze || true)
 [ -n "$SYSTEMD_ANALYZE" ] || { printf 'HARNESS_ABORT systemd_oracle_unavailable=systemd-analyze\n'; exit 97; }
-printf 'HARNESS_SYSTEMD_ORACLE tool=%s version=%s\n' "$SYSTEMD_ANALYZE" "$("$SYSTEMD_ANALYZE" --version | head -n 1)"
+SYSTEMD_VERSION=$("$SYSTEMD_ANALYZE" --version | head -n 1)
+# The recorded rule of record was established on systemd 259. A lower major
+# version is refused rather than silently re-read: the arms below would still
+# execute, but the transcript renders the version as %SYSTEMD_VERSION% and a
+# reader could not tell which manager answered. Behavioural drift on a HIGHER
+# version is not assumed away - every arm is executed and compared, so a
+# behavioural change surfaces as HARNESS_ORACLE_FAIL rather than as silence.
+SYSTEMD_MAJOR=$(printf '%s\n' "$SYSTEMD_VERSION" | sed -n 's/^systemd \([0-9][0-9]*\).*/\1/p')
+case "$SYSTEMD_MAJOR" in ''|*[!0-9]*) printf 'HARNESS_ABORT systemd_version_ungrammatical\n'; exit 97 ;; esac
+[ "$SYSTEMD_MAJOR" -ge 259 ] || { printf 'HARNESS_ABORT systemd_version_below_rule_of_record major=%s minimum=259\n' "$SYSTEMD_MAJOR"; exit 97; }
+printf 'HARNESS_SYSTEMD_ORACLE tool=%s version=%s major_minimum=259 major_ok=yes\n' "$SYSTEMD_ANALYZE" "$SYSTEMD_VERSION"
 ORACLE_DIR="$ROOT/oracle"; mkdir -p "$ORACLE_DIR"
 ORACLE_N=0
 oracle_case() {
-    local name want_terms expect_section expect_cont f out section cont
-    name="$1"; want_terms="$2"; expect_section="$3"; expect_cont="$4"
+    local name want_terms want_bytes expect_section expect_cont f out section cont
+    name="$1"; want_terms="$2"; want_bytes="$3"; expect_section="$4"; expect_cont="$5"
     f="$ORACLE_DIR/$name.service"
     case "$name" in
         ctrl_lf_bogus)     printf '[Unit]\nZZZBogus=1\n[Service]\nExecStart=/bin/true\n' > "$f" ;;
@@ -414,9 +669,16 @@ oracle_case() {
         bs_space_lf)       printf '[Unit]\nDescription=continued \\  \n[Install]\nZZZBogus=1\n[Service]\nExecStart=/bin/true\n' > "$f" ;;
         bs_space_crlf)     printf '[Unit]\r\nDescription=continued \\  \r\n[Install]\r\nZZZBogus=1\r\n[Service]\r\nExecStart=/bin/true\r\n' > "$f" ;;
         even_bs_lf)        printf '[Unit]\nDescription=continued \\\\\n[Install]\nZZZBogus=1\n[Service]\nExecStart=/bin/true\n' > "$f" ;;
+        # --- terminator-identity arms, added by the R4 repair ---
+        bare_cr)           printf '[Unit]\nDescription=x\r[Install]\nZZZBogus=1\n[Service]\nExecStart=/bin/true\n' > "$f" ;;
+        multi_cr)          printf '[Unit]\nDescription=continued \\\r\r\n[Install]\nZZZBogus=1\n[Service]\nExecStart=/bin/true\n' > "$f" ;;
+        bs_cr_then_header) printf '[Unit]\nDescription=continued \\\r[Install]\nZZZBogus=1\n[Service]\nExecStart=/bin/true\n' > "$f" ;;
+        cr_only_file)      printf '[Unit]\rDescription=x\r[Install]\rZZZBogus=1\r[Service]\rExecStart=/bin/true\r' > "$f" ;;
+        vt_after_backslash) printf '[Unit]\nDescription=continued \\\n\v[Install]\nZZZBogus=1\n[Service]\nExecStart=/bin/true\n' > "$f" ;;
         *) printf 'HARNESS_ABORT unknown_oracle_fixture=%s\n' "$name"; exit 97 ;;
     esac
     fixture_expect_terms "$f" "$want_terms"
+    fixture_expect_bytes "$f" "$want_bytes"
     out="$ORACLE_DIR/$name.out"
     set +e
     "$SYSTEMD_ANALYZE" verify "$f" > "$out" 2>&1
@@ -430,24 +692,121 @@ oracle_case() {
         exit 96
     fi
     ORACLE_N=$(( ORACLE_N + 1 ))
-    printf 'ORACLE fixture=%s terms=[%s] unknown_key_landed_in=[%s] continuation=%s\n' "$name" "$(fixture_terms "$f")" "$section" "$cont"
+    printf 'ORACLE fixture=%s terms=[%s] bytes=[%s] unknown_key_landed_in=[%s] continuation=%s\n' "$name" "$(fixture_terms "$f")" "$(fixture_bytes_census "$f")" "$section" "$cont"
 }
 # Controls first. Without these three, "no diagnostic" would be uninterpretable
 # and every CRLF answer below would prove nothing. They carry no continuation
 # claim of their own, so they are read only for the section they name.
-oracle_case ctrl_lf_bogus     'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0' Unit    CONTINUES
-oracle_case ctrl_crlf_bogus   'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=4' Unit    CONTINUES
-oracle_case ctrl_crlf_install 'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=6' Install DOES_NOT
-# The rule itself. CR is part of the line TERMINATOR and is normalised away
-# before the escape scan; trailing SPACES are line CONTENT and are not.
-oracle_case bs_lf             'bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0' Unit    CONTINUES
-oracle_case bs_crlf           'bs_lf=0 bs_cr=1 bs_space=0 bs_space_cr=0 cr_bytes=6' Unit    CONTINUES
-oracle_case bs_cr_in_lf_file  'bs_lf=0 bs_cr=1 bs_space=0 bs_space_cr=0 cr_bytes=1' Unit    CONTINUES
-oracle_case bs_space_lf       'bs_lf=0 bs_cr=0 bs_space=1 bs_space_cr=0 cr_bytes=0' Install DOES_NOT
-oracle_case bs_space_crlf     'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=1 cr_bytes=6' Install DOES_NOT
-oracle_case even_bs_lf        'bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0' Install DOES_NOT
-[ "$ORACLE_N" = 9 ] || { printf 'HARNESS_COUNT_MISMATCH scope=oracle fixtures=%s expected=9\n' "$ORACLE_N"; exit 96; }
-printf 'ORACLE_SUMMARY fixtures=%s controls=3 rule=trailing_CR_is_terminator_and_CONTINUES trailing_space_is_content_and_DOES_NOT even_backslash_DOES_NOT source=executed_systemd_analyze_verify normalisation_of_record=rstrip_CR_only_then_lstrip\n' "$ORACLE_N"
+oracle_case ctrl_lf_bogus     'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0' 'bs=0 cr=0 lf=4 vt=0 dq=0 total=48' Unit    CONTINUES
+oracle_case ctrl_crlf_bogus   'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=4' 'bs=0 cr=4 lf=4 vt=0 dq=0 total=52' Unit    CONTINUES
+oracle_case ctrl_crlf_install 'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=6' 'bs=0 cr=6 lf=6 vt=0 dq=0 total=78' Install DOES_NOT
+# The escape rule. CR is part of the line TERMINATOR and is gone before the
+# escape scan; trailing SPACES are line CONTENT and are not.
+oracle_case bs_lf             'bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0' 'bs=1 cr=0 lf=6 vt=0 dq=0 total=82' Unit    CONTINUES
+oracle_case bs_crlf           'bs_lf=0 bs_cr=1 bs_space=0 bs_space_cr=0 cr_bytes=6' 'bs=1 cr=6 lf=6 vt=0 dq=0 total=88' Unit    CONTINUES
+oracle_case bs_cr_in_lf_file  'bs_lf=0 bs_cr=1 bs_space=0 bs_space_cr=0 cr_bytes=1' 'bs=1 cr=1 lf=6 vt=0 dq=0 total=83' Unit    CONTINUES
+oracle_case bs_space_lf       'bs_lf=0 bs_cr=0 bs_space=1 bs_space_cr=0 cr_bytes=0' 'bs=1 cr=0 lf=6 vt=0 dq=0 total=84' Install DOES_NOT
+oracle_case bs_space_crlf     'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=1 cr_bytes=6' 'bs=1 cr=6 lf=6 vt=0 dq=0 total=90' Install DOES_NOT
+oracle_case even_bs_lf        'bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0' 'bs=2 cr=0 lf=6 vt=0 dq=0 total=83' Install DOES_NOT
+# TERMINATOR IDENTITY. The nine arms above vary only what PRECEDES the
+# terminator; every one of them uses LF or CRLF as the terminator itself. That is
+# precisely the dimension in which the delivered parser was wrong and its own
+# evidence could not see it. These five vary the terminator.
+#   bare_cr            a bare CR ENDS the line, so the header after it is REAL
+#   multi_cr           CR + CRLF is terminator + terminator, so the blank line
+#                      between them TERMINATES the open continuation
+#   bs_cr_then_header  a bare CR ends the value line while the backslash
+#                      continuation is still open, so the header IS swallowed -
+#                      the arm that stops "model the CR" becoming "swallow it"
+#   cr_only_file       a fragment terminated only by CR parses normally
+#   vt_after_backslash VT is CONTENT, not a terminator: the continuation stays
+#                      open and the header is swallowed. This is the arm that
+#                      refutes `str.splitlines()` as an equivalent repair.
+oracle_case bare_cr            'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=1' 'bs=0 cr=1 lf=5 vt=0 dq=0 total=72' Install DOES_NOT
+oracle_case multi_cr           'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=2' 'bs=1 cr=2 lf=6 vt=0 dq=0 total=84' Install DOES_NOT
+oracle_case bs_cr_then_header  'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=1' 'bs=1 cr=1 lf=5 vt=0 dq=0 total=82' Unit    CONTINUES
+oracle_case cr_only_file       'bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=6' 'bs=0 cr=6 lf=0 vt=0 dq=0 total=72' Install DOES_NOT
+oracle_case vt_after_backslash 'bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0' 'bs=1 cr=0 lf=6 vt=1 dq=0 total=83' Unit    CONTINUES
+[ "$ORACLE_N" = 14 ] || { printf 'HARNESS_COUNT_MISMATCH scope=oracle fixtures=%s expected=14\n' "$ORACLE_N"; exit 96; }
+printf 'ORACLE_SUMMARY fixtures=%s controls=3 terminator_set=CRLF_or_CR_or_LF_and_nothing_else rule=trailing_CR_is_terminator_and_CONTINUES trailing_space_is_content_and_DOES_NOT even_backslash_DOES_NOT VT_is_content source=executed_systemd_analyze_verify normalisation_of_record=re_split_CRLF_CR_LF\n' "$ORACLE_N"
+# ===========================================================================
+# ROW-9 ENVIRONMENT ORACLE - the manager normalisation boundary, executed.
+#
+# Row 9 reads the EFFECTIVE `Environment` rendering from `systemctl show`. A
+# previous D026 arm injected a raw mid-name-quote spelling straight into fake
+# show output and read the tokenizer refusing it as proof that production refuses
+# the attack. It is not: the spelling never reaches production in that form,
+# because the manager normalises it first. That boundary is now EXECUTED here
+# instead of being reasoned about.
+#
+# Discriminator, and it is a printing one rather than a silence one: systemd
+# echoes the token it actually validated. Under a name that is invalid even after
+# quote removal it prints the token WITH THE QUOTES ALREADY GONE, which shows the
+# normalisation directly; under a valid name the same spelling draws no
+# diagnostic at all, so the assignment systemd stored is the clean protected one.
+# ctrl_bad_name proves the diagnostic fires at all; ctrl_clean proves silence is
+# reachable. Without both, neither answer would be readable.
+# ===========================================================================
+ENV_ORACLE_DIR="$ROOT/env_oracle"; mkdir -p "$ENV_ORACLE_DIR"
+ENV_ORACLE_N=0
+env_oracle_case() {
+    local name expect_valid expect_echo f out echoed valid
+    name="$1"; expect_valid="$2"; expect_echo="$3"
+    f="$ENV_ORACLE_DIR/$name.service"
+    { printf '[Unit]\nDescription=env oracle %s\n[Service]\nExecStart=/bin/true\n' "$name"
+      case "$name" in
+        ctrl_clean)        printf 'Environment=MTC_BRIDGE_START_MODE=credential_free_disarmed\n' ;;
+        ctrl_bad_name)     printf 'Environment=1BAD=value\n' ;;
+        ctrl_hyphen_name)  printf 'Environment=MTC-BRIDGE_START_MODE=credential_free_disarmed\n' ;;
+        midname_dq)        printf 'Environment=MTC_BRIDGE"_START_MODE=credential_free_disarmed"\n' ;;
+        midname_sq)        printf "Environment=MTC_BRIDGE'_START_MODE=credential_free_disarmed'\n" ;;
+        midname_hyphen_dq) printf 'Environment=MTC-BRIDGE"_START_MODE=credential_free_disarmed"\n' ;;
+        name_quote_no_eq)  printf 'Environment=MTC_BRIDGE"_START_MODE"\n' ;;
+        whole_quoted)      printf 'Environment="MTC_BRIDGE_START_MODE=credential_free_disarmed"\n' ;;
+        value_quoted)      printf 'Environment=MTC_BRIDGE_START_MODE="credential_free_disarmed"\n' ;;
+        dup_same_value)    printf 'Environment=MTC_BRIDGE_START_MODE=credential_free_disarmed MTC_BRIDGE_START_MODE=credential_free_disarmed\n' ;;
+        dup_diff_value)    printf 'Environment=MTC_BRIDGE_START_MODE=credential_free_disarmed MTC_BRIDGE_START_MODE=manual_override\n' ;;
+        *) printf 'HARNESS_ABORT unknown_env_oracle_fixture=%s\n' "$name"; exit 97 ;;
+      esac
+    } > "$f"
+    out="$ENV_ORACLE_DIR/$name.out"
+    set +e
+    "$SYSTEMD_ANALYZE" verify "$f" > "$out" 2>&1
+    set -e
+    echoed=$(sed -n 's/.*Invalid environment assignment, ignoring: //p' "$out" | head -n 1)
+    if [ -z "$echoed" ]; then valid=yes; echoed=none; else valid=no; fi
+    if [ "$valid" != "$expect_valid" ] || [ "$echoed" != "$expect_echo" ]; then
+        printf 'HARNESS_ENV_ORACLE_FAIL fixture=%s expected_valid=%s observed_valid=%s expected_echo=[%s] observed_echo=[%s]\n' "$name" "$expect_valid" "$valid" "$expect_echo" "$echoed"
+        sed 's/^/HARNESS_ENV_ORACLE_OUT /' "$out"
+        exit 96
+    fi
+    ENV_ORACLE_N=$(( ENV_ORACLE_N + 1 ))
+    printf 'ENV_ORACLE fixture=%s assignment_accepted_by_systemd=%s systemd_echoed_token=[%s]\n' "$name" "$valid" "$echoed"
+}
+# Controls first: silence must be reachable, and the diagnostic must fire.
+env_oracle_case ctrl_clean        yes none
+env_oracle_case ctrl_bad_name     no  '1BAD=value'
+env_oracle_case ctrl_hyphen_name  no  'MTC-BRIDGE_START_MODE=credential_free_disarmed'
+# The boundary itself. midname_hyphen_dq is the load-bearing arm: systemd PRINTS
+# the post-quote-removal token, so the normalisation is observed rather than
+# inferred. midname_dq and midname_sq then show that the same normalisation under
+# a valid name is accepted silently - i.e. what the manager stores, and therefore
+# what `systemctl show` renders back to the production caller, is the clean
+# protected assignment and not the raw spelling.
+env_oracle_case midname_hyphen_dq no  'MTC-BRIDGE_START_MODE=credential_free_disarmed'
+env_oracle_case midname_dq        yes none
+env_oracle_case midname_sq        yes none
+env_oracle_case name_quote_no_eq  no  'MTC_BRIDGE_START_MODE'
+# The two quoted forms row 9 must keep accepting.
+env_oracle_case whole_quoted      yes none
+env_oracle_case value_quoted      yes none
+# The duplicate policy, stated as what it is. systemd accepts both duplicate
+# forms without a diagnostic; row 9 refuses them anyway. That is a DECLARED
+# narrowing, executed here so it cannot be mistaken for a systemd-fidelity claim.
+env_oracle_case dup_same_value    yes none
+env_oracle_case dup_diff_value    yes none
+[ "$ENV_ORACLE_N" = 11 ] || { printf 'HARNESS_COUNT_MISMATCH scope=env_oracle fixtures=%s expected=11\n' "$ENV_ORACLE_N"; exit 96; }
+printf 'ENV_ORACLE_SUMMARY fixtures=%s controls=3 established=quote_removal_precedes_validation_so_manager_renders_clean_assignment duplicate_policy=row9_stronger_than_systemd source=executed_systemd_analyze_verify\n' "$ENV_ORACLE_N"
 row6_green="B2_fragment_install_section path=$WPI_UNIT_FRAGMENT install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed"
 run_case 6 comment_decoy comment_contains_install CONTROL 0 "$row6_green" r6_comment 'prepare_case r6_comment; make_fragment comment_decoy 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
 run_case 6 continued_decoy continued_line_then_install CONTROL 0 "$row6_green" r6_continued 'prepare_case r6_continued; make_fragment continued_decoy 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
@@ -475,6 +834,16 @@ run_case 6 crlf_install crlf_terminator_continues_install_is_continuation_text C
 run_case 6 trailing_space_after_backslash trailing_space_blocks_continuation_real_install RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_trailing_space 'prepare_case r6_trailing_space; make_fragment trailing_space_after_backslash 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
 run_case 6 trailing_space_after_backslash repaired_expected GREEN 0 "$row6_green" r6_trailing_space_green 'prepare_case r6_trailing_space_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
 run_case 6 crlf_no_install crlf_fragment_without_install CONTROL 0 "$row6_green" r6_crlf_no_install 'prepare_case r6_crlf_no_install; make_fragment crlf_no_install 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+# --- R4 terminator-identity arms. The ORACLE arms above decided each of these
+# --- against systemd 259 before any of them was read here.
+run_case 6 bare_cr_install bare_CR_ends_the_line_so_install_is_real RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_bare_cr 'prepare_case r6_bare_cr; make_fragment bare_cr_install 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 bare_cr_install repaired_expected GREEN 0 "$row6_green" r6_bare_cr_green 'prepare_case r6_bare_cr_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
+run_case 6 multi_cr_install CR_run_makes_a_blank_line_that_terminates RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_multi_cr 'prepare_case r6_multi_cr; make_fragment multi_cr_install 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 multi_cr_install repaired_expected GREEN 0 "$row6_green" r6_multi_cr_green 'prepare_case r6_multi_cr_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
+run_case 6 cr_only_file CR_only_fragment_carries_a_real_install RED 1 "B2_FAIL reason=install_section_present path=$WPI_UNIT_FRAGMENT" r6_cr_only 'prepare_case r6_cr_only; make_fragment cr_only_file 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 cr_only_file repaired_expected GREEN 0 "$row6_green" r6_cr_only_green 'prepare_case r6_cr_only_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_fragment_has_no_install_section'
+run_case 6 bs_cr_then_header bare_CR_ends_the_line_but_the_continuation_stays_open CONTROL 0 "$row6_green" r6_bs_cr_then_header 'prepare_case r6_bs_cr_then_header; make_fragment bs_cr_then_header 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
+run_case 6 vt_after_backslash VT_is_content_not_a_terminator CONTROL 0 "$row6_green" r6_vt 'prepare_case r6_vt; make_fragment vt_after_backslash 3736; WPI_UNIT_FRAGMENT_BYTES=$(fragment_bytes); WPI_UNIT_FRAGMENT_SHA256=$(fragment_sha); wpi_assert_fragment_has_no_install_section'
 row7_green="B2_digest path=$WPI_UNIT_FRAGMENT bytes=3736 sha256=$CLEAN_FRAGMENT_SHA binding=component_and_mount"
 run_case 7 one_byte_short bytes_3735 RED 1 'B2_FAIL reason=unit_fragment_digest_mismatch observed_bytes=3735 expected_bytes=3736' r7_short 'prepare_case r7_short; make_fragment clean 3735; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_regular_digest B2 unit_fragment_absent unit_fragment_digest_mismatch "$WPI_UNIT_FRAGMENT" "$WPI_UNIT_FRAGMENT_BYTES" "$WPI_UNIT_FRAGMENT_SHA256" fragment unit_fragment_object_unexpected with_path'
 run_case 7 one_byte_short repaired_expected GREEN 0 "$row7_green" r7_short_green 'prepare_case r7_short_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_regular_digest B2 unit_fragment_absent unit_fragment_digest_mismatch "$WPI_UNIT_FRAGMENT" "$WPI_UNIT_FRAGMENT_BYTES" "$WPI_UNIT_FRAGMENT_SHA256" fragment unit_fragment_object_unexpected with_path'
@@ -499,18 +868,51 @@ SH
 chmod 755 "$child"; set +e; runuser -u nobody -- bash --noprofile --norc "$child"; rc=$?; set -e; chmod 0644 "$WPI_UNIT_FRAGMENT"; exit "$rc"'
 run_case 7 unreadable repaired_expected GREEN 0 "$row7_green" r7_unreadable_green 'prepare_case r7_unreadable_green; make_fragment clean 3736; WPI_UNIT_FRAGMENT_BYTES="$CLEAN_FRAGMENT_BYTES"; WPI_UNIT_FRAGMENT_SHA256="$CLEAN_FRAGMENT_SHA"; wpi_assert_regular_digest B2 unit_fragment_absent unit_fragment_digest_mismatch "$WPI_UNIT_FRAGMENT" "$WPI_UNIT_FRAGMENT_BYTES" "$WPI_UNIT_FRAGMENT_SHA256" fragment unit_fragment_object_unexpected with_path'
 run_case 8 mismatch PrivateTmp_no RED 1 'B4_FAIL reason=property_mismatch prop=PrivateTmp observed=[no] expected=[yes]' r8_mismatch 'prepare_case r8_mismatch; write_b4_show no; wpi_assert_b4_rows_8_9'
-run_case 8 mismatch repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r8_mismatch_green 'prepare_case r8_mismatch_green; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 8 mismatch repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r8_mismatch_green 'prepare_case r8_mismatch_green; write_b4_show; wpi_assert_b4_rows_8_9'
 run_case 8 missing_property delete_ProtectSystem RED 3 'B4_STOP reason=unit_property_unreadable prop=ProtectSystem rc=0 detail=property_record_absent query=ProtectSystem' r8_missing 'prepare_case r8_missing; write_b4_show yes strict MTC_BRIDGE_START_MODE=credential_free_disarmed yes; wpi_assert_b4_rows_8_9'
-run_case 8 missing_property repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r8_missing_green 'prepare_case r8_missing_green; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 8 missing_property repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r8_missing_green 'prepare_case r8_missing_green; write_b4_show; wpi_assert_b4_rows_8_9'
 run_case 9 duplicate two_start_mode_assignments_different_values RED 1 'B4_FAIL reason=start_mode_missing_or_altered observed=count=2 observed_sha256=' r9_duplicate 'prepare_case r9_duplicate; write_b4_show yes strict "MTC_BRIDGE_START_MODE=credential_free_disarmed MTC_BRIDGE_START_MODE=manual_override"; wpi_assert_b4_rows_8_9'
-run_case 9 duplicate repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r9_duplicate_green 'prepare_case r9_duplicate_green; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 9 duplicate repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r9_duplicate_green 'prepare_case r9_duplicate_green; write_b4_show; wpi_assert_b4_rows_8_9'
 run_case 9 substring different_variable_contains_token RED 1 'B4_FAIL reason=start_mode_missing_or_altered observed=count=0 observed_sha256=' r9_substring 'prepare_case r9_substring; write_b4_show yes strict "OTHER_MTC_BRIDGE_START_MODE=credential_free_disarmed"; wpi_assert_b4_rows_8_9'
-run_case 9 substring repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r9_substring_green 'prepare_case r9_substring_green; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 9 substring repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r9_substring_green 'prepare_case r9_substring_green; write_b4_show; wpi_assert_b4_rows_8_9'
 run_case 9 unmodeled_token token_without_assignment RED 3 'B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_token_without_assignment' r9_unmodeled 'prepare_case r9_unmodeled; write_b4_show yes strict "UNMODELED_TOKEN MTC_BRIDGE_START_MODE=credential_free_disarmed"; wpi_assert_b4_rows_8_9'
-run_case 9 unmodeled_token repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r9_unmodeled_green 'prepare_case r9_unmodeled_green; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 9 unmodeled_token repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r9_unmodeled_green 'prepare_case r9_unmodeled_green; write_b4_show; wpi_assert_b4_rows_8_9'
 run_case 9 malformed_name name_starts_digit RED 3 'B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_name_grammar' r9_bad_name 'prepare_case r9_bad_name; write_b4_show yes strict "1BAD=value MTC_BRIDGE_START_MODE=credential_free_disarmed"; wpi_assert_b4_rows_8_9'
-run_case 9 malformed_name repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r9_bad_name_green 'prepare_case r9_bad_name_green; write_b4_show; wpi_assert_b4_rows_8_9'
-run_case 9 quoted quoted_assignment CONTROL 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' r9_quoted 'prepare_case r9_quoted; write_b4_show yes strict "\"MTC_BRIDGE_START_MODE=credential_free_disarmed\""; wpi_assert_b4_rows_8_9'
+run_case 9 malformed_name repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r9_bad_name_green 'prepare_case r9_bad_name_green; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 9 quoted quoted_assignment CONTROL 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r9_quoted 'prepare_case r9_quoted; write_b4_show yes strict "\"MTC_BRIDGE_START_MODE=credential_free_disarmed\""; wpi_assert_b4_rows_8_9'
+run_case 9 value_quoted value_only_quoted_assignment CONTROL 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r9_value_quoted 'prepare_case r9_value_quoted; write_b4_show yes strict "MTC_BRIDGE_START_MODE=\"credential_free_disarmed\""; wpi_assert_b4_rows_8_9'
+run_case 9 same_value_duplicate declared_stronger_than_systemd_single_occurrence RED 1 'B4_FAIL reason=start_mode_missing_or_altered observed=count=2 observed_sha256=e9cc545dfb074abf6ff63c26a42b6139c12f714e3b20bb87ba31283ceba1b7de' r9_same_value_dup 'prepare_case r9_same_value_dup; write_b4_show yes strict "MTC_BRIDGE_START_MODE=credential_free_disarmed MTC_BRIDGE_START_MODE=credential_free_disarmed"; wpi_assert_b4_rows_8_9'
+run_case 9 same_value_duplicate repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r9_same_value_dup_green 'prepare_case r9_same_value_dup_green; write_b4_show; wpi_assert_b4_rows_8_9'
+# --- R1 SOURCE BINDING, single subject. Row 9 reads the manager's EFFECTIVE
+# --- rendering, so on its own it identifies no unit. These two arms drive the
+# --- production predicate with the attestation removed and with the attestation
+# --- pointing at a different object; both must STOP rather than accept.
+run_case 9 unattested_source attestation_removed RED 3 'B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=unit_source_not_attested' r9_unattested 'prepare_case r9_unattested; WPI_UNIT_SOURCE_ATTESTED=""; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 9 unattested_source repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r9_unattested_green 'prepare_case r9_unattested_green; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 9 attestation_mismatch attestation_names_another_object RED 3 'B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=unit_source_attestation_mismatch' r9_attest_mismatch 'prepare_case r9_attest_mismatch; WPI_UNIT_SOURCE_ATTESTED=0000000000000000000000000000000000000000000000000000000000000000; write_b4_show; wpi_assert_b4_rows_8_9'
+run_case 9 attestation_mismatch repaired_expected GREEN 0 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' r9_attest_mismatch_green 'prepare_case r9_attest_mismatch_green; write_b4_show; wpi_assert_b4_rows_8_9'
+# --- R1 SOURCE BINDING, driven through the row-7 production predicate. The
+# --- ENV_ORACLE arms established that a mid-name-quote spelling in the UNIT
+# --- SOURCE normalises to the clean protected assignment before the production
+# --- caller ever sees it, so the tokenizer is not what refuses it. This is what
+# --- refuses it: the two fragments below differ ONLY in the spelling of their
+# --- Environment line and are padded to the SAME byte count, so the digest
+# --- predicate can only be discriminating on content. The attacked source is
+# --- refused against the preregistered digest; drop-ins are separately required
+# --- empty by row 5, so no second assignment can arrive from anywhere else.
+make_fragment env_source_clean 3736
+ENV_SOURCE_CLEAN_SHA=$(fragment_sha)
+ENV_SOURCE_CLEAN_BYTES=$(fragment_bytes)
+make_fragment env_source_midname_quote 3736
+ENV_SOURCE_QUOTED_SHA=$(fragment_sha)
+ENV_SOURCE_QUOTED_BYTES=$(fragment_bytes)
+[ "$ENV_SOURCE_CLEAN_BYTES" = "$ENV_SOURCE_QUOTED_BYTES" ] || { printf 'HARNESS_ABORT env_source_sizes_differ clean=%s quoted=%s\n' "$ENV_SOURCE_CLEAN_BYTES" "$ENV_SOURCE_QUOTED_BYTES"; exit 97; }
+[ "$ENV_SOURCE_CLEAN_SHA" != "$ENV_SOURCE_QUOTED_SHA" ] || { printf 'HARNESS_ABORT env_source_shas_equal=yes\n'; exit 97; }
+make_fragment clean 3736
+[ "$(fragment_sha)" = "$CLEAN_FRAGMENT_SHA" ] || { printf 'HARNESS_ABORT clean_fragment_not_restored\n'; exit 97; }
+printf 'D026_SOURCE_BINDING clean_bytes=%s quoted_bytes=%s size_equal=yes sha_differs=yes\n' "$ENV_SOURCE_CLEAN_BYTES" "$ENV_SOURCE_QUOTED_BYTES"
+run_case 9 source_binding unit_source_carries_midname_quote RED 1 "B2_FAIL reason=unit_fragment_digest_mismatch observed=$ENV_SOURCE_QUOTED_SHA expected=$ENV_SOURCE_CLEAN_SHA" r9_source_binding 'prepare_case r9_source_binding; make_fragment env_source_midname_quote 3736; wpi_assert_regular_digest B2 unit_fragment_absent unit_fragment_digest_mismatch "$WPI_UNIT_FRAGMENT" "$ENV_SOURCE_CLEAN_BYTES" "$ENV_SOURCE_CLEAN_SHA" fragment unit_fragment_object_unexpected with_path'
+run_case 9 source_binding repaired_expected GREEN 0 "B2_digest path=$WPI_UNIT_FRAGMENT bytes=$ENV_SOURCE_CLEAN_BYTES sha256=$ENV_SOURCE_CLEAN_SHA binding=component_and_mount" r9_source_binding_green 'prepare_case r9_source_binding_green; make_fragment env_source_clean 3736; wpi_assert_regular_digest B2 unit_fragment_absent unit_fragment_digest_mismatch "$WPI_UNIT_FRAGMENT" "$ENV_SOURCE_CLEAN_BYTES" "$ENV_SOURCE_CLEAN_SHA" fragment unit_fragment_object_unexpected with_path'
 for cid in r8_mismatch_green r8_missing_green; do
     count=$(grep -c '^B4_property ' "$ROOT/logs/$cid.stdout.txt")
     [ "$count" = 10 ] || { printf 'HARNESS_CASE_FAIL case=%s expected_b4_property_count=10 actual=%s\n' "$cid" "$count"; exit 96; }
@@ -532,42 +934,59 @@ done
 # first parser and would fabricate exactly the evidence this section exists to
 # produce.
 #
-# Subjects:
-#   round4     git 90cbeac4 - 127491 B - the true pre-fix bytes for the six
-#              row-6 pairs and for crlf_install
-#   current    git 8ec89675 - 127655 B - the true pre-fix bytes for the row-9
-#              mid-name-quote guard
-#   repaired   the delivered worktree bytes
-#   mut_nocr   repaired with ONE line replaced by the CR-blind lstrip(WS)
-#              normalisation the current committed bytes carry. It is the false
-#              FAIL direction: a fragment systemd reads as having no install
-#              section is reported as having one.
-#   mut_broad  repaired with the same line replaced by a broad rstrip(). It is
-#              the false PASS direction: trailing spaces are eaten too, a
-#              continuation systemd does not perform is fabricated, and a REAL
-#              [Install] is swallowed.
+# Subjects. Seven, because the terminator model has three distinct wrong
+# neighbours and two of them are real committed byte sets:
+#   round4       git 90cbeac4 - 127491 B - true pre-fix bytes for the six row-6
+#                pairs and for crlf_install; splits on a bare CR correctly but
+#                bridges blank lines
+#   current      git 8ec89675 - 127655 B - true pre-fix bytes for the row-9
+#                mid-name-quote guard; CR-blind
+#   capoverride  git 2d0f24d0 - 132886 B - the cap-override candidate, and the
+#                true pre-fix bytes for R4. Its `split("\n")` plus `rstrip("\r")`
+#                is the FALSE PASS this repair removes: bare_cr_install and
+#                multi_cr_install are fragments systemd loads WITH a real
+#                [Install] that it reported `install_section=absent` at rc 0
+#   repaired     the delivered worktree bytes
+#   mut_nocr     repaired with ONE line replaced so only LF terminates. The
+#                CR-blind direction the committed 127655 bytes carried.
+#   mut_broad    repaired with ONE line replaced by a broad rstrip(). The false
+#                PASS direction: trailing spaces are eaten too, a continuation
+#                systemd does not perform is fabricated, and a REAL [Install] is
+#                swallowed.
+#   mut_splitlines  repaired with ONE line replaced by `str.splitlines()`. This
+#                is the "just revert it" repair, and it is wrong in the opposite
+#                direction: splitlines also breaks at VT, FF, FS, GS, RS, NEL,
+#                U+2028 and U+2029, which systemd treats as CONTENT, so it closes
+#                a continuation systemd keeps open and reports a real [Install]
+#                where there is none - executed on vt_after_backslash.
 #
-# The two mutants bracket the repaired line from both sides. That matters here
-# more than usual: this rule was reproduced wrongly twice during this repair,
-# once in each direction, from fixtures that had quietly lost a byte. Neither
-# mutant is an opinion about systemd - each is executed beside the oracle above,
-# which decides the rule, and beside two real committed blobs.
+# The three mutants bracket the repaired line on every side that matters: too
+# few terminators, too many terminators, and too much stripping. That matters
+# here more than usual: this rule was reproduced wrongly twice during this
+# repair, once in each direction, from fixtures that had quietly lost a byte.
+# No mutant is an opinion about systemd - each is executed beside the oracle
+# above, which decides the rule, and beside three real committed blobs.
 # ===========================================================================
 SUBJ_DIR="$ROOT/subjects"
 mkdir -p "$SUBJ_DIR"
-BLOCK_REL=MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh
 git -C "$REPO" cat-file blob "90cbeac4:$BLOCK_REL" > "$SUBJ_DIR/round4.sh"
 git -C "$REPO" cat-file blob "8ec89675:$BLOCK_REL" > "$SUBJ_DIR/current.sh"
+git -C "$REPO" cat-file blob "2d0f24d0:$BLOCK_REL" > "$SUBJ_DIR/capoverride.sh"
 cat "$BLOCK" > "$SUBJ_DIR/repaired.sh"
-MUT_TARGET=' line=physical.rstrip("\r").lstrip(WS)'
+# Two mutation targets now, because the repair moved the terminator model out of
+# the strip and into the split. Each mutation still replaces EXACTLY one line and
+# the awk aborts if it does not match exactly once.
+MUT_TARGET_SPLIT='for physical in re.split("\r\n|\r|\n",text):'
+MUT_TARGET_STRIP=' line=physical.lstrip(WS)'
 mutate_subject() {
-    local name replacement
-    name="$1"; replacement="$2"
-    OLD="$MUT_TARGET" NEW="$replacement" awk 'BEGIN{o=ENVIRON["OLD"];n=ENVIRON["NEW"]} $0==o{print n;c++;next} {print} END{if(c!=1)exit 9}' "$BLOCK" > "$SUBJ_DIR/$name.sh" || { printf 'HARNESS_ABORT mutation_not_applied=%s\n' "$name"; exit 97; }
-    printf 'HARNESS_MUTANT name=%s replaced_exactly_one_line=yes from=[%s] to=[%s]\n' "$name" "$MUT_TARGET" "$replacement"
+    local name target replacement
+    name="$1"; target="$2"; replacement="$3"
+    OLD="$target" NEW="$replacement" awk 'BEGIN{o=ENVIRON["OLD"];n=ENVIRON["NEW"]} $0==o{print n;c++;next} {print} END{if(c!=1)exit 9}' "$BLOCK" > "$SUBJ_DIR/$name.sh" || { printf 'HARNESS_ABORT mutation_not_applied=%s\n' "$name"; exit 97; }
+    printf 'HARNESS_MUTANT name=%s replaced_exactly_one_line=yes from=[%s] to=[%s]\n' "$name" "$target" "$replacement"
 }
-mutate_subject mut_nocr ' line=physical.lstrip(WS)'
-mutate_subject mut_broad ' line=physical.rstrip().lstrip(WS)'
+mutate_subject mut_nocr       "$MUT_TARGET_SPLIT" 'for physical in text.split("\n"):'
+mutate_subject mut_splitlines "$MUT_TARGET_SPLIT" 'for physical in text.splitlines():'
+mutate_subject mut_broad      "$MUT_TARGET_STRIP" ' line=physical.rstrip().lstrip(WS)'
 SUBJECT_BYTES=""; SUBJECT_SHA=""
 subject_identity() {
     local name file bytes sha cr
@@ -588,9 +1007,12 @@ subject_identity round4
 { [ "$SUBJECT_BYTES" = 127491 ] && [ "$SUBJECT_SHA" = 5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3 ]; } || { printf 'HARNESS_ABORT subject_identity_mismatch=round4\n'; exit 98; }
 subject_identity current
 { [ "$SUBJECT_BYTES" = 127655 ] && [ "$SUBJECT_SHA" = beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8 ]; } || { printf 'HARNESS_ABORT subject_identity_mismatch=current\n'; exit 98; }
+subject_identity capoverride
+{ [ "$SUBJECT_BYTES" = 132886 ] && [ "$SUBJECT_SHA" = a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243 ]; } || { printf 'HARNESS_ABORT subject_identity_mismatch=capoverride\n'; exit 98; }
 subject_identity repaired
 { [ "$SUBJECT_BYTES" = "$EXPECTED_BYTES" ] && [ "$SUBJECT_SHA" = "$EXPECTED_SHA" ]; } || { printf 'HARNESS_ABORT subject_identity_mismatch=repaired\n'; exit 98; }
 subject_identity mut_nocr
+subject_identity mut_splitlines
 subject_identity mut_broad
 cat > "$ROOT/subject_child.sh" <<'SUBJCHILD'
 #!/usr/bin/env bash
@@ -620,6 +1042,17 @@ wpi_build_mount_projection "$WPI_LINE" >/dev/null
 WPI_ATTESTED_MOUNTINFO_SHA256="$WPI_MOUNT_PROJECTION_DIGEST"
 EV_DIR="$NS/evidence"; WPI_PROBE_SEQ=0
 WPI_MOUNT_GUARD_ACTIVE=no; WPI_MOUNT_SNAPSHOT_SEQ=0
+# The row-9 source attestation, supplied explicitly so the arms that remove it
+# are removing something the run genuinely had. `auto` is what production sets at
+# the end of rows 1-7; `none` is the unattested case; anything else is a literal
+# attestation naming a different object. Subjects older than the repair simply do
+# not read this variable, which is exactly why they cannot refuse the unattested
+# rendering and are the RED for that arm.
+case "$ATTEST" in
+    auto) WPI_UNIT_SOURCE_ATTESTED="$WPI_UNIT_FRAGMENT_SHA256" ;;
+    none) WPI_UNIT_SOURCE_ATTESTED="" ;;
+    *)    WPI_UNIT_SOURCE_ATTESTED="$ATTEST" ;;
+esac
 case "$ARM_FN" in
     b2_fragment) wpi_assert_fragment_has_no_install_section ;;
     b4_env)      wpi_assert_b4_rows_8_9 ;;
@@ -634,13 +1067,28 @@ subject_env_value() {
         value_quoted)         printf 'MTC_BRIDGE_START_MODE="credential_free_disarmed"' ;;
         same_value_duplicate) printf 'MTC_BRIDGE_START_MODE=credential_free_disarmed MTC_BRIDGE_START_MODE=credential_free_disarmed' ;;
         clean_single)         printf 'MTC_BRIDGE_START_MODE=credential_free_disarmed' ;;
+        # The rendering the manager ACTUALLY produces for the raw mid-name-quote
+        # unit source, as established by the ENV_ORACLE arms above: quote removal
+        # precedes validation, so what reaches the production caller is the clean
+        # protected assignment. This arm is the production-boundary counterpart of
+        # `midname_quote`, which feeds the pre-normalisation spelling instead.
+        normalized_from_midname_quote) printf 'MTC_BRIDGE_START_MODE=credential_free_disarmed' ;;
+        unattested_clean)     printf 'MTC_BRIDGE_START_MODE=credential_free_disarmed' ;;
         *) printf 'HARNESS_ABORT unknown_env_arm=%s\n' "$1"; exit 97 ;;
+    esac
+}
+# Row-9 arms whose point is the ABSENCE of a source attestation, named once so
+# the mapping is not repeated at every call site.
+subject_attest_for_arm() {
+    case "$1" in
+        unattested_clean) printf 'none' ;;
+        *) printf 'auto' ;;
     esac
 }
 SUBJ_RED=0; SUBJ_GREEN=0; SUBJ_CTRL=0
 subject_case() {
-    local row subject arm fn kind disposition ns rc frag expected_rc expected_line last stray rec recs saved_frag saved_ev
-    row="$1"; subject="$2"; arm="$3"; fn="$4"; kind="$5"; disposition="$6"; rc=0
+    local row subject arm fn kind disposition ns rc frag expected_rc expected_line expected_recs last stray rec recs saved_frag saved_ev
+    row="$1"; subject="$2"; arm="$3"; fn="$4"; kind="$5"; disposition="$6"; rc=0; expected_recs=1
     ns="$ROOT/multi/$subject/$arm"
     rm -rf "$ns"
     mkdir -p "$ns/unit" "$ns/evidence" "$ns/attest"
@@ -659,13 +1107,19 @@ subject_case() {
         absent)  expected_rc=0; expected_line="B2_fragment_install_section path=$frag install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed" ;;
         present) expected_rc=1; expected_line="B2_FAIL reason=install_section_present path=$frag" ;;
         grammar) expected_rc=3; expected_line="B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=$frag detail=section_header_grammar" ;;
-        b4_ok)   expected_rc=0; expected_line='B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' ;;
+        b4_ok)   expected_rc=0; expected_line='B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty' ;;
+        # The same accepting disposition as emitted by a subject that predates the
+        # source binding. Kept as its own disposition rather than folded into
+        # b4_ok: those bytes accept without any source attestation at all, and
+        # that difference is exactly the R1 finding.
+        b4_ok_unbound) expected_rc=0; expected_line='B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1' ;;
         b4_name) expected_rc=3; expected_line='B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_token_name_not_literal' ;;
+        b4_unattested) expected_rc=3; expected_recs=0; expected_line='B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=unit_source_not_attested' ;;
         b4_dup)  expected_rc=1; expected_line='B4_FAIL reason=start_mode_missing_or_altered observed=count=2 observed_sha256=e9cc545dfb074abf6ff63c26a42b6139c12f714e3b20bb87ba31283ceba1b7de' ;;
         *) printf 'HARNESS_ABORT unknown_disposition=%s\n' "$disposition"; exit 97 ;;
     esac
     set +e
-    SUBJ_DEFS="$SUBJ_DIR/$subject.defs.sh" NS="$ns" ARM_FN="$fn" bash --noprofile --norc "$ROOT/subject_child.sh" > "$ns/out.txt" 2> "$ns/err.txt"
+    SUBJ_DEFS="$SUBJ_DIR/$subject.defs.sh" NS="$ns" ARM_FN="$fn" ATTEST="$(subject_attest_for_arm "$arm")" bash --noprofile --norc "$ROOT/subject_child.sh" > "$ns/out.txt" 2> "$ns/err.txt"
     rc=$?
     set -e
     # A STOP is only a PREDICATE stop if the capture around it opened and closed
@@ -689,9 +1143,17 @@ subject_case() {
         b2_fragment) recs=$(/usr/bin/find "$ns/evidence" -maxdepth 1 -type f -name 'ro.*.fragment_unit_grammar.stdout') ;;
         b4_env)      recs=$(/usr/bin/find "$ns/evidence" -maxdepth 1 -type f -name 'ro.*.environment_tokenizer.stdout') ;;
     esac
-    rec=$(printf '%s\n' "$recs" | grep -c .)
-    [ "$rec" = 1 ] || { printf 'HARNESS_SUBJECT_FAIL row=%s subject=%s arm=%s reason=parser_record_count=%s\n' "$row" "$subject" "$arm" "$rec"; exit 96; }
-    [ "$(wc -l < "$recs" | tr -d ' ')" = 1 ] || { printf 'HARNESS_SUBJECT_FAIL row=%s subject=%s arm=%s reason=parser_record_not_one_line\n' "$row" "$subject" "$arm"; exit 96; }
+    rec=$(printf '%s\n' "$recs" | grep -c . || true)
+    # How many single-line parser records this disposition is ENTITLED to. Every
+    # disposition that reads a parser answer requires exactly one, so an rc-3 can
+    # never be read as a predicate STOP unless the capture opened and closed
+    # normally. `b4_unattested` is the one disposition that STOPs BEFORE the
+    # tokenizer is invoked at all - the source binding is asserted first - so its
+    # entitlement is zero, and demanding zero is as strict as demanding one.
+    [ "$rec" = "$expected_recs" ] || { printf 'HARNESS_SUBJECT_FAIL row=%s subject=%s arm=%s reason=parser_record_count=%s expected=%s\n' "$row" "$subject" "$arm" "$rec" "$expected_recs"; exit 96; }
+    if [ "$expected_recs" = 1 ]; then
+        [ "$(wc -l < "$recs" | tr -d ' ')" = 1 ] || { printf 'HARNESS_SUBJECT_FAIL row=%s subject=%s arm=%s reason=parser_record_not_one_line\n' "$row" "$subject" "$arm"; exit 96; }
+    fi
     last=$(tail -n 1 "$ns/out.txt")
     if [ "$rc" != "$expected_rc" ] || [ "$last" != "$expected_line" ]; then
         printf 'HARNESS_SUBJECT_FAIL row=%s subject=%s arm=%s expected_rc=%s actual_rc=%s\n' "$row" "$subject" "$arm" "$expected_rc" "$rc"
@@ -759,20 +1221,119 @@ subject_case 6 current   crlf_real_install b2_fragment CONTROL present
 subject_case 6 repaired  crlf_real_install b2_fragment CONTROL present
 subject_case 6 mut_nocr  crlf_real_install b2_fragment CONTROL present
 subject_case 6 mut_broad crlf_real_install b2_fragment CONTROL present
-# --- Row 9: the mid-name quote guard, falsified against the bytes that accepted it ---
-subject_case 9 current   midname_quote b4_env RED   b4_ok
-subject_case 9 repaired  midname_quote b4_env GREEN b4_name
-subject_case 9 current   whole_quoted  b4_env CONTROL b4_ok
-subject_case 9 repaired  whole_quoted  b4_env CONTROL b4_ok
-subject_case 9 current   value_quoted  b4_env CONTROL b4_ok
-subject_case 9 repaired  value_quoted  b4_env CONTROL b4_ok
+# --- R4: the cap-override candidate carried forward as a NAMED SUBJECT, so its
+# --- previously-accepted arms are still executed against it and are not merely
+# --- asserted to be unchanged.
+subject_case 6 capoverride crlf_install                   b2_fragment CONTROL absent
+subject_case 6 capoverride trailing_space_after_backslash b2_fragment CONTROL present
+subject_case 6 capoverride crlf_no_install                b2_fragment CONTROL absent
+subject_case 6 capoverride crlf_real_install              b2_fragment CONTROL present
+subject_case 6 mut_splitlines crlf_install                b2_fragment CONTROL absent
+subject_case 6 mut_splitlines trailing_space_after_backslash b2_fragment CONTROL present
+subject_case 6 mut_splitlines crlf_no_install             b2_fragment CONTROL absent
+subject_case 6 mut_splitlines crlf_real_install           b2_fragment CONTROL present
+# --- R4 BARE CR. systemd 259 ends a line at a bare CR (ORACLE arm bare_cr), so
+# --- the `[Install]` after it is a REAL section and `present` is the only
+# --- truthful disposition. `capoverride`, `current` and `mut_nocr` model only LF
+# --- as a terminator, read the header as part of the value line, and emit the
+# --- accepting `install_section=absent` at rc 0. That is the FALSE PASS this
+# --- repair removes, executed against real committed bytes.
+subject_case 6 capoverride    bare_cr_install b2_fragment RED     absent
+subject_case 6 current        bare_cr_install b2_fragment RED     absent
+subject_case 6 mut_nocr       bare_cr_install b2_fragment RED     absent
+subject_case 6 repaired       bare_cr_install b2_fragment GREEN   present
+subject_case 6 round4         bare_cr_install b2_fragment CONTROL present
+subject_case 6 mut_splitlines bare_cr_install b2_fragment CONTROL present
+subject_case 6 mut_broad      bare_cr_install b2_fragment CONTROL present
+# --- R4 MULTI CR. `\` + CR + CR + LF is a value line, then a blank line, then
+# --- the header. The blank TERMINATES the continuation, so the header is real.
+# --- `capoverride` strips the whole CR RUN before the escape scan, keeps the
+# --- continuation open and swallows the header; `round4` splits correctly but
+# --- bridges the blank line, reaching the same false PASS by the other route.
+subject_case 6 capoverride    multi_cr_install b2_fragment RED     absent
+subject_case 6 round4         multi_cr_install b2_fragment RED     absent
+subject_case 6 repaired       multi_cr_install b2_fragment GREEN   present
+subject_case 6 current        multi_cr_install b2_fragment CONTROL present
+subject_case 6 mut_nocr       multi_cr_install b2_fragment CONTROL present
+subject_case 6 mut_splitlines multi_cr_install b2_fragment CONTROL present
+subject_case 6 mut_broad      multi_cr_install b2_fragment CONTROL present
+# --- R4 CR-ONLY FILE. systemd parses it normally and sees a real [Install].
+# --- The LF-only model sees one enormous physical line beginning `[Unit]` and
+# --- STOPs on section_header_grammar - an inability to evaluate a fragment the
+# --- manager reads without difficulty (pattern 1).
+subject_case 6 capoverride    cr_only_file b2_fragment RED     grammar
+subject_case 6 current        cr_only_file b2_fragment RED     grammar
+subject_case 6 mut_nocr       cr_only_file b2_fragment RED     grammar
+subject_case 6 repaired       cr_only_file b2_fragment GREEN   present
+subject_case 6 round4         cr_only_file b2_fragment CONTROL present
+subject_case 6 mut_splitlines cr_only_file b2_fragment CONTROL present
+subject_case 6 mut_broad      cr_only_file b2_fragment CONTROL present
+# --- R4 NO-WEAKENING, the arm that stops "model the CR" turning into "split on
+# --- everything". A bare CR ends the value line while the backslash continuation
+# --- is still open, so the header IS swallowed and `absent` is correct on every
+# --- subject including the repaired bytes.
+subject_case 6 capoverride    bs_cr_then_header b2_fragment CONTROL absent
+subject_case 6 round4         bs_cr_then_header b2_fragment CONTROL absent
+subject_case 6 current        bs_cr_then_header b2_fragment CONTROL absent
+subject_case 6 repaired       bs_cr_then_header b2_fragment CONTROL absent
+subject_case 6 mut_nocr       bs_cr_then_header b2_fragment CONTROL absent
+subject_case 6 mut_splitlines bs_cr_then_header b2_fragment CONTROL absent
+subject_case 6 mut_broad      bs_cr_then_header b2_fragment CONTROL absent
+# --- R4 VT. systemd treats VT as CONTENT (ORACLE arm vt_after_backslash), so the
+# --- continuation stays open and the fragment has NO install section.
+# --- `str.splitlines()` breaks at VT, closes the continuation and reports a real
+# --- [Install] where there is none. This is the executed refutation of "just
+# --- revert to splitlines" - it is a false FAIL on the same safety predicate.
+subject_case 6 mut_splitlines vt_after_backslash b2_fragment RED     present
+subject_case 6 repaired       vt_after_backslash b2_fragment GREEN   absent
+subject_case 6 capoverride    vt_after_backslash b2_fragment CONTROL absent
+subject_case 6 round4         vt_after_backslash b2_fragment CONTROL absent
+subject_case 6 current        vt_after_backslash b2_fragment CONTROL absent
+subject_case 6 mut_nocr       vt_after_backslash b2_fragment CONTROL absent
+subject_case 6 mut_broad      vt_after_backslash b2_fragment CONTROL absent
+# --- Row 9: RENDERING ATTRIBUTION, and what it is not.
+# --- `midname_quote` feeds the PRE-normalisation spelling straight into fake
+# --- `systemctl show` output. It is a true statement about the tokenizer and a
+# --- false model of production: the ENV_ORACLE arms above showed the manager
+# --- removes those quotes before it validates, so this spelling cannot reach the
+# --- production caller. The arm is retained, and relabelled to what it proves.
+subject_case 9 current     midname_quote b4_env RED     b4_ok_unbound
+subject_case 9 capoverride midname_quote b4_env CONTROL b4_name
+subject_case 9 repaired    midname_quote b4_env GREEN   b4_name
+# --- Row 9: the PRODUCTION boundary. This is the rendering the manager actually
+# --- produces for that same raw unit source, taken from the executed ENV_ORACLE
+# --- result rather than assumed. Every subject accepts it, and that is the
+# --- truthful disposition: the effective assignment IS the protected one. What
+# --- refuses the attacked source is the row-7 digest binding, executed as the
+# --- single-subject `source_binding` pair above.
+subject_case 9 current     normalized_from_midname_quote b4_env CONTROL b4_ok_unbound
+subject_case 9 capoverride normalized_from_midname_quote b4_env CONTROL b4_ok_unbound
+subject_case 9 repaired    normalized_from_midname_quote b4_env CONTROL b4_ok
+# --- Row 9: R1 SOURCE BINDING. With no attestation of the unit source, the three
+# --- older byte sets still emit an accepting row-9 line - a claim about "the
+# --- frozen unit" that nothing in that run bound to any unit. The repaired bytes
+# --- STOP instead.
+subject_case 9 capoverride unattested_clean b4_env RED   b4_ok_unbound
+subject_case 9 current     unattested_clean b4_env RED   b4_ok_unbound
+subject_case 9 round4      unattested_clean b4_env RED   b4_ok_unbound
+subject_case 9 repaired    unattested_clean b4_env GREEN b4_unattested
+subject_case 9 current     whole_quoted  b4_env CONTROL b4_ok_unbound
+subject_case 9 capoverride whole_quoted  b4_env CONTROL b4_ok_unbound
+subject_case 9 repaired    whole_quoted  b4_env CONTROL b4_ok
+subject_case 9 current     value_quoted  b4_env CONTROL b4_ok_unbound
+subject_case 9 capoverride value_quoted  b4_env CONTROL b4_ok_unbound
+subject_case 9 repaired    value_quoted  b4_env CONTROL b4_ok
 # --- Row 9: the DECLARED stronger-than-systemd single-occurrence invariant. This
 # --- is a discrimination pair, not a pre-fix falsification: the invariant is
-# --- older than both subjects, which is itself asserted by running it on both.
-subject_case 9 repaired  same_value_duplicate b4_env RED     b4_dup
-subject_case 9 repaired  clean_single         b4_env GREEN   b4_ok
-subject_case 9 current   same_value_duplicate b4_env CONTROL b4_dup
-subject_case 9 current   clean_single         b4_env CONTROL b4_ok
+# --- older than all three subjects, which is itself asserted by running it on
+# --- all three. The ENV_ORACLE arms recorded that systemd accepts both duplicate
+# --- forms without a diagnostic, so the narrowing is declared, not inherited.
+subject_case 9 repaired    same_value_duplicate b4_env RED     b4_dup
+subject_case 9 repaired    clean_single         b4_env GREEN   b4_ok
+subject_case 9 current     same_value_duplicate b4_env CONTROL b4_dup
+subject_case 9 current     clean_single         b4_env CONTROL b4_ok_unbound
+subject_case 9 capoverride same_value_duplicate b4_env CONTROL b4_dup
+subject_case 9 capoverride clean_single         b4_env CONTROL b4_ok_unbound
 after_bytes=$(wc -c < "$BLOCK" | tr -d ' ')
 after_sha=$(sha256sum "$BLOCK" | awk '{print $1}')
 after_cr=$(tr -cd '\r' < "$BLOCK" | wc -c | tr -d ' ')
@@ -781,25 +1342,25 @@ printf 'HARNESS_BLOCK_ID stage=after bytes=%s sha256=%s cr_bytes=%s bash_n=0\n' 
 # The summary is MEASURED, not asserted: every number below is a counter this
 # run incremented, and each is compared to the declared expectation, so a
 # silently dropped arm fails the fence instead of shrinking the claim.
-{ [ "$RED_N" = 36 ] && [ "$GREEN_N" = 36 ] && [ "$CTRL_N" = 9 ]; } || { printf 'HARNESS_COUNT_MISMATCH scope=single_subject red=%s green=%s controls=%s expected=36/36/9\n' "$RED_N" "$GREEN_N" "$CTRL_N"; exit 96; }
-{ [ "$SUBJ_RED" = 11 ] && [ "$SUBJ_GREEN" = 10 ] && [ "$SUBJ_CTRL" = 27 ]; } || { printf 'HARNESS_COUNT_MISMATCH scope=multi_subject red=%s green=%s controls=%s expected=11/10/27\n' "$SUBJ_RED" "$SUBJ_GREEN" "$SUBJ_CTRL"; exit 96; }
-printf 'D026_SUMMARY rows=1-9 red_green_pairs=%s controls=%s multi_subject_red=%s multi_subject_green=%s multi_subject_controls=%s subjects=5 systemd_oracle_fixtures=%s result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no\n' "$RED_N" "$CTRL_N" "$SUBJ_RED" "$SUBJ_GREEN" "$SUBJ_CTRL" "$ORACLE_N"
+{ [ "$RED_N" = 43 ] && [ "$GREEN_N" = 43 ] && [ "$CTRL_N" = 12 ]; } || { printf 'HARNESS_COUNT_MISMATCH scope=single_subject red=%s green=%s controls=%s expected=43/43/12\n' "$RED_N" "$GREEN_N" "$CTRL_N"; exit 96; }
+{ [ "$SUBJ_RED" = 23 ] && [ "$SUBJ_GREEN" = 15 ] && [ "$SUBJ_CTRL" = 65 ]; } || { printf 'HARNESS_COUNT_MISMATCH scope=multi_subject red=%s green=%s controls=%s expected=23/15/65\n' "$SUBJ_RED" "$SUBJ_GREEN" "$SUBJ_CTRL"; exit 96; }
+printf 'D026_SUMMARY rows=1-9 red_green_pairs=%s controls=%s multi_subject_red=%s multi_subject_green=%s multi_subject_controls=%s subjects=7 systemd_oracle_fixtures=%s env_oracle_fixtures=%s result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no\n' "$RED_N" "$CTRL_N" "$SUBJ_RED" "$SUBJ_GREEN" "$SUBJ_CTRL" "$ORACLE_N" "$ENV_ORACLE_N"
 # RP7_ROWS_1_9_REBUILD_FENCE_END
 ```
 
 Executed transcript from the published extraction command:
 
 ```text
-HARNESS_SCRATCH_ROOT shape=run_owned_mktemp template=rp7_rows_1_9_rebuild_evidence.XXXXXXXX fixed_root=no path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X
-HARNESS_BLOCK_ID stage=before bytes=132886 sha256=a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243 cr_bytes=0 bash_n=0
+HARNESS_SCRATCH_ROOT shape=run_owned_mktemp template=rp7_rows_1_9_rebuild_evidence.XXXXXXXX fixed_root=no published=canonical path=%RUNROOT%
+HARNESS_BLOCK_ID stage=before bytes=137981 sha256=4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c cr_bytes=0 bash_n=0
 HARNESS_EXTRACT method=sed_drop_terminal_wpi_main_call source=RP7-WPI-RO.sh functions_invoked=wpi_assert_b2_rows_1_7,wpi_assert_fragment_has_no_install_section,wpi_assert_regular_digest,wpi_assert_b4_rows_8_9
-HARNESS_ATTESTED_MOUNTINFO sha256=3a9486e6fc655a918097250412fa994c4e87233e21662e03b7e46533c1798444 fixture_root=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X unit_fragment=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service clean_fragment_bytes=3736 clean_fragment_sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49
+HARNESS_ATTESTED_MOUNTINFO sha256=%HOST_MOUNT_PROJECTION% fixture_root=%RUNROOT% unit_fragment=%RUNROOT%/unit/mtc-bridge-first-start.service clean_fragment_bytes=3736 clean_fragment_sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49 rederived=match decoy_rebuild=differs binding=kind_point_record_present
 HARNESS_DISCLOSURE row=8 sandbox_pins=asserted_rendered_systemctl_show_literals host_derivation=freeze_time_act fixture_fidelity_not_established
 D026 row=1 arm=inactive mutation=ActiveState=inactive RED rc=1 line=B2_FAIL reason=unit_not_active state=inactive expected=active
 D026 row=1 arm=inactive mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
-D026 row=1 arm=manager_stop mutation=systemctl_show_rc_7 RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=7 detail=unit_query_nonzero diagnostic_file=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/cases/r1_manager_stop/evidence/ro.0001.b2_unit_show.stderr
+D026 row=1 arm=manager_stop mutation=systemctl_show_rc_7 RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=7 detail=unit_query_nonzero diagnostic_file=%RUNROOT%/cases/r1_manager_stop/evidence/ro.0001.b2_unit_show.stderr
 D026 row=1 arm=manager_stop mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
-D026 row=1 arm=show_table_parse mutation=missing_final_newline RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=unterminated_final_record source=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/cases/r1_table_parse/evidence/ro.0001.b2_unit_show.stdout
+D026 row=1 arm=show_table_parse mutation=missing_final_newline RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=unterminated_final_record source=%RUNROOT%/cases/r1_table_parse/evidence/ro.0001.b2_unit_show.stdout
 D026 row=1 arm=show_table_parse mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
 D026 row=1 arm=active_absent mutation=delete_ActiveState RED rc=3 line=B2_STOP reason=system_manager_unreachable operation=show rc=0 detail=property_record_absent query=ActiveState
 D026 row=1 arm=active_absent mutation=repaired_expected GREEN rc=0 line=B2_active state=active source=system_manager_show property=ActiveState
@@ -819,242 +1380,388 @@ D026 row=4 arm=missing_property mutation=delete_MainPID RED rc=3 line=B2_STOP re
 D026 row=4 arm=missing_property mutation=repaired_expected GREEN rc=0 line=B2_mainpid prop=MainPID value=189813 continuity=preregistered
 D026 row=4 arm=wrong_value mutation=MainPID_190000 RED rc=1 line=B2_FAIL reason=mainpid_changed value=190000 expected=189813
 D026 row=4 arm=wrong_value mutation=repaired_expected GREEN rc=0 line=B2_mainpid prop=MainPID value=189813 continuity=preregistered
-D026 row=5 arm=wrong_fragment mutation=FragmentPath_wrong RED rc=1 line=B2_FAIL reason=unit_not_bound_to_candidate field=FragmentPath observed=[/tmp/comment-only.service] expected=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service
-D026 row=5 arm=wrong_fragment mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
+D026 row=5 arm=wrong_fragment mutation=FragmentPath_wrong RED rc=1 line=B2_FAIL reason=unit_not_bound_to_candidate field=FragmentPath observed=[/tmp/comment-only.service] expected=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=5 arm=wrong_fragment mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=%RUNROOT%/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
 D026 row=5 arm=dropin_override mutation=DropInPaths_override_conf RED rc=1 line=B2_FAIL reason=unit_not_bound_to_candidate field=DropInPaths observed=[/etc/systemd/system/mtc-bridge-first-start.service.d/override.conf] expected=empty
-D026 row=5 arm=dropin_override mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
+D026 row=5 arm=dropin_override mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=%RUNROOT%/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
 D026 row=5 arm=wrong_execstart mutation=ExecStart_path_tmp_comment_only RED rc=1 line=B2_FAIL reason=unit_not_bound_to_candidate field=ExecStart.path observed=[/tmp/comment-only] expected=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python
-D026 row=5 arm=wrong_execstart mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
+D026 row=5 arm=wrong_execstart mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=%RUNROOT%/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
 D026 row=5 arm=realistic_execstart mutation=ExecStart_path_tmp_comment_only_with_runtime_fields RED rc=1 line=B2_FAIL reason=unit_not_bound_to_candidate field=ExecStart.path observed=[/tmp/comment-only] expected=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python
-D026 row=5 arm=realistic_execstart mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
+D026 row=5 arm=realistic_execstart mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=%RUNROOT%/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
 D026 row=5 arm=decoy_fragment_only mutation=comment_inactive_env_paths_not_binding RED rc=1 line=B2_FAIL reason=unit_not_bound_to_candidate field=ExecStart.path observed=[/tmp/comment-only] expected=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python
-D026 row=5 arm=decoy_fragment_only mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
+D026 row=5 arm=decoy_fragment_only mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=%RUNROOT%/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
 D026 row=5 arm=not_found mutation=LoadState_not-found RED rc=1 line=B2_FAIL reason=unit_not_loaded
-D026 row=5 arm=not_found mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
-HARNESS_SYSTEMD_ORACLE tool=/usr/bin/systemd-analyze version=systemd 259 (259.5-0ubuntu3)
-ORACLE fixture=ctrl_lf_bogus terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0] unknown_key_landed_in=[Unit] continuation=CONTINUES
-ORACLE fixture=ctrl_crlf_bogus terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=4] unknown_key_landed_in=[Unit] continuation=CONTINUES
-ORACLE fixture=ctrl_crlf_install terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=6] unknown_key_landed_in=[Install] continuation=DOES_NOT
-ORACLE fixture=bs_lf terms=[bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0] unknown_key_landed_in=[Unit] continuation=CONTINUES
-ORACLE fixture=bs_crlf terms=[bs_lf=0 bs_cr=1 bs_space=0 bs_space_cr=0 cr_bytes=6] unknown_key_landed_in=[Unit] continuation=CONTINUES
-ORACLE fixture=bs_cr_in_lf_file terms=[bs_lf=0 bs_cr=1 bs_space=0 bs_space_cr=0 cr_bytes=1] unknown_key_landed_in=[Unit] continuation=CONTINUES
-ORACLE fixture=bs_space_lf terms=[bs_lf=0 bs_cr=0 bs_space=1 bs_space_cr=0 cr_bytes=0] unknown_key_landed_in=[Install] continuation=DOES_NOT
-ORACLE fixture=bs_space_crlf terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=1 cr_bytes=6] unknown_key_landed_in=[Install] continuation=DOES_NOT
-ORACLE fixture=even_bs_lf terms=[bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0] unknown_key_landed_in=[Install] continuation=DOES_NOT
-ORACLE_SUMMARY fixtures=9 controls=3 rule=trailing_CR_is_terminator_and_CONTINUES trailing_space_is_content_and_DOES_NOT even_backslash_DOES_NOT source=executed_systemd_analyze_verify normalisation_of_record=rstrip_CR_only_then_lstrip
-D026 row=6 arm=comment_decoy mutation=comment_contains_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=continued_decoy mutation=continued_line_then_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=continued_comment_install mutation=continued_line_comment_then_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=multi_comment_bridge mutation=continued_line_hash_and_semicolon_comments_then_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=odd_backslash_three mutation=three_trailing_backslashes_continue CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=case_variant mutation=lower_case_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=blank_no_bridge mutation=blank_line_terminates_continuation_real_install RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service
-D026 row=6 arm=blank_no_bridge mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=comment_then_blank mutation=comment_bridges_then_blank_terminates_real_install RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service
-D026 row=6 arm=comment_then_blank mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=even_backslash_no_bridge mutation=two_trailing_backslashes_do_not_continue RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service
-D026 row=6 arm=even_backslash_no_bridge mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=bare_backslash_line mutation=whitespace_only_continuation_prefix_keeps_install RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service
-D026 row=6 arm=bare_backslash_line mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=eof_dangling_install mutation=dangling_continuation_flushed_at_eof RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service
-D026 row=6 arm=eof_dangling_install mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=header_trailing_comment mutation=section_header_with_trailing_comment RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service detail=section_header_grammar
-D026 row=6 arm=header_trailing_comment mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=real_install mutation=real_Install_section RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service
-D026 row=6 arm=real_install mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=nul mutation=NUL_byte RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service detail=nul_byte
-D026 row=6 arm=nul mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=crlf_install mutation=crlf_terminator_continues_install_is_continuation_text CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=trailing_space_after_backslash mutation=trailing_space_blocks_continuation_real_install RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service
-D026 row=6 arm=trailing_space_after_backslash mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026 row=6 arm=crlf_no_install mutation=crlf_fragment_without_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=5 arm=not_found mutation=repaired_expected GREEN rc=0 line=B2_unit_binding unit=mtc-bridge-first-start.service load_state=loaded fragment=%RUNROOT%/unit/mtc-bridge-first-start.service dropins=empty working_directory=/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b/IBKR_PAPER_BRIDGE exec_path=/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b/bin/python argv_sha_bound=yes
+HARNESS_SYSTEMD_ORACLE tool=%SYSTEMD_ANALYZE% version=%SYSTEMD_VERSION% major_minimum=259 major_ok=yes
+ORACLE fixture=ctrl_lf_bogus terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0] bytes=[bs=0 cr=0 lf=4 vt=0 dq=0 total=48] unknown_key_landed_in=[Unit] continuation=CONTINUES
+ORACLE fixture=ctrl_crlf_bogus terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=4] bytes=[bs=0 cr=4 lf=4 vt=0 dq=0 total=52] unknown_key_landed_in=[Unit] continuation=CONTINUES
+ORACLE fixture=ctrl_crlf_install terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=6] bytes=[bs=0 cr=6 lf=6 vt=0 dq=0 total=78] unknown_key_landed_in=[Install] continuation=DOES_NOT
+ORACLE fixture=bs_lf terms=[bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0] bytes=[bs=1 cr=0 lf=6 vt=0 dq=0 total=82] unknown_key_landed_in=[Unit] continuation=CONTINUES
+ORACLE fixture=bs_crlf terms=[bs_lf=0 bs_cr=1 bs_space=0 bs_space_cr=0 cr_bytes=6] bytes=[bs=1 cr=6 lf=6 vt=0 dq=0 total=88] unknown_key_landed_in=[Unit] continuation=CONTINUES
+ORACLE fixture=bs_cr_in_lf_file terms=[bs_lf=0 bs_cr=1 bs_space=0 bs_space_cr=0 cr_bytes=1] bytes=[bs=1 cr=1 lf=6 vt=0 dq=0 total=83] unknown_key_landed_in=[Unit] continuation=CONTINUES
+ORACLE fixture=bs_space_lf terms=[bs_lf=0 bs_cr=0 bs_space=1 bs_space_cr=0 cr_bytes=0] bytes=[bs=1 cr=0 lf=6 vt=0 dq=0 total=84] unknown_key_landed_in=[Install] continuation=DOES_NOT
+ORACLE fixture=bs_space_crlf terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=1 cr_bytes=6] bytes=[bs=1 cr=6 lf=6 vt=0 dq=0 total=90] unknown_key_landed_in=[Install] continuation=DOES_NOT
+ORACLE fixture=even_bs_lf terms=[bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0] bytes=[bs=2 cr=0 lf=6 vt=0 dq=0 total=83] unknown_key_landed_in=[Install] continuation=DOES_NOT
+ORACLE fixture=bare_cr terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=1] bytes=[bs=0 cr=1 lf=5 vt=0 dq=0 total=72] unknown_key_landed_in=[Install] continuation=DOES_NOT
+ORACLE fixture=multi_cr terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=2] bytes=[bs=1 cr=2 lf=6 vt=0 dq=0 total=84] unknown_key_landed_in=[Install] continuation=DOES_NOT
+ORACLE fixture=bs_cr_then_header terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=1] bytes=[bs=1 cr=1 lf=5 vt=0 dq=0 total=82] unknown_key_landed_in=[Unit] continuation=CONTINUES
+ORACLE fixture=cr_only_file terms=[bs_lf=0 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=6] bytes=[bs=0 cr=6 lf=0 vt=0 dq=0 total=72] unknown_key_landed_in=[Install] continuation=DOES_NOT
+ORACLE fixture=vt_after_backslash terms=[bs_lf=1 bs_cr=0 bs_space=0 bs_space_cr=0 cr_bytes=0] bytes=[bs=1 cr=0 lf=6 vt=1 dq=0 total=83] unknown_key_landed_in=[Unit] continuation=CONTINUES
+ORACLE_SUMMARY fixtures=14 controls=3 terminator_set=CRLF_or_CR_or_LF_and_nothing_else rule=trailing_CR_is_terminator_and_CONTINUES trailing_space_is_content_and_DOES_NOT even_backslash_DOES_NOT VT_is_content source=executed_systemd_analyze_verify normalisation_of_record=re_split_CRLF_CR_LF
+ENV_ORACLE fixture=ctrl_clean assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE fixture=ctrl_bad_name assignment_accepted_by_systemd=no systemd_echoed_token=[1BAD=value]
+ENV_ORACLE fixture=ctrl_hyphen_name assignment_accepted_by_systemd=no systemd_echoed_token=[MTC-BRIDGE_START_MODE=credential_free_disarmed]
+ENV_ORACLE fixture=midname_hyphen_dq assignment_accepted_by_systemd=no systemd_echoed_token=[MTC-BRIDGE_START_MODE=credential_free_disarmed]
+ENV_ORACLE fixture=midname_dq assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE fixture=midname_sq assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE fixture=name_quote_no_eq assignment_accepted_by_systemd=no systemd_echoed_token=[MTC_BRIDGE_START_MODE]
+ENV_ORACLE fixture=whole_quoted assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE fixture=value_quoted assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE fixture=dup_same_value assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE fixture=dup_diff_value assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE_SUMMARY fixtures=11 controls=3 established=quote_removal_precedes_validation_so_manager_renders_clean_assignment duplicate_policy=row9_stronger_than_systemd source=executed_systemd_analyze_verify
+D026 row=6 arm=comment_decoy mutation=comment_contains_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=continued_decoy mutation=continued_line_then_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=continued_comment_install mutation=continued_line_comment_then_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=multi_comment_bridge mutation=continued_line_hash_and_semicolon_comments_then_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=odd_backslash_three mutation=three_trailing_backslashes_continue CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=case_variant mutation=lower_case_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=blank_no_bridge mutation=blank_line_terminates_continuation_real_install RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=6 arm=blank_no_bridge mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=comment_then_blank mutation=comment_bridges_then_blank_terminates_real_install RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=6 arm=comment_then_blank mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=even_backslash_no_bridge mutation=two_trailing_backslashes_do_not_continue RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=6 arm=even_backslash_no_bridge mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=bare_backslash_line mutation=whitespace_only_continuation_prefix_keeps_install RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=6 arm=bare_backslash_line mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=eof_dangling_install mutation=dangling_continuation_flushed_at_eof RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=6 arm=eof_dangling_install mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=header_trailing_comment mutation=section_header_with_trailing_comment RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=%RUNROOT%/unit/mtc-bridge-first-start.service detail=section_header_grammar
+D026 row=6 arm=header_trailing_comment mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=real_install mutation=real_Install_section RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=6 arm=real_install mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=nul mutation=NUL_byte RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=%RUNROOT%/unit/mtc-bridge-first-start.service detail=nul_byte
+D026 row=6 arm=nul mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=crlf_install mutation=crlf_terminator_continues_install_is_continuation_text CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=trailing_space_after_backslash mutation=trailing_space_blocks_continuation_real_install RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=6 arm=trailing_space_after_backslash mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=crlf_no_install mutation=crlf_fragment_without_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=bare_cr_install mutation=bare_CR_ends_the_line_so_install_is_real RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=6 arm=bare_cr_install mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=multi_cr_install mutation=CR_run_makes_a_blank_line_that_terminates RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=6 arm=multi_cr_install mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=cr_only_file mutation=CR_only_fragment_carries_a_real_install RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/unit/mtc-bridge-first-start.service
+D026 row=6 arm=cr_only_file mutation=repaired_expected GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=bs_cr_then_header mutation=bare_CR_ends_the_line_but_the_continuation_stays_open CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026 row=6 arm=vt_after_backslash mutation=VT_is_content_not_a_terminator CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
 D026 row=7 arm=one_byte_short mutation=bytes_3735 RED rc=1 line=B2_FAIL reason=unit_fragment_digest_mismatch observed_bytes=3735 expected_bytes=3736
-D026 row=7 arm=one_byte_short mutation=repaired_expected GREEN rc=0 line=B2_digest path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service bytes=3736 sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49 binding=component_and_mount
+D026 row=7 arm=one_byte_short mutation=repaired_expected GREEN rc=0 line=B2_digest path=%RUNROOT%/unit/mtc-bridge-first-start.service bytes=3736 sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49 binding=component_and_mount
 D026 row=7 arm=same_size_wrong_digest mutation=bytes_3736_wrong_sha RED rc=1 line=B2_FAIL reason=unit_fragment_digest_mismatch observed=8de3d83e3be94a8d25db0b46bde93fd58b5b8473fe5f71aeaae157fa2cf5cf48 expected=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49
-D026 row=7 arm=same_size_wrong_digest mutation=repaired_expected GREEN rc=0 line=B2_digest path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service bytes=3736 sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49 binding=component_and_mount
-D026 row=7 arm=unreadable mutation=chmod_000_as_nobody RED rc=3 line=B2_STOP reason=fragment_unreadable path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service rc=1 detail=sha256sum_failed diagnostic_file=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/cases/r7_unreadable/evidence/ro.0016.sha256.stderr
-D026 row=7 arm=unreadable mutation=repaired_expected GREEN rc=0 line=B2_digest path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/unit/mtc-bridge-first-start.service bytes=3736 sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49 binding=component_and_mount
+D026 row=7 arm=same_size_wrong_digest mutation=repaired_expected GREEN rc=0 line=B2_digest path=%RUNROOT%/unit/mtc-bridge-first-start.service bytes=3736 sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49 binding=component_and_mount
+D026 row=7 arm=unreadable mutation=chmod_000_as_nobody RED rc=3 line=B2_STOP reason=fragment_unreadable path=%RUNROOT%/unit/mtc-bridge-first-start.service rc=1 detail=sha256sum_failed diagnostic_file=%RUNROOT%/cases/r7_unreadable/evidence/ro.0016.sha256.stderr
+D026 row=7 arm=unreadable mutation=repaired_expected GREEN rc=0 line=B2_digest path=%RUNROOT%/unit/mtc-bridge-first-start.service bytes=3736 sha256=8eec04c5ec03de14e53ed3188396c9df1e87eb248e4abf63be57aabfa86eaf49 binding=component_and_mount
 D026 row=8 arm=mismatch mutation=PrivateTmp_no RED rc=1 line=B4_FAIL reason=property_mismatch prop=PrivateTmp observed=[no] expected=[yes]
-D026 row=8 arm=mismatch mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026 row=8 arm=mismatch mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
 D026 row=8 arm=missing_property mutation=delete_ProtectSystem RED rc=3 line=B4_STOP reason=unit_property_unreadable prop=ProtectSystem rc=0 detail=property_record_absent query=ProtectSystem
-D026 row=8 arm=missing_property mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026 row=8 arm=missing_property mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
 D026 row=9 arm=duplicate mutation=two_start_mode_assignments_different_values RED rc=1 line=B4_FAIL reason=start_mode_missing_or_altered observed=count=2 observed_sha256=8519edda80e7968b7c4653502aaffd6f21102c02384f8ddb661084731524069f
-D026 row=9 arm=duplicate mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026 row=9 arm=duplicate mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
 D026 row=9 arm=substring mutation=different_variable_contains_token RED rc=1 line=B4_FAIL reason=start_mode_missing_or_altered observed=count=0 observed_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-D026 row=9 arm=substring mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026 row=9 arm=substring mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
 D026 row=9 arm=unmodeled_token mutation=token_without_assignment RED rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_token_without_assignment
-D026 row=9 arm=unmodeled_token mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026 row=9 arm=unmodeled_token mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
 D026 row=9 arm=malformed_name mutation=name_starts_digit RED rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_name_grammar
-D026 row=9 arm=malformed_name mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
-D026 row=9 arm=quoted mutation=quoted_assignment CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026 row=9 arm=malformed_name mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
+D026 row=9 arm=quoted mutation=quoted_assignment CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
+D026 row=9 arm=value_quoted mutation=value_only_quoted_assignment CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
+D026 row=9 arm=same_value_duplicate mutation=declared_stronger_than_systemd_single_occurrence RED rc=1 line=B4_FAIL reason=start_mode_missing_or_altered observed=count=2 observed_sha256=e9cc545dfb074abf6ff63c26a42b6139c12f714e3b20bb87ba31283ceba1b7de
+D026 row=9 arm=same_value_duplicate mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
+D026 row=9 arm=unattested_source mutation=attestation_removed RED rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=unit_source_not_attested
+D026 row=9 arm=unattested_source mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
+D026 row=9 arm=attestation_mismatch mutation=attestation_names_another_object RED rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=unit_source_attestation_mismatch
+D026 row=9 arm=attestation_mismatch mutation=repaired_expected GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
+D026_SOURCE_BINDING clean_bytes=3736 quoted_bytes=3736 size_equal=yes sha_differs=yes
+D026 row=9 arm=source_binding mutation=unit_source_carries_midname_quote RED rc=1 line=B2_FAIL reason=unit_fragment_digest_mismatch observed=3770f311d626a3a3960d2d0e222cbea6e01102439cd3edab93205f1e6f8a947a expected=fde19b8b9462bbf65e00abe1f0df3b4a7884976632f3bb7237e7ef62e6241260
+D026 row=9 arm=source_binding mutation=repaired_expected GREEN rc=0 line=B2_digest path=%RUNROOT%/unit/mtc-bridge-first-start.service bytes=3736 sha256=fde19b8b9462bbf65e00abe1f0df3b4a7884976632f3bb7237e7ef62e6241260 binding=component_and_mount
 D026_CONTROL row=8 case=r8_mismatch_green executed_B4_property_lines=10
 D026_CONTROL row=8 case=r8_missing_green executed_B4_property_lines=10
-HARNESS_MUTANT name=mut_nocr replaced_exactly_one_line=yes from=[ line=physical.rstrip("\r").lstrip(WS)] to=[ line=physical.lstrip(WS)]
-HARNESS_MUTANT name=mut_broad replaced_exactly_one_line=yes from=[ line=physical.rstrip("\r").lstrip(WS)] to=[ line=physical.rstrip().lstrip(WS)]
+HARNESS_MUTANT name=mut_nocr replaced_exactly_one_line=yes from=[for physical in re.split("\r\n|\r|\n",text):] to=[for physical in text.split("\n"):]
+HARNESS_MUTANT name=mut_splitlines replaced_exactly_one_line=yes from=[for physical in re.split("\r\n|\r|\n",text):] to=[for physical in text.splitlines():]
+HARNESS_MUTANT name=mut_broad replaced_exactly_one_line=yes from=[ line=physical.lstrip(WS)] to=[ line=physical.rstrip().lstrip(WS)]
 HARNESS_SUBJECT name=round4 bytes=127491 sha256=5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3 cr_bytes=0 bash_n=0
 HARNESS_SUBJECT name=current bytes=127655 sha256=beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8 cr_bytes=0 bash_n=0
-HARNESS_SUBJECT name=repaired bytes=132886 sha256=a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243 cr_bytes=0 bash_n=0
-HARNESS_SUBJECT name=mut_nocr bytes=132873 sha256=4f3debb09e17b6082bf3dfc9b58075362f042f873779a74a2d78561da4cbec02 cr_bytes=0 bash_n=0
-HARNESS_SUBJECT name=mut_broad bytes=132882 sha256=bb431365f370e78597763148e91d484fa668be79abbbc068663ef4881cc2d05a cr_bytes=0 bash_n=0
-D026_SUBJECT row=6 subject=round4 arm=blank_no_bridge RED rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/blank_no_bridge/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=repaired arm=blank_no_bridge GREEN rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/blank_no_bridge/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=round4 arm=comment_then_blank RED rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/comment_then_blank/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=repaired arm=comment_then_blank GREEN rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/comment_then_blank/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=round4 arm=even_backslash_no_bridge RED rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/even_backslash_no_bridge/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=repaired arm=even_backslash_no_bridge GREEN rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/even_backslash_no_bridge/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=round4 arm=bare_backslash_line RED rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/bare_backslash_line/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=repaired arm=bare_backslash_line GREEN rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/bare_backslash_line/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=round4 arm=eof_dangling_install RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/eof_dangling_install/unit/mtc-bridge-first-start.service detail=section_header_grammar
-D026_SUBJECT row=6 subject=repaired arm=eof_dangling_install GREEN rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/eof_dangling_install/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=round4 arm=header_trailing_comment RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/header_trailing_comment/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=repaired arm=header_trailing_comment GREEN rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/header_trailing_comment/unit/mtc-bridge-first-start.service detail=section_header_grammar
-D026_SUBJECT row=6 subject=round4 arm=multi_comment_bridge CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/multi_comment_bridge/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=repaired arm=multi_comment_bridge CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/multi_comment_bridge/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=round4 arm=odd_backslash_three CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/odd_backslash_three/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=repaired arm=odd_backslash_three CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/odd_backslash_three/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=round4 arm=continued_comment_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/continued_comment_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=repaired arm=continued_comment_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/continued_comment_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=current arm=crlf_install RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/current/crlf_install/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=mut_nocr arm=crlf_install RED rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/mut_nocr/crlf_install/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=repaired arm=crlf_install GREEN rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/crlf_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=round4 arm=crlf_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/crlf_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=mut_broad arm=crlf_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/mut_broad/crlf_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=mut_broad arm=trailing_space_after_backslash RED rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/mut_broad/trailing_space_after_backslash/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=repaired arm=trailing_space_after_backslash GREEN rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/trailing_space_after_backslash/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=round4 arm=trailing_space_after_backslash CONTROL rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/trailing_space_after_backslash/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=current arm=trailing_space_after_backslash CONTROL rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/current/trailing_space_after_backslash/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=mut_nocr arm=trailing_space_after_backslash CONTROL rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/mut_nocr/trailing_space_after_backslash/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=round4 arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=current arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/current/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=repaired arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=mut_nocr arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/mut_nocr/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=mut_broad arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/mut_broad/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
-D026_SUBJECT row=6 subject=round4 arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/round4/crlf_real_install/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=current arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/current/crlf_real_install/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=repaired arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/repaired/crlf_real_install/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=mut_nocr arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/mut_nocr/crlf_real_install/unit/mtc-bridge-first-start.service
-D026_SUBJECT row=6 subject=mut_broad arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=/tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X/multi/mut_broad/crlf_real_install/unit/mtc-bridge-first-start.service
+HARNESS_SUBJECT name=capoverride bytes=132886 sha256=a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243 cr_bytes=0 bash_n=0
+HARNESS_SUBJECT name=repaired bytes=137981 sha256=4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c cr_bytes=0 bash_n=0
+HARNESS_SUBJECT name=mut_nocr bytes=137970 sha256=17baf69c643886cc71ac85f86259699581ab793ebf3d086b81da1e12778ebace cr_bytes=0 bash_n=0
+HARNESS_SUBJECT name=mut_splitlines bytes=137971 sha256=e93ce8ba96092745d7f953ea51b1437192d3a843a809413f53ae49a90bcbd214 cr_bytes=0 bash_n=0
+HARNESS_SUBJECT name=mut_broad bytes=137990 sha256=8a38736d187b9cdd8402381749914f0c9e9ba452013b20bc4e6b49108e6e2789 cr_bytes=0 bash_n=0
+D026_SUBJECT row=6 subject=round4 arm=blank_no_bridge RED rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/blank_no_bridge/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=blank_no_bridge GREEN rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/repaired/blank_no_bridge/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=round4 arm=comment_then_blank RED rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/comment_then_blank/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=comment_then_blank GREEN rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/repaired/comment_then_blank/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=round4 arm=even_backslash_no_bridge RED rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/even_backslash_no_bridge/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=even_backslash_no_bridge GREEN rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/repaired/even_backslash_no_bridge/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=round4 arm=bare_backslash_line RED rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/bare_backslash_line/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=bare_backslash_line GREEN rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/repaired/bare_backslash_line/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=round4 arm=eof_dangling_install RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=%RUNROOT%/multi/round4/eof_dangling_install/unit/mtc-bridge-first-start.service detail=section_header_grammar
+D026_SUBJECT row=6 subject=repaired arm=eof_dangling_install GREEN rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/repaired/eof_dangling_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=round4 arm=header_trailing_comment RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/round4/header_trailing_comment/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=repaired arm=header_trailing_comment GREEN rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=%RUNROOT%/multi/repaired/header_trailing_comment/unit/mtc-bridge-first-start.service detail=section_header_grammar
+D026_SUBJECT row=6 subject=round4 arm=multi_comment_bridge CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/multi_comment_bridge/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=multi_comment_bridge CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/repaired/multi_comment_bridge/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=round4 arm=odd_backslash_three CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/odd_backslash_three/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=odd_backslash_three CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/repaired/odd_backslash_three/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=round4 arm=continued_comment_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/continued_comment_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=continued_comment_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/repaired/continued_comment_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=current arm=crlf_install RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/current/crlf_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_nocr arm=crlf_install RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_nocr/crlf_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=repaired arm=crlf_install GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/repaired/crlf_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=round4 arm=crlf_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/crlf_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_broad arm=crlf_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_broad/crlf_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_broad arm=trailing_space_after_backslash RED rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_broad/trailing_space_after_backslash/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=trailing_space_after_backslash GREEN rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/repaired/trailing_space_after_backslash/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=round4 arm=trailing_space_after_backslash CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/round4/trailing_space_after_backslash/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=current arm=trailing_space_after_backslash CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/current/trailing_space_after_backslash/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_nocr arm=trailing_space_after_backslash CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_nocr/trailing_space_after_backslash/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=round4 arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=current arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/current/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/repaired/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_nocr arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_nocr/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_broad arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_broad/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=round4 arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/round4/crlf_real_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=current arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/current/crlf_real_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=repaired arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/repaired/crlf_real_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_nocr arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_nocr/crlf_real_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_broad arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_broad/crlf_real_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=capoverride arm=crlf_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/capoverride/crlf_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=capoverride arm=trailing_space_after_backslash CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/capoverride/trailing_space_after_backslash/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=capoverride arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/capoverride/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=capoverride arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/capoverride/crlf_real_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_splitlines arm=crlf_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_splitlines/crlf_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_splitlines arm=trailing_space_after_backslash CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_splitlines/trailing_space_after_backslash/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_splitlines arm=crlf_no_install CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_splitlines/crlf_no_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_splitlines arm=crlf_real_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_splitlines/crlf_real_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=capoverride arm=bare_cr_install RED rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/capoverride/bare_cr_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=current arm=bare_cr_install RED rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/current/bare_cr_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_nocr arm=bare_cr_install RED rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_nocr/bare_cr_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=bare_cr_install GREEN rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/repaired/bare_cr_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=round4 arm=bare_cr_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/round4/bare_cr_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_splitlines arm=bare_cr_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_splitlines/bare_cr_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_broad arm=bare_cr_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_broad/bare_cr_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=capoverride arm=multi_cr_install RED rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/capoverride/multi_cr_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=round4 arm=multi_cr_install RED rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/multi_cr_install/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=multi_cr_install GREEN rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/repaired/multi_cr_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=current arm=multi_cr_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/current/multi_cr_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_nocr arm=multi_cr_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_nocr/multi_cr_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_splitlines arm=multi_cr_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_splitlines/multi_cr_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_broad arm=multi_cr_install CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_broad/multi_cr_install/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=capoverride arm=cr_only_file RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=%RUNROOT%/multi/capoverride/cr_only_file/unit/mtc-bridge-first-start.service detail=section_header_grammar
+D026_SUBJECT row=6 subject=current arm=cr_only_file RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=%RUNROOT%/multi/current/cr_only_file/unit/mtc-bridge-first-start.service detail=section_header_grammar
+D026_SUBJECT row=6 subject=mut_nocr arm=cr_only_file RED rc=3 line=B2_STOP reason=fragment_unreadable_or_unparseable rc=0 path=%RUNROOT%/multi/mut_nocr/cr_only_file/unit/mtc-bridge-first-start.service detail=section_header_grammar
+D026_SUBJECT row=6 subject=repaired arm=cr_only_file GREEN rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/repaired/cr_only_file/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=round4 arm=cr_only_file CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/round4/cr_only_file/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_splitlines arm=cr_only_file CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_splitlines/cr_only_file/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=mut_broad arm=cr_only_file CONTROL rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_broad/cr_only_file/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=capoverride arm=bs_cr_then_header CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/capoverride/bs_cr_then_header/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=round4 arm=bs_cr_then_header CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/bs_cr_then_header/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=current arm=bs_cr_then_header CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/current/bs_cr_then_header/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=repaired arm=bs_cr_then_header CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/repaired/bs_cr_then_header/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_nocr arm=bs_cr_then_header CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_nocr/bs_cr_then_header/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_splitlines arm=bs_cr_then_header CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_splitlines/bs_cr_then_header/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_broad arm=bs_cr_then_header CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_broad/bs_cr_then_header/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_splitlines arm=vt_after_backslash RED rc=1 line=B2_FAIL reason=install_section_present path=%RUNROOT%/multi/mut_splitlines/vt_after_backslash/unit/mtc-bridge-first-start.service
+D026_SUBJECT row=6 subject=repaired arm=vt_after_backslash GREEN rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/repaired/vt_after_backslash/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=capoverride arm=vt_after_backslash CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/capoverride/vt_after_backslash/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=round4 arm=vt_after_backslash CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/round4/vt_after_backslash/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=current arm=vt_after_backslash CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/current/vt_after_backslash/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_nocr arm=vt_after_backslash CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_nocr/vt_after_backslash/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
+D026_SUBJECT row=6 subject=mut_broad arm=vt_after_backslash CONTROL rc=0 line=B2_fragment_install_section path=%RUNROOT%/multi/mut_broad/vt_after_backslash/unit/mtc-bridge-first-start.service install_section=absent parser=systemd_unit_line_grammar binding=component_and_mount_window_closed
 D026_SUBJECT row=9 subject=current arm=midname_quote RED rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=capoverride arm=midname_quote CONTROL rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_token_name_not_literal
 D026_SUBJECT row=9 subject=repaired arm=midname_quote GREEN rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=environment_token_name_not_literal
+D026_SUBJECT row=9 subject=current arm=normalized_from_midname_quote CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=capoverride arm=normalized_from_midname_quote CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=repaired arm=normalized_from_midname_quote CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
+D026_SUBJECT row=9 subject=capoverride arm=unattested_clean RED rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=current arm=unattested_clean RED rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=round4 arm=unattested_clean RED rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=repaired arm=unattested_clean GREEN rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=unit_source_not_attested
 D026_SUBJECT row=9 subject=current arm=whole_quoted CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
-D026_SUBJECT row=9 subject=repaired arm=whole_quoted CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=capoverride arm=whole_quoted CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=repaired arm=whole_quoted CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
 D026_SUBJECT row=9 subject=current arm=value_quoted CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
-D026_SUBJECT row=9 subject=repaired arm=value_quoted CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=capoverride arm=value_quoted CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=repaired arm=value_quoted CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
 D026_SUBJECT row=9 subject=repaired arm=same_value_duplicate RED rc=1 line=B4_FAIL reason=start_mode_missing_or_altered observed=count=2 observed_sha256=e9cc545dfb074abf6ff63c26a42b6139c12f714e3b20bb87ba31283ceba1b7de
-D026_SUBJECT row=9 subject=repaired arm=clean_single GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+D026_SUBJECT row=9 subject=repaired arm=clean_single GREEN rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty
 D026_SUBJECT row=9 subject=current arm=same_value_duplicate CONTROL rc=1 line=B4_FAIL reason=start_mode_missing_or_altered observed=count=2 observed_sha256=e9cc545dfb074abf6ff63c26a42b6139c12f714e3b20bb87ba31283ceba1b7de
 D026_SUBJECT row=9 subject=current arm=clean_single CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
-HARNESS_BLOCK_ID stage=after bytes=132886 sha256=a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243 cr_bytes=0 bash_n=0
-D026_SUMMARY rows=1-9 red_green_pairs=36 controls=9 multi_subject_red=11 multi_subject_green=10 multi_subject_controls=27 subjects=5 systemd_oracle_fixtures=9 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+D026_SUBJECT row=9 subject=capoverride arm=same_value_duplicate CONTROL rc=1 line=B4_FAIL reason=start_mode_missing_or_altered observed=count=2 observed_sha256=e9cc545dfb074abf6ff63c26a42b6139c12f714e3b20bb87ba31283ceba1b7de
+D026_SUBJECT row=9 subject=capoverride arm=clean_single CONTROL rc=0 line=B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1
+HARNESS_BLOCK_ID stage=after bytes=137981 sha256=4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c cr_bytes=0 bash_n=0
+D026_SUMMARY rows=1-9 red_green_pairs=43 controls=12 multi_subject_red=23 multi_subject_green=15 multi_subject_controls=65 subjects=7 systemd_oracle_fixtures=14 env_oracle_fixtures=11 result=PASS instrument=RP7-WPI-RO.sh extracted_block_functions=yes block_logic_reimplemented=no
+HARNESS_CANON published=canonical raw_lines=249 canon_lines=249 residue=none substitutions=[%RUNROOT%:133 %REPO%:0 %HOST_MOUNT_PROJECTION%:1 %SYSTEMD_ANALYZE%:1 %SYSTEMD_VERSION%:1] raw_evidence_env=RP7_RAW_EVIDENCE_DIR
 ```
 
-### Transcript provenance and exact-line comparison - stated honestly
+### Transcript determinism - R3, and what replaced the old exception
 
 The transcript above is the verbatim stdout of one execution of the published
-extraction command against the `132886`-byte block. It was captured as
+extraction command against the `137981`-byte block. It was captured as
 `... | bash --noprofile --norc > out 2> err` and pasted whole. Nothing in it was
-reordered, elided or reworded.
+reordered, elided, reworded, or edited after the fact.
 
-The pasted 156 lines are the stdout of a run executed by **this** implementer
-session on 2026-08-14/15 under `wsl -d Ubuntu` (Ubuntu WSL2, systemd 259
-(259.5-0ubuntu3), root), from the repo working tree at
-`/mnt/c/LAB/Tradingview_LAB_CLEAN/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT`.
-Measured directly on that run:
+**The previous contract is withdrawn.** It required exact transcript
+reproduction, then admitted that two runs matched on only 155 of 156 lines after
+an *external* `sed` over the scratch root, and excluded one field entirely. That
+is not exact reproduction, and a transcript that needs an external edit before it
+can be compared is not a reproducible transcript. Both halves of that exception -
+the external normalisation and the excluded field - are gone.
 
-```text
-rc=0
-stderr_bytes=0
-stdout_lines=156
-elapsed_s=125
-D026 RED arms      36     (single subject)
-D026 GREEN arms    36     (single subject)
-D026 CONTROL arms  9      (single subject)
-D026_SUBJECT arms  48     (11 RED / 10 GREEN / 27 CONTROL over 5 named subjects)
-ORACLE arms        9      (3 controls + 6 rule arms, executed systemd-analyze verify)
-identity           before/after 132886 / a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243, cr_bytes=0, bash_n=0
-```
+#### What is measured
 
-The published fence was executed **twice** in this session, back to back, in the
-same distro and the same WSL instance. Both runs produced rc 0, 0 stderr bytes
-and 156 stdout lines.
-
-#### Byte-for-byte comparability now has a documented exception, and why
-
-The earlier fixed scratch root `/tmp/rp7_rows_1_9_rebuild_evidence` was replaced
-this round with a run-owned `mktemp -d` root. That closes a real collision
-hazard - two runs of this fence, or this fence beside anything else using that
-name, shared one directory and each start-up `rm -rf` destroyed the other's
-fixtures mid-run - but it has an unavoidable consequence for the transcript,
-and the consequence is stated here rather than glossed:
-
-**Every transcript line that carries a path now carries a per-run random
-suffix.** The two runs are therefore *not* byte-identical as raw text. They were
-compared after substituting the run root reported by each run's own
-`HARNESS_SCRATCH_ROOT` line:
+The two runs below were executed sequentially by **this** implementer session on
+2026-08-15 under `wsl -d Ubuntu` (Ubuntu WSL2, kernel
+`6.18.33.2-microsoft-standard-WSL2`, systemd 259 (259.5-0ubuntu3), GNU bash
+5.3.9(1), Python 3.14.4, root), from a run-owned materialisation of the four
+owned artifacts outside the repository:
 
 ```text
-runA root  /tmp/rp7_rows_1_9_rebuild_evidence.ZaS9b08X
-runB root  /tmp/rp7_rows_1_9_rebuild_evidence.541vAZoy
-sed "s#<that run's root>#<RUNROOT>#g" runA.out > runA.norm   (same for runB)
-diff -u runA.norm runB.norm
+run A   rc=0  stderr_bytes=0  stdout_lines=250  elapsed_s=199.9
+run B   rc=0  stderr_bytes=0  stdout_lines=250  elapsed_s=200.5
+published stdout sha256, BOTH runs
+        d0788122c132e43c25aea52315d53b3596c40c57598e2bbded9b2efa11cae8ab
+cmp runA.stdout runB.stdout                 -> identical, no output, rc 0
 ```
 
-That normalised diff is clean on **155 of 156 lines**. The single differing line
-is the `HARNESS_ATTESTED_MOUNTINFO` line, and the reason is now known rather
-than guessed - see immediately below. An auditor reproducing this transcript
-should expect exactly the same shape: identical after root normalisation, except
-that one field.
+The comparison is `cmp` over the raw published bytes. There is no `sed`, no
+substitution, no excluded field and no tolerated line.
 
-#### The one host-derived line, and a mechanism that is now established
-
-Exactly one line of the transcript is host-derived rather than block- or
-fixture-derived:
+Transcript composition, counted on that same stdout:
 
 ```text
-HARNESS_ATTESTED_MOUNTINFO sha256=... fixture_root=<run-owned root> ...
+D026 arms (single subject)   98    43 RED / 43 GREEN / 12 CONTROL
+D026_SUBJECT arms            103   23 RED / 15 GREEN / 65 CONTROL over 7 subjects
+ORACLE arms                  14    3 controls + 11 rule arms, systemd-analyze verify
+ENV_ORACLE arms              11    3 controls + 8 boundary arms, systemd-analyze verify
+HARNESS_SUBJECT identities   7
+HARNESS_MUTANT records       3
+D026_CONTROL lines           2
+identity  before/after 137981 / 4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c, cr_bytes=0, bash_n=0
 ```
 
-Its `sha256=` field is the digest of the mount projection built from the
-executing machine's `/proc/self/mountinfo`. It is a property of the executing
-mount namespace, not of `RP7-WPI-RO.sh`, and it is **not evidence for or against
-any row predicate**.
+#### How determinism and run-owned isolation now coexist
 
-Two runs in the same WSL instance, minutes apart, recorded
-`3a9486e6fc655a918097250412fa994c4e87233e21662e03b7e46533c1798444` and
-`680adac319f054b35588a4ccf01f179bf1b9584998452a58a341d8fa323b63a4`. Earlier
-sessions recorded `be94739e05e58b6b5f5d8c94865cef8d512f8bcd79475b7944941a829a82dbb2`
-and `78388f0d1e330a9e2f49700f241d10c96c9df704f8dd99a15e3b01edb98b1e15`. None of
-those four is deleted here.
+Runtime isolation is unchanged: the scratch root is still a per-run `mktemp -d`
+directory, every path used during the run is that run's real path, and the
+recursive-removal guard still matches only the run-owned shape. What changed is
+the **publication boundary**. The fence writes its raw transcript into the
+run-owned tree and, on exit, canonicalises exactly five presentation values
+before writing to the real stdout:
 
-Previous drafts of this section could only say that this field "differs between
-namespaces" and was "stable across repeated runs inside one mount namespace".
-The second half of that is **no longer true, and the cause is a direct
-consequence of this round's own change**, read off the block source rather than
-inferred: `wpi_build_mount_projection` includes `"$WPI_UNIT_FRAGMENT"` in its
-`points` array and writes a `kind=point ... path=<that path>` record into the
-projection file it then hashes. `$WPI_UNIT_FRAGMENT` lives under the scratch
-root. Once the scratch root is run-owned, the projection text contains a
-per-run string, so its digest **must** differ per run. This is not host drift
-and not a defect: it is arithmetic.
+| token | real value | why it varies |
+|---|---|---|
+| `%RUNROOT%` | this run's `mktemp -d` root | run-owned isolation, by design |
+| `%REPO%` | the resolved repository root | differs per checkout; expected 0 hits |
+| `%HOST_MOUNT_PROJECTION%` | the live mount-projection digest | see below |
+| `%SYSTEMD_ANALYZE%` | resolved absolute oracle tool path | differs per host |
+| `%SYSTEMD_VERSION%` | oracle version string | differs per host |
 
-Nothing depends on cross-run equality of that digest. What the block actually
-requires is *intra-run* consistency - `wpi_mount_guard_begin` recomputes the
-projection and compares it to the value attested at the start of the same run -
-and that held in both runs, which is why both reached `D026_SUMMARY ...
-result=PASS` with a closed mount guard on every arm.
+Nothing else is touched. The last line of every run states the accounting:
 
-No normalisation, masking or placeholder substitution has been applied to any
-line of the pasted transcript. It is one run's raw stdout, including its real
-run-owned root.
+```text
+HARNESS_CANON published=canonical raw_lines=249 canon_lines=249 residue=none substitutions=[%RUNROOT%:133 %REPO%:0 %HOST_MOUNT_PROJECTION%:1 %SYSTEMD_ANALYZE%:1 %SYSTEMD_VERSION%:1] raw_evidence_env=RP7_RAW_EVIDENCE_DIR
+```
 
-**No independent Lead run of these bytes exists yet.** The Lead-run agreement
-recorded in earlier drafts of this section was against the superseded `127655`
-bytes and a different fence, and it is not carried forward to `132886`. No
-cross-agent byte comparison is claimed for this transcript.
+#### The gates that make this fail closed, and their executed falsifications
 
-## REQUIRED-1 - row-6 carriage-return handling, closed
+Canonicalisation that can quietly swallow a difference is worse than no
+canonicalisation. Five gates prevent that, and each was falsified by deliberately
+breaking it in a run-owned scratch copy of this file - the repository copy was
+never modified:
+
+| gate | falsification | observed |
+|---|---|---|
+| substitution counts are declared, not discovered | declare `%RUNROOT%=132` | rc 94, `HARNESS_CANON_FAIL count_mismatch:%RUNROOT% expected=132 observed=133` |
+| the mount digest must be a live value | freeze it to a constant | rc 97, `HARNESS_ABORT mount_projection_not_rederivable` |
+| the mount digest must be bound to the run-owned fragment | make the decoy rebuild reuse the real path | rc 97, `HARNESS_ABORT mount_projection_not_path_sensitive` |
+| a fixture may not silently gain or lose a byte | add one byte to `bare_cr_install` | rc 96, `HARNESS_ABORT fixture_bytes ... expected=[... total=88] observed=[... total=89]` |
+| canonical presentation may not mask a predicate deviation | make the CR-blind mutant a no-op | rc 96, `HARNESS_SUBJECT_FAIL row=6 subject=mut_nocr arm=crlf_install expected_rc=1 actual_rc=0` |
+
+The residue gate is additionally unconditional: any realised run-owned directory
+name surviving into the published text aborts the run, and only the literal
+`XXXXXXXX` template printed by `HARNESS_SCRATCH_ROOT` is permitted to match.
+
+#### The mount digest is canonicalised, not hidden
+
+`wpi_build_mount_projection` includes `"$WPI_UNIT_FRAGMENT"` in its `points`
+array and writes a `kind=point ... path=<that path>` record into the projection
+it hashes. That path lives under the run-owned root, so the digest **must** differ
+per run - it is arithmetic, not host drift. It is also not a row predicate: no
+row reads it. The predicate that does read the mount table,
+`wpi_mount_guard_begin`/`_end`, compares intra-run and runs on every row-6 and
+row-7 arm, so a real mount change still surfaces as a published STOP.
+
+Before the field may be replaced by a token, the fence proves in-run that the
+value it is about to hide is real:
+
+1. **shape** - exactly 64 lower-case hex characters;
+2. **re-derived** - a second independent build in the same run must agree;
+3. **bound** - the projection must carry a `kind=point` record for the run-owned
+   unit fragment;
+4. **path-sensitive** - a rebuild with a decoy fragment path must produce a
+   *different* digest.
+
+The real values are retained in the run-owned tree and can be copied out by
+exporting `RP7_RAW_EVIDENCE_DIR`, which changes no published byte. Measured on
+the two runs above, from that raw evidence:
+
+```text
+run A  real scratch root        /tmp/rp7_rows_1_9_rebuild_evidence.MxAGFJ3F
+       real mount projection    0ba118d4c1089e7257640a4976dbcb3f3fa5bdd40cca4247c2658ee519e859a8
+       decoy rebuild            5f5d06831ebfc190978408d8c1d913ac87fee39eb6d1fc36849e290bf51ee244
+       raw transcript sha256    490d422acec84aa41034980d33f456f6a9099a8f63b3351dd8d20097095abcf8
+run B  real scratch root        /tmp/rp7_rows_1_9_rebuild_evidence.CXTNsYx4
+       real mount projection    90021811326fea3c88022b50751aae6afcccbfc4ce76bbad751c6fd283aa2dbf
+       decoy rebuild            8d2cea02eabfee5930f8bef17b99ca726a4eb049472879af80a4339d0663d9d8
+       raw transcript sha256    b85a1b6936db7412d0f9697c5dd636c32cbaac9462908b4c1ce0061ab2172231
+diff runA.raw runB.raw          262 differing lines (131 line pairs)
+```
+
+Both raw transcripts are 58645 bytes and differ on 131 line pairs; both published
+transcripts are byte-identical. That is the property R3 asked for: the isolation
+and the binding are real and different per run, and the published artifact is
+exactly reproducible.
+
+#### What is host-bound and stated rather than canonicalised away
+
+The oracle version is canonicalised for presentation but **gated** rather than
+ignored: the fence refuses to run below systemd major 259, the version the rule
+of record was established on, and every oracle claim is executed and compared, so
+behavioural drift on a later version surfaces as `HARNESS_ORACLE_FAIL` rather
+than as silence. The row-8 disclosure is unchanged and unaffected.
+
+#### Provenance of this transcript
+
+It was produced by this implementer session against `137981`. A later independent
+Lead verification ran the same complete fence twice and reproduced the published
+hash with raw `cmp` equality; no auditor has run it. See "Provenance of record"
+at the top of this file for the full chronology.
+
+## REQUIRED-1 - row-6 carriage-return handling, closed — PARTLY SUPERSEDED
 
 **This section is not an audit verdict and claims no acceptance.**
+
+**Scope note added by the R1-R4 repair.** This section is the round-time record
+for the `132886` bytes. Its finding and its CR-versus-space conclusion still
+stand and are still executed. What it got **wrong** is narrower and is corrected
+in "R1-R4 repair" below rather than deleted here: it treated `rstrip("\r")` after
+`text.split("\n")` as "the faithful normalisation" of the line terminator. It is
+not. That models only `LF` as a terminator and strips a CR *run* rather than one
+terminator, and systemd 259 also ends a line at a bare `CR`. Two fragments the
+manager loads with a real `[Install]` section were reported
+`install_section=absent` at rc 0 by those bytes. Wherever this section says
+`rstrip("\r")` is the rule of record, read the R4 subsection: the rule of record
+is `re.split("\r\n|\r|\n", text)` and a plain `lstrip(WS)`.
 
 ### The finding
 
@@ -1310,47 +2017,266 @@ Two statements about `blank_no_bridge` that must not be blurred:
 ### Count delta
 
 ```text
-round-4  (127491): red_green_pairs=29 controls=5
-previous (127655): red_green_pairs=35 controls=7
-current  (132886): red_green_pairs=36 controls=9
-                   + multi-subject 11 RED / 10 GREEN / 27 CONTROL over 5 subjects
-                   + 9 ORACLE arms (3 controls + 6 rule arms)
+round-4      (127491): red_green_pairs=29 controls=5
+post-round-4 (127655): red_green_pairs=35 controls=7
+cap-override (132886): red_green_pairs=36 controls=9
+                       + multi-subject 11 RED / 10 GREEN / 27 CONTROL over 5 subjects
+                       + 9 ORACLE arms (3 controls + 6 rule arms)
+current      (137981): red_green_pairs=43 controls=12
+                       + multi-subject 23 RED / 15 GREEN / 65 CONTROL over 7 subjects
+                       + 14 ORACLE arms (3 controls + 11 rule arms)
+                       + 11 ENV_ORACLE arms (3 controls + 8 boundary arms)
 
 127491 -> 127655
 +6 pairs   : blank_no_bridge, comment_then_blank, even_backslash_no_bridge,
              bare_backslash_line, eof_dangling_install, header_trailing_comment
 +2 controls: multi_comment_bridge, odd_backslash_three
 
-127655 -> 132886 (this round)
+127655 -> 132886
 +1 pair    : trailing_space_after_backslash
 +2 controls: crlf_install, crlf_no_install
 +9 ORACLE arms  : the row-6 continuation rule executed against systemd 259
 +48 multi-subject arms over round4 / current / repaired / mut_nocr / mut_broad
+
+132886 -> 137981 (this round, R1-R4)
++7 pairs   : bare_cr_install, multi_cr_install, cr_only_file (R4);
+             same_value_duplicate, unattested_source, attestation_mismatch,
+             source_binding (R1)
++3 controls: bs_cr_then_header, vt_after_backslash (R4); value_quoted (R1)
++5 ORACLE arms     : terminator identity - bare_cr, multi_cr, bs_cr_then_header,
+                     cr_only_file, vt_after_backslash
++11 ENV_ORACLE arms: the manager normalisation boundary and the duplicate policy
++55 multi-subject arms, and two new subjects: capoverride (the 132886 bytes) and
+                     mut_splitlines
 ```
 
 ### Status of these bytes
 
-`132886` / `a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243` has
-implementer self-QA only: this section, the REQUIRED-1 section, and the executed
-transcript above, produced by two back-to-back runs in one session. It has **no**
-auditor verdict and **no** independent Lead run - the Lead agreement recorded in
-earlier drafts was against the superseded `127655` bytes and a different fence,
-and is not carried forward. Both required T0 auditor slots are PENDING and must
-run fresh against these same bytes. No acceptance is claimed.
+`137981` / `4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c` has
+implementer self-QA from the sections and transcript above plus a later
+independent Lead verification consisting of two complete retained fence runs,
+each rc 0 with zero stderr and raw published stdout compared identical. It has
+**no** auditor verdict. The earlier Lead run against `132886` remains scoped to
+those bytes, and the two T0 verdicts against `132886` remain BLOCK and
+REQUEST_CHANGES rather than acceptances. Both required T0 auditor slots are
+PENDING and must run fresh against these same bytes. No acceptance is claimed.
 
 The superseded identities remain reachable and are named here so no reader has to
 guess which bytes a statement refers to: `127491` /
 `5b00207aff17a9a9f29e056b9f93fb46b2cf640376659bf75b9f33b9b9b3dbe3` (round 4,
-commit `90cbeac4`) and `127655` /
+commit `90cbeac4`), `127655` /
 `beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8` (commit
-`8ec89675`). Both are executed as named subjects in the fence rather than merely
-cited.
+`8ec89675`), and `132886` /
+`a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243` (cap-override,
+commit `2d0f24d0`). All three are executed as named subjects in the fence rather
+than merely cited.
 
 The row-8 disclosure is unchanged and still stands: the row-8 sandbox pins are
 asserted rendered `systemctl show` literals, the fence proves comparator and
 presence-before-value behaviour against fixtures only, host derivation of those
 renderings remains a freeze-time act, and `CapabilityBoundingSet=''` remains the
 highest-risk pin for that derivation.
+
+## R1-R4 repair - the owner-authorized round over the cap-override candidate
+
+**This section is not an audit verdict and claims no acceptance.** It records one
+bounded repair of the four REQUIRED findings the two mandatory T0 flagships left
+against `132886`, dispatched by
+`KICKOFF_CLAUDE_RP7_R1_R4_REPAIR_2026-08-15.md`. Resulting identity `137981` /
+`4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c`, `0` CR bytes,
+`bash -n` rc 0.
+
+### R4 - the systemd line terminator, modelled instead of approximated
+
+**The finding.** `RP7-WPI-RO.sh` split physical lines with `text.split("\n")` and
+then `physical.rstrip("\r")`. That models only `LF` as a terminator, and strips an
+arbitrary *run* of trailing CRs rather than one terminator. The comment above it
+claimed the code normalised "the LINE TERMINATOR - and only the terminator",
+which is a claim the code did not implement.
+
+**Executed against systemd 259, in the published fence.** Five new `ORACLE` arms
+vary the terminator identity itself; the previous nine varied only what preceded
+it, which is why the package's own evidence could not see this:
+
+```text
+ORACLE fixture=bare_cr            unknown_key_landed_in=[Install] continuation=DOES_NOT
+ORACLE fixture=multi_cr           unknown_key_landed_in=[Install] continuation=DOES_NOT
+ORACLE fixture=bs_cr_then_header  unknown_key_landed_in=[Unit]    continuation=CONTINUES
+ORACLE fixture=cr_only_file       unknown_key_landed_in=[Install] continuation=DOES_NOT
+ORACLE fixture=vt_after_backslash unknown_key_landed_in=[Unit]    continuation=CONTINUES
+```
+
+systemd therefore ends a line at `CRLF`, at a bare `CR`, and at a bare `LF`, and
+at nothing else - `VT` is content.
+
+**The repair, exactly two lines:**
+
+```text
+- for physical in text.split("\n"):
+-  line=physical.rstrip("\r").lstrip(WS)
++ for physical in re.split("\r\n|\r|\n",text):
++  line=physical.lstrip(WS)
+```
+
+With a correct terminator split no trailing CR survives into the escape scan, so
+the strip is not narrowed - it becomes unnecessary, and its CR-run over-reach goes
+with it. The alternation order is load-bearing: `CRLF` must be tried before bare
+`CR` or a CRLF would become a terminator plus an empty line.
+
+**A plain revert to `str.splitlines()` is not this repair, and is executed as a
+mutant.** `splitlines()` also breaks at `VT`, `FF`, `FS`, `GS`, `RS`, `NEL`,
+`U+2028` and `U+2029`, which systemd treats as content. On `vt_after_backslash`
+it closes a continuation systemd keeps open and reports a real `[Install]` where
+there is none - a false FAIL on the same safety predicate:
+
+```text
+D026_SUBJECT row=6 subject=mut_splitlines arm=vt_after_backslash RED   rc=1 line=B2_FAIL reason=install_section_present ...
+D026_SUBJECT row=6 subject=repaired       arm=vt_after_backslash GREEN rc=0 line=B2_fragment_install_section ... install_section=absent ...
+```
+
+**D026, driven through the production caller in separate processes against named
+committed byte sets.** The RED subjects are real blobs, not opinions:
+
+```text
+bare_cr_install   capoverride 132886  RED     rc=0 install_section=absent   <- FALSE PASS
+bare_cr_install   current     127655  RED     rc=0 install_section=absent   <- FALSE PASS
+bare_cr_install   mut_nocr            RED     rc=0 install_section=absent
+bare_cr_install   repaired    137981  GREEN   rc=1 install_section_present
+bare_cr_install   round4      127491  CONTROL rc=1 install_section_present
+multi_cr_install  capoverride 132886  RED     rc=0 install_section=absent   <- FALSE PASS
+multi_cr_install  round4      127491  RED     rc=0 install_section=absent   <- FALSE PASS
+multi_cr_install  repaired    137981  GREEN   rc=1 install_section_present
+cr_only_file      capoverride 132886  RED     rc=3 section_header_grammar   <- cannot evaluate
+cr_only_file      repaired    137981  GREEN   rc=1 install_section_present
+```
+
+`bare_cr_install` and `multi_cr_install` are fragments systemd loads **with** a
+real `[Install]` section, reported by the frozen bytes as `install_section=absent`
+at rc 0. `cr_only_file` is the pattern-1 case: a fragment the manager parses
+without difficulty on which the frozen bytes could not evaluate at all.
+
+**No-weakening, all executed on all seven subjects.** `bs_cr_then_header` is the
+arm that stops "model the CR" becoming "split on everything": a bare CR ends the
+value line while the backslash continuation is still open, so the header IS
+swallowed and `absent` is correct everywhere. `crlf_install`, `crlf_no_install`,
+`crlf_real_install` and `trailing_space_after_backslash` keep their previous
+dispositions on every subject, `mut_broad` still buys its false PASS on
+`trailing_space_after_backslash`, and the LF, CRLF, odd/even backslash, comment
+bridge, blank termination, malformed header, NUL and EOF arms are unchanged.
+
+### R1 - row 9 bound to the production normalisation boundary
+
+**The finding.** The row-9 D026 arm injected the raw mid-name-quote spelling
+`MTC_BRIDGE"_START_MODE=..."` straight into fake `systemctl show` output. The
+production caller does not read unit source; it reads the manager's *effective*
+`Environment` rendering. So the arm proved something about the tokenizer and
+nothing about production.
+
+**The boundary, executed rather than argued.** Eleven new `ENV_ORACLE` arms run
+`systemd-analyze verify` on unit files carrying each spelling. The discriminator
+prints rather than merely staying silent - systemd echoes the token it actually
+validated:
+
+```text
+ENV_ORACLE fixture=ctrl_clean        assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE fixture=ctrl_bad_name     assignment_accepted_by_systemd=no  systemd_echoed_token=[1BAD=value]
+ENV_ORACLE fixture=ctrl_hyphen_name  assignment_accepted_by_systemd=no  systemd_echoed_token=[MTC-BRIDGE_START_MODE=credential_free_disarmed]
+ENV_ORACLE fixture=midname_hyphen_dq assignment_accepted_by_systemd=no  systemd_echoed_token=[MTC-BRIDGE_START_MODE=credential_free_disarmed]
+ENV_ORACLE fixture=midname_dq        assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE fixture=midname_sq        assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE fixture=name_quote_no_eq  assignment_accepted_by_systemd=no  systemd_echoed_token=[MTC_BRIDGE_START_MODE]
+ENV_ORACLE fixture=dup_same_value    assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+ENV_ORACLE fixture=dup_diff_value    assignment_accepted_by_systemd=yes systemd_echoed_token=[none]
+```
+
+`midname_hyphen_dq` is the load-bearing arm. The unit line written is
+`Environment=MTC-BRIDGE"_START_MODE=credential_free_disarmed"`, and systemd
+reports it as invalid **with the quotes already gone**. Quote removal therefore
+precedes validation. `midname_dq` then shows the same spelling under a valid name
+draws no diagnostic at all, so the assignment the manager stores - and renders
+back through `systemctl show` to the production caller - is the clean protected
+assignment. The raw spelling cannot reach the row-9 input.
+
+**What was corrected, and it is a narrowing of a claim, not of a check.** The
+effective-property check is unchanged; the lexical guard is unchanged and still
+refuses a rendering it cannot attribute token-for-token. What is withdrawn is the
+code comment asserting that this guard refuses the *unit-source* attack. It does
+not, and it cannot, because production never sees that spelling.
+
+**What actually refuses the attacked source, executed through the production
+predicate.** Two unit fragments differing only in the spelling of their
+`Environment=` line, padded to the same byte count so the digest predicate can
+only discriminate on content:
+
+```text
+D026_SOURCE_BINDING clean_bytes=3736 quoted_bytes=3736 size_equal=yes sha_differs=yes
+D026 row=9 arm=source_binding mutation=unit_source_carries_midname_quote RED   rc=1 B2_FAIL reason=unit_fragment_digest_mismatch
+D026 row=9 arm=source_binding mutation=repaired_expected                 GREEN rc=0 B2_digest ... binding=component_and_mount
+```
+
+Row 5 separately requires `DropInPaths` empty, so no second assignment can arrive
+from a drop-in either.
+
+**The new row-9 predicate, and its production-path RED/GREEN.** Row 9 read an
+effective rendering and emitted an accepting line about "the frozen unit" while
+nothing in the run had bound that rendering to any unit.
+`wpi_assert_b2_rows_1_7` now sets `WPI_UNIT_SOURCE_ATTESTED` only after rows 1-7
+complete - which includes row 5 proving drop-ins empty and row 7 proving the
+fragment byte count and SHA-256 - and `wpi_assert_environment_start_mode` refuses
+to proceed without it. The accepting line carries the earned token
+`source_binding=unit_fragment_digest_attested_dropins_empty`:
+
+```text
+D026_SUBJECT row=9 subject=capoverride arm=unattested_clean RED   rc=0 line=B4_environment ... occurrences=1
+D026_SUBJECT row=9 subject=current     arm=unattested_clean RED   rc=0 line=B4_environment ... occurrences=1
+D026_SUBJECT row=9 subject=round4      arm=unattested_clean RED   rc=0 line=B4_environment ... occurrences=1
+D026_SUBJECT row=9 subject=repaired    arm=unattested_clean GREEN rc=3 line=B4_STOP reason=unit_property_unreadable prop=Environment rc=0 detail=unit_source_not_attested
+D026 row=9 arm=attestation_mismatch    RED   rc=3 B4_STOP ... detail=unit_source_attestation_mismatch
+```
+
+Absent or mismatched attestation is a STOP, not a FAIL: the row could not be
+evaluated, it did not observe deviant host state.
+
+**Controls and duplicate policy, both retained and both executed.** The fully
+quoted and value-only quoted assignments are still accepted on every subject. The
+single-occurrence invariant is still refused at rc 1 `observed=count=2`, and the
+`ENV_ORACLE` arms now record executably that systemd accepts *both* duplicate
+forms without a diagnostic - so the row is a **declared narrowing**, not a
+systemd-fidelity claim. One fidelity limit is disclosed in the block itself: that
+a real manager ever renders the protected name twice in one `Environment`
+property is not established by this fence, so the duplicate policy is a rule
+about renderings this row may be handed, fail-closed by construction.
+
+**The `midname_quote` arm is kept and relabelled.** It is a true statement about
+rendering attribution and a false model of production, so it now sits beside
+`normalized_from_midname_quote`, which feeds the rendering the manager actually
+produces for that same source and which every subject correctly accepts.
+
+### R2 - provenance
+
+The single chronology is the table under "Provenance of record" at the top of
+this file, and it is reproduced identically in `STATUS_RP7.md` and in
+`RP7_ROWS_1_9_REPORT_2026-08-13.md`. History is not rewritten: the earlier Lead
+run remains scoped to `132886`, the later two-run Lead verification is scoped to
+`137981`, and the two T0 verdicts against `132886` retain their real values
+(BLOCK and REQUEST_CHANGES). Both new auditor slots remain pending.
+
+### R3 - transcript determinism
+
+Recorded in full under "Transcript determinism" above: two fresh sequential runs,
+raw published stdout compared with `cmp`, byte-identical at sha256
+`d0788122c132e43c25aea52315d53b3596c40c57598e2bbded9b2efa11cae8ab`, with the real
+scratch roots and mount-projection digests differing and the raw transcripts
+differing on 131 line pairs. Five fail-closed gates, each falsified.
+
+### What is not established by this repair
+
+The oracle arms establish systemd 259 behaviour on the machine that ran them.
+They are not a claim about every systemd version and not a re-derivation from
+systemd source; the fence gates the major version and executes every claim rather
+than assuming it. The row-8 disclosure and the C1 mount-projection digest
+residual are unchanged and were not repaired in this round. No auditor has run
+these bytes; the independent Lead verification is recorded above.
 
 Round 9 answers the Codex T0 part-B re-audit of the round-8 bytes
 (`RP7_CODEX_T0_AUDIT_R8_PART_B_2026-08-11.md`, BLOCK, five findings). Everything below ran

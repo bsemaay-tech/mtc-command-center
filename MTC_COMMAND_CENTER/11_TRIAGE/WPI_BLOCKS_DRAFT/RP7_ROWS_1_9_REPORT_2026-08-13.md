@@ -1,18 +1,38 @@
 # RP7 rows 1-9 build report - 2026-08-13
 
-> **Current state of record.** Block identity is `132886` /
-> `a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243`, fence count
-> `36` single-subject RED/GREEN pairs and `9` controls, plus `48` multi-subject
-> arms over 5 named subjects and `9` executed systemd `ORACLE` arms. Status:
-> **rows-1-9-EXTENDED-PENDING-FRESH-SAME-BYTE-T0-AUDITS** - the Lead independently
-> reproduced the complete fence against these exact bytes on 2026-08-15 (rc 0,
-> 124.8 s, all 9 oracle arms and final D026 summary matched), no auditor has
-> accepted them, and both required T0 slots are PENDING against this same byte identity. Everything below is
+> **Current state of record.** Block identity is `137981` /
+> `4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c`, fence count
+> `43` single-subject RED/GREEN pairs and `12` controls, plus `103` multi-subject
+> arms over 7 named subjects, `14` executed systemd `ORACLE` arms and `11`
+> executed `ENV_ORACLE` arms. Status:
+> **rows-1-9-EXTENDED-PENDING-FRESH-SAME-BYTE-T0-AUDITS**. Everything below is
 > written round by round; earlier sections record the identities and counts that
 > were current *at the time of that round* and are retained as history. Where a
 > round's prose was later found false it is marked SUPERSEDED in place rather
-> than deleted. The authoritative current record is the "Cap-override repair"
-> section at the end of this file.
+> than deleted. The authoritative current record is the "R1-R4 repair" section at
+> the end of this file.
+
+## Provenance of record - one chronology
+
+This table is the single provenance statement for RP7 rows 1-9 and is reproduced
+identically in `STATUS_RP7.md` and `SELF_QA_RP7.md`. Every other statement in
+this file is scoped to the byte identity it names and does not carry forward.
+
+| byte identity | implementer self-QA | independent Lead run | flagship auditor verdicts |
+|---|---|---|---|
+| `108301` (round 9) | yes | yes | two accepting verdicts - superseded, does not carry forward |
+| `127491` (round 4, `90cbeac4`) | yes | yes, recorded at the time | none |
+| `127655` (post-round-4, `8ec89675`) | yes | yes, recorded at the time, against a different fence | none |
+| `132886` (cap-override, `2d0f24d0`) | yes | yes - complete fence, 2026-08-15, rc 0, 124.8 s | Codex `gpt-5.6-sol` **BLOCK**, Claude `claude-opus-5` **REQUEST_CHANGES** |
+| `137981` (R1-R4 repair) | yes | yes - two complete retained fence runs, 2026-08-15, rc 0, raw `cmp` identical | **not yet - both T0 slots PENDING** |
+
+Neither T0 flagship accepted `132886`. Between them they left four REQUIRED
+findings - R1 row-9 production boundary, R2 provenance, R3 transcript
+determinism, R4 bare-CR terminator - and the bytes that close them are new. After
+the implementer session produced `137981`, the Lead independently ran the
+complete fence twice: both runs returned rc 0 with zero stderr and raw published
+stdout compared identical. No auditor has seen these bytes yet, and no
+acceptance is claimed anywhere in this file.
 
 Actual session-header model visible to this Codex session: Codex / GPT-5. The
 kickoff states this route is the Codex free gpt-5.5-class implementer lane; this
@@ -77,21 +97,41 @@ final executable identity changed from the pre-rebuild rows 1-9 identity.
 
 ## Identity
 
-Current `RP7-WPI-RO.sh` identity, after the cap-override repair recorded at the
-end of this file:
+Current `RP7-WPI-RO.sh` identity, after the R1-R4 repair recorded at the end of
+this file:
+
+```text
+bytes=137981
+sha256=4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c
+cr_bytes=0
+bash_n=0
+red_green_pairs=43
+controls=12
+multi_subject_arms=103
+multi_subject_subjects=7
+systemd_oracle_arms=14
+env_oracle_arms=11
+fence_stdout_lines=250
+fence_published_stdout_sha256=d0788122c132e43c25aea52315d53b3596c40c57598e2bbded9b2efa11cae8ab
+identity_changed=yes
+auditor_acceptance=none_yet_both_T0_slots_pending_same_bytes
+independent_lead_run=pass_2026-08-15_two_retained_runs_rc0_203s_each_raw_cmp_identical
+```
+
+Superseded cap-override identity:
 
 ```text
 bytes=132886
 sha256=a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243
-cr_bytes=0
-bash_n=0
 red_green_pairs=36
 controls=9
 multi_subject_arms=48
 systemd_oracle_arms=9
-identity_changed=yes
-auditor_acceptance=none_yet_both_T0_slots_pending_same_bytes
-independent_lead_run=none_yet_against_these_bytes
+committed_as=2d0f24d0
+lead_run=pass_2026-08-15_rc0_elapsed_124.8s
+codex_t0_verdict=BLOCK
+claude_t0_verdict=REQUEST_CHANGES
+superseded_reason=R1 row-9 D026 bypassed the manager normalisation boundary; R2 provenance self-contradiction; R3 exact-transcript contract not met; R4 row-6 modelled only LF as a line terminator, producing an executed bare-CR false PASS
 ```
 
 Superseded post-round-4 identity:
@@ -660,12 +700,25 @@ stash, branch or push. `RP7-WPI-RO.sh` was not edited in this documentation
 reconciliation - it remains locked at `127655` /
 `beacf85b628e419d911416dc1ee51a382f742d90cbabe29602e60c4f52d809a8`.
 
-## Cap-override repair - REQUIRED-1, REQUIRED-2, row-9 D026
+## Cap-override repair - REQUIRED-1, REQUIRED-2, row-9 D026 — SUPERSEDED
 
-**Authoritative current section.** This is the single owner-authorized T0
-cap-override repair round (`WPI_OWNER_DECISIONS_2026-08-13.md` §4). It is a
-repair record. **No acceptance is claimed and none may be inferred.** The two
-fresh mandatory T0 flagship audits and the Lead decide acceptance.
+**SUPERSEDED by the "R1-R4 repair" section at the end of this file.** Everything
+below in this section is the round-time record for the `132886` bytes. Both
+mandatory T0 flagships then ran against those bytes and neither accepted them.
+Three statements in this section were specifically overturned and are corrected
+in the R1-R4 section rather than deleted here:
+
+1. the row-6 normalisation of record (`rstrip("\r")` after `split("\n")`) modelled
+   only `LF` as a line terminator and carried an executed bare-CR false PASS;
+2. the row-9 mid-name-quote D026 arm did not traverse the manager normalisation
+   boundary the production caller sits behind;
+3. the "155 of 156 lines after substituting each run's own scratch root"
+   transcript comparison is withdrawn - the published transcript is now raw
+   byte-identical across runs with no substitution at all.
+
+This is a repair record for `132886`. **No acceptance is claimed and none may be
+inferred**, and none was granted: the Codex T0 verdict was BLOCK and the Claude
+T0 verdict was REQUEST_CHANGES.
 
 Resulting identity: `132886` /
 `a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243`, `0` CR
@@ -809,17 +862,23 @@ that path now lives under a run-owned root, so the digest **must** differ per
 run. The block requires only intra-run consistency, which `wpi_mount_guard_begin`
 re-checks and which held on every arm of every run.
 
-### Status of these bytes, stated plainly
+### Status of these bytes, stated plainly — SUPERSEDED, see "R1-R4 repair" below
+
+**These bytes are no longer the bytes on disk.** `132886` was superseded by the
+R1-R4 repair. The paragraph below is retained as the round-time record.
 
 `132886` / `a4af307c34cbc6092676b0838e17090dcadeb1116703773f1dbd42749670b243`
-has implementer self-QA plus an independent Lead run of the complete published
+had implementer self-QA plus an independent Lead run of the complete published
 fence on 2026-08-15. The Lead run returned rc 0 in 124.8 s; the before/after
 identity, all 9 live systemd oracle arms, and
-`D026_SUMMARY ... result=PASS` matched these bytes. It has **no auditor verdict**.
-The Lead agreement recorded earlier in this file against the superseded
-`127655` bytes is not carried forward; this is a fresh reproduction against
-`132886`. Both required T0 auditor slots are PENDING and must run fresh against
-these same bytes. **No acceptance is claimed.**
+`D026_SUMMARY ... result=PASS` matched those bytes. Both mandatory T0 flagship
+slots then ran against them and **neither accepted**: Codex `gpt-5.6-sol`
+returned BLOCK (the mandatory WSL fence was unavailable in its sandbox, plus
+three reproduced REQUIRED findings) and Claude `claude-opus-5` returned
+REQUEST_CHANGES (full fence executed, one further reproduced REQUIRED finding).
+The Lead agreement recorded earlier in this file against the superseded `127655`
+bytes was not carried forward to `132886`, and neither the Lead run nor either
+verdict carries forward to `137981`.
 
 Unchanged and still standing: the row-8 disclosure (sandbox pins are asserted
 rendered `systemctl show` literals; host derivation is a freeze-time act;
@@ -830,3 +889,176 @@ No git mutation occurred in this round: no stage, commit, checkout, reset, stash
 branch or push. No host contact, network probe, SSH/SCP, RUNID minting,
 deployment, service action, credential handling, or trading/ARM/order surface was
 touched. Scratch was confined to run-owned directories outside the repository.
+
+## R1-R4 repair - the owner-authorized round over the cap-override candidate
+
+**Authoritative current section.** This is the owner-authorized repair round
+dispatched by `KICKOFF_CLAUDE_RP7_R1_R4_REPAIR_2026-08-15.md`, opened after
+`RP7_CAP_OVERRIDE_FINAL_OWNER_BOUNDARY_2026-08-15.md` returned RP7 to the owner
+boundary with four unresolved REQUIRED findings. It is a repair record. **No
+acceptance is claimed and none may be inferred.** The two fresh mandatory T0
+flagship audits and the Lead decide acceptance.
+
+Resulting identity: `137981` /
+`4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c`, `0` CR bytes,
+`bash -n` rc 0. Files changed: the four owned artifacts only.
+
+### R4 - the systemd line terminator, modelled instead of approximated
+
+The frozen parser used `text.split("\n")` then `physical.rstrip("\r")`: only `LF`
+was modelled as a terminator, and an arbitrary *run* of trailing CRs was stripped
+rather than one terminator. Executed against systemd 259 in the published fence,
+by five new `ORACLE` arms that vary the terminator identity itself:
+
+```text
+bare CR before the header                 -> [Install]  the CR ENDED the line
+backslash + CR + CR + LF before header    -> [Install]  the CR run made a blank line
+backslash + CR then header on the LF line -> [Unit]     continuation still open
+whole fragment terminated by CR only      -> [Install]  parses normally
+backslash, then an LF line starting VT    -> [Unit]     VT is CONTENT
+```
+
+The repair is two lines:
+
+```text
+- for physical in text.split("\n"):
+-  line=physical.rstrip("\r").lstrip(WS)
++ for physical in re.split("\r\n|\r|\n",text):
++  line=physical.lstrip(WS)
+```
+
+Executed D026 through the production caller, in separate processes, against real
+committed byte sets: `bare_cr_install` returned the accepting
+`install_section=absent` at rc 0 on `capoverride` (132886), `current` (127655)
+and `mut_nocr` while systemd loads that fragment **with** a real `[Install]`
+section - a false PASS on a safety predicate. `multi_cr_install` did the same on
+`capoverride` and `round4`. `cr_only_file` could not be evaluated at all by the
+LF-only model (rc 3 `section_header_grammar`) on a fragment the manager parses
+without difficulty. All three are `present` at rc 1 on the repaired bytes.
+
+A plain revert to `str.splitlines()` is **not** equivalent and is executed as the
+mutant `mut_splitlines`: it breaks at `VT`, `FF`, `FS`, `GS`, `RS`, `NEL`,
+`U+2028` and `U+2029`, which systemd treats as content, and produces the opposite
+false FAIL on `vt_after_backslash`.
+
+No-weakening is executed on all seven subjects: `bs_cr_then_header`,
+`crlf_install`, `crlf_no_install`, `crlf_real_install`,
+`trailing_space_after_backslash`, odd/even backslash, comment bridge, blank
+termination, malformed header, NUL and EOF all keep their previous dispositions,
+and `mut_broad` still buys its false PASS on the trailing-space arm.
+
+### R1 - row 9 bound to the production normalisation boundary
+
+The row-9 D026 arm injected the raw mid-name-quote spelling directly into fake
+`systemctl show` output, which is not the production input. Eleven new
+`ENV_ORACLE` arms execute the real boundary with `systemd-analyze verify`. The
+load-bearing arm is `midname_hyphen_dq`: for the unit line
+`Environment=MTC-BRIDGE"_START_MODE=credential_free_disarmed"` systemd reports
+`Invalid environment assignment, ignoring: MTC-BRIDGE_START_MODE=credential_free_disarmed`
+- with the quotes already removed. Quote removal therefore precedes validation,
+and under a valid name the same spelling draws no diagnostic at all, so what the
+manager stores and renders back to the production caller is the clean protected
+assignment. The raw spelling cannot reach row 9.
+
+The claim that the tokenizer refuses the *unit-source* attack is withdrawn as an
+overclaim. The lexical guard and the effective-property check are unchanged; what
+changed is the sentence describing them. What actually refuses the attacked
+source is executed instead of asserted: two fragments differing only in the
+spelling of their `Environment=` line, padded to the same 3736 bytes, run through
+the real row-7 digest predicate - RED `unit_fragment_digest_mismatch` at rc 1,
+GREEN `B2_digest` at rc 0 - with row 5 separately requiring `DropInPaths` empty.
+
+Row 9 also gained the binding it was missing. `wpi_assert_b2_rows_1_7` sets
+`WPI_UNIT_SOURCE_ATTESTED` only after rows 1-7 complete, and
+`wpi_assert_environment_start_mode` refuses to emit an accepting line without it.
+Production-path D026: with the attestation removed, `capoverride`, `current` and
+`round4` all still emit an accepting row-9 line at rc 0 - a claim about "the
+frozen unit" bound to nothing - while the repaired bytes STOP at rc 3
+`detail=unit_source_not_attested`. A mismatched attestation STOPs as
+`unit_source_attestation_mismatch`. The accepting line now carries the earned
+token `source_binding=unit_fragment_digest_attested_dropins_empty`.
+
+The fully quoted and value-only quoted controls remain accepted, and the
+declared stronger-than-systemd single-occurrence invariant remains a rc-1 FAIL,
+now with `ENV_ORACLE` evidence that systemd itself accepts both duplicate forms
+without a diagnostic. The block discloses that whether a real manager ever
+renders the protected name twice in one `Environment` property is not established
+by this fixture harness.
+
+### R2 - provenance reconciled
+
+The single chronology is the table under "Provenance of record" near the top of
+this file and is reproduced identically in `STATUS_RP7.md` and `SELF_QA_RP7.md`.
+History is not rewritten: the earlier 2026-08-15 Lead run remains a fact about
+`132886`; the later two-run Lead verification is recorded only for `137981`; and
+the two T0 verdicts against `132886` retain their real values. Both new auditor
+slots remain pending.
+
+### R3 - the published transcript is exactly reproducible
+
+The fence now writes its raw transcript into the run-owned tree and canonicalises
+exactly five presentation values at the publication boundary. Two fresh
+sequential runs produced **raw byte-identical** published transcripts - compared
+with `cmp`, with no external editing, path replacement, normalisation or excluded
+field - at sha256
+`d0788122c132e43c25aea52315d53b3596c40c57598e2bbded9b2efa11cae8ab`, 250 lines,
+rc 0, 0 stderr bytes. From the retained raw evidence the two runs really did
+differ internally: different scratch roots, different live mount-projection
+digests, and raw transcripts differing on 131 line pairs.
+
+The layer fails closed, and each gate was falsified in a run-owned scratch copy:
+a wrong declared substitution count aborts at rc 94; a frozen mount digest aborts
+at rc 97 `mount_projection_not_rederivable`; a decoy rebuild that matches the
+real path aborts at rc 97 `mount_projection_not_path_sensitive`; a fixture that
+gains one byte aborts at rc 96 `fixture_bytes`; and a no-op mutant surfaces as
+`HARNESS_SUBJECT_FAIL` in the published transcript at rc 96. The repository root
+is now derived rather than hard-coded, so the published body runs unedited in any
+checkout.
+
+### Executed validation for these bytes
+
+```text
+identity derivation
+bytes=137981
+sha256=4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c
+cr_bytes=0
+bash --noprofile --norc -n RP7-WPI-RO.sh   rc=0
+git diff --check                           clean (owned files)
+
+published fence, executed twice back to back under wsl -d Ubuntu (systemd 259)
+from a run-owned materialisation of the four owned artifacts:
+cd <checkout>/MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT
+sed -n '/^# RP7_ROWS_1_9_REBUILD_FENCE_BEGIN$/,/^# RP7_ROWS_1_9_REBUILD_FENCE_END$/p' SELF_QA_RP7.md | bash --noprofile --norc
+
+run A  rc=0  stderr_bytes=0  stdout_lines=250  elapsed_s=199.9
+run B  rc=0  stderr_bytes=0  stdout_lines=250  elapsed_s=200.5
+published stdout sha256, both runs
+       d0788122c132e43c25aea52315d53b3596c40c57598e2bbded9b2efa11cae8ab
+cmp runA.stdout runB.stdout   -> identical
+
+single subject   RED=43  GREEN=43  CONTROL=12
+multi subject    RED=23  GREEN=15  CONTROL=65   subjects=7
+systemd oracle   arms=14  (3 controls + 11 rule arms)
+env oracle       arms=11  (3 controls + 8 boundary arms)
+harness abort / capture collision / unexpected stderr / ERR-trap contamination / identity drift: none
+```
+
+### Status of these bytes
+
+`137981` / `4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c` has
+implementer self-QA plus an independent Lead verification: two complete retained
+fence runs, each rc 0 with zero stderr, whose raw published stdout compared
+identical. It has **no auditor verdict**. Both required T0 auditor slots are
+PENDING and must run fresh against these same bytes. **No acceptance is claimed.**
+
+Unchanged and still standing: the row-8 disclosure and the C1 mount-projection
+digest residual, neither of which was in scope for this repair.
+
+No git mutation occurred in this round: no stage, commit, checkout, reset, stash,
+branch, push or worktree command, and no Git metadata was modified. No host
+contact, network probe, SSH/SCP, RUNID minting, deployment, service action,
+credential handling, broker/exchange access, or trading/ARM/order surface was
+touched. `systemd-analyze verify` was used read-only on local fixture files in
+run-owned scratch and contacted no service manager. All dynamic execution
+evidence stayed in run-owned temporary trees outside the repository. No
+sub-delegation; no other model was invoked.

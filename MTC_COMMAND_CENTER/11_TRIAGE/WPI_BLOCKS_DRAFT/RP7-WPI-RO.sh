@@ -119,6 +119,15 @@ WPI_FIXED_EVIDENCE_ROOT='<PIN-AT-FREEZE>'
 WPI_VENV_WALK_COMPLETE=no
 WPI_INTERPRETER_RAN=no
 WPI_METADATA_READABLE=no
+# Row 9 speaks about the ARM mode the frozen unit assigns, but it reads that mode
+# from the manager's EFFECTIVE `Environment` rendering, which is downstream of the
+# unit source. The rendering alone therefore identifies no source. This flag is
+# set only after rows 1-7 have completed - which includes row 5 proving
+# `DropInPaths` empty and row 7 proving the fragment's exact byte count and
+# SHA-256 - and row 9 refuses to emit an accepting line without it. Without this,
+# an accepting row-9 line is an unbound claim about an unattested source
+# (patterns 11 and 13).
+WPI_UNIT_SOURCE_ATTESTED=""
 # The row-21 response schema, declared exactly once. The parent needs it to
 # decide whether a result record its own child could have produced is being
 # adjudicated, and the child needs it to answer at all; declaring it twice would
@@ -658,12 +667,33 @@ except (OSError,UnicodeError):
  print("PARSE unreadable_or_encoding"); sys.exit(3)
 WS=" \t\r\n"
 # Physical-line rule for row 6, EXECUTED against systemd 259, not asserted.
-# systemd normalises the LINE TERMINATOR - and only the terminator - before it
-# runs the trailing-backslash escape scan. A trailing CR is part of the
-# terminator and is removed first, so it does not reach the scan. Trailing
-# SPACES are part of the line content, are not removed, and do reach the scan,
-# where they mean the last character is not a backslash and the line does not
-# continue.
+#
+# TERMINATOR SET. systemd ends a unit-file line at CRLF, at a bare CR, or at a
+# bare LF. That set is the whole of it: every other byte, including VT, FF, NEL
+# and the Unicode line separators, is line CONTENT. The scan for a trailing
+# backslash therefore runs on the line as it stands AFTER the terminator is
+# removed, and on nothing else. Trailing SPACES are content, are not removed,
+# and do reach the scan, where they mean the last character is not a backslash
+# and the line does not continue.
+#
+# `re.split("\r\n|\r|\n", text)` is exactly that terminator set, and the
+# alternation order matters: CRLF must be tried before bare CR so that a CRLF is
+# one terminator and not a terminator plus an empty line.
+#
+# WHAT THIS REPLACED, AND WHY IT WAS WRONG. The previous form was
+# `text.split("\n")` followed by `physical.rstrip("\r")`. It modelled only LF as
+# a terminator, so a bare CR was read as line content, and it stripped an
+# arbitrary RUN of trailing CRs rather than one terminator. Two fragments that
+# systemd loads WITH a real `[Install]` section were reported
+# `install_section=absent` at rc 0 - a false PASS on this safety predicate:
+#   `Description=x` + CR + `[Install]`             (bare CR before the header)
+#   `Description=continued \` + CR + CR + LF ...   (CR run swallowed the blank)
+# A plain revert to `str.splitlines()` is NOT the fix and is executed as the
+# mutant `mut_splitlines`: it also breaks at VT, FF, FS, GS, RS, NEL, U+2028 and
+# U+2029, which systemd treats as content, so a continuation that systemd keeps
+# open is closed and a fragment with NO install section is reported as having
+# one - a false FAIL on the same predicate.
+#
 # Executed discriminator - `systemd-analyze verify` on a fragment whose
 # `[Install]` is followed by a key unknown in every section, which makes systemd
 # NAME the section the key landed in ([Unit] = `[Install]` was swallowed as
@@ -672,20 +702,25 @@ WS=" \t\r\n"
 #   value line ends `\` + CRLF          -> key lands in [Unit]    -> CONTINUES
 #   value line ends `\` + CR + LF in an
 #     otherwise-LF file                 -> key lands in [Unit]    -> CONTINUES
+#   value line ends `\` + CR + header
+#     on the same LF line               -> key lands in [Unit]    -> CONTINUES
 #   value line ends `\` + spaces + LF   -> key lands in [Install] -> DOES NOT
 #   value line ends `\` + spaces + CRLF -> key lands in [Install] -> DOES NOT
 #   value line ends `\\` + LF (even)    -> key lands in [Install] -> DOES NOT
-# `rstrip("\r")` before the continuation test is therefore the faithful
-# normalisation, and it must be exactly that. A broad `rstrip()` or `rstrip(WS)`
-# would also eat the trailing spaces, fabricate a continuation systemd does not
-# perform, and swallow a REAL `[Install]` - a false PASS on this safety
-# predicate. `lstrip(WS)` alone is the opposite error: it leaves the CR on, the
-# line stops continuing, and a fragment systemd reads as having NO install
-# section is reported as having one - a false FAIL on the same predicate.
-# Both errors are executed as deliberate mutants in the fence (mut_broad,
-# mut_nocr) beside the round-4 blob and the current committed blob, so this is
-# falsified rather than stated - fixtures crlf_install and
-# trailing_space_after_backslash.
+#   `Description=x` + CR + header       -> key lands in [Install] -> bare CR
+#                                          ENDED the line
+#   value line ends `\` + CR + CR + LF  -> key lands in [Install] -> the CR run
+#                                          made a blank line, which TERMINATES
+#   whole fragment terminated by CR only-> key lands in [Install] -> a CR-only
+#                                          file parses normally
+#   value line ends `\`, next LF line
+#     starts with VT                    -> key lands in [Unit]    -> VT is
+#                                          CONTENT, the continuation stays open
+# A broad `rstrip()` or `rstrip(WS)` in place of the terminator split would eat
+# the trailing spaces, fabricate a continuation systemd does not perform, and
+# swallow a REAL `[Install]` - the false PASS direction, executed as the mutant
+# `mut_broad`. Modelling only LF is the CR-blind direction, executed as the
+# mutant `mut_nocr` beside the two real committed blobs that carried it.
 # The rule above is only readable off a fixture whose terminator bytes are the
 # ones intended. A fixture whose backslash line silently loses its CR - one
 # shell layer too many between the author and the file - reproduces the OPPOSITE
@@ -716,8 +751,8 @@ def continues(logical):
   n+=1
   i-=1
  return n%2==1
-for physical in text.split("\n"):
- line=physical.rstrip("\r").lstrip(WS)
+for physical in re.split("\r\n|\r|\n",text):
+ line=physical.lstrip(WS)
  if line[:1] in ("#",";"):
   continue
  logical=line if continuation is None else continuation+line
@@ -769,6 +804,18 @@ wpi_query_for_sandbox_prop() {
 
 wpi_assert_environment_start_mode() {
     local env_value="$1" record
+    # SOURCE BINDING, ASSERTED BEFORE ANY TOKEN IS READ.
+    # What this function receives is the manager's EFFECTIVE `Environment`
+    # rendering. That rendering is downstream of the unit source and identifies
+    # no source by itself, so an accepting line emitted from it alone would be a
+    # claim about "the frozen unit" that nothing in the run had bound to a unit.
+    # Rows 1-7 supply the binding: row 5 proves `DropInPaths` empty, so no
+    # drop-in can add or override an assignment, and row 7 proves the fragment's
+    # exact byte count and SHA-256. `wpi_assert_b2_rows_1_7` sets
+    # WPI_UNIT_SOURCE_ATTESTED only after both have passed. Absent or mismatched
+    # attestation is an inability to evaluate this row, not a host-state FAIL.
+    [ -n "$WPI_UNIT_SOURCE_ATTESTED" ] || wpi_stop B4 "unit_property_unreadable prop=Environment rc=0 detail=unit_source_not_attested"
+    [ "$WPI_UNIT_SOURCE_ATTESTED" = "$WPI_UNIT_FRAGMENT_SHA256" ] || wpi_stop B4 "unit_property_unreadable prop=Environment rc=0 detail=unit_source_attestation_mismatch"
     wpi_capture_bind_stop B4 "unit_property_unreadable prop=Environment" no_rc
     wpi_capture environment_tokenizer "$WPI_PYTHON3" -I -S -c '
 import hashlib,re,shlex,sys
@@ -803,17 +850,32 @@ for idx,tok in enumerate(tokens):
  name,value=tok.split("=",1)
  if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
   print("PARSE environment_name_grammar"); sys.exit(3)
- # A name is not an identity. Executed against systemd 259: the unit-file line
- # Environment=MTC_BRIDGE"_START_MODE=credential_free_disarmed" draws NO
- # diagnostic from systemd-analyze verify, because systemd removes the quotes
- # BEFORE it validates the assignment and stores the spliced name as though it
- # had been written literally. The rendering contract this row accepts is
- # narrower, and is DECLARED here rather than inferred from that: a genuine
- # assignment of the protected variable is bare, or wrapped in ONE outer quote
- # pair. A token whose name only becomes the protected target AFTER quote removal
- # splices a name the rendering never carried, so it is refused before target
- # semantics rather than normalised into them. The whole-assignment and
- # value-only quoted forms stay accepted (fixtures whole_quoted, value_quoted).
+ # RENDERING ATTRIBUTION - AND WHAT THIS GUARD DOES *NOT* ESTABLISH.
+ # This test refuses a token whose name only becomes the protected target after
+ # one outer quote pair is removed. Its true scope is the rendering this function
+ # was handed: every token must be attributable name-for-name to the raw
+ # (quote-preserving) lex, so a rendering this block cannot attribute is an
+ # inability to evaluate rather than something normalised into target semantics.
+ # The whole-assignment and value-only quoted forms stay accepted (fixtures
+ # whole_quoted, value_quoted).
+ #
+ # It is NOT a rejection of a mid-name quote written in the UNIT SOURCE, and the
+ # earlier comment here that implied it was has been withdrawn as an overclaim.
+ # Executed against systemd 259 by the ENV_ORACLE arms of the fence: the
+ # unit-file line
+ #   Environment=MTC-BRIDGE"_START_MODE=credential_free_disarmed"
+ # makes systemd PRINT the token it actually validated -
+ #   Invalid environment assignment, ignoring: MTC-BRIDGE_START_MODE=credential_free_disarmed
+ # - with the quotes already gone, while the same spelling under a valid name
+ #   Environment=MTC_BRIDGE"_START_MODE=credential_free_disarmed"
+ # draws no diagnostic at all. Quote removal therefore happens BEFORE validation,
+ # and the effective assignment the manager stores - and renders back through
+ # `systemctl show` - is the clean protected assignment. The raw mid-name spelling
+ # cannot survive into the input of this function, so this guard cannot be what
+ # stops it. What stops it is the source binding asserted at the top of the row:
+ # the exact byte count and SHA-256 of the fragment are pinned by row 7 and
+ # drop-ins are proved empty by row 5, so a unit source carrying that spelling is
+ # a different object and is refused before row 9 is reached.
  rawtok=raw_tokens[idx]
  q=rawtok[:1]
  core=rawtok
@@ -836,6 +898,11 @@ for idx,tok in enumerate(tokens):
 # rendering was fully evaluable and it did not match the preregistered shape. The
 # reason token start_mode_missing_or_altered covers that whole domain, and the
 # observed=count=N field is what distinguishes a duplicate from an absence.
+# FIDELITY LIMIT, DISCLOSED: the fence drives this arm from a written `systemctl
+# show` fixture. That a real manager ever RENDERS the protected name twice in one
+# `Environment=` property is NOT established by this block or its fence. The
+# policy above is therefore a rule about renderings this function may be handed,
+# fail-closed by construction, and not a claim about what the manager emits.
 if count==1 and observed[0]==expected:
  print("OK target=%s value=%s tokens=%d"%(target,expected,len(tokens))); sys.exit(0)
 h=hashlib.sha256("\n".join(observed).encode()).hexdigest()
@@ -845,7 +912,7 @@ print("BAD count=%d observed_sha256=%s"%(count,h)); sys.exit(1)
     wpi_captured_record B4 "unit_property_unreadable prop=Environment" out
     record="$WPI_LINE"
     case "$WPI_CAP_RC:$record" in
-        0:OK\ target=MTC_BRIDGE_START_MODE\ value=credential_free_disarmed\ tokens=*) printf 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1\n' ;;
+        0:OK\ target=MTC_BRIDGE_START_MODE\ value=credential_free_disarmed\ tokens=*) printf 'B4_environment target=MTC_BRIDGE_START_MODE value=credential_free_disarmed parser=systemd_environment_tokenizer occurrences=1 source_binding=unit_fragment_digest_attested_dropins_empty\n' ;;
         1:BAD\ count=*\ observed_sha256=*) wpi_fail B4 "start_mode_missing_or_altered observed=${record#BAD }" ;;
         3:PARSE\ *) wpi_stop B4 "unit_property_unreadable prop=Environment rc=0 detail=${record#PARSE }" ;;
         *) wpi_stop B4 "unit_property_unreadable prop=Environment rc=$WPI_CAP_RC detail=tokenizer_result_grammar" ;;
@@ -912,6 +979,11 @@ wpi_assert_b2_rows_1_7() {
     wpi_assert_regular_digest B2 unit_fragment_absent unit_fragment_digest_mismatch \
         "$WPI_UNIT_FRAGMENT" "$WPI_UNIT_FRAGMENT_BYTES" "$WPI_UNIT_FRAGMENT_SHA256" \
         fragment unit_fragment_object_unexpected with_path
+    # Rows 1-7 have now completed for this fragment: DropInPaths was proved empty
+    # above, and the line immediately above proved the fragment's exact byte count
+    # and SHA-256. Only here may the unit source be called attested, and only that
+    # attestation lets row 9 emit an accepting line about "the frozen unit".
+    WPI_UNIT_SOURCE_ATTESTED="$WPI_UNIT_FRAGMENT_SHA256"
 }
 
 wpi_assert_b4_rows_8_9() {
