@@ -1,5 +1,77 @@
 # GLOBAL_HANDOFF
 
+## [Claude Opus 5 Lead] 2026-08-15 evening — Pathscope retry executed and failed; deploy path priced
+
+Owner authorized one fresh Pathscope `gpt-5.6-sol` high execution-audit **retry**,
+because the 2026-08-14 attempt was transport-blocked before executing anything,
+with a standing instruction to stop before any repair cycle if it found required
+changes.
+
+**The retry executed.** Session header confirmed `sandbox: danger-full-access`
+before any work — the first Pathscope audit of these bytes that actually ran the
+mandated suite. Verdict **REQUEST_CHANGES**, three REQUIRED findings, no nits:
+command text and URI/list members still reach `PASS rc=0` with zero terminal
+accounting (F1); provenance is unioned over the whole RHS and laundered onto
+neighbouring members (F2); duplicate and repeated-empty members collapse before
+accounting (F3). The published harness and every named C-3/C-4 fixture reproduced
+cleanly, so the repair closed what it targeted and failed the sweep next door.
+**Lane stopped at the owner boundary. No repair opened, no further audit.** Four
+options are priced for Barış in
+`WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_DECISION_OPTIONS_2026-08-15.md`; the Lead
+recommends the accounting-layer redesign, because three prior shape-recognition
+repairs each closed their named findings and each failed the next sweep.
+
+**The 2026-08-14 audit contract was unsatisfiable.** Its frozen table mixed
+Git-object (LF) and working-tree (CRLF) identities, so no derivation method could
+reproduce all four rows. Corrected to a dual-form table before dispatch; the
+retry reproduced both forms exactly. See
+`PATHSCOPE_IDENTITY_TABLE_LEAD_FINDING_2026-08-15.md`. The same ambiguity then
+turned up again as Packet 10 anomaly A1 — third instance in two days.
+
+**Packet 10** (owner-authorized local run): recheck checklist steps 1-8, then the
+Bridge suite twice — `2 failed, 1019 passed` both times, identical identities.
+A1 fails only on Windows because the evidence ledger records the LF hash while
+the validator hashes the CRLF file; it passes on the Ubuntu target. A2 asserts
+`schema_version == "2"` against a baseline that is now 4 — stale, and it fails on
+Linux too. Explicitly **not** the freeze-time baseline: locked pytest 9.1.1 is not
+installed here. Repairs for both are being prepared on
+`codex/bridge-suite-anomaly-repairs-20260815`, not merged.
+
+**Packet 11**: ~55 h anchor plus 8 h 45 m measured post-anchor commit-session
+span = **~63.75 h**, with reproduction commands and an owner signature block.
+Measurement only, not self-ratified.
+
+**Freeze map**: within prerequisite gate 2, **Pathscope is now the only open
+sub-item**. After the owner's decision, Stage-1 freeze is 7-14.5 h, with exactly
+one step blocked on authorized host access.
+
+**Two deploy findings that move the schedule** — see
+`11_TRIAGE/DEPLOY_PATH_SYNTHESIS_2026-08-15.md`:
+
+1. The staging-accepted Gate-A candidate `2ce41e34` is **not in `origin/master`**
+   and not an ancestor of this branch; it lives only on
+   `codex/gate-a-disarmed-start-mode`, exactly as its staging-only acceptance
+   intended. `credential_free_disarmed` appears nowhere under `IBKR_PAPER_BRIDGE/`
+   at HEAD. Three lines have diverged — master, the Gate-A candidate, and this
+   WP-I branch, split at `4d2228cf` — so the release candidate is an integration
+   job, and Gate-A's A-0..A-9 pass cannot be carried onto new bytes.
+2. The deployment gate is **step 9 of the canonical sequence**, downstream of
+   WP-I, Audit 2, WP-A and Audit 3. It is not a parallel track.
+
+Assembled estimate to one DISARMED KVM2 first start: **55-105 hands-on hours,
+centred near 75** — roughly 31-56 local, 8-12 audit, 15-31 host, 1-1.5 owner.
+
+**Process note worth keeping:** three dispatched Codex lanes spontaneously
+spawned Claude Code child processes — unauthorized sub-delegation against the
+owner's separately-paid credits. Each was terminated, an explicit
+no-sub-delegation clause was added to every kickoff, and a guard process now
+kills strays. This is a recurrence of the 2026-08-13 incident. **Put the clause
+in every kickoff.**
+
+Commits `5ec1787c` → `678d4be2`, all pushed. No host, deployment, credential,
+service, broker/exchange, ARM, order, TESTNET/mainnet, Pine, parity, MTC,
+trading, or economic action occurred.
+
 ## [Codex GPT-5 Lead] 2026-08-15 — RP7 R1-R4 dual-flagship T0 acceptance
 
 RP7 rows 1-9 is **ACCEPTED** on frozen candidate
