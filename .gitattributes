@@ -1,2 +1,3 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+MTC_COMMAND_CENTER/11_TRIAGE/KVM2_PROGRAM/evidence/ledger_schema.json text eol=lf
