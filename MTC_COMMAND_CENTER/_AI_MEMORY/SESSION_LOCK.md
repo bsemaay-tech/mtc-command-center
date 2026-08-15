@@ -28,9 +28,9 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **UNCLAIMED** — accepted and released 2026-08-15 11:45 +03 | — |
 | Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
-| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **UNCLAIMED** — owner boundary, released 2026-08-15 11:45 +03 | — |
+| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Claude Opus 5 Lead `192dd112`** (session "R7FINAL 12h autonomous") | 2026-08-15 19:20 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
-| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **UNCLAIMED** — released for new-task handoff 2026-08-15 11:45 +03 | — |
+| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Claude Opus 5 Lead `192dd112`** (session "R7FINAL 12h autonomous") | 2026-08-15 19:20 +03 |
 | Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | UNCLAIMED | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
@@ -42,6 +42,15 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-15 19:20 +03:** Claude Opus 5 Lead `192dd112` claimed the Pathscope
+  and Audit-2 readiness rows for an owner-authorized 12-hour autonomous session
+  in `C:\R7FINAL`. Verified before claiming: HEAD `2d401822`, branch
+  `codex/rp7-r1-r4-repair-20260815`, `git status --porcelain` empty, and no
+  `codex.exe` process running (no active writer). Scope: one authorized
+  Pathscope `gpt-5.6-sol` high execution-audit **retry** of the unchanged frozen
+  candidate `40091b2b`, plus documentation-only reconciliation. No RP7 byte is
+  touched; RP7 row stays released and accepted.
 
 - **2026-08-15 11:45 +03:** Codex Lead `019fe77c` released RP7, Pathscope,
   and Audit-2 readiness after the RP7 R1-R4 candidate reached dual-flagship T0
