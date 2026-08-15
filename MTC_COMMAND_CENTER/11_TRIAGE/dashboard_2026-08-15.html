@@ -191,14 +191,14 @@
 <div class="wrap">
 
   <header>
-    <p class="eyebrow">Status for Barış · 16 August 2026, 03:30</p>
+    <p class="eyebrow">Status for Barış · 16 August 2026, 05:00</p>
     <h1>What is left before the bridge runs on your Hostinger server</h1>
     <div class="rule"></div>
   </header>
 
   <section>
     <div class="tiles">
-      <div class="tile"><span class="num">4</span><span class="cap">decisions still waiting on you</span></div>
+      <div class="tile"><span class="num">5</span><span class="cap">decisions still waiting on you</span></div>
       <div class="tile"><span class="num">41.5–77.5</span><span class="cap">hours priced so far</span></div>
       <div class="tile"><span class="num">14</span><span class="cap">jobs still with no price</span></div>
       <div class="tile"><span class="num">~64</span><span class="cap">hours spent so far</span></div>
@@ -213,9 +213,22 @@
   <section>
     <div class="sechead">
       <p class="eyebrow">Blocked on you</p>
-      <h2>Four things left for you</h2>
+      <h2>Five things left for you</h2>
     </div>
     <div class="decisions">
+
+      <div class="decision">
+        <h3>The safety checker, after five attempts</h3>
+        <p class="ask">You authorised one rebuild and one review. Both happened. The rebuild genuinely killed every old fault — the reviewer confirmed that with its own tests, not ours. It then found two new ways through, one of them inside the guard that had just been added to stop exactly that.</p>
+        <p class="ask">That is the fifth time the named problems were fixed and the same kind of problem appeared next door. The reason is now understood: the checker only guarantees anything about the inputs it agrees to look at, and the list of inputs it declines to look at keeps turning out to have gaps.</p>
+        <ul class="opts">
+          <li>Patch the two new holes and review again. Roughly 3–5 hours. The last four rounds all looked like this one.</li>
+          <li>Accept it as a helper rather than a gate, and write down precisely what is not proven. Unblocks everything else.</li>
+          <li>Drop it from this work package and record the gap.</li>
+          <li class="rec">New, and being costed for you right now — make the checker <em>refuse</em> anything it cannot fully account for, instead of trying to analyse everything. Safer boundary, but it may reject a lot of real input; the numbers will tell us whether that is tolerable.</li>
+        </ul>
+        <p class="ask">Nothing more happens on this until you choose. No sixth attempt has been started.</p>
+      </div>
 
       <div class="decision">
         <h3>Who and how, for the staging server login</h3>
@@ -259,7 +272,7 @@
     <div class="gates">
 
       <div class="gate"><span class="name">Decide which plan is in charge</span><span class="pill p-partial">My work first</span><span class="note">Two plans describe this same deployment and neither mentions the other. One says the server work is the last step of a long chain; the other treats it as its own programme with its own gates. Nobody ever reconciled them, and the answer changes both the order and the hours. I will produce the reconciliation; you ratify it.</span></div>
-      <div class="gate"><span class="name">Safety checker signed off</span><span class="pill p-partial">Built — under review</span><span class="note">You chose the full rebuild and it is done. Every hole the old version had was measured closing: cases that used to pass silently now stop the run. The independent review is running now. If it finds a required change, the work stops and comes back to you rather than starting another round.</span></div>
+      <div class="gate"><span class="name">Safety checker signed off</span><span class="pill p-blocked">Back to you</span><span class="note">The rebuild was built and independently reviewed. Every old hole is genuinely shut and stayed shut under the reviewer's own testing — but the reviewer found two new ways through, one of them inside the very guard added to stop them. Fifth time in a row the named problems were fixed and the same kind of problem turned up next door. The work has stopped and come back to you, as you asked.</span></div>
       <div class="gate"><span class="name">Repaired safety rules accepted</span><span class="pill p-clear">Done</span><span class="note">Passed both independent flagship reviewers today with no required fixes.</span></div>
       <div class="gate"><span class="name">Work package frozen</span><span class="pill p-blocked">Blocked</span><span class="note">Waits on the safety-checker decision.</span></div>
       <div class="gate"><span class="name">The authorized server job runs</span><span class="pill p-partial">Permission granted</span><span class="note">Your read-only permission covers this. It cannot be used until the paperwork it names is written and committed — that comes first.</span></div>
@@ -312,7 +325,7 @@
       <table>
         <thead><tr><th>Item</th><th>Result</th></tr></thead>
         <tbody>
-          <tr><td>Safety-checker rebuild</td><td><strong>Built.</strong> Designed, independently attacked, corrected, then implemented — about 2,400 lines changed plus a test runner that checks the work independently rather than trusting it. Every old hole measured shut. The one review you authorized is running now.</td></tr>
+          <tr><td>Safety-checker rebuild</td><td><strong>Built, reviewed, and stopped.</strong> About 2,400 lines changed. Every old hole measured shut and confirmed shut by the reviewer's own tests. But two new ways through were found, so the one attempt you authorized is spent and the decision returns to you.</td></tr>
           <tr><td>Your five decisions</td><td>All recorded and acted on. Two of them corrected documents that had been recommending the opposite of what you chose.</td></tr>
           <tr><td>Roughly 45 documents produced</td><td>Across about 40 parallel helper runs, on three accounts plus a second AI provider.</td></tr>
           <tr><td>Everything reviewed</td><td>Ten of ten server contracts failed review. Both halves of the paperwork for your server permission failed. The runbook's central safety guard turned out to be false. All being rewritten.</td></tr>
