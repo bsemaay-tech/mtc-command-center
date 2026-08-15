@@ -26,11 +26,11 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | Workstream | Files (primary home) | Owner | Since |
 |---|---|---|---|
 | RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
-| RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **Codex Lead `019fe77c`** — preserved partial repair; serialized writer only | 2026-08-14 10:30 +03 |
+| RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **UNCLAIMED** — accepted and released 2026-08-15 11:45 +03 | — |
 | Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
-| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
+| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **UNCLAIMED** — owner boundary, released 2026-08-15 11:45 +03 | — |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
-| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
+| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **UNCLAIMED** — released for new-task handoff 2026-08-15 11:45 +03 | — |
 | Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | UNCLAIMED | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
@@ -42,6 +42,12 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-15 11:45 +03:** Codex Lead `019fe77c` released RP7, Pathscope,
+  and Audit-2 readiness after the RP7 R1-R4 candidate reached dual-flagship T0
+  acceptance and the final continuity/handoff records were prepared. Pathscope
+  remains non-accepted at its exhausted owner boundary; release does not grant a
+  new cycle. No active writer remains in these workstreams.
 
 - **2026-08-14 10:30 +03:** Codex Lead `019fe77c` claimed RP7, Pathscope, and
   Audit-2 readiness. The existing uncommitted `RP7-WPI-RO.sh` edit is the

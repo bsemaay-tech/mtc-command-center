@@ -1,5 +1,26 @@
 # ACTIVE_FILES
 
+## 2026-08-15 Codex GPT-5 Lead — WP-I post-RP7 acceptance working set
+
+- `MTC_COMMAND_CENTER\11_TRIAGE\NEW_CHAT_HANDOFF_2026-08-15_AFTER_RP7_ACCEPTANCE.md`
+  — canonical next-task prompt and simple dashboard.
+- `MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT\RP7_R1_R4_FINAL_ACCEPTANCE_2026-08-15.md`
+  — combined Lead disposition; RP7 rows 1-9 accepted at T0.
+- `MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT\RP7_R1_R4_CLAUDE_T0_AUDIT_2026-08-15.md`
+  — exact Opus 5 xhigh accepting verdict.
+- `MTC_COMMAND_CENTER\11_TRIAGE\WPI_BLOCKS_DRAFT\RP7_R1_R4_CODEX_T0_AUDIT_2026-08-15.md`
+  — exact gpt-5.6-sol xhigh PASS verdict.
+- `MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\PATHSCOPE_FINAL_OVERRIDE_CODEX_T1_AUDIT_2026-08-14.md`
+  — current Pathscope transport BLOCK and exhausted-cycle boundary.
+- `MTC_COMMAND_CENTER\11_TRIAGE\AUDIT2_READINESS_PACKAGE\AUDIT2_PACKET10_CURRENT_BYTES_PREFLIGHT_2026-08-14.md`
+  and `AUDIT2_PACKET11_SKELETON_2026-08-12.md` — partial downstream packets.
+
+Branch/worktree: `C:\R7FINAL`,
+`codex/rp7-r1-r4-repair-20260815`. Do not use the dirty primary checkout for
+this continuation. RP7 accepted bytes are frozen from further edits unless a
+new cycle is explicitly opened. Stage 1/Audit 2/WP-A remain blocked by
+Pathscope and freeze-time prerequisites; all hard gates remain closed.
+
 ## 2026-08-01 Codex GPT-5.6-sol — WP-L/WP-I accepted local evidence; external host blocker
 
 Active record files (this programme):

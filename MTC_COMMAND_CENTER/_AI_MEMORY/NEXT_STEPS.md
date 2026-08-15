@@ -1,5 +1,38 @@
 # NEXT_STEPS
 
+## READ FIRST — post-RP7 acceptance handoff (2026-08-15)
+
+Canonical new-task prompt:
+`11_TRIAGE/NEW_CHAT_HANDOFF_2026-08-15_AFTER_RP7_ACCEPTANCE.md`.
+
+Current state: RP7 rows 1-9 candidate `80cbed46` is **T0 ACCEPTED** by both
+mandatory flagships (Codex PASS; Claude PASS-WITH-NITS; zero required repairs).
+The older RP7 owner-boundary record applies only to the rejected 132886-byte
+candidate and is superseded for current disposition by
+`WPI_BLOCKS_DRAFT/RP7_R1_R4_FINAL_ACCEPTANCE_2026-08-15.md`.
+
+**Immediate pick-up, in order:**
+
+1. **[AI: Lead]** Verify the new isolated checkout and claim only the rows to be
+   written. Do not modify the accepted RP7 bytes.
+2. **[AI: Lead]** Reconcile the freeze-blocker map, Packet 10, Packet 11, and
+   related status documents against the new RP7 acceptance. This is
+   documentation-only and grants no freeze or host authority.
+3. **[AI: Barış]** Decide whether to authorize one new narrowly scoped Pathscope
+   cycle. Its final authorized audit was transport-BLOCKED before execution;
+   the existing cycle is exhausted and must not be silently rerun.
+4. **[AI: Lead]** Only after Pathscope acceptance, finish Packet 9 and the
+   Stage-1 freeze-input allocation/binding sequence, then freeze the exact
+   Packet-10 Bridge-suite command before execution.
+5. **[AI: Barış]** Separately authorize any exact host contact, Stage-1 run,
+   deployment/service action, credentials, broker/exchange, ARM/order,
+   TESTNET/mainnet, merge-to-master, or economic action when that gate is
+   actually reached.
+
+The 50-hour ledger is historical: approximately 55 hours was owner-ratified as
+used on 2026-08-13, and subsequent repair/audit work is additional overrun. Do
+not present “50 minus used” as a remaining-hours forecast.
+
 ## READ FIRST — fresh-session handoff (2026-08-10 evening)
 
 **`11_TRIAGE/NEW_SESSION_KICKOFF_2026-08-10_EVENING.md` is self-contained and current.**

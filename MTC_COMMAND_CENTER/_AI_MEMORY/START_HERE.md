@@ -1,5 +1,14 @@
 # START_HERE
 
+> **▶ CURRENT WP-I ENTRYPOINT — 2026-08-15.** Start with
+> `..\11_TRIAGE\NEW_CHAT_HANDOFF_2026-08-15_AFTER_RP7_ACCEPTANCE.md` and
+> `..\11_TRIAGE\WPI_BLOCKS_DRAFT\RP7_R1_R4_FINAL_ACCEPTANCE_2026-08-15.md`.
+> RP7 rows 1-9 is now **T0 ACCEPTED** on candidate `80cbed46` after Codex PASS
+> and Claude PASS-WITH-NITS, zero required repairs. Pathscope remains the active
+> owner boundary after its final authorized audit transport-BLOCK; do not rerun
+> it without a new explicit owner decision. The older 2026-08-12/13 live-run
+> banner immediately below is historical and is superseded by this paragraph.
+
 > **▶▶ LIVE WP-I RUN — 2026-08-12/13. START WITH
 > `..\11_TRIAGE\FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md`.** It is self-contained, its §0 is a
 > **binding operating contract** (never idle · 4–6 parallel lanes · Codex primary · Claude Max is

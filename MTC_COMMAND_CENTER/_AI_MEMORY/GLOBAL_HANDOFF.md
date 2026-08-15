@@ -1,5 +1,28 @@
 # GLOBAL_HANDOFF
 
+## [Codex GPT-5 Lead] 2026-08-15 — RP7 R1-R4 dual-flagship T0 acceptance
+
+RP7 rows 1-9 is **ACCEPTED** on frozen candidate
+`80cbed461d0b0371e6eabbfff0e732e5001affaf`. Lead verification ran the complete
+fence twice with rc 0, 250 lines, zero stderr, and raw byte-identical published
+output. Two fresh isolated T0 auditors then executed independently: exact
+`gpt-5.6-sol` xhigh returned **PASS** and exact `claude-opus-5` xhigh returned
+**PASS-WITH-NITS**, with zero required repairs. Durable verdicts and the combined
+adjudication are in `11_TRIAGE/WPI_BLOCKS_DRAFT/RP7_R1_R4_*_2026-08-15.md` and
+`RP7_R1_R4_FINAL_ACCEPTANCE_2026-08-15.md`. The six Claude nits are optional
+backlog only; changing accepted bytes would reopen T0.
+
+Pathscope remains separately **NON-ACCEPTED at the owner boundary**: its final
+authorized `gpt-5.6-sol` high audit was transport-BLOCKED by an enforced read-only
+sandbox and did not execute the mandatory suite. No additional Pathscope cycle
+is authorized. Therefore Stage 1, freeze, Audit 2, and WP-A remain blocked.
+Packet 10 and Packet 11 are partial, and Packet 9/freeze bindings remain
+downstream. New-task entrypoint:
+`11_TRIAGE/NEW_CHAT_HANDOFF_2026-08-15_AFTER_RP7_ACCEPTANCE.md`.
+
+No host, deployment, credential, service, broker/exchange, ARM, order,
+TESTNET/mainnet, Pine, parity, MTC, trading, or economic action occurred.
+
 ## [Claude Fable 5 — Lead] 2026-08-12 20:50 → 2026-08-13 ~09:00 — WP-I overnight: the 23:00 Claude Pro window executed
 
 **Full detail: `11_TRIAGE/FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md` §7 — that file is the
