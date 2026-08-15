@@ -191,14 +191,14 @@
 <div class="wrap">
 
   <header>
-    <p class="eyebrow">Status for Barış · 16 August 2026, 00:00</p>
+    <p class="eyebrow">Status for Barış · 16 August 2026, 01:30</p>
     <h1>What is left before the bridge runs on your Hostinger server</h1>
     <div class="rule"></div>
   </header>
 
   <section>
     <div class="tiles">
-      <div class="tile"><span class="num">2</span><span class="cap">decisions still waiting on you</span></div>
+      <div class="tile"><span class="num">4</span><span class="cap">decisions still waiting on you</span></div>
       <div class="tile"><span class="num">41.5–77.5</span><span class="cap">hours priced so far</span></div>
       <div class="tile"><span class="num">14</span><span class="cap">jobs still with no price</span></div>
       <div class="tile"><span class="num">~64</span><span class="cap">hours spent so far</span></div>
@@ -213,9 +213,21 @@
   <section>
     <div class="sechead">
       <p class="eyebrow">Blocked on you</p>
-      <h2>Two things left for you</h2>
+      <h2>Four things left for you</h2>
     </div>
     <div class="decisions">
+
+      <div class="decision">
+        <h3>Who and how, for the staging server login</h3>
+        <p class="ask">This one is on the critical path — everything in the current work package waits behind it, including the permission you already gave me.</p>
+        <p class="ask">Your approval covers a read-only capture on the staging machine. To write the document that approval attaches to, eight facts about that login have to be pinned down. A sweep tonight found that <strong>nothing anywhere in the project establishes any of them</strong>. Five can be observed once the route exists. Three are choices nobody has made, and no amount of looking will produce them:</p>
+        <ul class="opts">
+          <li><strong>Which account.</strong> The records fix the ordinary unprivileged login and allow a pinned key, but never name the privileged one. It must not be guessed from the other.</li>
+          <li><strong>Direct administrator login, or one specific escalation route.</strong></li>
+          <li><strong>What actually stops a write.</strong> Which mechanism enforces read-only, and who owns it. Reading the script's source is explicitly not enough.</li>
+        </ul>
+        <p class="ask">This is likely a conversation with whoever administers that machine rather than something you answer alone. Once decided, the other five facts are observable and the document can be written.</p>
+      </div>
 
       <div class="decision">
         <h3>Which plan is in charge</h3>
@@ -300,15 +312,18 @@
       <table>
         <thead><tr><th>Item</th><th>Result</th></tr></thead>
         <tbody>
-          <tr><td>Safety-checker audit retry</td><td>Ran properly this time. Failed with three required fixes. Stopped at your boundary, no repair opened — which is what led to your rebuild decision.</td></tr>
-          <tr><td>Bridge test suite</td><td>Run twice: 1019 pass, 2 fail, identical. Both diagnosed, both fixed on a side branch, and the fix passed an independent review. Not merged.</td></tr>
-          <tr><td>Hours measurement</td><td>Done, with the commands to reproduce every number. You signed it.</td></tr>
-          <tr><td>Deploy readiness</td><td>All ten checklist items re-verified. Six of the ten July status notes were wrong.</td></tr>
-          <tr><td>Release integration plan</td><td>Written, then turned into a step-by-step script. The script caught a mistake in the plan it implements.</td></tr>
-          <tr><td>A reviewer sent to attack my own work</td><td>It refuted my hour estimate and found a genuine plan conflict. I withdrew the number rather than defend it, and rebuilt the breakdown from scratch.</td></tr>
-          <tr><td>Credit protection</td><td>Six times, helper processes tried to start their own Claude sessions. All killed automatically. Your Claude Max is untouched.</td></tr>
+          <tr><td>Safety-checker rebuild</td><td>Designed, independently attacked, corrected, and now being built. The review found a hole that would have wasted the single attempt you authorized.</td></tr>
+          <tr><td>Your five decisions</td><td>All recorded and acted on. Two of them corrected documents that had been recommending the opposite of what you chose.</td></tr>
+          <tr><td>Roughly 45 documents produced</td><td>Across about 40 parallel helper runs, on three accounts plus a second AI provider.</td></tr>
+          <tr><td>Everything reviewed</td><td>Ten of ten server contracts failed review. Both halves of the paperwork for your server permission failed. The runbook's central safety guard turned out to be false. All being rewritten.</td></tr>
+          <tr><td>One pattern named</td><td>Four unrelated reviews found the same underlying defect — a check that passes without proving anything. Written up so it stops recurring.</td></tr>
+          <tr><td>Credit protection</td><td>Six helper processes tried to start their own Claude sessions. All killed automatically. Your Claude Max is untouched.</td></tr>
         </tbody>
       </table>
+    </div>
+    <div class="callout">
+      <p><strong>How to read the volume.</strong> Roughly 45 documents sounds like a finished pile. It is not. The parallel runs are good at producing raw material fast and at finding problems; almost none of their first drafts survived review intact. The reviewing is where the work actually finishes, and most of tonight's output is now in its second or third pass.</p>
+      <p>What genuinely moved: the safety-checker rebuild is underway on a corrected design, the blocker behind your server permission is now a named question instead of a vague one, and the deployment work is priced where it can honestly be priced.</p>
     </div>
   </section>
 
