@@ -11,7 +11,11 @@
 
 > **▶ CURRENT STATE: read `_AI_MEMORY/GLOBAL_HANDOFF.md` (newest section first) + `NEXT_STEPS.md` for live work.** The older `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md` is historical (most items DONE) — read only for back-context. Everything below is standing reference.
 
-Read order: `AGENTS.md`, this file, `AI_RULES.md`, `PROJECT_MEMORY.md`, `GLOBAL_HANDOFF.md` if needed, `NEXT_STEPS.md`, then project handoff files.
+Read order: `AGENTS.md`, this file, `LESSONS.md` (capped, 2-min read — durable paid-for rules), `AI_RULES.md`, `PROJECT_MEMORY.md`, `GLOBAL_HANDOFF.md` if needed, `NEXT_STEPS.md`, then project handoff files.
+
+> **Rotation note (2026-08-15):** `GLOBAL_HANDOFF.md` / `NEXT_STEPS.md` entries dated before
+> 2026-08-01 and the old `SESSION_LOG.md` live under `_AI_MEMORY/archive/`. Grep the archive
+> before claiming an old entry does not exist.
 
 > **MANDATORY TWO-TIER MODEL (see `AGENTS.md` § Two-Tier):** Task recipient = **Lead** (Claude CLI *or* Codex CLI — whichever opened the session). Lead orchestrates and owns acceptance. Lead delegates *implementation* to the counterpart flagship CLI (Codex ↔ Claude). Cheap models (DeepSeek, Cline) are implementer sub-delegation tools only — never the lead. If the counterpart CLI is unavailable, the lead must surface the blocker and must not self-implement work assigned to the counterpart. Gates G1 (Scope) and G7 (Handoff) are **Lead-owned**. Gates G2–G4 (Plan/Impl/QA) are **Implementer-owned**. Gate G5 (Review) is **Lead-independent-inspection**. See `AI_RULES.md` and `SPRINT_WORKFLOW.md` for gate-level actor assignments.
 
