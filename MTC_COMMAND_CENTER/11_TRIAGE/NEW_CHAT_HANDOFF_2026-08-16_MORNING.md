@@ -6,7 +6,7 @@ the "in flight" section may have moved by the time you read it — check the bra
 ## Copy-paste prompt
 
 ```text
-Work in C:\R7FINAL as the Lead on branch codex/rp7-r1-r4-repair-20260815. Read root AGENTS.md, MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md, the top entry of GLOBAL_HANDOFF.md, SESSION_LOCK.md, MTC_COMMAND_CENTER/11_TRIAGE/SELF_CONFIRMING_CHECK_PATTERN_2026-08-15.md, and this handoff first. Verify HEAD, a clean worktree, and no active writer before doing anything. Four owner decisions are pending and one of them - the privileged staging-channel choice - blocks the entire WP-I chain. Do not choose any of them. Do not rerun or repair Pathscope beyond the single owner-authorized Option C cycle already in progress. RP7 rows 1-9 stay T0 accepted at 80cbed46; do not touch those bytes. Preserve D026, audit tiers, single-writer locks, exact-model rules, and every host/deployment/credential/service/broker/ARM/order/TESTNET/mainnet/Pine/parity/MTC/trading gate. Do not touch the dirty primary checkout C:\LAB\Tradingview_LAB_CLEAN.
+Work in C:\R7FINAL as the Lead on branch codex/rp7-r1-r4-repair-20260815. Read root AGENTS.md, MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md, the top entry of GLOBAL_HANDOFF.md, SESSION_LOCK.md, MTC_COMMAND_CENTER/11_TRIAGE/SELF_CONFIRMING_CHECK_PATTERN_2026-08-15.md, and this handoff first. Verify HEAD, a clean worktree, and no active writer before doing anything. Five owner decisions are pending; the privileged staging-channel choice blocks the entire WP-I chain, and the Pathscope disposition blocks its lane. Do not choose any of them. The Option C cycle is CONSUMED and returned REQUEST_CHANGES - do not start a sixth Pathscope cycle under any circumstances. RP7 rows 1-9 stay T0 accepted at 80cbed46; do not touch those bytes. Preserve D026, audit tiers, single-writer locks, exact-model rules, and every host/deployment/credential/service/broker/ARM/order/TESTNET/mainnet/Pine/parity/MTC/trading gate. Do not touch the dirty primary checkout C:\LAB\Tradingview_LAB_CLEAN.
 ```
 
 ## Read this first
@@ -17,10 +17,10 @@ proving what it claims. It explains most of tonight's rework, and applying its t
 is what found the two blockers below. One question, before accepting any check:
 **what would have to be true for this to fail?**
 
-## The four owner decisions
+## The five owner decisions
 
 Owner-facing memo with the exact reply sentences:
-`11_TRIAGE/OWNER_DECISION_MEMO_2026-08-15_NIGHT.md`. Dashboard:
+`11_TRIAGE/OWNER_DECISION_MEMO_V2_2026-08-16.md` (supersedes the first memo; the Pathscope item post-dates it and is in `WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_OWNER_BOUNDARY_2026-08-16.md`). Dashboard:
 https://claude.ai/code/artifact/7ceb461c-ba2a-49bb-bceb-a50aa5beddf2
 
 | # | Decision | Blocks |
@@ -29,11 +29,33 @@ https://claude.ai/code/artifact/7ceb461c-ba2a-49bb-bceb-a50aa5beddf2
 | 2 | Which plan authority governs | Sequencing and hours; interim rule is the union of both |
 | 3 | Audit reserve: hard 6 h cap or a larger authorized pool | Audit 2 dispatch |
 | 4 | Archive the pre-cutover risk state off-host, or leave it | Nothing before cutover |
+| 5 | **Pathscope disposition after Option C failed** — accept-with-disclosure, drop it, or one more bounded patch | The Pathscope lane, and Stage-1 behind it |
 
 Decision 1 detail: `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/ROOT_CHANNEL_RECORD_GAP_2026-08-15.md`.
 Eight facts are needed for Commit 1. **Nothing in the repository establishes any of
 them.** Five are observable once the route exists; three are choices — and a choice
 cannot be observed. Likely a conversation with whoever administers `GATEA-STAGING`.
+
+## The finding that outranks the rest
+
+`SELF_CONFIRMING_CHECK_PATTERN_2026-08-15.md` was written after four reviews found
+the same defect. By morning it had appeared **six** times, including twice inside
+artifacts written to fix it:
+
+- the Pathscope conservation invariant (skips whatever is never admitted);
+- the allocation record's collision check and append-only property;
+- the freeze procedure's continuity check (three drafts);
+- the runbook's host guard (asserted, never walked);
+- the runbook patch's *test* of that guard (cannot detect the repair's absence);
+- the WP-A identity authority (independence asserted via Git chronology).
+
+The last one exposed something structural rather than sloppy. **Independence
+requires a second party or a mechanism the first party cannot reach.** In a system
+where one operator runs every step, that is hard, and record design cannot conjure
+it. Three honest exits: a real second party at WP-A close, a mechanism outside the
+operator's control, or an explicit disclosure that continuity rests on operator
+integrity rather than proof. That is a staffing and instrumentation question for
+Barış, not a document defect — and it should be put to him in those terms.
 
 ## Two blockers that are decisions, not drafting
 
@@ -54,7 +76,7 @@ cannot be observed. Likely a conversation with whoever administers `GATEA-STAGIN
 |---|---|
 | RP7 rows 1-9 | **Accepted** at `80cbed46`, dual T0 flagship, zero required repairs. Untouched. |
 | RP6 / transport / SEC102 | Accepted with disclosure, earlier and independently. |
-| Pathscope | **Option C in progress.** Design → adversarial review (`SOUND-WITH-GAPS`, four must-fixes) → amended V2 → implementation building on branch `codex/pathscope-accounting-redesign-20260815`. **One** flagship audit remains authorized; a required finding returns the lane to the owner boundary. |
+| Pathscope | **STOPPED at the owner boundary. The Option C cycle is consumed.** Design → adversarial review → amended V2 → implementation `ec98cbd4` → fresh `claude-opus-5` flagship audit → **REQUEST_CHANGES**, two REQUIRED. The R5 defects are genuinely dead and F1/F2/F3 stay closed under the auditor's own re-measurement, but the new admission guard is bypassable inside its own route and the "independent" cardinality check is `len()` of the lists it checks. **Do not start a sixth cycle.** Four options in `WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_OWNER_BOUNDARY_2026-08-16.md`; the restricted-grammar one is now **costed and ruled out** (rejects 100% of real input). |
 | Stage-1 | Allocation record at v3 with real failure demonstrations. Commit-1 preregistration at v2, which **refuses to be committed** and names why. |
 | Packets 9/10/11 | Contracts and procedures written; Packet 10 suite contract at v2; Packet 11 signed at ~63.75 h, to be re-presented at freeze. |
 | Bridge release | Integration design + merge runbook + standalone blob fence. Suite repairs **accepted at T1** on `codex/bridge-suite-anomaly-repairs-20260815`, not merged. |
