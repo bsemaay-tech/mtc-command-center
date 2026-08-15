@@ -107,11 +107,28 @@ gate.
    a safe root-owned `0600` environment file or an equivalently protected secret
    mechanism. Put no secret in `.env`, the repository, chat, shell history, or
    plaintext backups. `HL_LIVE_ACK` must be absent.
+   **[owner decision 2026-08-15 night] DEFERRED — "this we will do later".**
+   Record: `WPI_OWNER_DECISIONS_2026-08-15_NIGHT.md` §D4. This item stays OPEN and
+   continues to block the first start. No agent may request, generate, store, or
+   reference a key value, and no later step may proceed past the point that
+   requires the wallet.
 5. **[AI: Barış] Choose the risk-state continuity policy before cutover.**
    Formally select and test either a WAL-consistent database migration or a
    conservative, explicitly approved fresh-database reset that preserves or blocks
    on lost daily-loss, consecutive-loss, order, and foreign-position evidence.
-   **Current: OPEN; WAL is recommended and supported, not approved.**
+   ~~**Current: OPEN; WAL is recommended and supported, not approved.**~~
+   **[owner decision 2026-08-15 night] DECIDED: conservative fresh-database
+   reset — "start clean".** This is a deliberate owner override of the
+   recommendation; WAL migration was recommended and supported and was not
+   chosen. Record: `WPI_OWNER_DECISIONS_2026-08-15_NIGHT.md` §D5. The
+   "preserves or blocks on" clause of this item is **not** waived by the choice:
+   a fresh reset must still be proven either to carry the daily-loss,
+   consecutive-loss, order and foreign-position evidence forward in some
+   retrievable form, or to refuse to start rather than silently lose it. Start
+   clean is not start blind. The item-6 single-writer cutover proof is unchanged.
+   **Open sub-question returned to the owner:** whether the pre-cutover risk
+   state is archived off-host before the fresh start or left on the old machine;
+   the Lead recommends archiving, as it is the only record of the paper period.
 6. **[AI: Barış] Execute no cutover until this exact single-writer proof can be
    followed and recorded in order:** record exact SHA/config; confirm DISARMED;
    obtain a fresh reconcile; capture raw empty positions and raw empty orders; stop
