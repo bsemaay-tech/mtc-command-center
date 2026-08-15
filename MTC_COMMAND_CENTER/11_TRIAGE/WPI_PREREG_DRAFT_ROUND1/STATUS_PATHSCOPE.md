@@ -1,6 +1,34 @@
 # Path-scope prover status
 
-Status: `REPAIRED-R5-PENDING-FINAL-REAUDIT`
+Status: `OPTION-C-IMPLEMENTED-PENDING-FRESH-FLAGSHIP-AUDIT`
+
+**Option C implementation (2026-08-15; audit tier T1).** The accepted accounting redesign
+is implemented in `pathscope_prover.py` and integrated into
+`composite_pathproof.py`. It keeps the parser/traversal surface, but replaces assignment
+value reporting with immutable expansion traces, ordered occurrence ledgers, stable global
+IDs, exact member-local provenance, a closed terminal-disposition enum, two-phase
+conservation checks, strict additive serialization, and fail-closed reporting. The
+composite adapter now parses only the named new prefixes, independently reconciles the
+ledgers and mandatory projection, forwards every accounting record, and implements the
+accounting-fault and zero-generic-issue member-unresolved arms.
+
+The edited harness was extracted verbatim from `SELF_QA_PATHSCOPE.md` and executed from
+`C:\PSC`: outer rc 0, stderr 0 bytes. Historical RED hashes and frozen R5's retired GREEN
+hash reproduced; two complete candidate runs were byte-identical; 60 required blocks were
+byte-identical to R5; and among 109 existing cases exactly the two V2-authorized return
+codes changed (`c2_benign_words` 0→3, `c3_colon_whole` 1→3). Frozen-R5 RED and current
+GREEN were measured for all admission/F1/F2/F3/adjacent attacks. All 23 required mutation
+arms (25 checks) were discriminating, including missing/duplicate/unknown disposition,
+identity/provenance/reason/cardinality faults, composite grammar faults, and compatibility
+mutations. CPython 3.14.2 executes the sources and all three parse at Python 3.12 grammar;
+an actual Python 3.12 runtime is unavailable (`py -3.12 -V` rc 103).
+
+This is implementation evidence, not acceptance. Owner decision D1 authorizes one fresh
+flagship execution audit and no implementation repair round if it returns a required
+finding. No host, network, deployment, service, trading, Pine, parity, MTC, broker,
+credential, push, merge, or economic action occurred. The pre-existing composite
+`ENDPOINT verdict=ALLOW-LEXICAL` versus `ALLOW` acceptance mismatch remains disclosed and
+unchanged because V2 residual 11.10 expressly excludes it.
 
 **Round 5 (2026-08-14) — the final owner-authorized repair.** The Codex T1 execution audit
 of the committed round-4 candidate `2fb3eac05f8da716609549179a7961aa692eae6b`

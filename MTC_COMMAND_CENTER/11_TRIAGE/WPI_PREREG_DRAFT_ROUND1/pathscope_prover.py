@@ -20,7 +20,11 @@ Two rules govern every line below.
 from __future__ import annotations
 
 import argparse
+import base64
+from collections import Counter
 import dataclasses
+import enum
+import json
 import posixpath
 import re
 import urllib.parse
@@ -72,10 +76,30 @@ class Token:
 
 
 @dataclasses.dataclass(frozen=True)
+class ExpansionSegment:
+    rendered_start: int
+    rendered_end: int
+    raw_start: int
+    raw_end: int
+    raw_text: str
+    rendered_text: str
+    origin: str
+    sources: frozenset[str] = frozenset()
+
+
+@dataclasses.dataclass(frozen=True)
+class ExpansionTrace:
+    raw_rhs: str
+    rendered_text: str
+    segments: tuple[ExpansionSegment, ...]
+
+
+@dataclasses.dataclass(frozen=True)
 class Value:
     text: str | None
     reason: str | None = None
     sources: frozenset[str] = frozenset()
+    trace: ExpansionTrace | None = None
 
     @property
     def known(self) -> bool:
@@ -90,6 +114,7 @@ class Use:
     expression: str
     sources: frozenset[str]
     domain: str = "fs"
+    member_id: str | None = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -98,6 +123,78 @@ class Issue:
     kind: str
     reason: str
     expression: str
+
+
+class DispositionKind(str, enum.Enum):
+    ALLOWED_WITH_REASON = "ALLOWED_WITH_REASON"
+    FORBIDDEN_WITH_REASON = "FORBIDDEN_WITH_REASON"
+    UNRESOLVED_FAIL_CLOSED = "UNRESOLVED_FAIL_CLOSED"
+
+
+@dataclasses.dataclass(frozen=True)
+class RawSlice:
+    raw_start: int
+    raw_end: int
+    raw_text: str
+    origin: str
+
+
+@dataclasses.dataclass(frozen=True)
+class MemberOccurrence:
+    member_id: str
+    value_id: str
+    reading: str
+    ordinal: int
+    rendered_start: int
+    rendered_end: int
+    raw_slices: tuple[RawSlice, ...]
+    text: str
+    sources: frozenset[str]
+    line: int
+    primitive: str
+    expression: str
+
+
+@dataclasses.dataclass(frozen=True)
+class TerminalDisposition:
+    member_id: str
+    value_id: str
+    disposition: DispositionKind | str
+    reason: str
+    rule: str | None
+    candidate_domain: str | None
+    candidate_value: str | None
+    sources: frozenset[str]
+
+
+@dataclasses.dataclass(frozen=True)
+class AdmittedValue:
+    value_id: str
+    line: int
+    site: str
+    expression: str
+    raw_rhs: str
+    rendered_text: str | None
+    trace: ExpansionTrace | None
+    expected_counts: tuple[tuple[str, int], ...]
+    member_ids: tuple[str, ...]
+
+
+@dataclasses.dataclass(frozen=True)
+class AccountingFault:
+    value_id: str | None
+    member_id: str | None
+    reason: str
+
+
+@dataclasses.dataclass
+class AccountingRunContext:
+    next_analyzer_ordinal: int = 0
+
+    def allocate_analyzer_id(self) -> str:
+        ordinal = self.next_analyzer_ordinal
+        self.next_analyzer_ordinal += 1
+        return f"A{ordinal:04d}"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -513,26 +610,71 @@ def brace_span(raw: str, start: int) -> tuple[int, bool] | None:
 
 def expand_word(raw: str, env: dict[str, Value], allow_tilde: bool = True) -> Value:
     out: list[str] = []
+    segments: list[ExpansionSegment] = []
     sources: set[str] = set()
+    rendered_offset = 0
+
+    def append_segment(
+        raw_start: int,
+        raw_end: int,
+        rendered: str,
+        origin: str,
+        segment_sources: frozenset[str] = frozenset(),
+    ) -> None:
+        nonlocal rendered_offset
+        out.append(rendered)
+        item = ExpansionSegment(
+            rendered_offset,
+            rendered_offset + len(rendered),
+            raw_start,
+            raw_end,
+            raw[raw_start:raw_end],
+            rendered,
+            origin,
+            segment_sources,
+        )
+        if (
+            origin == "literal"
+            and segments
+            and segments[-1].origin == "literal"
+            and segments[-1].sources == segment_sources
+            and segments[-1].raw_end == raw_start
+            and segments[-1].rendered_end == rendered_offset
+        ):
+            previous = segments[-1]
+            segments[-1] = dataclasses.replace(
+                previous,
+                rendered_end=item.rendered_end,
+                raw_end=item.raw_end,
+                raw_text=previous.raw_text + item.raw_text,
+                rendered_text=previous.rendered_text + item.rendered_text,
+            )
+        else:
+            segments.append(item)
+        rendered_offset += len(rendered)
+        sources.update(segment_sources)
+
     i = 0
     quote: str | None = None
     while i < len(raw):
         c = raw[i]
         if quote == "'":
             if c == "'":
+                append_segment(i, i + 1, "", "quote_elision")
                 quote = None
             else:
-                out.append(c)
+                append_segment(i, i + 1, c, "literal")
             i += 1
             continue
         if quote == '"':
             if c == '"':
+                append_segment(i, i + 1, "", "quote_elision")
                 quote = None
                 i += 1
                 continue
             if c == "\\" and i + 1 < len(raw) and raw[i + 1] in '$`"\\\n':
-                if raw[i + 1] != "\n":
-                    out.append(raw[i + 1])
+                rendered = "" if raw[i + 1] == "\n" else raw[i + 1]
+                append_segment(i, i + 2, rendered, "escape")
                 i += 2
                 continue
         else:
@@ -553,24 +695,27 @@ def expand_word(raw: str, env: dict[str, Value], allow_tilde: bool = True) -> Va
                 if end >= len(raw):
                     return Value(None, "unterminated ANSI-C quote")
                 try:
-                    out.append(decode_ansi("".join(body)))
+                    rendered = decode_ansi("".join(body))
                 except ValueError as exc:
                     return Value(None, str(exc))
+                append_segment(i, end + 1, rendered, "escape")
                 i = end + 1
                 continue
             if c == "'":
+                append_segment(i, i + 1, "", "quote_elision")
                 quote = "'"
                 i += 1
                 continue
             if c == '"':
+                append_segment(i, i + 1, "", "quote_elision")
                 quote = '"'
                 i += 1
                 continue
             if c == "\\":
                 if i + 1 >= len(raw):
                     return Value(None, "trailing escape")
-                if raw[i + 1] != "\n":
-                    out.append(raw[i + 1])
+                rendered = "" if raw[i + 1] == "\n" else raw[i + 1]
+                append_segment(i, i + 2, rendered, "escape")
                 i += 2
                 continue
             if c == "~" and (i == 0 or raw[i - 1] == ":"):
@@ -591,9 +736,9 @@ def expand_word(raw: str, env: dict[str, Value], allow_tilde: bool = True) -> Va
                         "tilde expansion depends on HOME, which is not a pinned "
                         "absolute constant",
                     )
-                out.append(home.text or "")
-                sources.update(home.sources)
-                i += 1
+                raw_end = i + len(match.group(0) if match else "~")
+                append_segment(i, raw_end, home.text or "", "parameter_expansion", home.sources)
+                i = raw_end
                 continue
             if c == "{":
                 span = brace_span(raw, i)
@@ -617,14 +762,15 @@ def expand_word(raw: str, env: dict[str, Value], allow_tilde: bool = True) -> Va
                     return Value(None, f"unsupported parameter expansion ${{{expr}}}")
                 name, mode, fallback = match.groups()
             value = env.get(name, Value(None, f"unpinned variable {name}"))
+            origin = "parameter_expansion"
             if mode in (":-", "-") and (not value.known or (mode == ":-" and value.text == "")):
                 value = expand_word(fallback or "", env, allow_tilde=False)
+                origin = "fallback_expansion"
             elif mode in (":?", "?") and not value.known:
                 return Value(None, f"required variable {name} is unpinned")
             if not value.known:
                 return value
-            out.append(value.text or "")
-            sources.update(value.sources)
+            append_segment(i, end + 1, value.text or "", origin, value.sources)
             i = end + 1
             continue
         if c == "$":
@@ -634,17 +780,24 @@ def expand_word(raw: str, env: dict[str, Value], allow_tilde: bool = True) -> Va
                 value = env.get(name, Value(None, f"unpinned variable {name}"))
                 if not value.known:
                     return value
-                out.append(value.text or "")
-                sources.update(value.sources)
+                append_segment(
+                    i,
+                    i + len(match.group(0)),
+                    value.text or "",
+                    "parameter_expansion",
+                    value.sources,
+                )
                 i += len(match.group(0))
                 continue
             if i + 1 < len(raw) and raw[i + 1] in "0123456789@*#?$!-":
                 return Value(None, f"dynamic shell parameter ${raw[i + 1]}")
-        out.append(c)
+        append_segment(i, i + 1, c, "literal")
         i += 1
     if quote:
         return Value(None, "unterminated quote")
-    return Value("".join(out), sources=frozenset(sources))
+    rendered_text = "".join(out)
+    trace = ExpansionTrace(raw, rendered_text, tuple(segments))
+    return Value(rendered_text, sources=frozenset(sources), trace=trace)
 
 
 def parse_constants(path: Path) -> dict[str, Value]:
@@ -664,7 +817,11 @@ def parse_constants(path: Path) -> dict[str, Value]:
             raise LexError(line_no, f"constant {name} is not static: {value.reason}")
         if "\x00" in (value.text or ""):
             raise LexError(line_no, f"constant {name} contains NUL")
-        env[name] = Value(value.text, sources=value.sources | frozenset({name}))
+        env[name] = Value(
+            value.text,
+            sources=value.sources | frozenset({name}),
+            trace=value.trace,
+        )
     return env
 
 
@@ -1094,6 +1251,90 @@ _register(
 )
 
 
+NO_ASSIGNMENT_EFFECT = "NO_ASSIGNMENT_EFFECT"
+ASSIGNMENT_EFFECT = "ASSIGNMENT_EFFECT"
+EFFECT_UNKNOWN = "EFFECT_UNKNOWN"
+
+
+def parameter_assignment_effect(raw: str) -> str:
+    """Classify active ${...} assignment effects without evaluating them."""
+    result = NO_ASSIGNMENT_EFFECT
+    quote: str | None = None
+    escaped = False
+    index = 0
+    while index < len(raw):
+        char = raw[index]
+        if escaped:
+            escaped = False
+            index += 1
+            continue
+        if char == "\\" and quote != "'":
+            escaped = True
+            index += 1
+            continue
+        if quote == "'":
+            if char == "'":
+                quote = None
+            index += 1
+            continue
+        if char == "'":
+            quote = "'"
+            index += 1
+            continue
+        if char == '"':
+            quote = None if quote == '"' else '"'
+            index += 1
+            continue
+        if not raw.startswith("${", index):
+            index += 1
+            continue
+
+        start = index
+        cursor = index + 2
+        depth = 1
+        inner_quote: str | None = None
+        inner_escaped = False
+        nested = False
+        while cursor < len(raw) and depth:
+            current = raw[cursor]
+            if inner_escaped:
+                inner_escaped = False
+                cursor += 1
+                continue
+            if current == "\\" and inner_quote != "'":
+                inner_escaped = True
+                cursor += 1
+                continue
+            if inner_quote:
+                if current == inner_quote:
+                    inner_quote = None
+                cursor += 1
+                continue
+            if current in "'\"":
+                inner_quote = current
+                cursor += 1
+                continue
+            if raw.startswith("${", cursor):
+                nested = True
+                depth += 1
+                cursor += 2
+                continue
+            if current == "}":
+                depth -= 1
+                cursor += 1
+                continue
+            cursor += 1
+        if depth or inner_quote:
+            return EFFECT_UNKNOWN
+        expr = raw[start + 2:cursor - 1]
+        if re.match(r"^[A-Za-z_][A-Za-z0-9_]*(?::?=)", expr, re.S):
+            return ASSIGNMENT_EFFECT
+        if nested:
+            result = EFFECT_UNKNOWN
+        index = cursor
+    return result
+
+
 class Analyzer:
     CONTROL = {
         "if", "then", "elif", "else", "fi", "for", "while", "until", "do", "done",
@@ -1116,13 +1357,28 @@ class Analyzer:
         "{", "}", "((", "))",
     }
 
-    def __init__(self, text: str, env: dict[str, Value], depth: int = 0) -> None:
+    def __init__(
+        self,
+        text: str,
+        env: dict[str, Value],
+        rules: list[Rule] | None = None,
+        depth: int = 0,
+        context: AccountingRunContext | None = None,
+    ) -> None:
         self.text = text
         self.env = dict(env)
         self.pinned = set(env)
+        self.rules = list(rules or [])
         self.depth = depth
+        self.context = context or AccountingRunContext()
+        self.analyzer_id = self.context.allocate_analyzer_id()
+        self.next_value_ordinal = 0
         self.uses: list[Use] = []
         self.issues: list[Issue] = []
+        self.admitted_values: list[AdmittedValue] = []
+        self.members: list[MemberOccurrence] = []
+        self.dispositions: list[TerminalDisposition] = []
+        self.accounting_faults: list[AccountingFault] = []
         self.functions: set[str] = set(
             re.findall(r"(?m)^\s*(?:function\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*\(\s*\)\s*\{", text)
         )
@@ -1132,6 +1388,16 @@ class Analyzer:
         item = Issue(line, kind, reason, expression[:240])
         if item not in self.issues:
             self.issues.append(item)
+
+    def accounting_fault(
+        self,
+        reason: str,
+        value_id: str | None = None,
+        member_id: str | None = None,
+    ) -> None:
+        item = AccountingFault(value_id, member_id, reason)
+        if item not in self.accounting_faults:
+            self.accounting_faults.append(item)
 
     def record_path_text(
         self,
@@ -1221,13 +1487,31 @@ class Analyzer:
         )
         for item in nested.issues:
             self.issue(line + item.line - 1, item.kind, item.reason, item.expression)
+        self.admitted_values.extend(
+            dataclasses.replace(value, line=line + value.line - 1)
+            for value in nested.admitted_values
+        )
+        self.members.extend(
+            dataclasses.replace(member, line=line + member.line - 1)
+            for member in nested.members
+        )
+        self.dispositions.extend(nested.dispositions)
+        for fault in nested.accounting_faults:
+            if fault not in self.accounting_faults:
+                self.accounting_faults.append(fault)
 
     def analyze_shell_source(self, text: str, line: int, label: str) -> None:
         if self.depth >= MAX_NESTING:
             self.issue(line, KIND_COVERAGE,
                        f"{label}: shell nesting exceeds the modeled depth", text)
             return
-        nested = Analyzer(text, self.env, self.depth + 1)
+        nested = Analyzer(
+            text,
+            self.env,
+            self.rules,
+            self.depth + 1,
+            self.context,
+        )
         nested.run()
         self.merge(nested, line)
 
@@ -1288,8 +1572,8 @@ class Analyzer:
         primitive = f"{keyword.text} assignment"
         for token in operands:
             if ASSIGN_RE.fullmatch(token.text):
-                self.assignment(token)
                 self.record_assignment_value(token, primitive)
+                self.assignment(token)
                 continue
             value = expand_word(token.text, self.env)
             if not value.known:
@@ -1302,9 +1586,9 @@ class Analyzer:
                 continue
             expanded = ASSIGN_RE.fullmatch(rendered)
             if expanded is not None:
+                self.record_assignment_value(token, primitive)
                 self.bind_assignment(token, expanded.group(1), expanded.group(2),
                                      value.sources)
-                self.record_assignment_value(token, primitive)
                 continue
             if NAME_RE.fullmatch(rendered):
                 if rendered not in self.env:
@@ -1317,43 +1601,22 @@ class Analyzer:
                        "NAME=VALUE after expansion", token.text)
 
     def record_assignment_value(self, token: Token, primitive: str) -> None:
-        # C-1 repair: an assignment value can name a path the dynamic loader or
-        # an interpreter opens at execve time (LD_PRELOAD, LD_LIBRARY_PATH,
-        # BASH_ENV, PYTHONPATH, PERL5LIB, GIT_SSH_COMMAND, ...). An assignment is
-        # neither an option nor a command, so it fell through the fail-closed
-        # machinery and a fragment like `LD_PRELOAD=/etc/evil.so cat "$ROOT/f"`
-        # returned PASS rc=0 with the out-of-allowlist path invisible. Treat the
-        # construct as first-class: a resolved path-shaped value gets a PATH row
-        # bound to the assignment site; an unresolvable value gets a coverage
-        # record; a known non-path value (IFS=:, count=1) carries no path and is
-        # left alone. This fails closed on the construct, not on a variable-name
-        # allowlist, so it does not repeat the round-1 NO_PATH_COMMANDS mistake.
-        #
-        # C-2 repair: the round-3 form tested only `rendered.startswith(("/",
-        # "./", "../"))` and had no `else`, so an assignment value whose FIRST
-        # member is not path-shaped -- a loader list (`bare.so:/etc/escape.so`),
-        # an ordinary relative pathname (`relative/path.so`), command text
-        # (`ssh -i /etc/key`) -- disappeared with no PATH and no coverage row,
-        # and a value that DID start with `/` was recorded only as one whole
-        # blob, so a later absolute member of `/safe/lib:/etc/escape` never
-        # reached the allowlist. Member parsing now runs on every statically
-        # known value regardless of its first character, and every member gets a
-        # terminal disposition (path, endpoint, empty, or bare name) or a
-        # specific coverage record. See record_assignment_members.
+        """Admit one assignment occurrence before RHS expansion can succeed."""
         raw = token.text
         match = ASSIGN_RE.fullmatch(raw)
         if match is not None:
-            value = expand_word(match.group(2), self.env)
+            raw_rhs = match.group(2)
+            raw_rhs_start = match.start(2)
+            value = expand_word(raw_rhs, self.env)
+            trace = self._shift_trace(value.trace, raw_rhs_start, raw_rhs)
             if not value.known:
                 self.issue(token.line, KIND_COVERAGE,
                            f"assignment value is not statically known: {value.reason}",
                            raw)
-                return
-            rendered, sources = value.text or "", value.sources
+                rendered = None
+            else:
+                rendered = value.text or ""
         else:
-            # A quoted assignment word (`env "LD_PRELOAD=/etc/evil.so" cat …`)
-            # is a NAME=VALUE assignment only after expansion. Recover the value
-            # from the rendered word rather than returning silently.
             whole = expand_word(raw, self.env)
             if not whole.known:
                 self.issue(token.line, KIND_COVERAGE,
@@ -1366,27 +1629,94 @@ class Analyzer:
                            "assignment word does not parse as NAME=VALUE after expansion",
                            raw)
                 return
-            rendered, sources = expanded.group(2), whole.sources
-        self.record_assignment_members(rendered, sources, token.line, primitive, raw)
+            rendered = expanded.group(2)
+            raw_equal = raw.find("=")
+            raw_rhs_start = raw_equal + 1 if raw_equal >= 0 else 0
+            raw_rhs = raw[raw_rhs_start:]
+            trace = self._slice_trace(
+                whole.trace,
+                expanded.start(2),
+                expanded.end(2),
+                raw_rhs,
+            )
+        self.record_assignment_members(
+            rendered,
+            trace,
+            raw_rhs,
+            raw_rhs_start,
+            token.line,
+            primitive,
+            raw,
+        )
+
+    @staticmethod
+    def _shift_trace(
+        trace: ExpansionTrace | None,
+        raw_offset: int,
+        raw_rhs: str,
+    ) -> ExpansionTrace | None:
+        if trace is None:
+            return None
+        return ExpansionTrace(
+            raw_rhs,
+            trace.rendered_text,
+            tuple(
+                dataclasses.replace(
+                    segment,
+                    raw_start=segment.raw_start + raw_offset,
+                    raw_end=segment.raw_end + raw_offset,
+                )
+                for segment in trace.segments
+            ),
+        )
+
+    @staticmethod
+    def _slice_trace(
+        trace: ExpansionTrace | None,
+        rendered_start: int,
+        rendered_end: int,
+        raw_rhs: str,
+    ) -> ExpansionTrace | None:
+        if trace is None:
+            return None
+        segments: list[ExpansionSegment] = []
+        for segment in trace.segments:
+            if segment.rendered_start == segment.rendered_end:
+                if rendered_start <= segment.rendered_start <= rendered_end:
+                    segments.append(
+                        dataclasses.replace(
+                            segment,
+                            rendered_start=segment.rendered_start - rendered_start,
+                            rendered_end=segment.rendered_end - rendered_start,
+                        )
+                    )
+                continue
+            left = max(rendered_start, segment.rendered_start)
+            right = min(rendered_end, segment.rendered_end)
+            if left >= right:
+                continue
+            local_left = left - segment.rendered_start
+            local_right = right - segment.rendered_start
+            replacements: dict[str, object] = {
+                "rendered_start": left - rendered_start,
+                "rendered_end": right - rendered_start,
+                "rendered_text": segment.rendered_text[local_left:local_right],
+            }
+            if (
+                segment.origin == "literal"
+                and len(segment.raw_text) == len(segment.rendered_text)
+            ):
+                replacements.update(
+                    raw_start=segment.raw_start + local_left,
+                    raw_end=segment.raw_start + local_right,
+                    raw_text=segment.raw_text[local_left:local_right],
+                )
+            segments.append(dataclasses.replace(segment, **replacements))
+        rendered = trace.rendered_text[rendered_start:rendered_end]
+        return ExpansionTrace(raw_rhs, rendered, tuple(segments))
 
     @staticmethod
     def assignment_member_kind(text: str) -> str:
-        """Terminal classification of one assignment-value member.
-
-        `net` a scheme URI, `fs` a pathname, `empty` an empty member, `bare` a
-        name that carries no pathname at all. `bare` is the single disclosed
-        residual of this construct: a member with no `/` (a soname like
-        `libc.so`, a scalar like `1`, an option word) is resolved by the
-        consumer's own search rules, not by an argv pathname, so it is outside
-        the lexical-argv-scope contract this tool proves.
-
-        C-3 repair (round 5): a relative value carrying `:` used to fall through
-        to `bare`, so the admitted single-pathname reading of `X=relative:$BASE`
-        -- `<PWD>/relative:dir/file` -- had no terminal disposition at all even
-        though the whole candidate was carried into the pool. `:` is a list
-        separator for the *members*; it does not stop the whole value from being
-        a pathname, exactly as it never did for a value starting with `/`.
-        """
         if text == "":
             return "empty"
         if URI_SCHEME_RE.match(text):
@@ -1398,18 +1728,9 @@ class Analyzer:
         return "bare"
 
     @staticmethod
-    def split_list_members(text: str) -> list[str]:
-        """Split one assignment value into the consumer's `:` list members.
-
-        A path list is split by the consumer regardless of shell quoting, so
-        this runs on every candidate, including one that starts with `/`. Only
-        a URI's `scheme://authority` span is protected from splitting: round 4
-        protected the complete value whenever it merely *started* with a scheme,
-        so `LD_LIBRARY_PATH=$URL:/etc/escape` produced an allowed endpoint and
-        no row at all for `/etc/escape` (C-3). A member that itself begins a new
-        URI re-arms the protection, so `a://h/x:b://h/y` splits into two URIs.
-        """
-        members: list[str] = []
+    def _colon_spans(text: str) -> tuple[list[tuple[int, int]], list[int]]:
+        spans: list[tuple[int, int]] = []
+        separators: list[int] = []
         start = 0
         index = 0
         while index < len(text):
@@ -1419,95 +1740,766 @@ class Analyzer:
                     index = prefix.end()
                     continue
             if text[index] == ":":
-                members.append(text[start:index])
+                spans.append((start, index))
+                separators.append(index)
                 start = index + 1
                 index = start
                 continue
             index += 1
-        members.append(text[start:])
-        return members
+        spans.append((start, len(text)))
+        return spans, separators
+
+    @staticmethod
+    def split_list_members(text: str) -> list[str]:
+        spans, _ = Analyzer._colon_spans(text)
+        return [text[start:end] for start, end in spans]
+
+    @staticmethod
+    def _trace_slices(
+        trace: ExpansionTrace,
+        rendered_start: int,
+        rendered_end: int,
+    ) -> tuple[RawSlice, ...]:
+        slices: list[RawSlice] = []
+        for segment in trace.segments:
+            intersects = (
+                segment.rendered_start < rendered_end
+                and segment.rendered_end > rendered_start
+            )
+            zero_inside = (
+                segment.rendered_start == segment.rendered_end
+                and rendered_start <= segment.rendered_start <= rendered_end
+            )
+            if intersects or zero_inside:
+                if (
+                    intersects
+                    and segment.origin == "literal"
+                    and len(segment.raw_text) == len(segment.rendered_text)
+                ):
+                    left = max(rendered_start, segment.rendered_start)
+                    right = min(rendered_end, segment.rendered_end)
+                    local_left = left - segment.rendered_start
+                    local_right = right - segment.rendered_start
+                    item = RawSlice(
+                        segment.raw_start + local_left,
+                        segment.raw_start + local_right,
+                        segment.raw_text[local_left:local_right],
+                        segment.origin,
+                    )
+                else:
+                    item = RawSlice(
+                        segment.raw_start,
+                        segment.raw_end,
+                        segment.raw_text,
+                        segment.origin,
+                    )
+                if not slices or slices[-1] != item:
+                    slices.append(item)
+        return tuple(slices)
+
+    @staticmethod
+    def _trace_sources(
+        trace: ExpansionTrace,
+        rendered_start: int,
+        rendered_end: int,
+    ) -> frozenset[str]:
+        return frozenset(
+            source
+            for segment in trace.segments
+            if segment.rendered_start < rendered_end
+            and segment.rendered_end > rendered_start
+            for source in segment.sources
+        )
+
+    @staticmethod
+    def _raw_boundary(trace: ExpansionTrace, rendered_offset: int) -> int:
+        for segment in trace.segments:
+            if segment.rendered_start == rendered_offset:
+                return segment.raw_start
+            if segment.rendered_end == rendered_offset:
+                return segment.raw_end
+            if segment.rendered_start < rendered_offset < segment.rendered_end:
+                return segment.raw_start
+        return trace.segments[-1].raw_end if trace.segments else 0
+
+    def _make_member(
+        self,
+        value_id: str,
+        reading: str,
+        ordinal: int,
+        rendered: str,
+        trace: ExpansionTrace | None,
+        rendered_start: int,
+        rendered_end: int,
+        raw_rhs: str,
+        raw_rhs_start: int,
+        line: int,
+        primitive: str,
+        expression: str,
+        semantic_pwd: bool = False,
+    ) -> MemberOccurrence:
+        member_id = f"{value_id}.{reading}.M{ordinal:04d}"
+        if trace is None:
+            raw_slices = (
+                RawSlice(
+                    raw_rhs_start,
+                    raw_rhs_start + len(raw_rhs),
+                    raw_rhs,
+                    "literal",
+                ),
+            )
+            sources = frozenset()
+        elif semantic_pwd:
+            boundary = self._raw_boundary(trace, rendered_start)
+            raw_slices = (RawSlice(boundary, boundary, "", "semantic_pwd_substitution"),)
+            pwd = self.env.get("PWD")
+            sources = (
+                frozenset({"PWD"})
+                if "PWD" in self.pinned and pwd is not None and pwd.known
+                else frozenset()
+            )
+        else:
+            raw_slices = self._trace_slices(trace, rendered_start, rendered_end)
+            sources = self._trace_sources(trace, rendered_start, rendered_end)
+        return MemberOccurrence(
+            member_id,
+            value_id,
+            reading,
+            ordinal,
+            rendered_start,
+            rendered_end,
+            raw_slices,
+            rendered[rendered_start:rendered_end] if trace is not None else raw_rhs,
+            sources,
+            line,
+            primitive,
+            expression,
+        )
+
+    def _matching_rules(self, candidate: str, member: MemberOccurrence, domain: str) -> list[str]:
+        return [
+            rule.render()
+            for rule in self.rules
+            if rule.matches(candidate, member.primitive, domain)
+        ]
+
+    def _record_member_candidate(
+        self,
+        member: MemberOccurrence,
+        candidate: str,
+        domain: str,
+    ) -> None:
+        self.uses.append(
+            Use(
+                candidate,
+                member.line,
+                member.primitive,
+                member.expression,
+                member.sources,
+                domain,
+                member.member_id,
+            )
+        )
+
+    def _classify_member(
+        self,
+        value: AdmittedValue,
+        member: MemberOccurrence,
+    ) -> TerminalDisposition:
+        active_children = sum(
+            count for reading, count in value.expected_counts if reading != "whole"
+        ) > 0
+        if value.rendered_text is None:
+            return TerminalDisposition(
+                member.member_id, value.value_id,
+                DispositionKind.UNRESOLVED_FAIL_CLOSED,
+                "opaque_assignment_expansion", None, None, None, member.sources,
+            )
+
+        kind = self.assignment_member_kind(member.text)
+        candidate_domain: str | None = None
+        candidate_value: str | None = None
+        if kind == "net":
+            normalized = normalize_network(member.text)
+            candidate_domain = "net"
+        elif kind == "fs" or (kind == "empty" and member.reading == "colon"):
+            normalized = canonical_path("." if kind == "empty" else member.text, self.env)
+            candidate_domain = "fs"
+        else:
+            normalized = Value(None, "no path or endpoint candidate")
+
+        if member.reading in {"words", "word-colon"}:
+            if normalized.known and candidate_domain is not None:
+                candidate_value = normalized.text or ""
+                self._record_member_candidate(member, candidate_value, candidate_domain)
+            return TerminalDisposition(
+                member.member_id, value.value_id,
+                DispositionKind.UNRESOLVED_FAIL_CLOSED,
+                "consumer_word_semantics_unmodeled", None,
+                candidate_domain if normalized.known else None,
+                candidate_value, member.sources,
+            )
+
+        if kind == "empty" and member.reading == "colon" and not normalized.known:
+            return TerminalDisposition(
+                member.member_id, value.value_id,
+                DispositionKind.UNRESOLVED_FAIL_CLOSED,
+                "member_pwd_unavailable", None, None, None, member.sources,
+            )
+
+        if candidate_domain is not None:
+            if not normalized.known:
+                return TerminalDisposition(
+                    member.member_id, value.value_id,
+                    DispositionKind.UNRESOLVED_FAIL_CLOSED,
+                    "member_normalization_failed", None, None, None, member.sources,
+                )
+            candidate_value = normalized.text or ""
+            self._record_member_candidate(member, candidate_value, candidate_domain)
+            matching = self._matching_rules(candidate_value, member, candidate_domain)
+            if not matching:
+                return TerminalDisposition(
+                    member.member_id, value.value_id,
+                    DispositionKind.FORBIDDEN_WITH_REASON,
+                    "member_outside_allowlist", None,
+                    candidate_domain, candidate_value, member.sources,
+                )
+            required_sources = (
+                member.sources == frozenset({"PWD"})
+                if kind == "empty" and member.reading == "colon"
+                else bool(member.sources)
+            )
+            if not required_sources:
+                return TerminalDisposition(
+                    member.member_id, value.value_id,
+                    DispositionKind.UNRESOLVED_FAIL_CLOSED,
+                    "member_exact_provenance_missing", matching[0],
+                    candidate_domain, candidate_value, member.sources,
+                )
+            return TerminalDisposition(
+                member.member_id, value.value_id,
+                DispositionKind.ALLOWED_WITH_REASON,
+                "member_allowlisted", matching[0],
+                candidate_domain, candidate_value, member.sources,
+            )
+
+        if member.reading == "whole" and active_children:
+            return TerminalDisposition(
+                member.member_id, value.value_id,
+                DispositionKind.ALLOWED_WITH_REASON,
+                "whole_container_decomposed", None, None, None, member.sources,
+            )
+        if member.reading == "whole" and member.text == "":
+            return TerminalDisposition(
+                member.member_id, value.value_id,
+                DispositionKind.ALLOWED_WITH_REASON,
+                "empty_scalar_no_lexical_sink", None, None, None, member.sources,
+            )
+        if member.reading == "whole" and OPTION_WORD_RE.match(member.text):
+            return TerminalDisposition(
+                member.member_id, value.value_id,
+                DispositionKind.UNRESOLVED_FAIL_CLOSED,
+                "member_option_semantics_unmodeled", None, None, None, member.sources,
+            )
+        if member.reading == "whole":
+            return TerminalDisposition(
+                member.member_id, value.value_id,
+                DispositionKind.ALLOWED_WITH_REASON,
+                "whole_scalar_no_lexical_sink", None, None, None, member.sources,
+            )
+        if member.reading == "colon":
+            return TerminalDisposition(
+                member.member_id, value.value_id,
+                DispositionKind.UNRESOLVED_FAIL_CLOSED,
+                "member_consumer_search_unmodeled", None, None, None, member.sources,
+            )
+        return TerminalDisposition(
+            member.member_id, value.value_id,
+            DispositionKind.UNRESOLVED_FAIL_CLOSED,
+            "member_classifier_no_terminal_rule", None, None, None, member.sources,
+        )
 
     def record_assignment_members(
         self,
-        rendered: str,
-        sources: frozenset[str],
+        rendered: str | None,
+        trace: ExpansionTrace | None,
+        raw_rhs: str,
+        raw_rhs_start: int,
         line: int,
         primitive: str,
         expression: str,
     ) -> None:
-        # The lexer already guarantees an assignment word contains no *unquoted*
-        # whitespace, and the shell never word-splits an assignment value, so no
-        # blank here is a shell separator: `X="$ROOT dir/escape"` is exactly one
-        # pathname `/safe dir/escape` and splitting it on whitespace would
-        # manufacture two allowed paths out of one forbidden one. A *consumer*
-        # (the dynamic loader, `sh -c`, ssh) may still read the same bytes as a
-        # word list or as command text. Both readings are therefore admitted
-        # together and decided on grammar, never on the variable name.
-        #
-        # C-3 repair (round 5). The round-4 predicate made the word-list reading
-        # live only when some word carried `/` AND (an option word was present,
-        # or a LATER word was ABSOLUTE, or the first word was not path-shaped).
-        # Two admitted readings therefore reached zero terminal accounting: a
-        # later *relative* word behind an fs-shaped first word
-        # (`LD_PRELOAD="$ROOT/lib relative/escape.so"`), and executable command
-        # text carrying no `/` at all (`GIT_SSH_COMMAND="ssh -v"`). The rule is
-        # now one line: a multi-word value is a live word list when any word is
-        # option-shaped or any word carries `/`. A value in which no word is
-        # option-shaped and no word carries `/` -- `MSG="Permission denied"`, a
-        # prose scalar, a tool-name list -- carries neither a pathname nor an
-        # argv under either reading and stays in the disclosed `bare` residual.
-        words = rendered.split()
-        option_word = any(OPTION_WORD_RE.match(word) for word in words)
-        carries_path = any("/" in word for word in words)
-        word_list_reading = len(words) > 1 and (option_word or carries_path)
-        if word_list_reading:
-            self.issue(line, KIND_COVERAGE,
-                       "assignment value is a whitespace-separated word list or command "
-                       "text; the single-pathname and word-list readings differ, this "
-                       "tool does not model which consumer splits it, and an option word "
-                       "carrying an attached pathname is not decomposed", expression)
-        # The whole value is ALWAYS a candidate and members are ADDED, never
-        # substituted: the single-pathname reading is admitted for every value,
-        # and replacing it with the words is exactly the MUT-A false PASS that
-        # turned one forbidden `/safe dir/escape` into two allowed paths.
-        candidates: list[str] = [rendered]
-        if word_list_reading:
-            candidates.extend(words)
-        pool: list[str] = []
-        empty_member = False
-        for candidate in candidates:
-            if candidate not in pool:
-                pool.append(candidate)
-            members = self.split_list_members(candidate)
-            if len(members) > 1:
-                for member in members:
-                    if member == "":
-                        # An empty member exists only because a separator does.
-                        # A whole value that is simply empty (`X=`) is an empty
-                        # scalar, not a one-element list, and is left alone.
-                        empty_member = True
-                    elif member not in pool:
-                        pool.append(member)
-        for item in pool:
-            kind = self.assignment_member_kind(item)
-            if kind == "net":
-                self.record_network_text(item, sources, line, primitive, expression)
-            elif kind == "fs":
-                self.record_path_text(item, sources, line, primitive, expression)
-            # `bare` and `empty` are the two disclosed non-path dispositions.
-        if empty_member:
-            # An empty member of a list names the consumer's current directory.
-            # That directory is the pinned PWD, so this is a resolvable fact and
-            # not an inability to evaluate (pattern 1): resolve it and give it a
-            # real row. Round 4 emitted a coverage record only when some OTHER
-            # member was already a path, so `LD_LIBRARY_PATH=:` -- the case that
-            # most needs consumer semantics -- had zero accounting (C-3). If PWD
-            # is unpinned, record_path_text fails closed with an unresolved-path
-            # record instead. The row is attributed to PWD because PWD is the
-            # preregistered constant that produced it; claiming no provenance
-            # for a value derived from a pinned constant would be false.
-            cwd_sources = sources | frozenset({"PWD"} if "PWD" in self.pinned else ())
-            self.record_path_text(".", cwd_sources, line, primitive, expression)
+        value_id = f"{self.analyzer_id}.V{self.next_value_ordinal:04d}"
+        self.next_value_ordinal += 1
+        text = rendered or ""
+        members: list[MemberOccurrence] = []
+
+        members.append(
+            self._make_member(
+                value_id, "whole", 0, text, trace, 0, len(text), raw_rhs,
+                raw_rhs_start, line, primitive, expression,
+            )
+        )
+        colon_spans, colon_separators = self._colon_spans(text) if rendered is not None else ([], [])
+        if colon_separators:
+            for ordinal, (start, end) in enumerate(colon_spans):
+                members.append(
+                    self._make_member(
+                        value_id, "colon", ordinal, text, trace, start, end,
+                        raw_rhs, raw_rhs_start, line, primitive, expression,
+                        semantic_pwd=start == end,
+                    )
+                )
+
+        word_matches = list(re.finditer(r"\S+", text)) if rendered is not None else []
+        words_active = len(word_matches) >= 2 and re.search(r"\s", text) is not None
+        if words_active:
+            for ordinal, match in enumerate(word_matches):
+                members.append(
+                    self._make_member(
+                        value_id, "words", ordinal, text, trace,
+                        match.start(), match.end(), raw_rhs, raw_rhs_start,
+                        line, primitive, expression,
+                    )
+                )
+
+        word_colon_spans: list[tuple[int, int]] = []
+        if words_active:
+            for match in word_matches:
+                local_spans, local_separators = self._colon_spans(match.group(0))
+                if not local_separators:
+                    continue
+                word_colon_spans.extend(
+                    (match.start() + start, match.start() + end)
+                    for start, end in local_spans
+                )
+        for ordinal, (start, end) in enumerate(word_colon_spans):
+            members.append(
+                self._make_member(
+                    value_id, "word-colon", ordinal, text, trace, start, end,
+                    raw_rhs, raw_rhs_start, line, primitive, expression,
+                )
+            )
+
+        expected_counts = (
+            ("whole", 1),
+            ("colon", len(colon_spans) if colon_separators else 0),
+            ("words", len(word_matches) if words_active else 0),
+            ("word-colon", len(word_colon_spans)),
+        )
+        value = AdmittedValue(
+            value_id,
+            line,
+            primitive,
+            expression,
+            raw_rhs,
+            rendered,
+            trace,
+            expected_counts,
+            tuple(member.member_id for member in members),
+        )
+        dispositions = [self._classify_member(value, member) for member in members]
+        self.admitted_values.append(value)
+        self.members.extend(members)
+        self.dispositions.extend(dispositions)
+        self._validate_value_accounting(value, members, dispositions)
+
+    @staticmethod
+    def _disposition_name(disposition: DispositionKind | str) -> str:
+        return disposition.value if isinstance(disposition, DispositionKind) else str(disposition)
+
+    def _validate_reason_reading(
+        self,
+        value: AdmittedValue,
+        member: MemberOccurrence,
+        disposition: TerminalDisposition,
+    ) -> None:
+        name = self._disposition_name(disposition.disposition)
+        active_children = sum(
+            count for reading, count in value.expected_counts if reading != "whole"
+        ) > 0
+        member_kind = self.assignment_member_kind(member.text)
+
+        if member.reading in {"words", "word-colon"}:
+            if not (
+                name == DispositionKind.UNRESOLVED_FAIL_CLOSED.value
+                and disposition.reason == "consumer_word_semantics_unmodeled"
+            ):
+                self.accounting_fault(
+                    "reason_reading_consistency_failed",
+                    value.value_id,
+                    member.member_id,
+                )
+            return
+
+        scalar_reasons = {
+            "whole_scalar_no_lexical_sink",
+            "empty_scalar_no_lexical_sink",
+        }
+        if disposition.reason in scalar_reasons:
+            scalar_shape = (
+                member_kind == "bare"
+                and OPTION_WORD_RE.match(member.text) is None
+            )
+            scalar_text = (
+                member.text == ""
+                if disposition.reason == "empty_scalar_no_lexical_sink"
+                else member.text != "" and scalar_shape
+            )
+            if not (
+                name == DispositionKind.ALLOWED_WITH_REASON.value
+                and member.reading == "whole"
+                and not active_children
+                and scalar_text
+                and disposition.candidate_domain is None
+                and disposition.candidate_value is None
+                and disposition.rule is None
+            ):
+                self.accounting_fault(
+                    "reason_reading_consistency_failed",
+                    value.value_id,
+                    member.member_id,
+                )
+            return
+
+        if disposition.reason == "whole_container_decomposed":
+            if not (
+                name == DispositionKind.ALLOWED_WITH_REASON.value
+                and member.reading == "whole"
+                and active_children
+                and member_kind == "bare"
+                and disposition.candidate_domain is None
+                and disposition.candidate_value is None
+                and disposition.rule is None
+            ):
+                self.accounting_fault(
+                    "reason_reading_consistency_failed",
+                    value.value_id,
+                    member.member_id,
+                )
+            return
+
+        if disposition.reason == "member_consumer_search_unmodeled":
+            if not (
+                name == DispositionKind.UNRESOLVED_FAIL_CLOSED.value
+                and member.reading == "colon"
+                and member_kind == "bare"
+                and member.text != ""
+            ):
+                self.accounting_fault(
+                    "reason_reading_consistency_failed",
+                    value.value_id,
+                    member.member_id,
+                )
+            return
+
+        if disposition.reason == "member_allowlisted":
+            expected = (
+                normalize_network(member.text)
+                if disposition.candidate_domain == "net"
+                else canonical_path(
+                    "." if member.reading == "colon" and member_kind == "empty"
+                    else member.text,
+                    self.env,
+                )
+                if disposition.candidate_domain == "fs"
+                else Value(None, "candidate domain missing")
+            )
+            matching = (
+                self._matching_rules(
+                    disposition.candidate_value,
+                    member,
+                    disposition.candidate_domain,
+                )
+                if disposition.candidate_value is not None
+                and disposition.candidate_domain in {"fs", "net"}
+                else []
+            )
+            exact_sources = (
+                member.sources == frozenset({"PWD"})
+                if member.reading == "colon" and member_kind == "empty"
+                else bool(member.sources)
+            )
+            if not (
+                name == DispositionKind.ALLOWED_WITH_REASON.value
+                and disposition.rule is not None
+                and disposition.rule in matching
+                and expected.known
+                and expected.text == disposition.candidate_value
+                and exact_sources
+                and disposition.sources == member.sources
+            ):
+                self.accounting_fault(
+                    "reason_reading_consistency_failed",
+                    value.value_id,
+                    member.member_id,
+                )
+            return
+
+        if disposition.reason == "member_outside_allowlist":
+            expected = (
+                normalize_network(member.text)
+                if disposition.candidate_domain == "net"
+                else canonical_path(
+                    "." if member.reading == "colon" and member_kind == "empty"
+                    else member.text,
+                    self.env,
+                )
+                if disposition.candidate_domain == "fs"
+                else Value(None, "candidate domain missing")
+            )
+            matching = (
+                self._matching_rules(
+                    disposition.candidate_value,
+                    member,
+                    disposition.candidate_domain,
+                )
+                if disposition.candidate_value is not None
+                and disposition.candidate_domain in {"fs", "net"}
+                else []
+            )
+            if not (
+                name == DispositionKind.FORBIDDEN_WITH_REASON.value
+                and disposition.candidate_value is not None
+                and disposition.candidate_domain in {"fs", "net"}
+                and disposition.rule is None
+                and expected.known
+                and expected.text == disposition.candidate_value
+                and not matching
+                and disposition.sources == member.sources
+            ):
+                self.accounting_fault(
+                    "reason_reading_consistency_failed",
+                    value.value_id,
+                    member.member_id,
+                )
+            return
+
+        unresolved_reasons = {
+            "opaque_assignment_expansion",
+            "member_pwd_unavailable",
+            "member_normalization_failed",
+            "member_exact_provenance_missing",
+            "member_option_semantics_unmodeled",
+            "member_classifier_no_terminal_rule",
+        }
+        if disposition.reason in unresolved_reasons:
+            valid = name == DispositionKind.UNRESOLVED_FAIL_CLOSED.value
+            if disposition.reason == "opaque_assignment_expansion":
+                valid &= value.rendered_text is None and member.reading == "whole"
+            elif disposition.reason == "member_pwd_unavailable":
+                valid &= member.reading == "colon" and member_kind == "empty"
+            elif disposition.reason == "member_exact_provenance_missing":
+                valid &= (
+                    disposition.candidate_value is not None
+                    and disposition.candidate_domain in {"fs", "net"}
+                    and disposition.rule is not None
+                    and not member.sources
+                )
+            elif disposition.reason == "member_option_semantics_unmodeled":
+                valid &= member.reading == "whole" and OPTION_WORD_RE.match(member.text) is not None
+            if not valid:
+                self.accounting_fault(
+                    "reason_reading_consistency_failed",
+                    value.value_id,
+                    member.member_id,
+                )
+            return
+
+        self.accounting_fault(
+            "reason_reading_consistency_failed",
+            value.value_id,
+            member.member_id,
+        )
+
+    def _validate_value_accounting(
+        self,
+        value: AdmittedValue,
+        members: list[MemberOccurrence],
+        dispositions: list[TerminalDisposition],
+    ) -> None:
+        member_ids = [member.member_id for member in members]
+        disposition_ids = [item.member_id for item in dispositions]
+        if not member_ids:
+            self.accounting_fault("member_set_empty", value.value_id)
+        if Counter(value.member_ids) != Counter(member_ids):
+            self.accounting_fault("value_member_ledger_mismatch", value.value_id)
+        if Counter(member_ids) != Counter(disposition_ids):
+            self.accounting_fault("member_disposition_counter_mismatch", value.value_id)
+        disposition_counter = Counter(disposition_ids)
+        for member_id in member_ids:
+            if disposition_counter[member_id] != 1:
+                self.accounting_fault(
+                    "member_disposition_cardinality_failed", value.value_id, member_id
+                )
+        for disposition in dispositions:
+            if disposition.member_id not in member_ids:
+                self.accounting_fault(
+                    "disposition_references_unknown_member",
+                    value.value_id,
+                    disposition.member_id,
+                )
+            if not isinstance(disposition.disposition, DispositionKind):
+                self.accounting_fault(
+                    "disposition_enum_not_closed",
+                    value.value_id,
+                    disposition.member_id,
+                )
+
+        actual_counts = Counter(member.reading for member in members)
+        for reading, expected in value.expected_counts:
+            if actual_counts[reading] != expected:
+                self.accounting_fault(
+                    f"reading_cardinality_mismatch_{reading.replace('-', '_')}",
+                    value.value_id,
+                )
+
+        if value.rendered_text is None:
+            if value.trace is not None:
+                self.accounting_fault("opaque_trace_present", value.value_id)
+        elif value.trace is None:
+            self.accounting_fault("expansion_trace_missing", value.value_id)
+        else:
+            cursor = 0
+            reconstructed: list[str] = []
+            for segment in value.trace.segments:
+                if (
+                    segment.rendered_start < 0
+                    or segment.rendered_end < segment.rendered_start
+                    or segment.raw_start < 0
+                    or segment.raw_end < segment.raw_start
+                    or segment.raw_end > len(value.expression)
+                    or segment.raw_text
+                    != value.expression[segment.raw_start:segment.raw_end]
+                    or segment.rendered_text
+                    != value.rendered_text[segment.rendered_start:segment.rendered_end]
+                ):
+                    self.accounting_fault("trace_range_or_substring_failed", value.value_id)
+                    break
+                if segment.rendered_start != cursor:
+                    self.accounting_fault("trace_gap_or_overlap", value.value_id)
+                    break
+                reconstructed.append(segment.rendered_text)
+                cursor = segment.rendered_end
+            if cursor != len(value.rendered_text) or "".join(reconstructed) != value.rendered_text:
+                self.accounting_fault("trace_reconstruction_failed", value.value_id)
+
+        disposition_by_member = {
+            item.member_id: item
+            for item in dispositions
+            if disposition_counter[item.member_id] == 1
+        }
+        for member in members:
+            if member.value_id != value.value_id:
+                self.accounting_fault(
+                    "member_value_identity_mismatch", value.value_id, member.member_id
+                )
+            for raw_slice in member.raw_slices:
+                if (
+                    raw_slice.raw_start < 0
+                    or raw_slice.raw_end < raw_slice.raw_start
+                    or raw_slice.raw_end > len(value.expression)
+                    or raw_slice.raw_text
+                    != value.expression[raw_slice.raw_start:raw_slice.raw_end]
+                ):
+                    self.accounting_fault(
+                        "member_raw_slice_failed", value.value_id, member.member_id
+                    )
+            if value.rendered_text is not None:
+                if not (
+                    0 <= member.rendered_start <= member.rendered_end <= len(value.rendered_text)
+                    and member.text
+                    == value.rendered_text[member.rendered_start:member.rendered_end]
+                ):
+                    self.accounting_fault(
+                        "member_rendered_span_failed", value.value_id, member.member_id
+                    )
+                if value.trace is not None:
+                    expected_slices = (
+                        (RawSlice(
+                            self._raw_boundary(value.trace, member.rendered_start),
+                            self._raw_boundary(value.trace, member.rendered_start),
+                            "",
+                            "semantic_pwd_substitution",
+                        ),)
+                        if member.reading == "colon" and member.text == ""
+                        else self._trace_slices(
+                            value.trace, member.rendered_start, member.rendered_end
+                        )
+                    )
+                    if member.raw_slices != expected_slices:
+                        self.accounting_fault(
+                            "member_raw_slice_intersection_mismatch",
+                            value.value_id,
+                            member.member_id,
+                        )
+                    expected_sources = (
+                        frozenset({"PWD"})
+                        if member.reading == "colon" and member.text == ""
+                        and "PWD" in self.pinned
+                        and self.env.get("PWD") is not None
+                        and self.env["PWD"].known
+                        else self._trace_sources(
+                            value.trace, member.rendered_start, member.rendered_end
+                        )
+                    )
+                    if member.sources != expected_sources:
+                        self.accounting_fault(
+                            "member_provenance_mismatch", value.value_id, member.member_id
+                        )
+            disposition = disposition_by_member.get(member.member_id)
+            if disposition is not None:
+                if disposition.value_id != value.value_id:
+                    self.accounting_fault(
+                        "disposition_value_identity_mismatch",
+                        value.value_id,
+                        member.member_id,
+                    )
+                self._validate_reason_reading(value, member, disposition)
+
+    def validate_accounting(self) -> None:
+        values_by_id: dict[str, list[AdmittedValue]] = {}
+        for value in self.admitted_values:
+            values_by_id.setdefault(value.value_id, []).append(value)
+        for value_id, values in values_by_id.items():
+            if len(values) != 1:
+                self.accounting_fault("value_id_not_globally_unique", value_id)
+
+        members_by_value: dict[str, list[MemberOccurrence]] = {}
+        for member in self.members:
+            members_by_value.setdefault(member.value_id, []).append(member)
+        dispositions_by_value: dict[str, list[TerminalDisposition]] = {}
+        for disposition in self.dispositions:
+            dispositions_by_value.setdefault(disposition.value_id, []).append(disposition)
+        for value in self.admitted_values:
+            self._validate_value_accounting(
+                value,
+                members_by_value.get(value.value_id, []),
+                dispositions_by_value.get(value.value_id, []),
+            )
+
+        member_counter = Counter(member.member_id for member in self.members)
+        disposition_counter = Counter(item.member_id for item in self.dispositions)
+        for member_id, count in member_counter.items():
+            if count != 1:
+                self.accounting_fault("member_id_not_globally_unique", member_id=member_id)
+        if member_counter != disposition_counter:
+            self.accounting_fault("global_member_disposition_counter_mismatch")
+        known_member_ids = set(member_counter)
+        member_values = {member.member_id: member.value_id for member in self.members}
+        for disposition in self.dispositions:
+            if disposition.member_id not in known_member_ids:
+                self.accounting_fault(
+                    "global_disposition_references_unknown_member",
+                    disposition.value_id,
+                    disposition.member_id,
+                )
+            elif member_values.get(disposition.member_id) != disposition.value_id:
+                self.accounting_fault(
+                    "global_disposition_value_identity_mismatch",
+                    disposition.value_id,
+                    disposition.member_id,
+                )
 
     # -- generic argv grammar --------------------------------------------
     def consume_value(
@@ -1562,7 +2554,22 @@ class Analyzer:
             token = args[index]
             value = expand_word(token.text, self.env)
             if not value.known:
-                if not spec_item.path_free:
+                effect = parameter_assignment_effect(token.text)
+                if effect == ASSIGNMENT_EFFECT:
+                    self.issue(
+                        token.line,
+                        KIND_COVERAGE,
+                        "assignment_parameter_expansion_not_modeled",
+                        token.text,
+                    )
+                elif effect == EFFECT_UNKNOWN:
+                    self.issue(
+                        token.line,
+                        KIND_COVERAGE,
+                        "parameter_expansion_effect_ambiguous",
+                        token.text,
+                    )
+                elif not spec_item.path_free:
                     self.issue(token.line, spec_item.unresolved_kind,
                                f"{command} argument is not statically known: {value.reason}",
                                token.text)
@@ -2561,8 +3568,9 @@ class Analyzer:
         if not tokens:
             return
         index = 0
-        while index < len(tokens) and self.assignment(tokens[index]):
+        while index < len(tokens) and ASSIGN_RE.fullmatch(tokens[index].text):
             self.record_assignment_value(tokens[index], "assignment prefix")
+            self.assignment(tokens[index])
             index += 1
         if index >= len(tokens):
             return
@@ -2927,7 +3935,13 @@ class Analyzer:
                 self.issue(line, KIND_COVERAGE,
                            "command substitution nesting exceeds the modeled depth", body)
                 continue
-            nested = Analyzer(body, self.env, self.depth + 1)
+            nested = Analyzer(
+                body,
+                self.env,
+                self.rules,
+                self.depth + 1,
+                self.context,
+            )
             nested.run()
             self.merge(nested, line)
         return self.uses, self.issues
@@ -2939,7 +3953,242 @@ SEMANTICS_LINE = (
 )
 
 
-def output_report(shell: Path, rules: list[Rule], uses: list[Use], issues: list[Issue]) -> int:
+VALUE_ID_PATTERN = r"A\d{4}\.V\d{4}"
+MEMBER_ID_PATTERN = VALUE_ID_PATTERN + r"\.(?:whole|colon|words|word-colon)\.M\d{4}"
+B64U_PATTERN = r"b64u:[A-Za-z0-9_-]*"
+SOURCES_PATTERN = r"(?:-|[A-Za-z_][A-Za-z0-9_]*(?:,[A-Za-z_][A-Za-z0-9_]*)*)"
+ACCOUNTING_SUMMARY_RE = re.compile(
+    r"^PATHSCOPE accounting_summary=(OK|FAIL) admitted_value_count=(\d+) "
+    r"member_count=(\d+) disposition_count=(\d+) accounting_fault_count=(\d+)$"
+)
+VALUE_ACCOUNT_RE = re.compile(
+    rf"^VALUE_ACCOUNT value_id=({VALUE_ID_PATTERN}) line=(\d+) site=({B64U_PATTERN}) "
+    r"member_count=(\d+) disposition_count=(\d+) conserved=(true|false)$"
+)
+MEMBER_RECORD_RE = re.compile(
+    rf"^MEMBER member_id=({MEMBER_ID_PATTERN}) value_id=({VALUE_ID_PATTERN}) "
+    rf"reading=(whole|colon|words|word-colon) ordinal=(\d+) rendered_span=(\d+):(\d+) "
+    rf"raw_slices=({B64U_PATTERN}) text=({B64U_PATTERN}) sources=({SOURCES_PATTERN}) "
+    rf"disposition=(ALLOWED_WITH_REASON|FORBIDDEN_WITH_REASON|UNRESOLVED_FAIL_CLOSED) "
+    rf"reason=([A-Za-z][A-Za-z0-9_]*) rule=(-|{B64U_PATTERN}) "
+    rf"candidate_domain=(fs|net|none) candidate_value=(-|{B64U_PATTERN})$"
+)
+ACCOUNTING_FAULT_RE = re.compile(
+    rf"^ACCOUNTING_FAULT value_id=({VALUE_ID_PATTERN}|NONE) "
+    rf"member_id=({MEMBER_ID_PATTERN}|NONE) reason=([A-Za-z][A-Za-z0-9_]*)$"
+)
+
+
+def b64u(text: str) -> str:
+    return "b64u:" + base64.urlsafe_b64encode(text.encode("utf-8")).decode("ascii").rstrip("=")
+
+
+def _raw_slices_token(raw_slices: tuple[RawSlice, ...]) -> str:
+    payload = [
+        {
+            "origin": item.origin,
+            "raw_end": item.raw_end,
+            "raw_start": item.raw_start,
+            "raw_text": item.raw_text,
+        }
+        for item in raw_slices
+    ]
+    return b64u(json.dumps(payload, ensure_ascii=True, separators=(",", ":"), sort_keys=True))
+
+
+def _accounting_records(analyzer: Analyzer) -> list[str]:
+    analyzer.validate_accounting()
+    members_by_value: dict[str, list[MemberOccurrence]] = {}
+    for member in analyzer.members:
+        members_by_value.setdefault(member.value_id, []).append(member)
+    dispositions_by_value: dict[str, list[TerminalDisposition]] = {}
+    for disposition in analyzer.dispositions:
+        dispositions_by_value.setdefault(disposition.value_id, []).append(disposition)
+    disposition_counter = Counter(item.member_id for item in analyzer.dispositions)
+    disposition_by_member = {
+        item.member_id: item
+        for item in analyzer.dispositions
+        if disposition_counter[item.member_id] == 1
+    }
+
+    value_rows: list[str] = []
+    for value in analyzer.admitted_values:
+        member_ids = [item.member_id for item in members_by_value.get(value.value_id, [])]
+        disposition_ids = [
+            item.member_id for item in dispositions_by_value.get(value.value_id, [])
+        ]
+        conserved = Counter(member_ids) == Counter(disposition_ids) and all(
+            Counter(disposition_ids)[member_id] == 1 for member_id in member_ids
+        )
+        row = (
+            f"VALUE_ACCOUNT value_id={value.value_id} line={value.line} "
+            f"site={b64u(value.site)} member_count={len(member_ids)} "
+            f"disposition_count={len(disposition_ids)} "
+            f"conserved={'true' if conserved else 'false'}"
+        )
+        if VALUE_ACCOUNT_RE.fullmatch(row) is None:
+            analyzer.accounting_fault("value_serialization_failed", value.value_id)
+        else:
+            value_rows.append(row)
+
+    member_rows: list[str] = []
+    for member in analyzer.members:
+        disposition = disposition_by_member.get(member.member_id)
+        if disposition is None or not isinstance(disposition.disposition, DispositionKind):
+            continue
+        sources = ",".join(sorted(member.sources)) if member.sources else "-"
+        rule = b64u(disposition.rule) if disposition.rule is not None else "-"
+        candidate_domain = disposition.candidate_domain or "none"
+        candidate_value = (
+            b64u(disposition.candidate_value)
+            if disposition.candidate_value is not None
+            else "-"
+        )
+        row = (
+            f"MEMBER member_id={member.member_id} value_id={member.value_id} "
+            f"reading={member.reading} ordinal={member.ordinal} "
+            f"rendered_span={member.rendered_start}:{member.rendered_end} "
+            f"raw_slices={_raw_slices_token(member.raw_slices)} text={b64u(member.text)} "
+            f"sources={sources} disposition={disposition.disposition.value} "
+            f"reason={disposition.reason} rule={rule} "
+            f"candidate_domain={candidate_domain} candidate_value={candidate_value}"
+        )
+        if MEMBER_RECORD_RE.fullmatch(row) is None:
+            analyzer.accounting_fault(
+                "member_serialization_failed", member.value_id, member.member_id
+            )
+        else:
+            member_rows.append(row)
+
+    if len(value_rows) != len(analyzer.admitted_values):
+        analyzer.accounting_fault("printed_value_record_count_mismatch")
+    if (
+        len(member_rows) != len(analyzer.members)
+        or len(member_rows) != len(analyzer.dispositions)
+    ):
+        analyzer.accounting_fault("printed_member_record_count_mismatch")
+
+    if not analyzer.admitted_values and not analyzer.accounting_faults:
+        return []
+
+    fault_rows: list[str] = []
+    for fault in analyzer.accounting_faults:
+        value_id = (
+            fault.value_id
+            if fault.value_id is not None and re.fullmatch(VALUE_ID_PATTERN, fault.value_id)
+            else "NONE"
+        )
+        member_id = (
+            fault.member_id
+            if fault.member_id is not None and re.fullmatch(MEMBER_ID_PATTERN, fault.member_id)
+            else "NONE"
+        )
+        row = (
+            f"ACCOUNTING_FAULT value_id={value_id} member_id={member_id} "
+            f"reason={fault.reason}"
+        )
+        if ACCOUNTING_FAULT_RE.fullmatch(row) is None:
+            row = (
+                "ACCOUNTING_FAULT value_id=NONE member_id=NONE "
+                "reason=accounting_fault_serialization_failed"
+            )
+        fault_rows.append(row)
+
+    summary_state = "FAIL" if analyzer.accounting_faults else "OK"
+    summary = (
+        f"PATHSCOPE accounting_summary={summary_state} "
+        f"admitted_value_count={len(analyzer.admitted_values)} "
+        f"member_count={len(analyzer.members)} "
+        f"disposition_count={len(analyzer.dispositions)} "
+        f"accounting_fault_count={len(fault_rows)}"
+    )
+    if ACCOUNTING_SUMMARY_RE.fullmatch(summary) is None:
+        analyzer.accounting_fault("accounting_summary_serialization_failed")
+        fault_rows.append(
+            "ACCOUNTING_FAULT value_id=NONE member_id=NONE "
+            "reason=accounting_summary_serialization_failed"
+        )
+        summary = (
+            "PATHSCOPE accounting_summary=FAIL "
+            f"admitted_value_count={len(analyzer.admitted_values)} "
+            f"member_count={len(analyzer.members)} "
+            f"disposition_count={len(analyzer.dispositions)} "
+            f"accounting_fault_count={len(fault_rows)}"
+        )
+    return [summary] + value_rows + member_rows + fault_rows
+
+
+def _minimal_accounting_failure_records(analyzer: Analyzer) -> list[str]:
+    if not analyzer.accounting_faults:
+        analyzer.accounting_fault("accounting_boundary_exception")
+    fault_rows = [
+        (
+            "ACCOUNTING_FAULT value_id=NONE member_id=NONE "
+            f"reason={fault.reason}"
+        )
+        for fault in analyzer.accounting_faults
+    ]
+    summary = (
+        "PATHSCOPE accounting_summary=FAIL "
+        f"admitted_value_count={len(analyzer.admitted_values)} "
+        f"member_count={len(analyzer.members)} "
+        f"disposition_count={len(analyzer.dispositions)} "
+        f"accounting_fault_count={len(fault_rows)}"
+    )
+    return [summary] + fault_rows
+
+
+def reconcile_accounting_records(analyzer: Analyzer, records: list[str]) -> bool:
+    summaries = [row for row in records if row.startswith("PATHSCOPE accounting_summary=")]
+    values = [row for row in records if row.startswith("VALUE_ACCOUNT ")]
+    members = [row for row in records if row.startswith("MEMBER ")]
+    faults = [row for row in records if row.startswith("ACCOUNTING_FAULT ")]
+    known_count = len(summaries) + len(values) + len(members) + len(faults)
+    if known_count != len(records):
+        analyzer.accounting_fault("printed_accounting_unknown_record")
+        return False
+    if not analyzer.admitted_values and not analyzer.accounting_faults:
+        if records:
+            analyzer.accounting_fault("printed_accounting_unexpected_for_empty_run")
+            return False
+        return True
+    if len(summaries) != 1:
+        analyzer.accounting_fault("printed_accounting_summary_cardinality_failed")
+        return False
+    summary_match = ACCOUNTING_SUMMARY_RE.fullmatch(summaries[0])
+    if summary_match is None:
+        analyzer.accounting_fault("printed_accounting_summary_malformed")
+        return False
+    state, value_count, member_count, disposition_count, fault_count = summary_match.groups()
+    valid = (
+        int(value_count) == len(analyzer.admitted_values)
+        and int(member_count) == len(analyzer.members)
+        and int(disposition_count) == len(analyzer.dispositions)
+        and int(fault_count) == len(faults)
+        and all(VALUE_ACCOUNT_RE.fullmatch(row) is not None for row in values)
+        and all(MEMBER_RECORD_RE.fullmatch(row) is not None for row in members)
+        and all(ACCOUNTING_FAULT_RE.fullmatch(row) is not None for row in faults)
+    )
+    if analyzer.accounting_faults:
+        valid &= state == "FAIL" and len(faults) == len(analyzer.accounting_faults)
+    else:
+        valid &= (
+            state == "OK"
+            and not faults
+            and len(values) == len(analyzer.admitted_values)
+            and len(members) == len(analyzer.members)
+            and len(members) == len(analyzer.dispositions)
+            and len({VALUE_ACCOUNT_RE.fullmatch(row).group(1) for row in values}) == len(values)
+            and len({MEMBER_RECORD_RE.fullmatch(row).group(1) for row in members}) == len(members)
+        )
+    if not valid:
+        analyzer.accounting_fault("printed_accounting_reconciliation_failed")
+    return valid
+
+
+def output_report(shell: Path, rules: list[Rule], analyzer: Analyzer) -> int:
+    uses = analyzer.uses
+    issues = analyzer.issues
     tables: dict[str, dict[str, list[Use]]] = {"fs": {}, "net": {}}
     for use in uses:
         tables[use.domain].setdefault(use.value, []).append(use)
@@ -2956,7 +4205,7 @@ def output_report(shell: Path, rules: list[Rule], uses: list[Use], issues: list[
                     Issue(use.line, KIND_PROVENANCE,
                           f"allowlisted {noun} has no preregistered-constant provenance",
                           use.expression)
-                    for use in value_uses if not use.sources
+                    for use in value_uses if not use.sources and use.member_id is None
                 )
     all_issues = sorted(
         set(issues + provenance),
@@ -2965,20 +4214,8 @@ def output_report(shell: Path, rules: list[Rule], uses: list[Use], issues: list[
     counts = {kind: 0 for kind in KIND_ORDER}
     for item in all_issues:
         counts[item.kind] += 1
-    print(f"PATHSCOPE shell={shell}")
-    print(SEMANTICS_LINE)
-    print(
-        f"PATHSCOPE resolved_fs_path_count={len(tables['fs'])} "
-        f"resolved_net_endpoint_count={len(tables['net'])}"
-    )
-    print(
-        f"PATHSCOPE unresolved_path_count={counts[KIND_PATH]} "
-        f"unresolved_endpoint_count={counts[KIND_ENDPOINT]} "
-        f"coverage_issue_count={counts[KIND_COVERAGE]} "
-        f"provenance_issue_count={counts[KIND_PROVENANCE]} "
-        f"parse_issue_count={counts[KIND_PARSE]}"
-    )
     forbidden = False
+    projection_rows: list[str] = []
     # NIT-1 (r3 audit §5): both domains carry the same lexical-argv-scope claim,
     # so both allow verdicts read ALLOW-LEXICAL.  A bare ALLOW on the endpoint
     # row implied a stronger guarantee for network than for filesystem operands.
@@ -2994,22 +4231,89 @@ def output_report(shell: Path, rules: list[Rule], uses: list[Use], issues: list[
             verdict = allow if allowed else "FORBID"
             forbidden |= not allowed
             evidence = sorted({f"line={use.line}:{use.primitive}" for use in table[value]})
+            member_evidence = [
+                f"member_id={use.member_id}"
+                for use in table[value]
+                if use.member_id is not None
+            ]
+            if member_evidence:
+                evidence.extend(member_evidence)
             source_names = sorted({source for use in table[value] for source in use.sources})
             rule_text = matching[0] if allowed and matching else "-"
             source_text = ",".join(source_names) if source_names else "NONE"
-            print(
+            projection_rows.append(
                 f"{label} value={value} verdict={verdict} rule={rule_text} "
                 f"sources={source_text} uses={','.join(evidence)}"
             )
-    for item in all_issues:
-        print(
+    unresolved_rows = [
+        (
             f"UNRESOLVED line={item.line} kind={item.kind} reason={item.reason} "
             f"expression={item.expression}"
         )
+        for item in all_issues
+    ]
+
+    for disposition in analyzer.dispositions:
+        if disposition.candidate_domain not in {"fs", "net"} or disposition.candidate_value is None:
+            continue
+        matching_uses = [
+            use
+            for use in analyzer.uses
+            if use.member_id == disposition.member_id
+            and use.domain == disposition.candidate_domain
+            and use.value == disposition.candidate_value
+        ]
+        marker = f"member_id={disposition.member_id}"
+        if len(matching_uses) != 1 or sum(row.count(marker) for row in projection_rows) != 1:
+            analyzer.accounting_fault(
+                "member_projection_reconciliation_failed",
+                disposition.value_id,
+                disposition.member_id,
+            )
+
+    try:
+        accounting_rows = _accounting_records(analyzer)
+    except Exception:
+        analyzer.accounting_fault("accounting_boundary_exception")
+        accounting_rows = _minimal_accounting_failure_records(analyzer)
+    if not reconcile_accounting_records(analyzer, accounting_rows):
+        try:
+            accounting_rows = _accounting_records(analyzer)
+        except Exception:
+            accounting_rows = _minimal_accounting_failure_records(analyzer)
+
+    print(f"PATHSCOPE shell={shell}")
+    print(SEMANTICS_LINE)
+    print(
+        f"PATHSCOPE resolved_fs_path_count={len(tables['fs'])} "
+        f"resolved_net_endpoint_count={len(tables['net'])}"
+    )
+    print(
+        f"PATHSCOPE unresolved_path_count={counts[KIND_PATH]} "
+        f"unresolved_endpoint_count={counts[KIND_ENDPOINT]} "
+        f"coverage_issue_count={counts[KIND_COVERAGE]} "
+        f"provenance_issue_count={counts[KIND_PROVENANCE]} "
+        f"parse_issue_count={counts[KIND_PARSE]}"
+    )
+    for row in projection_rows + unresolved_rows + accounting_rows:
+        print(row)
+
+    if analyzer.accounting_faults:
+        print("PATHSCOPE verdict=REJECT rc=3 reason=accounting_invariant_failed")
+        return RC_PARSE
     if all_issues:
         print("PATHSCOPE verdict=REJECT rc=3 reason=static_resolution_incomplete")
         return RC_PARSE
-    if forbidden:
+    if any(
+        item.disposition == DispositionKind.UNRESOLVED_FAIL_CLOSED
+        for item in analyzer.dispositions
+    ):
+        print("PATHSCOPE verdict=REJECT rc=3 reason=member_resolution_incomplete")
+        return RC_PARSE
+    if forbidden or any(
+        item.disposition == DispositionKind.FORBIDDEN_WITH_REASON
+        for item in analyzer.dispositions
+    ):
         print("PATHSCOPE verdict=REJECT rc=1 reason=path_outside_allowlist")
         return RC_FORBIDDEN
     print("PATHSCOPE verdict=PASS rc=0 reason=closed_and_allowlisted_lexical_argv_scope")
@@ -3036,8 +4340,9 @@ def main(argv: list[str] | None = None) -> int:
     except LexError as exc:
         print(f"PATHSCOPE verdict=REJECT rc=3 reason=input_parse_error line={exc.line} detail={exc}")
         return RC_PARSE
-    uses, issues = Analyzer(shell_text, env).run()
-    return output_report(args.shell, rules, uses, issues)
+    analyzer = Analyzer(shell_text, env, rules)
+    analyzer.run()
+    return output_report(args.shell, rules, analyzer)
 
 
 if __name__ == "__main__":

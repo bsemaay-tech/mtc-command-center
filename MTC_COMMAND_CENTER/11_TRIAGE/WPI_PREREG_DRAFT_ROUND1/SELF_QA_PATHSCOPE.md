@@ -1,5 +1,18 @@
-# Self-QA — Stage-1 path-scope prover, repair round 2
+# Self-QA — Stage-1 path-scope prover, Option C accounting redesign
 
+> **OPTION-C AMENDMENT (2026-08-15) — EXECUTED, PENDING FRESH FLAGSHIP
+> AUDIT.** The accepted V2 design replaces R5's text-deduplicated assignment-member
+> reporting with ordered value/member/disposition ledgers, exact substring provenance,
+> globally unique occurrence IDs, two-phase conservation validation, a fail-closed
+> accounting grammar, and independent downstream reconciliation. The published harness now
+> freezes R5 at blob `695ca9c951e31f53da9580d41326583d71086bb3`, preserves the
+> old RED families and R5 baseline, runs every Option-C attack RED on R5 and GREEN on the
+> candidate, executes all 23 required mutation arms, and runs the complete candidate suite
+> twice. Its literal run returned outer rc 0 with empty stderr; all old identities held,
+> 60 required blocks were byte-identical, and the only old rc changes were
+> `c2_benign_words` 0→3 and `c3_colon_whole` 1→3. This implementer does not accept the
+> result; the one fresh flagship T1 execution audit is the acceptance authority.
+>
 > **⚠ ROUND-5 AMENDMENT (2026-08-14) — C-3, C-4 and the literal-harness
 > portability defect; every transcript, count and digest in this file has been
 > REGENERATED at round 5 and is current.** The final owner-authorized Codex T1
@@ -70,22 +83,20 @@
 > *(Round-4 note: the harness changed again, so the current counts are 660/1363/150 —
 > see the round-4 stdout fence, which is the authoritative one.)*
 
-Date: 2026-08-11 (rounds 1–2) · 2026-08-13 (rounds 3–4) · 2026-08-14 (round 5)
+Date: 2026-08-11 (rounds 1–2) · 2026-08-13 (rounds 3–4) · 2026-08-14 (round 5) · 2026-08-15 (Option C)
 Audit tier: T1 (local-only static analysis)
-Working directory: `C:\LAB\Tradingview_LAB_CLEAN`
+Working directory: `C:\PSC`
 Implementer: rounds 2, 4 and 5 `claude-opus-5` (round 2 effort xhigh, rounds 4 and 5
-effort high); round 3 GLM-5.2. No implementer is the auditor of record, so the round-5 T1
-execution re-audit must be a fresh independent session of a flagship that is **not**
-`claude-opus-5` and **not** GLM-5.2. Round 5 is the single repair authorized by
-`WPI_OWNER_DECISION_PATHSCOPE_FINAL_OVERRIDE_2026-08-14.md`; no further repair or audit
-cycle is authorized after the one `gpt-5.6-sol` high execution audit that follows it.
+effort high); round 3 GLM-5.2; Option C Codex, with no sub-delegation or external AI CLI.
+No implementer is the auditor of record. Owner decision D1 authorizes exactly one fresh
+flagship execution audit after this implementation and no repair round if that audit finds
+a required change.
 
-Every run below used CPython 3.14.2 with `-B`; the repaired source also parses with
-`ast.parse(..., feature_version=(3, 12))`, re-verified at round 5 on the round-5 bytes. A
+Every Option-C run below used CPython 3.14.2 with `-B`; all three changed Python sources
+parse with `ast.parse(..., feature_version=(3, 12))`. A
 Python 3.12 executable is not installed on this workstation — `py -3.12 -V` reports no such
 runtime. No shell fixture was executed, no host was contacted, and no network call was
-made. Fixture files are written only under the Windows temporary directory; the mutation
-copies are written only under `C:\tmp\ps_final_r5`.
+made. Fixture and mutation files are written only under the Windows temporary directory.
 
 ## Identities
 
@@ -95,53 +106,108 @@ copies are written only under `C:\tmp\ps_final_r5`.
 | `pathscope_prover.py` round 2 | 122446 | `890016F0B9A8CDE4EED33F8733F69055471B07C6096F6BC07450457E6C52AF1D` | historical (r2 audit anchor) |
 | `pathscope_prover.py` round 3 (the C-2 pre-repair subject, RED column of family P10) | 124251 | `0724967E919C6576A5A18EA5606B947F3A617A6601AEE89C486C4A6E6C8225F7` | `e600a107f2e2a790653cc544a94cd7436b7b070a` |
 | `pathscope_prover.py` round 4 (the C-3/C-4 pre-repair subject, RED column of family P11) | 131599 | `553A97E932A190B4967B8F1F39C546D7558D9066ABD30B3AECA1913FED27E2EB` | `55ea3a852f7781d03d57483f554c1b8ac62007c6` |
-| `pathscope_prover.py` round 5 (this repair) | 137520 | `28848D60F74A7C668DB3019BBAC58550F4A55C1C02038C013153316C711EDF9C` | uncommitted |
+| `pathscope_prover.py` round 5 (frozen Option-C RED/baseline) | 137520 | `28848D60F74A7C668DB3019BBAC58550F4A55C1C02038C013153316C711EDF9C` | `695ca9c951e31f53da9580d41326583d71086bb3` |
+| `pathscope_prover.py` Option C working tree | 185272 | `3DA28F8EC3F4762836350293D8B51A797E2B2A3EAA1D06EEE36C768F706C969F` | see the committed-form row below |
+| `pathscope_prover.py` Option C Git blob | 185272 | `3DA28F8EC3F4762836350293D8B51A797E2B2A3EAA1D06EEE36C768F706C969F` | `db220dc6edf117cd1e1627bbed36fda3cb0b6057` |
 | `WPI_BLOCKS_DRAFT/RP6-P0.sh` | 107252 | `A090AE736CBECD9973E8AE948B052504B21CBE8B61602F4B5AC592394FAD0617` | `3c7b7d26a763f3904ea4fa4c0be3d39dc598c64c` |
 | `WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh` | 99903 | `11621044D0ADC21AF93E1CFC7B88EF88DE8ACA4683A69AB16CBC542A124141A4` | `5c9a2f597cceaef80d1cbd0fc100732f4b216cf5` |
 
 The round-4 blob is the exact committed candidate the final Codex T1 audit froze and
 rejected: `git rev-parse 2fb3eac05f8da716609549179a7961aa692eae6b:MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/pathscope_prover.py`
-prints `55ea3a852f7781d03d57483f554c1b8ac62007c6`. The round-1, round-3 and round-4
-artefacts are all reconstructed **from their pinned blobs**, not from the working tree, so
-every RED column stays reproducible after the repair is committed. The two real blocks are
-likewise read from their pinned blobs.
+prints `55ea3a852f7781d03d57483f554c1b8ac62007c6`. The round-1, round-3, round-4 and
+round-5 artefacts are all reconstructed **from their pinned blobs**, not from the working
+tree, so every RED/baseline column stays reproducible after Option C is committed. The two
+real blocks are likewise read from their pinned blobs.
 
 ## How to reproduce every RED and every GREEN in one command
 
-Save the fenced block below as `%TEMP%\pathscope_r5_harness.ps1`, then from
-`C:\LAB\Tradingview_LAB_CLEAN`:
+Save the fenced block below as `%TEMP%\pathscope_option_c_harness.ps1`, then from
+`C:\PSC`:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "$env:TEMP\pathscope_r5_harness.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "$env:TEMP\pathscope_option_c_harness.ps1"
 ```
 
-It writes every fixture, reconstructs the round-1, round-3 and round-4 provers from their
-pinned blobs, extracts both real blocks from their pinned blobs, runs the complete case
-list against the round-1 prover and the repaired prover, runs family P10 additionally
-against the round-3 blob and families P10+P11 against the round-4 blob, writes
-`RED_R1.txt`, `GREEN_R5.txt`, `RED_R3.txt` and `RED_R4.txt` next to the fixtures, and
-finishes with the determinism check. Nothing in it depends on shell state established
-elsewhere, and it contains no placeholder that must be edited before it runs. Its own
-stdout was:
+It reconstructs the round-1, round-3, round-4 and round-5 provers from pinned blobs,
+extracts both real blocks, writes the three historical RED transcripts unchanged, proves
+that `R5_BASELINE.txt` is the retired `GREEN_R5.txt`, runs the current suite twice, runs
+every Option-C attack against frozen R5 and the candidate, and executes all required
+mutations. Nothing depends on shell state established elsewhere, and no placeholder needs
+editing. Extracted verbatim from this file and executed from `C:\PSC`, its outer rc was 0,
+stderr was 0 bytes, and stdout was:
 
 ```text
 R1_BASELINE bytes=49820 sha256=3D6AF544F5CBADB0A1432D4784848F68F4BFDDF22AA52C9369FD9729853D43E6
 R3_PREREPAIR bytes=124251 sha256=0724967E919C6576A5A18EA5606B947F3A617A6601AEE89C486C4A6E6C8225F7
 R4_PREREPAIR bytes=131599 sha256=553A97E932A190B4967B8F1F39C546D7558D9066ABD30B3AECA1913FED27E2EB
-R5_REPAIRED bytes=137520 sha256=28848D60F74A7C668DB3019BBAC58550F4A55C1C02038C013153316C711EDF9C
+R5_FROZEN bytes=137520 sha256=28848D60F74A7C668DB3019BBAC58550F4A55C1C02038C013153316C711EDF9C git_blob=695ca9c951e31f53da9580d41326583d71086bb3
+OPTION_C_CANDIDATE bytes=185272 sha256=3DA28F8EC3F4762836350293D8B51A797E2B2A3EAA1D06EEE36C768F706C969F
 BLOCK RP6-P0.sh bytes=107252 sha256=A090AE736CBECD9973E8AE948B052504B21CBE8B61602F4B5AC592394FAD0617 git_blob=3c7b7d26a763f3904ea4fa4c0be3d39dc598c64c
 BLOCK RP7-WPI-RO.sh bytes=99903 sha256=11621044D0ADC21AF93E1CFC7B88EF88DE8ACA4683A69AB16CBC542A124141A4 git_blob=5c9a2f597cceaef80d1cbd0fc100732f4b216cf5
 WROTE RED_R1.txt lines=768 sha256=667BF364D0008B3A5869C3ECC2CA16FDAC0C1D60086B3F8FB50CC3E93E70E89D
-WROTE GREEN_R5.txt lines=1557 sha256=A534BDCFBBD7B21D874602EB5E90336CBF0796881BE650C3EEC973AF4DBE328C
 WROTE RED_R3.txt lines=150 sha256=599B4482C91FCC22F5CA9BCE09261F193F25A4321BF53F650EAA31EEE8C4CBCC
 WROTE RED_R4.txt lines=324 sha256=BC142778035AE9B759A47869CCEA86D8C23D9406735BBDB189009188C36CC01B
+WROTE R5_BASELINE.txt lines=1557 sha256=A534BDCFBBD7B21D874602EB5E90336CBF0796881BE650C3EEC973AF4DBE328C
+WROTE GREEN_OPTION_C.txt lines=3442 sha256=B70F54B11703220DA272B526C5C2564A3D08CA67C8B073F2B81857B804D4EE64
+WROTE GREEN_OPTION_C_REPEAT.txt lines=3442 sha256=B70F54B11703220DA272B526C5C2564A3D08CA67C8B073F2B81857B804D4EE64
+WROTE RED_R5_OPTION_C.txt lines=155 sha256=78DD1C3B5EA3C192B681898FA344E2D18A854D7DAC07B8825E30B8DE6BD0F74A
+WROTE GREEN_OPTION_C_ATTACKS.txt lines=222 sha256=4905124746EDF459A39FF3DA6B337B53679DC0AA757F98130E0F0746AB5E9E6D
+HISTORICAL_FENCES PASS red=3 retired_green_r5=true
+FULL_SUITE_DETERMINISM equal=True sha256=B70F54B11703220DA272B526C5C2564A3D08CA67C8B073F2B81857B804D4EE64
+REGRESSION_RC PASS cases=109 deltas=c2_benign_words:0->3,c3_colon_whole:1->3
+REGRESSION_BYTES PASS identical_blocks=60
+MUTATION M01_delete_disposition rc=3 summary=FAIL faults=4 pass_present=false terminal=accounting_invariant_failed
+MUTATION M02_duplicate_disposition rc=3 summary=FAIL faults=4 pass_present=false terminal=accounting_invariant_failed
+MUTATION M03_unknown_member rc=3 summary=FAIL faults=7 pass_present=false terminal=accounting_invariant_failed
+MUTATION M04_unknown_enum rc=3 summary=FAIL faults=3 pass_present=false terminal=accounting_invariant_failed
+MUTATION M05_member_dedupe rc=3 summary=FAIL faults=1 pass_present=false terminal=accounting_invariant_failed
+MUTATION M06_provenance_launder rc=3 summary=FAIL faults=1 pass_present=false terminal=accounting_invariant_failed
+MUTATION M07_suppress_member_record rc=3 summary=FAIL faults=1 pass_present=false terminal=accounting_invariant_failed
+MUTATION M08_bare_colon_scalar_allow rc=3 summary=FAIL faults=1 pass_present=false terminal=accounting_invariant_failed
+MUTATION M09_words_scalar_allow rc=3 summary=FAIL faults=1 pass_present=false terminal=accounting_invariant_failed
+MUTATION M10_scalar_with_children rc=3 summary=FAIL faults=1 pass_present=false terminal=accounting_invariant_failed
+MUTATION M11_allow_without_rule_provenance rc=3 summary=FAIL faults=1 pass_present=false terminal=accounting_invariant_failed
+MUTATION M12_cross_value_member_collision rc=3 summary=FAIL faults=3 pass_present=false terminal=accounting_invariant_failed
+MUTATION M13_analyzer_prefix_collision rc=3 summary=FAIL faults=6 pass_present=false terminal=accounting_invariant_failed
+MUTATION M14_incomplete_container rc=3 summary=FAIL faults=1 pass_present=false terminal=accounting_invariant_failed
+MUTATION M15_suppress_summary rc=3 summary=FAIL faults=1 pass_present=false terminal=accounting_invariant_failed
+ATTACK guard_colon r5_rc=0 candidate_rc=3 closure=assignment_effect_guard
+ATTACK guard_true r5_rc=0 candidate_rc=3 closure=assignment_effect_guard
+ATTACK guard_echo r5_rc=0 candidate_rc=3 closure=assignment_effect_guard
+ATTACK guard_printf r5_rc=0 candidate_rc=3 closure=assignment_effect_guard
+ATTACK guard_equal r5_rc=0 candidate_rc=3 closure=assignment_effect_guard
+ATTACK control_single_quote r5_rc=0 candidate_rc=0 closure=byte_identical_control
+ATTACK control_fallback r5_rc=0 candidate_rc=0 closure=byte_identical_control
+ATTACK f1_command_words r5_rc=0 candidate_rc=3 closure=two_unresolved_words
+ATTACK f1_uri_bare r5_rc=0 candidate_rc=3 closure=bare_colon_unresolved
+ATTACK f2_provenance r5_rc=0 candidate_rc=3 closure=literal_member_sources_none
+ATTACK f3_duplicate r5_rc=1 candidate_rc=1 closure=two_distinct_duplicate_members
+ATTACK f3_empty r5_rc=0 candidate_rc=0 closure=three_distinct_empty_members
+ATTACK adjacent_endpoint r5_rc=0 candidate_rc=3 closure=endpoint_occurrences_and_local_provenance
+ATTACK adjacent_interleaved_empty r5_rc=0 candidate_rc=0 closure=five_colon_members_four_empty
+ATTACK adjacent_newline r5_rc=0 candidate_rc=3 closure=quoted_newline_two_words
+ATTACK adjacent_duplicate_values r5_rc=1 candidate_rc=1 closure=same_line_value_ids_distinct
+ATTACK adjacent_mixed_whole r5_rc=3 candidate_rc=3 closure=path_shaped_whole_and_colon_children
+ATTACK adjacent_cross_analyzer r5_rc=3 candidate_rc=3 closure=global_analyzer_ordinals_distinct
+COMPOSITE_MUTATION M16_removed_member_arm verdict=STOP reason=prover_pass_terminal_mismatch
+COMPOSITE_MUTATION M17_fault_wrong_terminal verdict=STOP reason=prover_accounting_terminal_mismatch
+COMPOSITE_MUTATION M18a_omitted_header verdict=STOP reason=prover_output_grammar_incomplete
+COMPOSITE_MUTATION M18b_duplicate_header verdict=STOP reason=prover_output_grammar_incomplete
+COMPOSITE_MUTATION M19a_duplicate_member_id verdict=STOP reason=prover_member_identity_mismatch
+COMPOSITE_MUTATION M19b_value_count verdict=STOP reason=prover_value_account_count_mismatch
+COMPOSITE_MUTATION M20_projection_omission verdict=STOP reason=prover_member_projection_mismatch
+COMPOSITE_MUTATION M21_unknown_prefix verdict=STOP reason=prover_output_unknown_record
+COMPAT_MUTATION M22_summary_on_assignment_free byte_equal=false composite=STOP reason=prover_accounting_count_mismatch
+COMPAT_MUTATION M23_argv_projection_format byte_equal=false
+OPTION_C_MUTATIONS PASS arms=23 checks=25
+WROTE OPTION_C_MUTATIONS.txt lines=44 sha256=4AC0B546532E76F58DB83DE44DD875BE4A53D0E116547251A4E40687A1C9ADD0
 DETERMINISM find_exec rc1=1 rc2=1 equal=True sha1=f0f0bf2d14d9b504daa6528f230bc1bd4186dc8e9bcc5fd65d8d59b4016f11bd sha2=f0f0bf2d14d9b504daa6528f230bc1bd4186dc8e9bcc5fd65d8d59b4016f11bd
-DETERMINISM assign_prefix rc1=1 rc2=1 equal=True sha1=dc1ab295175cb8cf28c9a0bfae247c2311957244714d1108a9e4b13297449ae1 sha2=dc1ab295175cb8cf28c9a0bfae247c2311957244714d1108a9e4b13297449ae1
-DETERMINISM c2_list_prefix rc1=1 rc2=1 equal=True sha1=eed53413c5b972bae048263a7304aaeb5b6039f4abc5033d13b54b94596e53bd sha2=eed53413c5b972bae048263a7304aaeb5b6039f4abc5033d13b54b94596e53bd
-DETERMINISM c3_ws_relative rc1=3 rc2=3 equal=True sha1=7c905b083423f11b616c6979c5d87b93aaa76b71f16325ea082a495971f38d6c sha2=7c905b083423f11b616c6979c5d87b93aaa76b71f16325ea082a495971f38d6c
-DETERMINISM c4_export_quoted rc1=1 rc2=1 equal=True sha1=fa1ff7ce5b208da50c1dc11be72119ec0b906aec22afe15f7e2b124d32230581 sha2=fa1ff7ce5b208da50c1dc11be72119ec0b906aec22afe15f7e2b124d32230581
-DETERMINISM RP6-P0 rc1=3 rc2=3 equal=True sha1=01bffdd3692a39ad2bdd025952b2dcba9d793162c2e83e8d83f92ed697ddfdc0 sha2=01bffdd3692a39ad2bdd025952b2dcba9d793162c2e83e8d83f92ed697ddfdc0
-DETERMINISM RP7-WPI-RO rc1=3 rc2=3 equal=True sha1=2d87cffcc9f7fee241b5944fa8db62d5d6f652ea4b6af00760540f8e93c7c10a sha2=2d87cffcc9f7fee241b5944fa8db62d5d6f652ea4b6af00760540f8e93c7c10a
+DETERMINISM assign_prefix rc1=1 rc2=1 equal=True sha1=8428decd144375be99b2b0f16e1f61150bb3c54345e32a32b12bdca78735469d sha2=8428decd144375be99b2b0f16e1f61150bb3c54345e32a32b12bdca78735469d
+DETERMINISM c2_list_prefix rc1=1 rc2=1 equal=True sha1=bb6c9e7e6728cf7e069af598b2eb2b09ba9a6c6d57aefcce5a154400bab1eaad sha2=bb6c9e7e6728cf7e069af598b2eb2b09ba9a6c6d57aefcce5a154400bab1eaad
+DETERMINISM c3_ws_relative rc1=3 rc2=3 equal=True sha1=5734d34213d68087938e42f8eb2cf439f881bd4d8f754c6df4f260b76296dba9 sha2=5734d34213d68087938e42f8eb2cf439f881bd4d8f754c6df4f260b76296dba9
+DETERMINISM c4_export_quoted rc1=1 rc2=1 equal=True sha1=3df2ae08e5eba6e30a4106201487607634b7166a362a398202b94f6b9af9be94 sha2=3df2ae08e5eba6e30a4106201487607634b7166a362a398202b94f6b9af9be94
+DETERMINISM RP6-P0 rc1=3 rc2=3 equal=True sha1=19cb227c7b5ec3bffc8530b900350631975e9960a710ef541a9122e7837c7e67 sha2=19cb227c7b5ec3bffc8530b900350631975e9960a710ef541a9122e7837c7e67
+DETERMINISM RP7-WPI-RO rc1=3 rc2=3 equal=True sha1=cad3d3545211de136b691b1c90902a6a35ead1405dabdd3a86e00369c3de1077 sha2=cad3d3545211de136b691b1c90902a6a35ead1405dabdd3a86e00369c3de1077
 ```
 
 ### Why this stdout is now a property of the harness and not of the machine
@@ -227,8 +293,10 @@ $env:PYTHONIOENCODING = 'utf-8'
 
 $REPO = (Get-Location).Path
 $TOOL = (Resolve-Path 'MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\pathscope_prover.py').Path
+$COMPOSITE = (Resolve-Path 'MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\composite_pathproof.py').Path
+$MUTATION_TOOL = (Resolve-Path 'MTC_COMMAND_CENTER\11_TRIAGE\WPI_PREREG_DRAFT_ROUND1\pathscope_option_c_qa.py').Path
 $TEMPROOT = [System.IO.Path]::GetTempPath()
-$QA   = Join-Path $TEMPROOT 'pathscope-repair-r5'
+$QA   = Join-Path $TEMPROOT 'pathscope-option-c'
 New-Item -ItemType Directory -Path $QA -Force | Out-Null
 
 function New-Fixture([string]$Name, [string[]]$Lines) {
@@ -281,9 +349,12 @@ Save-Blob 'e600a107f2e2a790653cc544a94cd7436b7b070a' 'pathscope_prover_R3.py'
 # --- the round-4 artefact, the committed pre-repair subject of C-3 and C-4 ---
 Save-Blob '55ea3a852f7781d03d57483f554c1b8ac62007c6' 'pathscope_prover_R4.py'
 "R4_PREREPAIR bytes=$(Get-Size 'pathscope_prover_R4.py') sha256=$(Get-Sha256 'pathscope_prover_R4.py')"
-$h5 = (Get-FileHash -Algorithm SHA256 -LiteralPath $TOOL).Hash
-$l5 = (Get-Item -LiteralPath $TOOL).Length
-"R5_REPAIRED bytes=$l5 sha256=$h5"
+# --- the frozen round-5 artefact: Option-C RED and legacy compatibility baseline ---
+Save-Blob '695ca9c951e31f53da9580d41326583d71086bb3' 'pathscope_prover_R5.py'
+"R5_FROZEN bytes=$(Get-Size 'pathscope_prover_R5.py') sha256=$(Get-Sha256 'pathscope_prover_R5.py') git_blob=$(Get-BlobId 'pathscope_prover_R5.py')"
+$hc = (Get-FileHash -Algorithm SHA256 -LiteralPath $TOOL).Hash
+$lc = (Get-Item -LiteralPath $TOOL).Length
+"OPTION_C_CANDIDATE bytes=$lc sha256=$hc"
 
 # --- the round-1 audit's own constants and allowlist, unchanged ---
 New-Fixture 'constants.env' @(
@@ -452,6 +523,26 @@ New-Fixture 'c4_env_quoted_ctl.sh'   @('#!/bin/bash', 'env "LD_PRELOAD=/etc/esca
 New-Fixture 'c4_export_plain_ctl.sh' @('#!/bin/bash', 'export LD_PRELOAD="$ROOT/ok.so"', 'cat "$ROOT/f"')
 New-Fixture 'c3_scalar_ctl.sh'       @('#!/bin/bash', 'LC_ALL=C count=1 cat "$ROOT/f"')
 
+# --- Option C: admission boundary, F1/F2/F3 and adjacent accounting attacks ---
+New-Fixture 'guard_colon.sh'              @('#!/bin/bash', ': ${LD_PRELOAD:=/etc/evil.so}')
+New-Fixture 'guard_true.sh'               @('#!/bin/bash', 'true ${LD_PRELOAD:=/etc/evil.so}')
+New-Fixture 'guard_echo.sh'               @('#!/bin/bash', 'echo ${LD_PRELOAD:=/etc/evil.so}')
+New-Fixture 'guard_printf.sh'             @('#!/bin/bash', 'printf ''%s\n'' ${LD_PRELOAD:=/etc/evil.so}')
+New-Fixture 'guard_equal.sh'              @('#!/bin/bash', ': ${LD_PRELOAD=/etc/evil.so}')
+New-Fixture 'control_single_quote.sh'      @('#!/bin/bash', ': ''${LD_PRELOAD:=/etc/evil.so}''')
+New-Fixture 'control_fallback.sh'          @('#!/bin/bash', ': ${ROOT:-/fallback}')
+New-Fixture 'f1_command_words.sh'          @('#!/bin/bash', 'GIT_SSH_COMMAND="ssh evil.example" cat "$ROOT/f"')
+New-Fixture 'f1_uri_bare.sh'               @('#!/bin/bash', 'LD_LIBRARY_PATH=$URL:evil.so cat "$ROOT/f"')
+New-Fixture 'f2_provenance.sh'             @('#!/bin/bash', 'LD_LIBRARY_PATH=$ROOT/lib:/safe/literal cat "$ROOT/f"')
+New-Fixture 'f3_duplicate.sh'              @('#!/bin/bash', 'LD_LIBRARY_PATH=/etc/escape:/etc/escape cat "$ROOT/f"')
+New-Fixture 'f3_empty.sh'                  @('#!/bin/bash', 'LD_LIBRARY_PATH=:: cat "$ROOT/f"')
+New-Fixture 'adjacent_endpoint.sh'         @('#!/bin/bash', 'X=$URL:http://127.0.0.1:8790/other cat "$ROOT/f"')
+New-Fixture 'adjacent_interleaved_empty.sh' @('#!/bin/bash', 'LD_LIBRARY_PATH=::$ROOT/lib:: cat "$ROOT/f"')
+New-Fixture 'adjacent_newline.sh'          @('#!/bin/bash', 'GIT_SSH_COMMAND="ssh', 'evil.example" cat "$ROOT/f"')
+New-Fixture 'adjacent_duplicate_values.sh' @('#!/bin/bash', 'X=/etc/escape X=/etc/escape cat "$ROOT/f"')
+New-Fixture 'adjacent_mixed_whole.sh'      @('#!/bin/bash', 'X=bare.so:/etc/escape.so cat "$ROOT/f"')
+New-Fixture 'adjacent_cross_analyzer.sh'   @('#!/bin/bash', 'a="$(X=/etc/escape cat "$ROOT/f")"; b="$(X=/etc/escape cat "$ROOT/f")"')
+
 # --- the real blocks, extracted from their pinned committed blobs ---
 Save-Blob '3c7b7d26a763f3904ea4fa4c0be3d39dc598c64c' 'RP6-P0.sh'
 Save-Blob '5c9a2f597cceaef80d1cbd0fc100732f4b216cf5' 'RP7-WPI-RO.sh'
@@ -609,6 +700,29 @@ $C3CASES = @(
 )
 $CASES = $CASES + $C2CASES + $C3CASES
 
+# Kept separate so the historical RED_R1/RED_R3/RED_R4 transcript identities do
+# not change. Frozen R5 is the measured RED subject for every Option-C attack.
+$OPTION_C_CASES = @(
+  @('guard_colon','constants.env','allowlist.txt'),
+  @('guard_true','constants.env','allowlist.txt'),
+  @('guard_echo','constants.env','allowlist.txt'),
+  @('guard_printf','constants.env','allowlist.txt'),
+  @('guard_equal','constants.env','allowlist.txt'),
+  @('control_single_quote','constants.env','allowlist.txt'),
+  @('control_fallback','constants.env','allowlist.txt'),
+  @('f1_command_words','constants.env','allowlist.txt'),
+  @('f1_uri_bare','constants.env','allowlist.txt'),
+  @('f2_provenance','constants.env','allowlist.txt'),
+  @('f3_duplicate','constants.env','allowlist.txt'),
+  @('f3_empty','constants.env','allowlist.txt'),
+  @('adjacent_endpoint','constants.env','allowlist.txt'),
+  @('adjacent_interleaved_empty','constants.env','allowlist.txt'),
+  @('adjacent_newline','constants.env','allowlist.txt'),
+  @('adjacent_duplicate_values','constants.env','allowlist.txt'),
+  @('adjacent_mixed_whole','constants.env','allowlist.txt'),
+  @('adjacent_cross_analyzer','constants.env','allowlist.txt')
+)
+
 # Every prover argument below is a bare file name resolved against $QA, which is
 # the current directory for the whole run. No user-specific absolute path can
 # therefore enter a transcript, and no `<QA>` substitution is needed or made.
@@ -648,11 +762,114 @@ function Invoke-Suite([string]$Prover, [string]$OutFile, [object[]]$List, [bool]
 }
 
 Invoke-Suite 'pathscope_prover_R1.py' 'RED_R1.txt' $CASES   $true
-Invoke-Suite $TOOL                    'GREEN_R5.txt' $CASES $true
 Invoke-Suite 'pathscope_prover_R3.py' 'RED_R3.txt' $C2CASES $false
 Invoke-Suite 'pathscope_prover_R4.py' 'RED_R4.txt' ($C2CASES + $C3CASES) $false
+Invoke-Suite 'pathscope_prover_R5.py' 'R5_BASELINE.txt' $CASES $true
+Invoke-Suite $TOOL 'GREEN_OPTION_C.txt' $CASES $true
+Invoke-Suite $TOOL 'GREEN_OPTION_C_REPEAT.txt' $CASES $true
+Invoke-Suite 'pathscope_prover_R5.py' 'RED_R5_OPTION_C.txt' $OPTION_C_CASES $false
+Invoke-Suite $TOOL 'GREEN_OPTION_C_ATTACKS.txt' $OPTION_C_CASES $false
 
-# --- determinism: same input, same bytes, same order ---
+function Assert-Sha256([string]$Name, [string]$Expected) {
+  $actual = Get-Sha256 $Name
+  if ($actual -cne $Expected) { throw "HASH_MISMATCH $Name expected=$Expected actual=$actual" }
+}
+
+# Historical RED identities and the retired GREEN_R5 fence must reproduce
+# exactly. The R5 bytes are a baseline here, never the Option-C GREEN claim.
+Assert-Sha256 'RED_R1.txt' '667BF364D0008B3A5869C3ECC2CA16FDAC0C1D60086B3F8FB50CC3E93E70E89D'
+Assert-Sha256 'RED_R3.txt' '599B4482C91FCC22F5CA9BCE09261F193F25A4321BF53F650EAA31EEE8C4CBCC'
+Assert-Sha256 'RED_R4.txt' 'BC142778035AE9B759A47869CCEA86D8C23D9406735BBDB189009188C36CC01B'
+Assert-Sha256 'R5_BASELINE.txt' 'A534BDCFBBD7B21D874602EB5E90336CBF0796881BE650C3EEC973AF4DBE328C'
+"HISTORICAL_FENCES PASS red=3 retired_green_r5=true"
+
+$candidateBytes = [System.IO.File]::ReadAllBytes((Join-Path $QA 'GREEN_OPTION_C.txt'))
+$repeatBytes = [System.IO.File]::ReadAllBytes((Join-Path $QA 'GREEN_OPTION_C_REPEAT.txt'))
+if ([Convert]::ToBase64String($candidateBytes) -cne [Convert]::ToBase64String($repeatBytes)) {
+  throw 'FULL_SUITE_NONDETERMINISTIC'
+}
+"FULL_SUITE_DETERMINISM equal=True sha256=$(Get-Sha256 'GREEN_OPTION_C.txt')"
+
+function Get-RcMap([string]$Name) {
+  $map = @{}
+  $current = $null
+  foreach ($line in [System.IO.File]::ReadAllLines((Join-Path $QA $Name))) {
+    if ($line -match '^=== (.+) ===$') { $current = $Matches[1] }
+    elseif ($line -match '^COMMAND_RC=([0-9]+)$') {
+      if ($null -eq $current -or $map.ContainsKey($current)) { throw "BAD_TRANSCRIPT_RC $Name" }
+      $map[$current] = [int]$Matches[1]
+    }
+  }
+  return $map
+}
+
+$r5Rc = Get-RcMap 'R5_BASELINE.txt'
+$candidateRc = Get-RcMap 'GREEN_OPTION_C.txt'
+if ($r5Rc.Count -ne $candidateRc.Count) { throw 'REGRESSION_CASE_COUNT_CHANGED' }
+$deltas = New-Object System.Collections.Generic.List[string]
+foreach ($name in ($r5Rc.Keys | Sort-Object)) {
+  if (-not $candidateRc.ContainsKey($name)) { throw "REGRESSION_CASE_MISSING $name" }
+  if ($r5Rc[$name] -ne $candidateRc[$name]) {
+    $deltas.Add("${name}:$($r5Rc[$name])->$($candidateRc[$name])")
+  }
+}
+$expectedDeltas = @('c2_benign_words:0->3', 'c3_colon_whole:1->3')
+if (($deltas.Count -ne 2) -or (($deltas -join '|') -cne ($expectedDeltas -join '|'))) {
+  throw "UNAUTHORIZED_RC_DELTA $($deltas -join ',')"
+}
+"REGRESSION_RC PASS cases=$($r5Rc.Count) deltas=$($deltas -join ',')"
+
+function Get-BlockMap([string]$Name) {
+  $map = @{}
+  $current = $null
+  $buffer = New-Object System.Collections.Generic.List[string]
+  foreach ($line in [System.IO.File]::ReadAllLines((Join-Path $QA $Name))) {
+    if ($line -match '^=== (.+) ===$') {
+      if ($null -ne $current) { $map[$current] = (($buffer -join "`n") + "`n") }
+      $current = $Matches[1]
+      $buffer = New-Object System.Collections.Generic.List[string]
+    }
+    if ($null -ne $current) { $buffer.Add($line) }
+  }
+  if ($null -ne $current) { $map[$current] = (($buffer -join "`n") + "`n") }
+  return $map
+}
+
+$r5Blocks = Get-BlockMap 'R5_BASELINE.txt'
+$candidateBlocks = Get-BlockMap 'GREEN_OPTION_C.txt'
+$mustStayByteIdentical = @(
+  'alias','ansic','arith','array','brace','c4_export_opaque','case_loop','continuation',
+  'cp_option','cp_unknown','curl_net','curl_upload','devtcp','devtcp_allow','dot_source',
+  'exec_redir','fddup','find_exec','find_unknown','func_body','func_positional','getent',
+  'glob','grep_files','hash_p','heredoc','heredoc_quoted','heredoc_subst','herestring',
+  'jobs_x','literal','mapfile_cb','multipath','nc_client','param_default','param_subst',
+  'popd_stack','pushd','pushd_forbidden','python_c','redir_amp','redir_clobber','redir_rw',
+  'RP6-P0 with placeholder.constants','RP7-WPI-RO with placeholder.constants','scp_remote',
+  'sed_prog','source','ssh','ssh_command','symlink_lexical','systemctl_link','tar_option',
+  'terminal_cat','terminal_stat','tilde','tilde_home','tilde_user','trap','xargs'
+)
+foreach ($name in $mustStayByteIdentical) {
+  if (-not $r5Blocks.ContainsKey($name) -or -not $candidateBlocks.ContainsKey($name) -or
+      $r5Blocks[$name] -cne $candidateBlocks[$name]) {
+    throw "BYTE_IDENTITY_REGRESSION $name"
+  }
+}
+"REGRESSION_BYTES PASS identical_blocks=$($mustStayByteIdentical.Count)"
+
+# D026 falsification and composite-contract suite. Its own stdout is a committed
+# evidence format; stderr and any nonzero status fail this harness.
+$mutationErr = Join-Path $QA 'OPTION_C_MUTATIONS.stderr'
+$mutationOut = & python -B $MUTATION_TOOL $TOOL (Join-Path $QA 'pathscope_prover_R5.py') $COMPOSITE $QA 2> $mutationErr
+$mutationRc = $LASTEXITCODE
+$mutationStderr = [System.IO.File]::ReadAllText($mutationErr)
+if ($mutationRc -ne 0 -or $mutationStderr.Length -ne 0) {
+  throw "OPTION_C_MUTATIONS_FAILED rc=$mutationRc stderr=$mutationStderr"
+}
+[System.IO.File]::WriteAllText((Join-Path $QA 'OPTION_C_MUTATIONS.txt'), (($mutationOut -join "`n") + "`n"))
+foreach ($line in $mutationOut) { [string]$line }
+"WROTE OPTION_C_MUTATIONS.txt lines=$($mutationOut.Count) sha256=$(Get-Sha256 'OPTION_C_MUTATIONS.txt')"
+
+# --- the seven retired R5 determinism digests, explicitly re-fenced ---
 foreach ($pair in @(@('find_exec','constants.env','allowlist.txt'),
                     @('assign_prefix','constants.env','allowlist.txt'),
                     @('c2_list_prefix','constants.env','allowlist.txt'),
@@ -668,6 +885,7 @@ foreach ($pair in @(@('find_exec','constants.env','allowlist.txt'),
   $sha = [System.Security.Cryptography.SHA256]::Create()
   $ha = ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($a)))).Replace('-','').ToLowerInvariant()
   $hb = ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($b)))).Replace('-','').ToLowerInvariant()
+  if ($ra -ne $rb -or $a -cne $b) { throw "CASE_NONDETERMINISTIC $name" }
   "DETERMINISM $name rc1=$ra rc2=$rb equal=$($a -ceq $b) sha1=$ha sha2=$hb"
 }
 

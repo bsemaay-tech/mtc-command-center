@@ -14,6 +14,7 @@ The tool reads subject bytes as data.  It never executes a subject shell file.
 from __future__ import annotations
 
 import argparse
+import base64
 import dataclasses
 import enum
 import hashlib
@@ -2140,9 +2141,589 @@ class SubprocessPathProver:
     _unresolved_re = re.compile(
         r"^UNRESOLVED line=\d+ kind=(parse|coverage|unresolved_path|unresolved_endpoint|provenance) "
     )
+    _value_id = r"A\d{4}\.V\d{4}"
+    _member_id = _value_id + r"\.(?:whole|colon|words|word-colon)\.M\d{4}"
+    _b64u = r"b64u:[A-Za-z0-9_-]*"
+    _sources = r"(?:-|[A-Za-z_][A-Za-z0-9_]*(?:,[A-Za-z_][A-Za-z0-9_]*)*)"
+    _accounting_summary_re = re.compile(
+        r"^PATHSCOPE accounting_summary=(OK|FAIL) admitted_value_count=(\d+) "
+        r"member_count=(\d+) disposition_count=(\d+) accounting_fault_count=(\d+)$"
+    )
+    _value_account_re = re.compile(
+        rf"^VALUE_ACCOUNT value_id=({_value_id}) line=(\d+) site=({_b64u}) "
+        r"member_count=(\d+) disposition_count=(\d+) conserved=(true|false)$"
+    )
+    _member_re = re.compile(
+        rf"^MEMBER member_id=({_member_id}) value_id=({_value_id}) "
+        rf"reading=(whole|colon|words|word-colon) ordinal=(\d+) rendered_span=(\d+):(\d+) "
+        rf"raw_slices=({_b64u}) text=({_b64u}) sources=({_sources}) "
+        rf"disposition=(ALLOWED_WITH_REASON|FORBIDDEN_WITH_REASON|UNRESOLVED_FAIL_CLOSED) "
+        rf"reason=([A-Za-z][A-Za-z0-9_]*) rule=(-|{_b64u}) "
+        rf"candidate_domain=(fs|net|none) candidate_value=(-|{_b64u})$"
+    )
+    _accounting_fault_re = re.compile(
+        rf"^ACCOUNTING_FAULT value_id=({_value_id}|NONE) "
+        rf"member_id=({_member_id}|NONE) reason=([A-Za-z][A-Za-z0-9_]*)$"
+    )
 
     def _stop_result(self, member_id: str, reason: str, rc: int | None = None) -> ProverMemberResult:
         return ProverMemberResult(member_id, Verdict.STOP, reason, rc, 0, 0, 0, 0, 0, 0, 0, "-", tuple())
+
+    @classmethod
+    def _decode_b64u(cls, token: str) -> str | None:
+        if re.fullmatch(cls._b64u, token) is None:
+            return None
+        encoded = token[len("b64u:"):]
+        try:
+            data = base64.b64decode(
+                encoded + "=" * ((4 - len(encoded) % 4) % 4),
+                altchars=b"-_",
+                validate=True,
+            )
+            text = data.decode("utf-8")
+        except (ValueError, UnicodeError):
+            return None
+        canonical = base64.urlsafe_b64encode(text.encode("utf-8")).decode("ascii").rstrip("=")
+        return text if canonical == encoded else None
+
+    def _interpret_output(
+        self,
+        member_id: str,
+        process_rc: int,
+        stdout: str,
+        stderr: str,
+    ) -> ProverMemberResult:
+        if stderr:
+            return self._stop_result(member_id, "prover_stderr_nonempty", process_rc)
+        lines = stdout.splitlines()
+        shell_headers = [line for line in lines if line.startswith("PATHSCOPE shell=")]
+        semantics_headers = [line for line in lines if line.startswith("PATHSCOPE semantics=")]
+        resolved_headers = [line for line in lines if line.startswith("PATHSCOPE resolved_")]
+        issue_headers = [line for line in lines if line.startswith("PATHSCOPE unresolved_")]
+        verdict_headers = [line for line in lines if line.startswith("PATHSCOPE verdict=")]
+        semantics = [line for line in lines if line == (
+            "PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established "
+            "mount_boundary=not_established host_probe=none"
+        )]
+        resolved_lines = [match for line in lines if (match := self._resolved_re.fullmatch(line))]
+        issue_lines = [match for line in lines if (match := self._issue_re.fullmatch(line))]
+        terminal_lines = [match for line in lines if (match := self._terminal_re.fullmatch(line))]
+        known_lines = [
+            line
+            for line in lines
+            if line.startswith((
+                "PATHSCOPE shell=",
+                "PATHSCOPE semantics=",
+                "PATHSCOPE resolved_",
+                "PATHSCOPE unresolved_",
+                "PATH ",
+                "ENDPOINT ",
+                "UNRESOLVED ",
+                "PATHSCOPE accounting_summary=",
+                "VALUE_ACCOUNT ",
+                "MEMBER ",
+                "ACCOUNTING_FAULT ",
+                "PATHSCOPE verdict=",
+            ))
+        ]
+        if len(known_lines) != len(lines):
+            return self._stop_result(member_id, "prover_output_unknown_record", process_rc)
+        if (
+            len(shell_headers) != 1
+            or len(semantics_headers) != 1
+            or len(resolved_headers) != 1
+            or len(issue_headers) != 1
+            or len(verdict_headers) != 1
+            or len(semantics) != 1
+            or len(resolved_lines) != 1
+            or len(issue_lines) != 1
+            or len(terminal_lines) != 1
+        ):
+            return self._stop_result(member_id, "prover_output_grammar_incomplete", process_rc)
+        if not (
+            lines[0].startswith("PATHSCOPE shell=")
+            and lines[1] == semantics[0]
+            and self._resolved_re.fullmatch(lines[2]) is not None
+            and self._issue_re.fullmatch(lines[3]) is not None
+            and self._terminal_re.fullmatch(lines[-1]) is not None
+        ):
+            return self._stop_result(member_id, "prover_output_order_invalid", process_rc)
+        middle_ranks: list[int] = []
+        for line in lines[4:-1]:
+            if line.startswith(("PATH ", "ENDPOINT ", "UNRESOLVED ")):
+                middle_ranks.append(0)
+            elif line.startswith("PATHSCOPE accounting_summary="):
+                middle_ranks.append(1)
+            elif line.startswith("VALUE_ACCOUNT "):
+                middle_ranks.append(2)
+            elif line.startswith("MEMBER "):
+                middle_ranks.append(3)
+            elif line.startswith("ACCOUNTING_FAULT "):
+                middle_ranks.append(4)
+        if middle_ranks != sorted(middle_ranks):
+            return self._stop_result(member_id, "prover_output_order_invalid", process_rc)
+
+        resolved_fs, resolved_net = (int(value) for value in resolved_lines[0].groups())
+        unresolved_path, unresolved_endpoint, coverage, provenance, parse = (
+            int(value) for value in issue_lines[0].groups()
+        )
+        path_records = [line for line in lines if line.startswith("PATH ")]
+        endpoint_records = [line for line in lines if line.startswith("ENDPOINT ")]
+        unresolved_records = [line for line in lines if line.startswith("UNRESOLVED ")]
+        summary_records = [
+            line for line in lines if line.startswith("PATHSCOPE accounting_summary=")
+        ]
+        value_records = [line for line in lines if line.startswith("VALUE_ACCOUNT ")]
+        member_records = [line for line in lines if line.startswith("MEMBER ")]
+        fault_records = [line for line in lines if line.startswith("ACCOUNTING_FAULT ")]
+        accounting_records = summary_records + value_records + member_records + fault_records
+
+        if len(path_records) != resolved_fs or len(endpoint_records) != resolved_net:
+            return self._stop_result(member_id, "prover_resolved_count_mismatch", process_rc)
+        unresolved_by_kind = {
+            "unresolved_path": 0,
+            "unresolved_endpoint": 0,
+            "coverage": 0,
+            "provenance": 0,
+            "parse": 0,
+        }
+        for line in unresolved_records:
+            if line.count(" kind=") != 1:
+                return self._stop_result(member_id, "prover_unresolved_kind_ambiguous", process_rc)
+            match = self._unresolved_re.match(line)
+            if match is None:
+                return self._stop_result(member_id, "prover_unresolved_kind_missing", process_rc)
+            unresolved_by_kind[match.group(1)] += 1
+        if (
+            unresolved_by_kind["unresolved_path"] != unresolved_path
+            or unresolved_by_kind["unresolved_endpoint"] != unresolved_endpoint
+            or unresolved_by_kind["coverage"] != coverage
+            or unresolved_by_kind["provenance"] != provenance
+            or unresolved_by_kind["parse"] != parse
+        ):
+            return self._stop_result(member_id, "prover_issue_count_mismatch", process_rc)
+        for line in path_records:
+            if line.count(" verdict=") != 1:
+                return self._stop_result(member_id, "prover_path_disposition_ambiguous", process_rc)
+            disposition = line.split(" verdict=", 1)[1].split(" ", 1)[0]
+            if disposition not in {"ALLOW-LEXICAL", "FORBID"}:
+                return self._stop_result(member_id, "prover_path_disposition_missing", process_rc)
+        for line in endpoint_records:
+            if line.count(" verdict=") != 1:
+                return self._stop_result(member_id, "prover_endpoint_disposition_ambiguous", process_rc)
+            disposition = line.split(" verdict=", 1)[1].split(" ", 1)[0]
+            if disposition not in {"ALLOW", "FORBID"}:
+                return self._stop_result(member_id, "prover_endpoint_disposition_missing", process_rc)
+
+        if len(summary_records) > 1:
+            return self._stop_result(member_id, "prover_accounting_summary_cardinality", process_rc)
+        if not summary_records and accounting_records:
+            return self._stop_result(member_id, "prover_accounting_summary_missing", process_rc)
+        summary_match = (
+            self._accounting_summary_re.fullmatch(summary_records[0])
+            if summary_records
+            else None
+        )
+        if summary_records and summary_match is None:
+            return self._stop_result(member_id, "prover_accounting_summary_malformed", process_rc)
+        value_matches = [self._value_account_re.fullmatch(line) for line in value_records]
+        member_matches = [self._member_re.fullmatch(line) for line in member_records]
+        fault_matches = [self._accounting_fault_re.fullmatch(line) for line in fault_records]
+        if any(match is None for match in value_matches):
+            return self._stop_result(member_id, "prover_value_account_malformed", process_rc)
+        if any(match is None for match in member_matches):
+            return self._stop_result(member_id, "prover_member_record_malformed", process_rc)
+        if any(match is None for match in fault_matches):
+            return self._stop_result(member_id, "prover_accounting_fault_malformed", process_rc)
+
+        accounting_state: str | None = None
+        member_fields: list[dict[str, Any]] = []
+        if summary_match is not None:
+            accounting_state = summary_match.group(1)
+            admitted_count, member_count, disposition_count, fault_count = (
+                int(value) for value in summary_match.groups()[1:]
+            )
+            if accounting_state == "FAIL":
+                if fault_count <= 0 or len(fault_records) != fault_count:
+                    return self._stop_result(
+                        member_id, "prover_accounting_fault_count_mismatch", process_rc
+                    )
+            else:
+                if (
+                    admitted_count <= 0
+                    or fault_count != 0
+                    or fault_records
+                    or admitted_count != len(value_records)
+                    or member_count != len(member_records)
+                    or disposition_count != len(member_records)
+                ):
+                    return self._stop_result(
+                        member_id, "prover_accounting_count_mismatch", process_rc
+                    )
+                value_fields: dict[str, tuple[int, int, str]] = {}
+                for match in value_matches:
+                    assert match is not None
+                    value_id, _line, site, member_total, disposition_total, conserved = match.groups()
+                    if value_id in value_fields or self._decode_b64u(site) is None:
+                        return self._stop_result(
+                            member_id, "prover_value_account_identity_or_escape", process_rc
+                        )
+                    value_fields[value_id] = (
+                        int(member_total), int(disposition_total), conserved
+                    )
+
+                seen_member_ids: set[str] = set()
+                per_value_members: dict[str, list[dict[str, Any]]] = {
+                    value_id: [] for value_id in value_fields
+                }
+                for match in member_matches:
+                    assert match is not None
+                    (
+                        occurrence_id, value_id, reading, ordinal, span_start, span_end,
+                        raw_slices_token, text_token, sources, disposition, reason,
+                        rule, candidate_domain, candidate_token,
+                    ) = match.groups()
+                    if (
+                        occurrence_id in seen_member_ids
+                        or value_id not in value_fields
+                        or not occurrence_id.startswith(value_id + ".")
+                        or int(span_end) < int(span_start)
+                        or not occurrence_id.endswith(
+                            f".{reading}.M{int(ordinal):04d}"
+                        )
+                    ):
+                        return self._stop_result(
+                            member_id, "prover_member_identity_mismatch", process_rc
+                        )
+                    seen_member_ids.add(occurrence_id)
+                    raw_slices_text = self._decode_b64u(raw_slices_token)
+                    rendered_text = self._decode_b64u(text_token)
+                    if raw_slices_text is None or rendered_text is None:
+                        return self._stop_result(
+                            member_id, "prover_member_escape_invalid", process_rc
+                        )
+                    try:
+                        raw_slices = json.loads(raw_slices_text)
+                    except json.JSONDecodeError:
+                        return self._stop_result(
+                            member_id, "prover_member_raw_slices_invalid", process_rc
+                        )
+                    if (
+                        not isinstance(raw_slices, list)
+                        or json.dumps(
+                            raw_slices,
+                            ensure_ascii=True,
+                            separators=(",", ":"),
+                            sort_keys=True,
+                        ) != raw_slices_text
+                        or any(
+                            not isinstance(item, dict)
+                            or set(item) != {"origin", "raw_end", "raw_start", "raw_text"}
+                            or item["origin"] not in {
+                                "literal", "escape", "quote_elision",
+                                "parameter_expansion", "fallback_expansion",
+                                "semantic_pwd_substitution",
+                            }
+                            or not isinstance(item["raw_start"], int)
+                            or not isinstance(item["raw_end"], int)
+                            or item["raw_end"] < item["raw_start"]
+                            or not isinstance(item["raw_text"], str)
+                            or item["raw_end"] - item["raw_start"] != len(item["raw_text"])
+                            for item in raw_slices
+                        )
+                    ):
+                        return self._stop_result(
+                            member_id, "prover_member_raw_slices_invalid", process_rc
+                        )
+                    decoded_rule = None if rule == "-" else self._decode_b64u(rule)
+                    decoded_candidate = (
+                        None if candidate_token == "-" else self._decode_b64u(candidate_token)
+                    )
+                    if (rule != "-" and decoded_rule is None) or (
+                        candidate_token != "-" and decoded_candidate is None
+                    ):
+                        return self._stop_result(
+                            member_id, "prover_member_escape_invalid", process_rc
+                        )
+                    fields = {
+                        "member_id": occurrence_id,
+                        "value_id": value_id,
+                        "reading": reading,
+                        "ordinal": int(ordinal),
+                        "span_start": int(span_start),
+                        "span_end": int(span_end),
+                        "text": rendered_text,
+                        "sources": sources,
+                        "disposition": disposition,
+                        "reason": reason,
+                        "rule": decoded_rule,
+                        "candidate_domain": candidate_domain,
+                        "candidate_value": decoded_candidate,
+                    }
+                    member_fields.append(fields)
+                    per_value_members[value_id].append(fields)
+
+                for value_id, (expected_members, expected_dispositions, conserved) in value_fields.items():
+                    actual = len(per_value_members[value_id])
+                    if expected_members != actual or expected_dispositions != actual or conserved != "true":
+                        return self._stop_result(
+                            member_id, "prover_value_account_count_mismatch", process_rc
+                        )
+                    by_reading: dict[str, list[dict[str, Any]]] = {}
+                    for fields in per_value_members[value_id]:
+                        by_reading.setdefault(fields["reading"], []).append(fields)
+                    if (
+                        len(by_reading.get("whole", [])) != 1
+                        or by_reading["whole"][0]["ordinal"] != 0
+                        or any(
+                            sorted(item["ordinal"] for item in items)
+                            != list(range(len(items)))
+                            for items in by_reading.values()
+                        )
+                    ):
+                        return self._stop_result(
+                            member_id, "prover_member_reading_cardinality_mismatch", process_rc
+                        )
+
+                for fields in member_fields:
+                    siblings = per_value_members[fields["value_id"]]
+                    active_children = any(item["reading"] != "whole" for item in siblings)
+                    disposition = fields["disposition"]
+                    reason = fields["reason"]
+                    reading = fields["reading"]
+                    text = fields["text"]
+                    endpoint_shaped = re.match(r"^[A-Za-z][A-Za-z0-9+.-]*://", text) is not None
+                    path_shaped = (
+                        text.startswith(("/", "./", "../"))
+                        or ("/" in text and not text.startswith("-"))
+                    )
+                    no_candidate = (
+                        fields["rule"] is None
+                        and fields["candidate_domain"] == "none"
+                        and fields["candidate_value"] is None
+                    )
+                    valid = False
+                    if reading in {"words", "word-colon"}:
+                        valid = (
+                            disposition == "UNRESOLVED_FAIL_CLOSED"
+                            and reason == "consumer_word_semantics_unmodeled"
+                        )
+                    elif reason in {"whole_scalar_no_lexical_sink", "empty_scalar_no_lexical_sink"}:
+                        valid = (
+                            disposition == "ALLOWED_WITH_REASON"
+                            and reading == "whole"
+                            and not active_children
+                            and (
+                                (reason == "empty_scalar_no_lexical_sink" and text == "")
+                                or (
+                                    reason == "whole_scalar_no_lexical_sink"
+                                    and text != ""
+                                    and not endpoint_shaped
+                                    and not path_shaped
+                                    and re.match(r"^--?[A-Za-z0-9?]", text) is None
+                                )
+                            )
+                            and no_candidate
+                        )
+                    elif reason == "whole_container_decomposed":
+                        valid = (
+                            disposition == "ALLOWED_WITH_REASON"
+                            and reading == "whole"
+                            and active_children
+                            and not endpoint_shaped
+                            and not path_shaped
+                            and no_candidate
+                        )
+                    elif reason == "member_consumer_search_unmodeled":
+                        valid = (
+                            disposition == "UNRESOLVED_FAIL_CLOSED"
+                            and reading == "colon"
+                            and text != ""
+                            and not endpoint_shaped
+                            and not path_shaped
+                            and no_candidate
+                        )
+                    elif reason == "member_allowlisted":
+                        valid = (
+                            disposition == "ALLOWED_WITH_REASON"
+                            and fields["rule"] is not None
+                            and fields["candidate_domain"] in {"fs", "net"}
+                            and fields["candidate_value"] is not None
+                            and fields["sources"] != "-"
+                            and reading in {"whole", "colon"}
+                            and not (
+                                reading == "colon"
+                                and fields["text"] == ""
+                                and fields["sources"] != "PWD"
+                            )
+                        )
+                    elif reason == "member_outside_allowlist":
+                        valid = (
+                            disposition == "FORBIDDEN_WITH_REASON"
+                            and fields["rule"] is None
+                            and fields["candidate_domain"] in {"fs", "net"}
+                            and fields["candidate_value"] is not None
+                            and reading in {"whole", "colon"}
+                        )
+                    elif reason == "opaque_assignment_expansion":
+                        valid = (
+                            disposition == "UNRESOLVED_FAIL_CLOSED"
+                            and reading == "whole"
+                            and fields["span_start"] == fields["span_end"] == 0
+                            and no_candidate
+                        )
+                    elif reason == "member_pwd_unavailable":
+                        valid = (
+                            disposition == "UNRESOLVED_FAIL_CLOSED"
+                            and reading == "colon"
+                            and text == ""
+                            and fields["sources"] == "-"
+                            and no_candidate
+                        )
+                    elif reason == "member_normalization_failed":
+                        valid = (
+                            disposition == "UNRESOLVED_FAIL_CLOSED"
+                            and reading in {"whole", "colon"}
+                            and (endpoint_shaped or path_shaped or text == "")
+                            and no_candidate
+                        )
+                    elif reason == "member_exact_provenance_missing":
+                        valid = (
+                            disposition == "UNRESOLVED_FAIL_CLOSED"
+                            and reading in {"whole", "colon"}
+                            and fields["sources"] == "-"
+                            and fields["rule"] is not None
+                            and fields["candidate_domain"] in {"fs", "net"}
+                            and fields["candidate_value"] is not None
+                        )
+                    elif reason == "member_option_semantics_unmodeled":
+                        valid = (
+                            disposition == "UNRESOLVED_FAIL_CLOSED"
+                            and reading == "whole"
+                            and re.match(r"^--?[A-Za-z0-9?]", text) is not None
+                            and no_candidate
+                        )
+                    elif reason == "member_classifier_no_terminal_rule":
+                        valid = disposition == "UNRESOLVED_FAIL_CLOSED" and no_candidate
+                    if (
+                        valid
+                        and reason != "opaque_assignment_expansion"
+                        and fields["span_end"] - fields["span_start"] != len(text)
+                    ):
+                        valid = False
+                    if not valid:
+                        return self._stop_result(
+                            member_id, "prover_member_reason_reading_mismatch", process_rc
+                        )
+
+                for fields in member_fields:
+                    candidate = fields["candidate_value"]
+                    domain = fields["candidate_domain"]
+                    if domain not in {"fs", "net"}:
+                        if candidate is not None:
+                            return self._stop_result(
+                                member_id, "prover_member_candidate_domain_mismatch", process_rc
+                            )
+                        continue
+                    if candidate is None:
+                        return self._stop_result(
+                            member_id, "prover_member_candidate_domain_mismatch", process_rc
+                        )
+                    label = "PATH" if domain == "fs" else "ENDPOINT"
+                    marker = f"member_id={fields['member_id']}"
+                    projection_matches = [
+                        line
+                        for line in (path_records if domain == "fs" else endpoint_records)
+                        if line.startswith(f"{label} value={candidate} verdict=")
+                        and line.count(marker) == 1
+                    ]
+                    if len(projection_matches) != 1:
+                        return self._stop_result(
+                            member_id, "prover_member_projection_mismatch", process_rc
+                        )
+
+        terminal_verdict, terminal_rc_text, terminal_reason = terminal_lines[0].groups()
+        terminal_rc = int(terminal_rc_text)
+        if process_rc != terminal_rc:
+            return self._stop_result(member_id, "prover_process_terminal_rc_mismatch", process_rc)
+        total_issues = unresolved_path + unresolved_endpoint + coverage + provenance + parse
+        has_member_unresolved = any(
+            fields["disposition"] == "UNRESOLVED_FAIL_CLOSED" for fields in member_fields
+        )
+        has_member_forbid = any(
+            fields["disposition"] == "FORBIDDEN_WITH_REASON" for fields in member_fields
+        )
+        has_projection_forbid = any(
+            " verdict=FORBID " in line for line in path_records + endpoint_records
+        )
+        if accounting_state == "FAIL":
+            verdict = Verdict.STOP
+            reason = "prover_accounting_invariant_failed"
+            if (
+                terminal_verdict != "REJECT"
+                or terminal_rc != RC_STOP
+                or terminal_reason != "accounting_invariant_failed"
+            ):
+                return self._stop_result(
+                    member_id, "prover_accounting_terminal_mismatch", process_rc
+                )
+        elif total_issues:
+            verdict = Verdict.STOP
+            reason = "prover_static_resolution_incomplete"
+            if terminal_verdict != "REJECT" or terminal_rc != RC_STOP:
+                return self._stop_result(member_id, "prover_issue_terminal_mismatch", process_rc)
+            if terminal_reason != "static_resolution_incomplete":
+                return self._stop_result(member_id, "prover_issue_reason_mismatch", process_rc)
+        elif accounting_state == "OK" and has_member_unresolved:
+            verdict = Verdict.STOP
+            reason = "prover_member_resolution_incomplete"
+            if (
+                terminal_verdict != "REJECT"
+                or terminal_rc != RC_STOP
+                or terminal_reason != "member_resolution_incomplete"
+            ):
+                return self._stop_result(
+                    member_id, "prover_member_terminal_mismatch", process_rc
+                )
+        elif has_member_forbid or has_projection_forbid:
+            verdict = Verdict.FAIL
+            reason = "prover_forbidden_operand"
+            if terminal_verdict != "REJECT" or terminal_rc != RC_FAIL:
+                return self._stop_result(member_id, "prover_forbid_terminal_mismatch", process_rc)
+            if terminal_reason != "path_outside_allowlist":
+                return self._stop_result(member_id, "prover_forbid_reason_mismatch", process_rc)
+        else:
+            verdict = Verdict.PASS
+            reason = "prover_closed_and_allowlisted_lexical_scope"
+            if terminal_verdict != "PASS" or terminal_rc != RC_PASS:
+                return self._stop_result(member_id, "prover_pass_terminal_mismatch", process_rc)
+            if terminal_reason != "closed_and_allowlisted_lexical_argv_scope":
+                return self._stop_result(member_id, "prover_pass_reason_mismatch", process_rc)
+
+        forwarded = tuple(
+            line
+            for line in lines
+            if line.startswith((
+                "PATH ", "ENDPOINT ", "UNRESOLVED ",
+                "PATHSCOPE accounting_summary=", "VALUE_ACCOUNT ", "MEMBER ",
+                "ACCOUNTING_FAULT ",
+            ))
+        )
+        return ProverMemberResult(
+            member_id,
+            verdict,
+            reason,
+            process_rc,
+            resolved_fs,
+            resolved_net,
+            unresolved_path,
+            unresolved_endpoint,
+            coverage,
+            provenance,
+            parse,
+            f"{terminal_verdict}:{terminal_rc}:{terminal_reason}",
+            forwarded,
+        )
 
     def _build_analysis_unit(self, request: PathProofRequest) -> tuple[str | None, str]:
         member_data = {member.member_id: member.data for member in request.shell_members}
@@ -2269,125 +2850,11 @@ class SubprocessPathProver:
             )
         except (OSError, UnicodeError, subprocess.TimeoutExpired) as exc:
             return self._stop_result(member_id, f"prover_invocation_{type(exc).__name__}")
-        if completed.stderr:
-            return self._stop_result(member_id, "prover_stderr_nonempty", completed.returncode)
-        lines = completed.stdout.splitlines()
-        shell_headers = [line for line in lines if line.startswith("PATHSCOPE shell=")]
-        semantics_headers = [line for line in lines if line.startswith("PATHSCOPE semantics=")]
-        resolved_headers = [line for line in lines if line.startswith("PATHSCOPE resolved_")]
-        issue_headers = [line for line in lines if line.startswith("PATHSCOPE unresolved_")]
-        verdict_headers = [line for line in lines if line.startswith("PATHSCOPE verdict=")]
-        semantics = [line for line in lines if line == (
-            "PATHSCOPE semantics=lexical_argv_scope symlink_resolution=not_established "
-            "mount_boundary=not_established host_probe=none"
-        )]
-        resolved_lines = [match for line in lines if (match := self._resolved_re.fullmatch(line))]
-        issue_lines = [match for line in lines if (match := self._issue_re.fullmatch(line))]
-        terminal_lines = [match for line in lines if (match := self._terminal_re.fullmatch(line))]
-        known_lines = [
-            line
-            for line in lines
-            if line.startswith(("PATHSCOPE shell=", "PATHSCOPE semantics=", "PATHSCOPE resolved_", "PATHSCOPE unresolved_", "PATH ", "ENDPOINT ", "UNRESOLVED ", "PATHSCOPE verdict="))
-        ]
-        if len(known_lines) != len(lines):
-            return self._stop_result(member_id, "prover_output_unknown_record", completed.returncode)
-        if (
-            len(shell_headers) != 1
-            or len(semantics_headers) != 1
-            or len(resolved_headers) != 1
-            or len(issue_headers) != 1
-            or len(verdict_headers) != 1
-            or len(semantics) != 1
-            or len(resolved_lines) != 1
-            or len(issue_lines) != 1
-            or len(terminal_lines) != 1
-        ):
-            return self._stop_result(member_id, "prover_output_grammar_incomplete", completed.returncode)
-        resolved_fs, resolved_net = (int(value) for value in resolved_lines[0].groups())
-        unresolved_path, unresolved_endpoint, coverage, provenance, parse = (
-            int(value) for value in issue_lines[0].groups()
-        )
-        path_records = [line for line in lines if line.startswith("PATH ")]
-        endpoint_records = [line for line in lines if line.startswith("ENDPOINT ")]
-        unresolved_records = [line for line in lines if line.startswith("UNRESOLVED ")]
-        if len(path_records) != resolved_fs or len(endpoint_records) != resolved_net:
-            return self._stop_result(member_id, "prover_resolved_count_mismatch", completed.returncode)
-        unresolved_by_kind = {
-            "unresolved_path": 0,
-            "unresolved_endpoint": 0,
-            "coverage": 0,
-            "provenance": 0,
-            "parse": 0,
-        }
-        for line in unresolved_records:
-            if line.count(" kind=") != 1:
-                return self._stop_result(member_id, "prover_unresolved_kind_ambiguous", completed.returncode)
-            match = self._unresolved_re.match(line)
-            if match is None:
-                return self._stop_result(member_id, "prover_unresolved_kind_missing", completed.returncode)
-            unresolved_by_kind[match.group(1)] += 1
-        if (
-            unresolved_by_kind["unresolved_path"] != unresolved_path
-            or unresolved_by_kind["unresolved_endpoint"] != unresolved_endpoint
-            or unresolved_by_kind["coverage"] != coverage
-            or unresolved_by_kind["provenance"] != provenance
-            or unresolved_by_kind["parse"] != parse
-        ):
-            return self._stop_result(member_id, "prover_issue_count_mismatch", completed.returncode)
-        for line in path_records:
-            if line.count(" verdict=") != 1:
-                return self._stop_result(member_id, "prover_path_disposition_ambiguous", completed.returncode)
-            disposition = line.split(" verdict=", 1)[1].split(" ", 1)[0]
-            if disposition not in {"ALLOW-LEXICAL", "FORBID"}:
-                return self._stop_result(member_id, "prover_path_disposition_missing", completed.returncode)
-        for line in endpoint_records:
-            if line.count(" verdict=") != 1:
-                return self._stop_result(member_id, "prover_endpoint_disposition_ambiguous", completed.returncode)
-            disposition = line.split(" verdict=", 1)[1].split(" ", 1)[0]
-            if disposition not in {"ALLOW", "FORBID"}:
-                return self._stop_result(member_id, "prover_endpoint_disposition_missing", completed.returncode)
-
-        terminal_verdict, terminal_rc_text, terminal_reason = terminal_lines[0].groups()
-        terminal_rc = int(terminal_rc_text)
-        if completed.returncode != terminal_rc:
-            return self._stop_result(member_id, "prover_process_terminal_rc_mismatch", completed.returncode)
-        total_issues = unresolved_path + unresolved_endpoint + coverage + provenance + parse
-        has_forbid = any(" verdict=FORBID " in line for line in path_records + endpoint_records)
-        if total_issues:
-            verdict = Verdict.STOP
-            reason = "prover_static_resolution_incomplete"
-            if terminal_verdict != "REJECT" or terminal_rc != RC_STOP:
-                return self._stop_result(member_id, "prover_issue_terminal_mismatch", completed.returncode)
-            if terminal_reason != "static_resolution_incomplete":
-                return self._stop_result(member_id, "prover_issue_reason_mismatch", completed.returncode)
-        elif has_forbid:
-            verdict = Verdict.FAIL
-            reason = "prover_forbidden_operand"
-            if terminal_verdict != "REJECT" or terminal_rc != RC_FAIL:
-                return self._stop_result(member_id, "prover_forbid_terminal_mismatch", completed.returncode)
-            if terminal_reason != "path_outside_allowlist":
-                return self._stop_result(member_id, "prover_forbid_reason_mismatch", completed.returncode)
-        else:
-            verdict = Verdict.PASS
-            reason = "prover_closed_and_allowlisted_lexical_scope"
-            if terminal_verdict != "PASS" or terminal_rc != RC_PASS:
-                return self._stop_result(member_id, "prover_pass_terminal_mismatch", completed.returncode)
-            if terminal_reason != "closed_and_allowlisted_lexical_argv_scope":
-                return self._stop_result(member_id, "prover_pass_reason_mismatch", completed.returncode)
-        return ProverMemberResult(
+        return self._interpret_output(
             member_id,
-            verdict,
-            reason,
             completed.returncode,
-            resolved_fs,
-            resolved_net,
-            unresolved_path,
-            unresolved_endpoint,
-            coverage,
-            provenance,
-            parse,
-            f"{terminal_verdict}:{terminal_rc}:{terminal_reason}",
-            tuple(path_records + endpoint_records + unresolved_records),
+            completed.stdout,
+            completed.stderr,
         )
 
     def prove(self, request: PathProofRequest) -> PathProofResult:
