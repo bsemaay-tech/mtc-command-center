@@ -191,7 +191,7 @@
 <div class="wrap">
 
   <header>
-    <p class="eyebrow">Status for Barış · 15 August 2026, 21:00</p>
+    <p class="eyebrow">Status for Barış · 15 August 2026, 22:30</p>
     <h1>What is left before the bridge runs on your Hostinger server</h1>
     <div class="rule"></div>
   </header>
@@ -199,12 +199,15 @@
   <section>
     <div class="tiles">
       <div class="tile"><span class="num">5</span><span class="cap">decisions waiting on you</span></div>
-      <div class="tile"><span class="num">55–105</span><span class="cap">work hours left to first start</span></div>
-      <div class="tile"><span class="num">10–15</span><span class="cap">sessions like tonight</span></div>
+      <div class="tile"><span class="num">withdrawn</span><span class="cap">total hours estimate</span></div>
+      <div class="tile"><span class="num">2</span><span class="cap">plans that contradict each other</span></div>
       <div class="tile"><span class="num">~64</span><span class="cap">hours spent so far</span></div>
     </div>
     <p class="lede">The finish line counted here is the one you chose: the bridge installed on the Hostinger KVM2 server as a locked-down service, started <strong>disarmed</strong>, testnet only, reachable only from the machine itself. No live trading, no real money, no arming.</p>
-    <p class="lede">One correction from tonight's review, because it moves the date: <strong>the deployment is the last step of a fixed chain, not a separate track.</strong> The plan puts the deployment gate after the current work package, its big review, the host verification run, and a further final review. Nothing lets it start earlier.</p>
+    <div class="callout">
+      <p><strong>I gave you a number earlier tonight and I am withdrawing it.</strong> The first version of this page said 55–105 hours. I then had a separate reviewer try to tear that estimate apart, and it succeeded: some rows were counted twice, several quoted hour figures that their sources do not actually contain, one contradicts the plan's own budget, and real work — final packet completion, a fresh server readiness run, the merge approval, two later gates — appears in no row at all. Worse, it put the code-merging step <em>after</em> the final review, which would invalidate that review.</p>
+      <p>Because some errors inflate the number and others leave work out, there is no honest way to patch one row and keep the total. Please do not plan around 55–105. What is trustworthy is below, in pieces.</p>
+    </div>
   </section>
 
   <section>
@@ -256,13 +259,14 @@
     </div>
     <div class="gates">
 
+      <div class="gate"><span class="name">Decide which plan is in charge</span><span class="pill p-partial">My work first</span><span class="note">Two plans describe this same deployment and neither mentions the other. One says the server work is the last step of a long chain; the other treats it as its own programme with its own gates. Nobody ever reconciled them, and the answer changes both the order and the hours. I will produce the reconciliation; you ratify it.</span></div>
       <div class="gate"><span class="name">Safety checker signed off</span><span class="pill p-blocked">Your call</span><span class="note">Failed tonight's audit. Four options above.</span></div>
       <div class="gate"><span class="name">Repaired safety rules accepted</span><span class="pill p-clear">Done</span><span class="note">Passed both independent flagship reviewers today with no required fixes.</span></div>
       <div class="gate"><span class="name">Work package frozen</span><span class="pill p-blocked">Blocked</span><span class="note">Waits on the safety-checker decision.</span></div>
       <div class="gate"><span class="name">The authorized server job runs</span><span class="pill p-blocked">Blocked</span><span class="note">Cannot start until the freeze exists.</span></div>
       <div class="gate"><span class="name">Hours ledger signed</span><span class="pill p-partial">Your signature</span><span class="note">Figure measured tonight and ready.</span></div>
       <div class="gate"><span class="name">Big independent review (Audit 2)</span><span class="pill p-blocked">Blocked</span><span class="note">Two fresh flagship reviewers, after the job closes.</span></div>
-      <div class="gate"><span class="name">Final review before the deployment gate</span><span class="pill p-todo">Not started</span><span class="note">A further round after the host verification run. It is the last thing before deployment is even allowed to be discussed.</span></div>
+      <div class="gate"><span class="name">Final review before the deployment gate</span><span class="pill p-todo">Not started</span><span class="note">A further round after the host verification run. Under the stricter of the two plans it is the last thing before deployment may even be discussed.</span></div>
       <div class="gate"><span class="name">Release candidate for the server</span><span class="pill p-todo">Not started</span><span class="note">Bigger than it sounds — see the next row. Needs one clean commit plus two independent sign-offs.</span></div>
       <div class="gate"><span class="name">Recover the server behaviour that already passed</span><span class="pill p-partial">Stranded</span><span class="note">Back in early August a version of the bridge passed the full server-readiness review — locked-down startup, no exchange connection, refuses to arm. That version was never merged, on purpose, and the mainline has moved on without it. Its approval cannot be transferred; the behaviour has to be brought forward and re-approved on the new version. This is the single largest surprise in tonight's review.</span></div>
       <div class="gate"><span class="name">Test suite green at that exact commit</span><span class="pill p-partial">1 real fix</span><span class="note">Measured tonight: 1019 pass, 2 fail. One fails only on Windows and will pass on the server; the other is a genuinely out-of-date test that must be corrected.</span></div>
@@ -281,41 +285,25 @@
   <section>
     <div class="sechead">
       <p class="eyebrow">Where the hours go</p>
-      <h2>55 to 105 hours, centred near 75</h2>
-    </div>
-    <div class="bar" role="img" aria-label="Of the remaining hours, roughly 31 to 56 are local work, 15 to 31 are work on the servers, 8 to 12 are independent reviews, and about an hour and a half is your own time.">
-      <span style="width:51%;background:var(--accent)"></span>
-      <span style="width:28%;background:var(--partial)"></span>
-      <span style="width:19%;background:var(--clear)"></span>
-      <span style="width:2%;background:var(--blocked)"></span>
-    </div>
-    <div class="legend">
-      <span><i class="swatch" style="background:var(--accent)"></i>Local work <b>31–56 h</b></span>
-      <span><i class="swatch" style="background:var(--partial)"></i>On the servers <b>15–31 h</b></span>
-      <span><i class="swatch" style="background:var(--clear)"></i>Independent reviews <b>8–12 h</b></span>
-      <span><i class="swatch" style="background:var(--blocked)"></i>Your own time <b>1–1.5 h</b></span>
+      <h2>What the hours actually are, in pieces</h2>
     </div>
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Stage, in the order it must happen</th><th class="n">Hours</th></tr></thead>
+        <thead><tr><th>Piece of work</th><th class="n">Hours</th><th>How solid</th></tr></thead>
         <tbody>
-          <tr><td>Safety-checker decision carried out and approved</td><td class="n">6–10</td></tr>
-          <tr><td>Freeze the work package</td><td class="n">7–14.5</td></tr>
-          <tr><td>Run it on the host and close it out</td><td class="n">4–8</td></tr>
-          <tr><td>Lock the checkpoint and the hours ledger</td><td class="n">2–4</td></tr>
-          <tr><td>The big independent review, allowing one repair round</td><td class="n">6–12</td></tr>
-          <tr><td>Host verification run</td><td class="n">4–8</td></tr>
-          <tr><td>Final freeze and the last review before deployment</td><td class="n">6–12</td></tr>
-          <tr><td>Build the server release and get its tests green</td><td class="n">12–20</td></tr>
-          <tr><td>Your decisions and the testnet wallet</td><td class="n">0.9–1.5</td></tr>
-          <tr><td>Install on the server; prove backups, rollback, monitoring</td><td class="n">5–10</td></tr>
-          <tr><td>Shut down the old writer; first disarmed start</td><td class="n">2.5–5</td></tr>
+          <tr><td>Safety-checker rebuild (decision 1, option C)</td><td class="n">6–10</td><td>Sourced and checked.</td></tr>
+          <tr><td>Freeze the work package, after decision 1</td><td class="n">6–12.5</td><td>Sourced and checked. The earlier 7–14.5 figure belonged to a different option.</td></tr>
+          <tr><td>Build the server release and get it accepted locally</td><td class="n">16–32</td><td>Sourced, and it already includes its own review rounds — which is where the double-counting crept in.</td></tr>
+          <tr><td>Fresh server-readiness run on a throwaway host</td><td class="n">5–9</td><td>Sourced.</td></tr>
+          <tr><td>Install, backups, rollback, monitoring, cutover, first start</td><td class="n">7.5–15</td><td>Sourced, all on servers.</td></tr>
+          <tr><td>Your own time across every decision and the wallet</td><td class="n">~1–1.5</td><td>Sourced.</td></tr>
+          <tr><td>Host verification run, its big review, final freeze and last review</td><td class="n">unknown</td><td><strong>Not priced anywhere.</strong> The plan reserves 3 hours for one of them and 6 hours for all reviews combined, which nobody believes is enough. This is the real gap.</td></tr>
         </tbody>
       </table>
     </div>
     <div class="callout">
-      <p><strong>How much to trust these numbers.</strong> The stages and their order come from the written plan and the deployment checklist; those are exact. The hours are estimates, and the honest warning is this project's own record: repair-and-re-review cycles have roughly doubled several previous estimates, four times in a row on the safety checker alone. That is why the top of the range is 105 and not 85.</p>
-      <p>The single biggest swing is decision 1. Everything downstream of it is idle until you answer.</p>
+      <p><strong>Why these do not simply add up.</strong> They overlap — the release-build row contains review work that other rows also count — and they are not in a safe order yet. Getting to one clean list where every job appears exactly once is the next piece of work, and it is mine, not yours.</p>
+      <p>What I can say without hedging: the smallest sourced pieces alone come to roughly 40 hours, several mandatory steps have no price yet, and this project's own record is that review cycles roughly double estimates. Treat "well over 40" as the floor and be sceptical of any single number until the two plans are reconciled.</p>
     </div>
   </section>
 
