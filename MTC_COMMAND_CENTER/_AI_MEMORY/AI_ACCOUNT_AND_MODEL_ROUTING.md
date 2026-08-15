@@ -112,6 +112,22 @@ To establish **identity or remaining quota**, use the live method instead — th
 
 Canonical GLM **model tiers and the cheapest-capable decision tree** live in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING. Do not copy that table here. Do **not** ask for or paste a Z.AI key anywhere — the wrapper pulls it from Credential Manager and never prints it.
 
+**GLM-5.3 is live and selectable (probed 2026-08-15 ~23:15 +03).** Owner asked
+for it after the recent launch. Verified with a real call, not a cache read:
+
+```powershell
+& 'C:\Users\BarışSemaay\bin\glm.ps1' -p "<prompt>" --model glm-5.3
+# -> PROBE_OK glm-5.3, exit 0
+```
+
+The wrapper's existing isolation applies unchanged (fresh temporary
+`CLAUDE_CONFIG_DIR` per invocation, key from Credential Manager). The standing
+constraint also applies unchanged and decides where GLM-5.3 is useful: **GLM
+cannot execute harnesses unattended here**, so its verdicts stay supplemental on
+anything requiring a run, and it suits source-level review, design second
+opinions, and cross-reading. Owner routing note 2026-08-15: use GLM as the audit
+route once the Claude Pro 5-hour window is spent, before reaching for Max.
+
 **Current state (2026-08-08): WORKING.** Snapshot: 5-hour quota 0% used; weekly quota 51% used, resetting Aug 9 at 11:26; MCP quota 0% used, resetting Aug 26 at 11:26. The plan auto-renews Aug 26 at $16.20. Route remains `glm.ps1` plus Credential Manager target `ZAI_GLM_CODING_PLAN_KEY`.
 
 ---
