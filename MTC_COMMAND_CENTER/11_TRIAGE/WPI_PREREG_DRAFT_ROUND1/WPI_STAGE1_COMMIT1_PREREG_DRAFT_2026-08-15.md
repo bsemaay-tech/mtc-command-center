@@ -10,7 +10,7 @@ This draft specifies the capture procedure that is intended to become Stage-1 Co
 
 This artifact is **attestation-only**. It captures evidence and performs no WP-I transport operation 01–12, no allocation on the host, no service operation, and no WP-I predicate run. The source contract expressly forbids any WP-I transport op between Commit 1 and Commit 2. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:502-505,528-533`
 
-This artifact is **read-only on the target host** in the following precise sense: the producer source below calls only process-local operations, read-only file opens, `readlink`, `stat`, hashing, and stdout/stderr writes to the already-established channel. It contains no filesystem write/create/delete/rename/chmod/chown API, no subprocess call, no socket creation, and no service API. Python is launched with `-I -S -B` under a cleared environment; `-B` and `PYTHONDONTWRITEBYTECODE=1` prevent bytecode-cache writes. The need for a cleared environment, pinned interpreter/helper selection, fixed cwd, and no attacker-directed temporary location follows the privileged-child defect rule. `MTC_COMMAND_CENTER/11_TRIAGE/DESIGN_DEFECT_PATTERNS_2026-08-10.md:243-299`
+This artifact is **read-only on the target host** in the following precise sense: the producer source below calls only process-local operations, read-only file opens, `readlink`, `stat`, hashing, and stdout/stderr writes to the already-established channel. It contains no filesystem write/create/delete/rename/chmod/chown API, no subprocess call, no socket creation, and no service API. Python is launched with `-I -S -B`, `PYTHONDONTWRITEBYTECODE=1`, and a cleared environment; the absolute runtime-level guarantee remains the explicit `UNKNOWN` below. The need for a cleared environment, pinned interpreter/helper selection, fixed cwd, and no attacker-directed temporary location follows the privileged-child defect rule. `MTC_COMMAND_CENTER/11_TRIAGE/DESIGN_DEFECT_PATTERNS_2026-08-10.md:243-299`
 
 The existing owner grant is narrow: one separately preregistered and committed root-session command set may read `/proc/self/mountinfo`, namespace links, the canonical root-mount identity, and production-time hashes, with no mutation. This draft does not enlarge or spend that grant. `MTC_COMMAND_CENTER/11_TRIAGE/AUDIT2_READINESS_PACKAGE/WPI_FINAL_AUTHORITY_CONSOLIDATION_2026-08-15.md:32-36`
 
@@ -24,11 +24,15 @@ What settles it: a committed source must state the exact root-channel target and
 
 `SSH_INFRASTRUCTURE_SIDE_EFFECTS = UNKNOWN`. The producer payload cannot write target files, but the read sources do not establish whether sshd, PAM, auditd, or the root-channel wrapper writes connection/accounting logs. If “no mutation” includes infrastructure logging, an authoritative host-channel statement or a read-only execution environment proving those facilities cannot write is required before Commit 1. No weaker claim is made here. The catalogue requires the claim sentence to stay within what the predicate establishes. `MTC_COMMAND_CENTER/11_TRIAGE/DESIGN_DEFECT_PATTERNS_2026-08-10.md:547-613`
 
+`PRODUCER_RUNTIME_UNDOCUMENTED_WRITES = UNKNOWN`. The committed Python source contains no write-capable host-file operation, but the read sources do not prove the exact interpreter, loader, and standard-library runtime make no undocumented write syscall. What settles it is either an exact-runtime trace showing no target-file write/create/mutation syscall or an enforced execution boundary that denies all such syscalls and filesystem writes while preserving stdout/stderr. Until then, the draft proves the producer source’s read-only operation set, not an absolute property of uninspected runtime internals. The source contract itself identifies the outer Python runtime, startup mode, import graph, environment, and standard library as a trusted-base boundary in an earlier harness. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:173-194`
+
 ## 1. Fixed subject and allocation dependencies
 
 The attested staging subject is `GATEA-STAGING`; the later transport shape names address `172.24.55.233`, login `gatea`, and the pinned identity/known-hosts files. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_OWNER_DECISIONS_2026-08-15_NIGHT.md:35-38,60-60`; `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/TRANSPORT_PLAN.tsv:2-11`
 
-The frozen WP-I candidate carried by the source contract is `2ce41e34bceb599d80af24c5c33d835820ec321b`; its release and venv roots are `/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b` and `/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b`. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md:164-170`
+`CURRENT_STAGE1_CANDIDATE_AND_MAINPID = UNKNOWN`. The older source contract carries candidate `2ce41e34bceb599d80af24c5c33d835820ec321b` and RP7 value `WPI_MAINPID=189813`, but the later current work breakdown places Stage-1 allocation/Commit 1 only after Gate-A-forward integration and fresh exact-candidate A-0…A-9 staging. The older pair is therefore a historical contract input, not sufficient evidence of the current Stage-1 subject. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/WPI_PREREGISTRATION_DRAFT.md:164-170`; `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh:1387-1392`; `MTC_COMMAND_CENTER/11_TRIAGE/DEPLOY_WORK_BREAKDOWN_2026-08-15.md:43-49,93-99`
+
+What settles it: the authoritative candidate-identity record produced by the Gate-A-forward integration/fresh candidate-bound staging supplies `{{WPI_CANDIDATE_SHA}}`, and that same exact-candidate staging evidence supplies `{{WPI_MAINPID}}`. L1 may copy those identities into its allocation record only with those exact source paths; it must not infer them from R3 or adjacent acceptance. Until both sources exist, the final producer bytes and projection universe cannot be frozen.
 
 The source-fixed allocation parent consumed by `EXPECT_PARENT_MOUNT` is `/home/gatea`; `remote_setup_wpi.sh` names that exact parent and requires the covering-mount record in a fixed field order. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/remote_setup_wpi.sh:142-151,203-217`
 
@@ -37,6 +41,8 @@ The following values are dependencies on the Stage-1 allocation record now being
 | Draft token | Exact filler | Source of filler | Commit-1 rule |
 |---|---|---|---|
 | `{{ATTESTATION_RECORD_ID}}` | The one-use attestation record identifier allocated in the signed Stage-1 allocation record | Lane-L1 allocation record, exact field `ATTESTATION_RECORD_ID` | Must satisfy that record’s grammar/collision result; no independent typing |
+| `{{WPI_CANDIDATE_SHA}}` | Exact 40-lowercase-hex current candidate | Authoritative Gate-A-forward integration/fresh candidate-bound staging identity record, copied verbatim into L1 with source path | Must not be filled from the historical R3 candidate by inference |
+| `{{WPI_MAINPID}}` | Exact decimal MainPID bound to that candidate at the relevant fresh staging checkpoint | Authoritative exact-candidate staging evidence, copied verbatim into L1 with source path | Must not be filled from historical `189813` by inference |
 | `{{BASE}}` | One allocated `BASE` | Lane-L1 allocation record, field `BASE` | Informational binding; producer does not allocate or consume it |
 | `{{P0_RUNID}}` / `{{RO_RUNID}}` | The two derived RUNIDs | Lane-L1 allocation record | Informational binding only; no WP-I operation runs |
 | `{{REMOTE_BASE}}` | Exact `/home/gatea/wpi_staging_<BASE>` | Lane-L1 allocation record, field `REMOTE_BASE` | Used only to prove the allocation-parent relationship; no host path is created or opened by this capture |
@@ -77,10 +83,10 @@ Encoding and bytes: ASCII, LF line endings, no BOM, final LF. The exact producer
 Once §0.1’s outer root-channel route is fixed, the remote command string after that route is exactly:
 
 ```text
-/usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/root PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -I -S -B - --record-id {{ATTESTATION_RECORD_ID}} --candidate 2ce41e34bceb599d80af24c5c33d835820ec321b --allocation-parent /home/gatea --main-pid 189813 --producer-sha256 {{PRODUCER_SHA256}}
+/usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/root PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -I -S -B - --record-id {{ATTESTATION_RECORD_ID}} --candidate {{WPI_CANDIDATE_SHA}} --allocation-parent /home/gatea --main-pid {{WPI_MAINPID}} --producer-sha256 {{PRODUCER_SHA256}}
 ```
 
-Stdin is exactly the producer bytes named in §3.1. The producer calls `chdir('/')` before any observation and requires `cwd=/`. The accepted RP7 bytes freeze `WPI_MAINPID=189813`, and projection v2 includes `/proc/<WPI_MAINPID>/ns/net`. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh:1214-1227,1387-1392`
+Stdin is exactly the producer bytes named in §3.1 after the two identity tokens are filled from §1’s authoritative sources. The producer calls `chdir('/')` before any observation and requires `cwd=/`. Projection v2 includes the exact `/proc/<WPI_MAINPID>/ns/net` point. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh:1214-1227,1387-1392`
 
 No other environment entry is allowed. No argument may be shell-expanded, independently typed, or learned from the target. `{{ATTESTATION_RECORD_ID}}` comes only from L1 and `{{PRODUCER_SHA256}}` only from the finalized local producer bytes.
 
@@ -93,6 +99,7 @@ No other environment entry is allowed. No argument may be shell-expanded, indepe
 | `realpath`/`lstat`/`stat` | `/usr/bin/python3` chain, resolved interpreter leaf, `/`, `/home/gatea` | metadata read | These APIs inspect names/objects only; no mutation API exists in the producer |
 | `open` + `read` | resolved interpreter leaf | `O_RDONLY|O_CLOEXEC|O_NOFOLLOW` | The only open flags exclude create, truncate, append, and read-write; used only for evidence SHA-256 |
 | `open` + `read` | `/proc/self/mountinfo` | `O_RDONLY|O_CLOEXEC` | One complete byte-preserved read; no write-capable flag is present |
+| isolated Python startup and standard-library imports | runtime-selected system-Python library objects | read/execute only | The committed source exposes no import hook or write API; `-I -S -B` and the cleared environment are mandatory. Whether the pinned interpreter/runtime itself can make an undocumented write is **UNKNOWN** until exact-runtime execution tracing or an enforced write-syscall/filesystem denial settles it |
 | stdout/stderr write | inherited fd 1/fd 2 | channel output | Writes only to the established capture channel, not a target-host pathname |
 
 The source contract requires one complete byte-preserved `/proc/self/mountinfo` capture, the four `/proc/1/ns/*` link results, root identity, allocation-parent covering mount, and production-time binding. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:502-523`
@@ -116,7 +123,8 @@ Every record is ASCII and LF-terminated. Keys occur exactly once and in this exa
 ATTESTATION_V1_BEGIN
 protocol=normalised_path_projection_v2
 record_id=<safe-component>
-candidate=2ce41e34bceb599d80af24c5c33d835820ec321b
+candidate={{WPI_CANDIDATE_SHA}}
+main_pid={{WPI_MAINPID}}
 staging_host=GATEA-STAGING
 execution_euid=0
 cwd=/
@@ -155,9 +163,9 @@ import stat
 import sys
 
 STOP_PREFIX = "ATTESTATION_V1_STOP reason="
-FIXED_CANDIDATE = "2ce41e34bceb599d80af24c5c33d835820ec321b"
+FIXED_CANDIDATE = "{{WPI_CANDIDATE_SHA}}"
 FIXED_PARENT = "/home/gatea"
-FIXED_MAIN_PID = "189813"
+FIXED_MAIN_PID = "{{WPI_MAINPID}}"
 SAFE_COMPONENT = re.compile(r"^(?!-)(?!\.$)(?!\.\.$)[A-Za-z0-9._-]+$")
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -343,6 +351,10 @@ def main():
     producer_sha256 = args["--producer-sha256"]
     if not SAFE_COMPONENT.fullmatch(record_id):
         stop("record_id_grammar")
+    if not re.fullmatch(r"[0-9a-f]{40}", FIXED_CANDIDATE):
+        stop("candidate_identity_grammar")
+    if not FIXED_MAIN_PID.isdigit() or len(FIXED_MAIN_PID) < 2:
+        stop("main_pid_grammar")
     if candidate != FIXED_CANDIDATE or allocation_parent != FIXED_PARENT or main_pid != FIXED_MAIN_PID:
         stop("fixed_argument_mismatch")
     if not HEX64.fullmatch(producer_sha256):
@@ -397,6 +409,7 @@ def main():
         "protocol=normalised_path_projection_v2",
         f"record_id={record_id}",
         f"candidate={FIXED_CANDIDATE}",
+        f"main_pid={FIXED_MAIN_PID}",
         "staging_host=GATEA-STAGING",
         "execution_euid=0",
         "cwd=/",
@@ -469,6 +482,7 @@ ssh -F none -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519 -o BatchMode=yes -o Str
 | `git ls-files --others --exclude-standard` | operator | None: enumerates untracked paths; no target contact |
 | `git rev-parse --verify HEAD^{commit}` and `git rev-parse HEAD:<path>` | operator | None: reads object identities; no target contact |
 | `git hash-object --no-filters <path>` | operator | None: computes an object ID without `-w`; no object or target write |
+| `git ls-tree -r --name-only HEAD -- MTC_COMMAND_CENTER/11_TRIAGE/WPI_STAGE1_COMMIT1` | operator | None: force-inclusively enumerates committed package paths; no target contact |
 | local SHA-256/byte-count and local record creation | operator | None on target: writes only below `{{OPERATOR_ATTESTATION_ROOT}}` |
 | `ssh … ATT-01` | operator plus target channel | The SSH client opens the one approved connection; the remote payload is exactly §3.6 and has only the read/output operations listed in §3.3. Infrastructure logging remains the explicit `UNKNOWN` in §0.1 |
 
@@ -478,11 +492,12 @@ Before starting `ssh`, the recorder must, in this order:
 
 1. require empty output/diff from the three cleanliness commands in §4.2;
 2. derive `COMMIT_1` using `git rev-parse --verify HEAD^{commit}`;
-3. require every manifest member to exist at `COMMIT_1:<path>`;
-4. require `git hash-object --no-filters <worktree-path>` to equal `git rev-parse COMMIT_1:<path>`, proving the exact sent/worktree bytes equal the committed blob rather than merely a filtered checkout;
-5. verify each declared byte count and SHA-256 against the exact worktree bytes;
-6. create the local record at the L1-supplied create-once operator root and make its first line `attestation_prereg_commit=<COMMIT_1>`; and
-7. only then open the socket and send the exact producer bytes.
+3. require `git ls-tree -r --name-only COMMIT_1 -- MTC_COMMAND_CENTER/11_TRIAGE/WPI_STAGE1_COMMIT1` to return exactly the three paths in §6, with no hidden or extra member;
+4. require every manifest member to exist at `COMMIT_1:<path>`;
+5. require `git hash-object --no-filters <worktree-path>` to equal `git rev-parse COMMIT_1:<path>`, proving the exact sent/worktree bytes equal the committed blob rather than merely a filtered checkout;
+6. verify each declared byte count and SHA-256 against the exact worktree bytes;
+7. create the local record at the L1-supplied create-once operator root and make its first line `attestation_prereg_commit=<COMMIT_1>`; and
+8. only then open the socket and send the exact producer bytes.
 
 The source contract requires a clean checkout, current-HEAD derivation, proof that HEAD contains the exact procedure and package manifest, and emission of `attestation_prereg_commit=<COMMIT_1>` before socket or root command. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/WPI_SUCCESSOR_PREREG_DRAFT_R3_2026-08-11.md:519-533`
 
@@ -524,8 +539,8 @@ The exact 21 point paths, in order, are:
 8. `/usr/bin/curl`
 9. `/usr/bin/timeout`
 10. the captured exact `WPI_FIXED_TRUSTED_PYTHON` leaf
-11. `/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b`
-12. `/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b`
+11. `/opt/mtc-bridge/releases/{{WPI_CANDIDATE_SHA}}`
+12. `/opt/mtc-bridge/venvs/{{WPI_CANDIDATE_SHA}}`
 13. `/usr/local/lib/systemd/system/mtc-bridge-first-start.service`
 14. `/var/lib/mtc-bridge`
 15. `/var/log/mtc-bridge`
@@ -534,7 +549,7 @@ The exact 21 point paths, in order, are:
 18. `<release>/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py`
 19. `/proc/self/mountinfo`
 20. `/proc/self/ns/net`
-21. `/proc/189813/ns/net`
+21. `/proc/{{WPI_MAINPID}}/ns/net`
 
 This is the accepted RP7 point array and count. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7-WPI-RO.sh:1214-1222,1280-1281`
 
@@ -568,17 +583,18 @@ The later order proof must establish strict Commit-1 ancestry of Commit 2, evide
 
 | Class | Count | Terminal disposition |
 |---|---:|---|
-| L1 allocation dependencies | 6 token families | Every token has one named L1 field source in §1; none may remain in Commit 1 |
+| L1/allocation-record dependencies | 8 rows / 9 literal tokens | Every token has one named source in §1; candidate/MainPID require upstream identity evidence copied into L1, and none may remain in Commit 1 |
 | Host observations | 10 fields | Every field remains exactly `NOT-YET-OBSERVED — MUST NOT BE CONSUMED` in Commit 1 and has one successful-output source in §2 |
-| Local build identities | 3 producer byte-hash-blob fields plus preregistration byte-hash-blob fields in the manifest | Filled from finalized local bytes before Commit 1; never from host output |
+| Local build identities | 6 fields: producer and preregistration bytes/SHA-256/Git-blob identities | Filled from finalized local bytes before Commit 1; never from host output |
 | Root-channel route | 1 | `UNKNOWN`; blocks final outer argv and Commit 1 until an authoritative source settles it |
 | SSH infrastructure side effects | 1 | `UNKNOWN`; blocks an absolute whole-host “no mutation whatsoever” claim until settled |
+| Producer-runtime undocumented writes | 1 | `UNKNOWN`; blocks an absolute runtime-level no-write claim until tracing or enforcement settles it |
 
 The permanent conservation rule is that every admitted member must reach exactly one terminal disposition, with no overwrite, implicit filter, or unexplained count change. `MTC_COMMAND_CENTER/11_TRIAGE/DESIGN_DEFECT_PATTERNS_2026-08-10.md:933-967`
 
 ## 9. Self-verification record
 
-- Exactly one lane output is intended: this file outside the repository. No repository write, Git index operation, host/network contact, SSH, service action, credential use, deployment, broker/exchange contact, ARM/order action, TESTNET/mainnet action, Pine/parity/MTC/trading change, merge, push, or economic action is performed by this draft.
+- Exactly one lane output is intended: this file outside the repository. The lane contract forbids repository writes, index-locking Git, host/network/SSH and every listed operational/economic action. `C:\tmp\lane_kick\L2.md:5-18,67-80`
 - The producer has one stdout success grammar and one stderr STOP grammar; all observations precede the first stdout byte.
 - Projection conservation is fixed at 21 points and 6 roots, with later-record-wins ties and per-root count records.
 - Every target-side operation in the producer has a no-write explanation in §3.3.

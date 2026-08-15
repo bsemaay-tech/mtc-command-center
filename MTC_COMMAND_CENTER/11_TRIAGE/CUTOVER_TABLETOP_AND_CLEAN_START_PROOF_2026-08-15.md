@@ -67,10 +67,10 @@ Two framing facts for everything below:
   service, scheduler, listener, network, secret, exchange, or writer mutation"
   (`TASKS:294-296`). Its stop conditions: any live mutation; an unresolved abort/PC-off/
   dual-writer case; a procedure implying permanent Windows dependency; the tabletop cited
-  as P4-04A quiesce or P4-05 cutover authority (`TASKS:300-303`). **This document is not
+  as P4-04A quiesce or P4-05 cutover authority (`TASKS:300-302`). **This document is not
   authority for P4-04A or P4-05.**
 - The ordered proof being rehearsed is checklist item 6 (`LIST:132-138`) with the fuller
-  P4-05 detail (`TASKS:313-330`).
+  P4-05 detail (`TASKS:313-330`, ordered checklist at `TASKS:314-325`).
 - In the work breakdown this is row R39, placed **before** R40 (quiesce) and R42
   (cutover) in **both** contested orderings (`WBS:103-104` Ordering A;
   `WBS:124` Ordering B), so the tabletop's position does not depend on the unsettled
@@ -96,7 +96,7 @@ S3  one writer    : first VPS DISARMED start (separate P4-06/P4-07 authority)
 transition is evidenced in a timestamped ordered record (`TASKS:324-325`), and no abort
 path may ever create S1' (Windows recovered) while any VPS writer authority exists —
 P4-04 requires "VPS authority absent before any owner-controlled DISARMED Windows
-recovery" (`TASKS:297-298`).
+recovery" (`TASKS:296-298`).
 
 "VPS authority absent" is checkable, not assumed. Grounded composition of that check
 (the actual current state of KVM2 is **UNKNOWN** — see §1.6): the service must be
@@ -110,7 +110,7 @@ inference.
 ### 1.3 The tabletop script
 
 Spine = item 6's exact order (`LIST:133-138`), with the P4-05 state-policy tail
-(`TASKS:318-325`) executed under the D5 reset branch. Every step is a **paper action**:
+(`TASKS:319-325`) executed under the D5 reset branch. Every step is a **paper action**:
 the tabletop walks who would do what, what evidence would exist afterwards, and what
 would stop the procedure. Nothing is executed.
 
@@ -126,16 +126,16 @@ not a result", `DDP:48-107`, rule at `DDP:101-107`):
 
 | # | Step (item 6 order) | Actor | Evidence produced | Pass condition | Stops the cutover when | Abort path |
 |---|---|---|---|---|---|---|
-| T0 | Preconditions: P4-04A closed; P4-05 authorization exists; destination release identity frozen (exact SHA/config to be recorded in T1); R41 operations evidence already executed under Ordering A (`WBS:103-104`; `RR:337-341`) | Owner/Lead | Owner sentences; frozen-SHA record | all present and cited | any precondition absent, or this tabletop cited as one of them | AB-0 (below): no cutover; nothing has happened yet |
+| T0 | Preconditions: P4-04A closed; P4-05 authorization exists; destination release identity frozen (exact SHA/config to be recorded in T1); R41 operations evidence already executed under Ordering A (`WBS:103-110`; `RR:327-341`) | Owner/Lead | Owner sentences; frozen-SHA record | all present and cited | any precondition absent, or this tabletop cited as one of them | AB-0 (below): no cutover; nothing has happened yet |
 | T1 | Record exact SHA/config (`LIST:133`) | Owner | recorded destination release SHA + config identity in the ordered record | identity recorded and unambiguous | no frozen accepted SHA exists (current status: **UNKNOWN/open**, `RR:82-102`, `WBS:23-24`) | AB-0 |
-| T2 | Confirm DISARMED (`LIST:133`; `TASKS:314`) | Owner (owner-controlled live state, `TASKS:28-33`) | DISARMED proof of the running old bridge | state == DISARMED positively observed | state is ARMED (FAIL) or state cannot be observed (STOP) | AB-1 |
-| T3 | Obtain a fresh reconcile (`LIST:133`; `TASKS:314`) | Owner | reconcile-freshness evidence (documented status surface: `mode`, `exchange_conn`, `reconcile_ready`, `state`, `DEP:53-54`) | reconcile fresh | stale/absent reconcile, or status unreadable | AB-1 |
-| T4 | Capture **raw empty positions and raw empty orders** (first capture, before stop/revocation) (`LIST:134`; `TASKS:315`; `DEC:108-110`) | Owner | timestamped raw exchange-side captures, no secrets (`TASKS:318-319`) | both empty | any non-empty position/order (FAIL) — flatten scope belongs to P4-04A, not here (`TASKS:306-308`); capture unreadable/ambiguous (STOP) | AB-1 |
-| T5 | Stop and disable the Windows task (`LIST:134`; `TASKS:315`) | Owner | task state evidence: stopped **and** disabled (`DEP:65-67` ritual; disable is what prevents a logon restart, `DEP:49-49`) | stopped + disabled both observed | only stopped, or state ambiguous | AB-2 |
-| T6 | Prove wrapper and child processes gone and port 8790 closed (`LIST:135`; `TASKS:315`) | Owner | process inventory + port-state evidence (runtime root is the isolated P2RT worktree wrapper, `DEP:14-20`; no P2RT mutation is authorized by any of this, `LIST:169-170`) | zero wrapper/children; 8790 closed on old host | any survivor process or open port (FAIL); cannot observe (STOP) | AB-2 |
-| T7 | Revoke the old-host agent (`LIST:136`; `TASKS:316`) | Owner | revocation record (name only; per-machine agent-wallet model in `DEP:22-27`) | revocation confirmed | revocation unconfirmed or unprovable | AB-2 |
-| T8 | Reconfirm raw empty positions and orders (second timestamped capture, post-revocation, taken VPS-side; pre/post-revocation responses captured without secrets) (`LIST:136-137`; `TASKS:316-319`) | Owner | second timestamped raw captures + pre/post responses, sanitized | both empty again | any non-empty or changed result (FAIL); unreadable (STOP) | AB-2 |
-| T9 | Apply the accepted state policy — **D5 reset branch** of the P4-05 tail (`TASKS:319-325`): (a) final source capture + SHA-256 (the Part 2 archive); (b) execute the conservative reset; (c) `integrity_check` passed; (d) semantic checks on daily-loss, consecutive-loss, foreign positions/orders, corrupt/unknown state; (e) source and destination artifact hashes + timestamped ordered record | Owner + executor | archive bundle + manifest + two externally recorded SHA-256; raw-capture hashes; pristine-destination evidence; ordered record | archive captured and verified; reset executed; destination pristine; all hashes bound | capture fails (exit 2/3, `WAL:54-59`), verify fails, any mismatch or **unknown** evidence (`TASKS:325`) | AB-2 / AB-3 |
+| T2 | Confirm DISARMED (`LIST:133`; `TASKS:315`) | Owner (owner-controlled live state, `TASKS:28-33`) | DISARMED proof of the running old bridge | state == DISARMED positively observed | state is ARMED (FAIL) or state cannot be observed (STOP) | AB-1 |
+| T3 | Obtain a fresh reconcile (`LIST:133-134`; `TASKS:315`) | Owner | reconcile-freshness evidence (documented status surface: `mode`, `exchange_conn`, `reconcile_ready`, `state`, `DEP:53-54`) | reconcile fresh | stale/absent reconcile, or status unreadable | AB-1 |
+| T4 | Capture **raw empty positions and raw empty orders** (first capture, before stop/revocation) (`LIST:134`; `TASKS:315-316`; `DEC:108-110`) | Owner | timestamped raw exchange-side captures, no secrets (`TASKS:318-319`) | both empty | any non-empty position/order (FAIL) — flatten scope belongs to P4-04A, not here (`TASKS:306-308`); capture unreadable/ambiguous (STOP) | AB-1 |
+| T5 | Stop and disable the Windows task (`LIST:134-135`; `TASKS:316`) | Owner | task state evidence: stopped **and** disabled (`DEP:65-67` ritual; disable is what prevents a logon restart, `DEP:47-48,66`) | stopped + disabled both observed | only stopped, or state ambiguous | AB-2 |
+| T6 | Prove wrapper and child processes gone and port 8790 closed (`LIST:135-136`; `TASKS:316-317`) | Owner | process inventory + port-state evidence (runtime root is the isolated P2RT worktree wrapper, `DEP:14-20`; no P2RT mutation is authorized by any of this, `LIST:169-170`) | zero wrapper/children; 8790 closed on old host | any survivor process or open port (FAIL); cannot observe (STOP) | AB-2 |
+| T7 | Revoke the old-host agent (`LIST:136`; `TASKS:317`) | Owner | revocation record (name only; per-machine agent-wallet model in `DEP:22-27`) | revocation confirmed | revocation unconfirmed or unprovable | AB-2 |
+| T8 | Reconfirm raw empty positions and orders (second timestamped capture, post-revocation, taken VPS-side; pre/post-revocation responses captured without secrets) (`LIST:136-137`; `TASKS:317-319`) | Owner | second timestamped raw captures + pre/post responses, sanitized | both empty again | any non-empty or changed result (FAIL); unreadable (STOP) | AB-2 |
+| T9 | Apply the accepted state policy — **D5 reset branch** of the P4-05 tail (`TASKS:319-325`): (a) final source capture + SHA-256 (the Part 2 archive); (b) execute the conservative reset; (c) `integrity_check` passed; (d) semantic checks on daily-loss, consecutive-loss, foreign positions/orders, corrupt/unknown state; (e) source and destination artifact hashes + timestamped ordered record | Owner + executor | archive bundle + manifest + two externally recorded SHA-256; raw-capture hashes; pristine-destination evidence; ordered record | archive captured and verified; reset executed; destination pristine; all hashes bound | capture fails (exit 2/3, `WAL:54-59`), verify fails, any mismatch or **unknown** evidence (`TASKS:324-325`) | AB-2 / AB-3 |
 | T10 | Cutover proof complete — the item-6 record now exists in order; the first VPS service start becomes *permissible*, and remains separately gated by P4-06/P4-07 (`LIST:137-138`; `TASKS:331-348`) | Owner/Lead | complete ordered timestamped record | every T1–T9 outcome PASS | record incomplete or any step unrecorded | AB-2 / AB-3 |
 
 ### 1.4 Abort walks (the part P4-04 exists for)
@@ -164,7 +164,7 @@ path is:
    ordered record — "state/evidence preserved" (`TASKS:298`).
 2. Prove VPS authority absent (masked/inactive unit, no process, no listener, no
    provisioned wallet per `TASKS:278-284` and `DEC:80-87`) — this must be evidenced
-   **before** any Windows recovery is contemplated (`TASKS:297-298`).
+   **before** any Windows recovery is contemplated (`TASKS:296-298`).
 3. Only then may the owner choose an owner-controlled **DISARMED** Windows recovery
    (re-enable task, confirm DISARMED before anything else, per the migration ritual's
    disarm-first order, `DEP:65-68`). Recovery while ARMED, or while any doubt about VPS
@@ -195,12 +195,12 @@ WAL, which makes a later read-only archival capture fail closed (`WAL:230-236`) 
 escalation applies; (c) the ordered record must show the last completed step
 (timestamped), which is the only honest account of what state the world is in; (d) owner
 chooses: investigate/recover Windows DISARMED (after proving VPS authority absent,
-`TASKS:297-298`), or authorize a read-write recovery path as a new decision. A power
+`TASKS:296-298`), or authorize a read-write recovery path as a new decision. A power
 button is not an abort procedure; this walk exists so the decision is pre-made, not
 improvised.
 
 **PC-2 — PC powers off at T5–T8 (after stop/disable).** A disabled task does not come
-back with power (`DEP:49-49`, `Disable-ScheduledTask` semantics). State remains S2;
+back with power (`DEP:47-48,66`, `Disable-ScheduledTask` semantics). State remains S2;
 evidence already captured is preserved; walk is AB-2 unchanged. The point of walking
 this: the procedure's truth does not depend on the old machine surviving once it is
 stopped — which is also why the archive question (Part 3) matters.
@@ -210,7 +210,7 @@ secured off the old machine's liveness. Proceed by new authority (T10 → P4-06/
 the old machine's fate is now decoupled from the evidence record.
 
 **WR — Windows-recovery branch, walked as its own scenario.** Question: does any abort
-path imply a *permanent* Windows dependency (P4-04 stop condition, `TASKS:302-303`)?
+path imply a *permanent* Windows dependency (P4-04 stop condition, `TASKS:300-301`)?
 Answer walked: Windows recovery is a **fallback**, never the steady state. The steady
 state is S3 (VPS writer) reached through T10. Recovery exists only to exit S2 backward
 when the forward path is blocked, and requires proof of VPS-authority-absence first. If
@@ -224,7 +224,7 @@ and archive evidence (`TASKS:847-860`).
   the governing documents. Output: an adjudication record — every step and abort walk
   marked walked, every STOP/FAIL/abstention named, open questions listed, dated. Any
   **live** rehearsal (staging a fake quiesce, injecting a failure on a disposable host)
-  needs a separate future bounded owner authorization (`TASKS:299-300`).
+  needs a separate future bounded owner authorization (`TASKS:298-299`).
 - Falsifiability (DDP Pattern 10 — "evidence that cannot fail", `DDP:614-687`): a walked
   tabletop that cannot name an observation that would have stopped it is theater. Each
   row above therefore carries an explicit Stops-when column, and the adjudication record
@@ -239,7 +239,7 @@ and archive evidence (`TASKS:847-860`).
 
 Per the readiness refresh's bounded UNVERIFIED list, all of the following are unknown
 from the repository and none is inferred here (`RR:349-377`, especially `RR:206-211,
-366-370`): current Windows task/wrapper/child/writer/DB/port state; current reconcile
+365-370`): current Windows task/wrapper/child/writer/DB/port state; current reconcile
 freshness and raw exchange orders/positions; old-agent revocation state; whether a
 WAL-consistent source bundle can be captured now; any current KVM2 fact (install,
 listener, UFW, wallet existence). The tabletop rehearsing these checks is not evidence
@@ -324,7 +324,7 @@ cutover authorization (P4-05) would supply at execution time.
   same cutover record, cross-checked against the bundle: the bundle's `live_orders`
   invariant must be 0, matching the raw empty-orders capture. A bundle showing
   `live_orders > 0` against a raw empty capture is a mismatch and blocks ("any mismatch
-  or unknown evidence blocks the cutover", `TASKS:325`).
+  or unknown evidence blocks the cutover", `TASKS:324-325`).
 - A5. Verify the archive at rest: `wal_state_bundle.py verify --bundle-dir <archive>
   --expect-bundle-sha256 <A3 value> --expect-invariants-sha256 <A3 value>` on the copy
   at its final storage location, after transport (copy corruption is caught by the
