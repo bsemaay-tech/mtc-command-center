@@ -1,5 +1,49 @@
 # Deploy path synthesis — what actually stands between here and a KVM2 first start — 2026-08-15
 
+> ## ⚠ Correction — later the same evening
+>
+> An adversarial verification lane re-derived this document's load-bearing claims
+> from primary evidence. Record:
+> `NIGHT_CLAIM_VERIFICATION_2026-08-15.md`. Two results change how this file must
+> be read, and the Lead accepts both:
+>
+> - **§4's 55-105 hour estimate is REFUTED.** The arithmetic is right; the table
+>   is not. Row 2 reuses the Option-B range while row 1 already prices Option C,
+>   double-counting 1-2 h. Rows 3, 4, 5 and 7 quote hour ranges their cited
+>   sources do not contain. Row 6 contradicts the canonical 3 h WP-A budget. Row 8
+>   underprices integration against the newer direct estimate, mislabels its audit
+>   hours as local, **and places byte-changing integration after the final-SHA
+>   freeze and Audit 3, which would invalidate that acceptance.** Packet 9/10/11
+>   completion, fresh candidate-bound A-0..A-9 staging, the Gate-A merge
+>   authority, Gate B and WP-V appear nowhere. Some defects inflate and others
+>   omit, so no corrected total can be recovered by adjusting one row. **Do not
+>   budget against 55-105.** What survives is only that the eleven displayed
+>   numbers sum to that range.
+> - **§1's "deployment cannot run in parallel" is CONTESTED, not established.**
+>   The 50-hour plan is the later and stronger scheduling authority and does put
+>   Gate B at step 9. But the 2026-07-25 KVM2 master plan was never marked
+>   superseded, still names `BRIDGE_VPS_DEPLOY_TASK_LIST_2026-07-25.md` as the
+>   controlling lower-level authority, and runs its own Phase 0-4 chain that is
+>   not subordinated to Audit 2 / WP-A anywhere. Neither document reconciles the
+>   other. A reader may treat the gates as cumulative or the KVM2 bridge as its
+>   own program, and the choice materially changes both schedule and hours.
+> - §3's Windows-only framing of anomaly A1 is **confirmed only in a narrower
+>   form**: A1 fails whenever `ledger_schema.json` is materialized as CRLF and
+>   passes when the exact LF bytes are materialized. That is a byte condition, not
+>   an OS invariant, and a run on the actual deploy target is still not on record.
+>
+> §2's stranded-Gate-A finding and §1's citation of the canonical sequence are
+> **confirmed** — though the line reference below should read
+> `GLOBAL_HANDOFF.md:617-620`, not `:544-549`; the earlier numbers were shifted by
+> this session's own handoff entry.
+>
+> **What this means practically.** The two unreconciled plan authorities are now
+> the first thing to fix. Until one dependency-ordered, non-overlapping work
+> breakdown maps candidate integration, A-0..A-9, Packets 9/10/11, Audit 2, WP-A,
+> the final freeze with Audit 3 and Gate 6, Gate B and WP-V **exactly once**,
+> there is no honest total. Producing that breakdown is Lead work; ratifying which
+> plan authority dominates is an owner decision.
+
 Lead synthesis over three lanes completed tonight: the Bridge readiness refresh
 (`BRIDGE_VPS_DEPLOY_READINESS_REFRESH_2026-08-15.md`), the freeze-blocker
 reconciliation (`AUDIT2_READINESS_PACKAGE/AUDIT2_FREEZE_BLOCKER_RECONCILIATION_2026-08-15.md`),
