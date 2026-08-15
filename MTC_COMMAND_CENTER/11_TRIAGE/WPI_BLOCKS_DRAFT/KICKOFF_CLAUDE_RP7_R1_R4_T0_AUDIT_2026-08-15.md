@@ -1,7 +1,7 @@
 # RP7 R1-R4 T0 audit — Claude flagship
 
-Dispatch only after every `PENDING-FILL-AFTER-FREEZE` field is replaced from
-the frozen committed bytes. Any unfilled field is a dispatch BLOCK.
+All freeze fields below are filled from the frozen committed bytes. Any identity
+mismatch is a dispatch BLOCK.
 
 Auditor: fresh independent exact `claude-opus-5`, effort `xhigh`, T0. No
 resume/continue or sub-delegation. Read-only except the named verdict file. Do
@@ -9,14 +9,14 @@ not read the Codex verdict for this same round. No Git mutation, host/network
 contact, deployment, credentials, service mutation, broker/exchange access,
 ARM, orders, TESTNET, mainnet, Pine, parity, MTC, or trading action.
 
-Frozen candidate commit: `PENDING-FILL-AFTER-FREEZE`
+Frozen candidate commit: `80cbed461d0b0371e6eabbfff0e732e5001affaf`
 
 | artifact | bytes | SHA-256 |
 |---|---:|---|
-| `RP7-WPI-RO.sh` | `PENDING-FILL-AFTER-FREEZE` | `PENDING-FILL-AFTER-FREEZE` |
-| `SELF_QA_RP7.md` | `PENDING-FILL-AFTER-FREEZE` | `PENDING-FILL-AFTER-FREEZE` |
-| `STATUS_RP7.md` | `PENDING-FILL-AFTER-FREEZE` | `PENDING-FILL-AFTER-FREEZE` |
-| `RP7_ROWS_1_9_REPORT_2026-08-13.md` | `PENDING-FILL-AFTER-FREEZE` | `PENDING-FILL-AFTER-FREEZE` |
+| `RP7-WPI-RO.sh` | 137981 | `4caed4aecc91cada3b8b99f8ff06d7ba0d7376b2bc07e92c298f4a7b7ca0900c` |
+| `SELF_QA_RP7.md` | 585132 | `b1031cc5e71f2a19e05a400a0d3754b9cf37b5917848868e61ae0764a5b1c8ae` |
+| `STATUS_RP7.md` | 19165 | `f1fbe2e1d8381b2c5d762e6c69fff2718b7f90ae8d09e8b32d1947fab8ea5a46` |
+| `RP7_ROWS_1_9_REPORT_2026-08-13.md` | 54481 | `0a434a98393a6c8ecf41a01d6696326c814c44bf69a5d51734f1b44cbe738c46` |
 
 Read root `AGENTS.md`, `START_HERE.md`, the defect-pattern catalogue, the R1-R4
 repair kickoff, both prior cap-override verdicts, the final owner boundary, the
