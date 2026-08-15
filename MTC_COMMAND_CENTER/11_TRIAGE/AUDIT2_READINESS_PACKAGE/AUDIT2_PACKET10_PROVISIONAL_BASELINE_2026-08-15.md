@@ -1,5 +1,20 @@
 # Audit 2 Packet 10 — provisional mandated-suite baseline — 2026-08-15
 
+> ## ⚠ Correction — 2026-08-15 night
+>
+> This record calls anomaly A1 a Windows/Linux split. That overstates a byte
+> condition as an operating-system guarantee, and the adversarial verification
+> narrowed it: A1 fails whenever `ledger_schema.json` is **materialized as CRLF**
+> and passes whenever the exact LF bytes are materialized. A Windows checkout
+> holding LF bytes passes; a Linux worktree holding CRLF bytes fails. "Windows-only"
+> is not an OS invariant.
+>
+> The practical consequence is that A1's behaviour on the real deploy target is
+> **UNKNOWN** until the exact frozen candidate is materialized through the intended
+> package path and the locked test is run there. Source:
+> `NIGHT_CLAIM_VERIFICATION_2026-08-15.md` C4.
+
+
 Status: **PROVISIONAL BASELINE — NOT THE FREEZE-TIME BASELINE.**
 
 The pre-WP-A freeze SHA does not exist yet, so this cannot be the freeze-time

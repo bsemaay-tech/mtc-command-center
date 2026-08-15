@@ -1,5 +1,28 @@
 Status: CONSOLIDATION ONLY — CREATES NO AUTHORITY
 
+> ## ⚠ Superseded in part — 2026-08-15 night
+>
+> A cross-document meta-review found this file's blocker list had rolled the
+> authority ledger **backward**: it still lists as open three matters Barış
+> decided later the same night. Corrected here rather than rewritten, because the
+> body remains the authority-content source for the exact sentence boundaries.
+>
+> - **Pathscope** is no longer undecided. **Option C is authorized** — one
+>   accounting-layer redesign plus one fresh flagship execution audit, and no
+>   open-ended cycle.
+> - **The narrow host-and-credential confirmation is approved**, not absent. It is
+>   still **not spendable**, because its own wording names an "exact preregistered
+>   and committed" capture and neither Stage-1 Commit 1 nor the allocation record
+>   exists yet. That precondition stands.
+> - **The ~63.75 h ledger figure is signed** as of 2026-08-15, to be re-presented
+>   if it drifts by the real freeze checkpoint.
+>
+> Controlling record: `WPI_OWNER_DECISIONS_2026-08-15_NIGHT.md`. Section 3 and the
+> closing blocker list below are read subject to this banner. The remaining open
+> owner questions are the plan-authority reading, the audit-reserve cap, and the
+> pre-cutover archive location.
+
+
 # WP-I final authority consolidation — 2026-08-15
 
 Authority owner: **Barış**.  Consolidation worktree: `C:\AUTHCON`, detached at

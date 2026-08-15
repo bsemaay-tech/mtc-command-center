@@ -1,5 +1,25 @@
 # Bridge VPS deploy readiness refresh — 2026-08-15
 
+> ## ⚠ Superseded in part — 2026-08-15 night
+>
+> Two items in this refresh were overtaken by owner decisions made after it was
+> written, and a cross-document meta-review flagged that following them would now
+> **reverse an actual owner choice on a safety-sensitive boundary**.
+>
+> - **Item 5, risk-state continuity.** This document reports the choice as open and
+>   supplies a sentence selecting WAL-consistent migration with fresh reset "not
+>   approved". Barış decided the opposite: **start clean — a fresh-database reset**,
+>   recorded as a deliberate override of the recommendation. Read item 5 as
+>   *"fresh reset selected; the fail-closed preserve-or-block proof is still
+>   required."* The archive location remains genuinely open.
+> - **Item 4, the TESTNET wallet.** Reported here as `NEEDS-OWNER`; it is now
+>   **deferred by owner decision**. It stays open and still blocks the first start,
+>   but nothing may request, generate, store or reference a key value meanwhile.
+>
+> Controlling record: `WPI_OWNER_DECISIONS_2026-08-15_NIGHT.md` §D4 and §D5. Every
+> other finding in this refresh stands.
+
+
 ## Verdict and scope
 
 **Overall verdict: BLOCKED.** The repository does not prove that the bridge at

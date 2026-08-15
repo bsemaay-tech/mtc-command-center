@@ -1,5 +1,18 @@
 # New-chat handoff — after RP7 R1-R4 acceptance — 2026-08-15
 
+> ## ⚠ Superseded — 2026-08-15 evening
+>
+> This handoff was written before the owner authorized a transport retry. Its
+> Pathscope state is stale in a way that matters: it says the final audit was
+> transport-BLOCKED without executing. That attempt was retried the same day, the
+> retry **executed** under `sandbox: danger-full-access`, and it returned
+> **REQUEST_CHANGES** with three REQUIRED findings. Barış then authorized **Option
+> C**, the accounting-layer redesign.
+>
+> Use `NEW_CHAT_HANDOFF_2026-08-16_MORNING.md` instead. Everything below is kept as
+> the historical record of the RP7 acceptance, which is unaffected.
+
+
 ## Copy-paste prompt
 
 ```text
