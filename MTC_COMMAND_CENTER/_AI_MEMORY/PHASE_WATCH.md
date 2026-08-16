@@ -49,10 +49,10 @@ SKIP, and nothing below may be executed against KVM2.
 
 | # | Check | Read-only source | Exact command |
 |---|---|---|---|
-| 1 | Service alive | systemd unit state | `ssh <KVM2> "systemctl is-active mtc-bridge-first-start; systemctl status mtc-bridge-first-start --no-pager -n 0"` |
+| 1 | Service alive | systemd unit state | `ssh <KVM2> "systemctl is-active mtc-bridge-first-start; systemctl status mtc-bridge-first-start --no-pager -n 0; systemctl show -p NRestarts --value mtc-bridge-first-start"` — NRestarts expect 0 |
 | 2 | DISARMED mode | `GET /api/status` on loopback | `ssh <KVM2> "curl -s http://127.0.0.1:8790/api/status"` — assert armed=false, TESTNET |
 | 3 | Logs rotating | `/var/log/mtc-bridge/` + policy `/etc/logrotate.d/mtc-bridge` (daily, 30 kept, 64M early, copytruncate, dateext) | `ssh <KVM2> "ls -lh /var/log/mtc-bridge/; tail -3 /var/log/mtc-bridge/bridge.log"` — expect dated rotated files, sizes < 64M |
-| 4 | Backup ran / restore drill | WAL-safe bundles from `IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py`; backup dir per deployment plan — **fill at activation** | `ssh <KVM2> "ls -lh <backup-dir>"` — fresh bundle ≤ 24 h old; restore drill is a manual Lead/owner action recorded in the update log |
+| 4 | Backup ran / restore drill | WAL-safe bundles from `IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py` (a plain file copy of a live WAL DB is NOT a valid backup); backup dir per deployment plan — **fill at activation** | `ssh <KVM2> "ls -lh <backup-dir>"` — fresh bundle ≤ 24 h old; `wal_state_bundle.py verify` output = the restore-drill evidence; the drill itself is a manual Lead/owner action recorded in the update log |
 | 5 | Memory/disk flat | systemd accounting + df | `ssh <KVM2> "systemctl show mtc-bridge-first-start -p MemoryCurrent; df -h /var/lib/mtc-bridge /var/log/mtc-bridge"` |
 | 6 | Error scan | `/var/log/mtc-bridge/bridge.err.log` + journal | `ssh <KVM2> "tail -50 /var/log/mtc-bridge/bridge.err.log"; ssh <KVM2> "journalctl -u mtc-bridge-first-start --since -24h -p warning --no-pager \| tail -20"` |
 | 7 | Dashboard reachable | audited SSH-tunnel launcher `11_TRIAGE/KVM2_RUNKIT/Open-BridgeDashboard.ps1` (rp7 branch) → tunnel → `/api/status`, `/api/equity` | launcher (manual or Lead-run), then `curl -s http://127.0.0.1:<tunnel-port>/api/status` |
@@ -62,30 +62,11 @@ Hard limits for every row: read-only commands only; **never** read
 write/restart/unmask anything on KVM2. `deploy/linux/verify.sh` (full read-only
 assertion pass, needs root) is a deployment-owner weekly action, not a watch task.
 
-## STATUS_SOURCE map — Phase 1 (concrete read-only locations, owner-required 2026-08-16)
-
-Sources derived from the accepted deploy package on `master`
-(`IBKR_PAPER_BRIDGE/deploy/linux/` — systemd/logrotate/env templates, `COMMANDS.md`).
-All commands are READ-ONLY. Host = KVM2 in every row.
-
-| Phase-1 check | Concrete source | Exact read-only command / location |
-|---|---|---|
-| Service alive | systemd unit `mtc-bridge-first-start.service` (the steady restart profile is a GATED artifact, not installed) | `systemctl is-active mtc-bridge-first-start.service` · `systemctl show -p NRestarts --value mtc-bridge-first-start.service` (expect 0) |
-| Mode DISARMED | loopback API, never public | `curl -s http://127.0.0.1:8790/api/status` → expect DISARMED + testnet (`COMMANDS.md` Stage F check) |
-| Logs rotating | logrotate policy `/etc/logrotate.d/mtc-bridge` (daily, 30 gens, 64M early-rotate, dateext) | `ls -lh /var/log/mtc-bridge/` → dated rotated files appear, live `bridge.log` < 64M |
-| Backup + restore drill | WAL-safe bundle tool (plain file copy of a live WAL DB is NOT a valid backup) | `python IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py create` / `... verify` against `/var/lib/mtc-bridge/bridge.db`; `verify` output = the restore-drill evidence. Backup destination dir: **TO FILL AT ACTIVATION** |
-| Memory/disk flat | systemd accounting + filesystem | `systemctl show -p MemoryCurrent --value mtc-bridge-first-start.service` · `df -h /var/lib/mtc-bridge` · `du -sh /var/log/mtc-bridge` |
-| Error scan | journal + stderr log | `journalctl -u mtc-bridge-first-start.service --since "24 hours ago" -p warning` · `tail -n 50 /var/log/mtc-bridge/bridge.err.log` |
-| Dashboard reachable | audited SSH-tunnel launcher to loopback 8790 | `11_TRIAGE/KVM2_RUNKIT/Open-BridgeDashboard.ps1` (currently on branch `codex/rp7-r1-r4-repair-20260815`; path valid after its merge) |
-
-Explicitly NOT a status source, never read by any watcher: `/etc/mtc-bridge/mtc-bridge.env`
-(secret file, root 0600 — names-only contract; watching never touches it).
-
-**Access route — TO FILL AT ACTIVATION by the deployment-owner session:** the SSH
-host alias/user for the read-only checks above. Until the owner approves a read-only
-access route for Hermes, the Hermes cron runs LOCAL-ONLY (reads this file and any
-locally mirrored status the deployment session publishes); it never initiates a
-KVM2 connection on its own and never handles credentials.
+**Hermes cron scope under this map:** until the deployment-owner session provides
+the read-only `<KVM2>` access route at activation, the Hermes cron runs
+LOCAL-ONLY — it reads this file and any locally mirrored status the deployment
+session publishes; it never initiates a KVM2 connection on its own and never
+handles credentials.
 
 Parallel work item (already in the live queue, not a watch task): Dashboard V2
 package — T1 for local read-only visual work, T0 for anything host/control.
@@ -111,8 +92,15 @@ promotable strategy (Phase 3, QuantLens research) and its own gate. No shortcut.
 
 - Wrapper: `C:\LAB\HERMES_WATCH\phase_watch_check.ps1`, Windows scheduled task
   `MTC-HermesPhaseWatch`, every 4 hours.
-- Reads this file's STATUS block. `WATCH_ACTIVE: NO` → appends one PENDING line to
+- **Canonical-read rule:** the canonical copy of this file is the `origin/master`
+  version. On every run the wrapper fetches and materializes it to
+  `C:\LAB\HERMES_WATCH\PHASE_WATCH.current.md` and Hermes reads only that
+  materialized copy — never a branch checkout, which may be stale or missing.
+- Reads the materialized STATUS block. `WATCH_ACTIVE: NO` → appends one PENDING line to
   `C:\LAB\HERMES_WATCH\log\phase_watch.log` and exits (zero AI cost).
+- `-TestReport` switch: bounded read-only demo — Hermes reads the materialized
+  checklist and reports SKIP per check without touching any host; used to prove
+  the pipeline before activation.
 - `WATCH_ACTIVE: YES` → runs Hermes (`hermes -z … --provider deepseek -m deepseek-chat --cli`;
   verified 2026-08-16 — the default provider returns "no final response", DeepSeek works)
   against `STATUS_SOURCE`, appends a ≤10-line OK/WARN/FAIL report to the same log.
