@@ -33,6 +33,7 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
 | Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 20:20 +03 | — |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_READ_ONLY_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 20:20 +03 | — |
+| Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-16 20:31 +03 | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
@@ -43,6 +44,16 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 20:31 +03:** Codex Lead `01a00921` released the
+  Backend/Dashboard V2 design-record row after the owner-requested B7 sourcing
+  decision was added and a fresh read-only T2 review returned PASS. No code,
+  configuration, credential, host, deployment, trading, or economic surface changed.
+
+- **2026-08-16 20:22 +03:** Codex Lead `01a00921` claimed only the
+  Backend/Dashboard V2 design record for the owner-requested documentation of
+  Dashboard Codex-subscription use versus VPS LLM-gate API use. No implementation,
+  configuration, credential, host, deployment, trading, or economic surface is writable.
 
 - **2026-08-16 20:20 +03:** Codex Lead `01a00ad1` released the shared-memory and Gemini
   adviser rows at the owner's requested safe stop. Gemini CLI 1.1.13 is installed and the
