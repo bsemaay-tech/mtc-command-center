@@ -15,11 +15,13 @@ HOST: KVM2 (install pending owner signature; payload uploaded, python3.12-venv i
 STATUS_SOURCE: (none yet — fill with log path / health URL / SSH command after first DISARMED start)
 LAST_HUMAN_UPDATE: 2026-08-16 (initial authoring)
 
-Activation: after the KVM2 install + separate first-start sentence are executed
-(live queue steps in `NEXT_STEPS.md`), the Lead flips `WATCH_ACTIVE: YES`, sets
-`PHASE: 1`, and fills `STATUS_SOURCE` with the concrete places to look
-(bridge log path on KVM2, dashboard/health endpoint, backup dir). Until then the
-cron logs "PENDING" and spends no AI tokens.
+Activation (owner ruling 2026-08-16 late evening): `WATCH_ACTIVE` stays `NO` until
+the **deployment-owner session** (the other active Fable session — sole owner of
+KVM2, deployment, credentials, ARM, TESTNET) confirms a successful DISARMED start.
+Only after that confirmation does a Lead flip `WATCH_ACTIVE: YES`, set `PHASE: 1`,
+and fill `STATUS_SOURCE` with the concrete places to look (bridge log path on KVM2,
+dashboard/health endpoint, backup dir). Until then the cron logs "PENDING" and
+spends no AI tokens. No other session may pre-activate the watch.
 
 ## Phase 1 — prove it breathes (first week after DISARMED start, cheap)
 

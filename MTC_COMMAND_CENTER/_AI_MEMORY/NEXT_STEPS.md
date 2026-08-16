@@ -16,11 +16,13 @@
    stores, or requests key material.
 4. **Safety fence:** watch is read-only; no install/start, ARM/KILL, credential,
    config, host, TESTNET/MAINNET-economic action is authorized by this entry.
-5. **Housekeeping drafts (2026-08-16, prepared for owner):**
-   `11_TRIAGE/WORKTREE_SPRAWL_INVENTORY_2026-08-16.md`,
-   `11_TRIAGE/OWNER_DECISION_EVIDENCE_WINDDOWN_DRAFT_2026-08-16.md`,
-   `11_TRIAGE/OWNER_DECISION_AI_BUDGET_DRAFT_2026-08-16.md` — **[AI: Barış]**
-   answer the owner-ask sections; **[AI: Claude]** execute only after answers.
+5. **Housekeeping decisions — ANSWERED 2026-08-16 late evening**
+   (`11_TRIAGE/OWNER_DECISIONS_2026-08-16_HOUSEKEEPING.md`): wind-down 1=A / 2=B
+   (closure note written) / 3=A; budget = STANDARD as maximum ceiling, not target,
+   cheapest-suitable-model-first stays mandatory. **Worktree cleanup still NOT
+   approved** — the 73 SAFE-REMOVE and 9 local-only-commit worktrees in
+   `11_TRIAGE/WORKTREE_SPRAWL_INVENTORY_2026-08-16.md` must not be pushed, removed,
+   pruned, or altered without a new explicit owner approval.
 
 ## GLM SUPPLEMENTAL ROUTING POLICY — IMPLEMENTED 2026-07-27
 

@@ -1,6 +1,6 @@
 # DRAFT — Monthly AI Budget Proposal
 
-**Status: DRAFT, prepared for owner decision. Nothing in this file is binding until Barış picks an option in the OWNER ASK section below.**
+**Status: DECIDED 2026-08-16 (late evening) — owner picked Option 2 (STANDARD, ~$800–1200/mo) as a MAXIMUM CEILING, not a spending target; cheapest-suitable-model-first routing continues regardless of headroom. Binding record: `OWNER_DECISIONS_2026-08-16_HOUSEKEEPING.md`. Body below kept unchanged as the analysis the decision was made on.**
 **Prepared:** 2026-08-16 · **Prepared by:** Claude (Sonnet 5) · **Scope:** read-only research, one output file. No git changes, no account/subscription changes made.
 
 ---

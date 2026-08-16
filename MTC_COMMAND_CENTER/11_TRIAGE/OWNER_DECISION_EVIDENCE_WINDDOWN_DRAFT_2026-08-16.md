@@ -1,8 +1,9 @@
 # Owner decision — winding down three paused evidence-programme leftovers — 2026-08-16
 
-**STATUS: DRAFT — prepared for Barış's decision. Nothing below has been decided
-or executed. No file in the repository was changed to produce this draft; no
-git action was taken.**
+**STATUS: DECIDED 2026-08-16 (late evening) — owner answers: item 1 = A, item 2 = B,
+item 3 = A. Binding record: `OWNER_DECISIONS_2026-08-16_HOUSEKEEPING.md`. Decision 2
+executed same day as `AUDIT2_CLOSURE_NOTE_2026-08-16.md`. Body below kept unchanged
+as the analysis the decision was made on.**
 
 ## Why this exists
 
