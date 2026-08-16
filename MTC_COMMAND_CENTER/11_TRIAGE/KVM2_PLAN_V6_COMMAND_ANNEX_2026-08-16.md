@@ -1,13 +1,16 @@
 # Plan V6 inputs — round-4 R5–R8
 
-Status: **INPUTS FOR THE LEAD — NOT AUTHORIZED TO EXECUTE.** These commands were
-designed and checked against the round-4 contract and current candidate source;
-none was executed and no host or network was contacted. The Lead must atomically
-replace the release/payload/manifest pins after committing and packaging the final
-round-4 bytes. Until that repin, the literal
-`acdf4e379fb60ee319854acae19fd3eaf7db71a2` coordinates below are
-the task-mandated round-3 subject coordinates, not authority to deploy changed
-worktree bytes.
+Status: **COMMAND ANNEX OF RECORD — executable only under the owner-signed
+sentence.** Lead-repinned 2026-08-16 night to the FINAL candidate
+`be007fd802bbfd2eb181d66038c374865d1562ee`, payload `C:	mp\payload-be007fd8`,
+manifest sha256
+`bde1ff7dcd46a8b104ffdaca7a146ba0eca1958dab577a5a8e926dc24ee0b0a3`
+(21 identity replacements verified, zero stale pins).
+
+**Stage-0 addition (owner-directed):** before the Stage-1 transfer, remove the
+superseded old payload from the host:
+`ssh <isolated options> baris@152.239.123.231 'rm -rf ~/payload-acdf4e37'`
+— the old payload directory is the only object removed; nothing else existed.
 
 ## R5 — complete literal command blocks
 
@@ -34,7 +37,7 @@ and are never treated as success when the native process rc is nonzero.
   -o StrictHostKeyChecking=yes `
   -o ExitOnForwardFailure=yes `
   -o ConnectTimeout=10 `
-  -r 'C:\tmp\payload-acdf4e37' `
+  -r 'C:\tmp\payload-be007fd8' `
   'baris@152.239.123.231:~/'
 if ($LASTEXITCODE -ne 0) { throw "STOP: payload scp failed rc=$LASTEXITCODE" }
 
@@ -59,23 +62,23 @@ if ($LASTEXITCODE -ne 0) { throw "STOP: isolated SSH failed rc=$LASTEXITCODE" }
 Inside that isolated SSH session:
 
 ```bash
-sudo bash ~/payload-acdf4e37/IBKR_PAPER_BRIDGE/deploy/linux/install.sh \
-  --release-sha acdf4e379fb60ee319854acae19fd3eaf7db71a2 \
-  --manifest-sha256 e74c59fec82d49090d5ba56d4bf18f1cc0dbdd93375c0c82c07ab44b211530bf \
-  --source ~/payload-acdf4e37 --dry-run
+sudo bash ~/payload-be007fd8/IBKR_PAPER_BRIDGE/deploy/linux/install.sh \
+  --release-sha be007fd802bbfd2eb181d66038c374865d1562ee \
+  --manifest-sha256 bde1ff7dcd46a8b104ffdaca7a146ba0eca1958dab577a5a8e926dc24ee0b0a3 \
+  --source ~/payload-be007fd8 --dry-run
 ```
 
 ### Stage 2 — one install and read-only verify
 
 ```bash
-sudo bash ~/payload-acdf4e37/IBKR_PAPER_BRIDGE/deploy/linux/install.sh \
-  --release-sha acdf4e379fb60ee319854acae19fd3eaf7db71a2 \
-  --manifest-sha256 e74c59fec82d49090d5ba56d4bf18f1cc0dbdd93375c0c82c07ab44b211530bf \
-  --source ~/payload-acdf4e37
+sudo bash ~/payload-be007fd8/IBKR_PAPER_BRIDGE/deploy/linux/install.sh \
+  --release-sha be007fd802bbfd2eb181d66038c374865d1562ee \
+  --manifest-sha256 bde1ff7dcd46a8b104ffdaca7a146ba0eca1958dab577a5a8e926dc24ee0b0a3 \
+  --source ~/payload-be007fd8
 
-sudo bash /opt/mtc-bridge/releases/acdf4e379fb60ee319854acae19fd3eaf7db71a2/IBKR_PAPER_BRIDGE/deploy/linux/verify.sh \
-  --release-sha acdf4e379fb60ee319854acae19fd3eaf7db71a2 \
-  --manifest-sha256 e74c59fec82d49090d5ba56d4bf18f1cc0dbdd93375c0c82c07ab44b211530bf
+sudo bash /opt/mtc-bridge/releases/be007fd802bbfd2eb181d66038c374865d1562ee/IBKR_PAPER_BRIDGE/deploy/linux/verify.sh \
+  --release-sha be007fd802bbfd2eb181d66038c374865d1562ee \
+  --manifest-sha256 bde1ff7dcd46a8b104ffdaca7a146ba0eca1958dab577a5a8e926dc24ee0b0a3
 ```
 
 ### Stage 3.1–3.2 — deterministic never-started state and rehearsal
@@ -99,13 +102,13 @@ test "${#STATE_MANIFEST_SHA256}" -eq 64 || {
   exit 1
 }
 
-sudo bash /opt/mtc-bridge/releases/acdf4e379fb60ee319854acae19fd3eaf7db71a2/IBKR_PAPER_BRIDGE/deploy/linux/rollback.sh \
+sudo bash /opt/mtc-bridge/releases/be007fd802bbfd2eb181d66038c374865d1562ee/IBKR_PAPER_BRIDGE/deploy/linux/rollback.sh \
   --state-manifest-file /home/baris/bridge-state-initial.tar.gz \
   --state-manifest-sha256 "${STATE_MANIFEST_SHA256}"
 
-sudo bash /opt/mtc-bridge/releases/acdf4e379fb60ee319854acae19fd3eaf7db71a2/IBKR_PAPER_BRIDGE/deploy/linux/verify.sh \
-  --release-sha acdf4e379fb60ee319854acae19fd3eaf7db71a2 \
-  --manifest-sha256 e74c59fec82d49090d5ba56d4bf18f1cc0dbdd93375c0c82c07ab44b211530bf
+sudo bash /opt/mtc-bridge/releases/be007fd802bbfd2eb181d66038c374865d1562ee/IBKR_PAPER_BRIDGE/deploy/linux/verify.sh \
+  --release-sha be007fd802bbfd2eb181d66038c374865d1562ee \
+  --manifest-sha256 bde1ff7dcd46a8b104ffdaca7a146ba0eca1958dab577a5a8e926dc24ee0b0a3
 ```
 
 The first `case` is a character fence; the separate length test is the length
@@ -558,7 +561,7 @@ The initial-install sentence may create or modify exactly:
 7. `/etc/systemd/system/mtc-bridge-first-start.service` (the `/dev/null` mask);
 8. `/etc/logrotate.d/mtc-bridge`;
 9. `/etc/cron.hourly/mtc-bridge-logrotate`;
-10. `/home/baris/payload-acdf4e37`;
+10. `/home/baris/payload-be007fd8`;
 11. `/home/baris/bridge-state-initial.tar.gz` and
     `/home/baris/bridge-state-initial.sha256`; and
 12. the operator-side encrypted backup and restore-check directories named in
@@ -694,7 +697,7 @@ elif [ "${group_rc}" -ne 2 ] || [ -n "${group_record}" ]; then
   exit 1
 fi
 rm -rf -- \
-  /home/baris/payload-acdf4e37 \
+  /home/baris/payload-be007fd8 \
   /home/baris/bridge-state-initial.tar.gz \
   /home/baris/bridge-state-initial.sha256 \
   /home/baris/mtcbridge-d3-evidence
@@ -724,10 +727,10 @@ The single authoritative installation-authorization sentence lives in
 The text below is retained as the drafting source it was and has no
 independent authority.
 
-> "I authorize one attempt to transfer `~/payload-acdf4e37` and perform the
+> "I authorize one attempt to transfer `~/payload-be007fd8` and perform the
 > masked, never-started, credential-free DISARMED installation and read-only
 > operational evidence for exact release
-> `acdf4e379fb60ee319854acae19fd3eaf7db71a2` on Hostinger KVM2
+> `be007fd802bbfd2eb181d66038c374865d1562ee` on Hostinger KVM2
 > (`srv1856225`), limited exactly to `/opt/mtc-bridge/`, `/etc/mtc-bridge/`,
 > `/var/lib/mtc-bridge/`, `/var/log/mtc-bridge/`, the `mtc-bridge` user and
 > group, `/usr/local/lib/systemd/system/mtc-bridge-first-start.service`, its
