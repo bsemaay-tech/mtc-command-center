@@ -4,6 +4,42 @@
 > Governing record: MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md. Identity split: the prover in this repository is the older 137520-byte R5 code; the audited 185272-byte Option C prover is UNMERGED on codex/pathscope-accounting-redesign-20260815. Prerequisite gate 2 is UNKNOWN until the Lead re-derives it at freeze-prerequisite review.
 
 
+## [Fable 5 Lead] 2026-08-16 afternoon — ACCELERATED CONTRACT APPROVED; integration merge EXECUTED
+
+Owner answered the midday §3 question: **ACCELERATED FULL COMPLETION APPROVED**
+(`11_TRIAGE/OWNER_DECISION_ACCELERATED_COMPLETION_2026-08-16.md`). Lead: Fable 5.
+Coder-audit pool: Codex `gpt-5.6-sol` + Claude Sonnet 5 + GLM-5.3. T0 slots
+unchanged: exact `claude-opus-5` + `gpt-5.6-sol` xhigh.
+
+Executed this session, all committed and pushed:
+
+1. **Integration merge EXECUTED** per the frozen runbook + committed W-refresh:
+   candidate **`62bf661b065dec5b5d9895d83575581fe369252d`** on
+   `integration/bridge-release-20260815` (pushed), parents `7d4e9a96` + `2ce41e34`,
+   33/33 blob fence PASS, exact 32-path first-parent delta, credential parity with
+   Gate-A, **full suite `1360 passed, 1 warning in 191.54s`**. Four recorded
+   deviations (W refresh; one-shot longpaths; CRLF-normalized transformer; §5.1
+   path-list authoring defect corrected against live Gate-A). Full record:
+   `11_TRIAGE/BRIDGE_RELEASE_MERGE_EXECUTION_RECORD_2026-08-16.md`. NOT accepted,
+   NOT deployed, master untouched.
+2. **T0 acceptance pair dispatched** on the pinned candidate: Codex `gpt-5.6-sol`
+   xhigh (in the integration worktree) and `claude-opus-5` xhigh (fresh worktree
+   `C:\AUD62A`), verdicts to `C:\tmp\lane_out\T0_62BF_{CODEX,CLAUDE}_VERDICT.md`.
+   In flight at time of writing.
+3. **Privileged channel ruled NOT load-bearing** —
+   `11_TRIAGE/PRIVILEGED_CHANNEL_LOAD_BEARING_DECISION_2026-08-16.md`; design kept
+   as reference; Hyper-V checkpoint is the integrity mechanism; money-gate T0
+   untouched.
+4. **Host-labelled remaining register** replaces all prior hour figures:
+   `11_TRIAGE/REMAINING_TASK_REGISTER_2026-08-16.md`. No total published until
+   release acceptance + KVM2 read-only inventory (authorized by contract clause 5,
+   sequenced after acceptance).
+
+Locks held by this session: shared-memory, Stage-1/runbook, Bridge-release-
+integration (see SESSION_LOCK.md). Next in chain after acceptance: two-commit
+chain V2 re-audit → gate-2 re-derivation → Stage-1 freeze; and read-only KVM2
+inventory → one exact deployment plan → owner authorization for install.
+
 ## [Fable 5 Lead] 2026-08-16 midday — clean stop; entry point is the midday handoff
 
 Canonical pickup: `11_TRIAGE/NEW_CHAT_HANDOFF_2026-08-16_MIDDAY.md`. Stopped at
