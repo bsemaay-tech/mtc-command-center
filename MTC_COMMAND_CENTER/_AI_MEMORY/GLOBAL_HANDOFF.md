@@ -5,6 +5,29 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol] 2026-08-16 — Dashboard hosting decision queued; KVM2 checked live
+
+Owner approved recording the Dashboard-on-same-VPS direction and asked whether
+it predated the conversation and whether Dashboard V1 is currently on KVM2.
+Historical source confirms the V1 dashboard and VPS direction predate this
+conversation. The owner's 2026-08-16 requirement made dashboard availability
+completion-critical and added the audited private SSH-tunnel launcher and D3
+verification; it did not invent the underlying V1 dashboard.
+
+A fresh read-only SSH check at 22:04 +03 on `srv1856225` returned
+`BRIDGE_DIR_ABSENT`, no `mtc-bridge*` unit and no `:8790` listener; only
+`/home/baris/payload-acdf4e37` was present. Therefore neither Bridge nor
+Dashboard V1 is installed/running on Hostinger KVM2. This agrees with the latest
+execution record: `python3.12-venv` is installed, but the Bridge install stopped
+fail-closed before mutation and the UFW comment-normalization repair needs new
+pins and a newly signed sentence. No host state was changed by this check.
+
+The T2 design-record edit was attempted through exact `claude-opus-5` medium and
+was blocked by the provider session limit until 2026-08-17 00:30 Europe/Chisinau.
+Per the mandatory two-tier rule, Codex did not self-implement or substitute a
+different model. The exact content is queued at the top of `NEXT_STEPS.md`.
+No decision-file byte changed in this turn. Both write rows are released.
+
 ## [Codex gpt-5.6-sol] 2026-08-16 — Help/Wiki Exchange and Control content added
 
 Owner requested that the complete Hyperliquid Exchange-plane explanation be

@@ -4,6 +4,29 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
+## OWNER-REQUESTED PENDING — record Dashboard VPS hosting decision (2026-08-16)
+
+**Documentation tier: T2.** Exact Claude counterpart attempt at 22:02 +03 was
+session-limit blocked until 2026-08-17 00:30 Europe/Chisinau; the Lead did not
+self-implement or silently substitute another model.
+
+1. **[AI: Claude] After reset:** update
+   `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md`
+   with the owner-approved direction and reasons: execution dashboard hosted on
+   the same Hostinger VPS as the Bridge, private-first, while remaining a separate
+   logical responsibility/security boundary. Be exact that current V1 assets are
+   served by the same loopback FastAPI process, not a separate service.
+2. Record provenance: the V1 dashboard and VPS direction predate this conversation;
+   the 2026-08-16 owner requirement made dashboard availability completion-critical
+   and added the audited SSH-tunnel launcher plus D3 verification. Do not claim KVM2
+   deployment completed.
+3. Keep remote controls, login, 2FA, roles, public HTTPS topology, phone-control
+   authority and any future service split open/gated; AI remains read-only. Add
+   problem, reasoning, alternatives/trade-offs, implementation gates and change log.
+4. **[AI: Codex] Acceptance:** inspect the exact diff and run the required single
+   T2 review. No code, config, host, deployment, network, credential, ARM or
+   economic action.
+
 ## OWNER-REQUESTED READY — Bridge interactive Help / System Map (2026-08-16)
 
 **Execution tier: T1.** The feature is fully scoped but has not been implemented.
