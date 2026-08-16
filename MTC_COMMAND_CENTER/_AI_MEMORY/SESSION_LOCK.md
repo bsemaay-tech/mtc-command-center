@@ -28,10 +28,11 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **UNCLAIMED** — accepted and released 2026-08-15 11:45 +03 | — |
 | Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
-| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **UNCLAIMED** — released 2026-08-16 06:30 +03 at the Pathscope owner boundary | — |
-| Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
-| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **UNCLAIMED** — released 2026-08-16 06:30 +03 | — |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | UNCLAIMED | — |
+| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Fable 5 Lead `f3a2cf9f`** "owner decisions + 8h day run" | 2026-08-16 07:55 +03 |
+| Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **Fable 5 Lead `f3a2cf9f`** "owner decisions + 8h day run" | 2026-08-16 07:55 +03 |
+| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Fable 5 Lead `f3a2cf9f`** "owner decisions + 8h day run" | 2026-08-16 07:55 +03 |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **Fable 5 Lead `f3a2cf9f`** "owner decisions + 8h day run" | 2026-08-16 07:55 +03 |
+| Stage-1 / owner-decision / runbook records | `11_TRIAGE/` STAGE1_*, OWNER_DECISION*, *RUNBOOK_V*, KVM2 P2 review outputs (new files only) | **Fable 5 Lead `f3a2cf9f`** "owner decisions + 8h day run" | 2026-08-16 07:55 +03 |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
@@ -42,6 +43,18 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 07:55 +03:** Fable 5 Lead `f3a2cf9f` claimed the SEC102/Pathscope,
+  prereg-draft, Audit-2 readiness, shared-memory rows and a new Stage-1/owner-
+  decision/runbook row for an owner-authorized 8-hour day session in `C:\R7FINAL`.
+  Verified before claiming: HEAD `6ab04e34`, branch
+  `codex/rp7-r1-r4-repair-20260815`, `git status --porcelain` empty, repo guard
+  PASS, no active writer (previous session released cleanly at 06:30). Trigger:
+  Barış answered all six pending owner decisions in chat — recorded in
+  `11_TRIAGE/OWNER_DECISIONS_2026-08-16_MORNING.md`. Scope: documentation,
+  design, drafting and review only; dispatched lanes write scratch to
+  `C:\tmp\lane_out` and the Lead commits. No host, credential, staging, or
+  economic action.
 
 - **2026-08-16 06:30 +03:** Claude Opus 5 Lead `192dd112` released both rows at a
   clean stop. Everything committed and pushed on `codex/rp7-r1-r4-repair-20260815`
