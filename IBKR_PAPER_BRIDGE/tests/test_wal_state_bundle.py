@@ -7,10 +7,14 @@ runtime, no C:\\P2RT, no service, no network.
 from __future__ import annotations
 
 import json
+import shutil
 import sqlite3
 from contextlib import closing
+import struct
+import threading
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -18,6 +22,11 @@ from bridge.store.db import Store
 from tools import wal_state_bundle as wal
 
 TS = "2026-07-26T00:00:00Z"
+
+#: SQLite's WAL-index region size, taken from the file-format documentation and
+#: kept independent of the tool's own constant so these tests do not merely
+#: restate the implementation.
+SHM_REGION_BYTES = 32768
 
 
 # ---------------------------------------------------------------------------
@@ -225,6 +234,564 @@ def test_manifest_records_online_backup_and_both_ends_integrity(source_db, bundl
     for component in ("db", "wal", "shm"):
         assert isinstance(snapshot["before"][component]["present"], bool)
     assert snapshot["before"]["db"]["sha256"] == m["source"]["db_sha256"]
+
+
+def test_connect_readonly_reads_schema_before_returning(source_db):
+    wal_path = source_db.with_name(source_db.name + "-wal")
+    shm_path = source_db.with_name(source_db.name + "-shm")
+    assert not wal_path.exists()
+    assert not shm_path.exists()
+
+    conn = wal._connect_readonly(source_db)
+    try:
+        assert wal_path.exists()
+        assert shm_path.exists()
+    finally:
+        conn.close()
+
+
+def test_stable_wal_source_without_arrival_sidecars_is_not_reported_as_drift(
+    source_db, bundle_dir, capsys, monkeypatch
+):
+    """Emulate stacks where WAL sidecars appear only on the first main-DB read."""
+    wal_path = source_db.with_name(source_db.name + "-wal")
+    shm_path = source_db.with_name(source_db.name + "-shm")
+    assert not wal_path.exists()
+    assert not shm_path.exists()
+
+    real_connect = wal.sqlite3.connect
+    real_snapshot = wal._source_snapshot
+    source_uri = f"{source_db.resolve().as_uri()}?mode=ro"
+    main_db_read = {"started": False}
+
+    def connect_with_delayed_attach(database, *args, **kwargs):
+        conn = real_connect(database, *args, **kwargs)
+        if str(database) == source_uri:
+            def authorizer(action, table, _column, _database, _trigger):
+                if action == sqlite3.SQLITE_READ and table in {
+                    "sqlite_master",
+                    "sqlite_schema",
+                }:
+                    main_db_read["started"] = True
+                return sqlite3.SQLITE_OK
+
+            conn.set_authorizer(authorizer)
+        return conn
+
+    def snapshot_with_delayed_sidecars(source):
+        result = real_snapshot(source)
+        if Path(source).resolve() != source_db.resolve():
+            return result
+        if not main_db_read["started"]:
+            result["wal"] = {"present": False}
+            result["shm"] = {"present": False}
+        else:
+            result["wal"] = {
+                "present": True,
+                "sha256": wal._sha256_bytes(b""),
+                "changed_during_hash": False,
+            }
+            result["shm"] = {
+                "present": True,
+                "sha256": "a" * 64,
+                "changed_during_hash": False,
+            }
+        return result
+
+    sqlite3_shim = SimpleNamespace(
+        connect=connect_with_delayed_attach,
+        Error=sqlite3.Error,
+        Row=sqlite3.Row,
+    )
+    monkeypatch.setattr(wal, "sqlite3", sqlite3_shim)
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_delayed_sidecars)
+
+    rc, report = create(source_db, bundle_dir, capsys)
+
+    assert rc == 0, report
+    capture = read_manifest(bundle_dir)["source"]["capture_snapshot"]
+    assert capture["arrival"]["wal"]["present"] is False
+    assert capture["arrival"]["shm"]["present"] is False
+    assert capture["before"]["wal"]["present"] is True
+    assert capture["before"]["shm"]["present"] is True
+    assert capture["changed_components"] == []
+    assert capture["invariants_changed"] is False
+
+
+def test_hot_wal_without_shm_is_rejected_before_connecting(
+    tmp_path, bundle_dir
+):
+    live_db = tmp_path / "live" / "bridge.db"
+    store = Store(live_db)
+    _seed(store)
+    live_wal = live_db.with_name(live_db.name + "-wal")
+    live_shm = live_db.with_name(live_db.name + "-shm")
+    crashed_db = tmp_path / "crashed" / "bridge.db"
+    crashed_db.parent.mkdir(parents=True)
+    crashed_wal = crashed_db.with_name(crashed_db.name + "-wal")
+    crashed_shm = crashed_db.with_name(crashed_db.name + "-shm")
+
+    try:
+        assert live_wal.stat().st_size > 0
+        assert live_shm.is_file()
+        shutil.copy2(live_db, crashed_db)
+        shutil.copy2(live_wal, crashed_wal)
+        assert crashed_wal.stat().st_size > 0
+        assert not crashed_shm.exists()
+
+        with pytest.raises(wal.BundleError) as exc_info:
+            wal.create_bundle(crashed_db, bundle_dir, timestamp=TS)
+
+        assert str(exc_info.value) == (
+            "source database has a hot WAL without -shm and cannot be opened "
+            "read-only; recover it under separate authorization first"
+        )
+        assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+        assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+        assert not crashed_shm.exists()
+    finally:
+        store.close()
+
+
+def _crash_state(tmp_path: Path) -> tuple[Path, Path, Path]:
+    """Copy a genuine Store-written crash state: a real database plus the real
+    non-empty ``-wal`` that was live beside it. The ``-shm`` is deliberately not
+    copied — each caller decides what (if anything) sits in its place."""
+    live_db = tmp_path / "live" / "bridge.db"
+    store = Store(live_db)
+    _seed(store)
+    live_wal = live_db.with_name(live_db.name + "-wal")
+    live_shm = live_db.with_name(live_db.name + "-shm")
+    crashed_db = tmp_path / "crashed" / "bridge.db"
+    try:
+        assert live_wal.stat().st_size > 0
+        assert live_shm.stat().st_size > 0
+        crashed_db.parent.mkdir(parents=True)
+        shutil.copy2(live_db, crashed_db)
+        shutil.copy2(live_wal, crashed_db.with_name(crashed_db.name + "-wal"))
+    finally:
+        store.close()
+    return (
+        crashed_db,
+        crashed_db.with_name(crashed_db.name + "-wal"),
+        crashed_db.with_name(crashed_db.name + "-shm"),
+    )
+
+
+def _count_connects(monkeypatch, calls: list[str]) -> None:
+    """Record every ``sqlite3.connect`` the tool makes, without blocking it.
+
+    Delegating to the real connect keeps the tool's behaviour intact, so a
+    regression that drops the guard shows up as a recorded connection *and* as
+    source mutation / bundle output, not merely as a missing exception.
+    """
+    real_connect = sqlite3.connect
+
+    def counting_connect(database, *args, **kwargs):
+        calls.append(str(database))
+        return real_connect(database, *args, **kwargs)
+
+    monkeypatch.setattr(
+        wal,
+        "sqlite3",
+        SimpleNamespace(
+            connect=counting_connect, Error=sqlite3.Error, Row=sqlite3.Row
+        ),
+    )
+
+
+def _fingerprint(paths: tuple[Path, ...]) -> dict[str, object]:
+    """Content plus the size/timestamp metadata a SQLite write would move."""
+    state: dict[str, object] = {}
+    for path in paths:
+        if not path.exists():
+            state[path.name] = None
+            continue
+        info = path.stat()
+        state[path.name] = (path.read_bytes(), info.st_size, info.st_mtime_ns)
+    return state
+
+
+def _assert_no_source_disclosure(message: str, tmp_path: Path) -> None:
+    assert str(tmp_path) not in message
+    assert "/" not in message and chr(92) not in message
+
+
+def test_hot_wal_with_zero_byte_shm_is_rejected_before_connecting(
+    tmp_path, bundle_dir, monkeypatch
+):
+    """A present-but-empty ``-shm`` is not a WAL-index. Opening the database
+    would make SQLite build one *in the source directory*; the tool must refuse
+    before it ever connects."""
+    crashed_db, crashed_wal, crashed_shm = _crash_state(tmp_path)
+    crashed_shm.write_bytes(b"")
+    assert crashed_wal.stat().st_size > 0
+    assert crashed_shm.is_file()
+    assert crashed_shm.stat().st_size == 0
+
+    before = _fingerprint((crashed_db, crashed_wal, crashed_shm))
+    connects: list[str] = []
+    _count_connects(monkeypatch, connects)
+
+    with pytest.raises(wal.BundleError) as exc_info:
+        wal.create_bundle(crashed_db, bundle_dir, timestamp=TS)
+
+    assert connects == []
+    message = str(exc_info.value)
+    assert "-shm" in message
+    _assert_no_source_disclosure(message, tmp_path)
+    assert _fingerprint((crashed_db, crashed_wal, crashed_shm)) == before
+    assert crashed_shm.stat().st_size == 0
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+
+
+@pytest.mark.parametrize(
+    "shm_size",
+    [1, 136, 4096, SHM_REGION_BYTES - 1, SHM_REGION_BYTES + 1],
+)
+def test_hot_wal_with_structurally_invalid_shm_is_rejected_before_connecting(
+    tmp_path, bundle_dir, monkeypatch, shm_size
+):
+    """SQLite allocates the WAL-index in whole 32 KiB regions; the 136-byte
+    header lives inside the first one. Any other size is a truncated or foreign
+    file that the tool must not hand to SQLite."""
+    crashed_db, crashed_wal, crashed_shm = _crash_state(tmp_path)
+    crashed_shm.write_bytes(b"\x00" * shm_size)
+    assert crashed_shm.stat().st_size == shm_size
+
+    before = _fingerprint((crashed_db, crashed_wal, crashed_shm))
+    connects: list[str] = []
+    _count_connects(monkeypatch, connects)
+
+    with pytest.raises(wal.BundleError) as exc_info:
+        wal.create_bundle(crashed_db, bundle_dir, timestamp=TS)
+
+    assert connects == []
+    _assert_no_source_disclosure(str(exc_info.value), tmp_path)
+    assert _fingerprint((crashed_db, crashed_wal, crashed_shm)) == before
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+
+
+def test_hot_wal_with_zero_filled_full_size_shm_is_rejected_before_connecting(
+    tmp_path, bundle_dir, monkeypatch
+):
+    """The size gate alone is not enough. Exactly one zero-filled 32 KiB region
+    is a correctly *sized* file that is not a WAL-index at all: ``isInit`` is
+    clear and the salts belong to nothing. A size/readability-only guard accepts
+    it, SQLite reconstructs the index in the source directory and the capture
+    proceeds — so this is the permanent regression for the header preflight."""
+    crashed_db, crashed_wal, crashed_shm = _crash_state(tmp_path)
+    crashed_shm.write_bytes(b"\x00" * SHM_REGION_BYTES)
+    assert crashed_shm.stat().st_size == SHM_REGION_BYTES
+    assert crashed_shm.read_bytes() == b"\x00" * SHM_REGION_BYTES
+    assert crashed_wal.stat().st_size > 0
+
+    before = _fingerprint((crashed_db, crashed_wal, crashed_shm))
+    connects: list[str] = []
+    _count_connects(monkeypatch, connects)
+
+    with pytest.raises(wal.BundleError) as exc_info:
+        wal.create_bundle(crashed_db, bundle_dir, timestamp=TS)
+
+    assert connects == []
+    message = str(exc_info.value)
+    assert "-shm" in message
+    _assert_no_source_disclosure(message, tmp_path)
+    assert _fingerprint((crashed_db, crashed_wal, crashed_shm)) == before
+    assert crashed_shm.read_bytes() == b"\x00" * SHM_REGION_BYTES
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+
+
+# ---------------------------------------------------------------------------
+# WAL-index header preflight
+#
+# The offsets below are the `WalIndexHdr` layout from SQLite's `wal.c`, restated
+# here so these tests do not merely echo the tool's own constants.
+# ---------------------------------------------------------------------------
+
+WAL_INDEX_HDR_BYTES = 48
+WAL_INDEX_VERSION_OFFSET = 0
+WAL_INDEX_ISINIT_OFFSET = 12
+WAL_INDEX_MXFRAME_OFFSET = 16
+WAL_INDEX_SALT_OFFSET = 32
+WAL_INDEX_CKSUM_OFFSET = 40
+WAL_INDEX_SALT_BYTES = 8
+WAL_INDEX_MAX_VERSION = 3007000
+WAL_HEADER_SALT_OFFSET = 16
+
+
+def _crash_state_with_genuine_shm(
+    tmp_path: Path, name: str = "crashed"
+) -> tuple[Path, Path, Path]:
+    """Copy a whole genuine live Store trio — database, non-empty ``-wal`` and
+    the ``-shm`` SQLite itself wrote beside them.
+
+    Tests damage this real WAL-index rather than inventing a plausible one, so
+    what they prove is that the preflight rejects damage to a header SQLite
+    actually produced, not that it rejects a header the test got wrong.
+    """
+    live_db = tmp_path / f"live-{name}" / "bridge.db"
+    store = Store(live_db)
+    _seed(store)
+    live_wal = live_db.with_name(live_db.name + "-wal")
+    live_shm = live_db.with_name(live_db.name + "-shm")
+    crashed_db = tmp_path / name / "bridge.db"
+    crashed_wal = crashed_db.with_name(crashed_db.name + "-wal")
+    crashed_shm = crashed_db.with_name(crashed_db.name + "-shm")
+    try:
+        assert live_wal.stat().st_size > 0
+        assert live_shm.stat().st_size >= SHM_REGION_BYTES
+        crashed_db.parent.mkdir(parents=True)
+        shutil.copy2(live_db, crashed_db)
+        shutil.copy2(live_wal, crashed_wal)
+        shutil.copy2(live_shm, crashed_shm)
+    finally:
+        store.close()
+    return crashed_db, crashed_wal, crashed_shm
+
+
+def _patch_both_header_copies(shm_path: Path, offset: int, value: bytes) -> None:
+    """Write *value* at *offset* in both 48-byte header copies.
+
+    Keeping the copies identical means the duplicate-header check still passes,
+    so the specific check under test is the one that fires.
+    """
+    data = bytearray(shm_path.read_bytes())
+    data[offset : offset + len(value)] = value
+    second = offset + WAL_INDEX_HDR_BYTES
+    data[second : second + len(value)] = value
+    shm_path.write_bytes(bytes(data))
+
+
+def _corrupt_second_header_copy(shm_path: Path, wal_path: Path) -> None:
+    """Dirty read: the two header copies disagree."""
+    data = bytearray(shm_path.read_bytes())
+    data[WAL_INDEX_HDR_BYTES] ^= 0xFF
+    shm_path.write_bytes(bytes(data))
+
+
+def _clear_isinit(shm_path: Path, wal_path: Path) -> None:
+    _patch_both_header_copies(shm_path, WAL_INDEX_ISINIT_OFFSET, b"\x00")
+
+
+def _bump_version(shm_path: Path, wal_path: Path) -> None:
+    _patch_both_header_copies(
+        shm_path,
+        WAL_INDEX_VERSION_OFFSET,
+        struct.pack("=I", WAL_INDEX_MAX_VERSION + 1),
+    )
+
+
+def _corrupt_stored_checksum(shm_path: Path, wal_path: Path) -> None:
+    stored = shm_path.read_bytes()[WAL_INDEX_CKSUM_OFFSET : WAL_INDEX_CKSUM_OFFSET + 8]
+    _patch_both_header_copies(
+        shm_path, WAL_INDEX_CKSUM_OFFSET, bytes(byte ^ 0xFF for byte in stored)
+    )
+
+
+def _corrupt_checksummed_body(shm_path: Path, wal_path: Path) -> None:
+    """Move ``mxFrame``, which sits inside the 40 checksummed bytes but outside
+    the stored checksum words. Only a checksum that really covers the body
+    rejects this."""
+    frames = struct.unpack_from("=I", shm_path.read_bytes(), WAL_INDEX_MXFRAME_OFFSET)[0]
+    _patch_both_header_copies(
+        shm_path, WAL_INDEX_MXFRAME_OFFSET, struct.pack("=I", frames + 1)
+    )
+
+
+def _break_salt_link(shm_path: Path, wal_path: Path) -> None:
+    """Damage the ``-wal`` salts, not the header, so every WAL-index self-check
+    still passes and only the index-to-WAL linkage fails."""
+    data = bytearray(wal_path.read_bytes())
+    for index in range(
+        WAL_HEADER_SALT_OFFSET, WAL_HEADER_SALT_OFFSET + WAL_INDEX_SALT_BYTES
+    ):
+        data[index] ^= 0xFF
+    wal_path.write_bytes(bytes(data))
+
+
+WAL_INDEX_CORRUPTIONS = (
+    ("duplicate_header_mismatch", _corrupt_second_header_copy),
+    ("isinit_cleared", _clear_isinit),
+    ("unsupported_version", _bump_version),
+    ("stored_checksum_corrupted", _corrupt_stored_checksum),
+    ("checksummed_body_corrupted", _corrupt_checksummed_body),
+    ("salt_link_broken", _break_salt_link),
+)
+
+
+def test_genuine_store_shm_copy_passes_the_walindex_preflight(tmp_path):
+    """Control for every corruption case below: the untouched copy is accepted,
+    so a rejection there is caused by the damage and not by the fixture."""
+    _crashed_db, crashed_wal, crashed_shm = _crash_state_with_genuine_shm(tmp_path)
+    assert wal._shm_is_structurally_usable(crashed_shm) is True
+    assert wal._shm_holds_usable_wal_index(crashed_shm, crashed_wal) is True
+
+
+@pytest.mark.parametrize(
+    "corrupt", [pytest.param(fn, id=name) for name, fn in WAL_INDEX_CORRUPTIONS]
+)
+def test_walindex_preflight_rejects_damaged_genuine_header(tmp_path, corrupt):
+    _crashed_db, crashed_wal, crashed_shm = _crash_state_with_genuine_shm(tmp_path)
+    corrupt(crashed_shm, crashed_wal)
+    # None of these change the file's shape, so the structural gate still
+    # accepts it and only the header preflight can catch the damage.
+    assert wal._shm_is_structurally_usable(crashed_shm) is True
+    assert wal._shm_holds_usable_wal_index(crashed_shm, crashed_wal) is False
+
+
+@pytest.mark.parametrize(
+    "corrupt", [pytest.param(fn, id=name) for name, fn in WAL_INDEX_CORRUPTIONS]
+)
+def test_damaged_walindex_is_rejected_before_connecting(
+    tmp_path, bundle_dir, monkeypatch, corrupt
+):
+    crashed_db, crashed_wal, crashed_shm = _crash_state_with_genuine_shm(tmp_path)
+    corrupt(crashed_shm, crashed_wal)
+
+    before = _fingerprint((crashed_db, crashed_wal, crashed_shm))
+    connects: list[str] = []
+    _count_connects(monkeypatch, connects)
+
+    with pytest.raises(wal.BundleError) as exc_info:
+        wal.create_bundle(crashed_db, bundle_dir, timestamp=TS)
+
+    assert connects == []
+    message = str(exc_info.value)
+    assert "-shm" in message
+    _assert_no_source_disclosure(message, tmp_path)
+    assert _fingerprint((crashed_db, crashed_wal, crashed_shm)) == before
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+
+
+def test_hot_wal_with_unrelated_genuine_shm_is_rejected_before_connecting(
+    tmp_path, bundle_dir, monkeypatch
+):
+    """A structurally perfect, self-consistent, checksum-valid WAL-index that
+    belongs to a *different* database must still fail closed. Only the salt
+    linkage can tell the two apart."""
+    crashed_db, crashed_wal, crashed_shm = _crash_state_with_genuine_shm(
+        tmp_path, "crashed"
+    )
+    _other_db, other_wal, other_shm = _crash_state_with_genuine_shm(tmp_path, "other")
+    assert wal._shm_holds_usable_wal_index(other_shm, other_wal) is True
+    shutil.copy2(other_shm, crashed_shm)
+
+    salt_end = WAL_INDEX_SALT_OFFSET + WAL_INDEX_SALT_BYTES
+    foreign_salt = crashed_shm.read_bytes()[WAL_INDEX_SALT_OFFSET:salt_end]
+    own_salt = crashed_wal.read_bytes()[
+        WAL_HEADER_SALT_OFFSET : WAL_HEADER_SALT_OFFSET + WAL_INDEX_SALT_BYTES
+    ]
+    assert foreign_salt != own_salt
+    assert wal._shm_is_structurally_usable(crashed_shm) is True
+
+    before = _fingerprint((crashed_db, crashed_wal, crashed_shm))
+    connects: list[str] = []
+    _count_connects(monkeypatch, connects)
+
+    with pytest.raises(wal.BundleError) as exc_info:
+        wal.create_bundle(crashed_db, bundle_dir, timestamp=TS)
+
+    assert connects == []
+    _assert_no_source_disclosure(str(exc_info.value), tmp_path)
+    assert _fingerprint((crashed_db, crashed_wal, crashed_shm)) == before
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+
+
+def test_walindex_checksum_matches_the_header_sqlite_wrote(tmp_path):
+    """Independent evidence that the re-derived checksum is SQLite's own and not
+    merely self-consistent: it must reproduce the two words SQLite stored in a
+    header this test never touched."""
+    _crashed_db, _crashed_wal, crashed_shm = _crash_state_with_genuine_shm(tmp_path)
+    header = crashed_shm.read_bytes()[:WAL_INDEX_HDR_BYTES]
+    stored = struct.unpack_from("=2I", header, WAL_INDEX_CKSUM_OFFSET)
+    assert wal._walindex_checksum(header[:WAL_INDEX_CKSUM_OFFSET]) == stored
+    assert (
+        struct.unpack_from("=I", header, WAL_INDEX_VERSION_OFFSET)[0]
+        == WAL_INDEX_MAX_VERSION
+    )
+    assert header[WAL_INDEX_ISINIT_OFFSET] != 0
+
+
+def test_walindex_checksum_wraps_at_32_bits():
+    """The accumulators are 32-bit in `wal.c`; Python integers are not. Two
+    maximal words must fold to the wrapped values, not to big integers."""
+    assert wal._walindex_checksum(b"\xff" * 8) == (0xFFFFFFFF, 0xFFFFFFFE)
+
+
+def test_walindex_preflight_rejects_a_shm_shorter_than_two_headers(tmp_path):
+    """Guards the read itself: a short file fails closed instead of letting a
+    truncated buffer be parsed."""
+    _crashed_db, crashed_wal, crashed_shm = _crash_state_with_genuine_shm(tmp_path)
+    crashed_shm.write_bytes(crashed_shm.read_bytes()[: 2 * WAL_INDEX_HDR_BYTES - 1])
+    assert wal._shm_holds_usable_wal_index(crashed_shm, crashed_wal) is False
+
+
+class _UnstattableWal:
+    """Stands in for a ``-wal`` whose ``stat()`` fails for a reason other than
+    absence.
+
+    ``is_symlink`` answers False on purpose: the earlier symlink-based fallback
+    called exactly that and would have reported such a WAL cold, which is the
+    regression this fixture pins.
+    """
+
+    def __init__(self, error: OSError) -> None:
+        self._error = error
+
+    def stat(self):
+        raise self._error
+
+    def is_symlink(self) -> bool:
+        return False
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(PermissionError(13, "permission denied"), id="permission"),
+        pytest.param(OSError(5, "input/output error"), id="io"),
+        pytest.param(NotADirectoryError(20, "not a directory"), id="not_a_directory"),
+    ],
+)
+def test_wal_stat_failure_other_than_absence_counts_as_hot(error):
+    assert wal._wal_is_hot(_UnstattableWal(error)) is True
+
+
+def test_absent_wal_is_not_hot(tmp_path):
+    assert wal._wal_is_hot(tmp_path / "bridge.db-wal") is False
+
+
+def test_live_store_wal_shm_pair_still_captures(tmp_path, bundle_dir, capsys):
+    """No-regression boundary: the ``-wal``/``-shm`` pair SQLite itself creates
+    passes both the structural gate and the WAL-index header preflight, and
+    captures exactly as before."""
+    db = tmp_path / "live" / "bridge.db"
+    store = Store(db)
+    _seed(store)
+    try:
+        live_wal = db.with_name(db.name + "-wal")
+        live_shm = db.with_name(db.name + "-shm")
+        assert live_wal.stat().st_size > 0
+        shm_size = live_shm.stat().st_size
+        assert shm_size >= SHM_REGION_BYTES
+        assert shm_size % SHM_REGION_BYTES == 0
+        assert wal._shm_holds_usable_wal_index(live_shm, live_wal) is True
+
+        conn = wal._connect_readonly(db)
+        conn.close()
+
+        rc, report = create(db, bundle_dir, capsys, "--allow-live-source")
+        assert rc == 0, report
+        assert (bundle_dir / wal.BUNDLE_DB_NAME).is_file()
+        assert read_manifest(bundle_dir)["invariants"]["counts"]["trades"] == 4
+    finally:
+        store.close()
 
 
 def test_capture_drift_ignores_arrival_to_before_shm_only_change():
@@ -510,6 +1077,73 @@ def test_non_summary_source_mutation_during_capture_fails_closed(
     assert rc == 2
     assert report["failures"] == ["source_changed_during_capture"]
     assert calls["n"] == 3
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+
+
+def test_concurrent_writer_during_capture_still_fails_closed(
+    source_db, bundle_dir, capsys, monkeypatch
+):
+    """A real writer thread commits after the capture bracket has opened."""
+    real_connect = wal._connect_readonly
+    wrapped = {"done": False}
+    writer_started = threading.Event()
+    writer_finished = threading.Event()
+    writer_errors = []
+
+    class ConcurrentWriterBackupProxy:
+        def __init__(self, conn):
+            self.conn = conn
+
+        def execute(self, *args, **kwargs):
+            return self.conn.execute(*args, **kwargs)
+
+        def backup(self, target):
+            def write_during_capture():
+                writer_started.set()
+                try:
+                    writer = sqlite3.connect(source_db)
+                    try:
+                        writer.execute(
+                            "UPDATE orders SET order_json = ? WHERE cloid = ?",
+                            ('{"symbol":"ETH","concurrent":"changed"}', "cloid-0"),
+                        )
+                        writer.commit()
+                    finally:
+                        writer.close()
+                except Exception as exc:  # surfaced in the test thread below
+                    writer_errors.append(exc)
+                finally:
+                    writer_finished.set()
+
+            thread = threading.Thread(target=write_during_capture, daemon=True)
+            thread.start()
+            assert writer_started.wait(timeout=5)
+            assert writer_finished.wait(timeout=10)
+            thread.join(timeout=5)
+            assert not thread.is_alive()
+            assert writer_errors == []
+            return self.conn.backup(target)
+
+        def close(self):
+            self.conn.close()
+
+    def connect_with_concurrent_writer(path):
+        conn = real_connect(path)
+        if Path(path).resolve() == source_db.resolve() and not wrapped["done"]:
+            wrapped["done"] = True
+            return ConcurrentWriterBackupProxy(conn)
+        return conn
+
+    monkeypatch.setattr(wal, "_connect_readonly", connect_with_concurrent_writer)
+    rc, report = create(source_db, bundle_dir, capsys)
+
+    assert wrapped["done"] is True
+    assert writer_started.is_set()
+    assert writer_finished.is_set()
+    assert rc == 2
+    assert report["failures"] == ["source_changed_during_capture"]
+    assert report["drift_evidence"]["changed_components"]
     assert not (bundle_dir / wal.MANIFEST_NAME).exists()
     assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
 

@@ -1,7 +1,7 @@
 # Linux deployment assets — MTC Crypto Paper Bridge (Hyperliquid TESTNET)
 
 - Date added: 2026-07-26
-- Status: **PREPARATION ONLY — nothing here has been executed on any host.**
+- Status: **INTEGRATION PENDING — see the candidate-scoped execution history below; the newly integrated SHA has not been executed or accepted.**
 - Authority: none. These files are inert artifacts. Running any of them
   requires the separate owner authorizations named below.
 
@@ -110,14 +110,25 @@ environment; `install.sh` refuses to run if it is set in the invoking shell and
 `--state-db` / `MTC_BRIDGE_STATE_DB` plumbing in `bridge/app.py`. With no
 override set, the application keeps its existing in-repo default unchanged.
 
+**Start mode is unit-owned, not env-owned.** The first-start unit pins
+`MTC_BRIDGE_START_MODE=credential_free_disarmed` via `Environment=`. Defining
+`MTC_BRIDGE_START_MODE` in `/etc/mtc-bridge/mtc-bridge.env` would let the env
+file override that hashed, accepted DISARMED mode, so `verify.sh` rejects any
+`MTC_BRIDGE_START_MODE=` assignment — bare or `export` — found in the env file.
+
 **Rollback preserves evidence.** `rollback.sh` stops and masks the service and
 never deletes, moves or resets `/var/lib/mtc-bridge`. Risk history is evidence.
 
 ## Known limitations, recorded honestly
 
-- These assets have **never been executed**, on KVM2 or anywhere else. No
-  Ubuntu run, no `install.sh` invocation, no `systemctl` call has happened.
-  Test coverage in `tests/test_linux_deployment.py` is structural only.
+- `SECURITY_BASELINE.md` remains dated historical evidence for the old WP-I
+  static baseline; it does not establish the status of these integrated bytes.
+  Exact candidate `2ce41e34bceb599d80af24c5c33d835820ec321b` was installed
+  and executed on the disposable Gate-A staging host and passed A-0 through A-9
+  under the boundary recorded in
+  `MTC_COMMAND_CENTER/11_TRIAGE/GATE_A_A9_PASS_FINAL_2026-08-09D.md`.
+  The newly integrated SHA has not been installed, run, or accepted and must
+  repeat the full gate before any acceptance claim.
 - `requirements.lock` was resolved from package-index metadata for
   `--python-version 3.12 --python-platform linux`. Resolution is not the same as
   a successful install; the Ubuntu install itself remains

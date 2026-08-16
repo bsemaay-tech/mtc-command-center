@@ -19,6 +19,7 @@ monitoring. LLM layer is **veto/regime-only** — it never originates orders.
 4. `docs/02_BUILD_PLAN_1DAY.md` — ordered task list with acceptance criteria (now a 2-day plan).
 5. `docs/06_HYPERLIQUID_SETUP.md` — how to prepare the testnet account + API wallet.
 6. `docs/07_BROKER_DECISION.md` — why Hyperliquid; why not IBKR / Signum.
+7. `docs/30_TSP1009_KILL_EVIDENCE_RECOVERY.md` — durable owned-only KILL and ACK contract.
 
 ## Non-negotiable principles (from Barış)
 
@@ -31,7 +32,9 @@ monitoring. LLM layer is **veto/regime-only** — it never originates orders.
 4. **API wallet cannot withdraw** — use a Hyperliquid agent/API wallet, never the main key.
 5. **Native resting SL/TP** — stops are real orders on the exchange (protect even if the bridge dies).
 6. **Every decision logged as JSON** (signal, risk check, LLM directive, order, fill) — auditable.
-7. **Kill switch always one click away** — cancels all open orders, optionally flattens, disarms.
+7. **Kill switch always one click away** — latches KILLED first, cancels only proven-owned
+   risk-increasing orders, optionally flattens only exact proven-owned lots, and never ACKs
+   without fresh authoritative terminal evidence.
 8. **Independent from MCC** — no runtime imports; strategy parameters are *copied* from research,
    never live-linked.
 
@@ -50,3 +53,19 @@ python -m bridge.app --dry-run
 
 Then open `http://127.0.0.1:8790`. The dry-run path uses `MockBroker` and the local fixture only.
 Do not run `tools/smoke_p0.py` without explicit in-session approval.
+
+## Durable KILL capability (TS-P1-009)
+
+Schema v9 is an additive, explicitly selected capability; the default remains schema v4.
+There is no automatic migration or runtime activation. On v9, `POST /api/kill` remains
+emergency-available without `X-Confirm`. It reserves one durable episode before broker I/O,
+uses deterministic cancel/flatten action identities, and preserves owned reduce-only protection
+until exact flat proof exists. Foreign and ambiguous exposure is never mutated.
+
+`POST /api/kill/ack` requires the current `X-Confirm` state version and a fresh, current,
+accepted reconciliation checkpoint bound to the episode. ACK transitions to `DISARMED`, never
+`ARMED`. UNKNOWN, deadline, crash, partial application, quarantine, or incomplete ownership
+keeps the bridge KILLED and permits same-identity queries only.
+
+See `docs/30_TSP1009_KILL_EVIDENCE_RECOVERY.md` for the schema, lock ordering, deadline law,
+restart behavior, and evidence-preserving rollback procedure.

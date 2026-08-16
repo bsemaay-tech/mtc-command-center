@@ -12,7 +12,7 @@ import logging
 import math
 import os
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from decimal import Decimal, ROUND_DOWN
 
@@ -38,6 +38,8 @@ from bridge.engine.types import (
     Evidence,
     FillEvent,
     FlattenResult,
+    KillEvidenceCapture,
+    KillEvidenceEpoch,
     LotQuantizationError,
     LotUnit,
     OrderPlan,
@@ -56,6 +58,14 @@ from hyperliquid.utils.types import Cloid
 
 LIVE_ACK = "I_UNDERSTAND_THIS_IS_REAL_MONEY"
 logger = logging.getLogger(__name__)
+
+
+class _KillMutationEpochRejected(RuntimeError):
+    """Carries a fencing rejection across ``asyncio.to_thread`` unchanged."""
+
+    def __init__(self, cause: Exception) -> None:
+        self.cause = cause
+        super().__init__(type(cause).__name__)
 
 
 def round_hl_price(price: float, size_decimals: int) -> float:
@@ -358,7 +368,8 @@ class HyperliquidBroker:
         }
 
     async def place_bracket(
-        self, plan: OrderPlan, grouping: str = "normalTpsl"
+        self, plan: OrderPlan, grouping: str = "normalTpsl", *,
+        pre_send_guard: Callable[[], bool] | None = None,
     ) -> SubmissionOutcome:
         """Place entry + SL + optional TP as a bulk group.
 
@@ -436,10 +447,26 @@ class HyperliquidBroker:
         except Exception as exc:
             raise BrokerPreSendFailure("HL_REQUEST_BUILD_FAILED") from exc
 
+        if pre_send_guard is not None and not pre_send_guard():
+            raise BrokerPreSendFailure("HL_KILL_PRE_SEND_VETO")
+        worker_guard = (
+            getattr(pre_send_guard, "in_memory_only", pre_send_guard)
+            if pre_send_guard is not None
+            else None
+        )
+
+        def guarded_bulk_orders():
+            # The default executor may be saturated after the event-loop
+            # preflight succeeds. Re-read the process-local latch on the worker
+            # thread at the last possible boundary before the SDK write.
+            if worker_guard is not None and not worker_guard():
+                raise BrokerPreSendFailure("HL_KILL_PRE_SEND_VETO")
+            return self.exchange.bulk_orders(requests, grouping=grouping)
+
         try:
-            raw = await asyncio.to_thread(
-                self.exchange.bulk_orders, requests, grouping=grouping
-            )
+            raw = await asyncio.to_thread(guarded_bulk_orders)
+        except BrokerPreSendFailure:
+            raise
         except HyperliquidOrderError:
             raise
         except Exception as exc:
@@ -580,6 +607,9 @@ class HyperliquidBroker:
                 "role": role,
             }
             row = result.get(role.lower())
+            if row is not None:
+                row["side"] = "BUY" if request["is_buy"] else "SELL"
+                row["reduce_only"] = bool(request["reduce_only"])
             if row and row.get("oid") is not None:
                 self._oid_to_cloid[int(row["oid"])] = str(cloid)
 
@@ -1155,7 +1185,7 @@ class HyperliquidBroker:
                         "QUERY_ORDER", "HL_QUERY_FAILED", detail=type(exc).__name__
                     ),
                 )
-            return self._parse_order_query(raw, cloid)
+            return self._parse_order_query(raw, cloid, symbol)
         # Fall back to the raw open-order collection: it can only prove presence,
         # and any malformed row makes the entire recovery answer inexact.
         if not hasattr(self.info, "open_orders"):
@@ -1178,9 +1208,15 @@ class HyperliquidBroker:
             )
         for order in orders:
             if order.cloid == str(cloid):
+                if str(order.coin) != str(symbol):
+                    return OrderQueryResult(
+                        known=False,
+                        evidence=Evidence("OPEN_ORDERS", "HL_QUERY_IDENTITY_MISMATCH"),
+                    )
                 return OrderQueryResult(
                     known=True, found=True, terminal=False,
                     raw_status=str(order.status),
+                    cloid=str(order.cloid), symbol=str(order.coin),
                     evidence=Evidence("OPEN_ORDERS", "HL_ORDER_PRESENT"),
                 )
         # Absence from the open-order page alone is not proof of terminality.
@@ -1190,7 +1226,9 @@ class HyperliquidBroker:
         )
 
     @classmethod
-    def _parse_order_query(cls, raw: object, cloid: str) -> OrderQueryResult:
+    def _parse_order_query(
+        cls, raw: object, cloid: str, symbol: str
+    ) -> OrderQueryResult:
         if not isinstance(raw, dict):
             return OrderQueryResult(
                 known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_UNPARSEABLE")
@@ -1198,8 +1236,8 @@ class HyperliquidBroker:
         status = raw.get("status")
         if isinstance(status, str) and status.lower() in {"unknownoid", "unknown_oid"}:
             return OrderQueryResult(
-                known=True, found=False, terminal=True,
-                evidence=Evidence("QUERY_ORDER", "HL_ORDER_UNKNOWN_OID"),
+                known=False,
+                evidence=Evidence("QUERY_ORDER", "HL_QUERY_IDENTITY_MISSING"),
             )
         if not isinstance(status, str) or status.lower() != "order":
             return OrderQueryResult(
@@ -1224,15 +1262,32 @@ class HyperliquidBroker:
                 evidence=Evidence("QUERY_ORDER", "HL_QUERY_STATUS_UNKNOWN"),
             )
         inner = payload.get("order")
+        if not isinstance(inner, dict):
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_IDENTITY_MISSING")
+            )
+        returned_cloid = str(inner.get("cloid") or "").strip()
+        returned_symbol = str(inner.get("coin") or "").strip()
+        if not returned_cloid or not returned_symbol:
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_IDENTITY_MISSING")
+            )
+        if returned_cloid != str(cloid) or returned_symbol != str(symbol):
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_IDENTITY_MISMATCH")
+            )
         filled: float | None = None
-        if isinstance(inner, dict):
-            original = inner.get("origSz")
-            remaining = inner.get("sz")
-            if original is not None and remaining is not None:
-                try:
-                    filled = float(original) - float(remaining)
-                except (TypeError, ValueError):
-                    filled = None
+        oid: int | None = None
+        raw_oid = inner.get("oid")
+        if isinstance(raw_oid, int) and not isinstance(raw_oid, bool):
+            oid = raw_oid
+        original = inner.get("origSz")
+        remaining = inner.get("sz")
+        if original is not None and remaining is not None:
+            try:
+                filled = float(original) - float(remaining)
+            except (TypeError, ValueError):
+                filled = None
         live = normalized in cls._LIVE_ORDER_STATUSES
         return OrderQueryResult(
             known=True,
@@ -1240,6 +1295,9 @@ class HyperliquidBroker:
             terminal=not live,
             raw_status=normalized,
             filled_size=filled,
+            oid=oid,
+            cloid=returned_cloid,
+            symbol=returned_symbol,
             evidence=Evidence("QUERY_ORDER", "HL_QUERY_COMPLETE"),
         )
 
@@ -1288,6 +1346,40 @@ class HyperliquidBroker:
         return ActionOutcome.APPLIED, "HL_APPLIED"
 
     async def cancel_order_by_cloid(self, cloid: str, symbol: str) -> CancelResult:
+        return await self._cancel_order_by_cloid(
+            cloid=cloid,
+            symbol=symbol,
+            epoch=None,
+            epoch_guard=None,
+            worker_epoch_guard=None,
+        )
+
+    async def kill_cancel_order_by_cloid(
+        self,
+        cloid: str,
+        symbol: str,
+        *,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
+    ) -> CancelResult:
+        return await self._cancel_order_by_cloid(
+            cloid=cloid,
+            symbol=symbol,
+            epoch=epoch,
+            epoch_guard=epoch_guard,
+            worker_epoch_guard=worker_epoch_guard,
+        )
+
+    async def _cancel_order_by_cloid(
+        self,
+        *,
+        cloid: str,
+        symbol: str,
+        epoch: KillEvidenceEpoch | None,
+        epoch_guard: Callable[[KillEvidenceEpoch], None] | None,
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None] | None,
+    ) -> CancelResult:
         if self.exchange is None or not hasattr(self.exchange, "cancel_by_cloid"):
             return CancelResult(
                 ActionOutcome.NOT_APPLIED, str(cloid),
@@ -1295,10 +1387,26 @@ class HyperliquidBroker:
             )
         spec = self._order_specs.get(str(cloid), {})
         coin = str(spec.get("coin", symbol or self.coin))
-        try:
-            raw = await asyncio.to_thread(
-                self.exchange.cancel_by_cloid, coin, Cloid.from_str(str(cloid))
+
+        def guarded_cancel():
+            if epoch is not None and worker_epoch_guard is not None:
+                try:
+                    worker_epoch_guard(epoch)
+                except Exception as exc:  # fencing failures are hard aborts
+                    raise _KillMutationEpochRejected(exc) from exc
+            return self.exchange.cancel_by_cloid(
+                coin, Cloid.from_str(str(cloid))
             )
+
+        try:
+            if epoch is not None and epoch_guard is not None:
+                try:
+                    epoch_guard(epoch)
+                except Exception as exc:  # fencing failures are hard aborts
+                    raise _KillMutationEpochRejected(exc) from exc
+            raw = await asyncio.to_thread(guarded_cancel)
+        except _KillMutationEpochRejected as exc:
+            raise exc.cause from exc
         except Exception as exc:  # noqa: BLE001 - transport failure is UNKNOWN
             return CancelResult(
                 ActionOutcome.UNKNOWN, str(cloid),
@@ -1356,21 +1464,90 @@ class HyperliquidBroker:
         )
 
     async def flatten_reduce_only(
-        self, *, symbol: str, cloid: str, size: float
+        self, *, symbol: str, cloid: str, size: float, exit_side: str
     ) -> FlattenResult:
-        if self.exchange is None or not hasattr(self.exchange, "market_close"):
+        return await self._flatten_reduce_only(
+            symbol=symbol,
+            cloid=cloid,
+            size=size,
+            exit_side=exit_side,
+            epoch=None,
+            epoch_guard=None,
+            worker_epoch_guard=None,
+        )
+
+    async def kill_flatten_reduce_only(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        size: float,
+        exit_side: str,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
+    ) -> FlattenResult:
+        return await self._flatten_reduce_only(
+            symbol=symbol,
+            cloid=cloid,
+            size=size,
+            exit_side=exit_side,
+            epoch=epoch,
+            epoch_guard=epoch_guard,
+            worker_epoch_guard=worker_epoch_guard,
+        )
+
+    async def _flatten_reduce_only(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        size: float,
+        exit_side: str,
+        epoch: KillEvidenceEpoch | None,
+        epoch_guard: Callable[[KillEvidenceEpoch], None] | None,
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None] | None,
+    ) -> FlattenResult:
+        if self.exchange is None or not hasattr(self.exchange, "order"):
             return FlattenResult(
                 ActionOutcome.NOT_APPLIED, str(cloid),
                 Evidence("FLATTEN", "HL_NOT_CONFIGURED"),
             )
         try:
-            raw = await asyncio.to_thread(
-                self.exchange.market_close,
-                symbol,
-                sz=abs(float(size)),
-                slippage=0.05,
-                cloid=Cloid.from_str(str(cloid)),
+            is_buy = str(exit_side).upper() == "BUY"
+            if str(exit_side).upper() not in {"BUY", "SELL"}:
+                return FlattenResult(
+                    ActionOutcome.NOT_APPLIED, str(cloid),
+                    Evidence("FLATTEN", "HL_EXIT_SIDE_INVALID"),
+                )
+            price = await asyncio.to_thread(
+                self.exchange._slippage_price, symbol, is_buy, 0.05
             )
+
+            def guarded_flatten():
+                if epoch is not None and worker_epoch_guard is not None:
+                    try:
+                        worker_epoch_guard(epoch)
+                    except Exception as exc:  # fencing failures are hard aborts
+                        raise _KillMutationEpochRejected(exc) from exc
+                return self.exchange.order(
+                    symbol,
+                    is_buy,
+                    abs(float(size)),
+                    price,
+                    order_type={"limit": {"tif": "Ioc"}},
+                    reduce_only=True,
+                    cloid=Cloid.from_str(str(cloid)),
+                )
+
+            if epoch is not None and epoch_guard is not None:
+                try:
+                    epoch_guard(epoch)
+                except Exception as exc:  # fencing failures are hard aborts
+                    raise _KillMutationEpochRejected(exc) from exc
+            raw = await asyncio.to_thread(guarded_flatten)
+        except _KillMutationEpochRejected as exc:
+            raise exc.cause from exc
         except Exception as exc:  # noqa: BLE001
             return FlattenResult(
                 ActionOutcome.UNKNOWN, str(cloid),
@@ -1658,6 +1835,46 @@ class HyperliquidBroker:
             reason_code="HL_OPEN_ORDERS_COMPLETE",
             call_count=1,
             page_count=1,
+        )
+
+    async def capture_kill_evidence(
+        self,
+        *,
+        epoch: KillEvidenceEpoch,
+        symbol: str,
+        start_ms: int,
+        end_ms: int,
+    ) -> KillEvidenceCapture:
+        """One authoritative pre-mutation positions/orders/fills observation."""
+        try:
+            positions = (await self.portfolio_evidence()).positions
+        except Exception:
+            positions = self._reconcile_unavailable(
+                ReconcileComponentKind.POSITIONS,
+                "HL_POSITION_QUERY_FAILED",
+            )
+        try:
+            orders = await self.open_orders_evidence()
+        except Exception:
+            orders = self._reconcile_unavailable(
+                ReconcileComponentKind.OPEN_ORDERS,
+                "HL_OPEN_ORDER_QUERY_FAILED",
+            )
+        try:
+            fills = await self.fills_evidence(
+                start_ms=int(start_ms), end_ms=int(end_ms)
+            )
+        except Exception:
+            fills = self._reconcile_unavailable(
+                ReconcileComponentKind.FILLS,
+                "HL_FILLS_QUERY_FAILED",
+            )
+        return KillEvidenceCapture(
+            epoch=epoch,
+            symbol=str(symbol),
+            positions=positions,
+            open_orders=orders,
+            fills=fills,
         )
 
     async def fills_evidence(

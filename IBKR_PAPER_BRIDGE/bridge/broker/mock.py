@@ -32,6 +32,8 @@ from bridge.engine.types import (
     Evidence,
     FillEvent,
     FlattenResult,
+    KillEvidenceCapture,
+    KillEvidenceEpoch,
     LotQuantizationError,
     LotUnit,
     OrderPlan,
@@ -211,7 +213,9 @@ class MockBroker:
             roles.append("TP")
         return {role: f"{seed}:{role}" for role in roles}
 
-    async def place_bracket(self, plan: OrderPlan) -> SubmissionOutcome:
+    async def place_bracket(
+        self, plan: OrderPlan, *, pre_send_guard: Callable[[], bool] | None = None
+    ) -> SubmissionOutcome:
         if not self.connected:
             raise BrokerPreSendFailure("MOCK_NOT_CONNECTED")
         if len(self.bars) < 2:
@@ -220,6 +224,8 @@ class MockBroker:
         cloids = self.planned_cloids(plan)
         write_started = False
         try:
+            if pre_send_guard is not None and not pre_send_guard():
+                raise BrokerPreSendFailure("MOCK_KILL_PRE_SEND_VETO")
             write_started = True
             entry = self._order(
                 "ENTRY",
@@ -461,6 +467,8 @@ class MockBroker:
                 known=True,
                 found=False,
                 terminal=True,
+                cloid=str(cloid),
+                symbol=str(symbol),
                 evidence=Evidence("QUERY_ORDER", "MOCK_ORDER_ABSENT"),
             )
         status = str(order.get("status", "OPEN"))
@@ -473,6 +481,14 @@ class MockBroker:
             terminal=status not in _LIVE_STATUSES,
             raw_status=status,
             filled_size=filled,
+            oid=(
+                int(order["oid"])
+                if isinstance(order.get("oid"), int)
+                and not isinstance(order.get("oid"), bool)
+                else None
+            ),
+            cloid=str(order.get("cloid") or ""),
+            symbol=str(order.get("symbol") or ""),
             evidence=Evidence("QUERY_ORDER", "MOCK_ORDER_FOUND"),
         )
 
@@ -489,6 +505,10 @@ class MockBroker:
         if script is not None:
             if script.applied and order is not None and str(order.get("status")) in _LIVE_STATUSES:
                 order["status"] = "CANCELLED_BY_ENGINE"
+                self.full_open_orders = [
+                    row for row in self.full_open_orders
+                    if str(row.get("cloid")) != str(cloid)
+                ]
                 self._emit_order_update(order)
             return CancelResult(
                 script.outcome, str(cloid), Evidence("CANCEL", script.reason_code)
@@ -504,10 +524,28 @@ class MockBroker:
                 Evidence("CANCEL", "MOCK_ORDER_ALREADY_TERMINAL"),
             )
         order["status"] = "CANCELLED_BY_ENGINE"
+        self.full_open_orders = [
+            row for row in self.full_open_orders
+            if str(row.get("cloid")) != str(cloid)
+        ]
         self._emit_order_update(order)
         return CancelResult(
             ActionOutcome.APPLIED, str(cloid), Evidence("CANCEL", "MOCK_CANCEL_OK")
         )
+
+    async def kill_cancel_order_by_cloid(
+        self,
+        cloid: str,
+        symbol: str,
+        *,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
+    ) -> CancelResult:
+        """KILL-only seam: validate the token in the final synchronous slice."""
+        epoch_guard(epoch)
+        worker_epoch_guard(epoch)
+        return await self.cancel_order_by_cloid(cloid, symbol)
 
     def _apply_late_entry_fill(self, cancel_cloid: str) -> None:
         """Simulate a fill that lands between the cancel request and its ack."""
@@ -578,8 +616,13 @@ class MockBroker:
         )
 
     async def flatten_reduce_only(
-        self, *, symbol: str, cloid: str, size: float
+        self, *, symbol: str, cloid: str, size: float, exit_side: str
     ) -> FlattenResult:
+        if str(exit_side).upper() not in {"BUY", "SELL"}:
+            return FlattenResult(
+                ActionOutcome.NOT_APPLIED, str(cloid),
+                Evidence("FLATTEN", "MOCK_EXIT_SIDE_INVALID"),
+            )
         self.partial_calls.append(("flatten_reduce_only", str(cloid)))
         script = self._next_script(self.scripted_flatten)
         if script is not None:
@@ -593,6 +636,27 @@ class MockBroker:
             ActionOutcome.APPLIED, str(cloid), Evidence("FLATTEN", "MOCK_FLATTEN_OK")
         )
 
+    async def kill_flatten_reduce_only(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        size: float,
+        exit_side: str,
+        epoch: KillEvidenceEpoch,
+        epoch_guard: Callable[[KillEvidenceEpoch], None],
+        worker_epoch_guard: Callable[[KillEvidenceEpoch], None],
+    ) -> FlattenResult:
+        """KILL-only seam: validate the token immediately before mock mutation."""
+        epoch_guard(epoch)
+        worker_epoch_guard(epoch)
+        return await self.flatten_reduce_only(
+            symbol=symbol,
+            cloid=cloid,
+            size=size,
+            exit_side=exit_side,
+        )
+
     def _reduce_position(self, symbol: str, size: float, cloid: str) -> None:
         if self.position is None or self.position.symbol != symbol:
             return
@@ -601,15 +665,31 @@ class MockBroker:
         reduce_by = min(abs(current), abs(float(size)))
         close = self._order(
             "CLOSE", "FILLED", reduce_by, px, reduce_only=True, symbol=symbol,
-            cloid=str(cloid),
+            cloid=str(cloid), direction="LONG" if current > 0 else "SHORT",
         )
-        self._record_fill(close, reduce_by, px, datetime.now())
+        fill_ts = (
+            self.full_clock()
+            if self.full_clock is not None
+            else datetime.now(UTC)
+        )
+        self._record_fill(close, reduce_by, px, fill_ts)
         remaining = current - reduce_by if current > 0 else current + reduce_by
         self.position = (
             None
             if remaining == 0
             else self.position.model_copy(update={"size": remaining})
         )
+        matching = [
+            row for row in self.full_positions
+            if str(row.get("symbol", self.coin)) == symbol
+        ]
+        if matching:
+            self.full_positions = [
+                row for row in self.full_positions
+                if str(row.get("symbol", self.coin)) != symbol
+            ]
+            if remaining != 0:
+                self.full_positions.append({"symbol": symbol, "size": remaining})
 
     def process_bar(self, bar: Bar) -> None:
         for order in self.orders:
@@ -704,6 +784,20 @@ class MockBroker:
             "ts": ts,
         }
         self.fills.append(fill)
+        direction = str(order.get("direction", "LONG")).upper()
+        is_entry = str(order.get("role", "")).upper() == "ENTRY"
+        buy = (direction == "LONG") if is_entry else (direction == "SHORT")
+        self.full_fill_history.append({
+            "fill_id": fill["fill_id"],
+            "oid": int(order["oid"]),
+            "coin": str(order.get("symbol", self.coin)),
+            "side": "BUY" if buy else "SELL",
+            "sz": float(qty),
+            "px": float(px),
+            "time": int(
+                (ts if ts.tzinfo is not None else ts.astimezone()).timestamp() * 1000
+            ),
+        })
         event = FillEvent(
             fill_id=fill["fill_id"],
             cloid=fill["cloid"],
@@ -851,6 +945,47 @@ class MockBroker:
             margin=replace(margin, call_count=0),
         )
 
+    async def capture_kill_evidence(
+        self,
+        *,
+        epoch: KillEvidenceEpoch,
+        symbol: str,
+        start_ms: int,
+        end_ms: int,
+    ) -> KillEvidenceCapture:
+        """Capture the same authoritative mock fixtures used by reconciliation."""
+
+        def unavailable(kind: ReconcileComponentKind) -> ComponentEvidence:
+            return ComponentEvidence(
+                kind=kind,
+                source="MOCK",
+                status=ReconcileComponentStatus.UNAVAILABLE,
+                observed_ts=None,
+                reason_code=f"MOCK_{kind.value}_UNAVAILABLE",
+            )
+
+        try:
+            positions = (await self.portfolio_evidence()).positions
+        except Exception:
+            positions = unavailable(ReconcileComponentKind.POSITIONS)
+        try:
+            orders = await self.open_orders_evidence()
+        except Exception:
+            orders = unavailable(ReconcileComponentKind.OPEN_ORDERS)
+        try:
+            fills = await self.fills_evidence(
+                start_ms=int(start_ms), end_ms=int(end_ms)
+            )
+        except Exception:
+            fills = unavailable(ReconcileComponentKind.FILLS)
+        return KillEvidenceCapture(
+            epoch=epoch,
+            symbol=str(symbol),
+            positions=positions,
+            open_orders=orders,
+            fills=fills,
+        )
+
     async def open_orders_evidence(self) -> ComponentEvidence:
         self.full_calls.append("open_orders_evidence")
         await self._full_delay(ReconcileComponentKind.OPEN_ORDERS)
@@ -947,7 +1082,6 @@ class MockBroker:
                 and px > 0
                 and isinstance(time_value, int)
                 and not isinstance(time_value, bool)
-                and start_ms <= time_value <= end_ms
             )
             if not valid:
                 component = self._full_component(
@@ -963,6 +1097,11 @@ class MockBroker:
                     complete=False,
                     reason_code="MOCK_FILLS_MALFORMED",
                 )
+            # Hyperliquid applies the requested time window server-side. Mirror
+            # that behavior so the mock cannot expose rows the real adapter
+            # would never receive.
+            if not (start_ms <= time_value <= end_ms):
+                continue
             identity = (
                 str(fill_id)
                 if isinstance(fill_id, str) and fill_id.strip()

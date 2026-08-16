@@ -140,6 +140,11 @@ if [ -f "${MTC_ENV_FILE}" ] && grep -qE '^[[:space:]]*(export[[:space:]]+)?HL_LI
 else
   pass "HL_LIVE_ACK absent from env file"
 fi
+if [ -f "${MTC_ENV_FILE}" ] && grep -qE '^[[:space:]]*(export[[:space:]]+)?MTC_BRIDGE_START_MODE=' "${MTC_ENV_FILE}"; then
+  fail "MTC_BRIDGE_START_MODE is defined in the env file"
+else
+  pass "MTC_BRIDGE_START_MODE absent from env file"
+fi
 if grep -rqE '^[[:space:]]*Environment=.*HL_(API_WALLET_KEY|ACCOUNT_ADDRESS|LIVE_ACK)' \
      "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}" 2>/dev/null; then
   fail "unit carries credential material in Environment="
@@ -162,7 +167,8 @@ if [ -f "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}" ]; then
       'TimeoutStopSec=45' \
       'StartLimitBurst=3' \
       "ReadWritePaths=${MTC_STATE_DIR} ${MTC_LOG_DIR}" \
-      "MTC_BRIDGE_STATE_DB=${MTC_STATE_DB}" ; do
+      "MTC_BRIDGE_STATE_DB=${MTC_STATE_DB}" \
+      'MTC_BRIDGE_START_MODE=credential_free_disarmed' ; do
     if grep -qF "${needle}" "${unit}"; then
       pass "unit declares ${needle}"
     else

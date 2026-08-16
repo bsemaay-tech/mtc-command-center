@@ -47,7 +47,12 @@ done
 [ -n "${REPO}" ]        || die "--repo is required"
 [ -n "${OUT}" ]         || die "--out is required"
 require_release_sha "${RELEASE_SHA}"
-require_cmd git tar sha256sum sort realpath
+require_cmd git tar sha256sum sort realpath cmp mktemp find grep xargs
+for gnu_cmd in find sort grep realpath xargs; do
+  gnu_version="$("${gnu_cmd}" --version 2>/dev/null)" \
+    || die "GNU ${gnu_cmd} is required"
+  [[ "${gnu_version}" = *GNU* ]] || die "GNU ${gnu_cmd} is required"
+done
 
 git -C "${REPO}" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
   || die "--repo is not a git worktree"
@@ -71,7 +76,47 @@ fi
 mkdir -p "${OUT}"
 
 log "exporting ${RELEASE_SHA} via git archive"
-git -C "${REPO}" archive --format=tar "${RELEASE_SHA}" | tar -x -C "${OUT}"
+# Both line-ending pins are required: the repository's `* text=auto`
+# attribute makes core.eol load-bearing.  On Windows, its native default would
+# emit CRLF even with core.autocrlf=false.
+git -c core.autocrlf=false -c core.eol=lf -c tar.umask=0022 -C "${REPO}" \
+  archive --format=tar "${RELEASE_SHA}" | tar -x -C "${OUT}"
+
+TREE_RAW=""
+EXPECTED_INVENTORY=""
+ACTUAL_INVENTORY=""
+CR_INVENTORY=""
+cleanup_package_temps() {
+  local package_temp
+  for package_temp in "${TREE_RAW}" "${EXPECTED_INVENTORY}" \
+    "${ACTUAL_INVENTORY}" "${CR_INVENTORY}"; do
+    [ -z "${package_temp}" ] || rm -f -- "${package_temp}"
+  done
+}
+trap cleanup_package_temps EXIT
+TREE_RAW="$(mktemp)"
+EXPECTED_INVENTORY="$(mktemp)"
+ACTUAL_INVENTORY="$(mktemp)"
+CR_INVENTORY="$(mktemp)"
+
+log "verifying exported inventory and sizes match the release commit"
+if ! git -C "${REPO}" ls-tree -rz --long "${RELEASE_SHA}" > "${TREE_RAW}"; then
+  die "cannot inventory release commit tree"
+fi
+: > "${EXPECTED_INVENTORY}"
+while IFS= read -r -d '' tree_entry; do
+  tree_metadata="${tree_entry%%$'\t'*}"
+  tree_path="${tree_entry#*$'\t'}"
+  tree_size="${tree_metadata##* }"
+  printf '%s\t%s\0' "${tree_size}" "${tree_path}" >> "${EXPECTED_INVENTORY}"
+done < "${TREE_RAW}"
+if ! (cd "${OUT}" && find . -type f -printf '%s\t%P\0') > "${ACTUAL_INVENTORY}"; then
+  die "cannot inventory exported payload files"
+fi
+LC_ALL=C sort -z -o "${EXPECTED_INVENTORY}" "${EXPECTED_INVENTORY}"
+LC_ALL=C sort -z -o "${ACTUAL_INVENTORY}" "${ACTUAL_INVENTORY}"
+cmp -s "${EXPECTED_INVENTORY}" "${ACTUAL_INVENTORY}" \
+  || die "exported file inventory or sizes differ from release commit tree"
 
 printf '%s\n' "${RELEASE_SHA}" > "${OUT}/RELEASE_SHA"
 
@@ -80,9 +125,44 @@ assert_regular_directory_tree "${OUT}" || true
 [ "${MTC_FAILURES}" -eq 0 ] \
   || die "archive contains a symlink or special filesystem entry"
 
+log "verifying LF-only payload files contain no CR bytes"
+if ! (
+  cd "${OUT}"
+  find . -type f -path './IBKR_PAPER_BRIDGE/deploy/linux/*' -print0
+) > "${CR_INVENTORY}"; then
+  die "cannot inventory LF-required payload files"
+fi
+DEPLOY_LF_REQUIRED_COUNT=0
+while IFS= read -r -d '' payload_file; do
+  DEPLOY_LF_REQUIRED_COUNT=$((DEPLOY_LF_REQUIRED_COUNT + 1))
+done < "${CR_INVENTORY}"
+if ! (
+  cd "${OUT}"
+  find . -type f -name '*.sh' \
+    ! -path './IBKR_PAPER_BRIDGE/deploy/linux/*' -print0
+) >> "${CR_INVENTORY}"; then
+  die "cannot inventory LF-required payload files"
+fi
+LF_REQUIRED_COUNT=0
+while IFS= read -r -d '' payload_file; do
+  LF_REQUIRED_COUNT=$((LF_REQUIRED_COUNT + 1))
+  if LC_ALL=C grep -qU $'\r' "${OUT}/${payload_file#./}"; then
+    die "archive contains CR byte in LF-required file: ${payload_file#./}"
+  else
+    grep_status="$?"
+    [ "${grep_status}" -eq 1 ] \
+      || die "cannot inspect LF-required file for CR bytes: ${payload_file#./}"
+  fi
+done < "${CR_INVENTORY}"
+[ "${DEPLOY_LF_REQUIRED_COUNT}" -gt 0 ] \
+  || die "no deployment LF-required payload files were found to inspect"
+[ "${LF_REQUIRED_COUNT}" -gt 0 ] \
+  || die "no LF-required payload files were found to inspect"
+
 log "generating RELEASE_SHA256SUMS"
-( cd "${OUT}" \
-  && find . -type f '!' -name RELEASE_SHA256SUMS -print0 \
+( export LC_ALL=C
+  cd "${OUT}"
+  find . -type f '!' -name RELEASE_SHA256SUMS -print0 \
      | sort -z \
      | xargs -0 sha256sum > RELEASE_SHA256SUMS )
 

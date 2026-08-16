@@ -18,13 +18,7 @@ from fastapi.staticfiles import StaticFiles
 
 from bridge.api.routes import init_runtime_state, install_routes
 from bridge.api.ws import install_ws
-from bridge.broker.hyperliquid import HyperliquidBroker
-from bridge.broker.mock import MockBroker
-from bridge.engine.engine import BridgeEngine
-from bridge.engine.risk import RiskConfig, RiskEngine
-from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.store.db import Store
-from bridge.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +27,29 @@ logger = logging.getLogger(__name__)
 #: directory can live outside the read-only release tree. Unset everywhere
 #: else, which keeps the in-repo default untouched.
 STATE_DB_ENV_VAR = "MTC_BRIDGE_STATE_DB"
+START_MODE_ENV_VAR = "MTC_BRIDGE_START_MODE"
+CREDENTIALED_START_MODE = "credentialed"
+CREDENTIAL_FREE_DISARMED_START_MODE = "credential_free_disarmed"
+
+
+def resolve_start_mode(
+    cli_value: str | None = None,
+    env: Mapping[str, str] | None = None,
+) -> str:
+    """Resolve an explicit runtime mode without weakening the normal default."""
+    environ = os.environ if env is None else env
+    raw = cli_value if cli_value is not None else environ.get(START_MODE_ENV_VAR)
+    if raw is None:
+        return CREDENTIALED_START_MODE
+    mode = raw.strip()
+    if mode not in {
+        CREDENTIALED_START_MODE,
+        CREDENTIAL_FREE_DISARMED_START_MODE,
+    }:
+        raise ValueError(
+            f"--start-mode/{START_MODE_ENV_VAR} has an invalid start mode"
+        )
+    return mode
 
 
 def resolve_state_db_path(
@@ -88,8 +105,15 @@ def create_app(
     store_path: str | Path | None = None,
     start_runtime: bool = False,
     broker=None,
+    start_mode: str | None = None,
 ) -> FastAPI:
-    """Build an import-safe FastAPI app without exchange or LLM calls."""
+    """Build an import-safe FastAPI app, resolving start mode from arg then env."""
+    start_mode = resolve_start_mode(cli_value=start_mode)
+    credential_free_disarmed = start_mode == CREDENTIAL_FREE_DISARMED_START_MODE
+    if credential_free_disarmed and dry_run:
+        raise ValueError("credential-free DISARMED start mode cannot use --dry-run")
+    if credential_free_disarmed and broker is not None:
+        raise ValueError("credential-free DISARMED start mode cannot accept a broker")
     app = FastAPI(
         title="Crypto Paper Bridge",
         version="1.0.0",
@@ -110,9 +134,25 @@ def create_app(
             store.set_meta("app_state", "DISARMED")
     init_runtime_state(app, store=store)
     app.state.bridge_engine = None
-    if start_runtime:
+    app.state.credential_free_disarmed = credential_free_disarmed
+    if credential_free_disarmed:
+        app.state.bridge_status.update(
+            {
+                "mode": CREDENTIAL_FREE_DISARMED_START_MODE,
+                "network": "disabled",
+                "exchange_conn": "disabled",
+                "exchange_enabled": False,
+                "credential_lookup": "disabled",
+                "arm_enabled": False,
+            }
+        )
+    if start_runtime and not credential_free_disarmed:
         runtime_broker = broker or _build_broker(root, dry_run)
         run_id = f"{'dryrun' if dry_run else 'paper'}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
+
+        from bridge.engine.engine import BridgeEngine
+        from bridge.engine.risk import RiskConfig, RiskEngine
+        from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 
         async def publish(topic: str, data: object) -> None:
             if topic == "status" and isinstance(data, dict):
@@ -190,12 +230,15 @@ def create_app(
 
 def _build_broker(root: Path, dry_run: bool):
     if dry_run:
+        from bridge.broker.mock import MockBroker
+
         broker = MockBroker.from_csv(root / "tests" / "fixtures" / "BTC_1h.csv", starting_equity=100000)
         broker.streaming = True
         return broker
     # E1: resolve credentials process-env-first, then HKCU registry — the
     # BaseSettings defaults are empty when the parent process predates the
     # user-env variables.
+    from bridge.broker.hyperliquid import HyperliquidBroker
     from bridge.settings import resolve_hyperliquid_credentials
 
     account_address, api_wallet_key, _source = resolve_hyperliquid_credentials()
@@ -208,7 +251,8 @@ def _build_broker(root: Path, dry_run: bool):
     )
 
 
-app = create_app()
+if __name__ != "__main__":
+    app = create_app()
 
 
 if __name__ == "__main__":
@@ -216,6 +260,15 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--start-mode",
+        default=None,
+        metavar="MODE",
+        help=(
+            f"runtime start mode; use {CREDENTIAL_FREE_DISARMED_START_MODE!r} "
+            f"for credential-free DISARMED operation, or set {START_MODE_ENV_VAR}"
+        ),
+    )
     parser.add_argument(
         "--state-db",
         default=None,
@@ -230,5 +283,6 @@ if __name__ == "__main__":
         dry_run=args.dry_run,
         store_path=resolve_state_db_path(args.state_db),
         start_runtime=True,
+        start_mode=resolve_start_mode(args.start_mode),
     )
     uvicorn.run(runtime_app, host="127.0.0.1", port=8790, reload=False)
