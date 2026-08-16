@@ -4,31 +4,24 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
-## OWNER-REQUESTED OPEN — Gemini 3.7 Flash Pro read-only repo route (2026-08-16)
+## OWNER-REQUESTED BLOCKED — Gemini 3.7 Flash Pro read-only repo route (2026-08-16)
 
-**Execution tier: T0.** Installation/authentication/live completion are verified, but repo
-wiring is not implemented or accepted. Claude Pro counterpart resets at 18:10
-Europe/Chisinau; Claude Max remains emergency-only and was not used.
+**Execution tier: T0.** The owner explicitly directed Codex to perform the implementation
+instead of waiting for Claude. Installation, authentication, live completion, dedicated
+project isolation, launcher implementation, preflight, canonical repo read, and denied-write
+probe are complete. Repo authorization is blocked after the final permitted Codex audit returned
+`REQUEST_CHANGES`; Claude Max remains emergency-only and was not used.
 
-1. **[AI: Claude] Gate 2 then Gate 3 after reset.** Implement only:
-   `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1`, dedicated project
-   config `C:\Users\BarışSemaay\.gemini\config\projects\4b64b3f9-1bfa-4de1-a9eb-276f2e0489b7.json`,
-   the Antigravity row in `C:\LAB\PROJECT_STARTER_KIT\TOOLBOX.md`, and the secret-free
-   route entry in `_AI_MEMORY/AI_ACCOUNT_AND_MODEL_ROUTING.md`. Do not alter shared legacy
-   permission storage in this task.
-2. **Safety contract.** Exact canonical repo only; frozen `C:\LAB\tradingview-lab` refused;
-   project `allowWrite=false`; deny inherited write, unsandboxed, web, MCP, user-home,
-   broad shell, and Git-mutation grants; only narrow read/search/Git-inspection commands.
-   Wrapper always uses `--project`, `gemini-3.7-flash-high`, `--sandbox`, `--mode plan`,
-   finite structured print, process-scoped auto-update/account-display suppression, and
-   never `--dangerously-skip-permissions`.
-3. **D026 QA.** Prove success, missing/malformed config, frozen-path refusal, unavailable
-   model, denied write/Git mutation, tracked and `.git` mutation detection, empty/non-success
-   model result, and dirty-but-unchanged acceptance. Show equivalent-mutant RED and guarded
-   GREEN evidence.
-4. **[AI: Lead] T0 acceptance.** Independently inspect files and real config; reproduce QA;
-   then run fresh `claude-opus-5` xhigh and `gpt-5.6-sol` xhigh Gate 5/Gate 6 reviews.
-   Only after both accept may the route be called repo-ready and the Toolbox row committed.
+1. **T0 cap exhausted.** Literal commands and outputs are in
+   `11_TRIAGE/GEMINI_PRO_READ_ONLY_ROUTE_QA_2026-08-16.md`. Codex rounds 1 and 2 returned
+   BLOCK; round 3 returned `REQUEST_CHANGES`. The final response did not enumerate its repair,
+   although its transcript investigated watcher final-drain and `USERPROFILE` path-binding risks.
+2. **[AI: Barış] Decision required before any continuation.** Do not silently run round 4.
+   The owner may authorize a new bounded diagnosis/repair cycle or leave the installed route
+   outside repo governance. Fresh accepting `gpt-5.6-sol` xhigh and `claude-opus-5` xhigh
+   reviews are still required before this route can be called repo-ready.
+3. **Scope remains narrow.** Do not alter shared legacy Antigravity permission storage,
+   protected source, trading/Pine/parity/MTC behavior, schemas, credentials, hosts, or deploys.
 
 ## OWNER-REQUESTED OPEN — AI-memory continuity audit and repair (2026-08-16)
 

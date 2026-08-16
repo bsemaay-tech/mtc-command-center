@@ -213,7 +213,60 @@ Never authenticate Max into the default `.claude` profile, and never log the Pro
 
 ---
 
-## 9. Installed local AI tooling & router decision (2026-08-08)
+## 9. Google AI Pro — Gemini 3.7 Flash read-only route (2026-08-16)
+
+| Item | Value |
+|---|---|
+| Account | `bsemaay3@gmail.com` — Google AI Pro, authenticated interactively in Antigravity CLI |
+| CLI | `C:\Users\BarışSemaay\AppData\Local\agy\bin\agy.exe` — verified version 1.1.13 |
+| Mandatory launcher | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1` |
+| Dedicated project | `4b64b3f9-1bfa-4de1-a9eb-276f2e0489b7` |
+| Default model | `gemini-3.7-flash-high` |
+| Authority | Supplemental read-only inspection only. Never Lead, counterpart flagship, canonical auditor, protected implementer, or acceptance authority. Lead must reproduce every finding. |
+
+Run only from the canonical repository root:
+
+```powershell
+Set-Location 'C:\LAB\Tradingview_LAB_CLEAN'
+& 'C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1' -Prompt 'Review the named files and report evidence with paths.'
+```
+
+The launcher fails closed unless the current directory and Git top-level are exactly
+`C:\LAB\Tradingview_LAB_CLEAN`. It refuses the frozen `C:\LAB\tradingview-lab` checkout,
+pins the dedicated project and Gemini 3.7 Flash model, requires Antigravity 1.1.13 or newer,
+uses `--sandbox --mode plan`, enforces a finite timeout and structured JSON result, suppresses
+auto-update and account display only in the child process, and verifies that tracked state,
+HEAD, refs, object counts, Git index, local Git config, and packed refs are unchanged.
+It pins `C:\Program Files\Git\cmd\git.exe`, disables optional locks, system/global Git config,
+fsmonitor, untracked cache, and hooks for snapshot commands. During inference it also watches
+the complete repository tree and exact project config for filesystem change events.
+
+The dedicated project sets `allowWrite=false` and, because Antigravity evaluates
+`Deny > Ask > Allow`, denies `write_file(*)`, `command(*)`, `unsandboxed(*)`, all web and MCP
+actions, user-home reads, and reads from the frozen repository. Its only project allow is
+recursive read access to the canonical repository. Do not use bare `agy` for repository work,
+do not use `--dangerously-skip-permissions`, and do not modify the historical shared grants as
+part of this route.
+
+**Live evidence (time-specific, 2026-08-16):** the account banner showed Google AI Pro; the
+model list exposed all three Gemini 3.7 Flash effort variants; an external synthetic completion
+returned the exact marker; the mandatory launcher read the canonical `AGENTS.md` and returned
+the exact frozen path; an in-repo write request was denied and its unique marker remained absent.
+The repo already had a tracked `SESSION_LOCK.md` ownership edit, and the unchanged-dirty-state
+guard accepted it, proving that pre-existing tracked dirt is permitted only when byte/state
+signals remain unchanged. Quota percentages are deliberately not preserved here; re-check live.
+Literal commands, RED/GREEN mutations, and real outputs are recorded in
+`MTC_COMMAND_CENTER/11_TRIAGE/GEMINI_PRO_READ_ONLY_ROUTE_QA_2026-08-16.md`.
+
+**Acceptance state:** installed and locally reproduced by the Codex Lead under the owner's
+explicit 2026-08-16 override to perform implementation directly, but not repo-ready. Codex T0
+rounds 1 and 2 returned BLOCK and round 3 returned `REQUEST_CHANGES`, exhausting the three-round
+cap before Claude acceptance. Do not use this as a repository agent unless the owner authorizes
+a new bounded cycle and fresh `claude-opus-5` xhigh plus `gpt-5.6-sol` xhigh reviews both accept.
+
+---
+
+## 10. Installed local AI tooling & router decision (2026-08-08)
 
 ### Verified local inventory
 

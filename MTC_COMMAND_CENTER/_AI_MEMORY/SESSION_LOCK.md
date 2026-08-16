@@ -31,7 +31,7 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 17:16 | — |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 18:33 +03 | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
@@ -42,6 +42,15 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 18:33 +03:** Codex Lead `01a00ad1` released the shared-memory row. The
+  Gemini route is installed and live probes pass, but final T0 Codex round 3 returned
+  `REQUEST_CHANGES`, exhausting the three-round cap. Claude acceptance was not run and
+  the route remains not repo-ready pending explicit owner direction.
+
+- **2026-08-16 17:23 +03:** Owner explicitly directed Codex to perform the implementation
+  instead of waiting for Claude. Codex Lead `01a00ad1` reclaimed only the shared-memory
+  row for that narrow override; independent T0 acceptance requirements remain unchanged.
 
 - **2026-08-16 17:16 +03:** Codex Lead `01a00ad1` released the shared-memory row.
   Google AI Pro authentication and the external synthetic probes succeeded, but the
