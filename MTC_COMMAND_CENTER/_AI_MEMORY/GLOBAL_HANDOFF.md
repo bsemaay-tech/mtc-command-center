@@ -35,10 +35,31 @@ Executed this session, all committed and pushed:
    release acceptance + KVM2 read-only inventory (authorized by contract clause 5,
    sequenced after acceptance).
 
+**LATER THE SAME AFTERNOON — candidate T0 ACCEPTED:** Codex `gpt-5.6-sol` xhigh
+**PASS** (0 findings) + `claude-opus-5` xhigh **PASS-WITH-NITS** (0 required,
+4 prose nits — all repaired same day). Both executed the full suite
+independently (`1360 passed`). Acceptance record:
+`11_TRIAGE/BRIDGE_RELEASE_T0_ACCEPTANCE_2026-08-16.md`. **`62bf661b` is the
+accepted current Bridge release candidate.**
+
+KVM2 read-only inventory (contract clause 5): access route recovered —
+host `152.239.123.231`, pinned host key, identity `~/.ssh/hostinger_kvm2`,
+principal `baris` (local shell history). **BLOCKED on one owner action: the
+key is passphrase-protected; owner must `ssh-add` it himself** (passphrase
+never passes through AI/chat). Inventory command set ready; runs immediately
+after. Note for successors: ssh here needs explicit
+`-o UserKnownHostsFile="C:\Users\BarışSemaay\.ssh\known_hosts"` — the Turkish
+character in HOME breaks the default path resolution.
+
+Two-commit chain V2 T1 re-audit dispatched (`claude-opus-5` high, snapshot
+`C:\RO`) — in flight at time of writing; verdict lands at
+`C:\tmp\lane_out\AUD_TC2_VERDICT.md`.
+
 Locks held by this session: shared-memory, Stage-1/runbook, Bridge-release-
-integration (see SESSION_LOCK.md). Next in chain after acceptance: two-commit
-chain V2 re-audit → gate-2 re-derivation → Stage-1 freeze; and read-only KVM2
-inventory → one exact deployment plan → owner authorization for install.
+integration (see SESSION_LOCK.md). Next in chain after acceptance: chain V2
+verdict collection → gate-2 re-derivation → Stage-1 freeze; and (owner) ssh-add
+→ read-only KVM2 inventory → one exact deployment plan → owner authorization
+for install.
 
 ## [Fable 5 Lead] 2026-08-16 midday — clean stop; entry point is the midday handoff
 

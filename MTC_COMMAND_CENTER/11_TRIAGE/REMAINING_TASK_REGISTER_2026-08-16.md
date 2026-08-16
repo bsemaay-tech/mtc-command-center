@@ -53,8 +53,8 @@ confirmed live fact, only an absence of records.
 
 | Row | State | Evidence / note |
 |---|---|---|
-| Identify exact VPS + safe access route | UNKNOWN | Read-only inventory authorized by accelerated contract clause 5. |
-| Inventory OS/services/files/firewall/listeners/storage/backups/monitoring | UNKNOWN | Same. |
+| Identify exact VPS + safe access route | DONE (2026-08-16) | Host `152.239.123.231` (host key pinned in local known_hosts, all three types); identity `~/.ssh/hostinger_kvm2`; principal `baris` per local shell history. Host-key verification succeeds with explicit known_hosts path. No secret displayed. |
+| Inventory OS/services/files/firewall/listeners/storage/backups/monitoring | **BLOCKED — owner action** | The `hostinger_kvm2` private key is passphrase-protected; BatchMode auth returns `Permission denied (publickey)`. Owner must load the key into ssh-agent himself (`ssh-add`) — the passphrase never passes through an AI or chat. Read-only inventory command set is prepared and runs immediately after. |
 | Host-specific deployment + rollback plan | OPEN | Written from observed facts after inventory. |
 | Baseline reproduction, archive of existing state | OPEN | Only after separate configure/install authorization. |
 | Masked DISARMED install of exact accepted release | OPEN | Root-owned, immutable, pinned venv, exact commit path; masked/unenabled/unstarted. Separate authorization required. |
