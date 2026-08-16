@@ -326,7 +326,7 @@ runtime/install-essential boundary. Do not combine that optimization with the
 first scope repair. It would require:
 
 - a versioned explicit runtime closure rather than whole-subtree capture;
-- an independently signed source/verification companion;
+- an independently hash-bound source/verification companion;
 - tests proving every Python import, static asset, config, migration, unit,
   installer, verifier, and rollback dependency;
 - a clear rule for whether the installed release is source evidence or only a
