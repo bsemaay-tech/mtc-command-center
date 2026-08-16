@@ -44,6 +44,24 @@ later AI trying to understand the code.
 8. Preserve the existing no-`innerHTML` static safety contract and avoid external
    UI dependencies.
 9. Be responsive and usable with keyboard focus and reduced-motion preferences.
+10. The **Exchange plane** must explain, in plain language, Hyperliquid TESTNET,
+    the main account versus Agent/API wallet, native reduce-only SL/TP, exchange
+    truth, slippage and protection limits, and why MAINNET remains a separate
+    real-money owner/audit gate. State that an API wallet's inability to withdraw
+    does not make theft harmless: it may still place damaging trades or cancel
+    protection. Explain that the last exchange-accepted native stop survives a
+    Bridge outage, while Bridge-computed trailing updates stop until recovery.
+11. The **Observation and Control plane** must distinguish three identities:
+    the owner, the read-only AI assistant, and the Bridge runtime. It must show
+    that current V1 has real ARM/DISARM/KILL dashboard endpoints but no login,
+    2FA, or role system; because it binds to `127.0.0.1:8790`, it must never be
+    presented as a public website or phone-ready remote control today.
+12. Show the recommended staged access model without claiming implementation:
+    private VPS loopback service; owner access through a private tunnel/VPN;
+    remote read-only monitoring first; authenticated owner-only control later
+    with login, 2FA, roles, fresh-state confirmation and audit logging. The AI
+    remains read-only and never receives ARM, DISARM, KILL, config, order, wallet,
+    shell, or code-editing authority.
 
 ## Explicit exclusions
 

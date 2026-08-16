@@ -20,7 +20,11 @@ No dashboard source or live system changed.
    machine-readable knowledge source for both the UI and future AI agents. The owner requires
    beautiful interactive explanatory drawings/flow diagrams; the SQLite+WAL card must explain
    the black-box/logbook plainly (decisions, orders, fills, position snapshots/evidence), state
-   that Hyperliquid remains actual-position truth, and warn that backups must be WAL-safe.
+   that Hyperliquid remains actual-position truth, and warn that backups must be WAL-safe. The
+   Exchange plane must cover TESTNET, main versus Agent/API wallet, native reduce-only SL/TP,
+   slippage/outage limits and the separate MAINNET gate. The Observation/Control plane must state
+   that V1 controls are real but loopback-only and unauthenticated, so remote monitoring comes
+   before any future login+2FA+roles owner-control layer; AI remains read-only.
 3. **[AI: Codex] Acceptance after implementation:** independently inspect the
    exact diff, run the static-dashboard and JSON integrity tests, perform the
    fresh T1 flagship review, and accept only PASS/PASS-WITH-NITS within the
