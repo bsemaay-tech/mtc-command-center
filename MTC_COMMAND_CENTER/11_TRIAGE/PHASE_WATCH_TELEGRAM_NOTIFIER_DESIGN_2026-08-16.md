@@ -1,8 +1,14 @@
 # Phase Watch — Telegram notifier DESIGN (prepared, NOT deployed)
 
-**STATUS: DESIGN ONLY — owner requested 2026-08-16 late evening. Nothing installed,
-no wrapper change, no scheduled-task change, no bot created, no credential touched.
-Deployment requires explicit owner approval of §6.**
+**STATUS: APPROVED by owner ("approve telegram notifier", 2026-08-16 late evening)
+— §6.1 IMPLEMENTED same night:** `Send-WatchAlert` + daily-summary stamp + `-FakeWarnTest`
+switch added to `C:\LAB\HERMES_WATCH\phase_watch_check.ps1`; credentials read via
+Windows Credential Manager (advapi32 CredRead), never logged. Verified with
+credentials absent: fake-WARN → clean `NOTIFY-SKIP` log line, watch unaffected;
+PENDING run → zero notifications. **Remaining: §6.2 owner creates the bot and runs
+the two `cmdkey` commands in §3, then §6.3 supervised fake-WARN send
+(`phase_watch_check.ps1 -FakeWarnTest` → exactly one labelled TEST message).**
+Scheduled task, PHASE_WATCH.md gates, KVM2: untouched.
 
 ## 1. Current state (verified 2026-08-16)
 

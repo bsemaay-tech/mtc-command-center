@@ -107,9 +107,12 @@ promotable strategy (Phase 3, QuantLens research) and its own gate. No shortcut.
 - Daily AI sessions: read the last ~6 log entries, escalate any WARN/FAIL into
   `NEXT_STEPS.md`, tick the day's boxes above.
 - Hermes is read-only here: it never ARMs, never touches keys, never edits repo files.
-- **Notifications: NONE yet** — the watch writes local logs only. A Telegram
-  notifier (immediate WARN/FAIL, one daily OK summary, never PENDING, credentials
-  owner-managed outside Git) is DESIGNED but NOT deployed, awaiting owner approval:
+- **Notifications: Telegram notifier IMPLEMENTED in the wrapper (owner-approved
+  2026-08-16), pending owner credential step** — immediate WARN/FAIL on active runs,
+  one daily OK summary (first run after 07:00), never on PENDING, status-lines-only
+  messages. Credentials = Credential Manager entries `MTC-TG-BOT-TOKEN` /
+  `MTC-TG-CHAT-ID` (owner-created via cmdkey, outside Git); until they exist the
+  wrapper logs `NOTIFY-SKIP` and sends nothing. Design + status:
   `11_TRIAGE/PHASE_WATCH_TELEGRAM_NOTIFIER_DESIGN_2026-08-16.md`.
 
 ## Safety fence
