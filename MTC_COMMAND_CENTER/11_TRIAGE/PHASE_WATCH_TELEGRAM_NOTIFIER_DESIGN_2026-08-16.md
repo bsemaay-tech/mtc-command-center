@@ -1,14 +1,30 @@
 # Phase Watch — Telegram notifier DESIGN (prepared, NOT deployed)
 
-**STATUS: APPROVED by owner ("approve telegram notifier", 2026-08-16 late evening)
-— §6.1 IMPLEMENTED same night:** `Send-WatchAlert` + daily-summary stamp + `-FakeWarnTest`
-switch added to `C:\LAB\HERMES_WATCH\phase_watch_check.ps1`; credentials read via
-Windows Credential Manager (advapi32 CredRead), never logged. Verified with
-credentials absent: fake-WARN → clean `NOTIFY-SKIP` log line, watch unaffected;
-PENDING run → zero notifications. **Remaining: §6.2 owner creates the bot and runs
-the two `cmdkey` commands in §3, then §6.3 supervised fake-WARN send
-(`phase_watch_check.ps1 -FakeWarnTest` → exactly one labelled TEST message).**
-Scheduled task, PHASE_WATCH.md gates, KVM2: untouched.
+**STATUS: DEPLOYMENT HELD by owner ruling (2026-08-16, after the initial approval)
+— T0 REVIEW REQUIRED BEFORE ACTIVATION.** The owner classified the active Hermes
+watcher plus the Telegram credential/network handling as **T0** and required the
+tier-mandated review to complete before the notifier goes live. §6.1 code exists in
+`C:\LAB\HERMES_WATCH\phase_watch_check.ps1` but is dormant (no credentials stored;
+credentials absent → clean `NOTIFY-SKIP`, watch unaffected; PENDING → zero
+notifications — both verified). **Credential entry REDESIGNED per the same ruling:**
+the original §3 `cmdkey` commands are WITHDRAWN (they place the token on a command
+line and in shell history). Two compliant routes now exist, to be finalized in the
+T0 review: (a) **reuse the existing owner-managed USER environment variables**
+`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` of the existing @MTCHyperbot (per the owner
+directive recorded in the wrapper header — no new entry, token never re-typed
+anywhere; messages prefixed `[PHASE WATCH][KVM2]` to stay distinguishable); or
+(b) a dedicated credential entered via the interactive helper
+`C:\LAB\HERMES_WATCH\Set-TelegramCredentials.ps1` (hidden `Read-Host
+-AsSecureString` prompts → advapi32 CredWrite; accepts no arguments by design).
+Either way the token can never appear in a command line, history, log, or the repo.
+NOTE: as of this edit the wrapper header documents route (a) while its
+`Send-WatchAlert` code still reads Credential Manager — reconciling this mismatch
+is a named T0-review item.
+Pre-review hardening already applied: `NOTIFY-FAIL` log line masks the token if an
+exception message embeds the request URI. T0 review record:
+`PHASE_WATCH_NOTIFIER_T0_REVIEW_PENDING_2026-08-16.md`. Order now: T0 review →
+owner runs the helper (§6.2, redesigned) → §6.3 supervised fake-WARN test →
+activation. Scheduled task, PHASE_WATCH.md gates, KVM2: untouched.
 
 ## 1. Current state (verified 2026-08-16)
 
@@ -59,13 +75,19 @@ mechanism the GLM audit route already uses. Barış creates the bot with BotFath
 his own Telegram, obtains his chat id, then runs himself (AI never sees or types
 the token — same rule as every other credential here):
 
-```bash
-cmdkey /generic:MTC-TG-BOT-TOKEN /user:bot /pass:<token-from-BotFather>
-```
+> **WITHDRAWN (owner ruling 2026-08-16):** the original `cmdkey /pass:<token>`
+> commands are forbidden — they put the token on the command line and into shell
+> history. Use the interactive helper instead:
 
 ```bash
-cmdkey /generic:MTC-TG-CHAT-ID /user:chat /pass:<numeric-chat-id>
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\LAB\HERMES_WATCH\Set-TelegramCredentials.ps1
 ```
+
+The helper takes no arguments (refuses any), prompts twice with hidden input
+(`Read-Host -AsSecureString`), writes both values straight into Credential Manager
+via advapi32 `CredWrite`, zeroes the in-memory copies, and never echoes or logs a
+value. Deleting later by name (`cmdkey /delete:MTC-TG-BOT-TOKEN`) is fine — a
+delete carries no secret.
 
 The wrapper reads both at runtime (same read technique as `glm.ps1`), keeps them in
 process memory only, never logs them, never echoes them. Nothing credential-shaped

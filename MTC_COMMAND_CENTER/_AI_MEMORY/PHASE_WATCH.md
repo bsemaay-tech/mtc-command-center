@@ -15,13 +15,21 @@ HOST: KVM2 (install pending owner signature; payload uploaded, python3.12-venv i
 STATUS_SOURCE: see "STATUS_SOURCE map" section below (concrete read-only locations per check; access route TO FILL AT ACTIVATION)
 LAST_HUMAN_UPDATE: 2026-08-16 (initial authoring)
 
-Activation (owner ruling 2026-08-16 late evening): `WATCH_ACTIVE` stays `NO` until
+Activation (owner rulings 2026-08-16 late evening): `WATCH_ACTIVE` stays `NO` until
 the **deployment-owner session** (the other active Fable session — sole owner of
 KVM2, deployment, credentials, ARM, TESTNET) confirms a successful DISARMED start.
-Only after that confirmation does a Lead flip `WATCH_ACTIVE: YES`, set `PHASE: 1`,
-and fill `STATUS_SOURCE` with the concrete places to look (bridge log path on KVM2,
-dashboard/health endpoint, backup dir). Until then the cron logs "PENDING" and
-spends no AI tokens. No other session may pre-activate the watch.
+ALL of the following must then also hold before the flip to `YES`:
+
+1. Deployment-owner session supplies the approved read-only access alias and the
+   backup directory for the STATUS_SOURCE map.
+2. A **separately owner-authorized bounded read-only live check** against KVM2
+   succeeds. The local `-TestReport` demo proves CHECKLIST PARSING ONLY — it is
+   NOT evidence of real KVM2 monitoring and must never be cited as such.
+3. The **T0 review** of the active watcher + Telegram notifier completes with an
+   accepting verdict pair (`11_TRIAGE/PHASE_WATCH_NOTIFIER_T0_REVIEW_PENDING_2026-08-16.md`).
+
+Until then the cron logs "PENDING" and spends no AI tokens. No other session may
+pre-activate the watch.
 
 ## Phase 1 — prove it breathes (first week after DISARMED start, cheap)
 
@@ -107,8 +115,11 @@ promotable strategy (Phase 3, QuantLens research) and its own gate. No shortcut.
 - Daily AI sessions: read the last ~6 log entries, escalate any WARN/FAIL into
   `NEXT_STEPS.md`, tick the day's boxes above.
 - Hermes is read-only here: it never ARMs, never touches keys, never edits repo files.
-- **Notifications: Telegram notifier IMPLEMENTED in the wrapper (owner-approved
-  2026-08-16), pending owner credential step** — immediate WARN/FAIL on active runs,
+- **Notifications: Telegram notifier code present but DEPLOYMENT HELD — owner
+  classified watcher + credential/network handling as T0; review pending
+  (`11_TRIAGE/PHASE_WATCH_NOTIFIER_T0_REVIEW_PENDING_2026-08-16.md`). Credential
+  entry ONLY via `C:\LAB\HERMES_WATCH\Set-TelegramCredentials.ps1` (hidden prompts;
+  the old cmdkey commands are withdrawn)** — immediate WARN/FAIL on active runs,
   one daily OK summary (first run after 07:00), never on PENDING, status-lines-only
   messages. Credentials = Credential Manager entries `MTC-TG-BOT-TOKEN` /
   `MTC-TG-CHAT-ID` (owner-created via cmdkey, outside Git); until they exist the

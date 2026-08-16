@@ -481,3 +481,45 @@ Pattern C — mixed/larger: KVM2P03 (52 lines incl. `.gitattributes` + deploy do
 KVM2GLM (10 lines incl. `DECISIONS.md` mod), C:/tmp/postgate_runkit_design_claude
 (5 lines), CDXFAILOVER (1 modified tool script), C:/LAB/MTC_AIONUI_PILOT
 (untracked `data/`).
+
+---
+
+## GROUP-E BATCH 1 EXECUTION RECORD — 2026-08-16 late night (owner-approved)
+
+Owner approved exactly ten removals with per-item precheck (clean + remotely
+reachable immediately before each), `git worktree remove` without `--force`,
+stop on first error. Result:
+
+| Path | Result |
+|---|---|
+| `C:/AIROUTE` | REMOVED (clean, reachable via `origin/codex/ai-account-provider-routing`) |
+| `C:/BTL2` | REMOVED (clean, reachable via `origin/master`; local branch ref `feature/ibkr-bridge-final` intentionally retained) |
+| `C:/G5R` | REMOVED (clean, reachable via `origin/feature/exit-aware-gauntlet`) |
+| `C:/GA3B` | **ANOMALY — see below.** Registration gone; directory husk remains |
+| `C:/GA3BR2`, `C:/GA4RED`, `C:/GA5E`, `C:/GAAUD_3B`, `C:/GAAUD_3B_CDX`, `C:/GAAUD_3B_CLA` | NOT ATTEMPTED (stop-on-error honored) |
+
+Registered worktrees after: **155** (159 − 4 deregistrations).
+
+### GA3B anomaly — full diagnosis
+
+`C:/GA3B` was a ZOMBIE registration: its `.git` link had been destroyed at some
+earlier point, so the directory was no longer a valid worktree. The batch precheck
+FALSELY passed it (suppressed git stderr made empty output read as "clean" — a
+self-confirming check; recorded as a lesson). `git worktree remove` itself errored
+but dropped the stale registration; the 1.0 GB directory remains on disk.
+
+Content verification of the husk (Lead, same night): file-by-file diff against the
+`origin/master` tree with `core.quotePath=false` (the first pass without it
+false-flagged 71 Turkish/em-dash-named files as unique — encoding artifact, not
+data). **Result: ZERO non-junk files unique to the husk.** Every real file exists
+tracked on `origin/master`; the remainder is `__pycache__`/`.pytest_cache` junk.
+The husk is fully reproducible and safe to delete — but per standing constraint,
+deletion (plain `Remove-Item`, no git involved) awaits explicit owner approval.
+
+### Amendments to the batch-removal procedure (applied to any future batch)
+
+1. Precheck must assert `$LASTEXITCODE -eq 0` on `git status`/`rev-parse` before
+   interpreting output — empty-on-error must never read as PASS.
+2. Reachability check must refuse an empty SHA instead of calling
+   `git branch -r --contains` without an argument.
+3. Any path-set comparison over this repo runs with `-c core.quotePath=false`.
