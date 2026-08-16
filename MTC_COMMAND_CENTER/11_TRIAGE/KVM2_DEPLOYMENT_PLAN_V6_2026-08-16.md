@@ -17,7 +17,7 @@ version supplies a command.**
 | Round-4 delta vs `a7460784` | 4 files, +373/−36: complete UFW verb coverage (`ALLOW/LIMIT × IN/FWD`, named profiles fail closed, independent 8790 substring backstop, numeric `22/tcp` SSH requirement), structural D026 fences (statement extraction; unclassified executable heads FAIL), `assert_mode_owner` numeric-owner+kind applied to the root-executed logrotate/cron assets before byte comparison, honest structural-boundary documentation. |
 | Candidate test state | `1376 passed, 1 warning` — implementer 189.98 s AND Lead-independent 196.12 s. All round-3 mutations RED / final bytes GREEN (`RIC3_REPAIR_REPORT_2026-08-16.md`). |
 | Payload | `C:\tmp\payload-acdf4e37`; `RELEASE_SHA256SUMS` sha256 `e74c59fec82d49090d5ba56d4bf18f1cc0dbdd93375c0c82c07ab44b211530bf` |
-| **Command annex (the only executable text)** | `KVM2_PLAN_V6_COMMAND_ANNEX_2026-08-16.md` — 31283 B, sha256 `8cb02ff7fa13eb7e0ac602cfe0f1854b615cb079535ff91385e6c18efc5e5fce`. Lead-repinned from the implementer's inputs to the final identities (21 pin replacements, zero stale pins — verified by grep). Contains: fully isolated `scp`/`ssh` option sets (mirroring the launcher), full 40-hex paths, stages 1–3.5 with rc/stderr STOP rules, the verified never-started rollback-rehearsal branch (tar + sha256 against `rollback.sh`'s real input contract — confirmed non-JSON), the fail-closed D3 evidence contract (sqlite read-only persistence leg; auditd UID-scoped connect rule with active-rule proof, lost-counter equality, `NO_MATCHES` normalization, exact cleanup), and the complete tenancy/removal enumeration incl. cron asset, payload, audit rule, package disposition. |
+| **Command annex (the only executable text)** | `KVM2_PLAN_V6_COMMAND_ANNEX_2026-08-16.md` — 31980 B, sha256 `5a3f92e68514681dd94a913bc00a7f6964ab8efa98a6904be8c507f738761d7a` (post-confirmation-pass bytes: unit-guard cleanup repair + subordinated draft sentence, per `OWNER_DECISION_CONFIRMATION_PASS_2026-08-16.md`; previously 31283 B `8cb02ff7…`). Lead-repinned from the implementer's inputs to the final identities (21 pin replacements, zero stale pins — verified by grep). Contains: fully isolated `scp`/`ssh` option sets (mirroring the launcher), full 40-hex paths, stages 1–3.5 with rc/stderr STOP rules, the verified never-started rollback-rehearsal branch (tar + sha256 against `rollback.sh`'s real input contract — confirmed non-JSON), the fail-closed D3 evidence contract (sqlite read-only persistence leg; auditd UID-scoped connect rule with active-rule proof, lost-counter equality, `NO_MATCHES` normalization, exact cleanup), and the complete tenancy/removal enumeration incl. cron asset, payload, audit rule, package disposition. |
 | Launcher | `KVM2_RUNKIT/Open-BridgeDashboard.ps1` **v4** — 9277 B, sha256 `ac68196b4ae99e12892898c0a5bfb2d7d2249fc2bb476619a4c2bdaaebf2a1b5`. v3 + strict full-row `ssh-add -l` grammar (field-2 fingerprint only, malformed row = STOP); comment-injection false pass eliminated. |
 | Host / access | unchanged: `srv1856225` = `152.239.123.231`, `baris`, pinned host key, owner-loaded agent |
 | Retired pins | candidates `62bf661b`/`be689537`/`a7460784` + their payloads; launchers v1/v2/v3. Never installed. |
@@ -33,29 +33,47 @@ fail-closed contract in the annex. R8 boundary → complete enumeration in the
 annex and restated in §3 below. Claude R1/R2 close with R2/R6. Details:
 `RIC3_REPAIR_REPORT_2026-08-16.md`.
 
-## 3. §4 — the single authorization ask (present ONLY if the final pair accepts)
+## 3. THE single authoritative authorization sentence (the only signable copy)
 
-> "I authorize the one-attempt masked DISARMED installation of exact
-> replacement release `acdf4e379fb60ee319854acae19fd3eaf7db71a2` onto
-> Hostinger KVM2 (`srv1856225`) per KVM2_DEPLOYMENT_PLAN_V6_2026-08-16.md and
-> its pinned command annex (sha256 `8cb02ff7…`) — that is: payload transfer,
-> dry run, one bounded install, read-only verification, and Bridge-scoped
-> operational evidence in the annex's stage-3 order (never-started state
-> capture, rollback rehearsal including its rollback-manifest write, off-host
-> encrypted backup + restore check, monitoring baseline, tenancy
-> re-inventory). Allowed filesystem objects on KVM2: `/opt/mtc-bridge/**`,
-> `/etc/mtc-bridge/**`, `/var/lib/mtc-bridge`, `/var/log/mtc-bridge`, the
-> `mtc-bridge` user/group, the masked first-start unit + its mask symlink,
+Corrected under `OWNER_DECISION_CONFIRMATION_PASS_2026-08-16.md`: this section
+carries the ONE authoritative sentence (the annex's former draft copy is
+explicitly subordinated and not for signature). Command annex of record:
+`KVM2_PLAN_V6_COMMAND_ANNEX_2026-08-16.md`, 31980 bytes, sha256
+`5a3f92e68514681dd94a913bc00a7f6964ab8efa98a6904be8c507f738761d7a`.
+
+> "I authorize one attempt to transfer `~/payload-acdf4e37` and perform the
+> masked, never-started, credential-free DISARMED installation and read-only
+> operational evidence for exact release
+> `acdf4e379fb60ee319854acae19fd3eaf7db71a2` on Hostinger KVM2
+> (`srv1856225`), per KVM2_DEPLOYMENT_PLAN_V6_2026-08-16.md and its command
+> annex of sha256
+> `5a3f92e68514681dd94a913bc00a7f6964ab8efa98a6904be8c507f738761d7a`,
+> limited exactly to `/opt/mtc-bridge/`, `/etc/mtc-bridge/`,
+> `/var/lib/mtc-bridge/`, `/var/log/mtc-bridge/`, the `mtc-bridge` user and
+> group, `/usr/local/lib/systemd/system/mtc-bridge-first-start.service`, its
+> `/etc/systemd/system/mtc-bridge-first-start.service` `/dev/null` mask,
 > `/etc/logrotate.d/mtc-bridge`, `/etc/cron.hourly/mtc-bridge-logrotate`,
-> and `~/payload-acdf4e37` — nothing else. It also pre-authorizes, for the
-> later D3 evidence window only, installing the distro `auditd` package and
-> the one UID-scoped connect-audit rule exactly as the annex writes them,
-> with the annex's removal commands. No service start, no enable, no secret,
-> no firewall change, no TESTNET/mainnet, no broker, no ARM, no orders, no
-> action on reserved Hermes/web identities, no public exposure of port 8790
-> ever. The D3 matrix runs only after my separate first-start sentence. A
-> failed attempt stops, removes exactly the annex's enumerated objects, and
-> reports; any retry needs a new sentence."
+> `/home/baris/payload-acdf4e37`,
+> `/home/baris/bridge-state-initial.tar.gz`,
+> `/home/baris/bridge-state-initial.sha256`, and the named encrypted
+> operator-side directories `C:\tmp\KVM2_BRIDGE_ENCRYPTED` and
+> `C:\tmp\KVM2_BRIDGE_RESTORE_CHECK` on my Windows computer. This authorizes
+> payload transfer, dry run, one bounded install, verifier execution, the
+> tar-hash rollback rehearsal, encrypted-in-transit and encrypted-at-rest
+> backup/restore comparison, monitoring, and read-only re-inventory only. A
+> later separate D3 sentence may additionally authorize
+> `/home/baris/mtcbridge-d3-evidence`, installation of baseline-absent distro
+> `auditd` and transaction-added `libauparse0`, one exact numeric-UID
+> `connect` audit rule keyed `mtcbridge_net` with the rule removed and the
+> packages purged under the recorded baseline/simulation gates, and the
+> temporary `auditd` service start/stop that evidence window requires. No
+> Bridge service start, any service enable, secret, firewall change, public
+> 8790, TESTNET or mainnet action, broker, ARM, order, trading action,
+> Hermes/web identity or path, other
+> user/group/service/package/container/port, or retry is authorized. On
+> failure, stop, remove only the exact listed objects with the annex's
+> commands, re-inventory to the clean baseline, and report; any retry needs a
+> new sentence."
 
 ## 4. Final-pair review contract (owner's materiality standard, verbatim in force)
 

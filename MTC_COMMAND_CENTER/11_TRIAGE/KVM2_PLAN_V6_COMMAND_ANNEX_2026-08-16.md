@@ -660,8 +660,15 @@ else
   done
 fi
 
-sudo -n systemctl stop mtc-bridge-first-start.service
-sudo -n systemctl mask mtc-bridge-first-start.service
+# Unit handling (owner-prescribed repair 2026-08-16): a missing unit must not
+# abort cleanup; a genuine stop failure of an EXISTING unit stays fail-closed.
+if sudo -n systemctl cat mtc-bridge-first-start.service >/dev/null 2>&1; then
+  # Unit exists: stop must succeed; under set -e a failure aborts here loudly.
+  sudo -n systemctl stop mtc-bridge-first-start.service
+  sudo -n systemctl mask mtc-bridge-first-start.service
+else
+  printf '%s\n' "NOTE: mtc-bridge-first-start.service not installed; skipping stop/mask, continuing removal"
+fi
 sudo -n rm -f -- \
   /etc/cron.hourly/mtc-bridge-logrotate \
   /etc/logrotate.d/mtc-bridge \
@@ -710,7 +717,12 @@ After removal, rerun the complete Stage-3.5 inventory and require the original
 clean baseline, except for an explicitly recorded operator-side encrypted backup
 that the owner chose to retain. Any retry needs a new owner sentence.
 
-### Self-contained authorization sentence for Plan V6 §4
+### SUBORDINATED draft sentence — NOT FOR SIGNATURE (owner repair 2026-08-16)
+
+The single authoritative installation-authorization sentence lives in
+`KVM2_DEPLOYMENT_PLAN_V6_2026-08-16.md` §3 and only that copy may be signed.
+The text below is retained as the drafting source it was and has no
+independent authority.
 
 > "I authorize one attempt to transfer `~/payload-acdf4e37` and perform the
 > masked, never-started, credential-free DISARMED installation and read-only
