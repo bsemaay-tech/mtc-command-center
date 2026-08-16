@@ -232,19 +232,21 @@ else
 fi
 
 # --- 8. logs, rotation, control plane -------------------------------------
-if [ -f "${MTC_LOGROTATE_FILE}" ] && cmp -s \
-    "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/logrotate/mtc-bridge" \
-    "${MTC_LOGROTATE_FILE}"; then
-  pass "logrotate policy exactly matches the accepted release"
-else
-  fail "logrotate policy is missing or differs from the accepted release"
+if assert_mode_owner "${MTC_LOGROTATE_FILE}" 0644 root:root 0:0 file; then
+  if cmp -s "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/logrotate/mtc-bridge" \
+      "${MTC_LOGROTATE_FILE}"; then
+    pass "logrotate policy exactly matches the accepted release"
+  else
+    fail "logrotate policy differs from the accepted release"
+  fi
 fi
-if [ -x "${MTC_LOGROTATE_CRON}" ] && cmp -s \
-    "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/cron/mtc-bridge-logrotate" \
-    "${MTC_LOGROTATE_CRON}"; then
-  pass "hourly Bridge logrotate runner exactly matches the accepted release"
-else
-  fail "hourly Bridge logrotate runner is missing, non-executable, or differs from the accepted release"
+if assert_mode_owner "${MTC_LOGROTATE_CRON}" 0755 root:root 0:0 file; then
+  if cmp -s "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/cron/mtc-bridge-logrotate" \
+      "${MTC_LOGROTATE_CRON}"; then
+    pass "hourly Bridge logrotate runner exactly matches the accepted release"
+  else
+    fail "hourly Bridge logrotate runner differs from the accepted release"
+  fi
 fi
 assert_loopback_only_source "${DEST}/IBKR_PAPER_BRIDGE/bridge/app.py" || true
 # This verifier is specifically the masked/unstarted mode. A future explicit

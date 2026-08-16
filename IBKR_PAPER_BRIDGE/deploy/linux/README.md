@@ -79,6 +79,16 @@ The installer must itself be the hash-bound payload copy and must be invoked as
 checkout copy is rejected before any target-host mutation. All helpers and
 templates consumed by the installer come from that same accepted payload tree.
 
+**Mutation and verifier fences are structural within their declared shell
+grammar.** The test suite inventories every `run_action` ID against the dry-run
+manifest, rejects direct filesystem/identity mutators and non-query `systemctl`,
+allows the install-manifest redirection only through its single `run_action`
+helper, and fails on an unclassified executable head. The verifier fence allows
+only its two exact read-only venv interpreter probes; any added Python, Perl, or
+`bash -c` invocation is rejected. These are closed controls over the shipped
+scripts' modeled statement grammar, not a claim to understand arbitrary future
+shell or child-interpreter semantics.
+
 **Masked, not merely disabled.** The first-start unit has no `[Install]`
 section, so `systemctl enable` is structurally impossible, and it is installed
 masked, so `systemctl start` fails until someone explicitly unmasks it. Two

@@ -88,17 +88,38 @@ assert_not_symlink() {
 # --- verification primitives ----------------------------------------------
 assert_mode_owner() {
   # assert_mode_owner <path> <expected mode> <expected owner:group>
-  local path="$1" want_mode="${2#0}" want_own="$3" got_mode got_own
+  #                   [expected numeric uid:gid] [file|directory]
+  local path="$1" want_mode="${2#0}" want_own="$3"
+  local want_numeric="${4:-}" want_kind="${5:-}" got_mode got_own got_numeric
   if [ ! -e "$path" ]; then fail "missing: $path"; return 1; fi
-  got_mode="$(stat -c '%a' "$path")"
-  got_own="$(stat -c '%U:%G' "$path")"
+  if [ -L "$path" ]; then fail "symlink not allowed: $path"; return 1; fi
+  case "${want_kind}" in
+    "") : ;;
+    file) [ -f "$path" ] || { fail "not a regular file: $path"; return 1; } ;;
+    directory) [ -d "$path" ] || { fail "not a directory: $path"; return 1; } ;;
+    *) fail "invalid metadata kind ${want_kind}: $path"; return 1 ;;
+  esac
+  if ! got_mode="$(stat -c '%a' "$path")"; then
+    fail "cannot read mode: $path"; return 1
+  fi
+  if ! got_own="$(stat -c '%U:%G' "$path")"; then
+    fail "cannot read owner: $path"; return 1
+  fi
+  if [ -n "${want_numeric}" ]; then
+    if ! got_numeric="$(stat -c '%u:%g' "$path")"; then
+      fail "cannot read numeric owner: $path"; return 1
+    fi
+  fi
   if [ "$got_mode" != "$want_mode" ]; then
     fail "$path mode $got_mode, expected $want_mode"; return 1
   fi
   if [ "$got_own" != "$want_own" ]; then
     fail "$path owner $got_own, expected $want_own"; return 1
   fi
-  pass "$path mode $want_mode owner $want_own"
+  if [ -n "${want_numeric}" ] && [ "$got_numeric" != "$want_numeric" ]; then
+    fail "$path numeric owner $got_numeric, expected $want_numeric"; return 1
+  fi
+  pass "$path mode $want_mode owner $want_own${want_numeric:+ numeric $want_numeric}"
 }
 
 assert_no_writable_paths() {
@@ -171,11 +192,13 @@ assert_ufw_bridge_safe() {
     *"Default: deny (incoming)"*) : ;;
     *) fail "ufw default incoming policy is not deny"; return 1 ;;
   esac
-  # Parse every ALLOW row as a complete UFW status-table rule. A numeric port
-  # may be the first field or may follow a destination address; exact ports and
-  # inclusive a:b ranges are supported. Anything else is not evidence of
-  # safety: application profiles and unmodelled grammar must be replaced with
-  # explicit numeric port/range rules before this assertion can pass.
+  # Parse every status-table row. ALLOW/LIMIT rules admitting inbound or
+  # forwarded traffic use one exposure grammar; DENY/REJECT rules and explicit
+  # outbound rules do not admit inbound traffic. A numeric port may be the first
+  # field or may follow a destination address; exact ports and inclusive a:b
+  # ranges are supported. Anything else is not evidence of safety: application
+  # profiles and unmodelled grammar must be replaced with explicit numeric
+  # port/range rules before this assertion can pass.
   if ! parsed="$(printf '%s\n' "${status}" | awk -v bridge_port="${MTC_BIND_PORT}" '
     function trim(value) {
       sub(/^[[:space:]]+/, "", value)
@@ -206,10 +229,18 @@ assert_ufw_bridge_safe() {
       print "UNMODELLED\t" reason "\t" rule
       unmodelled = 1
     }
-    index($0, "ALLOW") {
+    /^[[:space:]]*--[[:space:]]/ { in_rules = 1; next }
+    in_rules && /^[[:space:]]*$/ { next }
+    in_rules {
       rule = $0
-      if (!match(rule, /[[:space:]]ALLOW[[:space:]]+IN[[:space:]]/)) {
-        mark_unmodelled("ALLOW action is not exactly ALLOW IN", rule)
+      if (match(rule, /[[:space:]]+(DENY|REJECT)[[:space:]]+(IN|FWD)[[:space:]]+/)) {
+        next
+      }
+      if (match(rule, /[[:space:]]+(ALLOW|LIMIT|DENY|REJECT)[[:space:]]+OUT[[:space:]]+/)) {
+        next
+      }
+      if (!match(rule, /[[:space:]]+(ALLOW|LIMIT)[[:space:]]+(IN|FWD)[[:space:]]+/)) {
+        mark_unmodelled("rule action/direction is not a modelled inbound UFW status verb", rule)
         next
       }
       destination = trim(substr(rule, 1, RSTART - 1))
@@ -230,10 +261,6 @@ assert_ufw_bridge_safe() {
           next
         }
         field_count -= 2
-      }
-      if (field_count == 1 && fields[1] == "OpenSSH") {
-        print "SSH\t" rule
-        next
       }
       if (field_count == 1 && fields[1] == "Anywhere") {
         print "BRIDGE\t" rule
@@ -260,16 +287,30 @@ assert_ufw_bridge_safe() {
     }
     END { if (unmodelled) exit 2 }
   ')"; then
-    fail "ufw has an unmodelled ALLOW rule or application profile; enumerate it as an explicit numeric port/range before Bridge verification: $(printf '%s' "${parsed}" | tr '\n' ' ')"
+    fail "ufw has an unmodelled inbound rule or application profile; enumerate it as an explicit numeric port/range before Bridge verification: $(printf '%s' "${parsed}" | tr '\n' ' ')"
     return 1
-  fi
-  ssh_allow="$(printf '%s\n' "${parsed}" | awk -F '\t' '$1 == "SSH" { print; exit }')"
-  if [ -z "${ssh_allow}" ]; then
-    fail "ufw has no inbound ALLOW rule for SSH port 22"; return 1
   fi
   bridge_allow="$(printf '%s\n' "${parsed}" | awk -F '\t' '$1 == "BRIDGE" { print $2 }')"
   if [ -n "${bridge_allow}" ]; then
     fail "ufw exposes Bridge port ${MTC_BIND_PORT}: $(printf '%s' "${bridge_allow}" | tr '\n' ' ')"; return 1
+  fi
+  # Independent substring backstop: if a future parser edit silently skips an
+  # inbound non-deny row containing the literal Bridge port, absence of parsed
+  # BRIDGE output still cannot become a clean conclusion.
+  bridge_allow="$(printf '%s\n' "${status}" | awk -v bridge_port="${MTC_BIND_PORT}" '
+    /^[[:space:]]*--[[:space:]]/ { in_rules = 1; next }
+    in_rules && index($0, bridge_port) {
+      if ($0 ~ /[[:space:]]+(DENY|REJECT)[[:space:]]+(IN|FWD)[[:space:]]/) next
+      if ($0 ~ /[[:space:]]+(ALLOW|LIMIT|DENY|REJECT)[[:space:]]+OUT[[:space:]]/) next
+      print
+    }
+  ')"
+  if [ -n "${bridge_allow}" ]; then
+    fail "ufw inbound substring backstop found Bridge port ${MTC_BIND_PORT}: $(printf '%s' "${bridge_allow}" | tr '\n' ' ')"; return 1
+  fi
+  ssh_allow="$(printf '%s\n' "${parsed}" | awk -F '\t' '$1 == "SSH" { print; exit }')"
+  if [ -z "${ssh_allow}" ]; then
+    fail "ufw has no inbound ALLOW/LIMIT rule for numeric SSH port 22/tcp"; return 1
   fi
   pass "ufw active, default-deny incoming; SSH port 22 allowed; Bridge port ${MTC_BIND_PORT} not exposed"
 }

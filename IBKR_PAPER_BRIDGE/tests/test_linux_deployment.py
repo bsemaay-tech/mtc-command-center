@@ -44,6 +44,44 @@ def noncomment_shell(path: Path) -> str:
     )
 
 
+def logical_shell_statements(script: str) -> list[str]:
+    """Return normalized shell statements while excluding here-document data."""
+    statements: list[str] = []
+    current = ""
+    heredoc_end: str | None = None
+    array_depth = 0
+    for raw_line in script.splitlines():
+        stripped = raw_line.strip()
+        if heredoc_end is not None:
+            if stripped == heredoc_end:
+                heredoc_end = None
+            continue
+        if not stripped or stripped.startswith("#"):
+            continue
+        if array_depth:
+            array_depth += stripped.count("(") - stripped.count(")")
+            continue
+        if re.match(r"^[A-Za-z_][A-Za-z0-9_]*=\($", stripped):
+            statements.append(stripped)
+            array_depth = 1
+            continue
+        continued = stripped.endswith("\\")
+        piece = stripped[:-1].rstrip() if continued else stripped
+        current = f"{current} {piece}".strip()
+        if continued:
+            continue
+        statement = re.sub(r"\s+", " ", current)
+        statements.append(statement)
+        heredoc = re.search(r"<<-?['\"]?([A-Za-z_][A-Za-z0-9_]*)['\"]?$", statement)
+        if heredoc:
+            heredoc_end = heredoc.group(1)
+        current = ""
+    assert not current, "unterminated shell continuation"
+    assert heredoc_end is None, "unterminated here-document"
+    assert array_depth == 0, "unterminated shell array"
+    return statements
+
+
 def direct_requirements(path: Path) -> list[str]:
     return [
         line.strip()
@@ -230,10 +268,136 @@ def test_dry_run_manifest_matches_every_real_install_mutation():
     assert len(guarded_id_list) == len(set(guarded_id_list))
     assert set(planned_id_list) == set(guarded_id_list)
 
-    # Every real mutation must name its dry-run ID through run_action. A raw
+    # Every modeled mutation must name its dry-run ID through run_action. A raw
     # `run install ... /opt/hermes` addition is therefore visible and RED.
     raw_run_calls = re.findall(r'^\s*run\s+([^\n]+)', script, re.MULTILINE)
     assert raw_run_calls == ['"$@"']
+
+    statements = logical_shell_statements(script)
+    guarded_helper = script[
+        script.index("write_install_manifest() {") : script.index(
+            'run_action "manifest-write" write_install_manifest'
+        )
+    ]
+    assert re.search(r'cat\s+>\s+"\$\{MTC_INSTALL_MANIFEST\}"\s+<<EOF', guarded_helper)
+    assert script.count('run_action "manifest-write" write_install_manifest') == 1
+    assert len(re.findall(r"(?m)^\s*write_install_manifest(?:\s|$)", script)) == 0
+
+    # Structural fence for the installer's current shell grammar. Direct
+    # mutators are unclassifiable and fail; the only output redirection outside
+    # /dev/null is the exact manifest helper invoked only by run_action.
+    direct_mutator = re.compile(
+        r"(?:^|(?:&&|\|\||;)\s*)(?:if\s+|elif\s+|while\s+|until\s+|!\s+)*"
+        r"(?:command\s+|sudo\s+)?"
+        r"(?:install|mkdir|cp|mv|rm|chown|chmod|ln|tee|useradd|groupadd)\b"
+    )
+    assert not [statement for statement in statements if direct_mutator.search(statement)]
+
+    direct_systemctl = re.compile(
+        r"(?:^|(?:&&|\|\||;)\s*)(?:if\s+|elif\s+|while\s+|until\s+|!\s+)*"
+        r"systemctl\s+([a-z-]+)"
+    )
+    direct_systemctl_verbs = {
+        match.group(1)
+        for statement in statements
+        for match in direct_systemctl.finditer(statement)
+    }
+    assert direct_systemctl_verbs <= {"is-active", "is-enabled"}
+    assert not re.search(
+        r"(?m)^\s*(?:python(?:[0-9.]+)?|perl|bash)\s+-c\b",
+        noncomment_shell(LINUX / "install.sh"),
+    )
+
+    output_redirection = re.compile(
+        r'(?<![<>])(?P<fd>\d*)(?P<operator>>>?)(?![>&])\s*'
+        r'(?P<target>"[^"]*"|\'[^\']*\'|[^\s;|&]+)'
+    )
+    redirection_targets = {
+        match.group("target").strip('"\'')
+        for statement in statements
+        for match in output_redirection.finditer(statement)
+    }
+    assert redirection_targets == {"/dev/null", "${MTC_INSTALL_MANIFEST}"}
+
+    # The direct-command grammar is closed: a newly introduced executable head
+    # (including a direct `install`) must be reviewed and explicitly classified.
+    allowed_heads = {
+        ".",
+        ":",
+        "assert_control_port_closed",
+        "assert_exact_payload_tree",
+        "assert_loopback_only_source",
+        "assert_no_writable_paths",
+        "assert_not_symlink",
+        "assert_ufw_bridge_safe",
+        "bootstrap_die",
+        "cd",
+        "command",
+        "cmp",
+        "die",
+        "dry_run_action",
+        "exit",
+        "fail",
+        "find",
+        "getent",
+        "grep",
+        "id",
+        "local",
+        "log",
+        "pgrep",
+        "preflight_venv_capability",
+        "printf",
+        "readlink",
+        "require_cmd",
+        "require_release_sha",
+        "require_root",
+        "require_sha256",
+        "run",
+        "run_action",
+        "cat",
+        "print_dry_run_manifest",
+        "sed",
+        "set",
+        "sha256sum",
+        "shift",
+        "sort",
+        "systemctl",
+        "tr",
+        "umask",
+        "verify_service_identity",
+        "write_install_manifest",
+        "usage",
+    }
+    unclassified: list[str] = []
+    for statement in statements:
+        candidate = statement
+        if re.match(r"^[A-Za-z_][A-Za-z0-9_]*\(\)\s*\{$", candidate):
+            continue
+        if re.match(r"^[A-Za-z_][A-Za-z0-9_]*(?:\+)?=", candidate):
+            continue
+        if candidate in {"do", "done", "then", "else", "fi", "esac", "}", ")"}:
+            continue
+        if re.match(r"^(?:for|case)\b", candidate):
+            continue
+        candidate = re.sub(r"^[^\s()]+\)\s*", "", candidate)
+        if re.match(r"^[A-Za-z_][A-Za-z0-9_]*(?:\+)?=", candidate):
+            continue
+        if candidate.endswith("$(") or candidate == '); then' or candidate == ')"; then':
+            continue
+        candidate = re.sub(r"^(?:if|elif|while|until)\s+!?\s*", "", candidate)
+        candidate = candidate.lstrip("(! ")
+        if not candidate or candidate.startswith("["):
+            continue
+        head = re.match(r'^(?:"?\$\{[^}]+\}"?|[A-Za-z0-9_./:-]+)', candidate)
+        if not head:
+            unclassified.append(statement)
+            continue
+        token = head.group(0)
+        if token.startswith('${') or token.startswith('"${'):
+            continue
+        if token not in allowed_heads:
+            unclassified.append(statement)
+    assert unclassified == []
 
     for exact_path in (
         "${MTC_STATE_DIR}",
@@ -311,8 +475,18 @@ def test_no_deployment_script_mutates_ufw():
         ),
         (
             "known_openssh_profile",
-            "OpenSSH ALLOW IN Anywhere\n80/tcp ALLOW IN Anywhere\n443/tcp ALLOW IN Anywhere\n",
-            True,
+            "22/tcp ALLOW IN Anywhere\nOpenSSH ALLOW IN Anywhere\n80/tcp ALLOW IN Anywhere\n",
+            False,
+        ),
+        (
+            "bridge_port_limit_in",
+            "22/tcp ALLOW IN Anywhere\n8790/tcp LIMIT IN Anywhere\n",
+            False,
+        ),
+        (
+            "bridge_port_allow_fwd",
+            "22/tcp ALLOW IN Anywhere\n8790/tcp ALLOW FWD Anywhere\n",
+            False,
         ),
         (
             "ssh_missing",
@@ -898,6 +1072,37 @@ def test_verifier_is_read_only_and_binds_release_unit_venv_and_manifest():
     systemctl_verbs = set(re.findall(r"\bsystemctl\s+([a-z-]+)", executable_script))
     assert systemctl_verbs <= {"is-active", "is-enabled"}
     assert not re.search(r"\b(?:printf|echo)\b[^\n]*(?:>>?|\btee\b)\s*/", script)
+
+    # Every lower-case interpreter token is inventoried, including read-only
+    # path tests and unit-text checks. This is intentionally stricter than a
+    # command-position denylist: any added python/perl/bash-c spelling must be
+    # reviewed, and the two executable venv probes remain the only calls.
+    normalized = "\n".join(logical_shell_statements(read(LINUX / "verify.sh")))
+    interpreter_token_lines = [
+        line
+        for line in normalized.splitlines()
+        if re.search(r"(?<![A-Za-z0-9_.-])(?:python(?:[0-9.]+)?|perl|bash\s+-c)(?![A-Za-z0-9_.-])", line)
+    ]
+    assert interpreter_token_lines == [
+        'if [ -x "${VENV}/bin/python" ]; then',
+        'pyver="$("${VENV}/bin/python" -c \'import sys; print("%d.%d" % sys.version_info[:2])\')"',
+        'if "${VENV}/bin/python" "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py" --lock "${DEST}/IBKR_PAPER_BRIDGE/requirements.lock" --check-installed; then',
+        'if grep -q "venvs/${RELEASE_SHA}/bin/python" "${unit}"; then',
+    ]
+    interpreter_command = re.compile(
+        r'(?:^|="?\$\(|\bif\s+)(?:"\$\{VENV\}/bin/python"|python(?:[0-9.]+)?|perl|bash\s+-c)'
+    )
+    interpreter_lines = [
+        line
+        for line in normalized.splitlines()
+        if interpreter_command.search(line)
+    ]
+    assert interpreter_lines == [
+        'pyver="$("${VENV}/bin/python" -c \'import sys; print("%d.%d" % sys.version_info[:2])\')"',
+        'if "${VENV}/bin/python" "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py" --lock "${DEST}/IBKR_PAPER_BRIDGE/requirements.lock" --check-installed; then',
+    ]
+    awk_with_output = re.compile(r"\bawk\b[^\n]*(?<![<>])(?:>>?)(?![>&])")
+    assert not awk_with_output.search(normalized)
     assert "expected_unit" not in script
     common = read(LINUX / "lib" / "common.sh")
     inventory_helper = common[
@@ -915,6 +1120,85 @@ def test_verifier_is_read_only_and_binds_release_unit_venv_and_manifest():
         "hourly Bridge logrotate runner exactly matches",
     ):
         assert token in read(LINUX / "verify.sh")
+
+
+def test_verifier_rejects_unsafe_logrotate_asset_metadata(tmp_path):
+    verify = read(LINUX / "verify.sh")
+    block = verify[
+        verify.index("# --- 8. logs, rotation, control plane") : verify.index(
+            'assert_loopback_only_source "${DEST}/IBKR_PAPER_BRIDGE/bridge/app.py"'
+        )
+    ]
+    assert 'assert_mode_owner "${MTC_LOGROTATE_FILE}" 0644 root:root 0:0 file' in block
+    assert 'assert_mode_owner "${MTC_LOGROTATE_CRON}" 0755 root:root 0:0 file' in block
+
+    release = tmp_path / "release"
+    installed = tmp_path / "installed"
+    policy_source = release / "IBKR_PAPER_BRIDGE" / "deploy" / "linux" / "logrotate" / "mtc-bridge"
+    cron_source = release / "IBKR_PAPER_BRIDGE" / "deploy" / "linux" / "cron" / "mtc-bridge-logrotate"
+    policy_target = installed / "mtc-bridge"
+    cron_target = installed / "mtc-bridge-logrotate"
+    for path in (policy_source, cron_source, policy_target, cron_target):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("accepted bytes\n", encoding="utf-8")
+
+    result = run_bash(
+        r'''
+. "$1"
+DEST="$2"
+MTC_LOGROTATE_FILE="$3"
+MTC_LOGROTATE_CRON="$4"
+stat() {
+  case "$2" in
+    '%a') printf '%s\n' '777' ;;
+    '%U:%G') printf '%s\n' 'root:root' ;;
+    '%u:%g') printf '%s\n' '1000:1000' ;;
+    *) return 73 ;;
+  esac
+}
+MTC_FAILURES=0
+''' + block + r'''
+[ "${MTC_FAILURES}" -gt 0 ]
+''',
+        LINUX / "lib" / "common.sh",
+        release,
+        policy_target,
+        cron_target,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "mode 777, expected 644" in result.stderr
+    assert "mode 777, expected 755" in result.stderr
+
+    owner_result = run_bash(
+        r'''
+. "$1"
+DEST="$2"
+MTC_LOGROTATE_FILE="$3"
+MTC_LOGROTATE_CRON="$4"
+stat() {
+  case "$2" in
+    '%a')
+      case "$3" in
+        *mtc-bridge-logrotate) printf '%s\n' '755' ;;
+        *) printf '%s\n' '644' ;;
+      esac
+      ;;
+    '%U:%G') printf '%s\n' 'root:root' ;;
+    '%u:%g') printf '%s\n' '1000:1000' ;;
+    *) return 73 ;;
+  esac
+}
+MTC_FAILURES=0
+''' + block + r'''
+[ "${MTC_FAILURES}" -gt 0 ]
+''',
+        LINUX / "lib" / "common.sh",
+        release,
+        policy_target,
+        cron_target,
+    )
+    assert owner_result.returncode == 0, owner_result.stderr
+    assert "numeric owner 1000:1000, expected 0:0" in owner_result.stderr
 
 
 def test_verifier_rejects_start_mode_defined_in_env_file(tmp_path):
