@@ -4,6 +4,32 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
+## OWNER-REQUESTED OPEN — Gemini 3.7 Flash Pro read-only repo route (2026-08-16)
+
+**Execution tier: T0.** Installation/authentication/live completion are verified, but repo
+wiring is not implemented or accepted. Claude Pro counterpart resets at 18:10
+Europe/Chisinau; Claude Max remains emergency-only and was not used.
+
+1. **[AI: Claude] Gate 2 then Gate 3 after reset.** Implement only:
+   `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1`, dedicated project
+   config `C:\Users\BarışSemaay\.gemini\config\projects\4b64b3f9-1bfa-4de1-a9eb-276f2e0489b7.json`,
+   the Antigravity row in `C:\LAB\PROJECT_STARTER_KIT\TOOLBOX.md`, and the secret-free
+   route entry in `_AI_MEMORY/AI_ACCOUNT_AND_MODEL_ROUTING.md`. Do not alter shared legacy
+   permission storage in this task.
+2. **Safety contract.** Exact canonical repo only; frozen `C:\LAB\tradingview-lab` refused;
+   project `allowWrite=false`; deny inherited write, unsandboxed, web, MCP, user-home,
+   broad shell, and Git-mutation grants; only narrow read/search/Git-inspection commands.
+   Wrapper always uses `--project`, `gemini-3.7-flash-high`, `--sandbox`, `--mode plan`,
+   finite structured print, process-scoped auto-update/account-display suppression, and
+   never `--dangerously-skip-permissions`.
+3. **D026 QA.** Prove success, missing/malformed config, frozen-path refusal, unavailable
+   model, denied write/Git mutation, tracked and `.git` mutation detection, empty/non-success
+   model result, and dirty-but-unchanged acceptance. Show equivalent-mutant RED and guarded
+   GREEN evidence.
+4. **[AI: Lead] T0 acceptance.** Independently inspect files and real config; reproduce QA;
+   then run fresh `claude-opus-5` xhigh and `gpt-5.6-sol` xhigh Gate 5/Gate 6 reviews.
+   Only after both accept may the route be called repo-ready and the Toolbox row committed.
+
 ## OWNER-REQUESTED OPEN — AI-memory continuity audit and repair (2026-08-16)
 
 **Registration tier: T3** (documentation / audit planning only). Future audit or repair work

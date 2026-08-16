@@ -5,6 +5,30 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol] 2026-08-16 — Google AI Pro CLI verified; safe repo route BLOCKED at Gate 2
+
+Owner account `bsemaay3@gmail.com` is authenticated in checksum-verified Google
+Antigravity CLI 1.1.13. Live evidence: account banner reported Google AI Pro; Gemini and
+third-party pools each reported 100% weekly and five-hour quota at the check; default model
+was `gemini-3.7-flash-high`; a real external-temp completion returned exactly
+`GEMINI_3_7_PRO_OK`, status SUCCESS, exit 0. No credential value was read, printed, or
+stored. The old `bsemaay@gmail.com` Starter session was logged out.
+
+The route is **not yet approved for this repository**. Discovery found inherited historical
+Antigravity grants including broad current-tree write access, user-home read access,
+unrestricted `git`, checkout/stash, Copy-Item, and Invoke-WebRequest. A disposable Git repo
+remained byte-identical under `--sandbox --mode plan`, but its requested read-only command
+was auto-denied; this proves containment, not usable repo readiness.
+
+Gate 1 is **T0** (authentication, outbound model access, external process, local permissions,
+repo access). Planned route: dedicated project `4b64b3f9-1bfa-4de1-a9eb-276f2e0489b7`
+with project-level deny precedence plus `Invoke-GeminiProReadOnly.ps1`; supplemental
+read-only role only, never Lead/counterpart/canonical auditor/protected implementer, and all
+claims require Lead reproduction. The required fresh Claude Opus/xhigh counterpart hit its
+Pro session limit before producing Gate 2; reset reported 18:10 Europe/Chisinau. Per the
+two-tier rule, Codex did not self-implement and did not spend emergency-only Claude Max.
+Resume from the OPEN item in `NEXT_STEPS.md` after the reset.
+
 ## [Codex gpt-5.6-sol] 2026-08-16 — AI-memory continuity risk recorded; remediation task OPEN
 
 Owner requested a durable future task after a documentation-only investigation. Finding:
@@ -2603,4 +2627,3 @@ round's own repair** — each fix closed the probed path and opened its neighbou
 implementer to name the *second route* and prove it closed, and to state what the repair traded
 away. And the two-auditor split has paid off every single round: each auditor caught what the other
 missed.
-
