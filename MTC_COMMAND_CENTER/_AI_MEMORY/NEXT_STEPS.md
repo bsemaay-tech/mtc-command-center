@@ -14,6 +14,27 @@
 >    deployment plan to Barış for the separate install authorization.
 > 4. **[AI: Barış]** KVM2 configure/install/start authorization when presented;
 >    TESTNET wallet remains its own later gate.
+>
+> **Update 2026-08-16 evening:** chain lane PAUSED by owner cap ruling (no
+> waiver; do not reopen). Deployment plan now **V3**
+> (`11_TRIAGE/KVM2_DEPLOYMENT_PLAN_62BF661B_V3_2026-08-16.md`) — dashboard is
+> completion-critical; launcher run-kit `11_TRIAGE/KVM2_RUNKIT/
+> Open-BridgeDashboard.ps1` is part of the T0-audited package. Queue:
+> 1. **[AI: Lead]** Fresh T0 pair on the pinned V3 bytes (exact
+>    `claude-opus-5` xhigh + `gpt-5.6-sol` xhigh) → present §9 sentence.
+> 2. **[AI: Barış]** §9 single installation authorization.
+> 3. **[AI: Lead]** Bootstrap stages 3–5 under that sentence; then the
+>    separate first-start sentence; then dashboard verification matrix D3.
+> 4. **[AI: Claude]** **Dashboard V2 work package — IMMEDIATELY after the
+>    stable DISARMED KVM2 deployment** (owner order 2026-08-16, not an
+>    indefinite future item): polished owner view (connection/service health,
+>    DISARMED/ARMED, deployed SHA + host, active strategy, positions + working
+>    orders, equity + P&L, risk gates, decision stream + errors, backup
+>    health, last update). Hard split read-only monitoring vs private control
+>    dashboard (ARM/DISARM/KILL); public hosting never exposes control
+>    endpoints. **Tier split: local read-only visual work = T1; host access,
+>    deployment, reverse-proxy rules, authentication, or control endpoints =
+>    T0.** Spec anchor: plan V3 §D4.
 > Everything below is older context.
 
 > **Pathscope disclosure (owner decision 2026-08-16, section 6):** Pathscope is a supplemental aid only: its output may inform review, but it may never be cited as proof, a gate, or an acceptance input anywhere in WP-I or downstream, and no Pathscope PASS may close any gate.

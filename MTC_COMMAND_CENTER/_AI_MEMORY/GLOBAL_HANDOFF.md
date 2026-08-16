@@ -75,10 +75,22 @@ Two-commit chain V2 T1 re-audit dispatched (`claude-opus-5` high, snapshot
 4. Interim results: candidate `62bf661b` T0 ACCEPTED (Codex PASS + Opus
    PASS-WITH-NITS, nits repaired); gate 2 SATISFIED-WITH-DISCLOSURES; P9
    grammar T2 review dispatched (GLM).
-5. **T0 pair on plan V2:** Codex xhigh dispatched; Claude xhigh hit the Pro
-   session limit (resets 13:10 Europe/Chisinau) — retry after reset, exact
-   model only, no substitution. After both accept: present the §9 single
-   install sentence. NOTHING touches KVM2 until the owner signs it.
+5. **Dashboard is completion-critical (owner, same evening,
+   `11_TRIAGE/OWNER_REQUIREMENT_DASHBOARD_2026-08-16.md`):** plan bumped to
+   **V3** (`11_TRIAGE/KVM2_DEPLOYMENT_PLAN_62BF661B_V3_2026-08-16.md`) — a
+   recorded Gate-1 scope change before acceptance, not a repair round. V2's
+   Codex audit was stopped pre-verdict (stale had it finished). Audited
+   package = plan V3 + launcher
+   `11_TRIAGE/KVM2_RUNKIT/Open-BridgeDashboard.ps1` (pinned SSH tunnel,
+   agent-only auth, strict host key, T0). 8790 never public; existing
+   `bridge/static` dashboard used as-is; D3 verification matrix defines
+   operational completion; **Dashboard V2 successor package queued in
+   NEXT_STEPS [AI: Claude], T1 visual / T0 host-control split.**
+6. **Fresh T0 pair runs on the pinned V3 bytes only** — exact `claude-opus-5`
+   xhigh + `gpt-5.6-sol` xhigh, no fallback (Claude Pro window reset 13:10).
+   After both accept: present the §9 single install sentence. NOTHING touches
+   KVM2 until the owner signs it. Chain lane stays PAUSED — no waiver, do not
+   reopen.
 
 Locks held by this session: shared-memory, Stage-1/runbook, Bridge-release-
 integration (see SESSION_LOCK.md).
