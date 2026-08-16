@@ -324,3 +324,55 @@ a route failure.
 Implementation and Lead QA are complete on the pinned hashes above. Fresh accepting
 `gpt-5.6-sol` xhigh and `claude-opus-5` xhigh T0 verdicts are still required before the route is
 repo-ready. No coding permission is granted by this cycle.
+
+## Cycle-2 T0 round 1 — REQUEST_CHANGES and repair (2026-08-16)
+
+Fresh host-integrated Codex `gpt-5.6-sol`, xhigh, ephemeral session
+`01a00b57-0f6c-7280-a4de-c944296869d5` returned **REQUEST_CHANGES** with three required findings:
+
+1. The authenticated profile path was used for launcher/config discovery but was not imposed on
+   the Antigravity child. Fake-profile preflight passed while real PS7/PS5 inference returned an
+   empty response with no authenticated cache reads.
+2. The PS5 timeout fallback enumerated descendants only once. A parent spawning `ping.exe` every
+   35 ms timed out normally but left seven descendants alive.
+3. `ConvertFrom-Json` unwrapped singleton root arrays, so both a wrapped project object and a
+   wrapped success payload were accepted.
+
+Lead testing also reproduced an initial watcher blind window: a transient marker created and
+deleted 1.8 seconds after launcher start could complete before watcher registration. This real
+defect is repaired in the same round even though it was omitted from the auditor's final list.
+
+Repaired launcher identity:
+
+```text
+launcher SHA256 = 67918EA88C61632416A027AC4D153D5E602C6251F3E178CFF8EF55B8EDAD9AE9
+project  SHA256 = BF5DED19F712CACA2D8DD38588E015C1717FEFD2CF2577CF54A7D604A88E3551
+```
+
+### Round-1 repair evidence
+
+The Antigravity child now receives a canonical, process-scoped profile environment
+(`USERPROFILE`, `HOME`, `HOMEDRIVE`, `HOMEPATH`, `APPDATA`, and `LOCALAPPDATA`), and every caller
+value is restored afterward. Both PS7 and PS5.1 real inference under deliberately false values
+returned the canonical repo and sentinel. Both real `write_file` probes were denied; both unique
+markers remained absent.
+
+The PS5 fallback now stops the root first, repeatedly discovers descendants of every observed
+tree member, stops newly discovered children, and requires three stable zero-survivor passes.
+The auditor's old implementation left seven descendants (RED); the repaired production AST
+against the same 35 ms rapid spawner returned `RAPID_TIMEOUT_CAUGHT=True` and
+`RAPID_TIMEOUT_SURVIVORS=0` (GREEN).
+
+Both validators now reject any raw root that is not a JSON object before `ConvertFrom-Json`.
+The auditor's prior singleton project and payload arrays were accepted (RED). Repaired PS7/PS5.1
+payload fixtures rejected the array and accepted the object; a real wrapped project config was
+rejected and the exact original config hash was restored (GREEN).
+
+Watcher registration and enablement now occur before project validation, config hashing, and the
+initial repo snapshot. The prior 1.8-second transient marker was missed (RED). The repaired
+production preflight caught Created/Changed/Deleted events for the same marker and failed closed;
+the marker was absent afterward (GREEN).
+
+Fresh PS7 and PS5.1 preflights passed after every repair. No repo source, protected surface, Git
+state, or project-config byte remains changed by these tests. Cycle-2 round 2 must independently
+reproduce this evidence. Claude has not yet been invoked. Coding access remains disabled.

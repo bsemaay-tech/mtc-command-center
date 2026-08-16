@@ -11,7 +11,7 @@ Audit only the current cycle-2 bytes. Coding access is future-only and disabled.
 - Canonical repo: `C:\LAB\Tradingview_LAB_CLEAN`
 - Branch: `feature/donchian-crypto-ladder`
 - Launcher: `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1`
-- Launcher SHA256: `3E713AB0C41B7773038F1009F560EFE8A6E4E7452F86A28ED8DDE180194F978B`
+- Launcher SHA256: `67918EA88C61632416A027AC4D153D5E602C6251F3E178CFF8EF55B8EDAD9AE9`
 - Project config: `C:\Users\BarışSemaay\.gemini\config\projects\4b64b3f9-1bfa-4de1-a9eb-276f2e0489b7.json`
 - Project SHA256: `BF5DED19F712CACA2D8DD38588E015C1717FEFD2CF2577CF54A7D604A88E3551`
 - CLI: official Antigravity 1.1.13; model `gemini-3.7-flash-high`.
@@ -45,19 +45,24 @@ Independently inspect and, where safe, execute the production entrypoints/AST fi
 3. Real denied `write_file` probe with unique absent marker and denied terminal command.
 4. Dedicated config exact types/case/counts, `allowWrite=false`, one canonical read allow, all
    documented denies, project/model/root/branch binding, no shared-global permission edit.
-5. Injected `USERPROFILE`: old environment-derived lookup is RED; production authenticated
-   profile binding remains canonical and restores the injected value in PS7/PS5.
-6. Persistent filesystem subscriptions start before first Antigravity process and remain through
-   final snapshot; disable then drain to two quiet passes; Error events fail closed. Reproduce
-   old no-subscription instant create/delete RED and production AST GREEN.
+5. Inject all profile-discovery variables (`USERPROFILE`, `HOME`, `HOMEDRIVE`, `HOMEPATH`,
+   `APPDATA`, `LOCALAPPDATA`). Production must bind the authenticated profile into every real
+   Antigravity child and restore every caller value. Reproduce real read and denied-write probes
+   in PS7 and PS5; preflight alone is supplemental.
+6. Persistent filesystem subscriptions start before project validation, config hash, and initial
+   repo snapshot and remain through the final snapshot; disable then drain to two quiet passes;
+   Error events fail closed. Reproduce the old 1.8-second blind-window RED and production GREEN,
+   plus the old no-subscription instant create/delete RED and production AST GREEN.
 7. The only ignored filesystem events must be directory metadata and temporary `index.lock`
    lifecycle under `.git` or `.git/worktrees/<name>`. Main and registered-worktree locks must be
    absent before/after. Config/source/worktree-registry mutants must remain rejected. All Git
    hashes/state remain bound.
-8. Timeout cleanup leaves zero descendants in PS7/PS5. Check the repaired PS5 ordering waits for
-   parent exit before declaring cleanup verified.
-9. Inherited `GIT_*`, native argv transport, strict structured result/sentinel, wrong root/frozen
-   root, missing/malformed config, unavailable model, and dirty-but-unchanged behavior.
+8. Timeout cleanup leaves zero descendants in PS7/PS5. Reproduce the 35 ms rapid-spawner fixture:
+   old PS5 code left seven `ping.exe` descendants; production must stop the root, repeatedly
+   discover the tree, and require stable zero-survivor passes.
+9. Inherited `GIT_*`, native argv transport, strict structured result/sentinel, singleton root
+   arrays for both config and payload, wrong root/frozen root, missing/malformed config,
+   unavailable model, and dirty-but-unchanged behavior.
 10. Verify exact scoped hashes/status before and after. No required test may be accepted without
     execution; classify each new regression test RED/GREEN per D026.
 
