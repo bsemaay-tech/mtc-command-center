@@ -403,3 +403,81 @@ Notes:
 
 ---
 End of inventory. No git state, working tree, or file was modified anywhere except this report file.
+
+---
+
+## CORRECTION + RESCUE RECORD — 2026-08-16 late evening (Lead, owner-verified)
+
+The owner's independent live verification found three errors in the original agent
+pass above; all confirmed by a fresh Lead sweep of every registered worktree:
+
+1. **Count is 159**, not 160 — the original scan included the since-removed
+   temporary worktree `C:/tmp/PHW`.
+2. **Rescue-first is 10 directories / 3 unique local-only commits**, not 9 / 2.
+   The original reachability pass missed `C:/tmp/gatea_postgate_prereg_glm`
+   (detached at `7c4cac2b`), whose commit was equally unreachable from any
+   `origin/*` ref.
+3. The "9 worktrees" wording above is therefore superseded by this section.
+
+### Rescue executed (owner-authorized, this step only)
+
+Three rescue branches pushed from the exact SHAs — plain content-preservation
+pushes; **no merge, no acceptance claim of any kind**:
+
+| Remote branch | Exact SHA (verified = remote tip) | Commit |
+|---|---|---|
+| `rescue/local-only-2fa120b9` | `2fa120b928045704405c0a5156d73b3b930d1837` | docs(gate-a): complete provenance repair round 1 (2026-08-09) |
+| `rescue/local-only-f8a6bc0f` | `f8a6bc0f1a7fa00fcd1637297e05424732386da7` | docs(gate-a): repair candidate provenance split (2026-08-09) |
+| `rescue/local-only-7c4cac2b` | `7c4cac2bf4ec28f66416490e40e5a66503c81ca7` | docs(gate-a): map post-gate evidence gaps (2026-08-09) |
+
+Verification: `git ls-remote` shows each remote branch tip equals the full SHA, and
+`git merge-base --is-ancestor <sha> origin/rescue/...` returned REACHABLE for all
+three. The 10 rescue-first directories (PG2A/PG2C/PG2D/PG2G/PGR @2fa120b9,
+PGAA/PGAC/PGAD/PGAG @f8a6bc0f, C:/tmp/gatea_postgate_prereg_glm @7c4cac2b) were
+NOT removed — their commits are now merely safe on the remote.
+
+### Standing constraints (owner, 2026-08-16 late evening)
+
+- No worktree removal, no `git worktree prune`, no `--force`, no deletion of any
+  kind without a further explicit owner approval.
+- No Group-D blanket branch pushes.
+- Group A untouched; KVM2/deployment/credentials/ARM/TESTNET remain exclusively
+  with the deployment-owner session.
+
+### Group-E first slate — 10 freshly revalidated candidates AWAITING APPROVAL
+
+Each re-checked live this evening: directory exists, `status --porcelain` empty,
+HEAD reachable from the named `origin/*` ref, untouched ≥ 2 days. Removal would
+be `git worktree remove <path>` only (no prune, no force). Branch refs checked
+out in these directories are NOT deleted by worktree removal.
+
+| # | Path | HEAD | Reachable via | Idle (days) |
+|---|---|---|---|---|
+| 1 | `C:/AIROUTE` | `d0fa0028` | `origin/codex/ai-account-provider-routing` | 14.5 |
+| 2 | `C:/BTL2` | `74e0990b` | `origin/master` | 31.4 |
+| 3 | `C:/G5R` | `cc59c931` | `origin/feature/exit-aware-gauntlet` | 31.5 |
+| 4 | `C:/GA3B` | `df00634f` | `origin/codex/gate-a-3b-shm-validation` | 14.0 |
+| 5 | `C:/GA3BR2` | `20de117f` | `origin/codex/gate-a-3b-shm-validation` | 14.1 |
+| 6 | `C:/GA4RED` | `637307e8` | `origin/master` | 14.0 |
+| 7 | `C:/GA5E` | `7453ea7f` | `origin/codex/bridge-suite-anomaly-repairs-20260815` | 8.0 |
+| 8 | `C:/GAAUD_3B` | `df00634f` | `origin/codex/gate-a-3b-shm-validation` | 14.5 |
+| 9 | `C:/GAAUD_3B_CDX` | `df00634f` | `origin/codex/gate-a-3b-shm-validation` | 14.2 |
+| 10 | `C:/GAAUD_3B_CLA` | `df00634f` | `origin/codex/gate-a-3b-shm-validation` | 14.2 |
+
+### Group C — complete dirty-tree census (33 trees, fresh sweep, none touched)
+
+Pattern A — single untracked triage/lane output `.md` (1 line each, 15 trees):
+AUTHCON, BRDG, CLAIMCHK, FRZMAP, MRGRUN, P11LED, PGRK, PLANREC, PSCAUD, PSRETRY,
+R7AC, R7AX, R7T0CDX, R7T0CLA, RELDES, WBS (16th). Note: R7T0CDX/R7T0CLA hold
+untracked RP7 T0 audit drafts — deployment-session domain, do not judge here.
+
+Pattern B — uncommitted modifications to Bridge source from the July TS-P1 series
+(12 trees, 3–17 lines each): TSP1002, TSP1002A2/A3/A4, TSP1003A1/A2/A3/A4/A5,
+TSP1004, TSP1004A2, TSP1004A4. Historical repair-iteration leftovers; the accepted
+versions are long merged. Owner keep/discard decision needed per tree before any
+cleanup.
+
+Pattern C — mixed/larger: KVM2P03 (52 lines incl. `.gitattributes` + deploy docs),
+KVM2GLM (10 lines incl. `DECISIONS.md` mod), C:/tmp/postgate_runkit_design_claude
+(5 lines), CDXFAILOVER (1 modified tool script), C:/LAB/MTC_AIONUI_PILOT
+(untracked `data/`).
