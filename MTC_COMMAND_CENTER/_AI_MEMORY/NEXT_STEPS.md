@@ -4,6 +4,44 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
+## OWNER-REQUESTED OPEN — AI-memory continuity audit and repair (2026-08-16)
+
+**Registration tier: T3** (documentation / audit planning only). Future audit or repair work
+must be separately tier-classified against the actual surfaces touched at execution time.
+
+1. **[AI: Any] Read-only continuity audit.** Before calling any work missing: read canonical
+   onboarding/memory against all refs and registered worktrees. Reverify snapshots; specifically
+   inspect root-gap commit `cac12b94` and the six owner-decision commit `c84497c8` to confirm
+   current state is reachable from canonical onboarding.
+
+2. **[AI: Any] Route distinction.** GATEA-STAGING (the Hyper-V VM) and the ordinary `gatea`
+   SSH route are recorded. The later privileged read-only / root-channel design (`RPD-VERIFY`,
+   grants #3/#6) was not established as a standing channel. Never call the VM forgotten; the
+   gap is in the privileged-channel design, not in VM existence.
+
+3. **[AI: Claude] Worktree and branch inventory + risk report.** Re-count and re-classify all
+   registered worktrees and detached HEADs first (last snapshot: 152 worktrees / 85 detached —
+   reverify at execution). Produce a compact evidence-backed risk report covering: long-horizon
+   coding drift, audit surface coverage, external infrastructure lifecycle, branch/worktree
+   propagation, and canonical propagation gaps. No deletion, move, prune, stage, or cleanup
+   without separate owner approval.
+
+4. **[AI: Claude] Canonical reconciliation proposal.** After Lead verification: reconcile
+   accepted current facts and decisions into canonical `_AI_MEMORY`. Propose one canonical
+   secret-safe infrastructure-metadata registry with enforceable write-back and
+   branch-visibility checks. Never guess or silently fill an UNKNOWN value; resolve it
+   only from independently verified evidence.
+
+5. **Acceptance criteria.** A fresh session finds current state through canonical onboarding
+   alone; no authoritative latest decision is stranded only on another ref or temp output;
+   infrastructure metadata shows purpose, lifecycle, provenance, current authority-status, and
+   secret-safe access metadata; conflicts and staleness are explicit; all refs and worktrees
+   are reverified at execution time.
+
+6. **Safety fence.** Audit read-only first. This registration authorizes no host, network, or
+   credential access; no trading, Pine, parity, or MTC source change; no repo cleanup,
+   worktree or branch deletion, or history rewrite. All existing hard gates remain unchanged.
+
 ## READ FIRST — fresh-session handoff (2026-08-10 evening)
 
 **`11_TRIAGE/NEW_SESSION_KICKOFF_2026-08-10_EVENING.md` is self-contained and current.**
@@ -2503,4 +2541,3 @@ Roles this execution only: **Claude Lead/acceptance, Codex `gpt-5.6-sol` impleme
   exists.
 - **[AI: Any] AUDIT AUTHORITY ONLY:** D025 grants secondary models **no** implementation authority.
   Protected Bridge/core-runtime implementation stays with the flagship implementer.
-

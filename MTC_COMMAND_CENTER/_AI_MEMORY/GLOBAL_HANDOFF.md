@@ -5,6 +5,21 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol] 2026-08-16 — AI-memory continuity risk recorded; remediation task OPEN
+
+Owner requested a durable future task after a documentation-only investigation. Finding:
+GATEA-STAGING (Hyper-V VM) and the ordinary `gatea` SSH route are recorded in canonical
+memory. The later privileged-channel design (`RPD-VERIFY`, root grants #3/#6) was not
+established as a standing channel and is absent from the current canonical branch. The
+latest owner-decision commit (`c84497c8`) and root-gap commit (`cac12b94`) are on separate
+feature refs and absent from the current canonical branch/onboarding chain; canonical
+onboarding does not yet surface them independently. Last snapshot
+registered 152 worktrees / 85 detached HEADs — re-count required at execution.
+
+Task is **OPEN, not repaired**. Detail in `NEXT_STEPS.md` §"OWNER-REQUESTED OPEN —
+AI-memory continuity audit and repair (2026-08-16)". No host, config, credential, cleanup,
+source, or trading action occurred in this registration.
+
 ## [Claude Fable 5 — Lead] 2026-08-15 — Lesson Ladder Stages 1–3 built (memory hygiene + capture + weekly retro)
 
 Owner reviewed the external RCLS self-improvement report and authorized the small
