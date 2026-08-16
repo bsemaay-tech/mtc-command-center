@@ -36,8 +36,9 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
-| Stage-1 / owner-decision / runbook records | `11_TRIAGE/` STAGE1_*, OWNER_DECISION*, *RUNBOOK_V*, KVM2 P2 review outputs (new files only) | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **Fable 5 Lead (accelerated-completion session)** | 2026-08-16 afternoon |
+| Stage-1 / owner-decision / runbook records | `11_TRIAGE/` STAGE1_*, OWNER_DECISION*, *RUNBOOK_V*, KVM2 P2 review outputs (new files only) | **Fable 5 Lead (accelerated-completion session)** | 2026-08-16 afternoon |
+| Bridge release integration | `integration/bridge-release-20260815` branch, `C:\BRIDGE_RELEASE_INTEGRATION_20260815` worktree, `11_TRIAGE/` BRIDGE_RELEASE_* refresh records | **Fable 5 Lead (accelerated-completion session)** | 2026-08-16 afternoon |
 | GATEA-STAGING host actions | the VM itself, `11_TRIAGE/` GATEA_STAGING_*, HOST_CHANNEL_* | **UNCLAIMED** — released 2026-08-16 11:05 +03. VM left `Off`, checkpoint `GATEA-STAGING-CH1-PRECHANGE-V1` retained | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
@@ -49,6 +50,16 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 afternoon:** Fable 5 Lead (accelerated-completion session) claimed the
+  shared-memory, Stage-1/runbook, and a new Bridge-release-integration row after the
+  owner answered the §3 midday question: **ACCELERATED FULL COMPLETION APPROVED**
+  (record: `11_TRIAGE/OWNER_DECISION_ACCELERATED_COMPLETION_2026-08-16.md`). Verified
+  before claiming: HEAD `e61dab1b`, branch `codex/rp7-r1-r4-repair-20260815`,
+  `git status --porcelain` empty, repo guard PASS, no active writer (previous session
+  released cleanly at 11:05). Scope: runbook refresh, integration merge + suite in an
+  isolated worktree, acceptance dispatch, register rebuild, memory write-back. No host
+  action beyond what the owner's recorded grants allow.
 
 - **2026-08-16 11:05 +03: ALL ROWS RELEASED** by Fable 5 Lead `f3a2cf9f` at a
   clean stop. 32 commits, all pushed, worktree clean at `e1dc3d95`. No foreign
