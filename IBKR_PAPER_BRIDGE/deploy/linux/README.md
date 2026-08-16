@@ -22,11 +22,12 @@ separation, no restart throttling, no explicit state/log ownership.
 | `rollback.sh` | Stop + mask + optionally re-bind to a prior installed SHA. Never starts, never deletes state. |
 | `verify_lock.py` | Offline parser for exact+hashed lock entries and exact installed distribution versions. |
 | `SECURITY_BASELINE.md` | WP-I pre-Gate-A pinned inventory, content-redacted secret-scan contract/result, and outbound-network inventory. Static evidence only. |
-| `lib/common.sh` | Shared layout constants and fail-closed assertions (including the read-only UFW SSH-only check). |
+| `lib/common.sh` | Shared layout constants and fail-closed assertions (including the read-only UFW Bridge-safe check). |
 | `systemd/mtc-bridge-first-start.service.template` | The only unit `install.sh` installs. `Restart=no`, no `[Install]` section, installed masked. |
 | `systemd/mtc-bridge-steady.service.template` | Restart-enabled profile. **Gated artifact — never installed or enabled by any script here.** |
 | `env/mtc-bridge.env.template` | Secret-name-only contract for the root-owned `0600` env file. Contains no values and never will. |
 | `logrotate/mtc-bridge` | Frozen persistent-log rotation policy. |
+| `cron/mtc-bridge-logrotate` | Bridge-only cron.hourly invocation of the frozen logrotate policy. It is not a disk quota. |
 | `COMMANDS.md` | The exact command sequence for a later, separately authorized one-attempt install. |
 
 ## Target layout
@@ -47,6 +48,7 @@ separation, no restart throttling, no explicit state/log ownership.
 /usr/local/lib/systemd/system/mtc-bridge-first-start.service   the real unit
 /etc/systemd/system/mtc-bridge-first-start.service -> /dev/null  the mask
 /etc/logrotate.d/mtc-bridge
+/etc/cron.hourly/mtc-bridge-logrotate
 ```
 
 The release path contains the exact commit SHA and the unit hard-codes that
@@ -93,9 +95,10 @@ Gate 5/Gate 6 accept that specific profile.
 **Loopback only, and the firewall is never touched.** The application binds
 `127.0.0.1:8790` in code; `install.sh` and `verify.sh` assert that statically
 and also assert no non-loopback listener exists on that port. UFW is only ever
-*read*: any inbound rule other than SSH fails the check. Adding, removing or
-changing a firewall rule is a separately scoped, separately audited,
-owner-approved action.
+*read*: explicit numeric web/tenant rules that exclude 8790 may coexist with
+SSH, but any rule exposing 8790 or using unmodelled/application-profile grammar
+fails closed. Adding, removing or changing a firewall rule is a separately
+scoped, separately audited, owner-approved action.
 
 **Secrets are contract-only here.** `install.sh` creates
 `/etc/mtc-bridge/mtc-bridge.env` from a comment-only template at `0600`
@@ -141,6 +144,10 @@ never deletes, moves or resets `/var/lib/mtc-bridge`. Risk history is evidence.
   egress control is deferred to the Phase 6 network gate.
 - `MemoryDenyWriteExecute` is deliberately not set: several locked
   cryptographic wheels map W+X pages at import time.
+- Hourly `maxsize 64M` log rotation is a nominal threshold, not a hard disk
+  bound: active growth between invocations and retained oversized generations
+  leave worst-case usage unbounded. Bridge log-directory monitoring against the
+  declared 10 GiB tenant budget is the compensating control.
 - Same-host isolation is **not** solved by this directory. A loopback listener
   is reachable by any local process; that is the KVM2-P5-10 design problem, and
   AI-lab admission stays BLOCKED until it is solved and accepted.

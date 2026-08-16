@@ -192,7 +192,10 @@ def test_installer_uses_per_sha_venv_hashes_and_binary_wheels_only():
     assert "--only-binary=:all:" in script
     assert "--check-installed" in script
     assert "pip install --upgrade pip" in script  # present only in the explicit prohibition comment
-    assert re.search(r'run "\$\{MTC_PYTHON\}" -m venv "\$\{VENV\}"', script)
+    assert re.search(
+        r'run_action "venv-create" "\$\{MTC_PYTHON\}" -m venv "\$\{VENV\}"',
+        script,
+    )
     assert not re.search(r"(?m)^\s*(?:sudo\s+)?pip(?:3)?\s+install\b", script)
 
 
@@ -206,48 +209,31 @@ def test_installer_preflights_venv_capability_before_any_mutation():
     assert "python3.12-venv" in result.stderr
 
     installer = read(LINUX / "install.sh")
-    assert installer.index("preflight_venv_capability") < installer.index("run groupadd")
+    assert installer.index("preflight_venv_capability") < installer.index(
+        'run_action "identity-group" groupadd'
+    )
 
 
 def test_dry_run_manifest_matches_every_real_install_mutation():
     script = read(LINUX / "install.sh")
-    planned_ids = set(re.findall(r'^\s*dry_run_action "([^"]+)"', script, re.MULTILINE))
-    real_mutations = {
-        "identity-group": r'run groupadd --system',
-        "identity-user": r'run useradd --system',
-        "dir-state": r'run install -d -o "\$\{MTC_USER\}".*"\$\{MTC_STATE_DIR\}"',
-        "dir-log": r'run install -d -o "\$\{MTC_USER\}".*"\$\{MTC_LOG_DIR\}"',
-        "dir-config": r'run install -d -o root.*"\$\{MTC_CONF_DIR\}"',
-        "dir-opt": r'run install -d -o root.*"\$\{MTC_OPT_ROOT\}"',
-        "dir-releases": r'run install -d -o root.*"\$\{MTC_RELEASES_ROOT\}"',
-        "dir-venvs": r'run install -d -o root.*"\$\{MTC_VENVS_ROOT\}"',
-        "release-dir": r'run install -d -o root.*"\$\{DEST\}"',
-        "release-copy": r'run cp -a "\$\{SOURCE_DIR\}/\." "\$\{DEST\}/"',
-        "venv-create": r'run "\$\{MTC_PYTHON\}" -m venv "\$\{VENV\}"',
-        "venv-install": r'run "\$\{PIP_ARGS\[@\]\}"',
-        "seal-release-owner": r'run chown -R root:root "\$\{DEST\}"',
-        "seal-release-dirs": r'run find "\$\{DEST\}" -type d -exec chmod 0555',
-        "seal-release-exec": r'run find "\$\{DEST\}" -type f -perm /111 -exec chmod 0555',
-        "seal-release-files": r'run find "\$\{DEST\}" -type f .* -perm /111 -exec chmod 0444',
-        "seal-venv-owner": r'run chown -R root:root "\$\{VENV\}"',
-        "seal-venv-dirs": r'run find "\$\{VENV\}" -type d -exec chmod 0555',
-        "seal-venv-exec": r'run find "\$\{VENV\}" -type f -perm /111 -exec chmod 0555',
-        "seal-venv-files": r'run find "\$\{VENV\}" -type f .* -perm /111 -exec chmod 0444',
-        "env-install": r'run install -o root -g root -m 0600',
-        "env-owner": r'run chown root:root "\$\{MTC_ENV_FILE\}"',
-        "env-mode": r'run chmod 0600 "\$\{MTC_ENV_FILE\}"',
-        "unit-dir": r'run install -d -o root -g root -m 0755 "\$\{MTC_UNIT_DIR\}"',
-        "unit-install": r'run install -o root -g root -m 0644.*"\$\{MTC_UNIT_DIR\}/\$\{MTC_FIRST_START_UNIT\}"',
-        "systemd-reload": r'run systemctl daemon-reload',
-        "unit-mask": r'run systemctl mask "\$\{MTC_FIRST_START_UNIT\}"',
-        "logrotate-install": r'run install -o root -g root -m 0644 "\$\{LOGROTATE_TEMPLATE\}"',
-        "manifest-write": r'cat > "\$\{MTC_INSTALL_MANIFEST\}"',
-        "manifest-owner": r'chown root:root "\$\{MTC_INSTALL_MANIFEST\}"',
-        "manifest-mode": r'chmod 0640 "\$\{MTC_INSTALL_MANIFEST\}"',
-    }
-    assert planned_ids == set(real_mutations)
-    for action_id, pattern in real_mutations.items():
-        assert re.search(pattern, script, re.DOTALL), action_id
+    planned_id_list = re.findall(r'^\s*dry_run_action "([^"]+)"', script, re.MULTILINE)
+    guarded_calls = re.findall(
+        r'^\s*run_action "([^"]+)"[ \t]+([^\n]+)',
+        script,
+        re.MULTILINE,
+    )
+    guarded_id_list = [action_id for action_id, command in guarded_calls if command.strip()]
+
+    # Both inventories are parsed from executable install.sh text. No
+    # hand-maintained action dictionary can hide a newly added mutation.
+    assert len(planned_id_list) == len(set(planned_id_list))
+    assert len(guarded_id_list) == len(set(guarded_id_list))
+    assert set(planned_id_list) == set(guarded_id_list)
+
+    # Every real mutation must name its dry-run ID through run_action. A raw
+    # `run install ... /opt/hermes` addition is therefore visible and RED.
+    raw_run_calls = re.findall(r'^\s*run\s+([^\n]+)', script, re.MULTILINE)
+    assert raw_run_calls == ['"$@"']
 
     for exact_path in (
         "${MTC_STATE_DIR}",
@@ -258,6 +244,7 @@ def test_dry_run_manifest_matches_every_real_install_mutation():
         "${MTC_ENV_FILE}",
         "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}",
         "${MTC_LOGROTATE_FILE}",
+        "${MTC_LOGROTATE_CRON}",
         "${MTC_INSTALL_MANIFEST}",
     ):
         assert re.search(rf'^\s*dry_run_action .*{re.escape(exact_path)}', script, re.MULTILINE)
@@ -266,8 +253,8 @@ def test_dry_run_manifest_matches_every_real_install_mutation():
 def test_installer_never_starts_enables_or_unmasks_a_service():
     commands = noncomment_shell(LINUX / "install.sh")
     assert not re.search(r"\bsystemctl\s+(?:start|enable|unmask)\b", commands)
-    assert "run systemctl mask" in commands
-    assert "run systemctl daemon-reload" in commands
+    assert 'run_action "unit-mask" systemctl mask' in commands
+    assert 'run_action "systemd-reload" systemctl daemon-reload' in commands
 
 
 def test_installer_never_installs_the_steady_profile():
@@ -296,6 +283,36 @@ def test_no_deployment_script_mutates_ufw():
             "bridge_port_exposed",
             "22/tcp ALLOW IN Anywhere\n8790/tcp ALLOW IN Anywhere\n",
             False,
+        ),
+        (
+            "bridge_port_after_destination_address",
+            "22/tcp ALLOW IN Anywhere\n152.239.123.231 8790/tcp ALLOW IN Anywhere\n",
+            False,
+        ),
+        (
+            "bridge_port_inside_wide_range",
+            "22/tcp ALLOW IN Anywhere\n8000:9000/tcp ALLOW IN Anywhere\n",
+            False,
+        ),
+        (
+            "bridge_port_at_range_start",
+            "22/tcp ALLOW IN Anywhere\n8790:8800/tcp ALLOW IN Anywhere\n",
+            False,
+        ),
+        (
+            "unmodelled_application_profile",
+            "22/tcp ALLOW IN Anywhere\nNginx Full ALLOW IN Anywhere\n",
+            False,
+        ),
+        (
+            "safe_numeric_range",
+            "22/tcp ALLOW IN Anywhere\n80:443/tcp ALLOW IN Anywhere\n",
+            True,
+        ),
+        (
+            "known_openssh_profile",
+            "OpenSSH ALLOW IN Anywhere\n80/tcp ALLOW IN Anywhere\n443/tcp ALLOW IN Anywhere\n",
+            True,
         ),
         (
             "ssh_missing",
@@ -338,14 +355,21 @@ assert_ufw_bridge_safe
 
 def test_first_start_unit_is_separate_masked_design_and_restart_no():
     unit = read(LINUX / "systemd" / "mtc-bridge-first-start.service.template")
+    effective_settings: dict[str, list[str]] = {}
+    for raw_line in unit.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or line.startswith("[") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        effective_settings.setdefault(key, []).append(value)
     assert "\nRestart=no\n" in unit
     assert "\n[Install]\n" not in unit
     assert "venvs/@RELEASE_SHA@/bin/python -m bridge.app" in unit
     assert "MTC_BRIDGE_STATE_DB=/var/lib/mtc-bridge/bridge.db" in unit
     assert "MTC_BRIDGE_START_MODE=credential_free_disarmed" in unit
     assert "MTC_BRIDGE_RELEASE_SHA=@RELEASE_SHA@" in unit
-    assert "MemoryHigh=768M" in unit
-    assert "MemoryMax=1G" in unit
+    assert effective_settings.get("MemoryHigh") == ["768M"]
+    assert effective_settings.get("MemoryMax") == ["1G"]
     assert "PrivateTmp=yes" in unit
     assert "KillSignal=SIGTERM" in unit
     assert "TimeoutStopSec=45" in unit
@@ -541,11 +565,13 @@ def test_installer_sources_and_copies_only_hash_bound_payload_assets():
     assert 'ENV_TEMPLATE="${PAYLOAD_DEPLOY_DIR}/env/mtc-bridge.env.template"' in script
     assert 'FIRST_START_TEMPLATE="${PAYLOAD_DEPLOY_DIR}/systemd/${MTC_FIRST_START_UNIT}.template"' in script
     assert 'LOGROTATE_TEMPLATE="${PAYLOAD_DEPLOY_DIR}/logrotate/mtc-bridge"' in script
+    assert 'LOGROTATE_CRON_TEMPLATE="${PAYLOAD_DEPLOY_DIR}/cron/mtc-bridge-logrotate"' in script
     for detached in (
         '"${SCRIPT_DIR}/lib/common.sh"',
         '"${SCRIPT_DIR}/env/mtc-bridge.env.template"',
         '"${SCRIPT_DIR}/systemd/${MTC_FIRST_START_UNIT}.template"',
         '"${SCRIPT_DIR}/logrotate/mtc-bridge"',
+        '"${SCRIPT_DIR}/cron/mtc-bridge-logrotate"',
     ):
         assert detached not in script
 
@@ -562,14 +588,21 @@ def test_env_template_contains_names_and_comments_but_no_definitions():
     assert assignments == []
 
 
-def test_logrotate_contract_is_persistent_bounded_and_nonrestarting():
+def test_logrotate_contract_is_hourly_nominal_and_nonrestarting():
     policy = read(LINUX / "logrotate" / "mtc-bridge")
-    for token in ("daily", "rotate 7", "maxsize 64M", "compress", "delaycompress", "copytruncate"):
+    cron = read(LINUX / "cron" / "mtc-bridge-logrotate")
+    for token in ("hourly", "rotate 7", "maxsize 64M", "compress", "delaycompress", "copytruncate"):
         assert token in policy
+    assert "daily" not in noncomment_shell(LINUX / "logrotate" / "mtc-bridge")
     assert "1 GiB" in policy
-    assert "not a hard disk quota" in policy
+    assert "NOT a bound or quota" in policy
+    assert "unbounded even after rotation" in policy
+    assert "Compensating control" in policy
+    assert "10 GiB Bridge disk budget" in policy
     assert "create 0640 mtc-bridge mtc-bridge" in policy
     assert "postrotate" not in policy
+    assert "exec /usr/sbin/logrotate /etc/logrotate.d/mtc-bridge" in cron
+    assert "not a disk quota" in cron
 
 
 def test_state_path_default_is_preserved_and_posix_env_override_resolves():
@@ -845,8 +878,26 @@ def test_masked_unstarted_verifier_requires_zero_writers_and_closed_port():
 
 def test_verifier_is_read_only_and_binds_release_unit_venv_and_manifest():
     script = noncomment_shell(LINUX / "verify.sh")
-    assert not re.search(r"\bsystemctl\s+(?:start|stop|restart|enable|disable|unmask|mask)\b", script)
-    assert "mktemp" not in script
+    output_redirection = re.compile(
+        r'(?<![<>])(?P<fd>\d*)(?P<operator>>>?)(?![>&])\s*'
+        r'(?P<target>"[^"]*"|\'[^\']*\'|[^\s;|&]+)'
+    )
+    redirections = [match.group("target").strip('"\'') for match in output_redirection.finditer(script)]
+    assert redirections
+    assert set(redirections) == {"/dev/null"}
+
+    write_commands = re.compile(
+        r"(?m)(?:^|[;|&()]\s*)(?:command\s+|sudo\s+)?"
+        r"(?:mktemp|rm|mv|cp|install|touch|tee|dd|truncate|ln|mkdir|rmdir|chmod|chown)\b"
+    )
+    assert not write_commands.search(script)
+    assert not re.search(r"\bsed\s+(?:[^\n;]*\s)?-i(?:[.A-Za-z]*)?(?:\s|$)", script)
+    executable_script = "\n".join(
+        line for line in script.splitlines() if not line.lstrip().startswith("require_cmd ")
+    )
+    systemctl_verbs = set(re.findall(r"\bsystemctl\s+([a-z-]+)", executable_script))
+    assert systemctl_verbs <= {"is-active", "is-enabled"}
+    assert not re.search(r"\b(?:printf|echo)\b[^\n]*(?:>>?|\btee\b)\s*/", script)
     assert "expected_unit" not in script
     common = read(LINUX / "lib" / "common.sh")
     inventory_helper = common[
@@ -861,6 +912,7 @@ def test_verifier_is_read_only_and_binds_release_unit_venv_and_manifest():
         "installed unit exactly matches",
         "first-start unit is masked",
         "restart-enabled steady unit absent",
+        "hourly Bridge logrotate runner exactly matches",
     ):
         assert token in read(LINUX / "verify.sh")
 

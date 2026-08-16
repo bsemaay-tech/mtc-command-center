@@ -47,7 +47,7 @@ for canonical_path in \
     "${DEST}" "${VENV}" "${MTC_STATE_DIR}" "${MTC_LOG_DIR}" \
     "${MTC_CONF_DIR}" "${MTC_ENV_FILE}" "${MTC_INSTALL_MANIFEST}" \
     "${MTC_UNIT_DIR}" "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}" \
-    "${MTC_LOGROTATE_FILE}"; do
+    "${MTC_LOGROTATE_FILE}" "${MTC_LOGROTATE_CRON}"; do
   assert_not_symlink "${canonical_path}"
 done
 
@@ -232,10 +232,19 @@ else
 fi
 
 # --- 8. logs, rotation, control plane -------------------------------------
-if [ -f "${MTC_LOGROTATE_FILE}" ]; then
-  pass "logrotate policy installed"
+if [ -f "${MTC_LOGROTATE_FILE}" ] && cmp -s \
+    "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/logrotate/mtc-bridge" \
+    "${MTC_LOGROTATE_FILE}"; then
+  pass "logrotate policy exactly matches the accepted release"
 else
-  fail "logrotate policy missing"
+  fail "logrotate policy is missing or differs from the accepted release"
+fi
+if [ -x "${MTC_LOGROTATE_CRON}" ] && cmp -s \
+    "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/cron/mtc-bridge-logrotate" \
+    "${MTC_LOGROTATE_CRON}"; then
+  pass "hourly Bridge logrotate runner exactly matches the accepted release"
+else
+  fail "hourly Bridge logrotate runner is missing, non-executable, or differs from the accepted release"
 fi
 assert_loopback_only_source "${DEST}/IBKR_PAPER_BRIDGE/bridge/app.py" || true
 # This verifier is specifically the masked/unstarted mode. A future explicit

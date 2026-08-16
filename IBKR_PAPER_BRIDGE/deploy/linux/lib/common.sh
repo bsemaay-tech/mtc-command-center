@@ -26,6 +26,7 @@ MTC_FIRST_START_UNIT="mtc-bridge-first-start.service"
 MTC_STEADY_UNIT="mtc-bridge-steady.service"
 
 MTC_LOGROTATE_FILE="/etc/logrotate.d/mtc-bridge"
+MTC_LOGROTATE_CRON="/etc/cron.hourly/mtc-bridge-logrotate"
 MTC_BIND_HOST="127.0.0.1"
 MTC_BIND_PORT="8790"
 MTC_PYTHON="python3.12"
@@ -158,7 +159,7 @@ assert_ufw_bridge_safe() {
   if ! command -v ufw >/dev/null 2>&1; then
     fail "ufw not installed; Bridge-safe inbound policy cannot be asserted"; return 1
   fi
-  local status ssh_allow bridge_allow
+  local status parsed ssh_allow bridge_allow
   if ! status="$(ufw status verbose 2>/dev/null)"; then
     fail "ufw status cannot be read"; return 1
   fi
@@ -170,15 +171,103 @@ assert_ufw_bridge_safe() {
     *"Default: deny (incoming)"*) : ;;
     *) fail "ufw default incoming policy is not deny"; return 1 ;;
   esac
-  ssh_allow="$(printf '%s\n' "${status}" | awk '
-    /ALLOW IN/ && ($1 == "22" || $1 ~ /^22\// || $1 == "OpenSSH") { print; exit }
-  ')"
+  # Parse every ALLOW row as a complete UFW status-table rule. A numeric port
+  # may be the first field or may follow a destination address; exact ports and
+  # inclusive a:b ranges are supported. Anything else is not evidence of
+  # safety: application profiles and unmodelled grammar must be replaced with
+  # explicit numeric port/range rules before this assertion can pass.
+  if ! parsed="$(printf '%s\n' "${status}" | awk -v bridge_port="${MTC_BIND_PORT}" '
+    function trim(value) {
+      sub(/^[[:space:]]+/, "", value)
+      sub(/[[:space:]]+$/, "", value)
+      return value
+    }
+    function source_is_modelled(value) {
+      return value == "Anywhere" || value ~ /^[0-9A-Fa-f:.]+(\/[0-9]+)?$/
+    }
+    function parse_port_spec(value, parts, range_parts, count) {
+      count = split(value, parts, "/")
+      if (count > 2 || parts[1] == "") return 0
+      parsed_protocol = count == 2 ? tolower(parts[2]) : ""
+      if (parsed_protocol != "" && parsed_protocol != "tcp" && parsed_protocol != "udp") return 0
+      if (parts[1] ~ /^[0-9]+$/) {
+        parsed_low = parts[1] + 0
+        parsed_high = parsed_low
+      } else if (parts[1] ~ /^[0-9]+:[0-9]+$/) {
+        split(parts[1], range_parts, ":")
+        parsed_low = range_parts[1] + 0
+        parsed_high = range_parts[2] + 0
+      } else {
+        return 0
+      }
+      return parsed_low >= 1 && parsed_high <= 65535 && parsed_low <= parsed_high
+    }
+    function mark_unmodelled(reason, rule) {
+      print "UNMODELLED\t" reason "\t" rule
+      unmodelled = 1
+    }
+    index($0, "ALLOW") {
+      rule = $0
+      if (!match(rule, /[[:space:]]ALLOW[[:space:]]+IN[[:space:]]/)) {
+        mark_unmodelled("ALLOW action is not exactly ALLOW IN", rule)
+        next
+      }
+      destination = trim(substr(rule, 1, RSTART - 1))
+      source = trim(substr(rule, RSTART + RLENGTH))
+      sub(/[[:space:]]+\(v6\)$/, "", destination)
+      sub(/[[:space:]]+\(v6\)$/, "", source)
+      destination = trim(destination)
+      source = trim(source)
+      if (!source_is_modelled(source)) {
+        mark_unmodelled("source field is not an explicit address", rule)
+        next
+      }
+
+      field_count = split(destination, fields, /[[:space:]]+/)
+      if (field_count >= 3 && fields[field_count - 1] == "on") {
+        if (fields[field_count] !~ /^[[:alnum:]_.:-]+$/) {
+          mark_unmodelled("interface field is invalid", rule)
+          next
+        }
+        field_count -= 2
+      }
+      if (field_count == 1 && fields[1] == "OpenSSH") {
+        print "SSH\t" rule
+        next
+      }
+      if (field_count == 1 && fields[1] == "Anywhere") {
+        print "BRIDGE\t" rule
+        next
+      }
+      if (field_count == 1) {
+        port_spec = fields[1]
+      } else if (field_count == 2 && source_is_modelled(fields[1])) {
+        port_spec = fields[2]
+      } else {
+        mark_unmodelled("destination is not an explicit numeric port/range", rule)
+        next
+      }
+      if (!parse_port_spec(port_spec)) {
+        mark_unmodelled("port field is not an explicit numeric port/range", rule)
+        next
+      }
+      if (parsed_low <= bridge_port && bridge_port <= parsed_high) {
+        print "BRIDGE\t" rule
+      }
+      if (parsed_low <= 22 && 22 <= parsed_high && (parsed_protocol == "" || parsed_protocol == "tcp")) {
+        print "SSH\t" rule
+      }
+    }
+    END { if (unmodelled) exit 2 }
+  ')"; then
+    fail "ufw has an unmodelled ALLOW rule or application profile; enumerate it as an explicit numeric port/range before Bridge verification: $(printf '%s' "${parsed}" | tr '\n' ' ')"
+    return 1
+  fi
+  ssh_allow="$(printf '%s\n' "${parsed}" | awk -F '\t' '$1 == "SSH" { print; exit }')"
   if [ -z "${ssh_allow}" ]; then
     fail "ufw has no inbound ALLOW rule for SSH port 22"; return 1
   fi
-  bridge_allow="$(printf '%s\n' "${status}" | awk -v port="${MTC_BIND_PORT}" '
-    /ALLOW IN/ && ($1 == port || index($1, port "/") == 1) { print }
-  ')"
+  bridge_allow="$(printf '%s\n' "${parsed}" | awk -F '\t' '$1 == "BRIDGE" { print $2 }')"
   if [ -n "${bridge_allow}" ]; then
     fail "ufw exposes Bridge port ${MTC_BIND_PORT}: $(printf '%s' "${bridge_allow}" | tr '\n' ' ')"; return 1
   fi

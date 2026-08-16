@@ -59,7 +59,11 @@ def test_status_exposes_deployment_identity_health_and_fresh_timestamp(monkeypat
     assert first["service_health"] == "healthy"
     assert datetime.fromisoformat(first["service_start_ts"]).tzinfo == UTC
     assert datetime.fromisoformat(first["status_ts"]).tzinfo == UTC
-    assert datetime.fromisoformat(second["status_ts"]) >= datetime.fromisoformat(first["status_ts"])
+    first_status_ts = datetime.fromisoformat(first["status_ts"])
+    second_status_ts = datetime.fromisoformat(second["status_ts"])
+    assert second_status_ts > first_status_ts
+    freshness = datetime.now(UTC) - second_status_ts
+    assert timedelta(0) <= freshness < timedelta(seconds=5)
     assert second["service_start_ts"] == first["service_start_ts"]
     for field in (
         "host_identity",

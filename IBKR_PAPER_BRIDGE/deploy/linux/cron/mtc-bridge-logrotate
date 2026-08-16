@@ -1,0 +1,9 @@
+#!/bin/sh
+# Bridge-only hourly logrotate invocation. The policy remains a nominal
+# threshold, not a disk quota; monitoring is the compensating control.
+set -eu
+
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+exec /usr/sbin/logrotate /etc/logrotate.d/mtc-bridge

@@ -4,16 +4,20 @@
 # the process lifetime. `copytruncate` therefore rotates without needing a
 # service restart — restarting the bridge to rotate a log is forbidden.
 #
-# Policy: daily, seven generations retained, compressed with a one-generation
-# delay, and early rotation when either active log exceeds 64 MiB. At the
-# threshold the uncompressed retention budget is two logs x eight files
-# (active + seven generations) x 64 MiB = 1 GiB. `maxsize` is checked only
-# when logrotate runs, so this is not a hard disk quota: active growth between
-# daily runs can exceed it, and the policy-only absolute worst case is
-# unbounded until the next invocation. MemoryMax protects RAM, not log disk.
+# Policy: an installed cron.hourly runner invokes this Bridge-only policy;
+# rotate hourly or early when either active log exceeds the nominal 64 MiB
+# `maxsize` threshold, retain seven generations, and compress after one
+# generation. If every active and retained file were exactly 64 MiB, the
+# nominal calculation would be two logs x eight files x 64 MiB = 1 GiB.
+# That calculation is NOT a bound or quota. Active files can grow without
+# limit between invocations, and an oversized file remains oversized after it
+# becomes a retained generation, so policy-only worst-case disk use remains
+# unbounded even after rotation. MemoryMax protects RAM, not log disk.
+# Compensating control: monitor /var/log/mtc-bridge usage against the declared
+# 10 GiB Bridge disk budget and alert/STOP before tenant headroom is threatened.
 
 /var/log/mtc-bridge/bridge.log /var/log/mtc-bridge/bridge.err.log {
-    daily
+    hourly
     rotate 7
     maxsize 64M
     missingok
@@ -22,7 +26,7 @@
     delaycompress
     copytruncate
     dateext
-    dateformat -%Y%m%d
+    dateformat -%Y%m%d%H%M%S
     su mtc-bridge mtc-bridge
     create 0640 mtc-bridge mtc-bridge
 }

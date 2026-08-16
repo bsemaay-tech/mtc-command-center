@@ -177,9 +177,14 @@ LOCK_VERIFY="${SOURCE_DIR}/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py"
 ENV_TEMPLATE="${PAYLOAD_DEPLOY_DIR}/env/mtc-bridge.env.template"
 FIRST_START_TEMPLATE="${PAYLOAD_DEPLOY_DIR}/systemd/${MTC_FIRST_START_UNIT}.template"
 LOGROTATE_TEMPLATE="${PAYLOAD_DEPLOY_DIR}/logrotate/mtc-bridge"
+LOGROTATE_CRON_TEMPLATE="${PAYLOAD_DEPLOY_DIR}/cron/mtc-bridge-logrotate"
 [ -f "${ENV_TEMPLATE}" ] || die "payload has no env contract template"
 [ -f "${FIRST_START_TEMPLATE}" ] || die "payload has no first-start unit template"
 [ -f "${LOGROTATE_TEMPLATE}" ] || die "payload has no logrotate template"
+[ -f "${LOGROTATE_CRON_TEMPLATE}" ] || die "payload has no hourly logrotate cron template"
+[ -x /usr/sbin/logrotate ] || die "/usr/sbin/logrotate is required for the hourly Bridge log rotation policy"
+[ -d /etc/cron.hourly ] && [ ! -L /etc/cron.hourly ] \
+  || die "/etc/cron.hourly must be an ordinary directory"
 if grep -qE '^[[:space:]]*(export[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*=' "${ENV_TEMPLATE}"; then
   die "payload env template contains a definition"
 fi
@@ -189,6 +194,7 @@ for canonical_path in \
     "${MTC_STATE_DIR}" "${MTC_LOG_DIR}" "${MTC_CONF_DIR}" \
     "${MTC_ENV_FILE}" "${MTC_INSTALL_MANIFEST}" "${MTC_UNIT_DIR}" \
     "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}" "${MTC_LOGROTATE_FILE}" \
+    "${MTC_LOGROTATE_CRON}" \
     "${DEST}" "$(venv_dir "${RELEASE_SHA}")"; do
   assert_not_symlink "${canonical_path}"
 done
@@ -220,6 +226,13 @@ dry_run_action() {
   printf '[dry-run] ACTION %-20s %s\n' "$1" "$2"
 }
 
+run_action() {
+  local action_id="$1"
+  shift
+  [ -n "${action_id}" ] || die "installer mutation has no action id"
+  run "$@"
+}
+
 print_dry_run_manifest() {
   dry_run_action "identity-group" "ensure system group ${MTC_GROUP}"
   dry_run_action "identity-user" "ensure nologin user ${MTC_USER} with home ${MTC_STATE_DIR}"
@@ -232,11 +245,13 @@ print_dry_run_manifest() {
   dry_run_action "release-dir" "create ${DEST} owner root:root mode 0755 if absent"
   dry_run_action "release-copy" "copy accepted payload ${SOURCE_DIR}/. to ${DEST}/ if absent"
   dry_run_action "venv-create" "create Python 3.12 venv ${VENV} if absent"
+  local venv_install_plan
   if [ -n "${WHEELHOUSE}" ]; then
-    dry_run_action "venv-install" "install hash-locked wheels into ${VENV} from ${WHEELHOUSE}"
+    venv_install_plan="install hash-locked wheels into ${VENV} from ${WHEELHOUSE}"
   else
-    dry_run_action "venv-install" "install hash-locked binary wheels into ${VENV} from package index"
+    venv_install_plan="install hash-locked binary wheels into ${VENV} from package index"
   fi
+  dry_run_action "venv-install" "${venv_install_plan}"
   dry_run_action "seal-release-owner" "recursively set ${DEST} owner root:root"
   dry_run_action "seal-release-dirs" "recursively set directories under ${DEST} mode 0555"
   dry_run_action "seal-release-exec" "recursively set executable files under ${DEST} mode 0555"
@@ -253,6 +268,7 @@ print_dry_run_manifest() {
   dry_run_action "systemd-reload" "run systemctl daemon-reload"
   dry_run_action "unit-mask" "mask ${MTC_FIRST_START_UNIT} via ${MTC_MASK_DIR}/${MTC_FIRST_START_UNIT}"
   dry_run_action "logrotate-install" "install ${MTC_LOGROTATE_FILE} root:root mode 0644"
+  dry_run_action "logrotate-cron-install" "install hourly Bridge logrotate runner ${MTC_LOGROTATE_CRON} root:root mode 0755"
   dry_run_action "manifest-write" "write hash-only install manifest ${MTC_INSTALL_MANIFEST}"
   dry_run_action "manifest-owner" "set ${MTC_INSTALL_MANIFEST} owner root:root"
   dry_run_action "manifest-mode" "set ${MTC_INSTALL_MANIFEST} mode 0640"
@@ -283,13 +299,13 @@ fi
 if getent group "${MTC_GROUP}" >/dev/null; then
   log "group ${MTC_GROUP} already present"
 else
-  run groupadd --system "${MTC_GROUP}"
+  run_action "identity-group" groupadd --system "${MTC_GROUP}"
 fi
 if getent passwd "${MTC_USER}" >/dev/null; then
   log "user ${MTC_USER} already present"
   verify_service_identity
 else
-  run useradd --system --gid "${MTC_GROUP}" \
+  run_action "identity-user" useradd --system --gid "${MTC_GROUP}" \
       --home-dir "${MTC_STATE_DIR}" --no-create-home \
       --shell /usr/sbin/nologin \
       --comment "MTC Crypto Paper Bridge service account" "${MTC_USER}"
@@ -300,12 +316,12 @@ verify_service_identity
 # --------------------------------------------------------------------------
 # 3. writable state / log / config directories
 # --------------------------------------------------------------------------
-run install -d -o "${MTC_USER}" -g "${MTC_GROUP}" -m 0750 "${MTC_STATE_DIR}"
-run install -d -o "${MTC_USER}" -g "${MTC_GROUP}" -m 0750 "${MTC_LOG_DIR}"
-run install -d -o root -g root -m 0750 "${MTC_CONF_DIR}"
-run install -d -o root -g root -m 0755 "${MTC_OPT_ROOT}"
-run install -d -o root -g root -m 0755 "${MTC_RELEASES_ROOT}"
-run install -d -o root -g root -m 0755 "${MTC_VENVS_ROOT}"
+run_action "dir-state" install -d -o "${MTC_USER}" -g "${MTC_GROUP}" -m 0750 "${MTC_STATE_DIR}"
+run_action "dir-log" install -d -o "${MTC_USER}" -g "${MTC_GROUP}" -m 0750 "${MTC_LOG_DIR}"
+run_action "dir-config" install -d -o root -g root -m 0750 "${MTC_CONF_DIR}"
+run_action "dir-opt" install -d -o root -g root -m 0755 "${MTC_OPT_ROOT}"
+run_action "dir-releases" install -d -o root -g root -m 0755 "${MTC_RELEASES_ROOT}"
+run_action "dir-venvs" install -d -o root -g root -m 0755 "${MTC_VENVS_ROOT}"
 
 # --------------------------------------------------------------------------
 # 4. immutable release tree
@@ -318,8 +334,8 @@ if [ -d "${DEST}" ]; then
     || die "installed release failed checksum verification; refusing to continue"
 else
   log "materialising release ${RELEASE_SHA}"
-  run install -d -o root -g root -m 0755 "${DEST}"
-  run cp -a "${SOURCE_DIR}/." "${DEST}/"
+  run_action "release-dir" install -d -o root -g root -m 0755 "${DEST}"
+  run_action "release-copy" cp -a "${SOURCE_DIR}/." "${DEST}/"
 fi
 MTC_FAILURES=0
 assert_exact_payload_tree "${DEST}" || true
@@ -335,7 +351,7 @@ if [ -x "${VENV}/bin/python" ]; then
     || die "existing venv does not exactly match requirements.lock"
 else
   log "creating venv with ${MTC_PYTHON}"
-  run "${MTC_PYTHON}" -m venv "${VENV}"
+  run_action "venv-create" "${MTC_PYTHON}" -m venv "${VENV}"
   PIP_ARGS=(
     "${VENV}/bin/python" -m pip install
     --require-hashes --no-deps
@@ -350,7 +366,7 @@ else
   fi
   # No `pip install --upgrade pip`: that would be an unpinned, unhashed network
   # install inside the release we are trying to make reproducible.
-  run "${PIP_ARGS[@]}"
+  run_action "venv-install" "${PIP_ARGS[@]}"
   "${VENV}/bin/python" "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py" \
       --lock "${DEST}/IBKR_PAPER_BRIDGE/requirements.lock" --check-installed \
     || die "new venv does not exactly match requirements.lock"
@@ -360,15 +376,15 @@ fi
 # 6. make the release root-owned and read-only
 # --------------------------------------------------------------------------
 log "sealing release tree read-only"
-run chown -R root:root "${DEST}"
-run find "${DEST}" -type d -exec chmod 0555 {} +
-run find "${DEST}" -type f -perm /111 -exec chmod 0555 {} +
-run find "${DEST}" -type f '!' -perm /111 -exec chmod 0444 {} +
+run_action "seal-release-owner" chown -R root:root "${DEST}"
+run_action "seal-release-dirs" find "${DEST}" -type d -exec chmod 0555 {} +
+run_action "seal-release-exec" find "${DEST}" -type f -perm /111 -exec chmod 0555 {} +
+run_action "seal-release-files" find "${DEST}" -type f '!' -perm /111 -exec chmod 0444 {} +
 log "sealing per-SHA venv read-only"
-run chown -R root:root "${VENV}"
-run find "${VENV}" -type d -exec chmod 0555 {} +
-run find "${VENV}" -type f -perm /111 -exec chmod 0555 {} +
-run find "${VENV}" -type f '!' -perm /111 -exec chmod 0444 {} +
+run_action "seal-venv-owner" chown -R root:root "${VENV}"
+run_action "seal-venv-dirs" find "${VENV}" -type d -exec chmod 0555 {} +
+run_action "seal-venv-exec" find "${VENV}" -type f -perm /111 -exec chmod 0555 {} +
+run_action "seal-venv-files" find "${VENV}" -type f '!' -perm /111 -exec chmod 0444 {} +
 MTC_FAILURES=0
 assert_no_writable_paths "${DEST}" || true
 assert_no_writable_paths "${VENV}" || true
@@ -381,16 +397,16 @@ if [ -f "${MTC_ENV_FILE}" ]; then
   log "env file already present; not read, not modified"
 else
   log "creating empty root-owned 0600 env file (no values)"
-  run install -o root -g root -m 0600 \
+  run_action "env-install" install -o root -g root -m 0600 \
       "${ENV_TEMPLATE}" "${MTC_ENV_FILE}"
 fi
-run chown root:root "${MTC_ENV_FILE}"
-run chmod 0600 "${MTC_ENV_FILE}"
+run_action "env-owner" chown root:root "${MTC_ENV_FILE}"
+run_action "env-mode" chmod 0600 "${MTC_ENV_FILE}"
 
 # --------------------------------------------------------------------------
 # 8. first-start unit — rendered for the exact SHA, installed MASKED
 # --------------------------------------------------------------------------
-run install -d -o root -g root -m 0755 "${MTC_UNIT_DIR}"
+run_action "unit-dir" install -d -o root -g root -m 0755 "${MTC_UNIT_DIR}"
 RENDERED_CONTENT="$(sed "s/@RELEASE_SHA@/${RELEASE_SHA}/g" "${FIRST_START_TEMPLATE}")"
 if grep -q '@RELEASE_SHA@' <<< "${RENDERED_CONTENT}"; then
   die "unit template placeholder not substituted"
@@ -400,14 +416,14 @@ if grep -q '^\[Install\]' <<< "${RENDERED_CONTENT}"; then
   die "first-start unit must have no [Install] section"
 fi
 
-run install -o root -g root -m 0644 \
+run_action "unit-install" install -o root -g root -m 0644 \
     <(printf '%s\n' "${RENDERED_CONTENT}") "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}"
 UNIT_SHA="$(printf '%s\n' "${RENDERED_CONTENT}" | sha256sum | awk '{print $1}')"
 
-run systemctl daemon-reload
+run_action "systemd-reload" systemctl daemon-reload
 # Masked, never started, never enabled. Starting it later requires an explicit
 # `systemctl unmask` performed under the separate KVM2-P4-06 authorization.
-run systemctl mask "${MTC_FIRST_START_UNIT}"
+run_action "unit-mask" systemctl mask "${MTC_FIRST_START_UNIT}"
 
 if [ "${MTC_DRY_RUN}" != "1" ]; then
   if [ ! -L "${MTC_MASK_DIR}/${MTC_FIRST_START_UNIT}" ] \
@@ -426,7 +442,10 @@ fi
 # --------------------------------------------------------------------------
 # 9. log rotation policy
 # --------------------------------------------------------------------------
-run install -o root -g root -m 0644 "${LOGROTATE_TEMPLATE}" "${MTC_LOGROTATE_FILE}"
+run_action "logrotate-install" install -o root -g root -m 0644 \
+    "${LOGROTATE_TEMPLATE}" "${MTC_LOGROTATE_FILE}"
+run_action "logrotate-cron-install" install -o root -g root -m 0755 \
+    "${LOGROTATE_CRON_TEMPLATE}" "${MTC_LOGROTATE_CRON}"
 
 # --------------------------------------------------------------------------
 # 10. read-only network assertion (never a firewall change)
@@ -444,7 +463,7 @@ fi
 # 11. install manifest (hashes only; no secret, no payload content)
 # --------------------------------------------------------------------------
 LOCK_SHA="$(sha256_of "${DEST}/IBKR_PAPER_BRIDGE/requirements.lock")"
-if [ "${MTC_DRY_RUN}" != "1" ]; then
+write_install_manifest() {
   umask 077
   cat > "${MTC_INSTALL_MANIFEST}" <<EOF
 {
@@ -469,9 +488,10 @@ if [ "${MTC_DRY_RUN}" != "1" ]; then
   "firewall_modified": false
 }
 EOF
-  chown root:root "${MTC_INSTALL_MANIFEST}"
-  chmod 0640 "${MTC_INSTALL_MANIFEST}"
-fi
+}
+run_action "manifest-write" write_install_manifest
+run_action "manifest-owner" chown root:root "${MTC_INSTALL_MANIFEST}"
+run_action "manifest-mode" chmod 0640 "${MTC_INSTALL_MANIFEST}"
 
 log "install complete for ${RELEASE_SHA}"
 log "unit ${MTC_FIRST_START_UNIT} sha256=${UNIT_SHA} state=masked"
