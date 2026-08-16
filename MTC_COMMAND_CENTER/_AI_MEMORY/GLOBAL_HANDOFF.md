@@ -55,11 +55,33 @@ Two-commit chain V2 T1 re-audit dispatched (`claude-opus-5` high, snapshot
 `C:\RO`) — in flight at time of writing; verdict lands at
 `C:\tmp\lane_out\AUD_TC2_VERDICT.md`.
 
+**EVENING UPDATE — owner mid-session instructions
+(`11_TRIAGE/OWNER_INSTRUCTIONS_KVM2_MULTITENANT_2026-08-16.md`):**
+
+1. **Chain lane PAUSED by owner cap ruling** — V2 consumed the T1 cap; the V3
+   round-1 review is SUPPLEMENTAL ONLY; the V4 repair lane was stopped and its
+   partial quarantined. No further chain repair/review without a recorded new
+   Gate-1 scope or an explicit owner cap waiver. **Stage-1 freeze is blocked at
+   this owner boundary** (no accepted chain design). Gate-2 re-derivation
+   stands — it never cited the chain.
+2. **KVM2 is a future multi-tenant host** (Hermes agent + websites later).
+   Deployment plan revised to **V2**
+   (`11_TRIAGE/KVM2_DEPLOYMENT_PLAN_62BF661B_V2_2026-08-16.md`): three-tenant
+   model, reserved identities/paths/ports, 80/443 reserved, no host-wide
+   security changes, Bridge-scoped ops, exact rollback boundary, bootstrap
+   (once, 7–12 h) vs upgrade (small 1–2 / normal 2–4 / major 4–8 h) split.
+3. KVM2 inventory COMPLETE — never repeat. Payload for `62bf661b` built,
+   manifest sha `1078ac22d3139be1ea50ede33fcb3dbc2ef01c5c860b46941c27ec8b550c175d`.
+4. Interim results: candidate `62bf661b` T0 ACCEPTED (Codex PASS + Opus
+   PASS-WITH-NITS, nits repaired); gate 2 SATISFIED-WITH-DISCLOSURES; P9
+   grammar T2 review dispatched (GLM).
+5. **T0 pair on plan V2:** Codex xhigh dispatched; Claude xhigh hit the Pro
+   session limit (resets 13:10 Europe/Chisinau) — retry after reset, exact
+   model only, no substitution. After both accept: present the §9 single
+   install sentence. NOTHING touches KVM2 until the owner signs it.
+
 Locks held by this session: shared-memory, Stage-1/runbook, Bridge-release-
-integration (see SESSION_LOCK.md). Next in chain after acceptance: chain V2
-verdict collection → gate-2 re-derivation → Stage-1 freeze; and (owner) ssh-add
-→ read-only KVM2 inventory → one exact deployment plan → owner authorization
-for install.
+integration (see SESSION_LOCK.md).
 
 ## [Fable 5 Lead] 2026-08-16 midday — clean stop; entry point is the midday handoff
 
