@@ -4,6 +4,72 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
+## OWNER ROADMAP — resume after current Bridge V1 deployment work (2026-08-16)
+
+These seven workstreams were explicitly recorded by Barış before stopping for
+the night. They are durable future work, not authority to bypass the existing
+trading, deployment, destructive-cleanup, audit-tier, or owner-approval gates.
+
+1. **[AI: Claude] Reconstruct the Bridge V2 deferral backlog.** Identify every
+   capability deliberately deferred from Bridge V1 to shorten delivery. Produce
+   one evidence-backed remaining-work inventory that distinguishes missing,
+   partial, deliberately deferred, and already completed functionality. While
+   the frozen V1 candidate is undergoing VPS testing, implement eligible V2 work
+   in a separate branch/worktree without changing or destabilizing that V1
+   candidate. Classify and approve each implementation package under the normal
+   audit tiers before integration.
+
+2. **[AI: Claude] Deep external research for Bridge V2 improvements.** Review
+   current internet sources, YouTube material, official documentation, and
+   relevant GitHub projects for useful reliability, safety, operations,
+   observability, exchange-integration, and user-experience ideas. Record source,
+   license/provenance, problem solved, benefit, complexity, risks, overlaps, and
+   rejection reasons. Add a proposal to the V2 architecture only after Claude
+   and Codex independently agree it is useful and compatible; existing owner
+   gates still apply to any trading/economic or live-system consequence.
+
+3. **[AI: Claude] Design and build Dashboard V2.** Produce the Dashboard V2
+   information architecture, interaction design, security/access model, and
+   implementation plan. Use the 2026-08-16 Observation/Control and Help/Wiki
+   work as the baseline: same-VPS private placement, owner versus read-only-AI
+   permissions, PC/phone access stages, Telegram, truthful current/planned
+   labels, and the built-now/still-required view. Keep dashboard and backend
+   responsibilities explicit. Propagate every Dashboard decision that changes a
+   Bridge contract into the Bridge V2 architecture and acceptance criteria.
+
+4. **[AI: Claude] Return to strategy research.** Resume the strategy pipeline
+   only through the canonical strategy-research and backtest/optimization gates:
+   versioned variants, correct datasets, walk-forward evidence, buy-and-hold,
+   DSR, BH-FDR, robustness, multi-window comparison, and promotion records.
+   Strategy research remains separate from the frozen Bridge V1 deployment.
+
+5. **[AI: Claude] Complete repository cleanup.** Start with a read-only inventory
+   and classification of tracked, untracked, generated, duplicate, stale, and
+   worktree/branch artifacts. Preserve owner files and accepted evidence. Do not
+   delete, move, prune, rewrite history, or perform destructive Git operations
+   without the required explicit owner approval and verified exact targets.
+
+6. **[AI: Claude] Audit and compact repository AI memory.** Review every
+   `MTC_COMMAND_CENTER/_AI_MEMORY/` file and its active/archive relationships.
+   Move genuinely historical or superseded detail into clearly indexed archives
+   so fresh-session context and token cost fall, while preserving current
+   authority, decisions, provenance, unresolved work, safety rules, and links.
+   First produce a no-loss archive/retention plan; never discard information
+   merely because a file is large.
+
+7. **[AI: Claude] Investigate reducing the approximately 1.1 GB Bridge package.**
+   Measure the package composition before proposing changes: runtime/dependency
+   weight, duplicate files, caches, tests/docs/evidence, rollback copies, and
+   packaging overhead. Design a smaller deterministic release only where it
+   preserves dependency locks, security checks, reproducibility, verification,
+   evidence, and rollback. Benchmark size and install/upgrade time before and
+   after; do not alter the frozen V1 candidate during its VPS test.
+
+**Recommended sequencing:** keep V1 VPS deployment/testing on its frozen lane;
+run items 1–3 in isolated V2/dashboard worktrees where safe; resume item 4 as a
+separate research lane; perform items 5–7 only after inventories and exact
+preservation rules are accepted.
+
 ## OWNER-REQUESTED PENDING — record Dashboard VPS hosting decision (2026-08-16)
 
 **Documentation tier: T2.** Exact Claude counterpart attempt at 22:02 +03 was

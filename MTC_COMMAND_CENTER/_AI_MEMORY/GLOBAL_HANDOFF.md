@@ -5,6 +5,27 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol] 2026-08-16 — Owner's seven-workstream roadmap recorded
+
+Before stopping for the night, Barış explicitly preserved seven future
+workstreams: reconstruct and execute the capabilities deferred from Bridge V1
+to V2 while the frozen V1 candidate is tested on the VPS; conduct deep
+internet/YouTube/GitHub research for evidence-backed V2 improvements subject to
+independent Claude+Codex agreement and all existing owner gates; design and
+build Dashboard V2 from the 2026-08-16 Observation/Control and Help/Wiki
+decisions and propagate Bridge-affecting contracts into the Bridge V2
+architecture; resume governed strategy research; finish repository cleanup;
+audit/archive repository `_AI_MEMORY` for lower fresh-session token cost without
+losing authority, provenance, decisions, unresolved work, or safety rules; and
+measure whether the approximately 1.1 GB Bridge package can be reduced without
+weakening locks, security, reproducibility, verification, evidence, or rollback.
+
+The detailed English task contracts, safety fences, and recommended sequencing
+are at the top of `NEXT_STEPS.md`. These are registered future workstreams, not
+blanket implementation, deployment, trading/economic, destructive-cleanup, or
+history-rewrite authorization. The frozen Bridge V1 lane must remain isolated
+from V2/dashboard/research/hygiene work.
+
 ## [Codex gpt-5.6-sol] 2026-08-16 — Dashboard hosting decision queued; KVM2 checked live
 
 Owner approved recording the Dashboard-on-same-VPS direction and asked whether
