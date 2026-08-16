@@ -5,6 +5,34 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol] 2026-08-16 — MTC/Bridge order-lifecycle ownership recorded (T2 PASS)
+
+Owner requested that the reasoning from the order-manager explanation be made
+durable in `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md`.
+New A11 records the future integration boundary: after accepted Pine/Python
+lifecycle parity, MTC Python should own exact desired economic intent; Bridge
+should validate and execute exactly or reject, while owning exchange identity,
+native protection, actual fills, partial-fill recovery, reconciliation, restart
+recovery, and safe flattening. It records no present clash because MTC_V2 and the
+current Keltner plumbing candidate are not connected.
+
+A11 also records the blocking model gap: current Bridge has one optional
+full-quantity TP, so it cannot represent MTC fractional TP1/TP2 or the conditional
+add/basket lifecycle without an accepted schema/execution extension. The
+native-strategy-stop versus separately labelled emergency-native-stop choice
+remains OPEN because it changes live fills and backtest parity. Dashboard V2 must
+show desired MTC state, Bridge acceptance/rejection, and actual exchange state
+separately. Former Backend OPEN Questions is A12 and now points to the full A11
+contract checklist.
+
+Gate 1: **T2 documentation only**. The low-cost harness editor and reviewer paths
+failed mechanically (paging/path-use limitations) and made no source changes. Lead
+applied the bounded Markdown edit and independently checked actual sources and all
+local links. Fresh read-only `gpt-5.6-sol` at medium (`01a00bb5-d07d-7b61-896d-d86ae6da6a39`)
+returned **PASS**, no findings or nits. No code, config, test, host, deployment,
+broker, ARM, or economic action occurred. The design record remains documentation
+only and grants no implementation authority.
+
 ## [Codex gpt-5.6-sol] 2026-08-16 — Gemini read-only adviser hardening cycle 2 pending fresh T0 audit
 
 Owner account `bsemaay3@gmail.com` is authenticated in checksum-verified Google

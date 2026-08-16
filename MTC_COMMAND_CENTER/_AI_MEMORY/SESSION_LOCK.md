@@ -31,9 +31,9 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 20:20 +03 | — |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 20:59 +03 | — |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_READ_ONLY_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 20:20 +03 | — |
-| Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-16 20:31 +03 | — |
+| Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-16 20:59 +03 | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
@@ -44,6 +44,21 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 20:59 +03:** Codex Lead `01a00921` released the design-record
+  and shared-memory rows after A11, A12, the change log, source links, and Gate-7
+  handoff were complete. Fresh read-only T2 `gpt-5.6-sol` medium review returned
+  PASS with no findings or nits. No implementation or live surface changed.
+
+- **2026-08-16 20:58 +03:** Codex Lead `01a00921` claimed the shared-memory row
+  only for the required final handoff and next-step record for the accepted A11
+  documentation change. No source, configuration, host, deployment, or trading
+  surface is writable under this claim.
+
+- **2026-08-16 20:44 +03:** Codex Lead `01a00921` reclaimed only the
+  Backend/Dashboard V2 design-record row for the owner-requested documentation
+  of MTC_V2 versus Bridge order/exit lifecycle ownership. No implementation,
+  configuration, host, deployment, broker, trading, or economic surface is writable.
 
 - **2026-08-16 20:31 +03:** Codex Lead `01a00921` released the
   Backend/Dashboard V2 design-record row after the owner-requested B7 sourcing

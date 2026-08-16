@@ -4,6 +4,29 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
+## OWNER-REQUESTED RECORDED — MTC/Bridge order and exit lifecycle ownership (2026-08-16)
+
+**Documentation tier: T2 — accepted.** New A11 in
+`IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` records
+the preferred ownership split and its reasons. Fresh `gpt-5.6-sol` medium
+read-only review returned PASS with no findings or nits. No implementation is
+authorized by this entry.
+
+1. **[AI: Claude] Before any MTC-to-Bridge integration:** close or explicitly
+   bound Pine↔Python lifecycle parity and write the versioned Order/Exit Lifecycle
+   Contract listed in A11, together with A10's sizing contract.
+2. **[AI: Claude] Required future Bridge design:** support explicit TP-leg
+   quantities/identity and basket/add identity before claiming MTC Multi-TP or
+   pyramiding support. Current one-full-quantity-TP behavior is not equivalent.
+3. **[AI: Barış] Future design choice:** decide whether the MTC strategy stop is
+   the native exchange stop, or MTC uses a synthetic/bar-based exit plus a
+   separately labelled emergency native safety stop. This requires a plain-language
+   comparison and parity evidence before approval.
+4. **[AI: Claude] Dashboard V2:** keep desired-by-MTC, accepted/rejected-by-Bridge,
+   and actual-exchange order/fill state visibly separate.
+5. **Safety fence:** no implementation, wiring, config, deployment, TESTNET/mainnet,
+   order, ARM, broker, or economic action is authorized by this recorded decision.
+
 ## OWNER-REQUESTED IN PROGRESS — Gemini 3.7 Flash Pro read-only repo adviser (2026-08-16)
 
 **Execution tier: T0.** The owner explicitly directed Codex to perform the implementation
