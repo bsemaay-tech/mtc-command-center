@@ -102,7 +102,24 @@ Two-commit chain V2 T1 re-audit dispatched (`claude-opus-5` high, snapshot
    present V5 §4 sentence; any REQUIRED → cap exhausted → owner.
    Chain lane stays PAUSED — no waiver, do not reopen. KVM2 untouched since
    the read-only inventory.
-7. **Round-3 pair returned non-accepting (Codex 8 REQ / Claude 2 REQ,
+7. **EXECUTION DAY STATE (late evening, live):** package went through rounds
+   1–4 + confirmation pass → **T0 ACCEPTED**
+   (`11_TRIAGE/KVM2_DEPLOYMENT_PACKAGE_ACCEPTED_2026-08-16.md`). Owner SIGNED
+   the V6 §3 sentence (`OWNER_AUTHORIZATION_INSTALL_2026-08-16.md` + two
+   supplementary grants). Execution so far: payload `~/payload-acdf4e37`
+   uploaded to KVM2 (SCP rc 0); owner-approved `python3.12-venv` installed
+   (now part of the authorized baseline); dry run STOPPED FAIL-CLOSED TWICE —
+   first the venv preflight (cured), then a real parser gap: live UFW rows
+   carry trailing `# SSH` comments the grammar didn't model. **NO Bridge
+   installation occurred; no service exists; the one bounded install attempt
+   is UNSPENT.** Owner authorized the one-line comment-normalization repair
+   cycle (fixtures: live-shape accepted; commented 8790 exposure still
+   rejected; unknown forms still fail closed) + confirmation-only closure +
+   full re-pin; **continuation/KVM2 contact with changed bytes NOT yet
+   authorized — new pins + corrected sentence go to the owner first.**
+   Repair lane in flight (Codex `free`). Old payload on host must be
+   removed/replaced by the updated plan.
+8. **Round-3 pair returned non-accepting (Codex 8 REQ / Claude 2 REQ,
    overlapping) → cap exhausted → owner chose Option A with override:**
    `11_TRIAGE/OWNER_DECISION_ROUND4_FINAL_2026-08-16.md` — ONE round-4 repair
    of the 8 findings + ONE final T0 pair under a materiality standard (new

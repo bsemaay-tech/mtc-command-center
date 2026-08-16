@@ -1,5 +1,26 @@
 # NEXT_STEPS
 
+> **▶▶ 2026-08-16 LATE EVENING — LIVE QUEUE (supersedes every block below):**
+> 1. **[AI: Lead]** Collect the UFW comment-repair lane; verify the three
+>    owner-specified evidence arms; run the full suite independently; commit →
+>    new candidate SHA; rebuild payload; re-pin plan V6 + annex (incl. old
+>    `~/payload-acdf4e37` removal/replacement + `python3.12-venv` baseline).
+> 2. **[AI: Lead]** Confirmation-only closure by both reviewers (exact change
+>    only, no hunting).
+> 3. **[AI: Barış]** Sign the corrected installation sentence (new pins).
+> 4. **[AI: Lead]** Execute annex stages: replace payload → dry run (expect
+>    manifest print) → boundary check → ONE bounded install → verify →
+>    rehearsal → backup → re-inventory. Report.
+> 5. **[AI: Barış]** Separate first-start sentence → one DISARMED start →
+>    dashboard via launcher → D3 matrix (needs its own D3 sentence for
+>    auditd).
+> 6. **[AI: Claude]** Dashboard V2 package (queued immediately after stable
+>    DISARMED deployment; T1 visual / T0 host-control split).
+> Standing: chain lane PAUSED (owner; no waiver) · KVM2 state = old payload
+> uploaded + python3.12-venv installed, NOTHING else, install attempt unspent ·
+> TESTNET wallet/ARM/mainnet each separately gated · package acceptance record
+> `11_TRIAGE/KVM2_DEPLOYMENT_PACKAGE_ACCEPTED_2026-08-16.md`.
+
 > **▶ 2026-08-16 afternoon: ACCELERATED FULL COMPLETION is APPROVED**
 > (`11_TRIAGE/OWNER_DECISION_ACCELERATED_COMPLETION_2026-08-16.md`) — the midday
 > §3 question is ANSWERED; do not re-ask it. Integration candidate `62bf661b`

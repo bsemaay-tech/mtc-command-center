@@ -76,6 +76,21 @@ the Trading System roadmap hardens. Stable facts:
 - Contracts are documented per task under `IBKR_PAPER_BRIDGE/docs/` (`22_ORDER_STATE` …
   `31_KILL_EVIDENCE_EPOCH_CONTRACT`).
 
+## KVM2 / Hostinger VPS (stable facts, 2026-08-16)
+
+- `srv1856225` = `152.239.123.231`; access `baris@` with the `hostinger_kvm2`
+  agent-loaded key, pinned host key (ssh needs explicit
+  `-o UserKnownHostsFile` — Turkish char in %USERPROFILE% breaks defaults).
+- **Future multi-tenant host (owner-permanent):** Bridge + later Hermes agent
+  (`hermes`, `/opt/hermes`) + websites (`webapp`, `/opt/web`, `/var/www`,
+  ports 80/443 reserved). Bridge stays loopback-only 8790, never behind the
+  future reverse proxy; no host-wide security changes.
+- Authorized baseline additions: `python3.12-venv` (owner 2026-08-16).
+- Deployment governance: accepted package + signed sentence pattern —
+  `11_TRIAGE/KVM2_DEPLOYMENT_PACKAGE_ACCEPTED_2026-08-16.md` and the plan
+  V6/annex/launcher pin set; one-attempt installs; upgrades side-by-side per
+  release SHA.
+
 ## Key Contracts
 
 - Pine logic, MTC strategy behavior, and parity files are **protected**.
