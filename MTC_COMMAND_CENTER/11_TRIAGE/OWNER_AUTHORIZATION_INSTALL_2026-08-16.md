@@ -17,3 +17,11 @@ change, no TESTNET/mainnet, no broker, no ARM, no orders, no retry without a
 new sentence. First start and D3 remain separately gated.
 
 Execution begins immediately after this record is committed.
+
+## Supplementary authorization — python3.12-venv — 2026-08-16
+
+Dry run failed closed at the venv preflight (as designed): KVM2 lacks
+`python3.12-venv`. Owner approved in chat: install the standard Ubuntu
+package `python3.12-venv` (with required dependencies) via apt, then continue
+the approved V6 §3 execution. No mutation had occurred; the one bounded
+install attempt was unspent.
