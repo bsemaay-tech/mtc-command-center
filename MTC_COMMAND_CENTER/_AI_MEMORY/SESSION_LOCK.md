@@ -31,9 +31,9 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **Codex Lead `01a00921`** — Gemini-drafted hosting decision acceptance/handoff | 2026-08-16 22:21 +03 |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
-| Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released Claude-capacity-blocked 2026-08-16 22:06 +03 | — |
+| Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **Codex Lead `01a00921`** — owner-authorized Gemini draft transfer and acceptance | 2026-08-16 22:21 +03 |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released content-updated/capacity-blocked 2026-08-16 21:52 +03 | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
@@ -45,6 +45,12 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 22:21 +03:** Codex Lead `01a00921` claimed the design-record and
+  shared-memory rows after Gemini 3.7 Flash High produced isolated draft
+  `e8e8ce7f`. Codex will transfer only independently verified content, correcting
+  the draft's V1 service-model error and premature technology choices. No
+  product, host, network, credential, control, or economic action is authorized.
 
 - **2026-08-16 22:19 +03:** Codex Lead `01a00ad1` released the Gemini and shared-memory
   rows. Direct headless terminal commands remained permission-denied under bounded grants, so
