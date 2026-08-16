@@ -46,3 +46,18 @@ dependencies) is installed and is the new authorized baseline. NO Bridge
 installation occurred; no service was created or started; the bounded
 installation attempt remains UNSPENT. The updated plan must account for
 removal or replacement of the old payload.
+
+## OVERNIGHT COMPLETION AUTHORIZATION — 2026-08-16 night (owner, verbatim)
+
+1. If both reviewers CONFIRM the exact UFW-repair closure with nothing else
+   changed, the owner signs the corrected V6 §3 installation sentence with the
+   new candidate/payload/annex pins, old payload replaced by the new one.
+2. If the install, verification, rollback rehearsal, backup/restore check,
+   and re-inventory all pass exactly per the plan, the owner authorizes
+   exactly one first DISARMED start of that installed release —
+   credential-free, loopback-only — the D3 dashboard verification matrix
+   including the temporary auditd package and single audit rule with their
+   recorded removal, and leaving the service running DISARMED overnight.
+3. Any failure, anomaly, or deviation: stop fail-closed, change nothing
+   further, report for morning. No secrets, no TESTNET keys, no ARM, no
+   orders, no mainnet, no firewall changes, no retry without a new sentence.
