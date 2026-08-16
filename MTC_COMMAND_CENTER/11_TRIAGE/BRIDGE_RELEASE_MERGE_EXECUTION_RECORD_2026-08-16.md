@@ -126,5 +126,21 @@ unit, verify.sh — **T0**. Required: two independent flagships, exact
 `claude-opus-5` + `gpt-5.6-sol`, xhigh, fresh sessions, on the pinned
 candidate `62bf661b`. D026 applies to any new regression test offered as
 closure evidence (none was created in this merge — the WAL test change is the
-already-T1-accepted repair replayed byte-exactly; its D026 evidence lives with
-the suite-anomaly repair acceptance).
+accepted A2 repair re-derived onto Gate-A's base: the resulting assertion line
+is byte-identical to the accepted one, and the synthesis additionally removes
+Gate-A's `SCHEMA_VERSION_BASELINE` import and its two-line comment; the D026
+evidence for the repair lives with the suite-anomaly repair acceptance).
+
+## Post-acceptance corrections — 2026-08-16 (from the Claude T0 verdict's nits)
+
+Candidate bytes unchanged; these correct this record's prose only
+(`T0_62BF_CLAUDE_VERDICT_2026-08-16.md`, NIT-1 and NIT-4):
+
+1. The earlier wording "replayed byte-exactly" (corrected in place above) was
+   wrong — the merged WAL synthesis `12b17ab5…` differs from the T1-audited
+   WP-I-based repair blob because the two bases differ (9+/4− vs 8+/1−); only
+   the assertion line is byte-identical.
+2. Describing Gate-A's base assertion as "stale" was wrong: on Gate-A's base
+   (`str(SCHEMA_VERSION_BASELINE)`) the assertion was already dynamic and
+   green; the resolution is a harmonization to the accepted WP-I repair shape,
+   not a defect fix. The fenced content is exactly what the runbook requires.

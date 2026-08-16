@@ -1,5 +1,18 @@
 # Bridge merge runbook — frozen-input refresh — 2026-08-16
 
+> **Corrections 2026-08-16 (post-acceptance, from `T0_62BF_CLAUDE_VERDICT_2026-08-16.md` NIT-2/NIT-3):**
+> (1) The drift commit's sole added file is
+> `MTC_COMMAND_CENTER/11_TRIAGE/BRIDGE_SUITE_ANOMALY_AUDIT_2026-08-15.md` —
+> the `WPI_BLOCKS_DRAFT/` segment named below does not exist.
+> (2) The "9 Gate-A-only … 21 WP-I-stale" sub-split quoted below (inherited
+> from the readiness/fence lanes' blob-source classification) could not be
+> reconstructed by the T0 auditor under add/modify semantics, which measure
+> 3 added / 30 modified-only — matching `ADDED_IN_REMOTE_COUNT=3` and the
+> committed candidate's `A=3, M=29` (+2 changed-by-both) distribution. The
+> union total (33), the 32-path first-parent delta, and every fence OID are
+> unaffected and were verified by both T0 flagships on the real candidate;
+> the sub-split is decorative and should not be quoted further.
+
 Status: LEAD INPUT-REFRESH RECORD — supersedes ONLY the `W` row of the frozen
 input table in `BRIDGE_RELEASE_MERGE_RUNBOOK_2026-08-15.md:31-37`. Every other
 runbook byte, precondition, step, and stop rule stays exactly as written. The
