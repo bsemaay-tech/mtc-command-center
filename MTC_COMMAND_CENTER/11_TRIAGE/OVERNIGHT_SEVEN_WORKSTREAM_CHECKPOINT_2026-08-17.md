@@ -77,8 +77,10 @@ B: clarify ROC2 first; or C: pause new strategy research and clean research trut
 ## 5. Repository cleanup
 
 **Completed evidence:** the repository contains 155 registered worktrees with an
-apparent logical size near 160 GiB. Five bounded audit batches reviewed 80 old,
-detached, tracked-clean worktrees totalling about 78.7 GiB.
+apparent logical size near 160 GiB. Six bounded audit batches reviewed the full
+current pool of 88 detached, tracked-clean worktrees, with zero missing or extra
+paths. The final classification is 51 conditional candidates and 37 HOLD; none
+is removal-ready.
 
 **Important preservation findings:**
 
@@ -87,6 +89,8 @@ detached, tracked-clean worktrees totalling about 78.7 GiB.
 - `C:\PGRK` contains a unique 194,207-byte untracked Gate-A design contract.
 - Ten Batch-5 worktrees contain ten unique untracked evidence documents totalling
   230,068 bytes and absent from the current checkout.
+- `C:\PLANREC`, `C:\WBS` and `C:\PSCAUD` contain three further unique evidence
+  documents; `C:\RO` has a current `RP7-WPI-RO` lock-name ambiguity.
 - `C:\GAAUD_CODEX` contains mutation/build evidence requiring preservation.
 
 **Nothing was deleted.** No audited worktree is removal-ready because Windows
