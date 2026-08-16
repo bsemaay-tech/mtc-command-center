@@ -8,9 +8,9 @@ mandatory.
 ## Route
 
 - Launcher: `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProCoder.ps1`
-- Launcher SHA256: `E7403B0EBFD97DB34896E75A468518590642C8B4BBBB38E3A9D33DC88F827F97`
+- Launcher SHA256: `88CB9DE9EA45DACBDB58C323B4BA61D0A8AABC5FF16B600259FCF0F3DEE97F65`
 - Project: `882ea0a0-b565-4e74-930c-6711a1b63507`
-- At-rest project-config SHA256: `02D9ACECD338A31345124E7DB3E5AFB573C6DBB19E7F0FD8C72F8EB8619C8F06`
+- At-rest project-config SHA256: `32924DF85B63BD54F6DE98E053E0451C2D53BD7CB63488C4D3F61FC5D7BCEE0A`
 - Worktree: `C:\GEMINI`
 - Branch: `codex/gemini-coder`
 - Model: `gemini-3.7-flash-high`, effort high
@@ -44,3 +44,18 @@ mandatory.
 `C:\GEMINI`. Codex must review the diff and run tests. This is not canonical audit acceptance and
 does not authorize protected code, terminal commands, Git operations, deployment, credentials,
 hosts, brokers, ARM/orders, TESTNET/mainnet, or economic action.
+
+## Terminal-access request (22:08–22:19 +03)
+
+The owner requested sandboxed terminal access. Codex configured bounded `rg`, read-only Git, and
+test/build command grants and ran fresh headless probes. Antigravity CLI 1.1.13 denied both
+`rg -n "^# AGENTS" AGENTS.md` and `git status --short --untracked-files=no` as matching a
+user-configured deny rule. No file changed. The route was restored to explicit `command(*)` deny
+and strict tool permission. `--dangerously-skip-permissions` was not used because it would remove
+the required safety boundary. Result: direct terminal access is **not enabled**; Codex continues
+to run tests and commands after Gemini's allowlisted file edits.
+
+While the lock was held, Gemini successfully created the separately requested allowlisted draft
+`C:\GEMINI\MTC_COMMAND_CENTER\11_TRIAGE\GEMINI_DASHBOARD_HOSTING_DECISION_DRAFT_2026-08-16.md`.
+Codex inspected and committed it on `codex/gemini-coder` as `e8e8ce7f`; the owning thread retains
+transfer and acceptance authority and the canonical Bridge design file was not touched here.

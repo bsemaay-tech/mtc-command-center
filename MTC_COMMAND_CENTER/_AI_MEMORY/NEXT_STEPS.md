@@ -98,6 +98,10 @@ long multi-model audit loop.** The existing read-only adviser remains separate a
    deploys, accesses credentials/live systems, or acts as canonical acceptance authority.
 5. **Read-only route status.** Its overlong final audit was interrupted at owner direction; do not
    describe that separate route as canonically dual-flagship accepted.
+6. **Terminal upgrade blocked safely.** Two fresh headless probes showed Antigravity CLI 1.1.13
+   still denies project-allowlisted `rg` and read-only `git status`. The dangerous permissions
+   bypass was not used. Direct terminal remains denied; Codex runs commands/tests after Gemini
+   edits. The file-coding route remains operational.
 
 ## OWNER-REQUESTED OPEN — AI-memory continuity audit and repair (2026-08-16)
 

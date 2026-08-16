@@ -72,6 +72,19 @@ unprotected work, not authority for trading, deployment, credentials, live syste
 push, merge, or canonical acceptance. Evidence:
 `11_TRIAGE/GEMINI_PRO_CODER_ROUTE_QA_2026-08-16.md`.
 
+At 22:08 +03 the owner requested terminal access inside `C:\GEMINI`. Two fresh headless probes
+with bounded command grants still returned permission-denied for `rg` and read-only `git status`.
+No file changed. Codex did not use `--dangerously-skip-permissions`; the launcher and project were
+restored to explicit `command(*)` deny/strict mode. Direct terminal therefore remains blocked by
+the current headless permission behavior, while allowlisted file coding remains operational.
+
+During the same lock window, Gemini created the requested allowlisted Dashboard-on-same-VPS
+decision draft without terminal access. Codex inspected and committed it on the dedicated branch
+as `e8e8ce7f`; source is
+`C:\GEMINI\MTC_COMMAND_CENTER\11_TRIAGE\GEMINI_DASHBOARD_HOSTING_DECISION_DRAFT_2026-08-16.md`.
+The owning thread will transfer any accepted text; this session did not touch the canonical
+Bridge design-decision file.
+
 ## [Codex gpt-5.6-sol] 2026-08-16 — Bridge interactive Help/Wiki scoped; implementation capacity-blocked
 
 Owner requested a real interactive Help/System Map inside the existing Bridge

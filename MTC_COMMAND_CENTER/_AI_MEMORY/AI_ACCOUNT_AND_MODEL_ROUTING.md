@@ -274,7 +274,7 @@ dual-flagship accepted. It grants no protected implementation authority.
 | Item | Value |
 |---|---|
 | Mandatory launcher | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProCoder.ps1` |
-| Launcher identity | SHA256 `E7403B0EBFD97DB34896E75A468518590642C8B4BBBB38E3A9D33DC88F827F97` |
+| Launcher identity | SHA256 `88CB9DE9EA45DACBDB58C323B4BA61D0A8AABC5FF16B600259FCF0F3DEE97F65` |
 | Dedicated project | `882ea0a0-b565-4e74-930c-6711a1b63507` |
 | Dedicated worktree | `C:\GEMINI` |
 | Dedicated branch | `codex/gemini-coder` |

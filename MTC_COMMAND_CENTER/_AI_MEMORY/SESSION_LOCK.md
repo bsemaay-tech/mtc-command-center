@@ -31,8 +31,8 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **Codex Lead `01a00ad1`** — Gemini bounded-terminal upgrade and concise handoff | 2026-08-16 22:08 +03 |
-| Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **Codex Lead `01a00ad1`** — isolated coder terminal upgrade | 2026-08-16 22:08 +03 |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
+| Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released Claude-capacity-blocked 2026-08-16 22:06 +03 | — |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released content-updated/capacity-blocked 2026-08-16 21:52 +03 | — |
 
@@ -45,6 +45,13 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 22:19 +03:** Codex Lead `01a00ad1` released the Gemini and shared-memory
+  rows. Direct headless terminal commands remained permission-denied under bounded grants, so
+  the dangerous bypass was not used and the route was restored to explicit terminal denial.
+  Allowlisted file coding remains operational. Gemini produced the requested same-VPS decision
+  draft in `C:\GEMINI`, committed as `e8e8ce7f`; the owning thread will inspect and transfer it.
+  This session did not touch the canonical Bridge design-decision file.
 
 - **2026-08-16 22:08 +03:** Owner authorized terminal access for Gemini inside its dedicated
   `C:\GEMINI` worktree. Codex Lead `01a00ad1` claimed the Gemini and shared-memory rows for a
