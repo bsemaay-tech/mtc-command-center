@@ -86,11 +86,22 @@ Two-commit chain V2 T1 re-audit dispatched (`claude-opus-5` high, snapshot
    `bridge/static` dashboard used as-is; D3 verification matrix defines
    operational completion; **Dashboard V2 successor package queued in
    NEXT_STEPS [AI: Claude], T1 visual / T0 host-control split.**
-6. **Fresh T0 pair runs on the pinned V3 bytes only** — exact `claude-opus-5`
-   xhigh + `gpt-5.6-sol` xhigh, no fallback (Claude Pro window reset 13:10).
-   After both accept: present the §9 single install sentence. NOTHING touches
-   KVM2 until the owner signs it. Chain lane stays PAUSED — no waiver, do not
-   reopen.
+6. **KVM2 plan review history (all committed):** V3 pair round 1 → Codex 10
+   REQ + Claude 7 REQ (all reproduced). Owner approved the minimal functional
+   status patch (`OWNER_DECISION_STATUS_PATCH_2026-08-16.md`), D3-4 not
+   relaxed, cap NOT reset. Round-2 repair candidate `be689537` (suite 1367) →
+   round-2 pair: Codex 7 REQ + Claude 3 REQ. Round-3 final repair candidate
+   **`a7460784`** (suite `1373 passed`, implementer + Lead runs; D026
+   mutations all RED in scratch) + launcher **v3** (8651 B `533f29db…`, zero
+   key-file reads, pinned fingerprint literal) + **plan V5**
+   (`KVM2_DEPLOYMENT_PLAN_V5_2026-08-16.md`, 9785 B `269da781…`,
+   self-contained command set, stage-3 reordered, auditd-or-STOP evidence).
+   Payload `C:\tmp\payload-a7460784`, manifest sha `2581ed3f…`.
+   **FINAL round-3 T0 pair in flight** (Codex on `free` account — `secondary`
+   exhausted till Aug 22, `fourth` till Aug 20; Claude Pro). Accepting pair →
+   present V5 §4 sentence; any REQUIRED → cap exhausted → owner.
+   Chain lane stays PAUSED — no waiver, do not reopen. KVM2 untouched since
+   the read-only inventory.
 
 Locks held by this session: shared-memory, Stage-1/runbook, Bridge-release-
 integration (see SESSION_LOCK.md).
