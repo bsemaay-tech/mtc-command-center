@@ -26,6 +26,23 @@ def test_dashboard_core_static_contract():
     assert "unpkg.com" not in html
     assert "LightweightCharts" not in js
     assert "createElementNS" in js
+    for label, element_id in (
+        ("Host", "hostIdentity"),
+        ("Release SHA", "releaseSha"),
+        ("Service Health", "serviceHealth"),
+        ("Service Start", "serviceStartTs"),
+        ("Last Update", "statusTs"),
+    ):
+        assert label in html
+        assert f'id="{element_id}"' in html
+    for element_id, status_field in (
+        ("hostIdentity", "host_identity"),
+        ("releaseSha", "release_sha"),
+        ("serviceHealth", "service_health"),
+        ("serviceStartTs", "service_start_ts"),
+        ("statusTs", "status_ts"),
+    ):
+        assert f'setText("{element_id}", state.status.{status_field}' in js
 
 
 def test_dashboard_root_serves_html():

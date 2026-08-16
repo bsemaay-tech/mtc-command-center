@@ -44,6 +44,41 @@ def test_api_status_config_state_and_snapshot_roundtrip():
     assert snapshot["bars"]["bars"] == []
 
 
+def test_status_exposes_deployment_identity_health_and_fresh_timestamp(monkeypatch):
+    release_sha = "a" * 40
+    monkeypatch.setenv("MTC_BRIDGE_RELEASE_SHA", release_sha)
+    monkeypatch.setattr("socket.gethostname", lambda: "srv1856225")
+    client = TestClient(create_app())
+
+    first = client.get("/api/status").json()
+    second = client.get("/api/status").json()
+    snapshot = client.get("/api/snapshot").json()["status"]
+
+    assert first["host_identity"] == "srv1856225"
+    assert first["release_sha"] == release_sha
+    assert first["service_health"] == "healthy"
+    assert datetime.fromisoformat(first["service_start_ts"]).tzinfo == UTC
+    assert datetime.fromisoformat(first["status_ts"]).tzinfo == UTC
+    assert datetime.fromisoformat(second["status_ts"]) >= datetime.fromisoformat(first["status_ts"])
+    assert second["service_start_ts"] == first["service_start_ts"]
+    for field in (
+        "host_identity",
+        "release_sha",
+        "service_health",
+        "service_start_ts",
+        "status_ts",
+    ):
+        assert snapshot[field]
+
+    client.post("/api/kill?flatten=false")
+    assert client.get("/api/status").json()["service_health"] == "halted"
+
+
+def test_status_release_sha_defaults_to_unknown(monkeypatch):
+    monkeypatch.delenv("MTC_BRIDGE_RELEASE_SHA", raising=False)
+    assert TestClient(create_app()).get("/api/status").json()["release_sha"] == "unknown"
+
+
 def test_ws_pushes_snapshot_on_connect():
     client = TestClient(create_app())
 

@@ -40,6 +40,7 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=MTC_BRIDGE_STATE_DB=/var/lib/mtc-bridge/bridge.db
 # Credential-free DISARMED mode is pinned here so the hashed unit cannot drift.
 Environment=MTC_BRIDGE_START_MODE=credential_free_disarmed
+Environment=MTC_BRIDGE_RELEASE_SHA=@RELEASE_SHA@
 # Root-owned 0600 file; provisioned only under the separate KVM2-P4-03 secret
 # authorization. HL_LIVE_ACK must never appear in it.
 EnvironmentFile=/etc/mtc-bridge/mtc-bridge.env
@@ -54,6 +55,10 @@ FinalKillSignal=SIGKILL
 # --- restart policy: none, plus throttling if a future profile enables it ---
 Restart=no
 RestartSec=30
+
+# Hard tenant ceiling plus early pressure threshold.
+MemoryHigh=768M
+MemoryMax=1G
 
 # --- persistent, rotatable logs -------------------------------------------
 SyslogIdentifier=mtc-bridge

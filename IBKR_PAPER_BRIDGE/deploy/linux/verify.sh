@@ -34,7 +34,7 @@ done
 require_release_sha "${RELEASE_SHA}"
 require_sha256 "${MANIFEST_SHA256}"
 require_root
-require_cmd stat find systemctl sha256sum sed cmp sort awk mktemp getent id pgrep
+require_cmd stat find systemctl sha256sum sed cmp sort awk getent id pgrep
 
 DEST="$(release_dir "${RELEASE_SHA}")"
 VENV="$(venv_dir "${RELEASE_SHA}")"
@@ -166,9 +166,12 @@ if [ -f "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}" ]; then
       'KillSignal=SIGTERM' \
       'TimeoutStopSec=45' \
       'StartLimitBurst=3' \
+      'MemoryHigh=768M' \
+      'MemoryMax=1G' \
       "ReadWritePaths=${MTC_STATE_DIR} ${MTC_LOG_DIR}" \
       "MTC_BRIDGE_STATE_DB=${MTC_STATE_DB}" \
-      'MTC_BRIDGE_START_MODE=credential_free_disarmed' ; do
+      'MTC_BRIDGE_START_MODE=credential_free_disarmed' \
+      "MTC_BRIDGE_RELEASE_SHA=${RELEASE_SHA}" ; do
     if grep -qF "${needle}" "${unit}"; then
       pass "unit declares ${needle}"
     else
@@ -185,16 +188,14 @@ if [ -f "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}" ]; then
   else
     fail "unit does not use the exact per-SHA venv"
   fi
-  expected_unit="$(mktemp)"
-  sed "s/@RELEASE_SHA@/${RELEASE_SHA}/g" \
-      "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/systemd/${MTC_FIRST_START_UNIT}.template" \
-      > "${expected_unit}"
-  if cmp -s "${expected_unit}" "${unit}"; then
+  if cmp -s \
+      <(sed "s/@RELEASE_SHA@/${RELEASE_SHA}/g" \
+        "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/systemd/${MTC_FIRST_START_UNIT}.template") \
+      "${unit}"; then
     pass "installed unit exactly matches the accepted release template"
   else
     fail "installed unit differs from the accepted release template"
   fi
-  rm -f "${expected_unit}"
   if grep -q '^\[Install\]' "${unit}"; then
     fail "unit has an [Install] section and could be enabled at boot"
   else
@@ -247,7 +248,7 @@ else
 fi
 assert_control_port_closed || true
 assert_no_public_control_listener || true
-assert_ufw_ssh_only || true
+assert_ufw_bridge_safe || true
 
 # --- 9. summary ------------------------------------------------------------
 if [ "${MTC_FAILURES}" -eq 0 ]; then

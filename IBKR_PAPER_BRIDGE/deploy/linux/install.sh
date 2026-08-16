@@ -14,7 +14,7 @@
 #   * creates /var/lib/mtc-bridge, /var/log/mtc-bridge, /etc/mtc-bridge;
 #   * creates the root-owned 0600 env file with NO values in it;
 #   * installs the first-start unit MASKED and installs the logrotate policy;
-#   * asserts UFW is active, default-deny inbound, SSH-only.
+#   * asserts UFW is active/default-deny, SSH remains allowed, and 8790 is not.
 #
 # WHAT THIS SCRIPT NEVER DOES
 #   * start, enable or arm any service;
@@ -131,9 +131,11 @@ require_release_sha "${RELEASE_SHA}"
 require_sha256 "${MANIFEST_SHA256}"
 require_root
 require_cmd sha256sum install find chmod chown stat systemctl sed grep tr cp cmp \
-            sort awk mktemp date getent groupadd useradd id pgrep readlink realpath "${MTC_PYTHON}"
+            sort awk date getent groupadd useradd id pgrep readlink realpath "${MTC_PYTHON}"
+preflight_venv_capability
 
 DEST="$(release_dir "${RELEASE_SHA}")"
+VENV="$(venv_dir "${RELEASE_SHA}")"
 
 # --------------------------------------------------------------------------
 # 0. refuse to run in a state that would make the install unsafe
@@ -214,6 +216,67 @@ verify_service_identity() {
   fi
 }
 
+dry_run_action() {
+  printf '[dry-run] ACTION %-20s %s\n' "$1" "$2"
+}
+
+print_dry_run_manifest() {
+  dry_run_action "identity-group" "ensure system group ${MTC_GROUP}"
+  dry_run_action "identity-user" "ensure nologin user ${MTC_USER} with home ${MTC_STATE_DIR}"
+  dry_run_action "dir-state" "ensure ${MTC_STATE_DIR} owner ${MTC_USER}:${MTC_GROUP} mode 0750"
+  dry_run_action "dir-log" "ensure ${MTC_LOG_DIR} owner ${MTC_USER}:${MTC_GROUP} mode 0750"
+  dry_run_action "dir-config" "ensure ${MTC_CONF_DIR} owner root:root mode 0750"
+  dry_run_action "dir-opt" "ensure ${MTC_OPT_ROOT} owner root:root mode 0755"
+  dry_run_action "dir-releases" "ensure ${MTC_RELEASES_ROOT} owner root:root mode 0755"
+  dry_run_action "dir-venvs" "ensure ${MTC_VENVS_ROOT} owner root:root mode 0755"
+  dry_run_action "release-dir" "create ${DEST} owner root:root mode 0755 if absent"
+  dry_run_action "release-copy" "copy accepted payload ${SOURCE_DIR}/. to ${DEST}/ if absent"
+  dry_run_action "venv-create" "create Python 3.12 venv ${VENV} if absent"
+  if [ -n "${WHEELHOUSE}" ]; then
+    dry_run_action "venv-install" "install hash-locked wheels into ${VENV} from ${WHEELHOUSE}"
+  else
+    dry_run_action "venv-install" "install hash-locked binary wheels into ${VENV} from package index"
+  fi
+  dry_run_action "seal-release-owner" "recursively set ${DEST} owner root:root"
+  dry_run_action "seal-release-dirs" "recursively set directories under ${DEST} mode 0555"
+  dry_run_action "seal-release-exec" "recursively set executable files under ${DEST} mode 0555"
+  dry_run_action "seal-release-files" "recursively set non-executable files under ${DEST} mode 0444"
+  dry_run_action "seal-venv-owner" "recursively set ${VENV} owner root:root"
+  dry_run_action "seal-venv-dirs" "recursively set directories under ${VENV} mode 0555"
+  dry_run_action "seal-venv-exec" "recursively set executable files under ${VENV} mode 0555"
+  dry_run_action "seal-venv-files" "recursively set non-executable files under ${VENV} mode 0444"
+  dry_run_action "env-install" "create ${MTC_ENV_FILE} from names-only template if absent, root:root mode 0600"
+  dry_run_action "env-owner" "set ${MTC_ENV_FILE} owner root:root"
+  dry_run_action "env-mode" "set ${MTC_ENV_FILE} mode 0600"
+  dry_run_action "unit-dir" "ensure ${MTC_UNIT_DIR} owner root:root mode 0755"
+  dry_run_action "unit-install" "render release ${RELEASE_SHA} and install ${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT} root:root mode 0644"
+  dry_run_action "systemd-reload" "run systemctl daemon-reload"
+  dry_run_action "unit-mask" "mask ${MTC_FIRST_START_UNIT} via ${MTC_MASK_DIR}/${MTC_FIRST_START_UNIT}"
+  dry_run_action "logrotate-install" "install ${MTC_LOGROTATE_FILE} root:root mode 0644"
+  dry_run_action "manifest-write" "write hash-only install manifest ${MTC_INSTALL_MANIFEST}"
+  dry_run_action "manifest-owner" "set ${MTC_INSTALL_MANIFEST} owner root:root"
+  dry_run_action "manifest-mode" "set ${MTC_INSTALL_MANIFEST} mode 0640"
+}
+
+if [ "${MTC_DRY_RUN}" = "1" ]; then
+  MTC_FAILURES=0
+  if getent group "${MTC_GROUP}" >/dev/null \
+     || getent passwd "${MTC_USER}" >/dev/null; then
+    verify_service_identity
+  fi
+  assert_ufw_bridge_safe || true
+  assert_control_port_closed || true
+  assert_loopback_only_source "${SOURCE_DIR}/IBKR_PAPER_BRIDGE/bridge/app.py" || true
+  if pgrep -f '[b]ridge\.app' >/dev/null 2>&1; then
+    fail "a bridge.app process already exists on the target host"
+  fi
+  [ "${MTC_FAILURES}" -eq 0 ] || die "${MTC_FAILURES} dry-run boundary assertion(s) failed"
+  print_dry_run_manifest
+  log "dry-run PASS for ${RELEASE_SHA}; complete mutation manifest printed above"
+  log "NOT started, NOT enabled, NO secret provisioned, NO firewall change."
+  exit 0
+fi
+
 # --------------------------------------------------------------------------
 # 2. dedicated non-login service identity (idempotent)
 # --------------------------------------------------------------------------
@@ -230,21 +293,6 @@ else
       --home-dir "${MTC_STATE_DIR}" --no-create-home \
       --shell /usr/sbin/nologin \
       --comment "MTC Crypto Paper Bridge service account" "${MTC_USER}"
-fi
-
-if [ "${MTC_DRY_RUN}" = "1" ]; then
-  MTC_FAILURES=0
-  assert_ufw_ssh_only || true
-  assert_control_port_closed || true
-  assert_loopback_only_source "${SOURCE_DIR}/IBKR_PAPER_BRIDGE/bridge/app.py" || true
-  if pgrep -f '[b]ridge\.app' >/dev/null 2>&1; then
-    fail "a bridge.app process already exists on the target host"
-  fi
-  [ "${MTC_FAILURES}" -eq 0 ] || die "${MTC_FAILURES} dry-run boundary assertion(s) failed"
-  log "dry-run PASS for ${RELEASE_SHA}; payload and host boundary checks passed"
-  log "would create/verify identity, immutable release+venv, masked unit, paths, env contract and manifest"
-  log "NOT started, NOT enabled, NO secret provisioned, NO firewall change."
-  exit 0
 fi
 
 verify_service_identity
@@ -280,7 +328,6 @@ assert_exact_payload_tree "${DEST}" || true
 # --------------------------------------------------------------------------
 # 5. hash-locked Python 3.12 virtual environment
 # --------------------------------------------------------------------------
-VENV="$(venv_dir "${RELEASE_SHA}")"
 if [ -x "${VENV}/bin/python" ]; then
   log "venv already present; verifying exact installed distribution set"
   "${VENV}/bin/python" "${DEST}/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py" \
@@ -344,20 +391,18 @@ run chmod 0600 "${MTC_ENV_FILE}"
 # 8. first-start unit — rendered for the exact SHA, installed MASKED
 # --------------------------------------------------------------------------
 run install -d -o root -g root -m 0755 "${MTC_UNIT_DIR}"
-RENDERED="$(mktemp)"
-trap 'rm -f "${RENDERED}"' EXIT
-sed "s/@RELEASE_SHA@/${RELEASE_SHA}/g" \
-    "${FIRST_START_TEMPLATE}" > "${RENDERED}"
-if grep -q '@RELEASE_SHA@' "${RENDERED}"; then
+RENDERED_CONTENT="$(sed "s/@RELEASE_SHA@/${RELEASE_SHA}/g" "${FIRST_START_TEMPLATE}")"
+if grep -q '@RELEASE_SHA@' <<< "${RENDERED_CONTENT}"; then
   die "unit template placeholder not substituted"
 fi
-grep -q '^Restart=no$' "${RENDERED}" || die "rendered first-start unit is not Restart=no"
-if grep -q '^\[Install\]' "${RENDERED}"; then
+grep -q '^Restart=no$' <<< "${RENDERED_CONTENT}" || die "rendered first-start unit is not Restart=no"
+if grep -q '^\[Install\]' <<< "${RENDERED_CONTENT}"; then
   die "first-start unit must have no [Install] section"
 fi
 
-run install -o root -g root -m 0644 "${RENDERED}" "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}"
-UNIT_SHA="$(sha256_of "${RENDERED}")"
+run install -o root -g root -m 0644 \
+    <(printf '%s\n' "${RENDERED_CONTENT}") "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}"
+UNIT_SHA="$(printf '%s\n' "${RENDERED_CONTENT}" | sha256sum | awk '{print $1}')"
 
 run systemctl daemon-reload
 # Masked, never started, never enabled. Starting it later requires an explicit
@@ -387,7 +432,7 @@ run install -o root -g root -m 0644 "${LOGROTATE_TEMPLATE}" "${MTC_LOGROTATE_FIL
 # 10. read-only network assertion (never a firewall change)
 # --------------------------------------------------------------------------
 MTC_FAILURES=0
-assert_ufw_ssh_only || true
+assert_ufw_bridge_safe || true
 assert_control_port_closed || true
 assert_loopback_only_source "${DEST}/IBKR_PAPER_BRIDGE/bridge/app.py" || true
 if pgrep -f '[b]ridge\.app' >/dev/null 2>&1; then

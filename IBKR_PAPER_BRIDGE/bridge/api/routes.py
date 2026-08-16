@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import socket
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -30,6 +32,9 @@ def init_runtime_state(app: FastAPI, store: Store | None = None) -> None:
         "regime": "BOTH",
         "state_version": 1,
         "reconcile_ready": False,
+        "host_identity": socket.gethostname(),
+        "release_sha": os.environ.get("MTC_BRIDGE_RELEASE_SHA", "").strip() or "unknown",
+        "service_start_ts": datetime.now(UTC).isoformat(),
         # TS-P0-003: honest window state from persisted evidence; a DOWN
         # bridge (no fresh liveness) can never present as an active window.
         "window": (
@@ -64,7 +69,7 @@ def install_routes(app: FastAPI) -> None:
         engine = _engine(request)
         if engine is not None:
             request.app.state.bridge_status.update(engine.status())
-        return dict(request.app.state.bridge_status)
+        return _status_payload(request.app)
 
     @app.get("/api/config")
     async def get_config(request: Request) -> dict[str, Any]:
@@ -211,7 +216,7 @@ async def make_snapshot(app: FastAPI) -> dict[str, Any]:
     orders = [row.model_dump(mode="json") for row in await engine.broker.open_orders()] if engine is not None else []
     bars = [_chart_bar(row) for row in store.get_bars(300)] if store is not None else []
     return {
-        "status": dict(app.state.bridge_status),
+        "status": _status_payload(app),
         "config": dict(app.state.bridge_config),
         "positions": positions,
         "orders": orders,
@@ -241,7 +246,7 @@ def _require_confirm(request: Request, x_confirm: int | None) -> None:
 async def _bump_and_broadcast(request: Request, topic: str, data: object) -> None:
     request.app.state.bridge_status["state_version"] += 1
     if topic == "status":
-        data = dict(request.app.state.bridge_status)
+        data = _status_payload(request.app)
     hub = getattr(request.app.state, "ws_hub", None)
     if hub is not None:
         await hub.broadcast(topic, data)
@@ -252,6 +257,22 @@ def _set_state(request: Request, state: str) -> None:
     store = _store(request)
     if store is not None:
         store.set_meta("app_state", state)
+
+
+def _status_payload(app: FastAPI) -> dict[str, Any]:
+    status = app.state.bridge_status
+    state = status.get("state")
+    window = status.get("window")
+    window_state = window.get("state") if isinstance(window, dict) else None
+    if state == "KILLED":
+        health = "halted"
+    elif state not in {"DISARMED", "ARMED"} or window_state == "INTERRUPTED":
+        health = "degraded"
+    else:
+        health = "healthy"
+    status["service_health"] = health
+    status["status_ts"] = datetime.now(UTC).isoformat()
+    return dict(status)
 
 
 def _chart_bar(row: dict[str, Any]) -> dict[str, Any]:

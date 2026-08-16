@@ -196,6 +196,73 @@ def test_installer_uses_per_sha_venv_hashes_and_binary_wheels_only():
     assert not re.search(r"(?m)^\s*(?:sudo\s+)?pip(?:3)?\s+install\b", script)
 
 
+def test_installer_preflights_venv_capability_before_any_mutation():
+    common = LINUX / "lib" / "common.sh"
+    result = run_bash(
+        '. "$1"; MTC_PYTHON=false; preflight_venv_capability',
+        common,
+    )
+    assert result.returncode != 0
+    assert "python3.12-venv" in result.stderr
+
+    installer = read(LINUX / "install.sh")
+    assert installer.index("preflight_venv_capability") < installer.index("run groupadd")
+
+
+def test_dry_run_manifest_matches_every_real_install_mutation():
+    script = read(LINUX / "install.sh")
+    planned_ids = set(re.findall(r'^\s*dry_run_action "([^"]+)"', script, re.MULTILINE))
+    real_mutations = {
+        "identity-group": r'run groupadd --system',
+        "identity-user": r'run useradd --system',
+        "dir-state": r'run install -d -o "\$\{MTC_USER\}".*"\$\{MTC_STATE_DIR\}"',
+        "dir-log": r'run install -d -o "\$\{MTC_USER\}".*"\$\{MTC_LOG_DIR\}"',
+        "dir-config": r'run install -d -o root.*"\$\{MTC_CONF_DIR\}"',
+        "dir-opt": r'run install -d -o root.*"\$\{MTC_OPT_ROOT\}"',
+        "dir-releases": r'run install -d -o root.*"\$\{MTC_RELEASES_ROOT\}"',
+        "dir-venvs": r'run install -d -o root.*"\$\{MTC_VENVS_ROOT\}"',
+        "release-dir": r'run install -d -o root.*"\$\{DEST\}"',
+        "release-copy": r'run cp -a "\$\{SOURCE_DIR\}/\." "\$\{DEST\}/"',
+        "venv-create": r'run "\$\{MTC_PYTHON\}" -m venv "\$\{VENV\}"',
+        "venv-install": r'run "\$\{PIP_ARGS\[@\]\}"',
+        "seal-release-owner": r'run chown -R root:root "\$\{DEST\}"',
+        "seal-release-dirs": r'run find "\$\{DEST\}" -type d -exec chmod 0555',
+        "seal-release-exec": r'run find "\$\{DEST\}" -type f -perm /111 -exec chmod 0555',
+        "seal-release-files": r'run find "\$\{DEST\}" -type f .* -perm /111 -exec chmod 0444',
+        "seal-venv-owner": r'run chown -R root:root "\$\{VENV\}"',
+        "seal-venv-dirs": r'run find "\$\{VENV\}" -type d -exec chmod 0555',
+        "seal-venv-exec": r'run find "\$\{VENV\}" -type f -perm /111 -exec chmod 0555',
+        "seal-venv-files": r'run find "\$\{VENV\}" -type f .* -perm /111 -exec chmod 0444',
+        "env-install": r'run install -o root -g root -m 0600',
+        "env-owner": r'run chown root:root "\$\{MTC_ENV_FILE\}"',
+        "env-mode": r'run chmod 0600 "\$\{MTC_ENV_FILE\}"',
+        "unit-dir": r'run install -d -o root -g root -m 0755 "\$\{MTC_UNIT_DIR\}"',
+        "unit-install": r'run install -o root -g root -m 0644.*"\$\{MTC_UNIT_DIR\}/\$\{MTC_FIRST_START_UNIT\}"',
+        "systemd-reload": r'run systemctl daemon-reload',
+        "unit-mask": r'run systemctl mask "\$\{MTC_FIRST_START_UNIT\}"',
+        "logrotate-install": r'run install -o root -g root -m 0644 "\$\{LOGROTATE_TEMPLATE\}"',
+        "manifest-write": r'cat > "\$\{MTC_INSTALL_MANIFEST\}"',
+        "manifest-owner": r'chown root:root "\$\{MTC_INSTALL_MANIFEST\}"',
+        "manifest-mode": r'chmod 0640 "\$\{MTC_INSTALL_MANIFEST\}"',
+    }
+    assert planned_ids == set(real_mutations)
+    for action_id, pattern in real_mutations.items():
+        assert re.search(pattern, script, re.DOTALL), action_id
+
+    for exact_path in (
+        "${MTC_STATE_DIR}",
+        "${MTC_LOG_DIR}",
+        "${MTC_CONF_DIR}",
+        "${DEST}",
+        "${VENV}",
+        "${MTC_ENV_FILE}",
+        "${MTC_UNIT_DIR}/${MTC_FIRST_START_UNIT}",
+        "${MTC_LOGROTATE_FILE}",
+        "${MTC_INSTALL_MANIFEST}",
+    ):
+        assert re.search(rf'^\s*dry_run_action .*{re.escape(exact_path)}', script, re.MULTILINE)
+
+
 def test_installer_never_starts_enables_or_unmasks_a_service():
     commands = noncomment_shell(LINUX / "install.sh")
     assert not re.search(r"\bsystemctl\s+(?:start|enable|unmask)\b", commands)
@@ -217,6 +284,58 @@ def test_no_deployment_script_mutates_ufw():
     assert "ufw status verbose" in read(LINUX / "lib" / "common.sh")
 
 
+@pytest.mark.parametrize(
+    ("name", "rules", "should_pass"),
+    (
+        (
+            "future_web_tenant",
+            "22/tcp ALLOW IN Anywhere\n80/tcp ALLOW IN Anywhere\n443/tcp ALLOW IN Anywhere\n",
+            True,
+        ),
+        (
+            "bridge_port_exposed",
+            "22/tcp ALLOW IN Anywhere\n8790/tcp ALLOW IN Anywhere\n",
+            False,
+        ),
+        (
+            "ssh_missing",
+            "80/tcp ALLOW IN Anywhere\n443/tcp ALLOW IN Anywhere\n",
+            False,
+        ),
+    ),
+)
+def test_ufw_bridge_safe_invariant_is_multi_tenant_and_fail_closed(
+    tmp_path, name, rules, should_pass
+):
+    fixture = tmp_path / f"{name}.txt"
+    fixture.write_text(
+        "Status: active\n"
+        "Logging: on (low)\n"
+        "Default: deny (incoming), allow (outgoing), disabled (routed)\n"
+        "To Action From\n"
+        "-- ------ ----\n"
+        + rules,
+        encoding="utf-8",
+    )
+    result = run_bash(
+        """
+UFW_FIXTURE="$2"
+ufw() { cat "${UFW_FIXTURE}"; }
+. "$1"
+MTC_FAILURES=0
+assert_ufw_bridge_safe
+""",
+        LINUX / "lib" / "common.sh",
+        fixture,
+    )
+    if should_pass:
+        assert result.returncode == 0, result.stderr
+        assert "Bridge port 8790 not exposed" in result.stdout
+    else:
+        assert result.returncode != 0
+        assert "FAIL" in result.stderr
+
+
 def test_first_start_unit_is_separate_masked_design_and_restart_no():
     unit = read(LINUX / "systemd" / "mtc-bridge-first-start.service.template")
     assert "\nRestart=no\n" in unit
@@ -224,6 +343,9 @@ def test_first_start_unit_is_separate_masked_design_and_restart_no():
     assert "venvs/@RELEASE_SHA@/bin/python -m bridge.app" in unit
     assert "MTC_BRIDGE_STATE_DB=/var/lib/mtc-bridge/bridge.db" in unit
     assert "MTC_BRIDGE_START_MODE=credential_free_disarmed" in unit
+    assert "MTC_BRIDGE_RELEASE_SHA=@RELEASE_SHA@" in unit
+    assert "MemoryHigh=768M" in unit
+    assert "MemoryMax=1G" in unit
     assert "PrivateTmp=yes" in unit
     assert "KillSignal=SIGTERM" in unit
     assert "TimeoutStopSec=45" in unit
@@ -442,8 +564,10 @@ def test_env_template_contains_names_and_comments_but_no_definitions():
 
 def test_logrotate_contract_is_persistent_bounded_and_nonrestarting():
     policy = read(LINUX / "logrotate" / "mtc-bridge")
-    for token in ("daily", "rotate 30", "size 64M", "compress", "delaycompress", "copytruncate"):
+    for token in ("daily", "rotate 7", "maxsize 64M", "compress", "delaycompress", "copytruncate"):
         assert token in policy
+    assert "1 GiB" in policy
+    assert "not a hard disk quota" in policy
     assert "create 0640 mtc-bridge mtc-bridge" in policy
     assert "postrotate" not in policy
 
@@ -722,6 +846,14 @@ def test_masked_unstarted_verifier_requires_zero_writers_and_closed_port():
 def test_verifier_is_read_only_and_binds_release_unit_venv_and_manifest():
     script = noncomment_shell(LINUX / "verify.sh")
     assert not re.search(r"\bsystemctl\s+(?:start|stop|restart|enable|disable|unmask|mask)\b", script)
+    assert "mktemp" not in script
+    assert "expected_unit" not in script
+    common = read(LINUX / "lib" / "common.sh")
+    inventory_helper = common[
+        common.index("assert_exact_payload_tree()") : common.index("# Read-only UFW assertion")
+    ]
+    assert "mktemp" not in inventory_helper
+    assert "cmp -s <(" in inventory_helper
     for token in (
         "--manifest-sha256 is required",
         "assert_exact_payload_tree",

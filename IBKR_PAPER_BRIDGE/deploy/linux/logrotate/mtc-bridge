@@ -4,16 +4,18 @@
 # the process lifetime. `copytruncate` therefore rotates without needing a
 # service restart — restarting the bridge to rotate a log is forbidden.
 #
-# Frozen policy (KVM2-P2-04): daily, 30 generations retained, compressed with a
-# one-generation delay, size-triggered early rotation at 64M, empty files
-# skipped, missing files tolerated. The forced-rotation test that proves this
-# works (`logrotate -f /etc/logrotate.d/mtc-bridge`) runs at KVM2-P4-07, before
-# the first DISARMED start is accepted.
+# Policy: daily, seven generations retained, compressed with a one-generation
+# delay, and early rotation when either active log exceeds 64 MiB. At the
+# threshold the uncompressed retention budget is two logs x eight files
+# (active + seven generations) x 64 MiB = 1 GiB. `maxsize` is checked only
+# when logrotate runs, so this is not a hard disk quota: active growth between
+# daily runs can exceed it, and the policy-only absolute worst case is
+# unbounded until the next invocation. MemoryMax protects RAM, not log disk.
 
-/var/log/mtc-bridge/*.log {
+/var/log/mtc-bridge/bridge.log /var/log/mtc-bridge/bridge.err.log {
     daily
-    rotate 30
-    size 64M
+    rotate 7
+    maxsize 64M
     missingok
     notifempty
     compress

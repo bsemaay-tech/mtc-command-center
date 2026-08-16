@@ -58,6 +58,14 @@ require_cmd() {
   done
 }
 
+preflight_venv_capability() {
+  if ! PYTHONDONTWRITEBYTECODE=1 "${MTC_PYTHON}" -c 'import venv, ensurepip' \
+      >/dev/null 2>&1; then
+    die "${MTC_PYTHON} cannot import venv and ensurepip; install Ubuntu package python3.12-venv before retrying"
+  fi
+  pass "${MTC_PYTHON} venv/ensurepip capability available"
+}
+
 require_release_sha() {
   [[ "$1" =~ ^[0-9a-f]{40}$ ]] || die "release sha must be exactly 40 lowercase hex characters"
 }
@@ -129,35 +137,31 @@ assert_exact_payload_tree() {
   if [ ! -f "${root}/RELEASE_SHA256SUMS" ]; then
     fail "missing regular RELEASE_SHA256SUMS"; return 1
   fi
-  expected="$(mktemp)"
-  actual="$(mktemp)"
-  if ! sed -E 's/^[0-9a-f]{64} [ *]//' \
-      "${root}/RELEASE_SHA256SUMS" | sort > "${expected}"; then
-    rm -f "${expected}" "${actual}"
+  if ! expected="$(sed -E 's/^[0-9a-f]{64} [ *]//' \
+      "${root}/RELEASE_SHA256SUMS" | sort)"; then
     fail "cannot parse RELEASE_SHA256SUMS"; return 1
   fi
-  if ! (cd "${root}" && find . -type f '!' -name RELEASE_SHA256SUMS -print | sort) \
-      > "${actual}"; then
-    rm -f "${expected}" "${actual}"
+  if ! actual="$(cd "${root}" \
+      && find . -type f '!' -name RELEASE_SHA256SUMS -print | sort)"; then
     fail "cannot inventory release tree"; return 1
   fi
-  if ! cmp -s "${expected}" "${actual}"; then
-    rm -f "${expected}" "${actual}"
+  if ! cmp -s <(printf '%s\n' "${expected}") <(printf '%s\n' "${actual}"); then
     fail "release file inventory differs from RELEASE_SHA256SUMS"; return 1
   fi
-  rm -f "${expected}" "${actual}"
   pass "release file inventory exactly matches RELEASE_SHA256SUMS"
 }
 
 # Read-only UFW assertion. This function NEVER changes a firewall rule; a
 # firewall change is a separately scoped, separately audited, owner-approved
 # action (KVM2 invariant 8).
-assert_ufw_ssh_only() {
+assert_ufw_bridge_safe() {
   if ! command -v ufw >/dev/null 2>&1; then
-    fail "ufw not installed; SSH-only inbound policy cannot be asserted"; return 1
+    fail "ufw not installed; Bridge-safe inbound policy cannot be asserted"; return 1
   fi
-  local status
-  status="$(ufw status verbose 2>/dev/null || true)"
+  local status ssh_allow bridge_allow
+  if ! status="$(ufw status verbose 2>/dev/null)"; then
+    fail "ufw status cannot be read"; return 1
+  fi
   case "$status" in
     *"Status: active"*) : ;;
     *) fail "ufw is not active"; return 1 ;;
@@ -166,18 +170,19 @@ assert_ufw_ssh_only() {
     *"Default: deny (incoming)"*) : ;;
     *) fail "ufw default incoming policy is not deny"; return 1 ;;
   esac
-  # Any ALLOW IN rule for a port other than 22 fails closed.
-  local bad
-  bad="$(printf '%s\n' "$status" \
-    | awk '/ALLOW IN/ { print $1 }' \
-    | grep -Ev '^(22|22/tcp|22/udp|OpenSSH)$' || true)"
-  if [ -n "$bad" ]; then
-    fail "ufw allows non-SSH inbound: $(printf '%s' "$bad" | tr '\n' ' ')"; return 1
+  ssh_allow="$(printf '%s\n' "${status}" | awk '
+    /ALLOW IN/ && ($1 == "22" || $1 ~ /^22\// || $1 == "OpenSSH") { print; exit }
+  ')"
+  if [ -z "${ssh_allow}" ]; then
+    fail "ufw has no inbound ALLOW rule for SSH port 22"; return 1
   fi
-  case "$status" in
-    *"${MTC_BIND_PORT}"*) fail "ufw mentions port ${MTC_BIND_PORT}; control plane must stay loopback-only"; return 1 ;;
-  esac
-  pass "ufw active, default-deny inbound, SSH-only"
+  bridge_allow="$(printf '%s\n' "${status}" | awk -v port="${MTC_BIND_PORT}" '
+    /ALLOW IN/ && ($1 == port || index($1, port "/") == 1) { print }
+  ')"
+  if [ -n "${bridge_allow}" ]; then
+    fail "ufw exposes Bridge port ${MTC_BIND_PORT}: $(printf '%s' "${bridge_allow}" | tr '\n' ' ')"; return 1
+  fi
+  pass "ufw active, default-deny incoming; SSH port 22 allowed; Bridge port ${MTC_BIND_PORT} not exposed"
 }
 
 # Static proof that the shipped application binds loopback only.

@@ -126,6 +126,11 @@ function renderSystem() {
   setText("systemNetwork", state.status.network || "testnet");
   setText("stateVersion", String(state.status.state_version));
   setText("dbStatus", "runtime");
+  setText("hostIdentity", state.status.host_identity || "unknown");
+  setText("releaseSha", state.status.release_sha || "unknown");
+  setText("serviceHealth", state.status.service_health || "unknown");
+  setText("serviceStartTs", state.status.service_start_ts || "--");
+  setText("statusTs", state.status.status_ts || "--");
   renderRows("eventsBody", state.snapshot.events);
 }
 
