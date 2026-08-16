@@ -235,6 +235,39 @@ The established field grammar is preserved from V2. `MTC_COMMAND_CENTER/11_TRIAG
 | Infrastructure crossover | Independent auth/audit/PAM/wrapper proof | Require no rotation, out-of-store action, or side-effect hook. |
 | Final review/evidence | Reviewer/auditor independent of builder | Exact filled bytes, executable commands, actual RED/GREEN, and accepting required verdicts. |
 
+The final `STAGE1_ROOT_CHANNEL_BINDING.tsv` is one ASCII/LF/final-LF row. Its fields are individually sourced and checked as follows; agreement between this row and the recorder is never sufficient by itself:
+
+| Field | Independent source | Required 1b verification |
+|---|---|---|
+| `POWERSHELL_EXE_PATH` | Unchanged 1a tool inventory | Exact byte equality to 1a plus K28 live rehash. |
+| `POWERSHELL_EXE_SHA256` | Unchanged 1a tool inventory | Recompute at the exact path and compare. |
+| `OPERATOR_PYTHON_PATH` | Unchanged 1a tool inventory | Exact byte equality to 1a plus K28 path check. |
+| `OPERATOR_PYTHON_SHA256` | Unchanged 1a tool inventory | Recompute at the exact path and compare. |
+| `GIT_EXE_PATH` | Unchanged 1a tool inventory | Exact byte equality to 1a; prohibit PATH lookup. |
+| `GIT_EXE_SHA256` | Unchanged 1a tool inventory | Recompute before Git use. |
+| `SSH_EXE_PATH` | Unchanged 1a tool inventory | Exact byte equality to 1a; prohibit PATH lookup. |
+| `SSH_EXE_SHA256` | Unchanged 1a tool inventory | Recompute before any socket. |
+| `SSH_TARGET` | Admin-selected principal/address plus server configuration | Require exact configured principal/address and K19 key binding; this fills the SSH-principal slot. |
+| `SERVER_AUTHORIZED_KEY_BINDING` | Authoritative server-side key mapping | Verify exact pinned identity maps only to the selected route; a client-side key label is insufficient. |
+| `ACCOUNT_UID_GID` | Authoritative account/escalation configuration | Require exact numeric identity for each hop; rendered names are diagnostic only. |
+| `ACCOUNT_SHELL_PATH` | Authoritative account record | Require exact absolute path, regular-file kind, numeric ownership/mode, and use by the selected account. |
+| `ACCOUNT_SHELL_SHA256` | Independently read shell bytes | Recompute SHA-256; do not accept a value copied by the launcher. |
+| `FORCED_COMMAND_MODE` | Effective sshd/authorized-key mapping | Require exactly `NONE` or `EXACT`; `NONE` must be proved, not assumed. |
+| `FORCED_COMMAND_EXACT_ARGV_B64` | Effective mapping when mode is `EXACT` | Decode/re-encode canonical NUL-separated argv and compare byte-for-byte; require empty only for proved `NONE`. |
+| `ROOT_WRAPPER_PATH` | Admin-selected route plus authoritative config | Require exact absolute path or proved `NONE`; no PATH resolution. |
+| `ROOT_WRAPPER_SHA256` | Independently read wrapper bytes | Recompute when a wrapper exists; require literal `NONE` only when no wrapper is configured. |
+| `ATT01_TARGET_PROCESS_CHAIN` | Independently verified account/sshd/wrapper execution mapping | Require a complete ordered exec chain from sshd child to `/usr/bin/env` and Python; no omitted hop or prose ellipsis. |
+| `ATT01_INITIAL_CWD` | Independent first-target-process record/config | Require exact absolute cwd before startup/import/`chdir`. |
+| `ATT01_PRE_ENVIRONMENT_B64` | Independent first-target-process environment record/config | Decode/re-encode sorted `name=value\0` bytes; reject unexpected startup/loader hooks. |
+| `ATT01_POST_ENVIRONMENT_B64` | Accepted procedure contract | Rebuild exactly `HOME=/root\0LC_ALL=C\0PATH=/usr/bin:/bin\0PYTHONDONTWRITEBYTECODE=1\0` in sorted-key order and compare. |
+| `ATT01_STDIN_MAPPING` | Accepted procedure plus independently verified channel mapping | Require literal `producer_blob_to_python_stdin_no_prefix_or_suffix` and prove no framing transformation. |
+| `ATT01_FD_MAPPING` | Independent complete FD inventory | Require exact `0=ssh-stdin,1=ssh-stdout,2=ssh-stderr,all_other_fds=closed`. |
+| `ATT01_REMOTE_COMMAND` | Effective forced-command/wrapper mapping plus accepted procedure | Compare complete command bytes; no placeholder, shell metavariable, or independently expanded copy. |
+| `ATT01_OUTER_ARGV_B64` | Admin-selected route, 1a tool identity, and accepted procedure | Independently construct exact NUL-separated Windows argv with final NUL, then canonical-base64 compare. |
+| `ATT01_OUTER_ARGV_SHA256` | Independently constructed outer argv bytes | Recompute SHA-256 from decoded bytes; never copy the recorder's own digest as expectation. |
+| `TARGET_MUTATION_DENIAL_CONTROL` | Admin-selected policy plus exact-chain D026 evidence | Bind exact control identity and require success/failure write mutations to be denied while fd 1/2 remain usable. |
+| `INFRASTRUCTURE_CROSSOVER_RESULT` | Independent channel/runtime evidence | Require literal `NO_ROTATION_NO_OUT_OF_STORE_ACTION_NO_SIDE_EFFECT_HOOK`; unreadable or partial evidence is STOP. |
+
 The existing V2 review explains why the outer argv, end-to-end no-mutation boundary, recorder, canonical grammar, exact filler sources, MainPID binding, and clean-object rule all have to be exact before the final commit. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/WPI_STAGE1_COMMIT1_PREREG_REVIEW_2026-08-15.md:29-79,81-110`
 
 ### 3.4 `COMMIT1B_CHAIN_BINDING.tsv` and final package verification
