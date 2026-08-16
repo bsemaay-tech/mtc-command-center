@@ -34,7 +34,7 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **Codex Lead `01a00921`** — Gemini-drafted hosting decision acceptance/handoff | 2026-08-16 22:21 +03 |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **Codex Lead `01a00921`** — owner-authorized Gemini draft transfer and acceptance | 2026-08-16 22:21 +03 |
-| Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released content-updated/capacity-blocked 2026-08-16 21:52 +03 | — |
+| Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **Codex Lead `01a00921`** — owner-requested Wiki and decision-aligned diagram implementation | 2026-08-16 22:38 +03 |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
@@ -45,6 +45,11 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 22:38 +03:** Codex Lead `01a00921` claimed the Bridge Help /
+  System Map row for the owner-requested interactive Wiki and diagram update.
+  Product scope remains the frozen T1 non-economic Help-only contract; no
+  runtime, API, trading, host, deployment, credential, or economic change.
 
 - **2026-08-16 22:21 +03:** Codex Lead `01a00921` claimed the design-record and
   shared-memory rows after Gemini 3.7 Flash High produced isolated draft
