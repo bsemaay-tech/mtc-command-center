@@ -213,7 +213,7 @@ Never authenticate Max into the default `.claude` profile, and never log the Pro
 
 ---
 
-## 9. Google AI Pro — Gemini 3.7 Flash read-only route (2026-08-16)
+## 9. Google AI Pro — Gemini 3.7 Flash read-only and isolated coder routes (2026-08-16)
 
 | Item | Value |
 |---|---|
@@ -265,9 +265,42 @@ T0 cycle exhausted its cap. The owner authorized cycle 2 at 18:55 +03 for read-o
 profile binding, persistent watcher/final drain, transient Git-lock adjudication, PS5 timeout
 verification, exact case-sensitive/duplicate-safe JSON validation, active-branch binding, and
 exact `gemini-3.7-flash-high` model binding are repaired and freshly tested. The QA record is the
-single source for earlier launcher identities and the literal repair evidence. Do not use this as a repository agent until fresh
-cycle-2 `claude-opus-5` xhigh plus `gpt-5.6-sol` xhigh reviews both accept. Coding permission is
-a separate future phase and remains disabled.
+single source for earlier launcher identities and the literal repair evidence. Its overlong final
+review was stopped at the owner's direction, so this read-only route is not claimed as canonically
+dual-flagship accepted. It grants no protected implementation authority.
+
+### Isolated Gemini coder pilot
+
+| Item | Value |
+|---|---|
+| Mandatory launcher | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProCoder.ps1` |
+| Launcher identity | SHA256 `E7403B0EBFD97DB34896E75A468518590642C8B4BBBB38E3A9D33DC88F827F97` |
+| Dedicated project | `882ea0a0-b565-4e74-930c-6711a1b63507` |
+| Dedicated worktree | `C:\GEMINI` |
+| Dedicated branch | `codex/gemini-coder` |
+| Model | Exact `gemini-3.7-flash-high`, effort high |
+| Authority | Bounded unprotected file edits only; Codex reviews and tests every diff |
+
+```powershell
+Set-Location 'C:\GEMINI'
+& 'C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProCoder.ps1' `
+  -AllowFile 'path\to\exact_file.py' `
+  -Prompt 'Make the requested narrow change. Do not touch other files.'
+```
+
+The launcher refuses the canonical and frozen checkouts, requires the exact isolated worktree
+and branch, regenerates its dedicated project with write grants only for each exact `-AllowFile`,
+and denies terminal, unsandboxed, web, MCP, user-home, canonical-checkout, frozen-checkout, and
+Git-metadata access. Protected Bridge, Pine, parity, MTC, schemas, credentials, deployment, and
+environment files are rejected before Gemini starts. HEAD and branch must remain unchanged, and
+any changed path outside the allowlist fails closed. Gemini cannot test, commit, push, merge, or
+accept its own work; Codex performs those steps after inspecting the actual diff.
+
+**Live pilot (2026-08-16):** Gemini created exactly one allowlisted smoke-test Markdown file,
+returned `GEMINI_CODER_OK`, and changed no other path. Codex verified the content, unchanged HEAD
+and branch, protected-path rejection, and a clean worktree after removing the temporary test.
+The config is left in read-only-at-rest preflight state. Evidence:
+`MTC_COMMAND_CENTER/11_TRIAGE/GEMINI_PRO_CODER_ROUTE_QA_2026-08-16.md`.
 
 ---
 

@@ -5,6 +5,27 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol] 2026-08-16 — Gemini isolated coder pilot operational
+
+Owner requested that Gemini CLI become a coder without another long audit cycle. A separate
+route now exists at `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProCoder.ps1`; it does not
+weaken or replace the existing read-only launcher. It pins `gemini-3.7-flash-high`, the dedicated
+project `882ea0a0-b565-4e74-930c-6711a1b63507`, worktree `C:\GEMINI`, and branch
+`codex/gemini-coder`. Every invocation requires exact relative `-AllowFile` paths.
+
+The route denies terminal commands, Git mutation, unsandboxed use, web, MCP, user-home reads,
+canonical/frozen-checkout reads, and protected Bridge/Pine/parity/MTC/schema/credential/deploy
+paths. It verifies unchanged HEAD/branch and fails if any changed file falls outside the task
+allowlist. Gemini cannot test or accept its own work; Codex must inspect the diff and run tests.
+
+A live smoke task created exactly one allowlisted Markdown file and returned
+`GEMINI_CODER_OK`; Codex verified its exact content, the single changed path, unchanged HEAD and
+branch, and protected-path rejection. The temporary file was removed, `C:\GEMINI` is clean, and
+preflight left the config with no write grant at rest. This is an operational bounded pilot for
+unprotected work, not authority for trading, deployment, credentials, live systems, commit,
+push, merge, or canonical acceptance. Evidence:
+`11_TRIAGE/GEMINI_PRO_CODER_ROUTE_QA_2026-08-16.md`.
+
 ## [Codex gpt-5.6-sol] 2026-08-16 — Bridge interactive Help/Wiki scoped; implementation capacity-blocked
 
 Owner requested a real interactive Help/System Map inside the existing Bridge

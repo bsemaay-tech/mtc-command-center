@@ -17,7 +17,10 @@ No dashboard source or live system changed.
 2. **Required result:** add a Help/System Map page to the existing Bridge
    dashboard with clickable/keyboard-accessible components, non-technical and
    technical detail views, current-V1 versus future-V2 labels, and one shared
-   machine-readable knowledge source for both the UI and future AI agents.
+   machine-readable knowledge source for both the UI and future AI agents. The owner requires
+   beautiful interactive explanatory drawings/flow diagrams; the SQLite+WAL card must explain
+   the black-box/logbook plainly (decisions, orders, fills, position snapshots/evidence), state
+   that Hyperliquid remains actual-position truth, and warn that backups must be WAL-safe.
 3. **[AI: Codex] Acceptance after implementation:** independently inspect the
    exact diff, run the static-dashboard and JSON integrity tests, perform the
    fresh T1 flagship review, and accept only PASS/PASS-WITH-NITS within the
@@ -49,29 +52,25 @@ authorized by this entry.
 5. **Safety fence:** no implementation, wiring, config, deployment, TESTNET/mainnet,
    order, ARM, broker, or economic action is authorized by this recorded decision.
 
-## OWNER-REQUESTED IN PROGRESS — Gemini 3.7 Flash Pro read-only repo adviser (2026-08-16)
+## OWNER-REQUESTED COMPLETE — Gemini 3.7 Flash isolated coder pilot (2026-08-16)
 
-**Execution tier: T0.** The owner explicitly directed Codex to perform the implementation
-instead of waiting for Claude. Installation, authentication, live completion, dedicated
-project isolation, launcher implementation, preflight, canonical repo read, and denied-write
-probe are complete. At 18:55 +03 the owner explicitly authorized a new bounded hardening cycle
-for read-only adviser use now; coding remains future-only and disabled. Claude Max remains
-emergency-only and was not used.
+**Safety classification: T0 surface with an explicit owner-directed short setup and review; no
+long multi-model audit loop.** The existing read-only adviser remains separate and unchanged.
 
-1. **Cycle-2 repair and Lead QA complete.** Profile lookup now binds to the authenticated Windows
-   profile, persistent watcher subscriptions cover the entire route through a final quiet drain,
-   exact transient Git lock events are narrowly adjudicated, and the PS5 timeout verification race
-   is repaired. RED/GREEN and live evidence are in
-   `11_TRIAGE/GEMINI_PRO_READ_ONLY_ROUTE_QA_2026-08-16.md`.
-2. **[AI: Lead] Fresh T0 acceptance.** Run fresh `gpt-5.6-sol` xhigh and
-   `claude-opus-5` xhigh reviews against exact cycle-2 bytes. Only after both accept may the route
-   be called repo-ready and the Toolbox row committed.
-3. **Scope remains narrow.** Do not alter shared legacy Antigravity permission storage,
-   protected source, trading/Pine/parity/MTC behavior, schemas, credentials, hosts, or deploys.
-4. **[AI: Lead] Future coding phase — not active.** After read-only acceptance, prepare a separate
-   owner-reviewed pilot in an isolated worktree: unprotected allowlisted files only, safe test
-   commands only, no commit/push/merge, no secrets/network, and mandatory Codex diff/test review.
-   This entry grants no current write permission.
+1. **Coder route operational.** `Invoke-GeminiProCoder.ps1` uses exact
+   `gemini-3.7-flash-high` only in `C:\GEMINI` on `codex/gemini-coder`.
+2. **Scope is explicit per task.** Every writable file must be named with `-AllowFile`. Terminal,
+   Git mutation, web, MCP, user-home access, canonical/frozen checkout access, and protected
+   Bridge/Pine/parity/MTC/schema/credential/deployment paths are denied.
+3. **Live edit passed.** Gemini created exactly one allowlisted temporary Markdown file; Codex
+   verified exact content, one-path status, unchanged branch/HEAD, and protected-path rejection.
+   The temporary file was removed and the worktree is clean. Evidence:
+   `11_TRIAGE/GEMINI_PRO_CODER_ROUTE_QA_2026-08-16.md`.
+4. **Permanent operating rule.** Gemini implements only bounded unprotected tasks. Codex must
+   inspect the actual diff and run tests before any commit. Gemini never commits, pushes, merges,
+   deploys, accesses credentials/live systems, or acts as canonical acceptance authority.
+5. **Read-only route status.** Its overlong final audit was interrupted at owner direction; do not
+   describe that separate route as canonically dual-flagship accepted.
 
 ## OWNER-REQUESTED OPEN — AI-memory continuity audit and repair (2026-08-16)
 
