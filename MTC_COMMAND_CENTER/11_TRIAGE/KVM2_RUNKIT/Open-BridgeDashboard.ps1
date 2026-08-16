@@ -1,97 +1,226 @@
-# Open-BridgeDashboard.ps1 - one-click owner access to the KVM2 Bridge dashboard.
+# Open-BridgeDashboard_v2.ps1 - pinned, agent-only KVM2 dashboard tunnel.
 #
-# What it does: opens a pinned SSH tunnel from this Windows PC to the Bridge's
-# loopback-only listener on KVM2 (127.0.0.1:8790), verifies the dashboard
-# answers through the tunnel, then opens it in the default browser. Closing
-# this window closes the tunnel.
-#
-# Security contract (owner requirement 2026-08-16):
-#   - Stores NO password and NO key passphrase. Authentication comes ONLY from
-#     the already-loaded Windows ssh-agent (the owner runs ssh-add themselves).
-#   - Strict host-key checking against the pinned known_hosts entry; a changed
-#     host key is a hard failure, never auto-accepted.
-#   - Fails with a clear message if the agent, authentication, port forward,
-#     or local port is not usable.
-#   - Contacts ONLY the pinned host below over SSH. No other network action.
-#
-# T0 note: this file is host-contacting and is audited with the deployment
-# package (KVM2_DEPLOYMENT_PLAN_62BF661B_V3_2026-08-16.md).
+# Stores no password, passphrase, or private-key material. The intended public
+# key fingerprint must already be present in the Windows ssh-agent. Closing this
+# window or pressing Ctrl+C closes the tunnel.
 
 $ErrorActionPreference = 'Stop'
 
-# --- pinned configuration (no secrets) ---------------------------------------
-$SshExe      = 'C:\Windows\System32\OpenSSH\ssh.exe'
-$HostAddr    = '152.239.123.231'          # srv1856225 (Hostinger KVM2)
-$HostUser    = 'baris'
-$KnownHosts  = Join-Path $env:USERPROFILE '.ssh\known_hosts'
-$LocalPort   = 18790                      # local end of the tunnel
-$RemoteLoop  = '127.0.0.1:8790'           # Bridge loopback listener on KVM2
+$SshExe       = 'C:\Windows\System32\OpenSSH\ssh.exe'
+$SshAddExe    = 'C:\Windows\System32\OpenSSH\ssh-add.exe'
+$SshKeygenExe = 'C:\Windows\System32\OpenSSH\ssh-keygen.exe'
+$HostAddr     = '152.239.123.231'
+$HostUser     = 'baris'
+$KnownHosts   = Join-Path $env:USERPROFILE '.ssh\known_hosts'
+$PublicKey    = Join-Path $env:USERPROFILE '.ssh\hostinger_kvm2.pub'
+$LocalPort    = 18790
+$RemoteLoop   = '127.0.0.1:8790'
 $DashboardUrl = "http://127.0.0.1:$LocalPort/"
 
 function Fail([string]$Message) {
     Write-Host ''
     Write-Host "PROBLEM: $Message" -ForegroundColor Red
-    Write-Host 'The dashboard was NOT opened. Nothing was changed anywhere.'
+    Write-Host 'The dashboard was NOT opened. No password, passphrase, or private key was read.'
     Read-Host 'Press Enter to close'
     exit 1
 }
 
-# --- preflight ---------------------------------------------------------------
-if (-not (Test-Path -LiteralPath $SshExe)) { Fail "Windows OpenSSH not found at $SshExe." }
-if (-not (Test-Path -LiteralPath $KnownHosts)) { Fail "known_hosts not found at $KnownHosts - the host key pin is missing." }
+function Invoke-NativeCapture {
+    param(
+        [Parameter(Mandatory = $true)][string]$FilePath,
+        [Parameter(Mandatory = $true)][string[]]$Arguments
+    )
 
-# ssh-agent must be running and must hold at least one identity.
+    $previousEap = $ErrorActionPreference
+    $output = @()
+    $exitCode = -1
+    try {
+        # Windows PowerShell 5.1 turns native stderr into ErrorRecords. Native
+        # calls therefore run under Continue, and the real rc is captured from
+        # LASTEXITCODE before the caller makes any decision.
+        $ErrorActionPreference = 'Continue'
+        $output = @(& $FilePath @Arguments 2>&1)
+        $exitCode = $LASTEXITCODE
+    }
+    catch {
+        $output = @($_.Exception.Message)
+    }
+    finally {
+        $ErrorActionPreference = $previousEap
+    }
+    [pscustomobject]@{
+        ExitCode = $exitCode
+        Output = @($output | ForEach-Object { $_.ToString() })
+    }
+}
+
+function Get-Sha256Fingerprints([string[]]$Lines) {
+    @(
+        $Lines | ForEach-Object {
+            [regex]::Matches($_, 'SHA256:[A-Za-z0-9+/=]+') | ForEach-Object { $_.Value }
+        } | Select-Object -Unique
+    )
+}
+
+function Get-SshExitMessage([System.Diagnostics.Process]$Process) {
+    $Process.Refresh()
+    $code = $Process.ExitCode
+    $likely = switch ($code) {
+        255 { 'authentication, pinned host-key, connection, or SSH forwarding failure; read the SSH line above. If it mentions a host key, STOP and report it' }
+        1   { 'local SSH option or forwarding setup failure' }
+        default { 'connection or forwarding failure; read the SSH line above for the exact class' }
+    }
+    "The SSH tunnel exited early with real exit code $code. Likely class: $likely."
+}
+
+function Test-DashboardReady([string]$Uri) {
+    $response = $null
+    $reader = $null
+    try {
+        $request = [System.Net.HttpWebRequest]::Create($Uri)
+        $request.Proxy = $null
+        $request.AllowAutoRedirect = $false
+        $request.Timeout = 1500
+        $request.ReadWriteTimeout = 1500
+        $response = [System.Net.HttpWebResponse]$request.GetResponse()
+        if ([int]$response.StatusCode -ne 200) { return $false }
+        $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
+        return $reader.ReadToEnd().Contains('<title>Crypto Paper Bridge</title>')
+    }
+    catch {
+        return $false
+    }
+    finally {
+        if ($null -ne $reader) { $reader.Dispose() }
+        if ($null -ne $response) { $response.Dispose() }
+    }
+}
+
+foreach ($binary in ($SshExe, $SshAddExe, $SshKeygenExe)) {
+    if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
+        Fail "Required Windows OpenSSH program not found: $binary"
+    }
+}
+if (-not (Test-Path -LiteralPath $KnownHosts -PathType Leaf)) {
+    Fail "Pinned known_hosts file not found at $KnownHosts. STOP and report; do not accept a new key."
+}
+if (-not (Test-Path -LiteralPath $PublicKey -PathType Leaf)) {
+    Fail "Intended PUBLIC key file not found at $PublicKey. The private key will not be read."
+}
+
 $agent = Get-Service ssh-agent -ErrorAction SilentlyContinue
 if ($null -eq $agent -or $agent.Status -ne 'Running') {
-    Fail 'The Windows ssh-agent service is not running. Start it and load the key: Start-Service ssh-agent; ssh-add $env:USERPROFILE\.ssh\hostinger_kvm2'
-}
-& $SshExe -o BatchMode=yes 2>$null | Out-Null   # no-op warmup; ignore
-$agentList = & 'C:\Windows\System32\OpenSSH\ssh-add.exe' -l 2>&1
-if ($LASTEXITCODE -ne 0) {
-    Fail 'No key is loaded in ssh-agent. Load it yourself (the passphrase is typed only into the ssh-add prompt): ssh-add $env:USERPROFILE\.ssh\hostinger_kvm2'
+    Fail 'The Windows ssh-agent service is not running. Start it, then load hostinger_kvm2 yourself with ssh-add.'
 }
 
-# Local port must be free.
+$agentResult = Invoke-NativeCapture -FilePath $SshAddExe -Arguments @('-l', '-E', 'sha256')
+if ($agentResult.ExitCode -eq 2) {
+    Fail 'The ssh-agent service is running but its agent socket cannot be reached. Restart ssh-agent, reload the key, and retry.'
+}
+if ($agentResult.ExitCode -eq 1) {
+    Fail 'The ssh-agent is reachable but has no identities. Load hostinger_kvm2 yourself with ssh-add, then retry.'
+}
+if ($agentResult.ExitCode -ne 0) {
+    Fail "ssh-add could not list identities (exit code $($agentResult.ExitCode)). STOP and report."
+}
+
+$pinResult = Invoke-NativeCapture -FilePath $SshKeygenExe -Arguments @('-F', $HostAddr, '-f', $KnownHosts)
+if ($pinResult.ExitCode -ne 0) {
+    Fail "No pinned host key for $HostAddr exists in $KnownHosts. STOP and report; never accept a new key here."
+}
+
+$publicResult = Invoke-NativeCapture -FilePath $SshKeygenExe -Arguments @('-lf', $PublicKey, '-E', 'sha256')
+if ($publicResult.ExitCode -ne 0) {
+    Fail "The intended PUBLIC key file could not be fingerprinted (exit code $($publicResult.ExitCode))."
+}
+$publicFingerprints = Get-Sha256Fingerprints -Lines $publicResult.Output
+$agentFingerprints = Get-Sha256Fingerprints -Lines $agentResult.Output
+if ($publicFingerprints.Count -ne 1) {
+    Fail 'The intended PUBLIC key produced no unique SHA256 fingerprint. STOP and inspect the public file.'
+}
+if ($agentFingerprints -notcontains $publicFingerprints[0]) {
+    Fail "The intended public-key fingerprint $($publicFingerprints[0]) is not loaded in ssh-agent. Load that key yourself and retry."
+}
+
 $portBusy = Get-NetTCPConnection -LocalPort $LocalPort -State Listen -ErrorAction SilentlyContinue
-if ($portBusy) { Fail "Local port $LocalPort is already in use. Close the other program or an older tunnel window first." }
+if ($portBusy) {
+    Fail "Local port $LocalPort is already in use. Close the other program or older tunnel window first."
+}
 
-# --- open the tunnel ---------------------------------------------------------
-Write-Host "Opening SSH tunnel  127.0.0.1:$LocalPort  ->  KVM2 $RemoteLoop ..." -ForegroundColor Cyan
+# Windows OpenSSH parses this option set with `ssh -G -F NUL` without opening a
+# connection. On Windows, NUL is the null device. `-F NUL` suppresses user and
+# system ssh_config; the explicit NUL IdentityFile removes file identities while
+# the default Windows agent remains available. `none` is the documented disable
+# value for ProxyCommand/ProxyJump. The two known-host options isolate trust to
+# the named pin file. Quoting preserves a USERPROFILE path containing spaces.
+$knownHostsOption = 'UserKnownHostsFile="' + $KnownHosts + '"'
 $sshArgs = @(
+    '-F', 'NUL',
     '-N',
     '-L', "127.0.0.1:${LocalPort}:${RemoteLoop}",
+    '-o', 'IdentityFile=NUL',
+    '-o', 'ProxyCommand=none',
+    '-o', 'ProxyJump=none',
+    '-o', 'GlobalKnownHostsFile=NUL',
+    '-o', $knownHostsOption,
+    '-o', 'PasswordAuthentication=no',
+    '-o', 'KbdInteractiveAuthentication=no',
     '-o', 'BatchMode=yes',
     '-o', 'StrictHostKeyChecking=yes',
-    '-o', "UserKnownHostsFile=$KnownHosts",
     '-o', 'ExitOnForwardFailure=yes',
     '-o', 'ConnectTimeout=10',
     "$HostUser@$HostAddr"
 )
-$tunnel = Start-Process -FilePath $SshExe -ArgumentList $sshArgs -NoNewWindow -PassThru
 
-# Give it a moment, then check it did not die (bad auth / forward failure exits fast).
-Start-Sleep -Seconds 3
-if ($tunnel.HasExited) {
-    Fail "The SSH tunnel exited immediately (code $($tunnel.ExitCode)). Usual causes: key not loaded in ssh-agent, changed host key (STOP - report it), or the forward was refused."
-}
-
-# --- verify the dashboard answers through the tunnel -------------------------
-$ok = $false
-for ($i = 0; $i -lt 5 -and -not $ok; $i++) {
+Write-Host "Opening SSH tunnel 127.0.0.1:$LocalPort -> KVM2 $RemoteLoop ..." -ForegroundColor Cyan
+$tunnel = $null
+$failure = $null
+try {
     try {
-        $resp = Invoke-WebRequest -Uri $DashboardUrl -UseBasicParsing -TimeoutSec 5
-        if ($resp.StatusCode -eq 200) { $ok = $true }
-    } catch { Start-Sleep -Seconds 2 }
+        $tunnel = Start-Process -FilePath $SshExe -ArgumentList $sshArgs -NoNewWindow -PassThru -ErrorAction Stop
+    }
+    catch {
+        throw "Windows could not start ssh.exe: $($_.Exception.Message)"
+    }
+
+    $ready = $false
+    for ($attempt = 1; $attempt -le 10 -and -not $ready; $attempt++) {
+        $tunnel.Refresh()
+        if ($tunnel.HasExited) { throw (Get-SshExitMessage -Process $tunnel) }
+        $ready = Test-DashboardReady -Uri $DashboardUrl
+        $tunnel.Refresh()
+        if ($tunnel.HasExited) { throw (Get-SshExitMessage -Process $tunnel) }
+        if (-not $ready) { Start-Sleep -Seconds 1 }
+    }
+    if (-not $ready) {
+        throw "The SSH child is still running, but the dashboard did not return HTTP 200 with the expected Bridge page at $DashboardUrl. The Bridge service may not be running."
+    }
+
+    Write-Host "Dashboard is answering. Opening $DashboardUrl" -ForegroundColor Green
+    try {
+        Start-Process -FilePath $DashboardUrl -ErrorAction Stop | Out-Null
+    }
+    catch {
+        throw "The dashboard answered, but Windows could not open the browser: $($_.Exception.Message)"
+    }
+    Write-Host ''
+    Write-Host 'Tunnel is ACTIVE. Keep this window open while using the dashboard.'
+    Write-Host 'Close this window or press Ctrl+C to close the tunnel.'
+    Wait-Process -Id $tunnel.Id -ErrorAction Stop
+    $tunnel.Refresh()
+    if ($tunnel.ExitCode -ne 0) { throw (Get-SshExitMessage -Process $tunnel) }
 }
-if (-not $ok) {
-    try { Stop-Process -Id $tunnel.Id -Force -ErrorAction SilentlyContinue } catch {}
-    Fail "The tunnel is up but the dashboard did not answer at $DashboardUrl. Usual cause: the Bridge service is not running on KVM2 (it starts only under a separate owner authorization)."
+catch {
+    $failure = $_.Exception.Message
+}
+finally {
+    if ($null -ne $tunnel) {
+        $tunnel.Refresh()
+        if (-not $tunnel.HasExited) {
+            Stop-Process -Id $tunnel.Id -Force -ErrorAction SilentlyContinue
+            Wait-Process -Id $tunnel.Id -ErrorAction SilentlyContinue
+        }
+    }
 }
 
-# --- open the browser --------------------------------------------------------
-Write-Host "Dashboard is answering. Opening $DashboardUrl" -ForegroundColor Green
-Start-Process $DashboardUrl
-Write-Host ''
-Write-Host 'Tunnel is ACTIVE. Keep this window open while using the dashboard.'
-Write-Host 'Close this window (or press Ctrl+C) to close the tunnel.'
-Wait-Process -Id $tunnel.Id
+if ($failure) { Fail $failure }
