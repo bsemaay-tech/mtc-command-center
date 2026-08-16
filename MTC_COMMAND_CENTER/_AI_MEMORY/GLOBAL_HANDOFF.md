@@ -5,6 +5,29 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol] 2026-08-16 — Help/Wiki Exchange and Control content added
+
+Owner requested that the complete Hyperliquid Exchange-plane explanation be
+preserved for the interactive Help/Wiki and asked whether the Observation and
+Control plane is interactive, where ARM happens, and whether PC/phone access is
+possible. Commit `838adb95` extends the frozen Gate-1 contract and counterpart
+prompt with the required truthful content.
+
+The Wiki must now explain TESTNET, main account versus Agent/API wallet, native
+reduce-only SL/TP, slippage/outage limits, exchange truth, and the separate
+MAINNET gate. It must also state the actual current boundary: V1 already has
+real ARM/DISARM/KILL dashboard endpoints, but has no login/2FA/roles and binds
+to `127.0.0.1:8790`, so it is not a public website or phone-ready remote control.
+The recommended future sequence is private VPS loopback, private tunnel/VPN,
+remote read-only monitoring first, then separately gated authenticated
+owner-only controls; AI remains read-only.
+
+This was a Lead-owned T3 scope/dispatch-package update, not product
+implementation. `git diff --check` passed. Dashboard source, runtime, host,
+network, credentials, broker, ARM, and economic state were untouched. The T1
+product implementation remains capacity-blocked until the exact counterpart
+reset at 2026-08-17 00:30 Europe/Chisinau. Both rows are released.
+
 ## [Codex gpt-5.6-sol] 2026-08-16 — Gemini isolated coder pilot operational
 
 Owner requested that Gemini CLI become a coder without another long audit cycle. A separate
