@@ -1,21 +1,21 @@
-# Open-BridgeDashboard_v2.ps1 - pinned, agent-only KVM2 dashboard tunnel.
+# Open-BridgeDashboard_v3.ps1 - pinned, agent-only KVM2 dashboard tunnel.
 #
-# Stores no password, passphrase, or private-key material. The intended public
-# key fingerprint must already be present in the Windows ssh-agent. Closing this
-# window or pressing Ctrl+C closes the tunnel.
+# Stores no password, passphrase, or private-key material. No identity key file
+# is opened: the pinned expected fingerprint must already be present in the
+# Windows ssh-agent. Closing this window or pressing Ctrl+C closes the tunnel.
 
 $ErrorActionPreference = 'Stop'
 
-$SshExe       = 'C:\Windows\System32\OpenSSH\ssh.exe'
-$SshAddExe    = 'C:\Windows\System32\OpenSSH\ssh-add.exe'
-$SshKeygenExe = 'C:\Windows\System32\OpenSSH\ssh-keygen.exe'
-$HostAddr     = '152.239.123.231'
-$HostUser     = 'baris'
-$KnownHosts   = Join-Path $env:USERPROFILE '.ssh\known_hosts'
-$PublicKey    = Join-Path $env:USERPROFILE '.ssh\hostinger_kvm2.pub'
-$LocalPort    = 18790
-$RemoteLoop   = '127.0.0.1:8790'
-$DashboardUrl = "http://127.0.0.1:$LocalPort/"
+$SshExe              = 'C:\Windows\System32\OpenSSH\ssh.exe'
+$SshAddExe           = 'C:\Windows\System32\OpenSSH\ssh-add.exe'
+$SshKeygenExe        = 'C:\Windows\System32\OpenSSH\ssh-keygen.exe'
+$HostAddr            = '152.239.123.231'
+$HostUser            = 'baris'
+$KnownHosts          = Join-Path $env:USERPROFILE '.ssh\known_hosts'
+$ExpectedFingerprint = 'SHA256:8b6bl/srDevzQ1rycf9FcQFgZXblSMddqak/9JsHBC8'
+$LocalPort           = 18790
+$RemoteLoop          = '127.0.0.1:8790'
+$DashboardUrl        = "http://127.0.0.1:$LocalPort/"
 
 function Fail([string]$Message) {
     Write-Host ''
@@ -104,9 +104,6 @@ foreach ($binary in ($SshExe, $SshAddExe, $SshKeygenExe)) {
 if (-not (Test-Path -LiteralPath $KnownHosts -PathType Leaf)) {
     Fail "Pinned known_hosts file not found at $KnownHosts. STOP and report; do not accept a new key."
 }
-if (-not (Test-Path -LiteralPath $PublicKey -PathType Leaf)) {
-    Fail "Intended PUBLIC key file not found at $PublicKey. The private key will not be read."
-}
 
 $agent = Get-Service ssh-agent -ErrorAction SilentlyContinue
 if ($null -eq $agent -or $agent.Status -ne 'Running') {
@@ -129,17 +126,9 @@ if ($pinResult.ExitCode -ne 0) {
     Fail "No pinned host key for $HostAddr exists in $KnownHosts. STOP and report; never accept a new key here."
 }
 
-$publicResult = Invoke-NativeCapture -FilePath $SshKeygenExe -Arguments @('-lf', $PublicKey, '-E', 'sha256')
-if ($publicResult.ExitCode -ne 0) {
-    Fail "The intended PUBLIC key file could not be fingerprinted (exit code $($publicResult.ExitCode))."
-}
-$publicFingerprints = Get-Sha256Fingerprints -Lines $publicResult.Output
 $agentFingerprints = Get-Sha256Fingerprints -Lines $agentResult.Output
-if ($publicFingerprints.Count -ne 1) {
-    Fail 'The intended PUBLIC key produced no unique SHA256 fingerprint. STOP and inspect the public file.'
-}
-if ($agentFingerprints -notcontains $publicFingerprints[0]) {
-    Fail "The intended public-key fingerprint $($publicFingerprints[0]) is not loaded in ssh-agent. Load that key yourself and retry."
+if ($agentFingerprints -notcontains $ExpectedFingerprint) {
+    Fail "The expected public-key fingerprint $ExpectedFingerprint is not loaded in ssh-agent. Load that key yourself and retry."
 }
 
 $portBusy = Get-NetTCPConnection -LocalPort $LocalPort -State Listen -ErrorAction SilentlyContinue
@@ -150,9 +139,12 @@ if ($portBusy) {
 # Windows OpenSSH parses this option set with `ssh -G -F NUL` without opening a
 # connection. On Windows, NUL is the null device. `-F NUL` suppresses user and
 # system ssh_config; the explicit NUL IdentityFile removes file identities while
-# the default Windows agent remains available. `none` is the documented disable
-# value for ProxyCommand/ProxyJump. The two known-host options isolate trust to
-# the named pin file. Quoting preserves a USERPROFILE path containing spaces.
+# the default Windows agent remains available. `IdentitiesOnly no` is deliberate:
+# authentication is agent-based, SSH may offer other loaded agent keys, and the
+# server can accept only keys already present in its authorized_keys. `none` is
+# the documented disable value for ProxyCommand/ProxyJump. The two known-host
+# options isolate trust to the named pin file. Quoting preserves a USERPROFILE
+# path containing spaces.
 $knownHostsOption = 'UserKnownHostsFile="' + $KnownHosts + '"'
 $sshArgs = @(
     '-F', 'NUL',
