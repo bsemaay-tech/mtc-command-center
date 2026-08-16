@@ -25,3 +25,24 @@ Dry run failed closed at the venv preflight (as designed): KVM2 lacks
 package `python3.12-venv` (with required dependencies) via apt, then continue
 the approved V6 §3 execution. No mutation had occurred; the one bounded
 install attempt was unspent.
+
+## Supplementary authorization — UFW comment-normalization repair — 2026-08-16
+
+Second dry-run stop (fail-closed, correct): live UFW rows carry Ubuntu's
+trailing `# SSH` comments; the parser models no trailing comment → UNMODELLED.
+Owner authorizes ONLY: the one-line trailing-comment normalization repair,
+focused fixtures + RED/GREEN proving (1) `22/tcp ALLOW IN Anywhere # SSH`
+accepted, (2) a commented rule exposing 8790 still rejected, (3) unknown/
+malformed forms remain fail-closed; confirmation-only closure by both
+reviewers; rebuild/re-pin of candidate, payload, plan, annex, sentence.
+NOT yet authorized: continuing installation or contacting KVM2 with changed
+bytes — new pins + corrected sentence go to the owner for signature first.
+
+## Execution-record correction (owner-directed)
+
+KVM2 current state: the uploaded OLD payload `~/payload-acdf4e37` is present
+in /home/baris; the separately authorized `python3.12-venv` package (with
+dependencies) is installed and is the new authorized baseline. NO Bridge
+installation occurred; no service was created or started; the bounded
+installation attempt remains UNSPENT. The updated plan must account for
+removal or replacement of the old payload.
