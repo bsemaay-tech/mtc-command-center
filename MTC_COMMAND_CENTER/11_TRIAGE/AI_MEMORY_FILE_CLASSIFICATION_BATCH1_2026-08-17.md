@@ -1,8 +1,8 @@
 # AI Memory File Classification — Batch 1
 
-**Date:** 2026-08-17 01:29 +03:00  
-**Mode:** read-only classification; this report is the only write  
-**Repository:** `C:\LAB\Tradingview_LAB_CLEAN`  
+**Date:** 2026-08-17 01:29 +03:00
+**Mode:** read-only classification; this report is the only write
+**Repository:** `C:\LAB\Tradingview_LAB_CLEAN`
 **Result:** authority files identified for preservation, three live drift risks isolated, and historical June artifacts grouped for no-loss archival review.
 
 ## 1. Scope and exclusions
