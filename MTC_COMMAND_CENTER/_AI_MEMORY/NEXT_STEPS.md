@@ -1,5 +1,27 @@
 # NEXT_STEPS
 
+## STANDING DAILY — deployment Phase 1 / Phase 2 watch (2026-08-16, owner-requested)
+
+**Tier: T3 (status/monitoring artifact). Standing entry — do not archive while any phase is open.**
+
+1. **[AI: Any] Daily:** read `_AI_MEMORY/PHASE_WATCH.md`; if `WATCH_ACTIVE: YES`,
+   run the day's checklist for the current phase, tick boxes, check the last ~6
+   entries of `C:\LAB\HERMES_WATCH\log\phase_watch.log` (Hermes 4-hour cron),
+   escalate any WARN/FAIL here as a new dated entry.
+2. **[AI: Claude] Activation:** after the KVM2 install + first DISARMED start
+   (live queue), flip `WATCH_ACTIVE: YES`, set `PHASE: 1`, fill `STATUS_SOURCE`
+   in `PHASE_WATCH.md`.
+3. **[AI: Barış] Phase-2 gates (owner-only, in person):** TESTNET wallet key
+   typed by Barış himself; separate ARM sentence, TESTNET only. AI never types,
+   stores, or requests key material.
+4. **Safety fence:** watch is read-only; no install/start, ARM/KILL, credential,
+   config, host, TESTNET/MAINNET-economic action is authorized by this entry.
+5. **Housekeeping drafts (2026-08-16, prepared for owner):**
+   `11_TRIAGE/WORKTREE_SPRAWL_INVENTORY_2026-08-16.md`,
+   `11_TRIAGE/OWNER_DECISION_EVIDENCE_WINDDOWN_DRAFT_2026-08-16.md`,
+   `11_TRIAGE/OWNER_DECISION_AI_BUDGET_DRAFT_2026-08-16.md` — **[AI: Barış]**
+   answer the owner-ask sections; **[AI: Claude]** execute only after answers.
+
 ## GLM SUPPLEMENTAL ROUTING POLICY — IMPLEMENTED 2026-07-27
 
 Policy codified in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical, do not copy table elsewhere). Cross-references added to all required files. Stale `claude-opus-4-8` → `claude-opus-5` fixed in `SPRINT_WORKFLOW.md`.
