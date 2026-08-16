@@ -5,6 +5,35 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol] 2026-08-17 — Help/Wiki implemented; T1 cap boundary preserved
+
+Claude Max implemented the complete interactive Bridge Help/System Map in the
+isolated `C:\BRIDGE_HELP_IMPL` worktree (`codex/bridge-help-wiki-impl`). The
+six-file scope contains a seven-page Dashboard shell with an interactive,
+keyboard-accessible four-plane system map; 34 documented components, five key
+flows, eight built-now/still-required rows, plain/technical explanations, and
+one JSON knowledge source shared by the human UI and later AI readers. Desktop
+and 390 px phone QA passed; the phone document width is 375 px with no
+horizontal overflow. Lead checks passed: 37 focused tests, Node syntax, JSON
+relationships/sources, and whitespace. The complete suite is 1054 passed plus
+the same two pre-existing failures already reproduced without this feature.
+
+Round 1 found seven inaccurate safety/status statements; Claude Max repaired
+all seven and both optional truthfulness nits. Fresh Codex round 2 then found
+two remaining source-truth defects: the LLM gate is dormant/unwired scaffolding
+(`NullLLMGate` is what runtime constructs), and Dashboard V1 has six original
+pages plus Help, shows a next-bar UTC time rather than a countdown, and has no
+automatic WebSocket reconnect. Round 2 returned `REQUEST_CHANGES`; therefore
+the mandatory T1 two-round cap is exhausted. No third repair was started, no
+feature byte was committed, and no host/deploy/trading/economic action occurred.
+The exact minimal repair and explicit owner cap-waiver boundary are recorded at
+the top of `NEXT_STEPS.md`. The isolated worktree is the preserved source of the
+uncommitted implementation.
+
+The required GLM-5.2 conditional second-opinion route was retried fresh for
+round 2 but returned HTTP 429 usage-limit reset at 2026-08-17 10:21:23; it did
+not produce an accepting or adverse code verdict and was not silently replaced.
+
 ## [Codex gpt-5.6-sol] 2026-08-16 — Owner's seven-workstream roadmap recorded
 
 Before stopping for the night, Barış explicitly preserved seven future

@@ -70,6 +70,27 @@ run items 1–3 in isolated V2/dashboard worktrees where safe; resume item 4 as 
 separate research lane; perform items 5–7 only after inventories and exact
 preservation rules are accepted.
 
+## OWNER-REQUESTED BLOCKED — finish interactive Bridge Help / System Map (2026-08-17)
+
+**[AI: Claude] T1 audit cap reached; preserve the isolated worktree.** Claude
+Max implemented the complete six-file Help/Wiki in `C:\BRIDGE_HELP_IMPL` on
+branch `codex/bridge-help-wiki-impl`. It is visually verified on desktop and a
+390 px phone viewport, has no horizontal overflow, and the post-repair focused
+suite is 37 passed. The complete Bridge suite is 1054 passed with the same two
+independently reproduced pre-existing failures (KVM2 ledger artifact hash and
+WAL bundle schema-version expectation). Nothing was deployed or committed.
+
+The fresh Codex T1 round-2 audit returned `REQUEST_CHANGES` for exactly two
+remaining truth corrections: (1) describe the LLM gate as dormant/unwired
+scaffolding because runtime injects `NullLLMGate`, and mark its Store/logging
+links planned rather than operational; (2) describe Dashboard V1 as six
+original pages plus Help, a next-bar UTC time rather than a countdown, and an
+initial WebSocket snapshot with no automatic reconnect. The T1 two-round cap is
+exhausted. Do not start another repair/re-audit silently. Resume only after an
+explicit owner cap waiver authorizes one narrow truth-only repair and one fresh
+final T1 audit. Then commit the accepted six files, transfer the feature commit
+to `codex/bridge-help-wiki`, and complete Gate 7.
+
 ## OWNER-REQUESTED PENDING — record Dashboard VPS hosting decision (2026-08-16)
 
 **Documentation tier: T2.** Exact Claude counterpart attempt at 22:02 +03 was
