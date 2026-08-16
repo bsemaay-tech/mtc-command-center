@@ -17,14 +17,27 @@ anywhere; messages prefixed `[PHASE WATCH][KVM2]` to stay distinguishable); or
 `C:\LAB\HERMES_WATCH\Set-TelegramCredentials.ps1` (hidden `Read-Host
 -AsSecureString` prompts → advapi32 CredWrite; accepts no arguments by design).
 Either way the token can never appear in a command line, history, log, or the repo.
-NOTE: as of this edit the wrapper header documents route (a) while its
-`Send-WatchAlert` code still reads Credential Manager — reconciling this mismatch
-is a named T0-review item.
+
+**UPDATE 2026-08-16 late night — route (a) FINALIZED and implemented by explicit
+owner directive** ("Reuse the existing MTC_Telegram bot @MTCHyperbot … existing
+owner-managed user environment variables TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID"):
+`Send-WatchAlert` now reads those two USER env vars at runtime (User scope with
+process fallback), the CredRead Add-Type block was removed, and every message is
+prefixed `[PHASE WATCH][KVM2]`. The route mismatch (former T0-review finding 6) is
+therefore RESOLVED in code; the review verifies rather than picks. Values were
+never displayed, copied, rotated, deleted, or logged; presence had been verified by
+the owner without reading values. Helper route (b) stays unused; the helper file
+remains for review reference only. **§6.3 supervised test EXECUTED on the same
+owner directive: exactly one fake-WARN run at 23:48:18 → `NOTIFY-SENT` attempt 1 —
+one TEST-labelled, `[PHASE WATCH][KVM2]`-prefixed message via @MTCHyperbot; only
+api.telegram.org contacted, no KVM2 endpoint touched, `WATCH_ACTIVE: NO`
+unchanged.** This is recorded as review evidence, not as deployment.
 Pre-review hardening already applied: `NOTIFY-FAIL` log line masks the token if an
 exception message embeds the request URI. T0 review record:
 `PHASE_WATCH_NOTIFIER_T0_REVIEW_PENDING_2026-08-16.md`. Order now: T0 review →
-owner runs the helper (§6.2, redesigned) → §6.3 supervised fake-WARN test →
-activation. Scheduled task, PHASE_WATCH.md gates, KVM2: untouched.
+activation preconditions (PHASE_WATCH.md) → activation. Automatic alerting on real
+runs stays structurally unreachable until then (active runs require activation,
+which requires the accepting T0 pair). Scheduled task, KVM2: untouched.
 
 ## 1. Current state (verified 2026-08-16)
 

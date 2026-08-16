@@ -117,13 +117,16 @@ promotable strategy (Phase 3, QuantLens research) and its own gate. No shortcut.
 - Hermes is read-only here: it never ARMs, never touches keys, never edits repo files.
 - **Notifications: Telegram notifier code present but DEPLOYMENT HELD — owner
   classified watcher + credential/network handling as T0; review pending
-  (`11_TRIAGE/PHASE_WATCH_NOTIFIER_T0_REVIEW_PENDING_2026-08-16.md`). Credential
-  entry ONLY via `C:\LAB\HERMES_WATCH\Set-TelegramCredentials.ps1` (hidden prompts;
-  the old cmdkey commands are withdrawn)** — immediate WARN/FAIL on active runs,
-  one daily OK summary (first run after 07:00), never on PENDING, status-lines-only
-  messages. Credentials = Credential Manager entries `MTC-TG-BOT-TOKEN` /
-  `MTC-TG-CHAT-ID` (owner-created via cmdkey, outside Git); until they exist the
-  wrapper logs `NOTIFY-SKIP` and sends nothing. Design + status:
+  (`11_TRIAGE/PHASE_WATCH_NOTIFIER_T0_REVIEW_PENDING_2026-08-16.md`).** Route
+  FINALIZED by owner directive 2026-08-16 late night: reuse the existing
+  @MTCHyperbot via its owner-managed USER env vars `TELEGRAM_BOT_TOKEN` /
+  `TELEGRAM_CHAT_ID` (values never displayed/copied/rotated/deleted/logged; the
+  cmdkey route and the credential helper are withdrawn/unused). Every message is
+  prefixed `[PHASE WATCH][KVM2]` to stay distinguishable from Bridge messages on
+  the same bot. Behavior: immediate WARN/FAIL on active runs, one daily OK summary
+  (first run after 07:00), never on PENDING, status-lines-only messages; missing
+  env vars → `NOTIFY-SKIP`, watch unaffected. Supervised one-message fake-WARN
+  test PASSED 2026-08-16 23:48 (review evidence, not deployment). Design + status:
   `11_TRIAGE/PHASE_WATCH_TELEGRAM_NOTIFIER_DESIGN_2026-08-16.md`.
 
 ## Safety fence

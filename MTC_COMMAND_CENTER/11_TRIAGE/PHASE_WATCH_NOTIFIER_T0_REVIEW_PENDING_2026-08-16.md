@@ -41,12 +41,23 @@ complete, in order:
    output (see the 2026-08-16 zombie-worktree false-PASS instance in session
    memory) — verify the wrapper's git/Hermes failure paths distinguish
    "no output" from "OK".
-6. **Header/code credential-route mismatch:** the wrapper header records the owner
-   directive to REUSE the existing @MTCHyperbot USER env vars
-   (`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`), but `Send-WatchAlert` still reads
-   Credential Manager (`MTC-TG-BOT-TOKEN`/`MTC-TG-CHAT-ID`). Review must pick one
-   route, make code and docs agree, and verify the env-var route does not leak
-   values into child-process environments or logs.
+6. **Header/code credential-route mismatch — RESOLVED IN CODE 2026-08-16 late
+   night by explicit owner directive, review now verifies:** `Send-WatchAlert`
+   reads the existing @MTCHyperbot USER env vars
+   (`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`; User scope, process fallback), the
+   CredRead Add-Type block was removed, every message carries the fixed
+   `[PHASE WATCH][KVM2]` prefix. Reviewers: verify the env-var route does not leak
+   values into child-process environments (note: the wrapper spawns hermes.exe,
+   which inherits process env — assess) or logs, and that the prefix cannot be
+   omitted on any send path.
+
+**Timeline note for reviewers:** on the same owner directive, exactly one
+supervised `-FakeWarnTest` run was executed 2026-08-16 23:48:18 → `NOTIFY-SENT`
+attempt 1 (one TEST-labelled message, no KVM2 contact, `WATCH_ACTIVE: NO`
+unchanged). Owner-ordered bounded test, recorded as evidence — not deployment;
+automatic alerting remains unreachable until activation, which requires this
+review's accepting pair. The `Set-TelegramCredentials.ps1` helper is UNUSED under
+the finalized env-var route; it stays in scope as reference only.
 
 ## Explicitly out of scope
 

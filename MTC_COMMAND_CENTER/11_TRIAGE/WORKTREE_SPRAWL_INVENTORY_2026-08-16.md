@@ -119,7 +119,7 @@ Clean working tree AND (branch fully pushed with 0 commits ahead of its upstream
 | `C:/MORNAUD_5A` | detached:5a9bb92 | 0 | detached | no | 2026-08-02 23:42:15 | Clean, detached HEAD reachable from a pushed origin/* branch (not master) |
 | `C:/MORNAUD_C5` | detached:c5a4070 | 0 | detached | no | 2026-08-02 23:33:26 | Clean, detached HEAD reachable from a pushed origin/* branch (not master) |
 | `C:/P1IF` | feature/interim-daily-loss-wiring | 0 | 0 | yes | 2026-07-18 16:22:33 | Clean, branch 'feature/interim-daily-loss-wiring' fully pushed to origin/feature/interim-daily-loss-wiring (0 ahead) |
-| `C:/P2RT` | detached:008e065 | 0 | detached | yes | 2026-07-13 18:03:34 | Clean, detached HEAD reachable from origin/master |
+| ~~`C:/P2RT`~~ | detached:008e065 | 0 | detached | yes | 2026-07-13 18:03:34 | **RECLASSIFIED ACTIVE / DO NOT TOUCH (owner, 2026-08-16 late night)** — powers the RUNNING scheduled task `MTC-Bridge-P2` and its Telegram messages; see "P2RT reclassification" section |
 | `C:/TSP0` | feature/ts-p0-baseline | 0 | 0 | yes | 2026-07-19 23:55:07 | Clean, branch 'feature/ts-p0-baseline' fully pushed to origin/feature/ts-p0-baseline (0 ahead) |
 | `C:/WP2AC` | detached:779bd03 | 0 | detached | no | 2026-08-09 09:12:48 | Clean, detached HEAD reachable from a pushed origin/* branch (not master) |
 | `C:/WP2AD` | detached:779bd03 | 0 | detached | no | 2026-08-09 09:13:02 | Clean, detached HEAD reachable from a pushed origin/* branch (not master) |
@@ -264,7 +264,7 @@ git -C C:\LAB\Tradingview_LAB_CLEAN worktree remove "C:/LAB/TIERPOL"
 git -C C:\LAB\Tradingview_LAB_CLEAN worktree remove "C:/MORNAUD_5A"
 git -C C:\LAB\Tradingview_LAB_CLEAN worktree remove "C:/MORNAUD_C5"
 git -C C:\LAB\Tradingview_LAB_CLEAN worktree remove "C:/P1IF"
-git -C C:\LAB\Tradingview_LAB_CLEAN worktree remove "C:/P2RT"
+# C:/P2RT — command WITHDRAWN 2026-08-16 late night: RECLASSIFIED ACTIVE / DO NOT TOUCH (runs live task MTC-Bridge-P2). NEVER remove.
 git -C C:\LAB\Tradingview_LAB_CLEAN worktree remove "C:/TSP0"
 git -C C:\LAB\Tradingview_LAB_CLEAN worktree remove "C:/WP2AC"
 git -C C:\LAB\Tradingview_LAB_CLEAN worktree remove "C:/WP2AD"
@@ -523,3 +523,23 @@ deletion (plain `Remove-Item`, no git involved) awaits explicit owner approval.
 2. Reachability check must refuse an empty SHA instead of calling
    `git branch -r --contains` without an argument.
 3. Any path-set comparison over this repo runs with `-c core.quotePath=false`.
+
+---
+
+## P2RT reclassification + scheduled-task cross-check rule — 2026-08-16 late night (owner directive)
+
+**`C:/P2RT` is ACTIVE / DO NOT TOUCH.** It powers the currently RUNNING Windows
+scheduled task `MTC-Bridge-P2` and the existing @MTCHyperbot Telegram messages.
+It sat in SAFE-REMOVE (clean, reachable, idle since 2026-07-13) with a prepared
+removal command — the classification heuristic (clean + pushed + old mtime) is
+blind to a task that EXECUTES from a worktree without writing to it. Never remove,
+prune, reset, or alter C:/P2RT while that task exists.
+
+**New mandatory rule for every future removal batch:** before removing ANY
+worktree, cross-check its path against all scheduled-task actions
+(`schtasks /Query /V /FO CSV`, match on the worktree path) and stop on any hit.
+
+**Fresh sweep evidence (2026-08-16 late night):** all 421 scheduled tasks scanned
+against all registered worktree paths — exactly ONE hit: `\MTC-Bridge-P2` →
+`C:\P2RT` (Status: Running). No other worktree, including every remaining
+SAFE-REMOVE candidate and the batch-1 slate, is referenced by any scheduled task.
