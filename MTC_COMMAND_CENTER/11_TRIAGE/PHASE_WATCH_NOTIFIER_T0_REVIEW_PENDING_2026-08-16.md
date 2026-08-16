@@ -19,22 +19,24 @@ complete, in order:
 
 | Artifact | What it does |
 |---|---|
-| `C:\LAB\HERMES_WATCH\phase_watch_check.ps1` | 4-hour cron wrapper: checklist snapshot from `origin/master`, PENDING gate, Hermes (DeepSeek) invocation, `Send-WatchAlert` (CredRead → Telegram sendMessage), daily-summary dedup, `-TestReport` / `-FakeWarnTest` switches |
-| `C:\LAB\HERMES_WATCH\Set-TelegramCredentials.ps1` | Interactive-only credential entry: no arguments accepted, hidden `Read-Host -AsSecureString`, advapi32 `CredWrite`, in-memory zeroing |
+| `C:\LAB\HERMES_WATCH\phase_watch_check.ps1` | 4-hour cron wrapper (binding-spec rewrite 2026-08-16 ~23:52): checklist snapshot from `origin/master`, PENDING gate, Hermes (DeepSeek) invocation, `Send-WatchAlert` (existing USER env vars `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`, presence-check only → Telegram sendMessage, fixed `[PHASE WATCH][KVM2]` prefix), generic-status-only failure logs (no exception text, no URI), daily-summary dedup, `-TestReport` / `-FakeWarnTest` (single attempt, `[TEST]` prefix, before/after `WATCH_ACTIVE: NO` assertions) |
+| `C:\LAB\HERMES_WATCH\Set-TelegramCredentials.ps1` | WITHDRAWN inert stub (prints the binding directive, exits 1) — no Credential Manager entries can be created; kept only so the withdrawal is auditable |
 | Scheduled task `MTC-HermesPhaseWatch` | Interactive-user task, every 4 h |
 
 ## Known findings for the reviewers (Lead-identified, to be independently re-checked)
 
-1. **Token-in-URI exception leak (pre-review fix applied):** the Bot API URL embeds
-   the token; a thrown `Invoke-RestMethod` exception can carry the URI into the
-   `NOTIFY-FAIL` log line. A mask (`-replace` token → `<token>`) was applied
-   2026-08-16 before this review — verify it covers all exception shapes
-   (inner exceptions, `ErrorDetails`).
+1. **Token-in-URI exception leak (superseded by stronger fix):** the Bot API URL
+   embeds the token; a thrown `Invoke-RestMethod` exception can carry the URI. The
+   earlier token-mask was REPLACED (binding-spec rewrite): `NOTIFY-FAIL` now logs
+   only exception TYPE name + HTTP status code — never exception message, URI, or
+   `ErrorDetails`. Verify no other code path (transcripts, `$Error`, -Verbose
+   streams) can persist the raw exception.
 2. **Message content fencing:** alert text is built from `CHECK/SUMMARY/TEST` status
    lines only (`Get-StatusLines`); verify no path lets raw Hermes output or env
    values into a message.
-3. **P/Invoke surface:** two Add-Type blocks (CredRead in the wrapper, CredWrite in
-   the helper) — verify blob size arithmetic, zeroing, and failure paths.
+3. **P/Invoke surface — ELIMINATED:** both Add-Type blocks are gone (CredRead
+   removed with the env-var route; the CredWrite helper is an inert stub). Verify
+   nothing reintroduces them.
 4. **Daily-summary log parsing:** regex over the log for WARN/FAIL counting —
    verify a crafted log line cannot suppress or force a summary.
 5. **Self-confirming-check discipline:** every check must fail loudly on empty
@@ -56,8 +58,9 @@ supervised `-FakeWarnTest` run was executed 2026-08-16 23:48:18 → `NOTIFY-SENT
 attempt 1 (one TEST-labelled message, no KVM2 contact, `WATCH_ACTIVE: NO`
 unchanged). Owner-ordered bounded test, recorded as evidence — not deployment;
 automatic alerting remains unreachable until activation, which requires this
-review's accepting pair. The `Set-TelegramCredentials.ps1` helper is UNUSED under
-the finalized env-var route; it stays in scope as reference only.
+review's accepting pair. The `Set-TelegramCredentials.ps1` helper is now an
+INERT WITHDRAWN stub under the finalized env-var route (no new bot, no new
+Credential Manager entries — binding owner instruction).
 
 ## Explicitly out of scope
 

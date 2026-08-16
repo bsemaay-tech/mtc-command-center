@@ -32,8 +32,18 @@ owner directive: exactly one fake-WARN run at 23:48:18 → `NOTIFY-SENT` attempt
 one TEST-labelled, `[PHASE WATCH][KVM2]`-prefixed message via @MTCHyperbot; only
 api.telegram.org contacted, no KVM2 endpoint touched, `WATCH_ACTIVE: NO`
 unchanged.** This is recorded as review evidence, not as deployment.
-Pre-review hardening already applied: `NOTIFY-FAIL` log line masks the token if an
-exception message embeds the request URI. T0 review record:
+
+**Final wrapper state (2026-08-16 ~23:52, binding-instruction rewrite):** the
+wrapper was rewritten to the owner's binding spec on top of the env-var
+implementation — failure logging now withholds exception text ENTIRELY (generic
+sanitized status only: exception type + HTTP code; never a raw URI or raw
+exception, superseding the earlier token-mask approach); `-FakeWarnTest` now
+enforces the spec in code (prefix `[PHASE WATCH][KVM2][TEST]`, exactly one send
+attempt with retries disabled, `WATCH_ACTIVE: NO` asserted before AND after from a
+fresh origin/master read, abort without sending on precondition failure); the
+credential helper `Set-TelegramCredentials.ps1` is now an INERT WITHDRAWN stub
+(prints the binding directive and exits 1 — no new Credential Manager entries can
+be created by it). T0 review record:
 `PHASE_WATCH_NOTIFIER_T0_REVIEW_PENDING_2026-08-16.md`. Order now: T0 review →
 activation preconditions (PHASE_WATCH.md) → activation. Automatic alerting on real
 runs stays structurally unreachable until then (active runs require activation,
