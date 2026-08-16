@@ -1,5 +1,11 @@
 # Single-sourced estimate register — 2026-08-15
 
+> **Correction, 2026-08-16 morning:** the R38 "archive sub-question open" cell
+> is answered — owner decision §5 (`OWNER_DECISIONS_2026-08-16_MORNING.md`)
+> adopts the off-host encrypted archive; wallet deferral unchanged. Per §6, any
+> future Pathscope critical-path labour rows are void (R01/R02 remain consumed
+> historical cost).
+
 Status: planning/evidence register only. `OWNER` denotes an owner decision/action rather than estimable implementer labour; `NO SOURCED ESTIMATE` denotes defined work with no disjoint sourced row price. `MTC_COMMAND_CENTER/11_TRIAGE/DEPLOY_WORK_BREAKDOWN_2026-08-15.md:31-36`
 
 ## Register result

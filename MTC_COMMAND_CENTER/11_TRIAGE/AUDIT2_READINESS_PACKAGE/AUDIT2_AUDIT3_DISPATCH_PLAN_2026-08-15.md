@@ -1,5 +1,12 @@
 # Audit 2 and Audit 3/Gate 6 dispatch plan and shared-reserve recommendation
 
+> **Correction, 2026-08-16 morning:** the reserve question this plan poses is
+> answered — owner decision §4 (`OWNER_DECISIONS_2026-08-16_MORNING.md`) keeps
+> the 6 h pool as a hard cap, accepts BLOCK on exhaustion, and makes metering
+> both Audit 2 sessions mandatory, with measured actuals presented before
+> Audit 3/Gate 6. Metering mechanism:
+> `AUDIT2_METERING_AMENDMENT_2026-08-16.md` (same directory).
+
 Status: **PLANNING MATERIAL ONLY — NO DISPATCH, NO GATE VERDICT, NO ACCEPTANCE, NO AUTHORIZATION.** The Audit 2 package itself is a readiness assembly that neither dispatches nor accepts an audit, contacts a host, executes an artifact, creates a freeze, or creates authority (`MTC_COMMAND_CENTER/11_TRIAGE/AUDIT2_READINESS_PACKAGE/AUDIT2_HANDOFF_PACKAGE.md:3-6`).
 
 ## 1. Controlling roster and the apparent plan conflict

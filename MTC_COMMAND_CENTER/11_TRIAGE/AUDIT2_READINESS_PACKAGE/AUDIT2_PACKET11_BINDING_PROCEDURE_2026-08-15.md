@@ -3,6 +3,13 @@
 Status: **PROCEDURE DEFINITION ONLY — CREATES NO AUTHORITY, NO ACCEPTANCE, NO GATE DECISION,
 NO INVENTED FIGURE.**
 
+> **Correction, 2026-08-16 morning:** the open-input row "Plan-authority
+> reading" is answered — owner decision §3
+> (`../OWNER_DECISIONS_2026-08-16_MORNING.md`) adopted the cumulative sentence
+> from `PLAN_AUTHORITY_RECONCILIATION_2026-08-15.md`. Per §6, the Pathscope
+> gate-2 row becomes a disclosure-presence record and may not contribute to
+> gate closure.
+
 - Produced: 2026-08-15/16 night, lane L5. Repository read read-only at `C:\RO`, detached at
   `25564449`. No repository file was written, created, deleted, or modified; no index-locking
   Git command was run.

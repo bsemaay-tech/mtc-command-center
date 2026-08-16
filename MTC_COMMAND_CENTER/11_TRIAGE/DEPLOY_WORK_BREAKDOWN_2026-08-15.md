@@ -1,5 +1,10 @@
 Status: WORK BREAKDOWN — PLANNING ONLY, NO AUTHORITY, NO GATE OPENED
 
+> **Superseded by `DEPLOY_WORK_BREAKDOWN_V2_2026-08-16.md` (2026-08-16).** Also:
+> the "plan authority remains contested" reading rule is resolved — owner
+> decision §3 (`OWNER_DECISIONS_2026-08-16_MORNING.md`) ratified the cumulative
+> reading.
+
 # Dependency-ordered deploy work breakdown — 2026-08-15
 
 ## Scope, frozen subject, and reading rule

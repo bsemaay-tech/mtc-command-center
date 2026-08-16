@@ -1,5 +1,31 @@
 # GLOBAL_HANDOFF
 
+## [Fable 5 Lead] 2026-08-16 morning — ALL SIX owner decisions answered; Wave A executed
+
+Barış answered every pending decision via the chat decision UI at 07:55 +03,
+recorded in `11_TRIAGE/OWNER_DECISIONS_2026-08-16_MORNING.md` (commit `c84497c8`):
+§1 staging-channel **admin configuration review approved** (documentation only);
+§2 Step-8/10 cycle **Option A — two-commit chain**; §3 plan authority
+**cumulative reading ratified**; §4 audit reserve **6 h hard cap stays, both
+Audit 2 sessions metered**; §5 pre-cutover archive **approved**; §6 Pathscope
+**accepted as supplemental with disclosure, off the critical path, no further
+cycle**. Every earlier "outstanding owner decisions" or "Barış must choose"
+sentence in older sections below is superseded by that record.
+
+Wave A (11 lanes, ~15 minutes wall-clock) turned each decision into a draft
+artifact, committed at `ac6b74cf`: two-commit chain design V1, Pathscope
+supplemental disclosure draft, owner-forwardable admin question sheet,
+plan-authority ratification record, archive procedure draft, Phase-2 v2
+independent verdicts (0/10 accept, 8 new defects), P9 producer kickoff repair
+(producer blocked on the reviewed egress policy — drafting dispatched),
+metering amendment, WP-level closure template. Bridge merge readiness verified
+read-only: sole blocker was one-commit docs-only tip drift; input refresh
+record `W := 7d4e9a96` committed at `a2482336`. Claude Pro flagship reviews of
+the two-commit design and the disclosure record ran the same morning; Codex
+xhigh repair lanes for the ten Phase-2 contracts and the P9 policy grammar
+followed. Stage-1 waits only on the admin review's eight channel facts and the
+reviewed two-commit chain.
+
 ## [Claude Opus 5 Lead] 2026-08-15 late night — owner decisions applied, 14-lane fan-out
 
 Barış made five decisions (`11_TRIAGE/WPI_OWNER_DECISIONS_2026-08-15_NIGHT.md`):

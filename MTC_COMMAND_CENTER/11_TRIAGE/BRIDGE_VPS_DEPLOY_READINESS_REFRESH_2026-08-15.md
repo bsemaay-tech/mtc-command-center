@@ -1,5 +1,13 @@
 # Bridge VPS deploy readiness refresh — 2026-08-15
 
+> **Banner extension, 2026-08-16 morning:** the "WP-I release freeze is stopped
+> at an owner decision" and "Pathscope owner boundary prevents the next freeze"
+> clauses are superseded — `OWNER_DECISIONS_2026-08-16_MORNING.md` answers all
+> six decisions; per §6 Pathscope is supplemental-with-disclosure and off the
+> critical path. The freeze now waits on the admin review's eight channel facts
+> and the reviewed two-commit chain (§1/§2 scope notes). Any estimate row that
+> counted future Pathscope critical-path work is `UNKNOWN` until re-derived.
+
 > ## ⚠ Superseded in part — 2026-08-15 night
 >
 > Two items in this refresh were overtaken by owner decisions made after it was

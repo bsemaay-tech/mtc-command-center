@@ -1,5 +1,14 @@
 # KVM2 Phase-2 v2 cross-check — lane HLCHK — 2026-08-16
 
+> **Correction, 2026-08-16 morning:** the "archive question … open branch"
+> verdict lines are answered — owner decision §5
+> (`../OWNER_DECISIONS_2026-08-16_MORNING.md`) selects the off-host encrypted
+> branch. Note also: the independent T2 verdict set
+> (`PHASE2_V2_INDEPENDENT_VERDICTS_2026-08-16.md`) disagrees with this
+> cross-check in five places (secret v3 scope, recovery retention denial,
+> teardown discovery, incident universe, and it post-dates the v3 checker);
+> where they conflict, the independent verdicts govern the V3 repair.
+
 ## Verdict
 
 **Overall: NEEDS-REWORK.** This is a T2 documentation/evidence verdict only. It is not

@@ -1,5 +1,14 @@
 # NEXT_STEPS
 
+> **Correction 2026-08-16:** all six owner decisions are ANSWERED in
+> `11_TRIAGE/OWNER_DECISIONS_2026-08-16_MORNING.md`. Item 3 below is obsolete —
+> decision §6 disposes Pathscope as supplemental-with-disclosure, off the
+> critical path, no further cycle. Item 4's "only after Pathscope acceptance"
+> premise is void for the same reason: Packet 9 / Stage-1 proceed through their
+> independent non-Pathscope prerequisites (the admin review's eight channel
+> facts and the reviewed two-commit chain, per the record's scope notes).
+> Canonical entrypoint: `11_TRIAGE/NEW_CHAT_HANDOFF_2026-08-16_MORNING.md`.
+
 ## READ FIRST — post-RP7 acceptance handoff (2026-08-15)
 
 Canonical new-task prompt:

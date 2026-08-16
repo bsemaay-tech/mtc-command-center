@@ -1,5 +1,12 @@
 # D026 map extension — 2026-08-15 work
 
+> **Pointer, 2026-08-16:** the three OPEN Pathscope rows (PS-X5-10/11/12)
+> record evidence state that remains true, but their disposition path changed —
+> owner decision §6 (`../OWNER_DECISIONS_2026-08-16_MORNING.md`) makes Pathscope
+> supplemental-with-disclosure. No reader should await a repair or a future
+> accepted GREEN for these rows; they close by disclosure, and they are excluded
+> from closure totals.
+
 Date: 2026-08-15 (`MTC_COMMAND_CENTER/11_TRIAGE/WPI_BLOCKS_DRAFT/RP7_R1_R4_FINAL_ACCEPTANCE_2026-08-15.md:1`; `MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_FINAL_OVERRIDE_RETRY_CODEX_T1_AUDIT_2026-08-15.md:3`). This is an evidence-map extension to the 2026-08-12 map, whose counting rule is one row per named finding or closure-test family and whose closure rule requires a literal RED and GREEN, an explicit pre-fix/mutant identity, and a GREEN bound to the final bytes; helper-only or non-literal evidence is supplemental (`MTC_COMMAND_CENTER/11_TRIAGE/AUDIT2_READINESS_PACKAGE/AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md:7`). This document does not grant freeze, host, deployment, credential, broker, order, or trading authority (`MTC_COMMAND_CENTER/11_TRIAGE/AUDIT2_READINESS_PACKAGE/AUDIT2_D026_MAP_CURRENT_CYCLE_2026-08-12.md:9`).
 
 Git-anchored citations such as `80cbed46:path:line` identify the numbered line in that exact Git-object version of the file, not the detached worktree copy.

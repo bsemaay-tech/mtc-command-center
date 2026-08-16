@@ -1,5 +1,15 @@
 # Night index — 2026-08-15 evening to 2026-08-16 morning
 
+> **Correction, 2026-08-16 morning:** every `OWNER DECISION PENDING` status cell
+> in this index is superseded — all six decisions were answered in
+> `OWNER_DECISIONS_2026-08-16_MORNING.md` (§1 staging-channel admin review, §2
+> Option A two-commit chain, §3 cumulative plan reading, §4 6 h cap metered, §5
+> archive approved, §6 Pathscope supplemental-with-disclosure). The named
+> instrument files stay CURRENT as sources; only their "awaits the owner"
+> framing is stale. Pathscope artifact rows are reclassified
+> supplemental/history per §6 — no Pathscope PASS may close any gate. The
+> morning handoff row's decision sections carry their own correction banner.
+
 Snapshot indexed: branch `codex/rp7-r1-r4-repair-20260815` at `c45bcb0bc64f4d575f488f6c3719db341871a9e3`.
 
 Scope is every filename dated `2026-08-15` or `2026-08-16` at the branch tip directly under `MTC_COMMAND_CENTER/11_TRIAGE/` or under its `AUDIT2_READINESS_PACKAGE/`, `WPI_PREREG_DRAFT_ROUND1/`, or `KVM2_PHASE2_CONTRACTS/` children, exactly as requested (`C:\tmp\lane_kick\IDX.md:13`). That produces 78 rows. Read-only `git log --diff-filter=A` establishes that 77 were added from 2026-08-15 19:09 through 2026-08-16 00:28; the sole earlier addition is the 11:45 RP7 handoff, which was amended that evening with an explicit supersession banner and is therefore included. The three dated `.log` files and the dated HTML dashboard are included because the specification says files, not Markdown files (`C:\tmp\lane_kick\IDX.md:13`).

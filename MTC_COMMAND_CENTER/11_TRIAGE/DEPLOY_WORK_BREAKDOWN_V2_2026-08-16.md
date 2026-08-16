@@ -1,5 +1,15 @@
 Status: PLANNING ONLY — NO ACCEPTANCE, AUTHORIZATION, GATE OPENING, OR OPERATIONAL ACTION
 
+> **Correction, 2026-08-16 morning:** the owner-decision rows are answered in
+> `OWNER_DECISIONS_2026-08-16_MORNING.md` — R02A per §6 (Pathscope
+> supplemental-with-disclosure; no future critical-path Pathscope labour), R08
+> per §2 (Option A; R09 implementation remains open work), R10 per §1 (admin
+> configuration review approved; R11 fact verification remains open work), the
+> R38 archive sub-question per §5 (archive adopted; destination/retention still
+> open), and the plan-authority clauses at lines 80/88 per §3 (cumulative
+> reading ratified). The no-inference rule for the failed Pathscope round stays
+> in force.
+
 # Dependency-ordered deploy work breakdown v2 — 2026-08-16
 
 ## Scope and evidence boundary

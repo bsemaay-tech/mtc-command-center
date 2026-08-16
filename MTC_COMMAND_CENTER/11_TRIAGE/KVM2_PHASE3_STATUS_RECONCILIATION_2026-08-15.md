@@ -1,5 +1,9 @@
 # Lane L11 — Reconcile the stale KVM2 Phase 3 status
 
+> **Correction, 2026-08-16 morning:** the ordering caveat "whether the
+> cumulative or KVM2-own-programme reading governs" is settled — owner decision
+> §3 (`OWNER_DECISIONS_2026-08-16_MORNING.md`) ratified the cumulative reading.
+
 - Status: **EVIDENCE RECORD FOR THE LEAD AND OWNER — DECIDES NOTHING, AUTHORIZES NOTHING, CLOSES NO GATE.**
 - Date: 2026-08-15 (night). Lane input: `C:\tmp\lane_kick\L11.md`.
 - Checkout under examination: `C:\RO`, detached at `25564449`, clean worktree (lane

@@ -21,6 +21,15 @@ Status: CONSOLIDATION ONLY — CREATES NO AUTHORITY
 > closing blocker list below are read subject to this banner. The remaining open
 > owner questions are the plan-authority reading, the audit-reserve cap, and the
 > pre-cutover archive location.
+>
+> **Banner extension, 2026-08-16 morning:** that "remaining open" list is itself
+> superseded — `../OWNER_DECISIONS_2026-08-16_MORNING.md` answers all three
+> (§3 cumulative reading ratified; §4 hard cap retained, metered; §5 archive
+> approved) plus the staging channel (§1), the ordering cycle (§2, Option A),
+> and the Pathscope disposition (§6, supplemental-with-disclosure). The body's
+> Pathscope owner-decision blocker is void; the not-yet-spendable status of the
+> host confirmation stands until final Commit 1b exists under the two-commit
+> chain.
 
 
 # WP-I final authority consolidation — 2026-08-15

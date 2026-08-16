@@ -3,6 +3,18 @@
 Supersedes the earlier draft of this file. Written during the overnight session, so
 the "in flight" section may have moved by the time you read it — check the branch.
 
+> **Correction, 2026-08-16 ~08:00 +03:** ALL SIX owner decisions this handoff
+> lists as pending were ANSWERED by Barış that morning —
+> `OWNER_DECISIONS_2026-08-16_MORNING.md` (commit `c84497c8`) is the record.
+> The copy-paste prompt's "Five owner decisions are pending … Do not choose any
+> of them" clause is void; keep every other clause. §"The five owner decisions"
+> and §"Two blockers" below are answered: the remaining waits are the admin
+> review's eight channel facts and the reviewed two-commit chain design
+> (Option A), not owner choices. The Pathscope row of the state table is
+> superseded by decision §6 (supplemental-with-disclosure, off critical path).
+> Wave A artifacts implementing all six decisions: commits `ac6b74cf` and
+> `a2482336`.
+
 ## Copy-paste prompt
 
 ```text

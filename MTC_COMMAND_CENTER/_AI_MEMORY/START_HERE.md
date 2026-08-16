@@ -1,6 +1,17 @@
 # START_HERE
 
-> **▶ CURRENT WP-I ENTRYPOINT — 2026-08-15.** Start with
+> **▶ CURRENT WP-I ENTRYPOINT — 2026-08-16 morning.** Start with
+> `..\11_TRIAGE\NEW_CHAT_HANDOFF_2026-08-16_MORNING.md` **plus its correction
+> banner**, then `..\11_TRIAGE\OWNER_DECISIONS_2026-08-16_MORNING.md` — **all six
+> owner decisions are ANSWERED there** (staging-channel admin review approved ·
+> Option A two-commit chain · cumulative plan reading · 6 h audit cap metered ·
+> archive approved · Pathscope supplemental-with-disclosure, off critical path,
+> no further cycle). The 2026-08-15 banner below is historical: its "Pathscope
+> remains the active owner boundary" sentence is superseded by decision §6.
+> Stage-1 now waits only on the admin review's eight channel facts and the
+> reviewed two-commit chain design.
+
+> **▶ historical (2026-08-15) —** Start with
 > `..\11_TRIAGE\NEW_CHAT_HANDOFF_2026-08-15_AFTER_RP7_ACCEPTANCE.md` and
 > `..\11_TRIAGE\WPI_BLOCKS_DRAFT\RP7_R1_R4_FINAL_ACCEPTANCE_2026-08-15.md`.
 > RP7 rows 1-9 is now **T0 ACCEPTED** on candidate `80cbed46` after Codex PASS

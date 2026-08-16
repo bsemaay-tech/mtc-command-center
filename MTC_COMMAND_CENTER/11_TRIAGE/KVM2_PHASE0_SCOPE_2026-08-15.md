@@ -1,5 +1,14 @@
 Status: SCOPING AND PRICING MATERIAL ONLY — NO AUTHORITY, NO GATE OPENED, NO ACCEPTANCE DECISION
 
+> **Correction, 2026-08-16 morning:** the plan-precedence question is resolved —
+> owner decision §3 (`OWNER_DECISIONS_2026-08-16_MORNING.md`) ratifies the
+> cumulative reading, which is the same union this file's interim rule already
+> applied; the interim rule's substance therefore continues as the ratified
+> rule. The Pathscope R01→R02 live-programme dependency at line ~95 is
+> superseded by §6 (supplemental-with-disclosure; not a join condition).
+> Retention/RPO-RTO and other owner facts named here remain open — they are not
+> among the six decisions.
+
 # Lane L8 — R27 / KVM2 Phase-0 technical governance: P0-01, P0-03, P0-04, P0-04A, P0-05
 
 - Lane input: `C:\tmp\lane_kick\L8.md` (2026-08-15).

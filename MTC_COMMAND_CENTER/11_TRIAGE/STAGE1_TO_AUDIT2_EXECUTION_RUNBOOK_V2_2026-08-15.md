@@ -1,5 +1,16 @@
 Status: EXECUTION RUNBOOK V2 - SUPERSEDES V1 - NOT ACCEPTED
 
+> **Correction, 2026-08-16 morning** (`OWNER_DECISIONS_2026-08-16_MORNING.md`):
+> the ordering-cycle resolution is no longer `UNKNOWN` — the owner selected
+> **Option A, the two-commit chain** (§2); the accepted replacement contract is
+> the pending artifact (design V1:
+> `WPI_PREREG_DRAFT_ROUND1/WPI_STAGE1_TWO_COMMIT_CHAIN_DESIGN_V1_2026-08-16.md`).
+> `PLAN_READING` is no longer `UNKNOWN` — the cumulative reading is ratified
+> (§3). Checklist C3's accepting-Pathscope-audit requirement is superseded by
+> §6: Pathscope is supplemental-with-disclosure; C3 becomes a
+> disclosure-presence check, never an acceptance predicate. The V3 patch file
+> carries the same C3 correction by this banner.
+
 | Review finding | V2 disposition | Where handled |
 |---|---|---|
 | **F1 — false host-ordering guard** | **The false path is removed.** The old Step 8 Gate-A run and old Step 12 grant-#6 capture have distinct authority labels and distinct incoming edges. Gate-A is currently unreachable because its authority sentence, safe-close contract, and ordering-cycle resolution are `UNKNOWN`; under the review's no-pre-Commit-1 rule it also requires a mechanically verified Commit 1. This exposes a real cycle instead of pretending there is an executable route. | §§4, 7, Steps 7–12, and §10. The defect and its mutating consequences are recorded at `MTC_COMMAND_CENTER/11_TRIAGE/STAGE1_TO_AUDIT2_RUNBOOK_REVIEW_2026-08-15.md:7-15`. |

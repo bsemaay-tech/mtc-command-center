@@ -1,5 +1,13 @@
 # NEXT_STEPS
 
+> **Correction, 2026-08-16 morning:** the owner questions this draft lists are
+> answered in `OWNER_DECISIONS_2026-08-16_MORNING.md` — §3 plan authority
+> (cumulative, sentence adopted verbatim), §4 audit reserve (hard cap, metered),
+> §5 archive (adopted verbatim), and §6 Pathscope (Option C cycle consumed in a
+> non-accepting audit; disposition is supplemental-with-disclosure — the
+> WPI-PATHSCOPE-C section's closure condition is void). Fold these in before
+> promoting this draft to `_AI_MEMORY/NEXT_STEPS.md`.
+
 > Current through 2026-08-15 night. This is a planning/status document, not
 > acceptance or authority. No host, deployment, credential, trading, merge-to-
 > master, or other operational gate is opened here.
