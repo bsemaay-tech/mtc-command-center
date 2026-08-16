@@ -1,5 +1,10 @@
 # SESSION_LOCK — workstream write ownership
 
+> **Pathscope disclosure (owner decision 2026-08-16, section 6):** Pathscope is a supplemental aid only: its output may inform review, but it may never be cited as proof, a gate, or an acceptance input anywhere in WP-I or downstream, and no Pathscope PASS may close any gate.
+> Governing record: MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md. Identity split: the prover in this repository is the older 137520-byte R5 code; the audited 185272-byte Option C prover is UNMERGED on codex/pathscope-accounting-redesign-20260815. Prerequisite gate 2 is UNKNOWN until the Lead re-derives it at freeze-prerequisite review.
+> Note (2026-08-16): the 06:30 log entry sentence "a sixth cycle needs a new explicit owner decision" is answered by section 6 - no further cycle; the lane is disposed as supplemental-with-disclosure.
+
+
 Rewritten 2026-08-11. The old file was a single unused "Status: unlocked" line; it did not
 prevent the 2026-08-10 concurrent-session collision on the transport set
 (`11_TRIAGE/WPI_BLOCKS_DRAFT/CONCURRENT_SESSION_NOTICE_2026-08-10_2130.md`). This version

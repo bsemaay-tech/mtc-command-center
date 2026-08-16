@@ -1,4 +1,4 @@
-Status: DISCLOSURE RECORD DRAFT — FOR LEAD REVIEW — implements owner decision §6 of 2026-08-16
+Status: SUPERSEDED — by `PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md` (2026-08-16, closes the Claude flagship review's R1-R5 and N1-N5; verdict in `PATHSCOPE_DISCLOSURE_CLAUDE_REVIEW_2026-08-16.md`). Historical draft, kept for the review chain.
 
 # Pathscope supplemental-use disclosure
 

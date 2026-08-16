@@ -1,5 +1,10 @@
 # Audit 2 freeze prerequisites — proposed dated corrections for gates 3–6
 
+> **Pathscope disclosure (owner decision 2026-08-16, section 6):** Pathscope is a supplemental aid only: its output may inform review, but it may never be cited as proof, a gate, or an acceptance input anywhere in WP-I or downstream, and no Pathscope PASS may close any gate.
+> Governing record: MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md. Identity split: the prover in this repository is the older 137520-byte R5 code; the audited 185272-byte Option C prover is UNMERGED on codex/pathscope-accounting-redesign-20260815. Prerequisite gate 2 is UNKNOWN until the Lead re-derives it at freeze-prerequisite review.
+> Note (2026-08-16): gate 2 no longer waits on an accepting Pathscope audit; the three findings stay as disclosed history; residual gate 2 is UNKNOWN.
+
+
 These are correction blocks, not silent replacements. Each block first preserves the current 2026-08-12 row and then supplies the 2026-08-15 text to place beside it. (`C:\tmp\lane_kick\Y3.md:25-33`)
 
 ## Gate 3 — Successor preregistration and Stage-1 two-commit freeze

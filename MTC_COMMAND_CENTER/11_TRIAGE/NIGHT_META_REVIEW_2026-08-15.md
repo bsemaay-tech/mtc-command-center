@@ -1,5 +1,10 @@
 # W12 cross-document adversarial meta-review
 
+> **Pathscope disclosure (owner decision 2026-08-16, section 6):** Pathscope is a supplemental aid only: its output may inform review, but it may never be cited as proof, a gate, or an acceptance input anywhere in WP-I or downstream, and no Pathscope PASS may close any gate.
+> Governing record: MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md. Identity split: the prover in this repository is the older 137520-byte R5 code; the audited 185272-byte Option C prover is UNMERGED on codex/pathscope-accounting-redesign-20260815. Prerequisite gate 2 is UNKNOWN until the Lead re-derives it at freeze-prerequisite review.
+> Note (2026-08-16): the closing "Option C pending / gate 2 open until acceptance" state is superseded; no accepting audit is owed.
+
+
 ## Verdict
 
 **NOT INTERNALLY CONSISTENT AS A CURRENT-STATE PACKET.** The substantive execution boundaries are generally conservative, but several same-day status artifacts still present pre-decision states as current after the owner explicitly authorized Pathscope Option C, approved the narrow host-and-credential sentence, signed the approximately 63.75-hour ledger snapshot, deferred the wallet, and selected a fresh reset. `MTC_COMMAND_CENTER/11_TRIAGE/WPI_OWNER_DECISIONS_2026-08-15_NIGHT.md:8-28`, `:30-78`, `:80-96`.

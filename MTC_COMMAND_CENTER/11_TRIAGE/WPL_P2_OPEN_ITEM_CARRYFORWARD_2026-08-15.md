@@ -1,5 +1,10 @@
 # WP-L Phase 2 carry-forward into the freeze
 
+> **Pathscope disclosure (owner decision 2026-08-16, section 6):** Pathscope is a supplemental aid only: its output may inform review, but it may never be cited as proof, a gate, or an acceptance input anywhere in WP-I or downstream, and no Pathscope PASS may close any gate.
+> Governing record: MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md. Identity split: the prover in this repository is the older 137520-byte R5 code; the audited 185272-byte Option C prover is UNMERGED on codex/pathscope-accounting-redesign-20260815. Prerequisite gate 2 is UNKNOWN until the Lead re-derives it at freeze-prerequisite review.
+> Note (2026-08-16): F1-F3 carry forward as disclosed non-gating limitations, not open closure items; affected counts are UNKNOWN until re-derived.
+
+
 Status: **carry-forward record only; no acceptance, authorization, or action.** Gate 1 is satisfied only because the unit closed its executable scope while preserving open items, and the gate's required action is to carry both the closure and the open-item registry into the later freeze without reclassifying an open item by inference. (`MTC_COMMAND_CENTER/11_TRIAGE/AUDIT2_READINESS_PACKAGE/AUDIT2_FREEZE_PREREQUISITES.md:13`)
 
 The readiness package distinguishes the separate Stage-1 artifact freeze from the pre-WP-A checkpoint that Audit 2 later reviews. (`MTC_COMMAND_CENTER/11_TRIAGE/AUDIT2_READINESS_PACKAGE/AUDIT2_FREEZE_PREREQUISITES.md:5`, `MTC_COMMAND_CENTER/11_TRIAGE/AUDIT2_READINESS_PACKAGE/AUDIT2_FREEZE_PREREQUISITES.md:6`, `MTC_COMMAND_CENTER/11_TRIAGE/AUDIT2_READINESS_PACKAGE/AUDIT2_FREEZE_PREREQUISITES.md:7`) Therefore, the mandatory **carry** consumer for every registry item below is the **pre-WP-A checkpoint freeze**; that checkpoint still does not close an item. (`MTC_COMMAND_CENTER/11_TRIAGE/AUDIT2_READINESS_PACKAGE/AUDIT2_FREEZE_PREREQUISITES.md:17`) A separate closure consumer is stated only where the cited records actually assign one.

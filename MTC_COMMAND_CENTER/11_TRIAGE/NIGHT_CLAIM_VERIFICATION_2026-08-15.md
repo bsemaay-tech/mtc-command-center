@@ -1,5 +1,10 @@
 Status: ADVERSARIAL VERIFICATION — NO ACCEPTANCE, NO AUTHORITY
 
+> **Pathscope disclosure (owner decision 2026-08-16, section 6):** Pathscope is a supplemental aid only: its output may inform review, but it may never be cited as proof, a gate, or an acceptance input anywhere in WP-I or downstream, and no Pathscope PASS may close any gate.
+> Governing record: MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md. Identity split: the prover in this repository is the older 137520-byte R5 code; the audited 185272-byte Option C prover is UNMERGED on codex/pathscope-accounting-redesign-20260815. Prerequisite gate 2 is UNKNOWN until the Lead re-derives it at freeze-prerequisite review.
+> Note (2026-08-16): the CONFIRMED "sole open gate-2 lane / gate 2 NOT SATISFIED" rows are superseded; REQUIRED-1/2 remain disclosure; gate 2 is UNKNOWN pending Lead re-derivation.
+
+
 # Night claim verification — 2026-08-15
 
 Scope: hostile, read-only re-derivation of C1–C5 at the owner-supplied frozen worktree. No host, network, deployment, service, credential, broker/exchange, ARM, order, TESTNET/mainnet, Pine, parity, MTC, trading, merge, push, or economic action was performed. No other AI or agent was invoked. The only write is this report.
