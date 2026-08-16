@@ -15,8 +15,18 @@
 > 4. **[AI: Barış]** KVM2 configure/install/start authorization when presented;
 >    TESTNET wallet remains its own later gate.
 >
-> **Update 2026-08-16 evening:** chain lane PAUSED by owner cap ruling (no
-> waiver; do not reopen). Deployment plan now **V3**
+> **Update 2026-08-16 late evening — ROUND 4 (FINAL) authorized:**
+> `11_TRIAGE/OWNER_DECISION_ROUND4_FINAL_2026-08-16.md` — one bounded repair
+> of the 8 round-3 REQUIRED findings + ONE final T0 pair with a materiality
+> standard for new findings (block only if Lead-reproduced AND directly
+> affecting the exact initial keyless DISARMED deployment; everything else =
+> disclosed follow-up). No fifth round. Then either the material-blocker
+> report or the single installation sentence. Review history V3→V5 and all
+> six verdicts committed. KVM2 untouched; chain lane paused; Dashboard V2
+> queued after stable deployment.
+>
+> **Superseded history (2026-08-16 evening):** chain lane PAUSED by owner cap ruling (no
+> waiver; do not reopen). Deployment plan was **V3**
 > (`11_TRIAGE/KVM2_DEPLOYMENT_PLAN_62BF661B_V3_2026-08-16.md`) — dashboard is
 > completion-critical; launcher run-kit `11_TRIAGE/KVM2_RUNKIT/
 > Open-BridgeDashboard.ps1` is part of the T0-audited package. Queue:

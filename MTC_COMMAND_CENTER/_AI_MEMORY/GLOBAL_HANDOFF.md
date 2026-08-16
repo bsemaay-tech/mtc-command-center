@@ -102,6 +102,14 @@ Two-commit chain V2 T1 re-audit dispatched (`claude-opus-5` high, snapshot
    present V5 §4 sentence; any REQUIRED → cap exhausted → owner.
    Chain lane stays PAUSED — no waiver, do not reopen. KVM2 untouched since
    the read-only inventory.
+7. **Round-3 pair returned non-accepting (Codex 8 REQ / Claude 2 REQ,
+   overlapping) → cap exhausted → owner chose Option A with override:**
+   `11_TRIAGE/OWNER_DECISION_ROUND4_FINAL_2026-08-16.md` — ONE round-4 repair
+   of the 8 findings + ONE final T0 pair under a materiality standard (new
+   findings block only if Lead-reproduced and directly affecting the exact
+   initial keyless DISARMED deployment; else disclosed follow-up). No fifth
+   round. Outcome = material-blocker report OR the single installation
+   sentence.
 
 Locks held by this session: shared-memory, Stage-1/runbook, Bridge-release-
 integration (see SESSION_LOCK.md).
