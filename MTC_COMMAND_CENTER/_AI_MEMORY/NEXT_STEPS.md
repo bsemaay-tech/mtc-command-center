@@ -4,6 +4,28 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
+## OWNER-REQUESTED READY — Bridge interactive Help / System Map (2026-08-16)
+
+**Execution tier: T1.** The feature is fully scoped but has not been implemented.
+No dashboard source or live system changed.
+
+1. **[AI: Claude] Implement after capacity reset:** from branch
+   `codex/bridge-help-wiki`, run the exact bounded package
+   `11_TRIAGE/BRIDGE_HELP_WIKI_IMPLEMENT_PROMPT_2026-08-16.md`. Exact Fable
+   credits were exhausted and exact Opus was session-limited until
+   **2026-08-17 00:30 Europe/Chisinau**.
+2. **Required result:** add a Help/System Map page to the existing Bridge
+   dashboard with clickable/keyboard-accessible components, non-technical and
+   technical detail views, current-V1 versus future-V2 labels, and one shared
+   machine-readable knowledge source for both the UI and future AI agents.
+3. **[AI: Codex] Acceptance after implementation:** independently inspect the
+   exact diff, run the static-dashboard and JSON integrity tests, perform the
+   fresh T1 flagship review, and accept only PASS/PASS-WITH-NITS within the
+   two-round cap.
+4. **Safety fence:** Help UI and documentation only. No strategy/risk/order/
+   reconciler/state/API/database/config behavior change; no server, host,
+   deployment, broker, credential, ARM/KILL, TESTNET/MAINNET, or economic action.
+
 ## OWNER-REQUESTED RECORDED — MTC/Bridge order and exit lifecycle ownership (2026-08-16)
 
 **Documentation tier: T2 — accepted.** New A11 in

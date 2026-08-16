@@ -5,6 +5,26 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol] 2026-08-16 — Bridge interactive Help/Wiki scoped; implementation capacity-blocked
+
+Owner requested a real interactive Help/System Map inside the existing Bridge
+dashboard, separate from the V2 decision record. Clicking a project component
+must explain it in non-technical language; one shared machine-readable source
+must also serve later AI/code understanding. Gate 1 classified this as **T1
+non-economic dashboard product code**. Scope and exclusions are frozen in
+`11_TRIAGE/BRIDGE_HELP_WIKI_GATE1_2026-08-16.md`; the exact counterpart package
+is `11_TRIAGE/BRIDGE_HELP_WIKI_IMPLEMENT_PROMPT_2026-08-16.md`.
+
+No dashboard source was edited. Exact Claude Fable 5 could not start because
+usage credits were exhausted; exact `claude-opus-5` then returned session-limit
+blocked, reset **2026-08-17 00:30 Europe/Chisinau**. Per the mandatory two-tier
+rule, Codex did not silently self-implement. Resume after reset by dispatching
+the frozen prompt from branch `codex/bridge-help-wiki` at commit `35ce9970`.
+Claude must not commit; Codex Lead then independently inspects, runs the narrow
+tests, performs the fresh T1 review, commits accepted bytes, and completes Gate
+7. No server, browser, host, deploy, broker, credential, ARM/KILL, TESTNET,
+MAINNET, or economic action occurred.
+
 ## [Codex gpt-5.6-sol] 2026-08-16 — MTC/Bridge order-lifecycle ownership recorded (T2 PASS)
 
 Owner requested that the reasoning from the order-manager explanation be made
