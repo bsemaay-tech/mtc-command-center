@@ -376,3 +376,151 @@ the marker was absent afterward (GREEN).
 Fresh PS7 and PS5.1 preflights passed after every repair. No repo source, protected surface, Git
 state, or project-config byte remains changed by these tests. Cycle-2 round 2 must independently
 reproduce this evidence. Claude has not yet been invoked. Coding access remains disabled.
+
+## Cycle-2 T0 round 2 — BLOCK and final repair (2026-08-16)
+
+Fresh Codex `gpt-5.6-sol`, xhigh, ephemeral session
+`01a00b74-5781-7690-900d-ed54be6fec8b` reproduced the live read, PS7/PS5 denied
+writes, terminal denial, watcher pairs, rapid-spawner pair, profile environment binding, Git
+environment isolation, native argv, exact hashes, and zero fixture residue. It returned
+**BLOCK** because case-insensitive PowerShell property lookup still accepted uppercased JSON
+member names, duplicate members were collapsed, extra members were accepted, low/medium model
+variants remained selectable, and the initial active Git branch was not compared to the pin.
+
+The same Codex session launched a fresh exact `claude-opus-5` xhigh no-persistence audit, but its
+manual permission mode could not read the two pinned external files or execute the route. Claude
+correctly returned **BLOCK** for non-execution. This is an auditor-harness access blocker, not a
+launcher behavior finding; the final round must use pre-authorized bounded external-file access.
+
+Final-repair launcher identity:
+
+```text
+launcher SHA256 = 393964E22D7C94C242720D6FEB452D816B5DBDBAD562FBBF94208807BB0CA18F
+project  SHA256 = BF5DED19F712CACA2D8DD38588E015C1717FEFD2CF2577CF54A7D604A88E3551
+```
+
+### Literal D026 — authenticated child profile binding
+
+Executed against the pre-repair `3E713AB0...` launcher:
+
+```powershell
+$saved=$env:USERPROFILE
+try {
+  $env:USERPROFILE='C:\__GEMINI_AUDIT_FAKE_PROFILE_LIVE'
+  & $launcher -TimeoutSeconds 180 -Prompt 'Read AGENTS.md and state only the exact canonical repository path, then the required sentinel.'
+} finally { $env:USERPROFILE=$saved }
+```
+
+```text
+OLD RED PS7/PS5: status=SUCCESS, response="", cache_read_tokens=0
+Gemini did not return a successful, non-empty response.
+```
+
+Executed against production after binding all six variables into the child:
+
+```powershell
+$names='USERPROFILE','HOME','HOMEDRIVE','HOMEPATH','APPDATA','LOCALAPPDATA'
+$saved=@{}; foreach($n in $names){$saved[$n]=[Environment]::GetEnvironmentVariable($n,'Process')}
+try {
+  foreach($n in $names){[Environment]::SetEnvironmentVariable($n,"C:\__FAKE_PROFILE__$n",'Process')}
+  & $launcher -TimeoutSeconds 180 -Prompt 'Read AGENTS.md and state only the exact canonical repository path, then the required sentinel.'
+} finally { foreach($n in $names){[Environment]::SetEnvironmentVariable($n,$saved[$n],'Process')} }
+```
+
+```text
+GREEN PS7: response=C:\LAB\Tradingview_LAB_CLEAN; GEMINI_READ_ONLY_OK; caller values restored=True
+GREEN PS5: response=C:\LAB\Tradingview_LAB_CLEAN; GEMINI_READ_ONLY_OK; caller values restored=True
+GREEN write probes: permission denied; PS7 marker=False; PS5 marker=False
+```
+
+### Literal D026 — rapid PS5 descendants
+
+Production function was AST-loaded in Windows PowerShell 5.1, then invoked with:
+
+```powershell
+$spawnCode='while ($true) { Start-Process -WindowStyle Hidden ping.exe -ArgumentList @(''-t'',''127.0.0.1''); Start-Sleep -Milliseconds 35 }'
+Invoke-NativeProcess -FilePath $ps5 -Arguments @('-NoProfile','-NonInteractive','-Command',$spawnCode) -Timeout 1
+```
+
+```text
+OLD single-enumeration RED: survivors=7 (round 1); independent round-2 timing survivors=8
+GREEN PS7: RAPID_TIMEOUT_CAUGHT=True; RAPID_TIMEOUT_SURVIVORS=0
+GREEN PS5: RAPID_TIMEOUT_CAUGHT=True; RAPID_TIMEOUT_SURVIVORS=0
+post-fixture exact survivor count=0
+```
+
+### Literal D026 — watcher start boundary
+
+The launcher was started as a native child in the canonical root; after exactly 1800 ms the
+parent created and deleted a unique root marker before waiting for the child:
+
+```powershell
+[void]$process.Start()
+Start-Sleep -Milliseconds 1800
+[IO.File]::WriteAllText($marker,'cycle2-watcher-probe')
+[IO.File]::Delete($marker)
+$process.WaitForExit(60000)
+```
+
+```text
+OLD delayed-subscription RED: events=0; marker absent=True
+GREEN production: exit=1; Events: Created:<marker>, Changed:<marker>, Deleted:<marker>
+GREEN marker absent after=True
+```
+
+### Literal D026 — strict JSON member protocol
+
+The actual validator functions were AST-loaded in both PS7 and PS5.1 and invoked on the original
+config/payload plus one mutation at a time:
+
+```powershell
+ConfigCase VALID $original $true
+ConfigCase UPPERCASE ([regex]::Replace($original,'"id"\s*:','"ID":',1)) $false
+ConfigCase DUPLICATE ($original -replace '^\{',"{`n  `"id`": `"evil`",") $false
+ConfigCase EXTRA ($original -replace '^\{',"{`n  `"unexpected`": true,") $false
+PayloadCase VALID $valid $true
+PayloadCase UPPERCASE ($valid.Replace('"status"','"STATUS"')) $false
+PayloadCase DUPLICATE ($valid.Replace('"status":"SUCCESS"','"status":"FAIL","status":"SUCCESS"')) $false
+```
+
+```text
+OLD RED PS7/PS5: uppercase=ACCEPT; duplicate=ACCEPT; extra=ACCEPT
+GREEN PS7: valid=True; uppercase rejected=True; duplicate rejected=True; extra rejected=True
+GREEN PS5: valid=True; uppercase rejected=True; duplicate rejected=True; extra rejected=True
+```
+
+The final implementation uses a fixed recursive JSON grammar guard with ordinal duplicate-member
+detection, followed by exact case-sensitive property sets for every project-config object and the
+pinned Antigravity 1.1.13 payload/usage objects. It also permits only
+`gemini-3.7-flash-high` and rejects unless the initial active branch is exactly the pinned branch.
+
+```text
+LOW_MODEL=REJECTED (ValidateSet contains only gemini-3.7-flash-high)
+PS7 preflight=PREFLIGHT_OK
+PS5.1 preflight=PREFLIGHT_OK
+PS7 live structured response=SUCCESS, exact canonical path and sentinel
+```
+
+Unchanged tracked dirt was reproduced on the final launcher bytes before this documentation was
+committed:
+
+```powershell
+git status --short --untracked-files=no
+& $launcher -PreflightOnly
+git diff --check
+```
+
+```text
+ M MTC_COMMAND_CENTER/11_TRIAGE/GEMINI_PRO_READ_ONLY_CYCLE2_T0_AUDIT_PROMPT_2026-08-16.md
+ M MTC_COMMAND_CENTER/11_TRIAGE/GEMINI_PRO_READ_ONLY_ROUTE_QA_2026-08-16.md
+ M MTC_COMMAND_CENTER/_AI_MEMORY/AI_ACCOUNT_AND_MODEL_ROUTING.md
+{"Status":"PREFLIGHT_OK","Model":"gemini-3.7-flash-high","Project":"4b64b3f9-1bfa-4de1-a9eb-276f2e0489b7","Repository":"C:\\LAB\\Tradingview_LAB_CLEAN","Version":"1.1.13"}
+git diff --check: no error
+```
+
+The preflight's before/after snapshot equality is the acceptance predicate; therefore this is a
+real unchanged-dirty GREEN rather than a clean-tree substitute. The cycle-1 concurrent mutation
+fixture remains the changed-dirty RED and records the restored file/hash.
+
+Cycle-2 round 3 is the final permitted round. Both exact flagship auditors must execute the
+mandated live suite and accept the same final bytes. Coding access remains disabled.

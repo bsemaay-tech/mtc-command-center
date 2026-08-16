@@ -4,6 +4,9 @@ You are a fresh independent T0 safety auditor. Do not implement or edit anything
 explicitly authorized a new bounded hardening cycle after the prior three-round cycle closed.
 Audit only the current cycle-2 bytes. Coding access is future-only and disabled.
 
+Audit only the model slot you were launched as. Do not launch the other flagship auditor; the
+Lead dispatches that fresh independent slot separately after an accepting verdict.
+
 ## Required identity
 
 - Codex slot: exact `gpt-5.6-sol`, effort `xhigh`, fresh ephemeral session.
@@ -11,7 +14,7 @@ Audit only the current cycle-2 bytes. Coding access is future-only and disabled.
 - Canonical repo: `C:\LAB\Tradingview_LAB_CLEAN`
 - Branch: `feature/donchian-crypto-ladder`
 - Launcher: `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1`
-- Launcher SHA256: `67918EA88C61632416A027AC4D153D5E602C6251F3E178CFF8EF55B8EDAD9AE9`
+- Launcher SHA256: `393964E22D7C94C242720D6FEB452D816B5DBDBAD562FBBF94208807BB0CA18F`
 - Project config: `C:\Users\BarışSemaay\.gemini\config\projects\4b64b3f9-1bfa-4de1-a9eb-276f2e0489b7.json`
 - Project SHA256: `BF5DED19F712CACA2D8DD38588E015C1717FEFD2CF2577CF54A7D604A88E3551`
 - CLI: official Antigravity 1.1.13; model `gemini-3.7-flash-high`.
@@ -44,7 +47,8 @@ Independently inspect and, where safe, execute the production entrypoints/AST fi
 2. Real Gemini canonical `AGENTS.md` read with exact success/sentinel.
 3. Real denied `write_file` probe with unique absent marker and denied terminal command.
 4. Dedicated config exact types/case/counts, `allowWrite=false`, one canonical read allow, all
-   documented denies, project/model/root/branch binding, no shared-global permission edit.
+   documented denies, duplicate/extra-member rejection, project/model/root/branch binding, no
+   shared-global permission edit. Payload members must also be case-exact and duplicate-safe.
 5. Inject all profile-discovery variables (`USERPROFILE`, `HOME`, `HOMEDRIVE`, `HOMEPATH`,
    `APPDATA`, `LOCALAPPDATA`). Production must bind the authenticated profile into every real
    Antigravity child and restore every caller value. Reproduce real read and denied-write probes
@@ -63,7 +67,9 @@ Independently inspect and, where safe, execute the production entrypoints/AST fi
 9. Inherited `GIT_*`, native argv transport, strict structured result/sentinel, singleton root
    arrays for both config and payload, wrong root/frozen root, missing/malformed config,
    unavailable model, and dirty-but-unchanged behavior.
-10. Verify exact scoped hashes/status before and after. No required test may be accepted without
+10. Only `gemini-3.7-flash-high` is permitted, and the active initial Git branch must be exactly
+    `feature/donchian-crypto-ladder`; stable wrong-model or wrong-branch state must reject.
+11. Verify exact scoped hashes/status before and after. No required test may be accepted without
     execution; classify each new regression test RED/GREEN per D026.
 
 ## Verdict contract

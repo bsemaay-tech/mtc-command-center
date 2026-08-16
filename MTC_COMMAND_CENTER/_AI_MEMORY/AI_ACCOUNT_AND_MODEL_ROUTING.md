@@ -220,6 +220,7 @@ Never authenticate Max into the default `.claude` profile, and never log the Pro
 | Account | `bsemaay3@gmail.com` — Google AI Pro, authenticated interactively in Antigravity CLI |
 | CLI | `C:\Users\BarışSemaay\AppData\Local\agy\bin\agy.exe` — verified version 1.1.13 |
 | Mandatory launcher | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1` |
+| Current launcher identity | SHA256 `393964E22D7C94C242720D6FEB452D816B5DBDBAD562FBBF94208807BB0CA18F` |
 | Dedicated project | `4b64b3f9-1bfa-4de1-a9eb-276f2e0489b7` |
 | Default model | `gemini-3.7-flash-high` |
 | Authority | Supplemental read-only inspection only. Never Lead, counterpart flagship, canonical auditor, protected implementer, or acceptance authority. Lead must reproduce every finding. |
@@ -261,8 +262,10 @@ Literal commands, RED/GREEN mutations, and real outputs are recorded in
 **Acceptance state:** installed and locally reproduced by the Codex Lead under the owner's
 explicit 2026-08-16 override to perform implementation directly, but not repo-ready. The first
 T0 cycle exhausted its cap. The owner authorized cycle 2 at 18:55 +03 for read-only adviser use;
-profile binding, persistent watcher/final drain, transient Git-lock adjudication, and PS5 timeout
-verification are repaired and freshly tested. Do not use this as a repository agent until fresh
+profile binding, persistent watcher/final drain, transient Git-lock adjudication, PS5 timeout
+verification, exact case-sensitive/duplicate-safe JSON validation, active-branch binding, and
+exact `gemini-3.7-flash-high` model binding are repaired and freshly tested. The QA record is the
+single source for earlier launcher identities and the literal repair evidence. Do not use this as a repository agent until fresh
 cycle-2 `claude-opus-5` xhigh plus `gpt-5.6-sol` xhigh reviews both accept. Coding permission is
 a separate future phase and remains disabled.
 
