@@ -46,16 +46,16 @@ completes and (b) the read-only KVM2 inventory replaces the UNKNOWN rows.
 
 ## KVM2 / HOSTINGER (the real deployment target)
 
-No accepted current Bridge deployment is recorded or verified on KVM2. Its
-current installation, services, firewall, listeners, files, secrets, backups
-and operating state are **UNVERIFIED** — "nothing is installed" is not a
-confirmed live fact, only an absence of records.
+**Live-verified 2026-08-16 (`KVM2_READONLY_INVENTORY_2026-08-16.md`): the host
+is a clean hardened Ubuntu 24.04.4 baseline with NOTHING bridge-related
+installed** — `/opt` empty, SSH-only firewall, no app processes, no backups or
+monitoring. "Nothing is installed" is now an observed fact, not an inference.
 
 | Row | State | Evidence / note |
 |---|---|---|
 | Identify exact VPS + safe access route | DONE (2026-08-16) | Host `152.239.123.231` (host key pinned in local known_hosts, all three types); identity `~/.ssh/hostinger_kvm2`; principal `baris` per local shell history. Host-key verification succeeds with explicit known_hosts path. No secret displayed. |
-| Inventory OS/services/files/firewall/listeners/storage/backups/monitoring | **BLOCKED — owner action** | The `hostinger_kvm2` private key is passphrase-protected; BatchMode auth returns `Permission denied (publickey)`. Owner must load the key into ssh-agent himself (`ssh-add`) — the passphrase never passes through an AI or chat. Read-only inventory command set is prepared and runs immediately after. |
-| Host-specific deployment + rollback plan | OPEN | Written from observed facts after inventory. |
+| Inventory OS/services/files/firewall/listeners/storage/backups/monitoring | DONE (2026-08-16) | `KVM2_READONLY_INVENTORY_2026-08-16.md` — owner loaded key into ssh-agent; full read-only sweep, no config change, no secret displayed. Host `srv1856225`, clean baseline, SSH-only surface, monarx-agent on loopback, no backups/monitoring. |
+| Host-specific deployment + rollback plan | DRAFTED (2026-08-16) | Skeleton in the inventory record from observed facts + proven GATEA recipe; candidate `62bf661b`. Execution needs clause-6 owner authorization. |
 | Baseline reproduction, archive of existing state | OPEN | Only after separate configure/install authorization. |
 | Masked DISARMED install of exact accepted release | OPEN | Root-owned, immutable, pinned venv, exact commit path; masked/unenabled/unstarted. Separate authorization required. |
 | Pre-start verification (identity, permissions, writable paths, firewall, closed listeners) | OPEN | — |
