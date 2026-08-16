@@ -26,7 +26,7 @@ This document compiles evidence-based architecture recommendations for the futur
 The following technical sources establish the baseline for these recommendations:
 1. **Hyperliquid WebSocket Disconnects & Recovery (Official Exchange Authority):** Automated clients must handle periodic disconnects and reconnect gracefully; recovery entails resubscribing, processing snapshot acknowledgements where supplied, and querying documented exchange truth endpoints as applicable.
    *Source:* [Hyperliquid WebSocket Documentation](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket)
-2. **Hyperliquid Rich WebSocket Subscriptions (Official Exchange Authority):** The WebSocket API provides native streams for `candle`, `orderUpdates`, `userEvents`, `userFills`, `userFundings`, `activeAssetData`, and `nonUserCancel`/`liquidation` events. Note that `userEvents` is a WebSocket subscription stream.
+2. **Hyperliquid Rich WebSocket Subscriptions (Official Exchange Authority):** The WebSocket API provides native subscriptions for `candle`, `orderUpdates`, `userEvents`, `userFills`, `userFundings`, `activeAssetCtx`, and `activeAssetData`. `liquidation` and `nonUserCancel` are event variants carried inside `userEvents`, not separate subscription types.
    *Source:* [Hyperliquid Subscriptions Documentation](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions)
 3. **Hyperliquid Dead-Man Switch (`scheduleCancel`) (Official Exchange Authority):** The exchange endpoint provides a `scheduleCancel` action that schedules a cancel-all after a minimum 5-second countdown with documented trigger mechanics. Whether this cancel-all action cancels resting protective trigger orders (such as stop-losses) is an unresolved safety hypothesis that requires explicit verification before any adoption consideration.
    *Source:* [Hyperliquid Exchange Endpoint Documentation](https://hyperliquid.gitbook.io/Hyperliquid-docs/for-developers/api/exchange-endpoint)
@@ -102,11 +102,11 @@ flowchart TD
 - **Problem Observed:** Relying solely on periodic REST polling introduces unnecessary transport overhead and risks rate-limit throttling during periods of high market activity.
 - **Proposed Solution:** Ingest native Hyperliquid WebSocket subscription streams:
   - `orderUpdates`: Tracking of resting, filled, rejected, or canceled orders.
-  - `userEvents`: User account updates, fill notifications, and balance events via WebSocket subscription.
+  - `userEvents`: Fills, funding, liquidation and `nonUserCancel` event variants via one WebSocket subscription.
   - `userFills`: Execution prices, fee recording, and fill details.
   - `userFundings`: Real-time tracking of funding rate cash flows.
-  - `activeAssetData`: Live mark price, oracle price, and open interest.
-  - `nonUserCancel` / `liquidation`: Immediate detection of exchange-triggered liquidations or margin cancellations.
+  - `activeAssetCtx`: Mark price, oracle price, funding and open interest for a market.
+  - `activeAssetData`: User-specific leverage, maximum trade sizes and available-to-trade values for a perpetual market.
 - **Why Useful:** Event-driven stream updates reduce reliance on polling while maintaining responsive event awareness. Periodic authoritative queries remain available for baseline synchronization.
 - **Risk / Safety Concern:** High event throughput during market volatility requires non-blocking asynchronous event handling. Buffer sizing and overflow handling must be evaluated against actual load.
 - **Implementation Boundary:** Exchange feed adapter and event dispatcher inside Bridge.
@@ -120,12 +120,12 @@ flowchart TD
 
 - **Problem Observed:** Copying only the main `.db` database file while WAL activity exists can yield an incomplete, inconsistent, or unusable backup because committed transactions may reside in the `.db-wal` file. In addition, unmanaged WAL growth can consume disk space and degrade read performance.
 - **Proposed Solution:**
-  1. Use the official SQLite Online Backup API (`sqlite3_backup_*`) as the primary candidate to create consistent, atomic database snapshots while live writes continue.
+  1. Use the official SQLite Online Backup API (`sqlite3_backup_*`) as the primary candidate to create a consistent snapshot while allowing other database activity between incremental backup steps.
   2. Evaluate `VACUUM INTO '<destination>'` as a separate SQLite-supported snapshot alternative.
   3. Define non-blocking passive checkpointing (`PRAGMA wal_checkpoint(PASSIVE)`) as an evaluated policy, measuring checkpoint duration under actual load before fixing operational cadence.
   4. Include an offline verification step that opens the snapshot in a read-only process and executes `PRAGMA integrity_check`.
-- **Why Useful:** Provides reliable, zero-downtime backups and disaster recovery without risking inconsistent data or blocking write operations.
-- **Risk / Safety Concern:** Backup implementation directly touches live persistence and recovery. Aggressive checkpointing modes (`TRUNCATE` / `RESTART`) could cause write locks and must not be used during active operations.
+- **Why Useful:** Provides an SQLite-supported route to consistent online snapshots while reducing the need for a long-lived read lock. Completion, restore and integrity still have to be proved.
+- **Risk / Safety Concern:** Backup implementation directly touches live persistence and recovery. Incremental backup can encounter `BUSY`/`LOCKED` and may restart after concurrent source writes; checkpoint mode and cadence must be measured before operational use. No aggressive checkpoint mode is approved by this research record.
 - **Implementation Boundary:** Persistence, backup, and database maintenance subsystem.
 - **Suggested Audit Tier:** **T0** for backup and persistence implementation (touches live persistence and recovery); **T2** for documentation contracts.
 - **Source URL:** https://sqlite.org/backup.html and https://sqlite.org/wal.html
