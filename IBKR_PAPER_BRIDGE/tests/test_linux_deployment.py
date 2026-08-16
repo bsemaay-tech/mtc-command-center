@@ -435,6 +435,18 @@ def test_no_deployment_script_mutates_ufw():
     assert "ufw status verbose" in read(LINUX / "lib" / "common.sh")
 
 
+# A commented row must fail for the reason the comment-stripped row implies, not
+# merely "some FAIL": each entry pins that exact failure category. The stripped
+# row also cannot carry the trailing comment marker any more, so its absence from
+# the diagnostic proves the reported row is the stripped one.
+COMMENTED_NEGATIVE_DIAGNOSTICS = {
+    "commented_bridge_port_exposed": "ufw exposes Bridge port 8790",
+    "commented_unknown_verb": "rule action/direction is not a modelled inbound UFW status verb",
+    "commented_named_profile": "port field is not an explicit numeric port/range",
+}
+UFW_COMMENT_MARKER = " #"
+
+
 @pytest.mark.parametrize(
     ("name", "rules", "should_pass"),
     (
@@ -493,6 +505,37 @@ def test_no_deployment_script_mutates_ufw():
             "80/tcp ALLOW IN Anywhere\n443/tcp ALLOW IN Anywhere\n",
             False,
         ),
+        # Live Ubuntu rows carry a trailing rule comment; the exact shipped shape.
+        (
+            "live_commented_ssh_pair",
+            "22/tcp                     ALLOW IN    Anywhere                   # SSH\n"
+            "22/tcp (v6)                ALLOW IN    Anywhere (v6)              # SSH\n",
+            True,
+        ),
+        (
+            "commented_bridge_port_exposed",
+            "22/tcp                     ALLOW IN    Anywhere                   # SSH\n"
+            "8790/tcp ALLOW IN Anywhere                # temporary\n",
+            False,
+        ),
+        (
+            "commented_unknown_verb",
+            "22/tcp WEIRD IN Anywhere # x\n",
+            False,
+        ),
+        (
+            "commented_named_profile",
+            "OpenSSH ALLOW IN Anywhere # SSH\n",
+            False,
+        ),
+        # A comment may mention the Bridge port without any rule admitting it.
+        # Only the substring backstop sees this row, so this case is the sole
+        # discriminator for the backstop's own comment strip.
+        (
+            "comment_mentions_bridge_port",
+            "22/tcp ALLOW IN Anywhere # was 8790 before\n",
+            True,
+        ),
     ),
 )
 def test_ufw_bridge_safe_invariant_is_multi_tenant_and_fail_closed(
@@ -525,6 +568,10 @@ assert_ufw_bridge_safe
     else:
         assert result.returncode != 0
         assert "FAIL" in result.stderr
+        expected_diagnostic = COMMENTED_NEGATIVE_DIAGNOSTICS.get(name)
+        if expected_diagnostic is not None:
+            assert expected_diagnostic in result.stderr, result.stderr
+            assert UFW_COMMENT_MARKER not in result.stderr, result.stderr
 
 
 def test_first_start_unit_is_separate_masked_design_and_restart_no():

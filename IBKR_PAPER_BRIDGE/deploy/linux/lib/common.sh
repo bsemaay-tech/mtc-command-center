@@ -233,6 +233,10 @@ assert_ufw_bridge_safe() {
     in_rules && /^[[:space:]]*$/ { next }
     in_rules {
       rule = $0
+      # A single trailing rule comment ("22/tcp ... # SSH") is ordinary UFW status
+      # output and is annotation, not grammar. Strip only that comment, before any
+      # field handling, so the source/destination fields stay modelled.
+      sub(/[[:space:]]+#[^\n]*$/, "", rule)
       if (match(rule, /[[:space:]]+(DENY|REJECT)[[:space:]]+(IN|FWD)[[:space:]]+/)) {
         next
       }
@@ -299,9 +303,15 @@ assert_ufw_bridge_safe() {
   # BRIDGE output still cannot become a clean conclusion.
   bridge_allow="$(printf '%s\n' "${status}" | awk -v bridge_port="${MTC_BIND_PORT}" '
     /^[[:space:]]*--[[:space:]]/ { in_rules = 1; next }
-    in_rules && index($0, bridge_port) {
-      if ($0 ~ /[[:space:]]+(DENY|REJECT)[[:space:]]+(IN|FWD)[[:space:]]/) next
-      if ($0 ~ /[[:space:]]+(ALLOW|LIMIT|DENY|REJECT)[[:space:]]+OUT[[:space:]]/) next
+    in_rules {
+      # Same single trailing rule comment is stripped here, so a comment can
+      # neither hide a port field nor forge a DENY/OUT skip. The scan still runs
+      # over the whole remaining row, port fields included.
+      rule = $0
+      sub(/[[:space:]]+#[^\n]*$/, "", rule)
+      if (!index(rule, bridge_port)) next
+      if (rule ~ /[[:space:]]+(DENY|REJECT)[[:space:]]+(IN|FWD)[[:space:]]/) next
+      if (rule ~ /[[:space:]]+(ALLOW|LIMIT|DENY|REJECT)[[:space:]]+OUT[[:space:]]/) next
       print
     }
   ')"
