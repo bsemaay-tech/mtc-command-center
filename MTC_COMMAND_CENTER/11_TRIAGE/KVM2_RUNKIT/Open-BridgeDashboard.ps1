@@ -1,4 +1,4 @@
-# Open-BridgeDashboard_v3.ps1 - pinned, agent-only KVM2 dashboard tunnel.
+# Open-BridgeDashboard_v4.ps1 - pinned, agent-only KVM2 dashboard tunnel.
 #
 # Stores no password, passphrase, or private-key material. No identity key file
 # is opened: the pinned expected fingerprint must already be present in the
@@ -55,11 +55,21 @@ function Invoke-NativeCapture {
 }
 
 function Get-Sha256Fingerprints([string[]]$Lines) {
-    @(
-        $Lines | ForEach-Object {
-            [regex]::Matches($_, 'SHA256:[A-Za-z0-9+/=]+') | ForEach-Object { $_.Value }
-        } | Select-Object -Unique
-    )
+    $fingerprints = @()
+    for ($index = 0; $index -lt $Lines.Count; $index++) {
+        # Accept only the complete ssh-add row grammar and extract exactly field
+        # 2. A SHA256-looking token in the comment can never become a key pin.
+        $row = [string]$Lines[$index]
+        $match = [regex]::Match(
+            $row,
+            '^(?<Bits>[1-9][0-9]*) (?<Fingerprint>SHA256:[A-Za-z0-9+/]{43}) (?<Comment>.+) \((?<Type>[A-Za-z0-9][A-Za-z0-9._+-]*)\)$'
+        )
+        if (-not $match.Success) {
+            throw "ssh-add identity row $($index + 1) is malformed; STOP and inspect ssh-agent output manually."
+        }
+        $fingerprints += $match.Groups['Fingerprint'].Value
+    }
+    @($fingerprints | Select-Object -Unique)
 }
 
 function Get-SshExitMessage([System.Diagnostics.Process]$Process) {
@@ -126,7 +136,12 @@ if ($pinResult.ExitCode -ne 0) {
     Fail "No pinned host key for $HostAddr exists in $KnownHosts. STOP and report; never accept a new key here."
 }
 
-$agentFingerprints = Get-Sha256Fingerprints -Lines $agentResult.Output
+try {
+    $agentFingerprints = Get-Sha256Fingerprints -Lines $agentResult.Output
+}
+catch {
+    Fail $_.Exception.Message
+}
 if ($agentFingerprints -notcontains $ExpectedFingerprint) {
     Fail "The expected public-key fingerprint $ExpectedFingerprint is not loaded in ssh-agent. Load that key yourself and retry."
 }
