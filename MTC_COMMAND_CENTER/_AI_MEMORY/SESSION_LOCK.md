@@ -31,7 +31,7 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 20:59 +03 | — |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **Codex Lead `01a00921`** — blocked Help/Wiki handoff only | 2026-08-16 21:40 +03 |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_READ_ONLY_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 20:20 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-16 20:59 +03 | — |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **Codex Lead `01a00921`** — T1 UI/documentation cycle; counterpart implementation only | 2026-08-16 21:30 +03 |
@@ -45,6 +45,11 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 21:40 +03:** Codex Lead `01a00921` claimed the shared-memory
+  row only to record the clean Help/Wiki capacity blocker and immediate resume
+  instruction. No product or protected runtime surface is writable under this
+  claim.
 
 - **2026-08-16 21:30 +03:** Codex Lead `01a00921` claimed the new Bridge Help /
   System Map workstream for the owner-requested interactive, explanatory Wiki.
