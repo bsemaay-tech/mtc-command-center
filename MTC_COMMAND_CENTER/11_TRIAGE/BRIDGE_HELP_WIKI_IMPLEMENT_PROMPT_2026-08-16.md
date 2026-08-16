@@ -108,3 +108,54 @@ and `git diff --check` on the allowed paths.
 At the end, report only: files changed, feature summary, exact validation run and
 results, and any unresolved issue. Do not claim acceptance; the Codex Lead owns
 independent inspection and Gate 5.
+
+## Owner decision addendum — 2026-08-16 22:37 +03
+
+The following decisions correct the older diagram and are binding for both the
+interactive Help diagram and its canonical machine-readable knowledge source:
+
+- The execution Dashboard is to live on the same Hostinger KVM2 VPS as the
+  Bridge, private-first. Current V1 assets are served by the same loopback
+  FastAPI process. "Separate logical component" means a responsibility and
+  security boundary, not a separate deployed service today; a separately
+  limited loopback Dashboard V2 service remains OPEN.
+- Bridge and Dashboard are **not installed or running on KVM2**. The latest
+  verified state has only an uploaded payload. Mark this as NOT DEPLOYED rather
+  than implying a live remote Dashboard.
+- Owner-PC access follows the private SSH-tunnel direction. Phone monitoring is
+  future and starts read-only through a private tunnel/VPN or another gated
+  private method. Exact phone/auth topology is OPEN. Port 8790 is never public.
+- V1 controls are real. ARM is conditional permission, not an order; DISARM
+  blocks new entries and does not automatically flatten; KILL is sticky, the
+  current UI sends `flatten=false`, and it is not production-hardened. There is
+  no application login, 2FA, role system, session expiry, or complete control
+  audit layer today.
+- V1 is a basic six-page UI with observation data and WebSocket updates. The
+  Strategy/Risk form is not a finished save workflow and the LLM page is mostly
+  a placeholder. Dashboard V2, mobile polish and this Help/Wiki remain future
+  until separately implemented and accepted.
+- Replace the old **AI copilot / Hermes** implication. The owner decided the
+  initial Dashboard assistant does **not** need Hermes. Initial assistance uses
+  the owner's Codex/ChatGPT subscription manually against a Dashboard-produced
+  read-only analysis package or controlled read-only context. Automatic embedded
+  server-side chat is later and normally requires a separately billed API. AI
+  never receives ARM, DISARM, KILL, config, order, wallet, shell, deployment, or
+  code-editing authority.
+- Distinguish planned Dashboard operational AI memory (summaries, incidents,
+  operator notes) from repository `_AI_MEMORY` used by coding agents. The latter
+  exists; the former is not implemented.
+- Telegram code exists for state/risk/reconciliation/heartbeat notifications,
+  but KVM2 credentials/configuration and live verification remain incomplete.
+  Do not claim complete fill notifications unless source proves them.
+- Future public websites may share the VPS only as separate tenants/users,
+  directories, services and public ports. They never proxy or expose Bridge
+  controls and are not part of the Bridge Dashboard.
+- Give every component one truthful status label: **CURRENT V1**, **PLANNED V2**,
+  **SEPARATE FUTURE GATE**, or **NOT DEPLOYED**, plus a compact legend.
+- Visually show: Owner -> private access -> Dashboard -> Bridge; Bridge ->
+  Telegram; Dashboard read-only package -> Codex subscription -> explanation /
+  proposal -> Owner decision. Show an explicit blocked/no-authority connection
+  from AI to economic controls.
+- Include a compact **Built now / still required** view covering source
+  implementation, KVM2 deployment, remote security, Dashboard V2, phone access,
+  Telegram verification, and AI assistance.
