@@ -4,6 +4,32 @@
 > Governing record: MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md. Identity split: the prover in this repository is the older 137520-byte R5 code; the audited 185272-byte Option C prover is UNMERGED on codex/pathscope-accounting-redesign-20260815. Prerequisite gate 2 is UNKNOWN until the Lead re-derives it at freeze-prerequisite review.
 
 
+## [Fable 5 Lead] 2026-08-16 midday — clean stop; entry point is the midday handoff
+
+Canonical pickup: `11_TRIAGE/NEW_CHAT_HANDOFF_2026-08-16_MIDDAY.md`. Stopped at
+`e1dc3d95`, worktree clean, all pushed, every session-lock row released, both
+VMs `Off` with the GATEA-STAGING checkpoint retained. 32 commits.
+
+The afternoon's two findings, in order of importance. First, **GATEA-STAGING is
+a local Hyper-V VM on the owner's PC, and the bridge is already installed on it
+and already ran** — hardened systemd unit, DISARMED, Hyperliquid TESTNET,
+2026-08-09 → 2026-08-11, clean stop. The blocker recorded for days as "eight
+facts only an administrator can supply" dissolved in twenty minutes of
+authorized observation; seven facts were answered on sight, the eighth
+(mutation-denial control) genuinely does not exist, and two recorded facts were
+stale — the address, and the sudo scope, which is actually full passwordless
+root. Second, **the Lead overstated that finding to the owner and corrected it**:
+the "never installed" planning rows describe **KVM2**, where they are accurate.
+Never state a deployment status without naming the host
+(`11_TRIAGE/POSTMORTEM_ALREADY_DEPLOYED_2026-08-16.md`).
+
+**One owner decision is open and should gate any large new audit programme** —
+whether to cut the evidence standard to match the risk (options B and C in §3 of
+the handoff). The owner is frustrated by elapsed time and spend; the Lead's
+diagnosis is that deploying the bridge is 10–20 h while proving it to audit
+standard is the remaining 60–70 h and most of the cost, and that standard was
+never deliberately chosen.
+
 ## [Fable 5 Lead] 2026-08-16 morning — ALL SIX owner decisions answered; Wave A executed
 
 Barış answered every pending decision via the chat decision UI at 07:55 +03,

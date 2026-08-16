@@ -1,5 +1,10 @@
 # NEXT_STEPS
 
+> **▶ 2026-08-16 midday: the live queue is §4 of
+> `11_TRIAGE/NEW_CHAT_HANDOFF_2026-08-16_MIDDAY.md`, and it is gated by the open
+> owner question in §3 of that file.** Ask that question before starting large
+> work. Everything below is older context.
+
 > **Pathscope disclosure (owner decision 2026-08-16, section 6):** Pathscope is a supplemental aid only: its output may inform review, but it may never be cited as proof, a gate, or an acceptance input anywhere in WP-I or downstream, and no Pathscope PASS may close any gate.
 > Governing record: MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md. Identity split: the prover in this repository is the older 137520-byte R5 code; the audited 185272-byte Option C prover is UNMERGED on codex/pathscope-accounting-redesign-20260815. Prerequisite gate 2 is UNKNOWN until the Lead re-derives it at freeze-prerequisite review.
 

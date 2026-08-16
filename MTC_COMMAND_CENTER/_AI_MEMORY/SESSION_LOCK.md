@@ -33,11 +33,12 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **UNCLAIMED** — accepted and released 2026-08-15 11:45 +03 | — |
 | Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
-| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Fable 5 Lead `f3a2cf9f`** "owner decisions + 8h day run" | 2026-08-16 07:55 +03 |
-| Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **Fable 5 Lead `f3a2cf9f`** "owner decisions + 8h day run" | 2026-08-16 07:55 +03 |
-| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Fable 5 Lead `f3a2cf9f`** "owner decisions + 8h day run" | 2026-08-16 07:55 +03 |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **Fable 5 Lead `f3a2cf9f`** "owner decisions + 8h day run" | 2026-08-16 07:55 +03 |
-| Stage-1 / owner-decision / runbook records | `11_TRIAGE/` STAGE1_*, OWNER_DECISION*, *RUNBOOK_V*, KVM2 P2 review outputs (new files only) | **Fable 5 Lead `f3a2cf9f`** "owner decisions + 8h day run" | 2026-08-16 07:55 +03 |
+| §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
+| Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
+| Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
+| Stage-1 / owner-decision / runbook records | `11_TRIAGE/` STAGE1_*, OWNER_DECISION*, *RUNBOOK_V*, KVM2 P2 review outputs (new files only) | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
+| GATEA-STAGING host actions | the VM itself, `11_TRIAGE/` GATEA_STAGING_*, HOST_CHANNEL_* | **UNCLAIMED** — released 2026-08-16 11:05 +03. VM left `Off`, checkpoint `GATEA-STAGING-CH1-PRECHANGE-V1` retained | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
@@ -48,6 +49,19 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 11:05 +03: ALL ROWS RELEASED** by Fable 5 Lead `f3a2cf9f` at a
+  clean stop. 32 commits, all pushed, worktree clean at `e1dc3d95`. No foreign
+  uncommitted edit found in any owned workstream. Both VMs are `Off`; the
+  GATEA-STAGING checkpoint `GATEA-STAGING-CH1-PRECHANGE-V1` is retained
+  deliberately as the rollback point. **One owner decision is open and should
+  gate any large new audit programme** — see
+  `11_TRIAGE/NEW_CHAT_HANDOFF_2026-08-16_MIDDAY.md`.
+
+  Process note for the next session: three lanes died together because all
+  three were routed to the same Codex account; and the single most valuable act
+  of the day cost no tokens — starting the VM and looking at it. Prefer cheap
+  observation over another fan-out.
 
 - **2026-08-16 07:55 +03:** Fable 5 Lead `f3a2cf9f` claimed the SEC102/Pathscope,
   prereg-draft, Audit-2 readiness, shared-memory rows and a new Stage-1/owner-

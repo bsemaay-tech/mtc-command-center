@@ -1,5 +1,17 @@
 # START_HERE
 
+> **▶▶ CURRENT ENTRY POINT — 2026-08-16 midday:
+> `..\11_TRIAGE\NEW_CHAT_HANDOFF_2026-08-16_MIDDAY.md`.** Read it in full before
+> anything else; its §1 is the copy-paste prompt and its §3 carries **an open
+> owner question that should gate any large new work**. Superseded by it: the
+> 2026-08-16 morning handoff and every banner below.
+>
+> Three facts that must not be re-learned the hard way: **GATEA-STAGING is a
+> local Hyper-V VM on Barış's PC** and the bridge is already installed there and
+> already ran disarmed for 2.5 days — while **KVM2 has nothing**, so never state
+> a deployment status without naming the host. **Pathscope is closed**; a sixth
+> cycle is forbidden. **Prerequisite gate 2 is UNKNOWN**, not satisfied.
+
 > **Pathscope disclosure (owner decision 2026-08-16, section 6):** Pathscope is a supplemental aid only: its output may inform review, but it may never be cited as proof, a gate, or an acceptance input anywhere in WP-I or downstream, and no Pathscope PASS may close any gate.
 > Governing record: MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md. Identity split: the prover in this repository is the older 137520-byte R5 code; the audited 185272-byte Option C prover is UNMERGED on codex/pathscope-accounting-redesign-20260815. Prerequisite gate 2 is UNKNOWN until the Lead re-derives it at freeze-prerequisite review.
 
