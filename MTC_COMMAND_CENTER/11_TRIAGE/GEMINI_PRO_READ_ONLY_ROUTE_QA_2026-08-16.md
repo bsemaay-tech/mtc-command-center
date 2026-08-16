@@ -9,7 +9,7 @@
 - Model: `gemini-3.7-flash-high`
 - Audit tier: T0. Supplemental read-only route only; never canonical acceptance authority.
 
-Final implementation hashes at 2026-08-16 18:16 +03:
+Round-3 implementation hashes at 2026-08-16 18:16 +03:
 
 ```text
 launcher SHA256 = 8E3CCE8283A3A7D1742A8E898354768A42366EB00DC104B8903967A1256B9870
@@ -237,3 +237,90 @@ This evidence does not accept the route. T0 rounds 1, 2, and 3 were all non-acce
 the mandatory maximum of three rounds. A fresh Claude Opus audit was therefore not started: a
 fourth repair/re-audit cycle would violate the cap. The route remains installed and locally
 functional, but **not repo-ready** and not authorized as a repository agent.
+
+## Owner-authorized hardening cycle 2 (2026-08-16 18:55 +03)
+
+The owner explicitly authorized a new bounded cycle to make Gemini a safe read-only repository
+adviser now. Coding access is a future phase and remains disabled. Gate 1 remains T0; this is a
+new owner-authorized work package, not a silent fourth round of the closed cycle above.
+
+Cycle-2 implementation identity at 2026-08-16 19:08 +03:
+
+```text
+launcher SHA256 = 3E713AB0C41B7773038F1009F560EFE8A6E4E7452F86A28ED8DDE180194F978B
+project  SHA256 = BF5DED19F712CACA2D8DD38588E015C1717FEFD2CF2577CF54A7D604A88E3551
+```
+
+### Repair A — authenticated profile binding
+
+The launcher no longer trusts process-scoped `USERPROFILE` to locate Antigravity or its project
+config. It resolves the authenticated Windows profile with
+`Environment.GetFolderPath(SpecialFolder.UserProfile)` and canonicalizes the result.
+
+Equivalent old behavior and guarded behavior:
+
+```text
+OLD: injected USERPROFILE controlled CLI/config lookup -> RED
+NEW PS7: injected fake USERPROFILE, PREFLIGHT_OK, canonical repository, injected value restored -> GREEN
+NEW PS5.1: injected fake USERPROFILE, PREFLIGHT_OK, canonical repository, injected value restored -> GREEN
+```
+
+### Repair B — persistent watcher plus final drain
+
+Persistent `Register-ObjectEvent` subscriptions now queue Changed/Created/Deleted/Renamed/Error
+events from before the first Antigravity process until both watchers are disabled after the final
+snapshot. Shutdown waits for two quiet drain passes before unregistering and disposing watchers.
+
+Production-AST create/delete fixture:
+
+```text
+OLD MUTANT: no persistent subscription; instant create/delete captured 0 events -> RED
+NEW PS7: Created:new-production.txt,Deleted:new-production.txt; marker absent -> GREEN
+NEW PS5.1: 2 events; marker absent -> GREEN
+```
+
+A real production preflight with a concurrent create/delete marker failed closed with
+`Filesystem changes were observed`; the marker was absent afterward. Repeating after the narrow
+Git-lock filter produced the same rejection for a non-Git marker.
+
+### Expected Git lock adjudication
+
+The persistent watcher exposed Antigravity's read-only Git discovery creating and deleting
+temporary `.git/index.lock` and `.git/worktrees/<name>/index.lock` files. The launcher now ignores
+only exact directory-change and `index.lock` lifecycle events under those paths. It requires no
+main or registered-worktree index lock before the run, requires the lock-state snapshot to remain
+`ABSENT`, and still binds index hashes, tracked diff, staged diff, refs, objects, config, and
+packed refs.
+
+Filter D026 matrix:
+
+```text
+Changed:.git                                      -> allowed expected metadata event
+Created:.git\index.lock                           -> allowed expected lock event
+Deleted:.git\worktrees\R7FINAL\index.lock        -> allowed expected lock event
+Changed:.git\config                               -> rejected
+Created:.git\worktrees\R7FINAL\gitdir            -> rejected
+Created:source.py                                 -> rejected
+```
+
+### Additional regression evidence
+
+```text
+PS7 preflight                                      -> PREFLIGHT_OK
+PS5.1 preflight with fake USERPROFILE              -> PREFLIGHT_OK
+PS7 live AGENTS.md read                            -> SUCCESS, paths exact, sentinel exact
+PS7 live write_file probe                          -> denied, marker absent, sentinel exact
+PS7 timeout process-tree cleanup                   -> timeout caught, survivors=0
+PS5.1 timeout process-tree cleanup after race fix  -> timeout caught, survivors=0
+```
+
+One PS5 preflight correctly failed when an unrelated concurrent writer created
+`IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md`; the launcher did not
+touch that file. A later stable PS5 preflight passed. This is positive fail-closed evidence, not
+a route failure.
+
+## Cycle-2 acceptance state
+
+Implementation and Lead QA are complete on the pinned hashes above. Fresh accepting
+`gpt-5.6-sol` xhigh and `claude-opus-5` xhigh T0 verdicts are still required before the route is
+repo-ready. No coding permission is granted by this cycle.

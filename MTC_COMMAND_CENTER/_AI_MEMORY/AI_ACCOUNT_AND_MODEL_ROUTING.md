@@ -259,10 +259,12 @@ Literal commands, RED/GREEN mutations, and real outputs are recorded in
 `MTC_COMMAND_CENTER/11_TRIAGE/GEMINI_PRO_READ_ONLY_ROUTE_QA_2026-08-16.md`.
 
 **Acceptance state:** installed and locally reproduced by the Codex Lead under the owner's
-explicit 2026-08-16 override to perform implementation directly, but not repo-ready. Codex T0
-rounds 1 and 2 returned BLOCK and round 3 returned `REQUEST_CHANGES`, exhausting the three-round
-cap before Claude acceptance. Do not use this as a repository agent unless the owner authorizes
-a new bounded cycle and fresh `claude-opus-5` xhigh plus `gpt-5.6-sol` xhigh reviews both accept.
+explicit 2026-08-16 override to perform implementation directly, but not repo-ready. The first
+T0 cycle exhausted its cap. The owner authorized cycle 2 at 18:55 +03 for read-only adviser use;
+profile binding, persistent watcher/final drain, transient Git-lock adjudication, and PS5 timeout
+verification are repaired and freshly tested. Do not use this as a repository agent until fresh
+cycle-2 `claude-opus-5` xhigh plus `gpt-5.6-sol` xhigh reviews both accept. Coding permission is
+a separate future phase and remains disabled.
 
 ---
 

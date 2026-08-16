@@ -32,6 +32,7 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
 | Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **Codex Lead `01a00ad1`** — owner-authorized Gemini read-only hardening cycle | 2026-08-16 18:55 +03 |
+| Gemini adviser route | `11_TRIAGE/GEMINI_PRO_READ_ONLY_*` plus external launcher/project config | **Codex Lead `01a00ad1`** — cycle-2 implementation and acceptance | 2026-08-16 18:55 +03 |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The

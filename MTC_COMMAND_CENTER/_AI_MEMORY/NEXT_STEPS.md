@@ -4,24 +4,29 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
-## OWNER-REQUESTED BLOCKED — Gemini 3.7 Flash Pro read-only repo route (2026-08-16)
+## OWNER-REQUESTED IN PROGRESS — Gemini 3.7 Flash Pro read-only repo adviser (2026-08-16)
 
 **Execution tier: T0.** The owner explicitly directed Codex to perform the implementation
 instead of waiting for Claude. Installation, authentication, live completion, dedicated
 project isolation, launcher implementation, preflight, canonical repo read, and denied-write
-probe are complete. Repo authorization is blocked after the final permitted Codex audit returned
-`REQUEST_CHANGES`; Claude Max remains emergency-only and was not used.
+probe are complete. At 18:55 +03 the owner explicitly authorized a new bounded hardening cycle
+for read-only adviser use now; coding remains future-only and disabled. Claude Max remains
+emergency-only and was not used.
 
-1. **T0 cap exhausted.** Literal commands and outputs are in
-   `11_TRIAGE/GEMINI_PRO_READ_ONLY_ROUTE_QA_2026-08-16.md`. Codex rounds 1 and 2 returned
-   BLOCK; round 3 returned `REQUEST_CHANGES`. The final response did not enumerate its repair,
-   although its transcript investigated watcher final-drain and `USERPROFILE` path-binding risks.
-2. **[AI: Barış] Decision required before any continuation.** Do not silently run round 4.
-   The owner may authorize a new bounded diagnosis/repair cycle or leave the installed route
-   outside repo governance. Fresh accepting `gpt-5.6-sol` xhigh and `claude-opus-5` xhigh
-   reviews are still required before this route can be called repo-ready.
+1. **Cycle-2 repair and Lead QA complete.** Profile lookup now binds to the authenticated Windows
+   profile, persistent watcher subscriptions cover the entire route through a final quiet drain,
+   exact transient Git lock events are narrowly adjudicated, and the PS5 timeout verification race
+   is repaired. RED/GREEN and live evidence are in
+   `11_TRIAGE/GEMINI_PRO_READ_ONLY_ROUTE_QA_2026-08-16.md`.
+2. **[AI: Lead] Fresh T0 acceptance.** Run fresh `gpt-5.6-sol` xhigh and
+   `claude-opus-5` xhigh reviews against exact cycle-2 bytes. Only after both accept may the route
+   be called repo-ready and the Toolbox row committed.
 3. **Scope remains narrow.** Do not alter shared legacy Antigravity permission storage,
    protected source, trading/Pine/parity/MTC behavior, schemas, credentials, hosts, or deploys.
+4. **[AI: Lead] Future coding phase — not active.** After read-only acceptance, prepare a separate
+   owner-reviewed pilot in an isolated worktree: unprotected allowlisted files only, safe test
+   commands only, no commit/push/merge, no secrets/network, and mandatory Codex diff/test review.
+   This entry grants no current write permission.
 
 ## OWNER-REQUESTED OPEN — AI-memory continuity audit and repair (2026-08-16)
 

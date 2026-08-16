@@ -5,7 +5,7 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
-## [Codex gpt-5.6-sol] 2026-08-16 — Google AI Pro route functional; T0 acceptance blocked at round cap
+## [Codex gpt-5.6-sol] 2026-08-16 — Gemini read-only adviser hardening cycle 2 pending fresh T0 audit
 
 Owner account `bsemaay3@gmail.com` is authenticated in checksum-verified Google
 Antigravity CLI 1.1.13. Live evidence: account banner reported Google AI Pro; Gemini and
@@ -38,10 +38,17 @@ response did not enumerate the repair; the transcript investigated final watcher
 `USERPROFILE` path-binding risks. Literal QA is in
 `11_TRIAGE/GEMINI_PRO_READ_ONLY_ROUTE_QA_2026-08-16.md`.
 
-The three-round T0 cap is exhausted. Claude Opus was not launched after the non-accepting final
-Codex verdict, and no fourth cycle may start silently. The route is installed and functional
-but **not repo-ready or authorized as a repository agent**. Claude Max remained unused. Owner
-direction is required to authorize a new bounded cycle or leave the route outside governance.
+The first three-round T0 cycle closed without acceptance. At 18:55 +03 the owner explicitly
+authorized a new bounded hardening cycle for a read-only adviser now and coder later. Coding
+access remains disabled. Cycle 2 binds profile lookup to the authenticated Windows profile, uses
+persistent filesystem-event subscriptions through a final quiet drain, narrowly adjudicates only
+transient Git `index.lock` events while binding final Git state, and repairs a PS5 timeout-check
+race. RED/GREEN fixtures pass in PS7/PS5; live read and denied-write probes pass. One unrelated
+concurrent IBKR doc writer was detected and caused the route to fail closed; its file was not
+touched. Exact evidence is in the QA record.
+
+The route remains **not repo-ready** until fresh `gpt-5.6-sol` xhigh and `claude-opus-5` xhigh
+cycle-2 audits both accept. Claude Max remains unused.
 
 ## [Codex gpt-5.6-sol] 2026-08-16 — AI-memory continuity risk recorded; remediation task OPEN
 
