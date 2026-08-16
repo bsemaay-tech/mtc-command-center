@@ -34,6 +34,7 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-16 20:59 +03 | — |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_READ_ONLY_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 20:20 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-16 20:59 +03 | — |
+| Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **Codex Lead `01a00921`** — T1 UI/documentation cycle; counterpart implementation only | 2026-08-16 21:30 +03 |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
@@ -44,6 +45,12 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-16 21:30 +03:** Codex Lead `01a00921` claimed the new Bridge Help /
+  System Map workstream for the owner-requested interactive, explanatory Wiki.
+  Scope is static Help UI, its tests, and a shared AI-readable knowledge source.
+  Trading logic, strategy/risk/order behavior, APIs, configuration, deployment,
+  credentials, hosts, and economic actions remain excluded.
 
 - **2026-08-16 20:59 +03:** Codex Lead `01a00921` released the design-record
   and shared-memory rows after A11, A12, the change log, source links, and Gate-7
