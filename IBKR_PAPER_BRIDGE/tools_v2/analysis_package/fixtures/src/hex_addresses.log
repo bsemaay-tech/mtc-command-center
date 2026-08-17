@@ -1,0 +1,9 @@
+# FAKE addresses and tokens - Package 4 redaction fixture (synthetic data only).
+# 40-hex address (0x + 40 hex chars)
+0x0123456789abcdef0123456789abcdef01234567
+# 64-hex address (0x + 64 hex chars)
+0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+# standalone long hex token (>=32 hex chars)
+0123456789ABCDEF0123456789ABCDEF01234567
+# standalone long base64-like token (>=40 chars, digit+upper+lower)
+FakeBase64Token9G7H5J3K1L8M2N4P6Q0R7S9T3U5V8W2X4Y6Z0A1B2C3D4E5F6G7H8J9K0L1M2N3P4Q5R6S7T8U9V0W1X2Y3Z4

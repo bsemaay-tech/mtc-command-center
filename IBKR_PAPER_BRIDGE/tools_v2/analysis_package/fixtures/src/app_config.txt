@@ -1,0 +1,12 @@
+# FAKE application config - Package 4 redaction fixture (synthetic data only).
+# Every value below is planted, deliberately invalid, and must never appear
+# un-redacted in a generated bundle.
+[app]
+api_key=FAKEKEY000000000000000000
+auth_token=FAKETOKEN000000000000000000
+db_password=FAKEPASSWORD000000000000000000
+client_secret=FAKESECRET000000000000000000
+
+[server]
+host=127.0.0.1
+port=7496
