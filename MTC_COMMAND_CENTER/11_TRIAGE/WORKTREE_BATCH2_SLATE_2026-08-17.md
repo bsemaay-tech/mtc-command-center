@@ -188,3 +188,27 @@ excluded by that guard, path by path (all clean and reachable, just touched with
 
 ALL removals remain HELD — nothing is removed until the owner approves a named
 subset of the 83-path list above.
+
+---
+
+## BATCH 2 EXECUTION RECORD — first ten, 2026-08-17 evening (owner-approved exact list)
+
+Per-item fresh prechecks immediately before each removal: clean tree
+(exit-asserted), remote reachability (capture-then-test), live process scan,
+Windows SERVICE scan, scheduled-task scan. `git worktree remove` only — no
+`--force`, no prune. Result: **10 of 10 REMOVED, zero mismatches.**
+
+| Path | SHA | Reachable via |
+|---|---|---|
+| `C:/GAAUD_3BR2_CDX` | `7aad0377` | `origin/codex/gate-a-3b-shm-validation` |
+| `C:/GAAUD_3BR2_CLA` | `7aad0377` | same |
+| `C:/GAAUD_3BR2_DS` | `7aad0377` | same |
+| `C:/GAAUD_3BR2_GLM` | `7aad0377` | same |
+| `C:/GAAUD_4_GLM` | `5a9bb922` | `origin/codex/gate-a-credential-free-disarmed` |
+| `C:/GAAUD_5A_CDX` | `5a9bb922` | same |
+| `C:/GAAUD_5A_CLA` | `5a9bb922` | same |
+| `C:/GAAUD_5A_CLD` | `5a9bb922` | same |
+| `C:/GAAUD_BUILD_CODEX` | `c5a4070a` | `origin/codex/gate-a-build-determinism` |
+| `C:/GAAUD_BUILD_GLM` | `c5a4070a` | same |
+
+Registered worktrees after: **139**. All other candidates remain HELD.

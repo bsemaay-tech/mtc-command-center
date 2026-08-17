@@ -75,3 +75,20 @@ PASS; PENDING regression clean; one summarizer API call (the only network use �
 no Telegram send, no KVM2 contact). All 13 REQUIRED findings now FIXED except
 #3-server-side (designed, owner-gated). Artifacts staged in `C:\tmp\t0_collector`
 for the 2026-08-19 exact `claude-opus-5` xhigh + `gpt-5.6-sol` xhigh re-audit.
+
+---
+
+## OWNER RULING 2026-08-17 late — local repairs accepted for continued review
+
+Collector local repairs ACCEPTED FOR CONTINUED REVIEW (not final acceptance).
+`WATCH_ACTIVE: NO` unchanged. Finding #3 design revised to V2 per six owner
+requirements (dedicated unprivileged `mtc-watch` account, owner-generated key +
+restrict, DPAPI agent-service reboot story with the honest logged-on-only
+limitation, exact-file ACLs with journal access dropped by default, a real
+backup CONTRACT separate from monitoring, frozen pre-application artifact set)
+— see `PHASE_WATCH_FORCED_COMMAND_DESIGN_2026-08-17.md` (V2, supersedes V1 in
+place). **The acceptance re-audit is GATED, not scheduled: it must NOT be
+dispatched while finding #3 or the backup contract is incomplete.** The earlier
+"automatic Aug-19 dispatch" wording is WITHDRAWN — capacity reopens then, but
+dispatch depends on the gate chain in the design doc, and no real scheduled
+follow-up exists.
