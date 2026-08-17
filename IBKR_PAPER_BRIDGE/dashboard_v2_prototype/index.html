@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bridge V2 — Dashboard Prototype (read-only, fixture data)</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="site-head">
+    <div class="brand-row">
+      <span class="brand">Bridge V2 — Dashboard Prototype</span>
+      <span class="brand-sub">Package 3 · T1 · multi-worker execution surface (proposed)</span>
+    </div>
+    <p class="banner" role="note">
+      READ-ONLY PROTOTYPE — fixture data only — this page controls nothing.
+      No live bridge, no exchange connection, no ARM, no orders, no configuration.
+    </p>
+    <nav class="tabs" role="tablist" aria-label="Prototype views">
+      <button type="button" class="tab" role="tab" aria-selected="true"  data-view="overview">Overview</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-view="workers">Worker detail</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-view="market">Market context</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-view="layers">Three layers</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" data-view="phone">Phone monitor</button>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <noscript>
+      <section class="panel">
+        <h2>JavaScript is disabled</h2>
+        <p>This prototype renders fixture data locally. Enable JavaScript to view it —
+           the page still performs no network access either way.</p>
+      </section>
+    </noscript>
+
+    <!-- View 1 — aggregate execution overview -->
+    <section class="view active" id="view-overview" role="tabpanel" aria-label="Aggregate execution overview">
+      <h1>Aggregate execution overview</h1>
+      <p class="lede">
+        Multi-worker execution summary across the synthetic fleet. Portfolio P&amp;L on this page is
+        the SUM of per-worker ledgers — workers never share one. Every number is fixture data,
+        rendered relative to a frozen as-of time; nothing here is live and nothing here is commanded.
+      </p>
+      <div class="grid" id="ov-cards"></div>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Workers</h2>
+          <span class="truth">FIXTURE · multi-worker summary</span>
+        </div>
+        <div id="ov-workers"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Portfolio Guardian</h2>
+          <span class="truth tone-blue">FIXTURE · Guardian model per P1 A.3 — thresholds unfrozen</span>
+        </div>
+        <div id="ov-guardian"></div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Shared infrastructure — IP / WebSocket budget</h2>
+          <span class="truth tone-amber">FIXTURE · realism only — P7 evidence levels respected</span>
+        </div>
+        <div id="ov-infra"></div>
+      </section>
+    </section>
+
+    <!-- View 2 — per-worker drill-down -->
+    <section class="view" id="view-workers" role="tabpanel" aria-label="Per-worker drill-down">
+      <h1>Per-worker drill-down</h1>
+      <p class="lede">
+        One worker at a time: the full identity tuple (seven immutable fields), health &amp; freshness,
+        block reasons with the veto vocabulary, the per-worker ledger, and the account label.
+        Selecting a worker below only changes what is displayed — it commands nothing.
+      </p>
+      <div class="chips" id="wk-chips"></div>
+      <div id="wk-detail"></div>
+    </section>
+
+    <!-- View 3 — market context -->
+    <section class="view" id="view-market" role="tabpanel" aria-label="Market context">
+      <h1>Market context</h1>
+      <p class="lede">
+        Context-only page for the operator. It feeds no decision path, emits no signal and has no
+        order path — non-actionable by construction, and labeled so on every panel.
+      </p>
+      <div id="mc-body"></div>
+    </section>
+
+    <!-- View 4 — desired / accepted / exchange truth -->
+    <section class="view" id="view-layers" role="tabpanel" aria-label="Desired, accepted and exchange truth">
+      <h1>Desired / accepted / exchange truth</h1>
+      <p class="lede">
+        Three separate states per intent: desired by the MTC strategy engine, accepted or rejected by
+        the Bridge, and what actually happened at the exchange. The divergence between the columns is
+        the signal — nothing on this page merges them into one “current order” value.
+      </p>
+      <div id="ly-body"></div>
+    </section>
+
+    <!-- View 5 — phone monitor -->
+    <section class="view" id="view-phone" role="tabpanel" aria-label="Phone monitor">
+      <h1>Phone monitor</h1>
+      <p class="lede">
+        The dedicated small-screen monitoring layout, shown inside a 390&nbsp;px frame. The whole
+        prototype is additionally responsive down to 375&nbsp;px — no horizontal scrolling at phone
+        widths. Monitoring only: the layout contains no controls of any kind.
+      </p>
+      <div id="ph-body"></div>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <div class="inner">
+      <p>
+        <strong>Truth &amp; permission statement.</strong> This page is READ-ONLY. It displays FIXTURE
+        DATA and controls nothing: no bridge process, no exchange connection, no ARM, no orders, no
+        configuration. It holds no credentials and performs no network access of any kind — no fetch,
+        no XHR, no WebSocket.
+      </p>
+      <ul>
+        <li><span class="truth">FIXTURE</span> — synthetic data, zero authority, frozen as-of time.</li>
+        <li><span class="truth tone-blue">LAYER 1 · DESIRED</span> — owner: MTC strategy engine. Never contains exchange claims.</li>
+        <li><span class="truth tone-amber">LAYER 2 · ACCEPTED / REJECTED</span> — owner: Bridge. Never fabricates fills or mutates intent.</li>
+        <li><span class="truth tone-green">LAYER 3 · ACTUAL</span> — owner: exchange; recorded and reconciled by the Bridge only.</li>
+        <li><span class="truth tone-violet">CONTEXT</span> — informational only, non-actionable, feeds no decision path.</li>
+      </ul>
+      <p>
+        State vocabularies follow the accepted P1 (worker identity tuple, Guardian veto tiers) and P2
+        (three-layer state model) contract packs. The shared-infrastructure panel follows the P7
+        re-verification record for realism only and asserts nothing beyond it. Visual language
+        references the frozen V1 dashboard surface; nothing was copied live or modified.
+      </p>
+      <p>Package 3 · Tier T1 · <span class="mono">dashboard_v2_prototype</span> · not connected to anything.</p>
+    </div>
+  </footer>
+
+  <script src="fixtures/data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

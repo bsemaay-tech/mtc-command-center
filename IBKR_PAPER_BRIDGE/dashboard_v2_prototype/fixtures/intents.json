@@ -1,0 +1,196 @@
+{
+  "meta": {
+    "view": "Desired / accepted / exchange-truth — three separate states (P2 contract pack, section 5)",
+    "data_nature": "SYNTHETIC FIXTURE DATA — no intents were emitted, accepted or filled anywhere. This stream exists only to make the three layers visible side by side.",
+    "as_of": "2026-08-18T02:40:00Z",
+    "purpose": "Combining the three layers into one 'current order' value would hide exactly the divergence this view exists to expose. Each row keeps desired, accepted/rejected, and actual visibly separate.",
+    "required_fields_note": "Required dashboard fields — desired, accepted/rejected, acknowledged, partially filled, actually closed — are kept visibly separate. 'Acknowledged' maps to layer-3 SUBMITTED/OPEN; 'partially filled' to layer-3 PARTIALLY_FILLED; 'actually closed' to layer-3 FILLED on a close."
+  },
+  "layers": [
+    {
+      "n": 1,
+      "name": "DESIRED",
+      "owner": "MTC strategy engine",
+      "states": ["EMITTED", "EXPIRED", "SUPERSEDED"],
+      "state_note": "EMITTED is the only non-terminal state; EXPIRED and SUPERSEDED are terminal. A later intent in the same lifecycle supersedes an unexecuted earlier one (e.g. a stop-update chain).",
+      "never_contains": "Any claim about the exchange: no fill, no acknowledgment, no position fact. MTC simulated exits stay in this layer — an MTC simulated close is never proof of an exchange fill."
+    },
+    {
+      "n": 2,
+      "name": "ACCEPTED / REJECTED",
+      "owner": "Bridge",
+      "states": ["RECEIVED", "VALIDATING", "ACCEPTED (reserved durably)", "SUBMITTED", "REJECTED:<reason>", "BLOCKED_DUPLICATE", "IDENTITY_COLLISION"],
+      "state_note": "Durable reservation follows the order-identity contract: the reservation is committed before any broker I/O; an exact duplicate intent+request becomes BLOCKED with no I/O; the same intent with a different request is an identity collision. A Guardian veto appears here as REJECTED:GUARDIAN_VETO — never a mutation.",
+      "never_contains": "Fabricated fills; silently mutated quantities, SL, TP, or TP-leg allocation."
+    },
+    {
+      "n": 3,
+      "name": "ACTUAL",
+      "owner": "Exchange (recorded and reconciled by the Bridge only)",
+      "states": ["PENDING_NEW", "SUBMITTING", "SUBMITTED", "OPEN", "PARTIALLY_FILLED", "PENDING_CANCEL", "FILLED", "CANCELED", "REJECTED", "EXPIRED", "UNKNOWN_SUBMISSION"],
+      "state_note": "Canonical order-state vocabulary with transitions only per the accepted transition table. Position actuals come from authoritative fills only. UNKNOWN_SUBMISSION is frozen pending reconciliation — never terminal, never blindly retried.",
+      "never_contains": "Anything copied from layers 1 or 2."
+    }
+  ],
+  "invariants": [
+    "1 to 2: acceptance requires schema validity, freshness (expires_ts), a durable identity reservation, a recomputed quantity within validation tolerances, and envelope checks. Any failure is a terminal REJECTED:<reason> — nothing executes partially-valid.",
+    "2 to 3: only ACCEPTED then SUBMITTED crosses into the exchange layer; from there only exchange observations move layer 3, through the accepted transition table.",
+    "3 to lifecycle closure: a lifecycle (and its TP legs) closes ONLY from actual fills — never from a layer-1 simulated close.",
+    "No layer copies another as fact: layer 1 never writes into layer 3, layer 2 never fabricates fills, layer 3 evidence never overwrites a layer-1 desired state. Divergence stays visible.",
+    "Intent freshness is wall-clock and internal to layers 1-2. It is NOT monitoring-window state: window state stays derived from persisted evidence plus the liveness staleness rule, so a dead bridge can never present an intent stream as an active window."
+  ],
+  "intents": [
+    {
+      "intent_id": "intent-v1:3f9ac1d87e02b615",
+      "kind": "ENTRY",
+      "action": "ENTRY LONG 0.014 BTC (MKT)",
+      "worker_id": "wrk-7c01",
+      "ts": "2026-08-18T01:12:44Z",
+      "desired": {
+        "state": "EMITTED",
+        "note": "Entry intent emitted by the strategy engine."
+      },
+      "accepted": {
+        "state": "SUBMITTED",
+        "note": "RECEIVED, VALIDATING, ACCEPTED (reserved durably before any broker I/O), then SUBMITTED."
+      },
+      "actual": {
+        "state": "FILLED",
+        "note": "Exchange truth: filled. Position actuals come from authoritative fills only."
+      }
+    },
+    {
+      "intent_id": "intent-v1:8c40be9135d7f2aa",
+      "kind": "EXIT",
+      "action": "STOP_UPDATE (trail step 1) — superseded",
+      "worker_id": "wrk-7c01",
+      "ts": "2026-08-18T01:55:02Z",
+      "desired": {
+        "state": "SUPERSEDED",
+        "note": "A later stop update in the same lifecycle (higher update_seq) superseded this one before it executed."
+      },
+      "accepted": {
+        "state": "—",
+        "note": "Never accepted — superseded inside layer 1. Stale reordering cannot apply."
+      },
+      "actual": {
+        "state": "—",
+        "note": "No broker I/O for this intent."
+      }
+    },
+    {
+      "intent_id": "intent-v1:b1726f5a08cc43de",
+      "kind": "EXIT",
+      "action": "STOP_UPDATE (trail step 2, tighten-only)",
+      "worker_id": "wrk-7c01",
+      "ts": "2026-08-18T02:21:37Z",
+      "desired": {
+        "state": "EMITTED",
+        "note": "The superseding stop update of the chain above."
+      },
+      "accepted": {
+        "state": "SUBMITTED",
+        "note": "Accepted: tighten-only respected (LONG: new stop at or above the current accepted stop — widening is forbidden)."
+      },
+      "actual": {
+        "state": "OPEN",
+        "note": "Native stop working at the exchange — 'acknowledged' in the required-fields vocabulary."
+      }
+    },
+    {
+      "intent_id": "intent-v1:57e0d3ba94c18f27",
+      "kind": "ENTRY",
+      "action": "ENTRY SHORT 1.2 ETH (MKT)",
+      "worker_id": "wrk-9d42",
+      "ts": "2026-08-17T22:07:51Z",
+      "desired": {
+        "state": "EXPIRED",
+        "note": "Intent freshness is wall-clock: past expires_ts it is rejected rather than executed late."
+      },
+      "accepted": {
+        "state": "REJECTED:FRESHNESS",
+        "note": "Loud reject with reason — never a silent late execution."
+      },
+      "actual": {
+        "state": "—",
+        "note": "No broker I/O."
+      }
+    },
+    {
+      "intent_id": "intent-v1:d93b50c7ea124f80",
+      "kind": "ENTRY",
+      "action": "ENTRY LONG 6.0 SOL (MKT)",
+      "worker_id": "wrk-4b8e",
+      "ts": "2026-08-18T01:06:02Z",
+      "desired": {
+        "state": "EMITTED",
+        "note": "Desired by the strategy engine — layer 1 stays EMITTED; the veto does not rewrite it."
+      },
+      "accepted": {
+        "state": "REJECTED:GUARDIAN_VETO",
+        "note": "Blocked by the active tier-2 per-worker pause on wrk-4b8e (new entries only, active since 01:05:33Z). A veto is never a mutation: no resize, no rewrite."
+      },
+      "actual": {
+        "state": "—",
+        "note": "No broker I/O — the veto happened before submission."
+      }
+    },
+    {
+      "intent_id": "intent-v1:0a61ce88f7b3d954",
+      "kind": "EXIT",
+      "action": "CLOSE_FULL 18.5 SOL",
+      "worker_id": "wrk-4b8e",
+      "ts": "2026-08-18T02:14:18Z",
+      "desired": {
+        "state": "EMITTED",
+        "note": "Exit requested by the strategy — exits are outside veto scope, so the per-worker pause does not block it."
+      },
+      "accepted": {
+        "state": "SUBMITTED",
+        "note": "Accepted and submitted via the cancel/replace and safe-flatten path; reduce-only by construction."
+      },
+      "actual": {
+        "state": "PARTIALLY_FILLED",
+        "note": "Partially filled at the exchange. The lifecycle closes only on actual fill truth — the strategy's desired close alone closes nothing."
+      }
+    },
+    {
+      "intent_id": "intent-v1:c7f4a2190e8b56d3",
+      "kind": "ENTRY",
+      "action": "ENTRY LONG 0.010 BTC (add, entry_seq 2)",
+      "worker_id": "wrk-7c01",
+      "ts": "2026-08-18T02:33:09Z",
+      "desired": {
+        "state": "EMITTED",
+        "note": "Add intent within an existing lifecycle (entry_seq 2, within declared max_entries)."
+      },
+      "accepted": {
+        "state": "SUBMITTED",
+        "note": "Accepted and submitted."
+      },
+      "actual": {
+        "state": "UNKNOWN_SUBMISSION",
+        "note": "Submission outcome not yet confirmed. Frozen pending reconciliation — never terminal, never blindly retried."
+      }
+    },
+    {
+      "intent_id": "intent-v1:3f9ac1d87e02b615 (duplicate delivery)",
+      "kind": "ENTRY",
+      "action": "Duplicate delivery of the first intent above",
+      "worker_id": "wrk-7c01",
+      "ts": "2026-08-18T02:38:40Z",
+      "desired": {
+        "state": "EMITTED",
+        "note": "Same intent re-delivered — a retry must not become a second order."
+      },
+      "accepted": {
+        "state": "BLOCKED_DUPLICATE",
+        "note": "Exact duplicate intent+request becomes BLOCKED with no broker I/O."
+      },
+      "actual": {
+        "state": "—",
+        "note": "Unchanged — the original order's exchange truth stays with the original intent row above."
+      }
+    }
+  ]
+}
