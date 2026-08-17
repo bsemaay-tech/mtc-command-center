@@ -15,6 +15,7 @@
     <button class="nav" data-page="journal">Journal</button>
     <button class="nav" data-page="llm">LLM</button>
     <button class="nav" data-page="system">System</button>
+    <button class="nav" data-page="help">Help / System Map</button>
     <button class="danger" id="killButton">KILL</button>
   </aside>
   <main class="shell">
@@ -104,7 +105,59 @@
         <table><tbody id="eventsBody"></tbody></table>
       </section>
     </section>
+    <section class="page" id="page-help">
+      <h1>Help / System Map</h1>
+      <p class="help-lede" id="helpSubtitle">Loading the system map...</p>
+
+      <div class="help-toolbar">
+        <button id="helpDetailToggle" type="button" aria-pressed="false">Technical detail: off</button>
+        <span class="pill" id="helpUpdated">--</span>
+        <span class="pill" id="helpCount">--</span>
+      </div>
+
+      <section class="panel">
+        <h2>Legend</h2>
+        <div class="help-legend" id="helpLegendStatus"></div>
+        <h3>Connection types</h3>
+        <div class="help-legend" id="helpLegendKinds"></div>
+      </section>
+
+      <section class="panel">
+        <h2>How to read this map</h2>
+        <ul id="helpHowTo"></ul>
+        <h3>Truth rules this page follows</h3>
+        <ul id="helpTruthRules"></ul>
+      </section>
+
+      <section class="panel">
+        <h2>Who is allowed to do what</h2>
+        <div class="help-identities" id="helpIdentities"></div>
+      </section>
+
+      <div class="help-layout">
+        <div class="help-planes" id="helpPlanes"></div>
+        <aside class="help-detail" id="helpDetail" tabindex="-1" aria-live="polite">
+          <p class="help-empty" id="helpDetailEmpty">Select any box on the left to read what it is, what it is not, and whether it exists today. Boxes work with the mouse and with the keyboard (Tab, then Enter or Space).</p>
+          <div id="helpDetailBody"></div>
+        </aside>
+      </div>
+
+      <section class="panel">
+        <h2>Key flows</h2>
+        <div id="helpFlows"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Built now / still required</h2>
+        <div class="help-readiness" id="helpReadiness"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Plain-language glossary</h2>
+        <dl class="help-glossary" id="helpGlossary"></dl>
+      </section>
+    </section>
   </main>
-  <script src="/static/app.js?v=4"></script>
+  <script src="/static/app.js?v=5"></script>
 </body>
 </html>
