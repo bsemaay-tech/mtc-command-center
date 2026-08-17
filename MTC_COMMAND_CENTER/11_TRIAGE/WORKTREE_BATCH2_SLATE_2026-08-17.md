@@ -164,3 +164,27 @@ These 83 fall into three natural groups the owner can approve wholesale or in pa
 Gate-A audit lanes (GAAUD_*/GAE*/GAEA*/MORNAUD_*/WP2* — the bulk), the rescue-backed
 PG*/tmp dirs, and old TS-P1/WP feature checkouts. Awaiting the owner's exact approved
 subset; nothing removed.
+
+---
+
+## RECONCILIATION: 91 vs 83 (owner question, 2026-08-17 evening)
+
+Both numbers were correct for what they counted; the slate text failed to say so.
+**91 = every clean + remotely-reachable worktree** outside the protected seven.
+**83 = the removable slate** after the additional "idle ≥ 2 days" guard. The 8
+excluded by that guard, path by path (all clean and reachable, just touched within
+2 days — re-eligible for a later batch once idle):
+
+| Path | Idle (days) at sweep |
+|---|---|
+| `C:/AUD62A` | 1.3 |
+| `C:/AUD62B` | 1.2 |
+| `C:/AUD62C` | 1.2 |
+| `C:/AUD62D` | 1.1 |
+| `C:/P10BASE` | 1.9 |
+| `C:/P10FIX` | 1.9 |
+| `C:/PSC` | 1.9 |
+| `C:/RO` | 1.9 |
+
+ALL removals remain HELD — nothing is removed until the owner approves a named
+subset of the 83-path list above.

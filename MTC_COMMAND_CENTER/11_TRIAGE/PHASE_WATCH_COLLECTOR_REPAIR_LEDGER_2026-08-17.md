@@ -44,3 +44,34 @@ exit codes). No Telegram message was sent during repair (the one 2026-08-16
 
 Real backup directory undefined; `baris` lacks read permission on
 `/var/log/mtc-bridge/`. Both are owner/deployment-owner items, not collector bugs.
+
+---
+
+## ROUND 1b UPDATE — 2026-08-17 evening (owner-approved summarizer + remaining repairs)
+
+Owner approved the tool-free direct summarizer for finding #1 with the honest
+descriptor: **it is NOT literally capability-free — it performs one outbound HTTPS
+request to a fixed endpoint and holds a provider credential for that request.**
+Constraints implemented exactly: existing owner-managed `DEEPSEEK_API_KEY` reused
+from its existing source (User-scope env var, the same one `_deepseek_driver`
+uses); value never displayed/copied/rotated/deleted/logged; no new credential
+entries; sanitized evidence passed as CONTENT (never a path); no filesystem/SSH/
+shell/subprocess/agent tools; fixed endpoint `api.deepseek.com` + fixed model
+`deepseek-chat`; 60 s timeout; 48 KB input cap; schema-validated output.
+
+| # | Status now | Evidence |
+|---|---|---|
+| 1 | **IMPLEMENTED (honest descriptor above)** | `Invoke-DirectSummary` replaces Hermes on the ACTIVE path. `-SummarizerProbe` ran ONE bounded real call on injection-laced fixtures: schema-valid, `error-scan -> FAIL` (bait correctly judged from data), `SUMMARY=FAIL`, exit 0. Hermes remains only in the local `-TestReport` demo. |
+| 8 | **FIXED** | `Resolve-PhaseWatch` verifies fetch exit + `rev-parse --verify origin/master`; ACTIVE runs REFUSE (exit 1, INCOMPLETE state) unless state came from a freshly verified `origin/master` — stale/local never authorizes live contact. |
+| 9 | **FIXED** | Mode switches mutually exclusive (verified exit 2); `WATCH_ACTIVE` must appear EXACTLY once or the run fails closed (exit 1). |
+| 10 | **FIXED** | Strict schema: every expected check exactly once + one SUMMARY, extras rejected; Telegram alert text rebuilt from parsed fixed statuses only, never model free text. |
+| 11 | **FIXED** | Every failure path writes run state and exits nonzero; a non-OK outcome exits 1 so Task Scheduler sees failure. |
+| 13 | **FIXED** | Daily summary reads machine-written per-run JSON state (never the text log); unreadable state counts bad; `Global\` named mutex + atomic stamp-file creation for dedup. |
+| 14 | **FIXED fully** | Stub enumerates env keys and exits with present-count; `-EnvProbe` asserts RED>0 / GREEN==0 (verified: RED exit 2, GREEN exit 0, PASS). |
+| 3 | **Design + T0 package PREPARED** | `PHASE_WATCH_FORCED_COMMAND_DESIGN_2026-08-17.md` — dedicated owner-generated key, server-side forced-command menu (check IDs, not commands, cross the wire), log-ACL options. NOTHING applied to KVM2; server change needs separate owner approval after review. |
+
+Verification session evidence: parse 0 errors; mode-exclusion exit 2; env-probe
+PASS; PENDING regression clean; one summarizer API call (the only network use —
+no Telegram send, no KVM2 contact). All 13 REQUIRED findings now FIXED except
+#3-server-side (designed, owner-gated). Artifacts staged in `C:\tmp\t0_collector`
+for the 2026-08-19 exact `claude-opus-5` xhigh + `gpt-5.6-sol` xhigh re-audit.
