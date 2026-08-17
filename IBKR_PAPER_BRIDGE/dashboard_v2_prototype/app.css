@@ -1,0 +1,725 @@
+/* Bridge V2 — Dashboard read-only prototype (Package 3, T1).
+ *
+ * Visual language follows the frozen V1 dashboard surface (GitHub-dark
+ * vocabulary: panel/border/muted/green/red/amber/blue) as REFERENCE ONLY —
+ * nothing is copied live and no V1 file is modified.
+ * No external resources: no fonts, no CDN, no images. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --panel: #161b22;
+  --panel-deep: #0b1017;
+  --head: #010409;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --green: #3fb950;
+  --red: #f85149;
+  --amber: #d29922;
+  --blue: #58a6ff;
+  --violet: #a371f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+/* --- Permanent header: banner + tabs -------------------------------------- */
+
+.site-head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--head);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px 10px;
+}
+
+.brand-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.brand-sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.banner {
+  margin: 10px 0 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--amber);
+  border-radius: 6px;
+  background: rgba(210, 153, 34, 0.08);
+  color: #e3b341;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tab {
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.tab:hover {
+  border-color: var(--blue);
+  color: var(--text);
+}
+
+.tab[aria-selected="true"] {
+  border-color: var(--blue);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* --- Shell and views ------------------------------------------------------- */
+
+.shell {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.view h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.lede {
+  color: var(--muted);
+  font-size: 13px;
+  max-width: 90ch;
+  margin: 0 0 16px;
+  overflow-wrap: anywhere;
+}
+
+/* --- Stat cards ------------------------------------------------------------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  min-width: 0;
+}
+
+.card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.card .ctx {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.card strong.pos {
+  color: var(--green);
+}
+
+.card strong.neg {
+  color: var(--red);
+}
+
+/* --- Panels and truth labels ------------------------------------------------ */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.panel h3 {
+  margin: 14px 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.panel p {
+  margin: 6px 0;
+  font-size: 13px;
+}
+
+.panel ul {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.panel li {
+  font-size: 13px;
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.truth {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: normal;
+}
+
+.truth.tone-blue {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+
+.truth.tone-amber {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+.truth.tone-green {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.truth.tone-red {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.truth.tone-violet {
+  color: var(--violet);
+  border-color: var(--violet);
+}
+
+/* --- Pills (state chips) ----------------------------------------------------- */
+
+.pill {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.pill.tone-green {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.pill.tone-red {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.pill.tone-amber {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+.pill.tone-blue {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+
+.pill.tone-violet {
+  color: var(--violet);
+  border-color: var(--violet);
+}
+
+/* --- Tables ------------------------------------------------------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  border-top: 1px solid var(--border);
+  padding: 8px;
+  font-size: 13px;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+td.mono,
+.mono {
+  font-family: Consolas, "Cascadia Mono", Menlo, monospace;
+  font-size: 12px;
+}
+
+/* --- Meters (thin labeled bars, fixture-labeled) -------------------------------- */
+
+.meter-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 220px) minmax(0, 1fr) minmax(110px, auto);
+  gap: 10px;
+  align-items: center;
+  margin: 8px 0;
+  font-size: 12px;
+}
+
+.meter-label {
+  color: var(--muted);
+}
+
+.meter {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--panel-deep);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  background: var(--blue);
+  border-radius: 3px;
+}
+
+.meter-value {
+  font-family: Consolas, "Cascadia Mono", Menlo, monospace;
+  font-size: 12px;
+  color: var(--text);
+  text-align: right;
+}
+
+/* --- Worker selector chips ------------------------------------------------------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.chip {
+  min-height: 32px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--blue);
+  color: var(--text);
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--blue);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* --- Three-layer swimlanes -------------------------------------------------------- */
+
+.swimlane {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+
+.swim-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.swim-id {
+  font-family: Consolas, "Cascadia Mono", Menlo, monospace;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.swim-action {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.layer-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.layer-col {
+  background: var(--panel-deep);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: 8px;
+  padding: 10px;
+  min-width: 0;
+}
+
+.layer-col.l1 {
+  border-left-color: var(--blue);
+}
+
+.layer-col.l2 {
+  border-left-color: var(--amber);
+}
+
+.layer-col.l3 {
+  border-left-color: var(--green);
+}
+
+.layer-col .who {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.layer-col h3 {
+  margin: 8px 0 2px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.layer-col .state {
+  margin-bottom: 6px;
+}
+
+.layer-col .why {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.vocab {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+/* --- Phone monitor view -------------------------------------------------------------- */
+
+.phone-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.phone-frame {
+  width: 100%;
+  max-width: 390px;
+  border: 2px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg);
+  padding: 10px;
+}
+
+.phone-screen {
+  display: grid;
+  gap: 10px;
+}
+
+.phone-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.phone-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.phone-banner {
+  border: 1px solid var(--amber);
+  border-radius: 6px;
+  background: rgba(210, 153, 34, 0.08);
+  color: #e3b341;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 8px;
+}
+
+.phone-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  min-width: 0;
+}
+
+.phone-card .row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.phone-card .title {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.phone-card .line {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+.phone-foot {
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+  padding-top: 4px;
+}
+
+/* --- Footer -------------------------------------------------------------------------- */
+
+.site-foot {
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  padding: 16px 20px 32px;
+}
+
+.site-foot .inner {
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.site-foot ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.site-foot li {
+  margin: 3px 0;
+  overflow-wrap: anywhere;
+}
+
+/* --- Focus and motion ------------------------------------------------------------------ */
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Responsive -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .layer-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .meter-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .meter-value {
+    text-align: left;
+  }
+}
+
+@media (max-width: 780px) {
+  .site-head {
+    padding: 10px 14px 8px;
+  }
+
+  .shell {
+    padding: 14px;
+  }
+
+  /* Grid/flex items default to min-width:auto and refuse to shrink below their
+     min-content size; releasing that floor lets every container track the viewport. */
+  .site-head,
+  .brand-row,
+  .tabs,
+  .shell,
+  .view,
+  .grid,
+  .card,
+  .panel,
+  .panel-head,
+  .swimlane,
+  .swim-head,
+  .layer-cols,
+  .layer-col,
+  .chips,
+  .chip,
+  .meter-row,
+  .phone-frame,
+  .phone-screen,
+  .phone-card,
+  .phone-card .row,
+  .site-foot .inner {
+    min-width: 0;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Long identifiers (intent ids, config hashes, notes) have no break
+     opportunity and would otherwise set the min-content width of their container. */
+  .lede,
+  .banner,
+  .note,
+  .card strong,
+  .card .ctx,
+  .panel li,
+  .panel p,
+  .truth,
+  .swim-id,
+  .layer-col .why,
+  .phone-banner,
+  .phone-card .line,
+  td,
+  th {
+    overflow-wrap: anywhere;
+  }
+
+  /* Table cells size to content and would push a width:100% table past the
+     viewport regardless of text wrapping. */
+  table {
+    table-layout: fixed;
+  }
+}
+
+@media (max-width: 400px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card strong {
+    font-size: 18px;
+  }
+
+  .tab {
+    flex: 1 1 auto;
+  }
+
+  .banner {
+    font-size: 12px;
+  }
+}

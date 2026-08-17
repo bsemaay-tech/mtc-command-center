@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "view": "Market Context — context-only page",
+    "data_nature": "SYNTHETIC FIXTURE DATA — no market data feed exists behind these numbers.",
+    "as_of": "2026-08-18T02:40:00Z",
+    "non_actionable": "CONTEXT ONLY — NON-ACTIONABLE. This page is informational for the operator. It feeds no decision path, emits no signal, and has no order path. The Bridge consumes approved frozen strategy packages; it does not develop strategies, and this page is not a strategy input.",
+    "no_signal_note": "No entry/exit vocabulary, no direction recommendations and no confidence labels are shown on purpose — a context page must not read like a trade recommendation."
+  },
+  "symbols": [
+    {
+      "symbol": "BTC",
+      "last": 60480.0,
+      "change_24h_pct": 1.2,
+      "range_24h": [59510.0, 60940.0],
+      "realized_vol_band": "mid",
+      "trend_context": "ranging inside a two-day bracket",
+      "fixture_note": "synthetic value"
+    },
+    {
+      "symbol": "ETH",
+      "last": 2531.4,
+      "change_24h_pct": -0.8,
+      "range_24h": [2502.0, 2571.5],
+      "realized_vol_band": "low",
+      "trend_context": "drifting lower against BTC",
+      "fixture_note": "synthetic value — the stale-feed worker shares this symbol; its feed problem is worker-side, not market-side"
+    },
+    {
+      "symbol": "SOL",
+      "last": 142.66,
+      "change_24h_pct": 3.4,
+      "range_24h": [137.2, 144.9],
+      "realized_vol_band": "high",
+      "trend_context": "extension day, broad participation",
+      "fixture_note": "synthetic value"
+    }
+  ],
+  "session_notes": [
+    "Weekend liquidity profile (fixture narration).",
+    "No scheduled macro releases in the next fixture window (fixture narration)."
+  ]
+}

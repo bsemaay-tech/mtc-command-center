@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "prototype": "IBKR Paper Bridge — Dashboard V2 read-only prototype (Package 3, T1)",
+    "data_nature": "SYNTHETIC FIXTURE DATA. There is no live bridge, no exchange connection and no worker process behind these values. This file feeds a static prototype page only.",
+    "as_of": "2026-08-18T02:40:00Z",
+    "age_basis": "Every age shown on the page is computed relative to meta.as_of (a frozen fixture timestamp), never relative to wall-clock time.",
+    "vocabulary_sources": "State vocabularies follow the accepted P1 contract pack (worker identity tuple, Guardian veto tiers) and P2 contract pack (three-layer state model). All figures are illustrative.",
+    "worker_set": "Three synthetic workers: one healthy, one stale-feed, one Guardian-paused."
+  },
+  "workers": [
+    {
+      "worker_id": "wrk-7c01",
+      "strategy_id": "keltner_trail_ema8",
+      "symbol": "BTC",
+      "timeframe": "15m",
+      "strategy_version": "1.4.2",
+      "config_hash": "9f21ab37c4d8e560",
+      "account_label": "book-alpha",
+      "scenario": "healthy",
+      "health": {
+        "window_state": "ACTIVE",
+        "window_basis": "Derived from this worker's persisted evidence with the staleness rule applied — never an in-memory claim (docs/21 evidence-derived model).",
+        "last_evidence_ts": "2026-08-18T02:37:12Z",
+        "last_bar_ts": "2026-08-18T02:30:00Z"
+      },
+      "blocks": [],
+      "position": {
+        "side": "LONG",
+        "qty": 0.028,
+        "avg_entry": 60120.5,
+        "mark": 60480.0
+      },
+      "orders_working": 2,
+      "orders_working_note": "protective stop + take-profit bracket (fixture illustration)",
+      "ledger": {
+        "currency": "USDC",
+        "realized_pnl_today": 24.6,
+        "ledger_key": "wrk-7c01",
+        "ledger_note": "Per-worker P&L ledger keyed by worker_id. Realized and unrealized attribution never crosses workers."
+      }
+    },
+    {
+      "worker_id": "wrk-9d42",
+      "strategy_id": "keltner_trail_ema8",
+      "symbol": "ETH",
+      "timeframe": "1h",
+      "strategy_version": "1.4.2",
+      "config_hash": "5c88e0f1a2b749d3",
+      "account_label": "book-alpha",
+      "scenario": "stale-feed",
+      "health": {
+        "window_state": "STALE",
+        "window_basis": "Evidence is older than the liveness staleness rule, so the window reports STALE — unreadable or stale evidence reports DOWN/STALE, never a fabricated active state (docs/21).",
+        "last_evidence_ts": "2026-08-17T21:12:44Z",
+        "last_bar_ts": "2026-08-17T21:00:00Z"
+      },
+      "blocks": [
+        {
+          "source": "Worker-local fail-closed rule",
+          "guardian_tier": null,
+          "reason_code": "BLOCKED:FEED_STALE",
+          "detail": "Candle evidence for ETH 1h is hours old relative to fixture as_of. New entries are blocked fail-closed; protective management of any existing position continues.",
+          "logged_ts": "2026-08-17T22:04:10Z",
+          "lift": "Recovers automatically once fresh evidence is readable again (fixture narration only)."
+        }
+      ],
+      "position": {
+        "side": "FLAT",
+        "qty": 0.0,
+        "avg_entry": null,
+        "mark": 2531.4
+      },
+      "orders_working": 0,
+      "orders_working_note": "flat — no working orders (fixture illustration)",
+      "ledger": {
+        "currency": "USDC",
+        "realized_pnl_today": -37.0,
+        "ledger_key": "wrk-9d42",
+        "ledger_note": "Per-worker P&L ledger keyed by worker_id. Realized and unrealized attribution never crosses workers."
+      }
+    },
+    {
+      "worker_id": "wrk-4b8e",
+      "strategy_id": "donchian_breakout_v1",
+      "symbol": "SOL",
+      "timeframe": "4h",
+      "strategy_version": "0.9.1",
+      "config_hash": "e3d0c2a9964f1b75",
+      "account_label": "book-beta",
+      "scenario": "guardian-paused",
+      "health": {
+        "window_state": "ACTIVE",
+        "window_basis": "Derived from this worker's persisted evidence with the staleness rule applied — never an in-memory claim (docs/21 evidence-derived model).",
+        "last_evidence_ts": "2026-08-18T02:11:09Z",
+        "last_bar_ts": "2026-08-18T00:00:00Z"
+      },
+      "blocks": [
+        {
+          "source": "Portfolio Guardian",
+          "guardian_tier": 2,
+          "reason_code": "REJECTED:GUARDIAN_VETO",
+          "detail": "Per-worker pause: aggregate gross long exposure across correlated symbols (BTC book-alpha + SOL book-beta) exceeded the portfolio review level in the derived snapshot. Veto, not a mutation — the Guardian never resizes or rewrites the order.",
+          "scope": "New entries only. The worker keeps managing and protecting its existing position; exits continue; books stay current.",
+          "logged_ts": "2026-08-18T01:05:33Z",
+          "lift": "Lifting a pause is an operator action, outside this prototype."
+        }
+      ],
+      "position": {
+        "side": "LONG",
+        "qty": 18.5,
+        "avg_entry": 138.9,
+        "mark": 142.66
+      },
+      "orders_working": 1,
+      "orders_working_note": "protective stop only — entries paused, exits live (fixture illustration)",
+      "ledger": {
+        "currency": "USDC",
+        "realized_pnl_today": 0.0,
+        "ledger_key": "wrk-4b8e",
+        "ledger_note": "Per-worker P&L ledger keyed by worker_id. Realized and unrealized attribution never crosses workers."
+      }
+    }
+  ],
+  "guardian": {
+    "state": "EVALUATING",
+    "snapshot_ts": "2026-08-18T02:39:58Z",
+    "snapshot_basis": "Derived snapshots from each worker's own books — never worker self-claims as sole truth (evidence-derived principle).",
+    "global_halt": false,
+    "position_note": "A Portfolio Guardian sits ABOVE the workers. Workers manage their own strategy; the Guardian manages the portfolio.",
+    "veto_tiers": [
+      {
+        "tier": 1,
+        "name": "PER-ORDER VETO",
+        "description": "Refuse an individual worker's order intent before submission."
+      },
+      {
+        "tier": 2,
+        "name": "PER-WORKER PAUSE",
+        "description": "Stop ONE worker from initiating new entries. That worker keeps managing and protecting existing positions — exits continue, books stay current."
+      },
+      {
+        "tier": 3,
+        "name": "GLOBAL HALT",
+        "description": "Stop new entries across ALL workers (portfolio circuit breaker)."
+      }
+    ],
+    "veto_domain_note": "Veto domain = risk-increasing actions (new entries, adds, risk-increasing order changes). Risk-reducing exits (stop-loss, take-profit, close) are OUTSIDE veto scope — a veto against an exit would increase the very quantities the Guardian exists to bound.",
+    "mutate_note": "The Guardian vetoes but does not mutate: it never resizes an order, never rewrites a stop or quantity, never edits economic intent.",
+    "fail_closed_note": "If the Guardian cannot evaluate (unreachable, missing or stale aggregate snapshot, broken worker-to-Guardian channel) the default is NO NEW ENTRIES. There is no silent Guardian-bypass mode. Guardian unavailability never blocks protective exits.",
+    "thresholds_note": "All numeric thresholds and their calibration are unresolved and belong to a later owner-gated package. No numbers are frozen here — fixture values are illustrative only.",
+    "inputs": {
+      "gross_exposure_pct": 18.4,
+      "gross_exposure_note": "Aggregate portfolio exposure — one of the sums the Guardian exists to bound (fixture value).",
+      "concentration_note": "Concentration and correlation inputs across workers — fixture narration only."
+    }
+  },
+  "shared_infrastructure": {
+    "truth_label": "FIXTURE ILLUSTRATION ONLY — usage numbers are synthetic. The shared framing is real: these budgets are shared VPS-wide across ALL workers regardless of the worker-process boundary (P1 B.8 framing, P7 evidence).",
+    "rest": {
+      "ip_weight_limit_per_min": 1200,
+      "fixture_used_weight": 322,
+      "note": "IP-based 'aggregated weight limit of 1200 per minute' is shared across ALL workers on the VPS (P7 claim n, dump-marked verbatim sentence)."
+    },
+    "websocket": {
+      "connections_cap": 10,
+      "subscriptions_cap": 1000,
+      "fixture_connections": 3,
+      "fixture_subscriptions": 214,
+      "note": "WebSocket caps (max 10 connections, 1000 subscriptions, 30 new connections/min, 2000 messages/min sent, 100 inflight posts) are shared per IP. P7 flags these figures as [E]-level page extraction only — no verbatim sentence preserved — and testnet parity is UNKNOWN (P7 claim r). This panel asserts nothing beyond that."
+    },
+    "allocator_note": "Required model: a CENTRAL allocator — one shared admission/token-bucket layer for REST weight and one connection/subscription registry for WebSocket, granting explicit per-worker budgets with a headroom policy and defined overload behavior (defer or reject, never silently exceed). No worker may hold its own independent connection-to-the-exchange budget (P1 B.8)."
+  }
+}
