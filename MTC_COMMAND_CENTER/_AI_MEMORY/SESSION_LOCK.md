@@ -36,9 +36,9 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **UNCLAIMED** — released 2026-08-16 11:05 +03 | — |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **Fable 5 Lead (accelerated-completion session)** | 2026-08-16 afternoon |
-| Stage-1 / owner-decision / runbook records | `11_TRIAGE/` STAGE1_*, OWNER_DECISION*, *RUNBOOK_V*, KVM2 P2 review outputs (new files only) | **Fable 5 Lead (accelerated-completion session)** | 2026-08-16 afternoon |
-| Bridge release integration | `integration/bridge-release-20260815` branch, `C:\BRIDGE_RELEASE_INTEGRATION_20260815` worktree, `11_TRIAGE/` BRIDGE_RELEASE_* refresh records | **Fable 5 Lead (accelerated-completion session)** | 2026-08-16 afternoon |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-17 | — |
+| Stage-1 / owner-decision / runbook records | `11_TRIAGE/` STAGE1_*, OWNER_DECISION*, *RUNBOOK_V*, KVM2 P2 review outputs (new files only) | **UNCLAIMED** — released 2026-08-17 | — |
+| Bridge release integration | `integration/bridge-release-20260815` branch, `C:\BRIDGE_RELEASE_INTEGRATION_20260815` worktree, `11_TRIAGE/` BRIDGE_RELEASE_* refresh records | **UNCLAIMED** — released 2026-08-17 | — |
 | GATEA-STAGING host actions | the VM itself, `11_TRIAGE/` GATEA_STAGING_*, HOST_CHANNEL_* | **UNCLAIMED** — released 2026-08-16 11:05 +03. VM left `Off`, checkpoint `GATEA-STAGING-CH1-PRECHANGE-V1` retained | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
@@ -50,6 +50,19 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-17 ~04:00: ALL ROWS RELEASED** by the Fable 5 Lead
+  (accelerated-completion + overnight-deployment session) at a clean stop.
+  **THE BRIDGE IS DEPLOYED AND RUNNING DISARMED ON KVM2** — release
+  `be007fd8`, active since 00:25:02Z; evidence
+  `11_TRIAGE/KVM2_DEPLOYMENT_EXECUTED_2026-08-17.md`; entry point
+  `11_TRIAGE/NEW_CHAT_HANDOFF_2026-08-17.md`. Everything committed and
+  pushed. No foreign uncommitted edits found. Worktrees C:\AUD62A/B/C/D,
+  C:\MRGRUN, C:\RO, C:\BRIDGE_RELEASE_INTEGRATION_20260815 remain on disk
+  (cleanup is a queued housekeeping item, owner-gated). Process note: two
+  live fail-closed dry-run stops on the real host were the fail-closed
+  design working — cure under a recorded owner sentence, never improvise.
+
 
 - **2026-08-16 afternoon:** Fable 5 Lead (accelerated-completion session) claimed the
   shared-memory, Stage-1/runbook, and a new Bridge-release-integration row after the

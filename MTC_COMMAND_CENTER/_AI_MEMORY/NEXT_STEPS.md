@@ -1,6 +1,17 @@
 # NEXT_STEPS
 
-> **▶▶ 2026-08-16 LATE EVENING — LIVE QUEUE (supersedes every block below):**
+> **▶▶ 2026-08-17 — CANONICAL QUEUE (supersedes everything below):
+> `11_TRIAGE/NEW_CHAT_HANDOFF_2026-08-17.md` §1 "NEXT WORK QUEUE".**
+> Bridge DEPLOYED + RUNNING DISARMED on KVM2 (`be007fd8`, since 00:25Z).
+> 1. **[AI: Claude]** Dashboard V2 on the owner's "start" (plan V3 §D4 spec;
+>    T1 visual / T0 host-auth-control; include background tunnel).
+> 2. **[AI: Any]** Daily read-only DISARMED health glance.
+> 3. **[AI: Claude]** Strategy-research pivot: QuantLens four-gate pipeline
+>    toward one promotable candidate.
+> 4. **[AI: Barış]** Own gates when ready: TESTNET wallet → TESTNET ARM
+>    sentence; network-audit redo window; housekeeping/cleanup session.
+
+> **historical — 2026-08-16 LATE EVENING queue (executed to completion):**
 > 1. **[AI: Lead]** Collect the UFW comment-repair lane; verify the three
 >    owner-specified evidence arms; run the full suite independently; commit →
 >    new candidate SHA; rebuild payload; re-pin plan V6 + annex (incl. old

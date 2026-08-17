@@ -1,10 +1,14 @@
 # START_HERE
 
-> **▶▶ CURRENT ENTRY POINT — 2026-08-16 midday:
-> `..\11_TRIAGE\NEW_CHAT_HANDOFF_2026-08-16_MIDDAY.md`.** Read it in full before
-> anything else; its §1 is the copy-paste prompt and its §3 carries **an open
-> owner question that should gate any large new work**. Superseded by it: the
-> 2026-08-16 morning handoff and every banner below.
+> **▶▶ CURRENT ENTRY POINT — 2026-08-17:
+> `..\11_TRIAGE\NEW_CHAT_HANDOFF_2026-08-17.md`.** Its §1 is the copy-paste
+> prompt. **THE BRIDGE IS DEPLOYED AND RUNNING DISARMED on Hostinger KVM2**
+> (release `be007fd8…`, since 2026-08-17T00:25:02Z, loopback-only,
+> credential-free) — evidence `..\11_TRIAGE\KVM2_DEPLOYMENT_EXECUTED_2026-08-17.md`.
+> Owner dashboard: `..\11_TRIAGE\KVM2_RUNKIT\Start-BridgeDashboard.cmd`.
+> Never state a deployment status without naming the host. TESTNET wallet/ARM,
+> Dashboard V2, and the network-audit redo are each separately owner-gated.
+> Chain lane owner-paused; Pathscope closed. Every banner below is historical.
 >
 > Three facts that must not be re-learned the hard way: **GATEA-STAGING is a
 > local Hyper-V VM on Barış's PC** and the bridge is already installed there and
