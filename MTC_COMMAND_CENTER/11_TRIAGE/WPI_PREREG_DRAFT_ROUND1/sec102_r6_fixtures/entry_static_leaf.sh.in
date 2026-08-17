@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+ROOT='{{REMOTE_BASE}}'
+RUNID='{{RUNID}}'
+# static leaf identity={{LIBRARY_PATH}}
+/bin/cat "$ROOT/$RUNID/input.txt"
+bin/verify_marker

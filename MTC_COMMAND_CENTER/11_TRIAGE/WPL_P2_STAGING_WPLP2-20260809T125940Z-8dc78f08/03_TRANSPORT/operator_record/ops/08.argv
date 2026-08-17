@@ -1,0 +1,17 @@
+ssh
+-i
+C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519
+-o
+BatchMode=yes
+-o
+StrictHostKeyChecking=yes
+-o
+IdentitiesOnly=yes
+-o
+ConnectTimeout=20
+gatea@172.24.55.233
+bash
+-s
+--
+/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence/runkit/WPLP2-20260809T125940Z-8dc78f08-R45
+WPLP2-20260809T125940Z-8dc78f08-R45

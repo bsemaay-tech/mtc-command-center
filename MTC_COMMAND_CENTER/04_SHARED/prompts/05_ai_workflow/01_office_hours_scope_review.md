@@ -34,10 +34,16 @@ Then output, in this exact order:
 5. FILES FORBIDDEN: cross-checked against DO_NOT_TOUCH.md.
 6. SUCCESS CRITERIA: how we will know it works (tests, manual check,
    parity smoke, visual diff, etc.).
-7. GATE DECISION: proceed to Gate 2 (plan) or Gate 3 (impl) — and why.
-8. OPEN QUESTIONS: anything you need from Barış before proceeding.
+7. AUDIT TIER: classify this scope as **T0 / T1 / T2 / T3** per
+   `AGENTS.md` §AUDIT TIER POLICY — PERMANENT DEFAULT, with a
+   one-sentence surface rationale, the required auditor count / effort /
+   round cap, and the audit cadence (work-package boundary, or immediate
+   for T0 surface changes). This classification is mandatory before any
+   gate decision and is recorded for the audit dispatch.
+8. GATE DECISION: proceed to Gate 2 (plan) or Gate 3 (impl) — and why.
+9. OPEN QUESTIONS: anything you need from Barış before proceeding.
 
-Refuse to skip any of the eight items.
+Refuse to skip any of the nine items.
 Refuse to start coding inside this gate.
 
 NOTE (GLM sub-delegation): If implementation will sub-delegate via Z.AI Coding Plan (GLM), add a ROUTING RECORD to item 4 (FILES ALLOWED) or as a named sub-item. Required fields: classification · protected flag · model+provider · cheaper-model rationale · exact paths · budget · fallback · external API credits. Decision tree and format: `AGENTS.md` §GLM SUPPLEMENTAL ROUTING.

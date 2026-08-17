@@ -1,0 +1,34 @@
+﻿All work is complete and verified. 
+
+**Note on scope:** `RP6-P0.sh` shows as modified in `git status` — that is **not mine**. Its mtime is 12:47:52, three seconds before I checked and after my last write (12:46:39); a concurrent session is doing the RP6 full-block repair (its kickoff file appeared untracked mid-session). I touched exactly the five kickoff-authorized files.
+
+---
+
+# COMPLETION SUMMARY — RP7-WPI-RO repair round 3 (final T0 round)
+
+## Disposition: 6/6 findings implemented, pending fresh independent re-audit
+
+| Finding | Result | Executed evidence |
+|---|---|---|
+| **F1 (BLOCK)** projection blind to subtrees + stacked mounts | **Closed** — `normalised_path_projection_v2`: `kind=point` (20 paths, incl. `requirements.lock` + `verify_lock.py`) with **effective** mount (`-ge`, last longest match) and `shared_mount_point_records`; `kind=subtree` closure below all 6 roots; `kind=subtree_count` | **Both auditor falsifications flip.** Real 4-record `mountinfo` + decoy bind under release: v2 `0d38de2c…`→`48e028dc…` (differs), v1 `226bfa6e…`→`226bfa6e…` (blind). Overlay under venv: same result. Stacked on `/` and on `/usr/bin`: v2 differs, v1 blind |
+| **F2(a)** GNU branch unproven | **Closed** — QA moved to Git Bash/GNU coreutils 8.32 | Real `stat` diagnostic → `absent` with no fixture; 7-wrapper matrix: 3 accepted→rc 0, 4 rejected→rc 3 |
+| **F2(b)** placebo RED arm | **Closed** — real pre-fix `wpi_fail` body | `mutant_window_closed=0` vs `production_window_closed=1`, marker wraps the *real* guard-close |
+| **F2(c)** no accepting-input arm | **Freeze-gate item, not faked** | Impossible pre-freeze (`<PIN-AT-FREEZE>`); recorded in STATUS as the first pre-dispatch action |
+| **F2(d)** guard stubs | **Closed** — zero guard stubs remain | All 6 window-opening arms run the real guard vs a computed attestation |
+| **F3** undisclosed self-attestation | **Closed** | `self=4 (stat,env,sha256sum,timeout) bound_instrument=5`; pre-fix line has no `attestation=` |
+| **F4** widened ENOENT match | **Closed** — 3 absolute-`argv[0]` forms only | `base_statx=3 base_stat=3 base_oserr=3` |
+| **F5** residual grammar | **Closed** — code + 4 draft declarations | `root_kind_other`, `kind=other target=none` vs executed multi-word mutants |
+| **F6** `timeout` outside cleared env | **Closed by inversion** | Bounding process records its own env: mutant 104 vars + sentinel, production 10 vars + none; **bound preserved** — 8 s child, 2 s budget, **2 s wall** |
+| **Obs 4** | Applied — `elapsed_s` = truncated `elapsed_ms` | `elapsed_s=2 elapsed_ms=2200` |
+
+## Validation
+- **`QA_PASS all_assertions=yes`**, exit 0 — and the fence **extracted back out of the published `SELF_QA_RP7.md`** re-runs to the same result (byte-identical to what I executed).
+- `bash -n` rc 0. **58012 bytes, `1d118d1581534f5d16b3730efbe642e80e5232fbf8a245d238574907166a7f4e`**.
+- Block diff +90/−20, confined to the ten functions the findings name. `<PIN-AT-FREEZE>` intact; all 19 draft placeholders byte-identical to HEAD.
+- No host contact, no network, no RUNID, no commit.
+
+## Two things the Lead should weigh
+1. **QA environment changed** to Git Bash (the kickoff's requirement, and the fix for F2(a)). MSYS2 has no root and `noacl` mounts, so three narrow fixture classes substitute ownership, symlink targets, and CRLF — each tabulated in `SELF_QA_RP7.md` with what stays real. The round-2 WSL2 transcript is **not** republished: round-3 edits change several of its lines, so it would be stale, not extra, evidence.
+2. **F2(a) composed with F4.** The auditor asked for six accepted literals; F4 removes three of them in the same round. The arm drives all seven and asserts `absent` for the three survivors, STOP for the four rejects — stated as a deliberate deviation in the report.
+
+I did **not** update `GLOBAL_HANDOFF.md` — the kickoff restricted me to five files, and G7 handoff is Lead-owned. Flagging it for you.

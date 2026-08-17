@@ -1,0 +1,28 @@
+{
+  "schema": "sec102-composite-plan-v1", "stage": "freeze",
+  "composites": [{
+    "id": "fixture-ro", "entrypoint": "entry",
+    "members": [
+      {"id": "entry", "kind": "shell", "path": "entry_python.sh", "deploy_path": "/safe/fixture/entry.sh"},
+      {"id": "verifier", "kind": "python_source", "path": "verifier.py", "deploy_path": "/safe/fixture/verifier.py"}
+    ],
+    "edges": [{"from": "entry", "to": "verifier", "kind": "execute_source"}],
+    "allocation_requirements": [
+      {"name": "REMOTE_BASE", "kind": "absolute_path", "consumers": ["entry"]},
+      {"name": "RUNID", "kind": "safe_component", "consumers": ["entry"]}
+    ],
+    "allocations": [
+      {"name": "REMOTE_BASE", "value": "/safe/fixture"},
+      {"name": "RUNID", "value": "WPI-FIXTURE-FREEZE"}
+    ],
+    "proof": {
+      "member_pins": [
+        {"member": "entry", "bytes": 116, "sha256": "b88f2fb11d535a2227a3d3aea10228f0758d20f015a4afad326ddd9cd32ecbf1"},
+        {"member": "verifier", "bytes": 74, "sha256": "1a2963fbf1b560d5e3cad96669971edce15f6186a11785c80a2f7cf1d0d256ba"}
+      ],
+      "constants": "constants.env", "constants_bytes": 126, "constants_sha256": "63d21caa85c6418449b3d5ccfba5b2990144709ece2ab2c2d0ddf2dfce35a572",
+      "allowlist": "allowlist.txt", "allowlist_bytes": 17, "allowlist_sha256": "a011e924851560c9b91b92c2d3802a893b3d96fbff47efc2dd5db560f371a62b",
+      "prover": "pathscope_prover.py", "prover_bytes": 122446, "prover_sha256": "890016f0b9a8cde4eed33f8733f69055471b07c6096f6bc07450457e6c52af1d"
+    }
+  }]
+}

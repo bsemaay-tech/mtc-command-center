@@ -1,0 +1,30 @@
+﻿Round 4 complete. Final verification sweep is green across the board.
+
+## Completion summary — RP6-P0 repair round 4
+
+**Baseline verified before the first edit:** `2d9b166e…96289e`, 71743 B — exact match to the kickoff. RP7 frozen basis also verified at the gated values (`d6a976aa`, `23e55667…a0aad`, 70941 B), re-verified inside the fence before any comparison.
+
+**Repaired identity:** `e93d07adcc9ae03ad15e0b0f10c76be54517251ab461c8fe789d160072d253c6`, **85540 bytes**, 1523 lines, `bash -n` rc 0, LF-only (0 CR bytes in every file written), no BOM.
+
+### The four findings
+
+| | Fix | D026 falsification (real, executed) |
+|---|---|---|
+| **F1** HIGH | Probe runs `-I -S`; the `-c` body refuses to report a version unless `sys.flags.isolated` **and** `no_site` are set; `mutation=none_in_this_block` and the "nothing is written" comment corrected | **Real `python -m venv` + real executable `.pth`.** Pre-fix bytes: `MARKER_CREATED=yes MARKER_CONTENT=[PTH_EXECUTED]` *while still printing the accepted line at rc 0*. Repaired: marker absent. ` -S` deleted: marker back **and** rc 3 `interpreter_startup_not_isolated` |
+| **F2** MED | `env -i LC_ALL=C <timeout> --signal=TERM --kill-after=5s 10s <systemctl>` — cleared-env exec first, bound inside it; 124/137/125 → deadline/killed/wrapper tokens | Real GNU `timeout`. Pre-fix stalled: **0 `P0_STOP` lines, external watchdog rc 124**. Repaired: own `rc=124 detail=manager_query_deadline_exceeded budget_s=10`, 40 s watchdog never fired. Budget raised to 600 s → external kill returns |
+| **F3** MED | Inventory regenerated from the frozen RO bytes: its 10 pinned tools + P0-only `id`/`getent`; `grep`/`awk` dropped; `timeout` resolved; `python3` bound to new `P0_FIXED_TRUSTED_PYTHON` with a python3-only canonicalisation allowance | Drift test re-derives the RO half from 3 independent places in the frozen bytes. Pre-fix reproduces the auditor's own `input_pin_unknown_tool … tool=timeout inventory=[…]`; repaired returns `P0_PINS_ACCEPTED count=10 trusted_python_pin=yes`. Shadowing `python3` still STOPs; allowance does not leak to `stat` |
+| **F4** LOW/MED | `P0_PW_RC` exported (read from the **last** capture field, so a NUL-corrupted capture keeps the real status); both `identity_unresolvable` callers emit `rc=<n\|na>`; `state_account_resolution_unexpected` preregistered verbatim in row 3 | **8 exact whole-line** assertions (rc-0 parse, rc-2 no-match, rc-2 diagnostic, rc-5, NUL) each with its RED twin; auditor's marker reproduced `contains_rc_field=0` → `1` |
+
+### Harnesses (all against the final bytes)
+```
+backstop-4  rc 0 PASS   full-block  rc 0, 39 ASSERT_MET/0 UNMET PASS   freeze  rc 0 PASS
+R4 D026     rc 0, 102 ASSERT_MET/0 UNMET PASS   R4b C13  rc 0, 27 cases PASS
+```
+Both new fences were re-extracted from the markdown and re-run: extraction byte-identical, transcripts reproduce (one documented exception — the F2 arm's diagnostic-only `elapsed_s`, 10 vs 11 s, which no assertion reads).
+
+**Two things you should know before dispatching an audit:**
+
+1. **The two older C13 fences (lines 664-787, 1181-1346) are now RED on purpose** — they assert the pre-R4 `identity_unresolvable` grammar by substring, and F4 makes `rc=` mandatory. I left them byte-untouched as round records, recorded their failing output as evidence, and superseded them with the R4b harness carrying all 27 cases with 12 corrected assertion strings. The new mandated set is listed in both `STATUS_RP6_P0.md` and the report.
+2. **A sixth freeze-gate input now exists:** `P0_FIXED_TRUSTED_PYTHON`, mirroring RP7's `WPI_FIXED_TRUSTED_PYTHON`. The manager budget literals are *not* freeze-gate inputs — they carry real values deliberately.
+
+**Files written (five + draft, nothing else):** `RP6-P0.sh`, `SELF_QA_RP6.md`, `STATUS_RP6_P0.md`, `RP6_FULLBLOCK_REPAIR_REPORT.md`, `RP6_REPAIR_R4_REPORT.md`, and four §8.1 rows of the prereg draft. RP7 and transport were read only. No host, network, SSH, or commit. Note: a concurrent session extended the draft's §4-§6 during this round — my hunks are `@@ -514,3 +623,3 @@` and `@@ -522 +631 @@` only, and I corrected the report where it would otherwise have claimed that concurrent work as mine.

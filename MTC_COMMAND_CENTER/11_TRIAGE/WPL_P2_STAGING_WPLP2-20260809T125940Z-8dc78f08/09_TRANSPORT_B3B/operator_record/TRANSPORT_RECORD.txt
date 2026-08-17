@@ -1,0 +1,60 @@
+TR_HEADER base_run=WPLP2B-20260809T210610Z-834380c5
+TR_MODE execute=True confirm_supplied=True
+TR_LOCATION dir=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\08_PREREG_B3B
+TR_PLAN path=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\08_PREREG_B3B\TRANSPORT_PLAN_B3B.tsv sha256=a518c2fe3cc15cd4892839dd29caa21c14a358577b4269d1ddf753a6ef9a447b
+TR_PLAN_ROWS count=7
+TR_STDIN op=01 file=remote_setup_b3b.sh sha256=242b14ce848607ed1ae58a50d2effe03fcb13549867629578cf74d0e0a3b3866
+TR_STDIN op=03 file=remote_extract_verify_b3b.sh sha256=68007732d8088f076575bd71a59e987e6f677602e272a4f36b19215e31d39750
+TR_STDIN op=04 file=run_b3b.sh sha256=17b19bf605823297b33459b9f0f9e1f76c3e8a284609c8523ce6f95e67c80c0a
+TR_STDIN op=05 file=remote_close_tree_b3b.sh sha256=5a9cfd5e8cec5960670fd46339f8fb15c355e2de23a34d878c0dc0e69cc50dcb
+TR_PINNED path=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\07_RUNKIT_B\runkit_b.tar sha256=888bec17cbea99a781368b7c3747d6a9085840005a686000bedaadcacb44246b
+TR_PROGRAM name=ssh resolved=C:\Windows\System32\OpenSSH\ssh.exe
+TR_PROGRAM name=scp resolved=C:\Windows\System32\OpenSSH\scp.exe
+TR_OP_PLANNED id=01 kind=ssh_stdin run_when=sequence_ok expect_rc=0 stdin=remote_setup_b3b.sh
+TR_OP_ARGV id=01 argv=[ssh] [-i] [C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519] [-o] [BatchMode=yes] [-o] [StrictHostKeyChecking=yes] [-o] [IdentitiesOnly=yes] [-o] [ConnectTimeout=20] [gatea@172.24.55.233] [bash] [-s] [--] [/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5]
+TR_OP_PLANNED id=02 kind=scp_up run_when=sequence_ok expect_rc=0 stdin=-
+TR_OP_ARGV id=02 argv=[scp] [-i] [C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519] [-o] [BatchMode=yes] [-o] [StrictHostKeyChecking=yes] [-o] [IdentitiesOnly=yes] [-o] [ConnectTimeout=20] [runkit_b.tar] [gatea@172.24.55.233:/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/kit/runkit_b.tar]
+TR_OP_PLANNED id=03 kind=ssh_stdin run_when=sequence_ok expect_rc=0 stdin=remote_extract_verify_b3b.sh
+TR_OP_ARGV id=03 argv=[ssh] [-i] [C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519] [-o] [BatchMode=yes] [-o] [StrictHostKeyChecking=yes] [-o] [IdentitiesOnly=yes] [-o] [ConnectTimeout=20] [gatea@172.24.55.233] [bash] [-s] [--] [/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/kit/runkit_b.tar] [/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/kit/extracted] [888bec17cbea99a781368b7c3747d6a9085840005a686000bedaadcacb44246b]
+TR_OP_PLANNED id=04 kind=ssh_stdin run_when=sequence_ok expect_rc=0 stdin=run_b3b.sh
+TR_OP_ARGV id=04 argv=[ssh] [-i] [C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519] [-o] [BatchMode=yes] [-o] [StrictHostKeyChecking=yes] [-o] [IdentitiesOnly=yes] [-o] [ConnectTimeout=20] [gatea@172.24.55.233] [bash] [-s] [--]
+TR_OP_PLANNED id=05 kind=ssh_stdin run_when=always expect_rc=0 stdin=remote_close_tree_b3b.sh
+TR_OP_ARGV id=05 argv=[ssh] [-i] [C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519] [-o] [BatchMode=yes] [-o] [StrictHostKeyChecking=yes] [-o] [IdentitiesOnly=yes] [-o] [ConnectTimeout=20] [gatea@172.24.55.233] [bash] [-s] [--] [/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/evidence/runkit/WPLP2B-20260809T210610Z-834380c5-B3B] [WPLP2B-20260809T210610Z-834380c5-B3B]
+TR_OP_PLANNED id=06 kind=scp_down run_when=always expect_rc=0 stdin=-
+TR_OP_ARGV id=06 argv=[scp] [-i] [C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519] [-o] [BatchMode=yes] [-o] [StrictHostKeyChecking=yes] [-o] [IdentitiesOnly=yes] [-o] [ConnectTimeout=20] [-r] [gatea@172.24.55.233:/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/evidence/runkit/WPLP2B-20260809T210610Z-834380c5-B3B] [.]
+TR_OP_PLANNED id=07 kind=local_bind run_when=always expect_rc=0 stdin=-
+TR_OP_ARGV id=07 argv=[local_bind] [05] [06] [evidence\WPLP2B-20260809T210610Z-834380c5-B3B]
+TR_RECORD_ROOT path=C:\WPI_ARTIFACTS\WPLP2B_TRANSPORT_WPLP2B-20260809T210610Z-834380c5
+TR_OP_BEGIN id=01 kind=ssh_stdin cwd=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\08_PREREG_B3B
+TR_OP_SENT_ARGV id=01 ssh -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20 gatea@172.24.55.233 bash -s -- /home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5
+TR_OP_END id=01 rc=0 expect_rc=0 stdout_sha256=35425dd24d459ad642659f64734fa7a03a3eede5f98ec9a4bed65d77c3b971d6 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TR_OP_BEGIN id=02 kind=scp_up cwd=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\07_RUNKIT_B
+TR_OP_SENT_ARGV id=02 scp -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20 runkit_b.tar gatea@172.24.55.233:/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/kit/runkit_b.tar
+TR_OP_END id=02 rc=0 expect_rc=0 stdout_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TR_OP_BEGIN id=03 kind=ssh_stdin cwd=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\08_PREREG_B3B
+TR_OP_SENT_ARGV id=03 ssh -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20 gatea@172.24.55.233 bash -s -- /home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/kit/runkit_b.tar /home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/kit/extracted 888bec17cbea99a781368b7c3747d6a9085840005a686000bedaadcacb44246b
+TR_OP_END id=03 rc=0 expect_rc=0 stdout_sha256=d2606dde952583bd7ab4175eb91dd7bf4188b1931af62c934b7cd20a6876bb78 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TR_OP_BEGIN id=04 kind=ssh_stdin cwd=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\08_PREREG_B3B
+TR_OP_SENT_ARGV id=04 ssh -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20 gatea@172.24.55.233 bash -s --
+TR_OP_END id=04 rc=0 expect_rc=0 stdout_sha256=ea3bc5ab736ddaa1b7f5be39a2db8bfd52eb7095ae3b4e8987039b08a4f17a12 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TR_OP_BEGIN id=05 kind=ssh_stdin cwd=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\08_PREREG_B3B
+TR_OP_SENT_ARGV id=05 ssh -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20 gatea@172.24.55.233 bash -s -- /home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/evidence/runkit/WPLP2B-20260809T210610Z-834380c5-B3B WPLP2B-20260809T210610Z-834380c5-B3B
+TR_OP_END id=05 rc=0 expect_rc=0 stdout_sha256=5792218c435d939d024dee4bbf2db29b06779a2ebaa584c92a35f53c0ef08a43 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TR_OP_BEGIN id=06 kind=scp_down cwd=C:\WPI_ARTIFACTS\WPLP2B_TRANSPORT_WPLP2B-20260809T210610Z-834380c5\evidence
+TR_OP_SENT_ARGV id=06 scp -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20 -r gatea@172.24.55.233:/home/gatea/wpl_p2b_staging_WPLP2B-20260809T210610Z-834380c5/evidence/runkit/WPLP2B-20260809T210610Z-834380c5-B3B .
+TR_OP_END id=06 rc=0 expect_rc=0 stdout_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TR_OP_BEGIN id=07 kind=local_bind cwd=C:\WPI_ARTIFACTS\WPLP2B_TRANSPORT_WPLP2B-20260809T210610Z-834380c5
+TR_OP_SENT_ARGV id=07 local_bind 05 06 evidence\WPLP2B-20260809T210610Z-834380c5-B3B
+TR_BIND op=07 close_op=05 fetch_op=06 local_dir=C:\WPI_ARTIFACTS\WPLP2B_TRANSPORT_WPLP2B-20260809T210610Z-834380c5\evidence\WPLP2B-20260809T210610Z-834380c5-B3B
+TR_BIND_COUNTS op=07 remote=1 local=1
+TR_BIND_SET op=07 remote_set_sha256=d572afe7f708e4dbc5720910678d0331d744646c3fb66eda0a4536fec7eeb9e9 reconstructed=d572afe7f708e4dbc5720910678d0331d744646c3fb66eda0a4536fec7eeb9e9
+TR_BIND_PASS op=07 files=1
+TR_OP_END id=07 rc=0 expect_rc=0 stdout_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+TR_RESULT id=01 rc=0 expect_rc=0
+TR_RESULT id=02 rc=0 expect_rc=0
+TR_RESULT id=03 rc=0 expect_rc=0
+TR_RESULT id=04 rc=0 expect_rc=0
+TR_RESULT id=05 rc=0 expect_rc=0
+TR_RESULT id=06 rc=0 expect_rc=0
+TR_RESULT id=07 rc=0 expect_rc=0
+TR_RUN PASS base_run=WPLP2B-20260809T210610Z-834380c5 record=C:\WPI_ARTIFACTS\WPLP2B_TRANSPORT_WPLP2B-20260809T210610Z-834380c5

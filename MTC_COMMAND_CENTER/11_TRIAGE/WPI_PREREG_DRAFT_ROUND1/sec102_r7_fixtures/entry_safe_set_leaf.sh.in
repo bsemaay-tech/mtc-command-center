@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+ROOT='{{REMOTE_BASE}}'
+RUNID='{{RUNID}}'
+# safe-set leaf identity={{LIBRARY_PATH}}
+fixture_main() {
+    /bin/cat "$ROOT/$RUNID/input.txt"
+}
+bin/verify_marker-2.0
+/opt/tools:probe_1/run.check
+fixture_main

@@ -1,0 +1,31 @@
+# SEC102 composite path proof - evidence durability (round-4 repair of R3-F3,
+# extended in rounds 5, 6 and 7 with each round's fixture tree).
+#
+# The repository root sets `* text=auto`, and a Windows clone with
+# core.autocrlf=true therefore materialises these blobs as CRLF.  Every file
+# named below is byte-pinned - by a `bytes`/`sha256` pair inside a composite plan,
+# by APPROVED_PROVER_BYTES/APPROVED_PROVER_SHA256 in composite_pathproof.py, or by
+# a SHA-256 published in the round-1..7 self-QA - so a checkout that rewrites one
+# byte makes the published FREEZE matrix unreproducible.  These rules keep the
+# checked-out bytes equal to the committed bytes on every platform.
+#
+# Scope: this directory only.  Nothing here changes global line-ending behaviour
+# and no file outside the SEC102 proof surface is affected.
+
+# Pinned fixture blobs: treated as binary, so Git performs no end-of-line
+# conversion in either direction and the committed bytes are the checked-out bytes.
+sec102_r1_fixtures/** -text
+sec102_r2_fixtures/** -text
+sec102_r3_fixtures/** -text
+sec102_r4_fixtures/** -text
+sec102_r5_fixtures/** -text
+sec102_r6_fixtures/** -text
+sec102_r7_fixtures/** -text
+
+# Pinned tools.  `text eol=lf` also fixes the checked-out bytes to the committed
+# LF blob, but keeps both files textually diffable so the Lead can still review a
+# real diff rather than "Binary files differ".  pathscope_prover.py is a FREEZE
+# proof input pinned at 122446 B / 890016f0...af1d; without this line a fresh
+# Windows checkout fails F4 with frozen_identity_mismatch.
+pathscope_prover.py text eol=lf
+composite_pathproof.py text eol=lf

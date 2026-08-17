@@ -1,0 +1,1614 @@
+# WP-I staging verification - preregistration DRAFT (round 1.4)
+
+Status: **DRAFT - NOT A PREREGISTRATION, NOT DISPATCHABLE, NO HOST CONTACT HAS OCCURRED**
+
+Unit: `<ALLOCATE-AT-DISPATCH>` - branch `feature/donchian-crypto-ladder`
+Frozen candidate: `2ce41e34bceb599d80af24c5c33d835820ec321b`
+Check universe: `GATE_A_POST_GATE_PREREGISTRATION_GAP_MATRIX_2026-08-09.md`
+Groups A3, B (B1, B1a, B2, B3, B4, B5, B6), C (C1-C5).
+Rigor template: `WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08/02_PREREG/PREREGISTRATION.md`.
+Governing lesson: `.../03_TRANSPORT/B3_STOP_ADJUDICATION.md` (design gap `B3-GAP-ENV`).
+Banked-evidence check: `.../EVIDENCE_INDEX.md`.
+
+This document is the *shape* of the WP-I preregistration, not the preregistration
+itself. A preregistration mints one-use identifiers; a draft must not, so every
+identifier here is a marked placeholder. Writing this document authorizes nothing:
+not transport, not host contact, not a socket, not a RUNID. Section 12 states
+exactly what has and has not happened.
+
+**Round 1.3 (Codex audit F3 and F4 applied).** Round 1.2 closed F1, F2, F5 and F6.
+This round closes the two findings it left open: F3 (B2/B4 system-manager access)
+and F4 (B3 partial-walk output). They share the existing `B3-GAP-ENV` rule: an
+inability-to-evaluate must STOP (rc 3), never FAIL (rc 1). A manager query is not a
+unit-state observation until invocation, bus, namespace, authorization and parsing
+have succeeded. A filesystem sweep is not a finding until its timeout, exit status
+and complete diagnostics prove the walk finished successfully. F3 and F4 are now
+closed; `SELF_QA.md` records the exact changes and supersedes the round-1.2 open list.
+
+**Round 1.4 (retroactive ten-pattern catalogue pass).** The whole draft - every
+preflight, expectation row, evidence block and deferred root-side rule - has been
+checked against `DESIGN_DEFECT_PATTERNS_2026-08-10.md`. This pass strengthens domain
+binding, numeric identity, path-object binding, structured parsing, result
+classification, status-before-output ordering, line-reader completeness and
+falsifiable acceptance evidence. It authorizes no host contact or new operation and
+does not fill or alter any existing PIN-BEFORE-DISPATCH placeholder.
+
+**Round 1.5 (transport-set contract repair — Lead adjudication of a Codex authoring
+STOP, 2026-08-10).** Authoring the transport set falsified the round-1.1 N1 claim that
+all three reused remote scripts fit the WP-I contract unchanged. Two do not:
+`remote_setup.sh` (4976 B, `faee3725…`) hardcodes the base prefix
+`/home/gatea/wpl_p2_staging_` and therefore cannot allocate the section-1
+`wpi_staging_` base (op 01 would always fail); `remote_extract_verify.sh` (8270 B,
+`ba0bef0e…`) pins the old nine-member 102400-byte archive **including `RP1-B3.sh`**,
+which section 3 excludes from the WP-I kit (op 03 would reject every valid WP-I
+archive). The implementer stopped without writing rather than author deliverables
+that could never run — the correct STOP. Section 4 is amended accordingly:
+WP-I-specific `remote_setup_wpi.sh` and `remote_extract_verify_wpi.sh` replace the
+two misfit rows as minimal derivations of the accepted bytes, and only
+`remote_close_tree.sh` (verified free of unit-specific constants) remains byte-reuse.
+
+Three things must happen before any successor of this document is dispatchable, and
+each is named at the point where it bites: Stage 1 must freeze and hash the blocks
+(sections 3 and 4), the values marked `<PIN-BEFORE-DISPATCH: ...>` must be filled
+from the cited record (sections 2 and 8), and the identifiers must be allocated and
+tested against `rp0_require_safe_component` (section 1).
+
+**These three are necessary but not sufficient (Codex audit F6, applied round 1.2).**
+Two further gates are required and are currently unmet (section 12, and matrix
+section 1): (a) **explicit written host-contact/transport authority** - a named
+authorisation for SSH/SCP contact with `GATEA-STAGING` and for the operator-side
+external probe (op 06); and (b) **the required budget lift** - the matrix records the
+exact 50-hour balance as NOT REPRODUCIBLE, so no host execution may be authorised or
+performed until a budget lift is granted. The `-Execute` and `-Confirm` switches in
+section 6 are technical interlocks on the runner, not authority: flipping both
+executes the plan the runner holds, it does not grant the authority or the budget the
+plan still lacks. No successor is dispatchable while either (a) or (b) is absent.
+
+---
+
+## 0. Design gate: unprivileged feasibility
+
+Tonight's B3 stage stopped with rc 3 at
+`RP0_STOP reason=path_probe_error path=/etc/mtc-bridge/mtc-bridge.env rc=1
+detail=stat: cannot statx ...: Permission denied`, because an adversarially
+accepted block assumed the operator could `stat` a name inside a `0750 root:root`
+directory as the unprivileged login user. The design and the execution model
+contradicted each other, and the contradiction was only discovered on the host,
+after a one-use RUNID had been spent.
+
+This draft therefore treats unprivileged feasibility as an admission gate on the
+*design*, ahead of expectations, argv, or evidence contract. Three rules follow,
+and they govern every later section:
+
+1. **Every check admitted to the run plan carries a written reason why it works as
+   `gatea` without sudo.** The reason must be a permission-semantics argument over a
+   recorded mode and owner, not an assumption of convenience. The full ledger with
+   one row per Group A3/B/C check is `WPI_CHECK_FEASIBILITY.tsv`; the reasoning and
+   its residual gaps are in `SELF_QA.md`.
+2. **Anything that needs privilege goes to DEFER-ROOT-SIDE under the RPD-VERIFY
+   pattern (section 10), never into the run plan** - not as a "best effort" probe,
+   not as an optional corroboration, not behind a conditional. A block that contains
+   an unreachable path will reach it.
+3. **`sudo` is not used, and is not probed.** No `sudo -n`, no capability test, no
+   fallback. On a host under a zero-mutation authority, testing for privilege is
+   itself outside the envelope, and a block that can escalate on some future host is
+   a block whose scope is not what this document describes.
+
+The mechanical form of rule 2 is the **path-scope proof** (section 10.2): Stage 1
+must emit the sorted closed set of absolute host paths reachable after expansion in
+each frozen block, reject unresolved dynamic construction, and show every result
+inside the section 10.1 allowlist. The distinction
+that proof enforces is exactly the one B3 missed - `/etc/mtc-bridge` as a terminal
+`stat` target is feasible; `/etc/mtc-bridge/` as a path prefix is not.
+
+---
+
+## 1. Run identifiers and evidence tree
+
+Two stages run, each with its own **one-use** RUNID. A RUNID is never reused: if
+allocation fails for any reason it is **burned**, and a retry requires a new
+preregistration, not a second attempt with the same identifier. RUNID
+`WPLP2-20260809T125940Z-8dc78f08-B3` is already burned this way.
+
+| Field | P0 preflight stage | RO check stage |
+|---|---|---|
+| `RUNID` | `<ALLOCATE-AT-DISPATCH>-P0` | `<ALLOCATE-AT-DISPATCH>-RO` |
+| `EV_STAGE_ID` | `p0` | `ro` |
+| `EV_DIR` | `<EV_RUNKIT>/<ALLOCATE-AT-DISPATCH>-P0` | `<EV_RUNKIT>/<ALLOCATE-AT-DISPATCH>-RO` |
+| `EV_LOG` | `<EV_DIR>/p0.log` | `<EV_DIR>/ro.log` |
+
+Shared, to be preregistered at dispatch:
+
+| Field | Value | Expected owner | Expected mode |
+|---|---|---|---|
+| `REMOTE_BASE` | `/home/gatea/wpi_staging_<ALLOCATE-AT-DISPATCH>` | P0-resolved numeric euid:egid for the named `gatea` login (`gatea:gatea` diagnostic only) | `0700` |
+| `EV_PARENT` | `<REMOTE_BASE>/evidence` | same numeric euid:egid | `0700` |
+| `EV_RUNKIT` | `<REMOTE_BASE>/evidence/runkit` | same numeric euid:egid | `0700` |
+| `REMOTE_KIT` | `<REMOTE_BASE>/kit` | same numeric euid:egid | `0700` |
+| remote archive | `<REMOTE_BASE>/kit/runkit.tar` | - | - |
+| `EXTRACT_DIR` | `<REMOTE_BASE>/kit/extracted` | - | `0700`, files `0444` |
+
+Allocation rules, binding on the successor document:
+
+- No identifier in this table may be made concrete here. A draft that mints a RUNID
+  has spent it, and a spent identifier cannot be preregistered.
+- Every allocated component must be tested against the **accepted** predicate
+  `rp0_require_safe_component` from `RP0-LIB.sh` and must be accepted (rc 0), with
+  the same refusal set demonstrated (`../escaped`, `a/b`, `.`, `..`, `-lead`, empty,
+  `bad name` -> rc 1). Assertion is not demonstration; the transcript goes in the
+  successor's self-QA.
+- `REMOTE_BASE` and the operator record root are **create-once**. Before allocation,
+  both must be shown not to collide with any existing tree - on the host under
+  `/home/gatea/`, and operator-side against the two recorded roots
+  `C:\WPI_ARTIFACTS\WPLP2_TRANSPORT_WPLP2-20260809T125940Z-8dc78f08` and the same
+  path suffixed `-R45B` (`EVIDENCE_INDEX.md`, RUNID ledger).
+- **The RO block binds its own evidence root** (round-5 repair; section-10.1
+  reconciliation item F5). `RP7-WPI-RO.sh` carries a frozen `WPI_FIXED_EVIDENCE_ROOT`
+  constant and STOPs, before it allocates any leaf, unless `EV_DIR` is a strict descendant
+  of it: `RP7_STOP reason=evidence_root_unattested ev_dir=<d> expected_root=<r>`, and
+  `RP7_STOP reason=evidence_root_unattested detail=freeze_gate_pin_unfilled
+  name=WPI_FIXED_EVIDENCE_ROOT` while the pin is unfilled. Proving `EV_LOG` inside `EV_DIR`
+  and every capture leaf inside `EV_DIR` binds nothing if `EV_DIR` itself is unbound, which
+  is what the round-4 bytes did. The constant's value is `<REMOTE_BASE>/evidence`, so it is
+  a **freeze-gate input with an ordering consequence**: `REMOTE_BASE` must be allocated
+  BEFORE the RO block is frozen and hashed, because a block frozen first cannot carry a
+  base allocated later. Stage 1 must either order allocation ahead of the RO freeze, or
+  record explicitly that the RO block cannot claim evidence-root provenance for this run.
+
+Two stages rather than one is deliberate. P0 establishes the executing identity and
+tool inventory that every feasibility claim in section 0 rests on; the RO stage is
+admissible only if P0 confirmed those premises. Folding them together would let the
+run assert a result whose precondition it never checked - the B3 failure mode with a
+different path in it.
+
+## 2. Preregistered inputs consumed by the accepted blocks
+
+| Variable | Value | Origin |
+|---|---|---|
+| `WPI_CANDIDATE_SHA` | `2ce41e34bceb599d80af24c5c33d835820ec321b` | frozen candidate; immutable (matrix A1) |
+| `WPI_RELEASE_ROOT` | `/opt/mtc-bridge/releases/2ce41e34bceb599d80af24c5c33d835820ec321b` | matrix B1, B1a; transition inventory |
+| `WPI_VENV_ROOT` | `/opt/mtc-bridge/venvs/2ce41e34bceb599d80af24c5c33d835820ec321b` | matrix B1 |
+| `WPI_UNIT_FRAGMENT` | `/usr/local/lib/systemd/system/mtc-bridge-first-start.service` | matrix B2 |
+| `WPI_UNIT_FRAGMENT_BYTES` | `3736` | transition inventory, via matrix B2 and template section 8 |
+| `WPI_UNIT_FRAGMENT_SHA256` | `<PIN-BEFORE-DISPATCH: GATE_A_POST_GATE_TRANSITION_INVENTORY_2026-08-09.md; matrix B2 records it elided as 538c1c60...279bd>` | see section 8 risk R1 |
+| `WPI_EXPECTED_LOCK_SHA256` | `a1881296c8cb6e0e9df33554aa2a25652cfeba2506530c74c7845ba2f58bf66e` | matrix A3 / B1a, round-2 and round-3 blocks; LF blob content, 117762 B |
+| `WPI_EXPECTED_LOCK_BYTES` | `117762` | same |
+| `WPI_EXPECTED_PACKAGES` | `56` | matrix A3 / A6, re-derived at the candidate twice |
+| `WPI_STATE_DIR` | `/var/lib/mtc-bridge` | matrix C3 (`/var/lib/mtc-bridge/bridge.db`), C4 |
+| `WPI_STATE_UID` | `999` | recorded host `getent passwd mtc-bridge` preflight; numeric identity of the dynamically allocated `mtc-bridge` account for this frozen host state |
+| `WPI_STATE_GID` | `988` | primary gid from the same recorded `getent` preflight; uid and gid are deliberately not assumed equal |
+| `WPI_LOG_DIR` | `/var/log/mtc-bridge` | `LEAD_PIN_RESOLUTION_2026-08-10.md`, unit-template `ReadWritePaths` at the candidate SHA |
+| `WPI_CONF_DIR` | `/etc/mtc-bridge` | matrix B3; adjudication (numeric `0:0`, `0750`; `root:root` diagnostic only) |
+| `WPI_CONTROL_ENDPOINT` | `http://127.0.0.1:8790/api/status` | matrix B5, B6 |
+| `WPI_SWEEP_BUDGET_S` | `120` | per-tree budget for the `find ... -perm /222` sweep, carried over unchanged from the accepted Stage 2 rationale: `-quit` only shortens a *failing* sweep, so a clean walk is a full walk, and exceeding the budget is STOP, never a pass |
+| `P0_ATTESTED_USER_NS` | `<PIN-AT-FREEZE>`, grammar `user:[<digits>]` | deploy channel, owner grant #6; **never** learned from the login under test |
+| `P0_ATTESTED_MNT_NS` | `<PIN-AT-FREEZE>`, grammar `mnt:[<digits>]` | same |
+| `P0_ATTESTED_PID_NS` | `<PIN-AT-FREEZE>`, grammar `pid:[<digits>]` | same |
+| `P0_ATTESTED_NET_NS` | `<PIN-AT-FREEZE>`, grammar `net:[<digits>]` | same |
+| `P0_ATTESTED_ROOT_MOUNT_ID` | `<PIN-AT-FREEZE>`, grammar `<dev>:<inode>` | same |
+
+The five `P0_ATTESTED_*` values are the RP6 row-8 execution-domain attestation.
+`RP6-P0.sh` requires all five before it observes anything about the login, and
+additionally requires each to equal its own frozen `P0_FIXED_ATTESTED_*` literal,
+so filling one side only is a STOP rather than a pass. **They are wired by
+`run_p0.sh`** (round 4, item T5): the round-3 wrapper defined and exported none of
+them, so the composition STOPped at
+`execution_domain_unattested … detail=preregistered_value_missing` before any host
+observation even with every other pin filled. Both halves — the wrapper's export
+set and the block's own gate bytes — are executed in self-QA rather than asserted.
+`WPI_INTERPRETER_TARGET` is deliberately **absent** from this table and from
+`run_ro.sh` (item T7): the accepted `RP7-WPI-RO.sh` never reads it, and a filled
+but unread value is a freeze-gate cost that establishes no preregistered check.
+
+`WPI_EXPECTED_LOCK_SHA256` is the **expected** value, source-derived
+(`git cat-file blob 47f53fa2... | sha256sum`). It has never been observed on the
+host (matrix round-3 block; B1a "Existing evidence: NONE"). It is therefore a
+predicate to be tested, not a fact to be restated, and its failure disposition in
+section 8 is *investigate read-only*, not an automatic drift STOP. The Windows
+CRLF worktree value `40873556...` (119274 B) is withdrawn and must never be cited.
+
+`WPI_UNIT_FRAGMENT_SHA256` is **never** derived at run time and never re-pinned from
+what the host reports. A digest a run reads from the object it is attesting is not
+an attestation. Until it is filled from the transition inventory, this draft has no
+successor that can be dispatched.
+
+## 3. Expected SHA-256 of every proposed block the stages carry
+
+Blocks marked `<PIN-AT-STAGE-1>` do not yet exist. The WP-I run kit has not been
+built; naming a hash for an unwritten file would be the same error class as minting
+a RUNID in a draft. The three reused blocks are already frozen and accepted, and
+their digests are pinned here from `EVIDENCE_INDEX.md` (01_RUNKIT):
+
+| Block | File | Bytes | SHA-256 | Carried by |
+|---|---|---:|---|---|
+| RP0-LIB | `RP0-LIB.sh` | 18968 | `4a404d7b90d83aef47b3593757f86e3699b3bc2dd772f51df63ead4f10d9ab48` | P0, RO |
+| RP0-BOOTSTRAP | `RP0-BOOTSTRAP.sh` | 1937 | `e7d748f6b41c6156de4d5c5e2d93c2b08729b1f85377b132660424024815bb33` | P0, RO |
+| RP6-P0 (new) | `RP6-P0.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | P0 |
+| RP7-WPI-RO (new) | `RP7-WPI-RO.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | RO |
+
+Archive: `runkit.tar`, `<PIN-AT-STAGE-1>` bytes, `<PIN-AT-STAGE-1>`.
+
+Reuse is byte reuse: Stage 1 must verify `RP0-LIB.sh` and `RP0-BOOTSTRAP.sh` against
+the two digests above before admitting them, and the remote extract step re-verifies
+every member again from constants before anything is sourced.
+
+**`RP1-B3.sh` (`f40411b053779b28ec9d970d7e5610fe5f363acbc48ee487d07ebce2638a69af`) does
+not travel in the WP-I kit.** Its accepted bytes contain the `/etc/mtc-bridge/`
+probes that produced `B3-GAP-ENV`. Shipping it "but not executing it" is how a
+frozen block gets executed: the Stage 2 archive carried five never-executed blocks
+precisely because the archive was already frozen, and that concession must not be
+extended to a block now known to be infeasible under this execution model. The
+scoped replacement is `RP7-WPI-RO.sh`, and it is a new block requiring its own
+adversarial acceptance, not an edit of an accepted one.
+
+## 4. Support-script hashes (every executed artifact)
+
+Everything the operator sends is pinned. No accepted Stage-2 script travels
+unchanged: **five delivered derived shell files** (`remote_setup_wpi.sh`,
+`remote_extract_verify_wpi.sh`, `remote_close_tree_wpi.sh`, `run_p0.sh`,
+`run_ro.sh`) are derived from **four accepted bases** (`remote_setup.sh`,
+`remote_extract_verify.sh`, `remote_close_tree.sh`, and the accepted wrapper
+`run_r45.sh`); the rest are authored for WP-I and pinned at Stage 1.
+
+| File | Bytes | SHA-256 | Role |
+|---|---:|---|---|
+| `remote_setup_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 01 stdin - create-once remote allocation. Derivation of the accepted `remote_setup.sh` (4976 B, `faee3725…`) whose permitted semantic changes are EXACTLY, and only, the six classes enumerated in the round-2 derivation contract below; the derivation diff is recorded in self-QA and must show nothing outside those six classes |
+| `remote_extract_verify_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 03 stdin - archive/member/hash verification + extraction. Derivation of the accepted `remote_extract_verify.sh` (8270 B, `ba0bef0e…`) whose permitted semantic changes are EXACTLY, and only, the six classes enumerated in the round-2 derivation contract below. No member-count literal may exist: every count is derived from the `MEMBERS` constant, so the archive-constants block remains the single source of the member set |
+| `remote_close_tree_wpi.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | ops 07 and 08 stdin - closed-tree hashing. **Third `_wpi` derived script** (added round 3; Codex round-2 re-audit F3). Derivation of the accepted `remote_close_tree.sh` (7470 B, `87157f0e…`) whose permitted semantic changes are EXACTLY, and only, derivation classes 2, 3, 5 and 6 of the contract below, and nothing else: class 2 program identity (every executable - `env`, `bash`, `mkdir`, `stat`, `tr`, `readlink`, `find`, `sort`, `sha256sum`, `cmp`, `rm` - is a frozen absolute `/usr/bin` pin admitted by non-following kind, numeric `0:0` ownership and not-group/other-writable mode; the inherited `PATH` selects nothing); class 3 STOP-before-mutation path classification (the absence sentence this pinned `stat` emits is calibrated once in the run and every later classification must match it as a whole string; multiline, mixed or unrecognised diagnostics STOP - Codex final audit F3); class 5 launch-domain attestation (the script attests, before anything else and with shell builtins only, that it runs under the pinned absolute interpreter through `env -i` with no `BASH_ENV`/`ENV`, no exported function and no inherited `TMPDIR` - Codex final audit F1); and class 6 run-owned scratch (it takes a `WORK_ROOT` argument, proves canonical non-overlap with the evidence tree BEFORE creating a create-once work directory under it, exports `TMPDIR` to that proven directory and removes it on exit, so the read-only claim is earned - Codex final audit F2). The RUNID/EV_DIR grammar, the two-pass digest stability rule and the emitted record grammar are the accepted logic unchanged |
+| `remote_close_tree.sh` | 7470 | `87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e` | **derivation basis only; it no longer travels.** Byte-frozen accepted input, verified free of unit-specific constants (round 1.5), and NOT edited. It stopped travelling in round 3 because, executed under the delivered environment, a `sha256sum` planted first on the inherited `PATH` appended to a closed evidence leaf and then delegated to the real tool: both digest passes observed the post-mutation bytes, agreed, and the script printed `CLOSE PASS … wrote_into_evidence_tree=0` at rc 0. The accepted bytes stay referenced here as the derivation basis and remain the object the derivation diff is recorded against |
+| `transport_runner.ps1` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | operator-side recorder (Stage 2 variants exist at 18095/`c5bdb47c...` and 17849/`a48ddc93...`; the WP-I op list differs, so the runner is re-pinned, not assumed) |
+| `run_p0.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 04 stdin - P0 wrapper |
+| `run_ro.sh` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | op 05 stdin - RO wrapper |
+| `TRANSPORT_PLAN.tsv` | `<PIN-AT-STAGE-1>` | `<PIN-AT-STAGE-1>` | the ordered op list; pinned inside the runner |
+
+Reused-script disposition (round 3, superseding the round-1.5 wording): **no accepted
+Stage-2 script travels unchanged any more.** The round-1.5 disposition kept
+`remote_close_tree.sh` byte-identical; that survived until the round-2 T0 re-audit
+executed it and found its evidence-producing helpers still selected from the inherited
+`PATH`. There are now **five delivered derived shell files** — the three `_wpi`
+derivations `remote_setup_wpi.sh`, `remote_extract_verify_wpi.sh` and
+`remote_close_tree_wpi.sh`, plus `run_p0.sh` and `run_ro.sh` as new wrappers — and
+each derivation must be proven bounded by a recorded
+diff against its accepted basis in self-QA. Each is a new artifact requiring Stage 1
+adversarial acceptance and its own pinned digest. The accepted originals remain
+byte-frozen inputs and derivation bases: **none of them is edited**, and any byte
+change to one of them voids this section and re-opens review.
+
+**Round-2 derivation contract (amended 2026-08-10; Codex transport audit F3/F4/F6/F7,
+Claude transport audit F5; extended round 4 by Codex final audit F1/F2).** Round 1
+permitted only a constants change. Two required findings from the round-1 T0 audits
+cannot be satisfied inside a constants block — `remote_setup_wpi.sh` classified an
+ambiguous path diagnostic as absence and mutated through an unbound parent, and
+`remote_extract_verify_wpi.sh` consumed listing stdout before adjudicating status,
+diagnostics and record completion — and a third, the execution-environment rule below,
+is by construction executable. Round 4 added two more (classes 5 and 6): the remote
+interpreter was selected outside the pinned program domain, and inherited `TMPDIR`
+let the close script write inside the evidence tree while reporting read-only
+behaviour. The permitted semantic changes for the derived scripts are therefore
+EXACTLY these six classes, and any delta outside them is still a finding:
+
+1. **Pinned archive/allocation constants** — the round-1 permission, unchanged: the
+   base-prefix constant for the setup script; the archive-constants block (bytes,
+   member list, per-member digests) for the extractor, plus the preregistered numeric
+   `EXPECT_UID`/`EXPECT_GID` the setup script compares against.
+2. **Program identity** — every executable any derived script invokes is resolved by a
+   frozen absolute path under the preregistered `/usr/bin/<tool>` set and admitted
+   only after a non-following kind check, numeric `0:0` ownership, and a
+   not-group/other-writable mode. The inherited `PATH` selects nothing. **No
+   delivered script creates a `mktemp`/`TMPDIR` object at all** — round 3 let
+   `remote_close_tree_wpi.sh` keep the accepted original's `mktemp` work directory
+   and merely *disclosed* the inherited-`TMPDIR` residual in its header; the round-4
+   T0 audit executed that disclosure and found the script writing and hashing its
+   own files inside the evidence tree while printing `wrote_into_evidence_tree=0`
+   (F2). A disclosure is not a control. `mktemp` is now removed and replaced by
+   class 6 below. Each admitted tool's runtime SHA-256 is
+   emitted as evidence and is deliberately **not** compared to a frozen value: no
+   digest of a remote tool can be known before host contact, and a digest a run
+   learns from the object it is attesting is not an attestation. Binding remote tool
+   bytes stays a successor deploy-channel item, and the scripts say so in their
+   claim lines rather than implying more than the pins establish.
+3. **STOP-before-mutation path classification** — the full parent chain is bound
+   (non-symlink, canonical, searchable, numerically owned, not group/other writable)
+   **and the allocation parent's covering mount object is bound to the deploy-channel
+   attested identity** before the first `mkdir`; identity is compared numerically with
+   the rendered `%U:%G` name kept diagnostic only; and a path probe is classified
+   `absent` only when the probe failed, the kernel reports neither object nor link,
+   and the diagnostic equals — as a whole string — the template calibrated in the same
+   run from the pinned tool itself. Multiline, mixed or unrecognised diagnostics STOP.
+   The mount half was added in round 3 (Codex round-2 re-audit F4): a bind or overlay
+   mount at the same literal canonical path presents the expected owner, mode and
+   `readlink -f` answer, so every component predicate passed and all four directories
+   were created inside the substituted object. `remote_setup_wpi.sh` therefore
+   projects the covering mount of `EXPECT_PARENT` from `/proc/self/mountinfo` —
+   longest matching mount point, later record wins a tie, shared mount points counted
+   — and compares it with the `EXPECT_PARENT_MOUNT` constant. An unfilled pin is a
+   missing input at rc 3; a mismatch is STOP before any mutation. The value is a
+   **freeze-gate input**: it comes from the read-only attestation command set the
+   owner authorised as grant #6, which the successor preregistration must order
+   **before op 01**, and it is never learned from the login session being tested.
+4. **Status-before-stdout adjudication** — every listing and tree walk has its exit
+   status, its complete diagnostic stream and its final-record termination adjudicated
+   before one byte of its stdout is parsed, and the archive is re-hashed after the
+   listings so a listing cannot describe different bytes from the ones hashed.
+5. **Launch-domain attestation** (round 4; Codex final audit F1) — the remote
+   interpreter and its startup environment are part of the pinned program domain,
+   not something the login shell's `PATH` selects. Every `ssh_stdin` row carries the
+   frozen launch argv of section 5 verbatim, and **each delivered script re-attests
+   that same domain from the inside**, before its first external program, using
+   shell builtins and one `/proc/self/environ` read: the interpreter is the pinned
+   absolute object, no startup files were read, and the exec environment is exactly
+   the three constructed entries, so `BASH_ENV`, `ENV`, `LD_PRELOAD`, an exported
+   shell function and an inherited `TMPDIR` are each refused **by name**. Every arm
+   is rc 3 — a launch-domain violation is an inability to evaluate, never a host
+   finding. **Disposition: inner child closed; outer SSH account-shell boundary
+   OPEN.** Measured scope, stated rather than implied: `bash` reads `$BASH_ENV`
+   before the first byte of a stdin-delivered script and `--norc`/`--noprofile` do
+   not disable that channel, so a startup plant that *exits* forges the record
+   before any in-script check can run. Nothing inside a delivered script closes
+   that, and this block does not close it on the operator side either: the remote
+   login shell that `sshd` runs the command string with processes its own startup
+   environment before `env -i` ever executes, so a server-supplied `BASH_ENV`/`ENV`
+   can act before the frozen inner child exists. That outer boundary is therefore
+   **not closed by these bytes** — closing it would require a mechanism that acts
+   before account-shell startup (an independently attested server-side execution
+   contract, or a transport path that runs the pinned helper without an unbound
+   shell), which is out of scope for this block and recorded as an open residual. A
+   plant that lets the delivered script run — the only kind the in-script sweep can
+   see — is refused by the sweep; a plant that *exits first* is not reached by it.
+   The integrity of the outer login/account shell `sshd` uses is a deploy-channel
+   property this block neither observes nor attests.
+6. **Run-owned scratch** (round 4; Codex final audit F2) — `remote_close_tree_wpi.sh`
+   takes a third argument, `WORK_ROOT`, which **op 01 allocates** as
+   `<REMOTE_BASE>/work` under the same create-once/bind-immediately discipline as the
+   other four directories. The close script proves canonical two-way non-overlap with
+   the evidence tree *before* creating a create-once `close_work_<RUNID>` directory
+   under it at mode 0700, proves it again on the object `mkdir` actually produced,
+   points `TMPDIR` at that proven directory, and removes it on every exit path taken
+   after the create returned 0, with the removal's own status adjudicated rather than
+   ignored. The coverage is stated at that width deliberately: a **nonzero** `mkdir`
+   result is not covered, because a nonzero status is no evidence that the object at
+   that path is the one this run created, and removing an object the run cannot prove
+   it created is the wrong answer. That arm STOPs and records whether an object is
+   present (`object_after_failed_create=present|absent`) instead of claiming coverage. The close script may not
+   allocate its own scratch root: a program that allocates the root it is about to
+   trust proves nothing about where that root is. This is what makes the read-only
+   claim earned rather than asserted.
+
+Class 2 is not optional for any derived script: it is the same execution-environment
+rule the operator side obeys. `transport_runner.ps1` starts `ssh` and `scp` only from
+frozen absolute paths whose SHA-256, reparse state and full-chain write ACL (compared
+by numeric SID, never a rendered account name) are adjudicated first; it never
+consults `Get-Command` or the inherited `PATH`; and every child receives a
+deliberately constructed environment with a run-owned `TEMP` rather than the
+operator's. Both wrappers resolve `sha256sum` the same way.
+
+**Operator-side configuration identity (round 3; Codex round-2 re-audit F2).** Program
+identity was not sufficient on the operator side, for two measured reasons. First, the
+round-2 child environment could not run the pinned program at all: OpenSSH for Windows
+resolves `__PROGRAMDATA__` and, with `PROGRAMDATA` unset, the real
+`C:\Windows\System32\OpenSSH\ssh.exe` exits **255 with zero bytes on both streams**
+before evaluating anything — measured, and measured to be the only load-bearing
+variable in the constructed set. Second, pinning the program does not pin the
+*configuration* that decides which program the transport ends up talking to: with the
+round-2 option set, an ambient `ssh_config` supplied a `ProxyCommand`, which is an
+external program interposed into the transport by inherited state. The runner
+therefore **disables ambient configuration rather than inheriting it**, and supplies
+every configuration input as a pinned argument or a pinned file:
+
+- `-F none` on every `ssh`/`scp` op, which refuses **both** the per-user and the
+  system-wide `ssh_config` (giving `-F` on the command line makes OpenSSH ignore the
+  system-wide file as well);
+- `PROGRAMDATA` set to a run-owned, freshly created, empty directory under the record
+  root, so nothing ambient is reachable even where `__PROGRAMDATA__` is still consulted;
+- `UserKnownHostsFile` and `GlobalKnownHostsFile` pinned to frozen files, so
+  `StrictHostKeyChecking=yes` decides against a preregistered host-key set rather than
+  the operator profile's;
+- `ProxyCommand=none`, `ControlMaster=no`, `ControlPath=none`, `PermitLocalCommand=no`,
+  `ForwardAgent=no`, `ForwardX11=no`, `ClearAllForwardings=yes`;
+- **nothing carried** from the operator environment — `USERPROFILE`, `HOMEDRIVE` and
+  `HOMEPATH` are no longer passed, because measurement showed OpenSSH for Windows
+  resolves the home directory from the OS token, so carrying them never closed that
+  channel and only `-F none` plus the pinned files does.
+
+The identity file, the two `known_hosts` files and the digests of all three are frozen
+inputs the runner binds before the first process starts; the identity file's digest is
+compared but never printed, being the one bound input that is key material. The option
+block is frozen **inside the runner**, and every `ssh`/`scp` plan row must carry it
+verbatim immediately after the program name, so a plan that drops `-F none` or
+re-points a `known_hosts` file cannot run. Scope, stated rather than implied: this is
+established by local configuration/argv evaluation of the real pinned programs
+(`ssh -G`, a real local-to-local `scp` transfer) with no connection attempted. Real
+connection behaviour remains unverified until dispatch.
+
+The frozen `runkit.tar` and the plan/runner live in **distinct** pinned directories —
+the kit in `01_RUNKIT` per section 5's op-02 working directory, the plan and runner in
+the preregistration directory — so an archive of the same name placed beside the
+runner cannot be selected.
+
+Both wrappers inherit the two repairs the Stage 2 wrappers needed: block paths are
+refused if they are symlinks (`-f` dereferences, so `-f` alone is not a refusal),
+and any child process reads from `/dev/null`, because the wrapper itself arrives on
+ssh stdin and a child that read stdin would consume the rest of the script.
+
+Stage 1 adversarial acceptance of `RP6-P0.sh`, `RP7-WPI-RO.sh` and both wrappers must
+also demonstrate the round-1.3 STOP-first contract before any bytes are frozen:
+
+- missing `systemctl`, denied D-Bus/polkit access, or an unavailable manager namespace
+  produces P0/B2/B4 STOP and cannot reach a unit-state or property comparison; and
+- a `find ... -perm /222` fixture that emits a writable pathname and then encounters
+  an LSM, ACL, mount or traversal error produces `B3_STOP`, never `B3_FAIL`.
+
+The accepted implementation must capture stdout, stderr, rc and elapsed time for
+each probe, adjudicate timeout/rc/the complete diagnostic stream first, and expose
+stdout to result comparison only after that gate holds. An assertion of this order
+without the adversarial transcript is not block acceptance. Each regression transcript
+offered as closure evidence must record the exact executable command and real output
+for both RED against the pre-fix behaviour (or an equivalent deliberate mutation) and
+GREEN with the accepted bytes. A prose recipe, substituted template, count, or command
+that needs undeclared shell state is supplemental only and cannot freeze a block.
+
+Before `RP6-P0.sh` is frozen, a root-authorised deploy channel outside the ssh login
+domain must attest the staging guest's user, mount, PID and network namespace identities
+and the canonical root-mount identity plus accepted mount topology for every
+preregistered host path. The mount-topology attestation is the SHA-256 of
+`normalised_path_projection_v2`, an ordered TSV (TAB-separated fields, LF records)
+carrying three record kinds in this fixed order:
+
+1. `kind=point / path=<p> / device=<major:minor> / root=<r> / mount_point=<m> /
+   fstype=<f> / source=<s> / shared_mount_point_records=<n>` - one per preregistered
+   point path, in the order: the ten tool pins (`stat`, `readlink`, `env`, `find`,
+   `sha256sum`, `systemctl`, `ss`, `curl`, `timeout`, `python3`), `WPI_RELEASE_ROOT`,
+   `WPI_VENV_ROOT`, `WPI_UNIT_FRAGMENT`, `WPI_STATE_DIR`, `WPI_LOG_DIR`, `WPI_CONF_DIR`,
+   `<release>/IBKR_PAPER_BRIDGE/requirements.lock`,
+   `<release>/IBKR_PAPER_BRIDGE/deploy/linux/verify_lock.py`, `/proc/self/mountinfo`,
+   `/proc/self/ns/net`, `/proc/<MainPID>/ns/net` - twenty-one records. The projected mount
+   is the **effective** one: the longest matching mount point, and among equally long
+   matches the **last** record in `mountinfo` order, because a later record at the same
+   mount point shadows the earlier one. `shared_mount_point_records` is the number of
+   records sharing the winning mount point, so a stacked mount is visible in the
+   projection rather than silently collapsed.
+2. `kind=subtree / subtree_root=<R> / seq=<i> / device=… / root=… / mount_point=… /
+   fstype=… / source=…` - every `mountinfo` record whose mount point is at or below a
+   preregistered root, in `mountinfo` order, for each root in the fixed order
+   `WPI_RELEASE_ROOT`, `WPI_VENV_ROOT`, `WPI_CONF_DIR`, `WPI_STATE_DIR`, `WPI_LOG_DIR`,
+   then each tool's directory, de-duplicated on first appearance (six roots under the
+   pinned `/usr/bin/<tool>` set).
+3. `kind=subtree_count / subtree_root=<R> / records=<n>` - one per root, in the same
+   root order.
+
+The subtree closure is load-bearing, not decoration: the objects the RO stage digests,
+executes and enumerates - `requirements.lock`, `verify_lock.py`, `<venv>/bin/python`,
+`<venv>/lib/python3.12/site-packages` and every `*.dist-info` member - lie *below* the
+preregistered roots, where a point-only projection cannot observe a bind or overlay
+mount because the roots' own covering mounts are unchanged. The superseded
+`normalised_path_projection_v1` projected eighteen point paths only, resolved ties to
+the *first* matching record, and was therefore blind to both a decoy mount inside a
+trusted subtree and a mount stacked on an existing mount point - the exact
+substitutions this binding exists to prevent. The deploy channel must attest the
+complete v2 record set; a per-path covering-mount list is not sufficient.
+
+The run captures `/proc/self/mountinfo` once into a create-once evidence leaf,
+parses and hashes that same leaf, derives exactly this projection, and compares
+its digest with the literal embedded at freeze. The exact attested values and their producing
+record are embedded in the frozen P0 block; they are never learned or re-pinned from
+the login session being tested. If that external attestation is unavailable, P0 STOPs
+and no RO row runs. Equality with a PID visible from inside the login session, including
+visible PID 1, is not a substitute for deploy-channel attestation.
+
+**Trusted adjudicating interpreter (Codex T0 finding 1, applied round 1.6).** The tenth
+tool pin is the interpreter under which the two accepting adjudicators - the row-21
+status parser and the row-19 lock-parity verifier - execute. It is a freeze-gate input,
+`WPI_TRUSTED_PYTHON`, and it is deliberately **not** `<venv>/bin/python`: on Python 3.12
+`-I` implies `-E`, `-P` and `-s` but not `-S`, so `site` still imports and an executable
+`import` line in the judged venv's own `site-packages/*.pth`, or a `sitecustomize.py`
+beside it, runs with the block's authority before either adjudicator's source is
+compiled. Such a line can print the exact accepted result and exit 0, and can write
+anywhere `gatea` can write. The pinned interpreter must therefore be a non-symlink
+regular file at numeric `0:0`, not group- or other-writable, under `/usr/bin/`, bound by
+the same discipline as the other nine and carried as the twenty-first projection point.
+`/usr/bin/python3` is itself a symlink on the target family and no symlinked object is
+admissible as a bound tool, so the deploy channel pins the resolved
+`/usr/bin/python3.<minor>`; until it does, `wpi_validate_inputs` STOPs. Row 18 is
+unaffected: `<venv>/bin/python` remains the object whose identity and version row 18
+adjudicates, because that is the interpreter the service actually runs. It is simply
+never an adjudicator of its own state.
+
+The complete set, including the successor of this document, is checksummed in
+`WPI_PREREG_SHA256SUMS.txt` at dispatch.
+
+## 5. Exact remote argv
+
+Route (recorded): `gatea@172.24.55.233`, identity
+`C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519`. Options are pinned fail-closed on every
+op. The round-1 set was inherited from the accepted Stage 2 set; round 3 extends it,
+because the accepted set pinned the credential but left the *configuration* ambient
+(Codex round-2 re-audit F2). This exact block, in this order, is frozen inside
+`transport_runner.ps1` and every `ssh`/`scp` plan row must carry it verbatim
+immediately after the program name:
+
+```
+-F none
+-i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519
+-o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20
+-o UserKnownHostsFile=C:\HyperV\GATEA-STAGING\ssh\wpi_known_hosts
+-o GlobalKnownHostsFile=C:\HyperV\GATEA-STAGING\ssh\wpi_known_hosts_global
+-o ProxyCommand=none -o ControlMaster=no -o ControlPath=none -o PermitLocalCommand=no
+-o ForwardAgent=no -o ForwardX11=no -o ClearAllForwardings=yes
+```
+
+`-F none` refuses both the per-user and the system-wide `ssh_config`; without it an
+ambient config can supply a `ProxyCommand`, which is an external program interposed
+into the transport by inherited state. `BatchMode=yes` refuses to prompt rather than
+hang. `StrictHostKeyChecking=yes` refuses an unknown or changed host key rather than
+trusting it: a changed key means the host identity is not the one this document
+describes, and silently accepting it would defeat the preregistration — and with
+`-F none` the host-key set it decides against is the pinned `UserKnownHostsFile` /
+`GlobalKnownHostsFile` pair, not whatever the operator profile happens to hold.
+`IdentitiesOnly=yes` stops any agent key being substituted for the named identity.
+`ProxyCommand=none`, `ControlMaster=no` and `ControlPath=none` refuse an interposed
+program and a reused or inherited multiplexed session; `PermitLocalCommand=no`,
+`ForwardAgent=no`, `ForwardX11=no` and `ClearAllForwardings=yes` refuse local command
+execution, agent/X11 forwarding and any port forwarding.
+
+**Freeze-gate inputs added by this block:** `wpi_known_hosts` and
+`wpi_known_hosts_global` must exist at the paths above and their SHA-256 values, plus
+the identity file's, must be pinned in the runner before it will start a process. The
+`known_hosts` content is preregistered host-key material, not something the run learns
+at dispatch.
+
+Every argv element must be free of spaces and shell metacharacters, so the remote
+login shell's re-parse of the command is a no-op. Scripts are delivered **on ssh
+stdin**; no script is written to the host before it runs.
+
+**Remote launch domain (round 4; Codex final audit F1).** Round 1–3 sent every
+stdin script to bare `bash -s --`, so the remote interpreter was whatever the login
+shell's `PATH` resolved and its startup environment was inherited. Both were
+falsified with the exact delivered bytes: a fake `bash` first on `PATH` returned 0,
+ignored the delivered script and printed a forged marker; and under an absolute
+interpreter an inherited `BASH_ENV` did the same. Pinning only the local `ssh`
+client does not make the remote program identity closed. Every `ssh_stdin` row now
+carries this block verbatim, immediately after the route and before the script's own
+arguments, and it is frozen inside `transport_runner.ps1` as `$REMOTE_LAUNCH_DOMAIN`
+so a plan row that reverts to bare `bash` cannot run:
+
+```
+/usr/bin/env -i PATH=/usr/bin:/bin LC_ALL=C HOME=/home/gatea
+  /usr/bin/bash --noprofile --norc -s --
+```
+
+`env -i` clears everything the login shell exported — `BASH_ENV`, `ENV`,
+`LD_PRELOAD`, exported shell functions, `TMPDIR` — for the frozen inner child, and
+supplies an explicit, complete variable list; `--noprofile --norc` refuses startup
+files; both programs are named by absolute path. Each delivered script re-attests
+the same domain from the inside (derivation class 5), so the operator side and the
+remote side state the same **inner-child** contract independently and a disagreement
+is rc 3, not a host finding. **This closes the inner child only; the outer SSH
+account-shell boundary is OPEN.** The login shell that `sshd` runs the whole command
+string with processes its own startup environment *before* `env -i` executes, so a
+server-supplied `BASH_ENV`/`ENV` that exits can forge the record before the frozen
+child exists. No text in this block closes that outer boundary, and none should
+claim to: closing it needs a mechanism acting before account-shell startup, which is
+out of scope for these bytes (see derivation class 5, launch-domain attestation).
+
+| op | run_when | kind | remote/local argv after the pinned options |
+|---|---|---|---|
+| 01 | sequence_ok | ssh stdin `remote_setup_wpi.sh` | `gatea@172.24.55.233 <launch domain> <REMOTE_BASE>` — allocates **five** directories: base, `evidence`, `evidence/runkit`, `kit`, and `work` (the run-owned scratch root ops 07/08 receive) |
+| 02 | sequence_ok | scp up | `runkit.tar gatea@172.24.55.233:<REMOTE_BASE>/kit/runkit.tar` (cwd `01_RUNKIT`, a pinned directory distinct from the preregistration directory) |
+| 03 | sequence_ok | ssh stdin `remote_extract_verify_wpi.sh` | `gatea@172.24.55.233 <launch domain> <REMOTE_BASE>/kit/runkit.tar <REMOTE_BASE>/kit/extracted <PIN-AT-STAGE-1 archive sha256>` |
+| 04 | sequence_ok | ssh stdin `run_p0.sh` | `gatea@172.24.55.233 <launch domain>` |
+| 05 | sequence_ok | ssh stdin `run_ro.sh` | `gatea@172.24.55.233 <launch domain>` |
+| 06 | sequence_ok | operator-side probe, **host contact** | single TCP connect attempt to `172.24.55.233:8790`, no payload sent, no ssh (B6 external half) |
+| 07 | **always** | ssh stdin `remote_close_tree_wpi.sh` | `gatea@172.24.55.233 <launch domain> <EV_DIR P0> <RUNID P0> <REMOTE_BASE>/work` |
+| 08 | **always** | ssh stdin `remote_close_tree_wpi.sh` | `gatea@172.24.55.233 <launch domain> <EV_DIR RO> <RUNID RO> <REMOTE_BASE>/work` |
+| 09 | **always** | scp down | `-r gatea@172.24.55.233:<EV_DIR P0> .` (cwd `<record>\evidence`) |
+| 10 | **always** | scp down | `-r gatea@172.24.55.233:<EV_DIR RO> .` (cwd `<record>\evidence`) |
+| 11 | **always** | local only | `local_bind 07 09 evidence\<RUNID P0>` - no host contact |
+| 12 | **always** | local only | `local_bind 08 10 evidence\<RUNID RO>` - no host contact |
+
+Every op preregisters `expect_rc = 0`. On the first rc that differs, **first-mismatch
+stopping engages**: remaining `sequence_ok` ops are skipped, and only the `always`
+ops still run - because a failed stage is exactly when its evidence must be closed,
+bound and retrieved. The successor must demonstrate this behaviour with exact
+paste-and-run commands and real output: RED against a deliberate mutation that wrongly
+runs a later `sequence_ok` op, then GREEN with the accepted runner while all `always`
+ops still execute. A narrated plan or reconciled op count cannot satisfy this gate.
+
+**Observed-outcome grammar, per kind (round 3; Codex and Claude round-2 re-audit F1).**
+The plan side already refused any `expect_rc` outside `{0,1,3}`; the *observed* side
+did not, so a transport failure was recorded as an observation of deviant host state.
+An observed rc is a result only under the rules below, and everything else is
+not-evaluable — `TR_RUN STOP`, runner exit 3. FAIL is reserved for an operation that
+ran and returned the deviant value its own contract defines.
+
+| kind | ops | what counts as a result | everything else |
+|---|---|---|---|
+| `ssh_stdin` | 01, 03, 04, 05, 07, 08 | rc in `{0,1,3}` **and** the capture carries a result-line prefix from **this operation's own marker family**, bound to the stdin artifact the row sends: `remote_setup_wpi.sh`→`SETUP_`/`SETUP `, `remote_extract_verify_wpi.sh`→`EXTRACT_`/`EXTRACT `, `run_p0.sh`→`P0W_`/`P0W `, `run_ro.sh`→`ROW_`/`ROW `, `remote_close_tree_wpi.sh`→`CLOSE_`/`CLOSE ` | ssh's own rc **255** is transport failure — host down, rejected key, DNS, dropped route, refused configuration — in which nothing was observed; any other rc is outside the grammar; and rc `{0,1,3}` with no marker **of that row's own family** is not evidence that the delivered script ran at all. Round 3 tested one global union of all five families, so a close operation accepted `SETUP PASS` from an unrelated program as its own provenance (Codex final audit F1); an `ssh_stdin` row whose stdin leaf has no registered family is a plan STOP |
+| `scp_up`, `scp_down` | 02, 09, 10 | rc 0 only | a transfer observes no host state, and scp's failure rc is **1**, which collides with the FAIL class and cannot be separated by rc alone — so the kind decides, and every non-zero rc is not-evaluable |
+| `tcp_probe` | 06 | rc in `{0,1,3}`; rc 1 is the genuine `host_reachable_8790` observation | rc outside the grammar |
+| `local_bind` | 11, 12 | rc in `{0,1,3}`; rc 1 is a genuine digest-set mismatch | rc outside the grammar |
+
+One further rule cuts across all kinds, and it is **per branch and per operation**
+(round 4; Codex final audit F4, Lead adjudication — the round-3 global rule is not
+ratified). An `always` op runs unconditionally so a broken run's evidence is still
+closed, retrieved and bound. When the operations that were supposed to *create the
+evidence that op closes* never completed, its failure is a consequence of that break
+— a cleanup with nothing to clean — and is not-evaluable, never a host-state FAIL
+that outvotes the truthful earlier STOP. This is not hypothetical: with an early
+STOP, the close script returns rc 1 for the absent tree and both retrievals then
+fail, so four `always` rows previously manufactured a FAIL out of one honest STOP.
+
+"Always run" is an execution policy, not a declaration that every cleanup row shares
+one prerequisite. Each `always` op depends only on its own branch:
+
+| op | depends on | branch |
+|---|---|---|
+| 07 P0 close | 04 | P0 |
+| 08 RO close | 05 | RO |
+| 09 P0 fetch | 07 | P0 |
+| 10 RO fetch | 08 | RO |
+| 11 P0 bind | 07, 09 | P0 |
+| 12 RO bind | 08, 10 | RO |
+
+The runner freezes this graph, binds it to the plan before execution — every
+`always` row must have an entry, every entry must name a real, earlier op, or the
+run STOPs — and resolves each dependency against the class that operation actually
+received. An unrelated branch's failure therefore can no longer demote a genuine
+marked rc 1 to not-evaluable: with ops 01–06 matching, a P0 close `CLOSE_STOP` rc 3
+and an independent RO close `CLOSE_FAIL` rc 1, the RO deviation is **counted**
+(`deviant>=1`, run FAIL). Two distinct reasons are emitted, because they are two
+different facts: `cleanup_after_unestablished_prerequisite` (the evidence this op
+exists to close was never created) and `cleanup_after_earlier_deviation` (the
+prerequisite ran and observed deviant state, so this op's own failure is downstream
+of a finding already counted). Both carry the resolved prerequisite classes in the
+record.
+
+Op 06 is the one op that touches the host without ssh. It is called out here and in
+section 12 rather than buried, because "no host contact" is a claim the record has
+to be able to make precisely: op 06 opens one TCP connection attempt toward a port
+that is expected to be closed, sends nothing, and is recorded operator-side. Its
+evidence is bound by the operator-side digest set, not by `CLOSE_DIGEST_SET_SHA256`,
+because nothing about it is written on the host.
+
+The scp local paths are bare filenames with the working directory set, so no
+argument ever contains a drive-letter colon that `scp` could parse as a host.
+
+## 6. Operator-side transport evidence
+
+`transport_runner.ps1` records, per op, from the first byte and independently of
+anything the remote side writes:
+
+- `ops/<id>.argv` - the exact argv sent, one element per line;
+- `ops/<id>.stdout`, `ops/<id>.stderr` - complete, separately captured;
+- the exit status, compared against the preregistered `expect_rc`;
+- `TRANSPORT_RECORD.txt` - the full narration including every digest;
+- `TRANSPORT_SHA256SUMS.txt` - sha256 of every captured file.
+
+Record root, **create-once**:
+`C:\WPI_ARTIFACTS\WPI_TRANSPORT_<ALLOCATE-AT-DISPATCH>`. If it already exists the
+runner stops before any process starts; a rerun therefore needs a new
+preregistration rather than a silent overwrite. The path must be shown at allocation
+not to collide with the two recorded Stage 2/3B roots (section 1).
+
+This matters because `RP0-BOOTSTRAP` calls `exec > "$EV_LOG" 2>&1`: after the
+evidence leaf opens, remote output stops reaching ssh stdout. **Every failure before
+that point is visible only in the operator-side record** - and those are precisely
+the failures that decide whether a RUNID is burned. Tonight's B3 STOP is the worked
+example: the STOP line reached the log because the leaf was already open, but the
+`stat` rc that caused it is only interpretable against the operator-side record of
+what was sent.
+
+**Transport semantics, stated once (round 4; supersedes every earlier summary).**
+The runner executes exactly `TRANSPORT_PLAN.tsv` ops 01–12 with **first-mismatch**
+sequencing, not first-FAIL: after the first mismatching *or* not-evaluable
+`sequence_ok` operation, later `sequence_ok` operations are skipped while all
+`always` operations still run. Results are classified by operation **kind** and
+**provenance**, never by rc alone. `ssh` rc 255, any nonzero `scp` rc, an rc outside
+a kind's grammar, and an `ssh` rc whose capture carries no marker **from that
+operation's own family** are all not-evaluable. An `always` failure caused by an
+earlier break on **its own branch** is not-evaluable rather than a new host FAIL;
+a failure on an unrelated branch does not demote it. The reason recorded is the
+**first** one that applies, so an operation whose own kind or status already
+explains the inability reports that: a nonzero `scp` reports
+`scp_transfer_did_not_complete` and an rc 3 reports `operation_reported_stop`,
+whatever its prerequisites. Only an **rc-1** `always` failure reaches
+prerequisite adjudication, and only there does the record name which of the two
+prerequisite cases applies —
+`cleanup_after_unestablished_prerequisite` or `cleanup_after_earlier_deviation`.
+Every `always` operation still emits `TR_OP_PREREQ_STATE` with the resolved
+class of each edge, so the prerequisite state is auditable from the record in
+all cases, including the ones whose reason token is not a prerequisite token. A completed deviant
+observation outranks a later inability to evaluate, so a run with both is FAIL, and
+every not-evaluable operation is still enumerated and counted. The per-op record
+therefore also carries `TR_REMOTE_LAUNCH_DOMAIN`, one `TR_OP_PREREQ` line per
+`always` op naming its frozen dependency edges, and a `TR_OP_PREREQ_STATE` line per
+executed `always` op naming the resolved class of each edge.
+
+Default mode is a dry run. Execution requires **both** `-Execute` and
+`-Confirm <ALLOCATE-AT-DISPATCH>-EXECUTE`; anything else prints the plan and opens
+nothing. Both switches are **technical interlocks on the runner, not authority**
+(Codex audit F6, applied round 1.2): they gate *whether the recorded plan executes*,
+not *whether it is authorised*. They are not a substitute for the written
+host-contact/transport authority and budget lift named in the dispatch gates above; a
+runner with both switches set still opens nothing the plan is not authorised and
+budgeted to do.
+
+## 7. Closing and binding the evidence tree
+
+A process never hashes its own still-open evidence. Ops 07 and 08 run
+`remote_close_tree_wpi.sh` - the section 4 derivation of the accepted
+`remote_close_tree.sh`, differing from it in derivation classes 2 (program
+identity), 3 (exact absence classification), 5 (launch-domain attestation) and 6
+(run-owned scratch), and in nothing else - as
+**separate ssh invocations after the stage connection has
+already returned** - that is the structural guarantee the stage shell has exited.
+Each invocation receives three arguments, `<EV_DIR> <RUNID> <WORK_ROOT>`, and the
+work root is the `<REMOTE_BASE>/work` directory op 01 allocated: the close script
+never chooses or creates its own scratch location. An argv count, RUNID grammar or
+`EV_DIR`/`RUNID` disagreement is an operator-side composition error and is rc 3;
+only the state of the evidence tree itself is a completed observation at rc 1.
+Because a structural guarantee is not a measurement, the script also computes the
+digest set **twice** and refuses if the two passes differ, so a tree that is still
+being written is never bound as closed. Each pass is independently complete only
+after its enumeration and hashing commands have exited 0 with empty diagnostics and
+every emitted record has parsed; partial records or a pathname emitted before a later
+read/hash error are discarded and STOP the close. Equality of two partial stdout
+streams is not closure evidence.
+
+It writes nothing into the evidence tree (writing a digest file into the directory
+being hashed would change the bytes being attested). That sentence is what the class 2
+derivation exists to make true: under the accepted bytes it was **false** in the
+delivered execution environment, because the script's own `sha256sum` was selected
+from the inherited `PATH`. An executed falsification planted a `sha256sum` that
+appended to a closed evidence leaf once and then delegated to the real tool; both
+digest passes observed the post-mutation bytes, agreed, and the accepted script
+printed `CLOSE PASS … wrote_into_evidence_tree=0` at rc 0 — and the operator-side
+binder would then have bound the retrieved post-mutation bytes without discrepancy,
+because remote and local both describe the mutated file. With every tool resolved from
+its frozen absolute pin the plant is never consulted and the claim is earned.
+
+It emits, on stdout only:
+
+- `CLOSE_DIGEST <sha256>  <path relative to EV_DIR>` per file, `LC_ALL=C` order;
+- `CLOSE_SIZE <relpath> <bytes>` per file;
+- `CLOSE_DIGEST_SET_SHA256 <runid> <sha256 of the digest set itself>`.
+
+Ops 11 and 12 then perform the **local half of the binding**: local per-file digests
+over the retrieved tree must equal the remote set name-for-name and
+digest-for-digest, and the reconstructed digest-set rendering must reproduce
+`CLOSE_DIGEST_SET_SHA256`. The local enumerator/hash/parser statuses and complete
+diagnostics are adjudicated before comparison under the same rule. A remote-only or
+local-only hash is not a binding.
+
+## 8. Preregistered expectations and predicted first divergence
+
+Preregistering the expected outcome is what stops a result being re-narrated
+afterwards. The **recorded** host state (transition inventory, read-only, as carried
+into the matrix section 0.3 and B1/B2/B3/B6) is: only release `2ce41e34...321b`
+installed at mode `555`; venv counterpart `555`; `/etc/mtc-bridge` metadata only,
+`install_manifest.json` 1007 B mode `640`; unit fragment 3736 B mode `644`;
+first-start unit active with `Restart=no`, `NRestarts=0`, MainPID 189813; exactly one
+bridge listener on `127.0.0.1:8790` (sshd:22 is necessarily also listening - see named
+risk R5, wording per GLM review N2); credential-free DISARMED `state_version=1` with
+all credential/network/exchange/ARM flags off.
+
+Outcome grammar, unchanged from the accepted Stage 2 contract: **rc 0 = PASS**,
+**rc 1 = FAIL** (a probe that ran observed deviant host state), **rc 3 = STOP** (a
+probe could not be evaluated). A STOP is never re-read as a PASS, and a STOP never
+becomes a FAIL by inference - tonight's adjudication turned on exactly that
+distinction, because permission denial precedes the existence question and the
+env-file naming risk remains *unresolved*, not *triggered*.
+
+### 8.1 P0 preflight - the premises every later row depends on
+
+| # | check | predicted outcome if it holds | exact predicted first divergence if it does not |
+|---|---|---|---|
+| 1 | `getent` present | `command -v getent` resolves and the resolved executable can run | `P0_STOP reason=missing_tool tool=getent` for absence, or `P0_STOP reason=tool_not_evaluable tool=getent path=<p> rc=<n|na> detail=<d> mechanism=<m>` when the resolved object cannot be evaluated as executable. **`rc=na` is mandatory for the `mechanism=access_builtin_x` arm and `rc=<n>` is reserved for an arm that actually invoked something** (amended round 3, RP6-P0 re-audit R2 finding 1): P0 decides resolution and executability with shell builtins only — `command -v` and the access(2) predicate `[ -x ]` — and deliberately never invokes an inventory tool, so no P0 arm can carry an honest invocation status, and a numeric `rc` here would assert a probe that never ran. `path=<p>` is required because the `P0_tool name=… path=…` inventory lines are printed only after every tool has resolved, so this STOP is the sole place the rejected object is named. **The preregistered inventory is amended in round 4 (RP6-P0 Codex T0 audit finding 3):** it is the ten tools the FROZEN RO block pins - `stat readlink env find sha256sum systemctl ss curl timeout python3`, from `RP7-WPI-RO.sh` at commit `d6a976aa`, SHA-256 `23e55667…a0aad`, 70941 B - plus the P0-only `id` and `getent`, twelve in all. `grep` and `awk` are REMOVED: neither stage invokes them, so listing them let P0 STOP on a tool no row needs while omitting `timeout`, which the RO stage really runs. A pin naming a tool outside that inventory is `P0_STOP reason=input_pin_unknown_tool name=P0_TOOL_PINS tool=<t> inventory=[<inv>]`; a pin disagreeing with PATH resolution is `P0_STOP reason=tool_pin_mismatch tool=<t> pinned=<p> resolved=<r>`. For `python3` ALONE - whose pin is the resolved non-symlink leaf while PATH still spells `/usr/bin/python3` - the pin is admitted when the PATH-resolved object canonicalises to exactly the pin; otherwise the same STOP carries an added `canonical=<c>`. That pin value is additionally bound to the frozen `P0_FIXED_TRUSTED_PYTHON` freeze-gate input, so P0 admits only the interpreter the RO stage will trust; a disagreement is `P0_STOP reason=input_pin_not_frozen_trusted_python tool=python3 pinned=<p> frozen=<f>`. **The unfilled-placeholder form is generic over all twelve tools (amended round 10, RP6-P0 Codex T0 audit R9 finding 2):** it is `P0_STOP reason=input_pin_freeze_unfilled tool=<t> name=<P0_FIXED_*> detail=deploy_channel_value_never_derived_here`, emitted at one site for whichever of the twelve frozen literals is still `<PIN-AT-FREEZE>`. Correction 7 deliberately made all twelve literals load-bearing, so the draft's earlier python3-only wording was the side that was wrong: the block is correct and this row is corrected to match it. Round 9 tried to close the same divergence by asserting the emitter's generic *variable name* (`name=$P0_FROZEN_CONST_NAME`) and calling that a declaration; it is not, and that claim is withdrawn. The complete field/value grammar of this and every other P0 result is §8.1.1. **The pin table is finite (amended round 7, RP6-P0 Codex audit correction 7, from the section-10.1 reconciliation):** exactly one frozen pin is required for each of the twelve tools, and each pin must equal that tool's frozen deploy-channel path literal (`P0_FIXED_STAT/READLINK/ENV/FIND/SHA256SUM/SYSTEMCTL/SS/CURL/TIMEOUT/ID/GETENT`, and `P0_FIXED_TRUSTED_PYTHON` for python3), so the reachable executable set IS the frozen set and is derivable from this source - the property the Stage-1 path-scope proof needs. A missing pin is `P0_STOP reason=input_pin_omitted tool=<t> detail=every_preregistered_tool_requires_one_frozen_pin`; a non-python pin that differs from its frozen literal is `P0_STOP reason=input_pin_not_frozen_path tool=<t> pinned=<p> frozen=<f>`; a pin count other than twelve is `P0_STOP reason=input_pin_count_unexpected count=<n> expected=12 detail=exactly_one_frozen_pin_per_preregistered_tool`; and the unpinned `command -v` fallback is deleted, so a tool that resolves on PATH but was not pinned is `P0_STOP reason=tool_pin_unpinned tool=<t> detail=every_tool_requires_a_frozen_pin` (both `detail=` tokens added to this row in round 10: the block emitted them and the row did not declare them) |
+| 2 | executing identity | a complete, uniquely parsed `getent passwd gatea` entry defines the named login contract; numeric `id -u` and `id -g` equal that entry's uid and primary gid, while `id -un=gatea` and rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=gatea rc=<n|na> detail=<d>` for resolver/invocation/parse ambiguity — **the `rc=` field is mandatory on every arm of this reason (amended round 4, RP6-P0 Codex T0 audit finding 4):** the record parser EXPORTS the resolver's own exit status instead of keeping it local, so a real resolver error records the status it really returned; `na` is admissible only on the two capture shapes that fail before any status can be read (a lost status sentinel, an unparseable status record) and is never a stand-in for a status that was available. A valid no-match for the route login is `P0_STOP reason=identity_unresolvable account=gatea rc=2 detail=getent_valid_no_match_for_route_login`. After successful resolution, `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=<u:g> account=gatea` for a mismatch |
+| 3 | service-account identity and login groups | because `install.sh` allocates the named account dynamically, a complete unique `getent passwd mtc-bridge` result must map that name to the preregistered numeric `WPI_STATE_UID:WPI_STATE_GID=999:988`; then complete numeric `id -G` output for `gatea` contains neither gid `0` nor gid `988`; rendered names are diagnostic only | `P0_STOP reason=identity_unresolvable account=mtc-bridge rc=<n|na> detail=<d>` for resolver/invocation/parse ambiguity, under the same mandatory-`rc` rule as row 2 (amended round 4, RP6-P0 Codex T0 audit finding 4); `P0_STOP reason=identity_unexpected observed_numeric=<u:g> expected_numeric=<P0_STATE_UID>:<P0_STATE_GID> account=mtc-bridge` if the named allocation moved — **amended round 10 (RP6-P0 Codex T0 audit R9 finding 2): the expected half is the operator-supplied preregistered input, not a literal the block carries.** The §2 preregistered values are `999` and `988`, but `RP6-P0.sh` constrains `P0_STATE_UID`/`P0_STATE_GID` only to positive decimals, so the emitted line can carry any positive decimal pair. The draft was the side that was wrong (it declared a value the block never emits), and it is corrected here rather than closed by freezing new literals into the block, which would be a new control this round was not asked to add. **Named residual, freeze-gate/owner band:** neither this row nor the block establishes that the prelude carried the preregistered numerics — that binding is visible only in the operator record. The same residual applies to `P0_EXPECT_UID` in row 2, for which §2 preregisters no numeric value at all; **`P0_STOP reason=state_account_resolution_unexpected account=mtc-bridge observed_numeric=absent expected_numeric=<P0_STATE_UID>:<P0_STATE_GID> detail=getent_valid_no_match` when the resolver established POSITIVE ABSENCE** (same round-10 amendment and same named residual as the line above: the expected half is the preregistered input, §2 value `999:988`) — getent rc 2 with a completely empty merged capture — which is preregistered here verbatim in round 4 because it is a reachable divergence and was previously an unregistered token; it is deliberately distinct from `identity_unresolvable` (the account really is not allocated, which is a host observation, not an inability to evaluate) and deliberately carries no `rc=` field because no error status was returned; `P0_STOP reason=group_query_not_evaluable rc=<n> detail=<d>` before group interpretation; after a complete parse, `P0_STOP reason=capability_wider_than_ledger gid=<g>` if 0 or 988 is present |
+| 4 | `ss` present | `command -v ss` resolves | `P0_STOP reason=missing_tool tool=ss` |
+| 5 | `curl` present | `command -v curl` resolves | `P0_STOP reason=missing_tool tool=curl` |
+| 6 | `sha256sum` present | `command -v sha256sum` resolves | `P0_STOP reason=missing_tool tool=sha256sum` |
+| 7 | `systemctl` present | `command -v systemctl` resolves | `P0_STOP reason=missing_tool tool=systemctl` |
+| 8 | execution-domain binding | the login's user, mount, PID and network namespace identities plus canonical root-mount identity exactly equal the values supplied by the external deploy-channel attestation frozen into `RP6-P0.sh` | `P0_STOP reason=execution_domain_unattested field=<f> detail=<d>` if the attestation is missing/unreadable/unparseable; `P0_STOP reason=execution_domain_mismatch field=<f> observed=<v> attested=<v>` on mismatch; comparison with visible PID 1 is not admissible. **Amended round 10 (RP6-P0 Codex T0 audit R9 finding 2): the `field=<f>`-only form declared here was never emitted.** All 34 `execution_domain_unattested` sites carry a `detail=`, and the probe-backed ones additionally carry `rc=`, `subject=`, `diagnostic_shape=`, or `device=`/`root_device=`. The block is correct — a bare `field=` would not say why the domain is unattested — and the draft was too narrow. The five `field=` values, the eight literal `detail=` tokens and the four extended field shapes are declared exhaustively in §8.1.1 |
+| 9 | system-manager query readiness | only after row 8, `systemctl` can execute, reach the intended system manager over its system bus, pass D-Bus/polkit authorization, and return a complete parseable manager response **within a preregistered deadline** | `P0_STOP reason=system_manager_unreachable rc=<n> detail=<d>` for invocation, bus, namespace, authorization, timeout, incomplete-output or parse failure. **The deadline is executable, not aspirational (amended round 4, RP6-P0 Codex T0 audit finding 2):** the query is launched as `env -i LC_ALL=C <pinned timeout> --signal=TERM --kill-after=5s 10s <pinned systemctl> --system --no-pager show --property=Version`, with the cleared-environment exec FIRST and the pinned `timeout` as its argument, per the probe execution-environment rule. `P0_MANAGER_QUERY_BUDGET_S=10` and `P0_MANAGER_QUERY_KILL_AFTER_S=5` are frozen block literals, never operator inputs: a bound supplied by the environment under test could be raised to infinity by that same environment. A status 124 is `P0_STOP reason=system_manager_unreachable rc=124 detail=manager_query_rc124_timeout_reached_or_child_exit_124 budget_s=10 elapsed_s=<e> text=<d>` — GNU `timeout` returns 124 both when it kills the child for exceeding the deadline and when the child itself exits 124 (`timeout 10s bash -c 'exit 124'` returns 124 at elapsed_s=0), so the wrapper cannot distinguish the two and 124 is NOT labelled uniquely as a deadline (amended round 7, RP6-P0 Codex audit A10); a SIGKILL escalation is `rc=137 detail=manager_query_killed_after_deadline`, and a wrapper that could not run the query at all is `rc=125 detail=bounding_wrapper_failed`. **Amended round 10 (RP6-P0 Codex T0 audit R9 finding 2): the `budget_s=`/`elapsed_s=`/`text=` fields are carried on EVERY nonzero wrapper status, not only rc 124.** The block classifies 124/137/125/126/127 by token and everything else as `detail=manager_query_nonzero_status`, and prints the bound and the measured elapsed time in all of those cases; the draft declared the extended fields for 124 alone. The block is correct — the bound is what makes any nonzero wrapper status readable — and the draft is corrected. The rc-0 shape errors (`response_multiline`, `response_unparseable`) carry `text=` but no `budget_s=`/`elapsed_s=`, and `response_unprintable_value` carries neither; all four forms are declared in §8.1.1. Without the bound a stalled manager produces NO reason line, NO rc and NO verdict — only an external actor's kill status, which is not this block's ruling |
+
+Row 3 is an inversion worth stating plainly: **more privilege than the ledger assumed
+is a STOP, not a bonus.** If `gatea` turns out to be in the state/log group, the
+feasibility ledger's premises are wrong, several DEFER-ROOT-SIDE calls were wrong,
+and the correct response is re-adjudication of the scope - not a run that quietly
+reaches further than the document it was preregistered under. Rows 1 and 4-7 fail closed
+to STOP with **no substitution**: a missing tool is not an invitation to improvise a
+replacement at run time, which is the whole reason the tool list is preregistered.
+Row 8 binds every local result to the externally attested guest domain; an apparently
+successful query from a container, chroot, private namespace or visible-PID-1 lookalike
+is STOP, not host evidence. Row 9 is not inferred from tool presence. It must exercise a harmless manager query
+and distinguish a valid manager response from an invocation, D-Bus, polkit, PID/mount
+namespace or parse error. If row 9 cannot hold as `gatea`, manager-backed B2/B4 checks
+move to RPD-VERIFY; they do not accuse the host from an empty or error result.
+
+**P0 also emits `P0_FAIL` (rc 1), which this section declared nowhere before round
+10.** The nine rows above are STOP-shaped because they are *premises*: a premise
+that cannot be evaluated stops the run. But P0 additionally observes two host
+objects it can evaluate completely — the preregistered per-SHA venv root and the
+interpreter inside it — and a complete observation of deviant state there is a
+FAIL, not a STOP. Those are the eight `P0_FAIL` forms (`venv_root_absent`,
+`venv_root_is_symlink`, `venv_root_kind_unexpected`,
+`venv_root_not_literal_canonical`, `interpreter_absent`,
+`interpreter_symlink_dangling`, `interpreter_kind_unexpected`,
+`interpreter_target_kind_unexpected`), declared with their exact fields in §8.1.1.
+The dividing line is the one this package keeps testing itself against: a producer
+answer that cannot be read as one complete result is rc 3 even when its exit
+status was 0 — which is why round 10 moved the followed-symlink target's malformed
+`%F` response off `interpreter_target_kind_unexpected` (rc 1) and onto
+`link_target_probe_multiline` / `link_target_probe_nonprintable` (rc 3).
+
+### 8.1.1 P0 result grammar - the exhaustive machine-result declaration
+
+Round 10 (RP6-P0 Codex T0 audit R9 finding 2) adds this subsection because §8.1
+above declares divergence tokens **per expectation row**, and an expectation row
+is not a grammar. The round-9 emit-site sweep found that only 23 of 159 machine
+results matched a form declared for P0: the draft declared **zero** `P0_FAIL`
+forms while the block emitted eight, fifty reason tokens appeared nowhere under a
+P0 prefix (several only under `B1_*`/`B3_*`, which cannot be borrowed by changing
+the prefix), declared reasons carried fields the exact form did not permit, and
+the ERR-trap emitter was absent entirely. §8.1 is unchanged as the *expectation*
+contract; this subsection is the *result grammar* contract, and it is exhaustive
+by construction.
+
+**What a declared tuple is.** One line per distinct emitted **correlated tuple**:
+
+```text
+<site_count> <PREFIX> <reason> <field>={<value-class>} ...
+```
+
+`<PREFIX>` is `P0_STOP` (rc 3) or `P0_FAIL` (rc 1). Fields appear in **emission
+order**, which is part of the tuple. A *value class* is either a source literal
+(the emitter writes that exact text) or `<name>` for a `$name`/`${name}`
+expansion, with surrounding literal text preserved - so `[$P0_SAFE]` is the class
+`[<P0_SAFE>]`, and `$P0_STATE_UID:$P0_STATE_GID` is the class
+`<P0_STATE_UID>:<P0_STATE_GID>`. `<printf_arg>` is a `%s` in a direct `printf`
+emitter.
+
+**Round 11 (RP6-P0 Codex T0 audit R10 finding 1): one value class per field,
+never a union.** Round 10 declared one line per *form* - prefix, reason and field
+order - and gave each field an independent sorted union of the values seen across
+every site sharing that form. That destroyed the correlation between the fields
+of one site: twelve forms admitted 65 field-value combinations no site emits, and
+a correlation-preserving relabel of a single site (`account=gatea` ->
+`account=mtc-bridge` at one of the three `identity_unexpected` sites) left every
+union byte-identical and the closure fence GREEN. Each `{}` now holds exactly ONE
+value class, `<site_count>` is how many sites emit that exact tuple, and the
+`R11_GRAMMAR` fence asserts that no `{}` ever contains a comma - so per-field
+unions cannot reappear without failing the fence.
+
+**The derivation is deterministic and total.** The declaration below is the exact
+text produced from `RP6-P0.sh` by the rule above: both emit wrappers
+(`p0_stop "..."`, `p0_fail "..."`) and every direct `printf 'P0_STOP ...'` /
+`printf 'P0_FAIL ...'` emitter, with the two wrapper *definitions* excluded. It
+therefore closes in both directions: a block that gains an undeclared form, loses
+a declared one, adds a field, reorders fields, or introduces a new literal
+`detail=` token no longer matches this text. The `R10_GRAMMAR` fence in
+`SELF_QA_RP6.md` re-derives it from the block bytes and diffs it against this
+block, so the fence is driven by this declaration and not by hand-picked source
+substrings; a repair round that changes any emitter must update this declaration
+in the same round.
+
+**Coverage is fail-closed (round 11).** The derivation reads one modelled
+spelling of each emitter. Round 10 measured its own coverage with that same
+lexical restriction on both sides, so an executable emitter written in another
+valid shell spelling - `p0_stop '...'` for instance - disappeared from the
+declaration AND from the check that was supposed to detect the disappearance.
+`R11_GRAMMAR` now censuses emit sites by a broader, independent rule: every line
+that uses `p0_stop`/`p0_fail` as a shell word, or writes the `P0_STOP`/`P0_FAIL`
+result literal, minus exactly two declared exclusions - the two wrapper
+definitions and whole-line comments. Any censused line the modelled parser cannot
+read is a coverage error and the fence fails; it is never skipped. This
+declaration is therefore complete for the modelled spellings **and** the fence
+refuses to certify a block that contains an unmodelled one.
+
+**What it does not establish.** This is a *static source* grammar. It constrains
+prefixes, reasons, field names, field order, every literal value and every literal
+`detail=` token. It does **not** constrain what a `<name>` class evaluates to at
+run time - that is decided by the code path that reaches the site, and is
+evidenced only by the executable fixtures in `SELF_QA_RP6.md`. Two consequences
+are named rather than hidden: `identity_unexpected ... account=mtc-bridge` and
+`state_account_resolution_unexpected` carry
+`expected_numeric=<P0_STATE_UID>:<P0_STATE_GID>`, the operator-supplied
+preregistered inputs whose §2 values are `999` and `988` and which the block
+constrains only to positive decimals; and `identity_unexpected ... account=gatea`
+carries `<P0_EXPECT_UID>`, for which §2 preregisters no numeric value at all. A
+prelude that supplies numerics other than the preregistered ones is a
+preregistration violation visible in the operator record, **not** something these
+blocks detect - see the residual named in §8.1 row 3.
+
+**P0 result grammar, exhaustive** - 149 correlated tuples, 163 emit sites,
+derived from `RP6-P0.sh` at the round-11 bytes. The round-11 block adds the two
+`*_kind_unrecognized` STOP tuples (finding 2: an unrecognised printable `%F`
+token is an inability to evaluate, not a host-state observation), and the
+remaining growth from 89 declared lines is the round-10 per-field unions being
+split into the correlated tuples that actually exist:
+
+```text
+# P0_RESULT_GRAMMAR_BEGIN
+1 P0_FAIL interpreter_absent path={<py>} detail={preregistered_path_observed_missing_parent_search_succeeded}
+1 P0_FAIL interpreter_kind_unexpected kind={<P0_KIND>} path={<py>} expected={regular_or_live_symlink}
+1 P0_FAIL interpreter_symlink_dangling path={<py>}
+1 P0_FAIL interpreter_target_kind_unexpected kind={<P0_FKIND>} path={<py>} expected={regular}
+1 P0_FAIL venv_root_absent path={<d>} detail={preregistered_path_observed_missing}
+1 P0_FAIL venv_root_is_symlink kind={<P0_KIND>} path={<d>}
+1 P0_FAIL venv_root_kind_unexpected kind={<P0_KIND>} path={<d>} expected={dir}
+1 P0_FAIL venv_root_not_literal_canonical path={<d>} canonical={<P0_SAFE>}
+1 P0_STOP capability_wider_than_ledger gid={<f>} caller_gids={[<gids>]}
+2 P0_STOP evidence_binding_unparsable subject={ev_log} value={[<logid>]}
+2 P0_STOP evidence_binding_unparsable subject={fd8} value={[<fdid>]}
+1 P0_STOP evidence_binding_unprobeable path={<EV_LOG>} rc={<rc>} detail={<P0_SAFE>}
+1 P0_STOP evidence_binding_unprobeable path={<P0_FD_SELF>} rc={<rc>} detail={<P0_SAFE>}
+1 P0_STOP evidence_binding_unprobeable path={<P0_FD_SELF>} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
+1 P0_STOP evidence_identifier_refused name={EV_STAGE_ID}
+1 P0_STOP evidence_identifier_refused name={RUNID}
+1 P0_STOP evidence_leaf_not_bound ev_log={<EV_LOG>} ev_log_id={<logid>} stdout_id={<fdid>} stdout_path={[<P0_SAFE>]}
+1 P0_STOP execution_domain_mismatch field={<field>} observed={<raw>} attested={<attested>}
+1 P0_STOP execution_domain_mismatch field={root_mount_identity} observed={<root_id>} attested={<P0_ATTESTED_ROOT_MOUNT_ID>}
+1 P0_STOP execution_domain_unattested field={<field>} detail={freeze_pin_unfilled}
+1 P0_STOP execution_domain_unattested field={<field>} detail={namespace_identity_empty}
+1 P0_STOP execution_domain_unattested field={<field>} detail={namespace_identity_unprintable}
+1 P0_STOP execution_domain_unattested field={<field>} detail={namespace_link_on_root_filesystem} device={<P0_DEVICE>} root_device={<root_dev>}
+1 P0_STOP execution_domain_unattested field={<field>} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
+1 P0_STOP execution_domain_unattested field={<field>} subject={namespace_link_device} detail={device_grammar}
+1 P0_STOP execution_domain_unattested field={<field>} subject={namespace_link_device} rc={<rc>} detail={[<P0_SAFE>]}
+1 P0_STOP execution_domain_unattested field={mount_namespace} detail={freeze_pin_unfilled}
+1 P0_STOP execution_domain_unattested field={mount_namespace} detail={prelude_value_differs_from_frozen_pin}
+1 P0_STOP execution_domain_unattested field={mount_namespace} detail={preregistered_value_missing}
+1 P0_STOP execution_domain_unattested field={network_namespace} detail={freeze_pin_unfilled}
+1 P0_STOP execution_domain_unattested field={network_namespace} detail={prelude_value_differs_from_frozen_pin}
+1 P0_STOP execution_domain_unattested field={network_namespace} detail={preregistered_value_missing}
+1 P0_STOP execution_domain_unattested field={pid_namespace} detail={freeze_pin_unfilled}
+1 P0_STOP execution_domain_unattested field={pid_namespace} detail={prelude_value_differs_from_frozen_pin}
+1 P0_STOP execution_domain_unattested field={pid_namespace} detail={preregistered_value_missing}
+1 P0_STOP execution_domain_unattested field={root_mount_identity} detail={prelude_value_differs_from_frozen_pin}
+1 P0_STOP execution_domain_unattested field={root_mount_identity} detail={preregistered_value_missing}
+1 P0_STOP execution_domain_unattested field={root_mount_identity} detail={root_not_literal_canonical}
+1 P0_STOP execution_domain_unattested field={root_mount_identity} rc={<rc>} detail={[<P0_SAFE>]}
+1 P0_STOP execution_domain_unattested field={root_mount_identity} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
+1 P0_STOP execution_domain_unattested field={user_namespace} detail={freeze_pin_unfilled}
+1 P0_STOP execution_domain_unattested field={user_namespace} detail={prelude_value_differs_from_frozen_pin}
+1 P0_STOP execution_domain_unattested field={user_namespace} detail={preregistered_value_missing}
+2 P0_STOP execution_domain_unattested field={root_mount_identity} detail={freeze_pin_unfilled}
+4 P0_STOP execution_domain_unattested field={<field>} detail={namespace_identity_grammar}
+4 P0_STOP execution_domain_unattested field={root_mount_identity} detail={dev_inode_grammar}
+1 P0_STOP group_query_not_evaluable rc={0} detail={[response_multiline:<P0_SAFE>]}
+1 P0_STOP group_query_not_evaluable rc={<rc>} detail={[<P0_SAFE>]}
+2 P0_STOP group_query_not_evaluable rc={0} detail={[response_empty]}
+2 P0_STOP group_query_not_evaluable rc={0} detail={[response_not_decimal_gid_list]}
+1 P0_STOP identity_probe_empty field={<label>} flag={<flag>}
+1 P0_STOP identity_probe_failed field={<label>} flag={<flag>} rc={<rc>} detail={[<P0_SAFE>]}
+1 P0_STOP identity_probe_multiline field={<label>} flag={<flag>} detail={[<P0_SAFE>]}
+1 P0_STOP identity_probe_unparsable field={gid} value={[<gid>]} expected={decimal_digits}
+1 P0_STOP identity_probe_unparsable field={uid} value={[<uid>]} expected={decimal_digits}
+1 P0_STOP identity_unexpected observed_numeric={<P0_PW_UID>:<P0_PW_GID>} expected_numeric={<P0_EXPECT_UID>:<P0_PW_GID>} account={gatea}
+1 P0_STOP identity_unexpected observed_numeric={<P0_PW_UID>:<P0_PW_GID>} expected_numeric={<P0_STATE_UID>:<P0_STATE_GID>} account={mtc-bridge}
+1 P0_STOP identity_unexpected observed_numeric={<live_uid>:<live_gid>} expected_numeric={<P0_PW_UID>:<P0_PW_GID>} account={gatea}
+1 P0_STOP identity_unresolvable account={gatea} rc={<P0_PW_RC>} detail={[<P0_PW_DIAG>]}
+1 P0_STOP identity_unresolvable account={gatea} rc={<P0_PW_RC>} detail={getent_valid_no_match_for_route_login}
+1 P0_STOP identity_unresolvable account={mtc-bridge} rc={<P0_PW_RC>} detail={[<P0_PW_DIAG>]}
+1 P0_STOP input_charset name={<name>} expected={decimal_digits}
+1 P0_STOP input_charset name={P0_FORBIDDEN_GIDS} value={[<P0_FORBIDDEN_GIDS>]} expected={decimal_digits_and_separators_only}
+1 P0_STOP input_charset name={P0_VENV_ROOT} expected={printable_without_whitespace}
+1 P0_STOP input_missing name={<name>} detail={preregistered_numeric_value_never_derived_here}
+1 P0_STOP input_missing name={P0_FORBIDDEN_GIDS} detail={preregistered_numeric_gid_list_never_derived_here}
+1 P0_STOP input_missing name={P0_VENV_ROOT} detail={preregistered_per_sha_venv_root_never_derived_here}
+1 P0_STOP input_not_absolute name={P0_VENV_ROOT} value={[<P0_VENV_ROOT>]}
+1 P0_STOP input_not_candidate_bound name={P0_VENV_ROOT} expected_basename={<P0_CAND>}
+1 P0_STOP input_not_canonical_spelling name={P0_VENV_ROOT} value={[<P0_VENV_ROOT>]} detail={repeated_separator}
+1 P0_STOP input_path_traversal name={P0_VENV_ROOT} value={[<P0_VENV_ROOT>]}
+1 P0_STOP input_pin_charset tool={<p0_pin_name>} expected={printable_without_glob_metacharacters}
+1 P0_STOP input_pin_charset tool={<p0_pin_name>} expected={printable_without_whitespace}
+1 P0_STOP input_pin_count_unexpected count={<P0_PIN_COUNT>} expected={<P0_TOOL_COUNT_EXPECTED>} detail={exactly_one_frozen_pin_per_preregistered_tool}
+1 P0_STOP input_pin_freeze_unfilled tool={<p0_pin_name>} name={<P0_FROZEN_CONST_NAME>} detail={deploy_channel_value_never_derived_here}
+1 P0_STOP input_pin_malformed name={P0_TOOL_PINS} entry={[<p0_pin>]} expected={tool=absolute_path}
+1 P0_STOP input_pin_not_absolute tool={<p0_pin_name>} path={[<p0_pin_path>]}
+1 P0_STOP input_pin_not_frozen_path tool={<p0_pin_name>} pinned={<p0_pin_path>} frozen={<P0_FROZEN_PIN>}
+1 P0_STOP input_pin_not_frozen_trusted_python tool={python3} pinned={<p0_pin_path>} frozen={<P0_FIXED_TRUSTED_PYTHON>}
+1 P0_STOP input_pin_omitted tool={<p0_t>} detail={every_preregistered_tool_requires_one_frozen_pin}
+2 P0_STOP input_pin_unknown_tool name={P0_TOOL_PINS} tool={<p0_pin_name>} inventory={[<P0_RO_TOOLS>]}
+1 P0_STOP input_range name={<name>} value={<val>} expected_min={<min>}
+1 P0_STOP input_range name={P0_FORBIDDEN_GIDS} value={[<P0_FORBIDDEN_GIDS>]} expected={at_least_one_numeric_gid}
+1 P0_STOP internal_invariant_unmet invariant={trusted_python_pin_bound} predicate={P0_TRUSTED_PYTHON_BOUND_eq_yes} observed={<P0_TRUSTED_PYTHON_BOUND>} detail={an_upstream_input_gate_stopped_detecting_its_condition}
+1 P0_STOP interpreter_exec_denied path={<py>} rc={126} detail={found_but_could_not_be_executed_by_this_login} text={[<P0_SAFE>]}
+1 P0_STOP interpreter_exec_failed path={<py>} rc={127} detail={interpreter_or_its_loader_not_found} text={[<P0_SAFE>]}
+1 P0_STOP interpreter_exec_failed path={<py>} rc={<rc>} detail={nonzero_interpreter_status} text={[<P0_SAFE>]}
+1 P0_STOP interpreter_not_executable path={<py>} mechanism={access_builtin_x} detail={exec_permission_denied_to_this_login}
+1 P0_STOP interpreter_probe_multiline path={<py>} detail={<P0_SAFE>}
+1 P0_STOP interpreter_probe_unparsable path={<py>} detail={[<P0_SAFE>]} expected={P0PY_major.minor}
+1 P0_STOP interpreter_probe_unparsable path={<py>} detail={[<version>]} expected={P0PY_major.minor}
+1 P0_STOP interpreter_probe_unparsable path={<py>} field={major} value={[<major>]}
+1 P0_STOP interpreter_probe_unparsable path={<py>} field={minor} value={[<minor>]}
+1 P0_STOP interpreter_startup_not_isolated path={<py>} detail={[<P0_SAFE>]} expected={isolated_and_no_site}
+1 P0_STOP link_target_kind_unrecognized path={<p>} rc={0} detail={<P0_SAFE>} expected={complete_gnu_stat_percent_F_token}
+1 P0_STOP link_target_probe_empty path={<p>} rc={0}
+1 P0_STOP link_target_probe_error path={<p>} rc={<subrc>} detail={<P0_SAFE>}
+1 P0_STOP link_target_probe_multiline path={<p>} rc={0} detail={<P0_SAFE>}
+1 P0_STOP link_target_probe_nonprintable path={<p>} rc={0} detail={<P0_SAFE>}
+1 P0_STOP metadata_multiline subject={<label>} path={<p>} detail={<P0_SAFE>}
+1 P0_STOP metadata_unparsable subject={<label>} path={<p>} detail={[<P0_SAFE>]} expected={kind|mode|uid:gid}
+1 P0_STOP metadata_unparsable subject={<label>} path={<p>} field={kind}
+1 P0_STOP metadata_unparsable subject={<label>} path={<p>} field={mode} value={[<P0_META_MODE>]}
+2 P0_STOP metadata_unparsable subject={<label>} path={<p>} field={owner_numeric} value={[<P0_META_OWNER>]}
+1 P0_STOP metadata_unreadable subject={<label>} path={<p>} rc={<rc>} detail={<P0_SAFE>}
+1 P0_STOP missing_tool tool={<p0_t>} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={<t>} rc={<rc>} detail={[<P0_SAFE>]}
+1 P0_STOP missing_tool tool={env} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={getent} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={id} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={readlink} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={stat} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={systemctl} detail={absent_from_resolved_map}
+1 P0_STOP missing_tool tool={timeout} detail={absent_from_resolved_map}
+1 P0_STOP path_probe_ambiguous path={<p>} rc={<rc>} classes={<classes>} eacces={<n_eacces>} enoent={<n_enoent>} detail={<P0_SAFE>}
+1 P0_STOP path_probe_denied path={<p>} rc={<rc>} detail={<P0_SAFE>}
+2 P0_STOP path_probe_empty path={<p>} rc={0}
+1 P0_STOP path_probe_kind_unrecognized path={<p>} rc={0} detail={<P0_SAFE>} expected={complete_gnu_stat_percent_F_token}
+1 P0_STOP path_probe_multiline path={<p>} rc={0} detail={<P0_SAFE>}
+1 P0_STOP path_probe_multiline path={<p>} rc={<rc>} detail={<P0_SAFE>}
+1 P0_STOP path_probe_nonprintable path={<p>} rc={0} detail={<P0_SAFE>}
+1 P0_STOP path_probe_unclassified path={<p>} rc={<rc>} detail={<P0_SAFE>}
+1 P0_STOP prereg_input_malformed name={P0_TOOL_PINS} duplicate={<p0_pin_name>}
+1 P0_STOP rp0_bootstrap_not_run detail={EV_DIR_unset}
+1 P0_STOP rp0_bootstrap_not_run detail={EV_LOG_unset}
+1 P0_STOP rp0_bootstrap_not_run detail={EV_STAGE_ID_unset}
+1 P0_STOP rp0_bootstrap_not_run detail={RUNID_unset}
+1 P0_STOP rp0_lib_not_sourced predicate={rp0_allocate_evidence_dir} detail={not_a_shell_function}
+1 P0_STOP rp0_lib_not_sourced predicate={rp0_require_safe_component} detail={not_a_shell_function}
+1 P0_STOP state_account_resolution_unexpected account={mtc-bridge} observed_numeric={absent} expected_numeric={<P0_STATE_UID>:<P0_STATE_GID>} detail={getent_valid_no_match}
+1 P0_STOP system_manager_unreachable rc={<rc>} detail={<detail>} budget_s={<P0_MANAGER_QUERY_BUDGET_S>} elapsed_s={<elapsed>} text={[<P0_SAFE>]}
+1 P0_STOP system_manager_unreachable rc={<rc>} detail={response_multiline} text={[<P0_SAFE>]}
+1 P0_STOP system_manager_unreachable rc={<rc>} detail={response_unparseable} text={[<P0_SAFE>]}
+1 P0_STOP system_manager_unreachable rc={<rc>} detail={response_unprintable_value}
+1 P0_STOP tool_not_evaluable tool={<t>} path={<resolved>} rc={na} detail={access_builtin_x_denied} mechanism={access_builtin_x}
+1 P0_STOP tool_pin_mismatch tool={<t>} pinned={<pin>} resolved={<resolved>}
+1 P0_STOP tool_pin_mismatch tool={<t>} pinned={<pin>} resolved={<resolved>} canonical={[<P0_SAFE>]}
+1 P0_STOP tool_pin_uncanonicalizable tool={<t>} pinned={<pin>} resolved={<resolved>} detail={readlink_not_resolved_before_python3}
+1 P0_STOP tool_pin_uncanonicalizable tool={<t>} pinned={<pin>} resolved={<resolved>} rc={<crc>} detail={[<P0_SAFE>]}
+1 P0_STOP tool_pin_unpinned tool={<t>} detail={every_tool_requires_a_frozen_pin}
+1 P0_STOP tool_resolution_unparsable tool={<p0_t>} detail={resolution_mode_lost}
+1 P0_STOP tool_resolution_unparsable tool={<t>} resolved={[<P0_SAFE>]} expected={absolute_path}
+1 P0_STOP tool_resolution_unparsable tool={<t>} resolved={[<P0_SAFE>]} expected={printable_without_whitespace}
+1 P0_STOP unadjudicated_command_status rc={<printf_arg>} line={<printf_arg>} cmd={[<printf_arg>]}
+1 P0_STOP venv_root_canonicalization_failed path={<d>} rc={<rc>} detail={[<P0_SAFE>]} diagnostic_shape={<P0_RESOLUTION>}
+1 P0_STOP venv_root_canonicalization_unparsable path={<d>} rc={0} detail={[response_multiline:<P0_SAFE>]}
+1 P0_STOP venv_root_canonicalization_unparsable path={<d>} rc={0} detail={[response_nonprintable]}
+1 P0_STOP venv_root_canonicalization_unparsable path={<d>} rc={0} detail={[response_not_absolute:<P0_SAFE>]}
+1 P0_STOP venv_root_canonicalization_unparsable path={<d>} rc={0} detail={response_empty}
+# P0_RESULT_GRAMMAR_END
+```
+
+### 8.2 RO stage - one row per admitted check
+
+| # | check | predicted outcome if it holds | exact predicted first divergence if it does not |
+|---|---|---|---|
+| 1 | B2 active | `systemctl is-active` returns a parseable unit state and that state is `active` | `B2_STOP reason=system_manager_unreachable operation=is-active rc=<n> detail=<d>` for invocation, bus, namespace, authorization or parse failure; after manager reachability is proven, a valid state such as `inactive` is evaluable and becomes `B2_FAIL reason=unit_not_active state=<s> expected=active` even when `is-active` uses a nonzero result rc |
+| 2 | B2 restart count | `NRestarts` is `0` | `B2_STOP reason=unit_property_unreadable prop=NRestarts rc=<n> detail=<d>` before comparison on any manager/query/parse error; only a successfully read value may become `B2_FAIL reason=nrestarts_nonzero value=<n> expected=0` |
+| 3 | B2 restart policy | `Restart` is `no` | `B2_STOP reason=unit_property_unreadable prop=Restart rc=<n> detail=<d>` before comparison on any manager/query/parse error; only a successfully read value may become `B2_FAIL reason=restart_policy value=<v> expected=no` |
+| 4 | B2 process identity | `MainPID` is `189813` | `B2_STOP reason=unit_property_unreadable prop=MainPID rc=<n> detail=<d>` before comparison on any manager/query/parse error; only a successfully read value may become `B2_FAIL reason=mainpid_changed value=<p> expected=189813` - **named risk R3**: with `Restart=no` a live unit cannot have self-restarted, so a changed MainPID means a manual restart between the transition inventory and dispatch. That is a FAIL requiring Lead adjudication, never a silent re-pin |
+| 5 | B2 candidate binding | after P0 domain binding, complete manager properties are structurally parsed: the effective `ExecStart` argv (not comments, inactive directives, environment text or arbitrary substrings) binds its executable and release argument to the exact venv and release roots for `2ce41e34...321b`, and the effective fragment/drop-in set contains no unpreregistered override | a valid complete manager result `LoadState=not-found` is observed deviant state and becomes `B2_FAIL reason=unit_not_loaded`; `B2_STOP reason=unit_definition_unreadable operation=show rc=<n> detail=<d>` applies only to invocation, bus, namespace, authorization, timeout, incomplete-output or grammar error; any other complete structural mismatch becomes `B2_FAIL reason=unit_not_bound_to_candidate field=<field> observed=<v>` |
+| 6 | B2 no `[Install]` | after path-object binding, a complete byte read of the fragment is parsed under the systemd unit-file line grammar and contains no section header whose exact parsed name is `Install`; comments, continuations and arbitrary substrings do not count | `B2_FAIL reason=unit_fragment_absent path=<p>` on positively established ENOENT; `B2_STOP reason=fragment_unreadable_or_unparseable rc=<n> path=<p> detail=<d>` on invocation/access/read/encoding/NUL/grammar or ambiguous-ENOENT error; only a complete successful parse may become `B2_FAIL reason=install_section_present path=<p>` - grep or substring matching is not admissible |
+| 7 | B2 fragment identity | after the section-wide path-object binding holds, `sha256sum` equals `WPI_UNIT_FRAGMENT_SHA256`, size 3736 | `B2_FAIL reason=unit_fragment_absent path=<p>` when a searchable, bound parent chain positively establishes ENOENT; `B2_FAIL reason=unit_fragment_digest_mismatch observed=<h> expected=<h>` only after `sha256sum` exited 0 and emitted a syntactically valid 64-hex digest plus the 3736-byte count; `B2_STOP reason=fragment_unreadable rc=<n> path=<p>` for invocation, permission, LSM, ambiguous-ENOENT or parent-traversal error |
+| 8 | B4 sandboxing | each named property is successfully read and equals the template-declared value (`PrivateTmp`, `ProtectSystem`, `NoNewPrivileges`, `RestrictAddressFamilies`, `CapabilityBoundingSet`, `ReadWritePaths`, `KillSignal`, `KillMode`, `TimeoutStopSec`, `FinalKillSignal`) | `B4_STOP reason=unit_property_unreadable prop=<P> rc=<n> detail=<d>` before comparison on any invocation, bus, namespace, authorization, incomplete-output or parse error; only a successfully read property may become `B4_FAIL reason=property_mismatch prop=<P> observed=<v> expected=<v>` |
+| 9 | B4 start mode | the complete effective `Environment` value is parsed as systemd's tokenized environment grammar and contains exactly one effective `MTC_BRIDGE_START_MODE` assignment whose value is `credential_free_disarmed`; a duplicate, shadowed or substring-only occurrence does not satisfy the row | `B4_STOP reason=unit_property_unreadable prop=Environment rc=<n> detail=<d>` before interpretation on any manager/query/grammar error; only a complete successful parse may become `B4_FAIL reason=start_mode_missing_or_altered observed=<v>` |
+| 10 | B3s release root | after component-wise path and mount binding, the literal release root is a non-symlink directory with numeric mode/owner `0555 0:0` (rendered `root:root` diagnostic only) | `B3_FAIL reason=path_absent path=<p>` on positively established ENOENT; `B3_FAIL reason=path_metadata_mismatch path=<p> kind=<k> mode=<m> owner_numeric=<u:g> expected=directory,555,0:0` after a successful `lstat`; `B3_STOP reason=path_not_evaluable path=<p> rc=<n> detail=<d>` on invocation/access/traversal/ambiguous error |
+| 11 | B3s venv root | after component-wise path and mount binding, the literal venv root is a non-symlink directory with numeric mode/owner `0555 0:0` | same classification grammar as row 10 |
+| 12 | B3s sweep budget | each sweep's stdout, stderr, rc and elapsed time are captured atomically and the sweep finishes inside 120 s; pinned `/usr/bin/timeout` is the ninth bound tool and enforces the bound on every child, with the post-hoc clock retained as a second gate | `B3_STOP reason=sweep_budget_exceeded root=<r> elapsed_s=<n> elapsed_ms=<n> budget_s=120`; timeout is adjudicated before rc, diagnostics or stdout |
+| 13 | B3s walk completeness | after row 12 holds, each complete diagnostic stream is empty and `find` exits 0; no LSM, ACL, mount or traversal error occurred | `B3_STOP reason=walk_incomplete root=<r> rc=<n> detail=<d>` on any nonzero rc or mount/traversal/diagnostic error. `walk_permission_error` is deleted: Pattern 5 forbids deriving an errno class from `find` prose. This STOP disqualifies rows 14 and 19 |
+| 14 | B3s write bits | only after rows 12-13 prove a complete rc-0 sweep may the captured stdout be interpreted; it contains no writable pathname in either tree | `B3_FAIL reason=writable_path_inside_immutable_tree path=<p> count=<n>` is admissible only from stdout of a sweep already proven complete; an unsafe-to-render but valid absolute pathname uses `path=[unrenderable] path_sha256=<h> count=<n>`. Partial stdout is discarded as result evidence and can produce only the row-12/13 STOP |
+| 15 | B3s metadata dirs | component-wise `lstat` of `/etc/mtc-bridge` proves a non-symlink directory at numeric `0750 0:0`; `WPI_STATE_DIR` and `WPI_LOG_DIR` prove non-symlink directories at numeric `0750 999:988`, the preregistered numeric allocation of the named `mtc-bridge` account (names diagnostic only) | `B3_FAIL reason=path_absent path=<p>` on positively established ENOENT; `B3_FAIL reason=path_metadata_mismatch path=<p> kind=<k> mode=<m> owner_numeric=<u:g> expected=<kind,mode,u:g>` after a successful `lstat`; `B3_STOP reason=path_not_evaluable path=<p> rc=<n> detail=<d>` on invocation/access/traversal/ambiguous error |
+| 16 | B3s scope | the block contains no path with prefix `/etc/mtc-bridge/`, `<WPI_STATE_DIR>/` or `<WPI_LOG_DIR>/` | not a run-time predicate: a Stage-1 path-scope proof failure (section 10.2) blocks the freeze, so this can never divergence at run time |
+| 17 | B1a lock bytes | after path-object binding, `sha256sum` of the installed non-symlink regular `requirements.lock` equals `a1881296...bf66e`, size 117762 | `B1a_FAIL reason=installed_lock_absent path=<p>` on positively established ENOENT; `B1a_FAIL reason=installed_lock_object_unexpected kind=<k>` for a symlink/non-regular leaf, with no `path=` field - the exact table records `kind=<k>` alone; `B1a_FAIL reason=installed_lock_owner_unexpected owner_numeric=<u:g> expected=0:0` when the bound leaf's numeric ownership deviates; `B1a_FAIL reason=path_absent path=<p>` and `B1a_FAIL reason=path_metadata_mismatch path=<p> kind=<k> mode=<m> owner_numeric=<u:g> expected=<kind,mode,u:g>` for a deviant INTERMEDIATE component of the bound chain, which is the walk's default outcome and is not the leaf form; `B1a_FAIL reason=installed_lock_digest_mismatch observed_bytes=<n> expected_bytes=117762` when the successfully `lstat`-ed size diverges, which is adjudicated before the digest; `B1a_FAIL reason=installed_lock_digest_mismatch observed=<h> expected=a1881296...bf66e` only after `sha256sum` exited 0 and emitted a syntactically valid 64-hex digest plus the 117762-byte count - disposition **investigate read-only**: weigh a wrong expected value *and* genuine drift, re-check blob -> LF-pinned export -> manifest-verified install before escalating a STOP or dismissing one; `B1a_STOP reason=installed_lock_unreadable path=<p> rc=<n> detail=<d>` for invocation, permission, LSM, ambiguous-ENOENT or parent-traversal error - this row-specific token, never the generic `path_not_evaluable`, is carried through every `lstat` and every component of the walk that binds this leaf |
+| 18 | B1 interpreter | after path-object binding, `<venv>/bin/python` is a non-symlink regular file; its execute is a separately bounded post-binding observation, `-V` demonstrably runs, and reports a `3.12.` version | `B1_FAIL reason=interpreter_absent path=<venv>/bin/python` on positively established ENOENT; `B1_STOP reason=interpreter_not_executable path=<venv>/bin/python` on access/exec/EACCES/126 denial (never a version FAIL); every observed symlink or other object is `B1_STOP reason=interpreter_object_unbound kind=<k> target=<sanitised-t>` routed to Lead adjudication; `B1_FAIL reason=interpreter_version observed=unpreregistered_version expected=3.12.*` is the accepted content-suppressed rendering after the regular file demonstrably ran |
+| 19 | B1 lock parity | `verify_lock.py --check-installed` exits 0 and emits its structurally parsed PASS result with `packages=56`; **preflight (Codex F1, universe widened by Codex T0 finding 3): after path-object binding, the enumeration of `<WPI_VENV_ROOT>/lib/python3.12/site-packages` is UNFILTERED to depth 1 and every direct child is classified. The one admissible metadata format and location is a `*.dist-info` DIRECTORY holding `METADATA` and `RECORD`, each proven present and open+readable by `gatea` before parity runs; every other discovery format or location `importlib.metadata` would accept - `*.egg-info`, `*.egg-link`, `*.egg`, `*.zip`, `*.whl` - and the `*.pth`, `sitecustomize.py` and `usercustomize.py` startup hooks that can add locations or execute, is refused rather than left unenumerated. The trusted verifier re-derives the same universe from its own scan and refuses the same set, so preflight and verifier share ONE explicit discovery universe. Admission is not adjudication (Codex round-4 finding 2): before any distribution object reaches the verifier, the trusted driver semantically establishes each admitted object's package IDENTITY - exactly one grammar-valid `Name` and exactly one `Version` in its `METADATA`, and a canonical name unique across the admitted set** | `B1_FAIL reason=distribution_metadata_absent path=<p>` when complete enumeration of a readable bound parent positively establishes a required member is missing; unsafe-to-render valid paths use `path=[unrenderable] path_sha256=<h>`; the component walk of `site-packages` and of each `*.dist-info` directory carries the default walk outcome, so a positively absent component is `B1_FAIL reason=path_absent path=<p>` and a deviant one is `B1_FAIL reason=path_metadata_mismatch path=<p> kind=<k> mode=<m> owner_numeric=<u:g> expected=<kind,mode,u:g>`; enumeration budget/traversal failures use the row-12/13 tokens under prefix `B1`; `B1_FAIL reason=lock_installed_parity observed=<detail>` ONLY when the verifier ran clean and structurally distinguished a genuine named missing/extra distribution, never on a generic nonzero rc or substring; `B1_STOP reason=metadata_universe_unexpected stage=preflight path=<p> format=<f>` when the preflight observes a non-preregistered metadata format or location, and `B1_STOP reason=metadata_universe_unexpected stage=verifier format=<f> name_sha256=<h>` when the trusted verifier observes one from its own scan - the entry name is content-suppressed to a digest, and `<f>` is drawn from the fixed token set `dist_info_kind_<k>`, `egg_info`, `egg_link`, `egg`, `zip`, `whl`, `startup_hook`; `B1_STOP reason=metadata_unreadable path=<p>` for open/parse/EACCES/LSM/traversal error, carried as this row-specific token through every `lstat` and component walk rather than the generic `path_not_evaluable`; `B1_STOP reason=verifier_not_evaluable rc=<n> detail=<d>` for any other nonzero verifier rc that did not positively distinguish a mismatch, including `detail=trusted_startup_unproven` when the adjudicating interpreter cannot prove it started isolated and site-free; `B1_STOP reason=metadata_identity_unestablished stage=verifier detail=<t> name_sha256=<h>` when an admitted object's package identity cannot be established before parity runs, with the entry name content-suppressed to a digest and `<t>` drawn from the fixed token set `metadata_unreadable`, `name_absent`, `name_ambiguous`, `name_grammar`, `version_absent`, `version_ambiguous`, `version_grammar`, `canonical_name_duplicate` - `verify_lock.py` skips any distribution whose `METADATA` carries no `Name` and overwrites duplicate canonical names in a dict, so an unadjudicated identity is either a silent omission from the installed set (false PASS) or a package-parity FAIL against an object that was never evaluable, and both are forbidden: an identity that cannot be established is an inability to evaluate. Row 18's STOP and this row's completeness/readability precondition each disqualify parity entirely. The accepting line discloses the adjudicator it earned: `B1_lock_parity result=pass packages=56 output=structurally_parsed verifier_preexec_binding=component_mount_digest_window_closed exec_binding=separate_bounded_exec adjudicator=pinned_system_interpreter isolation=isolated_no_site discovery=explicit_dist_info_universe` |
+| 19a | B1 verifier identity | before row 19 parity executes, the non-symlink regular `verify_lock.py` is component/mount-bound, size 3735, and SHA-256 `d951e0ee...a451e5`; execution is separately bounded after that pre-exec window closes | `B1_FAIL reason=verifier_absent path=<p>` on positive ENOENT; `B1_FAIL reason=verifier_object_unexpected path=<p> kind=<k>`; `B1_FAIL reason=verifier_owner_unexpected path=<p> owner_numeric=<u:g> expected=0:0` when the bound leaf's numeric ownership deviates; `B1_FAIL reason=path_absent path=<p>` and `B1_FAIL reason=path_metadata_mismatch path=<p> kind=<k> mode=<m> owner_numeric=<u:g> expected=<kind,mode,u:g>` for a deviant INTERMEDIATE component of the bound chain; `B1_FAIL reason=verifier_digest_mismatch observed=<h> expected=<h>` or the corresponding `observed_bytes=<n> expected_bytes=3735`; `B1_STOP reason=verifier_unreadable path=<p> rc=<n> detail=<d>` when identity cannot be evaluated, carried as this row-specific token through every `lstat` and every component of the walk |
+| 20 | B5 endpoint | only after the row-22 service-netns binding precondition, `GET /api/status` completes and returns HTTP 200 | `B5_STOP reason=status_endpoint_not_evaluable rc=<n> detail=<d>` for invocation, transport, timeout, incomplete/malformed response or unbound namespace - **including a status record the block cannot bind to the descriptor its capture created (`detail=capture_stream_unbound`): the status code, and the emptiness of the diagnostic stream it is conditioned on, are read THROUGH THAT DESCRIPTOR rather than by re-opening the leaf name, because an executed fixture replaced that name between the child's exit and the read and turned a child-observed HTTP 500 into an accepting 200 (Codex round-7 part-B finding 2); there is no fallback to a name** - and **including a status record that is not byte-preserved: the record is taken in ONE NUL-delimited read before any status semantics apply, so a NUL byte is `detail=nul_byte_in_record` and a captured byte the single record and its terminator do not account for is `detail=record_bytes_unaccounted`. A line-by-line record reader silently discards NUL and turned `2<NUL>00` into the completed status `200` (Codex round-6 part-B finding 1); normalising a record is not reading it** - and **including any status token that is not three decimal digits in the range 100-599**, of which curl's no-response sentinel `000` is the common case (`detail=http_code_no_response`) and an out-of-range token such as `600` the other (`detail=http_code_grammar`): an unparseable status token is an inability to evaluate the row, never an observed deviation; a complete valid 401/403 is `B5_STOP reason=status_endpoint_access_denied code=<c>`; any other complete valid non-200 response is an observed deviant state and becomes `B5_FAIL reason=status_endpoint_unexpected_http code=<c>` |
+| 21 | B5 flags | only after row 20, the complete response body is parsed by the pinned trusted interpreter under `-I -S` - never by `<venv>/bin/python`, which cannot be allowed to arbitrate the state it serves - and is strict JSON (duplicate keys and NaN/Infinity/-Infinity rejected), has the required top-level shape and exact typed fields, and reports `state` DISARMED, `state_version` 1, `mode` `credential_free_disarmed`, `network` disabled, `exchange_conn` disabled, `exchange_enabled` false, `credential_lookup` disabled, `arm_enabled` false | `B5_STOP reason=status_body_unreadable_or_unparseable detail=<d>` for incomplete/read/strict-JSON/duplicate-key/top-level-shape failure, **for a parser result record the block cannot bind to the descriptor its capture created (`detail=capture_stream_unbound`) - the result record and its diagnostic stream are read through that descriptor under the same rule as row 20**, **for a parser result record that is not byte-preserved - the same ONE NUL-delimited read as row 20, so `detail=nul_byte_in_record` and `detail=record_bytes_unaccounted` are reached before the result record has any meaning, because `O<NUL>K fields=8` was otherwise consumed as the accepting record (Codex round-6 part-B finding 1)** - **and for any parser result record that is not exactly one of the records the parser can emit** - exact token count, a preregistered field name, that field's own expected type, and 64 lowercase hex for a value digest - so that neither a truncated nor an invented result record can reach a `flag_mismatch` FAIL; the field/type schema is declared once and the parser refuses to answer unless the declaration it is given equals its own table; absent preregistered key -> `B5_STOP reason=schema_unexpected field=<f>`; present key with wrong type -> `B5_FAIL reason=flag_mismatch field=<f> observed_type=<t> expected_type=<t>`; a parser that cannot prove its own startup was isolated and site-free refuses to parse at all and reaches the same `status_body_unreadable_or_unparseable` STOP; wrong typed value -> `B5_FAIL reason=flag_mismatch field=<f> observed_sha256=<h> expected=preregistered_typed_value`, the accepted content-suppressed rendering, with the accepting line `B5_status http=200 json=strict required_fields=8 flags=expected body_sha256=<h> content=not_printed parser=pinned_system_interpreter isolation=isolated_no_site` - **named risk R4**: these key names come from matrix prose, not from an observed response body |
+| 22 | B5/B6 service network-namespace binding and B6 listener set | before either `curl` (rows 20-21) or `ss` (rows 22-23) output is interpreted, `readlink /proc/self/ns/net` equals `readlink /proc/<MainPID>/ns/net` (MainPID from row 4), each namespace identity itself read byte-preserving under the row-20/21 rule **and through the descriptor its own capture created, never by re-opening the leaf name** - so that `ne<NUL>t:[100]` is `detail=nul_byte_in_record` rather than a valid namespace identity, and so that replacing a leaf name after the child exits cannot turn two unequal child-observed namespaces into an equal pair, which an executed fixture did (Codex round-7 part-B finding 2); then the unfiltered complete `ss -H -ltn` output is captured whole as a create-once evidence leaf and **read once, THROUGH THE DESCRIPTOR THAT CAPTURE CREATED, as a single NUL-delimited string**, so that the byte string adjudicated is the byte string captured. Both halves of that sentence are load-bearing and each answers a demonstrated defect: a record reader that consumes line by line silently discards NUL and can normalise a malformed record into a conformant one (Codex round-5 part-B finding 1), and a reader that re-opens the leaf NAME after the child exits adjudicates whatever that name then resolves to, which an executed fixture proved is not necessarily what the child wrote (Codex round-6 part-B finding 3). The reader therefore resolves no name after capture: while the creating write descriptor is still open, the read side is opened through `/dev/fd/<n>`, and a leaf-name replacement after that point cannot change the bytes adjudicated. **Every** socket row is then split out of that one string and structurally parsed, with each of `Recv-Q` and `Send-Q` required SEPARATELY to be a nonempty decimal-digit field - validating the joined string `"<recvq>:<sendq>"` against a class that permits the separator admitted `recvq=:` and `sendq=12:34` as structurally complete (Codex round-6 part-B finding 2) - with only sanitised counters and flags recorded in the loop, and the count of bytes consumed by the records must equal the count of bytes captured, and only after reader diagnostics, record termination and table grammar have all held does the block scope to port 8790 and require exactly one listener at `127.0.0.1`. No wildcard, unexpected-address or count FAIL may be emitted from inside the read loop: a table containing a malformed record is not evaluable in any row order, so an early deviant row must never pre-empt a later grammar failure (Codex T0 finding 2). The complete-parse claim is itself evidence - `B6_listener_inventory rows=<n> port_8790_rows=<n> bytes=<n> evidence_file=<p> content=not_printed table=complete parse=complete_before_semantics read_binding=capture_descriptor scope_applied_in_block=yes` is emitted before any row-22/23 verdict, where `bytes` is the block's own accounting of every byte it consumed from the capture descriptor, and `read_binding` records that those bytes were read through that descriptor rather than through `evidence_file`, which is the name the leaf was created under and is reported for location only | `B6_STOP reason=netns_mismatch caller=<i> service=<i>` if identities differ; `B6_STOP reason=service_netns_unreadable path=/proc/<pid>/ns/net rc=<n> detail=<d>` if the identity cannot be read - `detail` covering a namespace record the block cannot bind to the descriptor its capture created (`detail=capture_stream_unbound`) as well as the row-20/21 byte-preservation details - routing both B5 and the listener-set half to RPD-VERIFY; `B6_STOP reason=listener_inventory_unreadable_or_unparseable rc=<n> detail=<d>` on invocation/read/timeout/incomplete/table-grammar error, where `detail` also covers a NUL byte in the inventory, a byte count the records do not account for, a `Recv-Q` or `Send-Q` field that is not nonempty decimal digits (`detail=queue_grammar`), an inventory the block cannot bind to the descriptor its capture created (`detail=capture_stream_unbound`), and any local or peer endpoint whose numeric address or port is not complete and in range (a record that states no address and no port cannot produce a host-state FAIL); `B6_FAIL reason=listener_set_unexpected observed_count=<n> expected=1x127.0.0.1:8790` is the accepted content-suppressed rendering only after binding and a complete structural parse; a structurally parsed port-8790 row whose local address is neither `127.0.0.1` nor one of row 23's wildcard/VM addresses is `B6_FAIL reason=listener_set_unexpected observed=non_preregistered_address expected=1x127.0.0.1:8790` - the address itself is suppressed, so this is the accepted rendering rather than an `addr=<a>` echo |
+| 23 | B6 no wildcard | no structurally parsed port-8790 row has local address `0.0.0.0`, `::` or the VM IP, subject to row 22 | `B6_FAIL reason=nonloopback_listener addr=<a>` admissible only after row 22's namespace binding and complete table parse held; substring matching of `ss` text is not admissible |
+| 24 | B6 external closed | a bounded operator-side TCP probe completes with the classified result `connection_refused` or `timeout` for `172.24.55.233:8790` | `B6_FAIL reason=host_reachable_8790 outcome=connected` only after a completed connection; `B6_STOP reason=external_probe_not_evaluable outcome=<o> rc=<n> detail=<d>` for invocation, local socket, routing, cancellation, clock or unclassified errors |
+
+> **ROW-1 AMENDMENT - 2026-08-13 RP7 rows 1-9 round 3.** Original row text preserved above:
+> "`systemctl is-active` returns a parseable unit state and that state is `active`"; original
+> first-divergence STOP token preserved above: `B2_STOP reason=system_manager_unreachable
+> operation=is-active rc=<n> detail=<d>`. Amended predicate: read `ActiveState` from the same
+> bounded `systemctl show` property table used for B2 rows 1-5, require the `ActiveState`
+> record to be present and require its value to be `active`; a valid `inactive` remains an
+> evaluable `B2_FAIL reason=unit_not_active state=<s> expected=active`. Amended STOP token:
+> `B2_STOP reason=system_manager_unreachable operation=show rc=<n> detail=<d>` for invocation,
+> bus, namespace, authorization, timeout, incomplete-output or grammar failure before any
+> active-state comparison. Authority: `ROWS_1_9_OPTIONS_CODEX_2026-08-10.md` section D.4
+> option 3(b) permits the `ActiveState` property route, and the Claude T0 audit
+> `RP7_CLAUDE_T0_EXT_AUDIT_2026-08-13.md` REQUIRED-2 accepts that route on engineering
+> grounds because it avoids the Pattern-1 `is-active` rc/result collision.
+
+**Path-object binding rule (catalogue Pattern 3).** Rows 6-7, 10-11, 15 and 17-19
+bind paths, not only leaves. In the same frozen block and before content or metadata
+comparison, the wrapper walks every literal component with non-following metadata,
+proves the expected directory/regular-file kind, rejects `.`/`..`, alternate spellings
+and every unpreregistered live or dangling symlink, and compares numeric ownership.
+No venv-interpreter symlink is accepted: an observed symlink STOPs for Lead adjudication.
+For each mount observation, `/proc/self/mountinfo` is copied once into a create-once
+evidence leaf; that same leaf is structurally parsed and hashed. The ordered
+`normalised_path_projection_v2` record set defined in section 4 - effective covering
+mount per point path, subtree closure below every preregistered root, and per-root
+counts - is hashed and compared with the literal deploy-channel-attested digest, so an
+overlay or bind mount cannot substitute a decoy object anywhere inside a trusted
+subtree. A missing leaf under a successfully searched, bound parent is evaluable FAIL;
+inability to inspect a component or mount record is STOP. Parent, mount and leaf checks
+are one atomic observation, not evidence gathered in different stages.
+
+**Preregistered `binding=` vocabulary.** The binding tokens are evidence, so their set
+is fixed here and no other spelling is admissible: `binding=component_and_mount` (leaf
+and every component bound inside an open mount window - metadata directories and
+regular-file digests), `binding=component_and_mount_window_closed` (the same, with the
+window proven closed before the result line - immutable-tree rows),
+`binding=window_open_pending_close` (a per-member result emitted while the enclosing
+window is still open, closed later by the section's own guard - metadata members),
+`binding=equal` (the two namespace identities compared equal),
+`preexec_binding=component_and_mount_window_closed` and
+`verifier_preexec_binding=component_mount_digest_window_closed` (the pre-exec object
+binding of an object that is then executed, the second including its digest), and
+`exec_binding=separate_bounded_exec` (the execution itself, a separately bounded
+observation after that window closed).
+
+**Instrument-attestation disclosure (round-3, auditor finding 3).** Each `RP7_tool`
+binding line carries `resolution=pinned_absolute attestation=<a>`. `attestation=self`
+is emitted for `stat`, `env`, `sha256sum` and `timeout`: the mount projection and the
+tool binding itself are *built with* those four, so they are exercised before any tool
+binding line exists and they attest their own integrity. `attestation=bound_instrument`
+is emitted for `readlink`, `find`, `systemctl`, `ss`, `curl` and `python3`, which are
+bound by already-attested instruments. This is a disclosed property of the design, not a defect
+to be discovered at adjudication: a digest comparison needs a digest tool, and the
+pinned absolute path plus the non-group/world-writable mode check are what stand behind
+the first four.
+
+`attestation=bound_instrument` is truthful only if the tool was in fact bound. **All TEN
+pins, `python3` included, pass through the single production binding loop in `wpi_main`,
+inside the initial mount window and before it closes**, and no accepting
+`adjudicator=pinned_system_interpreter` (row 19) or
+`parser=pinned_system_interpreter isolation=isolated_no_site` (row 21) token is admissible
+unless that loop has already emitted this tool's own
+`RP7_tool name=python3 ... attestation=bound_instrument` line. Round 4 accepted the tenth
+pin, included it in projection v2 and defined its binding, but never called that binding
+from the production path, so both adjudicator tokens rested on an executable no production
+line had bound and `-I -S` plus the startup guards were interpreted by whatever program the
+pin named (Codex round-4 finding 1).
+
+**Binding ordering rule.** Row 19 is admissible **only** after row 13 has held for
+the venv tree, row 18's interpreter has demonstrably run, and the row-19
+metadata-readability precondition has passed. The row-13 `find` guard proves
+traversal and stat-ability of the tree, **not** regular-file readability: a
+`*.dist-info/METADATA` at mode `000`, under a named ACL denying `gatea`, or denied by
+an LSM rule is stat-able by `find` yet unreadable to the verifying process.
+`verify_lock.py --check-installed` enumerates installed distributions from metadata
+objects; an unreadable one is indistinguishable from a distribution that is not
+installed, so it would surface as a *missing distribution* - a false FAIL against a
+correct host, which is the same shape of error as tonight's, arriving through a
+different door. If row 12 or 13 STOPs, row 14 is not evaluated, row 19 must STOP too,
+and neither a writable-path FAIL nor a parity FAIL may be reported from partial output.
+
+**Atomic-walk adjudication rule (Codex audit F4, applied round 1.3).** For every
+filesystem walk, including the immutable-tree write-bit sweeps and any metadata
+enumeration feeding row 19, the wrapper captures stdout, stderr, rc and elapsed time
+without streaming stdout into a result parser. It adjudicates in this binding order:
+(1) timeout/budget, (2) exit status plus the complete diagnostic stream, and only then
+(3) stdout. A timeout, nonzero rc, or any LSM, ACL, mount, permission or traversal
+diagnostic is `B3_STOP`/`B1_STOP` as applicable. A pathname emitted before the later
+error is partial output and cannot become `B3_FAIL`. Only a proven complete rc-0,
+diagnostic-free walk exposes stdout for writable-path or metadata interpretation.
+
+**Metadata-readability adjudication rule (Codex audit F1, applied round 1.2; discovery
+universe made explicit round 1.6 after Codex T0 finding 3).** Row 19 is evaluated under a
+fixed precedence. The wrapper first proves every metadata object the verifier consumes is
+open+readable by `gatea`. "Every object the verifier consumes" is not a synonym for
+"every `*.dist-info` directory": `importlib.metadata` also discovers `egg-info`, can
+discover metadata inside zip entries on `sys.path`, and supports extended finders, so a
+preflight that enumerates only `*.dist-info` has not established complete readability of
+its own verifier's input and may neither PASS nor name a mismatch. The universe is
+therefore defined once, here, and enforced on both sides. The admissible universe is
+exactly the `*.dist-info` DIRECTORIES that are direct children of
+`<WPI_VENV_ROOT>/lib/python3.12/site-packages`, each holding `METADATA` and `RECORD`. The
+preflight enumerates that directory unfiltered to depth 1 and STOPs on any other
+discovery format or location; the trusted verifier scans the same directory itself,
+STOPs on the same set, and replaces `importlib.metadata`'s implicit `sys.path` discovery
+with exactly that enumerated list, so the zip and extension-finder routes are structurally
+unreachable rather than merely unenumerated. Neither side may rely on a format the other
+did not see. Then the verifier's own exit status is adjudicated in this order: a
+required metadata member positively absent under a completely enumerated, readable,
+bound parent is an evaluable `B1_FAIL reason=distribution_metadata_absent`; otherwise a
+**positively-distinguished installed-set mismatch** (the verifier named a missing or
+extra distribution, having read every object) is the **only** input that may become
+`B1_FAIL reason=lock_installed_parity`; every open, parse, permission, LSM or
+traversal error from the preflight or from the verifier, and every other nonzero
+verifier rc that did not positively distinguish a mismatch, is `B1_STOP`. A generic
+nonzero verifier rc must never become `B1_FAIL reason=lock_installed_parity`. This
+makes the row-13 traversal guard non-sufficient by construction, exactly as the audit
+requires, and is the same defect class as `B3-GAP-ENV` - an inability-to-evaluate
+misread as a host finding.
+
+**System-manager adjudication rule (Codex audit F3, applied round 1.3).** P0 first
+requires `systemctl`, then separately proves query readiness against the intended
+system manager. Every B2/B4 manager probe captures stdout, stderr, rc and elapsed
+time. Invocation, missing-tool, D-Bus, polkit, PID/mount-namespace, authorization,
+timeout, incomplete-output and parse errors are adjudicated as P0/B2/B4 STOP before
+any stdout is compared. The row-1 round-3 amendment supersedes the original
+`systemctl is-active` route: B2 active reads `ActiveState` from the complete
+`systemctl show` property table, so a valid `inactive` is an evaluable B2 FAIL and
+an unevaluable manager/query/parse result is `B2_STOP ... operation=show ...`.
+`show` and `cat` must likewise return complete, parseable results before a missing
+value or mismatch may FAIL. If readiness cannot be established as `gatea`, the
+affected manager-backed checks move to RPD-VERIFY.
+
+**General probe-output precedence (binding on every interpreted stdout).** Every
+external command and local transport primitive - including `command -v`, `getent`,
+`id`, `lstat`/`stat`, `find`, the unit parser, `ss`, `curl`, `sha256sum`, `readlink`,
+`systemctl`, `mktemp`, the TCP probe, close/bind hashing and every verifier - captures
+stdout, stderr, rc and elapsed time. Timeout,
+invocation/access/traversal errors, complete diagnostics and parse validity are
+adjudicated before stdout is treated as an observation. Defined result statuses such
+as a parser's defined no-match and a valid inactive unit state remain evaluable only when the tool
+actually ran and returned a complete parseable result. Partial or error-path stdout
+is evidence of the attempted probe, never evidence of host drift. For any multi-record
+table the precedence extends past the tool's own status to the table itself: every record
+is parsed to clean EOF and only sanitised counters and flags are recorded while reading,
+so a semantic verdict is reached only once reader diagnostics, record termination and
+grammar have held for the WHOLE table. An early deviant record that is emitted as a FAIL
+before a later record proves the table unparseable converts an inability to evaluate into
+a host-state finding, and the row order of the input then decides the rc - which is the
+Pattern-6 defect this rule exists to forbid.
+
+**Probe execution-environment rule (catalogue Pattern 4).** Evidence-producing
+children run from a fixed trusted working directory with a cleared environment, fixed
+`LC_ALL=C`, a minimal pinned PATH or absolute helper paths, and a run-owned TMPDIR that
+cannot name a protected host directory. The bounding wrapper is **inside** the cleared
+environment, not outside it: the cleared-environment exec comes first and the pinned
+`timeout` is its argument, so the process that decides whether a probe was bounded runs
+under the same cleared environment as the probe it bounds. Each helper is bound by
+non-following kind, numeric ownership and non-group/world-writable mode before
+execution; any accepted symlink has an explicitly preregistered target chain.
+
+Python runs isolated with Python environment variables removed **and with `site` startup
+disabled** (`-I -S`, not `-I` alone: on Python 3.12 `-I` implies `-E`, `-P` and `-s` but
+not `-S`, so `site` still imports and executable `import` lines in `site-packages/*.pth`,
+plus any `sitecustomize`/`usercustomize` module, still run before the intended child
+body). No process may adjudicate its own state: an accepting adjudicator never runs under
+the interpreter of the venv it is judging, because startup code in that venv can print the
+exact accepted result line, exit 0, and write anywhere the caller can write, before the
+intended source is compiled. Both accepting adjudicators - the row-21 status parser and
+the row-19 lock-parity verifier - therefore execute under the separately pinned
+`WPI_TRUSTED_PYTHON` (section 4). Each verifies at run time that
+`sys.flags.isolated` and `sys.flags.no_site` are set and that no `site`,
+`sitecustomize` or `usercustomize` module is present, and refuses to produce a result
+otherwise. Where such an adjudicator needs venv state, that state is supplied as an
+explicit bounded path the trusted process inspects itself; it is never placed on
+`sys.path` and no venv startup configuration is read. This rule binds the unprivileged blocks for evidence
+integrity and binds RPD-VERIFY additionally because its children execute with root
+authority. An inherited PATH, PYTHONPATH, cwd or TMPDIR can never select code or a
+write location for a check.
+
+**Structured-input adjudication rule (catalogue Pattern 5).** JSON, systemd unit
+files and manager properties, `ss` tables, transport TSV, digest sets, mount tables
+and line-oriented diagnostics are parsed under their full declared grammar. Fixed
+strings, regular-expression presence, first-substring-wins and prose errno matching
+cannot prove a structural claim. Parsers consume the complete input, reject duplicate
+or extra structural ambiguity where it changes meaning, and distinguish valid
+no-match from invocation/read/parse failure. Error classification uses a directly
+observed error class where the interface exposes one; ambiguous prose remains STOP.
+
+**Line-reader completion rule (catalogue Pattern 7).** Every reader of
+`TRANSPORT_PLAN.tsv`, digest records, path lists, mount tables or captured multi-line
+probe output distinguishes clean EOF, an unterminated populated final record, and a
+hard read error. It processes a valid populated final record only under the input's
+explicit newline contract, rejects malformed/truncated records, and STOPs on any read
+failure. A shell loop ending because `read` returned nonzero is not evidence of a
+complete scan. Stage 1 must falsify both the no-final-newline and unreadable-source
+cases for every shared reader implementation.
+
+**Interpreter-exec extension (GLM review F1, applied round 1.1).** The recorded host
+state proves the venv tree is `0555` (traverse+read for other) but records no per-file
+execute bit for `<venv>/bin/python`. Executing it is not a privileged action, so B1
+stays INCLUDE - but an exec denial must surface as row 18's dedicated
+`interpreter_not_executable` STOP, never as a version or parity FAIL. A false FAIL
+against a correct host is exactly the B3-GAP-ENV failure shape arriving through a
+different door, and this table exists to make that shape impossible.
+
+**Namespace-binding adjudication rule (Codex audit F2, extended by catalogue pass).**
+Both `curl 127.0.0.1` and `ss -ltn` operate in the *caller's* network namespace, not
+necessarily the service's. If
+PAM, an ssh ForceCommand, or a service wrapper lands the `gatea` login in a private
+netns while PID 1 and the bridge listen in the host namespace, `ss` succeeds without
+a permission error yet observes the wrong namespace - yielding a false `B6_FAIL` (no
+port 8790 listener seen) or, in the mirror case, a false PASS (a matching listener in
+the login namespace concealing a bad set in the service namespace). Tool presence and
+unprivileged socket visibility do not establish namespace identity. The shared row-22
+preflight is therefore evaluated before rows 20-21 despite its display number, and
+rows 20-23 are admissible **only** after the namespace binding is proven. That preflight
+is the **only** authorised departure from the display order: after it holds, the executed
+order is `netns binding -> B5 rows 20-21 -> B6 rows 22-23`, exactly as the
+first-divergence table records them. Moving the whole listener adjudication ahead of rows
+20-21 is a second, unpreregistered inversion that lets a listener FAIL pre-empt an
+independently present endpoint or flag deviation, and is refused (Codex T0 finding 4). The
+binding predicate is:
+`readlink /proc/self/ns/net` (always readable by `gatea`) must equal
+`readlink /proc/<MainPID>/ns/net` (the service's netns identity, MainPID from row 4).
+A mismatch is `B6_STOP reason=netns_mismatch`; an unreadable service netns identity
+(EACCES on `/proc/<pid>/ns/net` for a root-owned service process under ptrace/yama
+gating) is `B6_STOP reason=service_netns_unreadable` and routes the listener-set half
+to RPD-VERIFY (section 10), where a root-authorised channel establishes the binding.
+The B5 status and B6 listener claims are admissible only when the observations are
+proven to be in the same namespace as the service. This service-relative binding is
+in addition to P0's deploy-channel binding of the login domain to the named staging
+guest; neither replaces the other. The operator-side external TCP probe (row 24) is independent
+corroboration and is unaffected - it probes reachability from outside, which holds or
+fails regardless of which namespace `ss` observed.
+
+**Named risks carried into dispatch.**
+
+- **R1** - `WPI_UNIT_FRAGMENT_SHA256` is elided in the matrix (`538c1c60...279bd`).
+  Row 7 cannot be preregistered until the full value is read from the transition
+  inventory. No successor is dispatchable with this unfilled.
+- **R2** - `WPI_LOG_DIR` has a recorded mode but no recorded literal path in the
+  inputs. Row 15 cannot be preregistered until it is pinned from the unit fragment's
+  `ReadWritePaths`/`LogsDirectory`. Deriving it at run time from the same
+  `systemctl show` output the run is asserting against would make row 15 circular.
+- **R3** - MainPID equality (row 4) is a strong predicate precisely because
+  `Restart=no` forbids self-restart; it is also the row most likely to move for a
+  benign reason. It is preregistered as FAIL-with-adjudication so that a benign cause
+  is *established* rather than *assumed*.
+- **R4** - the B5 field names are unobserved (see above).
+- **R5** - "exactly one listener" in the source records is read here as *exactly one
+  bridge listener on 8790*. `sshd` is necessarily also listening, since the run
+  arrives over ssh. Rows 22-23 are therefore scoped to port 8790, and the full
+  listener inventory is captured as evidence rather than asserted against a count.
+  If the source records meant a literal global count of one, that reading is
+  falsified by the transport itself and must be corrected in the successor.
+
+Any `FAIL` is a **STOP requiring Lead adjudication** - a candidate-repair question,
+not a documentation outcome. Any `STOP` from a `stat`, `find`, `grep`, `ss`, `curl`,
+`sha256sum`, `readlink`, `systemctl`, system-bus query, `mktemp` or clock error, or any
+internal open/parse/permission error raised by `verify_lock.py`, stops the stage and
+is never re-read as a PASS. Probe error adjudication always precedes stdout comparison.
+
+**Scope of the WP-I claim, preregistered.** A clean RO stage admits exactly this:
+the running unit is the accepted first-start unit bound to the frozen candidate,
+the complete release and venv walks found no DAC write bits, the installed lock bytes
+match the preregistered lock digest and the completely readable installed-distribution
+set matches that lock, its sandboxing and start-mode pins are effective, its status
+endpoint in the service network namespace reports credential-free DISARMED, and the
+same service namespace has only the preregistered loopback control listener while the
+operator-side probe cannot connect. The write-bit sweep is not a proof against ACL,
+capability, writable-mount or future-mutation mechanisms, and lock/package parity is
+not byte identity of either whole tree. It is **not**
+a full `verify.sh` run (that verifier is pre-start and post-Gate-A fails by design -
+G2), **not** a permissions proof of the root-owned metadata surface (deferred,
+section 10), **not** a SIGTERM/reboot/rollback/backup proof (Group C, section 9),
+and **not** WP-L, WP-A or Audit-2 completion.
+
+## 9. What is deliberately NOT preregistered
+
+Nothing in this section has an executable form anywhere in the run kit. Each item is
+listed with the dependency that blocks it, exactly as the Stage 2 template does for
+C1-C5.
+
+**Group C - mutating checks. No block, no command, no argv, no conditional branch.**
+
+- **C1 (graceful SIGTERM clean shutdown, WP0 I-R4).** Blocked twice over: it needs an
+  explicitly named authority lift for `systemctl stop` plus the recovery start, and a
+  budget lift; and it has an open **COMMAND GAP** - no verifier asserts "no dangling
+  state after SIGTERM". A bounded post-stop evidence procedure must be designed
+  locally first. Do not improvise one.
+- **C2 (reboot DISARMED).** Blocked on reboot authority + budget, and on a definition
+  that does not yet exist: scenario A (plain reboot from the current unmasked state,
+  expecting inactive+unmasked) and scenario B (separately authorised stop+mask, then
+  reboot, expecting inactive+masked) are different predicates and one must be chosen
+  and preregistered before anything runs. `verify.sh` is a pre-start masked-mode
+  verifier and is not the post-reboot instrument. **COMMAND GAP.**
+- **C3 (WAL-consistent backup/verify/restore on a temporary copy).** Blocked on
+  authority + budget, and on a **COMMAND GAP confirmed at the candidate**:
+  `wal_state_bundle.py` exposes exactly two subcommands, `create` and `verify`. There
+  is **no `restore` subcommand**, so the restore-into-temp wrapper does not exist and
+  must be authored locally. Note also that the live DB lives under a directory
+  `gatea` cannot read at all.
+- **C4 (rollback stop+mask, and release-rebind).** Blocked on KVM2-P4-08
+  authorisation + budget. The stop+mask path additionally requires the accepted
+  state-manifest hash from C3, which `rollback.sh` makes mandatory (`:57-58`). The
+  release-rebind path has an **unmet prerequisite** (G3): only candidate
+  `2ce41e34...321b` is installed, and the previous release is already absent. Do not
+  invent a target release.
+- **C5 (runtime egress / TESTNET-only / no-mainnet / Telegram disposition).** Blocked
+  on credential and broker/TESTNET network authority that does not exist, and
+  **structurally unobtainable from the current runtime**: at
+  `2ce41e34...321b:IBKR_PAPER_BRIDGE/bridge/app.py:149` the credential-free DISARMED
+  branch never reaches broker construction, so no broker egress exists to capture. A
+  future capture would require a different, separately authorised start mode. ARM
+  remains forbidden, and any future capture must remain DISARMED.
+
+**DEFER-ROOT-SIDE - privileged checks routed to RPD-VERIFY (section 10), not to the
+run plan.**
+
+- Existence, name, mode and ownership of the env file under `/etc/mtc-bridge`. The
+  `bridge.env` vs `mtc-bridge.env` naming question from the Stage 2 expectations
+  table remains **unresolved, not triggered**, and this run plan does not adjudicate
+  it - permission denial precedes the existence question, and it will precede it
+  again for any unprivileged successor.
+- `/etc/mtc-bridge/install_manifest.json`: the release-SHA binding, the
+  release-manifest binding, and the `requirements_lock_sha256` corroboration of B1a.
+- Any per-file mode or ownership assertion *inside* the state and log directories.
+- `ufw status` (B6's firewall half).
+- B5 rows 20-21 and B6 rows 22-23 if the unprivileged login cannot bind its network
+  namespace to the service MainPID namespace; a loopback `curl` result from an
+  unbound namespace is no more admissible than an unbound `ss` inventory.
+- B2 rows 1-5 and B4 rows 8-9 if `gatea` cannot establish P0 system-manager query
+  readiness because `systemctl`, the system bus, the intended PID/mount namespace or
+  D-Bus/polkit authorization is unavailable. Direct fragment reads in B2 rows 6-7
+  remain unprivileged; manager-backed state/property claims require RPD-VERIFY.
+
+**Everything the Stage 2 template excludes, excluded here on the same terms.**
+
+- No mutating step of any kind: no service stop, start, enable, disable, mask or
+  unmask; no reboot; no rollback rehearsal; no unit write; no chmod/chown of any host
+  object outside the run's own create-once tree.
+- No credential read, no `POST /api/arm`, no broker/exchange/order/TESTNET/mainnet
+  action, no master merge, no KVM2/WP-V action, no deletion of the old payload
+  archive, no host reprovisioning.
+- No `sudo`, and no probe for `sudo` (section 0, rule 3).
+- No `git add`, `git commit`, `git push`, branch or worktree action: Git sequencing
+  belongs to the Lead.
+
+## 10. RPD-VERIFY: the root-side channel for deferred checks
+
+### 10.1 Unprivileged path allowlist
+
+The RO stage may reference only these host paths. The list is exhaustive; anything
+else is a Stage-1 freeze failure.
+
+| Path pattern | Recorded mode/owner | Why `gatea` can reach it |
+|---|---|---|
+| `/opt/mtc-bridge/releases/2ce41e34...321b/**` | numeric `0555 0:0` at the root (`root:root` diagnostic only) | root is `r-x` for other; complete traversal/readability and absence of DAC write bits are separate rows 12-14 predicates |
+| `/opt/mtc-bridge/venvs/2ce41e34...321b/**` | `0555` | same |
+| `/usr/local/lib/systemd/system/mtc-bridge-first-start.service` | `0644`, 3736 B | world-readable regular file |
+| `/etc/mtc-bridge` **(terminal only)** | numeric `0750 0:0` | `lstat` of the directory needs search on `/` and `/etc` (both world-searchable), not on the target itself |
+| `<WPI_STATE_DIR>` **(terminal only)** | numeric `0750 999:988` | same argument via `/var/lib`; `mtc-bridge` name diagnostic only |
+| `<WPI_LOG_DIR>` **(terminal only)** | numeric `0750 999:988` | same argument via the log parent; `mtc-bridge` name diagnostic only |
+| `<REMOTE_BASE>/**` | `0700`, P0-resolved numeric euid:egid | the run's own create-once tree; `gatea:gatea` diagnostic only |
+| `127.0.0.1:8790` | loopback listener | loopback is not privilege-gated for a local user |
+
+"Terminal only" is the whole B3-GAP-ENV repair in two words: the path may appear as a
+complete `stat` argument and may never appear as a prefix.
+
+The list is exhaustive for **write** opens as well as reads, and `/dev/null` is
+deliberately not on it. Round 5 removed the RO block's three write opens of `/dev/null`:
+the two `command -v ... >/dev/null 2>&1` prerequisite probes became a non-overridable
+`builtin type -t` function-type check, which needs no redirection at all and is strictly
+narrower than what it replaced, and the `noclobber` create-once probe now closes fd 2
+(`2>&-`) instead of redirecting it. A block that opens a path outside this table for
+writing has left its declared scope even when the path is inert.
+
+Round 6 added the other half of that claim: **which object** a permitted write reaches.
+`noclobber` proves only that a leaf name did not exist at allocation, so a leaf replaced
+between the allocation and the write is written through the substituted name, and the run
+continues with no STOP - demonstrated on the round-5 bytes. Every shell-side write in the
+RO block therefore now goes to the descriptor returned by the `O_CREAT|O_EXCL` open that
+created the leaf, and no leaf is re-opened by name for writing. The one exception is the
+status-body leaf, because `curl --output <path>` is handed a name rather than a descriptor;
+it stays create-once allocated and re-opened by curl, and that residual is recorded rather
+than claimed away.
+
+Round 7 answers the read side of the same question, for the one place a row makes a claim
+about it. Row 22 states that the byte string adjudicated is the byte string captured; while
+the listener reader re-opened the leaf by name that sentence was false, and an executed
+fixture that replaced the name between the child's exit and the read made the row PASS on
+bytes the child never wrote. The listener inventory is therefore read through a descriptor
+re-derived from the capture's own creating write descriptor (`/dev/fd/<n>`), so no name is
+resolved after the child ran. Every other reader still opens by name - and no row claims
+byte identity for those: what the block establishes about their content is exactly what
+their record grammar establishes, which is why each of them STOPs on a record it cannot
+represent byte for byte rather than adjudicating it.
+
+### 10.2 Path-scope proof (Stage 1 gate)
+
+Stage 1 must emit, per frozen block, the sorted set of every host path that can reach a
+filesystem or network primitive after constant and variable expansion, and must show
+every entry inside section 10.1. A literal-string scan is supplemental only: it misses
+concatenated variables, command substitutions, arrays, sourced values and dynamically
+constructed prefixes. The accepted proof therefore parses the complete shell input,
+rejects unresolved/dynamic path construction, proves every path-bearing argument is
+derived only from preregistered constants, expands those constants, and checks the
+resulting closed set against section 10.1. It also falsifies a forbidden path assembled
+from separately harmless tokens and must reject it. The proof is recorded in the Stage
+1 record with the exact command and real RED/GREEN output, and the archive is not frozen
+until it passes. This is a static check over frozen bytes, so it cannot be satisfied by
+a run-time guard and cannot be skipped by a run-time branch.
+
+The check `RP1-B3.sh` failed tonight would have failed this proof before transport.
+
+### 10.3 RPD-VERIFY pattern
+
+A deferred check is discharged root-side at deploy time, not by widening this run:
+
+1. A root-authorised channel (deploy-time hook, or a separately authorised root
+   session) executes the check and writes its output plus the exact command that
+   produced it. Every child process is part of the privileged trusted computing base:
+   the channel pins and verifies absolute helper/interpreter paths, non-symlink kind,
+   numeric `0:0` ownership and non-group/world-writable mode; clears inherited
+   environment variables (including PATH, Python variables and TMPDIR); uses an
+   isolated interpreter mode and fixed trusted working directory where applicable;
+   and creates no temporary file under a protected host path. If any of those
+   preconditions cannot be proved, RPD-VERIFY STOPs without executing the child.
+2. The record is hashed at the point of production, by the producing channel.
+3. The record reaches the unprivileged verifier by one of two routes, and **which
+   route is used is itself a preregistered decision**:
+   - **(a) operator-side transport** - the root channel returns the record out of
+     band, and it is bound in the operator record. No host mutation.
+   - **(b) deposit at a world-readable path** - e.g. numeric `0444 0:0` under a
+     preregistered directory outside the protected metadata dirs, which the
+     unprivileged run then reads and binds. This **creates a file on the host** and
+     is therefore a mutation requiring its own authority; it is not available under
+     the current envelope.
+4. The unprivileged run **reads and binds** the record; it never re-derives the
+   predicate, because it cannot, and a check that appears to re-derive what it is
+   actually reading back is worse than no check.
+
+Both routes are named here so that the successor picks one deliberately. Neither is
+authorised now, and route (b)'s deposit path is not preregistered in this draft.
+
+## 11. Immutability rules
+
+The successor of this document is void, and a **new** one with fresh RUNIDs is
+required, if any of the following changes: any hash in section 3 or 4; the route,
+user, identity path or ssh options in section 5; any path in section 1 or section
+10.1; either RUNID or stage id; any pinned value in section 2; or the op list in
+section 5. In particular, **if the staging VM's IP address is no longer
+`172.24.55.233`, the preregistration does not describe the run** - the argv is
+pinned, and editing it invalidates `TRANSPORT_PLAN.tsv`, whose digest the runner
+pins, which is the intended failure mode rather than a silent edit.
+
+Two rules are added for WP-I, both from tonight:
+
+- **The P0 result is part of the immutability surface.** If P0 reports an executing
+  identity or capability set different from the ledger's premise - including a
+  *wider* one - the RO stage does not run under this preregistration. The feasibility
+  ledger is an argument from a specific identity against specific recorded modes; a
+  different identity is a different argument.
+- **A filled `<PIN-BEFORE-DISPATCH: ...>` value is frozen at the moment it is filled,
+  and is filled from the cited record only.** Filling one from host output would make
+  the run attest to a value it read from the object under test.
+
+A failed allocation burns its RUNID. There is no retry pool and no second RUNID
+preregistered for either stage.
+
+## 12. Safety state at the moment of this draft
+
+- SSH/SCP/remote invocation count: **0**
+- Staging host contact: **none**; no socket opened, no process spawned toward it, no
+  TCP connect attempted, and no deploy-channel domain attestation requested or
+  produced (op 06 and the attestation prerequisite are described, not performed)
+- RUNIDs minted: **0**. Unit ids minted: **0**. Record roots created: **0**. Remote
+  trees created: **0**
+- Blocks authored, built or frozen: **0**; `runkit.tar` for WP-I: does not exist
+- Service stop/start/enable/mask, reboot, rollback: **none**
+- Credential read, ARM, order, broker/exchange, TESTNET/mainnet: **none**
+- A3 re-derivation, B1, B1a, B2, B3, B4, B5, B6 execution: **none**
+- C1, C2, C3, C4, C5 execution: **none**, and no executable form of any of them exists
+  in this draft
+- `sudo` invoked or probed: **none**
+- Repository writes: confined to the `WPI_PREREG_DRAFT_ROUND1` directory - the
+  round-1 files plus this amended draft and `WPI_CATALOGUE_PASS_CODEX_2026-08-10.md`.
+  No file outside it was created,
+  modified or deleted; no `git add`, `commit`, `push`, checkout, branch or worktree
+  action was performed
+- Files read for the round-1.4 catalogue task: its kickoff, the ten-pattern catalogue
+  and this draft; repository-mandated onboarding was read before task execution. No
+  handoff or `GATE_A_A*` file was read for this pass
+
+This draft grants no authority. It grants only a *shape* for a preregistration that
+does not yet exist, over a run kit that has not been built, for a run that is
+budget-blocked and authority-blocked at section 1 of the matrix.
+
+Verification of every feasibility call and every expectation row is in `SELF_QA.md`;
+the per-check ledger is `WPI_CHECK_FEASIBILITY.tsv`.

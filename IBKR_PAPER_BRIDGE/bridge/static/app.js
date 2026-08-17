@@ -18,6 +18,7 @@ function activatePage(page) {
   const navNode = document.querySelector(`[data-page="${page}"]`);
   if (pageNode) pageNode.classList.add("active");
   if (navNode) navNode.classList.add("active");
+  if (page === "help") ensureHelp();
 }
 
 async function api(path, options = {}) {
@@ -264,6 +265,353 @@ async function sendState(path, confirmRequired = false) {
   await api(path, { method: "POST", headers });
   await refresh();
 }
+
+/* ---------------------------------------------------------------------------
+ * Help / System Map
+ *
+ * Everything below renders from ONE machine-readable knowledge source
+ * (/static/help_map.json), which is also what a future AI agent reads. No
+ * explanatory fact is hardcoded here: this file only decides layout. Every
+ * value reaches the document through textContent, never through markup, which
+ * keeps the existing static safety contract intact.
+ * ------------------------------------------------------------------------- */
+
+const HELP_SOURCE = "/static/help_map.json";
+
+const help = {
+  data: null,
+  status: "idle", // idle | loading | ready | failed
+  technical: false,
+  selected: null,
+  inbound: new Map(),
+};
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined && text !== null) node.textContent = text;
+  return node;
+}
+
+function helpComponent(id) {
+  if (!help.data) return null;
+  return help.data.components.find((component) => component.id === id) || null;
+}
+
+function helpStatusMeta(id) {
+  const found = help.data.statuses.find((status) => status.id === id);
+  return found || { id, label: id, tone: "muted", meaning: "" };
+}
+
+function helpKindMeta(id) {
+  const kinds = help.data.connection_kinds || [];
+  const found = kinds.find((kind) => kind.id === id);
+  return found || { id, label: id, meaning: "" };
+}
+
+function helpStatusBadge(statusId) {
+  const meta = helpStatusMeta(statusId);
+  const badge = el("span", `help-badge tone-${meta.tone}`, meta.label);
+  badge.title = meta.meaning;
+  return badge;
+}
+
+function ensureHelp() {
+  if (help.status === "loading" || help.status === "ready") return;
+  help.status = "loading";
+  setText("helpSubtitle", "Loading the system map...");
+  fetch(HELP_SOURCE)
+    .then((response) => {
+      if (!response.ok) throw new Error(`${HELP_SOURCE} ${response.status}`);
+      return response.json();
+    })
+    .then((payload) => {
+      help.data = payload;
+      help.status = "ready";
+      buildHelpIndex();
+      renderHelp();
+    })
+    .catch((error) => {
+      help.status = "failed";
+      setText(
+        "helpSubtitle",
+        `The system map could not be loaded (${error.message}). The rest of the dashboard is unaffected.`,
+      );
+    });
+}
+
+function buildHelpIndex() {
+  help.inbound = new Map();
+  help.data.components.forEach((component) => {
+    (component.connections || []).forEach((connection) => {
+      if (!help.inbound.has(connection.to)) help.inbound.set(connection.to, []);
+      help.inbound.get(connection.to).push({
+        from: component.id,
+        label: connection.label,
+        kind: connection.kind,
+      });
+    });
+  });
+}
+
+function renderHelp() {
+  setText("helpSubtitle", help.data.subtitle);
+  setText("helpUpdated", `updated ${help.data.updated}`);
+  setText("helpCount", `${help.data.components.length} components`);
+  renderHelpLegend();
+  renderHelpNotes();
+  renderHelpIdentities();
+  renderHelpPlanes();
+  renderHelpFlows();
+  renderHelpReadiness();
+  renderHelpGlossary();
+}
+
+function renderHelpLegend() {
+  const statusBox = byId("helpLegendStatus");
+  statusBox.replaceChildren();
+  help.data.statuses.forEach((status) => {
+    const row = el("div", "help-legend-row");
+    row.appendChild(helpStatusBadge(status.id));
+    row.appendChild(el("span", "help-legend-text", status.meaning));
+    statusBox.appendChild(row);
+  });
+
+  const kindBox = byId("helpLegendKinds");
+  kindBox.replaceChildren();
+  (help.data.connection_kinds || []).forEach((kind) => {
+    const row = el("div", "help-legend-row");
+    row.appendChild(el("span", `help-kind kind-${kind.id}`, kind.label));
+    row.appendChild(el("span", "help-legend-text", kind.meaning));
+    kindBox.appendChild(row);
+  });
+}
+
+function renderHelpNotes() {
+  fillList("helpHowTo", help.data.how_to_read);
+  fillList("helpTruthRules", help.data.truth_rules);
+}
+
+function fillList(id, items) {
+  const list = byId(id);
+  if (!list) return;
+  list.replaceChildren();
+  (items || []).forEach((item) => list.appendChild(el("li", null, item)));
+}
+
+function renderHelpIdentities() {
+  const box = byId("helpIdentities");
+  box.replaceChildren();
+  (help.data.identities || []).forEach((identity) => {
+    const card = el("article", "help-identity");
+    card.appendChild(el("strong", null, identity.name));
+    card.appendChild(el("p", null, identity.authority));
+    card.appendChild(helpLinkButton(identity.component, "Open this component"));
+    box.appendChild(card);
+  });
+}
+
+function helpLinkButton(componentId, label) {
+  const target = helpComponent(componentId);
+  const button = el("button", "help-link", label || (target ? target.name : componentId));
+  button.type = "button";
+  button.addEventListener("click", () => selectHelpComponent(componentId, true));
+  return button;
+}
+
+function renderHelpPlanes() {
+  const box = byId("helpPlanes");
+  box.replaceChildren();
+  help.data.planes.forEach((plane) => {
+    const section = el("section", "help-plane");
+    section.appendChild(el("h2", null, plane.name));
+    section.appendChild(el("p", "help-plane-summary", plane.summary));
+    section.appendChild(el("p", "help-plane-boundary", `Boundary: ${plane.boundary}`));
+    const grid = el("div", "help-grid");
+    help.data.components
+      .filter((component) => component.plane === plane.id)
+      .forEach((component) => grid.appendChild(helpComponentButton(component)));
+    section.appendChild(grid);
+    box.appendChild(section);
+  });
+}
+
+function helpComponentButton(component) {
+  const meta = helpStatusMeta(component.status);
+  const button = el("button", `help-node tone-${meta.tone}`);
+  button.type = "button";
+  button.dataset.component = component.id;
+  button.setAttribute("aria-pressed", String(help.selected === component.id));
+  button.setAttribute("aria-controls", "helpDetail");
+  const head = el("span", "help-node-head");
+  head.appendChild(el("span", "help-node-name", component.name));
+  head.appendChild(helpStatusBadge(component.status));
+  button.appendChild(head);
+  button.appendChild(el("span", "help-node-line", component.one_liner));
+  button.addEventListener("click", () => selectHelpComponent(component.id, true));
+  return button;
+}
+
+function selectHelpComponent(componentId, moveFocus) {
+  const component = helpComponent(componentId);
+  if (!component) return;
+  help.selected = componentId;
+  document.querySelectorAll(".help-node").forEach((node) => {
+    node.setAttribute("aria-pressed", String(node.dataset.component === componentId));
+  });
+  renderHelpDetail(component);
+  if (moveFocus) {
+    const panel = byId("helpDetail");
+    panel.focus();
+    panel.scrollIntoView({ block: "nearest" });
+  }
+}
+
+function renderHelpDetail(component) {
+  const empty = byId("helpDetailEmpty");
+  if (empty) empty.hidden = true;
+  const body = byId("helpDetailBody");
+  body.replaceChildren();
+
+  const header = el("header", "help-detail-head");
+  const title = el("h2", null, component.name);
+  header.appendChild(title);
+  header.appendChild(helpStatusBadge(component.status));
+  body.appendChild(header);
+
+  const plane = help.data.planes.find((item) => item.id === component.plane);
+  body.appendChild(el("p", "help-detail-plane", plane ? plane.name : component.plane));
+  body.appendChild(el("p", "help-detail-line", component.one_liner));
+
+  body.appendChild(detailSection("Current status", null, [component.status_detail]));
+  body.appendChild(detailSection("What it is for", component.purpose, null));
+  body.appendChild(detailSection("What it does", null, component.does));
+  body.appendChild(detailSection("What it does NOT do", null, component.does_not, "help-negative"));
+  body.appendChild(renderHelpConnections(component));
+  body.appendChild(detailSection("Responsibility boundaries and overlaps", null, component.boundaries));
+  body.appendChild(detailSection("Safety notes", null, component.safety, "help-safety"));
+  body.appendChild(detailSection("Source paths", null, component.sources, "help-paths"));
+  if (help.technical) {
+    body.appendChild(detailSection("Technical detail", null, component.technical, "help-technical"));
+  }
+}
+
+function detailSection(heading, paragraph, items, className) {
+  const section = el("section", className ? `help-section ${className}` : "help-section");
+  section.appendChild(el("h3", null, heading));
+  if (paragraph) section.appendChild(el("p", null, paragraph));
+  if (items && items.length) {
+    const list = el("ul");
+    items.forEach((item) => list.appendChild(el("li", null, item)));
+    section.appendChild(list);
+  }
+  return section;
+}
+
+function renderHelpConnections(component) {
+  const section = el("section", "help-section");
+  section.appendChild(el("h3", null, "What connects to it"));
+
+  const outgoing = component.connections || [];
+  section.appendChild(el("h4", null, "From this component"));
+  section.appendChild(connectionList(outgoing.map((connection) => ({
+    other: connection.to,
+    label: connection.label,
+    kind: connection.kind,
+  }))));
+
+  const inbound = help.inbound.get(component.id) || [];
+  section.appendChild(el("h4", null, "Toward this component"));
+  section.appendChild(connectionList(inbound.map((connection) => ({
+    other: connection.from,
+    label: connection.label,
+    kind: connection.kind,
+  }))));
+  return section;
+}
+
+function connectionList(entries) {
+  if (!entries.length) return el("p", "help-empty", "None recorded.");
+  const list = el("ul", "help-connections");
+  entries.forEach((entry) => {
+    const target = helpComponent(entry.other);
+    const item = el("li", `help-connection kind-${entry.kind}`);
+    item.appendChild(el("span", "help-kind", helpKindMeta(entry.kind).label));
+    item.appendChild(el("span", "help-connection-label", entry.label));
+    item.appendChild(helpLinkButton(entry.other, target ? target.name : entry.other));
+    list.appendChild(item);
+  });
+  return list;
+}
+
+function renderHelpFlows() {
+  const box = byId("helpFlows");
+  box.replaceChildren();
+  help.data.flows.forEach((flow) => {
+    const article = el("article", `help-flow kind-${flow.kind}`);
+    article.appendChild(el("h3", null, flow.title));
+    const chain = el("div", "help-flow-chain");
+    flow.steps.forEach((step, index) => {
+      if (index > 0) {
+        chain.appendChild(el("span", "help-flow-arrow", flow.kind === "blocked" ? "X" : "->"));
+      }
+      const chip = el("button", `help-chip state-${step.state}`);
+      chip.type = "button";
+      chip.appendChild(el("span", "help-chip-label", step.label));
+      if (step.state !== "current") {
+        chip.appendChild(el("span", "help-chip-state", step.state === "blocked" ? "NO AUTHORITY" : "NOT IN PLACE"));
+      }
+      chip.addEventListener("click", () => selectHelpComponent(step.component, true));
+      chain.appendChild(chip);
+    });
+    article.appendChild(chain);
+    article.appendChild(el("p", "help-flow-note", flow.note));
+    box.appendChild(article);
+  });
+}
+
+function renderHelpReadiness() {
+  const box = byId("helpReadiness");
+  box.replaceChildren();
+  help.data.readiness.forEach((row) => {
+    const card = el("article", "help-readiness-card");
+    const head = el("div", "help-readiness-head");
+    head.appendChild(el("strong", null, row.area));
+    head.appendChild(helpStatusBadge(row.status));
+    card.appendChild(head);
+    const built = el("div", "help-readiness-cell");
+    built.appendChild(el("h4", null, "Built now"));
+    built.appendChild(el("p", null, row.built_now));
+    card.appendChild(built);
+    const todo = el("div", "help-readiness-cell help-negative");
+    todo.appendChild(el("h4", null, "Still required"));
+    todo.appendChild(el("p", null, row.still_required));
+    card.appendChild(todo);
+    box.appendChild(card);
+  });
+}
+
+function renderHelpGlossary() {
+  const box = byId("helpGlossary");
+  box.replaceChildren();
+  (help.data.glossary || []).forEach((entry) => {
+    box.appendChild(el("dt", null, entry.term));
+    box.appendChild(el("dd", null, entry.plain));
+  });
+}
+
+function toggleHelpTechnical() {
+  help.technical = !help.technical;
+  const button = byId("helpDetailToggle");
+  button.setAttribute("aria-pressed", String(help.technical));
+  button.textContent = `Technical detail: ${help.technical ? "on" : "off"}`;
+  if (help.selected) {
+    const component = helpComponent(help.selected);
+    if (component) renderHelpDetail(component);
+  }
+}
+
+byId("helpDetailToggle").addEventListener("click", toggleHelpTechnical);
 
 document.querySelectorAll(".nav").forEach((button) => {
   button.addEventListener("click", () => activatePage(button.dataset.page));

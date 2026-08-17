@@ -1,0 +1,39 @@
+{
+  "schema": "sec102-composite-plan-v1",
+  "stage": "freeze",
+  "composites": [
+    {
+      "id": "fixture-zero",
+      "entrypoint": "entry",
+      "members": [
+        {
+          "id": "entry",
+          "kind": "shell",
+          "path": "entry_zero_facts.sh",
+          "deploy_path": "/safe/fixture/entry.sh"
+        }
+      ],
+      "edges": [],
+      "allocation_requirements": [],
+      "allocations": [],
+      "proof": {
+        "member_pins": [
+          {
+            "member": "entry",
+            "bytes": 25,
+            "sha256": "4c2bcddb50fe4df743e976de7a056687baaf10837c43bd7c13490911e18bb2b8"
+          }
+        ],
+        "constants": "constants.env",
+        "constants_bytes": 126,
+        "constants_sha256": "63d21caa85c6418449b3d5ccfba5b2990144709ece2ab2c2d0ddf2dfce35a572",
+        "allowlist": "allowlist.txt",
+        "allowlist_bytes": 17,
+        "allowlist_sha256": "a011e924851560c9b91b92c2d3802a893b3d96fbff47efc2dd5db560f371a62b",
+        "prover": "pathscope_prover.py",
+        "prover_bytes": 122446,
+        "prover_sha256": "890016f0b9a8cde4eed33f8733f69055471b07c6096f6bc07450457e6c52af1d"
+      }
+    }
+  ]
+}

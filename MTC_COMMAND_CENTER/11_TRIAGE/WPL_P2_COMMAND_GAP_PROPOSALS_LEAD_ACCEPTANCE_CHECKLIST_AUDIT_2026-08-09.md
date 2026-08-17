@@ -1,0 +1,74 @@
+# WP-L P2 Lead acceptance checklist — audit and repair record (2026-08-09)
+
+> **SUPERSEDED (2026-08-09):** post-acceptance candidate-source audit reproduced a required defect in the
+> no-rebind-field expectation. Byte-exact checklist `456968bb` is no longer accepted; the repaired
+> checklist requires fresh audit. See
+> `WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+
+## Round 1 verdict
+
+**REQUEST_CHANGES.** GLM-5.2 executed a read-only four-file audit of checklist commit `313bc187` and
+found one required source-anchor defect. DeepSeek V4 Flash via ClinePass did not execute because the local
+route returned the known hook-payload failure and no subscription-model access; isolated `C:\WP2CL`
+remained clean at `313bc187`.
+
+This is checklist audit round 1/3. It is separate from the future proposal implementation cycle, which
+remains at 0/3 because no Claude proposal edit has run.
+
+## Required finding and Lead reproduction
+
+Checklist §2 named candidate path `IBKR_PAPER_BRIDGE/deploy/linux/common.sh`. Lead independently ran exact
+candidate object checks:
+
+```text
+git cat-file -e 2ce41e34:IBKR_PAPER_BRIDGE/deploy/linux/common.sh       -> rc 128, path absent
+git cat-file -e 2ce41e34:IBKR_PAPER_BRIDGE/deploy/linux/lib/common.sh   -> rc 0
+```
+
+The real candidate symbol is `assert_no_writable_paths` in
+`IBKR_PAPER_BRIDGE/deploy/linux/lib/common.sh`; its `find` predicate is `-perm /222`, and candidate
+`verify.sh` calls it for release and venv roots. The finding reproduces and is binding.
+
+## Bounded round-1 repair
+
+The checklist now:
+
+1. names the exact `deploy/linux/lib/common.sh` path and symbol/predicate;
+2. records that POSIX fixture rows require proven Git Bash/WSL or equivalent Python stubs, otherwise
+   inability to execute remains `BLOCK`;
+3. names the protected audit floor inline as `claude-opus-5` xhigh plus `gpt-5.6-sol` xhigh and no
+   unresolved reproduced required finding from any canonical auditor.
+
+Items 2-3 were optional audit nits; both tighten standalone reproducibility without changing authority.
+
+## Current status and next steps
+
+Fresh GLM-5.2 re-audit of exact repaired commit
+`456968bbc694c90d7c30878059a96020c298d8a7` returned **PASS-WITH-NITS**, zero required repairs, and clean
+Git status. It independently reproduced the corrected candidate path, symbol, `/222` predicate and
+`verify.sh` call sites; both optional round-1 hardenings were confirmed correct. The checklist is accepted
+as the Lead verification contract for the future proposal repair.
+
+One optional wording nit remains unapplied: clarify that a Python subprocess fixture must exercise the
+real candidate predicate/tooling under stub control, not reimplement predicate logic. Existing D026 and
+non-execution=`BLOCK` language already prevents false acceptance. It is intentionally left unapplied so
+the accepted SHA remains byte-identical to the re-audited artifact.
+
+Next: dispatch the separately audited Claude proposal-repair prompt at the first account-capacity window,
+freeze its one-file diff, and execute the accepted checklist. All host/trading/deployment holds remain.
+
+## Routing record
+
+```text
+Classification          : Tier 4 protected Bridge checklist audit
+Protected               : yes — persistence, stop/reboot, rollback and broker boundaries
+Model/provider          : GLM-5.2 via Z.AI Coding Plan; DeepSeek ClinePass non-execution
+Cheaper-model rationale : owner exact-model request plus protected cross-cutting contract
+Exact paths             : checklist, repair spec, findings audit, AGENTS.md
+Context/tool budget     : four-file read-only audit; GLM completed in 319 seconds
+Fallback                : Lead reproduction; no secondary protected implementation
+External API credits    : no
+```
+
+Re-audit routing was the same Tier 4 GLM-5.2 Coding Plan route with a five-file compact allowlist; it
+completed in 210 seconds. DeepSeek remained supplemental non-execution.

@@ -1,0 +1,13 @@
+scp
+-i
+C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519
+-o
+BatchMode=yes
+-o
+StrictHostKeyChecking=yes
+-o
+IdentitiesOnly=yes
+-o
+ConnectTimeout=20
+R4_5_runner.py
+gatea@172.24.55.233:/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/R4_5_runner.py

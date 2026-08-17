@@ -16,9 +16,9 @@ The **IMPLEMENTER** (the counterpart flagship) may — only when useful and with
 
 **Lead responsibilities (non-delegable):**
 1. Independently inspect the actual diff/files, check scope and protected surfaces, and run or reproduce proportionate validation — never accept the implementer's self-report alone.
-2. On any failure: send a focused repair prompt to the same counterpart implementer and repeat until an accepting verdict or a concrete blocker. Maximum 3 repair/re-audit rounds; after the third non-accepting verdict, stop and report to Barış.
-3. Repo hygiene may begin only after an accepting audit verdict (PASS or PASS-WITH-NITS) — only where task/user authorization permits — commit/push and proceed to the next approved task.
-4. Gate 5 is the lead's independent cross-model audit of the implementer's work, not mere report review.
+2. On any failure: send a focused repair prompt to the same counterpart implementer and repeat until an accepting verdict or a concrete blocker. Repair/re-audit rounds are capped per audit tier (see AUDIT TIER POLICY — PERMANENT DEFAULT): T0=3, T1=2, T2=1, T3=0; after the cap is exhausted with no accepting verdict, stop and report to Barış.
+3. Repo hygiene may begin only after the tier-required acceptance (PASS/PASS-WITH-NITS, or recorded T3 self-verification) — only where task/user authorization permits — commit/push and proceed to the next approved task.
+4. When the tier requires model review, Gate 5 is the lead's independent audit of the implementer's work, not mere report review.
 
 **Implementer responsibilities:** implementation + self-QA (Gates 3–4). Scope, acceptance, repair loop, and authorized Git sequencing belong to the lead.
 
@@ -26,13 +26,35 @@ The **IMPLEMENTER** (the counterpart flagship) may — only when useful and with
 
 Hard safety gates remain unchanged: no Pine/parity/MTC/trading changes without explicit approval, no destructive Git, no secrets, no deployment/live action without explicit authorization.
 
+## AUDIT TIER POLICY — PERMANENT DEFAULT (MANDATORY)
+
+Every Gate-1 scope must classify its audit tier as **T0 / T1 / T2 / T3** before audit dispatch and record that classification. This is the permanent repo-wide default (owner-ratified 2026-08-10; rationale/history in `MTC_COMMAND_CENTER/11_TRIAGE/OWNER_DECISION_AUDIT_TIERS_2026-08-09.md`). The tier controls auditor count, effort, cadence, and round cap.
+
+| Tier | Surfaces | Auditors | Effort | Max rounds |
+|------|----------|----------|--------|------------|
+| **T0** | Economic/live/host-touching: deploy scripts, systemd units, `verify.sh`, credential/secret handling, ARM path, broker/exchange code, teardown scripts, anything touching staging/production hosts | 2 independent flagships: `claude-opus-5` + Codex `gpt-5.6-sol` | xhigh | 3 |
+| **T1** | Non-economic product code/scripts: bridge logic, tests, tools, run-kit scripts | 1 flagship (alternate Claude/Codex per round) + GLM-5.2 second opinion ONLY if the flagship raises findings or the diff exceeds ~300 lines | high | 2 |
+| **T2** | Docs/evidence: docs, handoffs, provenance records, prereg text, run-kit documentation, evidence write-ups | Single reviewer, single round. GLM-5.2 preferred; DeepSeek acceptable; flagship at medium effort only if neither is available | medium | 1 |
+| **T3** | Checkpoints, indexes, format/status stamps, and prompts/checklists/dispatch packages/repair specs/process artifacts | Implementer self-verification only. No model audit | — | 0 |
+
+**Overlap rule:** the highest applicable risk tier wins (`T0 > T1 > T2 > T3`). In particular, a run-kit script intended to contact or execute on staging/production is T0; a bounded local-only non-economic script can be T1.
+
+**Identity escalation:** a T2 finding that touches deployed-artifact identity (SHAs, hashes, candidate identity, release manifests) escalates **that finding only** to a single-flagship T1 verification — never a full multi-model round.
+
+**Cadence:** model audits run at work-package boundaries, not per-step. T0 surface changes are the sole exception — they are audited immediately regardless of cadence.
+
+**Precedence:** the tier policy controls auditor count, effort, cadence, and round cap, and supersedes any blanket four-auditor invocation. The canonical roster below controls exact model identity, fresh-session, execution, finding, and verdict standards for the auditor slots actually invoked. An explicit later owner task contract may override. Agents must not silently add audit rounds to T1/T2/T3.
+
 ## CANONICAL AUDIT ROSTER — Gate 5 and Gate 6 (MANDATORY)
+
+This roster is the **identity/quality authority** for the auditor slots actually invoked — it is **not** a universal headcount. Which slots are invoked (and how many) is decided by the AUDIT TIER POLICY — PERMANENT DEFAULT above.
 
 Define once here; prompts may cross-reference but must include enough detail to be safely copy-pasted standalone.
 
 ### Claude auditor (G5 and G6)
 
-- **Model:** `claude-opus-5` | **Effort:** `xhigh` — always, no exceptions.
+- **Model:** `claude-opus-5` — exact, always.
+- **Effort:** tier-controlled: `xhigh` for T0 (including Gate 6 and any explicitly designated four-auditor review), `high` for T1, `medium` only when a flagship fills a T2 slot because GLM/DeepSeek are unavailable.
 - No Sonnet, no implicit/latest alias, no silent fallback.
 - **If exact model/effort unavailable: stop as BLOCK unless Barış explicitly waives it.**
 - Fresh independent session every audit round — never `--resume` or `--continue` from the implementer session.
@@ -41,12 +63,32 @@ Define once here; prompts may cross-reference but must include enough detail to 
 ### Codex auditor (G5 and G6)
 
 - **Model:** `gpt-5.6-sol` — always, no implicit alias.
-- **Effort `high`** for ordinary Gate 5 audits.
-- **Effort `xhigh`** whenever ANY of these apply: Gate 6 security review; Pine/parity/MTC/trading/protected surface; architecture or cross-cutting change; re-audit after REQUEST_CHANGES or BLOCK.
+- **Effort:** tier-controlled: `xhigh` for T0 (including Gate 6 and any explicitly designated four-auditor review), `high` for T1, `medium` only when a flagship fills a T2 slot because GLM/DeepSeek are unavailable. A protected, host-touching, security, architecture, or cross-cutting surface must be classified T0 rather than silently raising effort inside T1.
 - **If exact model/effort unavailable: stop as BLOCK unless Barış explicitly waives it.**
 - Fresh independent session every audit round.
 - Example CLI (ordinary G5): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=high" <audit_prompt_file>`
-- Example CLI (G6/protected/re-audit): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=xhigh" <audit_prompt_file>`
+- Example CLI (T0/G6/protected): `codex exec --ephemeral --sandbox read-only -m gpt-5.6-sol -c "model_reasoning_effort=xhigh" <audit_prompt_file>`
+
+### DeepSeek V4 Flash auditor (G5 and G6) — canonical auditor 3
+
+- **Model:** `cline-pass/deepseek-v4-flash` via Cline CLI. **Owner-authorised 2026-08-01 (D025).**
+- Example CLI: `cline -P cline-pass -m cline-pass/deepseek-v4-flash --auto-approve false --cwd <audit worktree> "<audit prompt>"`
+- Fresh independent session every audit round. Read-only intent; audit in a dedicated worktree at the frozen SHA, then verify `git status --porcelain` is empty to prove it edited nothing.
+
+### GLM-5.2 auditor (G5 and G6) — canonical auditor 4
+
+- **Model:** `GLM-5.2` via the Z.AI Coding Plan route. **Owner-authorised 2026-08-01 (D025).**
+- Fresh independent session every audit round; same worktree-isolation and cleanliness proof as above.
+
+### Four-auditor acceptance rule (D025 — governs all four entries above)
+
+This rule applies **only** when a later explicit owner/task contract designates a four-auditor G5/G6 review. It does **not** override the permanent tier policy (AUDIT TIER POLICY — PERMANENT DEFAULT), which decides auditor count per tier.
+
+1. **A canonical auditor that cannot execute the mandated test suite must return BLOCK.** Non-execution is never acceptance. Codex already applies this to itself; it now binds every auditor. If a model can read the diff but not reproduce the evidence, its opinion is supplemental for that round regardless of the label it prints.
+2. **A required finding from ANY canonical auditor is binding — after the Lead reproduces it on real source.** This is not a weakening: `AGENTS.md` already requires independent Lead inspection, and it stops a weaker model burning a capped repair round on a finding that does not reproduce. A finding the Lead cannot reproduce is recorded as unreproduced with the evidence, not silently dropped.
+3. **Acceptance requires accepting verdicts from both flagship auditors** (`claude-opus-5` xhigh and `gpt-5.6-sol` xhigh) **plus no unresolved reproduced required finding from any auditor.** The flagships remain the acceptance floor because they are the two that have historically executed the suite and found real defects; auditors 3 and 4 add detection, not a veto based on an unexecuted read.
+4. **Known failure mode, do not forget it:** GLM-5.2 once returned PASS-WITH-NITS on a commit carrying two severe defects while being unable to run the suite at all. Rule 1 exists because of that exact event.
+5. This roster expansion supersedes the older restriction (including the 50-hour plan §23c/§39-10 wording, and D024's advisory-only limit) **for audit authority only**. It grants **no** implementation authority: protected Bridge/core-runtime implementation remains with the flagship implementer, and secondary models still may not implement protected work.
 
 ### Audit session contract
 
@@ -64,7 +106,31 @@ Never feed implementer session context or continue it. The lead still owns accep
 
 ### Repair loop bound
 
-**Maximum 3 repair/re-audit rounds per task.** After the third non-accepting verdict (REQUEST_CHANGES or BLOCK), stop and report the blocker to Barış. Do not silently enter a fourth round.
+**Repair/re-audit rounds are capped per audit tier: T0=3, T1=2, T2=1, T3=0.** Three is the absolute maximum (T0 only). After the cap is exhausted with no accepting verdict (REQUEST_CHANGES or BLOCK), stop and report the blocker to Barış. Do not silently enter an additional round.
+
+### D026 — FALSIFIED-TEST RULE: a regression test is not evidence until it has been shown to fail (MANDATORY)
+
+**Owner-ratified 2026-08-03.** A regression test claimed as evidence that a specific defect is closed **does not count as closure evidence** until it has been demonstrated:
+
+1. **RED** against the exact pre-fix/reverted behaviour — or against an equivalent deliberate mutation/falsification — and
+2. **GREEN** with the fix in place,
+
+with the **commands and their real output recorded** in the evidence package. Asserting that a test covers a defect is not the same as showing it fails without the fix.
+
+- If safe reversion is impractical, an **independent mutation/falsification** is required instead. If neither is done, the test is classified **supplemental — not closure evidence**, and the defect is not closed.
+- **Binds implementers and auditors alike.** Implementers must produce the demonstration; auditors must check it rather than accept the claim, and must state for each new test whether they verified it.
+- Applies with particular force to **protected Bridge, build, deployment, persistence, concurrency and safety defects**.
+- **Does not** require mutating every unrelated legacy test. It governs tests offered as proof that a named defect is fixed.
+
+**Why this exists — three real instances in a single session (2026-08-03), all on protected surfaces:**
+
+| Defect | The test | How it failed |
+|---|---|---|
+| 3b `wal_state_bundle` | drift regression test | Discriminated on the string literal `"SELECT 1"`. Swapping the fix for `SELECT 2` — which touches no table and leaves the defect fully intact — left it **green**. |
+| Build determinism | writable-path test | Asserted `returncode == 0`, which the *old* predicate also returned. Its only real guard sat in an `except OSError` branch that never executes on Linux, the deployment platform. |
+| Build determinism | metacharacter-path test | Built an **LF-only** fixture and asserted success. The defective code succeeded too, while silently skipping inspection. |
+
+In every case the test looked correct on review and was only exposed when someone deliberately broke the code underneath it. Two were caught by cross-model Gate 5 audit, not by the implementer or the Lead.
 
 ## TOKEN DISCIPLINE — implementer-tier sub-delegation to cheap models (MANDATORY)
 Within the two-tier model above, the **IMPLEMENTER** (Claude Code CLI or Codex CLI) may sub-delegate bounded mechanical work to a cheap sub-agent. **Cline CLI is the first-choice path** (uses monthly subscription credits before paid API spend); fall back to `_deepseek_driver` when Cline is unavailable, unauthenticated, out of credits, unsuitable, blocked, or when explicit provider routing / DeepSeek API is desired.
@@ -89,7 +155,7 @@ Update relevant handoff files before stopping after approved write sessions.
 
 ## GLM SUPPLEMENTAL ROUTING — QUOTA-EFFICIENT (CANONICAL)
 
-Single authoritative source for Z.AI Coding Plan model selection when sub-delegating via GLM models. Other memory files cross-reference here; do not copy the routing table elsewhere. GLM never replaces the mandatory audit roster (§CANONICAL AUDIT ROSTER) or the counterpart flagship implementer.
+Single authoritative source for Z.AI Coding Plan model selection when sub-delegating via GLM models. Other memory files cross-reference here; do not copy the routing table elsewhere. GLM never replaces a flagship slot required by the audit-tier policy or the counterpart flagship implementer; it may serve only the T1 conditional second-opinion slot, the T2 reviewer slot, or an explicitly designated four-auditor contract.
 
 ### Official facts (Lead-verified 2026-07-27 — time-sensitive; re-verify before acting after quota/model changes)
 
@@ -138,7 +204,7 @@ Does the task touch: difficult architecture; protected surface (Bridge/trading/r
 | 2 | Rename constant in a test file (mechanical test update) | No | Tier 1 — 4.5-Air (or Tier 2 if route lacks 4.5-Air) |
 | 3 | Fix typo in Bridge order-formatter — Gate 1 has explicitly classified this exact path as unprotected; no broker, order-behavior, risk, persistence, concurrency, or evidence impact (ordinary Bridge bug, Gate 1-proven unprotected) | No (Gate 1 explicit) | Tier 2 — 4.7 |
 | 4 | Repair idempotency logic in Bridge order executor touching risk/persistence (protected) | Yes | Tier 4 — 5.2 |
-| 5 | Gate-5 adversarial audit of a cross-file refactor (Gate-5 audit) | Yes (audit surface) | **Canonical roster only** — `claude-opus-5` xhigh or `gpt-5.6-sol` high/xhigh; GLM is not a Gate-5 auditor |
+| 5 | Gate-5 adversarial audit of a cross-file refactor | Classify by surface | Apply the permanent audit tier first: protected/host/architecture cross-cutting work is T0 (two flagships xhigh); bounded non-economic product code is T1 (one flagship high, GLM only under the conditional second-opinion rule) |
 | 6 | Barış requests exact GLM-5.2 for a specific bounded task (exact-model request) | N/A | Tier 4 — 5.2 (honor; no silent fallback or downgrade) |
 
 > **Bridge default:** Any Bridge task not explicitly proven unprotected by Gate 1 classification defaults to protected — route to Tier 4 / GLM-5.2.

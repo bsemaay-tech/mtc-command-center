@@ -1,0 +1,1647 @@
+{
+  "schema_version": 1,
+  "doc_id": "bridge_help_system_map",
+  "title": "Crypto Paper Bridge — Help / System Map",
+  "subtitle": "One picture of the whole system, in plain language. Every box says what it is, what it is not, and whether it exists today.",
+  "updated": "2026-08-17",
+  "audience": "Non-technical owner first; future AI agents second.",
+  "how_to_read": [
+    "Pick a plane below, then click any box. Boxes open with the keyboard too: Tab to a box and press Enter or Space.",
+    "Every box carries one status badge. The badge is about reality, not ambition: it says whether the thing exists and runs today.",
+    "'Does not do' is as important as 'does'. Most misunderstandings about this system come from assuming a box does more than it does.",
+    "Turn on 'Technical detail' to add file-level notes for a developer or a future AI agent."
+  ],
+  "truth_rules": [
+    "A plan is never written as if it were implemented.",
+    "Source code existing is not the same as being deployed, configured, or verified.",
+    "Hyperliquid is authoritative for exchange facts. Bridge records are authoritative for local intent and ownership. Incomplete, stale, or conflicting evidence fails closed.",
+    "TESTNET is mock money and proves plumbing only. It is not profitability proof and not MAINNET readiness.",
+    "The AI has no economic authority anywhere in this system.",
+    "Owner-operated control and automatic fail-safe action are different things. Only the owner may arm; the runtime may disarm itself for safety.",
+    "The tests over this file are structural and selected-phrase tripwires. They are not proof that every claim here is still current — source, configuration, deployment evidence and owner decisions must be re-verified when the system changes."
+  ],
+  "statuses": [
+    {
+      "id": "current_v1",
+      "label": "CURRENT V1",
+      "tone": "green",
+      "meaning": "Exists in the V1 source and works today on the private local surface. Read each box's status note — some V1 parts are deliberately switched off or are opt-in."
+    },
+    {
+      "id": "planned_v2",
+      "label": "PLANNED V2",
+      "tone": "blue",
+      "meaning": "An agreed direction for the next version. Not implemented. Nothing here may be described as working."
+    },
+    {
+      "id": "separate_gate",
+      "label": "SEPARATE FUTURE GATE",
+      "tone": "amber",
+      "meaning": "Requires its own explicit owner decision and audit before it may exist at all. Real money, remote authentication, and public exposure all live here."
+    },
+    {
+      "id": "not_deployed",
+      "label": "NOT DEPLOYED",
+      "tone": "red",
+      "meaning": "Not installed and not running on the KVM2 VPS. The latest verified state on that server is an uploaded payload only."
+    }
+  ],
+  "connection_kinds": [
+    { "id": "data", "label": "data / information", "meaning": "Something is read, streamed or written." },
+    { "id": "control", "label": "control / authority", "meaning": "One side can cause the other to act or change state." },
+    { "id": "evidence", "label": "evidence", "meaning": "One side supplies proof the other depends on before acting." },
+    { "id": "notify", "label": "notification (one way)", "meaning": "Information leaves the system. Nothing comes back through it." },
+    { "id": "boundary", "label": "boundary / not the same thing", "meaning": "A deliberate separation that is easy to confuse. Read both boxes." },
+    { "id": "planned", "label": "planned, not in place", "meaning": "This link is intended but does not exist today." },
+    { "id": "advisory", "label": "advice only", "meaning": "Explanation or a proposal. The owner still decides." },
+    { "id": "blocked", "label": "blocked — no authority", "meaning": "This connection deliberately does not exist and must never be built." }
+  ],
+  "planes": [
+    {
+      "id": "research",
+      "name": "Research and Promotion plane",
+      "summary": "Where strategies are invented, tested and approved. It never sends an order to any exchange.",
+      "boundary": "Research hands over a frozen, approved strategy package. The Bridge consumes packages; it does not develop strategies."
+    },
+    {
+      "id": "execution",
+      "name": "Execution plane (the Bridge runtime)",
+      "summary": "The single Python process that watches bars, decides, sizes, submits, protects and records. One strategy, one symbol, one timeframe in V1.",
+      "boundary": "The Bridge decides and records. It never becomes the source of exchange truth, and it never invents a strategy."
+    },
+    {
+      "id": "exchange",
+      "name": "Exchange plane (Hyperliquid)",
+      "summary": "The venue that actually holds the account, the money, the positions and the resting protective orders.",
+      "boundary": "Hyperliquid owns exchange reality. The Bridge owns its own intent and its own evidence."
+    },
+    {
+      "id": "control",
+      "name": "Observation and Control plane",
+      "summary": "How a human sees the system and acts on it, how notifications leave it, and what an AI is and is not allowed to do.",
+      "boundary": "Three separate identities live here: the owner (operates the controls), the Bridge runtime (acts automatically within its rails, including automatic fail-safe disarms), and the AI assistant (may only read and explain). Owner-operated control and automatic fail-safe action are different things and are easy to confuse."
+    }
+  ],
+  "identities": [
+    {
+      "id": "identity_owner",
+      "name": "Owner (human)",
+      "authority": "The only identity that may operate the ARM, DISARM and KILL controls, change configuration, or approve real money. This is about operated controls: the runtime can still disarm itself automatically as a fail-safe, which is a machine safety action and not delegated owner authority.",
+      "component": "owner"
+    },
+    {
+      "id": "identity_runtime",
+      "name": "Bridge runtime (machine)",
+      "authority": "Acts automatically inside the risk rails. New entries require the owner to have armed it. Reconciliation, protection maintenance, notification and safety work continue while DISARMED or KILLED as applicable, and the runtime may automatically disarm itself as a fail-safe.",
+      "component": "state_machine"
+    },
+    {
+      "id": "identity_ai",
+      "name": "AI assistant (read-only)",
+      "authority": "May read, explain, summarise and draft a proposal. Has no ARM, DISARM, KILL, config, order, wallet, shell, deployment or code-editing authority — now or in any planned version.",
+      "component": "codex_assistant"
+    }
+  ],
+  "components": [
+    {
+      "id": "quantlens_research",
+      "plane": "research",
+      "name": "QuantLens research lab",
+      "status": "current_v1",
+      "status_detail": "Exists in this repository today and is actively used for research. Its status describes the research lab itself. Promotion of any result into the Bridge is a separate owner gate and is not implied by this status — see the Promotion gate box, which remains a SEPARATE FUTURE GATE.",
+      "one_liner": "The laboratory where strategy ideas are backtested, scored and either rejected or promoted.",
+      "purpose": "To find out whether a trading idea is worth anything before a single real order is ever considered. This is where the honest, slow, statistical work happens.",
+      "does": [
+        "Runs walk-forward backtests over historical bars for a strategy, symbol and timeframe.",
+        "Compares a strategy against buy-and-hold and applies the repository's four promotion gates.",
+        "Records every variant it tried, so a failed idea cannot quietly reappear as a new one.",
+        "Produces a written report that a human reads."
+      ],
+      "does_not": [
+        "Does not connect to Hyperliquid.",
+        "Does not place, modify or cancel any order, ever.",
+        "Does not push anything into the Bridge automatically.",
+        "Does not decide that a strategy is live-eligible — that is the owner's decision."
+      ],
+      "boundaries": [
+        "Research and the Bridge are operationally separate systems that happen to share one repository for version control.",
+        "The only thing that crosses the boundary is a frozen strategy package file plus a written report.",
+        "Overlap risk to watch: a backtest result is not an execution result. QuantLens models assumed commission and an assumed slippage stress, but actual fills, realized slippage, funding and partial-fill behaviour are execution and exchange evidence and appear only in the Execution and Exchange planes.",
+        "The research lab existing today is not the same as a result being promoted. CURRENT V1 here describes the lab; promotion into the Bridge stays behind its own owner gate."
+      ],
+      "safety": [
+        "Because it has no exchange connection, a research bug cannot cost money directly. It can only cost money later, by promoting a bad strategy.",
+        "That is exactly why promotion is a human gate and not an automatic pipeline."
+      ],
+      "connections": [
+        { "to": "strategy_promotion", "label": "produces evidence for", "kind": "evidence" },
+        { "to": "strategy_package", "label": "exports a frozen package", "kind": "data" }
+      ],
+      "sources": [
+        "MTC_COMMAND_CENTER/03_QUANTLENS/tools/mega_walk_forward.py",
+        "MTC_COMMAND_CENTER/03_QUANTLENS/_user_guide/07_BACKTEST_AND_OPTIMIZATION_RULES.md"
+      ],
+      "technical": [
+        "Canonical single-run entry point is mega_walk_forward.py with MEGA_BUNDLE_MANIFEST pointing at a data bundle manifest.",
+        "Promotion requires rolling walk-forward, bootstrap with BH-FDR, DSR and multi-window agreement plus a buy-and-hold comparison. A single 5-minute run is never promotable."
+      ]
+    },
+    {
+      "id": "strategy_promotion",
+      "plane": "research",
+      "name": "Promotion gate (human)",
+      "status": "separate_gate",
+      "status_detail": "A human decision point, not a piece of software. It has to be passed for every strategy, every time.",
+      "one_liner": "The moment a human decides an idea is allowed to touch the execution machinery.",
+      "purpose": "To stop a promising-looking backtest from walking straight into a live account. A human reads the evidence and says yes or no.",
+      "does": [
+        "Reviews the research evidence against the four-gate ladder.",
+        "Freezes the strategy parameters so what was tested is what runs.",
+        "Sets the permission flags inside the strategy package, including whether the strategy may ever run on real money."
+      ],
+      "does_not": [
+        "Does not run automatically.",
+        "Does not make a strategy profitable — it only records that a human accepted the evidence.",
+        "Does not grant MAINNET permission; that is a further, separate gate."
+      ],
+      "boundaries": [
+        "Promotion decides what may be loaded. The RiskEngine still decides, trade by trade, what may actually be sent.",
+        "A promoted strategy with live_allowed false is still refused on mainnet by the Bridge at load time."
+      ],
+      "safety": [
+        "The current Bridge strategy has NOT passed this ladder. It is loaded as a plumbing subject on purpose.",
+        "Confusing 'loaded in the Bridge' with 'promoted' is the single most expensive mistake available here."
+      ],
+      "connections": [
+        { "to": "quantlens_research", "label": "reads evidence from", "kind": "evidence" },
+        { "to": "strategy_package", "label": "freezes and signs off", "kind": "control" },
+        { "to": "owner", "label": "decided by", "kind": "control" }
+      ],
+      "sources": [
+        "MTC_COMMAND_CENTER/03_QUANTLENS/_user_guide/07_BACKTEST_AND_OPTIMIZATION_RULES.md",
+        "IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md"
+      ],
+      "technical": [
+        "Permission flags live in the strategy YAML: paper_allowed, live_allowed, requires_human_approval.",
+        "The engine validates permissions and risk_overrides at load time; risk_overrides may only tighten bridge.yaml risk, never loosen it."
+      ]
+    },
+    {
+      "id": "strategy_package",
+      "plane": "research",
+      "name": "Frozen strategy package",
+      "status": "current_v1",
+      "status_detail": "The package format exists and one package is loaded: keltner_trail_ema8.",
+      "one_liner": "A single file that describes exactly which strategy runs, with which numbers, and what it is allowed to do.",
+      "purpose": "To make the running strategy a written, reviewable artefact instead of something hidden in code.",
+      "does": [
+        "Names the strategy, its version, symbol, timeframe and parameters.",
+        "Carries permission flags, including whether the strategy may run on real money.",
+        "Can tighten the global risk settings for this specific strategy."
+      ],
+      "does_not": [
+        "Does not contain the trading logic itself — only the configuration for it.",
+        "Does not loosen global risk limits. Overrides may only make risk smaller.",
+        "Does not claim the strategy is profitable."
+      ],
+      "boundaries": [
+        "The package says what to run. The RiskEngine says how much. The OrderManager says how it gets to the exchange."
+      ],
+      "safety": [
+        "The currently loaded package is a plumbing subject with live_allowed set false. The Bridge refuses mainnet for any strategy without that flag."
+      ],
+      "connections": [
+        { "to": "strategy_runtime", "label": "configures", "kind": "data" },
+        { "to": "strategy_promotion", "label": "approved by", "kind": "control" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/config/strategies/keltner_trail_ema8.yaml",
+        "IBKR_PAPER_BRIDGE/docs/01_ARCHITECTURE.md"
+      ],
+      "technical": [
+        "Shape is documented in 01_ARCHITECTURE.md section 6.2 and is the intended import format for future researched strategies."
+      ]
+    },
+
+    {
+      "id": "fastapi_backend",
+      "plane": "execution",
+      "name": "Bridge backend process (FastAPI)",
+      "status": "current_v1",
+      "status_detail": "Runs as one local process bound to 127.0.0.1 port 8790. It also serves the Dashboard files, including this Help page.",
+      "one_liner": "The single program that contains everything else in the Execution plane and answers the Dashboard.",
+      "purpose": "To keep the whole system as one process with one event loop, so there is no queue, no broker service and no hidden second copy of the truth.",
+      "does": [
+        "Starts and stops the engine, the reconciliation loop and the notification heartbeat.",
+        "Serves the REST endpoints the Dashboard calls, and pushes live updates over a WebSocket.",
+        "Serves the Dashboard's static files from disk, including this Help knowledge file."
+      ],
+      "does_not": [
+        "Does not listen on a public network interface. It binds to 127.0.0.1 only.",
+        "Does not authenticate anyone. There is no login, no session and no user account in V1.",
+        "Does not run on the KVM2 VPS today."
+      ],
+      "boundaries": [
+        "The backend is the security boundary. Anything that can reach port 8790 can already press ARM, DISARM and KILL, because there is no second check inside.",
+        "The Dashboard is a separate responsibility and security boundary from the trading engine, even though today one process serves both."
+      ],
+      "safety": [
+        "Port 8790 must never be exposed to the internet. Remote access is only ever through a private tunnel or VPN.",
+        "Cross-origin requests are restricted to 127.0.0.1 origins, which is a browser-side control and is not a substitute for authentication."
+      ],
+      "connections": [
+        { "to": "state_machine", "label": "hosts", "kind": "control" },
+        { "to": "dashboard", "label": "serves and streams to", "kind": "data" },
+        { "to": "store_wal", "label": "opens", "kind": "data" },
+        { "to": "kvm2_vps", "label": "intended to run on (not yet)", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/app.py",
+        "IBKR_PAPER_BRIDGE/bridge/api/routes.py",
+        "IBKR_PAPER_BRIDGE/bridge/api/ws.py",
+        "IBKR_PAPER_BRIDGE/config/bridge.yaml"
+      ],
+      "technical": [
+        "create_app builds an import-safe app: no exchange or LLM call happens at import time, which is what lets the test suite build the app without credentials.",
+        "uvicorn is started with host 127.0.0.1 and port 8790 in app.py's main block."
+      ]
+    },
+    {
+      "id": "bar_feed",
+      "plane": "execution",
+      "name": "BarFeed (market data)",
+      "status": "current_v1",
+      "status_detail": "Implemented, including reconnect and staleness detection.",
+      "one_liner": "The part that receives price candles and decides the exact moment a bar is finished.",
+      "purpose": "Every decision in this system happens on a closed bar. Someone has to say authoritatively when a bar closed, and that is this component.",
+      "does": [
+        "Loads historical bars at startup so indicators have enough history to be valid.",
+        "Subscribes to live candles and emits a 'bar closed' event on the interval boundary.",
+        "Uses a wall-clock timer as the authority, so a quiet market still closes the bar on time.",
+        "Raises a staleness alarm if data stops arriving, which disarms the system."
+      ],
+      "does_not": [
+        "Does not decide anything about trading. It only says 'this bar is final'.",
+        "Does not use local receipt time for freshness — it uses the data's own timestamps.",
+        "Does not trust that a subscription survived a disconnect; it re-subscribes every reconnect."
+      ],
+      "boundaries": [
+        "BarFeed owns time and data arrival. The Strategy owns what the data means.",
+        "Overlap to watch: a duplicated first candle after a reconnect is deduplicated here, not in the strategy."
+      ],
+      "safety": [
+        "If data goes stale for longer than two bar intervals, the system disarms rather than trading on an old picture.",
+        "Everything runs in UTC. Crypto is 24/7 so there is no session, holiday or half-day logic to get wrong."
+      ],
+      "connections": [
+        { "to": "hyperliquid_exchange", "label": "subscribes to candles from", "kind": "data" },
+        { "to": "strategy_runtime", "label": "emits closed bars to", "kind": "data" },
+        { "to": "store_wal", "label": "persists every finalized bar to", "kind": "data" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/engine/bars.py",
+        "IBKR_PAPER_BRIDGE/bridge/engine/engine.py"
+      ],
+      "technical": [
+        "Bar key is (coin, timeframe, bar_end_ts_utc). Historical warmup uses candles_snapshot; live uses the candle WebSocket subscription.",
+        "DATA_STALE fires when now minus last bar update exceeds two timeframes and is wired to auto-DISARM."
+      ]
+    },
+    {
+      "id": "strategy_runtime",
+      "plane": "execution",
+      "name": "Strategy (Keltner + EMA8 trail)",
+      "status": "current_v1",
+      "status_detail": "Loaded and running as a plumbing test subject. It has not passed the promotion ladder and is not a profitability claim.",
+      "one_liner": "The rule that looks at closed bars and occasionally says 'go long', 'go short' or nothing.",
+      "purpose": "To exercise the whole pipeline end to end with a real, deterministic rule, so that plumbing defects show up before a strategy anyone cares about is loaded.",
+      "does": [
+        "Reads the closed-bar history and returns a signal or nothing.",
+        "Computes a trailing stop level each bar so the stop can be tightened as price moves favourably.",
+        "Is replay-testable against a golden list of signal timestamps."
+      ],
+      "does_not": [
+        "Does not size anything. It has no idea how much money exists.",
+        "Does not place, modify or cancel orders.",
+        "Does not claim an edge. Keltner here is a plumbing subject, not a promoted strategy."
+      ],
+      "boundaries": [
+        "The Strategy proposes. The RiskEngine authorises and sizes. The OrderManager executes and protects.",
+        "This three-way split is the reason a strategy bug cannot directly become an oversized order."
+      ],
+      "safety": [
+        "Position flipping is disabled in V1. An opposite signal while in a position closes the position and does not open the other side on the same bar.",
+        "Only one open position per coin is permitted."
+      ],
+      "connections": [
+        { "to": "risk_engine", "label": "proposes a signal to", "kind": "data" },
+        { "to": "strategy_package", "label": "configured by", "kind": "data" },
+        { "to": "bar_feed", "label": "reads closed bars from", "kind": "data" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/engine/strategies/keltner_trail_ema8.py",
+        "IBKR_PAPER_BRIDGE/bridge/engine/strategy_base.py",
+        "IBKR_PAPER_BRIDGE/tests/test_strategy.py"
+      ],
+      "technical": [
+        "Protocol is on_bar(bars, position) returning Signal or None, plus trail_level(bars, position) returning a new stop level or None.",
+        "Entry is a close-confirmed Keltner breakout; exit is a trailing stop at EMA(8) of closes that only ever tightens."
+      ]
+    },
+    {
+      "id": "state_machine",
+      "plane": "execution",
+      "name": "State machine (DISARMED / ARMED / KILLED)",
+      "status": "current_v1",
+      "status_detail": "Real and persisted. KILL hardening is a recorded gap — see the safety notes.",
+      "one_liner": "The master switch that decides whether the system is allowed to open anything new.",
+      "purpose": "To give one unambiguous answer to the question 'is this machine permitted to act right now', and to make that answer survive a restart.",
+      "does": [
+        "Holds one of three states: DISARMED, ARMED or KILLED, and persists it to the database.",
+        "Blocks new entries unless the state is ARMED. ARMED gates new entries and nothing else.",
+        "Lets reconciliation, protection maintenance, notification and fail-safe work keep running while DISARMED or KILLED, as applicable to each.",
+        "Re-checks the state after every await in the decision chain, so a KILL pressed mid-decision aborts that decision.",
+        "Comes back up KILLED after a restart if KILL was pressed, until the owner explicitly acknowledges."
+      ],
+      "does_not": [
+        "ARMED does not place an order. It is conditional permission for eligible future signals, nothing more.",
+        "DISARM does not flatten an existing position. It blocks new entries, cancels pending ENTRY orders when it is safe to do so, then reconciles. The position and its exchange-side protection remain, and runtime safety, protection and notification work stays active.",
+        "KILL as currently wired by the Dashboard does not flatten either — the button sends flatten=false.",
+        "DISARMED is not only an owner state. The runtime can enter it automatically as a fail-safe, without anyone pressing anything."
+      ],
+      "boundaries": [
+        "The state machine says whether anything may start. The RiskEngine says whether this particular thing may start.",
+        "Both must agree. Neither can override the other."
+      ],
+      "safety": [
+        "KILL is sticky: it survives a restart and requires an explicit operator acknowledgement to leave.",
+        "KILL is NOT production-hardened. There is a recorded hardening gap and it must not be described as a finished emergency system.",
+        "The concrete gap: the Dashboard requests KILL with flatten=false, and the engine's KILL path calls cancel_all() regardless. Cancelling everything can remove the exchange-native protective orders while the position itself stays open, which leaves an unprotected position — the opposite of what an emergency stop should produce.",
+        "DISARM and KILL are never blocked by the stale-state confirmation header, because a safety action must not fail because a browser tab is out of date."
+      ],
+      "connections": [
+        { "to": "risk_engine", "label": "gates", "kind": "control" },
+        { "to": "order_manager", "label": "short-circuits in-flight work in", "kind": "control" },
+        { "to": "dashboard_controls", "label": "driven by", "kind": "control" },
+        { "to": "store_wal", "label": "persists state to", "kind": "data" },
+        { "to": "notifier_telegram", "label": "announces transitions to", "kind": "notify" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/engine/engine.py",
+        "IBKR_PAPER_BRIDGE/bridge/api/routes.py",
+        "IBKR_PAPER_BRIDGE/docs/01_ARCHITECTURE.md"
+      ],
+      "technical": [
+        "app_state lives in the meta table so KILLED survives a process restart; a restart always creates a new run_id.",
+        "ARM requires a matching X-Confirm state_version header. DISARM and KILL deliberately do not.",
+        "Engine.kill(flatten=False) sets KILLED and then awaits broker.cancel_all() under the symbol lock; broker.flatten is only reached when flatten is true. Engine.disarm_runtime() cancels open orders whose role is ENTRY, skipping any symbol under submission quarantine or active partial recovery, then runs order-manager reconciliation.",
+        "Automatic DISARM paths in the engine include stale data, the daily loss limit, equity divergence above one percent, and an unacknowledged order past the abort deadline.",
+        "On restart or reconnect, reconciliation must complete before ARM is possible."
+      ]
+    },
+    {
+      "id": "risk_engine",
+      "plane": "execution",
+      "name": "RiskEngine",
+      "status": "current_v1",
+      "status_detail": "Implemented and unit-tested as a pure function. Some newer exposure and snapshot layers are opt-in and are not on the default schema baseline.",
+      "one_liner": "The gatekeeper that decides whether a signal is allowed to become an order, and how big it may be.",
+      "purpose": "To make sure that no matter what a strategy suggests, the amount of money at risk stays inside limits the owner set in advance.",
+      "does": [
+        "Runs an ordered list of checks and stops at the first failure, recording the reason.",
+        "Refuses to trade when disarmed, when data is stale, when a position is already open, or when the direction is not allowed.",
+        "Enforces the daily loss limit, the consecutive-loss stop and the cooldown after a losing trade.",
+        "Sizes the position from risk percentage and stop distance, then clamps it against notional, margin, leverage and the exchange minimum order value.",
+        "Returns a readable gate-by-gate result that the Dashboard shows as the Gate Monitor."
+      ],
+      "does_not": [
+        "Does not talk to the exchange itself and does not place orders.",
+        "Does not invent a stop. If the stop distance is zero, too small, or on the wrong side of price, it rejects instead of guessing.",
+        "Does not allow a strategy override to loosen a limit — overrides may only tighten."
+      ],
+      "boundaries": [
+        "RiskEngine authorises and sizes. OrderManager executes and protects. This is the sharpest boundary in the system.",
+        "Overlap to watch: both read the position, but the RiskEngine reads it to decide, and the OrderManager reads it again at submit time to size an exit."
+      ],
+      "safety": [
+        "Default risk is 0.5 percent of equity per trade, maximum leverage is 1, and maximum position notional is 20 percent of equity.",
+        "Hitting the daily loss limit does not just reject the trade — it automatically disarms the system.",
+        "Every rejection is stored with its arithmetic, so any decision can be audited afterwards."
+      ],
+      "connections": [
+        { "to": "order_manager", "label": "hands an authorised plan to", "kind": "control" },
+        { "to": "llm_gate", "label": "would be narrowed by a wired gate — not wired today", "kind": "planned" },
+        { "to": "state_machine", "label": "gated by", "kind": "control" },
+        { "to": "store_wal", "label": "records every decision to", "kind": "data" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/engine/risk.py",
+        "IBKR_PAPER_BRIDGE/tests/test_risk.py",
+        "IBKR_PAPER_BRIDGE/config/bridge.yaml"
+      ],
+      "technical": [
+        "Sizing is fixed-fractional: risk_dollars = equity * risk_pct_per_trade, qty = risk_dollars / stop_distance, rounded down to szDecimals.",
+        "Stop-validity guards run BEFORE the division, which is what prevents a divide-by-zero from becoming an absurd quantity.",
+        "gate_results is an ordered list of {gate, status, detail} and is the Gate Monitor's data source."
+      ]
+    },
+    {
+      "id": "llm_gate",
+      "plane": "execution",
+      "name": "LLM gate (regime and veto) — dormant scaffolding",
+      "status": "planned_v2",
+      "status_detail": "Dormant, unwired scaffolding whose configuration is nonetheless visible. The LLMGate class exists in bridge/engine/llm_gate.py and has its own unit tests, but no runtime path constructs it: bridge/app.py builds the engine without an llm_gate, so bridge/engine/engine.py installs NullLLMGate, whose check always returns SKIPPED with the reason 'llm disabled'. The llm: block of config/bridge.yaml is read: bridge/api/routes.py loads that file into app.state.bridge_config, serves it from /api/config, and includes it in the dashboard snapshot, and bridge/static/app.js reads state.snapshot.config and displays config.llm.veto_enabled as the LLM page's veto mode. Configuration visibility is not activation — changing regime_enabled or veto_enabled changes what that page shows, and constructs no LLMGate, so it does not activate it today.",
+      "one_liner": "Scaffolding for an optional AI layer that could only ever narrow what the system is allowed to do — configured and displayed today, but never constructed.",
+      "purpose": "To hold the shape of a future capability: letting a market-sentiment view restrict trading direction, or letting a checklist model veto a specific order, without ever giving a model the ability to create or enlarge a trade. None of that runs today.",
+      "does": [
+        "Exists as source only: the LLMGate class in bridge/engine/llm_gate.py, exercised by tests/test_llm_gate.py. No runtime path constructs it.",
+        "Nothing at runtime beyond a null placeholder. The engine holds a NullLLMGate whose check always returns SKIPPED with the reason 'llm disabled'.",
+        "Has its configuration read, served and displayed. bridge/api/routes.py loads config/bridge.yaml into app.state.bridge_config, exposes it at /api/config and includes it in the dashboard snapshot; app.js reads state.snapshot.config and shows config.llm.veto_enabled as the LLM page's Veto Mode card.",
+        "Leaves a generic decision behind on every permitted signal. After risk passes, BridgeEngine maps the SKIPPED verdict to stage LLM_SKIPPED and calls store.insert_decision(...) with that reason, so the decision trail records that the stage was passed over.",
+        "Describes the shape a wired version would take: a periodic direction directive restricting trading to long-only, short-only or no-trade, and a per-order veto under a hard deadline."
+      ],
+      "does_not": [
+        "Is not running today, and is not activated by configuration. The runtime constructs NullLLMGate unconditionally, so changing regime_enabled or veto_enabled in config/bridge.yaml only changes what the dashboard displays — it wires and constructs no LLMGate, and does not activate it today.",
+        "Does not write a directive record or a model-call record. The directives and llm_calls tables exist in the store schema, and the current null-gate path writes no directive row and no model-call row. That absence is narrower than it looks: the generic LLM_SKIPPED decision row is still written on every RISK_PASS. Separately, llm_directive_id is a column on the trades row, not on the decisions row, and order and trade persistence currently passes llm_directive_id=None.",
+        "Cannot widen permission, in the wired design or in any other form. A directive could only narrow what the configuration already allows.",
+        "Cannot originate or enlarge an order. There is no code path from the gate to quantity, price, leverage or any new-order field, and that boundary is enforced in code rather than by prompt wording.",
+        "Does not mean 'harmless once enabled'. Narrowing still changes outcomes: LONG_ONLY, SHORT_ONLY and a per-order veto would suppress or select otherwise permitted trades."
+      ],
+      "boundaries": [
+        "Scaffolding is not a feature. Source code existing, owning a block in config/bridge.yaml, and passing its own unit tests is not the same as being constructed and reachable at runtime. Check the constructor, not the class.",
+        "A generic skipped decision is not an LLM artifact. The LLM_SKIPPED decision row records only that the stage was passed over with the reason 'llm disabled'; it is not a directive record, and it is not a model-call record.",
+        "The wired design would be advisory and restrictive only. The RiskEngine would remain the authority on whether an order is allowed.",
+        "Restrictive is not the same as economically neutral. If the gate were ever wired and enabled, LONG_ONLY, SHORT_ONLY and the per-order veto would suppress or select trades the RiskEngine would otherwise have permitted, so an enabled gate would change which trades happen and therefore change economic outcomes. It could still never originate or enlarge an order; it could only decide that a permitted one does not happen.",
+        "Do not confuse this with the Dashboard AI assistant — that is a separate, read-only explanation layer in the Control plane."
+      ],
+      "safety": [
+        "Both roles are OFF in the current configuration — regime_enabled false and veto_enabled false — and, more fundamentally, no runtime path constructs LLMGate at all. The runtime installs NullLLMGate, so neither the direction directive nor the per-order veto exists as a running code path today. The dashboard's Veto Mode card reports the configured value; it is not evidence of a running gate.",
+        "Wiring this gate would change the decision path and needs its own review and owner decision. Until then, describing it as a switchable V1 feature overstates what exists.",
+        "The prompt-injection defences in the class — truncation, stripping, labelled source blocks, and storing only the source-text hash rather than the raw retrieved text — are properties of code that never executes in the running system today.",
+        "In a wired version the worst case from a successful prompt injection is a forced no-trade. That is a denial rather than an ability to create or enlarge a trade — but a denial is not costless, because suppressing a trade is itself an economic outcome."
+      ],
+      "connections": [
+        { "to": "risk_engine", "label": "would narrow if it were ever wired", "kind": "planned" },
+        { "to": "store_wal", "label": "would log directive and model-call rows to — none of either written today", "kind": "planned" },
+        { "to": "dashboard", "label": "would populate the Directive History table of — empty today, while that page's Veto Mode card already shows the configured veto_enabled value", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/engine/llm_gate.py",
+        "IBKR_PAPER_BRIDGE/bridge/engine/engine.py",
+        "IBKR_PAPER_BRIDGE/bridge/app.py",
+        "IBKR_PAPER_BRIDGE/bridge/api/routes.py",
+        "IBKR_PAPER_BRIDGE/bridge/static/app.js",
+        "IBKR_PAPER_BRIDGE/bridge/store/db.py",
+        "IBKR_PAPER_BRIDGE/bridge/engine/orders.py",
+        "IBKR_PAPER_BRIDGE/tests/test_llm_gate.py",
+        "IBKR_PAPER_BRIDGE/config/bridge.yaml"
+      ],
+      "technical": [
+        "engine.py sets self.llm_gate = self.llm_gate or NullLLMGate(), and app.py's BridgeEngine(...) construction passes no llm_gate, so the running process always holds the null gate. Only tests inject a real LLMGate.",
+        "Role A would be a periodic regime directive and Role B a per-order veto. Role A has no caller at all: LLMGate.refresh_regime and LLMGate.effective_directions are never invoked anywhere under bridge/. Role B's entry point is called — engine.py awaits self.llm_gate.check(risk.plan) after every RISK_PASS — but the object answering is NullLLMGate, so the verdict is always SKIPPED.",
+        "Configuration path: routes.py loads config/bridge.yaml, install_routes keeps it on app.state.bridge_config, GET /api/config returns it, and the snapshot payload carries it under the config key; app.js renderLlm() sets the Veto Mode card from config.llm.veto_enabled. None of that constructs a gate.",
+        "Persistence path: engine.py maps the SKIPPED verdict to stage LLM_SKIPPED and calls store.insert_decision(...) with the reason 'llm disabled'. db.py declares llm_directive_id inside CREATE TABLE trades — it is a trades column, not a decisions column — and orders.py passes llm_directive_id=None when persisting.",
+        "The directive TTL clamp, the twice-TTL expiry rule that never silently converts NO_TRADE into BOTH, and the source-text hashing are implemented in the class but unreachable from the running system."
+      ]
+    },
+    {
+      "id": "order_manager",
+      "plane": "execution",
+      "name": "OrderManager",
+      "status": "current_v1",
+      "status_detail": "Implemented, including duplicate protection, stale-data guards and light operational reconciliation.",
+      "one_liner": "The part that actually sends orders, keeps their identity, and makes sure an open position is protected.",
+      "purpose": "To turn an authorised plan into real orders at the exchange and then never lose track of them, even across a crash or a reconnect.",
+      "does": [
+        "Submits the entry together with a native stop-loss trigger order, and optionally a take-profit trigger order.",
+        "Gives every order a durable client order id derived from the decision, and stores both that and the exchange id.",
+        "Refuses to submit the same decision twice, so a reconnect replay cannot double-order.",
+        "Refuses to submit on a stale bar, using the bar's own timestamp rather than local receipt time.",
+        "Sizes every exit to the live position quantity at submit time, so a close can never accidentally open the opposite side.",
+        "Runs light operational reconciliation every 60 seconds and can recover, re-protect or flatten state that it owns."
+      ],
+      "does_not": [
+        "Does not decide whether to trade or how large — that was already decided by the RiskEngine.",
+        "Does not touch positions or orders it cannot trace to its own client order id. Foreign positions produce a warning and are never adopted or flattened.",
+        "Does not guarantee a fill price. A trigger price is the level that activates an order, not the price you get."
+      ],
+      "boundaries": [
+        "This is the light reconciliation path, and it is allowed to change things it owns.",
+        "It is a different thing from the FullReconciler, which is read-only and never mutates exchange state. The word 'reconciler' means two different things in this system and the distinction matters."
+      ],
+      "safety": [
+        "An unfilled limit entry older than the maximum age is cancelled together with its triggers.",
+        "An order not acknowledged within 120 seconds is an abort criterion and disarms the system.",
+        "After a reconnect, an owned position without a working stop is re-protected first; flattening is only the fallback."
+      ],
+      "connections": [
+        { "to": "hyperliquid_exchange", "label": "submits and modifies orders at", "kind": "control" },
+        { "to": "native_protection", "label": "creates and maintains", "kind": "control" },
+        { "to": "light_reconciler", "label": "contains", "kind": "control" },
+        { "to": "store_wal", "label": "writes every order and fill event to", "kind": "data" },
+        { "to": "risk_engine", "label": "receives authorised plans from", "kind": "control" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/engine/orders.py",
+        "IBKR_PAPER_BRIDGE/tests/test_order_lifecycle.py",
+        "IBKR_PAPER_BRIDGE/docs/22_ORDER_STATE_CONTRACT.md",
+        "IBKR_PAPER_BRIDGE/docs/23_ORDER_IDENTITY_CONTRACT.md"
+      ],
+      "technical": [
+        "Entry brackets use grouping normalTpsl; re-protecting an already open position uses positionTpsl.",
+        "Trailing updates modify only the stop trigger price on the same client order id, never the quantity.",
+        "An unmatched partial fill remains an ENTRY_PARTIAL case that must resolve to PROTECTED or UNPROTECTED_ABORT under a 10 second guard."
+      ]
+    },
+    {
+      "id": "light_reconciler",
+      "plane": "execution",
+      "name": "Light operational reconciliation (60 s)",
+      "status": "current_v1",
+      "status_detail": "Runs continuously inside the engine while the process is up.",
+      "one_liner": "A frequent check that what the exchange says matches what the Bridge believes, with permission to fix what it owns.",
+      "purpose": "To catch the dangerous case quickly: a position that exists with no protective stop behind it.",
+      "does": [
+        "Compares live exchange positions and open orders against the local database every 60 seconds.",
+        "Also runs immediately on any fill or position callback, so a naked position is detected without waiting.",
+        "Re-protects or flattens positions it can trace to its own client order id.",
+        "Samples equity every 60 seconds and disarms if the engine's view of equity diverges from the exchange's by more than one percent."
+      ],
+      "does_not": [
+        "Does not touch foreign or manually-created positions. It warns instead.",
+        "Does not act on freshly submitted orders. Those sit in a grace state so an in-flight race is never mistaken for a mismatch.",
+        "Does not produce the authoritative checkpoints — that is the FullReconciler's job."
+      ],
+      "boundaries": [
+        "Light reconciliation may mutate owned state at the exchange. Full reconciliation never mutates exchange state at all — it only writes local evidence and checkpoints.",
+        "They also have separate failure budgets: a full-capture failure never touches the light readiness flag or the armed state."
+      ],
+      "safety": [
+        "Ambiguous matches produce a warning and explicitly do NOT flatten a sensible-looking protected position.",
+        "This is a deliberate fail-safe choice: a wrong flatten is a real loss, a warning is not."
+      ],
+      "connections": [
+        { "to": "order_manager", "label": "is part of", "kind": "control" },
+        { "to": "hyperliquid_exchange", "label": "reads truth from", "kind": "data" },
+        { "to": "full_reconciler", "label": "distinct from", "kind": "boundary" },
+        { "to": "notifier_telegram", "label": "raises warnings to", "kind": "notify" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/engine/orders.py",
+        "IBKR_PAPER_BRIDGE/bridge/engine/engine.py",
+        "IBKR_PAPER_BRIDGE/tests/test_reconciliation.py"
+      ],
+      "technical": [
+        "Matching order is cloid first, then order_ref, then a conservative attribute fallback of coin, side, type, trigger price and size.",
+        "Equity divergence above 0.5 percent warns; above 1 percent disarms."
+      ]
+    },
+    {
+      "id": "full_reconciler",
+      "plane": "execution",
+      "name": "FullReconciler (read-only evidence)",
+      "status": "current_v1",
+      "status_detail": "Implemented and tested, but opt-in: it needs the additive schema v6, and the operational baseline target is still v4.",
+      "one_liner": "A strict, read-only audit that produces one canonically hashed, immutable checkpoint of what was true at a moment in time.",
+      "purpose": "To create evidence that can be trusted later. If something goes wrong, the question 'what did the exchange actually say at that moment' needs an answer that nobody could have edited afterwards.",
+      "does": [
+        "Takes one bounded capture per cycle under a global guard, so two full attempts can never overlap.",
+        "Collects read-only evidence for seven components: open orders, fills, positions, balances, margin, funding and local pending actions.",
+        "Validates, diffs deterministically, and then commits snapshot, diff, provenance and verdict atomically.",
+        "Fails closed on a missed deadline, excessive clock skew, a clock rollback, or evidence it cannot prove."
+      ],
+      "does_not": [
+        "Never cancels, adopts, re-protects, flattens or retries anything. Zero exchange-state mutation, by design.",
+        "Never touches foreign state — it observes it.",
+        "Never lets a database transaction span an exchange call.",
+        "Is not free of all writes. 'Read-only' means read-only towards the exchange: locally it commits its own evidence — snapshot, diff, provenance and verdict — as immutable checkpoint rows."
+      ],
+      "boundaries": [
+        "This is the second meaning of 'reconciler' and it is the read-only one. The light path inside OrderManager is the one that may act.",
+        "The two have separate readiness gates. On a v6 store, arming requires both.",
+        "Read-only is a statement about exchange state, not about the database. Local evidence and checkpoints are written every cycle."
+      ],
+      "safety": [
+        "The coverage window is durable and has no fixed lookback, so a failure or a downtime widens the next window instead of leaving an unobserved gap.",
+        "A database that merely claims to be v6 without the v6 objects fails closed. A version label is not proof of a version.",
+        "The immutability property is a canonical hash computed over the checkpoint payload, with the payload version bound into it. It is not a cryptographic signature: it detects accidental drift and rebuild mismatch, and it is not evidence of authorship or a defence against anyone with write access to the database."
+      ],
+      "connections": [
+        { "to": "hyperliquid_exchange", "label": "reads evidence from", "kind": "data" },
+        { "to": "store_wal", "label": "commits immutable checkpoints to", "kind": "data" },
+        { "to": "risk_engine", "label": "supplies the authoritative snapshot to", "kind": "evidence" },
+        { "to": "light_reconciler", "label": "distinct from", "kind": "boundary" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/engine/reconcile.py",
+        "IBKR_PAPER_BRIDGE/docs/26_FULL_RECONCILIATION_CONTRACT.md",
+        "IBKR_PAPER_BRIDGE/docs/27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md"
+      ],
+      "technical": [
+        "Five second monotonic deadline enforced during collection, with every adapter await under an asyncio timeout on the remaining budget.",
+        "Lock order is always global guard then symbol locks. Funding is a separate sign-aware ledger — positive and negative amounts, not cryptographic signatures — keyed by the exchange event hash and never folded into fills."
+      ]
+    },
+    {
+      "id": "store_wal",
+      "plane": "execution",
+      "name": "Store / SQLite database (WAL)",
+      "status": "current_v1",
+      "status_detail": "Implemented. The operational baseline schema is v4; v5 through v8 are additive and opt-in.",
+      "one_liner": "The Bridge's own memory: every bar, decision, order, fill, trade and event, written down as it happens.",
+      "purpose": "So that any trade can be reconstructed afterwards in full — what was seen, what was decided, why, what was sent, and what came back.",
+      "does": [
+        "Stores bars, decisions, orders, fills, trades, equity samples, risk days and events.",
+        "Gives every stage of one decision a shared identifier, so the whole reasoning chain joins back together.",
+        "Records the generic LLM_SKIPPED decision the engine writes after every RISK_PASS, carrying the null gate's 'llm disabled' reason.",
+        "Persists the armed/disarmed/killed state so it survives a restart.",
+        "Redacts anything that looks like a key, token or secret out of stored model responses."
+      ],
+      "does_not": [
+        "Does not hold LLM directives or model-call records today. The directives and llm_calls tables exist in the schema, and the dormant null-gate path writes no directive row and no model-call row into either. What it does hold is the generic LLM_SKIPPED decision row written on every RISK_PASS, and llm_directive_id — a column on the trades row, not on the decisions row — which is currently always null.",
+        "Is not the authority on exchange facts. It holds local intent and evidence, not exchange truth.",
+        "Does not hold secrets. Credentials come from the environment only and are never written here.",
+        "Does not get its schema upgraded by accident — reaching a higher schema is a deliberate, chained migration."
+      ],
+      "boundaries": [
+        "Bridge records are authoritative for local intent, identity and ownership.",
+        "Hyperliquid is authoritative for positions, orders, fills, margin and funding. Where the two disagree and the disagreement cannot be resolved, the system fails closed."
+      ],
+      "safety": [
+        "Every timestamp is stored in UTC. Local time is a display concern only.",
+        "The data directory is git-ignored, so a runtime database is never committed."
+      ],
+      "connections": [
+        { "to": "fastapi_backend", "label": "opened by", "kind": "data" },
+        { "to": "dashboard", "label": "feeds the journal and system pages of", "kind": "data" },
+        { "to": "full_reconciler", "label": "holds immutable checkpoints for", "kind": "data" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/store/db.py",
+        "IBKR_PAPER_BRIDGE/tests/test_store.py",
+        "IBKR_PAPER_BRIDGE/docs/01_ARCHITECTURE.md"
+      ],
+      "technical": [
+        "SQLite in WAL mode, single writer, all writes through one Store class. Schema version is gated by meta.schema_version plus an object-existence check.",
+        "decisions.payload_json is the audit trail; joins happen on decision_uid."
+      ]
+    },
+    {
+      "id": "notifier_telegram",
+      "plane": "execution",
+      "name": "Telegram notifier",
+      "status": "current_v1",
+      "status_detail": "The notification code exists in V1 and is silently disabled when credentials are absent. KVM2 credentials, configuration and live verification are still incomplete, so it is not proven working on the server.",
+      "one_liner": "An optional one-way message channel that tells the owner's phone when something notable happens.",
+      "purpose": "So the owner does not have to sit in front of the Dashboard to learn that the system disarmed itself or that risk evidence went missing.",
+      "does": [
+        "Sends state transitions such as moving to DISARMED or KILLED.",
+        "Sends risk and reconciliation errors, for example when the authoritative risk input fails and the system disarms.",
+        "Sends a periodic heartbeat with position, equity and the last bar time.",
+        "Fails silently: a failed notification never blocks or breaks the trading path."
+      ],
+      "does_not": [
+        "Is not a control channel. Nothing can be armed, disarmed, killed or configured through Telegram. Messages only go outward.",
+        "Is not verified on the KVM2 VPS. Credentials and configuration there are incomplete.",
+        "Should not be assumed to send a message for every individual fill. Only what the source actually wires up is sent."
+      ],
+      "boundaries": [
+        "Notifications are observation, not control. The control surface is the Dashboard, and only over a private connection.",
+        "This is separate from the Dashboard's own event log, which is the complete record; Telegram is a subset pushed to a phone."
+      ],
+      "safety": [
+        "Both environment variables unset means disabled with no error, so a missing token can never crash the trading process.",
+        "Every send has a five second timeout and is fire-and-forget."
+      ],
+      "connections": [
+        { "to": "state_machine", "label": "announces transitions from", "kind": "notify" },
+        { "to": "owner", "label": "notifies", "kind": "notify" },
+        { "to": "kvm2_vps", "label": "needs configuration on (incomplete)", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/engine/notify.py",
+        "IBKR_PAPER_BRIDGE/bridge/engine/engine.py"
+      ],
+      "technical": [
+        "TelegramNotifier.send and .heartbeat are the only entry points; build_notifier returns a disabled notifier when either credential is missing.",
+        "Engine call sites include the state transition path, the risk snapshot and risk input failure paths, and the heartbeat loop."
+      ]
+    },
+
+    {
+      "id": "hyperliquid_exchange",
+      "plane": "exchange",
+      "name": "Hyperliquid TESTNET",
+      "status": "current_v1",
+      "status_detail": "TESTNET is the configured and only unlocked network. MAINNET is a separate gate.",
+      "one_liner": "The exchange itself — and the only place where what is actually true about the account is decided.",
+      "purpose": "To hold the account, match orders, hold the resting protective orders, and report the real state of positions, margin and funding.",
+      "does": [
+        "Owns the real facts: account balance, positions, open orders, fills, margin, mark price, funding and liquidation.",
+        "Holds native trigger orders on its own book, which keep working even if the Bridge process dies.",
+        "Streams live candles and user events over a WebSocket.",
+        "On TESTNET, does all of this with mock money."
+      ],
+      "does_not": [
+        "Does not know or care what the Bridge intended. It only knows what was actually sent and accepted.",
+        "Does not guarantee that a trigger price becomes your fill price. The trigger activates an order; the market decides the fill.",
+        "TESTNET does not prove profitability, and it does not prove MAINNET readiness."
+      ],
+      "boundaries": [
+        "Hyperliquid is authoritative for exchange facts. The Bridge database is authoritative for local intent, identity and ownership.",
+        "Reconciliation is exactly the act of comparing those two, and unresolved differences fail closed rather than being guessed away."
+      ],
+      "safety": [
+        "TESTNET is mock money. It is machinery testing, and treating a good TESTNET run as evidence of edge is a category error.",
+        "Slippage and protection limits are real even on TESTNET: a market order fills at what is available, not at the price you saw."
+      ],
+      "connections": [
+        { "to": "main_account", "label": "holds", "kind": "data" },
+        { "to": "api_wallet", "label": "accepts signed orders from", "kind": "control" },
+        { "to": "native_protection", "label": "hosts resting", "kind": "control" },
+        { "to": "bar_feed", "label": "streams candles to", "kind": "data" },
+        { "to": "mainnet_gate", "label": "real-money sibling of", "kind": "boundary" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py",
+        "IBKR_PAPER_BRIDGE/bridge/broker/base.py",
+        "IBKR_PAPER_BRIDGE/docs/06_HYPERLIQUID_SETUP.md"
+      ],
+      "technical": [
+        "The SDK splits into Info for reads and Exchange for signed writes, plus a WebSocket for candles and user events.",
+        "Positions and open orders are read from info.user_state; that single observation also serves balances and margin."
+      ]
+    },
+    {
+      "id": "main_account",
+      "plane": "exchange",
+      "name": "Main account (owns the funds)",
+      "status": "current_v1",
+      "status_detail": "Configured as an address only. Its private key is never given to the Bridge.",
+      "one_liner": "The account that actually owns the money and the positions.",
+      "purpose": "To hold funds, and to be the thing that an attacker must not be able to drain.",
+      "does": [
+        "Owns the balance, the collateral and the positions.",
+        "Is the address the Bridge reads state for.",
+        "Can withdraw funds — which is precisely why its key stays away from the software."
+      ],
+      "does_not": [
+        "Does not sign the Bridge's orders. A separate delegated wallet does that.",
+        "Its private key is never placed in the Bridge configuration, environment or database."
+      ],
+      "boundaries": [
+        "The main account owns funds. The API wallet only signs trades on its behalf.",
+        "Separating these two is the single most important money-safety decision in the design."
+      ],
+      "safety": [
+        "If the main account key were ever put into the software, a compromise would mean losing the funds outright rather than losing the trading session."
+      ],
+      "connections": [
+        { "to": "api_wallet", "label": "delegates trading authority to", "kind": "control" },
+        { "to": "hyperliquid_exchange", "label": "held at", "kind": "data" },
+        { "to": "owner", "label": "belongs to", "kind": "control" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/settings.py",
+        "IBKR_PAPER_BRIDGE/docs/06_HYPERLIQUID_SETUP.md"
+      ],
+      "technical": [
+        "Supplied as HL_ACCOUNT_ADDRESS and used as the account_address argument, so reads and writes resolve to the main account while signing happens with the agent key."
+      ]
+    },
+    {
+      "id": "api_wallet",
+      "plane": "exchange",
+      "name": "Agent / API wallet (the delegated signer)",
+      "status": "current_v1",
+      "status_detail": "This is the only key the Bridge holds, supplied through the environment.",
+      "one_liner": "A restricted key that can trade on the main account's behalf but cannot move money off the exchange.",
+      "purpose": "So that software can trade without software ever being able to steal the balance.",
+      "does": [
+        "Signs the orders the Bridge sends.",
+        "Acts on the main account's positions.",
+        "Can be revoked at the exchange without touching the main account."
+      ],
+      "does_not": [
+        "Cannot withdraw funds. That restriction is built into the wallet type, not enforced by our code.",
+        "Is never logged and never written to the database."
+      ],
+      "boundaries": [
+        "Trading authority and withdrawal authority are deliberately different things held by different keys."
+      ],
+      "safety": [
+        "IMPORTANT: 'cannot withdraw' does not mean 'theft is harmless'. A stolen API wallet key can still open damaging trades, close good ones, and — worst of all — cancel the protective stop orders that are keeping a position bounded.",
+        "Treat this key as a key that can lose money, just not carry it away.",
+        "Secrets come from the environment only. They are never committed, never logged and never rendered in the Dashboard."
+      ],
+      "connections": [
+        { "to": "main_account", "label": "acts on behalf of", "kind": "control" },
+        { "to": "hyperliquid_exchange", "label": "signs orders sent to", "kind": "control" },
+        { "to": "order_manager", "label": "used by", "kind": "control" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/settings.py",
+        "IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py",
+        "IBKR_PAPER_BRIDGE/docs/06_HYPERLIQUID_SETUP.md"
+      ],
+      "technical": [
+        "Supplied as HL_API_WALLET_KEY and loaded into an eth_account wallet used by the Exchange client.",
+        "The Store redacts key-, token-, secret-, bearer- and private-matching content from any persisted raw model response."
+      ]
+    },
+    {
+      "id": "native_protection",
+      "plane": "exchange",
+      "name": "Native reduce-only stop / take-profit",
+      "status": "current_v1",
+      "status_detail": "Stop-loss triggers are used. Take-profit is currently disabled by configuration (tp_mode is none), although the code path exists.",
+      "one_liner": "Real protective orders resting at the exchange — not a promise the Bridge makes to itself.",
+      "purpose": "So that a position stays protected even if the Bridge process crashes, the server reboots, or the network drops.",
+      "does": [
+        "Rests on Hyperliquid's own order book as reduce-only trigger orders.",
+        "Fires without the Bridge being involved or even online.",
+        "Gets tightened by the Bridge each bar as the trailing stop moves, by modifying only the trigger price."
+      ],
+      "does_not": [
+        "Does not guarantee the fill price. The trigger price is the activation level, not a promised exit price; in a fast move the fill can be worse.",
+        "Does not keep trailing while the Bridge is down. The last accepted level stays in force, but no new, tighter level is calculated or sent until the Bridge recovers.",
+        "Does not currently include a take-profit, because the configured strategy is trail-only."
+      ],
+      "boundaries": [
+        "The exchange owns the resting order. The Bridge owns the decision about where the level should be.",
+        "This is why an outage degrades gracefully: you keep the protection you had, you just stop getting improvements to it."
+      ],
+      "safety": [
+        "This is the strongest safety property in the whole design and the main reason this exchange was chosen over a relay that only fires synthetic market exits.",
+        "A stolen API key can cancel these. Protection resting at the exchange is protection against outages, not against key theft."
+      ],
+      "connections": [
+        { "to": "hyperliquid_exchange", "label": "rests at", "kind": "control" },
+        { "to": "order_manager", "label": "created and trailed by", "kind": "control" },
+        { "to": "api_wallet", "label": "cancellable by anyone holding", "kind": "blocked" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/engine/orders.py",
+        "IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py",
+        "IBKR_PAPER_BRIDGE/docs/25_PARTIAL_FILL_PROTECTION_CONTRACT.md"
+      ],
+      "technical": [
+        "Entry brackets use grouping normalTpsl with reduce_only triggers; re-protection of an existing position uses positionTpsl.",
+        "Trailing modifies triggerPx on the same cloid, price only and never quantity; if the live order cannot be found it is cancelled and re-placed with a warning."
+      ]
+    },
+    {
+      "id": "mainnet_gate",
+      "plane": "exchange",
+      "name": "MAINNET (real money)",
+      "status": "separate_gate",
+      "status_detail": "Locked. Reaching it requires a separate future audit, explicit limits and explicit owner approval.",
+      "one_liner": "Real money. Deliberately behind a triple lock that no amount of TESTNET success opens.",
+      "purpose": "To make the step from mock money to real money a conscious, audited, irreversible-feeling decision rather than a configuration flag someone flips.",
+      "does": [
+        "Requires three independent things at once: a command-line flag, an explicit acknowledgement environment variable, and a strategy marked live-allowed.",
+        "Refuses to start if any one of them is missing."
+      ],
+      "does_not": [
+        "Is not reachable by editing configuration from the Dashboard. The network setting is deliberately not runtime-editable.",
+        "Is not implied by a good TESTNET run. Machinery working is not the same as a strategy being worth real money.",
+        "Is not authorised by this Help page, by any audit of this Help page, or by any AI."
+      ],
+      "boundaries": [
+        "TESTNET proves plumbing. MAINNET requires a separate owner and audit gate covering strategy evidence, risk limits and operational readiness."
+      ],
+      "safety": [
+        "The default is deny. TESTNET is the only unlocked target.",
+        "A persistent red 'REAL MONEY' banner is specified for this mode so it can never be mistaken for paper."
+      ],
+      "connections": [
+        { "to": "hyperliquid_exchange", "label": "real-money form of", "kind": "boundary" },
+        { "to": "owner", "label": "may only be opened by", "kind": "control" },
+        { "to": "strategy_promotion", "label": "requires a promoted strategy from", "kind": "control" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/01_ARCHITECTURE.md",
+        "IBKR_PAPER_BRIDGE/docs/16_GO_LIVE_PLAN.md",
+        "IBKR_PAPER_BRIDGE/config/bridge.yaml"
+      ],
+      "technical": [
+        "Triple lock is the --enable-live flag, HL_LIVE_ACK set to the exact acknowledgement string, and strategy live_allowed true.",
+        "broker.network is yaml-only and not accepted through the config endpoint; changing it requires a restart."
+      ]
+    },
+
+    {
+      "id": "owner",
+      "plane": "control",
+      "name": "Owner (you)",
+      "status": "current_v1",
+      "status_detail": "The only identity in the system with authority to act.",
+      "one_liner": "The only decision-maker. Everything else either observes, advises, or executes inside limits you set.",
+      "purpose": "To hold the authority that no automation and no AI is allowed to hold.",
+      "does": [
+        "Arms, disarms and kills.",
+        "Sets risk limits and approves strategies.",
+        "Decides whether real money is ever involved.",
+        "Reads AI explanations and decides whether to act on them."
+      ],
+      "does_not": [
+        "Does not need to be technical to use this system safely. That is the point of this Help page.",
+        "Does not delegate economic authority to any AI, at any tier, in any planned version.",
+        "Is not the only thing that can move the system to DISARMED. The runtime disarms itself automatically on stale data, the daily loss limit, equity divergence and an unacknowledged order. Owner-operated control and automatic fail-safe action are separate ideas."
+      ],
+      "boundaries": [
+        "Owner authority is deliberately not delegable. An AI may prepare a proposal; only the owner may accept one.",
+        "Owner-operated controls widen and withdraw permission. Automatic fail-safe actions may only withdraw it. The runtime can never arm itself."
+      ],
+      "safety": [
+        "Today there is no login and no second factor, so anyone who can reach the Dashboard has the owner's control powers. That is why the connection must stay private."
+      ],
+      "connections": [
+        { "to": "private_access", "label": "reaches the system through", "kind": "control" },
+        { "to": "dashboard_controls", "label": "operates", "kind": "control" },
+        { "to": "codex_assistant", "label": "asks and judges", "kind": "advisory" },
+        { "to": "strategy_promotion", "label": "decides", "kind": "control" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md"
+      ],
+      "technical": [
+        "There is no user record anywhere in the system. 'Owner' is a role in the design, not an implemented account."
+      ]
+    },
+    {
+      "id": "dashboard",
+      "plane": "control",
+      "name": "Dashboard V1 (six original pages plus Help)",
+      "status": "current_v1",
+      "status_detail": "Seven pages today: the six original pages — Overview, Trading, Strategy & Risk, Journal, LLM and System — plus this Help page. Observation data and live WebSocket updates work. The Strategy & Risk form is not a finished save workflow, and the LLM page is a placeholder: its Regime, Veto Mode and Cost cards render from status and configuration — Veto Mode from config.llm.veto_enabled — while its Directive History table is always empty.",
+      "one_liner": "The window into the system: what it sees, what it decided, and what it is doing right now.",
+      "purpose": "To make an automated system legible. A system you cannot see is a system you cannot supervise.",
+      "does": [
+        "Shows equity, day profit and loss, the next bar's UTC time, and the gate-by-gate breakdown of the last signal.",
+        "Shows positions, working orders, trades, decisions and system events.",
+        "Opens one WebSocket, receives a full snapshot on connection, and then applies live updates as they arrive.",
+        "Hosts the control buttons and this Help page, which is the seventh page alongside the six original pages."
+      ],
+      "does_not": [
+        "Does not invent strategy, and does not bypass any backend gate. Pressing a button asks the backend; the backend still decides.",
+        "Does not count down to the next bar. The Next Bar card shows the next bar's UTC time — it is a time, not a live countdown.",
+        "Does not reconnect the WebSocket automatically. The client registers only a message listener, with no close or error handler, so a dropped socket silently stops live updates until the page is reloaded by hand.",
+        "Does not have a working save workflow on the Strategy & Risk form today.",
+        "Does not have a real LLM page today. Its Directive History table renders from an empty list and no gate output reaches the page at all; the Veto Mode card only mirrors the configured veto_enabled value, and the LLM gate behind it is dormant, unwired scaffolding.",
+        "Is not a public website and is not mobile-polished."
+      ],
+      "boundaries": [
+        "The Dashboard is a separate responsibility and security boundary from the trading engine, even though today the same loopback process serves both.",
+        "'Separate component' here means separate responsibility, not a separately deployed service. A separately limited loopback Dashboard V2 service remains an open option."
+      ],
+      "safety": [
+        "Every value from the backend is rendered as text, never as markup. This is a deliberate contract that a test enforces.",
+        "No external libraries and no content delivery networks are used, so the interface works on a fully private machine with no outbound access."
+      ],
+      "connections": [
+        { "to": "fastapi_backend", "label": "served and fed by", "kind": "data" },
+        { "to": "dashboard_controls", "label": "contains", "kind": "control" },
+        { "to": "help_map", "label": "contains", "kind": "data" },
+        { "to": "analysis_package", "label": "is intended to produce", "kind": "planned" },
+        { "to": "dashboard_v2", "label": "will be succeeded by", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/static/index.html",
+        "IBKR_PAPER_BRIDGE/bridge/static/app.js",
+        "IBKR_PAPER_BRIDGE/bridge/static/app.css",
+        "IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py"
+      ],
+      "technical": [
+        "Vanilla HTML, CSS and JavaScript with no build step, served from bridge/static by the same FastAPI process.",
+        "index.html carries seven nav buttons: the six original data-page values plus data-page=\"help\".",
+        "nextBarLabel() in app.js formats the next bar boundary as HH:00 UTC; no countdown timer exists.",
+        "ws.py sends one {topic: snapshot} message on connection. connectWs() in app.js registers only a message listener — no close or error handler, and therefore no automatic reconnect.",
+        "The no-markup-injection contract is asserted by test_dashboard_static.py, which fails if the forbidden DOM property appears in app.js."
+      ]
+    },
+    {
+      "id": "dashboard_controls",
+      "plane": "control",
+      "name": "ARM / DISARM / KILL controls",
+      "status": "current_v1",
+      "status_detail": "Real and wired. The buttons call /api/arm, /api/disarm and /api/kill on the backend.",
+      "one_liner": "Three real buttons that change what the machine is allowed to do.",
+      "purpose": "To give the owner an immediate, unambiguous way to grant or withdraw permission from the automation.",
+      "does": [
+        "ARM grants conditional permission for eligible future signals. It sends the current state version so a stale browser tab cannot arm by accident.",
+        "DISARM blocks new entries immediately, cancels pending ENTRY orders when it is safe to do so, and then reconciles.",
+        "KILL sets the sticky emergency state that survives a restart."
+      ],
+      "does_not": [
+        "ARM does not place an order and does not mean a trade is coming. It is permission, not an instruction.",
+        "DISARM does not automatically flatten. An open position stays open, its exchange-side protection stays in place, and runtime reconciliation, protection and notification work continues.",
+        "KILL as wired in this interface does not flatten either — the button sends flatten=false.",
+        "KILL does not leave protection alone. Even with flatten=false the engine calls cancel_all(), so exchange-native protective orders can be cancelled while the position stays open. Treat this as the recorded hardening gap, not as a safe emergency stop.",
+        "These three buttons are the owner-operated controls. They are not the only way the state changes: the runtime can disarm itself automatically as a fail-safe.",
+        "None of these are protected by a login, a second factor, a role check or a session timeout, because none of those exist yet."
+      ],
+      "boundaries": [
+        "The button expresses intent. The backend state machine and the RiskEngine still decide what actually happens.",
+        "Human and AI permissions are separate: these controls belong exclusively to the owner identity and are unreachable to any AI."
+      ],
+      "safety": [
+        "KILL must not be described as production-hardened. A hardening gap is recorded and still open.",
+        "Because there is no authentication, anyone who can reach port 8790 has these powers. Keep the connection private.",
+        "DISARM and KILL are intentionally exempt from the stale-state check — a safety action must never fail because a tab is out of date."
+      ],
+      "connections": [
+        { "to": "state_machine", "label": "drives", "kind": "control" },
+        { "to": "owner", "label": "operated only by", "kind": "control" },
+        { "to": "auth_layer", "label": "needs but does not have", "kind": "planned" },
+        { "to": "codex_assistant", "label": "NO AUTHORITY — AI can never operate these", "kind": "blocked" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/static/app.js",
+        "IBKR_PAPER_BRIDGE/bridge/api/routes.py",
+        "IBKR_PAPER_BRIDGE/bridge/engine/engine.py"
+      ],
+      "technical": [
+        "ARM sends the X-Confirm header carrying state_version; DISARM and KILL deliberately do not.",
+        "The KILL request is issued as /api/kill?flatten=false by the current interface, and the engine's KILL path still calls broker.cancel_all()."
+      ]
+    },
+    {
+      "id": "help_map",
+      "plane": "control",
+      "name": "This Help / System Map",
+      "status": "current_v1",
+      "status_detail": "This page is the feature currently under review. It is part of the Dashboard's static assets and is not accepted until the Lead's independent review completes.",
+      "one_liner": "The page you are reading: one machine-readable description of the system, rendered for a human and reusable by an AI.",
+      "purpose": "So the owner can understand the system without reading code, and so a future AI agent can learn the same facts from the same file rather than guessing from the source.",
+      "does": [
+        "Renders every component, its status, its boundaries, its connections and its source paths from a single JSON file.",
+        "Serves as the canonical answer to 'what exists today versus what is only planned'.",
+        "Works with a keyboard, at small widths, and with reduced-motion preferences."
+      ],
+      "does_not": [
+        "Does not authorise anything. It is documentation rendered in a browser.",
+        "Does not read live system state. It describes the design, not the current run.",
+        "Does not duplicate itself into a second document — the AI-facing note points here rather than copying the facts.",
+        "Does not prove itself with its test suite. The tests are structural and selected-phrase tripwires, not proof that every semantic claim in this file is still current."
+      ],
+      "boundaries": [
+        "One knowledge source, two consumers. The human interface and any future AI both read the same JSON, so they cannot drift apart.",
+        "A green test run and a true map are different things. The tests defend the shape and a chosen list of phrases; the truth of each sentence rests on source, configuration, deployment evidence and recorded owner decisions."
+      ],
+      "safety": [
+        "The automated checks are structural and selected-phrase tripwires: unique ids, resolvable planes, statuses, connection targets and flow steps, existing source paths, and a fixed list of load-bearing phrases. They cannot detect a sentence that quietly became false while keeping its wording.",
+        "When source, configuration, deployment state or an owner decision changes, the affected claims here must be re-verified against that evidence by a human. Passing tests are not that verification.",
+        "Every status label in this file is a truth claim. If the system changes, this file must change with it."
+      ],
+      "connections": [
+        { "to": "dashboard", "label": "part of", "kind": "data" },
+        { "to": "repo_ai_memory", "label": "not yet referenced from", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/bridge/static/help_map.json",
+        "IBKR_PAPER_BRIDGE/docs/31_HELP_SYSTEM_MAP_INDEX.md",
+        "IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py"
+      ],
+      "technical": [
+        "The JSON is served by the existing static mount at /static/help_map.json and fetched on first activation of the Help page.",
+        "Structural integrity — unique ids, resolvable connection targets, valid statuses, flow step states and existing source paths — is asserted in test_dashboard_static.py, alongside a parametrised list of required phrases. Both are tripwires against silent erosion, not semantic verification."
+      ]
+    },
+    {
+      "id": "dashboard_v2",
+      "plane": "control",
+      "name": "Dashboard V2",
+      "status": "planned_v2",
+      "status_detail": "Direction only. Nothing is implemented. Whether it becomes a separately limited loopback service or stays inside the Bridge process is an OPEN question.",
+      "one_liner": "The next version of the interface: better workflows, real configuration saving, and mobile polish.",
+      "purpose": "To turn the current basic V1 interface into something that is genuinely comfortable to operate, including from a phone screen.",
+      "does": [
+        "Nothing yet. This box exists so the plan is visible and clearly separated from what runs today."
+      ],
+      "does_not": [
+        "Does not exist. No part of it may be described as working.",
+        "Does not change the security model on its own. Remote control still requires the separate authentication gate."
+      ],
+      "boundaries": [
+        "V2 remains private-first and stays on the same VPS as the Bridge. Running it as its own loopback service would sharpen the security boundary but is not decided.",
+        "Even as a separate service it would remain loopback-only; it would not become a public site."
+      ],
+      "safety": [
+        "A nicer interface does not add safety. Authentication, roles and audit logging are a different, separately gated piece of work."
+      ],
+      "connections": [
+        { "to": "dashboard", "label": "successor to", "kind": "planned" },
+        { "to": "auth_layer", "label": "depends on for any remote control", "kind": "planned" },
+        { "to": "kvm2_vps", "label": "intended to live on", "kind": "planned" },
+        { "to": "dashboard_ai_memory", "label": "would host", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md"
+      ],
+      "technical": [
+        "Recorded in the V2 design decisions document, whose own status field marks it documentation-only with no implementation authority."
+      ]
+    },
+    {
+      "id": "kvm2_vps",
+      "plane": "control",
+      "name": "Hostinger KVM2 VPS",
+      "status": "not_deployed",
+      "status_detail": "The Bridge and Dashboard are NOT installed and NOT running on this server. The latest verified state is an uploaded payload only.",
+      "one_liner": "The always-on server the system is meant to live on — which it does not live on yet.",
+      "purpose": "To run the Bridge continuously, since crypto trades 24/7 and a laptop that sleeps is not an acceptable host for a system holding open positions.",
+      "does": [
+        "Exists as a rented server.",
+        "Holds an uploaded payload from an earlier step."
+      ],
+      "does_not": [
+        "Does not run the Bridge today.",
+        "Does not serve a live Dashboard today. Any claim of a live remote dashboard would be false.",
+        "Does not expose port 8790 to the internet, and must never do so."
+      ],
+      "boundaries": [
+        "The Bridge and Dashboard are meant to share this server, private-first, behind the loopback interface.",
+        "Future public websites may share the same server only as separate tenants: separate users, directories, services and public ports. They never proxy or expose Bridge controls and are not part of the Bridge Dashboard."
+      ],
+      "safety": [
+        "Deployment is a separate piece of work with its own risks. Until it happens, every statement about 'the server' is about intent, not operation."
+      ],
+      "connections": [
+        { "to": "fastapi_backend", "label": "intended host for", "kind": "planned" },
+        { "to": "dashboard_v2", "label": "intended host for", "kind": "planned" },
+        { "to": "private_access", "label": "reachable only through", "kind": "planned" },
+        { "to": "public_websites", "label": "may separately host", "kind": "boundary" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/17_DEPLOYMENT.md",
+        "MTC_COMMAND_CENTER/11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_MASTER_PLAN_2026-07-25.md"
+      ],
+      "technical": [
+        "The Linux deployment contract expects runtime state outside the release tree, via an absolute state database path supplied by CLI or environment."
+      ]
+    },
+    {
+      "id": "private_access",
+      "plane": "control",
+      "name": "Private access (SSH tunnel from the owner's PC)",
+      "status": "planned_v2",
+      "status_detail": "The chosen direction is a private SSH tunnel. It is not in use, because there is nothing deployed on the server to tunnel to yet.",
+      "one_liner": "The private door: how the owner's computer reaches a loopback-only service on a remote machine.",
+      "purpose": "To get remote access without ever putting the control surface on the public internet.",
+      "does": [
+        "Forwards a local port on the owner's PC to the server's loopback interface over an authenticated encrypted channel.",
+        "Keeps the Bridge listening only on 127.0.0.1 on the server, so nothing is exposed even if the tunnel is not up."
+      ],
+      "does_not": [
+        "Does not add authentication to the Dashboard itself. Anyone inside the tunnel still has full control, because the application has no login.",
+        "Does not exist as a running arrangement today.",
+        "Does not, and must never, mean opening port 8790 to the internet."
+      ],
+      "boundaries": [
+        "The tunnel is transport security. Application security — login, second factor, roles, audit — is a separate layer that does not exist yet.",
+        "Do not treat one as a substitute for the other."
+      ],
+      "safety": [
+        "Never expose port 8790 publicly. Not behind a password page, not 'just for a minute'.",
+        "Anyone with tunnel access effectively has owner-level control of the trading system."
+      ],
+      "connections": [
+        { "to": "owner", "label": "used by", "kind": "control" },
+        { "to": "kvm2_vps", "label": "terminates at", "kind": "planned" },
+        { "to": "dashboard", "label": "grants access to", "kind": "planned" },
+        { "to": "phone_monitoring", "label": "pattern to be extended for", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/17_DEPLOYMENT.md",
+        "IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md"
+      ],
+      "technical": [
+        "Local port forwarding to 127.0.0.1:8790 on the server; the server's bind address and CORS restriction stay unchanged."
+      ]
+    },
+    {
+      "id": "phone_monitoring",
+      "plane": "control",
+      "name": "Phone monitoring",
+      "status": "separate_gate",
+      "status_detail": "Future work. It must start read-only, through a private tunnel, VPN or another gated private method. The exact phone and authentication topology is an OPEN question.",
+      "one_liner": "Being able to check the system from a phone — watching first, and only much later touching anything.",
+      "purpose": "So the owner can see what an unattended system is doing without needing to be at a desk.",
+      "does": [
+        "Nothing yet."
+      ],
+      "does_not": [
+        "Does not exist.",
+        "Does not begin with control. The first version is read-only monitoring, deliberately.",
+        "Does not involve making anything public. A private tunnel, VPN or equivalent gated private method is required."
+      ],
+      "boundaries": [
+        "Read-only monitoring and interactive control are two separate pieces of work with two separate risk profiles. Monitoring comes first.",
+        "Interactive control from a phone additionally requires the authentication layer, which does not exist."
+      ],
+      "safety": [
+        "A phone is the easiest device to lose. That is a large part of why control from a phone sits behind authentication, roles and audit logging, and why monitoring comes first."
+      ],
+      "connections": [
+        { "to": "private_access", "label": "must go through", "kind": "planned" },
+        { "to": "auth_layer", "label": "requires before any control", "kind": "planned" },
+        { "to": "owner", "label": "used by", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md",
+        "IBKR_PAPER_BRIDGE/docs/01_ARCHITECTURE.md"
+      ],
+      "technical": [
+        "Topology is unresolved. Options include a VPN to the server's private network or a tunnel client on the phone; neither is chosen."
+      ]
+    },
+    {
+      "id": "auth_layer",
+      "plane": "control",
+      "name": "Login, 2FA, roles and control audit",
+      "status": "separate_gate",
+      "status_detail": "None of this exists today: no application login, no second factor, no role system, no session expiry, and no complete control audit layer.",
+      "one_liner": "The missing security layer that any remote or shared control would require first.",
+      "purpose": "To answer 'who did this and were they allowed to' — a question the system currently cannot answer at all.",
+      "does": [
+        "Nothing yet."
+      ],
+      "does_not": [
+        "Does not exist in any form. The current system has no concept of a user.",
+        "Is not replaced by the tunnel. Transport privacy is not identity.",
+        "Is not replaced by binding to loopback. That limits reach, not authority."
+      ],
+      "boundaries": [
+        "Until this exists, the honest description of the control surface is: unauthenticated, and safe only because it is unreachable."
+      ],
+      "safety": [
+        "This is the single gate between 'private local tool' and 'remotely operable system'. It must not be skipped, and it is required before any non-loopback exposure.",
+        "Fresh-state confirmation and complete audit logging belong to this layer too, not just the login box."
+      ],
+      "connections": [
+        { "to": "dashboard_controls", "label": "would protect", "kind": "planned" },
+        { "to": "phone_monitoring", "label": "required before control from", "kind": "planned" },
+        { "to": "dashboard_v2", "label": "prerequisite for remote control in", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/01_ARCHITECTURE.md",
+        "IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md"
+      ],
+      "technical": [
+        "Recorded in the architecture roadmap as required before any non-localhost exposure."
+      ]
+    },
+    {
+      "id": "analysis_package",
+      "plane": "control",
+      "name": "Read-only analysis package",
+      "status": "planned_v2",
+      "status_detail": "Not implemented. This is the intended way to get system context to an AI without giving the AI access to the system.",
+      "one_liner": "An exported, read-only bundle of what happened, that the owner can hand to an AI by choice.",
+      "purpose": "To get useful AI explanation without connecting an AI to the trading system. The data travels; the AI does not arrive.",
+      "does": [
+        "Nothing yet."
+      ],
+      "does_not": [
+        "Does not exist today.",
+        "Would not contain secrets, keys or wallet material.",
+        "Would not give the receiving AI any connection back into the system. It is an export, not a session."
+      ],
+      "boundaries": [
+        "This is the entire security argument for the initial AI assistance model: the AI reads an export, not the system.",
+        "Anything the owner pastes into an external assistant leaves the private environment. That is a deliberate, owner-made choice each time."
+      ],
+      "safety": [
+        "Redaction matters. An analysis package must never carry credentials, and the Store already redacts key-like content from persisted model responses."
+      ],
+      "connections": [
+        { "to": "dashboard", "label": "produced by", "kind": "planned" },
+        { "to": "codex_assistant", "label": "handed to", "kind": "planned" },
+        { "to": "store_wal", "label": "derived from", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md"
+      ],
+      "technical": [
+        "Shape, redaction rules and export mechanics are unspecified and remain OPEN."
+      ]
+    },
+    {
+      "id": "codex_assistant",
+      "plane": "control",
+      "name": "AI assistant — owner's Codex / ChatGPT subscription (manual)",
+      "status": "planned_v2",
+      "status_detail": "The decided initial approach: the owner uses their existing Codex/ChatGPT subscription manually against a read-only analysis package or controlled read-only context. This explicitly does NOT require Hermes or any dedicated model deployment.",
+      "one_liner": "An advisor the owner consults on purpose — with no connection to the trading system whatsoever.",
+      "purpose": "To get an explanation of what happened and why, and to draft proposals worth considering, without ever putting a model inside the control path.",
+      "does": [
+        "Reads what the owner gives it and explains it in plain language.",
+        "Summarises incidents, spots patterns and drafts a proposal for the owner to judge.",
+        "Avoids a separate API bill on this initial path, because it uses the Codex/ChatGPT subscription the owner already pays for — subject to that subscription's own usage limits and terms."
+      ],
+      "does_not": [
+        "Has no ARM, DISARM or KILL authority — now or in any planned version.",
+        "Has no configuration, order, wallet, shell, deployment or code-editing authority.",
+        "Does not receive a connection to the Bridge. It receives an export, if and when the owner sends one.",
+        "Is not Hermes, and does not require Hermes. That earlier implication was replaced by an explicit owner decision.",
+        "Is not automatic. Nothing runs on a schedule; the owner initiates every interaction."
+      ],
+      "boundaries": [
+        "Three identities exist in this plane: the owner may act, the runtime acts within rails, and the AI may only read and explain. The AI's boundary is absolute, not merely default-off.",
+        "An automatic embedded server-side chat is a different thing entirely — later, separately gated, and normally requiring a separately billed API."
+      ],
+      "safety": [
+        "The strongest property here is architectural: there is no wire from the AI to any economic control. It is not a permission that could be misconfigured.",
+        "Anything pasted into an external assistant leaves the private environment. Never paste credentials or wallet material."
+      ],
+      "connections": [
+        { "to": "analysis_package", "label": "reads", "kind": "planned" },
+        { "to": "owner", "label": "returns explanations and proposals to", "kind": "advisory" },
+        { "to": "dashboard_controls", "label": "NO AUTHORITY — cannot arm, disarm or kill", "kind": "blocked" },
+        { "to": "api_wallet", "label": "NO AUTHORITY — never receives keys or signing power", "kind": "blocked" },
+        { "to": "embedded_ai_chat", "label": "later alternative to", "kind": "planned" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md",
+        "MTC_COMMAND_CENTER/11_TRIAGE/BRIDGE_HELP_WIKI_IMPLEMENT_PROMPT_2026-08-16.md"
+      ],
+      "technical": [
+        "No code exists for this path. It is a workflow decision, not a component in the running process."
+      ]
+    },
+    {
+      "id": "embedded_ai_chat",
+      "plane": "control",
+      "name": "Embedded server-side AI chat",
+      "status": "separate_gate",
+      "status_detail": "Later work behind its own gate. It normally requires a separately billed API, which is one of the reasons it is not the initial approach.",
+      "one_liner": "An AI built into the Dashboard that answers questions automatically — deliberately not the starting point.",
+      "purpose": "Convenience: asking a question without exporting anything first. That convenience carries real cost and real risk, so it waits.",
+      "does": [
+        "Nothing yet."
+      ],
+      "does_not": [
+        "Does not exist.",
+        "Would still have no economic authority. Being embedded would not change the read-only boundary.",
+        "Is not free — an embedded assistant normally means a separately billed API rather than the owner's existing subscription."
+      ],
+      "boundaries": [
+        "Even if built, the boundary is unchanged: explain, summarise, alert, propose. Never act.",
+        "An embedded assistant also means the system holds another credential and makes outbound calls of its own — which is why it is gated separately."
+      ],
+      "safety": [
+        "An assistant that lives inside the system has a path to the system by definition. That path must be proven read-only by audit, not by intention."
+      ],
+      "connections": [
+        { "to": "codex_assistant", "label": "later alternative to", "kind": "planned" },
+        { "to": "dashboard_controls", "label": "NO AUTHORITY — would still never arm, disarm or kill", "kind": "blocked" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md"
+      ],
+      "technical": [
+        "No code, no design, no gate satisfied."
+      ]
+    },
+    {
+      "id": "dashboard_ai_memory",
+      "plane": "control",
+      "name": "Dashboard operational AI memory",
+      "status": "planned_v2",
+      "status_detail": "Not implemented. Planned as summaries, incident records and operator notes belonging to the running system.",
+      "one_liner": "The system's own operational notebook: what happened, what was decided, and what to remember next time.",
+      "purpose": "So that operational context survives between sessions instead of living in the owner's head.",
+      "does": [
+        "Nothing yet."
+      ],
+      "does_not": [
+        "Does not exist.",
+        "Is NOT the repository _AI_MEMORY. These are two different things that share a name and are constantly confused.",
+        "Would not grant an AI any authority. It is notes, not permissions."
+      ],
+      "boundaries": [
+        "Dashboard operational memory would belong to the running trading system: incidents, summaries, operator notes.",
+        "The repository _AI_MEMORY belongs to the coding agents that build the repository. It exists today. This one does not."
+      ],
+      "safety": [
+        "Keeping the two separate matters: operational notes about live trading should not be mixed into the development knowledge base."
+      ],
+      "connections": [
+        { "to": "dashboard_v2", "label": "would live inside", "kind": "planned" },
+        { "to": "repo_ai_memory", "label": "must not be confused with", "kind": "boundary" }
+      ],
+      "sources": [
+        "IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md"
+      ],
+      "technical": [
+        "Storage, retention and redaction are all unspecified and remain OPEN."
+      ]
+    },
+    {
+      "id": "repo_ai_memory",
+      "plane": "control",
+      "name": "Repository _AI_MEMORY (coding agents)",
+      "status": "current_v1",
+      "status_detail": "Exists and is in active use — but by the agents that build this repository, not by the trading system.",
+      "one_liner": "The onboarding and rules memory that coding agents read before touching this repository.",
+      "purpose": "So that every agent working on the code starts from the same rules, the same history and the same hard-won lessons.",
+      "does": [
+        "Holds the onboarding chain, workflow rules, audit tier policy and handoff records.",
+        "Records decisions and lessons so a mistake is paid for once."
+      ],
+      "does_not": [
+        "Has nothing to do with live trading, and is never read by the Bridge at runtime.",
+        "Is not the planned Dashboard operational memory.",
+        "Is never written to by the Bridge application.",
+        "Does not currently point coding agents at help_map.json. No file under MTC_COMMAND_CENTER/_AI_MEMORY references it today; the only pointer that exists is docs/31_HELP_SYSTEM_MAP_INDEX.md. Adding that pointer is outstanding work."
+      ],
+      "boundaries": [
+        "This is a development-time artefact. The Bridge application never writes into the command centre and never imports from it at runtime."
+      ],
+      "safety": [
+        "Keeping development memory and operational memory apart prevents a coding agent's context from being mistaken for live operational fact."
+      ],
+      "connections": [
+        { "to": "help_map", "label": "does not point agents at it yet", "kind": "planned" },
+        { "to": "dashboard_ai_memory", "label": "must not be confused with", "kind": "boundary" }
+      ],
+      "sources": [
+        "MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md",
+        "AGENTS.md"
+      ],
+      "technical": [
+        "Architecture rule 9: the Bridge never writes into MTC_COMMAND_CENTER and never imports from it at runtime."
+      ]
+    },
+    {
+      "id": "public_websites",
+      "plane": "control",
+      "name": "Future public websites on the same VPS",
+      "status": "separate_gate",
+      "status_detail": "Not built, and gated separately. If they ever exist they are tenants on the same machine, nothing more.",
+      "one_liner": "Unrelated public sites that may share the server hardware — and must never touch the Bridge.",
+      "purpose": "To use a rented server efficiently without letting a public surface anywhere near a trading control surface.",
+      "does": [
+        "Nothing yet."
+      ],
+      "does_not": [
+        "Never proxies Bridge controls.",
+        "Never exposes the Bridge or the Dashboard, directly or indirectly.",
+        "Is not part of the Bridge Dashboard and shares no code, no session and no authority with it."
+      ],
+      "boundaries": [
+        "Sharing is strictly at the machine level: separate tenants and users, separate directories, separate services, separate public ports.",
+        "The Bridge stays on loopback. A public site being on the same box changes nothing about that."
+      ],
+      "safety": [
+        "A public web service is the most likely thing on that machine to be attacked. Isolation is what stops that becoming a trading incident.",
+        "Any proposal to 'just proxy the dashboard through the website' is a rejection, not a design question."
+      ],
+      "connections": [
+        { "to": "kvm2_vps", "label": "would be a separate tenant on", "kind": "boundary" },
+        { "to": "dashboard_controls", "label": "NO AUTHORITY — never proxies or exposes", "kind": "blocked" }
+      ],
+      "sources": [
+        "MTC_COMMAND_CENTER/11_TRIAGE/BRIDGE_HELP_WIKI_IMPLEMENT_PROMPT_2026-08-16.md"
+      ],
+      "technical": [
+        "Isolation expectation is separate system users, separate directories, separate service units and separate public ports."
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "flow_owner_control",
+      "title": "How the owner controls the system",
+      "kind": "control",
+      "note": "Every step is deliberate and human-initiated. Steps marked as planned are not in place today.",
+      "steps": [
+        { "component": "owner", "label": "Owner", "state": "current" },
+        { "component": "private_access", "label": "Private SSH tunnel / VPN", "state": "planned" },
+        { "component": "dashboard", "label": "Dashboard (loopback)", "state": "current" },
+        { "component": "dashboard_controls", "label": "ARM / DISARM / KILL", "state": "current" },
+        { "component": "state_machine", "label": "Bridge runtime", "state": "current" }
+      ]
+    },
+    {
+      "id": "flow_notify",
+      "title": "How the system reaches the owner",
+      "kind": "notify",
+      "note": "One-way only. Nothing can be controlled through this channel. Not yet verified on the KVM2 server.",
+      "steps": [
+        { "component": "state_machine", "label": "Bridge runtime", "state": "current" },
+        { "component": "notifier_telegram", "label": "Telegram notifier", "state": "current" },
+        { "component": "owner", "label": "Owner's phone", "state": "current" }
+      ]
+    },
+    {
+      "id": "flow_ai_advice",
+      "title": "How AI assistance works (read-only, owner-initiated)",
+      "kind": "advisory",
+      "note": "The data travels to the AI. The AI never arrives at the system. The owner starts every step and decides at the end.",
+      "steps": [
+        { "component": "dashboard", "label": "Dashboard", "state": "current" },
+        { "component": "analysis_package", "label": "Read-only analysis package", "state": "planned" },
+        { "component": "codex_assistant", "label": "Owner's Codex / ChatGPT subscription", "state": "planned" },
+        { "component": "owner", "label": "Explanation / proposal → Owner decides", "state": "current" }
+      ]
+    },
+    {
+      "id": "flow_ai_blocked",
+      "title": "What AI can never do",
+      "kind": "blocked",
+      "note": "There is no wire here to misconfigure. The AI has no path to any economic control, in V1 or in any planned version.",
+      "steps": [
+        { "component": "codex_assistant", "label": "AI assistant (the manual Codex/ChatGPT workflow is itself PLANNED V2)", "state": "planned" },
+        { "component": "dashboard_controls", "label": "ARM / DISARM / KILL · config · orders · wallet · shell · deployment · code", "state": "blocked" }
+      ]
+    },
+    {
+      "id": "flow_trade",
+      "title": "How one bar becomes an order",
+      "kind": "data",
+      "note": "Every step can reject. Most bars stop at the first or second step, which is normal and correct.",
+      "steps": [
+        { "component": "bar_feed", "label": "Bar closes", "state": "current" },
+        { "component": "strategy_runtime", "label": "Strategy proposes", "state": "current" },
+        { "component": "risk_engine", "label": "Risk authorises and sizes", "state": "current" },
+        { "component": "order_manager", "label": "OrderManager submits", "state": "current" },
+        { "component": "native_protection", "label": "Native stop rests at exchange", "state": "current" },
+        { "component": "store_wal", "label": "Every step recorded", "state": "current" }
+      ]
+    }
+  ],
+  "readiness": [
+    {
+      "id": "readiness_source",
+      "area": "Source implementation",
+      "status": "current_v1",
+      "built_now": "The V1 Bridge runtime is implemented and tested: bar feed, strategy, state machine, risk engine, order manager, both reconciliation paths, the store, and the REST/WebSocket API. The real LLMGate is source-only scaffolding that no runtime path constructs; the engine calls a NullLLMGate instead and records the resulting generic LLM_SKIPPED decision.",
+      "still_required": "Multi-strategy V2, and the runtime wiring the dormant LLM gate would need before it could affect a decision at all. Several newer risk layers are opt-in and are not on the default schema baseline. Interface gaps are listed under the Dashboard V2 area, not here."
+    },
+    {
+      "id": "readiness_deploy",
+      "area": "KVM2 deployment",
+      "status": "not_deployed",
+      "built_now": "An uploaded payload on the server. That is the latest verified state.",
+      "still_required": "Actual installation, service configuration, a supervised start, and verification that the process survives a reboot. Until then nothing is running there."
+    },
+    {
+      "id": "readiness_security",
+      "area": "Remote security",
+      "status": "separate_gate",
+      "built_now": "Loopback-only binding, cross-origin restriction to 127.0.0.1 origins, and an API wallet that cannot withdraw.",
+      "still_required": "Everything about identity: login, second factor, roles, session expiry, fresh-state confirmation and a complete control audit log. None of it exists."
+    },
+    {
+      "id": "readiness_dashboard",
+      "area": "Dashboard V2",
+      "status": "planned_v2",
+      "built_now": "A basic V1 interface — the six original pages plus this Help page — with live observation data, WebSocket updates and working ARM/DISARM/KILL buttons.",
+      "still_required": "A finished Strategy & Risk save workflow, a real LLM page, automatic WebSocket reconnection in the client, mobile polish, and a decision on whether V2 runs as its own loopback service."
+    },
+    {
+      "id": "readiness_phone",
+      "area": "Phone access",
+      "status": "separate_gate",
+      "built_now": "Nothing.",
+      "still_required": "Read-only monitoring first, through a private tunnel, VPN or another gated private method. The exact phone and authentication topology is still open. Control from a phone additionally requires the whole authentication layer."
+    },
+    {
+      "id": "readiness_telegram",
+      "area": "Telegram verification",
+      "status": "not_deployed",
+      "built_now": "Notification code for state transitions, risk and reconciliation errors, and a periodic heartbeat. It disables itself silently when credentials are absent.",
+      "still_required": "Credentials and configuration on KVM2, plus live verification that messages actually arrive. Do not assume per-fill notifications are covered."
+    },
+    {
+      "id": "readiness_ai",
+      "area": "AI assistance",
+      "status": "planned_v2",
+      "built_now": "Nothing in the product. The repository _AI_MEMORY exists, but that belongs to the coding agents, not to the trading system.",
+      "still_required": "The read-only analysis package export, and the owner's manual workflow with their Codex/ChatGPT subscription. Hermes is explicitly not required. An automatic embedded chat is later and separately gated."
+    },
+    {
+      "id": "readiness_mainnet",
+      "area": "Real money (MAINNET)",
+      "status": "separate_gate",
+      "built_now": "A default-deny lock: TESTNET is the only unlocked network, and mainnet needs a flag, an acknowledgement variable and a live-allowed strategy simultaneously.",
+      "still_required": "A separate future audit, explicit limits, a promoted strategy, and explicit owner approval. No TESTNET result opens this gate."
+    }
+  ],
+  "glossary": [
+    { "term": "ARM", "plain": "Permission, not an instruction. It lets eligible future signals become orders. It does not create a trade, and it only gates new entries — reconciliation, protection and safety work run either way." },
+    { "term": "DISARM", "plain": "Stops new entries and cancels pending entry orders when it is safe to do so, then reconciles. It does not close a position you already have, and exchange-side protection stays in place. The owner can press it, and the runtime can also enter it automatically as a fail-safe." },
+    { "term": "KILL", "plain": "Emergency stop that sticks across restarts. As wired in this interface it does not flatten positions (flatten=false), yet the engine still cancels all orders — so a position can be left open with its protective orders cancelled. This is the recorded hardening gap: KILL is not production-hardened." },
+    { "term": "TESTNET", "plain": "The exchange's practice environment with mock money. It proves the machinery works. It proves nothing about profit." },
+    { "term": "MAINNET", "plain": "Real money. Behind a separate owner and audit gate, plus a three-part technical lock." },
+    { "term": "Reduce-only", "plain": "An order that can only make a position smaller, never larger. Protective stops are reduce-only so they can never accidentally open a new trade." },
+    { "term": "Trigger price", "plain": "The level that activates a protective order. It is not the price you are guaranteed to get." },
+    { "term": "Reconciliation", "plain": "Comparing what the exchange says against what the Bridge believes. Two paths exist: a light one that may fix what it owns, and a full one that is strictly read-only." },
+    { "term": "Fails closed", "plain": "When evidence is missing, stale or contradictory, the system refuses to act rather than guessing." },
+    { "term": "Loopback / 127.0.0.1", "plain": "An address that only the machine itself can reach. It is why the Dashboard is safe without a login — and why it must never be exposed." },
+    { "term": "API / agent wallet", "plain": "A key that can trade but cannot withdraw. It still needs protecting: a thief could trade badly or cancel your stops." },
+    { "term": "Plumbing subject", "plain": "A strategy loaded to test the pipeline, not because anyone believes it makes money. The current one is exactly this." }
+  ]
+}

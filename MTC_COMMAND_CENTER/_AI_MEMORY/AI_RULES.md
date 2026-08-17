@@ -33,6 +33,7 @@ Strategy-research layer (read before combining strategies/indicators):
 - Smallest safe change that delivers value.
 - Files allowed (whitelist).
 - Files forbidden — cross-check `DO_NOT_TOUCH.md`.
+- **Audit tier classification (T0/T1/T2/T3) — mandatory, recorded before audit dispatch** (see `AGENTS.md` § AUDIT TIER POLICY — PERMANENT DEFAULT).
 - Success criteria: how do we know it works?
 
 Prompt: `04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md`
@@ -72,22 +73,22 @@ Prompt: `04_SHARED/prompts/05_ai_workflow/03_implementation_task.md`
 
 Prompt: `04_SHARED/prompts/05_ai_workflow/05_qa_test_review.md`
 
-### Gate 5 — Adversarial Cross-Model Review (Lead's independent inspection)
+### Gate 5 — Tiered Independent Cross-Model Review (Lead's independent inspection)
 - The **LEAD ORCHESTRATOR** runs this gate — not the implementer. See two-tier model in `AGENTS.md`.
-- **Exact model/effort required** — see `AGENTS.md` §CANONICAL AUDIT ROSTER. Claude auditor: `claude-opus-5` + `xhigh`. Codex auditor: `gpt-5.6-sol` + `high` (ordinary G5) or `xhigh` (protected/re-audit). No Sonnet, no implicit alias, no silent fallback — BLOCK if unavailable unless Barış waives.
+- **Auditor count, effort, and round cap are decided by the audit tier** — see `AGENTS.md` § AUDIT TIER POLICY — PERMANENT DEFAULT. T0: 2 independent flagships (`claude-opus-5` + `gpt-5.6-sol`) at `xhigh`, max 3 rounds. T1: 1 flagship (alternate Claude/Codex per round) at `high`, plus GLM-5.2 second opinion only if the flagship raises findings or the diff exceeds ~300 lines, max 2 rounds. T2: single reviewer, single round, GLM-5.2 preferred / DeepSeek acceptable / flagship at `medium` only if neither is available, max 1 round. T3: implementer self-verification only, no model audit, max 0 rounds. Exact model identity for invoked slots per `AGENTS.md` §CANONICAL AUDIT ROSTER; no implicit alias, no silent fallback — BLOCK if unavailable unless Barış waives.
 - **Fresh independent session every round** — never resume or continue the implementer session.
 - The lead independently inspects the actual diff/files; accepting the implementer's self-report alone is not Gate 5.
 - Reviewer reads adversarially: assume the diff is wrong, prove otherwise.
 - Flag: missing edge cases, hidden coupling, parity risk, DO_NOT_TOUCH violations, scope creep.
 - Verdicts: **PASS** / **PASS-WITH-NITS** (accepting, optional nits only) / **REQUEST_CHANGES** (required repair) / **BLOCK** (cannot continue). PASS-WITH-NITS cannot contain a required repair.
-- On REQUEST_CHANGES or BLOCK: lead sends focused repair prompt to the same counterpart implementer. **Maximum 3 repair/re-audit rounds.** After the third non-accepting verdict, stop and report to Barış.
+- On REQUEST_CHANGES or BLOCK: lead sends focused repair prompt to the same counterpart implementer. **Repair/re-audit rounds capped per tier: T0=3, T1=2, T2=1, T3=0.** After the cap is exhausted with no accepting verdict, stop and report to Barış.
 
 Prompt: `04_SHARED/prompts/05_ai_workflow/04_adversarial_code_review.md`
 
 ### Gate 6 — Security Review (only if scope hits security surface)
 
 **Actor: Lead or designated independent reviewer** — must not be the implementer of the change under review. Lead retains final acceptance authority.
-**Exact model/effort:** Gate 6 always uses `xhigh`. Claude auditor: exact `claude-opus-5` xhigh. Codex auditor: exact `gpt-5.6-sol` xhigh.
+**Tier default:** security/auth/secret/network/host/deploy surfaces default to **T0** — two independent flagships (`claude-opus-5` + `gpt-5.6-sol`) at `xhigh` — unless an explicit owner contract says otherwise. Exact model identity per `AGENTS.md` §CANONICAL AUDIT ROSTER; no implicit alias, no silent fallback — BLOCK if unavailable unless Barış waives.
 **Verdicts:** PASS / PASS-WITH-NITS / REQUEST_CHANGES / BLOCK.
 
 - Secrets, auth, network calls, file system writes, eval / exec, subprocess.
@@ -97,7 +98,7 @@ Prompt: `04_SHARED/prompts/05_ai_workflow/06_security_review.md`
 
 ### Gate 7 — Memory Write-Back (mandatory before stopping)
 
-**Actor: Lead Orchestrator**, after accepting Gate 5 verdict (PASS or PASS-WITH-NITS) is verified. Implementer may supply factual inputs (commit hashes, test results, file lists); final write-back and authorized sequencing are Lead-owned. Do not execute without an accepting Gate 5 verdict (PASS or PASS-WITH-NITS).
+**Actor: Lead Orchestrator**, after the tier-required acceptance is verified. For T0/T1/T2 this is a Gate 5 PASS or PASS-WITH-NITS under the recorded auditor contract; for **T3**, recorded implementer self-verification stands in place of a model Gate 5. Implementer may supply factual inputs (commit hashes, test results, file lists); final write-back and authorized sequencing are Lead-owned. See `AGENTS.md` § AUDIT TIER POLICY — PERMANENT DEFAULT.
 
 Every completed task must update:
 - `GLOBAL_HANDOFF.md`   — always
@@ -107,6 +108,44 @@ Every completed task must update:
 - `PROJECT_MEMORY.md`   — if a stable repo fact changed
 
 Prompt: `04_SHARED/prompts/05_ai_workflow/07_handoff_update.md`
+
+## Autonomous Session Invariants — added 2026-08-11
+
+Distilled from the 2026-08-10/11 overnight cycle (four-hour idle gap; concurrent-session
+collision on the transport set; RP6 `R9_GRAMMAR` QA that ran the wrong program; RP7
+carried-fence weakening; transport "nearly done" turning out ~20% done; RP6 round 10
+killed mid-write by a provider cap). Binding for every Lead/agent session in this repo,
+autonomous or not. Process-level rules only — content-level review rules live in the
+defect catalogue `11_TRIAGE/DESIGN_DEFECT_PATTERNS_2026-08-10.md` (13 patterns, numbering
+frozen permanently).
+
+1. **Wake invariant.** An autonomous session may not end a turn with neither running
+   delegated work nor an armed wake condition (timer, monitor, or task notification).
+   Before ending any turn, name what will wake the session and when. Idle-until-the-owner-
+   writes is a protocol violation, not a rest state.
+2. **Workstream write-lock.** One writable owner per workstream. Claim before the first
+   write, release at handoff — mechanism and current table in `SESSION_LOCK.md`. Other
+   sessions are read-only on that workstream's files (auditing is allowed). On detecting a
+   foreign uncommitted edit inside an owned workstream: stop writing there, preserve the
+   edit, record a dated notice — never adjudicate ownership silently.
+3. **Evidence harness gate.** An artifact may not be dispatched to a flagship audit until
+   its published QA command has been executed VERBATIM by someone other than the author —
+   happy path plus at least one RED/mutant arm. Extraction-based verification does not
+   substitute. If the verbatim run and an extraction disagree, that disagreement is itself
+   a finding.
+4. **Carried-fence immutability.** A regression fence carried from a prior round may change
+   only with a per-change discriminating-power proof in the repair report: old and new
+   assertion executed against the same deviant output, both outcomes quoted. A silently
+   changed carried fence is an automatic BLOCK-class finding. Any claim about old code's
+   behaviour must be established by executing the old code, not by reading it.
+5. **State assessment before a repair lane.** Work that was inherited, produced by another
+   session, or dormant across a session boundary gets a read-only state assessment first —
+   per scope item: implemented? evidenced? both? — before any repair round is dispatched on
+   it. Comments and reports claiming completion are not evidence.
+6. **Quota preflight and resumable rounds.** Before dispatching to a window-capped provider,
+   measure the remaining window and record it in the kickoff. Structure long rounds so a
+   mid-round kill preserves committed partial state (incremental writes; partials committed
+   and labelled as partial, as RP6 round 10a was).
 
 ## Hard Safety Rules
 
@@ -134,4 +173,4 @@ Prompt: `04_SHARED/prompts/05_ai_workflow/07_handoff_update.md`
 
 ## GLM Supplemental Routing
 
-For Z.AI Coding Plan model selection when sub-delegating, see `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical source; routing table not copied here). GLM never replaces the mandatory Gate 5/6 audit roster (`claude-opus-5` xhigh / `gpt-5.6-sol` high/xhigh — §CANONICAL AUDIT ROSTER) or the counterpart flagship implementer. Every delegated GLM task requires a routing record (classification, protected flag, model+provider, cheaper-model rationale, exact paths, budget, fallback, external API credits).
+For Z.AI Coding Plan model selection when sub-delegating, see `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical source; routing table not copied here). GLM never replaces a flagship slot required by the audit tier or the counterpart flagship implementer. GLM fills **only** auditor slots selected by the tier policy (see `AGENTS.md` § AUDIT TIER POLICY — PERMANENT DEFAULT) and never silently adds a round. Every delegated GLM task requires a routing record (classification, protected flag, model+provider, cheaper-model rationale, exact paths, budget, fallback, external API credits).

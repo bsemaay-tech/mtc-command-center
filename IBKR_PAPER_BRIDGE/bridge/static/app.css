@@ -153,3 +153,567 @@ td {
   border-top: 1px solid var(--border);
   padding: 8px;
 }
+
+/* --- Help / System Map ---------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.help-lede {
+  color: var(--muted);
+  max-width: 80ch;
+}
+
+.help-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.panel h3 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 16px 0 8px;
+}
+
+.help-badge {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.help-badge.tone-green {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.help-badge.tone-blue {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+
+.help-badge.tone-amber {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+.help-badge.tone-red {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+.help-legend {
+  display: grid;
+  gap: 8px;
+}
+
+.help-legend-row {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.help-legend-text {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.help-kind {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.help-kind.kind-blocked,
+.kind-blocked > .help-kind {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.help-kind.kind-planned,
+.kind-planned > .help-kind {
+  color: var(--blue);
+}
+
+.help-kind.kind-control,
+.kind-control > .help-kind {
+  color: var(--amber);
+}
+
+.help-identities {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.help-identity {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: #0b1017;
+}
+
+.help-identity p {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.help-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  margin: 16px 0;
+}
+
+.help-plane {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.help-plane h2 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.help-plane-summary {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.help-plane-boundary {
+  color: var(--muted);
+  font-size: 12px;
+  border-left: 2px solid var(--border);
+  padding-left: 10px;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.help-node {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  padding: 10px;
+  height: 100%;
+  border-left-width: 3px;
+  cursor: pointer;
+}
+
+.help-node.tone-green {
+  border-left-color: var(--green);
+}
+
+.help-node.tone-blue {
+  border-left-color: var(--blue);
+}
+
+.help-node.tone-amber {
+  border-left-color: var(--amber);
+}
+
+.help-node.tone-red {
+  border-left-color: var(--red);
+}
+
+.help-node[aria-pressed="true"] {
+  border-color: var(--blue);
+  background: #0b1017;
+}
+
+.help-node-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.help-node-name {
+  font-weight: 600;
+}
+
+.help-node-line {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.help-detail {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.help-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.help-detail-head h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.help-detail-plane {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 4px 0 0;
+}
+
+.help-detail-line {
+  font-size: 14px;
+}
+
+.help-section {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.help-section h3 {
+  margin: 8px 0 6px;
+}
+
+.help-section h4 {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 10px 0 4px;
+  font-weight: 600;
+}
+
+.help-section ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.help-section li,
+.help-section p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.help-negative li,
+.help-negative p {
+  color: #f0a5a0;
+}
+
+.help-safety li {
+  color: var(--amber);
+}
+
+.help-paths li,
+.help-technical li {
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.help-connections {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.help-connection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.help-connection-label {
+  font-size: 13px;
+}
+
+.help-connection.kind-blocked .help-connection-label {
+  color: var(--red);
+}
+
+.help-link {
+  min-height: 0;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--blue);
+  background: transparent;
+  cursor: pointer;
+}
+
+.help-empty {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.help-flow {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #0b1017;
+}
+
+.help-flow h3 {
+  margin: 0 0 10px;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 14px;
+}
+
+.help-flow.kind-blocked {
+  border-color: var(--red);
+}
+
+.help-flow-chain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.help-flow-arrow {
+  color: var(--muted);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-weight: 700;
+}
+
+.help-flow.kind-blocked .help-flow-arrow {
+  color: var(--red);
+  font-size: 18px;
+}
+
+.help-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.help-chip.state-planned {
+  border-style: dashed;
+  border-color: var(--blue);
+}
+
+.help-chip.state-blocked {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.help-chip-state {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.help-chip.state-blocked .help-chip-state {
+  color: var(--red);
+}
+
+.help-flow-note {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 0;
+}
+
+.help-readiness {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.help-readiness-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: #0b1017;
+}
+
+.help-readiness-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.help-readiness-cell h4 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 8px 0 2px;
+}
+
+.help-readiness-cell p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.help-glossary {
+  margin: 0;
+}
+
+.help-glossary dt {
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+.help-glossary dd {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1100px) {
+  .help-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .help-detail {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 780px) {
+  /* `1fr` resolves to minmax(auto, 1fr); the auto floor is min-content, so the
+     single column would grow to the widest child instead of the viewport. */
+  body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Grid/flex items default to min-width: auto and refuse to shrink below their
+     min-content size. Releasing that floor lets the shell track the viewport. */
+  .sidebar,
+  .shell,
+  .page,
+  .panel,
+  .card,
+  .chart,
+  .drawer,
+  .help-planes,
+  .help-plane,
+  .help-detail,
+  .help-identity,
+  .help-readiness-card,
+  .help-flow,
+  .help-node,
+  .help-chip,
+  .help-connection,
+  .help-legend-row {
+    min-width: 0;
+  }
+
+  .sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .danger {
+    margin-top: 8px;
+  }
+
+  /* Status pills plus ARM/DISARM exceed 375px on one line; wrapping removes the
+     largest single contributor to the page's min-content width. */
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  /* auto-fit tracks keep a 180-280px floor that can exceed the content box once
+     shell and card padding are subtracted. Collapse to a single column. */
+  .grid,
+  .config-grid,
+  .help-identities,
+  .help-grid,
+  .help-readiness {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .help-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .help-legend-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  /* Long identifiers (symbols, paths, order ids) have no break opportunity and
+     would otherwise set the min-content width of their container. */
+  .help-lede,
+  .help-legend-text,
+  .help-identity p,
+  .help-plane-summary,
+  .help-plane-boundary,
+  .help-node-name,
+  .help-node-line,
+  .help-detail-head h2,
+  .help-detail-line,
+  .help-section li,
+  .help-section p,
+  .help-connection-label,
+  .help-chip,
+  .help-flow h3,
+  .help-flow-note,
+  .help-readiness-cell p,
+  .help-glossary dt,
+  .help-glossary dd,
+  .card strong,
+  pre,
+  td {
+    overflow-wrap: anywhere;
+  }
+
+  /* Table cells size to content and would push a width:100% table past the
+     viewport regardless of wrapping on the text itself. */
+  table {
+    table-layout: fixed;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,21 @@
+﻿All scratch removed, protected files untouched, working tree scoped to exactly the ten kickoff files.
+
+## Completion summary — WP-I transport set, round 2 repair
+
+**Verdict on my own work: all 16 required findings across both flagship T0 audits are closed with executed RED/GREEN; all 5 Claude nits are dispositioned (4 closed, 1 deliberately not repaired and recorded). Three items are raised as Lead decisions, not claimed as settled.**
+
+### The three that mattered most, each proven both ways
+- **Ops 11/12 now bind.** The `$Matches` clobber is gone; every capture is latched on the line after its own match. Against a **real `remote_close_tree.sh` transcript** (accepted bytes, 7470 B `87157f0e…`, one recorded substitution) a byte-equal pair returns `TR_BIND_SET remote=…c208 reconstructed=…c208`, `TR_BIND_PASS files=3`, exit 0 — the §7 binding executing successfully for the first time. Revert the latch and the same identical files report `digest_differs` ×3, exit 1.
+- **A not-evaluable op is no longer a FAIL.** rc 3 → `TR_RUN STOP` + exit 3. Precedence is defined and tested: a completed deviant observation outranks a later STOP, both counted in `TR_RUN_CLASS`. First-FAIL ordering unchanged.
+- **Nothing on the inherited PATH selects evidence-producing code.** A planted `ssh.cmd` runs and produces a green run under the reverted line (`FAKE_SSH_EXECUTED`, exit 0); the repaired file uses the pinned absolute path, digest- and ACL-bound by numeric SID. Codex's block-hijack attack reproduces exactly (`P0W_HIJACKED_BLOCK_EXECUTED`, rc 0) and is refused by the pinned wrapper (`block_sha256_mismatch`, rc 3).
+
+Also closed: STOP-before-mutation with a full parent-chain bind and numeric identity; status-before-stdout with provable listing termination; count literals derived from `MEMBERS`; `01_RUNKIT` as a distinct pinned kit directory; `ACCEPTED:` root token for `remote_close_tree.sh`; marker gate plus top-level trap; and `Test-Ascii` (dead code) deleted.
+
+**Evidence standard.** `SELF_QA_TRANSPORT.md` is generated from two standalone paste-and-run scripts reproduced verbatim inside it. Shell RED arms execute the audited round-1 bytes read from commit `1c1c9ed1`; runner RED arms revert the repair at an anchor asserted present first, so a missed anchor throws instead of faking a RED. Coverage accounting names every arm still undriven and the direction each fails in — all STOP-ward.
+
+### Three things I did not decide for you
+1. **§4 was widened.** The count literals came back inside the constants block, but the F3/F4/F5/F6 repairs cannot. I implemented them and amended §4 into four enumerated classes — and raised it as deviation **D-1**: ratify, or direct a narrower re-derivation and re-open the corresponding findings.
+2. **`remote_close_tree.sh` was pinned in place, not copied** (Codex F9's second option), because a copy would be an eleventh file against the kickoff's ten-file bound. Co-location is a one-file + one-token change if you prefer it.
+3. **Remote tool pins refuse symlinks**, per Codex's "non-following kind". Stage 1 must confirm each `/usr/bin/<tool>` on `GATEA-STAGING` is a regular root-owned file, or the scripts STOP.
+
+No host contact, no RUNID, no freeze, no commit, no Git action. Handoff files were left alone — the kickoff bound this round to ten files, and Git/handoff sequencing is the Lead's per AGENTS.md. Next action is two fresh T0 flagship audits of these exact bytes; one repair round remains under the cap.

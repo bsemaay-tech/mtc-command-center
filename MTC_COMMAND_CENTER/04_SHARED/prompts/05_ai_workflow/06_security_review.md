@@ -2,6 +2,8 @@
 
 ## Mandatory audit model/effort (AGENTS.md §CANONICAL AUDIT ROSTER)
 
+**T0 default:** the listed security/auth/secret/network/host/deploy surfaces below default to **T0** under `AGENTS.md` §AUDIT TIER POLICY — PERMANENT DEFAULT. T0 requires **both exact flagship models at xhigh** — `claude-opus-5` xhigh and `gpt-5.6-sol` xhigh — unless a later explicit owner contract overrides the tier/roster for this scope. Do not silently downgrade to a single auditor or a lower effort.
+
 **Claude auditor:** exact model `claude-opus-5`, effort `xhigh` (always for Gate 6).
 Example fresh-session CLI: `claude -p --model claude-opus-5 --effort xhigh --no-session-persistence`
 

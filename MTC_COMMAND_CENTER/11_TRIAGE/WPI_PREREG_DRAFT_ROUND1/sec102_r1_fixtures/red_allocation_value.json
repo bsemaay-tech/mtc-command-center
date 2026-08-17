@@ -1,0 +1,20 @@
+{
+  "schema": "sec102-composite-plan-v1",
+  "stage": "allocate",
+  "composites": [
+    {
+      "id": "fixture-p0",
+      "entrypoint": "entry",
+      "members": [
+        {"id": "entry", "kind": "shell", "path": "entry.sh"}
+      ],
+      "edges": [],
+      "allocation_requirements": [
+        {"name": "REMOTE_BASE", "kind": "absolute_path", "consumers": ["entry"]}
+      ],
+      "allocations": [
+        {"name": "REMOTE_BASE", "value": "/home/gatea/wpi_staging_<ALLOCATE>"}
+      ]
+    }
+  ]
+}

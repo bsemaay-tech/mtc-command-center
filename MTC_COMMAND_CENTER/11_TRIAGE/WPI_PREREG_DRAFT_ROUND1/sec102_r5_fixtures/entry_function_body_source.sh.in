@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+ROOT='{{REMOTE_BASE}}'
+RUNID='{{RUNID}}'
+# source identity={{LIBRARY_PATH}}
+function reload { source "$LIBRARY_PATH"; }
+reload
+cat "$ROOT/$RUNID/input.txt"

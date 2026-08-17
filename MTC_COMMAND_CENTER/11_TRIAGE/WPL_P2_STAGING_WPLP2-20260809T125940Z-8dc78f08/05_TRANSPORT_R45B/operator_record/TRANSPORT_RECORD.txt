@@ -1,0 +1,39 @@
+TR_HEADER base_run=WPLP2-20260809T125940Z-8dc78f08
+TR_MODE execute=True confirm_supplied=True
+TR_LOCATION dir=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\04_PREREG_R45B
+TR_PLAN path=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\04_PREREG_R45B\TRANSPORT_PLAN.tsv sha256=48acbea8eefe7c7f5659a5819725d767f3fd84b1c0cad6af215bae35f35de716
+TR_PLAN_ROWS count=4
+TR_STDIN op=01 file=run_r45b.sh sha256=70d90d3d074e22c409284409e327c5dc7846100f68ec1ab6a319ea1f7fb69670
+TR_STDIN op=02 file=remote_close_tree.sh sha256=87157f0ea454df7c1f826a8c76a38f3045dd38efdd8fa347644f79251d3f3f0e
+TR_PROGRAM name=ssh resolved=C:\Windows\System32\OpenSSH\ssh.exe
+TR_PROGRAM name=scp resolved=C:\Windows\System32\OpenSSH\scp.exe
+TR_OP_PLANNED id=01 kind=ssh_stdin run_when=sequence_ok expect_rc=0 stdin=run_r45b.sh
+TR_OP_ARGV id=01 argv=[ssh] [-i] [C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519] [-o] [BatchMode=yes] [-o] [StrictHostKeyChecking=yes] [-o] [IdentitiesOnly=yes] [-o] [ConnectTimeout=20] [gatea@172.24.55.233] [bash] [-s] [--]
+TR_OP_PLANNED id=02 kind=ssh_stdin run_when=always expect_rc=0 stdin=remote_close_tree.sh
+TR_OP_ARGV id=02 argv=[ssh] [-i] [C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519] [-o] [BatchMode=yes] [-o] [StrictHostKeyChecking=yes] [-o] [IdentitiesOnly=yes] [-o] [ConnectTimeout=20] [gatea@172.24.55.233] [bash] [-s] [--] [/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence/runkit/WPLP2-20260809T125940Z-8dc78f08-R45B] [WPLP2-20260809T125940Z-8dc78f08-R45B]
+TR_OP_PLANNED id=03 kind=scp_down run_when=always expect_rc=0 stdin=-
+TR_OP_ARGV id=03 argv=[scp] [-i] [C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519] [-o] [BatchMode=yes] [-o] [StrictHostKeyChecking=yes] [-o] [IdentitiesOnly=yes] [-o] [ConnectTimeout=20] [-r] [gatea@172.24.55.233:/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence/runkit/WPLP2-20260809T125940Z-8dc78f08-R45B] [.]
+TR_OP_PLANNED id=04 kind=local_bind run_when=always expect_rc=0 stdin=-
+TR_OP_ARGV id=04 argv=[local_bind] [02] [03] [evidence\WPLP2-20260809T125940Z-8dc78f08-R45B]
+TR_RECORD_ROOT path=C:\WPI_ARTIFACTS\WPLP2_TRANSPORT_WPLP2-20260809T125940Z-8dc78f08-R45B
+TR_OP_BEGIN id=01 kind=ssh_stdin cwd=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\04_PREREG_R45B
+TR_OP_SENT_ARGV id=01 ssh -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20 gatea@172.24.55.233 bash -s --
+TR_OP_END id=01 rc=0 expect_rc=0 stdout_sha256=4029a5367325371392f743f193e21c056404862db9040ff0794ee1b3dee7b134 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TR_OP_BEGIN id=02 kind=ssh_stdin cwd=C:\LAB\Tradingview_LAB_CLEAN\MTC_COMMAND_CENTER\11_TRIAGE\WPL_P2_STAGING_WPLP2-20260809T125940Z-8dc78f08\04_PREREG_R45B
+TR_OP_SENT_ARGV id=02 ssh -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20 gatea@172.24.55.233 bash -s -- /home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence/runkit/WPLP2-20260809T125940Z-8dc78f08-R45B WPLP2-20260809T125940Z-8dc78f08-R45B
+TR_OP_END id=02 rc=0 expect_rc=0 stdout_sha256=0f2f3af8d315884a52f8807a9b3d5d7b3bc97f099457823ffc06c24c5e4b609f stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TR_OP_BEGIN id=03 kind=scp_down cwd=C:\WPI_ARTIFACTS\WPLP2_TRANSPORT_WPLP2-20260809T125940Z-8dc78f08-R45B\evidence
+TR_OP_SENT_ARGV id=03 scp -i C:\HyperV\GATEA-STAGING\ssh\gatea_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=20 -r gatea@172.24.55.233:/home/gatea/wpl_p2_staging_WPLP2-20260809T125940Z-8dc78f08/evidence/runkit/WPLP2-20260809T125940Z-8dc78f08-R45B .
+TR_OP_END id=03 rc=0 expect_rc=0 stdout_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 stderr_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TR_OP_BEGIN id=04 kind=local_bind cwd=C:\WPI_ARTIFACTS\WPLP2_TRANSPORT_WPLP2-20260809T125940Z-8dc78f08-R45B
+TR_OP_SENT_ARGV id=04 local_bind 02 03 evidence\WPLP2-20260809T125940Z-8dc78f08-R45B
+TR_BIND op=04 close_op=02 fetch_op=03 local_dir=C:\WPI_ARTIFACTS\WPLP2_TRANSPORT_WPLP2-20260809T125940Z-8dc78f08-R45B\evidence\WPLP2-20260809T125940Z-8dc78f08-R45B
+TR_BIND_COUNTS op=04 remote=1 local=1
+TR_BIND_SET op=04 remote_set_sha256=1f74d69af7da8fd5cd5cfad7ba698ce0637fe34401606426d3f2d805ff1baf7f reconstructed=1f74d69af7da8fd5cd5cfad7ba698ce0637fe34401606426d3f2d805ff1baf7f
+TR_BIND_PASS op=04 files=1
+TR_OP_END id=04 rc=0 expect_rc=0 stdout_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b stderr_sha256=01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+TR_RESULT id=01 rc=0 expect_rc=0
+TR_RESULT id=02 rc=0 expect_rc=0
+TR_RESULT id=03 rc=0 expect_rc=0
+TR_RESULT id=04 rc=0 expect_rc=0
+TR_RUN PASS base_run=WPLP2-20260809T125940Z-8dc78f08 record=C:\WPI_ARTIFACTS\WPLP2_TRANSPORT_WPLP2-20260809T125940Z-8dc78f08-R45B

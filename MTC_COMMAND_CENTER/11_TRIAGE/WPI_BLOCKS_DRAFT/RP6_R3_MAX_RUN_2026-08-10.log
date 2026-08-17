@@ -1,0 +1,29 @@
+﻿All work complete and verified. Completion summary:
+
+## RP6-P0 repair round 3 — FINAL T0 round — DONE
+
+**Round-cap position:** this was round 3 of the T0 cap (T0=3). The cap is now exhausted — the next flagship verdict is terminal for this cycle.
+
+### The three findings + two nits
+
+| Item | Disposition |
+|---|---|
+| **R2-F1** (MED) fabricated `rc=126`, lost path | Block emits `tool_not_evaluable tool=$t path=$resolved rc=na detail=access_builtin_x_denied mechanism=access_builtin_x`. **§8.1 row 1 was amended** (the kickoff's alternative) to `path=<p> rc=<n\|na> detail=<d> mechanism=<m>`, making `rc=na` mandatory for the access(2) arm — P0 decides executability with builtins only and never invokes an inventory tool, so no arm can carry an honest invocation status. |
+| **R2-F2** (MED) evidence didn't reproduce | Fence RED side re-pinned from moving `HEAD` to immutable **`0bbc3591` (= `90d8d447^`)** for both block and draft; fence now prints `RED_SOURCE rev=… sha256=bff3c86e… bytes=57441`. All four transcripts re-executed and replaced — three reproduce **byte-identically** (`cmp` clean), the fence after normalizing only its `mktemp` root. |
+| **R2-F3** (LOW/MED) undisclosed procfs assumption | **Both** halves applied: `stat -L -c '%d'` per-namespace-link device vs the root object's device (free — it's the left field of the `%d:%i` already read), **plus** the disclosure, since a fabrication on a *non-root* filesystem still passes. Line now carries `procfs_identity=not_established ns_link_devices=… root_device=…`; `procfs_mount_identity_of_the_namespace_links` added to `does_not_establish`. |
+| **Nit 1** `(os error 2)` | Attribution corrected in both docs, and the alternative was **dropped** (stating the choice): uutils renders a *basename* prefix, `$P0_STAT` is always absolute → unreachable. |
+| **Nit 2** producer assumption | New `STATED PRODUCER ASSUMPTION` header paragraph: on a uutils host the F1 class returns fail-closed at rc 3. |
+
+### Evidence (all executed this session, Git Bash 5.2.37, no host/network)
+
+- Full-block fence → rc 0, `RP6_FULLBLOCK_D026_SUMMARY findings=7 round3_residuals=3 real_lstat_arms=2 execution_domain_cases=9 readlink_stop_arms=3 result=PASS`, `NORMALIZED_TRANSCRIPT_MATCH=True`
+- C13 R3 arm `cases=16 PASS` · R3 backstop `cases=4 PASS` · C13 R4 arm `cases=27 PASS` · freeze-literal gate `PASS` — all rc 0, all transcripts `cmp`-identical to a fresh re-run from the line ranges the document cites
+- New F3 falsification: crafted-`/proc` fixture refused rc 3; the comparison-only mutant admits it at rc 0 while printing the now-false `ns_link_devices=2049,2049,2049,2049 … distinct_from_root=yes` — the check is load-bearing by execution
+- `bash -n` rc 0 · **SHA-256 `2d9b166eacfc39ebe0d8d89edb5860876ccc4d9f0ff97f9e10a228dbcf96289e`, 71743 B** · 0 CR / 1328 LF / no BOM / 0 non-ASCII / 0 trailing-WS · `git diff --check` clean · 11 diff hunks, each mapping to one of the five items
+
+### Two judgement calls, both recorded
+
+1. `stat -f -c '%t'` (nsfs magic) would close F3's residual outright but its `-f`/`-L` semantics cannot be executed or falsified on Windows — D026 forbids offering an unexecuted mechanism as T0 closure evidence. Logged as the successor's option.
+2. The backstop double-mutant now dies at rc 3 on the row-8 input pre-check rather than rc 1 `unbound variable`. I recorded the real mechanism rather than injecting fabricated freeze literals to reproduce the old one; the mutant is still killed and the reading paragraph was rewritten.
+
+**Files written (exactly the whitelist):** `RP6-P0.sh`, `SELF_QA_RP6.md`, `STATUS_RP6_P0.md`, `RP6_FULLBLOCK_REPAIR_REPORT.md`, new `RP6_REPAIR_R3_REPORT.md`, and §8.1 row 1 of the prereg draft. Draft diffstat went 52/8 → 53/9 — the concurrent §3 hunks are intact. Transport and RP7 files were never read for edit or written; their `git status` entries belong to the concurrent sessions. **No commit.** `STATUS_RP6_P0.md` is the handoff record for this package and is current; I did not touch `GLOBAL_HANDOFF.md` since the kickoff restricted writes to the five files plus the draft.

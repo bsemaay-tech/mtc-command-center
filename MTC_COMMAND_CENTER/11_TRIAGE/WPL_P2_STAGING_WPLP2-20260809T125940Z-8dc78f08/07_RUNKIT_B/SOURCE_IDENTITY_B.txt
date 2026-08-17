@@ -1,0 +1,70 @@
+WP-L Phase 2 Stage 1B - re-frozen run-kit source identity
+
+This kit has TWO provenance classes. Class A is unchanged accepted content.
+Class B is repair-cycle content. They are never mixed silently: every block
+carries its class in BLOCK_IDENTITIES_B.tsv.
+
+== CLASS A - accepted_blob (8 blocks) ==
+
+source_path            MTC_COMMAND_CENTER/11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_2026-08-09.md
+accepted_commit        4c0d5fc5aeb1e069cd6171c11d143ac2a49a6e2c
+accepted_commit_actual 4c0d5fc5aeb1e069cd6171c11d143ac2a49a6e2c
+accepted_blob          76e0a66cd621ec5d38cc580904968262ce69678f
+accepted_blob_actual   76e0a66cd621ec5d38cc580904968262ce69678f
+blob_bytes             180987
+blob_sha256            eae933f8823cfccfcca2b52fe0f1791a533cdbd6489e4d81c79266aa5dfde1d4
+blob_cr_bytes          0
+blob_lf_bytes          3007
+blob_bom               False
+read_command           git -C <repo> cat-file blob 76e0a66cd621ec5d38cc580904968262ce69678f
+class_a_blocks         RP0-LIB RP0-BOOTSTRAP RP3-C2A-POST RP3-C2B-POST RP4-C3 RP5-C4A RP5-C4B RP5-C4C
+
+extraction rule: from the `# ===== BLOCK-ID: <id> =====` marker line inclusive,
+up to (not including) the closing ``` fence; LF line endings; final LF; no BOM.
+This is the Stage 1 rule, unchanged, and the eight Class A digests match the
+Stage 1 table in 01_RUNKIT/BLOCK_IDENTITIES.tsv bit-exactly.
+block source spans (1-indexed lines of the blob):
+  RP0-LIB        marker   170  fence   540  lines 370
+  RP0-BOOTSTRAP  marker   545  fence   581  lines  36
+  RP1-B3         marker   641  fence   758  lines 117   NOT SHIPPED - superseded by Class B
+  RP3-C2A-POST   marker   914  fence  1018  lines 104
+  RP3-C2B-POST   marker  1051  fence  1125  lines  74
+  RP4-C3         marker  1184  fence  1479  lines 295
+  RP5-C4A        marker  1590  fence  1964  lines 374
+  RP5-C4B        marker  1969  fence  2218  lines 249
+  RP5-C4C        marker  2223  fence  2451  lines 228
+
+superseded_block       RP1-B3
+superseded_sha256      f40411b053779b28ec9d970d7e5610fe5f363acbc48ee487d07ebce2638a69af
+superseded_disposition extracted from the blob for verification only; it is not
+                       written to any file in this kit and is not an archive
+                       member. The digest above appears in this kit only in the
+                       evidence records and as a verification constant in
+                       stage1b_build.py.
+
+== CLASS B - repair_round6 (2 blocks) ==
+
+source_dir             06_B3_REPAIR/round6
+acceptance             B3-GAP-ENV repair cycle, audit 6 PASS
+class_b_blocks         RP1-B3 RPD-VERIFY
+
+  block_id             RP1-B3
+  path                 06_B3_REPAIR/round6/RP1-B3.sh
+  bytes                37896
+  sha256               6f3ea022b68d80a552c4ebcb771bbb2a707bdab46a383d605ffc5b88b884becc
+  role                 REPLACES the Stage 1 block of the same id
+  statement            This file is byte-identical to the audit-6-PASSed
+                       round6 file at 06_B3_REPAIR/round6/RP1-B3.sh; it was copied verbatim, byte for
+                       byte, with no rewriting of any kind.
+
+  block_id             RPD-VERIFY
+  path                 06_B3_REPAIR/round6/RPD-VERIFY.sh
+  bytes                43940
+  sha256               3b9e78e87cecdc10ab1a10d14e79dbff530968e4075277117743c88976fa813c
+  role                 NEW block, not present in the Stage 1 kit
+  statement            This file is byte-identical to the audit-6-PASSed
+                       round6 file at 06_B3_REPAIR/round6/RPD-VERIFY.sh; it was copied verbatim, byte for
+                       byte, with no rewriting of any kind.
+
+copy rule: Class B blocks are read and written as raw bytes. No shebang is
+added, no line ending is translated, no whitespace is normalized.

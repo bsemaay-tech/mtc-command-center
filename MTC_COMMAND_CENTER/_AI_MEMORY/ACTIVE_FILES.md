@@ -1,5 +1,58 @@
 # ACTIVE_FILES
 
+## 2026-08-01 Codex GPT-5.6-sol — WP-L/WP-I accepted local evidence; external host blocker
+
+Active record files (this programme):
+- `MTC_COMMAND_CENTER\11_TRIAGE\WPI_CANDIDATE_ACCEPTANCE_RECORD_2026-08-01.md` (NEW — local/static WP-I candidate evidence accepted)
+- `MTC_COMMAND_CENTER\11_TRIAGE\WPI_READINESS_RECORD_2026-08-01.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\WPL_PHASE1_VERIFICATION_RECORD_2026-08-01.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md` — standing authorisation
+- `MTC_COMMAND_CENTER\11_TRIAGE\WP0_SCOPE_BASELINE_RECORD_2026-07-31.md`
+
+WPL branch / worktree:
+- Branch `codex/50h-wpl-verification` pushed at `d9d38d9b8e658d5853903cfc7779bc5ba56bfea2`; worktree `C:\WPL`.
+
+Candidate artifact:
+- Release SHA `1adf9ae51b0ddfe81057860aec5c23bb842f5a84`; path `C:\WPI_ARTIFACTS\1adf9ae51b0ddfe81057860aec5c23bb842f5a84`; manifest SHA-256 `bfefea2f825c8ba8a4c2289cd6ed90c74b51b15bc603cd5589db8815493ced02`.
+
+Main records commits:
+- `05acaadf` static docs, `52f33bdc` candidate evidence, `ad0c3dd7` WPL record.
+
+User untracked handoff preservation:
+- `MTC_COMMAND_CENTER\11_TRIAGE\NEXT_SESSION_HANDOFF_2026-08-01.md` is user-owned untracked and remains unstaged.
+
+Blocker and no-action boundary:
+- Gate A **BLOCKED** solely because no named/reachable expendable Ubuntu 24.04 staging host exists; active KVM2 forbidden. Static evidence is not Ubuntu/install/runtime evidence. No Ubuntu/service/broker/order/ARM/TESTNET order/mainnet/wallet/credential-value/live-capital action.
+
+## 2026-08-01 Claude Opus 5 — 50-Hour DISARMED Safety MVP (WP-0 done, WP-S final round)
+
+Working set. Branch `feature/ts-p1-009b-s2-closure` @ worktree `C:/WPS`; records on
+`feature/donchian-crypto-ladder`.
+
+Under active change (WP-S):
+- `IBKR_PAPER_BRIDGE/bridge/engine/orders.py` — drain containment, deferral, identity validation
+- `IBKR_PAPER_BRIDGE/bridge/store/db.py` — epoch-fenced lifecycle close, deferral evidence writer
+- `IBKR_PAPER_BRIDGE/tests/test_engine_dryrun.py` — S2/S3 contract tests
+- `IBKR_PAPER_BRIDGE/tests/test_store.py`
+- `IBKR_PAPER_BRIDGE/docs/31_KILL_EVIDENCE_EPOCH_CONTRACT.md`
+- `IBKR_PAPER_BRIDGE/bridge/engine/engine.py` — status payload only, S3-2
+
+Records and governance (this programme):
+- `11_TRIAGE/OWNER_AUTH_50H_EXECUTION_PROMPT_2026-07-31.md` — standing authorisation
+- `11_TRIAGE/WP0_SCOPE_BASELINE_RECORD_2026-07-31.md` — baseline, allowlist, invariant map
+- `11_TRIAGE/WPS_TSP1009B_S2_CLOSURE_RECORD_2026-07-31.md` — S2 acceptance + S3 Gate-1 scope
+- `11_TRIAGE/WPS_S3_AUDIT_ROUND2_BLOCKER_2026-07-31.md` — round-bound decision record
+- `09_DOCS/ROADMAPS/TRADING_SYSTEM/TRADING SYSTEM — 50-HOUR ACCELERATED IMPLEMENTATION PLAN.md`
+  — **FROZEN at `a07c90cc…`, do not edit**
+- `MTC_COMMAND_CENTER/tools/resilient_dispatch.sh` — network-resilient CLI dispatch wrapper
+- `AGENTS.md` — canonical audit roster (expanded by D025)
+- `_AI_MEMORY/{GLOBAL_HANDOFF,NEXT_STEPS,DECISIONS}.md`
+
+Not to be touched by this programme: `*.pine`, `MTC_V2`, `parity`, `01_PINE`, `02_MTC_BACKTEST`,
+`07_ADAPTERS`, `bridge/engine/strategies/**`, `config/strategies/**`, and every risk-threshold value
+in `IBKR_PAPER_BRIDGE/config/bridge.yaml`.
+
+
 ## 2026-07-26 Codex GPT-5.6-sol — KVM2 repair cycle 2 pending focused Claude repair
 
 - `MTC_COMMAND_CENTER\11_TRIAGE\KVM2_AI_LAB_AND_BRIDGE_MASTER_PLAN_2026-07-25.md`

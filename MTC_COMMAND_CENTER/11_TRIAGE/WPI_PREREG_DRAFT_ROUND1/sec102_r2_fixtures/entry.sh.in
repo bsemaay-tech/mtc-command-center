@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+ROOT='{{REMOTE_BASE}}'
+RUNID='{{RUNID}}'
+# source identity={{LIBRARY_PATH}}
+source "$LIBRARY_PATH"
+cat "$ROOT/$RUNID/input.txt"

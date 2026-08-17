@@ -1,0 +1,26 @@
+WP-L Phase 2 Stage 1 — accepted source identity
+
+source_path            MTC_COMMAND_CENTER/11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_2026-08-09.md
+accepted_commit        4c0d5fc5aeb1e069cd6171c11d143ac2a49a6e2c
+accepted_commit_actual 4c0d5fc5aeb1e069cd6171c11d143ac2a49a6e2c
+accepted_blob          76e0a66cd621ec5d38cc580904968262ce69678f
+accepted_blob_actual   76e0a66cd621ec5d38cc580904968262ce69678f
+blob_bytes             180987
+blob_sha256            eae933f8823cfccfcca2b52fe0f1791a533cdbd6489e4d81c79266aa5dfde1d4
+blob_cr_bytes          0
+blob_lf_bytes          3007
+blob_bom               False
+read_command           git -C <repo> cat-file blob 76e0a66cd621ec5d38cc580904968262ce69678f
+
+extraction rule: from the `# ===== BLOCK-ID: <id> =====` marker line inclusive,
+up to (not including) the closing ``` fence; LF line endings; final LF; no BOM.
+block source spans (1-indexed lines of the blob):
+  RP0-LIB        marker   170  fence   540  lines 370
+  RP0-BOOTSTRAP  marker   545  fence   581  lines  36
+  RP1-B3         marker   641  fence   758  lines 117
+  RP3-C2A-POST   marker   914  fence  1018  lines 104
+  RP3-C2B-POST   marker  1051  fence  1125  lines  74
+  RP4-C3         marker  1184  fence  1479  lines 295
+  RP5-C4A        marker  1590  fence  1964  lines 374
+  RP5-C4B        marker  1969  fence  2218  lines 249
+  RP5-C4C        marker  2223  fence  2451  lines 228
