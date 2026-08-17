@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MTC Trading Bot Terminal (Prototype)</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- 1. Always-visible status bar -->
+<header class="topbar" id="topbar"></header>
+
+<!-- 13. High-impact event banner -->
+<div class="banner" id="impact-banner" hidden>
+  <span class="icon">&#9888;</span><span id="impact-text"></span>
+</div>
+
+<nav class="tabs" id="tabs"></nav>
+
+<main>
+
+  <!-- ============ OVERVIEW ============ -->
+  <section class="page" data-page="overview">
+    <div class="grid kpis" id="kpi-row"></div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2 id="main-chart-title">Main Chart</h2>
+        <span class="hint">candles &middot; EMA20/50 &middot; VWAP &middot; entries/exits &middot; SL/TP</span>
+      </div>
+      <div class="chartbox">
+        <canvas id="main-chart" height="360"></canvas>
+        <div class="tooltip" id="main-chart-tip"></div>
+      </div>
+      <div class="legend" id="main-chart-legend"></div>
+    </div>
+
+    <div class="grid main-side">
+      <div class="panel flat" style="margin-top:12px">
+        <div class="panel-head"><h2>Open Positions</h2><span class="hint" id="pos-count"></span></div>
+        <div class="tablewrap" id="ov-positions"></div>
+      </div>
+      <div class="panel flat" style="margin-top:12px">
+        <div class="panel-head"><h2>AI Market View</h2></div>
+        <div id="ov-ai"></div>
+      </div>
+    </div>
+
+    <div class="grid cols-2">
+      <div class="panel flat" style="margin-top:12px">
+        <div class="panel-head"><h2>Top Signals</h2></div>
+        <div id="ov-signals" class="signal-list" style="grid-template-columns:1fr"></div>
+      </div>
+      <div class="panel flat" style="margin-top:12px">
+        <div class="panel-head"><h2>Market Scanner — Top Opportunities</h2></div>
+        <div class="tablewrap" id="ov-scanner"></div>
+      </div>
+    </div>
+
+    <div class="grid cols-2">
+      <div class="panel flat" style="margin-top:12px">
+        <div class="panel-head"><h2>Performance (YTD)</h2></div>
+        <div id="ov-perf"></div>
+      </div>
+      <div class="panel flat" style="margin-top:12px">
+        <div class="panel-head"><h2>Risk</h2></div>
+        <div id="ov-risk"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>System Health</h2><span class="hint" id="hb-hint"></span></div>
+      <div class="health" id="ov-health"></div>
+    </div>
+  </section>
+
+  <!-- ============ POSITIONS & ORDERS ============ -->
+  <section class="page" data-page="positions">
+    <div class="panel flat">
+      <div class="panel-head"><h2>Open Positions</h2><span class="hint">full detail — section 3</span></div>
+      <div class="tablewrap" id="pg-positions"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Order Management</h2><span class="hint">pending / filled / partial / cancelled / rejected</span></div>
+      <div class="tablewrap" id="pg-orders"></div>
+    </div>
+  </section>
+
+  <!-- ============ SIGNALS ============ -->
+  <section class="page" data-page="signals">
+    <div class="panel flat">
+      <div class="panel-head"><h2>Trading Signals</h2><span class="hint">why the bot wants each trade</span></div>
+      <div class="signal-list" id="pg-signals"></div>
+    </div>
+  </section>
+
+  <!-- ============ RISK ============ -->
+  <section class="page" data-page="risk">
+    <div class="grid cols-2">
+      <div class="panel flat">
+        <div class="panel-head"><h2>Risk Utilization</h2><span class="hint">used vs limit</span></div>
+        <div id="pg-risk-meters"></div>
+      </div>
+      <div class="panel flat">
+        <div class="panel-head"><h2>Sector Exposure</h2></div>
+        <div id="pg-sector"></div>
+        <p class="muted" id="pg-corr" style="margin:8px 0 0"></p>
+      </div>
+    </div>
+    <div class="grid cols-2">
+      <div class="panel flat" style="margin-top:12px">
+        <div class="panel-head"><h2>Automatic Safety Guards</h2></div>
+        <div id="pg-guards"></div>
+      </div>
+      <div class="panel flat" style="margin-top:12px">
+        <div class="panel-head"><h2>Manual Controls</h2><span class="hint">prototype — buttons are inert</span></div>
+        <p class="muted">Emergency controls are separate, deliberate actions. In production each requires a typed confirmation; selecting or viewing anything on this dashboard never places or closes a trade.</p>
+        <div class="actions">
+          <button class="action danger" id="btn-closeall">EMERGENCY CLOSE ALL</button>
+          <button class="action warnb" id="btn-pause">PAUSE BOT</button>
+        </div>
+        <p class="muted" id="ctl-msg" style="margin-top:8px"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PERFORMANCE ============ -->
+  <section class="page" data-page="performance">
+    <div class="panel flat">
+      <div class="panel-head">
+        <h2>Performance Analytics</h2>
+        <div class="filters" id="perf-filters"></div>
+      </div>
+      <div class="grid kpis" id="pg-perf-tiles"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Equity Curve</h2><span class="hint">strategy vs buy &amp; hold</span></div>
+      <div class="chartbox">
+        <canvas id="equity-chart" height="260"></canvas>
+        <div class="tooltip" id="equity-tip"></div>
+      </div>
+      <div class="legend" id="equity-legend"></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="panel flat" style="margin-top:12px">
+        <div class="panel-head"><h2>Strategy Performance</h2></div>
+        <div class="tablewrap" id="pg-strategies"></div>
+      </div>
+      <div class="panel flat" style="margin-top:12px">
+        <div class="panel-head"><h2>Backtest vs Live</h2><span class="hint">is the edge holding up?</span></div>
+        <div class="tablewrap" id="pg-btlive"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JOURNAL ============ -->
+  <section class="page" data-page="journal">
+    <div class="panel flat">
+      <div class="panel-head"><h2>Trade History / Journal</h2><span class="hint">auto-generated by the bot</span></div>
+      <div class="tablewrap" id="pg-journal"></div>
+    </div>
+  </section>
+
+  <!-- ============ SCANNER ============ -->
+  <section class="page" data-page="scanner">
+    <div class="panel flat">
+      <div class="panel-head"><h2>Market Scanner</h2><span class="hint">watchlist ranked by opportunity score</span></div>
+      <div class="tablewrap" id="pg-scanner"></div>
+    </div>
+  </section>
+
+  <!-- ============ AI ENGINE ============ -->
+  <section class="page" data-page="ai">
+    <div class="grid cols-2">
+      <div class="panel flat">
+        <div class="panel-head"><h2>AI Market View</h2></div>
+        <div id="pg-ai-view"></div>
+      </div>
+      <div class="panel flat">
+        <div class="panel-head"><h2>Why No Trade?</h2><span class="hint">every vetoed setup, with the reason</span></div>
+        <ul class="feed" id="pg-ai-veto"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NEWS ============ -->
+  <section class="page" data-page="news">
+    <div class="grid cols-2">
+      <div class="panel flat">
+        <div class="panel-head"><h2>Economic Calendar &amp; Earnings</h2></div>
+        <div class="tablewrap" id="pg-calendar"></div>
+      </div>
+      <div class="panel flat">
+        <div class="panel-head"><h2>Headlines</h2></div>
+        <ul class="feed" id="pg-headlines"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SYSTEM ============ -->
+  <section class="page" data-page="system">
+    <div class="grid cols-2">
+      <div class="panel flat">
+        <div class="panel-head"><h2>VPS / System Telemetry</h2><span class="hint" id="sys-uptime"></span></div>
+        <div id="pg-sysmetrics"></div>
+      </div>
+      <div class="panel flat">
+        <div class="panel-head"><h2>Services</h2></div>
+        <div id="pg-services"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Log &amp; Error Center</h2></div>
+      <div class="tablewrap"><table class="log" id="pg-logs"></table></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Notifications</h2><span class="hint" id="notif-channels"></span></div>
+      <ul class="feed" id="pg-notifs"></ul>
+    </div>
+  </section>
+
+</main>
+
+<p class="demo-note" style="margin:0 16px 24px;">
+  PROTOTYPE &middot; PAPER-mode mock data only. No broker, exchange, VPS or live
+  connection; controls are inert. Layout &amp; data contract: see ARCHITECTURE.md.
+</p>
+
+<script src="mock_data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

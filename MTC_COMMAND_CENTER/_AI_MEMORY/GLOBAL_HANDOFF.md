@@ -9,6 +9,35 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Claude Fable 5] 2026-08-17 — Trading Bot Dashboard UI prototype (mock-only) on claude/trading-bot-dashboard-hgnvcj
+
+Barış supplied a full Day/Swing trading-bot dashboard content spec (18 sections:
+status, portfolio, positions, orders, signals with "why", risk + kill switches,
+performance, journal, strategy table, scanner, chart, AI decision engine /
+"Why No Trade?", news/calendar, telemetry, logs, notifications, backtest-vs-live,
+overview layout). Implemented as a dependency-free static prototype at
+`MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/trading_bot_dashboard/`
+(index.html, styles.css, app.js, mock_data.js, ARCHITECTURE.md, README.md).
+
+- Mock data only (seeded PRNG); no broker/exchange/VPS/live connection; the
+  CLOSE ALL / PAUSE buttons are deliberately inert. Nothing protected touched
+  (no Bridge, Pine, MTC_V2, parity, schemas, adapters, backtest).
+- Design aligns with the accepted V2 dashboard direction (30_V2 doc Part B):
+  viewing never trades, block-reason visibility ("Why No Trade?"), single
+  execution dashboard + drill-down noted as v1 open point, loopback-first.
+  `mock_data.js` shape = proposed read-model contract for a future API.
+- Verified: `node --check` on both JS files; Chromium render of 7 pages via
+  Playwright — zero console/page errors; screenshots reviewed (layout, chart
+  scale fix, $ formatting fix applied after review).
+- Audit tier: T1 (read-only mock dashboard product code). Counterpart flagship
+  audit NOT run — this remote Linux session has no Codex CLI/auth (and both
+  Codex Plus accounts are quota-locked until ~Aug 20/22 per the night report);
+  repo_guard.ps1 also unavailable (no pwsh in container). Read-only git scope
+  checks done by hand: only the new directory + this handoff entry staged.
+  T1 audit remains OPEN for the next session with Codex/GLM access.
+- Branch: `claude/trading-bot-dashboard-hgnvcj` (task-designated), pushed to
+  origin. Not merged to master; merge needs owner decision.
+
 ## [Codex gpt-5.6-sol] 2026-08-17 — Help/Wiki implemented; T1 cap boundary preserved
 
 Claude Max implemented the complete interactive Bridge Help/System Map in the
