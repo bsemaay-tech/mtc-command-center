@@ -212,3 +212,24 @@ Windows SERVICE scan, scheduled-task scan. `git worktree remove` only — no
 | `C:/GAAUD_BUILD_GLM` | `c5a4070a` | same |
 
 Registered worktrees after: **139**. All other candidates remain HELD.
+
+---
+
+## BATCH 2 EXECUTION RECORD — second ten, 2026-08-17 late (owner-approved exact list)
+
+Same per-item prechecks (clean tree, remote reachability, process, service,
+scheduled task; no force, no prune; stop on first mismatch). Result: **6 REMOVED,
+1 ANOMALY (stop honored), 3 NOT ATTEMPTED.**
+
+| Path | Result |
+|---|---|
+| `C:/GAAUD_BUILD_R2_CDX` | REMOVED — `82e92c98`, `origin/codex/gate-a-build-determinism` |
+| `C:/GAAUD_BUILD_R2_GLM` | REMOVED — `82e92c98`, same |
+| `C:/GAAUD_C5` | REMOVED — `c5a4070a`, same |
+| `C:/GAAUD_C5_CDX` | REMOVED — `c5a4070a`, same |
+| `C:/GAAUD_C5_CLA` | REMOVED — `c5a4070a`, same |
+| `C:/GAAUD_CLAUDE` | REMOVED — `7be1c429`, same |
+| `C:/GAAUD_CODEX` | **ANOMALY** — prechecks PASSED (clean, `7be1c429` reachable), git deregistered it, then directory deletion failed midway. 1.03 GB husk remains (9,103 items), no longer a worktree. Unlike GA3B, the tree was verified clean seconds before removal, so the husk holds only tracked+pushed content plus build junk. Husk deletion awaits owner approval (same one-liner class as GA3B). |
+| `C:/GAAUD_DISARM`, `C:/GAAUD_DISARM_CDX_R2`, `C:/GAAUD_DISARM_CLA` | NOT ATTEMPTED — stop-on-error honored |
+
+Registered worktrees after: **132**. All other candidates held.
