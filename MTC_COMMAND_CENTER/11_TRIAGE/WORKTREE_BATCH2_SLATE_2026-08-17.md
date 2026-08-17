@@ -58,3 +58,109 @@ paths one-by-one under the full amended precheck (exit-code-asserted clean +
 reachability, live process + scheduled-task cross-check, capture-then-test on
 `--contains`), no force, no prune, stop on any mismatch; then report per-path
 results and the new registered count. Remaining clean candidates roll into Batch 3.
+
+---
+
+## FULL CANDIDATE LIST — 83 clean/reachable/idle worktrees (owner requested, 2026-08-17)
+
+Every row: clean tree, HEAD reachable from the named `origin/*` ref, idle ≥2 days,
+not in the protected set. Removal (on approval) is `git worktree remove` only — no
+`--force`, no prune — each RE-checked (clean + reachable + live-process +
+scheduled-task cross-check) immediately before removal. `AUD62A-D` remain HELD OUT
+pending deployment-owner confirmation and are not in this 83.
+
+Note: the 10 former "rescue-first" dirs (PG2A/C/D/G, PGAA/AC/AD/AG, PGR,
+tmp/gatea_postgate_prereg_glm) are now reachable via the pushed `rescue/local-only-*`
+branches, so they are safe-removable too and appear below.
+
+```
+Path                          HEAD     Reachable via (origin/…)
+GAAUD_3BR2_CDX                7aad0377 codex/gate-a-3b-shm-validation
+GAAUD_3BR2_CLA                7aad0377 codex/gate-a-3b-shm-validation
+GAAUD_3BR2_DS                 7aad0377 codex/gate-a-3b-shm-validation
+GAAUD_3BR2_GLM                7aad0377 codex/gate-a-3b-shm-validation
+GAAUD_4_GLM                   5a9bb922 codex/gate-a-credential-free-disarmed
+GAAUD_5A_CDX                  5a9bb922 codex/gate-a-credential-free-disarmed
+GAAUD_5A_CLA                  5a9bb922 codex/gate-a-credential-free-disarmed
+GAAUD_5A_CLD                  5a9bb922 codex/gate-a-credential-free-disarmed
+GAAUD_BUILD_CODEX             c5a4070a codex/gate-a-build-determinism
+GAAUD_BUILD_GLM               c5a4070a codex/gate-a-build-determinism
+GAAUD_BUILD_R2_CDX            82e92c98 codex/gate-a-build-determinism
+GAAUD_BUILD_R2_GLM            82e92c98 codex/gate-a-build-determinism
+GAAUD_C5                      c5a4070a codex/gate-a-build-determinism
+GAAUD_C5_CDX                  c5a4070a codex/gate-a-build-determinism
+GAAUD_C5_CLA                  c5a4070a codex/gate-a-build-determinism
+GAAUD_CLAUDE                  7be1c429 codex/gate-a-build-determinism
+GAAUD_CODEX                   7be1c429 codex/gate-a-build-determinism
+GAAUD_DISARM                  ed3d0534 codex/gate-a-disarmed-start-mode
+GAAUD_DISARM_CDX_R2           2ce41e34 codex/gate-a-disarmed-start-mode
+GAAUD_DISARM_CLA              ed3d0534 codex/gate-a-disarmed-start-mode
+GAAUD_DISARM_CLA_R2           2ce41e34 codex/gate-a-disarmed-start-mode
+GAAUD_DISARM_DS_R2            2ce41e34 codex/gate-a-disarmed-start-mode
+GAAUD_DISARM_GLM_R2           2ce41e34 codex/gate-a-disarmed-start-mode
+GAAUD_GA3BR2_CDX             7aad0377 codex/gate-a-3b-shm-validation
+GAAUD_GA3BR2_CLA             7aad0377 codex/gate-a-3b-shm-validation
+GAAUD_GA3BR2_DSV4            7aad0377 codex/gate-a-3b-shm-validation
+GAAUD_GA3BR2_GLM             7aad0377 codex/gate-a-3b-shm-validation
+GAAUD_INT_GLM                 ebada020 codex/gate-a-disarmed-start-mode
+GADISARM                      2ce41e34 codex/gate-a-disarmed-start-mode
+GAE3C                         b2c369f7 codex/bridge-suite-anomaly-repairs-20260815
+GAE3D                         b2c369f7 codex/bridge-suite-anomaly-repairs-20260815
+GAE3G                         b2c369f7 codex/bridge-suite-anomaly-repairs-20260815
+GAE3X                         b2c369f7 codex/bridge-suite-anomaly-repairs-20260815
+GAE3X2                        b2c369f7 codex/bridge-suite-anomaly-repairs-20260815
+GAEAC                         61d88f12 codex/bridge-suite-anomaly-repairs-20260815
+GAEAD                         61d88f12 codex/bridge-suite-anomaly-repairs-20260815
+GAEAG                         61d88f12 codex/bridge-suite-anomaly-repairs-20260815
+GAEAX                         61d88f12 codex/bridge-suite-anomaly-repairs-20260815
+GAEAX2                        61d88f12 codex/bridge-suite-anomaly-repairs-20260815
+GAEAX3                        61d88f12 codex/bridge-suite-anomaly-repairs-20260815
+GAREPORT                      b5a48e6f codex/gate-a-overnight-report
+GARESIDUAL                    3121e7c7 codex/gate-a-residual-evidence-tests
+GATEA4                        a0275b5c codex/gate-a-credential-free-disarmed
+GATEAFIX                      0bdf8cf4 codex/gate-a-build-determinism
+GATEAINTEGRATION              ebada020 codex/gate-a-disarmed-start-mode
+K2VPS                         6fe0130f master
+KVM2F61_PROBE                 f61ed919 master
+LAB/MTC_HANDOFF_UI            d08a7078 codex/modular-monorepo
+LAB/MTC_MODULAR               d08a7078 codex/modular-monorepo
+LAB/TIERPOL                   ef185d13 codex/modular-monorepo
+MORNAUD_5A                    5a9bb922 codex/gate-a-credential-free-disarmed
+MORNAUD_C5                    c5a4070a codex/gate-a-build-determinism
+P1IF                          acb83b5b master
+PG2A                          2fa120b9 rescue/local-only-2fa120b9
+PG2C                          2fa120b9 rescue/local-only-2fa120b9
+PG2D                          2fa120b9 rescue/local-only-2fa120b9
+PG2G                          2fa120b9 rescue/local-only-2fa120b9
+PGAA                          f8a6bc0f rescue/local-only-f8a6bc0f
+PGAC                          f8a6bc0f rescue/local-only-f8a6bc0f
+PGAD                          f8a6bc0f rescue/local-only-f8a6bc0f
+PGAG                          f8a6bc0f rescue/local-only-f8a6bc0f
+PGR                           2fa120b9 rescue/local-only-2fa120b9
+tmp/gatea_postgate_prereg_glm 7c4cac2b rescue/local-only-7c4cac2b
+TSP0                          cfb08b81 master
+TSP1001                       8edf81ca master
+TSP1002A5                     eba350ce master
+TSP1002A6                     fbd63474 master
+TSP1003A6                     677c3a29 master
+TSP1004A3                     65eaedb0 master
+TSP1004A5                     7f72f71c master
+TSP1009                       f5438c5b master
+TSP1009B                      678e8b94 master
+WP2AC                         779bd038 codex/bridge-suite-anomaly-repairs-20260815
+WP2AD                         779bd038 codex/bridge-suite-anomaly-repairs-20260815
+WP2AG                         779bd038 codex/bridge-suite-anomaly-repairs-20260815
+WP2AUD                        779bd038 codex/bridge-suite-anomaly-repairs-20260815
+WP2CAND                       2ce41e34 codex/gate-a-disarmed-start-mode
+WP2CL                         313bc187 codex/bridge-suite-anomaly-repairs-20260815
+WP2PKG2                       2bd4ae8d codex/bridge-suite-anomaly-repairs-20260815
+WP2PKG3                       3fa33555 codex/bridge-suite-anomaly-repairs-20260815
+WPL                           d9d38d9b codex/50h-wpl-verification
+WPS                           16cbc717 master
+WPSAUD5                       732b37c3 master
+```
+
+These 83 fall into three natural groups the owner can approve wholesale or in parts:
+Gate-A audit lanes (GAAUD_*/GAE*/GAEA*/MORNAUD_*/WP2* — the bulk), the rescue-backed
+PG*/tmp dirs, and old TS-P1/WP feature checkouts. Awaiting the owner's exact approved
+subset; nothing removed.
