@@ -1,0 +1,7 @@
+# FAKE sample settings - Package 4 redaction fixture (synthetic data only).
+host=127.0.0.1
+port=7496
+reconnect=true
+log_level=INFO
+password=FAKE-PASSWORD-do-NOT-use-0001
+auth_token = 'FAKE-TOKEN-qwerty-4567890123'

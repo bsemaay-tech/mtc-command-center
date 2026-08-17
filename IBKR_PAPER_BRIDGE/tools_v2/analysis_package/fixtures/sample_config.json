@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-08-18T00:00:00Z",
+  "output": "sample_output/analysis_package_bundle.md",
+  "inputs": [
+    "src/sample_settings.txt",
+    "src/app_config.txt",
+    "src/notes_with_creds.md",
+    "src/hex_addresses.log"
+  ]
+}
