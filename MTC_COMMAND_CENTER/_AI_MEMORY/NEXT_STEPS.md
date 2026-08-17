@@ -16,7 +16,7 @@
 >    auditd).
 > 6. **[AI: Claude]** Dashboard V2 package (queued immediately after stable
 >    DISARMED deployment; T1 visual / T0 host-control split).
-> Standing: chain lane PAUSED (owner; no waiver) · KVM2 state = old payload
+> Standing (SUPERSEDED by 2026-08-17 deployment - see GLOBAL_HANDOFF top): chain lane PAUSED (owner; no waiver) · KVM2 state was = old payload
 > uploaded + python3.12-venv installed, NOTHING else, install attempt unspent ·
 > TESTNET wallet/ARM/mainnet each separately gated · package acceptance record
 > `11_TRIAGE/KVM2_DEPLOYMENT_PACKAGE_ACCEPTED_2026-08-16.md`.

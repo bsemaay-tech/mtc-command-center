@@ -4,6 +4,26 @@
 > Governing record: MTC_COMMAND_CENTER/11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/PATHSCOPE_SUPPLEMENTAL_DISCLOSURE_V2_2026-08-16.md. Identity split: the prover in this repository is the older 137520-byte R5 code; the audited 185272-byte Option C prover is UNMERGED on codex/pathscope-accounting-redesign-20260815. Prerequisite gate 2 is UNKNOWN until the Lead re-derives it at freeze-prerequisite review.
 
 
+## [Fable 5 Lead] 2026-08-17 ~03:30 — 🟢 BRIDGE DEPLOYED AND RUNNING DISARMED ON KVM2
+
+**The finish line of the accelerated contract is crossed.** Release
+`be007fd802bbfd2eb181d66038c374865d1562ee` installed on `srv1856225` under the
+owner-signed V6 §3 sentence + overnight completion authorization; first
+DISARMED start `2026-08-17T00:25:02Z`; service left RUNNING (active,
+NRestarts=0, loopback-only 8790, credential-free, arm_enabled=false).
+Full evidence: `11_TRIAGE/KVM2_DEPLOYMENT_EXECUTED_2026-08-17.md` — D3 matrix
+all green except the network leg recorded INCONCLUSIVE-BENIGN (count
+consistent with zero connects; record body destroyed by premature auditd
+purge — Lead sequencing error, disclosed follow-up window queued).
+UFW-repair dual-CONFIRM (Codex + Claude-via-Max, owner-approved route).
+auditd installed for the window then purged; python3.12-venv stays (owner
+baseline). Owner opens the dashboard with
+`11_TRIAGE/KVM2_RUNKIT/Open-BridgeDashboard.ps1` (ssh-agent must be loaded).
+
+Next separately gated: TESTNET wallet (owner types keys), TESTNET ARM
+sentence, Dashboard V2 (queued [AI: Claude]), fresh audit window for the
+network leg, chain lane still owner-paused. Mainnet/orders forbidden.
+
 ## [Fable 5 Lead] 2026-08-16 afternoon — ACCELERATED CONTRACT APPROVED; integration merge EXECUTED
 
 Owner answered the midday §3 question: **ACCELERATED FULL COMPLETION APPROVED**
