@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bridge V2 — Pre-Flight Readiness Checklist (NON-AUTHORITATIVE)</title>
+<!--
+  Package 5a — Local Observability Toolkit, first increment.
+  Gate-1 record: MTC_COMMAND_CENTER/11_TRIAGE/GATE1_PACKAGE5A_OBSERVABILITY_TOOLKIT_2026-08-18.md
+
+  This page is a STANDALONE STATIC FILE. It:
+  - loads no external resource (no CDN, no fonts, no images, no fetch/XHR),
+  - performs NO network access of any kind,
+  - persists NOTHING (no localStorage, no sessionStorage, no cookies) —
+    check state lives in the DOM for this page view only and resets on reload,
+  - CONTROLS NOTHING. It is a human reading aid over the accepted contracts.
+-->
+<style>
+  :root {
+    --bg: #101418;
+    --panel: #171d24;
+    --panel-edge: #26303a;
+    --ink: #d8e0e8;
+    --ink-dim: #93a1ad;
+    --warn-bg: #3a2410;
+    --warn-edge: #b8742a;
+    --warn-ink: #ffd9a8;
+    --accent: #4fa3d9;
+    --ok: #4fbf8b;
+    --tech-bg: #0d1117;
+    --cite: #8ab4d8;
+    font-size: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+  }
+  /* Permanent non-authority banner: sticky so it is visible at all times. */
+  #banner {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--warn-bg);
+    border-bottom: 2px solid var(--warn-edge);
+    color: var(--warn-ink);
+    padding: 0.65rem 1rem;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  #banner .sub { display: block; font-weight: 400; font-size: 0.82rem; color: #d9b58a; }
+  main { max-width: 60rem; margin: 0 auto; padding: 1rem 1rem 3rem; }
+  header.page { padding: 1.25rem 0 0.5rem; }
+  h1 { font-size: 1.35rem; margin: 0 0 0.35rem; }
+  .lede { color: var(--ink-dim); font-size: 0.92rem; margin: 0 0 1rem; }
+  .disarmed-note {
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-left: 4px solid var(--ok);
+    border-radius: 6px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+  }
+  #progress {
+    position: sticky;
+    top: 3.35rem;
+    z-index: 9;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 6px;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  #progress strong { color: var(--accent); }
+  #progress .reset-note { color: var(--ink-dim); font-size: 0.8rem; }
+  h2 {
+    font-size: 1.05rem;
+    border-bottom: 1px solid var(--panel-edge);
+    padding-bottom: 0.35rem;
+    margin: 2rem 0 0.25rem;
+  }
+  h2 .groupcount { color: var(--ink-dim); font-weight: 400; font-size: 0.85rem; }
+  .item {
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 6px;
+    padding: 0.8rem 0.95rem;
+    margin: 0.75rem 0;
+  }
+  .item.checked { border-left: 4px solid var(--ok); }
+  .item-head { display: flex; gap: 0.6rem; align-items: flex-start; }
+  .item-head input[type="checkbox"] {
+    width: 1.15rem; height: 1.15rem;
+    margin-top: 0.2rem; flex: none; accent-color: var(--ok);
+  }
+  .item-title { font-weight: 600; }
+  .explanation { margin: 0.5rem 0 0 1.75rem; }
+  .explanation .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+    margin-bottom: 0.1rem;
+  }
+  .explanation p { margin: 0 0 0.55rem; font-size: 0.92rem; }
+  .technical p {
+    font-family: Consolas, "Cascadia Mono", Menlo, monospace;
+    font-size: 0.82rem;
+    background: var(--tech-bg);
+    border: 1px solid var(--panel-edge);
+    border-radius: 4px;
+    padding: 0.5rem 0.6rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .citation {
+    margin-left: 1.75rem;
+    font-size: 0.78rem;
+    color: var(--cite);
+    font-family: Consolas, "Cascadia Mono", Menlo, monospace;
+    overflow-wrap: anywhere;
+  }
+  footer {
+    border-top: 1px solid var(--panel-edge);
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    color: var(--ink-dim);
+    font-size: 0.8rem;
+  }
+  footer .again {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-edge);
+    color: var(--warn-ink);
+    border-radius: 6px;
+    padding: 0.6rem 0.9rem;
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 0.9rem;
+  }
+  /* 375px-and-below phones */
+  @media (max-width: 420px) {
+    :root { font-size: 15px; }
+    main { padding: 0.65rem 0.65rem 2.5rem; }
+    #progress { top: 3.9rem; font-size: 0.82rem; }
+    .explanation, .citation { margin-left: 0; }
+    .item { padding: 0.65rem 0.7rem; }
+    h1 { font-size: 1.12rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="banner" role="alert">
+  ⚠ THIS PAGE CONTROLS NOTHING ⚠
+  <span class="sub">A reading aid for humans. Checking boxes here arms nothing, disarms
+  nothing, approves nothing, and is recorded nowhere. No persistence, no network.</span>
+</div>
+
+<main>
+<header class="page">
+  <h1>Bridge V2 — Pre-Flight Readiness Checklist</h1>
+  <p class="lede">
+    Items derived from the accepted contracts
+    (<code>docs/21_WINDOW_STATE_CONTRACT.md</code>,
+    <code>docs/22_ORDER_STATE_CONTRACT.md</code>,
+    <code>docs/23_ORDER_IDENTITY_CONTRACT.md</code>) plus the v4 baseline schema
+    and loopback/deployment rules. Each row cites its source. Verified
+    in-page check state only — reload resets everything.
+  </p>
+</header>
+
+<div class="disarmed-note">
+  <strong>Default posture: DISARMED.</strong> The bridge store initializes
+  <code>app_state = DISARMED</code>
+  (<code>bridge/store/db.py:4031</code>); arming is always an explicit operator
+  action. If any check below cannot be verified, the safe answer is: leave it
+  disarmed.
+</div>
+
+<div id="progress" aria-live="polite">
+  Checked: <strong><span id="done">0</span> / <span id="total">0</span></strong>
+  <span class="reset-note">— in-page only; nothing is saved; reload clears all checks.</span>
+</div>
+
+<!-- ================================================================= -->
+<section>
+<h2>A · State safety <span class="groupcount">(window honesty &amp; disarm)</span></h2>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="a1" aria-labelledby="a1t">
+    <span class="item-title" id="a1t">A1 · A soak window may show RUNNING only with fresh liveness, ARMED, and no recorded interruption</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>The bridge must never look alive when it is dead. "Running" has to be earned
+    from three pieces of stored proof — a recent health pulse, the armed state,
+    and no interruption on record — never from a claim or a stale value.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>compute_window_state decision order: reset marker → DOWN; no window → DOWN; liveness missing / future-dated / older than stale_after_s (default 300 s) → DOWN; interruption recorded → INTERRUPTED; app_state == ARMED → RUNNING. Unreadable store reports DOWN with error: store_unreadable; unparseable timestamps report DOWN with error: invalid_meta:&lt;key&gt;.</p>
+    </div>
+  </div>
+  <div class="citation">docs/21_WINDOW_STATE_CONTRACT.md:26-42</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="a2" aria-labelledby="a2t">
+    <span class="item-title" id="a2t">A2 · Interruptions are sticky — re-arming alone never clears them</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>If the evidence run had a gap, quietly restarting it and calling the whole
+    thing one continuous run would be dishonest. Only an explicit
+    operator-driven reset starts a clean evidence run.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>Only reset_window (no HTTP surface by design — a runbook/Python action) clears window_interrupted_ts. Downtime gaps ≤ stale_after_s (300 s) do not stamp an interruption (brief-maintenance tolerance); while disarmed, the window still shows INTERRUPTED live.</p>
+    </div>
+  </div>
+  <div class="citation">docs/21_WINDOW_STATE_CONTRACT.md:44-53</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="a3" aria-labelledby="a3t">
+    <span class="item-title" id="a3t">A3 · Broken window evidence reports DOWN with an error code — never a fabricated active state</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>When the stored proof cannot be read or understood, the honest answer is
+    "down, and here is why" — not a guess that happens to look healthy.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>Unreadable store → DOWN + error: store_unreadable; unparseable non-empty window timestamp → DOWN + error: invalid_meta:&lt;meta-key&gt;; future-dated liveness → DOWN + error: future_liveness; exact-threshold liveness (age == stale_after_s) remains fresh.</p>
+    </div>
+  </div>
+  <div class="citation">docs/21_WINDOW_STATE_CONTRACT.md:37-42</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="a4" aria-labelledby="a4t">
+    <span class="item-title" id="a4t">A4 · First detection of an owned partial fill latches DISARMED and opens a recovery row — in one transaction</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>A half-filled position is a situation the engine must stop and hold your
+    hand over, not keep trading through. The moment it is detected, trading is
+    switched off and a recovery case is opened together, atomically.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>First detection writes PARTIALLY_FILLED, opens the partial-recovery row, and latches app_state=DISARMED in one transaction. Reserving CANCEL_ENTRY writes PENDING_CANCEL in the same reserve-before-I/O transaction. Post-SAFE_FLAT recovery generations never downgrade an already-terminal entry order.</p>
+    </div>
+  </div>
+  <div class="citation">docs/22_ORDER_STATE_CONTRACT.md:333-345</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="a5" aria-labelledby="a5t">
+    <span class="item-title" id="a5t">A5 · UNKNOWN_SUBMISSION is frozen — no blind retry, ever</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>"I don't know if my order got through" is never resolved by sending it
+    again and hoping. It stays parked until real reconciliation evidence says
+    what happened.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>UNKNOWN_SUBMISSION → {PENDING_NEW, SUBMITTING} is unconditionally illegal. Resolving an ambiguous submission requires reconciliation evidence; a retry after real reconciliation is a new order/decision_uid, never the same order mutating backward.</p>
+    </div>
+  </div>
+  <div class="citation">docs/22_ORDER_STATE_CONTRACT.md:157-164, 174-175</div>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+<h2>B · Schema <span class="groupcount">(store shape before you trust it)</span></h2>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="b1" aria-labelledby="b1t">
+    <span class="item-title" id="b1t">B1 · Store reports the expected schema_version (v4 baseline = 4)</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>Before reading a store, confirm you are reading the shape you think you
+    are. A missing or odd version number means stop and investigate, not
+    proceed and hope.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>SCHEMA_VERSION_BASELINE = 4; fresh initialization writes meta schema_version = '4'. Versions 5-9 exist but require an explicit initialize(target_schema_version=N) through the proven chain — no silent upgrades.</p>
+    </div>
+  </div>
+  <div class="citation">bridge/store/db.py:268-308, 892-898</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="b2" aria-labelledby="b2t">
+    <span class="item-title" id="b2t">B2 · order_identity rows are well-formed (74/75-char ids, legal states, timestamp consistency)</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>The identity ledger has a strict, checkable shape. Rows that do not fit it
+    are evidence of corruption or foreign data and must be treated as a finding.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>intent_id: 74 chars, prefix 'intent-v1:' + 64 lowercase hex; request_id: 75 chars, prefix 'request-v1:' + 64 hex; state ∈ {RESERVED, SUBMITTED, LEGACY_RESERVED, LEGACY_SUBMITTED}; table-level CHECK: RESERVED-class rows have submitted_ts NULL, SUBMITTED-class rows have it NOT NULL.</p>
+    </div>
+  </div>
+  <div class="citation">docs/23_ORDER_IDENTITY_CONTRACT.md:55-75</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="b3" aria-labelledby="b3t">
+    <span class="item-title" id="b3t">B3 · Orders are keyed by immutable cloid — re-observation updates mutable fields only</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>Seeing the same order again must update what you know about it, never
+    silently replace what it is. A different order wearing a known ID is an
+    error, not an overwrite.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>No INSERT OR REPLACE on orders. Same cloid + same immutable identity (oid, group_id, order_ref, decision_uid, trade_id, role, qty) → update mutable fields only (status, filled_qty, avg_fill_px, ts_last, order_json). Same cloid + different identity → preserve original row, raise OrderCollisionError.</p>
+    </div>
+  </div>
+  <div class="citation">docs/23_ORDER_IDENTITY_CONTRACT.md:151-160</div>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+<h2>C · Contracts <span class="groupcount">(order-state &amp; identity rules in force)</span></h2>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="c1" aria-labelledby="c1t">
+    <span class="item-title" id="c1t">C1 · Order state vocabulary is exactly the 11 canonical states; terminal states never leave</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>There is one agreed list of order states and one agreed map of which
+    states can follow which. Filled, canceled, rejected, and expired are dead
+    ends — nothing comes back from them.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>OrderState: PENDING_NEW, SUBMITTING, SUBMITTED, OPEN, PARTIALLY_FILLED, PENDING_CANCEL, FILLED, CANCELED, REJECTED, EXPIRED, UNKNOWN_SUBMISSION. TERMINAL_ORDER_STATES = {FILLED, CANCELED, REJECTED, EXPIRED}: zero outgoing edges except self; same-state replay is always a legal idempotent observation.</p>
+    </div>
+  </div>
+  <div class="citation">docs/22_ORDER_STATE_CONTRACT.md:68-84, 130-142, 165-172</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="c2" aria-labelledby="c2t">
+    <span class="item-title" id="c2t">C2 · Unrecognized raw broker statuses fail closed — never default to a live state</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>An unfamiliar word from the broker must never be translated into
+    "probably fine and working". It raises an error instead.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>normalize_raw_order_status maps OPEN/SUBMITTED/PENDING/FILLED/CANCELLED_BY_ENGINE (case/whitespace-tolerant); everything else — non-strings, empty, unrecognized — raises UnknownRawOrderStatusError with reason_code ∈ {NON_STRING_RAW_STATUS, EMPTY_RAW_STATUS, UNRECOGNIZED_RAW_STATUS}. The permissive historical "OPEN" fallback is a known risk this contract removes on its surfaces.</p>
+    </div>
+  </div>
+  <div class="citation">docs/22_ORDER_STATE_CONTRACT.md:88-121</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="c3" aria-labelledby="c3t">
+    <span class="item-title" id="c3t">C3 · PARTIALLY_FILLED never regresses to a lower-progress state</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>Fill progress is a ratchet. An order that has been partially filled can
+    finish, cancel, or expire — it cannot quietly become "just submitted"
+    again.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>PARTIALLY_FILLED → {PENDING_NEW, SUBMITTING, SUBMITTED, OPEN} is illegal. PENDING_CANCEL may still receive FILLED / PARTIALLY_FILLED / CANCELED / EXPIRED — authoritative race outcomes always win over a pending cancel request.</p>
+    </div>
+  </div>
+  <div class="citation">docs/22_ORDER_STATE_CONTRACT.md:138-141, 176-184</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="c4" aria-labelledby="c4t">
+    <span class="item-title" id="c4t">C4 · Duplicate delivery of the same intent+request is BLOCKED — no broker I/O</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>Sending the same trading idea twice (a replay, a retry, a stuck queue)
+    must not produce two orders at the broker. The second delivery is blocked
+    before anything is sent.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>Reservation protocol: BEGIN IMMEDIATE; no identity → insert RESERVED, commit; exact intent+request exists → BLOCKED (no broker I/O); same intent with different request or a digest collision → IdentityCollisionError + audit event with exc.code. Never submit without a committed reservation.</p>
+    </div>
+  </div>
+  <div class="citation">docs/23_ORDER_IDENTITY_CONTRACT.md:8-10, 127-137</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="c5" aria-labelledby="c5t">
+    <span class="item-title" id="c5t">C5 · Persisted events carry structured IDs and codes only — never raw exception text</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>When something fails, the durable log records which thing failed and what
+    kind of failure it was — not free-form error text that could leak anything.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>PLACE_BRACKET_FAILED events persist only structured IDs and exception type name (error_type), never str(exc) or raw messages. Identity finalization failures persist only structured IDs; generic failures persist only the error code.</p>
+    </div>
+  </div>
+  <div class="citation">docs/23_ORDER_IDENTITY_CONTRACT.md:178-186</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="c6" aria-labelledby="c6t">
+    <span class="item-title" id="c6t">C6 · Canonical states are derived from durable quantities and validated against the transition table</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>"Partially filled" is not a mood — it is arithmetic on recorded fills,
+    checked against the legal-move map before it is written down.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>canonical_order_state(raw_status, ordered_qty, filled_qty, lot, cancel_reserved): exchange-confirmed terminal raw wins; filled == ordered → FILLED; filled &gt; ordered → quantity-integrity failure; cancel reserved before I/O on a live order → PENDING_CANCEL; 0 &lt; filled &lt; ordered → PARTIALLY_FILLED; else normalized raw. Every derived value is checked against ORDER_STATE_TRANSITIONS via validate_order_transition.</p>
+    </div>
+  </div>
+  <div class="citation">docs/22_ORDER_STATE_CONTRACT.md:299-333</div>
+</div>
+</section>
+
+<!-- ================================================================= -->
+<section>
+<h2>D · Environment <span class="groupcount">(where things run, what touches what)</span></h2>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="d1" aria-labelledby="d1t">
+    <span class="item-title" id="d1t">D1 · The bridge starts DISARMED; arming is an explicit operator action</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>Starting the software must never be the same as starting to trade. Trading
+    begins only when a human deliberately switches it on.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>Store initialization writes meta app_state = 'DISARMED'; ARM is a separate recorded action (record_window_start on ARM stamps window_started_ts only if no window is active).</p>
+    </div>
+  </div>
+  <div class="citation">bridge/store/db.py:4031 · docs/21_WINDOW_STATE_CONTRACT.md:19-24</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="d2" aria-labelledby="d2t">
+    <span class="item-title" id="d2t">D2 · Any HTTP surface binds loopback only (127.0.0.1)</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>The dashboard and API listen only on this machine. Nothing on the network
+    can reach them without an explicit, separately-reviewed decision.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>uvicorn.run(host="127.0.0.1", port=8790); CORSMiddleware restricted to 127.0.0.1/localhost origins; deploy scripts statically assert loopback-only binding and that no non-loopback listener exists on the port.</p>
+    </div>
+  </div>
+  <div class="citation">bridge/app.py:234 · docs/01_ARCHITECTURE.md:769</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="d3" aria-labelledby="d3t">
+    <span class="item-title" id="d3t">D3 · Observability exports run against explicit fixture stores — never a default live path</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>The audit tool never decides for you which file to look at. You hand it a
+    path; in tests that path is always a built synthetic store.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>export_audit_pack.py requires an explicit --store path (no default path exists), opens it SQLite read-only (mode=ro), and reports missing/malformed structures as explicit REPORTED gaps. Tests build the fixture store at test time; no .db binary is committed.</p>
+    </div>
+  </div>
+  <div class="citation">MTC_COMMAND_CENTER/11_TRIAGE/GATE1_PACKAGE5A_OBSERVABILITY_TOOLKIT_2026-08-18.md:15-20 · IBKR_PAPER_BRIDGE/tools_v2/observability/README.md</div>
+</div>
+
+<div class="item">
+  <div class="item-head">
+    <input type="checkbox" id="d4" aria-labelledby="d4t">
+    <span class="item-title" id="d4t">D4 · Deployment is a separate owner gate — nothing built here is live by default</span>
+  </div>
+  <div class="explanation">
+    <span class="tag">Plain language</span>
+    <p>Work done in the repository stays in the repository. Putting anything onto
+    a running instance is its own explicit step that the owner controls.</p>
+    <div class="technical">
+      <span class="tag">Technical</span>
+      <p>Deployment note pattern: built and tested at the repo only; the running instance is NOT redeployed by the task; deploy is a later, separate owner gate. Additive keys leave existing status consumers unchanged.</p>
+    </div>
+  </div>
+  <div class="citation">docs/21_WINDOW_STATE_CONTRACT.md:56-61</div>
+</div>
+</section>
+
+<footer>
+  <div class="again">⚠ Reminder: this page controls nothing. ⚠</div>
+  <p>
+    Package 5a — Local Observability Toolkit (first increment), T1.
+    Checklist items carry citations to the accepted contracts; where a line
+    range is cited, the requirement is the cited text itself. Check state is
+    in-page only (DOM), resets on reload, and is never transmitted or stored.
+    This page is not an authority: it cannot verify anything — it only helps
+    a human read the contracts carefully before acting.
+  </p>
+</footer>
+</main>
+
+<script>
+// In-page check state ONLY. No storage, no network, no persistence of any
+// kind: the counter below is recomputed from the DOM on every interaction
+// and is gone when the page closes.
+(function () {
+  "use strict";
+  var boxes = Array.prototype.slice.call(
+    document.querySelectorAll('input[type="checkbox"]')
+  );
+  var done = document.getElementById("done");
+  var total = document.getElementById("total");
+  total.textContent = String(boxes.length);
+
+  function refresh() {
+    var count = 0;
+    boxes.forEach(function (box) {
+      var card = box.closest(".item");
+      if (card) { card.classList.toggle("checked", box.checked); }
+      if (box.checked) { count += 1; }
+    });
+    done.textContent = String(count);
+  }
+
+  boxes.forEach(function (box) { box.addEventListener("change", refresh); });
+  refresh();
+})();
+</script>
+</body>
+</html>
