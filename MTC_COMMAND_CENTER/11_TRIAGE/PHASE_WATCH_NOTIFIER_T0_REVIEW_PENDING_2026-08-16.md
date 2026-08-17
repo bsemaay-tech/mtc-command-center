@@ -63,12 +63,15 @@ complete, in order:
    (owner repair 3, 2026-08-17):** earlier wording claimed the watcher "never
    initiates a KVM2 connection"; that is true only while inactive. After
    activation the current design would have the HERMES CHILD initiate the
-   approved read-only SSH checks. The review must assess this honestly and
-   decide: (a) Hermes runs the SSH checks itself, or (b) deterministic
-   allowlisted commands collect the evidence (fixed script, fixed command list,
-   no LLM holding SSH capability) and Hermes only summarizes sanitized results.
-   Lead recommendation: (b) — smaller trust surface, reviewable command list,
-   LLM output cannot become command input.
+   approved read-only SSH checks. **DECIDED BY OWNER 2026-08-17 (binding):
+   Option B — deterministic allowlisted evidence collection.** Hermes never
+   receives SSH capability and never constructs/executes KVM2 commands; a fixed
+   reviewed collector runs only the exact approved read-only commands and writes
+   sanitized local evidence; Hermes only reads and summarizes it. Implementation
+   package: `PHASE_WATCH_COLLECTOR_B_PACKAGE_2026-08-17.md`. The review now
+   VERIFIES the implemented Option B (command-table freeze, injection refusal,
+   Hermes boundary canary, toolset restriction) instead of deciding the
+   architecture.
 8. **FakeWarnTest network diet (owner repair 2, 2026-08-17, implemented):** test
    mode performs no `git fetch` and no network request other than its single
    authorized Telegram send; before/after `WATCH_ACTIVE` checks read the

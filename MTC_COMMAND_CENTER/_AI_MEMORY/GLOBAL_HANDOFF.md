@@ -1,5 +1,41 @@
 # GLOBAL_HANDOFF
 
+## [Claude Fable 5] 2026-08-17 — Housekeeping lane: cleanup, phase watch, notifier T0 prep
+
+Owner-driven housekeeping lane, coordinated alongside (never touching) the KVM2
+deployment-owner session. On master through `33307723` + this commit:
+
+- **Worktree cleanup:** registered worktrees 160 → **149**. Nine removed under
+  owner-approved batches with per-item prechecks (clean tree, remote
+  reachability, live process + scheduled-task cross-checks; no `--force`, no
+  prune). **`C:/P2RT` is permanently ACTIVE / DO NOT TOUCH** — it powers the
+  running `MTC-Bridge-P2` task; it sat wrongly in SAFE-REMOVE until the owner
+  caught it. GA3B zombie-registration diagnosed; husk proven to hold ZERO unique
+  content by dual-form (raw + clean-filtered) hash comparison; owner approved
+  permanent deletion — blocked by a harness path-protection on root-level
+  `Remove-Item`, owner will run the one-liner personally. Three rescue branches
+  (`rescue/local-only-*`) preserve the three local-only commits. Full detail +
+  procedure amendments: `11_TRIAGE/WORKTREE_SPRAWL_INVENTORY_2026-08-16.md`.
+- **Phase watch:** `_AI_MEMORY/PHASE_WATCH.md` + 4-hourly scheduled task
+  `MTC-HermesPhaseWatch` (wrapper `C:\LAB\HERMES_WATCH\phase_watch_check.ps1`,
+  Hermes via `--provider deepseek -m deepseek-chat`). `WATCH_ACTIVE: NO` until
+  the deployment owner confirms a DISARMED start + activation preconditions.
+- **Telegram notifier:** reuses @MTCHyperbot via existing user env vars; one
+  supervised TEST message ever sent (2026-08-16 23:48:18). T0 review PENDING and
+  HOLD until the KVM2 T0 lane clears. Owner repairs done: Hermes child env
+  stripped of TELEGRAM_* (D026 RED/GREEN on file), test mode network-dieted,
+  KVM2-connection claim honesty-corrected. **Owner architecture decision
+  2026-08-17: Option B binding — deterministic allowlisted collector; Hermes
+  never gets SSH.** Package: `11_TRIAGE/PHASE_WATCH_COLLECTOR_B_PACKAGE_2026-08-17.md`
+  (prepared, NOT implemented).
+- **Owner decisions recorded:** wind-down 1=A/2=B/3=A (Audit 2 closed), AI
+  budget = STANDARD ceiling (`11_TRIAGE/OWNER_DECISIONS_2026-08-16_HOUSEKEEPING.md`).
+- **Process incident (owner: record, no rewrite):** commit `33307723` was made
+  directly on master — a PS 5.1 quoting failure aborted the branch commit and
+  left the temp worktree on master; the retry committed there. Content was
+  byte-identical to the guard-passed staged set. Branch pointer aligned
+  afterward; branch/worktree-first sequencing restored from this commit on.
+
 ## [Claude Opus 5] 2026-07-30 — 50-Hour Plan documentation repair/audit cycle ACCEPTED
 
 Owner-authorized documentation-only repair + audit cycle on `09_DOCS/ROADMAPS/TRADING_SYSTEM/TRADING SYSTEM — 50-HOUR ACCELERATED IMPLEMENTATION PLAN.md`. **ACCEPTED** — both canonical audits returned PASS-WITH-NITS with zero required repairs. Baseline `87a25792` (owner-supplied hash verified) → **final `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee`** (1879 lines). Roles: Claude `claude-opus-5` Lead/acceptance, Codex CLI `gpt-5.6-sol` sole document implementer, canonical auditors Claude `claude-opus-5` xhigh (fresh) + Codex `gpt-5.6-sol` xhigh (ephemeral read-only), DeepSeek CLI read-only supplemental. Two non-accepting rounds used of three permitted.

@@ -74,11 +74,13 @@ assertion pass, needs root) is a deployment-owner weekly action, not a watch tas
 while `WATCH_ACTIVE` is `NO`, the cron initiates NO KVM2 connection of any kind and
 runs LOCAL-ONLY. **After activation the current design WOULD have the Hermes child
 initiate the approved read-only SSH checks in the map** via the owner-approved
-access route — that is a real outbound capability, not "never connects". Whether
-evidence collection should instead be deterministic allowlisted commands (a fixed
-script gathers the raw outputs; Hermes only summarizes sanitized results and never
-holds SSH capability) is an open T0-review question that must be settled before
-activation. The cron never handles bridge credentials either way, and Hermes is
+access route — that is a real outbound capability, not "never connects".
+**Owner DECIDED 2026-08-17 (binding): Option B** — a fixed reviewed collector
+(deterministic allowlisted commands, exactly the map above) gathers the evidence
+and writes sanitized local files; **Hermes never receives SSH capability, never
+constructs or executes KVM2 commands, and only reads/summarizes the local
+evidence.** Package: `11_TRIAGE/PHASE_WATCH_COLLECTOR_B_PACKAGE_2026-08-17.md`;
+not implemented until the deployment-owner confirms the KVM2 T0 lane is clear. The cron never handles bridge credentials either way, and Hermes is
 launched with the Telegram variables stripped from its environment (owner repair 1,
 D026 RED/GREEN evidence on file).
 
