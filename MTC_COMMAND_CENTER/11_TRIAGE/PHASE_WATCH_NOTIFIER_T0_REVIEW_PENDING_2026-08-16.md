@@ -49,9 +49,32 @@ complete, in order:
    (`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`; User scope, process fallback), the
    CredRead Add-Type block was removed, every message carries the fixed
    `[PHASE WATCH][KVM2]` prefix. Reviewers: verify the env-var route does not leak
-   values into child-process environments (note: the wrapper spawns hermes.exe,
-   which inherits process env — assess) or logs, and that the prefix cannot be
-   omitted on any send path.
+   values into child-process environments or logs, and that the prefix cannot be
+   omitted on any send path. **Child-inheritance sub-item REPAIRED 2026-08-17
+   (owner repair 1):** hermes.exe is now launched via `Invoke-SanitizedProcess`,
+   which removes `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` from the child
+   environment BY NAME (values never read). D026 RED/GREEN demonstrated with a
+   harmless presence-boolean stub through the real launcher — RED: ordinary child
+   inherits both names (True/True); GREEN: sanitized path inherits neither
+   (False/False); commands + output in
+   `PHASE_WATCH_ENVSCRUB_D026_2026-08-17.md`. Review verifies the demo and the
+   removal call path.
+7. **Post-activation KVM2 contact — honesty correction + architecture question
+   (owner repair 3, 2026-08-17):** earlier wording claimed the watcher "never
+   initiates a KVM2 connection"; that is true only while inactive. After
+   activation the current design would have the HERMES CHILD initiate the
+   approved read-only SSH checks. The review must assess this honestly and
+   decide: (a) Hermes runs the SSH checks itself, or (b) deterministic
+   allowlisted commands collect the evidence (fixed script, fixed command list,
+   no LLM holding SSH capability) and Hermes only summarizes sanitized results.
+   Lead recommendation: (b) — smaller trust surface, reviewable command list,
+   LLM output cannot become command input.
+8. **FakeWarnTest network diet (owner repair 2, 2026-08-17, implemented):** test
+   mode performs no `git fetch` and no network request other than its single
+   authorized Telegram send; before/after `WATCH_ACTIVE` checks read the
+   already-fetched `origin/master` ref. The one delivered TEST message
+   (2026-08-16 23:48:18) is sufficient; the test must not be repeated without a
+   new owner instruction. Review verifies the no-fetch path.
 
 **Timeline note for reviewers:** on the same owner directive, exactly one
 supervised `-FakeWarnTest` run was executed 2026-08-16 23:48:18 → `NOTIFY-SENT`

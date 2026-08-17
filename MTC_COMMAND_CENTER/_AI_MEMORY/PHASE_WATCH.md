@@ -70,11 +70,17 @@ Hard limits for every row: read-only commands only; **never** read
 write/restart/unmask anything on KVM2. `deploy/linux/verify.sh` (full read-only
 assertion pass, needs root) is a deployment-owner weekly action, not a watch task.
 
-**Hermes cron scope under this map:** until the deployment-owner session provides
-the read-only `<KVM2>` access route at activation, the Hermes cron runs
-LOCAL-ONLY — it reads this file and any locally mirrored status the deployment
-session publishes; it never initiates a KVM2 connection on its own and never
-handles credentials.
+**Hermes cron scope under this map — stated honestly (owner repair 3, 2026-08-17):**
+while `WATCH_ACTIVE` is `NO`, the cron initiates NO KVM2 connection of any kind and
+runs LOCAL-ONLY. **After activation the current design WOULD have the Hermes child
+initiate the approved read-only SSH checks in the map** via the owner-approved
+access route — that is a real outbound capability, not "never connects". Whether
+evidence collection should instead be deterministic allowlisted commands (a fixed
+script gathers the raw outputs; Hermes only summarizes sanitized results and never
+holds SSH capability) is an open T0-review question that must be settled before
+activation. The cron never handles bridge credentials either way, and Hermes is
+launched with the Telegram variables stripped from its environment (owner repair 1,
+D026 RED/GREEN evidence on file).
 
 Parallel work item (already in the live queue, not a watch task): Dashboard V2
 package — T1 for local read-only visual work, T0 for anything host/control.
@@ -114,7 +120,10 @@ promotable strategy (Phase 3, QuantLens research) and its own gate. No shortcut.
   against `STATUS_SOURCE`, appends a ≤10-line OK/WARN/FAIL report to the same log.
 - Daily AI sessions: read the last ~6 log entries, escalate any WARN/FAIL into
   `NEXT_STEPS.md`, tick the day's boxes above.
-- Hermes is read-only here: it never ARMs, never touches keys, never edits repo files.
+- Hermes is read-only here: it never ARMs, never touches keys, never edits repo
+  files. Post-activation KVM2 contact is limited to the approved read-only checks
+  above and its final shape (Hermes-driven vs deterministic collector) is a
+  pending T0-review question — see the cron-scope paragraph.
 - **Notifications: Telegram notifier code present but DEPLOYMENT HELD — owner
   classified watcher + credential/network handling as T0; review pending
   (`11_TRIAGE/PHASE_WATCH_NOTIFIER_T0_REVIEW_PENDING_2026-08-16.md`).** Route

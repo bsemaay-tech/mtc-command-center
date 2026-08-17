@@ -543,3 +543,54 @@ worktree, cross-check its path against all scheduled-task actions
 against all registered worktree paths — exactly ONE hit: `\MTC-Bridge-P2` →
 `C:\P2RT` (Status: Running). No other worktree, including every remaining
 SAFE-REMOVE candidate and the batch-1 slate, is referenced by any scheduled task.
+
+---
+
+## GROUP-E BATCH 1 REMAINDER + GA3B CONTENT VERDICT — 2026-08-17 (owner-approved)
+
+**P2RT: owner ACCEPTED the reclassification 2026-08-17 — permanently ACTIVE / DO
+NOT TOUCH.** Standing, not time-boxed.
+
+### Remainder execution (six worktrees, full amended precheck per item)
+
+Prechecks immediately before each removal: exists → `rev-parse` exit-0 + 40-hex →
+`status --porcelain` exit-0 + zero lines → remote reachability (full output
+captured, then tested) → fresh `Win32_Process` command-line/path scan → fresh
+scheduled-task action scan → `git worktree remove` (no `--force`).
+
+| Path | Result |
+|---|---|
+| `C:/GA3BR2` | REMOVED — `20de117f`, reachable `origin/codex/gate-a-3b-shm-validation` |
+| `C:/GA4RED` | REMOVED — `637307e8`, reachable `origin/master` (after one FALSE-STOP, see below) |
+| `C:/GA5E` | REMOVED — `7453ea7f`, reachable `origin/codex/bridge-suite-anomaly-repairs-20260815` |
+| `C:/GAAUD_3B` | REMOVED — `df00634f`, reachable `origin/codex/gate-a-3b-shm-validation` |
+| `C:/GAAUD_3B_CDX` | REMOVED — `df00634f`, same ref |
+| `C:/GAAUD_3B_CLA` | REMOVED — `df00634f`, same ref |
+
+Registered worktrees after: **149** — exactly the owner-expected count.
+
+**Check-defect found and fixed during the run (false-STOP, safe direction):**
+piping `git branch -r --contains` into `Select-Object -First 1` makes PowerShell
+kill git as soon as the first line arrives; with the new exit-code assertion, a
+commit reachable from MANY refs (e.g. a master tip) then reads as "not reachable".
+GA4RED tripped it; fix = capture the full output into an array first, then test.
+Procedure amendment 5: never combine an exit-code assertion with an
+early-terminating pipeline on the same command.
+
+### GA3B husk — content-level verdict (filter-aware, CRLF-correct)
+
+Method: every husk file hashed TWO ways in batch (`git hash-object --stdin-paths`
+raw/`--no-filters`, and clean-filtered with `GIT_ATTR_SOURCE=df00634f` since the
+husk lost its own `.gitattributes`), each compared against the exact blob OID in
+`ls-tree -r df00634f` (`core.quotePath=false`). A file counts as differing only if
+NEITHER form matches — this handles the repo's mixed CRLF/LF blob history (see
+`recorded-hash-form-ambiguity`), which had made naive `diff-index` report all 7,057
+entries as modified (EOL artifact, not real edits).
+
+Result: **0 of 7,052 present files differ in content.** 5 files are absent from
+the husk (`.gitattributes`, `.gitignore`, `.cursorrules`,
+`.chatgpt-instructions.md`, `.claude/skills/mtc-repo-guard/SKILL.md` — all
+trivially recoverable from git); the remaining husk entries are
+`__pycache__`/`.pytest_cache` build junk. The husk holds ZERO unique content at
+byte/content level. Permanent deletion remains NOT executed — awaiting explicit
+owner approval per standing constraint.
