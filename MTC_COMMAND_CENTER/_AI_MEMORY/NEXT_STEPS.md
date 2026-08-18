@@ -8,6 +8,74 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
+## CURRENT (2026-08-18 morning) — night records ported to master; every package lane owner-gated
+
+Master now carries the full night record (this port; see GLOBAL_HANDOFF same date). Open owner
+gates unchanged: Package 5b step-0 classification, Package 6 local half, Package 8 per-work-
+package T0 starts, P1 §A.2 store-model choice, chaos-drill implementation increment, P4
+redaction widening. Dispatch skeletons ready:
+`11_TRIAGE/BRIDGE_V2_PACKAGE_KICKOFF_PREP_2026-08-17.md`. Route facts: Codex `fourth` resets
+~2026-08-20 10:20, `secondary` ~2026-08-22 20:09 (probe by real dispatch); ChatGPT Pro (`free`)
+and Claude MAX protected; GLM-5.3 (5-hour quota wall), DeepSeek driver, Gemini routes are the
+workhorses. Budget flag: CodeBurn month-to-date ~$3.2k vs owner ceiling $800–1200 max — owner
+read needed.
+
+## AFTER THE NIGHT RUN, PART 3 (2026-08-18 pre-dawn) — Packages 3/4/5a BUILT + ACCEPTED; master `38a2c0b8`
+
+Part 2's "start Packages 3/4/5a" items are DONE: built in isolated worktrees, DeepSeek-reviewed
+(P3 round-2 ACCEPT after one fixture fix; P4/P5a ACCEPT zero findings), Gemini
+CROSSCHECK_CLEAN, merged to master `38a2c0b8` and pushed; final suite 1379 passed / same 2
+baseline failures. Acceptance: `11_TRIAGE/BRIDGE_V2_PACKAGES_345A_T1_ACCEPTANCE_2026-08-18.md`;
+owner report: `11_TRIAGE/OVERNIGHT_BRIDGE_V2_NIGHT_REPORT_PART3_2026-08-18.md`. Open owner
+gates now: Package 5b step-0 classification, Package 6 local half, Package 8 per-work-package
+T0 starts, P1 §A.2 store-model choice, chaos-drill implementation increment, P4 redaction
+widening. Try the prototype: open `IBKR_PAPER_BRIDGE/dashboard_v2_prototype/index.html`.
+
+## AFTER THE 2026-08-17 NIGHT RUN, PART 2 — master merged+pushed at `6ddebb4a`; Packages 7/1/2 ACCEPTED
+
+Done overnight under owner Decision 5: master merge (`dc720521`, suite-verified), Gemini
+launcher repair (default `-ExpectedBranch master`), Packages 7, 1, 2 authored (GLM-5.3),
+officially reviewed (DeepSeek v4-pro — three ACCEPTs, zero required findings), Gemini
+CROSSCHECK_CLEAN, all committed and pushed (`887ec60f` → master `6ddebb4a`).
+
+Next owner choices, in recommended order:
+1. "Start Package 3" (Dashboard V2 read-only fixture prototype, T1) and/or "start 4, 5a" —
+   dispatch skeletons ready in `11_TRIAGE/BRIDGE_V2_PACKAGE_KICKOFF_PREP_2026-08-17.md`.
+   Note [7WS] §3: finish/preserve the B8 docs decision + WP-D0 contract before a new Dashboard
+   product package — fold into Package 3's Gate-1 at dispatch.
+2. Pick the Package 1 §A.2 store-model option (OPEN with labeled recommendation).
+3. Someday: authorize the T0 account-level check for sub-account eligibility + hedge-mode
+   behavior (Package 7 lists exactly which claims are ACCOUNT-LEVEL-ONLY).
+4. Codex `fourth` resets 2026-08-20 ~10:20; `secondary` 2026-08-22 ~20:09.
+5. Housekeeping: main checkout still sits on `codex/bridge-help-wiki` with the historical dirty
+   files; the canonical committed state is master `6ddebb4a`. The two handoff working copies
+   carry these night appends uncommitted (rotation lane stays owner-gated).
+
+## AFTER THE 2026-08-17 NIGHT RUN — Bridge V2 backlog is ACCEPTED; packages await owner starts
+
+State: the V2 deferral backlog is an accepted T2 record (commit `4f4a97e2`; acceptance record
+`11_TRIAGE/BRIDGE_V2_DEFERRAL_BACKLOG_T2_ACCEPTANCE_2026-08-17.md`). Kickoff-prep drafts for
+Packages 1, 2, 3, 4, 5a, 5b, 6, 7, 8 with ready-to-fill dispatch skeletons are committed
+(`62272948`, unaccepted, authorize nothing). Next actions, in the accepted fastest-safe order:
+
+1. **Owner says "start Package 7"** (read-only official Hyperliquid fact-check, T2) — first,
+   because it gates every exchange-dependent design decision. Skeleton ready in
+   `11_TRIAGE/BRIDGE_V2_PACKAGE_KICKOFF_PREP_2026-08-17.md`.
+2. **Owner says "start Packages 1+2"** (design paperwork, T2) — can run parallel to Package 7;
+   Package 1's exchange-dependent half stays unfrozen until Package 7's record exists.
+3. Later: Packages 3/4/5a (T1, isolated worktrees), 5b after per-surface classification +
+   separate gate, 6 local half, 8 per-work-package T0.
+4. **Route facts for planning:** Codex `fourth` resets ~2026-08-20 10:20, `secondary`
+   ~2026-08-22 20:09; ChatGPT Pro (`free`) and Claude MAX deliberately unspent. GLM-5.3
+   carried the night (author + official T2 reviewer per owner decision 4).
+5. **Owner-ask:** the Gemini read-only launcher hard-pins branch
+   `feature/donchian-crypto-ladder` (`Invoke-GeminiProReadOnly.ps1:764`), so the route is
+   unusable on any other branch. Re-pinning/parameterizing needs its own decision + repaired
+   launcher acceptance (identity hash is recorded).
+6. `GLOBAL_HANDOFF.md`/`NEXT_STEPS.md` pre-existing dirty edits from the earlier session were
+   preserved untouched; these two appends are the only overnight handoff changes, left
+   uncommitted with the rest of the dirty memory state (rotation lane remains owner-gated).
+
 ## OWNER ROADMAP — resume after current Bridge V1 deployment work (2026-08-16)
 
 These seven workstreams were explicitly recorded by Barış before stopping for
