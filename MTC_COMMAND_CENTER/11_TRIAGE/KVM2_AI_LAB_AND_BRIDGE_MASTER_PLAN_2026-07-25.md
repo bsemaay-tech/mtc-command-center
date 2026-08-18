@@ -65,18 +65,29 @@ recoverability**, not maximizing the number of installed services.
 ## 2. Owner decisions captured
 
 1. The Windows PC cannot remain continuously powered.
-2. Getting the bridge ready and safely deployed to KVM2 is the first priority.
+2. Getting the bridge ready and safely deployed to the **existing KVM2** is the
+   first priority. No new VPS purchase is part of this program stage.
 3. The canonical Bridge VPS Deploy Task List remains blocked until its repairs,
    exact audits, and separate owner gates are complete.
-4. During TESTNET only, KVM2 may become a temporary, restricted AI laboratory
-   after a bridge-only stability period succeeds.
-5. A mainnet decision will be made in several months:
+4. After deployment, KVM2 runs only the MTC Bridge, starts DISARMED, and
+   completes an owner-accepted monitoring window of at least 10 days with no
+   strategy selected, no order submission, and no ARM.
+5. Only after that bridge-only window is accepted may the owner select exactly
+   one strategy and separately authorize simulated-money/TESTNET ARM and
+   trading. Other KVM2 workloads remain absent during this first strategy
+   stage.
+6. During TESTNET only, KVM2 may later become a temporary, restricted AI
+   laboratory after the bridge-only window and the one-strategy TESTNET stage
+   produce accepted stability and capacity evidence.
+7. A mainnet decision will be made in several months:
    - **Option A:** destructively reprovision KVM2 from a trusted clean Ubuntu image
      and rebuild it as trading-only; or
    - **Option B:** obtain a separate clean trading VPS and keep KVM2 as the lab.
-6. The reproducible clean-image/rebuild kit must be prepared now, without
+   Option B is not a current purchase plan; any new KVM1/VPS purchase is
+   deferred until the separately authorized real-money transition.
+8. The reproducible clean-image/rebuild kit must be prepared now, without
    reprovisioning or installing anything now.
-7. D024 authorizes only this Cycle-4 document repair. It grants no standing
+9. D024 authorizes only this Cycle-4 document repair. It grants no standing
    document-write, Git, runtime, VPS, deployment, secret, network, trading,
    purchase, reprovision, or mainnet authority.
 
@@ -86,8 +97,10 @@ This program is successful only when all of the following are true:
 
 - the bridge runs from one exact, immutable, independently accepted release;
 - there is exactly one writer;
-- the bridge starts DISARMED, stays TESTNET-only, reconciles correctly, and has
-  tested rollback and state recovery;
+- the bridge starts DISARMED, stays bridge-only with no selected strategy or
+  order submission for an accepted window of at least 10 days, then remains
+  TESTNET-only if exactly one strategy is separately selected and ARM is
+  separately authorized; rollback and state recovery are tested;
 - monitoring and encrypted off-host recovery are proven, not merely configured;
 - AI-lab workloads cannot read bridge secrets/state, control the service, or
   exhaust resources outside measured limits;
@@ -245,7 +258,7 @@ Neither is complete without the other.
 | 2 | Prepare clean rebuild kit (preparation only — no install) | Phase 1 | Owner rebuild-kit acceptance as preparation only (P2-12) |
 | 3 | Bridge release readiness — **BLOCKED** pending PR #25 merge or equivalent | Phase 2; three PR #25 contract files present in `origin/master` | Acyclic trace P3-01 → P3-02 → P3-03 → P3-04 → P3-05; named expendable Ubuntu 24.04 P2-09-class environment, never active KVM2; P3-05 closes the lower-level pre-deploy audit contract under the current `AGENTS.md` roster with fresh exact `claude-opus-5`/`xhigh`, no fallback/resume, on the exact candidate diff/tests unless a later explicit owner decision amends it |
 | 4 | Separately authorized deploy and cutover | Phase 3 | P4-04 is tabletop-only; P4-04A/P4-05 separately quiesce the old writer, capture/migrate or conservatively reset final WAL-consistent risk state, prove SQLite/application semantics and source/destination hashes, then P4-07 proves the exact accepted destination artifact was loaded before one DISARMED start. Rollback and recovery-start remain separate |
-| 5 | Bridge-only stabilization | Phase 4 | P5-01 separately authorizes any named external monitoring/backup account, cost, credential, provisioning/test, purchase, firewall, DNS, listener, or network scope; none is implicit. Unit/ARM/recovery/monitoring/capacity gates remain ordered. Optional lab additionally needs P5-09/P5-10; rejection does not bypass Phase 10 |
+| 5 | Bridge-only stabilization, then one-strategy TESTNET | Phase 4 | P5-01 separately authorizes any named external monitoring/backup account, cost, credential, provisioning/test, purchase, firewall, DNS, listener, or network scope; none is implicit. The mandatory order is at least 10 days DISARMED with no strategy/order submission, owner acceptance, then exact one-strategy selection and separate TESTNET ARM. Optional lab remains absent until P5-08/P5-09/P5-10 close; rejection does not bypass Phase 10 |
 | 6 | AI-laboratory admission gate | P5-09 and P5-10 both closed | P6-00A authorizes implementation/testing only. P6-01–P6-03 create isolation, the actual `ai-lab` identity, and final controls; P6-04 runs the complete denial/kill-switch suite from that identity and children and obtains fresh final-evidence Gate 6 acceptance. P6-05 then admits exactly one immutable-manifest workload, one install/start attempt, no retry |
 | 7 | Low-risk AI-lab rollout | Phase 6 | P7-01A first selects Hermes or OpenClaw and proves the other absent; P7-01 then admits the selected agent provider-neutrally. Every workload has separate manifest/owner authority; optional additions may close `NOT_SELECTED`; GitHub runner remains excluded |
 | 8 | MTC visibility | Phase 7 or recorded optional skip | Design/readiness/admission/build/verification remain ordered; optional Phase 8 may close `NOT_SELECTED`/`NOT_ADMITTED` with dated absence proof |
@@ -263,8 +276,9 @@ source; candidate text is not merged authority. See Section 15 for the file list
 ## 8. Resource admission policy
 
 **Three acyclic routes:** Phases 6–9 are optional and conditional; Phase 10 is
-mandatory. After P5-07 acceptance, completed P5-08 evidence, and hash-cited P5-06
-monitoring history:
+mandatory. After P5-07 accepts the hash-cited DISARMED P5-06 monitoring history,
+P5-05/P5-05A start exactly one owner-selected TESTNET strategy, and P5-08
+accepts measured bridge capacity covering both stages:
 
 - full lab: P5-09/P5-10 → Phases 6–9 → Phase 10;
 - partial lab: after each admitted workload completes its required observation,
@@ -279,8 +293,9 @@ contaminated and still forces Option A or B. No route bypasses the fork choice,
 bounded action packets, fresh independent post-build Gate 5/Gate 6 audit, or
 separate final mainnet gate. Unaccepted bridge evidence blocks Phase 10.
 
-Do not predeclare that 7.8 GiB RAM or two vCPUs are sufficient. Derive limits from
-the bridge-only monitoring window (P5-08).
+Do not predeclare that 7.8 GiB RAM or two vCPUs are sufficient. Derive limits
+from the P5-06 DISARMED bridge-only window and the bounded post-P5-05A
+one-strategy TESTNET observation recorded by P5-08.
 
 Before admitting a lab workload, record:
 
@@ -477,7 +492,7 @@ a REQUIRED_REPAIR.
 | Execute single-writer cutover | Not authorized | P4-04 document walkthrough/tabletop only—no process, service, scheduler, listener, network, secret, exchange, or writer mutation; any live rehearsal needs a future bounded owner authorization. Actual action remains P4-04A quiesce plus P4-05 cutover, with raw exchange flat proof before and after authority revocation |
 | First DISARMED start | Not authorized | P4-06 (separate Barış first-start authorization) then P4-07 (exactly one attempt); post-rollback recovery-start requires separate P4-08A authorization then P4-08B execution; not granted by install, cutover, or deploy authorization |
 | Prove rollback before ARM | Not authorized | P4-08 requires a named immutable rollback-state artifact/manifest SHA and hash-recorded tested rollback procedure yielding stopped/disabled service, preserved state/risk, zero writers, and no Windows authority; if a prior accepted VPS release exists, record its rollback release SHA too. Recovery-start remains separately P4-08A/P4-08B |
-| ARM bridge | Not authorized | P5-05 explicit Barış ARM authorization citing P5-04 contract hash; P5-05B crash/recovery procedure frozen and staging drill complete before P5-05A; then P5-05A bounded one-attempt ARM execution; no automatic re-ARM or retry; never implied by start, deploy, monitoring, or lab authorization |
+| ARM bridge | Not authorized | P5-06 must first complete at least 10 accepted DISARMED bridge-only days with no strategy or orders, and P5-07 must accept them. P5-05 then names exactly one TESTNET strategy and separately authorizes ARM citing the P5-04/P5-06/P5-07 hashes; P5-05B freezes crash/recovery before the one P5-05A attempt. No automatic re-ARM or retry; never implied by start, deploy, monitoring, or lab authorization |
 | Admit one AI-lab service | Not authorized | P6-00A permits isolation implementation/testing only. Actual identity/final controls, complete denial/kill-switch suite, and fresh exact-evidence Gate 6 acceptance close first; P6-05 then cites one immutable manifest, named executor, and exactly one install/start attempt with no retry |
 | Admit controlled coding | Not authorized | Distinct P6-05-style owner decision ID plus immutable coding-manifest hash, permissions, resource budget, credential scope, observation duration, rollback, and start/end conditions; selected-agent or prior-workload authority cannot be reused |
 | Phase 8 bounded build/start | Not authorized | P8-01 design hash → P8-02 no-build/readiness hash → P8-01A owner admission citing both plus any network gate → P8-03 exactly one named-executor build/start → P8-04 network/bridge proof; no self-authorization |

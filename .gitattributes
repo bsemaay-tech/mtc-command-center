@@ -1,2 +1,10 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# KVM2 evidence hashes and Linux deployment scripts must be checkout-stable.
+MTC_COMMAND_CENTER/11_TRIAGE/KVM2_*.md text eol=lf
+MTC_COMMAND_CENTER/11_TRIAGE/KVM2_PROGRAM/** text eol=lf
+IBKR_PAPER_BRIDGE/deploy/linux/** text eol=lf
+IBKR_PAPER_BRIDGE/requirements.in text eol=lf
+IBKR_PAPER_BRIDGE/requirements.lock text eol=lf
+IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py text eol=lf

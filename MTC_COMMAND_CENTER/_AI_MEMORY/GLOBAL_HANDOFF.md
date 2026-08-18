@@ -3180,3 +3180,60 @@ No real-data run, broker/API action, deploy, restart, DISARM, or ARM occurred. `
 clean and detached at `1465f8f0`. Detailed evidence:
 `MTC_COMMAND_CENTER/11_TRIAGE/P2_DATA_RESTORE_TIMEOUT_REPORT_2026-07-16.md`. STOP for Fable to
 audit real code, independently rerun suites and the pre-fix failure, and record PASS before deploy.
+
+## [Codex GPT-5] 2026-07-26 — KVM2 post-merge Phase 0–3 readiness
+
+Anchored isolated worktree `C:\KVM2P03` and branch
+`codex/kvm2-p0-p3-readiness` at exact merged master
+`f61ed91919110e8856b2bc309c2c807365bb5fea`. Codex Lead reproduced the
+85-task/Evidence/Stop, crosswalk, strict UTF-8, size, scope, protected-surface,
+stale-model, hash-binding, process, and diff checks.
+
+The exact base exposed two narrow required repairs: Windows checkout conversion
+made evidence/audit hashes non-portable and left the audit prompt bound to the
+converted master bytes; the WAL invariant test also hard-coded schema version
+2 although the merged bridge baseline is schema version 4. The uncommitted
+repair changes `.gitattributes`, the audit prompt's master SHA-256, and the WAL
+test assertion. Focused tests pass `75`; both full supported-CWD bridge suites
+pass `901` with one existing warning; ledger, 56-package lock, compile, and
+shell syntax checks pass.
+
+A separate clean detached worktree at exact `f61ed919…` built a local-only
+6,963-file payload at `C:\KVM2F61_PAYLOAD`. Its `RELEASE_SHA256SUMS` hash is
+`d2a4275268d27a911ea74d97d57ab2132e0da137a037bce663b3a98d37d12a21`,
+and full manifest verification passes. This is only an exact-base packaging
+probe; the committed final candidate remains open.
+
+P2-09/P3-03 are still blocked. Read-only host inventory found Windows 11 Pro
+with enough local capacity, but Hyper-V is disabled, `vmms` and the Hyper-V
+PowerShell module are absent, and no local Ubuntu ISO was found. No feature,
+restart, VM, switch, VPS, service, secret, exchange, TESTNET, cutover, start,
+ARM, staging, commit, push, or deployment action occurred.
+
+## [Codex GPT-5] 2026-07-26 — KVM2 owner sequence recorded; local Hyper-V staging prepared
+
+Barış fixed the controlling route: use the existing KVM2; deploy only the MTC
+Bridge and start DISARMED; complete at least 10 owner-accepted monitoring days
+with no selected strategy, order submission, ARM, or lab workload; only then
+select exactly one strategy and separately authorize simulated-money/TESTNET
+ARM and trading; admit other lab workloads later. No KVM1 or new VPS purchase
+is permitted before a separately authorized real-money transition. The
+canonical master and 85-task companion now encode that order and their audit
+prompt bindings were refreshed.
+
+Local staging preparation used no VPS. Hyper-V was enabled on the Windows 11
+Pro host and Windows reported one restart required. A Canonical released Ubuntu
+24.04 Azure VHD source, key-only NoCloud seed, bounded VM creation script, and
+SYSTEM startup-resume task were prepared outside the repository for
+`KVM2-Ubuntu-2404-Staging` (4 vCPU, dynamic 2–8 GiB RAM, 80 GiB dynamic disk,
+no automatic start, no automatic checkpoints). The VM has not yet been created
+or booted. The startup workflow resumes the partial official-media download,
+then requires its published SHA-256 and safe archive layout before extraction
+or VM creation; it also performs key-only SSH and cloud-init-marker validation.
+
+No active-KVM2/VPS access, purchase, install, bridge service action, secret,
+exchange, TESTNET, ARM, strategy execution, staging, commit, push, or
+deployment occurred. The semantic readiness diff is 12 paths: three core
+repair paths, seven readiness/handoff records, and the two-file owner-sequence
+amendment. P2-09/P3-03 remain blocked until the local VM exists and the exact
+candidate is committed.

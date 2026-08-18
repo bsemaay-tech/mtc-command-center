@@ -35,8 +35,11 @@ before reading any content. If either hash differs from the expected value, retu
 
 - Master plan:
   `MTC_COMMAND_CENTER/11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_MASTER_PLAN_2026-07-25.md`
-- Master expected SHA-256 (Cycle-4/R1 post-roster-repair 2026-07-26):
-  `B4C9E2FF370D023B57141EB3DFB77D796B7C1FF666312278CD655D88E55CD48E`
+- Master expected SHA-256 (post owner sequencing clarification 2026-07-26):
+  `9D3DDAC0952E53506680D4AF4001884200B80BDEBCC1E292C6E884DEC098DB78`
+- Master superseded SHA-256 (Cycle-4/R1 post-roster-repair, before owner
+  sequencing clarification):
+  `D8232555ADF2D37DE1F1C718D01309D59D7B5EAFF1A1D7DD1443785503131BBD`
 - Master superseded SHA-256 (Cycle-4/R1 pre-roster-repair input; never audited):
   `9A287D425573C73F9EDE4E5DF30FBB994CBB78CA965E8731D5DDBE58D6ADF178`
 - Master superseded SHA-256 (Cycle-3/R3 `REQUEST_CHANGES`):
@@ -71,7 +74,10 @@ before reading any content. If either hash differs from the expected value, retu
 
 - Execution companion:
   `MTC_COMMAND_CENTER/11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_EXECUTION_TASKS_2026-07-25.md`
-- Companion expected SHA-256 (Cycle-4/R1 post-roster-repair 2026-07-26):
+- Companion expected SHA-256 (post owner sequencing clarification 2026-07-26):
+  `6F10560878129CECD4C585E9363D7D2F1F077ECE7B9FE5FCD690AFC841B38EA5`
+- Companion superseded SHA-256 (Cycle-4/R1 post-roster-repair, before owner
+  sequencing clarification):
   `6996C9309459932C3BBCEE1C3AFCD7E56D542FEDCC47748E11782A854EEEEA9C`
 - Companion superseded SHA-256 (Cycle-4/R1 pre-roster-repair input; never audited):
   `9F2894246926A6C6FE2ABF924F666FD7453EA2BBD76C0A588B13D99FE9815FB4`

@@ -1291,3 +1291,23 @@ Must obey 7-gate workflow (AI_RULES.md). Start at Gate 1.
 - PR #16 is merged remotely at `20237733`; PRs #17–#19 remain open.
 - Local isolated master contains unpushed #17/#18 merge commits `60415b08` and `89725dfe`.
 - PR #19 adds an out-of-scope conflict in `05_REGISTRY/RESEARCH_RUN_REGISTRY.json`; do not resolve or push without Fable review and explicit direction. The attempted #19 merge was aborted cleanly.
+
+### KVM2-PHASE0-3-READINESS | BLOCKED 2026-07-26 | base `f61ed919` [AI: Codex|Barış]
+
+- Controlling order is now explicit in the canonical master and companion:
+  existing KVM2; MTC Bridge only and DISARMED; at least 10 owner-accepted days
+  with no strategy/order/ARM; then exactly one separately authorized
+  simulated-money/TESTNET strategy; other lab workloads later. No KVM1/new VPS
+  purchase before a separately authorized real-money transition. [AI: Any]
+- Finish the already-authorized local preparation: verify the official Ubuntu
+  24.04 cloud-image hash, wait for the unrelated active CLI to finish, perform
+  one controlled Windows restart, and confirm the startup task created
+  `KVM2-Ubuntu-2404-Staging`. No VPS purchase or active-KVM2 action. [AI: Codex]
+- Review and accept the exact current 12-path readiness package on
+  `codex/kvm2-p0-p3-readiness`; then authorize exact-path staging and one local
+  commit, without push or deployment. [AI: Barış]
+- After that commit, rebuild and hash the immutable candidate. [AI: Codex]
+- Run P2-09 and P3-03 only inside that VM against the committed exact candidate;
+  do not use active KVM2 and do not deploy, start, TESTNET, or ARM. [AI: Codex]
+- Keep P3-01, P3-04, and P3-05 open until their separate owner/audit gates are
+  satisfied. [AI: Barış|Codex]

@@ -378,8 +378,9 @@ cutover, first-start, or ARM action.
 
 ### Phase 5 — Bridge-only stabilization
 
-P5-04/P5-02 precede ARM. P5-07/P5-08 and hash-cited P5-06 open Phase 10
-through a recorded full-, partial-, or no-lab route; P5-09/P5-10 gate lab only.
+Order: P5-02/03/03A/04 → P5-06 (≥10 accepted DISARMED days; no strategy,
+orders, or ARM) → P5-07 → P5-05B/05/05A (one TESTNET strategy/ARM) → P5-08.
+P5-09/10 gate every later lab workload.
 
 - [ ] **KVM2-P5-01 [AI: Barış] Separately authorize the external monitoring/backup provider and credentials; precondition for P5-02 and P5-03.**
   - Evidence: separate Barış-only authorization (not ARM/start/lab admission/
@@ -437,9 +438,10 @@ through a recorded full-, partial-, or no-lab route; P5-09/P5-10 gate lab only.
     all rerun with the new hash before Phase 6 opens.
   - Stop: unit unhashed; restart-enabled chosen but fault-injection matrix
     incomplete or unaccepted; P5-04 attempted before close.
-- [ ] **KVM2-P5-04 [AI: Barış] Accept and hash the monitoring/recovery/window contract before ARM.**
+- [ ] **KVM2-P5-04 [AI: Barış] Accept and hash the DISARMED bridge-only monitoring/recovery/window contract before P5-06.**
   - Evidence: P5-03A already recorded. Owner reviews and hashes an immutable
-    contract defining: ≥10-day window semantics; local telemetry coverage;
+    contract defining: ≥10 days DISARMED with no strategy, order submission, or
+    ARM; local telemetry coverage;
     independent heartbeat coverage; heartbeat provider ownership with named
     billing/renewal contact; external-provider renewal, quota-limit, and
     billing-failure alert ownership (each named); evidence continuity; incident
@@ -453,16 +455,18 @@ through a recorded full-, partial-, or no-lab route; P5-09/P5-10 gate lab only.
   - Stop: P5-03A not complete; contract unhashed; observation semantics
     undefined; sampling interval, retention, or storage class absent;
     reset/pause/reclassification (including provider action) missing; heartbeat
-    billing/renewal ownership unnamed; external-provider alerts absent; accepted
-    after ARM.
-- [ ] **KVM2-P5-05 [AI: Barış] Authorize ARM separately; cite the P5-04 contract hash.**
-  - Evidence: explicit ARM authorization citing the exact P5-04 contract hash;
-    reconfirms TESTNET-only, DISARMED start, bridge-stability monitoring. Does
-    not grant lab admission or the ARM execution attempt; P5-05A required.
+    billing/renewal ownership unnamed; external-provider alerts absent; any
+    strategy, order submission, or ARM during P5-06.
+- [ ] **KVM2-P5-05 [AI: Barış] After P5-07 acceptance, select exactly one TESTNET strategy and authorize ARM separately.**
+  - Evidence: cite P5-04, P5-06 raw-series hash, and P5-07 acceptance; record
+    one strategy/configuration hash, explicit TESTNET-only ARM authorization,
+    and owner-defined post-ARM observation. No lab/execution authority; P5-05A
+    required.
   - Stop: install/start/monitoring/deploy approval cited as ARM authorization;
-    P5-04 contract hash not cited.
-- [ ] **KVM2-P5-05B [AI: Barış] Freeze ARMED TESTNET crash/recovery procedure before P5-05A and P5-06.**
-  - Must close before P5-05A and before P5-06.
+    required hashes absent; P5-07 not accepting; strategy count not one;
+    strategy/configuration mutable; post-ARM observation absent.
+- [ ] **KVM2-P5-05B [AI: Barış] Freeze ARMED TESTNET crash/recovery procedure before P5-05A.**
+  - Must close before P5-05A; not required for DISARMED P5-06.
   - Evidence: owner records and hashes the ARMED TESTNET crash/recovery
     procedure: named authorizer/executor; one attempt per explicit new
     authorization; restart DISARMED only; raw exchange reconcile before re-ARM;
@@ -470,42 +474,38 @@ through a recorded full-, partial-, or no-lab route; P5-09/P5-10 gate lab only.
     injected-crash staging drill record (table-top, hashed scenario/outcome). No
     automatic re-ARM.
   - Stop: procedure absent or unhashed; automatic re-ARM permitted; no
-    injected-crash staging drill record; P5-05A or P5-06 starts before close.
+    injected-crash staging drill record; P5-05A starts before close.
 - [ ] **KVM2-P5-05A [AI: Claude] Perform exactly one ARM attempt per P5-05; no retry.**
-  - Prerequisite: P5-05B and P4-07A closed before execution.
-  - Evidence: pre-checks passed (P5-04 hash confirmed, P5-03 backup drill
-    confirmed, active service-unit hash matches P5-03A baseline, bridge DISARMED
-    TESTNET-only, fresh reconcile, no unexpected listener); P5-05B confirmed
-    closed; `HL_LIVE_ACK-absent proof`; ARM issued once; ARMED TESTNET-only
-    confirmed; logs captured.
+  - Prerequisite: P5-07, P5-05B, P5-05, and P4-07A closed before execution.
+  - Evidence: pre-check P5-04/06/07 hashes, P5-03 backup, service-unit hash,
+    DISARMED TESTNET, fresh reconcile, listener set, P5-05B, and exact
+    strategy/configuration; prove `HL_LIVE_ACK` absent; ARM once; only that
+    strategy submits simulated orders; capture logs/observation series.
   - Stop: any pre-check fails; P5-05B not closed; `HL_LIVE_ACK` present in any
-    form; more than one attempt; not TESTNET-only after ARM; ARM without P5-05.
+    form; more than one attempt; not TESTNET-only after ARM; ARM without P5-05;
+    unselected, changed, or multiple strategy/order sources.
 - [ ] **KVM2-P5-06 [AI: Claude] Run the canonical bridge-only monitoring window.**
-  - Prerequisite: P5-05B and P4-07A closed; P2-10 contract applied and drill
-    verified on KVM2 (P4-07A) before this phase.
-  - Evidence: counter starts only at P5-05A ARM execution. Use P5-04 contract
-    observation semantics; do not invent or substitute. Record reconciliation
-    freshness/latency/disconnects, restarts, CPU/memory/swap/disk/IO, log
-    growth, state integrity, incidents — all classified per P5-04. Retain and
-    hash-record raw samples at the P5-04 sampling interval for the full window.
-    No lab service in this phase.
-  - Stop: P5-05B or P4-07A not closed; P2-10 not applied/verified on KVM2;
-    P5-04 contract undefined before this phase; sampling or retention deviates
-    from P5-04; lab service running; interruption misclassified.
+  - Prerequisite: P4-07A closed; P2-10 contract applied and drill verified on
+    KVM2; P5-04 accepted before this phase.
+  - Evidence: after P5-04, confirm DISARMED and no strategy/order source; apply
+    its observation semantics. Record reconciliation, disconnects, restarts,
+    resources, log growth, state integrity, and incidents; retain/hash samples
+    at the specified interval for ≥10 accepted days. No ARM, strategy, order,
+    or lab.
+  - Stop: P4-07A not closed; P2-10 not applied/verified on KVM2; P5-04 contract
+    undefined; fewer than 10 accepted days; sampling/retention deviates; ARM,
+    strategy, order submission, lab, or misclassified interruption.
 - [ ] **KVM2-P5-07 [AI: Barış] Accept or reject bridge stability.**
   - Evidence: owner decision based on complete P5-06 monitoring evidence and all
     classified incidents. Elapsed calendar time alone is not acceptance.
   - Stop: evidence incomplete; unresolved incident unclassified; elapsed time is
     the sole basis.
 - [ ] **KVM2-P5-08 [AI: Claude] Derive resource capacity and thresholds from accepted Phase 5 raw monitoring data.**
-  - Evidence: measured peak and percentile CPU, memory, swap pressure, disk/IO,
-    network, bridge latency, reconciliation age, restart/log behavior from the
-    P5-06 retained raw series (cited by hash); proposed lab budget and bridge
-    reserve derived mechanically from those measurements; no provisional or
-    invented numbers.
-  - Stop: thresholds from invented/estimated data rather than real P5-06 data;
-    retained raw series not cited by hash; raw metrics do not mechanically
-    reproduce the proposed budget.
+  - Evidence: hash-cite P5-06 DISARMED and post-P5-05A one-strategy series;
+    derive peak/percentile resource, bridge, reconcile, restart/log measures,
+    lab budget, and bridge reserve mechanically from the worse case.
+  - Stop: either series incomplete/unhashed; estimated values; raw metrics do
+    not reproduce the budget.
 - [ ] **KVM2-P5-09 [AI: Barış] Accept and hash the AI-lab resource admission contract and kill-switch test specification, only after P5-08.**
   - Evidence: owner accepts and hashes a contract from real P5-08 data: sample
     interval; baseline duration/percentile; per-metric absolute/relative

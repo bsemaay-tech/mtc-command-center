@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from bridge.store.db import Store
+from bridge.store.db import SCHEMA_VERSION_BASELINE, Store
 from tools import wal_state_bundle as wal
 
 TS = "2026-07-26T00:00:00Z"
@@ -318,7 +318,7 @@ def test_invariants_preserve_risk_and_history(source_db, bundle_dir, capsys):
     inv = read_manifest(bundle_dir)["invariants"]
 
     assert inv["app_state"] == "DISARMED"
-    assert inv["schema_version"] == "2"
+    assert inv["schema_version"] == str(SCHEMA_VERSION_BASELINE)
     assert inv["open_trades"] == 1
     assert inv["live_orders"] == 1
     assert inv["closed_trades"] == 3
