@@ -7,7 +7,13 @@ from typing import Any
 
 from bridge.broker.base import Broker
 from bridge.engine.types import BrokerEvent, BrokerOrder, FillEvent, OrderPlan, OrderUpdateEvent, Position
-from bridge.store.db import Store
+from bridge.store.db import (
+    IdentityCollisionError,
+    OrderCollisionError,
+    Store,
+    compute_intent_identity,
+    compute_request_identity,
+)
 
 
 class OrderManager:
@@ -23,65 +29,168 @@ class OrderManager:
         if subscribe is not None:
             subscribe(self._queue_event)
 
-    async def submit_plan(self, decision_uid: str, plan: OrderPlan) -> dict[str, Any] | None:
+    # ------------------------------------------------------------------
+    # TS-P1-002 identity-based submission
+    # ------------------------------------------------------------------
+
+    async def submit_plan(
+        self, decision_uid: str, plan: OrderPlan, *, strategy_id: str = "keltner_trail_ema8"
+    ) -> dict[str, Any] | None:
+        """Submit an order plan with durable identity reservation.
+
+        The canonical intent_id and request_id are computed and persisted
+        before broker I/O.  Duplicate delivery or replay is blocked.
+        Materially different requests for the same intent cause a fail-closed
+        collision error.
+        """
         if decision_uid in self._submitted:
             return None
-        fingerprint = self._fingerprint(plan)
-        if not self.store.claim_signal_fingerprint(self.run_id, fingerprint, decision_uid, plan.signal.ts):
+
+        # --- 1. Compute dual identities ---
+        intent_id, intent_preimage, intent_version = compute_intent_identity(
+            strategy_id=strategy_id,
+            symbol=plan.signal.symbol,
+            direction=plan.signal.direction,
+            signal_ts=plan.signal.ts,
+        )
+        request_id, request_preimage, request_version = compute_request_identity(
+            intent_id=intent_id,
+            symbol=plan.signal.symbol,
+            direction=plan.signal.direction,
+            ref_price=plan.signal.ref_price,
+            qty=plan.qty,
+            entry_type=plan.entry_type,
+            limit_price=plan.limit_price,
+            stop_loss=plan.stop_loss,
+            take_profit=plan.take_profit,
+            leverage=plan.leverage,
+        )
+
+        # --- 2. Durable reservation (explicit transaction) ---
+        try:
+            self.store.conn.execute("BEGIN IMMEDIATE")
+        except Exception:
+            # If we cannot start a transaction, fail closed
+            raise
+
+        try:
+            result = self.store.reserve_identity(
+                intent_id=intent_id,
+                intent_preimage=intent_preimage,
+                intent_version=intent_version,
+                request_id=request_id,
+                request_preimage=request_preimage,
+                request_version=request_version,
+                cloid_seed=request_id,
+                origin_run_id=self.run_id,
+                origin_decision_uid=decision_uid,
+            )
+            self.store.conn.commit()
+        except IdentityCollisionError:
+            self.store.conn.rollback()
+            # Write audit event and re-raise
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "ERROR",
+                "IDENTITY_COLLISION_INTENT",
+                f"intent_id={intent_id} request_id={request_id} decision_uid={decision_uid}",
+            )
+            raise
+        except Exception:
+            self.store.conn.rollback()
+            raise
+
+        if result == "BLOCKED":
+            # Identity already exists — idempotent replay, do not resubmit
             return None
 
-        plan.decision_uid = decision_uid
+        # Reservation is now committed as RESERVED
+
+        # --- 3. Set broker cloid seed and submit ---
+        plan.decision_uid = request_id
         try:
-            result = await self.broker.place_bracket(plan)
+            broker_result = await self.broker.place_bracket(plan)
         except Exception as exc:
-            # Write a secret-redacted diagnostic events row before re-raising
+            # Broker call failed — reservation stays RESERVED.
+            # Write a secret-redacted diagnostic event before re-raising.
             if hasattr(self.store, "insert_event"):
                 self.store.insert_event(
                     self.run_id,
                     datetime.now(UTC),
                     "ERROR",
                     "PLACE_BRACKET_FAILED",
-                    f"decision_uid={decision_uid} error={type(exc).__name__}: {exc}",
+                    f"decision_uid={decision_uid} intent_id={intent_id} error={type(exc).__name__}: {exc}",
                 )
             raise
-        trade_id = self.store.create_trade(
-            run_id=self.run_id,
-            coin=plan.signal.symbol,
-            direction=plan.signal.direction,
-            qty=plan.qty,
-            entry_decision_uid=decision_uid,
-            signal_ts=plan.signal.ts,
-            decision_ts=datetime.now(UTC),
-            expected_px=plan.signal.ref_price,
-            risk_dollars=plan.risk_dollars,
-            risk_pct=plan.risk_pct,
-            leverage=plan.leverage,
-            sl_initial=plan.stop_loss,
-            tp_initial=plan.take_profit,
-            llm_directive_id=None,
-        )
-        self._submitted.add(decision_uid)
 
-        for role, order in result.items():
+        # --- 4. Atomic finalization ---
+        orders_data: list[dict[str, Any]] = []
+        for role, order in broker_result.items():
             if not isinstance(order, dict):
                 continue
-            self.store.insert_order(
-                cloid=order["cloid"],
-                oid=order["oid"],
-                group_id=decision_uid,
-                order_ref=f"{decision_uid}:{role.upper()}",
-                order_json=self._jsonable_order(order),
-                decision_uid=decision_uid,
-                trade_id=trade_id,
-                role=order["role"],
-                status=order["status"],
-                qty=order["qty"],
-                filled_qty=order["qty"] if order["status"] == "FILLED" else 0.0,
-                avg_fill_px=order.get("avg_fill_px"),
+            orders_data.append({
+                "cloid": order["cloid"],
+                "oid": order.get("oid"),
+                "group_id": request_id,
+                "order_ref": f"{request_id}:{role.upper()}",
+                "order_json": self._jsonable_order(order),
+                "decision_uid": decision_uid,
+                "role": order["role"],
+                "status": order["status"],
+                "qty": order["qty"],
+                "filled_qty": order["qty"] if order["status"] == "FILLED" else 0.0,
+                "avg_fill_px": order.get("avg_fill_px"),
+            })
+
+        try:
+            trade_id = self.store.finalize_submission(
+                intent_id=intent_id,
+                run_id=self.run_id,
+                coin=plan.signal.symbol,
+                direction=plan.signal.direction,
+                qty=plan.qty,
+                entry_decision_uid=decision_uid,
+                signal_ts=plan.signal.ts,
+                decision_ts=datetime.now(UTC),
+                expected_px=plan.signal.ref_price,
+                risk_dollars=plan.risk_dollars,
+                risk_pct=plan.risk_pct,
+                leverage=plan.leverage,
+                sl_initial=plan.stop_loss,
+                tp_initial=plan.take_profit,
+                llm_directive_id=None,
+                orders_data=orders_data,
             )
+        except (IdentityCollisionError, OrderCollisionError) as exc:
+            # Finalization failed — reservation stays RESERVED.
+            # Broker submission is ambiguous. No retry.
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "ERROR",
+                "IDENTITY_FINALIZE_FAILED",
+                f"intent_id={intent_id} decision_uid={decision_uid} error={exc}",
+            )
+            raise
+        except Exception as exc:
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "ERROR",
+                "IDENTITY_FINALIZE_FAILED",
+                f"intent_id={intent_id} decision_uid={decision_uid} error={type(exc).__name__}: {exc}",
+            )
+            raise
+
+        self._submitted.add(decision_uid)
 
         await self.sync_broker_state()
-        return result
+        return broker_result
+
+    # ------------------------------------------------------------------
+    # Rest of OrderManager (TS-P1-001 behaviour preserved)
+    # ------------------------------------------------------------------
 
     async def sync_broker_state(self) -> None:
         pending: list[BrokerEvent] = []
@@ -151,9 +260,6 @@ class OrderManager:
         try:
             realized_today = self.store.realized_pnl_today(self.run_id)
         except LookupError:
-            # Telemetry only: a reconcile before the run row exists has no
-            # same-environment trades to sum. Real DB errors still propagate
-            # so the reconcile failure budget sees them.
             realized_today = 0.0
         self.store.insert_equity(
             self.run_id,
@@ -340,9 +446,6 @@ class OrderManager:
             if trade is not None:
                 totals = self.store.trade_fill_totals(int(trade_id))
                 exit_qty = float(totals["exit_qty"])
-                # Entry basis: prefer persisted entry fills (split-entry VWAP);
-                # brokers that report the entry only on the order row fall back
-                # to the trade's planned quantity and recorded entry price.
                 if totals["entry_qty"] > 0 and totals["entry_vwap"] is not None:
                     entry_qty = float(totals["entry_qty"])
                     entry_px = float(totals["entry_vwap"])
@@ -384,8 +487,6 @@ class OrderManager:
                     exit_vwap = float(totals["exit_vwap"])
                     sign = 1 if trade["direction"] == "LONG" else -1
                     gross = (exit_vwap - entry_px) * entry_qty * sign
-                    # Persisted PnL is NET of captured fill costs; the exit
-                    # fill above is already in `fills`.
                     costs = self.store.trade_costs(str(order["decision_uid"]))
                     pnl = gross - costs
                     closed = self.store.close_trade_once_with_decision(
@@ -414,8 +515,6 @@ class OrderManager:
                             f"trade_id={trade_id} was closed before atomic close",
                         )
                 elif outcome == "INSERTED":
-                    # Partial exit: the trade stays open — no exit_ts, no PnL,
-                    # no gate contribution until the position is fully flat.
                     self.store.insert_decision(
                         self.run_id,
                         order["decision_uid"],

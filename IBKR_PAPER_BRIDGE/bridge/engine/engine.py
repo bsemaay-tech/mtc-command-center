@@ -310,7 +310,10 @@ class BridgeEngine:
         if self._position_for(self.coin, await self.broker.positions()) is not None:
             return
         try:
-            result = await self.order_manager.submit_plan(decision_uid, risk.plan)
+            result = await self.order_manager.submit_plan(
+                decision_uid, risk.plan,
+                strategy_id=getattr(self.strategy, 'id', 'keltner_trail_ema8'),
+            )
         except Exception as exc:
             self._consecutive_order_rejects += 1
             self.store.insert_decision(
