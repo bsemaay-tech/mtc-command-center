@@ -1,0 +1,4 @@
+# /etc/ssh/authorized_keys.d/mtc-watch — FROZEN V3 TEMPLATE. root:root 0644.
+# <OWNER-PUBKEY> is replaced by the owner-generated ed25519 public key at
+# application time; the substituted final line is re-hashed and recorded then.
+command="/usr/local/bin/mtc-watch-collect",restrict ssh-ed25519 <OWNER-PUBKEY> mtc-watch-ro

@@ -1,0 +1,8 @@
+# /etc/systemd/system/mtc-bridge-backup.timer — FROZEN V3. root:root 0644.
+[Unit]
+Description=Daily MTC Bridge backup
+[Timer]
+OnCalendar=*-*-* 03:00:00 UTC
+Persistent=true
+[Install]
+WantedBy=timers.target

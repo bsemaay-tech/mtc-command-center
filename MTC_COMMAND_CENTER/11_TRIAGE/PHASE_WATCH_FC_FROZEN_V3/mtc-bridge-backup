@@ -1,0 +1,90 @@
+#!/bin/sh
+# /usr/local/sbin/mtc-bridge-backup — FROZEN V3. root:root 0755. Run by
+# mtc-bridge-backup.service as root. WAL-safe bundle: stage -> create (as
+# mtc-bridge) -> verify (as mtc-bridge) -> atomic root-owned immutable promote
+# -> ACL-preserving atomic manifest -> prune (success only, never last-known-good).
+set -u
+umask 077
+PATH=/usr/bin:/usr/sbin:/bin:/sbin; export PATH
+ROOT=/var/backups/mtc-bridge
+STAGING=$ROOT/.staging
+MANIFEST=$ROOT/status.json
+RELEASE_LINK=/opt/mtc-bridge/current   # symlink maintained by deployment; resolved once below
+DB=/var/lib/mtc-bridge/bridge.db
+RETAIN=14
+LOCK=/run/mtc-bridge-backup.lock
+
+fail_manifest() { # $1 = reason
+  PREV_GOOD=""; PREV_CF=0
+  if [ -f "$MANIFEST" ]; then
+    PREV_GOOD=$(/usr/bin/sed -n 's/.*"bundle": *"\([^"]*\)".*/\1/p' "$MANIFEST")
+    PREV_CF=$(/usr/bin/sed -n 's/.*"consecutive_failures": *\([0-9]*\).*/\1/p' "$MANIFEST"); [ -z "$PREV_CF" ] && PREV_CF=0
+  fi
+  CF=$((PREV_CF + 1))
+  TMP=$MANIFEST.tmp.$$
+  printf '{ "bundle": "%s", "size_bytes": 0, "created_utc": "%s", "verify_result": "FAIL", "sha256": "", "last_success_utc": "", "consecutive_failures": %s, "fail_reason": "%s" }\n' \
+    "$PREV_GOOD" "$(/usr/bin/date -u +%Y-%m-%dT%H:%M:%SZ)" "$CF" "$1" > "$TMP"
+  /usr/bin/chmod 0644 "$TMP"; /usr/bin/setfacl -m u:mtc-watch:r-- "$TMP"
+  /usr/bin/mv -f "$TMP" "$MANIFEST"   # atomic rename; ACL set on tmp survives the rename
+  echo "mtc-bridge-backup: FAIL ($1)" >&2
+  exit 1
+}
+
+# overlap prevention: single instance
+exec 9> "$LOCK" || exit 1
+/usr/bin/flock -n 9 || { echo "another backup run holds the lock" >&2; exit 1; }
+
+[ -d "$ROOT" ] || { /usr/bin/mkdir -p "$ROOT"; /usr/bin/chown root:root "$ROOT"; /usr/bin/chmod 0755 "$ROOT"; /usr/bin/setfacl -m u:mtc-watch:--x "$ROOT"; }
+[ -d "$STAGING" ] || { /usr/bin/mkdir -p "$STAGING"; /usr/bin/chown root:root "$STAGING"; /usr/bin/chmod 0711 "$STAGING"; }
+[ -L "$ROOT" ] && fail_manifest "backup root is a symlink"
+[ -L "$STAGING" ] && fail_manifest "staging is a symlink"
+
+RELEASE=$(/usr/bin/readlink -f "$RELEASE_LINK") || fail_manifest "release link unresolvable"
+TOOL=$RELEASE/IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py
+[ -f "$TOOL" ] || fail_manifest "bundle tool missing"
+
+RUNID=$(/usr/bin/date -u +%Y%m%d_%H%M%S)_$$
+STAGE=$STAGING/$RUNID
+/usr/bin/mkdir "$STAGE" || fail_manifest "staging collision"
+/usr/bin/chown mtc-bridge:mtc-bridge "$STAGE"; /usr/bin/chmod 0700 "$STAGE"
+
+# create + verify as the Bridge user, sanitized env, access only to the stage dir
+/usr/sbin/runuser -u mtc-bridge -- /usr/bin/env -i PATH=/usr/bin:/bin HOME=/var/lib/mtc-bridge \
+  /usr/bin/python3 "$TOOL" create --source "$DB" --out-dir "$STAGE/bundle" \
+  || fail_manifest "create failed"
+/usr/sbin/runuser -u mtc-bridge -- /usr/bin/env -i PATH=/usr/bin:/bin HOME=/var/lib/mtc-bridge \
+  /usr/bin/python3 "$TOOL" verify --bundle-dir "$STAGE/bundle" \
+  || fail_manifest "verify failed"
+
+# promote: lstat discipline, composite hash, atomic rename, root-owned immutable
+[ -L "$STAGE/bundle" ] && fail_manifest "staged bundle is a symlink"
+[ -d "$STAGE/bundle" ] || fail_manifest "staged bundle missing"
+SIZE=$(/usr/bin/du -sb "$STAGE/bundle" | /usr/bin/cut -f1); [ "$SIZE" -gt 0 ] || fail_manifest "empty bundle"
+HASH=$(cd "$STAGE/bundle" && /usr/bin/find . -type f -print0 | /usr/bin/sort -z | /usr/bin/xargs -0 /usr/bin/sha256sum | /usr/bin/sha256sum | /usr/bin/cut -d' ' -f1)
+DEST=$ROOT/bundle_$RUNID
+[ -e "$DEST" ] && fail_manifest "promotion target exists"
+/usr/bin/mv "$STAGE/bundle" "$DEST" || fail_manifest "promotion failed"
+/usr/bin/chown -R root:root "$DEST"; /usr/bin/chmod -R a-w "$DEST"; /usr/bin/chmod 0555 "$DEST"
+/usr/bin/chattr -R +i "$DEST" 2>/dev/null || true
+/usr/bin/rmdir "$STAGE" 2>/dev/null || true
+
+NOW=$(/usr/bin/date -u +%Y-%m-%dT%H:%M:%SZ)
+TMP=$MANIFEST.tmp.$$
+printf '{ "bundle": "bundle_%s", "size_bytes": %s, "created_utc": "%s", "verify_result": "PASS", "sha256": "%s", "last_success_utc": "%s", "consecutive_failures": 0 }\n' \
+  "$RUNID" "$SIZE" "$NOW" "$HASH" "$NOW" > "$TMP"
+/usr/bin/chmod 0644 "$TMP"; /usr/bin/setfacl -m u:mtc-watch:r-- "$TMP"
+/usr/bin/mv -f "$TMP" "$MANIFEST"   # atomic; watcher ACL preserved (set pre-rename)
+
+# prune: only after full success; never the bundle named in the manifest
+KEEP="bundle_$RUNID"
+COUNT=0
+for B in $(/usr/bin/ls -1d "$ROOT"/bundle_* 2>/dev/null | /usr/bin/sort -r); do
+  COUNT=$((COUNT + 1))
+  [ "$(basename "$B")" = "$KEEP" ] && continue
+  if [ "$COUNT" -gt "$RETAIN" ]; then
+    /usr/bin/chattr -R -i "$B" 2>/dev/null || true
+    /usr/bin/rm -rf "$B"
+  fi
+done
+echo "mtc-bridge-backup: OK bundle_$RUNID size=$SIZE"
+exit 0

@@ -1,0 +1,15 @@
+#!/bin/sh
+# /usr/local/bin/mtc-watch-collect — FROZEN V3. root:root 0755.
+# Sole entry point for the mtc-watch account (sshd ForceCommand + key command=).
+# Accepts ONLY a check id in SSH_ORIGINAL_COMMAND; absolute executables; env -i;
+# restrictive umask. Read-only by construction.
+umask 077
+case "$SSH_ORIGINAL_COMMAND" in
+  check1) exec /usr/bin/env -i PATH=/usr/bin:/bin /bin/sh -c '/usr/bin/systemctl is-active mtc-bridge-first-start; /usr/bin/systemctl status mtc-bridge-first-start --no-pager -n 0; /usr/bin/systemctl show -p NRestarts --value mtc-bridge-first-start' ;;
+  check2) exec /usr/bin/env -i /usr/bin/curl -q -sS --max-time 15 http://127.0.0.1:8790/api/status ;;
+  check3) exec /usr/bin/env -i PATH=/usr/bin:/bin /bin/sh -c '/usr/bin/ls -lh /var/log/mtc-bridge/; /usr/bin/tail -3 /var/log/mtc-bridge/bridge.log' ;;
+  check4) exec /usr/bin/env -i /usr/bin/cat /var/backups/mtc-bridge/status.json ;;
+  check5) exec /usr/bin/env -i PATH=/usr/bin:/bin /bin/sh -c '/usr/bin/systemctl show mtc-bridge-first-start -p MemoryCurrent; /usr/bin/df -h /var/lib/mtc-bridge /var/log/mtc-bridge' ;;
+  check6) exec /usr/bin/env -i /usr/bin/tail -50 /var/log/mtc-bridge/bridge.err.log ;;
+  *) echo "refused: unknown check id" >&2; exit 1 ;;
+esac

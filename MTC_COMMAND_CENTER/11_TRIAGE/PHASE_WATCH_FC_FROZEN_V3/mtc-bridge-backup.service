@@ -1,0 +1,11 @@
+# /etc/systemd/system/mtc-bridge-backup.service — FROZEN V3. root:root 0644.
+[Unit]
+Description=MTC Bridge WAL-safe backup (stage, verify, atomic immutable promote)
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/sbin/mtc-bridge-backup
+UMask=0077
+NoNewPrivileges=no
+ProtectHome=yes
+PrivateTmp=yes

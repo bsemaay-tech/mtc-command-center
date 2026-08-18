@@ -1,6 +1,12 @@
 # Phase-watch — dedicated read-only forced-command SSH design **V3** (T0 finding #3)
 
-**STATUS: V3 PRESENTED FOR FREEZE APPROVAL. NOTHING APPLIED; NO KVM2 CONTACT MADE.**
+**STATUS: V3 FREEZE APPROVED BY OWNER 2026-08-18 — artifact set FROZEN at
+`PHASE_WATCH_FC_FROZEN_V3/` (byte-exact, git-blob-OID + SHA-256 pinned, see its
+`FREEZE_MANIFEST.md`). HELD for the exact pre-application T0 pair; NO KVM2 contact
+or mutation. Owner-added hardening baked into the frozen artifacts: absolute
+executable paths, sanitized `env -i`, restrictive `umask`, flock overlap
+prevention, ACL-preserving atomic manifest replacement, full T/B/W falsification
+scripts.**
 V2 was accepted conceptually 2026-08-17; freeze was withheld pending the six V3
 repairs below, all incorporated here. V1/V2 are superseded in place. No T0
 dispatch and no KVM2 mutation before the owner's freeze approval and separate
