@@ -1,6 +1,81 @@
 # NEXT SESSION HANDOFF — `2ce41e34` accepted; 20260808B local run kit ready; staging authorization required (2026-08-08)
 
-> ## ▶ NEWEST CHECKPOINT — GLM-5.2 post-Gate preregistration & gap matrix (WP-L Phase 2 → WP-I → Audit 2 → WP-A) (read-only) (2026-08-09)
+> ## ▶ NEWEST CHECKPOINT — Claude Opus 5 post-Gate local run-kit design (documentation only) (2026-08-09)
+>
+> **PICK UP EXACTLY HERE:** (1) The five **COMMAND GAP** procedures now have an implementation-ready
+> design contract — `11_TRIAGE/POST_GATE_WPL_WPI_RUN_KIT_DESIGN_2026-08-09.md`. It is a
+> **specification, not an executable**; every command block in it is marked **NOT EXECUTED** and
+> **no stage script exists or may be created** until the budget blocker clears *and* a named
+> authority lift covers the stage. (2) Next safe local unit: resolve the two **UNRESOLVED-INPUTs**
+> read-only — `EXPECT_HOSTNAME` (`GATEA-STAGING` is the Hyper-V **VM name**, not a verified guest OS
+> hostname; read the cloud-init seed record) and `MANIFEST_SHA256` for candidate `2ce41e34…321b`
+> (the `bfefea2f…ced02` in `WPI_READINESS_RECORD:9` belongs to the earlier `1adf9ae5…` candidate;
+> read `install_manifest.json` `release_manifest_sha256` or the A-2 install log). **Do not invent
+> either.** (3) Keep `GATEA-STAGING` **retained, active, credential-free DISARMED — do not discard
+> it** (needed through WP-A). (4) **No server execution** until a human budget re-plan / ceiling
+> extension resolves the budget-evidence blocker (exact 50 h balance NOT REPRODUCIBLE) **and** a
+> named lift covers any WP-V/KVM2/credential/broker/ARM/order/TESTNET-mainnet/economic action.
+>
+> **Unit scope:** `claude-opus-5` effort `xhigh`, isolated local worktree, documentation HEAD
+> `851d2aa5`, candidate `2ce41e34…321b` unchanged. Exactly five files written. **No** SSH, sudo,
+> systemctl, reboot, service, package/install, pytest, broker/network/exchange, credential,
+> ARM/order, Git, staging-host, or mutation command was run. No executable script was created. No
+> credential value was read or printed.
+>
+> **Stage split — independently authorised, no monolith, no automatic chaining across a mutating
+> boundary:** **B** post-start read-only evidence · **C1** post-SIGTERM no-dangling-state · **C2**
+> post-reboot subcheck · **C3** WAL capture → verify → restore-into-temp · **C4** rollback
+> stop+mask-only. Normative rules: one authority per artifact; no stage invokes another (C1 never
+> restarts, C1 never calls C3, C4 never performs a recovery start); read-only stages accumulate and
+> fail closed once while mutating stages abort at first mismatch; the quiesced window is declared in
+> the authorising sentence, never discovered at runtime. Ordering that spends **one** stop and keeps
+> all the evidence: **C1 → C3-b → C4**.
+>
+> **Three findings a future implementer must not lose:**
+> 1. **Stage B asserts `systemctl is-enabled` = exactly `static`.** `verify.sh:212-215` accepts
+>    `masked|disabled|static`, which post-start would silently accept a *masked* host — a different
+>    state from the accepted one. `static` proves unmasked **and** un-enableable in one token; pair it
+>    with a direct mask-symlink-absence check and an empty-`DropInPaths` check (a drop-in can override
+>    `Restart=`/`ExecStart=`/`TimeoutStopSec=` while the unit hash still matches `538c1c60…279bd`).
+> 2. **C1 hard ordering rule:** capture the sidecar snapshot (`bridge.db-shm` absent, `-wal` absent or
+>    0 B, no open fd) **before any DB read, including a read-only one** — a read-only SQLite open can
+>    materialise a zero-byte WAL/SHM (`wal_state_bundle.py:602-604`, `:491-500`). Reorder it and the
+>    verifier fails on state it created itself.
+> 3. **`wal_state_bundle.py` has no `restore` subcommand** (only `create`/`verify`, `:1062-1080`).
+>    Restore-into-temp is composed: copy the bundle db → `create` against the copy → assert the
+>    re-derived **`invariants_sha256`** matches. Assert invariants, **never** `bundle_db_sha256` — a
+>    re-capture is a fresh online backup, so the file hash legitimately differs.
+>
+> **Stale node G4 refreshed (narrow authorisation).** `WP0_SCOPE_BASELINE_RECORD_2026-07-31.md` I-R2
+> no longer cites `test_kill_restart_after_request_commit_keeps_killed_and_resumes_once` (re-verified
+> absent this unit); the two surviving symbols got path:line (`tests/test_api.py:61`,
+> `tests/test_window_state.py:82`). A dated correction note records the removal rather than rewriting
+> history, and records that the same symbol still sits in §9.1 line 308 — **left in place on purpose**,
+> outside this unit's named write authorisation. Evidence-map defect, **not** a product defect;
+> classification unchanged; no replacement symbol invented.
+>
+> **Re-derived independently here:** `requirements.lock` SHA-256
+> `40873556a7f4586d77f165b985863138c9fc95b095da64ac52456b8c49098ec3`, 56 `==` entries, 1345 hash
+> lines — matches the Lead's gap-matrix value. Also confirmed for the design: `meta(key, value)` with
+> `app_state` (`bridge/store/db.py:654-657, :4313-4315`; `bridge/app.py:109-110`), so the "not ARMED"
+> predicate is a real query. Recorded discrepancy: canonical `mtc-bridge.env` / `bridge.err.log`
+> (`common.sh:18`, templates) vs the inventory's `bridge.env` / `bridge.err` — **shorthand, not an
+> observed host fault**; no host read occurred.
+>
+> **Not designed on purpose:** C5 runtime egress (needs credentials + broker/TESTNET network
+> authority — notably **not** ARM, which stays forbidden); release-rebind rollback (unmet
+> prerequisite — only the candidate is installed); recovery start after C1/C4 (KVM2-P4-08A/08B);
+> wholesale `verify.sh` post-start (intentionally fails); `logrotate -f` (a write).
+>
+> **Stop conditions:** executing any block from the design record; creating any stage script as an
+> executable before both blockers clear; running `verify.sh` wholesale post-start; inventing
+> `EXPECT_HOSTNAME`, `MANIFEST_SHA256`, a rollback target SHA, a replacement test symbol, or any hash
+> for an artifact that does not exist; destructively testing or repairing
+> `/var/lib/mtc-bridge/bridge.db`; discarding `GATEA-STAGING`; any observed drift from the recorded
+> host invariant (second release, extra listener, non-loopback bind, ARM enabled, credentials present,
+> MainPID change under `Restart=no`) — investigate read-only, report, take no corrective action.
+
+> ## ▶ PREVIOUS CHECKPOINT — GLM-5.2 post-Gate preregistration & gap matrix (WP-L Phase 2 → WP-I → Audit 2 → WP-A) (read-only) (2026-08-09)
 >
 > **PICK UP EXACTLY HERE:** (1) next autonomous safe unit is **local run-kit design/validation only** —
 > author the Group B read-only post-start subchecks and the five **COMMAND GAP** procedures (post-start

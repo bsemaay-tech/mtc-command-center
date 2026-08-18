@@ -361,9 +361,36 @@ Deferred Delivery Stage 2 or BLOCK.
 | ID | Invariant | Evidence | Class |
 |---|---|---|---|
 | I-R1 | restart while flat and DISARMED → starts DISARMED, no order submitted | `bridge/app.py:109-110` forces `app_state=DISARMED` on every start unless `KILLED`; ARM is an explicit API action; `test_gates_persist_across_restart` | COVERED (code+test) / COVERED-STATIC on Ubuntu → **WP-A must execute on the staging host** |
-| I-R2 | killed/disarmed state persistent after restart | `test_kill_persists_across_restart`, `test_killed_alive_is_interrupted`, `test_kill_restart_after_request_commit_keeps_killed_and_resumes_once` | COVERED (code+test) / COVERED-STATIC on Ubuntu → **WP-A** |
+| I-R2 | killed/disarmed state persistent after restart | `test_kill_persists_across_restart` (`tests/test_api.py:61`), `test_killed_alive_is_interrupted` (`tests/test_window_state.py:82`) — a third symbol was removed as stale on 2026-08-09; see the correction note below | COVERED (code+test) / COVERED-STATIC on Ubuntu → **WP-A** |
 | I-R3 | database state-file integrity after restart | `tests/test_wal_state_bundle.py` (41); `test_bundle_never_contains_a_wal_shm_trio`, `test_invariants_preserve_risk_and_history` | COVERED (code+test) / COVERED-STATIC on Ubuntu → **WP-A** |
 | I-R4 | SIGTERM → clean DISARMED shutdown, no dangling state | `bridge/app.py:72-83` lifespan `finally: await engine.stop()`; unit `KillSignal=SIGTERM`, `TimeoutStopSec=45`, `FinalKillSignal=SIGKILL`. `engine.stop()` (`engine.py:228-235`) stops the feed and cancels tasks — it does **not** write a DISARMED state or close the store. **No test asserts SIGTERM/lifespan shutdown leaves no dangling state.** | **OPEN — see below** |
+
+#### Correction note — 2026-08-09 — I-R2 evidence-map refresh (stale symbol removed)
+
+**What changed.** The I-R2 row above previously cited three test symbols. The third,
+`test_kill_restart_after_request_commit_keeps_killed_and_resumes_once`, was removed on 2026-08-09
+because it does **not exist in the candidate source**. Verified by `rg` over
+`IBKR_PAPER_BRIDGE/tests/` at candidate `2ce41e34bceb599d80af24c5c33d835820ec321b`: the full symbol
+has no definition and no reference, and neither `kill_restart_after_request_commit` nor
+`resumes_once` matches anywhere under `tests/`. The two surviving symbols were re-verified as
+present and their paths/lines added: `tests/test_api.py:61` and `tests/test_window_state.py:82`.
+
+**What this is, and is not.** This is a **stale evidence-map node**, not a product defect. The
+invariant's classification is unchanged — I-R2 remains COVERED (code+test) / COVERED-STATIC on
+Ubuntu → WP-A. No replacement symbol was invented, no test was written, and no source file was
+inspected for modification. The original record's history is preserved: this note states exactly
+what was removed rather than rewriting the row silently.
+
+**Residue deliberately left in place.** The same absent symbol also appears in §9.1's
+*"killed/disarmed state survives restart"* row. The authorisation for this correction named the
+**I-R2** evidence-map symbol only, so §9.1 was not touched. It is recorded here so the residue stays
+visible; refreshing it requires its own narrow authorisation.
+
+**Provenance.** Gap recorded as **G4** in
+`GATE_A_POST_GATE_PREREGISTRATION_GAP_MATRIX_2026-08-09.md` §3 and §4 (row 11); refreshed under the
+local run-kit design unit `POST_GATE_WPL_WPI_RUN_KIT_DESIGN_2026-08-09.md` §11 (documentation-only,
+no host execution). **D026 note:** the two surviving symbols are *existing* coverage; citing them
+does not close any newly named defect.
 
 #### I-R4 — Lead assessment, recorded rather than resolved
 

@@ -1,5 +1,58 @@
 # NEXT_STEPS
 
+## POST-GATE — Local run-kit design record authored (documentation only, no host execution) (2026-08-09)
+
+**Documentation-only unit; no staging command run.** Model `claude-opus-5` effort `xhigh`. Starting
+documentation HEAD `851d2aa5`; candidate `2ce41e34…321b` unchanged. New record:
+`11_TRIAGE/POST_GATE_WPL_WPI_RUN_KIT_DESIGN_2026-08-09.md`. Five-file write ceiling; no SSH, sudo,
+systemctl, reboot, package, pytest, broker/network, credential, ARM/order, Git, or staging-mutation
+command was run. **No executable script was created.**
+
+**What now exists:** an implementation-ready *contract* — not a script — for the five COMMAND GAP
+procedures, split into **independently authorised stages with no monolith and no automatic chaining
+across a mutating boundary**: **B** post-start read-only evidence · **C1** post-SIGTERM
+no-dangling-state · **C2** post-reboot subcheck · **C3** WAL capture/verify/restore-into-temp ·
+**C4** rollback stop+mask-only. Every command block is marked **NOT EXECUTED**. Exact constants,
+no-clobber rules (refuse a pre-existing evidence dir; seal each artifact with sha256 at creation),
+redaction rules D-1..D-7 (env file never read; `/api/status` never written raw — allowlist projection
+with name-preserving redaction), exit-code contract, and per-stage stop conditions are specified.
+
+**Three design findings worth carrying forward:**
+1. **Stage B must assert `systemctl is-enabled` = exactly `static`** — `verify.sh:212-215` accepts
+   `masked|disabled|static`, which post-start would silently accept a *masked* host. `static` proves
+   unmasked **and** un-enableable in one token; paired with a direct mask-symlink-absence check and a
+   `DropInPaths` empty check (a drop-in can override `Restart=`/`ExecStart=` without changing the
+   unit file hash).
+2. **C1 ordering rule:** the "no dangling state" sidecar snapshot (`bridge.db-shm` absent, `-wal`
+   absent or 0 B) **must be captured before any DB read, including read-only** — a read-only SQLite
+   open can materialise a zero-byte WAL/SHM (`wal_state_bundle.py:602-604`, `:491-500`). Reordering
+   produces a false failure.
+3. **`wal_state_bundle.py` has no `restore` subcommand** (only `create`/`verify`). Restore-into-temp
+   is composed: copy the bundle db → run `create` against the copy → assert `invariants_sha256`
+   matches. **Assert invariants, never `bundle_db_sha256`** (re-capture legitimately changes the file).
+
+**Stale node G4 refreshed:** `WP0_SCOPE_BASELINE_RECORD_2026-07-31.md` I-R2 no longer cites
+`test_kill_restart_after_request_commit_keeps_killed_and_resumes_once` (re-verified absent this unit);
+the two surviving symbols got path:line. A dated correction note records the removal, and explicitly
+records that the same symbol still sits in §9.1 line 308 — **left in place on purpose**, outside this
+unit's named authorisation.
+
+**Two new UNRESOLVED-INPUTs (resolve locally before authoring Stage B):** (a) `EXPECT_HOSTNAME` —
+`GATEA-STAGING` is the **VM name**, not a verified guest OS hostname; (b) `MANIFEST_SHA256` for
+candidate `2ce41e34…321b` — the `bfefea2f…ced02` in `WPI_READINESS_RECORD` belongs to the earlier
+`1adf9ae5…` candidate. Do not invent either.
+
+**Blockers unchanged:** budget (exact 50 h balance NOT REPRODUCIBLE → all host execution blocked) and
+authority (WP-V/KVM2/master/credentials/broker/ARM/orders/TESTNET-mainnet need a named lift).
+
+- **[AI: Any]** Resolve the two UNRESOLVED-INPUTs locally from the seed record and
+  `install_manifest.json` / A-2 install log. Read-only.
+- **[AI: Any]** Keep `GATEA-STAGING` retained, active, credential-free DISARMED. Do not discard it.
+- **[AI: Barış]** Re-plan the remaining hours against the hard 50 h ceiling, or issue an explicit
+  ceiling extension, before any server-executed WP-L Phase 2 / WP-I / WP-A work.
+- **[AI: Barış]** Named explicit lift required before authoring any stage script as an executable,
+  and before WP-V / KVM2 / master merge / credentials / broker / ARM / orders / TESTNET-mainnet.
+
 ## GATE A — Post-Gate preregistration & gap matrix (WP-L Phase 2 → WP-I → Audit 2 → WP-A) (read-only) (2026-08-09)
 
 **Read-only documentation unit; no staging command run.** Starting HEAD `52b8f496`; candidate
