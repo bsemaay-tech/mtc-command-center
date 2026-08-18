@@ -23,13 +23,14 @@ Phase Watch V3 frozen set verified + supplementally reviewed REQUEST_CHANGES
    xhigh — capacity ~2026-08-19 23:00 — + `gpt-5.6-sol` xhigh) on the re-frozen
    set. Do NOT spend a capped T0 round on the current bytes; the known findings
    stand unrepaired.
-3. **[Barış] Cleanup owner decisions (two small ones):**
-   a. Nine ACL husks, 8.8 GB (GATEAFIX K2VPS TSP1003A6 TSP1009 TSP1009B WPS
-      WPSAUD5 TSP1003A5 TSP1004A2) — one elevated delete approval clears all.
-   b. `C:\LAB\MTC_AIONUI_PILOT` — a dashboard server is LIVE from this worktree
-      (PID recorded in the execution file) and AIONUI is "never used" per
-      TOOLBOX: keep the pilot, or stop the server and let a session rescue+remove.
-4. **[AI: Any] Optional:** retire the 36 `rescue/wt-*` branches into an archive
+3. **DONE 2026-08-18 late afternoon — both owner decisions executed** ("husk'ları
+   sil" + "AIONUI kapat"): AIONUI server stopped (canonical dashboard untouched),
+   pilot rescued (`rescue/wt-aionui-pilot-20260818`) + removed, small app db
+   preserved at `C:\LAB\_PRESERVED_AIONUI_PILOT_20260818`; husks deleted, **~10 GB
+   freed** (C: 277.7→287.7 GB). Registered worktrees now **8**. Residue: 64
+   zero-byte ACL-locked skeleton dirs — owner can finish with one double-click +
+   UAC "Yes" on `C:\LAB\DELETE_HUSK_LEFTOVERS_20260818.cmd` (cosmetic either way).
+4. **[AI: Any] Optional:** retire the 37 `rescue/wt-*` branches into an archive
    tag once the owner confirms nothing in them is wanted (they cost nothing to
    keep; no deletion without explicit approval).
 5. Codex quota facts (live-probed 2026-08-18): `secondary` → 2026-08-22 20:09,

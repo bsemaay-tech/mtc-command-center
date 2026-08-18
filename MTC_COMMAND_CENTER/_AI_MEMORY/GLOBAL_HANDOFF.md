@@ -17,13 +17,20 @@ worktree (`C:\WTCLEAN_CTRL`, branch `chore/worktree-cleanup-20260818` off master
 
 - **Cleanup (Workstreams A–D): DONE and CLOSED.** 124 worktrees deregistered
   (115 clean removals, 9 ACL husks totalling 8.8 GB), 36 `rescue/wt-*` branches
-  pushed + ls-remote-verified, zero holds/stops/force/prune. Registered now 9 =
-  protected 7 + control lane + one D-hold: `C:\LAB\MTC_AIONUI_PILOT` (runs a LIVE
-  dashboard-server process; 2 unpushed commits; 107 MB untracked). `C:\P2RT`
+  pushed + ls-remote-verified, zero holds/stops/force/prune. `C:\P2RT`
   untouched (HEAD `008e065e`, clean). Full record + per-class evidence:
   `11_TRIAGE/WORKTREE_CLEANUP_EXECUTION_2026-08-18.md`. GLM-4.7 classified the
   33 dirty trees (routing record in file); Gemini read-only failed CLOSED 3× on
   concurrent-session watcher noise — recorded, not substituted.
+- **LATE-AFTERNOON UPDATE — both owner decisions executed** ("husk'ları sil" +
+  "AIONUI kapat"): AIONUI dashboard server stopped (canonical repo's own
+  dashboard verified alive/untouched), pilot commits rescued as
+  `rescue/wt-aionui-pilot-20260818` (37th rescue ref), app db preserved at
+  `C:\LAB\_PRESERVED_AIONUI_PILOT_20260818`, worktree removed; nine husks
+  deleted, **~10 GB freed** (C: 277.7→287.7 GB). **Registered worktrees now 8 =
+  protected 7 + cleanup control lane.** Residue: 64 zero-byte ACL-locked skeleton
+  dirs; owner one-click finisher `C:\LAB\DELETE_HUSK_LEFTOVERS_20260818.cmd`.
+  TOOLBOX AIONUI row updated (kit repo `c2b6b92`).
 - **Phase Watch V3 (Workstream E):** freeze ledger verified (12 files, all OIDs +
   SHA-256 match at `14559c2a`); all owner-required hardening present in the
   frozen bytes; `WATCH_ACTIVE: NO` live-verified; **no KVM2 contact**. GLM-5.2
