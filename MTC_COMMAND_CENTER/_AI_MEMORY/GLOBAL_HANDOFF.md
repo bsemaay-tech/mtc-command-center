@@ -9,6 +9,33 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Claude Fable 5] 2026-08-18 — Unified dashboard architecture proposal + deep-research prompt
+
+Follow-up to the prototype below, on the same branch. Two T2-class docs in
+`11_TRIAGE/`:
+
+- `DASHBOARD_UNIFIED_ARCHITECTURE_PROPOSAL_2026-08-18.md` — merges owner's
+  18-section spec + Codex Part B (B1–B8) + Gemini D1–D6 + Claude's V1 code
+  review into one two-surface architecture (execution vs research) with a
+  31-row feature matrix (V1 status + phase V1.1/V2/R), a deferred/rejected
+  table with reasons (scanner, news, AI-confidence panel, Grafana stack,
+  multi-channel alerts, telemetry wall, manual order entry), 8 Claude
+  additions (staleness rule, config-drift pill, chart↔decision-chain link,
+  ARM audit trail, degraded banner, P&L decomposition, latency p50/p95,
+  alert budget), and sequencing. PROPOSAL only — no implementation
+  authorized; Bridge remains protected.
+- `DEEP_RESEARCH_PROMPT_TRADING_BOT_DASHBOARD_2026-08-18.md` — ready-to-paste
+  deep-research prompt scoped to our exact class (bar-close 5m–1h, 0–5
+  trades/day, 1–5 single-instrument workers, frozen params, solo operator,
+  self-hosted VPS, SQLite/WAL, Hyperliquid perps + IBKR paper, loopback UI,
+  read-only-plus-brakes governance) with explicit HFT/OMS/market-making
+  exclusions, 11 research questions, and mandatory output/citation format
+  including an audited discard list.
+
+Prior V1 dashboard review (Bridge `bridge/static/` read-only) recorded in
+chat + the architecture doc's feature matrix. No code changed this session
+beyond the docs; T1 audit on the prototype below still OPEN.
+
 ## [Claude Fable 5] 2026-08-17 — Trading Bot Dashboard UI prototype (mock-only) on claude/trading-bot-dashboard-hgnvcj
 
 Barış supplied a full Day/Swing trading-bot dashboard content spec (18 sections:
