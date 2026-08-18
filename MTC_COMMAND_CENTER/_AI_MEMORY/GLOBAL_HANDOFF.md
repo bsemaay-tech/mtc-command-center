@@ -9,6 +9,45 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Claude Fable Lead] 2026-08-18 — WORKTREE CLEANUP CLOSED (132→9); Phase Watch V3 reviewed, T0 pair capacity-gated
+
+Owner's autonomous continuation dispatch executed to completion in a clean control
+worktree (`C:\WTCLEAN_CTRL`, branch `chore/worktree-cleanup-20260818` off master
+`14559c2a`); the dirty canonical checkout was never written.
+
+- **Cleanup (Workstreams A–D): DONE and CLOSED.** 124 worktrees deregistered
+  (115 clean removals, 9 ACL husks totalling 8.8 GB), 36 `rescue/wt-*` branches
+  pushed + ls-remote-verified, zero holds/stops/force/prune. Registered now 9 =
+  protected 7 + control lane + one D-hold: `C:\LAB\MTC_AIONUI_PILOT` (runs a LIVE
+  dashboard-server process; 2 unpushed commits; 107 MB untracked). `C:\P2RT`
+  untouched (HEAD `008e065e`, clean). Full record + per-class evidence:
+  `11_TRIAGE/WORKTREE_CLEANUP_EXECUTION_2026-08-18.md`. GLM-4.7 classified the
+  33 dirty trees (routing record in file); Gemini read-only failed CLOSED 3× on
+  concurrent-session watcher noise — recorded, not substituted.
+- **Phase Watch V3 (Workstream E):** freeze ledger verified (12 files, all OIDs +
+  SHA-256 match at `14559c2a`); all owner-required hardening present in the
+  frozen bytes; `WATCH_ACTIVE: NO` live-verified; **no KVM2 contact**. GLM-5.2
+  supplemental adversarial review returned **REQUEST_CHANGES (14 findings)** —
+  Lead reproduced the load-bearing ones, incl. two found independently by the
+  Lead first: the client's `ProcessStartInfo.ArgumentList` is absent on
+  PowerShell 5.1 (pwsh not installed → live ssh path crashes; fixture paths
+  masked it — the LIVE collector shares the defect), and multiple T-matrix
+  judges false-pass on "Connection refused"/"inactive". Backup contract: empty
+  bundle promotable as PASS; composite hash unchecked. Records:
+  `11_TRIAGE/PHASE_WATCH_V3_PREAPP_VERIFICATION_2026-08-18.md` +
+  `PHASE_WATCH_V3_GLM52_SUPPLEMENTAL_VERDICT_2026-08-18.md` (verbatim). Frozen
+  bytes untouched (change control respected).
+- **T0 pair: live-probed, both sides capacity-blocked** — `claude-opus-5` weekly
+  resets 2026-08-19 23:00 Europe/Chisinau; Codex `secondary` 2026-08-22 20:09,
+  `fourth` 2026-08-20 10:20; `free`/MAX protected, not spent. Even with capacity,
+  dispatching T0 before the reproduced findings are repaired would waste a capped
+  round. Queue: Codex repair (fourth reset) → owner re-freeze → fresh T0 pair.
+- Coordination: the concurrently RUNNING "Bridge V2 continuation" session was
+  messaged the exact lane split before any shared surface was touched.
+- Untouched, confirmed: KVM2, credentials/keys, Telegram, `WATCH_ACTIVE`, Bridge
+  state, `MTC-Bridge-P2` (Disabled) / `MTC-HermesPhaseWatch` (Ready), TESTNET/
+  ARM/exchange, Pine/parity/MTC/trading logic.
+
 ## [Codex gpt-5.6-sol] 2026-08-17 — Help/Wiki implemented; T1 cap boundary preserved
 
 Claude Max implemented the complete interactive Bridge Help/System Map in the

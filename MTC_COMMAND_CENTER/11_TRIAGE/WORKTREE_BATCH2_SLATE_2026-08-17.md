@@ -233,3 +233,16 @@ scheduled task; no force, no prune; stop on first mismatch). Result: **6 REMOVED
 | `C:/GAAUD_DISARM`, `C:/GAAUD_DISARM_CDX_R2`, `C:/GAAUD_DISARM_CLA` | NOT ATTEMPTED — stop-on-error honored |
 
 Registered worktrees after: **132**. All other candidates held.
+
+---
+
+## FINAL EXECUTION — full autonomous sweep 2026-08-18 (owner dispatch)
+
+The owner's 2026-08-18 continuation prompt authorized autonomous processing of
+the whole remaining slate plus the dirty/unreachable groups. Complete record:
+`WORKTREE_CLEANUP_EXECUTION_2026-08-18.md`. Outcome: registered worktrees
+132 → 9 (protected 7 + cleanup control lane + the one D-hold
+`C:\LAB\MTC_AIONUI_PILOT`, which runs a live dashboard-server process). 124
+deregistered: 115 clean removals, 9 ACL husks (8.8 GB, owner one-liner pending).
+36 `rescue/wt-*` branches pushed and remote-verified. Zero precheck holds, zero
+global stops, no force, no prune (dry-run named nothing). This slate is CLOSED.

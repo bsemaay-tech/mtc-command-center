@@ -35,6 +35,7 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-17 00:54 +03; foreign partial preserved | — |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released cleanly at Gate 7 | 2026-08-17 03:54 +03 |
+| Worktree cleanup + Phase Watch V3 review | `11_TRIAGE/WORKTREE_*`, `11_TRIAGE/PHASE_WATCH_V3_*`, worktree registry | **UNCLAIMED** — claimed and released same run by Fable Lead cleanup session, 2026-08-18 (work complete, records committed) | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
@@ -45,6 +46,14 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-18 ~17:10 +03:** Fable Lead cleanup session claimed-and-released the
+  new "Worktree cleanup + Phase Watch V3 review" row in a single run: 124
+  worktrees deregistered (115 clean, 9 ACL husks), 36 rescue branches pushed,
+  Phase Watch V3 ledger verified + GLM-5.2 REQUEST_CHANGES supplemental verdict
+  recorded, T0 pair live-probed capacity-blocked. The concurrent "Bridge V2
+  continuation" session was notified of the lane split before any shared write.
+  All records committed from `C:\WTCLEAN_CTRL` (`chore/worktree-cleanup-20260818`).
 
 - **2026-08-17 03:54 +03:** Codex Lead `01a00921` completed a clean Gate-7
   release of the Shared memory layer and Bridge Help / System Map rows. The

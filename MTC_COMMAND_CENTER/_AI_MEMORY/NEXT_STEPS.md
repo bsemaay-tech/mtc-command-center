@@ -8,6 +8,34 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
+## AFTER THE 2026-08-18 CLEANUP RUN — worktrees 132→9 DONE; Phase Watch V3 findings recorded
+
+State: cleanup CLOSED (`11_TRIAGE/WORKTREE_CLEANUP_EXECUTION_2026-08-18.md`);
+Phase Watch V3 frozen set verified + supplementally reviewed REQUEST_CHANGES
+(`11_TRIAGE/PHASE_WATCH_V3_PREAPP_VERIFICATION_2026-08-18.md`). Next, in order:
+
+1. **[AI: Codex, after `fourth` resets ~2026-08-20 10:20] Phase Watch V3 repair
+   round** — fix the 14 GLM findings + Lead findings (PS 5.1 `ArgumentList` in
+   BOTH the frozen client and the live `C:\LAB\HERMES_WATCH\collect_kvm2_evidence.ps1`;
+   T-judge anchoring; empty-bundle/hash guards; `Match all` terminator; on-host
+   `sha256sum -c` gate). Produces a V4 candidate → owner re-freeze approval.
+2. **[AI: Claude+Codex] Fresh exact pre-application T0 pair** (`claude-opus-5`
+   xhigh — capacity ~2026-08-19 23:00 — + `gpt-5.6-sol` xhigh) on the re-frozen
+   set. Do NOT spend a capped T0 round on the current bytes; the known findings
+   stand unrepaired.
+3. **[Barış] Cleanup owner decisions (two small ones):**
+   a. Nine ACL husks, 8.8 GB (GATEAFIX K2VPS TSP1003A6 TSP1009 TSP1009B WPS
+      WPSAUD5 TSP1003A5 TSP1004A2) — one elevated delete approval clears all.
+   b. `C:\LAB\MTC_AIONUI_PILOT` — a dashboard server is LIVE from this worktree
+      (PID recorded in the execution file) and AIONUI is "never used" per
+      TOOLBOX: keep the pilot, or stop the server and let a session rescue+remove.
+4. **[AI: Any] Optional:** retire the 36 `rescue/wt-*` branches into an archive
+   tag once the owner confirms nothing in them is wanted (they cost nothing to
+   keep; no deletion without explicit approval).
+5. Codex quota facts (live-probed 2026-08-18): `secondary` → 2026-08-22 20:09,
+   `fourth` → 2026-08-20 10:20, `free`/MAX protected. Gemini read-only route is
+   unusable while two sessions run in the repo (watcher fail-closed × 3).
+
 ## OWNER ROADMAP — resume after current Bridge V1 deployment work (2026-08-16)
 
 These seven workstreams were explicitly recorded by Barış before stopping for
