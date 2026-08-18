@@ -214,7 +214,30 @@ class OrderManager:
     async def submit_plan(
         self, decision_uid: str, plan: OrderPlan, *, strategy_id: str = "keltner_trail_ema8"
     ) -> dict[str, Any] | None:
-        """Reserve, submit, verify, and finalize without an ambiguous retry path."""
+        """Serialize the final new-risk boundary with partial recovery.
+
+        The engine performs earlier advisory checks, but only this boundary owns
+        reservation/send sequencing.  The final ARM and recovery checks therefore
+        run after acquiring the same per-symbol writer lock used by fill
+        ingestion and recovery.
+        """
+        symbol = str(plan.signal.symbol)
+        async with self.symbol_locks.hold(symbol):
+            state = self.store.get_meta("app_state")
+            if (state is not None and state != "ARMED") or self._partial_recovery_owns(
+                symbol
+            ):
+                return None
+            return await self._submit_plan_locked(
+                decision_uid, plan, strategy_id=strategy_id
+            )
+
+    async def _submit_plan_locked(
+        self, decision_uid: str, plan: OrderPlan, *, strategy_id: str
+    ) -> dict[str, Any] | None:
+        """Reserve, submit, verify, and finalize while holding the symbol lock."""
+        symbol = str(plan.signal.symbol)
+        self.symbol_locks.require(symbol)
         if decision_uid in self._submitted:
             return None
 
@@ -288,6 +311,16 @@ class OrderManager:
             ),
             "leverage": plan.leverage,
         }
+        # This is the last risk-authority check before the synchronous durable
+        # reservation and the immediately following broker coroutine call.  No
+        # awaited gap exists between this check and reservation.
+        state = self.store.get_meta("app_state")
+        if (
+            (state is not None and state != "ARMED")
+            or self.store.has_submission_quarantine()
+            or self._partial_recovery_owns(symbol)
+        ):
+            return None
         try:
             result, attempt_id = self.store.reserve_submission(
                 intent_id=intent_id,
@@ -861,20 +894,26 @@ class OrderManager:
             if filled_qty is not None
             else float(order.get("filled_qty") or 0.0)
         )
+        lot = self._broker_lot_unit(symbol)
+        if lot is None:
+            raise LotQuantizationError("SIZE_QUANTUM_UNAVAILABLE")
         try:
             return canonical_order_state(
                 raw_status=raw_status,
                 ordered_qty=float(order["qty"]),
                 filled_qty=durable_filled,
-                lot=self._broker_lot_unit(symbol),
+                lot=lot,
                 cancel_reserved=self.store.partial_cancel_reserved_for_cloid(
                     str(order["cloid"])
                 ),
             ).value
+        except LotQuantizationError:
+            raise
         except Exception:
             # Existing unrelated brokers may expose legacy raw spellings that
             # are outside the TS-P1-001 alias inventory. Preserve their
-            # established behavior; recovery itself remains fail-closed.
+            # established spelling only after exact quantity normalization has
+            # succeeded. Quantization failures never reach this fallback.
             return str(raw_status)
 
     async def sync_broker_state(self) -> None:
@@ -896,14 +935,23 @@ class OrderManager:
                 stored = self.store.get_order(order.cloid)
                 if stored is None:
                     continue
-                self.store.update_order_status(
-                    order.cloid,
-                    self._canonical_status(
+                try:
+                    status = self._canonical_status(
                         order=stored,
                         raw_status=order.status,
                         filled_qty=stored.get("filled_qty"),
                         symbol=str(order.coin),
-                    ),
+                    )
+                except LotQuantizationError as exc:
+                    self._quantity_integrity_fault(
+                        symbol=str(order.coin),
+                        observed_ts=datetime.now(UTC),
+                        detail=f"cloid={order.cloid} reason={exc.reason_code}",
+                    )
+                    continue
+                self.store.update_order_status(
+                    order.cloid,
+                    status,
                 )
 
     async def reconcile(self) -> None:
@@ -1113,14 +1161,23 @@ class OrderManager:
             if order is None:
                 return False
             symbol = self._event_symbol(event) or ""
-            self.store.update_order_status(
-                event.cloid,
-                self._canonical_status(
+            try:
+                status = self._canonical_status(
                     order=order,
                     raw_status=event.status,
                     filled_qty=event.filled_qty,
                     symbol=symbol,
-                ),
+                )
+            except LotQuantizationError as exc:
+                self._quantity_integrity_fault(
+                    symbol=symbol,
+                    observed_ts=event.ts,
+                    detail=f"cloid={event.cloid} reason={exc.reason_code}",
+                )
+                return True
+            self.store.update_order_status(
+                event.cloid,
+                status,
                 filled_qty=event.filled_qty,
                 avg_fill_px=event.avg_fill_px,
                 ts_last=event.ts,
@@ -1182,11 +1239,39 @@ class OrderManager:
         # persisted fills reach the ordered quantity; a partial fill keeps the
         # current status so pending/grace logic still sees a live order.
         order_filled_qty, order_vwap = self.store.order_fill_totals(fill.cloid)
-        if order_filled_qty > float(order["qty"]) + 1e-9:
+        lot = self._broker_lot_unit(str(fill.coin))
+        if lot is None:
+            self._quantity_integrity_fault(
+                symbol=str(fill.coin),
+                observed_ts=fill.ts,
+                detail=f"fill_id={fill.fill_id} cloid={fill.cloid} "
+                "reason=SIZE_QUANTUM_UNAVAILABLE",
+            )
+            self._synced_fills.add(fill.fill_id)
+            return True
+        try:
+            event_lots = quantize_lots(fill.qty, lot)
+            ordered_lots = quantize_lots(float(order["qty"]), lot)
+            filled_lots = quantize_lots(order_filled_qty, lot)
+            if event_lots <= 0:
+                raise LotQuantizationError("NON_POSITIVE_FILL_QUANTITY")
+            if ordered_lots <= 0:
+                raise LotQuantizationError("NON_POSITIVE_ORDER_QUANTITY")
+        except LotQuantizationError as exc:
+            self._quantity_integrity_fault(
+                symbol=str(fill.coin),
+                observed_ts=fill.ts,
+                detail=f"fill_id={fill.fill_id} cloid={fill.cloid} "
+                f"reason={exc.reason_code}",
+            )
+            self._synced_fills.add(fill.fill_id)
+            return True
+        if filled_lots > ordered_lots:
             self._quarantine_fill(
                 "ORDER_OVERFILL",
                 fill,
-                f"cloid={fill.cloid} filled_qty={order_filled_qty} order_qty={order['qty']}",
+                f"cloid={fill.cloid} filled_lots={filled_lots} "
+                f"ordered_lots={ordered_lots}",
             )
             self._synced_fills.add(fill.fill_id)
             return True
@@ -1221,16 +1306,42 @@ class OrderManager:
                 else:
                     entry_qty = float(trade["qty"])
                     entry_px = float(trade["entry_px"] or trade["expected_px"])
-                if exit_qty > entry_qty + 1e-9:
-                    self._quarantine_fill(
-                        "TRADE_OVERFILL",
-                        fill,
-                        f"trade_id={trade_id} exit_qty={exit_qty} entry_qty={entry_qty}",
+                try:
+                    entry_lots = quantize_lots(entry_qty, lot)
+                    exit_lots = quantize_lots(exit_qty, lot)
+                except LotQuantizationError as exc:
+                    self._quantity_integrity_fault(
+                        symbol=str(fill.coin),
+                        observed_ts=fill.ts,
+                        detail=f"fill_id={fill.fill_id} trade_id={trade_id} "
+                        f"reason={exc.reason_code}",
                     )
                     self._synced_fills.add(fill.fill_id)
                     return True
-                if exit_qty >= entry_qty - 1e-9:
-                    if self.store.has_live_entry_remainder(int(trade_id)):
+                if exit_lots > entry_lots:
+                    self._quarantine_fill(
+                        "TRADE_OVERFILL",
+                        fill,
+                        f"trade_id={trade_id} exit_lots={exit_lots} "
+                        f"entry_lots={entry_lots}",
+                    )
+                    self._synced_fills.add(fill.fill_id)
+                    return True
+                if exit_lots == entry_lots:
+                    try:
+                        live_entry_remainder = self._has_live_entry_remainder_exact(
+                            int(trade_id), lot
+                        )
+                    except LotQuantizationError as exc:
+                        self._quantity_integrity_fault(
+                            symbol=str(fill.coin),
+                            observed_ts=fill.ts,
+                            detail=f"fill_id={fill.fill_id} trade_id={trade_id} "
+                            f"reason={exc.reason_code}",
+                        )
+                        self._synced_fills.add(fill.fill_id)
+                        return True
+                    if live_entry_remainder:
                         if outcome == "INSERTED":
                             self.store.insert_decision(
                                 self.run_id,
@@ -1295,6 +1406,38 @@ class OrderManager:
                     )
         self._synced_fills.add(fill.fill_id)
         return True
+
+    def _has_live_entry_remainder_exact(
+        self, trade_id: int, lot: LotUnit
+    ) -> bool:
+        for order in self.store.get_orders_for_trade(trade_id):
+            if order["role"] != "ENTRY" or order["status"] not in {
+                "OPEN",
+                "SUBMITTED",
+                "PENDING",
+                "PARTIALLY_FILLED",
+                "PENDING_CANCEL",
+            }:
+                continue
+            filled_qty, _ = self.store.order_fill_totals(str(order["cloid"]))
+            filled_lots = quantize_lots(filled_qty, lot)
+            ordered_lots = quantize_lots(float(order["qty"]), lot)
+            if filled_lots < ordered_lots:
+                return True
+        return False
+
+    def _quantity_integrity_fault(
+        self, *, symbol: str, observed_ts: datetime, detail: str
+    ) -> None:
+        """Persist malformed lot evidence and stop new risk without mutation."""
+        self.store.set_meta("app_state", "DISARMED")
+        self.store.insert_event(
+            self.run_id,
+            observed_ts,
+            "ERROR",
+            "FILL_QUANTITY_INTEGRITY",
+            f"{symbol} {detail}".strip(),
+        )
 
     def _quarantine_fill(self, code: str, fill: FillEvent, detail: str) -> None:
         """Persist an integrity fault and stop new entries without rewriting PnL."""
@@ -1409,27 +1552,33 @@ class OrderManager:
             ordered = float(order["qty"])
         except (TypeError, ValueError):
             return
-        if not (0.0 < float(filled_qty) < ordered):
-            return
         trade = self.store.get_trade(int(trade_id))
         if trade is None or trade["exit_ts"] is not None:
             return
         symbol = str(trade["coin"])
+        lot = self._broker_lot_unit(symbol)
+        if lot is None:
+            self._quantity_integrity_fault(
+                symbol=symbol,
+                observed_ts=self.store.now(),
+                detail=f"cloid={order['cloid']} reason=SIZE_QUANTUM_UNAVAILABLE",
+            )
+            return
+        try:
+            ordered_lots = quantize_lots(ordered, lot)
+            filled_lots = quantize_lots(float(filled_qty), lot)
+        except LotQuantizationError as exc:
+            self._quantity_integrity_fault(
+                symbol=symbol,
+                observed_ts=self.store.now(),
+                detail=f"cloid={order['cloid']} reason={exc.reason_code}",
+            )
+            return
         existing = self.store.active_partial_recovery_for_symbol(symbol)
         if existing is not None:
             # A live generation already owns this symbol; quantities are
             # recomputed by the runner. The deadline is never rewritten.
             return
-        lot = self._broker_lot_unit(symbol)
-        ordered_lots: int | None = None
-        filled_lots: int | None = None
-        if lot is not None:
-            try:
-                ordered_lots = quantize_lots(ordered, lot)
-                filled_lots = quantize_lots(float(filled_qty), lot)
-            except LotQuantizationError:
-                ordered_lots = None
-                filled_lots = None
         latest = self.store.latest_partial_recovery_for_symbol(symbol)
         same_lineage = bool(
             latest is not None
@@ -1445,6 +1594,8 @@ class OrderManager:
         if same_lineage and str(latest["state"]) == (
             PartialProtectionState.PROTECTED_PARTIAL.value
         ):
+            if int(latest["filled_lots"] or -1) == filled_lots:
+                return
             # A late fill invalidates the accepted quantity proof while
             # retaining the original, non-resetting 10-second deadline.
             self.store.open_partial_generation(
@@ -1456,9 +1607,17 @@ class OrderManager:
                 "PARTIAL_LATE_FILL_REOPENED", symbol, str(order["cloid"])
             )
             return
-        if (
+        reopening_safe_flat = bool(
             same_lineage
             and str(latest["state"]) == PartialProtectionState.SAFE_FLAT.value
+            and int(latest["filled_lots"] or -1) != filled_lots
+        )
+        if not (0 < filled_lots < ordered_lots) and not reopening_safe_flat:
+            # A normal exact fill has no recovery work. Exact/full fills only
+            # reopen an already accepted lineage when the quantity changed.
+            return
+        if (
+            reopening_safe_flat
         ):
             # SAFE_FLAT is terminal only for that generation. A late exposure
             # gets a new identity, never a fresh safety budget.
@@ -1538,12 +1697,40 @@ class OrderManager:
         snapshot: SymbolSnapshot | None = None
         provenance = Provenance.UNVERIFIED
         position_lots: int | None = None
+        current_filled_lots: int | None = None
         reason = "RECOVERY_API_UNAVAILABLE"
         if broker is not None:
             snapshot = await self._snapshot(broker, latest)
             if self.store.has_submission_quarantine():
                 return True
-            provenance, position_lots, reason = self._classify(latest, snapshot)
+            if snapshot.exact and snapshot.lot is not None:
+                try:
+                    filled_qty, _ = self.store.order_fill_totals(
+                        str(latest["entry_cloid"])
+                    )
+                    current_filled_lots = quantize_lots(filled_qty, snapshot.lot)
+                    baseline_filled_lots = int(latest["filled_lots"])
+                except (LotQuantizationError, TypeError, ValueError):
+                    reason = "POST_SAFE_FLAT_FILL_EVIDENCE_INVALID"
+                else:
+                    if current_filled_lots > baseline_filled_lots:
+                        provenance, position_lots, reason = self._classify(
+                            latest, snapshot
+                        )
+                    elif current_filled_lots == baseline_filled_lots:
+                        try:
+                            position_lots = quantize_lots(
+                                abs(float(snapshot.net_size or 0.0)), snapshot.lot
+                            )
+                        except LotQuantizationError:
+                            position_lots = None
+                        provenance = Provenance.AMBIGUOUS
+                        reason = "POST_SAFE_FLAT_NO_FRESH_OWNED_EVIDENCE"
+                    else:
+                        provenance = Provenance.AMBIGUOUS
+                        reason = "POST_SAFE_FLAT_FILL_EVIDENCE_REGRESSED"
+            else:
+                reason = "SNAPSHOT_INEXACT"
 
         first_observed = self._parse_utc(latest["first_observed_ts"])
         deadline = self._parse_utc(latest["protect_deadline_ts"])
@@ -1569,7 +1756,11 @@ class OrderManager:
                     else snapshot.lot.size_decimals
                 ),
                 ordered_lots=latest["ordered_lots"],
-                filled_lots=latest["filled_lots"],
+                filled_lots=(
+                    latest["filled_lots"]
+                    if current_filled_lots is None
+                    else current_filled_lots
+                ),
                 reason_code="POST_SAFE_FLAT_EXPOSURE",
             )
         except PartialRecoveryConflictError as exc:
@@ -1721,6 +1912,9 @@ class OrderManager:
             owned_net_lots = quantize_lots(
                 float(totals["entry_qty"]), lot
             ) - quantize_lots(float(totals["exit_qty"]), lot)
+            owned_net_lots -= self.store.applied_partial_flatten_lots(
+                int(recovery["trade_id"]), str(recovery["entry_cloid"])
+            )
         except LotQuantizationError as exc:
             return Provenance.UNVERIFIED, None, exc.reason_code
         if owned_net_lots < 0:
@@ -2542,6 +2736,12 @@ class OrderManager:
         expired = self._deadline_expired(recovery, "protect")
 
         if entry_terminal:
+            if outcome != ActionOutcome.APPLIED.value:
+                self._record_outcome(
+                    action_id,
+                    ActionOutcome.APPLIED,
+                    "CANCEL_ENTRY_TERMINAL_OBSERVED",
+                )
             self._persist_entry_terminal(recovery, query)
             return await self._resolve_after_entry_terminal(recovery, broker)
         if expired:
@@ -2586,9 +2786,15 @@ class OrderManager:
                 filled, _ = self.store.order_fill_totals(
                     str(recovery["entry_cloid"])
                 )
+                try:
+                    lot = LotUnit(recovery["size_decimals"])
+                    filled_lots = quantize_lots(filled, lot)
+                    ordered_lots = quantize_lots(float(order["qty"]), lot)
+                except (LotQuantizationError, TypeError, ValueError):
+                    return
                 status = (
                     OrderState.FILLED.value
-                    if Decimal(str(filled)) >= Decimal(str(order["qty"]))
+                    if filled_lots >= ordered_lots
                     else OrderState.CANCELED.value
                 )
         if status is not None:
@@ -2711,21 +2917,12 @@ class OrderManager:
             return False
         expired = self._deadline_expired(recovery, "flatten")
         if not snapshot.exact or snapshot.lot is None or snapshot.net_size is None:
-            if expired:
-                self._abort(recovery, "FLATTEN_EVIDENCE_INCOMPLETE")
-                return True
-            self._partial_event("WARN", "PARTIAL_EVIDENCE_INCOMPLETE", symbol)
-            return False
+            self._abort(recovery, "FLATTEN_EVIDENCE_INCOMPLETE")
+            return True
         try:
             live_lots = quantize_lots(abs(float(snapshot.net_size)), snapshot.lot)
         except LotQuantizationError as exc:
             self._abort(recovery, exc.reason_code)
-            return True
-
-        if live_lots == 0:
-            return await self._verify_safe_flat(recovery, broker, snapshot)
-        if expired:
-            self._abort(recovery, "FLATTEN_DEADLINE_EXPIRED")
             return True
 
         seq = int(recovery["flatten_seq"])
@@ -2737,12 +2934,28 @@ class OrderManager:
             if int(row["flatten_seq"] or 0) == seq
         ]
         if attempts:
-            outcome = self.store.resolve_partial_action(str(attempts[0]["action_id"]))
+            action = attempts[0]
+            action_id = str(action["action_id"])
+            outcome = self.store.resolve_partial_action(action_id)
             if outcome in (None, ActionOutcome.UNKNOWN.value):
-                # Position evidence is the only authority here and it still
-                # shows a remainder. The attempt sequence stays frozen: an
-                # unknown flatten never mints a second market close.
-                if str(recovery["state"]) != PartialProtectionState.FLATTEN_UNKNOWN.value:
+                await self._query_action(
+                    broker,
+                    recovery,
+                    action_id,
+                    str(action["target_cloid"]),
+                    "FLATTEN",
+                )
+                outcome = self.store.resolve_partial_action(action_id)
+            if outcome in (None, ActionOutcome.UNKNOWN.value):
+                # UNKNOWN permits queries only. The attempt sequence and broker
+                # mutation count remain frozen until the same cloid resolves.
+                if expired:
+                    self._abort(recovery, "FLATTEN_DEADLINE_EXPIRED")
+                    return True
+                if (
+                    str(recovery["state"])
+                    != PartialProtectionState.FLATTEN_UNKNOWN.value
+                ):
                     self.store.transition_partial_recovery(
                         str(recovery["recovery_id"]),
                         expected=str(recovery["state"]),
@@ -2754,10 +2967,54 @@ class OrderManager:
                     "WARN", "PARTIAL_FLATTEN_UNRESOLVED", symbol, f"seq={seq}"
                 )
                 return False
+            if live_lots == 0:
+                return await self._verify_safe_flat(recovery, broker, snapshot)
+            provenance, classified_lots, reason = self._classify(recovery, snapshot)
+            if provenance is not Provenance.OWNED or classified_lots != live_lots:
+                self._abort(recovery, reason)
+                return True
+            if expired:
+                self._abort(recovery, "FLATTEN_DEADLINE_EXPIRED")
+                return True
             # Definitive outcome plus authoritative proof of a nonzero
             # remainder: only now may the sequence advance.
             self.store.bump_partial_flatten_seq(str(recovery["recovery_id"]), seq)
             return True
+
+        if live_lots == 0:
+            return await self._verify_safe_flat(recovery, broker, snapshot)
+        provenance, classified_lots, reason = self._classify(recovery, snapshot)
+        if provenance is not Provenance.OWNED or classified_lots != live_lots:
+            self._abort(recovery, reason)
+            return True
+        if expired:
+            self._abort(recovery, "FLATTEN_DEADLINE_EXPIRED")
+            return True
+
+        # Re-snapshot immediately before reservation. A manual/foreign change
+        # that lands after the phase-entry snapshot therefore cannot influence
+        # either the durable target quantity or broker I/O.
+        reservation_snapshot = await self._snapshot(broker, recovery)
+        if self.store.has_submission_quarantine():
+            return False
+        reservation_provenance, reservation_lots, reservation_reason = self._classify(
+            recovery, reservation_snapshot
+        )
+        if (
+            reservation_provenance is not Provenance.OWNED
+            or reservation_lots is None
+            or reservation_snapshot.lot is None
+        ):
+            self._abort(recovery, reservation_reason)
+            return True
+        if reservation_lots == 0:
+            return await self._verify_safe_flat(
+                recovery, broker, reservation_snapshot
+            )
+        if self._deadline_expired(recovery, "flatten"):
+            self._abort(recovery, "FLATTEN_DEADLINE_EXPIRED")
+            return True
+
         action_id = compute_partial_action_id(
             kind=PartialActionKind.FLATTEN.value,
             trade_id=int(recovery["trade_id"]),
@@ -2765,7 +3022,7 @@ class OrderManager:
             entry_request_id=str(recovery["entry_request_id"]),
             generation=int(recovery["generation"]),
             flatten_seq=seq,
-            qty_lots=live_lots,
+            qty_lots=reservation_lots,
         )
         cloid = compute_partial_action_cloid(action_id)
         is_replay, _ = self.store.reserve_partial_action(
@@ -2778,12 +3035,17 @@ class OrderManager:
             reason_code="FLATTEN_RESERVED",
             generation=int(recovery["generation"]),
             flatten_seq=seq,
-            qty_lots=live_lots,
-            position_lots=live_lots,
+            qty_lots=reservation_lots,
+            position_lots=reservation_lots,
         )
         if not is_replay:
             await self._send_flatten(
-                recovery, broker, action_id, cloid, live_lots, snapshot.lot
+                recovery,
+                broker,
+                action_id,
+                cloid,
+                reservation_lots,
+                reservation_snapshot.lot,
             )
         return True
 
@@ -2821,6 +3083,72 @@ class OrderManager:
     ) -> bool:
         """SAFE_FLAT requires fresh exact evidence on every owned artefact."""
         symbol = str(recovery["symbol"])
+        if (
+            not snapshot.exact
+            or snapshot.lot is None
+            or snapshot.net_size is None
+        ):
+            self._abort(recovery, "SAFE_FLAT_EVIDENCE_INCOMPLETE")
+            return True
+        try:
+            if quantize_lots(abs(float(snapshot.net_size)), snapshot.lot) != 0:
+                self._abort(recovery, "SAFE_FLAT_POSITION_NONZERO")
+                return True
+        except LotQuantizationError as exc:
+            self._abort(recovery, exc.reason_code)
+            return True
+
+        # A flatten transport result never proves safety. If a flatten identity
+        # exists, require a fresh direct query of that exact cloid before any
+        # further mutation (including entry/orphan cancellation).
+        flatten_actions = self.store.partial_actions_for_recovery(
+            str(recovery["recovery_id"]), PartialActionKind.FLATTEN.value
+        )
+        if flatten_actions:
+            latest_flatten = max(
+                flatten_actions,
+                key=lambda row: (
+                    int(row["flatten_seq"] or 0),
+                    str(row["reserved_ts"]),
+                    str(row["action_id"]),
+                ),
+            )
+            queried = await self._query_action(
+                broker,
+                recovery,
+                str(latest_flatten["action_id"]),
+                str(latest_flatten["target_cloid"]),
+                "FLATTEN",
+            )
+            flatten_outcome = self.store.resolve_partial_action(
+                str(latest_flatten["action_id"])
+            )
+            if (
+                queried != ActionRecordStatus.APPLIED.value
+                or flatten_outcome != ActionOutcome.APPLIED.value
+            ):
+                if self._deadline_expired(recovery, "flatten"):
+                    self._abort(recovery, "FLATTEN_DEADLINE_EXPIRED")
+                    return True
+                if (
+                    flatten_outcome in (None, ActionOutcome.UNKNOWN.value)
+                    and str(recovery["state"])
+                    != PartialProtectionState.FLATTEN_UNKNOWN.value
+                ):
+                    self.store.transition_partial_recovery(
+                        str(recovery["recovery_id"]),
+                        expected=str(recovery["state"]),
+                        target=PartialProtectionState.FLATTEN_UNKNOWN.value,
+                        reason_code="FLATTEN_OUTCOME_UNKNOWN",
+                    )
+                    return True
+                return False
+
+        provenance, flat_lots, flat_reason = self._classify(recovery, snapshot)
+        if provenance is not Provenance.OWNED or flat_lots != 0:
+            self._abort(recovery, flat_reason)
+            return True
+
         entry_cloid = str(recovery["entry_cloid"])
         owned = self._owned_cloids(recovery)
         try:
@@ -2836,6 +3164,22 @@ class OrderManager:
         )
         if entry_terminal:
             self._persist_entry_terminal(recovery, entry_query)
+            cancel_action_id = compute_partial_action_id(
+                kind=PartialActionKind.CANCEL_ENTRY.value,
+                trade_id=int(recovery["trade_id"]),
+                entry_cloid=entry_cloid,
+                entry_request_id=str(recovery["entry_request_id"]),
+            )
+            if (
+                self.store.get_partial_action(cancel_action_id) is not None
+                and self.store.resolve_partial_action(cancel_action_id)
+                != ActionOutcome.APPLIED.value
+            ):
+                self._record_outcome(
+                    cancel_action_id,
+                    ActionOutcome.APPLIED,
+                    "CANCEL_ENTRY_TERMINAL_OBSERVED",
+                )
         in_flatten = str(recovery["state"]) in {
             PartialProtectionState.FLATTEN_PENDING.value,
             PartialProtectionState.FLATTEN_UNKNOWN.value,
@@ -2867,12 +3211,59 @@ class OrderManager:
                 return True
             await self._cancel_orphan(recovery, broker, orphans[0])
             return True
+
+        # No accepting state may coexist with an unresolved lineage action.
+        # Query each exact target with the correct evidence polarity; never
+        # reserve or resend while any result remains UNKNOWN.
+        for action in self.store.partial_actions_for_lineage(
+            int(recovery["trade_id"]), entry_cloid
+        ):
+            action_id = str(action["action_id"])
+            if self.store.resolve_partial_action(action_id) not in (
+                None,
+                ActionOutcome.UNKNOWN.value,
+            ):
+                continue
+            kind = PartialActionKind(str(action["kind"]))
+            await self._query_action(
+                broker,
+                recovery,
+                action_id,
+                str(action["target_cloid"]),
+                kind.value,
+                effect_is_absence=kind
+                in {
+                    PartialActionKind.CANCEL_ENTRY,
+                    PartialActionKind.CANCEL_PROTECTION,
+                },
+            )
+        unresolved = [
+            action
+            for action in self.store.partial_actions_for_lineage(
+                int(recovery["trade_id"]), entry_cloid
+            )
+            if self.store.resolve_partial_action(str(action["action_id"]))
+            in (None, ActionOutcome.UNKNOWN.value)
+        ]
+        if unresolved:
+            if in_flatten and self._deadline_expired(recovery, "flatten"):
+                self._abort(recovery, "LINEAGE_ACTION_UNRESOLVED")
+                return True
+            return False
+
+        try:
+            filled_qty, _ = self.store.order_fill_totals(entry_cloid)
+            safe_flat_filled_lots = quantize_lots(filled_qty, snapshot.lot)
+        except LotQuantizationError as exc:
+            self._abort(recovery, exc.reason_code)
+            return True
         self.store.transition_partial_recovery(
             str(recovery["recovery_id"]),
             expected=str(recovery["state"]),
             target=PartialProtectionState.SAFE_FLAT.value,
             reason_code="SAFE_FLAT",
             position_lots=0,
+            filled_lots=safe_flat_filled_lots,
         )
         self._partial_event("WARN", "PARTIAL_SAFE_FLAT", symbol)
         return True
@@ -3066,9 +3457,37 @@ class OrderManager:
                         # snapshot wins. Retry the scan only after it resolves.
                         self._legacy_partial_scan_done = False
                         return
-                    provenance, position_lots, abort_reason = self._classify(
-                        synthetic, snapshot
-                    )
+                    no_fresh_post_flat_evidence = False
+                    if (
+                        post_safe_flat
+                        and snapshot.exact
+                        and snapshot.lot is not None
+                        and snapshot.net_size is not None
+                    ):
+                        try:
+                            candidate_filled_lots = quantize_lots(
+                                float(candidate["filled_qty"]), snapshot.lot
+                            )
+                            baseline_filled_lots = int(latest["filled_lots"])
+                            position_lots = quantize_lots(
+                                abs(float(snapshot.net_size)), snapshot.lot
+                            )
+                            no_fresh_post_flat_evidence = (
+                                position_lots > 0
+                                and candidate_filled_lots
+                                <= baseline_filled_lots
+                            )
+                        except (LotQuantizationError, TypeError, ValueError):
+                            no_fresh_post_flat_evidence = True
+                    if no_fresh_post_flat_evidence:
+                        provenance = Provenance.AMBIGUOUS
+                        abort_reason = (
+                            "POST_SAFE_FLAT_NO_FRESH_OWNED_EVIDENCE"
+                        )
+                    else:
+                        provenance, position_lots, abort_reason = self._classify(
+                            synthetic, snapshot
+                        )
                     if provenance is Provenance.OWNED and position_lots:
                         abort_reason = None
                     elif (

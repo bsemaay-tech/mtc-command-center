@@ -30,6 +30,7 @@ from bridge.engine.types import (
     LotQuantizationError,
     LotUnit,
     OrderState,
+    OrderQueryResult,
     OrderView,
     PartialProtectionState,
     Position,
@@ -626,7 +627,8 @@ def test_canonical_order_state_reserved_cancel_is_pending_cancel():
 def test_canonical_order_state_terminal_raw_status_wins():
     assert (
         canonical_order_state(
-            raw_status="CANCELLED_BY_ENGINE", ordered_qty=2.0, filled_qty=1.0
+            raw_status="CANCELLED_BY_ENGINE", ordered_qty=2.0, filled_qty=1.0,
+            lot=LotUnit(3),
         )
         is OrderState.CANCELED
     )
@@ -1107,6 +1109,24 @@ def test_flatten_deadline_expiry_ends_in_unprotected_abort(tmp_path):
     broker.scripted_flatten.append(
         ScriptedOutcome(ActionOutcome.UNKNOWN, applied=False, reason_code="MOCK_TIMEOUT")
     )
+    original_query = broker.query_order
+
+    async def unresolved_flatten_query(cloid, symbol):
+        recovery = store.latest_partial_recovery_for_symbol("BTC")
+        targets = {
+            str(row["target_cloid"])
+            for row in store.partial_actions_for_recovery(
+                str(recovery["recovery_id"]), "FLATTEN"
+            )
+        }
+        if str(cloid) in targets:
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence("QUERY_ORDER", "MOCK_FLATTEN_QUERY_UNAVAILABLE"),
+            )
+        return await original_query(cloid, symbol)
+
+    broker.query_order = unresolved_flatten_query
     asyncio.run(manager.run_partial_recovery("BTC"))
     clock.advance(FLATTEN_VERIFY_DEADLINE_S + 1)
 
@@ -1125,6 +1145,24 @@ def test_unknown_flatten_does_not_advance_the_attempt_sequence(tmp_path):
     broker.scripted_flatten.append(
         ScriptedOutcome(ActionOutcome.UNKNOWN, applied=False, reason_code="MOCK_TIMEOUT")
     )
+    original_query = broker.query_order
+
+    async def unresolved_flatten_query(cloid, symbol):
+        recovery = store.latest_partial_recovery_for_symbol("BTC")
+        targets = {
+            str(row["target_cloid"])
+            for row in store.partial_actions_for_recovery(
+                str(recovery["recovery_id"]), "FLATTEN"
+            )
+        }
+        if str(cloid) in targets:
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence("QUERY_ORDER", "MOCK_FLATTEN_QUERY_UNAVAILABLE"),
+            )
+        return await original_query(cloid, symbol)
+
+    broker.query_order = unresolved_flatten_query
 
     asyncio.run(manager.run_partial_recovery("BTC"))
     asyncio.run(manager.run_partial_recovery("BTC"))
@@ -1133,6 +1171,47 @@ def test_unknown_flatten_does_not_advance_the_attempt_sequence(tmp_path):
     assert recovery["flatten_seq"] == 0
     flattens = [c for c in broker.partial_calls if c[0] == "flatten_reduce_only"]
     assert len(flattens) == 1, "an unknown flatten never mints a second close"
+
+
+def test_unknown_applied_flatten_is_not_safe_until_same_identity_query_resolves(
+    tmp_path,
+):
+    clock = Clock()
+    store, broker, manager, _c, _m = scenario(tmp_path, clock=clock)
+    clock.advance(PROTECT_DEADLINE_S + 1)
+    broker.scripted_flatten.append(
+        ScriptedOutcome(ActionOutcome.UNKNOWN, applied=True, reason_code="MOCK_TIMEOUT")
+    )
+    original_query = broker.query_order
+    allow_flatten_query = False
+
+    async def query_with_unknown_flatten(cloid, symbol):
+        flatten_targets = {
+            str(row["target_cloid"])
+            for row in store.partial_actions_for_recovery(
+                str(store.latest_partial_recovery_for_symbol("BTC")["recovery_id"]),
+                "FLATTEN",
+            )
+        }
+        if str(cloid) in flatten_targets and not allow_flatten_query:
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence("QUERY_ORDER", "MOCK_FLATTEN_QUERY_UNAVAILABLE"),
+            )
+        return await original_query(cloid, symbol)
+
+    broker.query_order = query_with_unknown_flatten
+
+    state = asyncio.run(manager.run_partial_recovery("BTC"))
+
+    assert state == PartialProtectionState.FLATTEN_UNKNOWN.value
+    recovery = store.latest_partial_recovery_for_symbol("BTC")
+    assert store.unresolved_partial_actions(str(recovery["recovery_id"]))
+    assert recovery["state"] != PartialProtectionState.SAFE_FLAT.value
+
+    allow_flatten_query = True
+    state = asyncio.run(manager.run_partial_recovery("BTC"))
+    assert state == PartialProtectionState.SAFE_FLAT.value
 
 
 def test_proven_failed_flatten_advances_sequence_with_a_new_identity(tmp_path):
@@ -1156,6 +1235,27 @@ def test_proven_failed_flatten_advances_sequence_with_a_new_identity(tmp_path):
 # ===========================================================================
 # Late fills / generations
 # ===========================================================================
+
+
+def test_full_late_fill_after_protected_partial_reopens_generation(tmp_path):
+    store, broker, manager, _c, _m = scenario(tmp_path)
+    assert asyncio.run(manager.run_partial_recovery("BTC")) == (
+        PartialProtectionState.PROTECTED_PARTIAL.value
+    )
+    accepted = store.latest_partial_recovery_for_symbol("BTC")
+    original_deadline = accepted["protect_deadline_ts"]
+    before_mutations = list(broker.broker_mutations)
+    broker.position = Position(symbol="BTC", size=2.0, entry_px=100.0)
+
+    detect_partial(manager, filled=1.0, fill_id="fills-to-exact-ordered")
+
+    reopened = store.active_partial_recovery_for_symbol("BTC")
+    assert reopened is not None
+    assert reopened["generation"] == int(accepted["generation"]) + 1
+    assert reopened["state"] == PartialProtectionState.PARTIAL_DETECTED.value
+    assert reopened["filled_lots"] == 2000
+    assert reopened["protect_deadline_ts"] == original_deadline
+    assert broker.broker_mutations == before_mutations
 
 
 def test_late_fill_during_cancel_opens_a_new_generation(tmp_path):
@@ -1347,6 +1447,65 @@ def test_safe_flat_refused_while_a_remainder_survives(tmp_path):
     assert broker.position is not None
 
 
+def test_flatten_reclassifies_foreign_quantity_added_after_flatten_entry(tmp_path):
+    clock = Clock()
+    store, broker, manager, _c, _m = scenario(tmp_path, clock=clock)
+    clock.advance(PROTECT_DEADLINE_S + 1)
+    assert asyncio.run(manager.run_partial_recovery("BTC", max_cycles=1)) == (
+        PartialProtectionState.FLATTEN_PENDING.value
+    )
+    recovery = store.latest_partial_recovery_for_symbol("BTC")
+    assert store.partial_actions_for_recovery(
+        str(recovery["recovery_id"]), "FLATTEN"
+    ) == []
+    broker.partial_extra_position = 1.0
+
+    state = asyncio.run(manager.run_partial_recovery("BTC"))
+
+    recovery = store.latest_partial_recovery_for_symbol("BTC")
+    assert state == PartialProtectionState.UNPROTECTED_ABORT.value
+    assert recovery["reason_code"] == "MIXED_PROVENANCE"
+    assert store.partial_actions_for_recovery(
+        str(recovery["recovery_id"]), "FLATTEN"
+    ) == []
+    assert not [call for call in broker.partial_calls if call[0] == "flatten_reduce_only"]
+
+
+def test_flatten_resnap_closes_foreign_quantity_race_before_reservation(tmp_path):
+    clock = Clock()
+    store, broker, manager, _c, _m = scenario(tmp_path, clock=clock)
+    clock.advance(PROTECT_DEADLINE_S + 1)
+    assert asyncio.run(manager.run_partial_recovery("BTC", max_cycles=1)) == (
+        PartialProtectionState.FLATTEN_PENDING.value
+    )
+    original_snapshot = broker.symbol_snapshot
+    injected = False
+
+    async def inject_foreign_after_first_flatten_snapshot(symbol):
+        nonlocal injected
+        snapshot = await original_snapshot(symbol)
+        recovery = store.latest_partial_recovery_for_symbol(symbol)
+        if (
+            not injected
+            and recovery["state"] == PartialProtectionState.FLATTEN_PENDING.value
+        ):
+            injected = True
+            broker.partial_extra_position = 1.0
+        return snapshot
+
+    broker.symbol_snapshot = inject_foreign_after_first_flatten_snapshot
+
+    state = asyncio.run(manager.run_partial_recovery("BTC"))
+
+    recovery = store.latest_partial_recovery_for_symbol("BTC")
+    assert state == PartialProtectionState.UNPROTECTED_ABORT.value
+    assert recovery["reason_code"] == "MIXED_PROVENANCE"
+    assert store.partial_actions_for_recovery(
+        str(recovery["recovery_id"]), "FLATTEN"
+    ) == []
+    assert not [call for call in broker.partial_calls if call[0] == "flatten_reduce_only"]
+
+
 def test_orphan_owned_protection_prevents_safe_flat_until_cancelled(tmp_path):
     clock = Clock()
     store, broker, manager, _c, _m = scenario(tmp_path, clock=clock)
@@ -1358,6 +1517,30 @@ def test_orphan_owned_protection_prevents_safe_flat_until_cancelled(tmp_path):
         (PartialProtectionState.CANCEL_PENDING.value,),
     )
     store.conn.commit()
+    recovery = store.latest_partial_recovery_for_symbol("BTC")
+    store.insert_order(
+        cloid="owned-close-proof",
+        oid=999,
+        group_id=REQUEST_ID,
+        order_ref=f"{REQUEST_ID}:CLOSE",
+        order_json={"symbol": "BTC", "role": "CLOSE", "reduce_only": True},
+        decision_uid=str(recovery["entry_decision_uid"]),
+        trade_id=int(recovery["trade_id"]),
+        role="CLOSE",
+        status="FILLED",
+        qty=1.0,
+        filled_qty=1.0,
+    )
+    store.insert_fill(
+        "owned-close-fill",
+        "owned-close-proof",
+        str(recovery["entry_decision_uid"]),
+        FROZEN,
+        1.0,
+        100.0,
+        0.0,
+        0.0,
+    )
     broker.position = None
     clock.advance(PROTECT_DEADLINE_S + 1)
 
@@ -1411,7 +1594,7 @@ def test_same_entry_late_fill_after_safe_flat_opens_new_generation(tmp_path):
     assert store.get_order(ENTRY_CLOID)["status"] == "CANCELED"
 
 
-def test_reconcile_claims_owned_exposure_after_safe_flat_without_fill_event(tmp_path):
+def test_full_late_fill_after_safe_flat_reopens_under_original_deadline(tmp_path):
     clock = Clock()
     store, broker, manager, _c, _m = scenario(tmp_path, clock=clock)
     clock.advance(PROTECT_DEADLINE_S + 1)
@@ -1419,19 +1602,38 @@ def test_reconcile_claims_owned_exposure_after_safe_flat_without_fill_event(tmp_
         PartialProtectionState.SAFE_FLAT.value
     )
     flat = store.latest_partial_recovery_for_symbol("BTC")
-    original_deadline = flat["protect_deadline_ts"]
+    broker.position = Position(symbol="BTC", size=1.0, entry_px=100.0)
+
+    detect_partial(manager, filled=1.0, fill_id="post-flat-fills-to-exact-ordered")
+
+    active = store.active_partial_recovery_for_symbol("BTC")
+    assert active is not None
+    assert active["generation"] == int(flat["generation"]) + 1
+    assert active["state"] == PartialProtectionState.PARTIAL_DETECTED.value
+    assert active["filled_lots"] == 2000
+    assert active["protect_deadline_ts"] == flat["protect_deadline_ts"]
+
+
+def test_same_size_manual_exposure_after_safe_flat_is_ambiguous_zero_mutation(
+    tmp_path,
+):
+    clock = Clock()
+    store, broker, manager, _c, _m = scenario(tmp_path, clock=clock)
+    clock.advance(PROTECT_DEADLINE_S + 1)
+    assert asyncio.run(manager.run_partial_recovery("BTC")) == (
+        PartialProtectionState.SAFE_FLAT.value
+    )
+    flat = store.latest_partial_recovery_for_symbol("BTC")
     manager._legacy_partial_scan_done = True
     broker.position = Position(symbol="BTC", size=1.0, entry_px=100.0)
     before = list(broker.broker_mutations)
 
     asyncio.run(manager.reconcile())
 
-    active = store.active_partial_recovery_for_symbol("BTC")
-    assert active is not None
-    assert active["recovery_id"] != flat["recovery_id"]
-    assert active["generation"] == int(flat["generation"]) + 1
-    assert active["reason_code"] == "POST_SAFE_FLAT_OWNED"
-    assert active["protect_deadline_ts"] == original_deadline
+    latest = store.latest_partial_recovery_for_symbol("BTC")
+    assert latest["recovery_id"] != flat["recovery_id"]
+    assert latest["state"] == PartialProtectionState.UNPROTECTED_ABORT.value
+    assert latest["reason_code"] == "POST_SAFE_FLAT_NO_FRESH_OWNED_EVIDENCE"
     assert broker.broker_mutations == before
 
 
@@ -1454,11 +1656,11 @@ def test_reconcile_aborts_ambiguous_exposure_after_safe_flat_without_mutation(
     latest = store.latest_partial_recovery_for_symbol("BTC")
     assert latest["recovery_id"] != flat["recovery_id"]
     assert latest["state"] == PartialProtectionState.UNPROTECTED_ABORT.value
-    assert latest["reason_code"] == "OWNED_QUANTITY_CONFLICT"
+    assert latest["reason_code"] == "POST_SAFE_FLAT_NO_FRESH_OWNED_EVIDENCE"
     assert broker.broker_mutations == before
 
 
-def test_restart_scan_opens_new_generation_for_owned_post_safe_flat_exposure(
+def test_restart_scan_aborts_unproved_post_safe_flat_exposure_without_mutation(
     tmp_path,
 ):
     clock = Clock()
@@ -1470,12 +1672,81 @@ def test_restart_scan_opens_new_generation_for_owned_post_safe_flat_exposure(
     flat = store.latest_partial_recovery_for_symbol("BTC")
     broker.position = Position(symbol="BTC", size=1.0, entry_px=100.0)
     restarted = make_manager(store, broker)
+    before = list(broker.broker_mutations)
 
     asyncio.run(restarted.reconcile())
 
     latest = store.latest_partial_recovery_for_symbol("BTC")
     assert latest["recovery_id"] != flat["recovery_id"]
     assert latest["generation"] == int(flat["generation"]) + 1
+    assert latest["state"] == PartialProtectionState.UNPROTECTED_ABORT.value
+    assert latest["reason_code"] == "POST_SAFE_FLAT_NO_FRESH_OWNED_EVIDENCE"
+    assert broker.broker_mutations == before
+
+
+# ===========================================================================
+# Fill quantity integrity
+# ===========================================================================
+
+
+@pytest.mark.parametrize("size_decimals", [None, 1.5])
+def test_missing_or_invalid_quantum_quarantines_fill_evidence(tmp_path, size_decimals):
+    store = make_store(tmp_path)
+    seed_trade(store, qty=1.0)
+    broker = make_broker(ordered=1.0, position_size=0.5)
+    broker.partial_size_decimals = size_decimals
+    manager = make_manager(store, broker)
+    store.set_meta("app_state", "ARMED")
+
+    detect_partial(manager, filled=0.5)
+
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "FILL_QUANTITY_INTEGRITY" in codes(store)
+    assert store.active_partial_recovery_for_symbol("BTC") is None
+
+
+def test_sub_epsilon_non_lot_overfill_quarantines_instead_of_raw_status_fallback(
+    tmp_path,
+):
+    store = make_store(tmp_path)
+    seed_trade(store, qty=1.0)
+    broker = make_broker(ordered=1.0, position_size=1.0000000005)
+    manager = make_manager(store, broker)
+    store.set_meta("app_state", "ARMED")
+
+    detect_partial(manager, filled=1.0000000005)
+
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "FILL_QUANTITY_INTEGRITY" in codes(store)
+    assert store.active_partial_recovery_for_symbol("BTC") is None
+    assert store.get_order(ENTRY_CLOID)["status"] != OrderState.FILLED.value
+
+
+def test_exact_lot_overfill_quarantines(tmp_path):
+    store = make_store(tmp_path)
+    seed_trade(store, qty=1.0)
+    broker = make_broker(ordered=1.0, position_size=1.001)
+    manager = make_manager(store, broker)
+    store.set_meta("app_state", "ARMED")
+
+    detect_partial(manager, filled=1.001)
+
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "ORDER_OVERFILL" in codes(store)
+    assert store.active_partial_recovery_for_symbol("BTC") is None
+
+
+def test_accumulated_binary_float_residue_is_summed_in_exact_lot_units(tmp_path):
+    store = make_store(tmp_path)
+    seed_trade(store, qty=0.3)
+    broker = make_broker(ordered=0.3, position_size=0.3)
+    manager = make_manager(store, broker)
+
+    detect_partial(manager, filled=0.1, fill_id="residue-1")
+    detect_partial(manager, filled=0.2, fill_id="residue-2")
+
+    assert store.get_order(ENTRY_CLOID)["status"] == OrderState.FILLED.value
+    assert "FILL_QUANTITY_INTEGRITY" not in codes(store)
 
 
 # ===========================================================================
@@ -2036,6 +2307,86 @@ def test_migration_failure_rolls_back_fully_to_v4(tmp_path):
     recovered = Store(tmp_path / "bridge.db", clock=Clock())
     recovered.initialize()
     assert recovered.get_meta("schema_version") == "4"
+
+
+def test_malformed_v5_residue_cannot_advance_version_or_add_objects(tmp_path):
+    store = make_store(tmp_path, version=4)
+    seed_trade(store, qty=2.0)
+    store.conn.executescript(
+        """
+        CREATE TABLE partial_fill_recoveries (
+            recovery_id TEXT,
+            symbol TEXT,
+            state TEXT,
+            trade_id INTEGER,
+            generation INTEGER
+        );
+        CREATE TABLE partial_fill_actions (
+            action_id TEXT,
+            recovery_id TEXT,
+            kind TEXT,
+            target_cloid TEXT
+        );
+        CREATE TABLE partial_fill_action_events (
+            event_id INTEGER,
+            action_id TEXT,
+            recovery_id TEXT,
+            seq INTEGER
+        );
+        """
+    )
+    store.conn.commit()
+    before_objects = {
+        (str(row["type"]), str(row["name"]), str(row["sql"]))
+        for row in store.conn.execute(
+            "SELECT type, name, sql FROM sqlite_master "
+            "WHERE name LIKE 'partial_fill_%' OR name LIKE 'trg_partial_%' "
+            "OR name LIKE '%partial_recovery%' OR name LIKE '%partial_action%'"
+        ).fetchall()
+    }
+    order_rows = [
+        tuple(row)
+        for row in store.conn.execute("SELECT * FROM orders ORDER BY cloid").fetchall()
+    ]
+
+    with pytest.raises(MigrationError):
+        store.initialize(target_schema_version=5)
+
+    after_objects = {
+        (str(row["type"]), str(row["name"]), str(row["sql"]))
+        for row in store.conn.execute(
+            "SELECT type, name, sql FROM sqlite_master "
+            "WHERE name LIKE 'partial_fill_%' OR name LIKE 'trg_partial_%' "
+            "OR name LIKE '%partial_recovery%' OR name LIKE '%partial_action%'"
+        ).fetchall()
+    }
+    assert store.get_meta("schema_version") == "4"
+    assert after_objects == before_objects, "rollback must add no v5 residue"
+    assert [
+        tuple(row)
+        for row in store.conn.execute("SELECT * FROM orders ORDER BY cloid").fetchall()
+    ] == order_rows
+
+
+def test_v5_reopen_rejects_noncanonical_trigger_body(tmp_path):
+    store = make_store(tmp_path)
+    store.conn.execute("DROP TRIGGER trg_partial_action_no_update")
+    store.conn.execute(
+        """
+        CREATE TRIGGER trg_partial_action_no_update
+        BEFORE UPDATE ON partial_fill_actions
+        BEGIN
+          SELECT RAISE(ABORT, 'WRONG_TRIGGER_BODY');
+        END
+        """
+    )
+    store.conn.commit()
+    store.close()
+
+    reopened = Store(tmp_path / "bridge.db", clock=Clock())
+    with pytest.raises(MigrationError):
+        reopened.initialize(target_schema_version=5)
+    assert reopened.get_meta("schema_version") == "5"
 
 
 def test_migration_refuses_to_alter_existing_evidence(tmp_path):

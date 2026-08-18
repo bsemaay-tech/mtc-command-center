@@ -7,6 +7,7 @@ import json
 import sqlite3
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable, Literal
 
@@ -746,10 +747,8 @@ class Store:
     # ------------------------------------------------------------------
 
     def _initialize_v5_idempotent(self) -> None:
-        """Re-open an existing v5 database; DDL is IF NOT EXISTS throughout."""
-        self._create_tables_v4()
-        self._create_partial_fill_tables_v5()
-        self.conn.commit()
+        """Re-open v5 only when its complete safety topology is canonical."""
+        self._validate_partial_fill_schema_v5()
 
     def _create_partial_fill_tables_v5(self) -> None:
         """Purely additive DDL. Callable inside an open transaction.
@@ -895,35 +894,107 @@ class Store:
         return census
 
     def _validate_partial_fill_schema_v5(self) -> None:
-        """Fail the migration unless every v5 object exists as declared."""
-        required_tables = {
+        """Compare every v5 table/index/trigger against a canonical schema.
+
+        Exact normalized SQL covers columns, affinities, NOT NULL/default/PK/
+        UNIQUE/FK/CHECK clauses, partial-index predicates, and trigger bodies.
+        PRAGMA signatures independently cover the materialized topology and
+        foreign-key integrity on reopen.
+        """
+        tables = {
             "partial_fill_recoveries",
             "partial_fill_actions",
             "partial_fill_action_events",
         }
-        required_triggers = {
-            "trg_partial_action_no_update",
-            "trg_partial_action_no_delete",
-            "trg_partial_action_event_no_update",
-            "trg_partial_action_event_no_delete",
-        }
-        required_indexes = {"ux_partial_recovery_active_symbol"}
-        found = {
-            (str(row["type"]), str(row["name"]))
-            for row in self.conn.execute(
-                "SELECT type, name FROM sqlite_master"
+
+        reference = Store(Path(":memory:"))
+        reference._conn = sqlite3.connect(":memory:")
+        reference._conn.row_factory = sqlite3.Row
+        reference._conn.execute("PRAGMA foreign_keys=ON")
+        reference._conn.execute(
+            "CREATE TABLE trades (trade_id INTEGER PRIMARY KEY)"
+        )
+        reference._conn.execute("CREATE TABLE orders (cloid TEXT PRIMARY KEY)")
+        Store._create_partial_fill_tables_v5(reference)
+
+        def normalized_sql(value: object) -> str:
+            return " ".join(str(value or "").split()).upper()
+
+        def object_signature(conn: sqlite3.Connection) -> dict[tuple[str, str], tuple[str, str]]:
+            rows = conn.execute(
+                "SELECT type, name, tbl_name, sql FROM sqlite_master "
+                "WHERE sql IS NOT NULL"
             ).fetchall()
-        }
-        missing = (
-            {("table", name) for name in required_tables}
-            | {("trigger", name) for name in required_triggers}
-            | {("index", name) for name in required_indexes}
-        ) - found
-        if missing:
-            raise MigrationError(
-                "v4-to-v5 validation failed; missing objects: "
-                + ",".join(sorted(name for _, name in missing))
-            )
+            return {
+                (str(row["type"]), str(row["name"])): (
+                    str(row["tbl_name"]),
+                    normalized_sql(row["sql"]),
+                )
+                for row in rows
+                if str(row["tbl_name"]) in tables
+            }
+
+        def pragma_signature(
+            conn: sqlite3.Connection,
+        ) -> dict[str, dict[str, tuple[tuple[object, ...], ...]]]:
+            signature: dict[str, dict[str, tuple[tuple[object, ...], ...]]] = {}
+            for table in sorted(tables):
+                columns = tuple(
+                    tuple(row)
+                    for row in conn.execute(
+                        f"PRAGMA table_xinfo('{table}')"
+                    ).fetchall()
+                )
+                foreign_keys = tuple(
+                    sorted(
+                        (tuple(row) for row in conn.execute(
+                            f"PRAGMA foreign_key_list('{table}')"
+                        ).fetchall()),
+                        key=repr,
+                    )
+                )
+                indexes = []
+                for row in conn.execute(
+                    f"PRAGMA index_list('{table}')"
+                ).fetchall():
+                    index_name = str(row["name"])
+                    index_columns = tuple(
+                        tuple(index_row)
+                        for index_row in conn.execute(
+                            f"PRAGMA index_xinfo('{index_name}')"
+                        ).fetchall()
+                    )
+                    indexes.append((tuple(row)[1:], index_columns))
+                signature[table] = {
+                    "columns": columns,
+                    "foreign_keys": foreign_keys,
+                    "indexes": tuple(sorted(indexes, key=repr)),
+                }
+            return signature
+
+        try:
+            expected_objects = object_signature(reference._conn)
+            actual_objects = object_signature(self.conn)
+            if actual_objects != expected_objects:
+                missing = sorted(set(expected_objects) - set(actual_objects))
+                extra = sorted(set(actual_objects) - set(expected_objects))
+                changed = sorted(
+                    key
+                    for key in set(expected_objects) & set(actual_objects)
+                    if expected_objects[key] != actual_objects[key]
+                )
+                raise MigrationError(
+                    "v5 topology mismatch "
+                    f"missing={missing} extra={extra} changed={changed}"
+                )
+            if pragma_signature(self.conn) != pragma_signature(reference._conn):
+                raise MigrationError("v5 PRAGMA topology mismatch")
+            violations = self.conn.execute("PRAGMA foreign_key_check").fetchall()
+            if violations:
+                raise MigrationError("v5 foreign-key integrity check failed")
+        finally:
+            reference._conn.close()
+            reference._conn = None
 
     def _migrate_v4_to_v5(self) -> None:
         """Additive v4→v5 upgrade in one rollback-clean transaction.
@@ -2193,13 +2264,6 @@ class Store:
                 and filled_lots is not None
                 and 0 < int(filled_lots) < int(ordered_lots)
             )
-            if not is_partial:
-                try:
-                    durable_ordered = float(entry["qty"])
-                    durable_filled = float(entry["filled_qty"] or 0.0)
-                    is_partial = 0.0 < durable_filled < durable_ordered
-                except (TypeError, ValueError):
-                    is_partial = False
             if is_partial and str(entry["status"]).upper() not in {
                 "FILLED",
                 "CANCELED",
@@ -2686,6 +2750,28 @@ class Store:
             (int(trade_id), str(entry_cloid)),
         )
 
+    def applied_partial_flatten_lots(
+        self, trade_id: int, entry_cloid: str
+    ) -> int:
+        """Durable owned exit quantity proved by resolved recovery flattens."""
+        total = 0
+        for action in self.partial_actions_for_lineage(trade_id, entry_cloid):
+            if str(action["kind"]) != PartialActionKind.FLATTEN.value:
+                continue
+            if (
+                self.resolve_partial_action(str(action["action_id"]))
+                != ActionOutcome.APPLIED.value
+            ):
+                continue
+            qty_lots = action["qty_lots"]
+            if qty_lots is None or int(qty_lots) <= 0:
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_FLATTEN_QUANTITY_INVALID",
+                    f"action_id={action['action_id']}",
+                )
+            total += int(qty_lots)
+        return total
+
     def partial_cancel_reserved_for_cloid(self, cloid: str) -> bool:
         """Whether the stable entry cancel identity has been durably reserved."""
         if not self.partial_protection_enabled():
@@ -2784,9 +2870,12 @@ class Store:
         )
         candidates: list[dict[str, Any]] = []
         for row in rows:
-            ordered = float(row["ordered_qty"] or 0.0)
-            filled = float(row["filled_qty"] or 0.0)
-            if ordered <= 0.0 or filled <= 0.0 or filled >= ordered:
+            try:
+                ordered = Decimal(str(row["ordered_qty"] or 0))
+                filled = Decimal(str(row["filled_qty"] or 0))
+            except Exception:
+                continue
+            if ordered <= 0 or filled <= 0 or filled >= ordered:
                 continue
             candidates.append(row)
         return candidates
@@ -3549,25 +3638,28 @@ class Store:
         return count
 
     def order_fill_totals(self, cloid: str) -> tuple[float, float | None]:
-        row = self.conn.execute(
-            "SELECT COALESCE(SUM(qty), 0.0), SUM(qty * px) FROM fills WHERE cloid = ?",
+        rows = self.conn.execute(
+            "SELECT qty, px FROM fills WHERE cloid = ? ORDER BY fill_ts, fill_id",
             (cloid,),
-        ).fetchone()
-        qty = float(row[0]) if row and row[0] is not None else 0.0
-        vwap = (float(row[1]) / qty) if qty > 0 and row[1] is not None else None
-        return qty, vwap
+        ).fetchall()
+        qty = Decimal(0)
+        notional = Decimal(0)
+        for row in rows:
+            row_qty = Decimal(str(row["qty"]))
+            row_px = Decimal(str(row["px"]))
+            qty += row_qty
+            notional += row_qty * row_px
+        vwap = float(notional / qty) if qty > 0 else None
+        return float(qty), vwap
 
     def trade_fill_totals(self, trade_id: int) -> dict[str, Any]:
         rows = self.conn.execute(
             """
             SELECT CASE WHEN o.role = 'ENTRY' THEN 'ENTRY' ELSE 'EXIT' END AS side,
-                   COALESCE(SUM(f.qty), 0.0) AS qty,
-                   SUM(f.qty * f.px) AS notional,
-                   MIN(f.fill_ts) AS first_ts,
-                   MAX(f.fill_ts) AS last_ts
+                   f.qty AS qty, f.px AS px, f.fill_ts AS fill_ts
             FROM fills f JOIN orders o ON o.cloid = f.cloid
             WHERE o.trade_id = ?
-            GROUP BY side
+            ORDER BY f.fill_ts, f.fill_id
             """,
             (trade_id,),
         ).fetchall()
@@ -3575,17 +3667,31 @@ class Store:
             "entry_qty": 0.0, "entry_vwap": None, "entry_first_ts": None,
             "exit_qty": 0.0, "exit_vwap": None, "exit_last_ts": None,
         }
+        aggregates = {
+            "ENTRY": {"qty": Decimal(0), "notional": Decimal(0), "first": None, "last": None},
+            "EXIT": {"qty": Decimal(0), "notional": Decimal(0), "first": None, "last": None},
+        }
         for row in rows:
-            qty = float(row["qty"])
-            vwap = (float(row["notional"]) / qty) if qty > 0 and row["notional"] is not None else None
-            if row["side"] == "ENTRY":
-                totals["entry_qty"] = qty
-                totals["entry_vwap"] = vwap
-                totals["entry_first_ts"] = row["first_ts"]
-            else:
-                totals["exit_qty"] = qty
-                totals["exit_vwap"] = vwap
-                totals["exit_last_ts"] = row["last_ts"]
+            side = str(row["side"])
+            aggregate = aggregates[side]
+            qty = Decimal(str(row["qty"]))
+            px = Decimal(str(row["px"]))
+            aggregate["qty"] += qty
+            aggregate["notional"] += qty * px
+            ts = str(row["fill_ts"])
+            if aggregate["first"] is None:
+                aggregate["first"] = ts
+            aggregate["last"] = ts
+        entry = aggregates["ENTRY"]
+        exit_ = aggregates["EXIT"]
+        if entry["qty"] > 0:
+            totals["entry_qty"] = float(entry["qty"])
+            totals["entry_vwap"] = float(entry["notional"] / entry["qty"])
+            totals["entry_first_ts"] = entry["first"]
+        if exit_["qty"] > 0:
+            totals["exit_qty"] = float(exit_["qty"])
+            totals["exit_vwap"] = float(exit_["notional"] / exit_["qty"])
+            totals["exit_last_ts"] = exit_["last"]
         return totals
 
     def has_live_entry_remainder(self, trade_id: int) -> bool:
@@ -3596,7 +3702,7 @@ class Store:
             }:
                 continue
             filled_qty, _ = self.order_fill_totals(str(order["cloid"]))
-            if filled_qty < float(order["qty"]) - 1e-9:
+            if Decimal(str(filled_qty)) < Decimal(str(order["qty"])):
                 return True
         return False
 

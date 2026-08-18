@@ -50,16 +50,22 @@ entry filled quantity `f`, and authoritative live net position `q`, where
    observe-only. Take-profit is optional and never counts as the safety stop.
 5. The entry remainder is cancelled by its existing stable cloid, then proven
    terminal by direct query. A transport success alone is not proof.
-6. After cancellation the symbol is re-snapshotted. A late fill that changed
-   `q` re-opens quantity computation **without** resetting the deadline.
+6. After cancellation the symbol is re-snapshotted. Any authoritative quantity
+   change on the accepted entry lineage is processed before the partial-only
+   guard. This includes a fill reaching exactly `Q` after
+   `PROTECTED_PARTIAL` or `SAFE_FLAT`; it opens a new generation and re-runs
+   recovery **without** resetting the original deadline.
 7. `PROTECTED_PARTIAL` requires: entry terminal, position nonzero, exact
    verified stop coverage, and no unresolved owned action.
    `SAFE_FLAT` requires: entry terminal, position authoritatively zero, and no
    surviving live owned entry/SL/TP order.
 8. If the protected outcome cannot be proved by the **10.0 s** primary
-   deadline, an owned reduce-only flatten action is reserved and submitted,
-   then both entry-terminal and position-zero are proved. Flatten verification
-   has its own **5.0 s** budget. An unknown flatten outcome is not `SAFE_FLAT`.
+   deadline, an owned reduce-only flatten action is reserved and submitted.
+   Immediately before every new flatten reservation/send, recovery takes a
+   fresh snapshot and reclassifies provenance while holding the symbol lock;
+   only the exact proven `OWNED` quantity may be flattened. Flatten verification
+   has its own **5.0 s** budget. An unknown flatten outcome remains query-only
+   and can never become `SAFE_FLAT` from a zero position alone.
 9. Any unresolved or ambiguous action/evidence ends in durable
    `UNPROTECTED_ABORT` with the application `DISARMED`, new risk blocked, an
    explicit `ERROR` event, and no false safe/green claim.
@@ -78,6 +84,11 @@ entry filled quantity `f`, and authoritative live net position `q`, where
 | **Risk authority is independent** | `engine.arm()` refuses while any recovery is non-terminal or any `UNPROTECTED_ABORT` is durable; `_app_state()` forces `DISARMED`. |
 | **One writer per symbol** | `SymbolLockRegistry` — a reentrant per-symbol `asyncio.Lock`. Queued fills/updates, reconcile/restart, disarm/kill, trail/close/flip, and the whole recovery run hold it; ordinary mutations **re-check** recovery ownership after acquisition. The durable expression is the partial unique index `ux_partial_recovery_active_symbol`. |
 | **No TS-P1-005 scope theft** | The snapshot is bounded to one symbol: position + live orders + one direct order query. No balances, margin, or portfolio reconciliation. |
+
+The final ARM, quarantine, and active-recovery checks plus new-entry
+reservation/send sequencing are one locked submission boundary. An awaited
+position read cannot create a gap in which recovery opens after the last check
+but before reservation or broker submission.
 
 ## 4. State and action model
 
@@ -165,16 +176,25 @@ to have changed.
   the shortest exact decimal spelling. Binary-float residue such as `0.1 + 0.2`
   fails closed rather than rounding into a tradeable size. There is no epsilon.
 * The quantum comes from exchange metadata (`szDecimals`) or an explicit test
-  fixture. A missing or invalid quantum is fail-closed.
+  fixture. A missing/invalid quantum, any non-lot quantity, and any overfill
+  (including a sub-epsilon non-lot overfill) raises a quantity-integrity
+  failure, latches `DISARMED`, and emits an integrity event. No order-state
+  decision falls back to raw float comparison.
 * `f` (entry filled) triggers recovery; `q` (authoritative live net position
   after a complete bounded snapshot) sizes protection and flattening. `f` is
   never substituted for `q`.
 * Provenance: `q` must equal the exact durable owned net
-  (`local entry-fill lots − local exit-fill lots`). More live size is `MIXED`;
+  (`local entry-fill lots − local exit-fill lots − definitively applied
+  recovery-flatten lots`). More live size is `MIXED`;
   less is conflicting/`AMBIGUOUS`; an opposite-side position is `AMBIGUOUS`;
   any live order outside the same trade/action lineage is foreign or mixed,
   including a locally known order belonging to another trade. All abort with
   zero mutation.
+* `SAFE_FLAT` persists the accepted entry-fill baseline and the same-identity
+  applied flatten evidence. A later nonzero position is owned only when fresh
+  durable fill/order evidence advances that lineage beyond the baseline.
+  Same-size manual/foreign exposure with no fresh owned evidence is ambiguous
+  and causes zero mutation.
 * **A qualifying stop is exactly one live owned SL**: same symbol; opposite
   exit side; `role == "SL"`; `reduce_only == true`; owned by the same
   trade/action lineage; live; and size exactly `q` in lot units. A second live
@@ -259,16 +279,26 @@ action reservation *before* broker I/O; broker result/evidence append; final
 protected/flat/abort result; late-fill re-entry + generation bump with
 unresolved action context preserved.
 
-Migration rules: one `BEGIN IMMEDIATE` for DDL, evidence census, structural
-validation, and the version bump. A before/after row census over every v4
-evidence table refuses any migration that would alter existing rows. No
-speculative backfill. Any failure rolls back completely — `schema_version`
-stays `4`, no `partial_fill_*` residue survives, and the database remains a
-valid, reopenable v4.
+Migration rules: one `BEGIN IMMEDIATE` for DDL, evidence census, canonical
+topology validation, and the version bump. Validation compares required
+columns (including safety-relevant types, nullability, defaults, and primary
+keys), unique/check/foreign-key constraints, indexes and predicates, triggers
+and bodies, and the complete canonical table topology. The same validation
+runs on every v5 reopen. A before/after row census over every v4 evidence table
+refuses any migration that would alter existing rows. No speculative backfill.
+Any malformed pre-existing residue or validation failure rolls back completely
+— `schema_version` stays `4`, no new v5 residue survives, and v4 evidence
+remains logically unchanged and reopenable.
+
+Hyperliquid recovery parsing is independently fail-closed: malformed
+collections/rows, missing required position/order fields, absent
+`reduceOnly`, non-finite sizes, or an order status outside the explicit live
+and terminal whitelists produce inexact/unknown evidence. `reduceOnly` is
+never inferred.
 
 ## 8. Adversarial coverage
 
-`tests/test_partial_fill_protection.py` (115 tests) plus the TS-P1-004 blocks
+`tests/test_partial_fill_protection.py` (135 tests) plus the TS-P1-004 blocks
 in the five touched suites cover: exact lot normalization and rounding
 boundaries; missing/invalid quantum; the ten states and their illegal edges;
 happy path; 1-lot and zero-position paths; active TS-P1-003 quarantine
@@ -283,7 +313,12 @@ unparseable deadline; flatten deadline written once; flatten expiry →
 flatten advancing it with a new identity; late fill during cancel → new
 generation and re-protection at the new exact lots; identity determinism across
 replay; `SAFE_FLAT` refused on remainder and on orphan owned protection;
-new exposure after `SAFE_FLAT` opening a new generation; duplicate exact owned
+new proven owned exposure after `SAFE_FLAT` opening a new generation;
+same-size manual exposure remaining ambiguous with zero mutation; a full late
+fill to exactly ordered quantity reopening recovery after both
+`PROTECTED_PARTIAL` and `SAFE_FLAT`; foreign/manual quantity introduced before
+or during flatten preventing reservation and I/O; UNKNOWN applied flatten
+remaining non-accepting until same-identity evidence resolves; duplicate exact owned
 stops failing closed; under/over-sized prior-generation stops reserved,
 cancelled, directly proved absent, and only then accepted; UNKNOWN stale-stop
 cancel replay remaining query-only until same-identity `NOT_APPLIED`; foreign
@@ -292,7 +327,8 @@ rejecting duplicates; the five other non-qualifying-stop shapes; unowned exact
 stop; recovery suppressing ordinary repair, trail, and close; abort latch;
 concurrent runs serialized by the lock;
 store immutability/append-only triggers, CAS, replay reserve, conservative
-outcome fold, flatten-sequence refusal; v5 DDL/foreign keys; migration
+outcome fold, flatten-sequence refusal; complete v5 topology; malformed-residue
+migration rollback and noncanonical-reopen refusal; migration
 rollback, evidence-preservation refusal, idempotent reopen, future/corrupt
 version, unsupported target, v2→v5 chain; legacy strong/weak evidence; engine
 DISARM latch, ARM refusal, pre-ARM trail/close suppression, and the re-ARM

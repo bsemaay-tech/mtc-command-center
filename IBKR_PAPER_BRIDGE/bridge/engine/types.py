@@ -654,21 +654,21 @@ def canonical_order_state(
     * a cancel reserved before I/O -> ``PENDING_CANCEL``
     * an exchange-confirmed terminal raw status wins over both
 
-    Quantities are compared in exact lot units when a quantum is supplied and
-    in exact decimal spelling otherwise; there is no epsilon anywhere.
+    Quantities are compared only in exact integer lot units. Missing quantum,
+    non-lot evidence, and overfill are integrity failures rather than states.
     """
     base = normalize_raw_order_status(raw_status)
-    if base in TERMINAL_ORDER_STATES:
-        return base
-    if lot is not None:
-        ordered_units: int | Decimal = quantize_lots(ordered_qty, lot)
-        filled_units: int | Decimal = quantize_lots(filled_qty, lot)
-    else:
-        ordered_units = Decimal(str(ordered_qty))
-        filled_units = Decimal(str(filled_qty))
+    if lot is None:
+        raise LotQuantizationError("SIZE_QUANTUM_UNAVAILABLE")
+    ordered_units = quantize_lots(ordered_qty, lot)
+    filled_units = quantize_lots(filled_qty, lot)
     if filled_units < 0 or ordered_units <= 0:
         raise LotQuantizationError("NON_POSITIVE_ORDER_QUANTITY")
-    if filled_units >= ordered_units:
+    if filled_units > ordered_units:
+        raise LotQuantizationError("ORDER_OVERFILL")
+    if base in TERMINAL_ORDER_STATES:
+        return base
+    if filled_units == ordered_units:
         return validate_order_transition(base, OrderState.FILLED)
     if cancel_reserved:
         return validate_order_transition(base, OrderState.PENDING_CANCEL)
