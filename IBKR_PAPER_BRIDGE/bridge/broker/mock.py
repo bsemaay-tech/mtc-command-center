@@ -6,7 +6,7 @@ import csv
 import asyncio
 import itertools
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Callable
 
@@ -37,6 +37,11 @@ class MockBroker:
     _user_callbacks: list[Callable[[BrokerEvent], None]] = field(default_factory=list)
     _bar_callbacks: list[Callable[[Bar], None]] = field(default_factory=list)
     resubscribe_count: int = 0
+
+    # TS-P1-003: controllable recovery behaviour
+    query_order_by_cloid_returns: dict[str, dict | None] = field(default_factory=dict)
+    historical_orders_returns: list[dict] = field(default_factory=list)
+    user_fills_returns: list[dict] = field(default_factory=list)
 
     @classmethod
     def from_csv(cls, path: str | Path, starting_equity: float = 10_000.0) -> "MockBroker":
@@ -324,6 +329,79 @@ class MockBroker:
         )
         for callback in list(self._user_callbacks):
             callback(event)
+
+    # ------------------------------------------------------------------
+    # TS-P1-003 read-only recovery evidence methods
+    # ------------------------------------------------------------------
+
+    async def query_order_by_cloid(self, cloid: str) -> dict | None:
+        """Read-only cloid lookup across all stored orders (live + history)."""
+        # First check the programmed override
+        if cloid in self.query_order_by_cloid_returns:
+            return self.query_order_by_cloid_returns[cloid]
+        for o in self.orders:
+            if o["cloid"] == cloid:
+                return {
+                    "cloid": o["cloid"],
+                    "oid": o.get("oid"),
+                    "status": o["status"],
+                    "coin": o.get("symbol", self.coin),
+                    "size": float(o["qty"]),
+                    "role": o.get("role", "UNKNOWN"),
+                    "reduce_only": bool(o.get("reduce_only", False)),
+                }
+        return None
+
+    async def historical_orders(
+        self, coin: str, lookback_hours: float = 24.0
+    ) -> list[dict]:
+        """Read-only: return all orders (programmed override or live+filled)."""
+        if self.historical_orders_returns:
+            return list(self.historical_orders_returns)
+        result: list[dict] = []
+        for o in self.orders:
+            result.append({
+                "cloid": o["cloid"],
+                "oid": o.get("oid"),
+                "status": o["status"],
+                "coin": o.get("symbol", self.coin),
+                "size": float(o["qty"]),
+                "role": o.get("role", "UNKNOWN"),
+                "reduce_only": bool(o.get("reduce_only", False)),
+            })
+        return result
+
+    async def user_fills(
+        self, coin: str, lookback_hours: float = 24.0
+    ) -> list[dict]:
+        """Read-only: return programmed override fills or recorded fills."""
+        if self.user_fills_returns:
+            return list(self.user_fills_returns)
+        result: list[dict] = []
+        cutoff = datetime.now(UTC) - timedelta(hours=lookback_hours)
+        for f in self.fills:
+            ts = f.get("ts")
+            if isinstance(ts, datetime) and ts >= cutoff:
+                result.append({
+                    "fill_id": f["fill_id"],
+                    "cloid": f["cloid"],
+                    "coin": o.get("symbol", self.coin) if (o := next((x for x in self.orders if x["cloid"] == f["cloid"]), None)) else self.coin,
+                    "qty": f["qty"],
+                    "px": f["px"],
+                    "ts": ts.isoformat() if isinstance(ts, datetime) else str(ts),
+                    "role": f.get("role", "UNKNOWN"),
+                })
+            elif not isinstance(ts, datetime):
+                result.append({
+                    "fill_id": f["fill_id"],
+                    "cloid": f["cloid"],
+                    "coin": self.coin,
+                    "qty": f["qty"],
+                    "px": f["px"],
+                    "ts": str(ts) if ts else "",
+                    "role": f.get("role", "UNKNOWN"),
+                })
+        return result
 
     def _last_price(self) -> float:
         if self.bars:

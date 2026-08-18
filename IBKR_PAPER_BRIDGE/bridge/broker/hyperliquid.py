@@ -869,6 +869,114 @@ class HyperliquidBroker:
             avg_fill_px=self._float(order.get("avgPx")) if order.get("avgPx") is not None else None,
         )
 
+    # ------------------------------------------------------------------
+    # TS-P1-003 read-only recovery evidence (never mutates orders)
+    # ------------------------------------------------------------------
+
+    async def query_order_by_cloid(self, cloid: str) -> dict | None:
+        """Read-only cloid lookup via SDK query_order_by_cloid.
+
+        Normalizes and sanitizes the result; never persists raw exchange text.
+        Returns None if the order is not found or the client is unavailable.
+        """
+        if self.info is None or not hasattr(self.info, "query_order_by_cloid"):
+            return None
+        try:
+            raw = await asyncio.to_thread(
+                self.info.query_order_by_cloid, self.account_address, Cloid.from_str(cloid)
+            )
+        except Exception:
+            return None
+        if raw is None:
+            return None
+        if not isinstance(raw, dict):
+            return None
+        order = raw.get("order", raw)
+        if not isinstance(order, dict):
+            return None
+        return {
+            "cloid": cloid,
+            "oid": order.get("oid"),
+            "status": str(order.get("status", "")).upper() or None,
+            "coin": str(order.get("coin", self.coin)),
+            "size": self._float(order.get("sz", order.get("size"))),
+        }
+
+    async def historical_orders(
+        self, coin: str, lookback_hours: float = 24.0
+    ) -> list[dict]:
+        """Read-only recent order history via SDK historical_orders.
+
+        Normalizes every returned row; never persists raw exchange text.
+        Returns empty list when the client is unavailable or the call fails.
+        """
+        if self.info is None or not hasattr(self.info, "historical_orders"):
+            return []
+        try:
+            raw = await asyncio.to_thread(
+                self.info.historical_orders, self.account_address
+            )
+        except Exception:
+            return []
+        if not isinstance(raw, list):
+            return []
+        result: list[dict] = []
+        for row in raw:
+            if not isinstance(row, dict):
+                continue
+            result.append({
+                "cloid": str(row.get("cloid", "")),
+                "oid": row.get("oid"),
+                "status": str(row.get("status", "")).upper() or None,
+                "coin": str(row.get("coin", coin)),
+                "size": self._float(row.get("sz", row.get("size"))),
+            })
+        return result
+
+    async def user_fills(
+        self, coin: str, lookback_hours: float = 24.0
+    ) -> list[dict]:
+        """Read-only recent fill history via SDK user_fills_by_time / user_fills.
+
+        Normalizes every returned row; never persists raw exchange text.
+        Returns empty list when the client is unavailable or the call fails.
+        """
+        if self.info is None:
+            return []
+        now_ms = int(datetime.now(UTC).timestamp() * 1000)
+        start_ms = now_ms - int(lookback_hours * 3600 * 1000)
+        try:
+            if hasattr(self.info, "user_fills_by_time"):
+                raw = await asyncio.to_thread(
+                    self.info.user_fills_by_time, self.account_address, start_ms, now_ms
+                )
+            elif hasattr(self.info, "user_fills"):
+                raw = await asyncio.to_thread(
+                    self.info.user_fills, self.account_address
+                )
+            else:
+                return []
+        except Exception:
+            return []
+        if not isinstance(raw, list):
+            return []
+        result: list[dict] = []
+        for row in raw:
+            if not isinstance(row, dict):
+                continue
+            cloid = str(row.get("cloid", ""))
+            raw_time = row.get("time", row.get("timestamp"))
+            ts = datetime.fromtimestamp(float(raw_time) / 1000, tz=UTC).isoformat() if raw_time is not None else None
+            result.append({
+                "fill_id": str(row.get("tid", row.get("hash", ""))),
+                "cloid": cloid,
+                "coin": str(row.get("coin", coin)),
+                "qty": self._float(row.get("sz", row.get("qty"))),
+                "px": self._float(row.get("px")),
+                "ts": ts,
+            })
+        return result
+
     def _dispatch_user_event(self, event: BrokerEvent) -> None:
         for callback in list(self._user_callbacks):
             callback(event)

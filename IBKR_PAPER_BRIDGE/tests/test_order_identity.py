@@ -910,12 +910,12 @@ def test_v2_migration_backfills_legacy_submitted(tmp_path):
     store.conn.commit()
     store.close()
 
-    # Now initialize — should migrate v2→v3
+    # Now initialize — should migrate v2→v3→v4
     store2 = Store(db_path)
     store2.initialize()
 
     # Schema version bumped
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     # Identity row created
     intent_id, _, _ = compute_intent_identity(
@@ -997,7 +997,7 @@ def test_v2_migration_legacy_reserved_for_pre_broker_row(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
@@ -1257,7 +1257,7 @@ def test_duplicate_decision_uid_other_run_does_not_contaminate(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
@@ -1533,17 +1533,17 @@ def test_cross_run_trade_mapping_fails_migration(tmp_path):
 # 14. Fresh v3 and reopen idempotent
 # ---------------------------------------------------------------------------
 
-def test_fresh_v3_initialization(tmp_path):
-    """Fresh database initializes directly at v3."""
+def test_fresh_v4_initialization(tmp_path):
+    """Fresh database initializes directly at v4 (v3→v4 migration)."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
-    assert store.get_meta("schema_version") == "3"
+    assert store.get_meta("schema_version") == "4"
     store.close()
 
 
-def test_v3_reopen_idempotent(tmp_path):
-    """Reopening a v3 database is safe and idempotent."""
+def test_v4_reopen_idempotent(tmp_path):
+    """Reopening a v4 database is safe and idempotent."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -1551,7 +1551,7 @@ def test_v3_reopen_idempotent(tmp_path):
 
     store2 = Store(db_path)
     store2.initialize()  # should not raise
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
     store2.close()
 
 
@@ -2287,7 +2287,7 @@ def test_repair2_7_signal_plan_ref_price_mismatch_fails_migration(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_repair2_8_empty_broker_result_leaves_reserved(tmp_path):
-    """Empty broker_result must leave RESERVED and raise."""
+    """Empty broker_result must leave RESERVED and record UNKNOWN_SUBMISSION."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -2297,7 +2297,7 @@ def test_repair2_8_empty_broker_result_leaves_reserved(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(IdentityCollisionError, match="empty or non-mapping"):
+    with pytest.raises(IdentityCollisionError, match="OUTCOME_UNKNOWN"):
         asyncio.run(mgr.submit_plan("d-1", plan))
 
     assert broker.place_count == 1  # broker was called
@@ -2314,11 +2314,14 @@ def test_repair2_8_empty_broker_result_leaves_reserved(tmp_path):
     snapshot = store.get_snapshot()
     assert len(snapshot["trades"]) == 0
     assert len(snapshot["orders"]) == 0
+
+    # UNKNOWN_SUBMISSION attempt recorded
+    assert store.get_active_unknown_count() == 1
     store.close()
 
 
 def test_repair2_8_invalid_broker_order_rejected(tmp_path):
-    """Non-dict order in broker_result must be rejected."""
+    """Non-dict order in broker_result must be recorded as OUTCOME_UNKNOWN."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -2328,7 +2331,7 @@ def test_repair2_8_invalid_broker_order_rejected(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(IdentityCollisionError, match="non-dict order"):
+    with pytest.raises(IdentityCollisionError, match="OUTCOME_UNKNOWN"):
         asyncio.run(mgr.submit_plan("d-1", plan))
 
     assert broker.place_count == 1
@@ -2340,6 +2343,9 @@ def test_repair2_8_invalid_broker_order_rejected(tmp_path):
     ident = store.get_identity_by_intent(intent_id)
     assert ident is not None
     assert ident["state"] == "RESERVED"
+
+    # UNKNOWN_SUBMISSION recorded
+    assert store.get_active_unknown_count() == 1
     store.close()
 
 
@@ -2799,7 +2805,7 @@ def test_repair3_4_equivalent_timestamp_spellings_accepted(tmp_path):
     # Migration should succeed — equivalent spellings are the same instant
     store2 = Store(db_path)
     store2.initialize()
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
     store2.close()
 
 
@@ -3170,7 +3176,7 @@ def test_repair4_4_zero_fingerprints_empty_legacy_upgrades(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     # order_identity table exists (but empty)
     tbl = store2.conn.execute(

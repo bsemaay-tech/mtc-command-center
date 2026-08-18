@@ -144,6 +144,27 @@ class BridgeEngine:
             raise RuntimeError("KILLED requires operator acknowledgement")
         if not self.reconcile_ready:
             raise RuntimeError("startup reconcile incomplete")
+        # TS-P1-003: block ARM while active unknown submissions exist
+        if self.order_manager is not None:
+            unknown_count = self.order_manager.active_unknown_count
+            if unknown_count > 0:
+                raise RuntimeError(
+                    f"{unknown_count} active UNKNOWN_SUBMISSION(s) require recovery"
+                )
+            submitting_count = self.store.get_active_submitting_count()
+            if submitting_count > 0:
+                # Stale SUBMITTING found — treat as unknown, refuse ARM
+                self.store.insert_event(
+                    self.run_id,
+                    now,
+                    "ERROR",
+                    "STALE_SUBMITTING_BLOCK",
+                    f"{submitting_count} stale SUBMITTING attempt(s) found; "
+                    f"resolve before ARM",
+                )
+                raise RuntimeError(
+                    f"{submitting_count} stale SUBMITTING attempt(s); resolve first"
+                )
         max_age = timedelta(seconds=max(self.reconcile_interval_s * 3, 30.0))
         if self.last_reconcile_ts is None or now - self.last_reconcile_ts > max_age:
             self.reconcile_ready = False
@@ -376,6 +397,13 @@ class BridgeEngine:
             # Store unreadable: report the in-memory state rather than crash
             # the status surface (see _risk_inputs_failed).
             state = self.state
+        active_unknown = 0
+        active_submitting = 0
+        try:
+            active_unknown = self.store.get_active_unknown_count()
+            active_submitting = self.store.get_active_submitting_count()
+        except Exception:
+            pass
         return {
             "state": state,
             "window": window_status(
@@ -390,6 +418,8 @@ class BridgeEngine:
             "run_id": self.run_id,
             "coin": self.coin,
             "timeframe": self.timeframe,
+            "active_unknown_submissions": active_unknown,
+            "active_submitting": active_submitting,
         }
 
     async def _heartbeat_loop(self) -> None:
