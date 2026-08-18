@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
+from dataclasses import dataclass, field
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -356,3 +359,408 @@ def normalize_raw_order_status(raw: object) -> OrderState:
         return RAW_ORDER_STATUS_ALIASES[key]
     except KeyError:
         raise UnknownRawOrderStatusError(raw, "UNRECOGNIZED_RAW_STATUS") from None
+
+
+# ===========================================================================
+# TS-P1-004 — partial-fill protect-or-flatten model
+#
+# Pure model only: no broker I/O, no persistence, no clock. The state
+# machine that consumes these lives in engine/orders.py; the durable v5
+# ledger lives in store/db.py. See docs/25_PARTIAL_FILL_PROTECTION_CONTRACT.md.
+# ===========================================================================
+
+
+PROTECT_DEADLINE_S: float = 10.0
+"""Non-resetting primary protect-or-flatten budget (owner decision 1)."""
+
+FLATTEN_VERIFY_DEADLINE_S: float = 5.0
+"""Non-resetting flatten-verification budget (owner decision 1)."""
+
+
+class LotQuantizationError(Exception):
+    """Fail-closed: a size could not be expressed in exact integer lot units."""
+
+    def __init__(self, reason_code: str) -> None:
+        self.reason_code = reason_code
+        super().__init__(f"{reason_code}: size is not an exact lot multiple")
+
+
+@dataclass(frozen=True)
+class LotUnit:
+    """Exchange size quantum for one symbol, expressed as decimal places.
+
+    ``size_decimals`` comes from exchange metadata (Hyperliquid ``szDecimals``)
+    or an explicit test fixture. A missing or invalid quantum is fail-closed:
+    callers must treat ``None`` as "cannot size an order" and abort without
+    mutation, never fall back to raw float comparison.
+    """
+
+    size_decimals: int
+
+    def __post_init__(self) -> None:
+        value = self.size_decimals
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise LotQuantizationError("INVALID_SIZE_QUANTUM")
+        if value < 0 or value > 18:
+            raise LotQuantizationError("INVALID_SIZE_QUANTUM")
+
+    @property
+    def scale(self) -> Decimal:
+        return Decimal(10) ** self.size_decimals
+
+
+def quantize_lots(value: float | int | str | Decimal, lot: LotUnit) -> int:
+    """Exact integer lot normalization; never an epsilon comparison.
+
+    The value is read through its shortest exact decimal spelling, scaled by
+    the symbol quantum, and rejected unless the result is an exact integer.
+    Binary-float residue (e.g. ``0.1 + 0.2``) therefore fails closed instead of
+    silently rounding to a tradeable size.
+    """
+    if isinstance(value, bool):
+        raise LotQuantizationError("NON_NUMERIC_SIZE")
+    if isinstance(value, float) and not math.isfinite(value):
+        raise LotQuantizationError("NON_FINITE_SIZE")
+    try:
+        decimal_value = value if isinstance(value, Decimal) else Decimal(str(value))
+    except (InvalidOperation, ValueError, TypeError) as exc:
+        raise LotQuantizationError("NON_NUMERIC_SIZE") from exc
+    if not decimal_value.is_finite():
+        raise LotQuantizationError("NON_FINITE_SIZE")
+    scaled = decimal_value * lot.scale
+    if scaled != scaled.to_integral_value():
+        raise LotQuantizationError("NON_LOT_MULTIPLE")
+    return int(scaled)
+
+
+def lots_to_size(lots: int, lot: LotUnit) -> float:
+    """Inverse of :func:`quantize_lots` for order placement."""
+    if isinstance(lots, bool) or not isinstance(lots, int):
+        raise LotQuantizationError("NON_INTEGER_LOTS")
+    return float(Decimal(lots) / lot.scale)
+
+
+class ActionOutcome(str, Enum):
+    """Typed broker verdict for one reserved partial-recovery action.
+
+    ``NOT_APPLIED`` means *proven* not applied. Transport failures, malformed
+    bodies, missing fields, and timeouts are always ``UNKNOWN`` — never an
+    optimistic success and never a licence to retry blindly.
+    """
+
+    APPLIED = "APPLIED"
+    NOT_APPLIED = "NOT_APPLIED"
+    UNKNOWN = "UNKNOWN"
+
+
+class ActionRecordStatus(str, Enum):
+    """Append-only action-event vocabulary in ``partial_fill_action_events``."""
+
+    RESERVED = "RESERVED"
+    SENT = "SENT"
+    APPLIED = "APPLIED"
+    NOT_APPLIED = "NOT_APPLIED"
+    UNKNOWN = "UNKNOWN"
+    EVIDENCE = "EVIDENCE"
+
+
+class PartialActionKind(str, Enum):
+    """Deterministic action-identity domains."""
+
+    INSTALL_STOP = "INSTALL_STOP"
+    CANCEL_ENTRY = "CANCEL_ENTRY"
+    CANCEL_PROTECTION = "CANCEL_PROTECTION"
+    FLATTEN = "FLATTEN"
+
+
+class Provenance(str, Enum):
+    """Ownership verdict for the authoritative symbol state."""
+
+    OWNED = "OWNED"
+    MIXED = "MIXED"
+    FOREIGN = "FOREIGN"
+    AMBIGUOUS = "AMBIGUOUS"
+    UNVERIFIED = "UNVERIFIED"
+
+
+class PartialProtectionState(str, Enum):
+    """Recovery-generation state; deliberately separate from ``OrderState``."""
+
+    PARTIAL_DETECTED = "PARTIAL_DETECTED"
+    PROTECTION_PENDING = "PROTECTION_PENDING"
+    PROTECTION_VERIFIED = "PROTECTION_VERIFIED"
+    PROTECTED_PARTIAL = "PROTECTED_PARTIAL"
+    CANCEL_PENDING = "CANCEL_PENDING"
+    CANCEL_UNKNOWN = "CANCEL_UNKNOWN"
+    FLATTEN_PENDING = "FLATTEN_PENDING"
+    FLATTEN_UNKNOWN = "FLATTEN_UNKNOWN"
+    SAFE_FLAT = "SAFE_FLAT"
+    UNPROTECTED_ABORT = "UNPROTECTED_ABORT"
+
+
+PARTIAL_ACCEPTING_STATES: frozenset[PartialProtectionState] = frozenset({
+    PartialProtectionState.PROTECTED_PARTIAL,
+    PartialProtectionState.SAFE_FLAT,
+})
+
+PARTIAL_TERMINAL_STATES: frozenset[PartialProtectionState] = frozenset({
+    PartialProtectionState.PROTECTED_PARTIAL,
+    PartialProtectionState.SAFE_FLAT,
+    PartialProtectionState.UNPROTECTED_ABORT,
+})
+
+
+PARTIAL_STATE_TRANSITIONS: Mapping[
+    PartialProtectionState, frozenset[PartialProtectionState]
+] = _ImmutableMapping((
+    (
+        PartialProtectionState.PARTIAL_DETECTED,
+        frozenset({
+            PartialProtectionState.PARTIAL_DETECTED,
+            PartialProtectionState.PROTECTION_PENDING,
+            PartialProtectionState.CANCEL_PENDING,
+            PartialProtectionState.FLATTEN_PENDING,
+            PartialProtectionState.UNPROTECTED_ABORT,
+        }),
+    ),
+    (
+        PartialProtectionState.PROTECTION_PENDING,
+        frozenset({
+            PartialProtectionState.PROTECTION_PENDING,
+            PartialProtectionState.PROTECTION_VERIFIED,
+            PartialProtectionState.PARTIAL_DETECTED,
+            PartialProtectionState.FLATTEN_PENDING,
+            PartialProtectionState.UNPROTECTED_ABORT,
+        }),
+    ),
+    (
+        PartialProtectionState.PROTECTION_VERIFIED,
+        frozenset({
+            PartialProtectionState.PROTECTION_VERIFIED,
+            PartialProtectionState.CANCEL_PENDING,
+            PartialProtectionState.PARTIAL_DETECTED,
+            PartialProtectionState.FLATTEN_PENDING,
+            PartialProtectionState.UNPROTECTED_ABORT,
+        }),
+    ),
+    (
+        PartialProtectionState.CANCEL_PENDING,
+        frozenset({
+            PartialProtectionState.CANCEL_PENDING,
+            PartialProtectionState.CANCEL_UNKNOWN,
+            PartialProtectionState.PROTECTED_PARTIAL,
+            PartialProtectionState.PARTIAL_DETECTED,
+            PartialProtectionState.FLATTEN_PENDING,
+            PartialProtectionState.SAFE_FLAT,
+            PartialProtectionState.UNPROTECTED_ABORT,
+        }),
+    ),
+    (
+        PartialProtectionState.CANCEL_UNKNOWN,
+        frozenset({
+            PartialProtectionState.CANCEL_UNKNOWN,
+            PartialProtectionState.CANCEL_PENDING,
+            PartialProtectionState.PROTECTED_PARTIAL,
+            PartialProtectionState.PARTIAL_DETECTED,
+            PartialProtectionState.FLATTEN_PENDING,
+            PartialProtectionState.UNPROTECTED_ABORT,
+        }),
+    ),
+    (
+        PartialProtectionState.PROTECTED_PARTIAL,
+        frozenset({
+            PartialProtectionState.PROTECTED_PARTIAL,
+            # A later authoritative owned fill re-opens quantity recomputation
+            # inside the same recovery row (Gate 1 §4).
+            PartialProtectionState.PARTIAL_DETECTED,
+        }),
+    ),
+    (
+        PartialProtectionState.FLATTEN_PENDING,
+        frozenset({
+            PartialProtectionState.FLATTEN_PENDING,
+            PartialProtectionState.FLATTEN_UNKNOWN,
+            PartialProtectionState.SAFE_FLAT,
+            PartialProtectionState.UNPROTECTED_ABORT,
+        }),
+    ),
+    (
+        PartialProtectionState.FLATTEN_UNKNOWN,
+        frozenset({
+            PartialProtectionState.FLATTEN_UNKNOWN,
+            PartialProtectionState.FLATTEN_PENDING,
+            PartialProtectionState.SAFE_FLAT,
+            PartialProtectionState.UNPROTECTED_ABORT,
+        }),
+    ),
+    (PartialProtectionState.SAFE_FLAT, frozenset({PartialProtectionState.SAFE_FLAT})),
+    (
+        PartialProtectionState.UNPROTECTED_ABORT,
+        frozenset({PartialProtectionState.UNPROTECTED_ABORT}),
+    ),
+))
+
+
+class IllegalPartialTransitionError(Exception):
+    """Raised when a partial-recovery transition is not declared legal."""
+
+    def __init__(
+        self, from_state: PartialProtectionState, to_state: PartialProtectionState
+    ) -> None:
+        self.from_state = from_state
+        self.to_state = to_state
+        self.reason_code = "ILLEGAL_PARTIAL_TRANSITION"
+        super().__init__(
+            f"{self.reason_code}: {from_state.value} -> {to_state.value}"
+        )
+
+
+def can_transition_partial(
+    from_state: PartialProtectionState, to_state: PartialProtectionState
+) -> bool:
+    """Pure query; never raises, never mutates the policy table."""
+    return to_state in PARTIAL_STATE_TRANSITIONS.get(from_state, frozenset())
+
+
+def validate_partial_transition(
+    from_state: PartialProtectionState, to_state: PartialProtectionState
+) -> PartialProtectionState:
+    if not can_transition_partial(from_state, to_state):
+        raise IllegalPartialTransitionError(from_state, to_state)
+    return to_state
+
+
+def canonical_order_state(
+    *,
+    raw_status: object,
+    ordered_qty: float,
+    filled_qty: float,
+    lot: LotUnit | None = None,
+    cancel_reserved: bool = False,
+) -> OrderState:
+    """Derive the canonical order state from durable quantities and evidence.
+
+    ``orders.status`` keeps its accepted v4 raw spelling — this task does not
+    rewrite the legacy status column — but the *canonical* lifecycle state is
+    wired by quantity exactly as ADR-0023 and Gate 1 §4 require:
+
+    * ``0 < filled < ordered`` -> ``PARTIALLY_FILLED``
+    * a cancel reserved before I/O -> ``PENDING_CANCEL``
+    * an exchange-confirmed terminal raw status wins over both
+
+    Quantities are compared in exact lot units when a quantum is supplied and
+    in exact decimal spelling otherwise; there is no epsilon anywhere.
+    """
+    base = normalize_raw_order_status(raw_status)
+    if base in TERMINAL_ORDER_STATES:
+        return base
+    if lot is not None:
+        ordered_units: int | Decimal = quantize_lots(ordered_qty, lot)
+        filled_units: int | Decimal = quantize_lots(filled_qty, lot)
+    else:
+        ordered_units = Decimal(str(ordered_qty))
+        filled_units = Decimal(str(filled_qty))
+    if filled_units < 0 or ordered_units <= 0:
+        raise LotQuantizationError("NON_POSITIVE_ORDER_QUANTITY")
+    if filled_units >= ordered_units:
+        return validate_order_transition(base, OrderState.FILLED)
+    if cancel_reserved:
+        return validate_order_transition(base, OrderState.PENDING_CANCEL)
+    if filled_units > 0:
+        return validate_order_transition(base, OrderState.PARTIALLY_FILLED)
+    return base
+
+
+@dataclass(frozen=True)
+class Evidence:
+    """Bounded, secret-safe provenance for one typed broker result."""
+
+    source: str
+    reason_code: str
+    observed_ts: datetime | None = None
+    detail: str = ""
+
+    def as_payload(self) -> dict[str, Any]:
+        return {
+            "source": self.source,
+            "reason_code": self.reason_code,
+            "observed_ts": (
+                self.observed_ts.isoformat() if self.observed_ts is not None else None
+            ),
+            "detail": self.detail[:512],
+        }
+
+
+@dataclass(frozen=True)
+class CancelResult:
+    outcome: ActionOutcome
+    cloid: str
+    evidence: Evidence
+
+
+@dataclass(frozen=True)
+class PlaceResult:
+    outcome: ActionOutcome
+    cloid: str
+    exchange_order_id: int | None
+    evidence: Evidence
+
+
+@dataclass(frozen=True)
+class FlattenResult:
+    outcome: ActionOutcome
+    cloid: str | None
+    evidence: Evidence
+
+
+@dataclass(frozen=True)
+class OrderQueryResult:
+    """Direct single-order evidence.
+
+    ``known`` is False whenever the adapter could not obtain an authoritative
+    answer (transport error, unparseable body, truncated page). A caller must
+    treat ``known=False`` as UNKNOWN and must never read ``found``/``terminal``
+    as proof in that case.
+    """
+
+    known: bool
+    found: bool = False
+    terminal: bool = False
+    raw_status: str | None = None
+    filled_size: float | None = None
+    evidence: Evidence = field(
+        default_factory=lambda: Evidence("QUERY_ORDER", "UNSPECIFIED")
+    )
+
+
+@dataclass(frozen=True)
+class OrderView:
+    """One live exchange order as seen inside a bounded symbol snapshot."""
+
+    cloid: str
+    coin: str
+    side: Literal["BUY", "SELL"]
+    size: float
+    role: str = "UNKNOWN"
+    reduce_only: bool = False
+    trigger_px: float | None = None
+    status: str = "OPEN"
+    order_ref: str | None = None
+
+
+@dataclass(frozen=True)
+class SymbolSnapshot:
+    """Bounded per-symbol evidence tuple.
+
+    ``exact`` is True only when the position read *and* the open-order read
+    both succeeded, are mutually consistent, and the size quantum is known.
+    Anything less is never treated as safe.
+    """
+
+    symbol: str
+    exact: bool
+    net_size: float | None
+    open_orders: tuple[OrderView, ...]
+    lot: LotUnit | None
+    evidence: Evidence
+    observed_ts: datetime | None = None

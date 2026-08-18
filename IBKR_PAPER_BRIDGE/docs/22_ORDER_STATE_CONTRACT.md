@@ -10,6 +10,13 @@ Module: `bridge/engine/types.py` (`OrderState`, `ORDER_STATE_TRANSITIONS`,
 acceptance. Not yet wired into persistence, broker adapters, or the engine
 (see Scope boundary below).
 
+**TS-P1-004 amendment (2026-07-26):** `PARTIALLY_FILLED` and `PENDING_CANCEL`
+are now *derived* from durable quantities and the partial-recovery action
+ledger by `canonical_order_state()` — see "TS-P1-004 amendment" at the end of
+this document and `docs/25_PARTIAL_FILL_PROTECTION_CONTRACT.md`. The raw
+`orders.status` column, the raw-alias table, and the transition table below
+are unchanged.
+
 **Repair history:** commit `5140e062` was BLOCKed by independent Codex audit
 (`11_TRIAGE/CODEX_TSP1001_AUDIT_2026-07-20.md`) for a mutable policy-map
 backing surface (F1) and an unsafe exception contract (F2); repair commit
@@ -285,3 +292,74 @@ Status: **PROPOSED.** Awaiting independent Codex Gate-5 audit on the real
 diff, then Barış acceptance of the invariant contract (per the TS-P1-001
 backlog row: "Barış accepts invariant contract"). Not to be treated as
 ratified until Barış signs off in `_AI_MEMORY/DECISIONS.md`.
+
+
+---
+
+## TS-P1-004 amendment — canonical state wired by quantity
+
+Added 2026-07-26 by TS-P1-004 (partial-fill protect-or-flatten). Full contract:
+`docs/25_PARTIAL_FILL_PROTECTION_CONTRACT.md`.
+
+### What changed
+
+TS-P1-001 declared the state model but left it unwired. TS-P1-004 wires the two
+states that matter for an owned partial entry — **without** rewriting the legacy
+`orders.status` column:
+
+```python
+canonical_order_state(
+    raw_status=...,      # the persisted v4 raw spelling
+    ordered_qty=...,     # orders.qty
+    filled_qty=...,      # SUM(fills.qty) for that cloid
+    lot=LotUnit(...),    # exchange size quantum, optional
+    cancel_reserved=..., # a CANCEL_ENTRY action reserved before I/O
+) -> OrderState
+```
+
+| Condition | Canonical state |
+| --- | --- |
+| exchange-confirmed terminal raw status | that terminal state (wins over everything) |
+| `filled >= ordered` | `FILLED` |
+| a cancel reserved before I/O, order still live | `PENDING_CANCEL` |
+| `0 < filled < ordered` | `PARTIALLY_FILLED` |
+| otherwise | the normalized raw state |
+
+Every derived value is checked against `ORDER_STATE_TRANSITIONS` via
+`validate_order_transition`, so the derivation can never produce an edge this
+document does not declare. Unknown raw statuses still fail closed through
+`normalize_raw_order_status`.
+
+### Why derived rather than persisted
+
+`db.py` keys three accepted behaviours to the raw status string — the live-set
+membership checks in `has_live_entry_remainder` and
+`find_live_orders_by_attributes`, and `orders.py`'s pending-grace check.
+Writing `"PARTIALLY_FILLED"` into `orders.status` would silently change the
+accepted TS-P1-007 `ENTRY_REMAINDER_LIVE` quarantine behaviour, which is out of
+TS-P1-004's scope. Deriving the canonical state from durable quantities plus
+the append-only action ledger is also strictly stronger evidence than a mutable
+status string: it cannot drift from the fills that justify it.
+
+### Quantity comparison
+
+Comparisons use exact integer lot units (`LotUnit` / `quantize_lots`) when a
+size quantum is known, and exact decimal spelling otherwise. There is no
+epsilon anywhere in the derivation, and a size that is not an exact lot
+multiple raises `LotQuantizationError` rather than rounding.
+
+### Uncertainty representation
+
+An unknown cancel keeps the order at `PENDING_CANCEL`; the uncertainty itself
+lives in `PartialProtectionState.CANCEL_UNKNOWN` in the separate
+partial-recovery state machine. No raw exchange status is ever invented to
+express doubt.
+
+### Lock scope
+
+Every owned mutation on a symbol — fill ingestion follow-up, ordinary
+trail/close/flip, periodic reconcile, restart recovery, and the whole
+partial-recovery run — serializes through `OrderManager.symbol_locks`, a
+reentrant per-symbol `asyncio.Lock`. Ordinary paths re-check recovery ownership
+*after* acquiring the lock, and the recovery run asserts the lock is held
+before taking a snapshot or sending any order.

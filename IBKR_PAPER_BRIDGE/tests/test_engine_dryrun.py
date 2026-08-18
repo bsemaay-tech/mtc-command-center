@@ -465,3 +465,157 @@ class DisarmingGate:
             reason = "test disarm"
 
         return Result()
+
+
+# ===========================================================================
+# TS-P1-004 — engine participation: pre-ARM suppression and the re-ARM gate
+# ===========================================================================
+
+from bridge.engine.types import FillEvent, PartialProtectionState, Position  # noqa: E402
+
+
+def _partial_engine(tmp_path, *, position_size: float = 1.0):
+    """v5 store + a partially filled owned entry + a wired engine."""
+    store = Store(tmp_path / "bridge.db")
+    store.initialize(target_schema_version=5)
+    store.create_run("run", "dry_run", "testnet", {})
+    now = datetime(2026, 7, 26, 12, 0, tzinfo=UTC)
+    request_id = "request-v1:" + "d" * 64
+    trade_id = int(
+        store.create_trade(
+            run_id="run", coin="BTC", direction="LONG", qty=2.0,
+            entry_decision_uid="d1", signal_ts=now, decision_ts=now,
+            expected_px=100.0, risk_dollars=1.0, risk_pct=0.001, leverage=1,
+            sl_initial=95.0, tp_initial=None, llm_directive_id=None,
+        )
+    )
+    store.insert_order(
+        cloid="entry-1", oid=1, group_id=request_id,
+        order_ref=f"{request_id}:ENTRY", order_json={"symbol": "BTC"},
+        decision_uid="d1", trade_id=trade_id, role="ENTRY", status="OPEN", qty=2.0,
+    )
+    broker = MockBroker(bars=[], starting_equity=1000.0)
+    broker.orders.append({
+        "cloid": "entry-1", "oid": 1, "role": "ENTRY", "status": "OPEN",
+        "qty": 2.0, "avg_fill_px": 100.0, "reduce_only": False,
+        "symbol": "BTC", "direction": "LONG",
+    })
+    broker.position = Position(symbol="BTC", size=position_size, entry_px=100.0)
+    manager = OrderManager(store, broker, "run", pending_grace_s=0)
+    engine = BridgeEngine(
+        run_id="run", broker=broker, store=store,
+        strategy=KeltnerTrailEma8(),
+        risk_engine=RiskEngine(RiskConfig(max_position_notional_pct=0.5)),
+        order_manager=manager,
+    )
+    manager._ingest_fill(
+        FillEvent(
+            fill_id="f1", cloid="entry-1", coin="BTC", qty=1.0, px=100.0,
+            ts=now, role="ENTRY",
+        )
+    )
+    return store, broker, manager, engine
+
+
+def test_partial_recovery_latches_the_engine_disarmed(tmp_path):
+    store, _broker, _manager, engine = _partial_engine(tmp_path)
+    store.set_meta("app_state", "ARMED")
+
+    assert engine._app_state() == "DISARMED"
+    assert store.get_meta("app_state") == "DISARMED"
+    assert engine.status()["partial_recovery_blocking"] is True
+
+
+def test_arm_is_refused_while_a_recovery_is_active(tmp_path):
+    store, _broker, _manager, engine = _partial_engine(tmp_path)
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+
+    with pytest.raises(RuntimeError, match="partial-fill recovery blocks ARM"):
+        asyncio.run(engine.arm())
+    assert store.get_meta("app_state") == "DISARMED"
+
+
+def test_arm_is_refused_after_an_unprotected_abort(tmp_path):
+    store, broker, manager, engine = _partial_engine(tmp_path)
+    broker.partial_extra_position = 2.0  # mixed provenance
+    asyncio.run(manager.run_partial_recovery("BTC"))
+    assert store.partial_recovery_abort_active("BTC")
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+
+    with pytest.raises(RuntimeError, match="partial-fill recovery blocks ARM"):
+        asyncio.run(engine.arm())
+
+
+def test_pre_arm_trail_and_close_are_suppressed_during_recovery(tmp_path):
+    store, broker, manager, engine = _partial_engine(tmp_path)
+    bars = [
+        Bar(ts=datetime(2026, 7, 6, h, tzinfo=UTC), open=100, high=101, low=99,
+            close=100, volume=1)
+        for h in range(3)
+    ]
+    engine.bars = list(bars[:2])
+    before = list(broker.partial_calls)
+
+    asyncio.run(engine.on_bar(bars[2]))
+
+    # neither the ordinary trail/close path nor a new entry may run
+    assert broker.partial_calls == before
+    assert store.get_meta("app_state") == "DISARMED"
+    assert "TRAIL_MODIFIED" not in {row["code"] for row in store.get_events()}
+
+
+def test_protected_partial_requires_a_human_rearm_with_fresh_evidence(tmp_path):
+    store, broker, manager, engine = _partial_engine(tmp_path)
+    state = asyncio.run(manager.run_partial_recovery("BTC"))
+    assert state == PartialProtectionState.PROTECTED_PARTIAL.value
+    # accepting, yet still DISARMED and still awaiting an explicit re-ARM
+    assert store.get_meta("app_state") == "DISARMED"
+    assert store.partial_recoveries_awaiting_rearm()
+
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+    asyncio.run(engine.arm())
+
+    assert store.get_meta("app_state") == "ARMED"
+    assert store.partial_recoveries_awaiting_rearm() == []
+
+
+def test_rearm_is_refused_when_the_fresh_snapshot_cannot_prove_protection(tmp_path):
+    store, broker, manager, engine = _partial_engine(tmp_path)
+    assert asyncio.run(manager.run_partial_recovery("BTC")) == (
+        PartialProtectionState.PROTECTED_PARTIAL.value
+    )
+    # the protective stop vanished between the proof and the re-ARM request
+    for order in broker.orders:
+        if order["role"] == "SL":
+            order["status"] = "CANCELLED_BY_ENGINE"
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+
+    with pytest.raises(RuntimeError, match="partial-fill re-arm proof failed"):
+        asyncio.run(engine.arm())
+    assert store.get_meta("app_state") == "DISARMED"
+
+
+def test_rearm_is_refused_when_the_snapshot_is_inexact(tmp_path):
+    store, broker, manager, engine = _partial_engine(tmp_path)
+    assert asyncio.run(manager.run_partial_recovery("BTC")) == (
+        PartialProtectionState.PROTECTED_PARTIAL.value
+    )
+    broker.partial_snapshot_available = False
+    engine.reconcile_ready = True
+    engine.last_reconcile_ts = datetime.now(UTC)
+
+    with pytest.raises(RuntimeError, match="partial-fill re-arm proof failed"):
+        asyncio.run(engine.arm())
+
+
+def test_engine_start_drives_partial_recovery_through_reconcile(tmp_path):
+    store, broker, manager, engine = _partial_engine(tmp_path)
+
+    asyncio.run(manager.reconcile())
+
+    recovery = store.latest_partial_recovery_for_symbol("BTC")
+    assert recovery["state"] == PartialProtectionState.PROTECTED_PARTIAL.value

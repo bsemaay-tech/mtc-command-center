@@ -88,6 +88,9 @@ class BridgeEngine:
         if self.store.has_submission_quarantine():
             self.state = "DISARMED"
             self.store.set_meta("app_state", "DISARMED")
+        elif self.store.partial_recovery_blocks_new_risk():
+            self.state = "DISARMED"
+            self.store.set_meta("app_state", "DISARMED")
 
     async def start(self, lookback: int = 300) -> None:
         self._ensure_run(mode=self.mode)
@@ -153,6 +156,29 @@ class BridgeEngine:
             self.state = "DISARMED"
             self.store.set_meta("app_state", "DISARMED")
             raise RuntimeError("submission quarantine blocks ARM")
+        if self.store.partial_recovery_blocks_new_risk():
+            # Non-terminal recovery or a durable UNPROTECTED_ABORT: risk
+            # authority is independent, no automatic re-arm exists.
+            self.state = "DISARMED"
+            self.store.set_meta("app_state", "DISARMED")
+            raise RuntimeError("partial-fill recovery blocks ARM")
+        for pending in self.store.partial_recoveries_awaiting_rearm():
+            # PROTECTED_PARTIAL hands the position back only after a fresh
+            # exact-quantity snapshot proves protection under the symbol lock.
+            proved = await self.order_manager.confirm_partial_rearm(
+                str(pending["recovery_id"])
+            )
+            if not proved:
+                self.state = "DISARMED"
+                self.store.set_meta("app_state", "DISARMED")
+                self.store.insert_event(
+                    self.run_id,
+                    now,
+                    "WARN",
+                    "PARTIAL_REARM_PROOF_FAILED",
+                    str(pending["symbol"]),
+                )
+                raise RuntimeError("partial-fill re-arm proof failed")
         if not self.reconcile_ready:
             raise RuntimeError("startup reconcile incomplete")
         max_age = timedelta(seconds=max(self.reconcile_interval_s * 3, 30.0))
@@ -228,6 +254,14 @@ class BridgeEngine:
                 process_bar(bar)
         await self.order_manager.sync_broker_state()
         if self.store.has_submission_quarantine():
+            self.state = "DISARMED"
+            self.store.set_meta("app_state", "DISARMED")
+            await self._publish("bar", bar.model_dump(mode="json"))
+            return
+        if self.store.partial_recovery_blocks_new_risk():
+            # Only the partial-recovery state machine may act on this symbol.
+            # The engine's trail/close/flip path runs *before* the ARMED gate,
+            # so it must be short-circuited here as well.
             self.state = "DISARMED"
             self.store.set_meta("app_state", "DISARMED")
             await self._publish("bar", bar.model_dump(mode="json"))
@@ -469,6 +503,7 @@ class BridgeEngine:
             "last_reconcile_ts": self.last_reconcile_ts.isoformat() if self.last_reconcile_ts else None,
             "reconcile_error": self.reconcile_error,
             "submission_quarantine_count": self.store.submission_quarantine_count(),
+            "partial_recovery_blocking": self.store.partial_recovery_blocks_new_risk(),
             "run_id": self.run_id,
             "coin": self.coin,
             "timeframe": self.timeframe,
@@ -598,6 +633,13 @@ class BridgeEngine:
 
     def _app_state(self) -> str:
         if self.store.has_submission_quarantine():
+            self.state = "DISARMED"
+            try:
+                self.store.set_meta("app_state", "DISARMED")
+            except Exception:
+                pass
+            return self.state
+        if self.store.partial_recovery_blocks_new_risk():
             self.state = "DISARMED"
             try:
                 self.store.set_meta("app_state", "DISARMED")

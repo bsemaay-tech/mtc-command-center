@@ -1,4 +1,4 @@
-"""SQLite Store with schema v4 durable identity and submission recovery ledger."""
+"""SQLite Store: v4 durable identity/submission ledger, v5 partial-fill recovery."""
 
 from __future__ import annotations
 
@@ -9,6 +9,15 @@ from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Literal
+
+from bridge.engine.types import (
+    PARTIAL_STATE_TRANSITIONS,
+    PARTIAL_TERMINAL_STATES,
+    ActionOutcome,
+    ActionRecordStatus,
+    PartialActionKind,
+    PartialProtectionState,
+)
 
 
 def _to_iso(value: datetime | str | None) -> str | None:
@@ -186,6 +195,119 @@ def compute_submission_attempt_id(request_id: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# TS-P1-004 deterministic partial-recovery identities
+# ---------------------------------------------------------------------------
+
+SCHEMA_VERSION_BASELINE = 4
+"""Default target: the accepted TS-P1-003 identity/submission ledger."""
+
+SCHEMA_VERSION_PARTIAL_FILL = 5
+"""Additive TS-P1-004 partial-fill recovery ledger; opt-in, never automatic."""
+
+SUPPORTED_TARGET_SCHEMA_VERSIONS = (
+    SCHEMA_VERSION_BASELINE,
+    SCHEMA_VERSION_PARTIAL_FILL,
+)
+
+_PARTIAL_RECOVERY_VERSION = "ts-p1-004-recovery-v1"
+_PARTIAL_ACTION_VERSION = "ts-p1-004-action-v1"
+
+_PARTIAL_EVIDENCE_TABLES = (
+    "orders",
+    "trades",
+    "fills",
+    "decisions",
+    "events",
+    "equity",
+    "signal_fingerprints",
+    "order_identity",
+    "submission_attempts",
+    "submission_recovery_evidence",
+)
+
+
+class PartialRecoveryConflictError(Exception):
+    """Raised when a partial-recovery write would break a durable invariant."""
+
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        self.message = message
+        super().__init__(f"{code}: {message}")
+
+
+def compute_partial_recovery_id(
+    *, trade_id: int, entry_cloid: str, generation: int
+) -> str:
+    """Stable per trade/entry/generation recovery identity."""
+    preimage = _canonical_json({
+        "version": _PARTIAL_RECOVERY_VERSION,
+        "trade_id": int(trade_id),
+        "entry_cloid": str(entry_cloid),
+        "generation": int(generation),
+    })
+    return f"pfr-v1:{hashlib.sha256(preimage.encode('utf-8')).hexdigest()}"
+
+
+def compute_partial_action_id(
+    *,
+    kind: str,
+    trade_id: int,
+    entry_cloid: str,
+    entry_request_id: str,
+    generation: int | None = None,
+    flatten_seq: int | None = None,
+    qty_lots: int | None = None,
+    target_cloid: str | None = None,
+) -> str:
+    """Deterministic action identity, one domain per action kind (Gate 1 §4).
+
+    * ``CANCEL_ENTRY`` — entry request identity + entry cloid only, so it is
+      quantity- and generation-independent and a late-fill re-entry keeps the
+      same pending/unknown cancel context.
+    * ``INSTALL_STOP`` — trade/entry identity + generation + target lots.
+    * ``FLATTEN`` — the above plus the resolved-attempt sequence.
+    * ``CANCEL_PROTECTION`` — trade/entry identity + the exact cloid removed.
+    """
+    action_kind = PartialActionKind(str(kind))
+    body: dict[str, Any] = {
+        "version": _PARTIAL_ACTION_VERSION,
+        "kind": action_kind.value,
+        "entry_cloid": str(entry_cloid),
+    }
+    if action_kind is PartialActionKind.CANCEL_ENTRY:
+        body["entry_request_id"] = str(entry_request_id)
+    else:
+        body["trade_id"] = int(trade_id)
+    if action_kind in {PartialActionKind.INSTALL_STOP, PartialActionKind.FLATTEN}:
+        if generation is None or qty_lots is None:
+            raise ValueError("generation and qty_lots are required for this action kind")
+        body["generation"] = int(generation)
+        body["qty_lots"] = int(qty_lots)
+    if action_kind is PartialActionKind.FLATTEN:
+        if flatten_seq is None:
+            raise ValueError("flatten_seq is required for FLATTEN actions")
+        body["flatten_seq"] = int(flatten_seq)
+    if action_kind is PartialActionKind.CANCEL_PROTECTION:
+        if not target_cloid:
+            raise ValueError("target_cloid is required for CANCEL_PROTECTION")
+        body["target_cloid"] = str(target_cloid)
+    preimage = _canonical_json(body)
+    return f"pfa-v1:{hashlib.sha256(preimage.encode('utf-8')).hexdigest()}"
+
+
+def compute_partial_action_cloid(action_id: str) -> str:
+    """Exchange cloid bound 1:1 to the action identity.
+
+    A proven-not-applied action therefore re-sends under the *same* cloid; a
+    new cloid can only appear together with a new action identity.
+    """
+    digest = hashlib.blake2s(
+        f"{_PARTIAL_ACTION_VERSION}:{action_id}".encode("utf-8"), digest_size=16
+    ).hexdigest()
+    return f"0x{digest}"
+
+
+# ---------------------------------------------------------------------------
 # Custom exceptions
 # ---------------------------------------------------------------------------
 
@@ -254,31 +376,57 @@ class Store:
     # Schema initialization with version-aware migration
     # ------------------------------------------------------------------
 
-    def initialize(self) -> None:
+    def initialize(
+        self, target_schema_version: int = SCHEMA_VERSION_BASELINE
+    ) -> None:
+        """Open/upgrade the database up to ``target_schema_version``.
+
+        The default target stays v4: TS-P1-004 adds schema v5 as an explicit,
+        additive opt-in so that no existing caller — and no existing runtime
+        database — is silently upgraded by merely opening it. Reaching v5
+        requires ``initialize(target_schema_version=5)``.
+
+        A database already at v5 is reopened idempotently regardless of the
+        requested target; this code understands v5 and must never downgrade.
+        Unsupported or future versions still fail closed.
+        """
+        if isinstance(target_schema_version, bool) or not isinstance(
+            target_schema_version, int
+        ):
+            raise RuntimeError(
+                f"Unsupported target_schema_version={target_schema_version!r}"
+            )
+        if target_schema_version not in SUPPORTED_TARGET_SCHEMA_VERSIONS:
+            raise RuntimeError(
+                f"Unsupported target_schema_version={target_schema_version!r}"
+            )
         # Ensure meta table exists before querying it
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"
         )
         existing = self.get_meta("schema_version")
+        if existing == str(SCHEMA_VERSION_PARTIAL_FILL):
+            # Already migrated: idempotent reopen, never an in-place downgrade.
+            self._initialize_v5_idempotent()
+            return
         if existing is None:
             self._initialize_v4_fresh()
-            return
-        if existing == "4":
+        elif existing == "4":
             self._initialize_v4_idempotent()
-            return
-        if existing == "3":
+        elif existing == "3":
             self._migrate_v3_to_v4()
-            return
-        if existing == "2":
+        elif existing == "2":
             self._migrate_v2_to_v3()
             # Intentionally a second committed transaction. A later v4
             # failure must leave a valid, reopenable v3 database.
             self._migrate_v3_to_v4()
-            return
-        # Unsupported or corrupt version → fail closed
-        raise RuntimeError(
-            f"Unsupported schema_version={existing!r}; cannot initialize safely"
-        )
+        else:
+            # Unsupported or corrupt version → fail closed
+            raise RuntimeError(
+                f"Unsupported schema_version={existing!r}; cannot initialize safely"
+            )
+        if target_schema_version >= SCHEMA_VERSION_PARTIAL_FILL:
+            self._migrate_v4_to_v5()
 
     def _initialize_v4_fresh(self) -> None:
         self._create_tables_v4()
@@ -592,6 +740,227 @@ class Store:
             BEGIN
               SELECT RAISE(ABORT, 'SUBMISSION_EVIDENCE_APPEND_ONLY');
             END""")
+
+    # ------------------------------------------------------------------
+    # TS-P1-004 schema v5 (additive partial-fill recovery ledger)
+    # ------------------------------------------------------------------
+
+    def _initialize_v5_idempotent(self) -> None:
+        """Re-open an existing v5 database; DDL is IF NOT EXISTS throughout."""
+        self._create_tables_v4()
+        self._create_partial_fill_tables_v5()
+        self.conn.commit()
+
+    def _create_partial_fill_tables_v5(self) -> None:
+        """Purely additive DDL. Callable inside an open transaction.
+
+        Types are fitted to the real v4 schema: ``trades.trade_id`` is INTEGER
+        and orders are keyed by their durable ``cloid``, so both foreign keys
+        below reference real columns rather than the illustrative TEXT
+        ``trade_id`` of the plan sketch.
+        """
+        states = ",".join(
+            f"'{state.value}'" for state in sorted(PartialProtectionState, key=lambda s: s.value)
+        )
+        kinds = ",".join(
+            f"'{kind.value}'" for kind in sorted(PartialActionKind, key=lambda k: k.value)
+        )
+        statuses = ",".join(
+            f"'{status.value}'"
+            for status in sorted(ActionRecordStatus, key=lambda s: s.value)
+        )
+        terminal = ",".join(
+            f"'{state.value}'"
+            for state in sorted(PARTIAL_TERMINAL_STATES, key=lambda s: s.value)
+        )
+        self.conn.execute(f"""
+            CREATE TABLE IF NOT EXISTS partial_fill_recoveries (
+              recovery_id TEXT PRIMARY KEY
+                CHECK(length(recovery_id) = 71 AND substr(recovery_id, 1, 7) = 'pfr-v1:'
+                      AND NOT substr(recovery_id, 8) GLOB '*[^0-9a-f]*'),
+              run_id TEXT NOT NULL CHECK(run_id != ''),
+              symbol TEXT NOT NULL CHECK(symbol != ''),
+              trade_id INTEGER NOT NULL REFERENCES trades(trade_id),
+              entry_cloid TEXT NOT NULL REFERENCES orders(cloid),
+              entry_decision_uid TEXT NOT NULL CHECK(entry_decision_uid != ''),
+              entry_request_id TEXT NOT NULL CHECK(entry_request_id != ''),
+              generation INTEGER NOT NULL CHECK(generation >= 0),
+              flatten_seq INTEGER NOT NULL DEFAULT 0 CHECK(flatten_seq >= 0),
+              state TEXT NOT NULL CHECK(state IN ({states})),
+              provenance TEXT NOT NULL,
+              size_decimals INTEGER CHECK(size_decimals IS NULL OR
+                                          (size_decimals >= 0 AND size_decimals <= 18)),
+              ordered_lots INTEGER CHECK(ordered_lots IS NULL OR ordered_lots > 0),
+              filled_lots INTEGER CHECK(filled_lots IS NULL OR filled_lots >= 0),
+              position_lots INTEGER CHECK(position_lots IS NULL OR position_lots >= 0),
+              first_observed_ts TEXT NOT NULL CHECK(first_observed_ts != ''),
+              protect_deadline_ts TEXT NOT NULL CHECK(protect_deadline_ts != ''),
+              flatten_deadline_ts TEXT,
+              reason_code TEXT NOT NULL CHECK(
+                length(reason_code) BETWEEN 1 AND 96
+                AND reason_code NOT GLOB '*[^A-Z0-9_:.-]*'
+              ),
+              created_ts TEXT NOT NULL CHECK(created_ts != ''),
+              updated_ts TEXT NOT NULL CHECK(updated_ts != ''),
+              UNIQUE(trade_id, entry_cloid, generation)
+            )""")
+        # At most one non-terminal recovery per symbol: the durable expression
+        # of "one writer per symbol".
+        self.conn.execute(f"""
+            CREATE UNIQUE INDEX IF NOT EXISTS ux_partial_recovery_active_symbol
+            ON partial_fill_recoveries(symbol)
+            WHERE state NOT IN ({terminal})""")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_partial_recovery_state "
+            "ON partial_fill_recoveries(state)")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_partial_recovery_trade "
+            "ON partial_fill_recoveries(trade_id, generation)")
+        self.conn.execute(f"""
+            CREATE TABLE IF NOT EXISTS partial_fill_actions (
+              action_id TEXT PRIMARY KEY
+                CHECK(length(action_id) = 71 AND substr(action_id, 1, 7) = 'pfa-v1:'
+                      AND NOT substr(action_id, 8) GLOB '*[^0-9a-f]*'),
+              recovery_id TEXT NOT NULL
+                REFERENCES partial_fill_recoveries(recovery_id),
+              trade_id INTEGER NOT NULL REFERENCES trades(trade_id),
+              kind TEXT NOT NULL CHECK(kind IN ({kinds})),
+              generation INTEGER CHECK(generation IS NULL OR generation >= 0),
+              flatten_seq INTEGER CHECK(flatten_seq IS NULL OR flatten_seq >= 0),
+              qty_lots INTEGER CHECK(qty_lots IS NULL OR qty_lots > 0),
+              target_cloid TEXT NOT NULL CHECK(target_cloid != ''),
+              reserved_ts TEXT NOT NULL CHECK(reserved_ts != ''),
+              UNIQUE(target_cloid, kind)
+            )""")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_partial_action_recovery "
+            "ON partial_fill_actions(recovery_id, kind)")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_partial_action_no_update
+            BEFORE UPDATE ON partial_fill_actions
+            BEGIN
+              SELECT RAISE(ABORT, 'PARTIAL_ACTION_IMMUTABLE');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_partial_action_no_delete
+            BEFORE DELETE ON partial_fill_actions
+            BEGIN
+              SELECT RAISE(ABORT, 'PARTIAL_ACTION_IMMUTABLE');
+            END""")
+        self.conn.execute(f"""
+            CREATE TABLE IF NOT EXISTS partial_fill_action_events (
+              event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+              action_id TEXT NOT NULL REFERENCES partial_fill_actions(action_id),
+              recovery_id TEXT NOT NULL
+                REFERENCES partial_fill_recoveries(recovery_id),
+              seq INTEGER NOT NULL CHECK(seq > 0),
+              status TEXT NOT NULL CHECK(status IN ({statuses})),
+              evidence_source TEXT NOT NULL CHECK(evidence_source != ''),
+              reason_code TEXT NOT NULL CHECK(
+                length(reason_code) BETWEEN 1 AND 96
+                AND reason_code NOT GLOB '*[^A-Z0-9_:.-]*'
+              ),
+              evidence_json TEXT NOT NULL CHECK(evidence_json != ''),
+              observed_ts TEXT NOT NULL CHECK(observed_ts != ''),
+              UNIQUE(action_id, seq)
+            )""")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_partial_action_event_action "
+            "ON partial_fill_action_events(action_id, seq)")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_partial_action_event_no_update
+            BEFORE UPDATE ON partial_fill_action_events
+            BEGIN
+              SELECT RAISE(ABORT, 'PARTIAL_ACTION_EVENT_APPEND_ONLY');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_partial_action_event_no_delete
+            BEFORE DELETE ON partial_fill_action_events
+            BEGIN
+              SELECT RAISE(ABORT, 'PARTIAL_ACTION_EVENT_APPEND_ONLY');
+            END""")
+
+    def _evidence_census(self) -> dict[str, int]:
+        """Row counts of every pre-existing evidence table (migration guard)."""
+        census: dict[str, int] = {}
+        for table in _PARTIAL_EVIDENCE_TABLES:
+            row = self.conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
+                (table,),
+            ).fetchone()
+            if row is None:
+                continue
+            count = self.conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()
+            census[table] = int(count[0]) if count else 0
+        return census
+
+    def _validate_partial_fill_schema_v5(self) -> None:
+        """Fail the migration unless every v5 object exists as declared."""
+        required_tables = {
+            "partial_fill_recoveries",
+            "partial_fill_actions",
+            "partial_fill_action_events",
+        }
+        required_triggers = {
+            "trg_partial_action_no_update",
+            "trg_partial_action_no_delete",
+            "trg_partial_action_event_no_update",
+            "trg_partial_action_event_no_delete",
+        }
+        required_indexes = {"ux_partial_recovery_active_symbol"}
+        found = {
+            (str(row["type"]), str(row["name"]))
+            for row in self.conn.execute(
+                "SELECT type, name FROM sqlite_master"
+            ).fetchall()
+        }
+        missing = (
+            {("table", name) for name in required_tables}
+            | {("trigger", name) for name in required_triggers}
+            | {("index", name) for name in required_indexes}
+        ) - found
+        if missing:
+            raise MigrationError(
+                "v4-to-v5 validation failed; missing objects: "
+                + ",".join(sorted(name for _, name in missing))
+            )
+
+    def _migrate_v4_to_v5(self) -> None:
+        """Additive v4→v5 upgrade in one rollback-clean transaction.
+
+        DDL, evidence census, validation, and the ``meta.schema_version`` bump
+        all live in a single ``BEGIN IMMEDIATE``. SQLite DDL is transactional,
+        so any failure rolls the whole thing back: the database stays a valid,
+        reopenable v4 with every pre-existing row untouched. There is no
+        speculative backfill — recovery rows are only created later, by
+        ``OrderManager`` startup reconciliation, once ownership is proven.
+        """
+        if self.get_meta("schema_version") == str(SCHEMA_VERSION_PARTIAL_FILL):
+            self._initialize_v5_idempotent()
+            return
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if self.get_meta("schema_version") != str(SCHEMA_VERSION_BASELINE):
+                raise MigrationError("v4-to-v5 requires schema_version=4")
+            before = self._evidence_census()
+            self._create_partial_fill_tables_v5()
+            self._validate_partial_fill_schema_v5()
+            after = self._evidence_census()
+            if before != after:
+                raise MigrationError(
+                    "v4-to-v5 must not alter existing evidence rows"
+                )
+            cursor = self.conn.execute(
+                "UPDATE meta SET value = ? "
+                "WHERE key = 'schema_version' AND value = ?",
+                (str(SCHEMA_VERSION_PARTIAL_FILL), str(SCHEMA_VERSION_BASELINE)),
+            )
+            if cursor.rowcount != 1:
+                raise MigrationError("v4-to-v5 version update rowcount mismatch")
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
 
     def _migrate_v3_to_v4(self) -> None:
         """Add the v4 ledger in one rollback-clean BEGIN IMMEDIATE transaction."""
@@ -1665,6 +2034,670 @@ class Store:
             row["evidence"] = json.loads(row["evidence_json"])
             result.append(row)
         return result
+
+    # ------------------------------------------------------------------
+    # TS-P1-004 partial-fill recovery ledger
+    #
+    # Every mutating call below is a single BEGIN IMMEDIATE transaction and
+    # commits *before* the caller performs any broker I/O. This module never
+    # performs broker I/O itself.
+    # ------------------------------------------------------------------
+
+    def partial_protection_enabled(self) -> bool:
+        """True only on a database that carries the v5 recovery ledger."""
+        return self.get_meta("schema_version") == str(SCHEMA_VERSION_PARTIAL_FILL)
+
+    def _require_partial_schema(self) -> None:
+        if not self.partial_protection_enabled():
+            raise PartialRecoveryConflictError(
+                "PARTIAL_SCHEMA_UNAVAILABLE",
+                "partial-fill recovery requires schema_version=5",
+            )
+
+    @staticmethod
+    def _partial_row(raw: sqlite3.Row | None) -> dict[str, Any] | None:
+        return None if raw is None else dict(raw)
+
+    def get_partial_recovery(self, recovery_id: str) -> dict[str, Any] | None:
+        return self._partial_row(
+            self.conn.execute(
+                "SELECT * FROM partial_fill_recoveries WHERE recovery_id = ?",
+                (recovery_id,),
+            ).fetchone()
+        )
+
+    def active_partial_recovery_for_symbol(self, symbol: str) -> dict[str, Any] | None:
+        """The single non-terminal recovery generation for ``symbol``, if any."""
+        if not self.partial_protection_enabled():
+            return None
+        placeholders = ",".join("?" for _ in PARTIAL_TERMINAL_STATES)
+        return self._partial_row(
+            self.conn.execute(
+                f"""SELECT * FROM partial_fill_recoveries
+                    WHERE symbol = ? AND state NOT IN ({placeholders})""",
+                (symbol, *sorted(state.value for state in PARTIAL_TERMINAL_STATES)),
+            ).fetchone()
+        )
+
+    def latest_partial_recovery_for_symbol(self, symbol: str) -> dict[str, Any] | None:
+        if not self.partial_protection_enabled():
+            return None
+        return self._partial_row(
+            self.conn.execute(
+                """SELECT * FROM partial_fill_recoveries
+                   WHERE symbol = ? ORDER BY generation DESC, created_ts DESC
+                   LIMIT 1""",
+                (symbol,),
+            ).fetchone()
+        )
+
+    def partial_recovery_abort_active(self, symbol: str | None = None) -> bool:
+        """Sticky fail-closed latch: any recovery that ended UNPROTECTED_ABORT."""
+        if not self.partial_protection_enabled():
+            return False
+        sql = "SELECT COUNT(*) FROM partial_fill_recoveries WHERE state = ?"
+        params: tuple[Any, ...] = (PartialProtectionState.UNPROTECTED_ABORT.value,)
+        if symbol is not None:
+            sql += " AND symbol = ?"
+            params = (*params, symbol)
+        row = self.conn.execute(sql, params).fetchone()
+        return bool(row and int(row[0]) > 0)
+
+    def partial_recovery_blocks_new_risk(self) -> bool:
+        """True while any recovery is non-terminal or any abort is durable."""
+        if not self.partial_protection_enabled():
+            return False
+        placeholders = ",".join("?" for _ in PARTIAL_TERMINAL_STATES)
+        row = self.conn.execute(
+            f"""SELECT COUNT(*) FROM partial_fill_recoveries
+                WHERE state NOT IN ({placeholders}) OR state = ?""",
+            (
+                *sorted(state.value for state in PARTIAL_TERMINAL_STATES),
+                PartialProtectionState.UNPROTECTED_ABORT.value,
+            ),
+        ).fetchone()
+        return bool(row and int(row[0]) > 0)
+
+    def partial_recoveries_awaiting_rearm(self) -> list[dict[str, Any]]:
+        """PROTECTED_PARTIAL generations that a human has not yet re-ARMed.
+
+        ``PROTECTED_PARTIAL`` is accepting and terminal for automatic recovery,
+        but it never restores ordinary position handling on its own: the row
+        stays here until an explicit re-ARM proof archives it.
+        """
+        if not self.partial_protection_enabled():
+            return []
+        return self._rows(
+            """SELECT * FROM partial_fill_recoveries
+               WHERE state = ? AND reason_code != 'REARM_ARCHIVED'
+               ORDER BY created_ts, recovery_id""",
+            (PartialProtectionState.PROTECTED_PARTIAL.value,),
+        )
+
+    def list_partial_recoveries(self) -> list[dict[str, Any]]:
+        if not self.partial_protection_enabled():
+            return []
+        return self._rows(
+            "SELECT * FROM partial_fill_recoveries ORDER BY created_ts, recovery_id"
+        )
+
+    def open_partial_recovery(
+        self,
+        *,
+        run_id: str,
+        symbol: str,
+        trade_id: int,
+        entry_cloid: str,
+        entry_decision_uid: str,
+        entry_request_id: str,
+        first_observed_ts: datetime | str,
+        protect_deadline_ts: datetime | str,
+        generation: int = 0,
+        size_decimals: int | None = None,
+        ordered_lots: int | None = None,
+        filled_lots: int | None = None,
+        reason_code: str = "PARTIAL_ENTRY_FILL",
+    ) -> dict[str, Any]:
+        """Persist the first partial observation and its fixed deadline.
+
+        Idempotent by construction: replaying the same trade/entry/generation
+        returns the stored row untouched, so neither the first-observation
+        timestamp nor the deadline can ever be rewritten by a retry, a
+        reconnect, or a restart.
+        """
+        self._require_partial_schema()
+        recovery_id = compute_partial_recovery_id(
+            trade_id=int(trade_id), entry_cloid=str(entry_cloid), generation=int(generation)
+        )
+        observed = _to_iso(first_observed_ts)
+        deadline = _to_iso(protect_deadline_ts)
+        if not observed or not deadline:
+            raise ValueError("first_observed_ts and protect_deadline_ts are required")
+        safe_reason = self._safe_reason_code(reason_code)
+        now = _to_iso(self._clock())
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            existing = self.get_partial_recovery(recovery_id)
+            if existing is not None:
+                self.conn.commit()
+                return existing
+            active = self.active_partial_recovery_for_symbol(symbol)
+            if active is not None and str(active["recovery_id"]) != recovery_id:
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_RECOVERY_SYMBOL_BUSY",
+                    f"symbol={symbol} active={active['recovery_id']}",
+                )
+            self.conn.execute(
+                """INSERT INTO partial_fill_recoveries(
+                     recovery_id, run_id, symbol, trade_id, entry_cloid,
+                     entry_decision_uid, entry_request_id, generation, flatten_seq,
+                     state, provenance, size_decimals, ordered_lots, filled_lots,
+                     position_lots, first_observed_ts, protect_deadline_ts,
+                     flatten_deadline_ts, reason_code, created_ts, updated_ts
+                   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, NULL,
+                             ?, ?, NULL, ?, ?, ?)""",
+                (
+                    recovery_id,
+                    str(run_id),
+                    str(symbol),
+                    int(trade_id),
+                    str(entry_cloid),
+                    str(entry_decision_uid),
+                    str(entry_request_id),
+                    int(generation),
+                    PartialProtectionState.PARTIAL_DETECTED.value,
+                    "UNVERIFIED",
+                    None if size_decimals is None else int(size_decimals),
+                    None if ordered_lots is None else int(ordered_lots),
+                    None if filled_lots is None else int(filled_lots),
+                    observed,
+                    deadline,
+                    safe_reason,
+                    now,
+                    now,
+                ),
+            )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        row = self.get_partial_recovery(recovery_id)
+        if row is None:  # pragma: no cover - defensive
+            raise PartialRecoveryConflictError(
+                "PARTIAL_RECOVERY_MISSING", f"recovery_id={recovery_id}"
+            )
+        return row
+
+    _PARTIAL_MUTABLE_FIELDS = frozenset({
+        "provenance",
+        "size_decimals",
+        "ordered_lots",
+        "filled_lots",
+        "position_lots",
+        "flatten_deadline_ts",
+        "reason_code",
+    })
+
+    def _transition_partial_in_tx(
+        self,
+        recovery_id: str,
+        expected: str,
+        target: str,
+        reason_code: str,
+        fields: Mapping[str, Any],
+    ) -> None:
+        row = self.conn.execute(
+            "SELECT state, flatten_deadline_ts FROM partial_fill_recoveries "
+            "WHERE recovery_id = ?",
+            (recovery_id,),
+        ).fetchone()
+        if row is None:
+            raise PartialRecoveryConflictError(
+                "PARTIAL_RECOVERY_NOT_FOUND", f"recovery_id={recovery_id}"
+            )
+        current = PartialProtectionState(str(row["state"]))
+        if current is not PartialProtectionState(str(expected)):
+            raise PartialRecoveryConflictError(
+                "PARTIAL_TRANSITION_CAS_FAILED",
+                f"recovery_id={recovery_id} current={current.value} expected={expected}",
+            )
+        target_state = PartialProtectionState(str(target))
+        if target_state not in PARTIAL_STATE_TRANSITIONS.get(current, frozenset()):
+            raise PartialRecoveryConflictError(
+                "PARTIAL_TRANSITION_DENIED",
+                f"recovery_id={recovery_id} {current.value} -> {target_state.value}",
+            )
+        assignments = ["state = ?", "reason_code = ?", "updated_ts = ?"]
+        params: list[Any] = [
+            target_state.value,
+            self._safe_reason_code(reason_code),
+            _to_iso(self._clock()),
+        ]
+        for key, value in fields.items():
+            if key not in self._PARTIAL_MUTABLE_FIELDS:
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_FIELD_IMMUTABLE", f"field={key}"
+                )
+            if key == "flatten_deadline_ts":
+                # Non-resetting: the 5s budget is written exactly once.
+                if row["flatten_deadline_ts"] is not None:
+                    continue
+                value = _to_iso(value)
+            assignments.append(f"{key} = ?")
+            params.append(value)
+        params.extend([recovery_id, current.value])
+        cursor = self.conn.execute(
+            f"""UPDATE partial_fill_recoveries SET {', '.join(assignments)}
+                WHERE recovery_id = ? AND state = ?""",
+            tuple(params),
+        )
+        if cursor.rowcount != 1:
+            raise PartialRecoveryConflictError(
+                "PARTIAL_TRANSITION_ROWCOUNT",
+                f"recovery_id={recovery_id} rowcount={cursor.rowcount}",
+            )
+
+    def transition_partial_recovery(
+        self,
+        recovery_id: str,
+        *,
+        expected: str,
+        target: str,
+        reason_code: str,
+        **fields: Any,
+    ) -> dict[str, Any]:
+        """Compare-and-set the recovery state; refuses illegal/raced targets."""
+        self._require_partial_schema()
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            self._transition_partial_in_tx(
+                recovery_id, expected, target, reason_code, fields
+            )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        row = self.get_partial_recovery(recovery_id)
+        if row is None:  # pragma: no cover - defensive
+            raise PartialRecoveryConflictError(
+                "PARTIAL_RECOVERY_MISSING", f"recovery_id={recovery_id}"
+            )
+        return row
+
+    def open_partial_generation(
+        self,
+        *,
+        recovery_id: str,
+        reason_code: str,
+        position_lots: int | None = None,
+        filled_lots: int | None = None,
+    ) -> dict[str, Any]:
+        """Late-fill re-entry: recompute quantities inside the same row.
+
+        The generation counter advances so newly reserved INSTALL_STOP/FLATTEN
+        identities are distinct, while the fixed deadline, the first-observed
+        timestamp, and every unresolved CANCEL_ENTRY context are preserved.
+        """
+        self._require_partial_schema()
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.conn.execute(
+                "SELECT state, generation FROM partial_fill_recoveries "
+                "WHERE recovery_id = ?",
+                (recovery_id,),
+            ).fetchone()
+            if row is None:
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_RECOVERY_NOT_FOUND", f"recovery_id={recovery_id}"
+                )
+            current = PartialProtectionState(str(row["state"]))
+            target = PartialProtectionState.PARTIAL_DETECTED
+            if target not in PARTIAL_STATE_TRANSITIONS.get(current, frozenset()):
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_TRANSITION_DENIED",
+                    f"recovery_id={recovery_id} {current.value} -> {target.value}",
+                )
+            cursor = self.conn.execute(
+                """UPDATE partial_fill_recoveries
+                   SET state = ?, generation = generation + 1, reason_code = ?,
+                       position_lots = COALESCE(?, position_lots),
+                       filled_lots = COALESCE(?, filled_lots),
+                       updated_ts = ?
+                   WHERE recovery_id = ? AND state = ?""",
+                (
+                    target.value,
+                    self._safe_reason_code(reason_code),
+                    None if position_lots is None else int(position_lots),
+                    None if filled_lots is None else int(filled_lots),
+                    _to_iso(self._clock()),
+                    recovery_id,
+                    current.value,
+                ),
+            )
+            if cursor.rowcount != 1:
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_GENERATION_ROWCOUNT",
+                    f"recovery_id={recovery_id} rowcount={cursor.rowcount}",
+                )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        row_out = self.get_partial_recovery(recovery_id)
+        if row_out is None:  # pragma: no cover - defensive
+            raise PartialRecoveryConflictError(
+                "PARTIAL_RECOVERY_MISSING", f"recovery_id={recovery_id}"
+            )
+        return row_out
+
+    def reserve_partial_action(
+        self,
+        *,
+        recovery_id: str,
+        action_id: str,
+        kind: str,
+        target_cloid: str,
+        expected_state: str,
+        next_state: str,
+        reason_code: str,
+        generation: int | None = None,
+        flatten_seq: int | None = None,
+        qty_lots: int | None = None,
+        **fields: Any,
+    ) -> tuple[bool, dict[str, Any]]:
+        """Reserve an action *and* commit the state transition before any I/O.
+
+        Returns ``(is_replay, action_row)``. A pre-existing reservation is a
+        replay, not an error: after a crash between reserve-commit and send,
+        the restarted process finds the same identity and resolves it by
+        evidence instead of minting a new action.
+        """
+        self._require_partial_schema()
+        action_kind = PartialActionKind(str(kind))
+        safe_cloid = self._safe_cloid(target_cloid)
+        now = _to_iso(self._clock())
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            recovery = self.conn.execute(
+                "SELECT trade_id, state FROM partial_fill_recoveries "
+                "WHERE recovery_id = ?",
+                (recovery_id,),
+            ).fetchone()
+            if recovery is None:
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_RECOVERY_NOT_FOUND", f"recovery_id={recovery_id}"
+                )
+            existing = self.conn.execute(
+                "SELECT * FROM partial_fill_actions WHERE action_id = ?",
+                (action_id,),
+            ).fetchone()
+            is_replay = existing is not None
+            if is_replay:
+                if (
+                    str(existing["recovery_id"]) != recovery_id
+                    or str(existing["kind"]) != action_kind.value
+                    or str(existing["target_cloid"]) != safe_cloid
+                    or existing["qty_lots"] != (
+                        None if qty_lots is None else int(qty_lots)
+                    )
+                ):
+                    raise PartialRecoveryConflictError(
+                        "PARTIAL_ACTION_IDENTITY_CONFLICT", f"action_id={action_id}"
+                    )
+            else:
+                self.conn.execute(
+                    """INSERT INTO partial_fill_actions(
+                         action_id, recovery_id, trade_id, kind, generation,
+                         flatten_seq, qty_lots, target_cloid, reserved_ts
+                       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        action_id,
+                        recovery_id,
+                        int(recovery["trade_id"]),
+                        action_kind.value,
+                        None if generation is None else int(generation),
+                        None if flatten_seq is None else int(flatten_seq),
+                        None if qty_lots is None else int(qty_lots),
+                        safe_cloid,
+                        now,
+                    ),
+                )
+                self._append_action_event_in_tx(
+                    action_id=action_id,
+                    recovery_id=recovery_id,
+                    status=ActionRecordStatus.RESERVED.value,
+                    evidence_source="LOCAL",
+                    reason_code=reason_code,
+                    evidence={"kind": action_kind.value, "target_cloid": safe_cloid},
+                    observed_ts=now,
+                )
+            if str(recovery["state"]) != str(next_state):
+                self._transition_partial_in_tx(
+                    recovery_id, expected_state, next_state, reason_code, fields
+                )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        row = self.conn.execute(
+            "SELECT * FROM partial_fill_actions WHERE action_id = ?", (action_id,)
+        ).fetchone()
+        if row is None:  # pragma: no cover - defensive
+            raise PartialRecoveryConflictError(
+                "PARTIAL_ACTION_MISSING", f"action_id={action_id}"
+            )
+        return is_replay, dict(row)
+
+    def _append_action_event_in_tx(
+        self,
+        *,
+        action_id: str,
+        recovery_id: str,
+        status: str,
+        evidence_source: str,
+        reason_code: str,
+        evidence: Mapping[str, Any],
+        observed_ts: str,
+    ) -> None:
+        record_status = ActionRecordStatus(str(status))
+        seq_row = self.conn.execute(
+            "SELECT COALESCE(MAX(seq), 0) + 1 FROM partial_fill_action_events "
+            "WHERE action_id = ?",
+            (action_id,),
+        ).fetchone()
+        self.conn.execute(
+            """INSERT INTO partial_fill_action_events(
+                 action_id, recovery_id, seq, status, evidence_source,
+                 reason_code, evidence_json, observed_ts
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                action_id,
+                recovery_id,
+                int(seq_row[0]) if seq_row else 1,
+                record_status.value,
+                str(evidence_source) or "LOCAL",
+                self._safe_reason_code(reason_code),
+                _canonical_json(dict(evidence)),
+                observed_ts,
+            ),
+        )
+
+    def record_partial_action_event(
+        self,
+        *,
+        action_id: str,
+        status: str,
+        reason_code: str,
+        evidence_source: str = "BROKER",
+        evidence: Mapping[str, Any] | None = None,
+        observed_ts: datetime | str | None = None,
+    ) -> None:
+        """Append one immutable outcome/evidence record for a reserved action."""
+        self._require_partial_schema()
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.conn.execute(
+                "SELECT recovery_id FROM partial_fill_actions WHERE action_id = ?",
+                (action_id,),
+            ).fetchone()
+            if row is None:
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_ACTION_NOT_FOUND", f"action_id={action_id}"
+                )
+            self._append_action_event_in_tx(
+                action_id=action_id,
+                recovery_id=str(row["recovery_id"]),
+                status=status,
+                evidence_source=evidence_source,
+                reason_code=reason_code,
+                evidence=evidence or {},
+                observed_ts=_to_iso(observed_ts) or _to_iso(self._clock()) or "",
+            )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+
+    def partial_action_events(self, action_id: str) -> list[dict[str, Any]]:
+        return self._rows(
+            "SELECT * FROM partial_fill_action_events WHERE action_id = ? ORDER BY seq",
+            (action_id,),
+        )
+
+    def resolve_partial_action(self, action_id: str) -> str | None:
+        """Fold the append-only evidence into one conservative outcome.
+
+        ``None`` means "reserved/sent, no outcome evidence yet". Conflicting
+        definitive evidence (both APPLIED and NOT_APPLIED) resolves to
+        ``UNKNOWN``, the most restrictive verdict: query-only, never re-issued.
+        A definitive outcome is never downgraded by later UNKNOWN evidence.
+        """
+        statuses = {
+            str(row["status"])
+            for row in self.conn.execute(
+                "SELECT status FROM partial_fill_action_events WHERE action_id = ?",
+                (action_id,),
+            ).fetchall()
+        }
+        applied = ActionRecordStatus.APPLIED.value in statuses
+        not_applied = ActionRecordStatus.NOT_APPLIED.value in statuses
+        if applied and not_applied:
+            return ActionOutcome.UNKNOWN.value
+        if applied:
+            return ActionOutcome.APPLIED.value
+        if not_applied:
+            return ActionOutcome.NOT_APPLIED.value
+        if ActionRecordStatus.UNKNOWN.value in statuses:
+            return ActionOutcome.UNKNOWN.value
+        return None
+
+    def partial_actions_for_recovery(
+        self, recovery_id: str, kind: str | None = None
+    ) -> list[dict[str, Any]]:
+        if kind is None:
+            return self._rows(
+                "SELECT * FROM partial_fill_actions WHERE recovery_id = ? "
+                "ORDER BY reserved_ts, action_id",
+                (recovery_id,),
+            )
+        return self._rows(
+            "SELECT * FROM partial_fill_actions WHERE recovery_id = ? AND kind = ? "
+            "ORDER BY reserved_ts, action_id",
+            (recovery_id, PartialActionKind(str(kind)).value),
+        )
+
+    def unresolved_partial_actions(self, recovery_id: str) -> list[dict[str, Any]]:
+        """Reserved/sent actions whose outcome is not yet definitive."""
+        return [
+            action
+            for action in self.partial_actions_for_recovery(recovery_id)
+            if self.resolve_partial_action(str(action["action_id"]))
+            in (None, ActionOutcome.UNKNOWN.value)
+        ]
+
+    def bump_partial_flatten_seq(self, recovery_id: str, expected_seq: int) -> int:
+        """Advance the flatten attempt counter only after a definitive outcome.
+
+        Refuses while the current sequence's FLATTEN action is unresolved or
+        UNKNOWN, so an unknown flatten can never mint a second market close.
+        """
+        self._require_partial_schema()
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.conn.execute(
+                "SELECT flatten_seq FROM partial_fill_recoveries WHERE recovery_id = ?",
+                (recovery_id,),
+            ).fetchone()
+            if row is None:
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_RECOVERY_NOT_FOUND", f"recovery_id={recovery_id}"
+                )
+            current = int(row["flatten_seq"])
+            if current != int(expected_seq):
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_FLATTEN_SEQ_CAS_FAILED",
+                    f"recovery_id={recovery_id} current={current} expected={expected_seq}",
+                )
+            for action in self.conn.execute(
+                """SELECT action_id FROM partial_fill_actions
+                   WHERE recovery_id = ? AND kind = ? AND flatten_seq = ?""",
+                (recovery_id, PartialActionKind.FLATTEN.value, current),
+            ).fetchall():
+                outcome = self.resolve_partial_action(str(action["action_id"]))
+                if outcome not in (
+                    ActionOutcome.APPLIED.value,
+                    ActionOutcome.NOT_APPLIED.value,
+                ):
+                    raise PartialRecoveryConflictError(
+                        "PARTIAL_FLATTEN_SEQ_UNRESOLVED",
+                        f"recovery_id={recovery_id} seq={current} outcome={outcome}",
+                    )
+            cursor = self.conn.execute(
+                """UPDATE partial_fill_recoveries
+                   SET flatten_seq = flatten_seq + 1, updated_ts = ?
+                   WHERE recovery_id = ? AND flatten_seq = ?""",
+                (_to_iso(self._clock()), recovery_id, current),
+            )
+            if cursor.rowcount != 1:
+                raise PartialRecoveryConflictError(
+                    "PARTIAL_FLATTEN_SEQ_ROWCOUNT",
+                    f"recovery_id={recovery_id} rowcount={cursor.rowcount}",
+                )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        return current + 1
+
+    def legacy_partial_entry_candidates(self) -> list[dict[str, Any]]:
+        """Query-only survey of owned entry orders with an unfilled remainder.
+
+        Pure local evidence: no broker call, no mutation, no recovery row. The
+        caller (``OrderManager`` startup recovery) is responsible for proving
+        ownership against a bounded exchange snapshot before opening anything.
+        """
+        rows = self._rows(
+            """SELECT o.cloid AS cloid, o.qty AS ordered_qty, o.status AS status,
+                      o.decision_uid AS decision_uid, o.trade_id AS trade_id,
+                      o.order_ref AS order_ref, o.group_id AS group_id,
+                      t.coin AS coin, t.run_id AS run_id, t.direction AS direction,
+                      t.exit_ts AS exit_ts,
+                      COALESCE((SELECT SUM(f.qty) FROM fills f
+                                WHERE f.cloid = o.cloid), 0.0) AS filled_qty,
+                      (SELECT MIN(f.fill_ts) FROM fills f
+                       WHERE f.cloid = o.cloid) AS first_fill_ts
+               FROM orders o JOIN trades t ON t.trade_id = o.trade_id
+               WHERE o.role = 'ENTRY' AND t.exit_ts IS NULL
+               ORDER BY o.ts_submit, o.cloid"""
+        )
+        candidates: list[dict[str, Any]] = []
+        for row in rows:
+            ordered = float(row["ordered_qty"] or 0.0)
+            filled = float(row["filled_qty"] or 0.0)
+            if ordered <= 0.0 or filled <= 0.0 or filled >= ordered:
+                continue
+            candidates.append(row)
+        return candidates
 
     # ------------------------------------------------------------------
     # Identity reservation

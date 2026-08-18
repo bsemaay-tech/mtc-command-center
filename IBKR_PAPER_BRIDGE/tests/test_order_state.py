@@ -581,3 +581,211 @@ def test_existing_models_remain_constructible_and_backward_compatible():
         ts=ts, regime="BOTH", confidence=0.9, ttl_minutes=60, sources=["x"], rationale="test"
     )
     assert regime.regime == "BOTH"
+
+
+# ===========================================================================
+# TS-P1-004 — canonical state wired by quantity, partial-recovery machine
+# ===========================================================================
+
+from bridge.engine.types import (  # noqa: E402
+    PARTIAL_ACCEPTING_STATES,
+    PARTIAL_STATE_TRANSITIONS,
+    PARTIAL_TERMINAL_STATES,
+    ActionOutcome,
+    IllegalPartialTransitionError,
+    LotQuantizationError,
+    LotUnit,
+    PartialActionKind,
+    PartialProtectionState,
+    Provenance,
+    canonical_order_state,
+    can_transition_partial,
+    quantize_lots,
+    validate_partial_transition,
+)
+
+ALL_PARTIAL_STATES = tuple(PartialProtectionState)
+
+
+def test_partial_protection_states_are_the_declared_ten():
+    assert len(ALL_PARTIAL_STATES) == 10
+    assert {state.value for state in ALL_PARTIAL_STATES} == {
+        "PARTIAL_DETECTED", "PROTECTION_PENDING", "PROTECTION_VERIFIED",
+        "PROTECTED_PARTIAL", "CANCEL_PENDING", "CANCEL_UNKNOWN",
+        "FLATTEN_PENDING", "FLATTEN_UNKNOWN", "SAFE_FLAT", "UNPROTECTED_ABORT",
+    }
+
+
+def test_partial_transition_table_covers_every_state():
+    assert set(PARTIAL_STATE_TRANSITIONS) == set(ALL_PARTIAL_STATES)
+
+
+@pytest.mark.parametrize("state", ALL_PARTIAL_STATES)
+def test_partial_self_loop_is_always_legal_idempotent_replay(state):
+    assert can_transition_partial(state, state)
+
+
+def test_partial_terminal_and_accepting_sets():
+    assert PARTIAL_ACCEPTING_STATES == frozenset({
+        PartialProtectionState.PROTECTED_PARTIAL, PartialProtectionState.SAFE_FLAT
+    })
+    assert PARTIAL_TERMINAL_STATES == PARTIAL_ACCEPTING_STATES | frozenset({
+        PartialProtectionState.UNPROTECTED_ABORT
+    })
+
+
+@pytest.mark.parametrize(
+    "state",
+    [PartialProtectionState.SAFE_FLAT, PartialProtectionState.UNPROTECTED_ABORT],
+)
+def test_final_states_forbid_resurrection(state):
+    assert PARTIAL_STATE_TRANSITIONS[state] == frozenset({state})
+
+
+def test_protected_partial_only_reopens_for_a_late_fill():
+    assert PARTIAL_STATE_TRANSITIONS[PartialProtectionState.PROTECTED_PARTIAL] == (
+        frozenset({
+            PartialProtectionState.PROTECTED_PARTIAL,
+            PartialProtectionState.PARTIAL_DETECTED,
+        })
+    )
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        PartialProtectionState.PROTECTION_VERIFIED,
+        PartialProtectionState.PROTECTED_PARTIAL,
+        PartialProtectionState.CANCEL_PENDING,
+        PartialProtectionState.CANCEL_UNKNOWN,
+    ],
+)
+def test_late_fill_can_requantify_from_the_documented_states(source):
+    assert can_transition_partial(source, PartialProtectionState.PARTIAL_DETECTED)
+
+
+@pytest.mark.parametrize(
+    ("a", "b"),
+    [
+        (PartialProtectionState.PARTIAL_DETECTED, PartialProtectionState.PROTECTED_PARTIAL),
+        (PartialProtectionState.PARTIAL_DETECTED, PartialProtectionState.SAFE_FLAT),
+        (PartialProtectionState.PROTECTION_PENDING, PartialProtectionState.PROTECTED_PARTIAL),
+        (PartialProtectionState.FLATTEN_PENDING, PartialProtectionState.PARTIAL_DETECTED),
+        (PartialProtectionState.UNPROTECTED_ABORT, PartialProtectionState.SAFE_FLAT),
+    ],
+)
+def test_representative_illegal_partial_edges(a, b):
+    assert not can_transition_partial(a, b)
+    with pytest.raises(IllegalPartialTransitionError):
+        validate_partial_transition(a, b)
+
+
+def test_illegal_partial_transition_error_is_structured():
+    with pytest.raises(IllegalPartialTransitionError) as exc_info:
+        validate_partial_transition(
+            PartialProtectionState.SAFE_FLAT, PartialProtectionState.PARTIAL_DETECTED
+        )
+    err = exc_info.value
+    assert err.reason_code == "ILLEGAL_PARTIAL_TRANSITION"
+    assert err.from_state is PartialProtectionState.SAFE_FLAT
+    assert err.to_state is PartialProtectionState.PARTIAL_DETECTED
+
+
+def test_partial_policy_table_is_immutable():
+    with pytest.raises(TypeError):
+        PARTIAL_STATE_TRANSITIONS[PartialProtectionState.SAFE_FLAT] = frozenset()
+
+
+def test_partial_enums_are_closed_vocabularies():
+    assert {kind.value for kind in PartialActionKind} == {
+        "INSTALL_STOP", "CANCEL_ENTRY", "CANCEL_PROTECTION", "FLATTEN"
+    }
+    assert {outcome.value for outcome in ActionOutcome} == {
+        "APPLIED", "NOT_APPLIED", "UNKNOWN"
+    }
+    assert {p.value for p in Provenance} == {
+        "OWNED", "MIXED", "FOREIGN", "AMBIGUOUS", "UNVERIFIED"
+    }
+
+
+# --- canonical order state derived from durable quantities ----------------
+
+
+@pytest.mark.parametrize(
+    ("raw", "ordered", "filled", "expected"),
+    [
+        ("OPEN", 2.0, 0.0, OrderState.OPEN),
+        ("OPEN", 2.0, 0.5, OrderState.PARTIALLY_FILLED),
+        ("OPEN", 2.0, 1.999, OrderState.PARTIALLY_FILLED),
+        ("OPEN", 2.0, 2.0, OrderState.FILLED),
+        ("SUBMITTED", 2.0, 1.0, OrderState.PARTIALLY_FILLED),
+        ("PENDING", 2.0, 1.0, OrderState.PARTIALLY_FILLED),
+        ("FILLED", 2.0, 1.0, OrderState.FILLED),
+        ("CANCELLED_BY_ENGINE", 2.0, 1.0, OrderState.CANCELED),
+    ],
+)
+def test_canonical_order_state_by_quantity(raw, ordered, filled, expected):
+    assert (
+        canonical_order_state(
+            raw_status=raw, ordered_qty=ordered, filled_qty=filled, lot=LotUnit(3)
+        )
+        is expected
+    )
+
+
+def test_canonical_order_state_pending_cancel_only_while_live():
+    assert (
+        canonical_order_state(
+            raw_status="OPEN", ordered_qty=2.0, filled_qty=1.0,
+            lot=LotUnit(3), cancel_reserved=True,
+        )
+        is OrderState.PENDING_CANCEL
+    )
+    assert (
+        canonical_order_state(
+            raw_status="CANCELLED_BY_ENGINE", ordered_qty=2.0, filled_qty=1.0,
+            lot=LotUnit(3), cancel_reserved=True,
+        )
+        is OrderState.CANCELED
+    )
+
+
+def test_canonical_order_state_fails_closed_on_unknown_raw_status():
+    with pytest.raises(UnknownRawOrderStatusError):
+        canonical_order_state(raw_status="BOGUS", ordered_qty=2.0, filled_qty=1.0)
+
+
+def test_canonical_order_state_fails_closed_on_non_lot_quantities():
+    with pytest.raises(LotQuantizationError):
+        canonical_order_state(
+            raw_status="OPEN", ordered_qty=2.0, filled_qty=0.00001, lot=LotUnit(3)
+        )
+
+
+def test_canonical_order_state_rejects_non_positive_order_quantity():
+    with pytest.raises(LotQuantizationError):
+        canonical_order_state(raw_status="OPEN", ordered_qty=0.0, filled_qty=0.0)
+
+
+def test_canonical_order_state_agrees_with_the_declared_transition_table():
+    """Every derived state must be reachable from its raw base state."""
+    for raw, base in RAW_ORDER_STATUS_ALIASES.items():
+        if base in TERMINAL_ORDER_STATES:
+            continue
+        derived = canonical_order_state(
+            raw_status=raw, ordered_qty=2.0, filled_qty=1.0, lot=LotUnit(3)
+        )
+        assert can_transition(base, derived)
+
+
+def test_partial_fill_edges_exist_in_the_order_state_table():
+    assert can_transition(OrderState.OPEN, OrderState.PARTIALLY_FILLED)
+    assert can_transition(OrderState.PARTIALLY_FILLED, OrderState.PENDING_CANCEL)
+    assert can_transition(OrderState.PENDING_CANCEL, OrderState.FILLED)
+    assert not can_transition(OrderState.PARTIALLY_FILLED, OrderState.OPEN)
+
+
+def test_lot_quantum_is_required_to_be_valid():
+    with pytest.raises(LotQuantizationError):
+        LotUnit(-1)
+    assert quantize_lots(1.5, LotUnit(2)) == 150
