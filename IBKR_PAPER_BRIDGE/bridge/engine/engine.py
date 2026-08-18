@@ -142,6 +142,13 @@ class BridgeEngine:
         self.store.insert_event(self.run_id, now, "INFO", "ARM_REQUEST", f"state={previous}")
         if previous == "KILLED":
             raise RuntimeError("KILLED requires operator acknowledgement")
+        # TS-P1-003-A2: block arming while any quarantine is unacknowledged.
+        recovery = self.store.recovery_status()
+        if recovery["requires_acknowledgement"]:
+            raise RuntimeError(
+                f"Unacknowledged quarantines: {recovery['active_quarantines']} active. "
+                f"Acknowledge them before re-arming."
+            )
         if not self.reconcile_ready:
             raise RuntimeError("startup reconcile incomplete")
         max_age = timedelta(seconds=max(self.reconcile_interval_s * 3, 30.0))
@@ -191,6 +198,31 @@ class BridgeEngine:
         await self.order_manager.reconcile()
         self.reconcile_ready = True
         await self._publish("status", self.status())
+
+    async def acknowledge_quarantines(self) -> dict[str, int]:
+        """Acknowledge all active quarantines (TS-P1-003-A2).
+
+        Operator must still re-arm explicitly. Returns counts of acknowledged
+        vs already-acknowledged rows.
+        """
+        recovery = self.store.recovery_status()
+        acked = 0
+        skipped = 0
+        for row in recovery["latest"]:
+            qid = int(row["quarantine_id"])
+            if self.store.acknowledge_quarantine(qid, self.run_id):
+                acked += 1
+            else:
+                skipped += 1
+        self.store.insert_event(
+            self.run_id,
+            datetime.now(UTC),
+            "INFO",
+            "QUARANTINE_ACK",
+            f"acknowledged={acked} skipped={skipped}",
+        )
+        await self._publish("status", self.status())
+        return {"acknowledged": acked, "skipped": skipped}
 
     async def run_replay(self, max_bars: int | None = None) -> None:
         self._ensure_run(mode="dry_run")
@@ -361,6 +393,13 @@ class BridgeEngine:
                 "RISK_INPUT_FAILED",
                 self.risk_input_error,
             )
+            self.store.quarantine_event(
+                run_id=self.run_id,
+                ts=datetime.now(UTC),
+                code="RISK_INPUT_FAILED",
+                reason=self.risk_input_error,
+                detail=f"Risk inputs unreadable: {type(exc).__name__}",
+            )
         except Exception:
             pass
         await self.notifier.send("ERROR", f"RISK_INPUT_FAILED — DISARMED: {self.risk_input_error}")
@@ -390,6 +429,8 @@ class BridgeEngine:
             "run_id": self.run_id,
             "coin": self.coin,
             "timeframe": self.timeframe,
+            "recovery": self.store.recovery_status(),
+            "quarantine_summary": self.store.quarantine_summary(),
         }
 
     async def _heartbeat_loop(self) -> None:

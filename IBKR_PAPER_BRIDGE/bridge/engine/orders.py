@@ -613,7 +613,12 @@ class OrderManager:
         return True
 
     def _quarantine_fill(self, code: str, fill: FillEvent, detail: str) -> None:
-        """Persist an integrity fault and stop new entries without rewriting PnL."""
+        """Persist an integrity fault and stop new entries without rewriting PnL.
+
+        TS-P1-003-A2: records a structured quarantine_event for operator
+        acknowledgement, in addition to the immediate DISARMED state change
+        and event log entry.
+        """
         self.store.set_meta("app_state", "DISARMED")
         self.store.insert_event(
             self.run_id,
@@ -621,6 +626,14 @@ class OrderManager:
             "ERROR",
             code,
             f"fill_id={fill.fill_id} {detail}",
+        )
+        self.store.quarantine_event(
+            run_id=self.run_id,
+            ts=fill.ts,
+            code=code,
+            reason=f"fill_id={fill.fill_id} {detail}",
+            detail=detail,
+            fill_id=fill.fill_id,
         )
 
     def _within_pending_grace(self, trade_id: int) -> bool:

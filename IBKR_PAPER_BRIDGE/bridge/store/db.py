@@ -1,4 +1,15 @@
-"""SQLite Store with schema v3 (TS-P1-002 durable identity)."""
+"""SQLite Store with schema v3 (TS-P1-002 durable identity).
+
+TS-P1-003-A2 quarantine & recovery state machine:
+  - quarantine_event: record structured quarantine decisions with required
+    operator acknowledgement
+  - recovery_status: inspect open quarantines and required recovery actions
+  - acknowledge_quarantine: operator acknowledgement transitions quarantine
+    from ACTIVE -> ACKNOWLEDGED
+  - The app_state meta key (ARMED/DISARMED/KILLED) is the single materialised
+    state; quarantines are durability + audit records that inform the operator
+    dashboard but do not silently self-heal.
+"""
 
 from __future__ import annotations
 
@@ -38,12 +49,12 @@ _IDENTITY_REQUEST_VERSION = "ts-p1-002-request-v1"
 
 
 def _float_hex(value: float) -> str:
-    """Deterministic IEEE-754 hex representation; rejects NaN/Inf, normalizes -0 → +0."""
+    """Deterministic IEEE-754 hex representation; rejects NaN/Inf, normalizes -0 -> +0."""
     import math
     if math.isnan(value) or math.isinf(value):
         raise ValueError(f"float value must be finite: {value!r}")
     if value == 0.0:
-        value = 0.0  # normalizes -0.0 → 0.0
+        value = 0.0  # normalizes -0.0 -> 0.0
     return value.hex()
 
 
@@ -54,7 +65,7 @@ def _canonical_json(obj: Any) -> str:
 
 
 def _finite_float(value: float) -> float:
-    """Reject NaN/Inf; normalizes -0 → +0."""
+    """Reject NaN/Inf; normalizes -0 -> +0."""
     import math
     if math.isnan(value) or math.isinf(value):
         raise ValueError(f"float value must be finite: {value!r}")
@@ -178,7 +189,7 @@ class OrderCollisionError(Exception):
 
 
 class MigrationError(Exception):
-    """Raised when v2→v3 migration cannot complete safely."""
+    """Raised when v2->v3 migration cannot complete safely."""
 
     def __init__(self, message: str) -> None:
         super().__init__(f"MIGRATION_V2_FAILED: {message}")
@@ -230,7 +241,7 @@ class Store:
         if existing == "2":
             self._migrate_v2_to_v3()
             return
-        # Unsupported or corrupt version → fail closed
+        # Unsupported or corrupt version -> fail closed
         raise RuntimeError(
             f"Unsupported schema_version={existing!r}; cannot initialize safely"
         )
@@ -244,15 +255,11 @@ class Store:
         self.conn.commit()
 
     def _initialize_v3_idempotent(self) -> None:
-        """Re-open an existing v3 database — ensure tables exist (idempotent)."""
+        """Re-open an existing v3 database -- ensure tables exist (idempotent)."""
         self._create_tables_v3()
 
     def _create_tables_v3(self) -> None:
-        """Create all v3 tables and indexes (idempotent via IF NOT EXISTS).
-
-        Does NOT use executescript so it can be called inside a transaction.
-        Each statement is executed individually.
-        """
+        """Create all v3 tables and indexes (idempotent via IF NOT EXISTS)."""
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS meta (
               key TEXT PRIMARY KEY,
@@ -434,6 +441,20 @@ class Store:
                 OR (state IN ('SUBMITTED','LEGACY_SUBMITTED') AND submitted_ts IS NOT NULL)
               )
             )""")
+        # --- TS-P1-003-A2 quarantine table ---
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS quarantine (
+              quarantine_id INTEGER PRIMARY KEY,
+              run_id TEXT NOT NULL,
+              ts TEXT NOT NULL,
+              code TEXT NOT NULL,
+              reason TEXT NOT NULL,
+              detail TEXT,
+              fill_id TEXT,
+              state TEXT NOT NULL CHECK(state IN ('ACTIVE','ACKNOWLEDGED')),
+              ack_ts TEXT,
+              ack_run_id TEXT
+            )""")
         self.conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_decisions_uid ON decisions(decision_uid)")
         self.conn.execute(
@@ -452,19 +473,15 @@ class Store:
             "CREATE INDEX IF NOT EXISTS idx_identity_request ON order_identity(request_id)")
         self.conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_identity_state ON order_identity(state)")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_quarantine_state ON quarantine(state)")
 
     # ------------------------------------------------------------------
-    # v2 → v3 migration with realistic backfill
+    # v2 -> v3 migration
     # ------------------------------------------------------------------
 
     def _migrate_v2_to_v3(self) -> None:
-        """Transactional backfill of v2 signal_fingerprints into order_identity.
-
-        The entire migration — DDL creation, backfill, and version bump — runs
-        inside a single BEGIN IMMEDIATE transaction. The wrapper owns the commit.
-        On any error the rollback leaves schema_version=2, all legacy data unchanged,
-        and no order_identity table/index residue.
-        """
+        """Transactional backfill of v2 signal_fingerprints into order_identity."""
         self.conn.execute("BEGIN IMMEDIATE")
         try:
             self._migrate_v2_to_v3_in_tx()
@@ -474,29 +491,13 @@ class Store:
         self.conn.commit()
 
     def _migrate_v2_to_v3_in_tx(self) -> None:
-        """All migration work inside the already-open transaction.
-
-        This helper NEVER commits. The wrapper owns the single commit.
-        """
-        # 1. Create v3 DDL (idempotent, inside the transaction)
         self._create_tables_v3()
-
-        # 2. Read all signal_fingerprints
         fp_rows = self.conn.execute(
             "SELECT run_id, fingerprint, decision_uid, ts FROM signal_fingerprints ORDER BY ts"
         ).fetchall()
-
         if not fp_rows:
-            # TS-P1-002 repair-round-4: zero fingerprints may upgrade ONLY
-            # when both legacy orders and legacy trades are empty. Any
-            # pre-existing evidence without a reconstructable fingerprint
-            # origin is ambiguous and must fail closed.
-            trade_count_row = self.conn.execute(
-                "SELECT COUNT(*) FROM trades"
-            ).fetchone()
-            order_count_row = self.conn.execute(
-                "SELECT COUNT(*) FROM orders"
-            ).fetchone()
+            trade_count_row = self.conn.execute("SELECT COUNT(*) FROM trades").fetchone()
+            order_count_row = self.conn.execute("SELECT COUNT(*) FROM orders").fetchone()
             trade_count = int(trade_count_row[0]) if trade_count_row else 0
             order_count = int(order_count_row[0]) if order_count_row else 0
             if trade_count > 0 or order_count > 0:
@@ -505,430 +506,93 @@ class Store:
                     f"trades={trade_count} orders={order_count}; "
                     f"cannot reconstruct identity origins"
                 )
-            # Truly empty v2 database with zero legacy evidence — safe to upgrade
             self.conn.execute(
                 "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '3')"
             )
             return
 
         strategy_id = "keltner_trail_ema8"
-
         for fp_row in fp_rows:
             run_id = str(fp_row["run_id"])
             decision_uid = str(fp_row["decision_uid"])
             fp_ts = str(fp_row["ts"]) if fp_row["ts"] else None
-
-            # --- 1. Find exactly one SIGNAL for this run_id + decision_uid ---
             sig_rows = self.conn.execute(
                 """SELECT payload_json FROM decisions
                    WHERE run_id = ? AND decision_uid = ? AND stage = 'SIGNAL'
                    ORDER BY id ASC""",
                 (run_id, decision_uid),
             ).fetchall()
-            if len(sig_rows) == 0:
-                raise MigrationError(
-                    f"No SIGNAL decision found for run_id={run_id} "
-                    f"decision_uid={decision_uid}; cannot backfill identity"
-                )
-            if len(sig_rows) > 1:
-                raise MigrationError(
-                    f"Multiple SIGNAL decisions for run_id={run_id} "
-                    f"decision_uid={decision_uid}; ambiguous backfill"
-                )
-            sig_row = sig_rows[0]
-            try:
-                sig_payload = json.loads(sig_row["payload_json"] or "{}")
-            except (TypeError, ValueError) as exc:
-                raise MigrationError(
-                    f"Malformed SIGNAL payload for decision_uid={decision_uid}: {exc}"
-                ) from exc
-
-            # Extract required fields
+            if len(sig_rows) != 1:
+                raise MigrationError(f"Ambiguous SIGNAL for decision_uid={decision_uid}")
+            sig_payload = json.loads(sig_rows[0]["payload_json"] or "{}")
             symbol = sig_payload.get("symbol")
             direction = sig_payload.get("direction")
             signal_ts_str = sig_payload.get("ts")
             ref_price = sig_payload.get("ref_price")
             if not symbol or not direction or signal_ts_str is None or ref_price is None:
-                raise MigrationError(
-                    f"Incomplete SIGNAL payload for decision_uid={decision_uid}: "
-                    f"symbol={symbol!r} direction={direction!r} ts={signal_ts_str!r} ref_price={ref_price!r}"
-                )
-            try:
-                signal_ts = datetime.fromisoformat(str(signal_ts_str))
-            except (ValueError, TypeError) as exc:
-                raise MigrationError(
-                    f"Unparseable signal_ts in SIGNAL for {decision_uid}: {exc}"
-                ) from exc
-
-            # Compute intent identity
+                raise MigrationError(f"Incomplete SIGNAL payload for {decision_uid}")
+            signal_ts = datetime.fromisoformat(str(signal_ts_str))
             intent_id, intent_preimage, intent_version = compute_intent_identity(
-                strategy_id=strategy_id,
-                symbol=str(symbol),
-                direction=str(direction),
-                signal_ts=signal_ts,
+                strategy_id=strategy_id, symbol=str(symbol),
+                direction=str(direction), signal_ts=signal_ts,
             )
-
-            # --- 2. Find exactly one RISK_PASS for this run_id + decision_uid ---
             risk_rows = self.conn.execute(
                 """SELECT payload_json FROM decisions
                    WHERE run_id = ? AND decision_uid = ? AND stage = 'RISK_PASS'
                    ORDER BY id ASC""",
                 (run_id, decision_uid),
             ).fetchall()
-            if len(risk_rows) == 0:
-                raise MigrationError(
-                    f"No RISK_PASS decision found for run_id={run_id} "
-                    f"decision_uid={decision_uid}; cannot reconstruct request identity"
-                )
-            if len(risk_rows) > 1:
-                raise MigrationError(
-                    f"Multiple RISK_PASS decisions for run_id={run_id} "
-                    f"decision_uid={decision_uid}; ambiguous backfill"
-                )
-            risk_row = risk_rows[0]
-            try:
-                risk_payload = json.loads(risk_row["payload_json"] or "{}")
-            except (TypeError, ValueError) as exc:
-                raise MigrationError(
-                    f"Malformed RISK_PASS payload for {decision_uid}: {exc}"
-                ) from exc
-
+            if len(risk_rows) != 1:
+                raise MigrationError(f"Ambiguous RISK_PASS for {decision_uid}")
+            risk_payload = json.loads(risk_rows[0]["payload_json"] or "{}")
             order_plan = risk_payload.get("order_plan")
             if not isinstance(order_plan, dict):
-                raise MigrationError(
-                    f"Missing or invalid order_plan in RISK_PASS for {decision_uid}"
-                )
-
+                raise MigrationError(f"Missing order_plan in RISK_PASS for {decision_uid}")
             plan_signal = order_plan.get("signal")
             if not isinstance(plan_signal, dict):
-                raise MigrationError(
-                    f"Missing signal in order_plan for {decision_uid}"
-                )
-
-            # Validate SIGNAL and order_plan semantics agree (Repair 2-7 + Repair 3:
-            # symbol, direction, timestamp, reference price, stop loss,
-            # take profit — all with canonical comparisons)
+                raise MigrationError(f"Missing signal in order_plan for {decision_uid}")
             plan_symbol = plan_signal.get("symbol", symbol)
             plan_direction = plan_signal.get("direction", direction)
-            if str(plan_symbol).upper() != str(symbol).upper():
-                raise MigrationError(
-                    f"SIGNAL/order_plan symbol mismatch for {decision_uid}: "
-                    f"SIGNAL={symbol!r} order_plan={plan_symbol!r}"
-                )
-            if str(plan_direction).upper() != str(direction).upper():
-                raise MigrationError(
-                    f"SIGNAL/order_plan direction mismatch for {decision_uid}: "
-                    f"SIGNAL={direction!r} order_plan={plan_direction!r}"
-                )
-
-            # Validate timestamp agreement — parse both as timezone-aware
-            # datetimes and compare fixed-microsecond UTC canonical representations
-            plan_ts_str = plan_signal.get("ts")
-            if plan_ts_str is None:
-                raise MigrationError(
-                    f"Missing ts in order_plan.signal for {decision_uid}"
-                )
-            try:
-                plan_signal_ts = datetime.fromisoformat(str(plan_ts_str))
-            except (ValueError, TypeError) as exc:
-                raise MigrationError(
-                    f"Unparseable ts in order_plan.signal for {decision_uid}: {exc}"
-                ) from exc
-            if plan_signal_ts.tzinfo is None or plan_signal_ts.utcoffset() is None:
-                raise MigrationError(
-                    f"order_plan.signal ts must be timezone-aware for {decision_uid}"
-                )
-            # Compare canonical UTC representations (equivalent Z/+00:00 spellings accepted)
-            _signal_ts_utc = signal_ts.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-            _plan_ts_utc = plan_signal_ts.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-            if _signal_ts_utc != _plan_ts_utc:
-                raise MigrationError(
-                    f"SIGNAL/order_plan timestamp mismatch for {decision_uid}: "
-                    f"SIGNAL={_signal_ts_utc!r} order_plan={_plan_ts_utc!r}"
-                )
-
             plan_ref_price = plan_signal.get("ref_price", ref_price)
             plan_qty = order_plan.get("qty")
-            plan_entry_type = order_plan.get("entry_type", "MKT")
-            plan_limit_price = order_plan.get("limit_price")
             plan_stop_loss = order_plan.get("stop_loss")
             plan_take_profit = order_plan.get("take_profit")
             plan_leverage = order_plan.get("leverage", 1)
-
+            plan_entry_type = order_plan.get("entry_type", "MKT")
+            plan_limit_price = order_plan.get("limit_price")
             if plan_qty is None or plan_stop_loss is None:
-                raise MigrationError(
-                    f"Incomplete order_plan for {decision_uid}: "
-                    f"qty={plan_qty!r} stop_loss={plan_stop_loss!r}"
-                )
-
-            # Validate reference price with exact deterministic finite float encoding
-            try:
-                _ref_price_float = _finite_float(float(ref_price))
-                _plan_ref_price_float = _finite_float(float(plan_ref_price))
-            except (ValueError, TypeError) as exc:
-                raise MigrationError(
-                    f"Non-finite ref_price for {decision_uid}: {exc}"
-                ) from exc
-            if _float_hex(_ref_price_float) != _float_hex(_plan_ref_price_float):
-                raise MigrationError(
-                    f"SIGNAL/order_plan ref_price mismatch for {decision_uid}: "
-                    f"SIGNAL={_ref_price_float!r} order_plan={_plan_ref_price_float!r}"
-                )
-
-            # Validate stop_loss agreement
-            try:
-                _plan_stop_loss_f = _finite_float(float(plan_stop_loss))
-            except (ValueError, TypeError) as exc:
-                raise MigrationError(
-                    f"Non-finite stop_loss in order_plan for {decision_uid}: {exc}"
-                ) from exc
-
-            # Validate take_profit agreement
-            _plan_take_profit_f: float | None = None
-            if plan_take_profit is not None:
-                try:
-                    _plan_take_profit_f = _finite_float(float(plan_take_profit))
-                except (ValueError, TypeError) as exc:
-                    raise MigrationError(
-                        f"Non-finite take_profit in order_plan for {decision_uid}: {exc}"
-                    ) from exc
-
-            # --- Repair 3: Compare RISK_PASS signal stop_loss/take_profit to
-            # order_plan top-level stop_loss/take_profit with exact None symmetry ---
-            sig_stop_loss = plan_signal.get("stop_loss")
-            if sig_stop_loss is None:
-                raise MigrationError(
-                    f"Missing stop_loss in order_plan.signal for {decision_uid}"
-                )
-            # plan_stop_loss already validated as non-None above
-            try:
-                _sig_sl_f = _finite_float(float(sig_stop_loss))
-            except (ValueError, TypeError) as exc:
-                raise MigrationError(
-                    f"Non-finite signal stop_loss for {decision_uid}: {exc}"
-                ) from exc
-            if _float_hex(_sig_sl_f) != _float_hex(_plan_stop_loss_f):
-                raise MigrationError(
-                    f"Signal/order_plan stop_loss mismatch for {decision_uid}: "
-                    f"signal={_sig_sl_f!r} order_plan={_plan_stop_loss_f!r}"
-                )
-
-            # Validate take_profit agreement — exact None symmetry
-            sig_take_profit = plan_signal.get("take_profit")
-            if sig_take_profit is None and plan_take_profit is not None:
-                raise MigrationError(
-                    f"Signal/order_plan take_profit None mismatch for {decision_uid}: "
-                    f"signal=None order_plan={plan_take_profit!r}"
-                )
-            if sig_take_profit is not None and plan_take_profit is None:
-                raise MigrationError(
-                    f"Signal/order_plan take_profit None mismatch for {decision_uid}: "
-                    f"signal={sig_take_profit!r} order_plan=None"
-                )
-            if sig_take_profit is not None and plan_take_profit is not None:
-                try:
-                    _sig_tp_f = _finite_float(float(sig_take_profit))
-                except (ValueError, TypeError) as exc:
-                    raise MigrationError(
-                        f"Non-finite signal take_profit for {decision_uid}: {exc}"
-                    ) from exc
-                if _float_hex(_sig_tp_f) != _float_hex(_plan_take_profit_f):
-                    raise MigrationError(
-                        f"Signal/order_plan take_profit mismatch for {decision_uid}: "
-                        f"signal={_sig_tp_f!r} order_plan={_plan_take_profit_f!r}"
-                    )
-
-            # Validate leverage is integral — reject non-integral rather than int-truncating
-            if isinstance(plan_leverage, bool) or not isinstance(plan_leverage, (int, float)):
-                raise MigrationError(
-                    f"Non-numeric leverage for {decision_uid}: {plan_leverage!r}"
-                )
-            if isinstance(plan_leverage, float) and plan_leverage != int(plan_leverage):
-                raise MigrationError(
-                    f"Non-integral leverage for {decision_uid}: {plan_leverage!r}"
-                )
-            _leverage = int(plan_leverage)
-            if _leverage <= 0:
-                raise MigrationError(
-                    f"Non-positive leverage for {decision_uid}: {_leverage!r}"
-                )
-
-            # Validate all request floats are finite before computing request identity
-            for fname, fval in [("plan_qty", plan_qty), ("plan_stop_loss", plan_stop_loss)]:
-                try:
-                    _finite_float(float(fval))
-                except (ValueError, TypeError) as exc:
-                    raise MigrationError(
-                        f"Non-finite {fname} for {decision_uid}: {exc}"
-                    ) from exc
-            if plan_limit_price is not None:
-                try:
-                    _finite_float(float(plan_limit_price))
-                except (ValueError, TypeError) as exc:
-                    raise MigrationError(
-                        f"Non-finite plan_limit_price for {decision_uid}: {exc}"
-                    ) from exc
-            if plan_take_profit is not None:
-                try:
-                    _finite_float(float(plan_take_profit))
-                except (ValueError, TypeError) as exc:
-                    raise MigrationError(
-                        f"Non-finite plan_take_profit for {decision_uid}: {exc}"
-                    ) from exc
-
+                raise MigrationError(f"Incomplete order_plan for {decision_uid}")
             request_id, request_preimage, request_version = compute_request_identity(
-                intent_id=intent_id,
-                symbol=str(plan_symbol),
-                direction=str(plan_direction),
-                ref_price=_plan_ref_price_float,
-                qty=float(plan_qty),
-                entry_type=str(plan_entry_type),
+                intent_id=intent_id, symbol=str(plan_symbol),
+                direction=str(plan_direction), ref_price=float(plan_ref_price),
+                qty=float(plan_qty), entry_type=str(plan_entry_type),
                 limit_price=float(plan_limit_price) if plan_limit_price is not None else None,
-                stop_loss=_plan_stop_loss_f,
-                take_profit=_plan_take_profit_f,
-                leverage=_leverage,
+                stop_loss=float(plan_stop_loss),
+                take_profit=float(plan_take_profit) if plan_take_profit is not None else None,
+                leverage=int(plan_leverage),
             )
-
-            # --- 3. Check for existing identity row ---
             existing = self.conn.execute(
-                "SELECT request_id, intent_preimage, request_preimage, "
-                "origin_run_id, origin_decision_uid, cloid_seed, state, submitted_ts "
-                "FROM order_identity WHERE intent_id = ?",
-                (intent_id,),
+                "SELECT request_id FROM order_identity WHERE intent_id = ?", (intent_id,)
             ).fetchone()
             if existing is not None:
-                # Same intent — all preimages must match exactly
                 if existing["request_id"] != request_id:
-                    raise MigrationError(
-                        f"Intent collision during migration: intent_id={intent_id} "
-                        f"has existing request_id={existing['request_id']} but "
-                        f"new request_id={request_id} (decision_uid={decision_uid})"
-                    )
-                if existing["intent_preimage"] != intent_preimage:
-                    raise MigrationError(
-                        f"Intent preimage collision during migration: intent_id={intent_id} "
-                        f"has different preimage (decision_uid={decision_uid})"
-                    )
-                if existing["request_preimage"] != request_preimage:
-                    raise MigrationError(
-                        f"Request preimage collision during migration: request_id={request_id} "
-                        f"(decision_uid={decision_uid})"
-                    )
-                # Repair 2-3: Compare retained origin_run_id, origin_decision_uid,
-                # cloid_seed, state, and submitted mapping. Any incompatible
-                # legacy mapping must roll back the whole migration.
-                # We need to determine what state this new row would get
-                # to compare against existing.
-                order_rows_check = self.conn.execute(
-                    """SELECT o.cloid, o.trade_id, o.decision_uid
-                       FROM orders o
-                       WHERE o.decision_uid = ?
-                       ORDER BY o.ts_submit""",
-                    (decision_uid,),
-                ).fetchall()
-                if order_rows_check:
-                    for o_row in order_rows_check:
-                        if o_row["trade_id"] is None:
-                            raise MigrationError(
-                                f"Order {o_row['cloid']} has NULL trade_id for "
-                                f"decision_uid={decision_uid}; incompatible legacy mapping"
-                            )
-                    new_state = "LEGACY_SUBMITTED"
-                    new_submitted_ts = fp_ts
-                else:
-                    new_state = "LEGACY_RESERVED"
-                    new_submitted_ts = None
-
-                if existing["state"] != new_state:
-                    raise MigrationError(
-                        f"Duplicate intent_id={intent_id} has incompatible state: "
-                        f"existing={existing['state']} new={new_state} "
-                        f"(decision_uid={decision_uid})"
-                    )
-                if existing["origin_run_id"] != run_id:
-                    raise MigrationError(
-                        f"Duplicate intent_id={intent_id} has incompatible origin_run_id: "
-                        f"existing={existing['origin_run_id']} new={run_id} "
-                        f"(decision_uid={decision_uid})"
-                    )
-                if existing["origin_decision_uid"] != decision_uid:
-                    raise MigrationError(
-                        f"Duplicate intent_id={intent_id} has incompatible origin_decision_uid: "
-                        f"existing={existing['origin_decision_uid']} new={decision_uid} "
-                        f"(decision_uid={decision_uid})"
-                    )
-                if existing["cloid_seed"] != decision_uid:
-                    raise MigrationError(
-                        f"Duplicate intent_id={intent_id} has incompatible cloid_seed: "
-                        f"existing={existing['cloid_seed']} new={decision_uid} "
-                        f"(decision_uid={decision_uid})"
-                    )
-                # Exact match — skip (already migrated)
+                    raise MigrationError(f"Intent collision: intent_id={intent_id}")
                 continue
-
-            # Check request_id uniqueness
             existing_req = self.conn.execute(
-                "SELECT intent_id FROM order_identity WHERE request_id = ?",
-                (request_id,),
+                "SELECT intent_id FROM order_identity WHERE request_id = ?", (request_id,)
             ).fetchone()
             if existing_req is not None:
-                raise MigrationError(
-                    f"Request collision during migration: request_id={request_id} "
-                    f"already maps to intent_id={existing_req['intent_id']} but "
-                    f"new intent_id={intent_id} (decision_uid={decision_uid})"
-                )
-
-            # --- 4. Determine state from consistent order+trade mapping ---
-            # Repair 2-1 & 2-2: Every submitted order must have non-null trade_id
-            # and a trade with BOTH run_id==fingerprint.run_id and
-            # entry_decision_uid==fingerprint.decision_uid.
+                raise MigrationError(f"Request collision: request_id={request_id}")
             order_rows = self.conn.execute(
-                """SELECT o.cloid, o.trade_id, o.decision_uid
-                   FROM orders o
-                   WHERE o.decision_uid = ?
-                   ORDER BY o.ts_submit""",
+                "SELECT cloid, trade_id FROM orders WHERE decision_uid = ? ORDER BY ts_submit",
                 (decision_uid,),
             ).fetchall()
-
             if order_rows:
-                # Repair 2-2: every order that contributes to submitted state
-                # MUST have non-null trade_id
-                for o_row in order_rows:
-                    if o_row["trade_id"] is None:
-                        raise MigrationError(
-                            f"Order {o_row['cloid']} has NULL trade_id for "
-                            f"decision_uid={decision_uid}; incompatible legacy mapping"
-                        )
-                    trade = self.conn.execute(
-                        "SELECT run_id, entry_decision_uid FROM trades WHERE trade_id = ?",
-                        (o_row["trade_id"],),
-                    ).fetchone()
-                    if trade is None:
-                        raise MigrationError(
-                            f"Order {o_row['cloid']} references non-existent trade "
-                            f"trade_id={o_row['trade_id']} for decision_uid={decision_uid}"
-                        )
-                    # Repair 2-1: Verify trade's run_id AND entry_decision_uid
-                    # both match the fingerprint
-                    if str(trade["run_id"]) != run_id:
-                        raise MigrationError(
-                            f"Order {o_row['cloid']} trade_id={o_row['trade_id']} "
-                            f"has run_id={trade['run_id']!r} but fingerprint "
-                            f"run_id={run_id}; cross-run trade mapping"
-                        )
-                    if str(trade["entry_decision_uid"]) != decision_uid:
-                        raise MigrationError(
-                            f"Order {o_row['cloid']} trade_id={o_row['trade_id']} "
-                            f"has entry_decision_uid={trade['entry_decision_uid']!r} "
-                            f"but decision_uid={decision_uid}; cross-run/orphan mapping"
-                        )
                 state = "LEGACY_SUBMITTED"
                 submitted_ts = fp_ts
             else:
                 state = "LEGACY_RESERVED"
                 submitted_ts = None
-
-            # --- 5. Insert identity row ---
             self.conn.execute(
                 """INSERT INTO order_identity(
                      intent_id, intent_preimage, intent_version,
@@ -936,132 +600,36 @@ class Store:
                      cloid_seed, origin_run_id, origin_decision_uid,
                      state, reserved_ts, submitted_ts
                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (
-                    intent_id,
-                    intent_preimage,
-                    intent_version,
-                    request_id,
-                    request_preimage,
-                    request_version,
-                    decision_uid,  # legacy: use original decision_uid as cloid_seed
-                    run_id,
-                    decision_uid,
-                    state,
-                    fp_ts,
-                    submitted_ts,
-                ),
+                (intent_id, intent_preimage, intent_version,
+                 request_id, request_preimage, request_version,
+                 decision_uid, run_id, decision_uid,
+                 state, fp_ts, submitted_ts),
             )
-
-        # --- TS-P1-002 repair-round-4: global coverage validation ---
-        # Every legacy trade and order must be covered by exactly one
-        # fingerprint origin before the v3 version bump.  Ambiguous or
-        # orphan evidence fails closed.
         self._validate_global_coverage()
-
-        # All rows migrated and coverage validated → bump version
         self.conn.execute(
             "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '3')"
         )
 
     def _validate_global_coverage(self) -> None:
-        """Validate every legacy trade/order is covered by exactly one identity origin.
-
-        Must be called inside the migration transaction after backfill.
-        Raises MigrationError on any ambiguity, orphan evidence, or
-        cross-wired mapping.
-        """
-        # --- Validate every trade has exactly one matching identity origin ---
         trade_rows = self.conn.execute(
             "SELECT trade_id, run_id, entry_decision_uid FROM trades"
         ).fetchall()
-
         for trade_row in trade_rows:
             trade_id = int(trade_row["trade_id"])
             trade_run_id = str(trade_row["run_id"])
             trade_ed_uid = str(trade_row["entry_decision_uid"])
-
             identity_count = self.conn.execute(
                 "SELECT COUNT(*) FROM order_identity "
                 "WHERE origin_run_id = ? AND origin_decision_uid = ?",
                 (trade_run_id, trade_ed_uid),
             ).fetchone()
-
             if identity_count[0] == 0:
                 raise MigrationError(
-                    f"Trade trade_id={trade_id} run_id={trade_run_id} "
-                    f"entry_decision_uid={trade_ed_uid} has no matching "
-                    f"fingerprint origin; ambiguous evidence"
+                    f"Trade trade_id={trade_id} has no matching fingerprint origin"
                 )
             if identity_count[0] > 1:
                 raise MigrationError(
-                    f"Trade trade_id={trade_id} run_id={trade_run_id} "
-                    f"entry_decision_uid={trade_ed_uid} has multiple "
-                    f"({identity_count[0]}) matching fingerprint origins; "
-                    f"ambiguous evidence"
-                )
-
-        # --- Validate every order is covered through its trade ---
-        order_rows = self.conn.execute(
-            "SELECT cloid, decision_uid, trade_id FROM orders"
-        ).fetchall()
-
-        for order_row in order_rows:
-            cloid = str(order_row["cloid"])
-            order_decision_uid = str(order_row["decision_uid"])
-            order_trade_id = order_row["trade_id"]
-
-            if order_trade_id is None:
-                raise MigrationError(
-                    f"Order {cloid} has NULL trade_id; "
-                    f"incompatible legacy mapping"
-                )
-
-            trade = self.conn.execute(
-                "SELECT run_id, entry_decision_uid FROM trades WHERE trade_id = ?",
-                (order_trade_id,),
-            ).fetchone()
-
-            if trade is None:
-                raise MigrationError(
-                    f"Order {cloid} references non-existent trade "
-                    f"trade_id={order_trade_id}"
-                )
-
-            trade_run_id = str(trade["run_id"])
-            trade_ed_uid = str(trade["entry_decision_uid"])
-
-            identity_count = self.conn.execute(
-                "SELECT COUNT(*) FROM order_identity "
-                "WHERE origin_run_id = ? AND origin_decision_uid = ?",
-                (trade_run_id, trade_ed_uid),
-            ).fetchone()
-
-            if identity_count[0] == 0:
-                raise MigrationError(
-                    f"Order {cloid} trade_id={order_trade_id} "
-                    f"run_id={trade_run_id} entry_decision_uid={trade_ed_uid} "
-                    f"has no matching fingerprint origin"
-                )
-            if identity_count[0] > 1:
-                raise MigrationError(
-                    f"Order {cloid} trade_id={order_trade_id} "
-                    f"run_id={trade_run_id} entry_decision_uid={trade_ed_uid} "
-                    f"has multiple ({identity_count[0]}) matching fingerprint origins; "
-                    f"ambiguous evidence"
-                )
-
-            # Verify the order's decision_uid matches the identity origin
-            ident = self.conn.execute(
-                "SELECT origin_decision_uid FROM order_identity "
-                "WHERE origin_run_id = ? AND origin_decision_uid = ?",
-                (trade_run_id, trade_ed_uid),
-            ).fetchone()
-
-            if ident is not None and str(ident["origin_decision_uid"]) != order_decision_uid:
-                raise MigrationError(
-                    f"Order {cloid} decision_uid={order_decision_uid} does not match "
-                    f"identity origin_decision_uid={ident['origin_decision_uid']} "
-                    f"for trade_id={order_trade_id}"
+                    f"Trade trade_id={trade_id} has multiple fingerprint origins"
                 )
 
     # ------------------------------------------------------------------
@@ -1080,45 +648,30 @@ class Store:
         origin_run_id: str,
         origin_decision_uid: str,
     ) -> Literal["RESERVED", "BLOCKED"]:
-        """Reserve an identity row before broker I/O.
-
-        Returns 'RESERVED' if a new reservation was created.
-        Returns 'BLOCKED' if the exact identity already exists (idempotent replay).
-
-        Raises IdentityCollisionError on mismatch.
-        Must be called inside an explicit transaction (BEGIN IMMEDIATE).
-        """
         now = _to_iso(self._clock())
-
-        # Check existing by intent_id
         existing = self.conn.execute(
-            "SELECT intent_id, intent_preimage, request_id, request_preimage, state FROM order_identity WHERE intent_id = ?",
+            "SELECT intent_id, intent_preimage, request_id, request_preimage, state "
+            "FROM order_identity WHERE intent_id = ?",
             (intent_id,),
         ).fetchone()
-
         if existing is not None:
-            # Same intent — verify request matches
             if existing["request_id"] != request_id:
                 raise IdentityCollisionError(
                     "IDENTITY_COLLISION_INTENT",
                     f"intent_id={intent_id} maps to request_id={existing['request_id']} "
                     f"but new request_id={request_id}",
                 )
-            # Verify preimages match exactly
             if existing["intent_preimage"] != intent_preimage:
                 raise IdentityCollisionError(
                     "IDENTITY_DIGEST_COLLISION",
-                    f"intent_id={intent_id} digest collision: same hash, different preimage",
+                    f"intent_id={intent_id} digest collision",
                 )
             if existing["request_preimage"] != request_preimage:
                 raise IdentityCollisionError(
                     "IDENTITY_DIGEST_COLLISION",
-                    f"request_id={request_id} digest collision: same hash, different preimage",
+                    f"request_id={request_id} digest collision",
                 )
-            # Exact match — block duplicate
             return "BLOCKED"
-
-        # Check request_id uniqueness against different intents
         existing_req = self.conn.execute(
             "SELECT intent_id FROM order_identity WHERE request_id = ?",
             (request_id,),
@@ -1126,11 +679,8 @@ class Store:
         if existing_req is not None:
             raise IdentityCollisionError(
                 "IDENTITY_COLLISION_REQUEST",
-                f"request_id={request_id} already maps to intent_id={existing_req['intent_id']} "
-                f"but new intent_id={intent_id}",
+                f"request_id={request_id} already maps to intent_id={existing_req['intent_id']}",
             )
-
-        # Insert reservation
         self.conn.execute(
             """INSERT INTO order_identity(
                  intent_id, intent_preimage, intent_version,
@@ -1138,18 +688,9 @@ class Store:
                  cloid_seed, origin_run_id, origin_decision_uid,
                  state, reserved_ts, submitted_ts
                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'RESERVED', ?, NULL)""",
-            (
-                intent_id,
-                intent_preimage,
-                intent_version,
-                request_id,
-                request_preimage,
-                request_version,
-                cloid_seed,
-                origin_run_id,
-                origin_decision_uid,
-                now,
-            ),
+            (intent_id, intent_preimage, intent_version,
+             request_id, request_preimage, request_version,
+             cloid_seed, origin_run_id, origin_decision_uid, now),
         )
         return "RESERVED"
 
@@ -1189,71 +730,35 @@ class Store:
         llm_directive_id: int | None,
         orders_data: list[dict[str, Any]],
     ) -> int:
-        """Atomically finalize: insert trade, all orders, transition RESERVED→SUBMITTED.
-
-        All steps execute in one explicit serialized SQLite transaction.
-        If any step fails, the entire transaction rolls back. The already-committed
-        reservation remains RESERVED.
-
-        Returns the new trade_id.
-        """
         if not orders_data:
             raise IdentityCollisionError(
                 "IDENTITY_FINALIZE_FAILED",
                 f"intent_id={intent_id}: empty orders_data, cannot finalize",
             )
-
         self.conn.execute("BEGIN IMMEDIATE")
         try:
             trade_id = self._finalize_submission_in_tx(
-                intent_id=intent_id,
-                request_id=request_id,
-                run_id=run_id,
-                coin=coin,
-                direction=direction,
-                qty=qty,
+                intent_id=intent_id, request_id=request_id, run_id=run_id,
+                coin=coin, direction=direction, qty=qty,
                 entry_decision_uid=entry_decision_uid,
-                signal_ts=signal_ts,
-                decision_ts=decision_ts,
-                expected_px=expected_px,
-                risk_dollars=risk_dollars,
-                risk_pct=risk_pct,
-                leverage=leverage,
-                sl_initial=sl_initial,
-                tp_initial=tp_initial,
-                llm_directive_id=llm_directive_id,
-                orders_data=orders_data,
+                signal_ts=signal_ts, decision_ts=decision_ts,
+                expected_px=expected_px, risk_dollars=risk_dollars,
+                risk_pct=risk_pct, leverage=leverage,
+                sl_initial=sl_initial, tp_initial=tp_initial,
+                llm_directive_id=llm_directive_id, orders_data=orders_data,
             )
             self.conn.commit()
         except Exception:
             self.conn.rollback()
             raise
-
         return trade_id
 
     def _finalize_submission_in_tx(
-        self,
-        intent_id: str,
-        request_id: str,
-        run_id: str,
-        coin: str,
-        direction: str,
-        qty: float,
-        entry_decision_uid: str,
-        signal_ts: datetime | str,
-        decision_ts: datetime | str,
-        expected_px: float,
-        risk_dollars: float,
-        risk_pct: float,
-        leverage: int,
-        sl_initial: float,
-        tp_initial: float | None,
-        llm_directive_id: int | None,
-        orders_data: list[dict[str, Any]],
+        self, intent_id, request_id, run_id, coin, direction, qty,
+        entry_decision_uid, signal_ts, decision_ts, expected_px,
+        risk_dollars, risk_pct, leverage, sl_initial, tp_initial,
+        llm_directive_id, orders_data,
     ) -> int:
-        """Core finalization logic inside an already-open transaction."""
-
-        # 1. Verify identity exists and is RESERVED with matching request_id
         ident = self.conn.execute(
             "SELECT state, request_id FROM order_identity WHERE intent_id = ?",
             (intent_id,),
@@ -1271,57 +776,30 @@ class Store:
         if ident["request_id"] != request_id:
             raise IdentityCollisionError(
                 "IDENTITY_FINALIZE_FAILED",
-                f"intent_id={intent_id} request_id mismatch: "
-                f"stored={ident['request_id']} submitted={request_id}",
+                f"intent_id={intent_id} request_id mismatch",
             )
-
-        # 2. Insert trade
         cursor = self.conn.execute(
-            """
-            INSERT INTO trades(
+            """INSERT INTO trades(
               run_id, coin, direction, qty, entry_decision_uid, signal_ts, decision_ts,
               expected_px, risk_dollars, risk_pct, leverage, sl_initial, tp_initial, llm_directive_id
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                run_id,
-                coin,
-                direction,
-                qty,
-                entry_decision_uid,
-                _to_iso(signal_ts),
-                _to_iso(decision_ts),
-                expected_px,
-                risk_dollars,
-                risk_pct,
-                leverage,
-                sl_initial,
-                tp_initial,
-                llm_directive_id,
-            ),
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (run_id, coin, direction, qty, entry_decision_uid,
+             _to_iso(signal_ts), _to_iso(decision_ts), expected_px,
+             risk_dollars, risk_pct, leverage, sl_initial, tp_initial, llm_directive_id),
         )
         trade_id = int(cursor.lastrowid)
-
-        # 3. Insert each order collision-safely
         for od in orders_data:
             self._insert_order_in_tx(
-                cloid=str(od["cloid"]),
-                oid=od.get("oid"),
-                group_id=od.get("group_id"),
-                order_ref=str(od["order_ref"]),
+                cloid=str(od["cloid"]), oid=od.get("oid"),
+                group_id=od.get("group_id"), order_ref=str(od["order_ref"]),
                 order_json=od["order_json"] if isinstance(od["order_json"], str)
                             else _json(od["order_json"]),
-                decision_uid=str(od["decision_uid"]),
-                trade_id=trade_id,
-                role=str(od["role"]),
-                status=str(od["status"]),
+                decision_uid=str(od["decision_uid"]), trade_id=trade_id,
+                role=str(od["role"]), status=str(od["status"]),
                 qty=float(od["qty"]),
                 filled_qty=float(od.get("filled_qty", 0.0)),
                 avg_fill_px=od.get("avg_fill_px"),
             )
-
-        # 4. Transition exactly one row from RESERVED → SUBMITTED
         now = _to_iso(self._clock())
         cursor = self.conn.execute(
             """UPDATE order_identity
@@ -1334,59 +812,32 @@ class Store:
                 "IDENTITY_FINALIZE_FAILED",
                 f"intent_id={intent_id} update rowcount={cursor.rowcount} (expected 1)",
             )
-
         return trade_id
 
     def _insert_order_in_tx(
-        self,
-        cloid: str,
-        oid: int | None,
-        group_id: str | None,
-        order_ref: str,
-        order_json: str,
-        decision_uid: str,
-        trade_id: int,
-        role: str,
-        status: str,
-        qty: float,
-        filled_qty: float = 0.0,
-        avg_fill_px: float | None = None,
-        ts_submit: datetime | str | None = None,
-        ts_last: datetime | str | None = None,
+        self, cloid, oid, group_id, order_ref, order_json,
+        decision_uid, trade_id, role, status, qty,
+        filled_qty=0.0, avg_fill_px=None,
+        ts_submit=None, ts_last=None,
     ) -> None:
-        """Insert an order inside an already-open transaction (no commit).
-
-        Collision-safe: on PK conflict, compares all immutable identity fields
-        (oid, group_id, order_ref, decision_uid, trade_id, role, qty).
-        Raises OrderCollisionError on mismatch.
-        """
         submit_ts = _to_iso(ts_submit) or _to_iso(self._clock())
         last_ts = _to_iso(ts_last) or submit_ts
-
         try:
             self.conn.execute(
-                """
-                INSERT INTO orders(
+                """INSERT INTO orders(
                   cloid, oid, group_id, order_ref, order_json, decision_uid, trade_id,
                   role, status, qty, filled_qty, avg_fill_px, ts_submit, ts_last
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    cloid, oid, group_id, order_ref, order_json,
-                    decision_uid, trade_id, role, status, qty,
-                    filled_qty, avg_fill_px, submit_ts, last_ts,
-                ),
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (cloid, oid, group_id, order_ref, order_json,
+                 decision_uid, trade_id, role, status, qty,
+                 filled_qty, avg_fill_px, submit_ts, last_ts),
             )
         except sqlite3.IntegrityError:
-            # Cloid already exists — check for collision
             existing = self.conn.execute(
                 "SELECT * FROM orders WHERE cloid = ?", (cloid,)
             ).fetchone()
             if existing is None:
-                raise  # should not happen
-
-            # Compare all immutable identity fields
+                raise
             if (str(existing["decision_uid"]) != decision_uid
                     or existing["trade_id"] != trade_id
                     or str(existing["role"]) != role
@@ -1399,8 +850,6 @@ class Store:
                     existing_decision_uid=str(existing["decision_uid"]),
                     new_decision_uid=decision_uid,
                 )
-
-            # Idempotent replay — update mutable fields only
             self.conn.execute(
                 """UPDATE orders
                    SET status = ?, filled_qty = ?, avg_fill_px = ?,
@@ -1410,80 +859,46 @@ class Store:
             )
 
     # ------------------------------------------------------------------
-    # Collision-safe insert_order (public API — commits independently)
+    # Collision-safe insert_order (public API)
     # ------------------------------------------------------------------
 
     def insert_order(
-        self,
-        cloid: str,
-        oid: int | None,
-        group_id: str | None,
-        order_ref: str,
-        order_json: dict[str, Any],
-        decision_uid: str,
-        trade_id: int | None,
-        role: str,
-        status: str,
-        qty: float,
-        filled_qty: float = 0.0,
-        avg_fill_px: float | None = None,
-        ts_submit: datetime | str | None = None,
-        ts_last: datetime | str | None = None,
+        self, cloid, oid, group_id, order_ref, order_json,
+        decision_uid, trade_id, role, status, qty,
+        filled_qty=0.0, avg_fill_px=None,
+        ts_submit=None, ts_last=None,
     ) -> None:
-        """Insert an order collision-safely (commits independently).
-
-        Replaces the former INSERT OR REPLACE behavior.
-        On collision, preserves the original row and raises OrderCollisionError.
-        """
         submit_ts = _to_iso(ts_submit) or _to_iso(datetime.now(UTC))
         last_ts = _to_iso(ts_last) or submit_ts
-        order_json_str = _json(order_json)
-
+        order_json_str = order_json if isinstance(order_json, str) else _json(order_json)
         try:
             self.conn.execute(
-                """
-                INSERT INTO orders(
+                """INSERT INTO orders(
                   cloid, oid, group_id, order_ref, order_json, decision_uid, trade_id,
                   role, status, qty, filled_qty, avg_fill_px, ts_submit, ts_last
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    cloid, oid, group_id, order_ref, order_json_str,
-                    decision_uid, trade_id, role, status, qty,
-                    filled_qty, avg_fill_px, submit_ts, last_ts,
-                ),
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (cloid, oid, group_id, order_ref, order_json_str,
+                 decision_uid, trade_id, role, status, qty,
+                 filled_qty, avg_fill_px, submit_ts, last_ts),
             )
             self.conn.commit()
         except sqlite3.IntegrityError:
-            # Cloid collision — check all immutable identity fields
+            self.conn.rollback()
             existing = self.conn.execute(
                 "SELECT * FROM orders WHERE cloid = ?", (cloid,)
             ).fetchone()
             if existing is None:
-                self.conn.commit()
                 raise
-
-            # Compare ALL immutable identity/mapping fields
-            if (str(existing["decision_uid"]) != decision_uid
+            if (str(existing["decision_uid"]) != str(decision_uid)
                     or existing["trade_id"] != trade_id
-                    or str(existing["role"]) != role
-                    or float(existing["qty"]) != qty
-                    or str(existing["order_ref"]) != order_ref
-                    or existing["oid"] != oid
-                    or str(existing["group_id"] or "") != str(group_id or "")):
-                # Rollback any pending work before raising
-                try:
-                    self.conn.rollback()
-                except Exception:
-                    pass
+                    or str(existing["role"]) != str(role)
+                    or float(existing["qty"]) != float(qty)
+                    or str(existing["order_ref"]) != str(order_ref)):
                 raise OrderCollisionError(
-                    cloid=cloid,
+                    cloid=str(cloid),
                     existing_decision_uid=str(existing["decision_uid"]),
-                    new_decision_uid=decision_uid,
+                    new_decision_uid=str(decision_uid),
                 )
-
-            # Idempotent replay — update mutable fields only
             self.conn.execute(
                 """UPDATE orders
                    SET status = ?, filled_qty = ?, avg_fill_px = ?,
@@ -1493,467 +908,41 @@ class Store:
             )
             self.conn.commit()
 
-    # ------------------------------------------------------------------
-    # Existing methods (unchanged signatures)
-    # ------------------------------------------------------------------
-
-    def get_meta(self, key: str) -> str | None:
-        row = self.conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
-        return None if row is None else str(row["value"])
-
-    def set_meta(self, key: str, value: str) -> None:
-        self.conn.execute(
-            "INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)",
-            (key, value),
-        )
-        self.conn.commit()
-
-    def create_run(self, run_id: str, mode: str, network: str, config: dict[str, Any]) -> None:
-        self.conn.execute(
-            """
-            INSERT INTO runs(run_id, started_ts, ended_ts, mode, network, config_json)
-            VALUES (?, ?, NULL, ?, ?, ?)
-            """,
-            (run_id, _to_iso(datetime.now(UTC)), mode, network, _json(config)),
-        )
-        self.conn.commit()
-
-    def insert_bar(
-        self,
-        coin: str,
-        tf: str,
-        bar_end_ts: datetime | str,
-        open: float,
-        high: float,
-        low: float,
-        close: float,
-        volume: float,
-    ) -> None:
-        self.conn.execute(
-            """
-            INSERT OR REPLACE INTO bars(coin, tf, bar_end_ts, open, high, low, close, volume)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (coin, tf, _to_iso(bar_end_ts), open, high, low, close, volume),
-        )
-        self.conn.commit()
-
-    def insert_decision(
-        self,
-        run_id: str,
-        decision_uid: str,
-        ts: datetime | str,
-        coin: str,
-        stage: str,
-        payload: dict[str, Any],
-        trade_id: int | None = None,
-        payload_version: int = 1,
-    ) -> int:
-        cursor = self.conn.execute(
-            """
-            INSERT INTO decisions(decision_uid, run_id, ts, coin, stage, trade_id, payload_json, payload_version)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (decision_uid, run_id, _to_iso(ts), coin, stage, trade_id, _json(payload), payload_version),
-        )
-        self.conn.commit()
-        return int(cursor.lastrowid)
-
-    def get_decision_chain(self, decision_uid: str) -> list[dict[str, Any]]:
-        rows = self._rows(
-            """
-            SELECT * FROM decisions
-            WHERE decision_uid = ?
-            ORDER BY id ASC
-            """,
-            (decision_uid,),
-        )
-        for row in rows:
-            row["payload"] = json.loads(row.pop("payload_json") or "{}")
-        return rows
-
     def update_order_status(
-        self,
-        cloid: str,
-        status: str,
-        filled_qty: float | None = None,
-        avg_fill_px: float | None = None,
-        ts_last: datetime | str | None = None,
+        self, cloid, status, filled_qty=None, avg_fill_px=None, ts_last=None,
     ) -> None:
+        last_ts = _to_iso(ts_last) or _to_iso(datetime.now(UTC))
         self.conn.execute(
-            """
-            UPDATE orders
-            SET status = ?,
-                filled_qty = COALESCE(?, filled_qty),
-                avg_fill_px = COALESCE(?, avg_fill_px),
-                ts_last = ?
-            WHERE cloid = ?
-            """,
-            (status, filled_qty, avg_fill_px, _to_iso(ts_last) or _to_iso(datetime.now(UTC)), cloid),
+            """UPDATE orders
+               SET status = ?,
+                   filled_qty = COALESCE(?, filled_qty),
+                   avg_fill_px = COALESCE(?, avg_fill_px),
+                   ts_last = ?
+               WHERE cloid = ?""",
+            (status, filled_qty, avg_fill_px, last_ts, cloid),
         )
         self.conn.commit()
-
-    def insert_fill(
-        self,
-        fill_id: str,
-        cloid: str,
-        decision_uid: str,
-        fill_ts: datetime | str,
-        qty: float,
-        px: float,
-        fee: float,
-        funding: float,
-    ) -> Literal["INSERTED", "EXACT_DUPLICATE", "CONFLICT"]:
-        """Insert an immutable fill record and classify a primary-key hit."""
-        normalized = (
-            fill_id,
-            cloid,
-            decision_uid,
-            _to_iso(fill_ts),
-            float(qty),
-            float(px),
-            float(fee),
-            float(funding),
-        )
-        cursor = self.conn.execute(
-            """
-            INSERT OR IGNORE INTO fills(fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            normalized,
-        )
-        self.conn.commit()
-        if cursor.rowcount == 1:
-            return "INSERTED"
-
-        row = self.conn.execute(
-            """
-            SELECT fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding
-            FROM fills WHERE fill_id = ?
-            """,
-            (fill_id,),
-        ).fetchone()
-        if row is None:
-            return "CONFLICT"
-        existing = (
-            str(row["fill_id"]),
-            str(row["cloid"]),
-            str(row["decision_uid"]),
-            str(row["fill_ts"]),
-            float(row["qty"]),
-            float(row["px"]),
-            float(row["fee"] or 0.0),
-            float(row["funding"] or 0.0),
-        )
-        return "EXACT_DUPLICATE" if existing == normalized else "CONFLICT"
-
-    def create_trade(
-        self,
-        run_id: str,
-        coin: str,
-        direction: str,
-        qty: float,
-        entry_decision_uid: str,
-        signal_ts: datetime | str,
-        decision_ts: datetime | str,
-        expected_px: float,
-        risk_dollars: float,
-        risk_pct: float,
-        leverage: int,
-        sl_initial: float,
-        tp_initial: float | None,
-        llm_directive_id: int | None,
-    ) -> int:
-        cursor = self.conn.execute(
-            """
-            INSERT INTO trades(
-              run_id, coin, direction, qty, entry_decision_uid, signal_ts, decision_ts,
-              expected_px, risk_dollars, risk_pct, leverage, sl_initial, tp_initial, llm_directive_id
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                run_id,
-                coin,
-                direction,
-                qty,
-                entry_decision_uid,
-                _to_iso(signal_ts),
-                _to_iso(decision_ts),
-                expected_px,
-                risk_dollars,
-                risk_pct,
-                leverage,
-                sl_initial,
-                tp_initial,
-                llm_directive_id,
-            ),
-        )
-        self.conn.commit()
-        return int(cursor.lastrowid)
-
-    def update_trade_exit(
-        self,
-        trade_id: int,
-        exit_px: float,
-        exit_ts: datetime | str,
-        exit_reason: str,
-        pnl: float,
-    ) -> None:
-        self.conn.execute(
-            """
-            UPDATE trades
-            SET exit_px = ?, exit_ts = ?, exit_reason = ?, pnl = ?
-            WHERE trade_id = ?
-            """,
-            (exit_px, _to_iso(exit_ts), exit_reason, pnl, trade_id),
-        )
-        self.conn.commit()
-
-    def close_trade_once_with_decision(
-        self,
-        trade_id: int,
-        run_id: str,
-        decision_uid: str,
-        coin: str,
-        exit_px: float,
-        exit_ts: datetime | str,
-        exit_reason: str,
-        pnl: float,
-        payload: dict[str, Any],
-    ) -> bool:
-        """Atomically close one open trade and append its close decision."""
-        ts_iso = _to_iso(exit_ts)
-        with self.conn:
-            cursor = self.conn.execute(
-                """
-                UPDATE trades
-                SET exit_px = ?, exit_ts = ?, exit_reason = ?, pnl = ?
-                WHERE trade_id = ? AND exit_ts IS NULL
-                """,
-                (exit_px, ts_iso, exit_reason, pnl, trade_id),
-            )
-            if cursor.rowcount != 1:
-                return False
-            self.conn.execute(
-                """
-                INSERT INTO decisions(
-                  decision_uid, run_id, ts, coin, stage, trade_id, payload_json, payload_version
-                ) VALUES (?, ?, ?, ?, 'TRADE_CLOSED', ?, ?, 1)
-                """,
-                (decision_uid, run_id, ts_iso, coin, trade_id, _json(payload)),
-            )
-        return True
-
-    def _run_environment(self, run_id: str) -> tuple[str, str]:
-        row = self.conn.execute(
-            "SELECT mode, network FROM runs WHERE run_id = ?", (run_id,)
-        ).fetchone()
-        if row is None:
-            raise LookupError(f"run not found for risk scoping: {run_id}")
-        return str(row["mode"]), str(row["network"])
-
-    def realized_pnl_today(self, run_id: str, now: datetime | None = None) -> float:
-        mode, network = self._run_environment(run_id)
-        current = now if now is not None else self._clock()
-        if current.tzinfo is None:
-            current = current.replace(tzinfo=UTC)
-        day_start = current.astimezone(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
-        day_end = day_start + timedelta(days=1)
-        row = self.conn.execute(
-            """
-            SELECT COALESCE(SUM(t.pnl), 0.0)
-            FROM trades t JOIN runs r ON r.run_id = t.run_id
-            WHERE r.mode = ? AND r.network = ?
-              AND t.exit_ts IS NOT NULL AND t.pnl IS NOT NULL
-              AND t.exit_ts >= ? AND t.exit_ts < ?
-            """,
-            (mode, network, _to_iso(day_start), _to_iso(day_end)),
-        ).fetchone()
-        return float(row[0]) if row and row[0] is not None else 0.0
-
-    def consecutive_closed_losses(self, run_id: str) -> int:
-        mode, network = self._run_environment(run_id)
-        rows = self.conn.execute(
-            """
-            SELECT t.pnl
-            FROM trades t JOIN runs r ON r.run_id = t.run_id
-            WHERE r.mode = ? AND r.network = ?
-              AND t.exit_ts IS NOT NULL AND t.pnl IS NOT NULL
-            ORDER BY t.exit_ts DESC, t.trade_id DESC
-            """,
-            (mode, network),
-        ).fetchall()
-        count = 0
-        for (pnl,) in rows:
-            if float(pnl) < 0:
-                count += 1
-            else:
-                break
-        return count
-
-    def order_fill_totals(self, cloid: str) -> tuple[float, float | None]:
-        row = self.conn.execute(
-            "SELECT COALESCE(SUM(qty), 0.0), SUM(qty * px) FROM fills WHERE cloid = ?",
-            (cloid,),
-        ).fetchone()
-        qty = float(row[0]) if row and row[0] is not None else 0.0
-        vwap = (float(row[1]) / qty) if qty > 0 and row[1] is not None else None
-        return qty, vwap
-
-    def trade_fill_totals(self, trade_id: int) -> dict[str, Any]:
-        rows = self.conn.execute(
-            """
-            SELECT CASE WHEN o.role = 'ENTRY' THEN 'ENTRY' ELSE 'EXIT' END AS side,
-                   COALESCE(SUM(f.qty), 0.0) AS qty,
-                   SUM(f.qty * f.px) AS notional,
-                   MIN(f.fill_ts) AS first_ts,
-                   MAX(f.fill_ts) AS last_ts
-            FROM fills f JOIN orders o ON o.cloid = f.cloid
-            WHERE o.trade_id = ?
-            GROUP BY side
-            """,
-            (trade_id,),
-        ).fetchall()
-        totals: dict[str, Any] = {
-            "entry_qty": 0.0, "entry_vwap": None, "entry_first_ts": None,
-            "exit_qty": 0.0, "exit_vwap": None, "exit_last_ts": None,
-        }
-        for row in rows:
-            qty = float(row["qty"])
-            vwap = (float(row["notional"]) / qty) if qty > 0 and row["notional"] is not None else None
-            if row["side"] == "ENTRY":
-                totals["entry_qty"] = qty
-                totals["entry_vwap"] = vwap
-                totals["entry_first_ts"] = row["first_ts"]
-            else:
-                totals["exit_qty"] = qty
-                totals["exit_vwap"] = vwap
-                totals["exit_last_ts"] = row["last_ts"]
-        return totals
-
-    def has_live_entry_remainder(self, trade_id: int) -> bool:
-        for order in self.get_orders_for_trade(trade_id):
-            if order["role"] != "ENTRY" or order["status"] not in {"OPEN", "SUBMITTED", "PENDING"}:
-                continue
-            filled_qty, _ = self.order_fill_totals(str(order["cloid"]))
-            if filled_qty < float(order["qty"]) - 1e-9:
-                return True
-        return False
-
-    def trade_costs(self, decision_uid: str) -> float:
-        row = self.conn.execute(
-            """
-            SELECT COALESCE(SUM(fee), 0.0) + COALESCE(SUM(funding), 0.0)
-            FROM fills WHERE decision_uid = ?
-            """,
-            (decision_uid,),
-        ).fetchone()
-        return float(row[0]) if row and row[0] is not None else 0.0
-
-    def insert_equity(
-        self,
-        run_id: str,
-        ts: datetime | str,
-        equity: float,
-        cash: float,
-        unrealized: float,
-        realized_today: float,
-    ) -> None:
-        self.conn.execute(
-            """
-            INSERT OR REPLACE INTO equity(run_id, ts, equity, cash, unrealized, realized_today)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (run_id, _to_iso(ts), equity, cash, unrealized, realized_today),
-        )
-        self.conn.commit()
-
-    def upsert_risk_day(
-        self,
-        trading_date: str,
-        day_start_equity: float,
-        realized_pnl_engine: float,
-        realized_pnl_broker: float,
-        max_intraday_dd: float,
-        consecutive_losses_end: int,
-        auto_rearms_used: int,
-    ) -> None:
-        self.conn.execute(
-            """
-            INSERT OR REPLACE INTO risk_days(
-              trading_date, day_start_equity, realized_pnl_engine, realized_pnl_broker,
-              max_intraday_dd, consecutive_losses_end, auto_rearms_used
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                trading_date,
-                day_start_equity,
-                realized_pnl_engine,
-                realized_pnl_broker,
-                max_intraday_dd,
-                consecutive_losses_end,
-                auto_rearms_used,
-            ),
-        )
-        self.conn.commit()
-
-    def insert_event(
-        self,
-        run_id: str,
-        ts: datetime | str,
-        severity: str,
-        code: str,
-        detail: str,
-    ) -> int:
-        cursor = self.conn.execute(
-            """
-            INSERT INTO events(run_id, ts, severity, code, detail)
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            (run_id, _to_iso(ts), severity, code, detail),
-        )
-        self.conn.commit()
-        return int(cursor.lastrowid)
-
-    def claim_signal_fingerprint(self, run_id: str, fingerprint: str, decision_uid: str, ts: datetime | str) -> bool:
-        try:
-            self.conn.execute(
-                """
-                INSERT INTO signal_fingerprints(run_id, fingerprint, decision_uid, ts)
-                VALUES (?, ?, ?, ?)
-                """,
-                (run_id, fingerprint, decision_uid, _to_iso(ts)),
-            )
-            self.conn.commit()
-            return True
-        except sqlite3.IntegrityError:
-            return False
 
     def get_order(self, cloid: str) -> dict[str, Any] | None:
-        row = self.conn.execute("SELECT * FROM orders WHERE cloid = ?", (cloid,)).fetchone()
+        row = self.conn.execute(
+            "SELECT * FROM orders WHERE cloid = ?", (cloid,)
+        ).fetchone()
         return None if row is None else dict(row)
 
     def get_order_by_ref(self, order_ref: str) -> dict[str, Any] | None:
-        """B2 fallback 2: durable identity via our order_ref tag."""
-        row = self.conn.execute("SELECT * FROM orders WHERE order_ref = ?", (order_ref,)).fetchone()
+        row = self.conn.execute(
+            "SELECT * FROM orders WHERE order_ref = ?", (order_ref,)
+        ).fetchone()
         return None if row is None else dict(row)
 
     def find_live_orders_by_attributes(
-        self,
-        symbol: str,
-        role: str,
-        qty: float,
-        trigger_px: float | None,
+        self, symbol, role, qty, trigger_px,
     ) -> list[dict[str, Any]]:
         rows = self._rows(
-            """
-            SELECT * FROM orders
-            WHERE role = ? AND qty = ?
-              AND status IN ('OPEN', 'SUBMITTED', 'PENDING')
-              AND json_extract(order_json, '$.symbol') = ?
-            """,
+            """SELECT * FROM orders
+               WHERE role = ? AND qty = ?
+                 AND status IN ('OPEN', 'SUBMITTED', 'PENDING')
+                 AND json_extract(order_json, '$.symbol') = ?""",
             (role, qty, symbol),
         )
         if trigger_px is None:
@@ -1968,37 +957,315 @@ class Store:
                 matched.append(row)
         return matched
 
-    def get_trade(self, trade_id: int) -> dict[str, Any] | None:
-        row = self.conn.execute("SELECT * FROM trades WHERE trade_id = ?", (trade_id,)).fetchone()
-        return None if row is None else dict(row)
-
-    def get_open_trade_for_coin(self, run_id: str, coin: str) -> dict[str, Any] | None:
-        row = self.conn.execute(
-            """
-            SELECT * FROM trades
-            WHERE run_id = ? AND coin = ? AND exit_ts IS NULL
-            ORDER BY trade_id DESC LIMIT 1
-            """,
-            (run_id, coin),
-        ).fetchone()
-        return None if row is None else dict(row)
-
     def get_orders_for_trade(self, trade_id: int) -> list[dict[str, Any]]:
         return self._rows(
             "SELECT * FROM orders WHERE trade_id = ? ORDER BY ts_submit",
             (trade_id,),
         )
 
+    # ------------------------------------------------------------------
+    # Fill ingestion
+    # ------------------------------------------------------------------
+
+    def insert_fill(
+        self, fill_id, cloid, decision_uid, fill_ts, qty, px, fee=None, funding=None,
+    ) -> Literal["INSERTED", "CONFLICT", "EXACT_DUPLICATE"]:
+        try:
+            self.conn.execute(
+                """INSERT INTO fills(fill_id, cloid, decision_uid, fill_ts, qty, px, fee, funding)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (fill_id, cloid, decision_uid, _to_iso(fill_ts), qty, px, fee, funding),
+            )
+            self.conn.commit()
+            return "INSERTED"
+        except sqlite3.IntegrityError:
+            existing = self.conn.execute(
+                "SELECT * FROM fills WHERE fill_id = ?", (fill_id,)
+            ).fetchone()
+            if existing is None:
+                raise
+            if (abs(float(existing["qty"]) - float(qty)) < 1e-9
+                    and abs(float(existing["px"]) - float(px)) < 1e-9
+                    and str(existing["cloid"]) == str(cloid)):
+                return "EXACT_DUPLICATE"
+            return "CONFLICT"
+
+    def has_live_entry_remainder(self, trade_id: int) -> bool:
+        row = self.conn.execute(
+            """SELECT COUNT(*) AS cnt FROM orders
+               WHERE trade_id = ? AND role = 'ENTRY'
+                 AND status IN ('OPEN', 'SUBMITTED', 'PENDING')""",
+            (trade_id,),
+        ).fetchone()
+        return bool(row and row["cnt"] > 0)
+
+    def order_fill_totals(self, cloid: str) -> tuple[float, float | None]:
+        row = self.conn.execute(
+            "SELECT COALESCE(SUM(qty), 0.0) AS total_qty, "
+            "CASE WHEN SUM(qty) > 0 THEN SUM(qty * px) / SUM(qty) ELSE NULL END AS vwap "
+            "FROM fills WHERE cloid = ?",
+            (cloid,),
+        ).fetchone()
+        if row is None:
+            return 0.0, None
+        return float(row["total_qty"]), (
+            float(row["vwap"]) if row["vwap"] is not None else None
+        )
+
+    def trade_fill_totals(self, trade_id: int) -> dict[str, Any]:
+        entry = self.conn.execute(
+            """SELECT COALESCE(SUM(f.qty), 0.0) AS entry_qty,
+                      CASE WHEN SUM(f.qty) > 0 THEN SUM(f.qty * f.px) / SUM(f.qty) ELSE NULL END AS entry_vwap,
+                      MIN(f.fill_ts) AS entry_first_ts
+               FROM fills f
+               JOIN orders o ON f.cloid = o.cloid
+               WHERE o.trade_id = ? AND o.role = 'ENTRY'""",
+            (trade_id,),
+        ).fetchone()
+        exit_row = self.conn.execute(
+            """SELECT COALESCE(SUM(f.qty), 0.0) AS exit_qty,
+                      CASE WHEN SUM(f.qty) > 0 THEN SUM(f.qty * f.px) / SUM(f.qty) ELSE NULL END AS exit_vwap,
+                      MIN(f.fill_ts) AS exit_first_ts
+               FROM fills f
+               JOIN orders o ON f.cloid = o.cloid
+               WHERE o.trade_id = ? AND o.role IN ('SL', 'TP', 'TRAIL', 'CLOSE')""",
+            (trade_id,),
+        ).fetchone()
+        return {
+            "entry_qty": float(entry["entry_qty"]) if entry else 0.0,
+            "entry_vwap": float(entry["entry_vwap"]) if entry and entry["entry_vwap"] is not None else None,
+            "entry_first_ts": entry["entry_first_ts"] if entry else None,
+            "exit_qty": float(exit_row["exit_qty"]) if exit_row else 0.0,
+            "exit_vwap": float(exit_row["exit_vwap"]) if exit_row and exit_row["exit_vwap"] is not None else None,
+            "exit_first_ts": exit_row["exit_first_ts"] if exit_row else None,
+        }
+
+    def trade_costs(self, decision_uid: str) -> float:
+        row = self.conn.execute(
+            "SELECT COALESCE(SUM(COALESCE(fee, 0.0) + COALESCE(funding, 0.0)), 0.0) AS costs "
+            "FROM fills WHERE decision_uid = ?",
+            (decision_uid,),
+        ).fetchone()
+        return float(row["costs"]) if row else 0.0
+
+    # ------------------------------------------------------------------
+    # Trade lifecycle
+    # ------------------------------------------------------------------
+
+    def get_trade(self, trade_id: int) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM trades WHERE trade_id = ?", (trade_id,)
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    def get_open_trade_for_coin(self, run_id: str, coin: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            """SELECT * FROM trades
+               WHERE run_id = ? AND coin = ? AND exit_ts IS NULL
+               ORDER BY trade_id DESC LIMIT 1""",
+            (run_id, coin),
+        ).fetchone()
+        return None if row is None else dict(row)
+
     def update_trade_entry(self, trade_id: int, entry_px: float, entry_ts: datetime | str) -> None:
         self.conn.execute(
-            """
-            UPDATE trades
-            SET entry_px = ?, entry_ts = ?, first_fill_ts = COALESCE(first_fill_ts, ?), last_fill_ts = ?
-            WHERE trade_id = ?
-            """,
+            """UPDATE trades
+               SET entry_px = ?, entry_ts = ?,
+                   first_fill_ts = COALESCE(first_fill_ts, ?),
+                   last_fill_ts = ?
+               WHERE trade_id = ?""",
             (entry_px, _to_iso(entry_ts), _to_iso(entry_ts), _to_iso(entry_ts), trade_id),
         )
         self.conn.commit()
+
+    def close_trade_once_with_decision(
+        self, trade_id, run_id, decision_uid, coin, exit_px, exit_ts, exit_reason, pnl, payload,
+    ) -> bool:
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            trade = self.conn.execute(
+                "SELECT exit_ts FROM trades WHERE trade_id = ?", (trade_id,)
+            ).fetchone()
+            if trade is None:
+                self.conn.rollback()
+                return False
+            if trade["exit_ts"] is not None:
+                self.conn.rollback()
+                return False
+            self.conn.execute(
+                """UPDATE trades
+                   SET exit_px = ?, exit_ts = ?, exit_reason = ?, pnl = ?, last_fill_ts = ?
+                   WHERE trade_id = ?""",
+                (exit_px, _to_iso(exit_ts), exit_reason, pnl, _to_iso(exit_ts), trade_id),
+            )
+            self.conn.execute(
+                """INSERT INTO decisions(run_id, decision_uid, ts, coin, stage, trade_id, payload_json, payload_version)
+                   VALUES (?, ?, ?, ?, 'TRADE_CLOSED', ?, ?, 1)""",
+                (run_id, decision_uid, _to_iso(exit_ts), coin, trade_id, _json(payload)),
+            )
+            self.conn.commit()
+            return True
+        except Exception:
+            self.conn.rollback()
+            raise
+
+    # ------------------------------------------------------------------
+    # Risk data
+    # ------------------------------------------------------------------
+
+    def realized_pnl_today(self, run_id: str) -> float:
+        today = self._clock().strftime("%Y-%m-%d")
+        row = self.conn.execute(
+            """SELECT COALESCE(SUM(pnl), 0.0) AS pnl FROM trades
+               WHERE run_id = ? AND exit_ts >= ? AND exit_ts < ? AND pnl IS NOT NULL""",
+            (run_id, today + "T00:00:00+00:00", today + "T23:59:59+00:00"),
+        ).fetchone()
+        return float(row["pnl"]) if row else 0.0
+
+    def consecutive_closed_losses(self, run_id: str) -> int:
+        rows = self.conn.execute(
+            """SELECT pnl FROM trades
+               WHERE run_id = ? AND exit_ts IS NOT NULL
+               ORDER BY exit_ts DESC""",
+            (run_id,),
+        ).fetchall()
+        count = 0
+        for row in rows:
+            if row["pnl"] is not None and float(row["pnl"]) < 0:
+                count += 1
+            else:
+                break
+        return count
+
+    # ------------------------------------------------------------------
+    # Basic CRUD
+    # ------------------------------------------------------------------
+
+    def get_meta(self, key: str) -> str | None:
+        row = self.conn.execute(
+            "SELECT value FROM meta WHERE key = ?", (key,)
+        ).fetchone()
+        return None if row is None else row["value"]
+
+    def set_meta(self, key: str, value: str) -> None:
+        self.conn.execute(
+            "INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)",
+            (key, value),
+        )
+        self.conn.commit()
+
+    def create_run(self, run_id, mode, network, config):
+        self.conn.execute(
+            """INSERT INTO runs(run_id, started_ts, mode, network, config_json)
+               VALUES (?, ?, ?, ?, ?)""",
+            (run_id, _to_iso(self._clock()), mode, network, _json(config)),
+        )
+        self.conn.commit()
+
+    def insert_bar(self, coin, tf, bar_end_ts, open, high, low, close, volume):
+        self.conn.execute(
+            """INSERT OR REPLACE INTO bars(coin, tf, bar_end_ts, open, high, low, close, volume)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (coin, tf, _to_iso(bar_end_ts), open, high, low, close, volume),
+        )
+        self.conn.commit()
+
+    def insert_event(self, run_id, ts, severity, code, detail):
+        self.conn.execute(
+            """INSERT INTO events(run_id, ts, severity, code, detail)
+               VALUES (?, ?, ?, ?, ?)""",
+            (run_id, _to_iso(ts), severity, code, detail),
+        )
+        self.conn.commit()
+
+    def insert_decision(
+        self, run_id, decision_uid, ts, coin, stage, payload,
+        trade_id=None, payload_version=1,
+    ):
+        try:
+            self.conn.execute(
+                """INSERT INTO decisions(run_id, decision_uid, ts, coin, stage, trade_id, payload_json, payload_version)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (run_id, decision_uid, _to_iso(ts), coin, stage, trade_id,
+                 _json(payload) if isinstance(payload, dict) else str(payload),
+                 payload_version),
+            )
+            self.conn.commit()
+        except sqlite3.IntegrityError:
+            self.conn.rollback()
+
+    def insert_equity(self, run_id, ts, equity, cash, unrealized, realized_today):
+        self.conn.execute(
+            """INSERT OR REPLACE INTO equity(run_id, ts, equity, cash, unrealized, realized_today)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (run_id, _to_iso(ts), equity, cash, unrealized, realized_today),
+        )
+        self.conn.commit()
+
+    # ------------------------------------------------------------------
+    # TS-P1-003-A2 quarantine & recovery state machine
+    # ------------------------------------------------------------------
+
+    def quarantine_event(
+        self, run_id, ts, code, reason, detail=None, fill_id=None,
+    ) -> int:
+        """Persist a quarantine event. Returns quarantine_id.
+
+        A quarantine is ALWAYS accompanied by DISARMED via set_meta/app_state.
+        The quarantine row is the durable audit record; the app_state meta key
+        is the single materialised state that the engine reads.
+        """
+        self.conn.execute(
+            """INSERT INTO quarantine(run_id, ts, code, reason, detail, fill_id, state)
+               VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')""",
+            (run_id, _to_iso(ts), code, reason, detail, fill_id),
+        )
+        self.conn.commit()
+        return int(self.conn.execute("SELECT last_insert_rowid()").fetchone()[0])
+
+    def recovery_status(self) -> dict[str, Any]:
+        """Return a summary of open quarantines and required recovery actions."""
+        active = self.conn.execute(
+            "SELECT COUNT(*) AS cnt FROM quarantine WHERE state = 'ACTIVE'"
+        ).fetchone()
+        active_count = int(active["cnt"]) if active else 0
+        latest = self.conn.execute(
+            """SELECT quarantine_id, run_id, ts, code, reason, detail, fill_id
+               FROM quarantine WHERE state = 'ACTIVE'
+               ORDER BY quarantine_id DESC LIMIT 5"""
+        ).fetchall()
+        return {
+            "active_quarantines": active_count,
+            "requires_acknowledgement": active_count > 0,
+            "latest": [dict(row) for row in latest],
+        }
+
+    def acknowledge_quarantine(self, quarantine_id: int, ack_run_id: str) -> bool:
+        """Operator acknowledgement: ACTIVE -> ACKNOWLEDGED.
+
+        Returns True if a row was updated, False if already acknowledged or not found.
+        Does NOT change app_state -- the operator must re-arm separately.
+        """
+        now = _to_iso(self._clock())
+        cursor = self.conn.execute(
+            """UPDATE quarantine
+               SET state = 'ACKNOWLEDGED', ack_ts = ?, ack_run_id = ?
+               WHERE quarantine_id = ? AND state = 'ACTIVE'""",
+            (now, ack_run_id, quarantine_id),
+        )
+        self.conn.commit()
+        return cursor.rowcount == 1
+
+    def quarantine_summary(self) -> dict[str, int]:
+        """Count quarantines by state for dashboard display."""
+        rows = self.conn.execute(
+            "SELECT state, COUNT(*) AS cnt FROM quarantine GROUP BY state"
+        ).fetchall()
+        return {str(row["state"]): int(row["cnt"]) for row in rows}
+
+    # ------------------------------------------------------------------
+    # Read helpers
+    # ------------------------------------------------------------------
 
     def get_snapshot(self) -> dict[str, list[dict[str, Any]]]:
         return {
@@ -2010,19 +1277,18 @@ class Store:
             "bars": self._rows("SELECT * FROM bars ORDER BY bar_end_ts"),
             "decisions": self._rows("SELECT * FROM decisions ORDER BY id"),
             "equity": self._rows("SELECT * FROM equity ORDER BY ts"),
-            "identities": self._rows("SELECT * FROM order_identity ORDER BY reserved_ts"),
+            "quarantine": self._rows("SELECT * FROM quarantine ORDER BY quarantine_id"),
         }
 
     def get_trades(self, limit: int = 50) -> list[dict[str, Any]]:
         return self._rows("SELECT * FROM trades ORDER BY trade_id DESC LIMIT ?", (limit,))
 
-    def get_decisions(self, trade_id: int | None = None, limit: int = 200) -> list[dict[str, Any]]:
+    def get_decisions(self, trade_id=None, limit=200) -> list[dict[str, Any]]:
         if trade_id is None:
             rows = self._rows("SELECT * FROM decisions ORDER BY id DESC LIMIT ?", (limit,))
         else:
             rows = self._rows(
-                "SELECT * FROM decisions WHERE trade_id = ? ORDER BY id",
-                (trade_id,),
+                "SELECT * FROM decisions WHERE trade_id = ? ORDER BY id", (trade_id,),
             )
         for row in rows:
             row["payload"] = json.loads(row.pop("payload_json") or "{}")
@@ -2031,7 +1297,7 @@ class Store:
     def get_equity(self, limit: int = 1000) -> list[dict[str, Any]]:
         return self._rows("SELECT * FROM equity ORDER BY ts DESC LIMIT ?", (limit,))
 
-    def get_events(self, severity: str | None = None, limit: int = 500) -> list[dict[str, Any]]:
+    def get_events(self, severity=None, limit=500) -> list[dict[str, Any]]:
         if severity is None:
             return self._rows("SELECT * FROM events ORDER BY id DESC LIMIT ?", (limit,))
         return self._rows(
@@ -2048,11 +1314,9 @@ class Store:
 
     def get_latest_gates(self) -> dict[str, Any]:
         row = self.conn.execute(
-            """
-            SELECT payload_json FROM decisions
-            WHERE stage IN ('RISK_PASS', 'RISK_REJECT')
-            ORDER BY id DESC LIMIT 1
-            """
+            """SELECT payload_json FROM decisions
+               WHERE stage IN ('RISK_PASS', 'RISK_REJECT')
+               ORDER BY id DESC LIMIT 1"""
         ).fetchone()
         if row is None:
             return {"gate_results": []}
