@@ -1,15 +1,20 @@
-"""Deterministic mock broker for tests and dry-run mode."""
+"""Deterministic mock broker for tests and dry-run mode.
+
+TS-P1-003: configurable outcome injection, recovery evidence, and cloid plan.
+"""
 
 from __future__ import annotations
 
 import csv
 import asyncio
 import itertools
+import hashlib
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Callable
 
+from bridge.broker.base import EvidenceVerdict, RecoveryEvidence, SubmissionOutcome
 from bridge.engine.types import (
     AccountSnapshot,
     Bar,
@@ -37,6 +42,29 @@ class MockBroker:
     _user_callbacks: list[Callable[[BrokerEvent], None]] = field(default_factory=list)
     _bar_callbacks: list[Callable[[Bar], None]] = field(default_factory=list)
     resubscribe_count: int = 0
+
+    # TS-P1-003 outcome injection
+    _inject_pre_send_failure: bool = False
+    _inject_timeout_after_accept: bool = False
+    _inject_malformed_response: bool = False
+    _inject_partial_response: bool = False
+    _inject_wrong_cloid: bool = False
+    _inject_extra_role: bool = False
+    _inject_duplicate_role: bool = False
+    _inject_mixed_accept_reject: bool = False
+    _inject_definitive_rejection: bool = False
+    _inject_crash_after_accept: bool = False  # signals "crash before local finalization"
+
+    # TS-P1-003 recovery evidence injection
+    _recovery_evidence: RecoveryEvidence | None = None
+    _recovery_cycles_until_present: int = 0  # cycles until evidence flips to PRESENT
+    _recovery_cycles_until_absent: int = 0  # cycles until evidence flips to ABSENT
+    _recovery_cycle_count: int = field(default=0, init=False)
+    _historical_cloids: dict[str, dict] = field(default_factory=dict)
+    _fill_cloids: dict[str, list[dict]] = field(default_factory=dict)
+    _query_failure: bool = False
+    _truncated_coverage: bool = False
+    _stale_coverage: bool = False
 
     @classmethod
     def from_csv(cls, path: str | Path, starting_equity: float = 10_000.0) -> "MockBroker":
@@ -119,45 +147,278 @@ class MockBroker:
     def subscribe_user_events(self, on_event: Callable[[BrokerEvent], None]) -> None:
         self._user_callbacks.append(on_event)
 
+    # ------------------------------------------------------------------
+    # TS-P1-003: cloid plan (pure broker-boundary method)
+    # ------------------------------------------------------------------
+
+    def compute_plan_cloids(self, decision_uid: str, roles: tuple[str, ...] = ("entry", "sl", "tp")) -> dict[str, str]:
+        """Deterministic role→cloid map using blake2s (matches Hyperliquid adapter)."""
+        result: dict[str, str] = {}
+        for role in roles:
+            raw = f"{decision_uid}:{role}"
+            cloid = "0x" + hashlib.blake2s(raw.encode("utf-8"), digest_size=16).hexdigest()
+            result[role.upper()] = cloid
+        return result
+
+    # ------------------------------------------------------------------
+    # TS-P1-003: recovery evidence
+    # ------------------------------------------------------------------
+
+    async def recovery_evidence(
+        self,
+        planned_cloids: dict[str, str],
+        attempt_start_ts: str | None,
+    ) -> RecoveryEvidence:
+        """Return typed recovery evidence (injectable for tests)."""
+        self._recovery_cycle_count += 1
+
+        # Always perform actual lookups first
+        found_cloids: list[str] = []
+        sources_checked: list[str] = ["direct_lookup", "open_orders", "historical", "fills"]
+        sources_complete: list[str] = []
+        reason_codes: list[str] = []
+        ts_end = datetime.now(UTC).isoformat()
+
+        for role, cloid in planned_cloids.items():
+            if not cloid:
+                continue
+            try:
+                result = await self.query_order_by_cloid(cloid, self.coin)
+                if result is not None:
+                    found_cloids.append(cloid)
+            except Exception:
+                reason_codes.append("DIRECT_LOOKUP_FAILED")
+        sources_complete.append("direct_lookup")
+
+        # Open orders
+        try:
+            open_orders = await self.open_orders()
+            open_cloids = {o.cloid for o in open_orders if o.cloid}
+            sources_complete.append("open_orders")
+            for cloid in planned_cloids.values():
+                if cloid in open_cloids and cloid not in found_cloids:
+                    found_cloids.append(cloid)
+        except Exception:
+            reason_codes.append("OPEN_ORDERS_FAILED")
+
+        sources_complete.append("historical")
+        sources_complete.append("fills")
+
+        # Override with injection flags
+        if self._recovery_evidence is not None:
+            return self._recovery_evidence
+
+        if self._query_failure:
+            return RecoveryEvidence(
+                verdict=EvidenceVerdict.INCOMPLETE,
+                planned_cloids=planned_cloids,
+                sources_checked=sources_checked,
+                sources_complete=[],
+                reason_codes=["QUERY_FAILED"],
+                ts_start=attempt_start_ts,
+                ts_end=ts_end,
+                attempt_window_covered=False,
+            )
+
+        if self._truncated_coverage:
+            return RecoveryEvidence(
+                verdict=EvidenceVerdict.INCOMPLETE,
+                planned_cloids=planned_cloids,
+                sources_checked=["direct_lookup", "open_orders"],
+                sources_complete=["direct_lookup"],
+                reason_codes=["COVERAGE_TRUNCATED"],
+                ts_start=attempt_start_ts,
+                ts_end=ts_end,
+                attempt_window_covered=False,
+            )
+
+        if self._stale_coverage:
+            return RecoveryEvidence(
+                verdict=EvidenceVerdict.INCOMPLETE,
+                planned_cloids=planned_cloids,
+                sources_checked=sources_checked,
+                sources_complete=sources_complete,
+                reason_codes=["STALE_COVERAGE"],
+                ts_start=attempt_start_ts,
+                ts_end=ts_end,
+                attempt_window_covered=False,
+            )
+
+        if self._recovery_cycles_until_present > 0:
+            if self._recovery_cycle_count >= self._recovery_cycles_until_present:
+                return RecoveryEvidence(
+                    verdict=EvidenceVerdict.PRESENT,
+                    planned_cloids=planned_cloids,
+                    found_cloids=found_cloids or list(planned_cloids.values())[:1],
+                    sources_checked=sources_checked,
+                    sources_complete=sources_complete,
+                    reason_codes=["DIRECT_LOOKUP_FOUND"],
+                    ts_start=attempt_start_ts,
+                    ts_end=ts_end,
+                    attempt_window_covered=True,
+                )
+            return RecoveryEvidence(
+                verdict=EvidenceVerdict.ABSENT_CANDIDATE,
+                planned_cloids=planned_cloids,
+                sources_checked=sources_checked,
+                sources_complete=sources_complete,
+                reason_codes=[],
+                ts_start=attempt_start_ts,
+                ts_end=ts_end,
+                attempt_window_covered=True,
+            )
+
+        if self._recovery_cycles_until_absent > 0:
+            if self._recovery_cycle_count >= self._recovery_cycles_until_absent:
+                return RecoveryEvidence(
+                    verdict=EvidenceVerdict.ABSENT_CANDIDATE,
+                    planned_cloids=planned_cloids,
+                    sources_checked=sources_checked,
+                    sources_complete=sources_complete,
+                    reason_codes=[],
+                    ts_start=attempt_start_ts,
+                    ts_end=ts_end,
+                    attempt_window_covered=True,
+                )
+            return RecoveryEvidence(
+                verdict=EvidenceVerdict.INCOMPLETE,
+                planned_cloids=planned_cloids,
+                sources_checked=["direct_lookup", "open_orders"],
+                sources_complete=["direct_lookup"],
+                reason_codes=["WAITING_FOR_VISIBILITY"],
+                ts_start=attempt_start_ts,
+                ts_end=ts_end,
+                attempt_window_covered=False,
+            )
+
+        # Determine verdict from actual lookups
+        if found_cloids:
+            verdict = EvidenceVerdict.PRESENT
+        elif len(sources_complete) < len(sources_checked):
+            verdict = EvidenceVerdict.INCOMPLETE
+        elif reason_codes:
+            verdict = EvidenceVerdict.INCOMPLETE
+        else:
+            verdict = EvidenceVerdict.ABSENT_CANDIDATE
+
+        return RecoveryEvidence(
+            verdict=verdict,
+            planned_cloids=planned_cloids,
+            found_cloids=found_cloids,
+            sources_checked=sources_checked,
+            sources_complete=sources_complete,
+            reason_codes=reason_codes,
+            ts_start=attempt_start_ts,
+            ts_end=ts_end,
+            attempt_window_covered=len(sources_complete) == len(sources_checked),
+        )
+
+    async def query_order_by_cloid(self, cloid: str, coin: str) -> dict | None:
+        """Direct cloid lookup against stored mock orders."""
+        for order in self.orders:
+            if order.get("cloid") == cloid:
+                return dict(order)
+        if cloid in self._historical_cloids:
+            return dict(self._historical_cloids[cloid])
+        return None
+
+    async def historical_orders(self, coin: str, since_ts: str | None) -> list[dict]:
+        """Historical order snapshot from stored mock orders."""
+        result: list[dict] = []
+        for order in self.orders:
+            if order.get("symbol", self.coin) == coin:
+                result.append(dict(order))
+        for cloid, order in self._historical_cloids.items():
+            result.append(dict(order))
+        return result
+
+    async def user_fills_by_time(self, coin: str, since_ts: str | None) -> list[dict]:
+        """Fill history covering the attempt window."""
+        result: list[dict] = []
+        for fill in self.fills:
+            result.append(dict(fill))
+        for fills_list in self._fill_cloids.values():
+            for fill in fills_list:
+                result.append(dict(fill))
+        return result
+
+    # ------------------------------------------------------------------
+    # place_bracket with outcome injection
+    # ------------------------------------------------------------------
+
     async def place_bracket(self, plan: OrderPlan) -> dict:
         if not self.connected:
             raise RuntimeError("MockBroker is not connected")
         if len(self.bars) < 2:
             raise ValueError("MockBroker needs at least two bars for next-open fill")
 
+        if self._inject_pre_send_failure:
+            raise RuntimeError("PRE_SEND_FAILURE: validation before send")
+
+        if self._inject_definitive_rejection:
+            raise RuntimeError("DEFINITIVE_REJECTION: all orders rejected by exchange")
+
+        # Use planned cloids from broker boundary
+        duid = plan.decision_uid or f"mock-{next(self._ids)}"
+        planned_cloids = self.compute_plan_cloids(duid)
+
+        entry_cloid = planned_cloids.get("ENTRY", f"mock-entry-{next(self._ids)}")
+        sl_cloid = planned_cloids.get("SL", f"mock-sl-{next(self._ids)}")
+        tp_cloid = planned_cloids.get("TP", f"mock-tp-{next(self._ids)}")
+
         entry = self._order(
-            "ENTRY",
-            "OPEN",
-            plan.qty,
-            plan.signal.ref_price,
-            reduce_only=False,
-            signal_ts=plan.signal.ts,
-            direction=plan.signal.direction,
-            symbol=plan.signal.symbol,
-            leverage=plan.leverage,
+            "ENTRY", "OPEN", plan.qty, plan.signal.ref_price,
+            reduce_only=False, signal_ts=plan.signal.ts,
+            direction=plan.signal.direction, symbol=plan.signal.symbol,
+            leverage=plan.leverage, cloid=entry_cloid,
         )
         sl = self._order(
-            "SL",
-            "OPEN",
-            plan.qty,
-            plan.stop_loss,
-            reduce_only=True,
-            trigger_px=plan.stop_loss,
-            direction=plan.signal.direction,
-            symbol=plan.signal.symbol,
+            "SL", "OPEN", plan.qty, plan.stop_loss,
+            reduce_only=True, trigger_px=plan.stop_loss,
+            direction=plan.signal.direction, symbol=plan.signal.symbol,
+            cloid=sl_cloid,
         )
         result = {"entry": entry, "sl": sl}
         if plan.take_profit is not None:
             result["tp"] = self._order(
-                "TP",
-                "OPEN",
-                plan.qty,
-                plan.take_profit,
-                reduce_only=True,
-                trigger_px=plan.take_profit,
-                direction=plan.signal.direction,
-                symbol=plan.signal.symbol,
+                "TP", "OPEN", plan.qty, plan.take_profit,
+                reduce_only=True, trigger_px=plan.take_profit,
+                direction=plan.signal.direction, symbol=plan.signal.symbol,
+                cloid=tp_cloid,
             )
+
+        if self._inject_timeout_after_accept:
+            raise TimeoutError("OUTCOME_UNKNOWN: timeout after exchange acceptance")
+
+        if self._inject_malformed_response:
+            return {"unexpected": object()}
+
+        if self._inject_partial_response:
+            return {"entry": entry}
+
+        if self._inject_wrong_cloid:
+            wrong_entry = dict(entry)
+            wrong_entry["cloid"] = "0xWRONGCLOID000000000000000000000"
+            return {"entry": wrong_entry, "sl": sl}
+
+        if self._inject_extra_role:
+            extra = self._order("EXTRA", "OPEN", plan.qty, plan.signal.ref_price,
+                                reduce_only=False, direction=plan.signal.direction,
+                                symbol=plan.signal.symbol)
+            result["extra"] = extra
+            return result
+
+        if self._inject_duplicate_role:
+            result["entry2"] = dict(entry)
+            return result
+
+        if self._inject_mixed_accept_reject:
+            sl["status"] = "REJECTED"
+            return result
+
+        if self._inject_crash_after_accept:
+            raise RuntimeError("OUTCOME_UNKNOWN: crash after exchange acceptance")
+
         return result
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:

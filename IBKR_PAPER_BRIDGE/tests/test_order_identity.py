@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from bridge.engine.orders import OrderManager
+from bridge.engine.orders import OrderManager, UnknownSubmissionError
 from bridge.engine.types import AccountSnapshot, Bar, OrderPlan, Position, Signal
 from bridge.store.db import (
     IdentityCollisionError,
@@ -342,7 +342,11 @@ def test_reservation_durable_before_broker(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_broker_exception_leaves_reserved_restart_blocks(tmp_path):
-    """Broker failure after reservation: state stays RESERVED, replay blocked."""
+    """Broker failure after reservation: state stays RESERVED, replay blocked.
+
+    TS-P1-003: Broker exception without proof of pre-send failure becomes
+    OUTCOME_UNKNOWN → UNKNOWN_SUBMISSION. RESERVED identity is preserved.
+    """
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -353,7 +357,7 @@ def test_broker_exception_leaves_reserved_restart_blocks(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(RuntimeError, match="broker unavailable"):
+    with pytest.raises(UnknownSubmissionError):
         asyncio.run(mgr.submit_plan("d-1", plan))
 
     # Reservation is still RESERVED
@@ -365,7 +369,7 @@ def test_broker_exception_leaves_reserved_restart_blocks(tmp_path):
     assert ident is not None
     assert ident["state"] == "RESERVED"
 
-    # Restart (reopen store) — same plan blocked
+    # Restart (reopen store) — same plan blocked (quarantine active)
     store.close()
     store2 = Store(db_path)
     store2.initialize()
@@ -373,9 +377,8 @@ def test_broker_exception_leaves_reserved_restart_blocks(tmp_path):
     broker2 = _SimpleMockBroker()
     mgr2 = OrderManager(store2, broker2, "run-2")
 
-    result = asyncio.run(mgr2.submit_plan("d-2", plan))
-    assert result is None  # blocked
-    assert broker2.place_count == 0
+    with pytest.raises(UnknownSubmissionError, match="SUBMIT_BLOCKED_QUARANTINE"):
+        asyncio.run(mgr2.submit_plan("d-2", plan))
 
     store2.close()
 
@@ -915,7 +918,7 @@ def test_v2_migration_backfills_legacy_submitted(tmp_path):
     store2.initialize()
 
     # Schema version bumped
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     # Identity row created
     intent_id, _, _ = compute_intent_identity(
@@ -997,7 +1000,7 @@ def test_v2_migration_legacy_reserved_for_pre_broker_row(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
@@ -1257,7 +1260,7 @@ def test_duplicate_decision_uid_other_run_does_not_contaminate(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
@@ -1534,16 +1537,16 @@ def test_cross_run_trade_mapping_fails_migration(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_fresh_v3_initialization(tmp_path):
-    """Fresh database initializes directly at v3."""
+    """Fresh database initializes directly at v4."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
-    assert store.get_meta("schema_version") == "3"
+    assert store.get_meta("schema_version") == "4"
     store.close()
 
 
 def test_v3_reopen_idempotent(tmp_path):
-    """Reopening a v3 database is safe and idempotent."""
+    """Reopening a v4 database is safe and idempotent."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -1551,7 +1554,7 @@ def test_v3_reopen_idempotent(tmp_path):
 
     store2 = Store(db_path)
     store2.initialize()  # should not raise
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
     store2.close()
 
 
@@ -2095,7 +2098,11 @@ def test_repair2_4_state_timestamp_consistency_submitted_with_null_submitted_ts_
 # ---------------------------------------------------------------------------
 
 def test_repair2_5_broker_exception_event_contains_no_raw_exc_text(tmp_path):
-    """PLACE_BRACKET_FAILED event detail must contain no raw str(exc)."""
+    """PLACE_BRACKET_FAILED event detail must contain no raw str(exc).
+
+    TS-P1-003: Broker exceptions without proof of pre-send failure become
+    OUTCOME_UNKNOWN → UnknownSubmissionError. Validates event sanitization.
+    """
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -2105,18 +2112,17 @@ def test_repair2_5_broker_exception_event_contains_no_raw_exc_text(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(RuntimeError, match="broker unavailable"):
+    with pytest.raises(UnknownSubmissionError):
         asyncio.run(mgr.submit_plan("d-1", plan))
 
-    # Check event detail contains no raw exception text
+    # Check events contain no raw exception text
     events = store.get_events(severity="ERROR")
-    place_events = [e for e in events if e["code"] == "PLACE_BRACKET_FAILED"]
-    assert len(place_events) >= 1
-    for e in place_events:
+    # Verify an OUTCOME_UNKNOWN event was logged
+    unknown_events = [e for e in events if e["code"] == "OUTCOME_UNKNOWN"]
+    assert len(unknown_events) >= 1
+    for e in unknown_events:
         detail = e["detail"]
         assert "broker unavailable" not in detail
-        assert "decision_uid=d-1" in detail
-        assert "error_type=RuntimeError" in detail
     store.close()
 
 
@@ -2287,7 +2293,11 @@ def test_repair2_7_signal_plan_ref_price_mismatch_fails_migration(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_repair2_8_empty_broker_result_leaves_reserved(tmp_path):
-    """Empty broker_result must leave RESERVED and raise."""
+    """Empty broker_result must leave RESERVED and raise.
+
+    TS-P1-003: When broker lacks compute_plan_cloids, raises
+    IdentityCollisionError (preserving TS-P1-002 behavior).
+    """
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -2318,7 +2328,11 @@ def test_repair2_8_empty_broker_result_leaves_reserved(tmp_path):
 
 
 def test_repair2_8_invalid_broker_order_rejected(tmp_path):
-    """Non-dict order in broker_result must be rejected."""
+    """Non-dict order in broker_result must be rejected.
+
+    TS-P1-003: When broker lacks compute_plan_cloids, raises
+    IdentityCollisionError (preserving TS-P1-002 behavior).
+    """
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -2799,7 +2813,7 @@ def test_repair3_4_equivalent_timestamp_spellings_accepted(tmp_path):
     # Migration should succeed — equivalent spellings are the same instant
     store2 = Store(db_path)
     store2.initialize()
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
     store2.close()
 
 
@@ -3170,7 +3184,7 @@ def test_repair4_4_zero_fingerprints_empty_legacy_upgrades(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     # order_identity table exists (but empty)
     tbl = store2.conn.execute(

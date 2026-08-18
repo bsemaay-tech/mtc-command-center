@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import json
 import sqlite3
 import traceback
 from dataclasses import dataclass, field
@@ -95,6 +96,10 @@ class BridgeEngine:
                 f"liveness gap exceeded {self.window_stale_after_s}s at startup",
             )
         await self.broker.connect()
+
+        # TS-P1-003: scan durable active attempts and run read-only recovery
+        await self._recover_unknown_submissions()
+
         await self.order_manager.reconcile()
         self.reconcile_ready = True
         self.last_reconcile_ts = datetime.now(UTC)
@@ -142,6 +147,15 @@ class BridgeEngine:
         self.store.insert_event(self.run_id, now, "INFO", "ARM_REQUEST", f"state={previous}")
         if previous == "KILLED":
             raise RuntimeError("KILLED requires operator acknowledgement")
+
+        # TS-P1-003: block ARM when active quarantine exists
+        if hasattr(self.store, "has_active_quarantine") and self.store.has_active_quarantine():
+            active = self.store.get_active_quarantine_attempts()
+            raise RuntimeError(
+                f"Active unknown-submission quarantine exists "
+                f"({len(active)} attempt(s)); resolve or confirm absence first"
+            )
+
         if not self.reconcile_ready:
             raise RuntimeError("startup reconcile incomplete")
         max_age = timedelta(seconds=max(self.reconcile_interval_s * 3, 30.0))
@@ -315,6 +329,33 @@ class BridgeEngine:
                 strategy_id=getattr(self.strategy, 'id', 'keltner_trail_ema8'),
             )
         except Exception as exc:
+            # TS-P1-003: distinguish UNKNOWN_SUBMISSION from definitive rejection
+            exc_name = type(exc).__name__
+            is_unknown = (
+                hasattr(exc, 'code') and getattr(exc, 'code', '') == 'UNKNOWN_SUBMISSION'
+            ) or exc_name in {"TimeoutError", "ConnectionError"}
+
+            if is_unknown:
+                # UNKNOWN_SUBMISSION: immediate DISARM, no counter increment
+                self.disarm()
+                self.store.insert_decision(
+                    self.run_id,
+                    decision_uid,
+                    signal.ts,
+                    signal.symbol,
+                    "UNKNOWN_SUBMISSION",
+                    {"reason": exc_name, "detail": str(exc)[:500]},
+                )
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "ERROR",
+                    "UNKNOWN_SUBMISSION_DISARM",
+                    f"decision_uid={decision_uid} error={exc_name}",
+                )
+                self._consecutive_order_rejects = 0
+                return
+
             self._consecutive_order_rejects += 1
             self.store.insert_decision(
                 self.run_id,
@@ -369,6 +410,121 @@ class BridgeEngine:
         except Exception:
             pass
 
+    async def _recover_unknown_submissions(self) -> None:
+        """Scan durable active attempts and run read-only recovery on startup.
+
+        Never places, cancels, flattens, re-protects, or mutates exchange state.
+        If any SUBMITTING or UNKNOWN_SUBMISSION attempt is found, immediately
+        DISARM and block ARM.
+        """
+        if not hasattr(self.store, "get_active_attempts_for_recovery"):
+            return
+
+        attempts = self.store.get_active_attempts_for_recovery()
+        if not attempts:
+            return
+
+        # Any active quarantine → immediate DISARM
+        self.disarm()
+        self.store.insert_event(
+            self.run_id,
+            datetime.now(UTC),
+            "WARN",
+            "QUARANTINE_FOUND_ON_STARTUP",
+            f"{len(attempts)} active unknown-submission attempt(s); engine DISARMED",
+        )
+
+        for attempt in attempts:
+            request_id = str(attempt["request_id"])
+            state = str(attempt["state"])
+            try:
+                planned_cloids = json.loads(str(attempt["planned_cloids_json"]))
+            except (TypeError, ValueError):
+                planned_cloids = {}
+
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "INFO",
+                "QUARANTINE_RECOVERY_START",
+                f"request_id={request_id} state={state}",
+            )
+
+            # Read-only evidence collection
+            try:
+                evidence = await self.broker.recovery_evidence(
+                    planned_cloids,
+                    str(attempt.get("created_ts", "")),
+                )
+            except Exception as exc:
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "WARN",
+                    "RECOVERY_EVIDENCE_FAILED",
+                    f"request_id={request_id} error={type(exc).__name__}",
+                )
+                continue
+
+            # Persist evidence
+            cycle_id = f"{request_id}:recovery:{datetime.now(UTC).isoformat()}"
+            self.store.insert_recovery_evidence(
+                request_id=request_id,
+                cycle_id=cycle_id,
+                verdict=evidence.verdict.value,
+                planned_cloids=evidence.planned_cloids,
+                found_cloids=evidence.found_cloids,
+                sources_checked=evidence.sources_checked,
+                sources_complete=evidence.sources_complete,
+                reason_codes=evidence.reason_codes,
+                ts_start=evidence.ts_start,
+                ts_end=evidence.ts_end or datetime.now(UTC).isoformat(),
+                attempt_window_covered=evidence.attempt_window_covered,
+            )
+
+            if evidence.verdict.value == "PRESENT":
+                # Confirmed presence — permanently DISARMED
+                self.store.transition_attempt_state(
+                    request_id, ["SUBMITTING", "UNKNOWN_SUBMISSION"],
+                    "CONFIRMED_PRESENT", "RECOVERY_FOUND_PRESENT",
+                )
+                self.store.insert_event(
+                    self.run_id, datetime.now(UTC), "ERROR",
+                    "QUARANTINE_CONFIRMED_PRESENT",
+                    f"request_id={request_id} found_cloids={','.join(evidence.found_cloids)}",
+                )
+            elif evidence.verdict.value == "INCOMPLETE" or evidence.verdict.value == "CONFLICTING":
+                # Ensure UNKNOWN_SUBMISSION (may have been SUBMITTING)
+                self.store.transition_attempt_state(
+                    request_id, ["SUBMITTING"], "UNKNOWN_SUBMISSION", "RECOVERY_INCOMPLETE",
+                )
+                self.store.transition_attempt_state(
+                    request_id, ["UNKNOWN_SUBMISSION"], "UNKNOWN_SUBMISSION", "RECOVERY_INCOMPLETE",
+                )
+            elif evidence.verdict.value == "ABSENT_CANDIDATE":
+                # Ensure UNKNOWN_SUBMISSION, then check streak
+                self.store.transition_attempt_state(
+                    request_id, ["SUBMITTING"], "UNKNOWN_SUBMISSION", "RECOVERY_ABSENT_CANDIDATE",
+                )
+                streak, first_ts, last_ts = self.store.get_absent_candidate_streak(request_id)
+                if streak >= 3 and first_ts and last_ts:
+                    try:
+                        t1 = datetime.fromisoformat(first_ts.replace("Z", "+00:00"))
+                        t2 = datetime.fromisoformat(last_ts.replace("Z", "+00:00"))
+                        span = (t2 - t1).total_seconds()
+                        if span >= 120:
+                            self.store.transition_attempt_state(
+                                request_id, ["UNKNOWN_SUBMISSION"],
+                                "CONFIRMED_ABSENT", "RECOVERY_ABSENCE_CONFIRMED",
+                            )
+                            self.store.insert_event(
+                                self.run_id, datetime.now(UTC), "INFO",
+                                "QUARANTINE_CONFIRMED_ABSENT",
+                                f"request_id={request_id} cycles={streak} span_s={span:.1f}",
+                            )
+                    except (ValueError, TypeError):
+                        pass
+
     def status(self) -> dict[str, object]:
         try:
             state = self._app_state()
@@ -376,6 +532,12 @@ class BridgeEngine:
             # Store unreadable: report the in-memory state rather than crash
             # the status surface (see _risk_inputs_failed).
             state = self.state
+        quarantine_count = 0
+        try:
+            if hasattr(self.store, "get_active_quarantine_attempts"):
+                quarantine_count = len(self.store.get_active_quarantine_attempts())
+        except Exception:
+            pass
         return {
             "state": state,
             "window": window_status(
@@ -390,6 +552,7 @@ class BridgeEngine:
             "run_id": self.run_id,
             "coin": self.coin,
             "timeframe": self.timeframe,
+            "quarantine_attempts": quarantine_count,
         }
 
     async def _heartbeat_loop(self) -> None:

@@ -640,6 +640,168 @@ class HyperliquidBroker:
             result[role] = str(HyperliquidBroker._raw_cloid(raw))
         return result
 
+    # ------------------------------------------------------------------
+    # TS-P1-003: instance method for role→cloid plan (broker boundary)
+    # ------------------------------------------------------------------
+
+    def compute_plan_cloids(self, decision_uid: str, roles: tuple[str, ...] = ("entry", "sl", "tp")) -> dict[str, str]:
+        """Deterministic role→cloid map. Pure; no I/O."""
+        return HyperliquidBroker.compute_cloids(decision_uid, roles)
+
+    # ------------------------------------------------------------------
+    # TS-P1-003: recovery evidence
+    # ------------------------------------------------------------------
+
+    async def recovery_evidence(
+        self,
+        planned_cloids: dict[str, str],
+        attempt_start_ts: str | None,
+    ) -> "RecoveryEvidence":
+        """Return typed, normalized, secret-safe evidence for exact planned cloids.
+
+        Uses direct cloid lookup, open_orders, historical_orders, and fills.
+        """
+        from bridge.broker.base import EvidenceVerdict, RecoveryEvidence
+
+        sources_checked: list[str] = []
+        sources_complete: list[str] = []
+        reason_codes: list[str] = []
+        found_cloids: list[str] = []
+        ts_end = datetime.now(UTC).isoformat()
+
+        for role, cloid in planned_cloids.items():
+            if not cloid:
+                continue
+
+            # Direct lookup
+            sources_checked.append("direct_lookup")
+            try:
+                result = await self.query_order_by_cloid(cloid, self.coin)
+                if result is not None:
+                    found_cloids.append(cloid)
+                    sources_complete.append("direct_lookup")
+            except Exception:
+                reason_codes.append("DIRECT_LOOKUP_FAILED")
+                continue
+            else:
+                sources_complete.append("direct_lookup")
+
+        # Open orders coverage
+        sources_checked.append("open_orders")
+        try:
+            open_orders = await self.open_orders()
+            open_cloids = {o.cloid for o in open_orders if o.cloid}
+            sources_complete.append("open_orders")
+            for cloid in planned_cloids.values():
+                if cloid in open_cloids:
+                    if cloid not in found_cloids:
+                        found_cloids.append(cloid)
+        except Exception:
+            reason_codes.append("OPEN_ORDERS_FAILED")
+
+        # Historical orders coverage
+        sources_checked.append("historical")
+        try:
+            hist = await self.historical_orders(self.coin, attempt_start_ts)
+            sources_complete.append("historical")
+            hist_cloids = {str(o.get("cloid", "")) for o in hist if o.get("cloid")}
+            for cloid in planned_cloids.values():
+                if cloid in hist_cloids and cloid not in found_cloids:
+                    found_cloids.append(cloid)
+        except Exception:
+            reason_codes.append("HISTORICAL_FAILED")
+
+        # Fills coverage
+        sources_checked.append("fills")
+        try:
+            fills = await self.user_fills_by_time(self.coin, attempt_start_ts)
+            sources_complete.append("fills")
+            fill_cloids = {str(f.get("cloid", "")) for f in fills if f.get("cloid")}
+            for cloid in planned_cloids.values():
+                if cloid in fill_cloids and cloid not in found_cloids:
+                    found_cloids.append(cloid)
+        except Exception:
+            reason_codes.append("FILLS_FAILED")
+
+        # Determine verdict
+        if found_cloids:
+            verdict = EvidenceVerdict.PRESENT
+        elif len(sources_complete) < len(sources_checked):
+            verdict = EvidenceVerdict.INCOMPLETE
+        elif reason_codes:
+            verdict = EvidenceVerdict.INCOMPLETE
+        else:
+            verdict = EvidenceVerdict.ABSENT_CANDIDATE
+
+        return RecoveryEvidence(
+            verdict=verdict,
+            planned_cloids=planned_cloids,
+            found_cloids=found_cloids,
+            sources_checked=sources_checked,
+            sources_complete=sources_complete,
+            reason_codes=reason_codes,
+            ts_start=attempt_start_ts,
+            ts_end=ts_end,
+            attempt_window_covered=len(sources_complete) == len(sources_checked),
+        )
+
+    async def query_order_by_cloid(self, cloid: str, coin: str) -> dict | None:
+        """Request-specific direct lookup of a single cloid via info client."""
+        if self.info is None or not hasattr(self.info, "query_order_by_cloid"):
+            return None
+        try:
+            from hyperliquid.utils.types import Cloid
+            result = await asyncio.to_thread(
+                self.info.query_order_by_cloid, self.account_address, Cloid.from_str(cloid)
+            )
+            if isinstance(result, dict):
+                return result
+            return None
+        except Exception:
+            return None
+
+    async def historical_orders(self, coin: str, since_ts: str | None) -> list[dict]:
+        """Historical order snapshot from user_state fills or order history."""
+        if self.info is None or not hasattr(self.info, "user_state"):
+            return []
+        try:
+            state = await asyncio.to_thread(self.info.user_state, self.account_address)
+            if not isinstance(state, dict):
+                return []
+            result: list[dict] = []
+            for key in ("fills", "orderHistory", "historicalOrders"):
+                rows = state.get(key, [])
+                if isinstance(rows, list):
+                    for row in rows:
+                        if isinstance(row, dict):
+                            result.append(row)
+            return result
+        except Exception:
+            return []
+
+    async def user_fills_by_time(self, coin: str, since_ts: str | None) -> list[dict]:
+        """Fill history from user_state fills."""
+        if self.info is None:
+            return []
+        try:
+            if hasattr(self.info, "user_fills_by_time"):
+                end_ms = int(datetime.now(UTC).timestamp() * 1000)
+                start_ms = 0
+                if since_ts:
+                    try:
+                        start_dt = datetime.fromisoformat(since_ts.replace("Z", "+00:00"))
+                        start_ms = int(start_dt.timestamp() * 1000)
+                    except (ValueError, TypeError):
+                        pass
+                result = await asyncio.to_thread(
+                    self.info.user_fills_by_time, self.account_address, start_ms, end_ms
+                )
+                if isinstance(result, list):
+                    return [r for r in result if isinstance(r, dict)]
+            return []
+        except Exception:
+            return []
+
     @staticmethod
     def _order_result(role: str, cloid: Cloid, raw: object, qty: float, trigger_px: float | None = None) -> dict:
         result = {"cloid": str(cloid), "oid": None, "role": role, "status": "OPEN", "qty": qty}

@@ -223,12 +223,17 @@ class Store:
         existing = self.get_meta("schema_version")
         if existing is None:
             self._initialize_v3_fresh()
+            self._migrate_v3_to_v4_on_fresh()
+            return
+        if existing == "4":
+            self._initialize_v4_idempotent()
             return
         if existing == "3":
-            self._initialize_v3_idempotent()
+            self._migrate_v3_to_v4()
             return
         if existing == "2":
             self._migrate_v2_to_v3()
+            self._migrate_v3_to_v4_on_fresh()
             return
         # Unsupported or corrupt version → fail closed
         raise RuntimeError(
@@ -1065,6 +1070,88 @@ class Store:
                 )
 
     # ------------------------------------------------------------------
+    # v3 → v4 migration: submission-attempt + recovery-evidence ledger
+    # ------------------------------------------------------------------
+
+    def _migrate_v3_to_v4_on_fresh(self) -> None:
+        """Run v4 migration on a fresh (just-initialized v3) database."""
+        self._migrate_v3_to_v4()
+
+    def _migrate_v3_to_v4(self) -> None:
+        """Transactional v3→v4: add submission_attempts + submission_recovery_evidence.
+
+        Executes in one BEGIN IMMEDIATE transaction. On failure, rolls back
+        to clean v3 with no v4 residue. A v2 database first reaches valid v3;
+        a later v4 failure leaves valid v3.
+        """
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            self._migrate_v3_to_v4_in_tx()
+        except Exception:
+            self.conn.rollback()
+            raise
+        self.conn.commit()
+
+    def _migrate_v3_to_v4_in_tx(self) -> None:
+        """All v4 migration DDL inside the already-open transaction."""
+        self._create_tables_v4_only()
+        self.conn.execute(
+            "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', '4')"
+        )
+
+    def _initialize_v4_idempotent(self) -> None:
+        """Re-open an existing v4 database — ensure all tables exist."""
+        self._create_tables_v3()
+        self._create_tables_v4_only()
+
+    def _create_tables_v4_only(self) -> None:
+        """Create v4-only tables (idempotent via IF NOT EXISTS)."""
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS submission_attempts (
+              request_id TEXT PRIMARY KEY
+                REFERENCES order_identity(request_id) ON DELETE RESTRICT,
+              intent_id TEXT NOT NULL,
+              planned_cloids_json TEXT NOT NULL CHECK(planned_cloids_json != ''),
+              recovery_payload_json TEXT NOT NULL CHECK(recovery_payload_json != ''),
+              state TEXT NOT NULL CHECK(state IN (
+                'SUBMITTING','UNKNOWN_SUBMISSION','CONFIRMED_PRESENT','CONFIRMED_ABSENT',
+                'FINALIZED','REJECTED'
+              )),
+              reason_code TEXT,
+              created_ts TEXT NOT NULL CHECK(created_ts != ''),
+              resolved_ts TEXT
+            )""")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_submission_attempts_state "
+            "ON submission_attempts(state)")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_submission_attempts_intent "
+            "ON submission_attempts(intent_id)")
+
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS submission_recovery_evidence (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              request_id TEXT NOT NULL
+                REFERENCES submission_attempts(request_id) ON DELETE RESTRICT,
+              cycle_id TEXT NOT NULL,
+              verdict TEXT NOT NULL CHECK(verdict IN (
+                'PRESENT','ABSENT_CANDIDATE','INCOMPLETE','CONFLICTING'
+              )),
+              planned_cloids_json TEXT NOT NULL,
+              found_cloids_json TEXT NOT NULL DEFAULT '[]',
+              sources_checked_json TEXT NOT NULL DEFAULT '[]',
+              sources_complete_json TEXT NOT NULL DEFAULT '[]',
+              reason_codes_json TEXT NOT NULL DEFAULT '[]',
+              ts_start TEXT,
+              ts_end TEXT NOT NULL,
+              attempt_window_covered INTEGER NOT NULL DEFAULT 0,
+              UNIQUE(request_id, cycle_id)
+            )""")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_recovery_evidence_request "
+            "ON submission_recovery_evidence(request_id, ts_end)")
+
+    # ------------------------------------------------------------------
     # Identity reservation
     # ------------------------------------------------------------------
 
@@ -1164,6 +1251,178 @@ class Store:
             "SELECT * FROM order_identity WHERE request_id = ?", (request_id,)
         ).fetchone()
         return None if row is None else dict(row)
+
+    # ------------------------------------------------------------------
+    # TS-P1-003 submission attempt lifecycle
+    # ------------------------------------------------------------------
+
+    def start_submission_attempt(
+        self,
+        request_id: str,
+        intent_id: str,
+        planned_cloids: dict[str, str],
+        recovery_payload: dict[str, Any],
+    ) -> Literal["CREATED", "BLOCKED"]:
+        """Atomically persist a SUBMITTING attempt before broker I/O.
+
+        Returns 'CREATED' if a new attempt was created.
+        Returns 'BLOCKED' if the exact request_id already exists.
+        Must be called inside an explicit transaction (BEGIN IMMEDIATE).
+        """
+        now = _to_iso(self._clock())
+        existing = self.conn.execute(
+            "SELECT state FROM submission_attempts WHERE request_id = ?",
+            (request_id,),
+        ).fetchone()
+        if existing is not None:
+            return "BLOCKED"
+
+        self.conn.execute(
+            """INSERT INTO submission_attempts(
+                 request_id, intent_id, planned_cloids_json, recovery_payload_json,
+                 state, created_ts
+               ) VALUES (?, ?, ?, ?, 'SUBMITTING', ?)""",
+            (
+                request_id,
+                intent_id,
+                _json(planned_cloids),
+                _json(recovery_payload),
+                now,
+            ),
+        )
+        return "CREATED"
+
+    def get_submission_attempt(self, request_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM submission_attempts WHERE request_id = ?", (request_id,)
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    def get_active_quarantine_attempts(self) -> list[dict[str, Any]]:
+        """Return all attempts in SUBMITTING or UNKNOWN_SUBMISSION state."""
+        rows = self.conn.execute(
+            """SELECT * FROM submission_attempts
+               WHERE state IN ('SUBMITTING', 'UNKNOWN_SUBMISSION')
+               ORDER BY created_ts"""
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def has_active_quarantine(self) -> bool:
+        """True if any SUBMITTING, UNKNOWN_SUBMISSION, or CONFIRMED_PRESENT attempt exists."""
+        row = self.conn.execute(
+            """SELECT COUNT(*) FROM submission_attempts
+               WHERE state IN ('SUBMITTING', 'UNKNOWN_SUBMISSION', 'CONFIRMED_PRESENT')"""
+        ).fetchone()
+        return bool(row and row[0] > 0)
+
+    def transition_attempt_state(
+        self,
+        request_id: str,
+        from_states: list[str],
+        to_state: str,
+        reason_code: str | None = None,
+    ) -> bool:
+        """Atomically transition an attempt between states with exact pre-state check.
+
+        Returns True if exactly one row was updated, False otherwise.
+        Wraps in its own immediate transaction.
+        """
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            placeholders = ",".join(["?" for _ in from_states])
+            now = _to_iso(self._clock())
+            cursor = self.conn.execute(
+                f"""UPDATE submission_attempts
+                    SET state = ?, reason_code = ?, resolved_ts = ?
+                    WHERE request_id = ? AND state IN ({placeholders})""",
+                (to_state, reason_code, now, request_id, *from_states),
+            )
+            if cursor.rowcount != 1:
+                self.conn.rollback()
+                return False
+            self.conn.commit()
+            return True
+        except Exception:
+            self.conn.rollback()
+            raise
+
+    def insert_recovery_evidence(
+        self,
+        request_id: str,
+        cycle_id: str,
+        verdict: str,
+        planned_cloids: dict[str, str],
+        found_cloids: list[str],
+        sources_checked: list[str],
+        sources_complete: list[str],
+        reason_codes: list[str],
+        ts_start: str | None,
+        ts_end: str,
+        attempt_window_covered: bool,
+    ) -> bool:
+        """Append one recovery-evidence row. Returns True if inserted, False if duplicate cycle."""
+        try:
+            self.conn.execute(
+                """INSERT INTO submission_recovery_evidence(
+                     request_id, cycle_id, verdict,
+                     planned_cloids_json, found_cloids_json,
+                     sources_checked_json, sources_complete_json,
+                     reason_codes_json,
+                     ts_start, ts_end, attempt_window_covered
+                   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    request_id, cycle_id, verdict,
+                    _json(planned_cloids), _json(found_cloids),
+                    _json(sources_checked), _json(sources_complete),
+                    _json(reason_codes),
+                    ts_start, ts_end,
+                    1 if attempt_window_covered else 0,
+                ),
+            )
+            self.conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            return False
+
+    def get_recovery_cycles(self, request_id: str) -> list[dict[str, Any]]:
+        """Return all recovery-evidence rows for an attempt, ordered by ts_end."""
+        rows = self.conn.execute(
+            """SELECT * FROM submission_recovery_evidence
+               WHERE request_id = ? ORDER BY ts_end""",
+            (request_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_absent_candidate_streak(self, request_id: str) -> tuple[int, str | None, str | None]:
+        """Return (consecutive_absent_candidates, first_ts, last_ts).
+
+        Streak is the number of most recent consecutive ABSENT_CANDIDATE verdicts.
+        """
+        rows = self.conn.execute(
+            """SELECT verdict, ts_end FROM submission_recovery_evidence
+               WHERE request_id = ? ORDER BY id DESC""",
+            (request_id,),
+        ).fetchall()
+        streak = 0
+        first_ts = None
+        last_ts = None
+        for row in rows:
+            if row["verdict"] == "ABSENT_CANDIDATE":
+                streak += 1
+                last_ts = last_ts or row["ts_end"]
+                first_ts = row["ts_end"]
+            else:
+                break
+        return streak, first_ts, last_ts
+
+    def get_active_attempts_for_recovery(self) -> list[dict[str, Any]]:
+        """Return all attempts for read-only recovery scan (SUBMITTING, UNKNOWN_SUBMISSION)."""
+        rows = self.conn.execute(
+            """SELECT * FROM submission_attempts
+               WHERE state IN ('SUBMITTING', 'UNKNOWN_SUBMISSION')
+               ORDER BY created_ts"""
+        ).fetchall()
+        return [dict(r) for r in rows]
 
     # ------------------------------------------------------------------
     # Atomic post-broker finalization
@@ -2011,6 +2270,8 @@ class Store:
             "decisions": self._rows("SELECT * FROM decisions ORDER BY id"),
             "equity": self._rows("SELECT * FROM equity ORDER BY ts"),
             "identities": self._rows("SELECT * FROM order_identity ORDER BY reserved_ts"),
+            "submission_attempts": self._rows("SELECT * FROM submission_attempts ORDER BY created_ts"),
+            "recovery_evidence": self._rows("SELECT * FROM submission_recovery_evidence ORDER BY ts_end"),
         }
 
     def get_trades(self, limit: int = 50) -> list[dict[str, Any]]:
