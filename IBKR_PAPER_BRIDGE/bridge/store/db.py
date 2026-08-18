@@ -1,7 +1,13 @@
-"""SQLite Store with schema v2 from the architecture spec."""
+"""SQLite Store with schema v3 from the architecture spec.
+
+V3 (TS-P1-002) adds the durable identity table (order_identities) for
+intent/request identity, fail-closed double-submission prevention, and
+collision-safe order persistence.
+"""
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 from datetime import UTC, datetime, timedelta
@@ -30,39 +36,86 @@ def _json(value: Any) -> str:
 
     return json.dumps(value, sort_keys=True, separators=(",", ":"), default=default)
 
+# ---------------------------------------------------------------------------
+# TS-P1-002: durable identity primitives
+# ---------------------------------------------------------------------------
 
-class Store:
-    """Small SQLite access layer for the bridge runtime database."""
 
-    def __init__(self, db_path: str | Path, clock: Callable[[], datetime] | None = None):
-        self.db_path = Path(db_path)
-        self._conn: sqlite3.Connection | None = None
-        self._clock: Callable[[], datetime] = clock or (lambda: datetime.now(UTC))
+def _float_hex(value: float) -> str:
+    """Deterministic finite IEEE-754 representation string."""
+    if value != value:
+        raise ValueError("float NaN not allowed in identity preimage")
+    if value == float("inf") or value == float("-inf"):
+        raise ValueError("float Infinity not allowed in identity preimage")
+    if value == 0.0 and str(value).startswith("-"):
+        value = 0.0
+    return value.hex()
 
-    @property
-    def conn(self) -> sqlite3.Connection:
-        if self._conn is None:
-            self.db_path.parent.mkdir(parents=True, exist_ok=True)
-            self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
-            self._conn.row_factory = sqlite3.Row
-            self._conn.execute("PRAGMA journal_mode=WAL")
-            self._conn.execute("PRAGMA foreign_keys=ON")
-        return self._conn
 
-    def close(self) -> None:
-        if self._conn is not None:
-            self._conn.close()
-            self._conn = None
+def _normalize_ts(ts: datetime) -> str:
+    """UTC timestamp with fixed microsecond precision + Z."""
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=UTC)
+    utc = ts.astimezone(UTC)
+    return utc.strftime("%Y-%m-%dT%H:%M:%S.%f") + "Z"
 
-    def initialize(self) -> None:
-        self.conn.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS meta (
+
+def _canonical_json(obj: Any) -> str:
+    """Deterministic JSON: sorted keys, compact separators, UTF-8, no NaN."""
+    return _json(obj)
+
+
+_INTENT_VERSION = "ts-p1-002-intent-v1"
+_REQUEST_VERSION = "ts-p1-002-request-v1"
+
+
+def compute_intent_id(
+    strategy_id: str, symbol: str, direction: str, signal_ts: datetime
+) -> tuple[str, str]:
+    """Return (intent_id, exact_canonical_preimage)."""
+    preimage = _canonical_json({
+        "version": _INTENT_VERSION,
+        "strategy_id": strategy_id,
+        "symbol": symbol.upper(),
+        "direction": direction.upper(),
+        "signal_ts": _normalize_ts(signal_ts),
+    })
+    digest = hashlib.sha256(preimage.encode("utf-8")).hexdigest()
+    return f"intent-v1:{digest}", preimage
+
+
+def compute_request_id(
+    intent_id: str, symbol: str, direction: str,
+    ref_price: float, qty: float, entry_type: str,
+    limit_price: float | None, stop_loss: float,
+    take_profit: float | None, leverage: int,
+) -> tuple[str, str]:
+    """Return (request_id, exact_canonical_preimage)."""
+    preimage = _canonical_json({
+        "version": _REQUEST_VERSION,
+        "intent_id": intent_id,
+        "symbol": symbol.upper(),
+        "direction": direction.upper(),
+        "ref_price": _float_hex(ref_price),
+        "qty": _float_hex(qty),
+        "entry_type": entry_type,
+        "limit_price": None if limit_price is None else _float_hex(limit_price),
+        "stop_loss": _float_hex(stop_loss),
+        "take_profit": None if take_profit is None else _float_hex(take_profit),
+        "leverage": leverage,
+    })
+    digest = hashlib.sha256(preimage.encode("utf-8")).hexdigest()
+    return f"request-v1:{digest}", preimage
+
+
+
+_V3_DDL = """
+            CREATE TABLE meta (
               key TEXT PRIMARY KEY,
               value TEXT
             );
 
-            CREATE TABLE IF NOT EXISTS runs (
+            CREATE TABLE runs (
               run_id TEXT PRIMARY KEY,
               started_ts TEXT,
               ended_ts TEXT,
@@ -71,7 +124,7 @@ class Store:
               config_json TEXT
             );
 
-            CREATE TABLE IF NOT EXISTS bars (
+            CREATE TABLE bars (
               coin TEXT,
               tf TEXT,
               bar_end_ts TEXT,
@@ -83,7 +136,7 @@ class Store:
               PRIMARY KEY(coin, tf, bar_end_ts)
             );
 
-            CREATE TABLE IF NOT EXISTS decisions (
+            CREATE TABLE decisions (
               id INTEGER PRIMARY KEY,
               decision_uid TEXT NOT NULL,
               run_id TEXT,
@@ -95,7 +148,7 @@ class Store:
               payload_version INTEGER DEFAULT 1
             );
 
-            CREATE TABLE IF NOT EXISTS orders (
+            CREATE TABLE orders (
               cloid TEXT PRIMARY KEY,
               oid INTEGER,
               group_id TEXT,
@@ -112,7 +165,7 @@ class Store:
               ts_last TEXT
             );
 
-            CREATE TABLE IF NOT EXISTS fills (
+            CREATE TABLE fills (
               fill_id TEXT PRIMARY KEY,
               cloid TEXT,
               decision_uid TEXT,
@@ -123,7 +176,7 @@ class Store:
               funding REAL
             );
 
-            CREATE TABLE IF NOT EXISTS trades (
+            CREATE TABLE trades (
               trade_id INTEGER PRIMARY KEY,
               run_id TEXT,
               coin TEXT,
@@ -151,7 +204,7 @@ class Store:
               llm_directive_id INTEGER
             );
 
-            CREATE TABLE IF NOT EXISTS equity (
+            CREATE TABLE equity (
               run_id TEXT,
               ts TEXT,
               equity REAL,
@@ -161,7 +214,7 @@ class Store:
               PRIMARY KEY(run_id, ts)
             );
 
-            CREATE TABLE IF NOT EXISTS risk_days (
+            CREATE TABLE risk_days (
               trading_date TEXT PRIMARY KEY,
               day_start_equity REAL,
               realized_pnl_engine REAL,
@@ -171,7 +224,7 @@ class Store:
               auto_rearms_used INTEGER
             );
 
-            CREATE TABLE IF NOT EXISTS directives (
+            CREATE TABLE directives (
               id INTEGER PRIMARY KEY,
               ts TEXT,
               regime TEXT,
@@ -183,7 +236,7 @@ class Store:
               valid INTEGER
             );
 
-            CREATE TABLE IF NOT EXISTS llm_calls (
+            CREATE TABLE llm_calls (
               id INTEGER PRIMARY KEY,
               ts TEXT,
               role TEXT,
@@ -196,7 +249,7 @@ class Store:
               cost_est REAL
             );
 
-            CREATE TABLE IF NOT EXISTS events (
+            CREATE TABLE events (
               id INTEGER PRIMARY KEY,
               run_id TEXT,
               ts TEXT,
@@ -205,7 +258,7 @@ class Store:
               detail TEXT
             );
 
-            CREATE TABLE IF NOT EXISTS signal_fingerprints (
+            CREATE TABLE signal_fingerprints (
               run_id TEXT,
               fingerprint TEXT,
               decision_uid TEXT,
@@ -213,20 +266,358 @@ class Store:
               PRIMARY KEY(run_id, fingerprint)
             );
 
-            CREATE INDEX IF NOT EXISTS idx_decisions_uid ON decisions(decision_uid);
-            CREATE INDEX IF NOT EXISTS idx_decisions_run ON decisions(run_id, ts);
-            CREATE INDEX IF NOT EXISTS idx_orders_oid ON orders(oid);
-            CREATE INDEX IF NOT EXISTS idx_orders_trade ON orders(trade_id);
-            CREATE INDEX IF NOT EXISTS idx_fills_cloid ON fills(cloid);
-            CREATE INDEX IF NOT EXISTS idx_trades_run ON trades(run_id);
-            CREATE INDEX IF NOT EXISTS idx_events_run_sev ON events(run_id, severity, ts);
+            CREATE TABLE order_identities (
+              intent_id TEXT PRIMARY KEY,
+              intent_preimage TEXT NOT NULL,
+              intent_version TEXT NOT NULL,
+              request_id TEXT UNIQUE NOT NULL,
+              request_preimage TEXT NOT NULL,
+              request_version TEXT NOT NULL,
+              cloid_seed TEXT NOT NULL,
+              origin_run_id TEXT NOT NULL,
+              original_decision_uid TEXT NOT NULL,
+              state TEXT NOT NULL CHECK(state IN (
+                'RESERVED','SUBMITTED','LEGACY_RESERVED','LEGACY_SUBMITTED'
+              )),
+              reserved_ts TEXT,
+              submitted_ts TEXT
+            );
+
+            CREATE INDEX idx_order_identities_request_id ON order_identities(request_id);
+            CREATE INDEX idx_order_identities_state ON order_identities(state);
+            CREATE INDEX idx_order_identities_origin_run ON order_identities(origin_run_id);
             """
-        )
+
+
+
+# -------------------------------------------------------------------
+# Exception classes
+# -------------------------------------------------------------------
+
+
+class IdentityCollisionError(Exception):
+    """Durable identity collision: same digest, different preimage."""
+
+
+class IdentityMismatchError(Exception):
+    """Same intent maps to a different request - material change."""
+
+
+class ReservationBlockedError(Exception):
+    """Reservation blocked: intent already exists in any state."""
+
+
+class SchemaVersionError(Exception):
+    """Unsupported or corrupt schema version."""
+
+
+class V2MigrationError(Exception):
+    """v2 -> v3 migration failed; rollback completed."""
+
+
+class Store:
+    """Small SQLite access layer for the bridge runtime database."""
+
+    _SCHEMA_VERSION = 3
+
+    def __init__(self, db_path: str | Path, clock: Callable[[], datetime] | None = None):
+        self.db_path = Path(db_path)
+        self._conn: sqlite3.Connection | None = None
+        self._clock: Callable[[], datetime] = clock or (lambda: datetime.now(UTC))
+
+    @property
+    def conn(self) -> sqlite3.Connection:
+        if self._conn is None:
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            self._conn.row_factory = sqlite3.Row
+            self._conn.execute("PRAGMA journal_mode=WAL")
+            self._conn.execute("PRAGMA foreign_keys=ON")
+        return self._conn
+
+    def close(self) -> None:
+        if self._conn is not None:
+            self._conn.close()
+            self._conn = None
+
+    def initialize(self) -> None:
+        """Version-checked schema initialisation.
+
+        None  -> fresh v3 creation
+        2     -> migrate v2 -> v3
+        3     -> idempotent reopen
+        other -> SchemaVersionError
+        """
+        existing = self._read_schema_version()
+        if existing is None:
+            self._init_v3_fresh()
+        elif existing == 2:
+            self._migrate_v2_to_v3()
+        elif existing == 3:
+            self._ensure_v3_schema()
+        else:
+            raise SchemaVersionError(
+                f"Unsupported schema version {existing!r}; "
+                "expected None (fresh), 2, or 3."
+            )
+    # -------------------------------------------------------------------
+    # Schema version helpers
+    # -------------------------------------------------------------------
+
+    def _read_schema_version(self) -> int | None:
+        """Return the stored schema version or None if meta table is absent."""
+        try:
+            row = self.conn.execute(
+                "SELECT value FROM meta WHERE key = 'schema_version'"
+            ).fetchone()
+        except sqlite3.OperationalError:
+            return None
+        if row is None:
+            return None
+        try:
+            return int(row["value"])
+        except (TypeError, ValueError):
+            raise SchemaVersionError(
+                f"Corrupt schema_version value: {row['value']!r}"
+            )
+
+    def _write_schema_version(self, version: int) -> None:
         self.conn.execute(
-            "INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)",
-            ("schema_version", "2"),
+            "INSERT OR REPLACE INTO meta(key, value) VALUES ('schema_version', ?)",
+            (str(version),),
         )
         self.conn.commit()
+
+    def _init_v3_fresh(self) -> None:
+        """Execute the full v3 DDL on a pristine database."""
+        self.conn.executescript(_V3_DDL)
+        self._write_schema_version(3)
+
+    def _ensure_v3_schema(self) -> None:
+        """Idempotent reopen: ensure all tables/indices exist."""
+        self.conn.executescript(_V3_DDL)
+        stored = self._read_schema_version()
+        if stored != 3:
+            self._write_schema_version(3)
+    def _migrate_v2_to_v3(self) -> None:
+        """Migrate a v2 database to v3 in a single transaction.
+
+        1. Create order_identities table and its indices.
+        2. Backfill from signal_fingerprints joined with SIGNAL/RISK_PASS
+           decisions: LEGACY_RESERVED for SIGNAL, LEGACY_SUBMITTED for
+           RISK_PASS.
+        3. Write schema_version = 3.
+        """
+        try:
+            with self.conn:
+                self.conn.executescript("""
+                    CREATE TABLE IF NOT EXISTS order_identities (
+                      intent_id TEXT PRIMARY KEY,
+                      intent_preimage TEXT NOT NULL,
+                      intent_version TEXT NOT NULL,
+                      request_id TEXT UNIQUE NOT NULL,
+                      request_preimage TEXT NOT NULL,
+                      request_version TEXT NOT NULL,
+                      cloid_seed TEXT NOT NULL,
+                      origin_run_id TEXT NOT NULL,
+                      original_decision_uid TEXT NOT NULL,
+                      state TEXT NOT NULL CHECK(state IN (
+                        'RESERVED','SUBMITTED','LEGACY_RESERVED','LEGACY_SUBMITTED'
+                      )),
+                      reserved_ts TEXT,
+                      submitted_ts TEXT
+                    );
+
+                    CREATE INDEX IF NOT EXISTS idx_order_identities_request_id
+                      ON order_identities(request_id);
+                    CREATE INDEX IF NOT EXISTS idx_order_identities_state
+                      ON order_identities(state);
+                    CREATE INDEX IF NOT EXISTS idx_order_identities_origin_run
+                      ON order_identities(origin_run_id);
+                """)
+
+                rows = self.conn.execute(
+                    """
+                    SELECT sf.run_id, sf.fingerprint, sf.decision_uid, sf.ts
+                    FROM signal_fingerprints sf
+                    ORDER BY sf.ts
+                    """
+                ).fetchall()
+
+                for row in rows:
+                    run_id = str(row["run_id"])
+                    fingerprint = str(row["fingerprint"])
+                    signal_uid = str(row["decision_uid"])
+                    ts_val = str(row["ts"])
+
+                    rp_row = self.conn.execute(
+                        """
+                        SELECT d.decision_uid, d.ts
+                        FROM decisions d
+                        WHERE d.stage = 'RISK_PASS'
+                          AND d.run_id = ?
+                          AND d.decision_uid LIKE ?
+                        ORDER BY d.id LIMIT 1
+                        """,
+                        (run_id, signal_uid.replace("SIGNAL:", "RISK_PASS:")),
+                    ).fetchone()
+
+                    legacy_intent_id = f"legacy-v2:intent:{run_id}:{fingerprint}"
+                    legacy_request_id = f"legacy-v2:request:{run_id}:{fingerprint}"
+
+                    if rp_row is not None:
+                        self.conn.execute(
+                            """
+                            INSERT OR IGNORE INTO order_identities(
+                              intent_id, intent_preimage, intent_version,
+                              request_id, request_preimage, request_version,
+                              cloid_seed, origin_run_id, original_decision_uid,
+                              state, reserved_ts, submitted_ts
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            """,
+                            (
+                                legacy_intent_id, fingerprint, "legacy-v2",
+                                legacy_request_id, fingerprint, "legacy-v2",
+                                f"legacy:{fingerprint[:32]}",
+                                run_id, str(rp_row["decision_uid"]),
+                                "LEGACY_SUBMITTED", ts_val, str(rp_row["ts"]),
+                            ),
+                        )
+                    else:
+                        self.conn.execute(
+                            """
+                            INSERT OR IGNORE INTO order_identities(
+                              intent_id, intent_preimage, intent_version,
+                              request_id, request_preimage, request_version,
+                              cloid_seed, origin_run_id, original_decision_uid,
+                              state, reserved_ts, submitted_ts
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            """,
+                            (
+                                legacy_intent_id, fingerprint, "legacy-v2",
+                                legacy_request_id, fingerprint, "legacy-v2",
+                                f"legacy:{fingerprint[:32]}",
+                                run_id, signal_uid,
+                                "LEGACY_RESERVED", ts_val, None,
+                            ),
+                        )
+
+                self._write_schema_version(3)
+
+        except Exception:
+            raise V2MigrationError(
+                "v2 -> v3 migration failed; the database has been rolled back "
+                "to its pre-migration state."
+            )
+    # -------------------------------------------------------------------
+    # Durable identity store methods (TS-P1-002)
+    # -------------------------------------------------------------------
+
+    def reserve_identity(
+        self,
+        intent_id: str,
+        intent_preimage: str,
+        request_id: str,
+        request_preimage: str,
+        cloid_seed: str,
+        origin_run_id: str,
+        original_decision_uid: str,
+        reserved_ts: datetime | str,
+    ) -> None:
+        """Insert a RESERVED row. Raises on collision or preimage mismatch."""
+        ts = _to_iso(reserved_ts)
+        try:
+            self.conn.execute(
+                """
+                INSERT INTO order_identities(
+                  intent_id, intent_preimage, intent_version,
+                  request_id, request_preimage, request_version,
+                  cloid_seed, origin_run_id, original_decision_uid,
+                  state, reserved_ts
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'RESERVED', ?)
+                """,
+                (
+                    intent_id, intent_preimage, _INTENT_VERSION,
+                    request_id, request_preimage, _REQUEST_VERSION,
+                    cloid_seed, origin_run_id, original_decision_uid, ts,
+                ),
+            )
+            self.conn.commit()
+        except sqlite3.IntegrityError as exc:
+            existing = self.get_identity(intent_id)
+            if existing is None:
+                existing_by_req = self.get_identity_by_request(request_id)
+                if existing_by_req is not None and existing_by_req["intent_id"] != intent_id:
+                    raise IdentityCollisionError(
+                        f"request_id {request_id!r} already bound to "
+                        f"intent {existing_by_req['intent_id']!r}"
+                    ) from exc
+                raise ReservationBlockedError(
+                    f"Reservation blocked for intent {intent_id!r}"
+                ) from exc
+            if existing["intent_preimage"] != intent_preimage:
+                raise IdentityCollisionError(
+                    f"intent_id {intent_id!r} collision: preimage mismatch"
+                )
+            if existing["request_id"] != request_id:
+                raise IdentityMismatchError(
+                    f"intent {intent_id!r} already bound to "
+                    f"request {existing['request_id']!r}, not {request_id!r}"
+                )
+            raise ReservationBlockedError(
+                f"Reservation blocked: intent {intent_id!r} already "
+                f"exists in state {existing['state']!r}"
+            ) from exc
+
+    def finalize_identity(
+        self, intent_id: str, submitted_ts: datetime | str,
+    ) -> None:
+        """Transition an identity from RESERVED -> SUBMITTED."""
+        ts = _to_iso(submitted_ts)
+        cursor = self.conn.execute(
+            """
+            UPDATE order_identities
+            SET state = 'SUBMITTED', submitted_ts = ?
+            WHERE intent_id = ? AND state = 'RESERVED'
+            """,
+            (ts, intent_id),
+        )
+        self.conn.commit()
+        if cursor.rowcount != 1:
+            existing = self.get_identity(intent_id)
+            if existing is None:
+                raise LookupError(
+                    f"Cannot finalize identity: {intent_id!r} not found"
+                )
+            raise ReservationBlockedError(
+                f"Cannot finalize identity: {intent_id!r} is "
+                f"{existing['state']!r}, not RESERVED"
+            )
+
+    def get_identity(self, intent_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM order_identities WHERE intent_id = ?",
+            (intent_id,),
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    def get_identity_by_request(self, request_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM order_identities WHERE request_id = ?",
+            (request_id,),
+        ).fetchone()
+        return None if row is None else dict(row)
+
+    def check_identity_preimage(
+        self, intent_id: str, intent_preimage: str
+    ) -> bool:
+        row = self.conn.execute(
+            "SELECT intent_preimage FROM order_identities WHERE intent_id = ?",
+            (intent_id,),
+        ).fetchone()
+        if row is None:
+            return False
+        return str(row["intent_preimage"]) == intent_preimage
 
     def get_meta(self, key: str) -> str | None:
         row = self.conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
@@ -319,34 +710,72 @@ class Store:
         avg_fill_px: float | None = None,
         ts_submit: datetime | str | None = None,
         ts_last: datetime | str | None = None,
-    ) -> None:
+    ) -> Literal["INSERTED", "EXACT_REPLAY", "CONFLICT"]:
+        """Collision-safe order insertion (TS-P1-002).
+
+        Returns 'INSERTED', 'EXACT_REPLAY', or 'CONFLICT'.
+        """
         submit_ts = _to_iso(ts_submit) or _to_iso(datetime.now(UTC))
-        self.conn.execute(
+        _last = _to_iso(ts_last) or submit_ts
+        normalized = (
+            cloid, oid, group_id, order_ref, _json(order_json),
+            decision_uid, trade_id, role, status,
+            float(qty), float(filled_qty),
+            float(avg_fill_px) if avg_fill_px is not None else None,
+            submit_ts, _last,
+        )
+        cursor = self.conn.execute(
             """
-            INSERT OR REPLACE INTO orders(
-              cloid, oid, group_id, order_ref, order_json, decision_uid, trade_id,
-              role, status, qty, filled_qty, avg_fill_px, ts_submit, ts_last
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT OR IGNORE INTO orders(
+              cloid, oid, group_id, order_ref, order_json, decision_uid,
+              trade_id, role, status, qty, filled_qty, avg_fill_px,
+              ts_submit, ts_last
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (
-                cloid,
-                oid,
-                group_id,
-                order_ref,
-                _json(order_json),
-                decision_uid,
-                trade_id,
-                role,
-                status,
-                qty,
-                filled_qty,
-                avg_fill_px,
-                submit_ts,
-                _to_iso(ts_last) or submit_ts,
-            ),
+            normalized,
         )
         self.conn.commit()
+        if cursor.rowcount == 1:
+            return "INSERTED"
+
+        row = self.conn.execute(
+            """SELECT cloid, oid, group_id, order_ref, order_json,
+                      decision_uid, trade_id, role, status, qty,
+                      filled_qty, avg_fill_px, ts_submit, ts_last
+               FROM orders WHERE cloid = ?""",
+            (cloid,),
+        ).fetchone()
+        if row is None:
+            return "CONFLICT"
+        existing = (
+            str(row["cloid"]), int(row["oid"]),
+            str(row["group_id"]) if row["group_id"] is not None else None,
+            str(row["order_ref"]) if row["order_ref"] is not None else None,
+            str(row["order_json"]), str(row["decision_uid"]),
+            int(row["trade_id"]), str(row["role"]), str(row["status"]),
+            float(row["qty"]), float(row["filled_qty"]),
+            float(row["avg_fill_px"]) if row["avg_fill_px"] is not None else None,
+            str(row["ts_submit"]), str(row["ts_last"]),
+        )
+        return "EXACT_REPLAY" if existing == normalized else "CONFLICT"
+    def insert_order_safe(
+        self,
+        cloid: str, oid: int | None, group_id: str | None,
+        order_ref: str, order_json: dict[str, Any],
+        decision_uid: str, trade_id: int | None, role: str,
+        status: str, qty: float, filled_qty: float = 0.0,
+        avg_fill_px: float | None = None,
+        ts_submit: datetime | str | None = None,
+        ts_last: datetime | str | None = None,
+    ) -> Literal["INSERTED", "EXACT_REPLAY", "CONFLICT"]:
+        """Alias for collision-safe insert_order (TS-P1-002)."""
+        return self.insert_order(
+            cloid=cloid, oid=oid, group_id=group_id,
+            order_ref=order_ref, order_json=order_json,
+            decision_uid=decision_uid, trade_id=trade_id, role=role,
+            status=status, qty=qty, filled_qty=filled_qty,
+            avg_fill_px=avg_fill_px, ts_submit=ts_submit, ts_last=ts_last,
+        )
 
     def update_order_status(
         self,
@@ -812,7 +1241,10 @@ class Store:
             "bars": self._rows("SELECT * FROM bars ORDER BY bar_end_ts"),
             "decisions": self._rows("SELECT * FROM decisions ORDER BY id"),
             "equity": self._rows("SELECT * FROM equity ORDER BY ts"),
+            "identities": self._rows(
+                "SELECT * FROM order_identities ORDER BY reserved_ts"),
         }
+
 
     def get_trades(self, limit: int = 50) -> list[dict[str, Any]]:
         return self._rows("SELECT * FROM trades ORDER BY trade_id DESC LIMIT ?", (limit,))
