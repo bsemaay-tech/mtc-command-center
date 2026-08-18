@@ -7,7 +7,20 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Protocol
 
-from bridge.engine.types import AccountSnapshot, Bar, BrokerEvent, BrokerOrder, OrderPlan, Position
+from bridge.engine.types import (
+    AccountSnapshot,
+    Bar,
+    BrokerEvent,
+    BrokerOrder,
+    CancelResult,
+    FlattenResult,
+    LotUnit,
+    OrderPlan,
+    OrderQueryResult,
+    PlaceResult,
+    Position,
+    SymbolSnapshot,
+)
 
 
 class SubmissionDisposition(str, Enum):
@@ -190,4 +203,67 @@ class Broker(Protocol):
         take_profit: float | None,
         decision_uid: str,
     ) -> dict[str, Any] | None:
+        ...
+
+
+# ---------------------------------------------------------------------------
+# TS-P1-004 bounded partial-recovery surface
+#
+# Deliberately a *separate* protocol. `Broker` keeps its accepted
+# `cancel` / `flatten` / `reprotect_position` shape so unrelated fakes outside
+# the allow-list are untouched; an adapter opts in by implementing the methods
+# below. `OrderManager` feature-detects and treats a missing surface as
+# "recovery unavailable" — abort with zero mutation, never a silent success.
+# ---------------------------------------------------------------------------
+
+
+class PartialRecoveryUnavailable(RuntimeError):
+    """The adapter cannot serve the bounded partial-recovery contract."""
+
+    def __init__(self, reason_code: str = "PARTIAL_RECOVERY_API_UNAVAILABLE") -> None:
+        self.reason_code = reason_code
+        super().__init__(reason_code)
+
+
+class PartialRecoveryBroker(Protocol):
+    """Typed, bounded, evidence-carrying surface used by partial recovery.
+
+    Every method returns a typed result whose outcome is conservative:
+    transport failures, unparseable bodies and missing fields map to
+    ``ActionOutcome.UNKNOWN`` / ``known=False`` / ``exact=False``, never to a
+    claimed success.
+    """
+
+    def lot_unit(self, symbol: str) -> LotUnit | None:
+        """Exchange size quantum, or ``None`` when unknown (fail-closed)."""
+        ...
+
+    async def symbol_snapshot(self, symbol: str) -> SymbolSnapshot:
+        """Bounded position + open-order evidence for exactly one symbol."""
+        ...
+
+    async def query_order(self, cloid: str, symbol: str) -> OrderQueryResult:
+        """Direct single-order lookup used to resolve UNKNOWN outcomes."""
+        ...
+
+    async def cancel_order_by_cloid(self, cloid: str, symbol: str) -> CancelResult:
+        """Cancel one owned order by its stable cloid."""
+        ...
+
+    async def place_protective_stop(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        exit_side: str,
+        size: float,
+        trigger_px: float,
+    ) -> PlaceResult:
+        """Place one exact-size, reduce-only stop for the owned position."""
+        ...
+
+    async def flatten_reduce_only(
+        self, *, symbol: str, cloid: str, size: float
+    ) -> FlattenResult:
+        """Reduce-only market close of exactly ``size`` on ``symbol``."""
         ...

@@ -26,13 +26,23 @@ from bridge.broker.base import (
 )
 from bridge.engine.types import (
     AccountSnapshot,
+    ActionOutcome,
     Bar,
     BrokerEvent,
     BrokerOrder,
+    CancelResult,
+    Evidence,
     FillEvent,
+    FlattenResult,
+    LotQuantizationError,
+    LotUnit,
     OrderPlan,
+    OrderQueryResult,
     OrderUpdateEvent,
+    OrderView,
+    PlaceResult,
     Position,
+    SymbolSnapshot,
 )
 from bridge.engine.bars import BarFinalizer, timeframe_delta
 from hyperliquid.utils.types import Cloid
@@ -909,6 +919,308 @@ class HyperliquidBroker:
         return await self._verify_positioned_orders(
             raw, roles, requests, abs(position.size), position.symbol
         )
+
+    # ------------------------------------------------------------------
+    # TS-P1-004 typed, bounded partial-recovery surface
+    #
+    # Strict response mapping only. `status=ok` plus a resting/filled/success
+    # status is APPLIED; an *authoritative* not-found/already-canceled/
+    # validation rejection is NOT_APPLIED; everything else — timeout, transport
+    # error, unparseable body, missing status, unexpected shape — is UNKNOWN.
+    # There is no optimistic branch anywhere in this section.
+    # ------------------------------------------------------------------
+
+    _LIVE_ORDER_STATUSES = frozenset({"OPEN", "SUBMITTED", "PENDING", "RESTING"})
+
+    def lot_unit(self, symbol: str) -> LotUnit | None:
+        """Symbol size quantum from exchange metadata; None when unknown."""
+        decimals = self._size_decimals.get(str(symbol))
+        if decimals is None:
+            return None
+        try:
+            return LotUnit(int(decimals))
+        except (LotQuantizationError, TypeError, ValueError):
+            return None
+
+    async def symbol_snapshot(self, symbol: str) -> SymbolSnapshot:
+        """Bounded position + open-order evidence for exactly one symbol."""
+        lot = self.lot_unit(symbol)
+        try:
+            positions = await self.positions()
+        except Exception as exc:  # noqa: BLE001 - any failure is inexact evidence
+            return SymbolSnapshot(
+                symbol=symbol, exact=False, net_size=None, open_orders=(), lot=lot,
+                evidence=Evidence(
+                    "SNAPSHOT", "HL_POSITION_QUERY_FAILED", detail=type(exc).__name__
+                ),
+            )
+        try:
+            orders = await self.open_orders()
+        except Exception as exc:  # noqa: BLE001
+            return SymbolSnapshot(
+                symbol=symbol, exact=False, net_size=None, open_orders=(), lot=lot,
+                evidence=Evidence(
+                    "SNAPSHOT", "HL_OPEN_ORDER_QUERY_FAILED", detail=type(exc).__name__
+                ),
+            )
+        matching = [p for p in positions if p.symbol == symbol]
+        if len(matching) > 1:
+            return SymbolSnapshot(
+                symbol=symbol, exact=False, net_size=None, open_orders=(), lot=lot,
+                evidence=Evidence("SNAPSHOT", "HL_POSITION_CONFLICTING"),
+            )
+        net = float(matching[0].size) if matching else 0.0
+        views = tuple(
+            OrderView(
+                cloid=order.cloid,
+                coin=order.coin,
+                side=order.side,
+                size=float(order.size),
+                role=str(order.role),
+                reduce_only=bool(order.reduce_only),
+                trigger_px=order.trigger_px,
+                status=str(order.status),
+                order_ref=order.order_ref,
+            )
+            for order in orders
+            if order.coin == symbol
+        )
+        return SymbolSnapshot(
+            symbol=symbol,
+            exact=lot is not None,
+            net_size=net,
+            open_orders=views,
+            lot=lot,
+            evidence=Evidence(
+                "SNAPSHOT",
+                "HL_SNAPSHOT_COMPLETE" if lot is not None else "HL_SIZE_QUANTUM_MISSING",
+            ),
+            observed_ts=datetime.now(UTC),
+        )
+
+    async def query_order(self, cloid: str, symbol: str) -> OrderQueryResult:
+        """Direct single-order lookup; an unusable answer stays UNKNOWN."""
+        if self.info is None:
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_NOT_CONFIGURED")
+            )
+        lookup = getattr(self.info, "query_order_by_cloid", None)
+        if callable(lookup):
+            try:
+                raw = await asyncio.to_thread(lookup, self.account_address, Cloid.from_str(str(cloid)))
+            except Exception as exc:  # noqa: BLE001
+                return OrderQueryResult(
+                    known=False,
+                    evidence=Evidence(
+                        "QUERY_ORDER", "HL_QUERY_FAILED", detail=type(exc).__name__
+                    ),
+                )
+            return self._parse_order_query(raw, cloid)
+        # Fall back to the open-order collection: it can only prove presence.
+        try:
+            orders = await self.open_orders()
+        except Exception as exc:  # noqa: BLE001
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence(
+                    "QUERY_ORDER", "HL_QUERY_FAILED", detail=type(exc).__name__
+                ),
+            )
+        for order in orders:
+            if order.cloid == str(cloid):
+                return OrderQueryResult(
+                    known=True, found=True, terminal=False,
+                    raw_status=str(order.status),
+                    evidence=Evidence("OPEN_ORDERS", "HL_ORDER_PRESENT"),
+                )
+        # Absence from the open-order page alone is not proof of terminality.
+        return OrderQueryResult(
+            known=False,
+            evidence=Evidence("OPEN_ORDERS", "HL_ORDER_ABSENCE_NOT_AUTHORITATIVE"),
+        )
+
+    @classmethod
+    def _parse_order_query(cls, raw: object, cloid: str) -> OrderQueryResult:
+        if not isinstance(raw, dict):
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_UNPARSEABLE")
+            )
+        status = raw.get("status")
+        if isinstance(status, str) and status.lower() in {"unknownoid", "unknown_oid"}:
+            return OrderQueryResult(
+                known=True, found=False, terminal=True,
+                evidence=Evidence("QUERY_ORDER", "HL_ORDER_UNKNOWN_OID"),
+            )
+        if not isinstance(status, str) or status.lower() != "order":
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_UNEXPECTED")
+            )
+        payload = raw.get("order")
+        if not isinstance(payload, dict):
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_UNPARSEABLE")
+            )
+        order_status = payload.get("status")
+        if not isinstance(order_status, str) or not order_status.strip():
+            return OrderQueryResult(
+                known=False, evidence=Evidence("QUERY_ORDER", "HL_QUERY_STATUS_MISSING")
+            )
+        normalized = order_status.strip().upper()
+        inner = payload.get("order")
+        filled: float | None = None
+        if isinstance(inner, dict):
+            original = inner.get("origSz")
+            remaining = inner.get("sz")
+            if original is not None and remaining is not None:
+                try:
+                    filled = float(original) - float(remaining)
+                except (TypeError, ValueError):
+                    filled = None
+        live = normalized in cls._LIVE_ORDER_STATUSES
+        return OrderQueryResult(
+            known=True,
+            found=live,
+            terminal=not live,
+            raw_status=normalized,
+            filled_size=filled,
+            evidence=Evidence("QUERY_ORDER", "HL_QUERY_COMPLETE"),
+        )
+
+    _NOT_APPLIED_MARKERS = (
+        "order was never placed",
+        "never placed",
+        "order not found",
+        "was not found",
+        "already canceled",
+        "already cancelled",
+        "cannot be canceled",
+        "invalid order",
+        "reduce only",
+        "insufficient",
+    )
+
+    @classmethod
+    def _classify_exchange_result(cls, raw: object) -> tuple[ActionOutcome, str]:
+        """Strict response -> outcome mapping. Anything unexpected is UNKNOWN."""
+        if not isinstance(raw, dict):
+            return ActionOutcome.UNKNOWN, "HL_RESPONSE_NOT_OBJECT"
+        status = raw.get("status")
+        if not isinstance(status, str):
+            return ActionOutcome.UNKNOWN, "HL_STATUS_MISSING"
+        if status.lower() == "err":
+            message = cls._safe_exchange_message(raw.get("response"), cap=256).lower()
+            if any(marker in message for marker in cls._NOT_APPLIED_MARKERS):
+                return ActionOutcome.NOT_APPLIED, "HL_DEFINITIVE_REJECTION"
+            return ActionOutcome.UNKNOWN, "HL_ERROR_NOT_AUTHORITATIVE"
+        if status.lower() != "ok":
+            return ActionOutcome.UNKNOWN, "HL_STATUS_UNEXPECTED"
+        try:
+            statuses = cls._extract_statuses(raw)
+        except Exception:  # noqa: BLE001 - unparseable body is never a success
+            return ActionOutcome.UNKNOWN, "HL_RESPONSE_UNPARSEABLE"
+        if not statuses:
+            return ActionOutcome.UNKNOWN, "HL_STATUSES_EMPTY"
+        for entry in statuses:
+            if "error" in entry:
+                message = cls._safe_exchange_message(entry.get("error"), cap=256).lower()
+                if any(marker in message for marker in cls._NOT_APPLIED_MARKERS):
+                    return ActionOutcome.NOT_APPLIED, "HL_DEFINITIVE_REJECTION"
+                return ActionOutcome.UNKNOWN, "HL_ERROR_NOT_AUTHORITATIVE"
+            if not ({"resting", "filled", "success", "pending_child"} & set(entry)):
+                return ActionOutcome.UNKNOWN, "HL_STATUS_UNRECOGNIZED"
+        return ActionOutcome.APPLIED, "HL_APPLIED"
+
+    async def cancel_order_by_cloid(self, cloid: str, symbol: str) -> CancelResult:
+        if self.exchange is None or not hasattr(self.exchange, "cancel_by_cloid"):
+            return CancelResult(
+                ActionOutcome.NOT_APPLIED, str(cloid),
+                Evidence("CANCEL", "HL_NOT_CONFIGURED"),
+            )
+        spec = self._order_specs.get(str(cloid), {})
+        coin = str(spec.get("coin", symbol or self.coin))
+        try:
+            raw = await asyncio.to_thread(
+                self.exchange.cancel_by_cloid, coin, Cloid.from_str(str(cloid))
+            )
+        except Exception as exc:  # noqa: BLE001 - transport failure is UNKNOWN
+            return CancelResult(
+                ActionOutcome.UNKNOWN, str(cloid),
+                Evidence("CANCEL", "HL_TRANSPORT_FAILED", detail=type(exc).__name__),
+            )
+        outcome, reason = self._classify_exchange_result(raw)
+        return CancelResult(outcome, str(cloid), Evidence("CANCEL", reason))
+
+    async def place_protective_stop(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        exit_side: str,
+        size: float,
+        trigger_px: float,
+    ) -> PlaceResult:
+        if self.exchange is None or not hasattr(self.exchange, "bulk_orders"):
+            return PlaceResult(
+                ActionOutcome.NOT_APPLIED, str(cloid), None,
+                Evidence("PLACE", "HL_NOT_CONFIGURED"),
+            )
+        is_buy = str(exit_side).upper() == "BUY"
+        try:
+            rounded = self._round_price(symbol, trigger_px)
+        except Exception as exc:  # noqa: BLE001 - never send an unrounded price
+            return PlaceResult(
+                ActionOutcome.NOT_APPLIED, str(cloid), None,
+                Evidence("PLACE", "HL_PRICE_INVALID", detail=type(exc).__name__),
+            )
+        typed_cloid = Cloid.from_str(str(cloid))
+        request = self._request(
+            symbol,
+            is_buy,
+            float(size),
+            rounded,
+            {"trigger": {"triggerPx": rounded, "isMarket": True, "tpsl": "sl"}},
+            True,
+            typed_cloid,
+        )
+        try:
+            raw = await asyncio.to_thread(
+                self.exchange.bulk_orders, [request], grouping="positionTpsl"
+            )
+        except Exception as exc:  # noqa: BLE001
+            return PlaceResult(
+                ActionOutcome.UNKNOWN, str(cloid), None,
+                Evidence("PLACE", "HL_TRANSPORT_FAILED", detail=type(exc).__name__),
+            )
+        outcome, reason = self._classify_exchange_result(raw)
+        if outcome is ActionOutcome.APPLIED:
+            self._order_specs[str(cloid)] = {**request, "role": "SL"}
+        return PlaceResult(
+            outcome, str(cloid), self._extract_oid(raw), Evidence("PLACE", reason)
+        )
+
+    async def flatten_reduce_only(
+        self, *, symbol: str, cloid: str, size: float
+    ) -> FlattenResult:
+        if self.exchange is None or not hasattr(self.exchange, "market_close"):
+            return FlattenResult(
+                ActionOutcome.NOT_APPLIED, str(cloid),
+                Evidence("FLATTEN", "HL_NOT_CONFIGURED"),
+            )
+        try:
+            raw = await asyncio.to_thread(
+                self.exchange.market_close,
+                symbol,
+                sz=abs(float(size)),
+                slippage=0.05,
+                cloid=Cloid.from_str(str(cloid)),
+            )
+        except Exception as exc:  # noqa: BLE001
+            return FlattenResult(
+                ActionOutcome.UNKNOWN, str(cloid),
+                Evidence("FLATTEN", "HL_TRANSPORT_FAILED", detail=type(exc).__name__),
+            )
+        outcome, reason = self._classify_exchange_result(raw)
+        return FlattenResult(outcome, str(cloid), Evidence("FLATTEN", reason))
 
     def _check_network_lock(self) -> None:
         if self.network != "mainnet":

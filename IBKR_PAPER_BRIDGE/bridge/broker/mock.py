@@ -22,14 +22,41 @@ from bridge.broker.base import (
 )
 from bridge.engine.types import (
     AccountSnapshot,
+    ActionOutcome,
     Bar,
     BrokerEvent,
     BrokerOrder,
+    CancelResult,
+    Evidence,
     FillEvent,
+    FlattenResult,
+    LotQuantizationError,
+    LotUnit,
     OrderPlan,
+    OrderQueryResult,
     OrderUpdateEvent,
+    OrderView,
+    PlaceResult,
     Position,
+    SymbolSnapshot,
 )
+
+_LIVE_STATUSES = frozenset({"SUBMITTED", "OPEN", "PENDING"})
+
+
+@dataclass
+class ScriptedOutcome:
+    """One forced broker verdict, with the exchange effect stated separately.
+
+    ``outcome`` is what the adapter *reports*; ``applied`` is what actually
+    happened on the exchange. The two are deliberately independent so tests can
+    build the dangerous cases — reported UNKNOWN but really applied, reported
+    UNKNOWN and really not applied — that a real transport failure produces.
+    """
+
+    outcome: ActionOutcome
+    applied: bool = True
+    reason_code: str = "MOCK_SCRIPTED"
 
 
 @dataclass
@@ -47,6 +74,19 @@ class MockBroker:
     _user_callbacks: list[Callable[[BrokerEvent], None]] = field(default_factory=list)
     _bar_callbacks: list[Callable[[Bar], None]] = field(default_factory=list)
     resubscribe_count: int = 0
+
+    # --- TS-P1-004 partial-recovery surface (defaults = healthy exchange) ---
+    partial_size_decimals: int | None = 3
+    partial_snapshot_exact: bool = True
+    partial_snapshot_available: bool = True
+    partial_query_available: bool = True
+    partial_foreign_orders: list[dict] = field(default_factory=list)
+    partial_extra_position: float = 0.0
+    scripted_place: list[ScriptedOutcome] = field(default_factory=list)
+    scripted_cancel: list[ScriptedOutcome] = field(default_factory=list)
+    scripted_flatten: list[ScriptedOutcome] = field(default_factory=list)
+    late_entry_fill_on_cancel: float = 0.0
+    partial_calls: list[tuple[str, str]] = field(default_factory=list)
 
     @classmethod
     def from_csv(cls, path: str | Path, starting_equity: float = 10_000.0) -> "MockBroker":
@@ -290,6 +330,253 @@ class MockBroker:
             cloid=f"mock-reprotect-{decision_uid}-sl",
         )
         return {"sl": sl}
+
+    # ------------------------------------------------------------------
+    # TS-P1-004 typed, bounded partial-recovery surface
+    # ------------------------------------------------------------------
+
+    def lot_unit(self, symbol: str) -> LotUnit | None:
+        if self.partial_size_decimals is None:
+            return None
+        try:
+            return LotUnit(int(self.partial_size_decimals))
+        except LotQuantizationError:
+            return None
+
+    @property
+    def broker_mutations(self) -> list[tuple[str, str]]:
+        """Only the calls that can change exchange state."""
+        return [
+            call
+            for call in self.partial_calls
+            if call[0] in {"cancel_order_by_cloid", "place_protective_stop", "flatten_reduce_only"}
+        ]
+
+    async def symbol_snapshot(self, symbol: str) -> SymbolSnapshot:
+        self.partial_calls.append(("symbol_snapshot", symbol))
+        lot = self.lot_unit(symbol)
+        if not self.partial_snapshot_available:
+            return SymbolSnapshot(
+                symbol=symbol,
+                exact=False,
+                net_size=None,
+                open_orders=(),
+                lot=lot,
+                evidence=Evidence("SNAPSHOT", "MOCK_SNAPSHOT_UNAVAILABLE"),
+            )
+        net = 0.0
+        if self.position is not None and self.position.symbol == symbol:
+            net = float(self.position.size)
+        net += float(self.partial_extra_position)
+        views: list[OrderView] = []
+        for order in self.orders:
+            if str(order.get("status")) not in _LIVE_STATUSES:
+                continue
+            if str(order.get("symbol", self.coin)) != symbol:
+                continue
+            views.append(self._order_view(order))
+        for foreign in self.partial_foreign_orders:
+            if str(foreign.get("symbol", self.coin)) != symbol:
+                continue
+            views.append(self._order_view(foreign))
+        return SymbolSnapshot(
+            symbol=symbol,
+            exact=bool(self.partial_snapshot_exact and lot is not None),
+            net_size=net,
+            open_orders=tuple(views),
+            lot=lot,
+            evidence=Evidence("SNAPSHOT", "MOCK_SNAPSHOT_COMPLETE"),
+            observed_ts=datetime.now(),
+        )
+
+    def _order_view(self, order: dict) -> OrderView:
+        direction = str(order.get("direction", "LONG"))
+        role = str(order.get("role", "UNKNOWN"))
+        is_entry = role == "ENTRY"
+        is_buy = (direction == "LONG") if is_entry else (direction == "SHORT")
+        return OrderView(
+            cloid=str(order.get("cloid", "")),
+            coin=str(order.get("symbol", self.coin)),
+            side="BUY" if is_buy else "SELL",
+            size=float(order.get("qty", 0.0)),
+            role=role,
+            reduce_only=bool(order.get("reduce_only", False)),
+            trigger_px=order.get("trigger_px"),
+            status=str(order.get("status", "OPEN")),
+            order_ref=order.get("order_ref"),
+        )
+
+    def _find_order(self, cloid: str) -> dict | None:
+        for order in self.orders:
+            if str(order.get("cloid")) == str(cloid):
+                return order
+        for order in self.partial_foreign_orders:
+            if str(order.get("cloid")) == str(cloid):
+                return order
+        return None
+
+    async def query_order(self, cloid: str, symbol: str) -> OrderQueryResult:
+        self.partial_calls.append(("query_order", str(cloid)))
+        if not self.partial_query_available:
+            return OrderQueryResult(
+                known=False,
+                evidence=Evidence("QUERY_ORDER", "MOCK_QUERY_UNAVAILABLE"),
+            )
+        order = self._find_order(cloid)
+        if order is None:
+            return OrderQueryResult(
+                known=True,
+                found=False,
+                terminal=True,
+                evidence=Evidence("QUERY_ORDER", "MOCK_ORDER_ABSENT"),
+            )
+        status = str(order.get("status", "OPEN"))
+        filled = sum(
+            float(fill["qty"]) for fill in self.fills if str(fill["cloid"]) == str(cloid)
+        )
+        return OrderQueryResult(
+            known=True,
+            found=status in _LIVE_STATUSES,
+            terminal=status not in _LIVE_STATUSES,
+            raw_status=status,
+            filled_size=filled,
+            evidence=Evidence("QUERY_ORDER", "MOCK_ORDER_FOUND"),
+        )
+
+    @staticmethod
+    def _next_script(script: list[ScriptedOutcome]) -> ScriptedOutcome | None:
+        return script.pop(0) if script else None
+
+    async def cancel_order_by_cloid(self, cloid: str, symbol: str) -> CancelResult:
+        self.partial_calls.append(("cancel_order_by_cloid", str(cloid)))
+        if self.late_entry_fill_on_cancel:
+            self._apply_late_entry_fill(str(cloid))
+        script = self._next_script(self.scripted_cancel)
+        order = self._find_order(cloid)
+        if script is not None:
+            if script.applied and order is not None and str(order.get("status")) in _LIVE_STATUSES:
+                order["status"] = "CANCELLED_BY_ENGINE"
+                self._emit_order_update(order)
+            return CancelResult(
+                script.outcome, str(cloid), Evidence("CANCEL", script.reason_code)
+            )
+        if order is None:
+            return CancelResult(
+                ActionOutcome.NOT_APPLIED, str(cloid),
+                Evidence("CANCEL", "MOCK_ORDER_ABSENT"),
+            )
+        if str(order.get("status")) not in _LIVE_STATUSES:
+            return CancelResult(
+                ActionOutcome.NOT_APPLIED, str(cloid),
+                Evidence("CANCEL", "MOCK_ORDER_ALREADY_TERMINAL"),
+            )
+        order["status"] = "CANCELLED_BY_ENGINE"
+        self._emit_order_update(order)
+        return CancelResult(
+            ActionOutcome.APPLIED, str(cloid), Evidence("CANCEL", "MOCK_CANCEL_OK")
+        )
+
+    def _apply_late_entry_fill(self, cancel_cloid: str) -> None:
+        """Simulate a fill that lands between the cancel request and its ack."""
+        qty = float(self.late_entry_fill_on_cancel)
+        self.late_entry_fill_on_cancel = 0.0
+        order = self._find_order(cancel_cloid)
+        if order is None or str(order.get("role")) != "ENTRY":
+            return
+        px = self._last_price()
+        direction = str(order.get("direction", "LONG"))
+        side = 1 if direction == "LONG" else -1
+        symbol = str(order.get("symbol", self.coin))
+        if self.position is None:
+            self.position = Position(
+                symbol=symbol, size=qty * side, entry_px=px, unrealized=0.0
+            )
+        else:
+            self.position = self.position.model_copy(
+                update={"size": self.position.size + qty * side}
+            )
+        self._record_fill(order, qty, px, datetime.now())
+
+    async def place_protective_stop(
+        self,
+        *,
+        symbol: str,
+        cloid: str,
+        exit_side: str,
+        size: float,
+        trigger_px: float,
+    ) -> PlaceResult:
+        self.partial_calls.append(("place_protective_stop", str(cloid)))
+        script = self._next_script(self.scripted_place)
+        direction = "LONG" if str(exit_side).upper() == "SELL" else "SHORT"
+        if script is not None:
+            if script.applied:
+                self._install_stop(symbol, cloid, direction, size, trigger_px)
+            return PlaceResult(
+                script.outcome, str(cloid), None, Evidence("PLACE", script.reason_code)
+            )
+        order = self._install_stop(symbol, cloid, direction, size, trigger_px)
+        return PlaceResult(
+            ActionOutcome.APPLIED,
+            str(cloid),
+            int(order["oid"]),
+            Evidence("PLACE", "MOCK_PLACE_OK"),
+        )
+
+    def _install_stop(
+        self, symbol: str, cloid: str, direction: str, size: float, trigger_px: float
+    ) -> dict:
+        existing = self._find_order(cloid)
+        if existing is not None:
+            existing["status"] = "OPEN"
+            existing["qty"] = float(size)
+            existing["trigger_px"] = float(trigger_px)
+            return existing
+        return self._order(
+            "SL",
+            "OPEN",
+            float(size),
+            float(trigger_px),
+            reduce_only=True,
+            trigger_px=float(trigger_px),
+            direction=direction,
+            symbol=symbol,
+            cloid=str(cloid),
+        )
+
+    async def flatten_reduce_only(
+        self, *, symbol: str, cloid: str, size: float
+    ) -> FlattenResult:
+        self.partial_calls.append(("flatten_reduce_only", str(cloid)))
+        script = self._next_script(self.scripted_flatten)
+        if script is not None:
+            if script.applied:
+                self._reduce_position(symbol, size, cloid)
+            return FlattenResult(
+                script.outcome, str(cloid), Evidence("FLATTEN", script.reason_code)
+            )
+        self._reduce_position(symbol, size, cloid)
+        return FlattenResult(
+            ActionOutcome.APPLIED, str(cloid), Evidence("FLATTEN", "MOCK_FLATTEN_OK")
+        )
+
+    def _reduce_position(self, symbol: str, size: float, cloid: str) -> None:
+        if self.position is None or self.position.symbol != symbol:
+            return
+        px = self._last_price()
+        current = float(self.position.size)
+        reduce_by = min(abs(current), abs(float(size)))
+        close = self._order(
+            "CLOSE", "FILLED", reduce_by, px, reduce_only=True, symbol=symbol,
+            cloid=str(cloid),
+        )
+        self._record_fill(close, reduce_by, px, datetime.now())
+        remaining = current - reduce_by if current > 0 else current + reduce_by
+        self.position = (
+            None
+            if remaining == 0
+            else self.position.model_copy(update={"size": remaining})
+        )
 
     def process_bar(self, bar: Bar) -> None:
         for order in self.orders:
