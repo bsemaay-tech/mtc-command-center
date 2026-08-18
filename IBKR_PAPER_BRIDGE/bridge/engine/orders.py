@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from bridge.broker.base import Broker
+from bridge.broker.base import Broker, SubmissionResult
 from bridge.engine.types import BrokerEvent, BrokerOrder, FillEvent, OrderPlan, OrderUpdateEvent, Position
 from bridge.store.db import (
     IdentityCollisionError,
@@ -25,30 +25,36 @@ class OrderManager:
         self._synced_fills: set[str] = set()
         self._queued_events: list[BrokerEvent] = []
         self.pending_grace_s = pending_grace_s
+        self._consecutive_order_rejects: int = 0
         subscribe = getattr(self.broker, "subscribe_user_events", None)
         if subscribe is not None:
             subscribe(self._queue_event)
 
     # ------------------------------------------------------------------
-    # TS-P1-002 identity-based submission
+    # TS-P1-003 quarantine guard
+    # ------------------------------------------------------------------
+
+    def _quarantine_active(self) -> bool:
+        """Check durable quarantine before any placement decision."""
+        return self.store.has_active_quarantine()
+
+    # ------------------------------------------------------------------
+    # TS-P1-002/003 identity-based submission
     # ------------------------------------------------------------------
 
     async def submit_plan(
         self, decision_uid: str, plan: OrderPlan, *, strategy_id: str = "keltner_trail_ema8"
     ) -> dict[str, Any] | None:
-        """Submit an order plan with durable identity reservation.
+        """Submit an order plan with durable identity reservation + TS-P1-003 quarantine.
 
-        The canonical intent_id and request_id are computed and persisted
-        before broker I/O.  Duplicate delivery or replay is blocked.
-        Materially different requests for the same intent cause a fail-closed
-        collision error.
-
-        plan.decision_uid is set to request_id immediately before the broker
-        call so the broker adapter derives stable cloids. The original
-        run-scoped decision_uid is persisted separately in all decision/trade/
-        order lineage.
+        Blocks all broker placement while any SUBMITTING, UNKNOWN_SUBMISSION,
+        or CONFIRMED_PRESENT quarantine exists.
         """
         if decision_uid in self._submitted:
+            return None
+
+        # --- TS-P1-003: block if quarantine active ---
+        if self._quarantine_active():
             return None
 
         # --- 1. Compute dual identities ---
@@ -71,11 +77,23 @@ class OrderManager:
             leverage=plan.leverage,
         )
 
-        # --- 2. Durable reservation (explicit transaction) ---
+        # --- 2. Obtain planned cloids from broker boundary ---
+        get_planned = getattr(self.broker, "get_planned_cloids", None)
+        if get_planned is not None:
+            planned_cloids = get_planned(plan)
+        else:
+            planned_cloids = {
+                "entry": f"{request_id}:ENTRY",
+                "sl": f"{request_id}:SL",
+            }
+            if plan.take_profit is not None:
+                planned_cloids["tp"] = f"{request_id}:TP"
+        planned_roles = list(planned_cloids.keys())
+
+        # --- 3. Durable reservation + submission attempt (one transaction) ---
         try:
             self.store.conn.execute("BEGIN IMMEDIATE")
         except Exception:
-            # If we cannot start a transaction, fail closed
             raise
 
         try:
@@ -90,11 +108,40 @@ class OrderManager:
                 origin_run_id=self.run_id,
                 origin_decision_uid=decision_uid,
             )
+
+            if result == "BLOCKED":
+                self.store.conn.commit()
+                return None
+
+            # TS-P1-003: create submission attempt only for new reservations
+            recovery_payload = {
+                "intent_id": intent_id,
+                "request_id": request_id,
+                "symbol": plan.signal.symbol,
+                "direction": plan.signal.direction,
+                "qty": plan.qty,
+                "entry_type": plan.entry_type,
+                "stop_loss": plan.stop_loss,
+                "take_profit": plan.take_profit,
+                "leverage": plan.leverage,
+                "ref_price": plan.signal.ref_price,
+                "signal_ts": plan.signal.ts.isoformat(),
+            }
+            attempt_id = self.store.create_submission_attempt(
+                request_id=request_id,
+                origin_run_id=self.run_id,
+                origin_decision_uid=decision_uid,
+                strategy_id=strategy_id,
+                coin=plan.signal.symbol,
+                direction=plan.signal.direction,
+                qty=plan.qty,
+                planned_roles=planned_roles,
+                planned_cloids=planned_cloids,
+                recovery_payload=recovery_payload,
+            )
             self.store.conn.commit()
         except IdentityCollisionError as exc:
             self.store.conn.rollback()
-            # Repair 2-5: Persist exc.code (the structured collision code),
-            # never a hardcoded string. The detail contains only safe IDs.
             self.store.insert_event(
                 self.run_id,
                 datetime.now(UTC),
@@ -108,170 +155,298 @@ class OrderManager:
             raise
 
         if result == "BLOCKED":
-            # Identity already exists — idempotent replay, do not resubmit
             return None
 
-        # Reservation is now committed as RESERVED
-
-        # --- 3. Set broker cloid seed and submit ---
-        # Persist original run-scoped decision_uid for lineage
+        # --- 4. Broker I/O ---
         original_decision_uid = decision_uid
         plan.decision_uid = request_id
+        submission_result: SubmissionResult
+        broker_exception: Exception | None = None
         try:
-            broker_result = await self.broker.place_bracket(plan)
+            raw_result = await self.broker.place_bracket(plan)
+            if isinstance(raw_result, SubmissionResult):
+                submission_result = raw_result
+            else:
+                # Legacy broker returning dict
+                submission_result = _legacy_broker_to_result(raw_result)
         except Exception as exc:
-            # Repair 2-5: Broker call failed — reservation stays RESERVED.
-            # Persist only structured IDs and exception type/code, never str(exc)
-            # or raw messages.
-            if hasattr(self.store, "insert_event"):
-                self.store.insert_event(
-                    self.run_id,
-                    datetime.now(UTC),
-                    "ERROR",
-                    "PLACE_BRACKET_FAILED",
-                    f"decision_uid={original_decision_uid} intent_id={intent_id} "
-                    f"error_type={type(exc).__name__}",
-                )
-            raise
+            broker_exception = exc
+            submission_result = SubmissionResult(
+                verdict="OUTCOME_UNKNOWN",
+                error_type=type(exc).__name__,
+                safe_detail="broker call raised exception after possible send",
+            )
         finally:
-            # Restore plan.decision_uid to the original run-scoped value
             plan.decision_uid = original_decision_uid
 
-        # --- Repair 2-8: Validate broker_result ---
-        # broker_result must be a non-empty mapping; every returned entry must
-        # be a valid order mapping with required cloid/role/status/qty.
-        if not isinstance(broker_result, dict) or not broker_result:
-            # Failure after broker I/O — leaves reservation RESERVED,
-            # creates no trade/order, logs only safe error code.
+        # --- 5. Classify outcome ---
+        verdict = submission_result.verdict
+
+        if verdict == "PRE_SEND_FAILURE":
+            # Proven no exchange write began — safe to keep RESERVED
+            self.store.conn.execute("BEGIN IMMEDIATE")
+            try:
+                self.store.transition_attempt_state(
+                    attempt_id=attempt_id,
+                    from_states=["SUBMITTING"],
+                    to_state="DEFINITIVE_REJECTION",
+                    reason_code="PRE_SEND_FAILURE",
+                )
+                self.store.conn.commit()
+            except Exception:
+                self.store.conn.rollback()
             self.store.insert_event(
                 self.run_id,
                 datetime.now(UTC),
                 "ERROR",
-                "BROKER_RESULT_INVALID",
-                f"decision_uid={original_decision_uid} intent_id={intent_id} "
-                f"type={type(broker_result).__name__}",
-            )
-            raise IdentityCollisionError(
-                "IDENTITY_BROKER_RESULT_INVALID",
-                f"intent_id={intent_id}: broker returned empty or non-mapping result",
-            )
-
-        # --- 4. Validate each returned order row ---
-        orders_data: list[dict[str, Any]] = []
-        for role, order in broker_result.items():
-            if not isinstance(order, dict):
-                self.store.insert_event(
-                    self.run_id,
-                    datetime.now(UTC),
-                    "ERROR",
-                    "BROKER_ORDER_INVALID",
-                    f"decision_uid={original_decision_uid} role={role} "
-                    f"order_type={type(order).__name__}",
-                )
-                raise IdentityCollisionError(
-                    "IDENTITY_BROKER_ORDER_INVALID",
-                    f"intent_id={intent_id}: broker returned non-dict order for role={role}",
-                )
-            # Verify required keys
-            missing = [k for k in ("cloid", "role", "status", "qty") if k not in order]
-            if missing:
-                self.store.insert_event(
-                    self.run_id,
-                    datetime.now(UTC),
-                    "ERROR",
-                    "BROKER_ORDER_MISSING_KEYS",
-                    f"decision_uid={original_decision_uid} role={role} "
-                    f"missing={','.join(missing)}",
-                )
-                raise IdentityCollisionError(
-                    "IDENTITY_BROKER_ORDER_INVALID",
-                    f"intent_id={intent_id}: broker order for role={role} "
-                    f"missing keys: {','.join(missing)}",
-                )
-            orders_data.append({
-                "cloid": order["cloid"],
-                "oid": order.get("oid"),
-                "group_id": request_id,
-                "order_ref": f"{request_id}:{role.upper()}",
-                "order_json": self._jsonable_order(order),
-                "decision_uid": original_decision_uid,
-                "role": order["role"],
-                "status": order["status"],
-                "qty": order["qty"],
-                "filled_qty": order["qty"] if order["status"] == "FILLED" else 0.0,
-                "avg_fill_px": order.get("avg_fill_px"),
-            })
-
-        if not orders_data:
-            self.store.insert_event(
-                self.run_id,
-                datetime.now(UTC),
-                "ERROR",
-                "BROKER_ORDERS_EMPTY",
+                "PRE_SEND_FAILURE",
                 f"decision_uid={original_decision_uid} intent_id={intent_id}",
             )
             raise IdentityCollisionError(
-                "IDENTITY_BROKER_ORDERS_EMPTY",
-                f"intent_id={intent_id}: no valid orders in broker result",
+                "IDENTITY_PRE_SEND_FAILURE",
+                f"intent_id={intent_id}: pre-send failure, no broker write",
             )
 
-        # --- 5. Atomic finalization ---
-        try:
-            trade_id = self.store.finalize_submission(
-                intent_id=intent_id,
-                request_id=request_id,
-                run_id=self.run_id,
-                coin=plan.signal.symbol,
-                direction=plan.signal.direction,
-                qty=plan.qty,
-                entry_decision_uid=original_decision_uid,
-                signal_ts=plan.signal.ts,
-                decision_ts=datetime.now(UTC),
-                expected_px=plan.signal.ref_price,
-                risk_dollars=plan.risk_dollars,
-                risk_pct=plan.risk_pct,
-                leverage=plan.leverage,
-                sl_initial=plan.stop_loss,
-                tp_initial=plan.take_profit,
-                llm_directive_id=None,
-                orders_data=orders_data,
-            )
-        except IdentityCollisionError as exc:
-            # Repair 2-5: Finalization failed — reservation stays RESERVED.
-            # Broker submission is ambiguous. No retry. Persist exc.code.
+        if verdict == "DEFINITIVE_REJECTION":
+            # Complete rejection — safe
+            self.store.conn.execute("BEGIN IMMEDIATE")
+            try:
+                self.store.transition_attempt_state(
+                    attempt_id=attempt_id,
+                    from_states=["SUBMITTING"],
+                    to_state="DEFINITIVE_REJECTION",
+                    reason_code="ALL_REJECTED",
+                )
+                self.store.conn.commit()
+            except Exception:
+                self.store.conn.rollback()
             self.store.insert_event(
                 self.run_id,
                 datetime.now(UTC),
-                "ERROR",
-                exc.code,
-                f"intent_id={intent_id} decision_uid={original_decision_uid}",
+                "WARN",
+                "DEFINITIVE_REJECTION",
+                f"decision_uid={original_decision_uid} intent_id={intent_id}",
             )
-            raise
-        except OrderCollisionError as exc:
-            self.store.insert_event(
-                self.run_id,
-                datetime.now(UTC),
-                "ERROR",
-                "IDENTITY_ORDER_COLLISION",
-                f"intent_id={intent_id} decision_uid={original_decision_uid} "
-                f"cloid={exc.cloid}",
+            self._consecutive_order_rejects = getattr(self, '_consecutive_order_rejects', 0) + 1
+            raise IdentityCollisionError(
+                "IDENTITY_DEFINITIVE_REJECTION",
+                f"intent_id={intent_id}: all orders definitively rejected",
             )
-            raise
-        except Exception:
-            # Repair 2-5: Generic failure — persist only type, no raw str(exc)
-            self.store.insert_event(
-                self.run_id,
-                datetime.now(UTC),
-                "ERROR",
-                "IDENTITY_FINALIZE_FAILED",
-                f"intent_id={intent_id} decision_uid={original_decision_uid}",
-            )
-            raise
 
-        self._submitted.add(original_decision_uid)
+        if verdict == "OUTCOME_UNKNOWN":
+            # Ambiguous — transition to UNKNOWN_SUBMISSION, DISARM
+            self.store.conn.execute("BEGIN IMMEDIATE")
+            try:
+                self.store.transition_attempt_state(
+                    attempt_id=attempt_id,
+                    from_states=["SUBMITTING"],
+                    to_state="UNKNOWN_SUBMISSION",
+                    reason_code=submission_result.error_type or "OUTCOME_UNKNOWN",
+                )
+                self.store.set_meta("app_state", "DISARMED")
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "ERROR",
+                    "UNKNOWN_SUBMISSION",
+                    f"attempt_id={attempt_id} error={submission_result.error_type} "
+                    f"decision_uid={original_decision_uid}",
+                )
+                self.store.conn.commit()
+            except Exception:
+                self.store.conn.rollback()
+                # SUBMITTING remains — treated as unknown on restart
+            self._consecutive_order_rejects = getattr(self, '_consecutive_order_rejects', 0) + 1
+            raise IdentityCollisionError(
+                "IDENTITY_OUTCOME_UNKNOWN",
+                f"intent_id={intent_id}: outcome unknown, attempt {attempt_id} quarantined",
+            )
 
-        await self.sync_broker_state()
-        return broker_result
+        # --- 6. VERIFIED_SUCCESS — validate broker result ---
+        if verdict == "VERIFIED_SUCCESS":
+            verified_orders = submission_result.verified_orders
+            if not isinstance(verified_orders, dict) or not verified_orders:
+                self.store.conn.execute("BEGIN IMMEDIATE")
+                try:
+                    self.store.transition_attempt_state(
+                        attempt_id=attempt_id,
+                        from_states=["SUBMITTING"],
+                        to_state="UNKNOWN_SUBMISSION",
+                        reason_code="BROKER_RESULT_INVALID",
+                    )
+                    self.store.set_meta("app_state", "DISARMED")
+                    self.store.conn.commit()
+                except Exception:
+                    self.store.conn.rollback()
+                self._consecutive_order_rejects = getattr(self, '_consecutive_order_rejects', 0) + 1
+                raise IdentityCollisionError(
+                    "IDENTITY_OUTCOME_UNKNOWN",
+                    f"intent_id={intent_id}: verified success but empty orders",
+                )
+
+            # Validate each order
+            orders_data: list[dict[str, Any]] = []
+            for role_key, order in verified_orders.items():
+                if not isinstance(order, dict):
+                    self.store.conn.execute("BEGIN IMMEDIATE")
+                    try:
+                        self.store.transition_attempt_state(
+                            attempt_id=attempt_id,
+                            from_states=["SUBMITTING"],
+                            to_state="UNKNOWN_SUBMISSION",
+                            reason_code="BROKER_ORDER_INVALID",
+                        )
+                        self.store.set_meta("app_state", "DISARMED")
+                        self.store.conn.commit()
+                    except Exception:
+                        self.store.conn.rollback()
+                    self._consecutive_order_rejects = getattr(self, '_consecutive_order_rejects', 0) + 1
+                    raise IdentityCollisionError(
+                        "IDENTITY_OUTCOME_UNKNOWN",
+                        f"intent_id={intent_id}: non-dict order for {role_key}",
+                    )
+                missing = [k for k in ("cloid", "role", "status", "qty") if k not in order]
+                if missing:
+                    self.store.conn.execute("BEGIN IMMEDIATE")
+                    try:
+                        self.store.transition_attempt_state(
+                            attempt_id=attempt_id,
+                            from_states=["SUBMITTING"],
+                            to_state="UNKNOWN_SUBMISSION",
+                            reason_code="BROKER_ORDER_MISSING_KEYS",
+                        )
+                        self.store.set_meta("app_state", "DISARMED")
+                        self.store.conn.commit()
+                    except Exception:
+                        self.store.conn.rollback()
+                    self._consecutive_order_rejects = getattr(self, '_consecutive_order_rejects', 0) + 1
+                    raise IdentityCollisionError(
+                        "IDENTITY_OUTCOME_UNKNOWN",
+                        f"intent_id={intent_id}: missing keys {missing} for {role_key}",
+                    )
+                orders_data.append({
+                    "cloid": order["cloid"],
+                    "oid": order.get("oid"),
+                    "group_id": request_id,
+                    "order_ref": f"{request_id}:{role_key.upper()}",
+                    "order_json": self._jsonable_order(order),
+                    "decision_uid": original_decision_uid,
+                    "role": order["role"],
+                    "status": order["status"],
+                    "qty": order["qty"],
+                    "filled_qty": order["qty"] if order["status"] == "FILLED" else 0.0,
+                    "avg_fill_px": order.get("avg_fill_px"),
+                })
+
+            if not orders_data:
+                self.store.conn.execute("BEGIN IMMEDIATE")
+                try:
+                    self.store.transition_attempt_state(
+                        attempt_id=attempt_id,
+                        from_states=["SUBMITTING"],
+                        to_state="UNKNOWN_SUBMISSION",
+                        reason_code="BROKER_ORDERS_EMPTY",
+                    )
+                    self.store.set_meta("app_state", "DISARMED")
+                    self.store.conn.commit()
+                except Exception:
+                    self.store.conn.rollback()
+                self._consecutive_order_rejects = getattr(self, '_consecutive_order_rejects', 0) + 1
+                raise IdentityCollisionError(
+                    "IDENTITY_OUTCOME_UNKNOWN",
+                    f"intent_id={intent_id}: no valid orders after validation",
+                )
+
+            # --- 7. Atomic finalization ---
+            try:
+                trade_id = self.store.finalize_submission(
+                    intent_id=intent_id,
+                    request_id=request_id,
+                    run_id=self.run_id,
+                    coin=plan.signal.symbol,
+                    direction=plan.signal.direction,
+                    qty=plan.qty,
+                    entry_decision_uid=original_decision_uid,
+                    signal_ts=plan.signal.ts,
+                    decision_ts=datetime.now(UTC),
+                    expected_px=plan.signal.ref_price,
+                    risk_dollars=plan.risk_dollars,
+                    risk_pct=plan.risk_pct,
+                    leverage=plan.leverage,
+                    sl_initial=plan.stop_loss,
+                    tp_initial=plan.take_profit,
+                    llm_directive_id=None,
+                    orders_data=orders_data,
+                )
+            except (IdentityCollisionError, OrderCollisionError) as exc:
+                exc_code = getattr(exc, 'code', 'IDENTITY_FINALIZE_FAILED')
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "ERROR",
+                    exc_code,
+                    f"intent_id={intent_id} decision_uid={original_decision_uid}",
+                )
+                # Transition attempt to UNKNOWN_SUBMISSION — finalization failed after broker success
+                try:
+                    self.store.conn.execute("BEGIN IMMEDIATE")
+                    self.store.transition_attempt_state(
+                        attempt_id=attempt_id,
+                        from_states=["SUBMITTING"],
+                        to_state="UNKNOWN_SUBMISSION",
+                        reason_code=exc_code,
+                    )
+                    self.store.set_meta("app_state", "DISARMED")
+                    self.store.conn.commit()
+                except Exception:
+                    self.store.conn.rollback()
+                self._consecutive_order_rejects = getattr(self, '_consecutive_order_rejects', 0) + 1
+                raise
+            except Exception:
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "ERROR",
+                    "IDENTITY_FINALIZE_FAILED",
+                    f"intent_id={intent_id} decision_uid={original_decision_uid}",
+                )
+                try:
+                    self.store.conn.execute("BEGIN IMMEDIATE")
+                    self.store.transition_attempt_state(
+                        attempt_id=attempt_id,
+                        from_states=["SUBMITTING"],
+                        to_state="UNKNOWN_SUBMISSION",
+                        reason_code="IDENTITY_FINALIZE_FAILED",
+                    )
+                    self.store.set_meta("app_state", "DISARMED")
+                    self.store.conn.commit()
+                except Exception:
+                    self.store.conn.rollback()
+                self._consecutive_order_rejects = getattr(self, '_consecutive_order_rejects', 0) + 1
+                raise
+
+            # --- 8. Mark attempt VERIFIED_SUCCESS ---
+            try:
+                self.store.conn.execute("BEGIN IMMEDIATE")
+                self.store.transition_attempt_state(
+                    attempt_id=attempt_id,
+                    from_states=["SUBMITTING"],
+                    to_state="VERIFIED_SUCCESS",
+                )
+                self.store.conn.commit()
+            except Exception:
+                self.store.conn.rollback()
+                # Finalization succeeded; attempt state update failure is non-fatal
+
+            self._submitted.add(original_decision_uid)
+            await self.sync_broker_state()
+            return verified_orders
+
+        # Should not reach here
+        raise IdentityCollisionError(
+            "IDENTITY_UNEXPECTED_VERDICT",
+            f"intent_id={intent_id}: unexpected verdict {verdict}",
+        )
 
     # ------------------------------------------------------------------
     # Rest of OrderManager (TS-P1-001 behaviour preserved)
@@ -664,3 +839,274 @@ class OrderManager:
             else:
                 clean[key] = value
         return clean
+
+    # ------------------------------------------------------------------
+    # TS-P1-003 recovery
+    # ------------------------------------------------------------------
+
+    async def run_recovery_cycle(self) -> dict[str, Any]:
+        """Run one recovery evidence cycle for all active attempts.
+
+        Returns a summary dict. Called by BridgeEngine at startup and
+        during reconciliation.
+        """
+        active = self.store.get_active_attempts()
+        results = {}
+        for attempt in active:
+            attempt_id = int(attempt["attempt_id"])
+            result = await self._recover_attempt(attempt_id, attempt)
+            results[str(attempt_id)] = result
+        return results
+
+    async def _recover_attempt(
+        self, attempt_id: int, attempt: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Gather one complete evidence cycle for a single attempt."""
+        import json as _json
+
+        planned_cloids_raw = attempt.get("planned_cloids_json", "{}")
+        try:
+            planned_cloids = _json.loads(planned_cloids_raw) if isinstance(planned_cloids_raw, str) else planned_cloids_raw
+        except Exception:
+            planned_cloids = {}
+
+        if not planned_cloids:
+            return {"attempt_id": attempt_id, "verdict": "INCOMPLETE", "reason": "no planned cloids"}
+
+        cycle_id = f"cycle-{attempt_id}-{datetime.now(UTC).isoformat()}"
+        all_evidence = []
+        coin = str(attempt["coin"])
+        attempt_start_ts = str(attempt.get("created_ts", ""))
+
+        for role, cloid in planned_cloids.items():
+            cloid_str = str(cloid)
+            # Direct lookup
+            try:
+                direct = await self.broker.query_order_by_cloid(cloid_str)
+                if direct is not None:
+                    all_evidence.append({
+                        "attempt_id": attempt_id, "cycle_id": cycle_id,
+                        "source": "DIRECT_LOOKUP", "planned_cloid": cloid_str,
+                        "verdict": "FOUND", "completeness": "COMPLETE",
+                        "safe_payload": {"found": True, "status": direct.get("status", "UNKNOWN")},
+                    })
+                else:
+                    all_evidence.append({
+                        "attempt_id": attempt_id, "cycle_id": cycle_id,
+                        "source": "DIRECT_LOOKUP", "planned_cloid": cloid_str,
+                        "verdict": "NOT_FOUND", "completeness": "COMPLETE",
+                        "safe_payload": {"found": False},
+                    })
+            except Exception:
+                all_evidence.append({
+                    "attempt_id": attempt_id, "cycle_id": cycle_id,
+                    "source": "DIRECT_LOOKUP", "planned_cloid": cloid_str,
+                    "verdict": "QUERY_FAILED", "completeness": "INCOMPLETE",
+                    "safe_payload": {"error": "query_failed"},
+                })
+
+        # Open orders — must cover all cloids
+        try:
+            open_orders = await self.broker.open_orders()
+            open_cloids = {str(o.cloid) for o in open_orders if o.cloid}
+            for role, cloid in planned_cloids.items():
+                cloid_str = str(cloid)
+                if cloid_str in open_cloids:
+                    all_evidence.append({
+                        "attempt_id": attempt_id, "cycle_id": cycle_id,
+                        "source": "OPEN_ORDERS", "planned_cloid": cloid_str,
+                        "verdict": "FOUND", "completeness": "COMPLETE",
+                        "safe_payload": {"found": True},
+                    })
+                else:
+                    all_evidence.append({
+                        "attempt_id": attempt_id, "cycle_id": cycle_id,
+                        "source": "OPEN_ORDERS", "planned_cloid": cloid_str,
+                        "verdict": "NOT_FOUND", "completeness": "COMPLETE",
+                        "safe_payload": {"found": False},
+                    })
+        except Exception:
+            for role, cloid in planned_cloids.items():
+                cloid_str = str(cloid)
+                all_evidence.append({
+                    "attempt_id": attempt_id, "cycle_id": cycle_id,
+                    "source": "OPEN_ORDERS", "planned_cloid": cloid_str,
+                    "verdict": "QUERY_FAILED", "completeness": "INCOMPLETE",
+                    "safe_payload": {"error": "query_failed"},
+                })
+
+        # Historical orders
+        hlo = getattr(self.broker, "historical_orders", None)
+        if hlo is not None:
+            try:
+                hist_orders = await hlo(coin, attempt_start_ts)
+                hist_cloids = {str(o.get("cloid", "")) for o in hist_orders}
+                for role, cloid in planned_cloids.items():
+                    cloid_str = str(cloid)
+                    if cloid_str in hist_cloids:
+                        all_evidence.append({
+                            "attempt_id": attempt_id, "cycle_id": cycle_id,
+                            "source": "HISTORICAL_ORDERS", "planned_cloid": cloid_str,
+                            "verdict": "FOUND", "completeness": "COMPLETE",
+                            "safe_payload": {"found": True},
+                        })
+                    else:
+                        all_evidence.append({
+                            "attempt_id": attempt_id, "cycle_id": cycle_id,
+                            "source": "HISTORICAL_ORDERS", "planned_cloid": cloid_str,
+                            "verdict": "NOT_FOUND", "completeness": "COMPLETE",
+                            "safe_payload": {"found": False},
+                        })
+            except Exception:
+                for role, cloid in planned_cloids.items():
+                    cloid_str = str(cloid)
+                    all_evidence.append({
+                        "attempt_id": attempt_id, "cycle_id": cycle_id,
+                        "source": "HISTORICAL_ORDERS", "planned_cloid": cloid_str,
+                        "verdict": "QUERY_FAILED", "completeness": "INCOMPLETE",
+                        "safe_payload": {"error": "query_failed"},
+                    })
+
+        # Fills
+        uf = getattr(self.broker, "user_fills", None)
+        if uf is not None:
+            try:
+                fills = await uf(coin, attempt_start_ts)
+                fill_cloids = {str(f.get("cloid", "")) for f in fills}
+                for role, cloid in planned_cloids.items():
+                    cloid_str = str(cloid)
+                    if cloid_str in fill_cloids:
+                        all_evidence.append({
+                            "attempt_id": attempt_id, "cycle_id": cycle_id,
+                            "source": "FILLS", "planned_cloid": cloid_str,
+                            "verdict": "FOUND", "completeness": "COMPLETE",
+                            "safe_payload": {"found": True},
+                        })
+                    else:
+                        all_evidence.append({
+                            "attempt_id": attempt_id, "cycle_id": cycle_id,
+                            "source": "FILLS", "planned_cloid": cloid_str,
+                            "verdict": "NOT_FOUND", "completeness": "COMPLETE",
+                            "safe_payload": {"found": False},
+                        })
+            except Exception:
+                for role, cloid in planned_cloids.items():
+                    cloid_str = str(cloid)
+                    all_evidence.append({
+                        "attempt_id": attempt_id, "cycle_id": cycle_id,
+                        "source": "FILLS", "planned_cloid": cloid_str,
+                        "verdict": "QUERY_FAILED", "completeness": "INCOMPLETE",
+                        "safe_payload": {"error": "query_failed"},
+                    })
+
+        # Persist all evidence in one transaction
+        self.store.conn.execute("BEGIN IMMEDIATE")
+        try:
+            for ev in all_evidence:
+                self.store.insert_recovery_evidence(
+                    attempt_id=ev["attempt_id"],
+                    cycle_id=ev["cycle_id"],
+                    source=ev["source"],
+                    planned_cloid=ev["planned_cloid"],
+                    verdict=ev["verdict"],
+                    completeness=ev["completeness"],
+                    safe_payload=ev["safe_payload"],
+                )
+            self.store.conn.commit()
+        except Exception:
+            self.store.conn.rollback()
+            return {"attempt_id": attempt_id, "verdict": "INCOMPLETE"}
+
+        # Analyze cycle verdict
+        has_found = any(e["verdict"] == "FOUND" for e in all_evidence)
+        has_failed = any(e["verdict"] == "QUERY_FAILED" for e in all_evidence)
+        has_incomplete = any(e["completeness"] == "INCOMPLETE" for e in all_evidence)
+
+        if has_found:
+            # PRESENT — transition to CONFIRMED_PRESENT
+            self.store.conn.execute("BEGIN IMMEDIATE")
+            try:
+                self.store.transition_attempt_state(
+                    attempt_id=attempt_id,
+                    from_states=["SUBMITTING", "UNKNOWN_SUBMISSION"],
+                    to_state="CONFIRMED_PRESENT",
+                    reason_code="EVIDENCE_FOUND",
+                )
+                self.store.set_meta("app_state", "DISARMED")
+                self.store.conn.commit()
+            except Exception:
+                self.store.conn.rollback()
+            return {"attempt_id": attempt_id, "verdict": "PRESENT"}
+
+        if has_failed or has_incomplete:
+            # INCOMPLETE — reset absence candidate sequence
+            return {"attempt_id": attempt_id, "verdict": "INCOMPLETE"}
+
+        # All ABSENT_CANDIDATE
+        # Check number of consecutive complete absent cycles
+        planned_cloids_list = list(planned_cloids.values())
+        count, first_ts, last_ts = self.store.count_consecutive_absent_candidate_cycles(
+            attempt_id, planned_cloids_list
+        )
+
+        if count >= 3 and first_ts and last_ts:
+            # Check 120-second span
+            try:
+                t1 = datetime.fromisoformat(first_ts)
+                t2 = datetime.fromisoformat(last_ts)
+                if t1.tzinfo is None:
+                    t1 = t1.replace(tzinfo=UTC)
+                if t2.tzinfo is None:
+                    t2 = t2.replace(tzinfo=UTC)
+                span = (t2 - t1).total_seconds()
+                if span >= 120.0:
+                    self.store.conn.execute("BEGIN IMMEDIATE")
+                    try:
+                        self.store.transition_attempt_state(
+                            attempt_id=attempt_id,
+                            from_states=["UNKNOWN_SUBMISSION"],
+                            to_state="CONFIRMED_ABSENT",
+                            reason_code="THREE_CYCLES_120S",
+                        )
+                        self.store.conn.commit()
+                    except Exception:
+                        self.store.conn.rollback()
+                    return {"attempt_id": attempt_id, "verdict": "CONFIRMED_ABSENT"}
+            except Exception:
+                pass
+
+        return {"attempt_id": attempt_id, "verdict": "ABSENT_CANDIDATE", "cycles": count}
+
+
+# ------------------------------------------------------------------
+# Legacy broker compatibility
+# ------------------------------------------------------------------
+
+def _legacy_broker_to_result(raw: Any) -> SubmissionResult:
+    """Convert a legacy dict broker result to SubmissionResult."""
+    if not isinstance(raw, dict) or not raw:
+        return SubmissionResult(
+            verdict="OUTCOME_UNKNOWN",
+            error_type="InvalidBrokerResult",
+            safe_detail="broker returned non-dict result",
+        )
+    # If all orders have reasonable-looking data, treat as VERIFIED_SUCCESS
+    for key, order in raw.items():
+        if not isinstance(order, dict):
+            return SubmissionResult(
+                verdict="OUTCOME_UNKNOWN",
+                verified_orders=raw,
+                error_type="NonDictOrder",
+                safe_detail=f"order for {key} is not a dict",
+            )
+        if "cloid" not in order or "status" not in order:
+            return SubmissionResult(
+                verdict="OUTCOME_UNKNOWN",
+                verified_orders=raw,
+                error_type="IncompleteOrder",
+                safe_detail=f"order for {key} missing required keys",
+            )
+    return SubmissionResult(
+        verdict="VERIFIED_SUCCESS",
+        verified_orders=raw,
+    )

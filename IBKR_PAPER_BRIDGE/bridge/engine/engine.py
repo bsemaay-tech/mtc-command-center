@@ -25,7 +25,7 @@ from bridge.engine.window import (
     record_window_start,
     window_status,
 )
-from bridge.store.db import Store
+from bridge.store.db import Store, IdentityCollisionError
 
 
 _ROUTINE_FEED_NOTIFICATION_CODES = frozenset({"DISCONNECT", "DATA_RESTORED"})
@@ -95,6 +95,12 @@ class BridgeEngine:
                 f"liveness gap exceeded {self.window_stale_after_s}s at startup",
             )
         await self.broker.connect()
+
+        # TS-P1-003: scan durable active attempts and run recovery before
+        # reconciliation. Active SUBMITTING/UNKNOWN_SUBMISSION/CONFIRMED_PRESENT
+        # immediately DISARM and block.
+        await self._startup_unknown_check()
+
         await self.order_manager.reconcile()
         self.reconcile_ready = True
         self.last_reconcile_ts = datetime.now(UTC)
@@ -142,6 +148,9 @@ class BridgeEngine:
         self.store.insert_event(self.run_id, now, "INFO", "ARM_REQUEST", f"state={previous}")
         if previous == "KILLED":
             raise RuntimeError("KILLED requires operator acknowledgement")
+        # TS-P1-003: block ARM when quarantine active
+        if self.store.has_active_quarantine():
+            raise RuntimeError("ARM blocked: active unknown-submission quarantine")
         if not self.reconcile_ready:
             raise RuntimeError("startup reconcile incomplete")
         max_age = timedelta(seconds=max(self.reconcile_interval_s * 3, 30.0))
@@ -314,6 +323,45 @@ class BridgeEngine:
                 decision_uid, risk.plan,
                 strategy_id=getattr(self.strategy, 'id', 'keltner_trail_ema8'),
             )
+        except IdentityCollisionError as exc:
+            code = getattr(exc, 'code', 'IDENTITY_ERROR')
+            if code in ('IDENTITY_OUTCOME_UNKNOWN',):
+                # UNKNOWN_SUBMISSION — immediately DISARM, do not count as ordinary reject
+                self.disarm()
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "ERROR",
+                    "UNKNOWN_SUBMISSION_DISARMED",
+                    f"decision_uid={decision_uid} code={code}",
+                )
+            else:
+                self._consecutive_order_rejects += 1
+            self.store.insert_decision(
+                self.run_id,
+                decision_uid,
+                signal.ts,
+                signal.symbol,
+                "REJECTED",
+                {"reason": code, "detail": str(exc.message) if hasattr(exc, 'message') else str(exc)},
+            )
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "WARN",
+                "ORDER_REJECTED",
+                f"count={self._consecutive_order_rejects}; error={code}",
+            )
+            if self._consecutive_order_rejects >= 3:
+                self.disarm()
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "WARN",
+                    "ORDER_REJECT_LIMIT",
+                    "three consecutive order rejects",
+                )
+            return
         except Exception as exc:
             self._consecutive_order_rejects += 1
             self.store.insert_decision(
@@ -373,9 +421,10 @@ class BridgeEngine:
         try:
             state = self._app_state()
         except Exception:
-            # Store unreadable: report the in-memory state rather than crash
-            # the status surface (see _risk_inputs_failed).
             state = self.state
+        active_attempts = self.store.get_active_attempts()
+        quarantine_count = len(active_attempts)
+        quarantine_states = list({a["state"] for a in active_attempts})
         return {
             "state": state,
             "window": window_status(
@@ -390,6 +439,8 @@ class BridgeEngine:
             "run_id": self.run_id,
             "coin": self.coin,
             "timeframe": self.timeframe,
+            "quarantine_count": quarantine_count,
+            "quarantine_states": quarantine_states,
         }
 
     async def _heartbeat_loop(self) -> None:
@@ -412,7 +463,7 @@ class BridgeEngine:
 
     async def _run_reconcile_cycle(self) -> bool:
         try:
-            await self.order_manager.reconcile()
+            await self._reconcile_with_recovery()
         except asyncio.CancelledError:
             raise
         except Exception as exc:  # noqa: BLE001 - fail closed and keep the health loop alive
@@ -514,11 +565,49 @@ class BridgeEngine:
         except sqlite3.IntegrityError:
             return
 
+    async def _startup_unknown_check(self) -> None:
+        """TS-P1-003: scan active attempts at startup, run recovery, disarm if needed."""
+        active = self.store.get_active_attempts()
+        if active:
+            self.store.insert_event(
+                self.run_id,
+                datetime.now(UTC),
+                "WARN",
+                "ACTIVE_QUARANTINE_AT_STARTUP",
+                f"count={len(active)}",
+            )
+            # Run one recovery cycle
+            await self.order_manager.run_recovery_cycle()
+            # Re-check after recovery — if still active, DISARM
+            if self.store.has_active_quarantine():
+                self.disarm()
+                self.store.insert_event(
+                    self.run_id,
+                    datetime.now(UTC),
+                    "WARN",
+                    "QUARANTINE_DISARMED",
+                    "active quarantine persists after startup recovery",
+                )
+
+    async def _reconcile_with_recovery(self) -> None:
+        """TS-P1-003: reconciliation now includes recovery for active attempts."""
+        await self.order_manager.reconcile()
+        if self.store.has_active_quarantine():
+            await self.order_manager.run_recovery_cycle()
+            # If still active after recovery, ensure DISARMED
+            if self.store.has_active_quarantine():
+                if self._app_state() == "ARMED":
+                    self.disarm()
+
     def _app_state(self) -> str:
         if self.risk_input_error is not None:
             # Sticky fail-closed: after a risk-input failure the engine stays
             # DISARMED until a human re-arms, even if the DISARMED meta write
             # itself failed and the persisted value still says ARMED.
+            self.state = "DISARMED"
+            return self.state
+        # TS-P1-003: active quarantine overrides persisted state
+        if self.store.has_active_quarantine():
             self.state = "DISARMED"
             return self.state
         persisted = self.store.get_meta("app_state")

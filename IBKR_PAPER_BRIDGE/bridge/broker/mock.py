@@ -6,10 +6,11 @@ import csv
 import asyncio
 import itertools
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Callable
 
+from bridge.broker.base import RecoveryCycle, RecoveryEvidence, SubmissionResult
 from bridge.engine.types import (
     AccountSnapshot,
     Bar,
@@ -37,6 +38,26 @@ class MockBroker:
     _user_callbacks: list[Callable[[BrokerEvent], None]] = field(default_factory=list)
     _bar_callbacks: list[Callable[[Bar], None]] = field(default_factory=list)
     resubscribe_count: int = 0
+    place_count: int = 0
+
+    # TS-P1-003 configurable outcomes
+    pre_send_failure: bool = False
+    post_send_timeout: bool = False
+    definitive_rejection: bool = False
+    mixed_response: bool = False  # accepted+rejected mix
+    return_empty_response: bool = False
+    return_malformed_response: bool = False
+    wrong_cloids: bool = False
+    extra_roles: bool = False
+    missing_roles: bool = False
+    crash_after_accept: bool = False  # accepts but then raises
+
+    # Recovery evidence configuration
+    recovery_evidence_map: dict[str, list[RecoveryEvidence]] = field(default_factory=dict)
+    recovery_query_should_fail: bool = False
+    recovery_open_orders_empty: bool = False
+    recovery_delayed_visibility: bool = False  # orders appear after a delay
+    _recovery_cycles_seen: int = 0
 
     @classmethod
     def from_csv(cls, path: str | Path, starting_equity: float = 10_000.0) -> "MockBroker":
@@ -119,12 +140,93 @@ class MockBroker:
     def subscribe_user_events(self, on_event: Callable[[BrokerEvent], None]) -> None:
         self._user_callbacks.append(on_event)
 
-    async def place_bracket(self, plan: OrderPlan) -> dict:
+    async def place_bracket(self, plan: OrderPlan) -> SubmissionResult:
+        self.place_count += 1
         if not self.connected:
             raise RuntimeError("MockBroker is not connected")
+        if self.pre_send_failure:
+            return SubmissionResult(
+                verdict="PRE_SEND_FAILURE",
+                error_type="PreSendCheckFailed",
+                safe_detail="mock pre-send failure",
+            )
+        if self.return_malformed_response:
+            return SubmissionResult(
+                verdict="OUTCOME_UNKNOWN",
+                error_type="MalformedResponse",
+                safe_detail="mock malformed response",
+            )
+        if self.crash_after_accept:
+            # Simulate acceptance then raise
+            self._create_mock_orders(plan)
+            raise RuntimeError("mock crash after acceptance")
+
+        if self.return_empty_response:
+            return SubmissionResult(
+                verdict="OUTCOME_UNKNOWN",
+                error_type="EmptyResponse",
+                safe_detail="mock empty response",
+            )
         if len(self.bars) < 2:
             raise ValueError("MockBroker needs at least two bars for next-open fill")
 
+        if self.definitive_rejection:
+            return SubmissionResult(
+                verdict="DEFINITIVE_REJECTION",
+                rejection_reasons={"ENTRY": "mock rejection", "SL": "mock rejection"},
+                safe_detail="all orders rejected",
+            )
+
+        orders = self._create_mock_orders(plan)
+
+        if self.post_send_timeout:
+            return SubmissionResult(
+                verdict="OUTCOME_UNKNOWN",
+                error_type="TimeoutError",
+                safe_detail="mock post-send timeout",
+            )
+
+        if self.mixed_response:
+            # Return verified success for entry but mark SL as rejected
+            return SubmissionResult(
+                verdict="OUTCOME_UNKNOWN",
+                verified_orders={"entry": orders["entry"]},
+                rejection_reasons={"SL": "mock partial rejection"},
+                safe_detail="mixed accepted/rejected",
+            )
+
+        if self.wrong_cloids:
+            wrong = dict(orders)
+            wrong["entry"]["cloid"] = "wrong-cloid-xxx"
+            return SubmissionResult(
+                verdict="OUTCOME_UNKNOWN",
+                verified_orders=wrong,
+                safe_detail="wrong cloids",
+            )
+
+        if self.missing_roles:
+            partial = {"entry": orders["entry"]}
+            return SubmissionResult(
+                verdict="OUTCOME_UNKNOWN",
+                verified_orders=partial,
+                safe_detail="missing sl role",
+            )
+
+        if self.extra_roles:
+            extra = dict(orders)
+            extra["EXTRA"] = {"cloid": "extra-cloid", "role": "EXTRA", "status": "OPEN", "qty": plan.qty}
+            return SubmissionResult(
+                verdict="OUTCOME_UNKNOWN",
+                verified_orders=extra,
+                safe_detail="extra role",
+            )
+
+        return SubmissionResult(
+            verdict="VERIFIED_SUCCESS",
+            verified_orders=orders,
+        )
+
+    def _create_mock_orders(self, plan: OrderPlan) -> dict[str, dict]:
         entry = self._order(
             "ENTRY",
             "OPEN",
@@ -208,6 +310,39 @@ class MockBroker:
             cloid=f"mock-reprotect-{decision_uid}-sl",
         )
         return {"sl": sl}
+
+    # --- TS-P1-003 recovery evidence ---
+
+    async def query_order_by_cloid(self, cloid: str) -> dict[str, Any] | None:
+        """Direct cloid lookup. Raises if recovery_query_should_fail is set."""
+        if self.recovery_query_should_fail:
+            raise RuntimeError("mock query failure")
+        for order in self.orders:
+            if order["cloid"] == cloid:
+                return dict(order)
+        return None
+
+    async def historical_orders(self, coin: str, since_ts: str) -> list[dict[str, Any]]:
+        """Historical orders. Raises if recovery_query_should_fail is set."""
+        if self.recovery_query_should_fail:
+            raise RuntimeError("mock historical query failure")
+        return [dict(o) for o in self.orders
+                if o.get("symbol", self.coin) == coin]
+
+    async def user_fills(self, coin: str, since_ts: str) -> list[dict[str, Any]]:
+        """User fills. Raises if recovery_query_should_fail is set."""
+        if self.recovery_query_should_fail:
+            raise RuntimeError("mock fills query failure")
+        return [dict(f) for f in self.fills
+                if f.get("role", "") != "UNKNOWN"]
+
+    def get_planned_cloids(self, plan: OrderPlan) -> dict[str, str]:
+        """Return deterministic role→cloid map without broker I/O."""
+        decision_uid = plan.decision_uid or "mock-no-duid"
+        roles = {"entry": f"{decision_uid}:ENTRY", "sl": f"{decision_uid}:SL"}
+        if plan.take_profit is not None:
+            roles["tp"] = f"{decision_uid}:TP"
+        return roles
 
     def process_bar(self, bar: Bar) -> None:
         for order in self.orders:

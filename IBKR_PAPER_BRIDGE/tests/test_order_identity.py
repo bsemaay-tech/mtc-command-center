@@ -342,7 +342,7 @@ def test_reservation_durable_before_broker(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_broker_exception_leaves_reserved_restart_blocks(tmp_path):
-    """Broker failure after reservation: state stays RESERVED, replay blocked."""
+    """Broker failure after reservation: identity stays RESERVED, attempt quarantined, replay blocked."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -353,10 +353,12 @@ def test_broker_exception_leaves_reserved_restart_blocks(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(RuntimeError, match="broker unavailable"):
+    # TS-P1-003: broker exception is OUTCOME_UNKNOWN
+    with pytest.raises(IdentityCollisionError) as exc_info:
         asyncio.run(mgr.submit_plan("d-1", plan))
+    assert exc_info.value.code == "IDENTITY_OUTCOME_UNKNOWN"
 
-    # Reservation is still RESERVED
+    # Identity is still RESERVED (unchanged by unknown transition)
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
         datetime(2026, 7, 6, 12, 0, 0, tzinfo=UTC),
@@ -364,6 +366,9 @@ def test_broker_exception_leaves_reserved_restart_blocks(tmp_path):
     ident = store.get_identity_by_intent(intent_id)
     assert ident is not None
     assert ident["state"] == "RESERVED"
+
+    # Quarantine is active
+    assert store.has_active_quarantine()
 
     # Restart (reopen store) — same plan blocked
     store.close()
@@ -915,7 +920,7 @@ def test_v2_migration_backfills_legacy_submitted(tmp_path):
     store2.initialize()
 
     # Schema version bumped
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     # Identity row created
     intent_id, _, _ = compute_intent_identity(
@@ -997,7 +1002,8 @@ def test_v2_migration_legacy_reserved_for_pre_broker_row(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    # After v2→v3→v4 migration
+    assert store2.get_meta("schema_version") == "4"
 
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
@@ -1257,7 +1263,7 @@ def test_duplicate_decision_uid_other_run_does_not_contaminate(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
@@ -1534,16 +1540,16 @@ def test_cross_run_trade_mapping_fails_migration(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_fresh_v3_initialization(tmp_path):
-    """Fresh database initializes directly at v3."""
+    """Fresh database initializes directly at v4."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
-    assert store.get_meta("schema_version") == "3"
+    assert store.get_meta("schema_version") == "4"
     store.close()
 
 
 def test_v3_reopen_idempotent(tmp_path):
-    """Reopening a v3 database is safe and idempotent."""
+    """Reopening a v4 database is safe and idempotent."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -1551,7 +1557,7 @@ def test_v3_reopen_idempotent(tmp_path):
 
     store2 = Store(db_path)
     store2.initialize()  # should not raise
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
     store2.close()
 
 
@@ -2095,7 +2101,7 @@ def test_repair2_4_state_timestamp_consistency_submitted_with_null_submitted_ts_
 # ---------------------------------------------------------------------------
 
 def test_repair2_5_broker_exception_event_contains_no_raw_exc_text(tmp_path):
-    """PLACE_BRACKET_FAILED event detail must contain no raw str(exc)."""
+    """UNKNOWN_SUBMISSION event detail must contain no raw str(exc)."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -2105,18 +2111,17 @@ def test_repair2_5_broker_exception_event_contains_no_raw_exc_text(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(RuntimeError, match="broker unavailable"):
+    with pytest.raises(IdentityCollisionError):
         asyncio.run(mgr.submit_plan("d-1", plan))
 
     # Check event detail contains no raw exception text
     events = store.get_events(severity="ERROR")
-    place_events = [e for e in events if e["code"] == "PLACE_BRACKET_FAILED"]
-    assert len(place_events) >= 1
-    for e in place_events:
+    unknown_events = [e for e in events if e["code"] == "UNKNOWN_SUBMISSION"]
+    assert len(unknown_events) >= 1
+    for e in unknown_events:
         detail = e["detail"]
         assert "broker unavailable" not in detail
         assert "decision_uid=d-1" in detail
-        assert "error_type=RuntimeError" in detail
     store.close()
 
 
@@ -2287,7 +2292,7 @@ def test_repair2_7_signal_plan_ref_price_mismatch_fails_migration(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_repair2_8_empty_broker_result_leaves_reserved(tmp_path):
-    """Empty broker_result must leave RESERVED and raise."""
+    """Empty broker_result → OUTCOME_UNKNOWN, quarantine, identity stays RESERVED."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -2297,11 +2302,12 @@ def test_repair2_8_empty_broker_result_leaves_reserved(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(IdentityCollisionError, match="empty or non-mapping"):
+    with pytest.raises(IdentityCollisionError) as exc_info:
         asyncio.run(mgr.submit_plan("d-1", plan))
+    assert exc_info.value.code == "IDENTITY_OUTCOME_UNKNOWN"
 
     assert broker.place_count == 1  # broker was called
-    # Reservation should still be RESERVED
+    # Identity should still be RESERVED
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
         datetime(2026, 7, 6, 12, 0, 0, tzinfo=UTC),
@@ -2314,11 +2320,13 @@ def test_repair2_8_empty_broker_result_leaves_reserved(tmp_path):
     snapshot = store.get_snapshot()
     assert len(snapshot["trades"]) == 0
     assert len(snapshot["orders"]) == 0
+    # TS-P1-003: quarantine is active
+    assert store.has_active_quarantine()
     store.close()
 
 
 def test_repair2_8_invalid_broker_order_rejected(tmp_path):
-    """Non-dict order in broker_result must be rejected."""
+    """Non-dict order in broker_result → OUTCOME_UNKNOWN."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -2328,11 +2336,12 @@ def test_repair2_8_invalid_broker_order_rejected(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(IdentityCollisionError, match="non-dict order"):
+    with pytest.raises(IdentityCollisionError) as exc_info:
         asyncio.run(mgr.submit_plan("d-1", plan))
+    assert exc_info.value.code == "IDENTITY_OUTCOME_UNKNOWN"
 
     assert broker.place_count == 1
-    # Reservation stays RESERVED
+    # Identity stays RESERVED
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
         datetime(2026, 7, 6, 12, 0, 0, tzinfo=UTC),
@@ -2799,7 +2808,7 @@ def test_repair3_4_equivalent_timestamp_spellings_accepted(tmp_path):
     # Migration should succeed — equivalent spellings are the same instant
     store2 = Store(db_path)
     store2.initialize()
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
     store2.close()
 
 
@@ -3170,7 +3179,7 @@ def test_repair4_4_zero_fingerprints_empty_legacy_upgrades(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     # order_identity table exists (but empty)
     tbl = store2.conn.execute(
