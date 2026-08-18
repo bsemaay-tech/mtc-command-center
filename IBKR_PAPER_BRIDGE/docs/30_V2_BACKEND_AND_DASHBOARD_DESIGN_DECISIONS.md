@@ -937,8 +937,9 @@ strategies out of live trading (see §1).
 - *Combined execution view + separate research view* (preferred) — two
   surfaces to maintain, one clear boundary.
 
-**Open points / implementation gate.** Hosting and access model unresolved
-(B8). No dashboard implementation is authorized.
+**Open points / implementation gate.** Same-VPS placement is settled in B8;
+the detailed access and service-isolation model remains open in B9. No
+dashboard implementation is authorized.
 
 ### B2. Frozen Packages Only
 
@@ -969,7 +970,7 @@ are eligible to be prepared at all.
   which unapproved code reaches an execution surface.
 
 **Open points / implementation gate.** How to stage a change without arming it
-is explicitly open (B8). No activation mechanism is authorized here.
+is explicitly open (B9). No activation mechanism is authorized here.
 
 ### B3. Overview Content
 
@@ -1000,7 +1001,7 @@ looks like a quiet market.
 - *Everything on one screen* — complete, and unreadable; the drill-down in B4
   exists so the overview does not have to carry detail.
 
-**Open points / implementation gate.** Alerting on these fields is open (B8).
+**Open points / implementation gate.** Alerting on these fields is open (B9).
 No implementation is authorized.
 
 ### B4. Drill-Down Views
@@ -1033,7 +1034,7 @@ means the answer is one click away instead of one search away.
   which defeats the purpose.
 
 **Open points / implementation gate.** Retention policy for journal/history is
-open (B8). No implementation is authorized.
+open (B9). No implementation is authorized.
 
 ### B5. Access Control
 
@@ -1060,9 +1061,9 @@ identity controls have to exist *before* that step, not after.
 - *VPN / tunnel instead of public exposure* — strong and practical; it does not
   remove the need for login and roles once more than one person can reach it.
 
-**Open points / implementation gate.** Hosting and access model, and remote
-control scope, remain open (B8). This records a boundary in force; it
-authorizes no exposure.
+**Open points / implementation gate.** Same-VPS placement is settled in B8;
+the exact private-access topology and remote-control scope remain open (B9).
+This records a boundary in force; it authorizes no exposure.
 
 ### B6. AI Assistant (Read-Only Start)
 
@@ -1097,7 +1098,7 @@ authority — the capability either exists or it does not.
   authority; the cost is that the owner still performs every action.
 
 **Open points / implementation gate.** AI provider, model, cost, and memory
-policy are open (B8); the *sourcing route* for the initial assistant is settled
+policy are open (B9); the *sourcing route* for the initial assistant is settled
 in B7. Any write authority is separate, explicit, gated work and is **not**
 authorized here.
 
@@ -1214,9 +1215,85 @@ agent-to-agent chat.
 this section — not the package generator, not embedded chat, not the Bridge
 gate, and not any account, credential, or spend.
 
-### B8. Dashboard OPEN Questions
+### B8. Same-VPS Dashboard Placement
 
-- [ ] Hosting and access model.
+**Status:** RECORDED — owner-approved hosting direction; not an implementation
+or deployment authorization.
+
+**Problem or question discovered.** Was the dashboard always intended to run
+with the Bridge on the Hostinger VPS, or was that suggested only after the
+owner asked about PC and phone access? If it is on the same VPS, does
+"separate logical component" mean a second service already exists?
+
+**Evidence and reasoning.** Dashboard V1 and the local-to-small-VPS direction
+predate this conversation: the current V1 ships static dashboard assets inside
+the Bridge and the same FastAPI application serves them on loopback
+`127.0.0.1:8790`. It is therefore a separate *responsibility and permission
+surface*, but **not a separate deployed process or service today**. On
+2026-08-16 the owner made dashboard availability completion-critical for the
+KVM2 package; that added a pinned private SSH-tunnel launcher and D3 dashboard
+verification. It strengthened the deployment acceptance criteria rather than
+inventing the underlying dashboard.
+
+Running the dashboard beside the Bridge means it remains available while the
+owner's Windows PC is off, reads Bridge state locally without a cross-host API,
+and avoids paying for and operating a second server. The owner's PC or phone
+only renders the browser interface. Colocation also creates a shared-resource
+and shared-failure concern: dashboard load must not starve or destabilize the
+execution path, and V1's same-process packaging must not be described as if
+process isolation already existed.
+
+**Decision / offered direction.**
+
+- Host the **execution dashboard on the same Hostinger VPS as the Bridge**.
+- Keep Bridge/dashboard traffic private and local; **port 8790 is never
+  exposed directly to the public internet**.
+- Treat the dashboard as a separate logical responsibility/security boundary:
+  it observes and requests permitted owner actions, while the Bridge backend
+  remains the authority that validates or rejects them. The dashboard cannot
+  invent strategy decisions or bypass state, risk, reconciliation, or broker
+  gates.
+- Preserve the exact V1 fact: dashboard assets are bundled into and served by
+  the same loopback FastAPI Bridge process. Whether Dashboard V2 remains there
+  or becomes a separately limited loopback service is an OPEN implementation
+  choice, not a completed feature.
+- Private PC/phone access is the direction; the exact tunnel/VPN/identity-proxy
+  and login/2FA/role design remains separately gated. AI remains read-only.
+- This decision makes **no claim that Bridge or Dashboard V1 is currently
+  installed or running on KVM2**, and authorizes no host contact or change.
+
+**Alternatives and trade-offs.**
+
+| Placement | Benefit | Cost / risk | Direction |
+|---|---|---|---|
+| **Dashboard on the owner's Windows PC** | No extra VPS UI process | Unavailable when the PC is off; requires a remote Bridge API and splits operations | Rejected for execution monitoring |
+| **Dashboard on a second VPS** | Stronger host-level separation | Extra cost, credentials, networking, monitoring and cross-host attack surface | Deferred unless measured isolation needs justify it |
+| **Same VPS, same FastAPI process** | Already matches V1; simplest local data path | Dashboard and Bridge share a process and resources | Current V1 fact, not a permanent V2 mandate |
+| **Same VPS, separate loopback service** | Better process/resource separation while keeping traffic local | More deployment, authentication, health-check and upgrade complexity | OPEN V2 option |
+
+**Open points / implementation gate — OPEN.**
+
+- [ ] Keep V2 in the V1 FastAPI process or introduce a separately constrained
+      loopback dashboard service after measuring load and failure behaviour.
+- [ ] Prove that dashboard requests, refreshes and history queries cannot
+      starve or materially delay the Bridge execution path; set resource and
+      query limits appropriate to the chosen process model.
+- [ ] Choose the exact private access topology and its authentication: pinned
+      SSH tunnel, VPN, or an identity-aware HTTPS gateway. This section selects
+      none of them as the permanent answer.
+- [ ] Define login, 2FA, roles, session expiry, audit logging and remote-control
+      scope before any non-loopback or phone control is enabled.
+- [ ] Verify responsive phone monitoring separately; mobile support is not
+      implied merely by same-VPS placement.
+
+**Documentation only.** No Dashboard V2 service split, login, network exposure,
+deployment, KVM2 action, ARM, order, credential or economic action is
+authorized by this section.
+
+### B9. Dashboard OPEN Questions
+
+- [x] Host placement: same Hostinger VPS as the Bridge (B8). Exact service and
+      private-access topology remain open.
 - [ ] Remote control scope.
 - [ ] AI provider / model / cost / memory. *(The sourcing boundary is decided in
       B7 — Hermes not needed; initial route is the owner's Codex/ChatGPT
@@ -1242,6 +1319,7 @@ gate, and not any account, credential, or spend.
 | 2026-08-16 | **Accuracy and contract-completeness repair round.** Corrections to statements that were imprecise or overclaimed against source, plus a materially expanded intent schema. Six-field structure and the documentation-only / no-implementation authority fence unchanged; no verdicts recorded here. (1) **A7** no longer implies all-in is Signum's only sizing mode — `07_BROKER_DECISION.md` records all-in, "let strategy decide" absolute sizing, and custom-JSON percentage sizing; the section now declines Signum's *optional* all-in mode and states that the disqualifying property is market-only execution with synthetic SL/TP, not its sizing menu. (2) **A8** no longer claims every failure mode first appears with the second worker: two workers is stated as the minimum configuration for testing netting (A4), aggregate risk (A5), and state isolation (A6), while the A10 sizing conflict is recorded separately as existing with the *first* MTC-connected worker and required to be resolved before any MTC-to-Bridge integration. (3) **A8/A9 and §0** runtime wording tightened to "current authorized baseline V1 scope or build" — the "unchanged, current", "operating system", and "only working system" phrasings are removed so no sentence implies V1 runtime status, while the do-not-destabilize/delay requirement is preserved. (4) **A10** no longer calls Pine and Python the same contract/identical implementations. Two OPEN parity gaps are recorded from source: Pine's stop-risk raw qty divides by `stop_distance * contract_multiplier` (line 351) while Python divides by `stop_distance` only (line 47) despite using `contract_multiplier` in its leverage cap (52–54) and notional check (66); and Python gates on `min_notional` (66–68) where Pine has no equivalent gate. Both must be closed or explicitly bounded (e.g. multiplier = 1) before Python is appointed production canonical or MTC is integrated — the preferred DIRECTION that Python *should become* canonical is kept but now gated on gap closure plus an accepted frozen sizing contract. The BTC arithmetic is marked as assuming `contract_multiplier = 1` and a step/rounding/minimum that does not change the raw values. `pyramiding=100` is recorded as a deliberately generous broker ceiling only, with script-level `max_entries` (default 1) as the actual add permission, making basket/add behavior conditional. Pine sizing range corrected to lines 339–361. (5) **A10** Bridge-cap wording replaced: 0.05 BTC = $3,000 exceeds the current numeric $2,000 cap; today's Bridge cannot receive an MTC-requested quantity and evaluates its own quantity; a future validator retaining this threshold would reject the MTC request. (6) **A10** `OrderIntent` checklist expanded, preserving every prior field and adding `intent_id`/`decision_uid`; creation, signal, and expiry/freshness timestamps; symbol, venue, account/subaccount, side, timeframe; quantity unit and delta-vs-target-position semantics; sizing branch and `fallback_size_pct`; risk-percent scale convention (1.0 = one percent vs 0.01); sizing-policy version or immutable hash; and add/basket lifecycle identity, sequence, position context, and pyramiding quantity semantics. Also: A2's worker-isolation-strength question added to A11 so the cross-reference resolves; the "only MTC occurrences" claim scoped to the `bridge/` package (`bridge/app.py` lines 32 and 35); A4's Hyperliquid netting mechanics given the same reverification caveat as A3, since no authoritative local exchange citation exists and nothing was browsed. |
 | 2026-08-16 | **New B7 — AI Sourcing (subscription vs. API; dashboard assistant vs. Bridge gate).** Records that the dashboard does **not** need Hermes and that initial owner analysis uses the owner's existing Codex/ChatGPT subscription through the Codex app/CLI, driven manually against a dashboard-produced read-only analysis package or controlled read-only context — avoiding initial API cost and granting the AI no write or economic authority. Distinguishes a subscription from application API access: embedded automatic server-side dashboard chat normally requires separately billed API access, and current OpenAI product facts are marked re-verifiable before implementation. Records that a future VPS Bridge optional LLM gate, if enabled, would use a narrowly scoped provider API with independent service credentials — not Codex CLI, not an interactive subscription — for unattended predictable operation, a strict structured PASS/VETO/NO_TRADE or direction-restriction contract, low latency, independent credentials, rate/cost limits, no shell/filesystem/Git/coding tools, and to keep subscription login/quota changes out of the trading path; the gate is initially OFF, so initially no LLM API usage or cost, and **no claim is made that the Bridge calls OpenAI today**. Hard fence recorded: the gate never changes Bridge code or config, never ARMs, never originates orders, never increases size or leverage, never widens stops — it can only withhold or restrict. Codex subscription on a trusted headless machine is noted as technically possible for Codex CLI but rejected for the Bridge hot path, acceptable only as separate owner-initiated maintenance/analysis outside the trading path. Dashboard assistant and Bridge gate are recorded as separate logical components that may later share provider/model but need separate prompts, identities/credentials, permissions, budgets, and logs, exchanging audited structured/read-only records rather than unrestricted agent-to-agent chat. Alternatives table covers Hermes (not needed), embedded API chat day one (deferred), Codex CLI in the trading path (rejected), one shared AI component (rejected), and the preferred initial manual read-only package + subscription route. OPEN: package/context format, embedded-chat timing, exact API provider/model, credential handling, budgets, retention, activation criteria, and OpenAI-fact reverification. Renumbering: former B7 "Dashboard OPEN Questions" is now **B8**, and the B7 cross-references in B1–B6 gates now point to B8; the B8 AI entry notes the decided sourcing boundary while keeping provider/model/cost/memory genuinely open. Documentation only; **no implementation or activation authorized.** |
 | 2026-08-16 | **New A11 — Order and Exit Lifecycle Ownership (MTC vs. Bridge).** Records why similarly named entry/SL/TP/trailing/close concepts must not become two competing strategy brains. No present runtime clash: MTC_V2 and the Keltner plumbing candidate are not connected; current Keltner supplies its own initial stop and EMA8 trail, with TP disabled. Preferred DIRECTION: after accepted Pine/Python lifecycle parity, MTC Python owns exact desired economic intent; Bridge validates and either executes it exactly or rejects it, while owning real exchange identity, native protection, fills, reconciliation, restart recovery, and safe flattening. No silent mutation, stop widening, or simulated-fill substitution. Records the current blocking incompatibility: MTC fractional TP1/TP2 and conditional basket/add semantics cannot be represented by the Bridge's single full-quantity optional TP model. Leaves native-strategy-stop versus separately labelled emergency-native-stop semantics OPEN because the choice changes fills and parity. Adds the full Order/Exit Lifecycle Contract gate and desired/accepted/actual dashboard separation. Former A11 Backend OPEN Questions becomes **A12**. Documentation only; **no implementation or trading action approved.** |
+| 2026-08-16 | **New B8 — Same-VPS Dashboard Placement.** Owner-approved direction: the execution dashboard lives on the same Hostinger VPS as the Bridge, remains private, and stays a separate logical responsibility/security boundary. Records the pre-existing V1 fact precisely: static assets are served by the same loopback FastAPI Bridge process, not a separate service. Records that the owner's 2026-08-16 completion-critical requirement added the pinned SSH-tunnel launcher and D3 verification rather than inventing the dashboard. Reasons: available while the PC is off, local state access, no second-server cost; shared-resource/failure risk must be tested. Alternatives cover owner-PC, second-VPS, current same-process V1, and possible separate-loopback-service V2. Exact service split, resource limits, private-access technology, login/2FA/roles, phone support and remote controls remain OPEN. Former Dashboard OPEN Questions is B9; cross-references updated. Gemini 3.7 Flash High supplied an isolated draft, and Codex corrected its separate-service assumption and premature technology selections before transfer. Documentation only; no deployment or live action authorized. |
 
 ---
 

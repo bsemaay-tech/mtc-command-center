@@ -48,6 +48,97 @@ worktree (`C:\WTCLEAN_CTRL`, branch `chore/worktree-cleanup-20260818` off master
   state, `MTC-Bridge-P2` (Disabled) / `MTC-HermesPhaseWatch` (Ready), TESTNET/
   ARM/exchange, Pine/parity/MTC/trading logic.
 
+## [Claude Fable Lead] 2026-08-18 morning — handoff durability port: night records committed to master
+
+Found that master's lane-union `GLOBAL_HANDOFF.md`/`NEXT_STEPS.md` were missing ALL THREE
+2026-08-17/18 night entries (backlog acceptance; Packages 7/1/2; Packages 3/4/5a) — they
+existed only as uncommitted working-copy edits in the main checkout on `codex/bridge-help-wiki`.
+This commit ports them insert-only (nothing removed from the union files) and also commits the
+matching uncommitted companions: rotated `START_HERE.md` + its new archive file
+`archive/START_HERE_STALE_BANNER_2026-08-12.md`, the Decision 5 record in
+`11_TRIAGE/OWNER_DECISIONS_BRIDGE_V2_BACKLOG_NIGHT_2026-08-17.md`, and the B8-settled/B9
+renumber in `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md`.
+Docs-only; no package started (all remaining Bridge V2 packages await explicit owner "start");
+no VPS/credential/ARM/trading/Pine/MTC/parity action. Main checkout's historical untracked
+triage files remain untouched (cleanup lane stays owner-gated). **Budget flag for owner:**
+CodeBurn month-to-date reads ~$3.2k vs the 2026-08-16 ceiling "STANDARD $800–1200 as MAXIMUM,
+stop-and-ask at 75%" — needs an owner read on whether CodeBurn's counting of subscription
+routes inflates the figure; flagged in the session report.
+
+## [Claude Fable Lead] 2026-08-18 pre-dawn, part 3 — Packages 3/4/5a BUILT + ACCEPTED + MERGED; master `38a2c0b8`
+
+Owner's "devam, full autonomy until morning" executed to completion. Three T1 packages built in
+isolated worktrees, reviewed, accepted, merged to master and pushed:
+
+- **Package 3** Dashboard V2 read-only fixture prototype (5 views, P1 identity tuple, P2
+  three-layer view, phone layout; zero network/controls) — DeepSeek round 1 found one fixture
+  Guardian-tier mismatch, fixed, round 2 ACCEPT. Merge `303c6d9a`.
+- **Package 4** owner analysis-package generator (bounded redacted Markdown bundle, 11 tests)
+  — GLM authored the generator until the GLM 5-hour quota wall (~04:15, reset 06:14); DeepSeek
+  completed fixtures/tests/README; Lead fixed two real generator bugs (header-size chicken-egg
+  → honest footer; %-format crash on content → concatenation) and wrong test assumptions
+  ('a'-filler is valid hex — the redactor was right), suite 11 passed; DeepSeek review ACCEPT;
+  nits applied (symlink-resolved credential-name check, README known-gap notes). Merge `97b236d5`.
+- **Package 5a** observability toolkit first increment (read-only audit-pack exporter, fixture
+  store builder, 18-item cited readiness checklist, 16-drill chaos DESIGN deferred-by-design,
+  19 tests) — Lead-run pytest 19 passed; DeepSeek ACCEPT zero required findings; nits applied.
+  Merge `bb396162`.
+- **Verification on final master:** full suite **1379 passed, 2 failed = the identical
+  pre-existing baseline pair**. Gemini cross-check of all three packages: CROSSCHECK_CLEAN
+  (one earlier run failed closed when its repo watcher saw the Lead's concurrent merge — guard
+  correct; retried quiet). Acceptance record:
+  `11_TRIAGE/BRIDGE_V2_PACKAGES_345A_T1_ACCEPTANCE_2026-08-18.md`; owner report:
+  `11_TRIAGE/OVERNIGHT_BRIDGE_V2_NIGHT_REPORT_PART3_2026-08-18.md`. Branches
+  `feature/bridge-v2-package3/4/5a` pushed; night worktrees removed.
+- Night totals: backlog + Packages 7/1/2/3/4/5a accepted, master merged twice, Gemini launcher
+  repaired — zero Codex/Pro/MAX spend. Remaining owner gates: 5b classification, Package 6
+  local half, Package 8 work packages, P1 §A.2 store choice, drill implementation, redaction
+  widening.
+
+## [Claude Fable Lead] 2026-08-17 night, part 2 — merge to master DONE; Gemini launcher repaired; Packages 7/1/2 ACCEPTED
+
+Owner Decision 5 (late night, in chat): start Packages 7 and 1+2, repair the Gemini launcher,
+merge `codex/bridge-help-wiki` to master, burn GLM/Gemini/DeepSeek until morning, protect
+Fable/MAX/Pro. All executed:
+
+- **Merge:** `dc720521` on master, pushed. Only the two append-log memory files conflicted;
+  lane-union resolution, nothing dropped. Merged-tree suite: 1349 passed, 2 failed = the exact
+  pre-existing baseline pair (reproduced on the un-merged branch). Zero new failures.
+- **Gemini launcher:** branch pin replaced by `-ExpectedBranch` param (default `master`),
+  fail-closed; new identity `2FE936D2…`; negative+positive live QA green. Records + routing-doc
+  update committed (`b08aab35`).
+- **Packages 7, 1, 2: ALL ACCEPTED** (commit `887ec60f`, master fast-forwarded to `6ddebb4a`,
+  pushed). Authors GLM-5.3; official T2 reviewer DeepSeek v4-pro (three ACCEPT verdicts, zero
+  required findings); Gemini cross-check CROSSCHECK_CLEAN; Lead collected P7 official-docs
+  evidence personally. Acceptance record with pinned hashes:
+  `11_TRIAGE/BRIDGE_V2_PACKAGES_712_T2_ACCEPTANCE_2026-08-17.md`. Key facts now on record:
+  sub-accounts volume-gated ($100k → virtual-book fallback is Package 1's DEFAULT branch);
+  same-symbol hedge mode officially UNKNOWN; IP 1200/min + 10-WS-connection caps are VPS-shared.
+- Packages 3/4/5a/5b/6/8 remain un-started (owner gates). No implementation, host, credential,
+  account, TESTNET/MAINNET, ARM/order, or Pine/MTC/parity action.
+- Owner report: `11_TRIAGE/OVERNIGHT_BRIDGE_V2_NIGHT_REPORT_PART2_2026-08-17.md`.
+
+## [Claude Fable Lead] 2026-08-17 night — Bridge V2 backlog ACCEPTED via owner-authorized T2 round; prep drafts committed
+
+Owner (live in chat, evening) authorized: (1) exactly one fresh T2 review of a corrected
+backlog candidate; (2) Codex routes secondary + fourth-if-live, Pro/`free` and Claude MAX
+protected; (3) full night scope (acceptance + Package 1–8 prep + Hyperliquid public-docs
+research); (4) after live dispatches proved BOTH Codex Plus routes credit-exhausted
+(`secondary` → ~2026-08-22 20:09, `fourth` → ~2026-08-20 10:20), GLM-5.3 as the official
+T2 reviewer (AGENTS.md GLM T2-reviewer slot; docs-only review).
+
+Result: GLM-5.3 authored the repair (all 3 findings + 3 nits), DeepSeek v4-pro pre-review
+PASS, Lead reproduced load-bearing code citations, two trivial wording items fixed, then a
+fresh GLM-5.3 hash-pinned official round returned **ACCEPT** (identity match, 16 citation
+spot-check groups at pinned HEAD `033546fb`, zero new required findings). Commits on
+`codex/bridge-help-wiki`: `4f4a97e2` (accepted backlog + acceptance record + owner
+decisions; candidate blob `f0115b0a` pinned) and `62272948` (unaccepted drafts: Package 1–8
+kickoff prep + Hyperliquid public-docs addendum — sub-account $100k volume gate lead;
+same-symbol netting officially UNKNOWN). Gemini read-only route was UNUSABLE: its accepted
+launcher hard-pins branch `feature/donchian-crypto-ladder` (line 764) — owner-ask recorded.
+No VPS/trading/credential/ARM/Pine/MTC/parity action. Full night report:
+`11_TRIAGE/OVERNIGHT_BRIDGE_V2_BACKLOG_NIGHT_REPORT_2026-08-17.md`.
+
 ## [Codex gpt-5.6-sol] 2026-08-17 — Help/Wiki implemented; T1 cap boundary preserved
 
 Claude Max implemented the complete interactive Bridge Help/System Map in the
