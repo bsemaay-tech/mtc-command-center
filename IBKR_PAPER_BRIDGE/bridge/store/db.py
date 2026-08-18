@@ -1,10 +1,11 @@
-"""SQLite Store with schema v3 (TS-P1-002 durable identity)."""
+"""SQLite Store with schema v4 durable identity and submission recovery ledger."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 import sqlite3
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable, Literal
@@ -35,6 +36,32 @@ def _json(value: Any) -> str:
 
 _IDENTITY_INTENT_VERSION = "ts-p1-002-intent-v1"
 _IDENTITY_REQUEST_VERSION = "ts-p1-002-request-v1"
+_SUBMISSION_ATTEMPT_VERSION = "ts-p1-003-attempt-v1"
+_RECOVERY_PAYLOAD_VERSION = "ts-p1-003-recovery-v1"
+_ATTEMPT_TRANSITIONS: dict[str, frozenset[str]] = {
+    "SUBMITTING": frozenset({
+        "PRE_SEND_FAILURE",
+        "DEFINITIVE_REJECTION",
+        "UNKNOWN_SUBMISSION",
+        "VERIFIED_SUCCESS",
+    }),
+    "VERIFIED_SUCCESS": frozenset({"FINALIZED"}),
+    "UNKNOWN_SUBMISSION": frozenset({"CONFIRMED_PRESENT", "CONFIRMED_ABSENT"}),
+}
+_QUARANTINE_STATES = frozenset({
+    "SUBMITTING",
+    "UNKNOWN_SUBMISSION",
+    "CONFIRMED_PRESENT",
+})
+_EVIDENCE_STATUSES = frozenset({
+    "FOUND",
+    "NOT_FOUND",
+    "QUERY_FAILED",
+    "UNAVAILABLE",
+    "TRUNCATED",
+    "STALE",
+    "CONFLICTING",
+})
 
 
 def _float_hex(value: float) -> str:
@@ -150,6 +177,14 @@ def compute_request_identity(
     return request_id, preimage, _IDENTITY_REQUEST_VERSION
 
 
+def compute_submission_attempt_id(request_id: str) -> str:
+    """Derive the stable ledger identifier without exposing plan content."""
+    digest = hashlib.sha256(
+        f"{_SUBMISSION_ATTEMPT_VERSION}:{request_id}".encode("utf-8")
+    ).hexdigest()
+    return f"attempt-v1:{digest}"
+
+
 # ---------------------------------------------------------------------------
 # Custom exceptions
 # ---------------------------------------------------------------------------
@@ -178,10 +213,10 @@ class OrderCollisionError(Exception):
 
 
 class MigrationError(Exception):
-    """Raised when v2→v3 migration cannot complete safely."""
+    """Raised when a schema migration cannot complete safely."""
 
     def __init__(self, message: str) -> None:
-        super().__init__(f"MIGRATION_V2_FAILED: {message}")
+        super().__init__(f"MIGRATION_FAILED: {message}")
 
 
 # ---------------------------------------------------------------------------
@@ -211,6 +246,10 @@ class Store:
             self._conn.close()
             self._conn = None
 
+    def now(self) -> datetime:
+        """Trusted local observation clock used by recovery sequencing."""
+        return self._clock().astimezone(UTC)
+
     # ------------------------------------------------------------------
     # Schema initialization with version-aware migration
     # ------------------------------------------------------------------
@@ -222,30 +261,41 @@ class Store:
         )
         existing = self.get_meta("schema_version")
         if existing is None:
-            self._initialize_v3_fresh()
+            self._initialize_v4_fresh()
+            return
+        if existing == "4":
+            self._initialize_v4_idempotent()
             return
         if existing == "3":
-            self._initialize_v3_idempotent()
+            self._migrate_v3_to_v4()
             return
         if existing == "2":
             self._migrate_v2_to_v3()
+            # Intentionally a second committed transaction. A later v4
+            # failure must leave a valid, reopenable v3 database.
+            self._migrate_v3_to_v4()
             return
         # Unsupported or corrupt version → fail closed
         raise RuntimeError(
             f"Unsupported schema_version={existing!r}; cannot initialize safely"
         )
 
-    def _initialize_v3_fresh(self) -> None:
-        self._create_tables_v3()
+    def _initialize_v4_fresh(self) -> None:
+        self._create_tables_v4()
         self.conn.execute(
             "INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)",
-            ("schema_version", "3"),
+            ("schema_version", "4"),
         )
         self.conn.commit()
 
-    def _initialize_v3_idempotent(self) -> None:
-        """Re-open an existing v3 database — ensure tables exist (idempotent)."""
+    def _initialize_v4_idempotent(self) -> None:
+        """Re-open an existing v4 database and verify idempotent DDL."""
+        self._create_tables_v4()
+        self.conn.commit()
+
+    def _create_tables_v4(self) -> None:
         self._create_tables_v3()
+        self._create_submission_ledger_v4()
 
     def _create_tables_v3(self) -> None:
         """Create all v3 tables and indexes (idempotent via IF NOT EXISTS).
@@ -452,6 +502,114 @@ class Store:
             "CREATE INDEX IF NOT EXISTS idx_identity_request ON order_identity(request_id)")
         self.conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_identity_state ON order_identity(state)")
+
+    def _create_submission_ledger_v4(self) -> None:
+        """Add v4 tables without rebuilding or rewriting order_identity."""
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS submission_attempts (
+              attempt_id TEXT PRIMARY KEY
+                CHECK(length(attempt_id) = 75 AND substr(attempt_id, 1, 11) = 'attempt-v1:' AND NOT substr(attempt_id, 12) GLOB '*[^0-9a-f]*'),
+              intent_id TEXT UNIQUE NOT NULL REFERENCES order_identity(intent_id),
+              request_id TEXT UNIQUE NOT NULL,
+              origin_run_id TEXT NOT NULL CHECK(origin_run_id != ''),
+              origin_decision_uid TEXT NOT NULL CHECK(origin_decision_uid != ''),
+              state TEXT NOT NULL CHECK(state IN (
+                'SUBMITTING','PRE_SEND_FAILURE','DEFINITIVE_REJECTION',
+                'UNKNOWN_SUBMISSION','VERIFIED_SUCCESS','FINALIZED',
+                'CONFIRMED_PRESENT','CONFIRMED_ABSENT'
+              )),
+              recovery_payload_json TEXT NOT NULL CHECK(recovery_payload_json != ''),
+              planned_cloids_json TEXT NOT NULL CHECK(planned_cloids_json != ''),
+              created_ts TEXT NOT NULL CHECK(created_ts != ''),
+              updated_ts TEXT NOT NULL CHECK(updated_ts != ''),
+              reason_code TEXT NOT NULL CHECK(
+                length(reason_code) BETWEEN 1 AND 96
+                AND reason_code NOT GLOB '*[^A-Z0-9_:.-]*'
+              ),
+              absence_count INTEGER NOT NULL DEFAULT 0 CHECK(absence_count >= 0),
+              absence_first_ts TEXT,
+              absence_last_ts TEXT,
+              verdict_ts TEXT
+            )""")
+        self.conn.execute("""
+            CREATE TABLE IF NOT EXISTS submission_recovery_evidence (
+              evidence_id INTEGER PRIMARY KEY,
+              attempt_id TEXT NOT NULL REFERENCES submission_attempts(attempt_id),
+              cycle_no INTEGER NOT NULL CHECK(cycle_no > 0),
+              observed_ts TEXT NOT NULL CHECK(observed_ts != ''),
+              verdict TEXT NOT NULL CHECK(verdict IN (
+                'PRESENT','ABSENT_COMPLETE','INCOMPLETE','CONFLICTING'
+              )),
+              evidence_json TEXT NOT NULL CHECK(evidence_json != ''),
+              UNIQUE(attempt_id, cycle_no)
+            )""")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_submission_attempt_state "
+            "ON submission_attempts(state)")
+        self.conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_submission_evidence_attempt "
+            "ON submission_recovery_evidence(attempt_id, cycle_no)")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_submission_attempt_transition
+            BEFORE UPDATE OF state ON submission_attempts
+            WHEN NOT (
+              (OLD.state = 'SUBMITTING' AND NEW.state IN (
+                'PRE_SEND_FAILURE','DEFINITIVE_REJECTION',
+                'UNKNOWN_SUBMISSION','VERIFIED_SUCCESS'
+              ))
+              OR (OLD.state = 'VERIFIED_SUCCESS' AND NEW.state = 'FINALIZED')
+              OR (OLD.state = 'UNKNOWN_SUBMISSION' AND NEW.state IN (
+                'CONFIRMED_PRESENT','CONFIRMED_ABSENT'
+              ))
+            )
+            BEGIN
+              SELECT RAISE(ABORT, 'SUBMISSION_ATTEMPT_TRANSITION_DENIED');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_submission_attempt_core_immutable
+            BEFORE UPDATE OF attempt_id, intent_id, request_id, origin_run_id,
+              origin_decision_uid, recovery_payload_json, planned_cloids_json,
+              created_ts
+            ON submission_attempts
+            BEGIN
+              SELECT RAISE(ABORT, 'SUBMISSION_ATTEMPT_CORE_IMMUTABLE');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_submission_attempt_no_delete
+            BEFORE DELETE ON submission_attempts
+            BEGIN
+              SELECT RAISE(ABORT, 'SUBMISSION_ATTEMPT_DELETE_DENIED');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_submission_evidence_no_update
+            BEFORE UPDATE ON submission_recovery_evidence
+            BEGIN
+              SELECT RAISE(ABORT, 'SUBMISSION_EVIDENCE_APPEND_ONLY');
+            END""")
+        self.conn.execute("""
+            CREATE TRIGGER IF NOT EXISTS trg_submission_evidence_no_delete
+            BEFORE DELETE ON submission_recovery_evidence
+            BEGIN
+              SELECT RAISE(ABORT, 'SUBMISSION_EVIDENCE_APPEND_ONLY');
+            END""")
+
+    def _migrate_v3_to_v4(self) -> None:
+        """Add the v4 ledger in one rollback-clean BEGIN IMMEDIATE transaction."""
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            if self.get_meta("schema_version") != "3":
+                raise MigrationError("v3-to-v4 requires schema_version=3")
+            self._create_submission_ledger_v4()
+            cursor = self.conn.execute(
+                "UPDATE meta SET value = '4' "
+                "WHERE key = 'schema_version' AND value = '3'"
+            )
+            if cursor.rowcount != 1:
+                raise MigrationError("v3-to-v4 version update rowcount mismatch")
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
 
     # ------------------------------------------------------------------
     # v2 → v3 migration with realistic backfill
@@ -1065,6 +1223,450 @@ class Store:
                 )
 
     # ------------------------------------------------------------------
+    # TS-P1-003 submission-attempt ledger
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _safe_reason_code(value: str) -> str:
+        code = str(value).strip().upper()
+        if (
+            not code
+            or len(code) > 96
+            or any(ch not in "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_:-." for ch in code)
+        ):
+            raise ValueError("reason_code must be a short structured code")
+        return code
+
+    @staticmethod
+    def _canonical_planned_cloids(planned_cloids: Mapping[str, str]) -> dict[str, str]:
+        if not isinstance(planned_cloids, Mapping) or not planned_cloids:
+            raise ValueError("planned_cloids must be a non-empty mapping")
+        normalized: dict[str, str] = {}
+        for raw_role, raw_cloid in planned_cloids.items():
+            role = str(raw_role).strip().upper()
+            cloid = Store._safe_cloid(raw_cloid)
+            if role not in {"ENTRY", "SL", "TP"}:
+                raise ValueError("planned_cloids contains an invalid role or cloid")
+            if role in normalized:
+                raise ValueError("planned_cloids contains a duplicate role")
+            normalized[role] = cloid
+        if len(set(normalized.values())) != len(normalized):
+            raise ValueError("planned_cloids contains duplicate cloids")
+        return dict(sorted(normalized.items()))
+
+    @staticmethod
+    def _safe_cloid(value: object) -> str:
+        cloid = str(value).strip()
+        if (
+            not cloid
+            or len(cloid) > 256
+            or any(
+                ch not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_:-."
+                for ch in cloid
+            )
+        ):
+            raise ValueError("cloid must be a short structured identifier")
+        return cloid
+
+    @staticmethod
+    def _canonical_recovery_payload(payload: Mapping[str, Any]) -> str:
+        expected = {
+            "version",
+            "symbol",
+            "direction",
+            "signal_ts",
+            "ref_price_hex",
+            "qty_hex",
+            "entry_type",
+            "limit_price_hex",
+            "stop_loss_hex",
+            "take_profit_hex",
+            "leverage",
+        }
+        if not isinstance(payload, Mapping) or set(payload) != expected:
+            raise ValueError("recovery payload fields do not match the canonical contract")
+        if payload.get("version") != _RECOVERY_PAYLOAD_VERSION:
+            raise ValueError("recovery payload version mismatch")
+        if not isinstance(payload.get("leverage"), int) or isinstance(payload.get("leverage"), bool):
+            raise ValueError("recovery payload leverage must be an integer")
+        for key in expected - {"limit_price_hex", "take_profit_hex", "leverage"}:
+            if not isinstance(payload.get(key), str) or not str(payload[key]).strip():
+                raise ValueError(f"recovery payload field {key} is invalid")
+        for key in {"limit_price_hex", "take_profit_hex"}:
+            if payload.get(key) is not None and not isinstance(payload.get(key), str):
+                raise ValueError(f"recovery payload field {key} is invalid")
+        return _canonical_json(dict(payload))
+
+    @classmethod
+    def _canonical_evidence_payload(cls, payload: Mapping[str, Any]) -> str:
+        expected = {
+            "request_id",
+            "planned_cloids",
+            "direct_lookup",
+            "open_orders",
+            "historical_orders",
+            "fills",
+            "position",
+        }
+        if not isinstance(payload, Mapping) or set(payload) != expected:
+            raise ValueError("recovery evidence fields do not match the typed contract")
+        planned = cls._canonical_planned_cloids(payload["planned_cloids"])
+        if not isinstance(payload["direct_lookup"], Mapping):
+            raise ValueError("direct_lookup evidence must be a mapping")
+        if set(map(str, payload["direct_lookup"])) != set(planned.values()):
+            raise ValueError("direct_lookup evidence does not exactly cover planned cloids")
+
+        def validate_query(query: Any) -> None:
+            if not isinstance(query, Mapping) or set(query) != {
+                "status", "found_cloids", "reason_code"
+            }:
+                raise ValueError("query evidence fields do not match the typed contract")
+            if str(query["status"]) not in _EVIDENCE_STATUSES:
+                raise ValueError("query evidence status is invalid")
+            if not isinstance(query["found_cloids"], (list, tuple)):
+                raise ValueError("query evidence found_cloids must be a sequence")
+            found_cloids = [
+                cls._safe_cloid(value) for value in query["found_cloids"]
+            ]
+            if len(set(found_cloids)) != len(found_cloids):
+                raise ValueError("query evidence contains duplicate cloids")
+            if set(found_cloids) - set(planned.values()):
+                raise ValueError("recovery evidence contains an unplanned cloid")
+            cls._safe_reason_code(str(query["reason_code"]))
+
+        for query in payload["direct_lookup"].values():
+            validate_query(query)
+        for name in ("open_orders", "historical_orders", "fills", "position"):
+            validate_query(payload[name])
+        return _canonical_json(dict(payload))
+
+    def reserve_submission(
+        self,
+        *,
+        intent_id: str,
+        intent_preimage: str,
+        intent_version: str,
+        request_id: str,
+        request_preimage: str,
+        request_version: str,
+        cloid_seed: str,
+        origin_run_id: str,
+        origin_decision_uid: str,
+        recovery_payload: Mapping[str, Any],
+        planned_cloids: Mapping[str, str],
+    ) -> tuple[Literal["RESERVED", "BLOCKED"], str]:
+        """Atomically reserve identity and the immutable SUBMITTING attempt."""
+        attempt_id = compute_submission_attempt_id(request_id)
+        canonical_payload = self._canonical_recovery_payload(recovery_payload)
+        canonical_cloids = self._canonical_planned_cloids(planned_cloids)
+        payload_has_tp = recovery_payload["take_profit_hex"] is not None
+        expected_roles = {"ENTRY", "SL", "TP"} if payload_has_tp else {"ENTRY", "SL"}
+        if set(canonical_cloids) != expected_roles:
+            raise ValueError("planned_cloids do not exactly cover the planned bracket roles")
+
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            result = self.reserve_identity(
+                intent_id=intent_id,
+                intent_preimage=intent_preimage,
+                intent_version=intent_version,
+                request_id=request_id,
+                request_preimage=request_preimage,
+                request_version=request_version,
+                cloid_seed=cloid_seed,
+                origin_run_id=origin_run_id,
+                origin_decision_uid=origin_decision_uid,
+            )
+            if result == "RESERVED":
+                now = _to_iso(self._clock())
+                self.conn.execute(
+                    """INSERT INTO submission_attempts(
+                         attempt_id, intent_id, request_id,
+                         origin_run_id, origin_decision_uid, state,
+                         recovery_payload_json, planned_cloids_json,
+                         created_ts, updated_ts, reason_code
+                       ) VALUES (?, ?, ?, ?, ?, 'SUBMITTING', ?, ?, ?, ?, ?)""",
+                    (
+                        attempt_id,
+                        intent_id,
+                        request_id,
+                        origin_run_id,
+                        origin_decision_uid,
+                        canonical_payload,
+                        _canonical_json(canonical_cloids),
+                        now,
+                        now,
+                        "SUBMISSION_RESERVED",
+                    ),
+                )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        return result, attempt_id
+
+    def get_submission_attempt(self, attempt_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT * FROM submission_attempts WHERE attempt_id = ?", (attempt_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        result["planned_cloids"] = json.loads(result["planned_cloids_json"])
+        result["recovery_payload"] = json.loads(result["recovery_payload_json"])
+        return result
+
+    def get_submission_attempt_by_request(self, request_id: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT attempt_id FROM submission_attempts WHERE request_id = ?",
+            (request_id,),
+        ).fetchone()
+        return None if row is None else self.get_submission_attempt(str(row["attempt_id"]))
+
+    def get_active_submission_attempts(self) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            """SELECT attempt_id FROM submission_attempts
+               WHERE state IN ('SUBMITTING','UNKNOWN_SUBMISSION')
+               ORDER BY created_ts, attempt_id"""
+        ).fetchall()
+        return [
+            attempt
+            for row in rows
+            if (attempt := self.get_submission_attempt(str(row["attempt_id"]))) is not None
+        ]
+
+    def get_quarantined_submission_attempts(self) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            """SELECT attempt_id FROM submission_attempts
+               WHERE state IN ('SUBMITTING','UNKNOWN_SUBMISSION','CONFIRMED_PRESENT')
+               ORDER BY created_ts, attempt_id"""
+        ).fetchall()
+        return [
+            attempt
+            for row in rows
+            if (attempt := self.get_submission_attempt(str(row["attempt_id"]))) is not None
+        ]
+
+    def submission_quarantine_count(self) -> int:
+        placeholders = ",".join("?" for _ in _QUARANTINE_STATES)
+        row = self.conn.execute(
+            f"SELECT COUNT(*) FROM submission_attempts WHERE state IN ({placeholders})",
+            tuple(sorted(_QUARANTINE_STATES)),
+        ).fetchone()
+        return int(row[0]) if row else 0
+
+    def has_submission_quarantine(self) -> bool:
+        return self.submission_quarantine_count() > 0
+
+    def _transition_attempt_in_tx(
+        self, attempt_id: str, target_state: str, reason_code: str
+    ) -> None:
+        row = self.conn.execute(
+            "SELECT state FROM submission_attempts WHERE attempt_id = ?",
+            (attempt_id,),
+        ).fetchone()
+        if row is None:
+            raise IdentityCollisionError(
+                "SUBMISSION_ATTEMPT_NOT_FOUND", f"attempt_id={attempt_id}"
+            )
+        current = str(row["state"])
+        if target_state not in _ATTEMPT_TRANSITIONS.get(current, frozenset()):
+            raise IdentityCollisionError(
+                "SUBMISSION_TRANSITION_DENIED",
+                f"attempt_id={attempt_id} current={current} target={target_state}",
+            )
+        now = _to_iso(self._clock())
+        cursor = self.conn.execute(
+            """UPDATE submission_attempts
+               SET state = ?, updated_ts = ?, reason_code = ?,
+                   verdict_ts = CASE
+                     WHEN ? IN ('CONFIRMED_PRESENT','CONFIRMED_ABSENT') THEN ?
+                     ELSE verdict_ts
+                   END
+               WHERE attempt_id = ? AND state = ?""",
+            (
+                target_state,
+                now,
+                self._safe_reason_code(reason_code),
+                target_state,
+                now,
+                attempt_id,
+                current,
+            ),
+        )
+        if cursor.rowcount != 1:
+            raise IdentityCollisionError(
+                "SUBMISSION_TRANSITION_ROWCOUNT",
+                f"attempt_id={attempt_id} rowcount={cursor.rowcount}",
+            )
+
+    def transition_submission_attempt(
+        self, attempt_id: str, target_state: str, reason_code: str
+    ) -> None:
+        """Forward-only transition; callers never supply or authorize from_state."""
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            self._transition_attempt_in_tx(attempt_id, target_state, reason_code)
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+
+    def mark_submission_unknown(self, attempt_id: str, reason_code: str) -> None:
+        """Persist quarantine; an already-unknown attempt remains unchanged."""
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.conn.execute(
+                "SELECT state FROM submission_attempts WHERE attempt_id = ?",
+                (attempt_id,),
+            ).fetchone()
+            if row is None:
+                raise IdentityCollisionError(
+                    "SUBMISSION_ATTEMPT_NOT_FOUND", f"attempt_id={attempt_id}"
+                )
+            if str(row["state"]) == "SUBMITTING":
+                self._transition_attempt_in_tx(
+                    attempt_id, "UNKNOWN_SUBMISSION", reason_code
+                )
+            elif str(row["state"]) != "UNKNOWN_SUBMISSION":
+                raise IdentityCollisionError(
+                    "SUBMISSION_TRANSITION_DENIED",
+                    f"attempt_id={attempt_id} current={row['state']} target=UNKNOWN_SUBMISSION",
+                )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+
+    def record_recovery_cycle(
+        self,
+        *,
+        attempt_id: str,
+        request_id: str,
+        planned_cloids: Mapping[str, str],
+        observed_ts: datetime,
+        verdict: Literal["PRESENT", "ABSENT_COMPLETE", "INCOMPLETE", "CONFLICTING"],
+        evidence_payload: Mapping[str, Any],
+    ) -> str:
+        """Append evidence and apply its recovery state/counter change atomically."""
+        observed = _to_iso(observed_ts)
+        if observed is None:
+            raise ValueError("observed_ts is required")
+        canonical_cloids = self._canonical_planned_cloids(planned_cloids)
+        canonical_evidence = self._canonical_evidence_payload(evidence_payload)
+        if evidence_payload["request_id"] != request_id:
+            raise ValueError("recovery evidence request_id linkage mismatch")
+        if self._canonical_planned_cloids(evidence_payload["planned_cloids"]) != canonical_cloids:
+            raise ValueError("recovery evidence cloid-map linkage mismatch")
+        if verdict not in {"PRESENT", "ABSENT_COMPLETE", "INCOMPLETE", "CONFLICTING"}:
+            raise ValueError("recovery verdict is invalid")
+
+        self.conn.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.conn.execute(
+                """SELECT request_id, state, planned_cloids_json, absence_count,
+                          absence_first_ts, absence_last_ts
+                   FROM submission_attempts WHERE attempt_id = ?""",
+                (attempt_id,),
+            ).fetchone()
+            if row is None:
+                raise IdentityCollisionError(
+                    "SUBMISSION_ATTEMPT_NOT_FOUND", f"attempt_id={attempt_id}"
+                )
+            if str(row["request_id"]) != request_id:
+                raise ValueError("stored recovery request_id linkage mismatch")
+            if json.loads(str(row["planned_cloids_json"])) != canonical_cloids:
+                raise ValueError("stored recovery cloid-map linkage mismatch")
+            state = str(row["state"])
+            if state not in {"SUBMITTING", "UNKNOWN_SUBMISSION"}:
+                raise IdentityCollisionError(
+                    "SUBMISSION_RECOVERY_TERMINAL",
+                    f"attempt_id={attempt_id} state={state}",
+                )
+            cycle_row = self.conn.execute(
+                """SELECT COALESCE(MAX(cycle_no), 0) + 1
+                   FROM submission_recovery_evidence WHERE attempt_id = ?""",
+                (attempt_id,),
+            ).fetchone()
+            cycle_no = int(cycle_row[0]) if cycle_row else 1
+            self.conn.execute(
+                """INSERT INTO submission_recovery_evidence(
+                     attempt_id, cycle_no, observed_ts, verdict, evidence_json
+                   ) VALUES (?, ?, ?, ?, ?)""",
+                (attempt_id, cycle_no, observed, verdict, canonical_evidence),
+            )
+
+            if state == "SUBMITTING":
+                self._transition_attempt_in_tx(
+                    attempt_id, "UNKNOWN_SUBMISSION", "RECOVERY_OBSERVED"
+                )
+                state = "UNKNOWN_SUBMISSION"
+
+            if verdict == "PRESENT":
+                self.conn.execute(
+                    """UPDATE submission_attempts
+                       SET absence_count = 0, absence_first_ts = NULL,
+                           absence_last_ts = NULL
+                       WHERE attempt_id = ?""",
+                    (attempt_id,),
+                )
+                self._transition_attempt_in_tx(
+                    attempt_id, "CONFIRMED_PRESENT", "RECOVERY_PRESENT"
+                )
+                state = "CONFIRMED_PRESENT"
+            elif verdict == "ABSENT_COMPLETE":
+                count = int(row["absence_count"])
+                first = row["absence_first_ts"]
+                last = row["absence_last_ts"]
+                if last is not None and datetime.fromisoformat(observed) <= datetime.fromisoformat(str(last)):
+                    count = 0
+                    first = None
+                count += 1
+                first = str(first) if first is not None else observed
+                self.conn.execute(
+                    """UPDATE submission_attempts
+                       SET absence_count = ?, absence_first_ts = ?,
+                           absence_last_ts = ?, updated_ts = ?
+                       WHERE attempt_id = ?""",
+                    (count, first, observed, observed, attempt_id),
+                )
+                span = (
+                    datetime.fromisoformat(observed)
+                    - datetime.fromisoformat(first)
+                ).total_seconds()
+                if count >= 3 and span >= 120.0:
+                    self._transition_attempt_in_tx(
+                        attempt_id, "CONFIRMED_ABSENT", "RECOVERY_ABSENT"
+                    )
+                    state = "CONFIRMED_ABSENT"
+            else:
+                self.conn.execute(
+                    """UPDATE submission_attempts
+                       SET absence_count = 0, absence_first_ts = NULL,
+                           absence_last_ts = NULL, updated_ts = ?
+                       WHERE attempt_id = ?""",
+                    (observed, attempt_id),
+                )
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+            raise
+        return state
+
+    def get_submission_evidence(self, attempt_id: str) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            """SELECT * FROM submission_recovery_evidence
+               WHERE attempt_id = ? ORDER BY cycle_no""",
+            (attempt_id,),
+        ).fetchall()
+        result: list[dict[str, Any]] = []
+        for raw in rows:
+            row = dict(raw)
+            row["evidence"] = json.loads(row["evidence_json"])
+            result.append(row)
+        return result
+
+    # ------------------------------------------------------------------
     # Identity reservation
     # ------------------------------------------------------------------
 
@@ -1188,6 +1790,7 @@ class Store:
         tp_initial: float | None,
         llm_directive_id: int | None,
         orders_data: list[dict[str, Any]],
+        attempt_id: str | None = None,
     ) -> int:
         """Atomically finalize: insert trade, all orders, transition RESERVED→SUBMITTED.
 
@@ -1223,6 +1826,7 @@ class Store:
                 tp_initial=tp_initial,
                 llm_directive_id=llm_directive_id,
                 orders_data=orders_data,
+                attempt_id=attempt_id,
             )
             self.conn.commit()
         except Exception:
@@ -1250,6 +1854,7 @@ class Store:
         tp_initial: float | None,
         llm_directive_id: int | None,
         orders_data: list[dict[str, Any]],
+        attempt_id: str | None = None,
     ) -> int:
         """Core finalization logic inside an already-open transaction."""
 
@@ -1274,6 +1879,25 @@ class Store:
                 f"intent_id={intent_id} request_id mismatch: "
                 f"stored={ident['request_id']} submitted={request_id}",
             )
+        if attempt_id is not None:
+            attempt = self.conn.execute(
+                """SELECT intent_id, request_id, state
+                   FROM submission_attempts WHERE attempt_id = ?""",
+                (attempt_id,),
+            ).fetchone()
+            if attempt is None:
+                raise IdentityCollisionError(
+                    "SUBMISSION_ATTEMPT_NOT_FOUND", f"attempt_id={attempt_id}"
+                )
+            if (
+                str(attempt["intent_id"]) != intent_id
+                or str(attempt["request_id"]) != request_id
+                or str(attempt["state"]) != "SUBMITTING"
+            ):
+                raise IdentityCollisionError(
+                    "SUBMISSION_FINALIZE_PRESTATE",
+                    f"attempt_id={attempt_id} state={attempt['state']}",
+                )
 
         # 2. Insert trade
         cursor = self.conn.execute(
@@ -1333,6 +1957,13 @@ class Store:
             raise IdentityCollisionError(
                 "IDENTITY_FINALIZE_FAILED",
                 f"intent_id={intent_id} update rowcount={cursor.rowcount} (expected 1)",
+            )
+        if attempt_id is not None:
+            self._transition_attempt_in_tx(
+                attempt_id, "VERIFIED_SUCCESS", "BROKER_VERIFIED_SUCCESS"
+            )
+            self._transition_attempt_in_tx(
+                attempt_id, "FINALIZED", "LOCAL_FINALIZATION_COMPLETE"
             )
 
         return trade_id
@@ -2011,6 +2642,12 @@ class Store:
             "decisions": self._rows("SELECT * FROM decisions ORDER BY id"),
             "equity": self._rows("SELECT * FROM equity ORDER BY ts"),
             "identities": self._rows("SELECT * FROM order_identity ORDER BY reserved_ts"),
+            "submission_attempts": self._rows(
+                "SELECT * FROM submission_attempts ORDER BY created_ts"
+            ),
+            "submission_recovery_evidence": self._rows(
+                "SELECT * FROM submission_recovery_evidence ORDER BY attempt_id, cycle_no"
+            ),
         }
 
     def get_trades(self, limit: int = 50) -> list[dict[str, Any]]:

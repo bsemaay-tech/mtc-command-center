@@ -14,6 +14,16 @@ import re
 from datetime import UTC, datetime
 from decimal import Decimal, ROUND_DOWN
 
+from bridge.broker.base import (
+    BrokerOutcomeUnknown,
+    BrokerPreSendFailure,
+    EvidenceStatus,
+    RecoveryQueryEvidence,
+    SubmissionDisposition,
+    SubmissionOutcome,
+    SubmissionRecoveryEvidence,
+    SubmissionRecoveryRequest,
+)
 from bridge.engine.types import (
     AccountSnapshot,
     Bar,
@@ -51,16 +61,28 @@ def round_hl_price(price: float, size_decimals: int) -> float:
     return float(value.quantize(quantum, rounding=ROUND_DOWN))
 
 
-class BrokerRefusedLive(RuntimeError):
-    pass
+class BrokerRefusedLive(BrokerPreSendFailure):
+    def __init__(self, message: str) -> None:
+        self.reason_code = "HL_LIVE_LOCK_REFUSED"
+        self.disposition = SubmissionDisposition.DEFINITIVE_REJECTION
+        self.write_may_have_started = False
+        RuntimeError.__init__(self, message)
 
 
-class HyperliquidNotConfigured(RuntimeError):
-    pass
+class HyperliquidNotConfigured(BrokerPreSendFailure):
+    def __init__(self, message: str) -> None:
+        self.reason_code = "HL_NOT_CONFIGURED"
+        self.disposition = SubmissionDisposition.DEFINITIVE_REJECTION
+        self.write_may_have_started = False
+        RuntimeError.__init__(self, message)
 
 
-class HyperliquidOrderError(RuntimeError):
-    pass
+class HyperliquidOrderError(BrokerOutcomeUnknown):
+    def __init__(self, message: str, reason_code: str = "HL_OUTCOME_UNKNOWN") -> None:
+        self.reason_code = reason_code
+        self.disposition = SubmissionDisposition.OUTCOME_UNKNOWN
+        self.write_may_have_started = True
+        RuntimeError.__init__(self, message)
 
 
 class HyperliquidBroker:
@@ -308,7 +330,19 @@ class HyperliquidBroker:
         if self._user_callbacks and not self._user_channels_subscribed:
             await asyncio.to_thread(self._subscribe_user_channels)
 
-    async def place_bracket(self, plan: OrderPlan, grouping: str = "normalTpsl") -> dict:
+    def planned_cloids(self, plan: OrderPlan) -> dict[str, str]:
+        decision_uid = plan.decision_uid or (
+            f"{plan.signal.symbol}:{plan.signal.ts.isoformat()}:{plan.signal.direction}"
+        )
+        roles = ("entry", "sl", "tp") if plan.take_profit is not None else ("entry", "sl")
+        return {
+            role.upper(): cloid
+            for role, cloid in self.compute_cloids(decision_uid, roles).items()
+        }
+
+    async def place_bracket(
+        self, plan: OrderPlan, grouping: str = "normalTpsl"
+    ) -> SubmissionOutcome:
         """Place entry + SL + optional TP as a bulk group.
 
         Default ``grouping="normalTpsl"`` sends entry and trigger orders in a
@@ -320,58 +354,92 @@ class HyperliquidBroker:
         ``reprotect_position`` continues to use ``positionTpsl`` because it
         protects an already-open position.
         """
-        if self.exchange is None or not hasattr(self.exchange, "order"):
+        if self.exchange is None or not hasattr(self.exchange, "bulk_orders"):
             raise HyperliquidNotConfigured("Exchange client not configured")
-        is_entry_buy = plan.signal.direction == "LONG"
-        is_exit_buy = not is_entry_buy
-        entry_cloid = self._cloid(plan, "entry")
-        sl_cloid = self._cloid(plan, "sl")
-        entry_px = self._round_price(
-            plan.signal.symbol,
-            plan.limit_price if plan.entry_type == "LMT" else plan.signal.ref_price,
-        )
-        stop_px = self._round_price(plan.signal.symbol, plan.stop_loss)
-        entry_type = {"limit": {"tif": "Gtc" if plan.entry_type == "LMT" else "Ioc"}}
-
-        # The installed SDK's TriggerOrderType requires ``tpsl`` regardless
-        # of grouping. With ``na`` it remains an independently submitted
-        # trigger, rather than a normal-TPSL-linked child.
-        sl_trigger = {"triggerPx": stop_px, "isMarket": True, "tpsl": "sl"}
-
-        requests = [
-            self._request(plan.signal.symbol, is_entry_buy, plan.qty, entry_px, entry_type, False, entry_cloid),
-            self._request(
+        try:
+            planned = self.planned_cloids(plan)
+            is_entry_buy = plan.signal.direction == "LONG"
+            is_exit_buy = not is_entry_buy
+            entry_cloid = Cloid.from_str(planned["ENTRY"])
+            sl_cloid = Cloid.from_str(planned["SL"])
+            entry_px = self._round_price(
                 plan.signal.symbol,
-                is_exit_buy,
-                plan.qty,
-                stop_px,
-                {"trigger": sl_trigger},
-                True,
-                sl_cloid,
-            ),
-        ]
-        roles: list[tuple[str, Cloid, float | None]] = [("ENTRY", entry_cloid, None), ("SL", sl_cloid, stop_px)]
-        if plan.take_profit is not None:
-            tp_cloid = self._cloid(plan, "tp")
-            take_profit_px = self._round_price(plan.signal.symbol, plan.take_profit)
-            tp_trigger = {"triggerPx": take_profit_px, "isMarket": True, "tpsl": "tp"}
-            requests.append(
+                plan.limit_price if plan.entry_type == "LMT" else plan.signal.ref_price,
+            )
+            stop_px = self._round_price(plan.signal.symbol, plan.stop_loss)
+            entry_type = {"limit": {"tif": "Gtc" if plan.entry_type == "LMT" else "Ioc"}}
+            # TriggerOrderType requires ``tpsl`` even with grouping="na".
+            sl_trigger = {"triggerPx": stop_px, "isMarket": True, "tpsl": "sl"}
+            requests = [
+                self._request(
+                    plan.signal.symbol,
+                    is_entry_buy,
+                    plan.qty,
+                    entry_px,
+                    entry_type,
+                    False,
+                    entry_cloid,
+                ),
                 self._request(
                     plan.signal.symbol,
                     is_exit_buy,
                     plan.qty,
-                    take_profit_px,
-                    {"trigger": tp_trigger},
+                    stop_px,
+                    {"trigger": sl_trigger},
                     True,
-                    tp_cloid,
+                    sl_cloid,
+                ),
+            ]
+            roles: list[tuple[str, Cloid, float | None]] = [
+                ("ENTRY", entry_cloid, None),
+                ("SL", sl_cloid, stop_px),
+            ]
+            if plan.take_profit is not None:
+                tp_cloid = Cloid.from_str(planned["TP"])
+                take_profit_px = self._round_price(
+                    plan.signal.symbol, plan.take_profit
                 )
-            )
-            roles.append(("TP", tp_cloid, take_profit_px))
+                tp_trigger = {
+                    "triggerPx": take_profit_px,
+                    "isMarket": True,
+                    "tpsl": "tp",
+                }
+                requests.append(
+                    self._request(
+                        plan.signal.symbol,
+                        is_exit_buy,
+                        plan.qty,
+                        take_profit_px,
+                        {"trigger": tp_trigger},
+                        True,
+                        tp_cloid,
+                    )
+                )
+                roles.append(("TP", tp_cloid, take_profit_px))
+        except Exception as exc:
+            raise BrokerPreSendFailure("HL_REQUEST_BUILD_FAILED") from exc
 
-        raw = await asyncio.to_thread(self.exchange.bulk_orders, requests, grouping=grouping)
-        return await self._verify_positioned_orders(
-            raw, roles, requests, plan.qty, plan.signal.symbol
-        )
+        try:
+            raw = await asyncio.to_thread(
+                self.exchange.bulk_orders, requests, grouping=grouping
+            )
+        except HyperliquidOrderError:
+            raise
+        except Exception as exc:
+            raise HyperliquidOrderError(
+                "Hyperliquid write outcome unknown", "HL_BULK_WRITE_EXCEPTION"
+            ) from exc
+        try:
+            return await self._verify_positioned_orders(
+                raw, roles, requests, plan.qty, plan.signal.symbol
+            )
+        except HyperliquidOrderError:
+            raise
+        except Exception as exc:
+            raise HyperliquidOrderError(
+                "Hyperliquid post-write verification failed",
+                "HL_POST_SEND_VERIFICATION_FAILED",
+            ) from exc
 
     async def _verify_positioned_orders(
         self,
@@ -380,7 +448,7 @@ class HyperliquidBroker:
         requests: list[dict],
         qty: float,
         symbol: str,
-    ) -> dict[str, dict]:
+    ) -> SubmissionOutcome:
         """Verify bulk-placed orders via open_orders; authoritative verification.
 
         Every submitted cloid (including SL/TP triggers) MUST be visible in
@@ -390,17 +458,46 @@ class HyperliquidBroker:
         redacted raw response.
         """
         statuses = self._extract_statuses(raw)
-        # Map statuses to roles by positional index; statuses may be fewer than
-        # the number of requests in positionTpsl groups.
+        if len(statuses) > len(roles):
+            raise HyperliquidOrderError(
+                "cloid result missing from open_orders or result cardinality mismatched",
+                "HL_RESULT_CARDINALITY_MISMATCH",
+            )
         role_to_status: dict[str, dict] = {}
         for idx, (role, _cloid, _tp) in enumerate(roles):
-            if idx < len(statuses):
-                role_to_status[role] = statuses[idx]
-            else:
-                # No individual status for this role — must be verified below
-                role_to_status[role] = {}
+            role_to_status[role] = statuses[idx] if idx < len(statuses) else {}
 
         errors = [str(s.get("error")) for s in statuses if "error" in s]
+        conclusive_rejections = (
+            len(statuses) == len(roles)
+            and all(
+                "error" in status
+                and not any(
+                    key in status for key in ("resting", "filled", "pending_child")
+                )
+                for status in statuses
+            )
+        )
+        if conclusive_rejections:
+            return SubmissionOutcome(
+                SubmissionDisposition.DEFINITIVE_REJECTION,
+                {},
+                "HL_ALL_ORDERS_REJECTED",
+            )
+        if errors:
+            raise HyperliquidOrderError(
+                "; ".join(self._safe_exchange_message(error) for error in errors),
+                "HL_MIXED_BULK_RESULT",
+            )
+        for status in statuses:
+            compatible = sum(
+                key in status for key in ("resting", "filled", "pending_child")
+            )
+            if compatible != 1:
+                raise HyperliquidOrderError(
+                    "Hyperliquid status was malformed",
+                    "HL_STATUS_MALFORMED",
+                )
 
         # Ground-truth query: every order we own that is live on the exchange
         open_orders = await self.open_orders()
@@ -469,10 +566,245 @@ class HyperliquidBroker:
             if row and row.get("oid") is not None:
                 self._oid_to_cloid[int(row["oid"])] = str(cloid)
 
-        if errors:
-            raise HyperliquidOrderError("; ".join(errors))
+        return SubmissionOutcome(
+            (
+                SubmissionDisposition.VERIFIED_SUCCESS
+                if len(statuses) == len(roles)
+                else SubmissionDisposition.OUTCOME_UNKNOWN
+            ),
+            result,
+            (
+                "HL_VERIFIED_SUCCESS"
+                if len(statuses) == len(roles)
+                else "HL_RESULT_CARDINALITY_MISMATCH"
+            ),
+        )
 
-        return result
+    async def submission_recovery_evidence(
+        self, request: SubmissionRecoveryRequest
+    ) -> SubmissionRecoveryEvidence:
+        """Collect conservative, request-specific evidence without write calls."""
+        planned = set(map(str, request.planned_cloids.values()))
+        direct: dict[str, RecoveryQueryEvidence] = {}
+        lookup = (
+            getattr(self.info, "query_order_by_oid", None)
+            if self.info is not None
+            else None
+        )
+        for cloid in sorted(planned):
+            if not callable(lookup):
+                direct[cloid] = RecoveryQueryEvidence(
+                    EvidenceStatus.UNAVAILABLE, (), "HL_DIRECT_LOOKUP_UNAVAILABLE"
+                )
+                continue
+            try:
+                raw = await asyncio.to_thread(
+                    lookup, self.account_address, Cloid.from_str(cloid)
+                )
+            except Exception:
+                direct[cloid] = RecoveryQueryEvidence(
+                    EvidenceStatus.QUERY_FAILED, (), "HL_DIRECT_LOOKUP_FAILED"
+                )
+                continue
+            found = self._collect_cloids(raw) & planned
+            if cloid in found:
+                direct[cloid] = RecoveryQueryEvidence(
+                    EvidenceStatus.FOUND, (cloid,), "HL_DIRECT_FOUND"
+                )
+            elif self._is_authoritative_not_found(raw):
+                direct[cloid] = RecoveryQueryEvidence(
+                    EvidenceStatus.NOT_FOUND, (), "HL_DIRECT_NOT_FOUND"
+                )
+            else:
+                direct[cloid] = RecoveryQueryEvidence(
+                    EvidenceStatus.CONFLICTING, tuple(sorted(found)),
+                    "HL_DIRECT_MALFORMED",
+                )
+
+        open_evidence = await self._collection_recovery_evidence(
+            ("open_orders",),
+            planned,
+            (self.account_address,),
+            "HL_OPEN_ORDERS",
+        )
+        history_evidence = await self._collection_recovery_evidence(
+            ("historical_orders",),
+            planned,
+            (self.account_address,),
+            "HL_HISTORY",
+        )
+
+        start_ms = int(datetime.fromisoformat(request.window_start).timestamp() * 1000)
+        end_ms = int(datetime.now(UTC).timestamp() * 1000)
+        fills_method = (
+            getattr(self.info, "user_fills_by_time", None)
+            if self.info is not None
+            else None
+        )
+        if callable(fills_method):
+            fills_evidence = await self._collection_recovery_evidence(
+                ("user_fills_by_time",),
+                planned,
+                (self.account_address, start_ms, end_ms),
+                "HL_FILLS",
+            )
+        else:
+            unbounded_fills = (
+                getattr(self.info, "user_fills", None)
+                if self.info is not None
+                else None
+            )
+            if not callable(unbounded_fills):
+                fills_evidence = RecoveryQueryEvidence(
+                    EvidenceStatus.UNAVAILABLE, (), "HL_FILLS_UNAVAILABLE"
+                )
+            else:
+                try:
+                    raw_fills = await asyncio.to_thread(
+                        unbounded_fills, self.account_address
+                    )
+                    found_fills = self._collect_cloids(raw_fills) & planned
+                    fills_evidence = RecoveryQueryEvidence(
+                        EvidenceStatus.FOUND
+                        if found_fills
+                        else EvidenceStatus.TRUNCATED,
+                        tuple(sorted(found_fills)),
+                        "HL_FILLS_FOUND"
+                        if found_fills
+                        else "HL_FILLS_WINDOW_UNPROVEN",
+                    )
+                except Exception:
+                    fills_evidence = RecoveryQueryEvidence(
+                        EvidenceStatus.QUERY_FAILED, (), "HL_FILLS_FAILED"
+                    )
+
+        position_evidence = await self._position_recovery_evidence(request.symbol)
+        return SubmissionRecoveryEvidence(
+            request_id=request.request_id,
+            planned_cloids=dict(request.planned_cloids),
+            direct_lookup=direct,
+            open_orders=open_evidence,
+            historical_orders=history_evidence,
+            fills=fills_evidence,
+            position=position_evidence,
+        )
+
+    async def _collection_recovery_evidence(
+        self,
+        method_names: tuple[str, ...],
+        planned: set[str],
+        args: tuple[object, ...],
+        code_prefix: str,
+    ) -> RecoveryQueryEvidence:
+        method = None
+        if self.info is not None:
+            method = next(
+                (
+                    getattr(self.info, name)
+                    for name in method_names
+                    if callable(getattr(self.info, name, None))
+                ),
+                None,
+            )
+        if method is None:
+            return RecoveryQueryEvidence(
+                EvidenceStatus.UNAVAILABLE, (), f"{code_prefix}_UNAVAILABLE"
+            )
+        try:
+            raw = await asyncio.to_thread(method, *args)
+        except Exception:
+            return RecoveryQueryEvidence(
+                EvidenceStatus.QUERY_FAILED, (), f"{code_prefix}_FAILED"
+            )
+        if isinstance(raw, dict) and any(
+            bool(raw.get(flag)) for flag in ("truncated", "hasMore", "has_more")
+        ):
+            found = self._collect_cloids(raw) & planned
+            return RecoveryQueryEvidence(
+                EvidenceStatus.FOUND if found else EvidenceStatus.TRUNCATED,
+                tuple(sorted(found)),
+                f"{code_prefix}_FOUND"
+                if found
+                else f"{code_prefix}_TRUNCATED",
+            )
+        rows: object = raw
+        if isinstance(raw, dict):
+            rows = raw.get("data", raw.get("orders", raw.get("fills")))
+        if not isinstance(rows, list):
+            return RecoveryQueryEvidence(
+                EvidenceStatus.CONFLICTING, (), f"{code_prefix}_MALFORMED"
+            )
+        found = self._collect_cloids(rows) & planned
+        return RecoveryQueryEvidence(
+            EvidenceStatus.FOUND if found else EvidenceStatus.NOT_FOUND,
+            tuple(sorted(found)),
+            f"{code_prefix}_FOUND" if found else f"{code_prefix}_NOT_FOUND",
+        )
+
+    async def _position_recovery_evidence(
+        self, symbol: str
+    ) -> RecoveryQueryEvidence:
+        method = (
+            getattr(self.info, "user_state", None)
+            if self.info is not None
+            else None
+        )
+        if not callable(method):
+            return RecoveryQueryEvidence(
+                EvidenceStatus.UNAVAILABLE, (), "HL_POSITION_UNAVAILABLE"
+            )
+        try:
+            raw = await asyncio.to_thread(method, self.account_address)
+        except Exception:
+            return RecoveryQueryEvidence(
+                EvidenceStatus.QUERY_FAILED, (), "HL_POSITION_FAILED"
+            )
+        if not isinstance(raw, dict) or not isinstance(
+            raw.get("assetPositions", []), list
+        ):
+            return RecoveryQueryEvidence(
+                EvidenceStatus.CONFLICTING, (), "HL_POSITION_MALFORMED"
+            )
+        for row in raw.get("assetPositions", []):
+            position = self._parse_position(row)
+            if position is not None and position.symbol == symbol and position.size != 0:
+                return RecoveryQueryEvidence(
+                    EvidenceStatus.FOUND, (), "HL_POSITION_EXPOSURE"
+                )
+        return RecoveryQueryEvidence(
+            EvidenceStatus.NOT_FOUND, (), "HL_POSITION_FLAT"
+        )
+
+    @classmethod
+    def _collect_cloids(cls, value: object) -> set[str]:
+        found: set[str] = set()
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if str(key).lower() in {
+                    "cloid",
+                    "clientorderid",
+                    "client_order_id",
+                } and child is not None:
+                    found.add(str(child))
+                else:
+                    found.update(cls._collect_cloids(child))
+        elif isinstance(value, (list, tuple)):
+            for child in value:
+                found.update(cls._collect_cloids(child))
+        return found
+
+    @staticmethod
+    def _is_authoritative_not_found(raw: object) -> bool:
+        if not isinstance(raw, dict):
+            return False
+        status = str(raw.get("status", raw.get("error", ""))).lower()
+        return status in {
+            "unknownoid",
+            "unknown_oid",
+            "notfound",
+            "not_found",
+            "order not found",
+        }
 
     async def modify_stop(self, cloid: str, new_stop: float) -> None:
         if self.exchange is None or not hasattr(self.exchange, "modify_order"):
@@ -642,7 +974,8 @@ class HyperliquidBroker:
 
     @staticmethod
     def _order_result(role: str, cloid: Cloid, raw: object, qty: float, trigger_px: float | None = None) -> dict:
-        result = {"cloid": str(cloid), "oid": None, "role": role, "status": "OPEN", "qty": qty}
+        status = "FILLED" if isinstance(raw, dict) and "filled" in raw else "OPEN"
+        result = {"cloid": str(cloid), "oid": None, "role": role, "status": status, "qty": qty}
         oid = HyperliquidBroker._extract_oid(raw)
         if oid is not None:
             result["oid"] = oid

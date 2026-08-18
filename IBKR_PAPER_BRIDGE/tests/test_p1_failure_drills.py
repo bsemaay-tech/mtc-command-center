@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime, timedelta
 
+from bridge.broker.base import SubmissionDisposition, SubmissionOutcome
 from bridge.broker.mock import MockBroker
 from bridge.engine.bars import BarFeed
 from bridge.engine.engine import BridgeEngine
@@ -218,7 +219,11 @@ class AlwaysSignalStrategy:
 
 class RejectingBroker(MockBroker):
     async def place_bracket(self, plan):
-        raise RuntimeError("scripted reject")
+        return SubmissionOutcome(
+            SubmissionDisposition.DEFINITIVE_REJECTION,
+            {},
+            "SCRIPTED_DEFINITIVE_REJECTION",
+        )
 
 
 class KillingGate:

@@ -16,6 +16,13 @@ from pathlib import Path
 
 import pytest
 
+from bridge.broker.base import (
+    BrokerPreSendFailure,
+    SubmissionDisposition,
+    SubmissionOutcome,
+    SubmissionRejectedError,
+    UnknownSubmissionError,
+)
 from bridge.engine.orders import OrderManager
 from bridge.engine.types import AccountSnapshot, Bar, OrderPlan, Position, Signal
 from bridge.store.db import (
@@ -101,22 +108,37 @@ class _SimpleMockBroker:
     def subscribe_user_events(self, handler):
         return None
 
+    def planned_cloids(self, plan):
+        seed = plan.decision_uid or "no-decision"
+        roles = ["ENTRY", "SL"]
+        if plan.take_profit is not None:
+            roles.append("TP")
+        return {role: f"{seed}:{role}" for role in roles}
+
     async def place_bracket(self, plan):
         if self.raise_on_place:
-            raise RuntimeError("broker unavailable")
+            raise BrokerPreSendFailure("TEST_PRE_SEND_FAILURE")
         self.place_count += 1
         self._counter += 1
 
         if self.return_empty:
-            return {}
+            return SubmissionOutcome(
+                SubmissionDisposition.VERIFIED_SUCCESS, {}, "TEST_EMPTY_RESULT"
+            )
 
         seed = plan.decision_uid or f"no-decision-{self._counter}"
 
         if self.return_invalid:
-            return {"entry": ["not", "a", "dict"]}
+            return SubmissionOutcome(
+                SubmissionDisposition.VERIFIED_SUCCESS,
+                {"ENTRY": ["not", "a", "dict"]},
+                "TEST_INVALID_RESULT",
+            )
 
-        return {
-            "entry": {
+        return SubmissionOutcome(
+            SubmissionDisposition.VERIFIED_SUCCESS,
+            {
+            "ENTRY": {
                 "cloid": f"{seed}:ENTRY",
                 "oid": self._counter * 3,
                 "role": "ENTRY",
@@ -124,7 +146,7 @@ class _SimpleMockBroker:
                 "qty": plan.qty,
                 "symbol": plan.signal.symbol,
             },
-            "sl": {
+            "SL": {
                 "cloid": f"{seed}:SL",
                 "oid": self._counter * 3 + 1,
                 "role": "SL",
@@ -132,7 +154,7 @@ class _SimpleMockBroker:
                 "qty": plan.qty,
                 "symbol": plan.signal.symbol,
             },
-            "tp": {
+            "TP": {
                 "cloid": f"{seed}:TP",
                 "oid": self._counter * 3 + 2,
                 "role": "TP",
@@ -140,7 +162,9 @@ class _SimpleMockBroker:
                 "qty": plan.qty,
                 "symbol": plan.signal.symbol,
             },
-        }
+            },
+            "TEST_VERIFIED_SUCCESS",
+        )
 
     async def modify_stop(self, cloid, new_stop):
         return None
@@ -353,7 +377,7 @@ def test_broker_exception_leaves_reserved_restart_blocks(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(RuntimeError, match="broker unavailable"):
+    with pytest.raises(SubmissionRejectedError, match="PRE_SEND_FAILURE"):
         asyncio.run(mgr.submit_plan("d-1", plan))
 
     # Reservation is still RESERVED
@@ -364,6 +388,8 @@ def test_broker_exception_leaves_reserved_restart_blocks(tmp_path):
     ident = store.get_identity_by_intent(intent_id)
     assert ident is not None
     assert ident["state"] == "RESERVED"
+    attempt = store.get_snapshot()["submission_attempts"][0]
+    assert attempt["state"] == "PRE_SEND_FAILURE"
 
     # Restart (reopen store) — same plan blocked
     store.close()
@@ -915,7 +941,7 @@ def test_v2_migration_backfills_legacy_submitted(tmp_path):
     store2.initialize()
 
     # Schema version bumped
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     # Identity row created
     intent_id, _, _ = compute_intent_identity(
@@ -997,7 +1023,7 @@ def test_v2_migration_legacy_reserved_for_pre_broker_row(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
@@ -1257,7 +1283,7 @@ def test_duplicate_decision_uid_other_run_does_not_contaminate(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     intent_id, _, _ = compute_intent_identity(
         "keltner_trail_ema8", "BTC", "LONG",
@@ -1530,15 +1556,15 @@ def test_cross_run_trade_mapping_fails_migration(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# 14. Fresh v3 and reopen idempotent
+# 14. Fresh v4 and reopen idempotent
 # ---------------------------------------------------------------------------
 
 def test_fresh_v3_initialization(tmp_path):
-    """Fresh database initializes directly at v3."""
+    """Fresh database initializes directly at v4."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
-    assert store.get_meta("schema_version") == "3"
+    assert store.get_meta("schema_version") == "4"
     store.close()
 
 
@@ -1551,7 +1577,7 @@ def test_v3_reopen_idempotent(tmp_path):
 
     store2 = Store(db_path)
     store2.initialize()  # should not raise
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
     store2.close()
 
 
@@ -2095,7 +2121,7 @@ def test_repair2_4_state_timestamp_consistency_submitted_with_null_submitted_ts_
 # ---------------------------------------------------------------------------
 
 def test_repair2_5_broker_exception_event_contains_no_raw_exc_text(tmp_path):
-    """PLACE_BRACKET_FAILED event detail must contain no raw str(exc)."""
+    """Pre-send failure persists a structured state and no raw exception text."""
     db_path = tmp_path / "bridge.db"
     store = Store(db_path)
     store.initialize()
@@ -2105,18 +2131,14 @@ def test_repair2_5_broker_exception_event_contains_no_raw_exc_text(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(RuntimeError, match="broker unavailable"):
+    with pytest.raises(SubmissionRejectedError, match="PRE_SEND_FAILURE"):
         asyncio.run(mgr.submit_plan("d-1", plan))
 
-    # Check event detail contains no raw exception text
-    events = store.get_events(severity="ERROR")
-    place_events = [e for e in events if e["code"] == "PLACE_BRACKET_FAILED"]
-    assert len(place_events) >= 1
-    for e in place_events:
-        detail = e["detail"]
-        assert "broker unavailable" not in detail
-        assert "decision_uid=d-1" in detail
-        assert "error_type=RuntimeError" in detail
+    attempt = store.get_snapshot()["submission_attempts"][0]
+    assert attempt["state"] == "PRE_SEND_FAILURE"
+    assert attempt["reason_code"] == "TEST_PRE_SEND_FAILURE"
+    persisted = json.dumps(store.get_snapshot(), sort_keys=True)
+    assert "broker unavailable" not in persisted
     store.close()
 
 
@@ -2297,7 +2319,7 @@ def test_repair2_8_empty_broker_result_leaves_reserved(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(IdentityCollisionError, match="empty or non-mapping"):
+    with pytest.raises(UnknownSubmissionError, match="BROKER_RESULT_COVERAGE_INVALID"):
         asyncio.run(mgr.submit_plan("d-1", plan))
 
     assert broker.place_count == 1  # broker was called
@@ -2309,6 +2331,7 @@ def test_repair2_8_empty_broker_result_leaves_reserved(tmp_path):
     ident = store.get_identity_by_intent(intent_id)
     assert ident is not None
     assert ident["state"] == "RESERVED"
+    assert store.get_snapshot()["submission_attempts"][0]["state"] == "UNKNOWN_SUBMISSION"
 
     # No trade or orders created
     snapshot = store.get_snapshot()
@@ -2328,7 +2351,7 @@ def test_repair2_8_invalid_broker_order_rejected(tmp_path):
     mgr = OrderManager(store, broker, "run-1")
     plan = _plan()
 
-    with pytest.raises(IdentityCollisionError, match="non-dict order"):
+    with pytest.raises(UnknownSubmissionError, match="BROKER_RESULT_COVERAGE_INVALID"):
         asyncio.run(mgr.submit_plan("d-1", plan))
 
     assert broker.place_count == 1
@@ -2340,6 +2363,7 @@ def test_repair2_8_invalid_broker_order_rejected(tmp_path):
     ident = store.get_identity_by_intent(intent_id)
     assert ident is not None
     assert ident["state"] == "RESERVED"
+    assert store.get_snapshot()["submission_attempts"][0]["state"] == "UNKNOWN_SUBMISSION"
     store.close()
 
 
@@ -2799,7 +2823,7 @@ def test_repair3_4_equivalent_timestamp_spellings_accepted(tmp_path):
     # Migration should succeed — equivalent spellings are the same instant
     store2 = Store(db_path)
     store2.initialize()
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
     store2.close()
 
 
@@ -3170,7 +3194,7 @@ def test_repair4_4_zero_fingerprints_empty_legacy_upgrades(tmp_path):
     store2 = Store(db_path)
     store2.initialize()
 
-    assert store2.get_meta("schema_version") == "3"
+    assert store2.get_meta("schema_version") == "4"
 
     # order_identity table exists (but empty)
     tbl = store2.conn.execute(
