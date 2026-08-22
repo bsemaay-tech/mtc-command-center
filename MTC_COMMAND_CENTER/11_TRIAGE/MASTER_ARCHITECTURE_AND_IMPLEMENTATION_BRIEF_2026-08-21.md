@@ -7,7 +7,8 @@
 > ## STATUS — read before using this document
 > | Field | Value |
 > |---|---|
-> | **Document state** | **v2.1 REPAIRED** — the 2026-08-21 Gate-5 findings are repaired (Appendix E), a second owner-authorized T2 documentation round applied the repairs listed in §0.3, a third owner-authorized T2 documentation round applied the repairs listed in §0.4, and a **fourth owner-authorized T2 documentation round** applied the repairs listed in **§0.5** (owner acknowledgement of D-01…D-12, the D-02 and D-07 clarifications, and removal of a reserved future safeguard identifier). **The version remains v2.1; no repair round is an acceptance** |
+> | **Document state** | **v2.1 REPAIRED** — the 2026-08-21 Gate-5 findings are repaired (Appendix E), a second owner-authorized T2 documentation round applied the repairs listed in §0.3, a third owner-authorized T2 documentation round applied the repairs listed in §0.4, a **fourth owner-authorized T2 documentation round** applied the repairs listed in **§0.5** (owner acknowledgement of D-01…D-12, the D-02 and D-07 clarifications, and removal of a reserved future safeguard identifier), and a **fifth owner-authorized documentation round** repaired the **seventeen blockers R1 … R17 raised by the G1 architecture acceptance audit round 1 (T0)**, listed in **§0.6**. **The version remains v2.1; no repair round is an acceptance** |
+> | **Current counts (§0.6 governs)** | **60 tracked requirements = 44 owner outcomes (O-01…O-44, unchanged) + 16 derived safeguards (D-01…D-16)**, of which **D-13…D-16 are new in §0.6 and are NOT owner-acknowledged**. **69 work-package definitions.** Counts quoted inside §0.3, §0.4 and §0.5 are historical to those rounds and are not the current totals |
 > | **AUDIT ACCEPTANCE** | **PENDING.** No audit has accepted this document in its current repaired state. Acceptance is governed by the **current root `AGENTS.md`**: the **tier-required independent audit(s)** at the **highest applicable tier at the actual gate**, with the auditor identity, effort and count that policy names **at the time of that gate**. This document does **not** decide a permanent tier, an auditor count or a model identity. The 2026-08-21 Codex Slot-B `REQUEST_CHANGES` on **v2.0** is **historical provenance only** — it is neither an acceptance nor a standing acceptance contract. Appendix E §E.7 remains **Not accepted** and is the canonical acceptance record |
 > | **IMPLEMENTATION AUTHORIZED** | **NO.** Nothing in this document authorizes code, migration, deployment, schema activation, host contact, credential use, broker action, TESTNET/MAINNET action, ARM, or an order |
 > | **DECISIONS APPROVED** | **YES, for the owner decisions in §21.1 only.** Those are binding. Everything else is analysis and proposal |
@@ -79,8 +80,8 @@ Six of these are corrections of **errors in v1**, not refinements.
 | C-3 | `TrialRecord` contract defined before any optimizer choice. v1 recommended Optuna without noting that adaptive search changes the DSR/BH-FDR trial family. | Codex §6 | **Error corrected** |
 | C-4 | F-14 wording corrected from "inert on the running database" to "not activated by the default initialization path; deployed state unverified". | ChatGPT 1 §9 | **Error corrected** |
 | C-5 | Acceptance criterion A-13 reworded; deterministic on-demand replay added. v1's A-13 contradicted v1's own artifact model. | Codex §8 | **Error corrected** |
-| C-6 | All promotion evidence binds to `package_hash`, never `candidate_id`. v1 attached forward evidence to `candidate_id`. | Codex §2 | **Error corrected** |
-| C-7 | Position sizing split into `SizingIntent` (kernel) and `AuthorizedQuantity` (Risk Allocator). v1 gave the kernel the final quantity. | Codex §1, ChatGPT 2 §3, Q1, Q16 | Architectural improvement |
+| C-6 | Promotion evidence binds to a **frozen hash**, never to `candidate_id`. v1 attached forward evidence to `candidate_id`. **Superseded and extended by §0.6 R2 (§6.7):** `package_hash` freezes strategy semantics and is **one component of lineage**; it does **not** by itself start or own a forward evidence clock. Economic, forward, promotion and live evidence binds to the composite **`deployment_identity_hash`**. C-6 is retained as the historical correction of v1's `candidate_id` binding, not as the current rule. | Codex §2 | **Error corrected, later extended** |
+| C-7 | Position sizing split into `SizingIntent` (kernel) and `AuthorizedQuantity` (Risk Allocator). v1 gave the kernel the final quantity. **Superseded by §0.6 R3 (§5.4, §5.5): the single `SizingIntent` is replaced by `SizingRequest` (K) → `BoundSizingIntent` (OR) → `proposed_qty` (RA) → `AuthorizedQuantity` (Guardian).** | Codex §1, ChatGPT 2 §3, Q1, Q16 | Architectural improvement, later superseded |
 | C-8 | Source profiles replaced: `SOURCE_LITERAL` / `SIGNAL_EDGE` evaluation / `SOURCE_COMPLETED_BASELINE` / `MTC_ENRICHED`. v1's "naked" was wrong once a substitute stop was added. No auto-reject on an incomplete source. | Codex §3, ChatGPT 1 §1, ChatGPT 2 §4 | Correction |
 | C-9 | Four forward **environments** and four **eligibility states** replace v1's two-lane model. `TESTNET_PAPER_ELIGIBLE` added before full statistics. | Codex §13, ChatGPT 1 §4, ChatGPT 2 §6, Q17 | Improvement |
 | C-10 | Module count removed from the DSR calculation; preregistered search family used instead; complexity reported separately. | Codex §7, ChatGPT 2 §5 | Correction |
@@ -101,7 +102,8 @@ Six of these are corrections of **errors in v1**, not refinements.
 | C-25 | **v2.1 repair pass.** Eight reproduced findings from the Codex Slot-B Gate-5 audit repaired: F-7 corpus scoping + parity inventory (RF-1); F-22 rescoped to one sweep (RF-2); F-2 worked example corrected — shipped defaults floor to zero (RF-3); sizing snapshot identity made fail-closed at runtime (RF-4); F-4 narrowed + writer inventory (RF-5); F-10 payload-vs-directory (RF-6); F-15 runtime caveat (RF-7); F-17 timestamped with branch semantics (RF-8). Plus 8 citation repairs, the Appendix D count, and 3 nits. | Codex audit `CODEX_AUDIT_MASTER_BRIEF_VERDICT_2026-08-21.md` | **Errors corrected** |
 | C-26 | **v2.1 second repair round (2026-08-22), owner-authorized T2 documentation task.** Twenty-one internal-consistency repairs applied in place; no evidence deleted, no citation weakened. Enumerated in §0.3. | Owner instruction, documentation-only round | **Errors corrected / clarifications** |
 | C-27 | **v2.1 third repair round (2026-08-22), owner-authorized single T2 documentation round.** Five reproduced findings from a fresh independent T2 review repaired: acceptance policy and model identity (RF-T2-1); per-package implementation authorization and the new **G1-IA** gate (RF-T2-2); the V2A native-stop proof made local-only, with the real venue drill moved to V2B testnet (RF-T2-3); §22 tier alignment to the work plan (RF-T2-4); untracked-artefact inventory (RF-T2-5). Enumerated in §0.4. **No requirement added, no count changed, nothing accepted.** | Independent T2 review, documentation-only round | **Errors corrected / clarifications** |
-| C-28 | **v2.1 fourth repair round (2026-08-22), owner-authorized single T2 documentation round.** The owner acknowledged all twelve derived safeguards **D-01…D-12** — ten as written, **D-02 and D-07 with clarifications** (new-order sizing vs. separately authorized emergency reduction of existing exposure; 1 % as maximum allocated capital with a separate lower loss-at-stop cap still to be defined and evidenced). Stale "not yet acknowledged" wording replaced across the document set, and a **reserved future derived-safeguard identifier removed** from the register's change-control rule. Enumerated in §0.5. **No requirement added, no requirement renumbered, no count changed (still 56 = 44 + 12), nothing accepted and no implementation authorized.** | Owner decision 2026-08-22, documentation-only round | **Clarifications** |
+| C-28 | **v2.1 fourth repair round (2026-08-22), owner-authorized single T2 documentation round.** The owner acknowledged all twelve derived safeguards **D-01…D-12** — ten as written, **D-02 and D-07 with clarifications** (new-order sizing vs. separately authorized emergency reduction of existing exposure; 1 % as maximum allocated capital with a separate lower loss-at-stop cap still to be defined and evidenced). Stale "not yet acknowledged" wording replaced across the document set, and a **reserved future derived-safeguard identifier removed** from the register's change-control rule. Enumerated in §0.5. **No requirement added, no requirement renumbered, no count changed in that round (56 = 44 + 12 at the time), nothing accepted and no implementation authorized.** | Owner decision 2026-08-22, documentation-only round | **Clarifications** |
+| C-29 | **v2.1 fifth repair round (2026-08-22), owner-authorized documentation round answering the G1 architecture acceptance audit round 1 (T0).** Seventeen reproduced blockers repaired: the live gate restated at its canonical **fourteen** hard preconditions (R1); a **composite economic/deployment evidence identity** defined and bound to every evidence class (R2); the circular sizing contract replaced by four explicitly owned stages (R3); an acceptance-bearing **canonical research-simulator migration** package added (R4); **staged, objective, immutable environment admission** added ahead of loader admission (R5, R13); a **family/human-observation leakage control** placed before the first `LIVE_CANDIDATE` decision (R6); Pine de-fang **design** separated from a distinct T0 **implementation** package (R7); **DISARM / KILL / FLATTEN / future automatic emergency reduction** defined and kept separate (R8); the **G2–G9** protected-gate mapping completed (R9); a **production** chart and result-visual package added (R10); the OSS-first policy expanded to provenance, supply chain, abandonment, incident response, portability and owner-authorized retirement (R11); the false "inert `tw_*`" framing replaced with **active DRIFT** and its real consumers (R12); the **M9/M10** migration chain made executable with a separately authorized Bridge migration/deployment carrier (R14); a **cited-artefact provenance inventory** added and false reproducibility claims removed (R15, Appendix F); the **existing Bridge broker boundary** recorded with a reuse/extend/replace decision carrier (R16); and **break-glass authentication redundancy** with out-of-band venue-side recovery added (R17). **Four new derived safeguards D-13…D-16, ten new work packages, no O-row changed, nothing accepted, nothing authorized.** | G1 architecture acceptance audit round 1 (T0), documentation-only round | **Errors corrected** |
 
 ## 0.3 The second v2.1 repair round — what changed on 2026-08-22
 
@@ -111,10 +113,10 @@ Documentation-only. No finding was removed, no citation dropped, no source claim
 |---|---|---|
 | 1 | Status made explicit: repaired, **audit acceptance pending**, implementation **not** authorized | Header STATUS block; Appendix E §E.7 unchanged and still canonical |
 | 2 | "The fourteen" decision heading corrected — the section carries Q1–Q19 including Q2a/Q2b | §0.1 |
-| 3 | Lifecycle/package-freeze contradiction resolved: the baseline/enriched package freezes for early shadow; optimization mints **trial identities**; each selected optimized package receives a **new `package_hash` and its own evidence clock** | §6.3, §6.6, §6.7, §6.8 |
+| 3 | Lifecycle/package-freeze contradiction resolved: the baseline/enriched package freezes for early shadow; optimization mints **trial identities**; each selected optimized package receives a **new `package_hash`**. **Superseded and extended by §0.6 R2:** a new `package_hash` does **not** by itself start an acceptance-bearing forward clock — the clock starts when the full **`deployment_identity_hash`** is minted and admitted for that environment (§6.7) | §6.3, §6.6, §6.7, §6.8 |
 | 4 | Identity split: `package_hash` carries deployable strategy semantics only; **`evaluation_run_hash`** adds dataset, costs, simulator and evaluation configuration | §6.7, §11.2 |
 | 5 | Duplicate sizing recipes eliminated: `kernel_reference_qty` redefined as a **replayable diagnostic**, never an independent runtime calculation | §5.4, §5.5 |
-| 6 | One vocabulary everywhere: **RA proposes `AuthorizedQuantity` · Guardian authorizes or rejects · Bridge executes or rejects** | §4.2, §5.5, §9.2, §10.2 |
+| 6 | One vocabulary everywhere: **RA computes `proposed_qty` · Guardian authorizes it unchanged as `AuthorizedQuantity` or rejects · Bridge executes or rejects** | §4.2, §5.5, §9.2, §10.2 |
 | 7 | Principle 1 narrowed to "a **strategy-lifecycle** rule not in the kernel does not exist" | §5.1 |
 | 8 | Stale 17-family references replaced with **25** wherever the Golden Suite is cited | §9.3, §16 M6, §17.1, §18 R-1, §22 |
 | 9 | Phase 0 non-goal clarified: no **execution-dashboard** rework; the research-side Minimum Explorer is in scope | §17.1, §11.4 |
@@ -159,7 +161,61 @@ Documentation-only, owner-authorized, **one** T2 repair round recording an owner
 | 4 | The register's change-control rule no longer prints a **reserved future safeguard identifier**. New derived safeguards continue **sequentially after the current D-01…D-12 range**, and the next identifier is assigned **only when a safeguard is actually added** | Register §6 rule 3 |
 | 5 | The four authorization axes kept explicitly distinct — **owner acknowledgement / decision approval · implementation authorization (G1-IA) · audit acceptance (G1) · deployment and live authorization (G2…G9)** — with acknowledgement stated as supplying none of the other three | STATUS block, this §0.5, Appendix **E.7**; owner plan §9; register **D-12** and its acknowledgement note |
 
-**What did not change in this round.** Audit acceptance is still **PENDING**; implementation is still **NOT AUTHORIZED**; O-01…O-44 keep their exact wording and numbering; D-01…D-12 keep their IDs and their DERIVED source type; the phase structure, the 59 work-package definitions, their tiers and their dependencies, the deferred topology decision, the Pine decision-versus-edit split, the RA/Guardian vocabulary, every hash formula and the **25** golden families are all untouched. **No work package started and none became done. This round accepts nothing** — it is a repair by the party under audit, and a re-auditor should read §0.5 as a set of claims, exactly as §E.7 says of §0.3 and §0.4.
+**What did not change in this round.** Audit acceptance is still **PENDING**; implementation is still **NOT AUTHORIZED**; O-01…O-44 keep their exact wording and numbering; D-01…D-12 keep their IDs and their DERIVED source type; the phase structure, the 59 work-package definitions **as they stood at the close of that round**, their tiers and their dependencies, the deferred topology decision, the Pine decision-versus-edit split, the RA/Guardian vocabulary, every hash formula and the **25** golden families are all untouched. **No work package started and none became done. This round accepts nothing** — it is a repair by the party under audit, and a re-auditor should read §0.5 as a set of claims, exactly as §E.7 says of §0.3 and §0.4.
+
+## 0.6 The fifth v2.1 repair round — 2026-08-22 (G1 architecture acceptance audit round 1 (T0) blockers R1 … R17)
+
+**The audit event named correctly, once (repaired in the R1 correction pass).** Earlier wording in this round labelled the review with a **G3** gate identifier. That was wrong, and it named the wrong gate. What the owner authorized is a **G1 architecture acceptance audit round 1, classified T0** — an acceptance review of this document set under gate **G1**. **G3 and G3-K are future protected *implementation* gates** (delivery plan §9); no round of either has been held, requested or passed, and nothing in this document set may be read as one. Every current-round label now reads **"G1 architecture acceptance audit round 1 (T0)"**. The historical **2026-08-21 Gate-5** labels describe a different, earlier event and are unchanged.
+
+**Read the counts here, not in §0.3–§0.5.** Every total quoted in §0.3, §0.4 and §0.5 is **historical to the round it describes**. The current totals are:
+
+| Quantity | Before this round | **After this round** |
+|---|---|---|
+| Owner outcomes | 44 (O-01…O-44) | **44 (O-01…O-44) — unchanged in wording, numbering and order** |
+| Derived safeguards | 12 (D-01…D-12) | **16 (D-01…D-16)** — D-13…D-16 added here, **DERIVED and NOT owner-acknowledged** |
+| **Tracked requirements** | 56 | **60** |
+| Work-package definitions | 59 | **69** |
+| Golden Suite families | 25 | 25 — unchanged |
+| Owner decisions Q1–Q19 | binding | binding — unchanged |
+
+Documentation-only, owner-authorized, **one** repair round answering the **G1 architecture acceptance audit round 1 (T0)** whose seventeen blockers were reproduced by the Lead against real source before repair. **What is verifiable and what is not:** the seventeen blockers R1 … R17 stand on the reproduced source facts recorded row by row in §0.6.1 and re-checkable from the paths cited there and in Appendix A. The **audit event itself** — who reviewed, at what effort, in how many rounds — is **session provenance**: no auditor transcript or report for this round exists at the frozen base commit, and none may be created here (Appendix F). **No owner outcome was added, removed, reworded, reordered or renumbered. No implementation was performed or authorized, no code, Pine, schema, configuration, memory, prompt or audit record was touched, no host, broker or venue was contacted, and nothing was accepted.** The round wrote to five documents only: this brief, the owner plan, the starting point, the traceability register and the work-package plan.
+
+### 0.6.1 The seventeen blockers and where each is repaired
+
+| # | Blocker, as reproduced | Repair | Where |
+|---|---|---|---|
+| **R1** | The document set claimed the live-trading gate has **six** hard preconditions, and A-21 / A-24 / gate **G5** were written against that number. `_AI_MEMORY/LIVE_TRADING_GATE.md:15-66` lists **fourteen**, with the explicit standing rule *"All items are required. There is no partial credit."* | Every six-gate and partial-gate claim replaced by the canonical **fourteen**, enumerated verbatim-in-substance in **F-16**. All fourteen must pass in **one dated, evidence-bound decision** against the **exact economic/deployment identity** (R2). **D-07's two-cap condition is an additional named requirement, not a substitute for any canonical precondition** | **§2 F-16**, §19 **A-21**, **A-24**, §17.4; plan gate **G5**, **WP-V4-01**, **WP-V4-02**; register **D-07**; owner plan §9; starting point §6 |
+| **R2** | `package_hash` binds only strategy semantics, yet forward and live evidence clocks were bound to it. Allocator, Guardian policy, risk-bucket / economic / runtime policy, broker-adapter, protection-semantics and cost lineage could all change without minting a new evidence identity | **`deployment_identity_hash`** defined as the composite economic/deployment evidence identity. **TrialRecord, replay, eligibility, promotion, environment admission and rollback evidence all bind to it**, and a material change to any bound component **resets the applicable shadow / testnet / limited-live evidence period** | **§6.7**, §6.3, §6.6, §11.2, §11.5, §19 **A-21**; register **O-24, O-32, D-11**; plan **WP-P0-04**, **WP-V2A-01**, **WP-V2A-10**, **WP-V3-02**, **WP-V3-03**, **WP-V4-01** |
+| **R3** | The sizing contract was circular: **K** was defined as pure `Bars + config → intent` and simultaneously required to carry a bound `snapshot_id` and an `R_policy` value, while `SizingIntent` still carried an emitted quantity/notional field family | **Four stages with one owner each** — (1) K emits a **snapshot-independent `SizingRequest`**, (2) the **Decision Orchestrator** binds it to a named `AccountSnapshot` and `allocation_policy_version` producing a `BoundSizingIntent`, (3) the **Risk Allocator** is the only component that computes `proposed_qty`, (4) the **Guardian** authorizes it unchanged or rejects, and only then does a **final quantity** exist. `RISK_AT_STOP`, `FIXED_QTY`, `FIXED_NOTIONAL`, `VOLATILITY_TARGET` and `SOURCE_DEFINED` semantics stated **without making K an account authority**. Snapshot **producer**, **freshness/staleness owner** and **fail-closed** behaviour named. **D-02 preserved verbatim in effect.** **Completed in the R1 correction pass:** the repair had left three self-contradictions — the message was described as carrying "no quantity and no notional" while defining `qty_request` / `notional_request` that `FIXED_QTY` and `FIXED_NOTIONAL` require; A-10c's schema test would have rejected them; and K was still made to emit `R_policy`, a value the text simultaneously said the allocation policy owns. **Now stated exactly: K emits a snapshot-independent, untrusted request constant from the frozen strategy/package configuration (`requested_fixed_qty` / `requested_fixed_notional` / `requested_risk_fraction`), never an account-derived, proposed, authorized or executable quantity; the `RISK_AT_STOP` number comes from the frozen package, not from allocation policy; RA applies the bound policy caps as propose-in-full-or-reject; OR binds identity and computes nothing; and `SOURCE_DEFINED` must compile to a snapshot-independent request form at freeze or be `NOT_EXPRESSIBLE` and take a named substitute** | **§5.4**, **§5.5**, §4.1, §4.2, §9.2, §19 **A-9 / A-10 / A-10b / A-10c**; plan **WP-P0-04**, **WP-V2A-03**, **WP-V2A-04**, **WP-V2A-05**; register **D-02** |
+| **R4** | Nothing migrated `mega_walk_forward.simulate_slice` — the canonical promotion-deciding simulator (F-3) — to the kernel and shared allocator, yet `TrialRecord`, the Explorer, replay and promotion were all treated as acceptance-bearing on top of it | New acceptance-bearing **T0** package **WP-P0-20 — Canonical research-simulator migration**. Enabled controls must be **simulated or declared in `UNSIMULATED_CONTROLS`**, and **promotion is blocked when a required control lacks evidence**. Dependencies repaired so replay and promotion depend on it. New safeguard **D-13**. **Completed in the R1 correction pass:** the first repair left an `ALLOCATOR_NOT_YET_SHARED` stand-in that could pass WP-P0-20's gate and let TrialRecord and the Explorer proceed before the shared allocator existed. **WP-P0-20 now delivers the one versioned shared allocator implementation and the canonical path imports it with the kernel; a stand-in is a non-accepting development state producing `SIGNAL_SCREEN_ONLY` and can never satisfy A-7b or D-13; WP-V2A-03 becomes runtime wiring plus import-identity proof, not first delivery; WP-P0-20 becomes a real dependency of WP-P0-13, with WP-P0-14 transitively dependent and required to refuse acceptance-bearing rows from the unmigrated path; and the eight dependent tools are classified as direct callers, independent simulators, a patcher and a reporting consumer instead of being described as one inheriting battery** | **§9.1**, **§9.1a**, §9.2, §9.4, §2 F-3, §19 **A-7b**; plan **WP-P0-20**, **WP-P0-13**, **WP-P0-14**, **WP-V2A-03**, **WP-V3-02**, **WP-V3-03**; register **D-13**, **F-3** |
+| **R5** | Loader admission required registry entries derived from Promotion Authority decision artifacts (§11.5), but the Promotion Authority arrives in **V3** while shadow (V2A) and testnet (V2B) must load packages first — an unbreakable ordering circularity | **Staged, immutable, identity-bound admission decisions**: `SHADOW_ELIGIBLE` and `TESTNET_ELIGIBLE` are produced by a new **Environment Admission Authority** (**WP-V2A-10**, T0) **before** loader admission; **mainnet and `LIMITED_LIVE` admission remain reserved to the Promotion Authority**. The loader's admission check is **empty and fail-closed by default** — no admission record, no load | **§6.5**, **§11.5**, §19 **A-12b**; plan **WP-V2A-01**, **WP-V2A-10**, **WP-V2A-08**, **WP-V2B-07**, **WP-V3-03**; register **D-14** |
+| **R6** | Family-level and human-observation leakage was recorded as an **unrepaired** residual gap (Appendix E O-12) whose only carrier, WP-V3-10, is a T2 design study sitting **after** promotion | New Phase-0 carrier **WP-P0-22 — Family-lineage and human-observation leakage control**, with **objective evidence** (family lineage graph, observation ledger, untouched-window computation). **Candidate eligibility (WP-V2A-10), Promotion Authority (WP-V3-03) and live admission (WP-V4-01) all depend on it.** New safeguard **D-15** | **§6.6**, §10.3, §19 **A-18**; Appendix **E.5**, **E.6 O-12**; plan **WP-P0-22**; register **D-15** |
+| **R7** | WP-P0-19 is design-only, yet §22 item 6, WP-V4-07 and gate G2 referred to it as though the change had been executed | **WP-P0-23 — Pine de-fang implementation** added as a distinct **T0** package depending on WP-P0-19, requiring **its own exact-change owner authorization**, an **empty-allowlist fail-closed CI guard**, a **rollback path** and **D026 RED/GREEN** evidence. Every reference that implied WP-P0-19 executed the change is corrected. **No Pine is edited by this round.** **Completed in the R1 correction pass:** the first repair removed the alerts only from a **new visualization copy** while leaving the alert-capable original **active**, and then demanded an empty-allowlist whole-repo guard — an unsatisfiable combination. **The authorized end state is now: the frozen tag preserves the original; the one maintained active Pine source is transformed in place into visualization-only Pine with the two `alert()` emissions and the 13 `wt_*` inputs removed; the 13 consumerless Python `wt_*` keys remain the separately named approved scope; zero `.pine` files in the active tree contain `alert(` under an empty allowlist; the D026 guard is RED on a deliberate reintroduction anywhere in the active tree and GREEN after removal; and rollback restores the controller from the immutable tag** | **§8.3**, §22 item 6; plan **WP-P0-19**, **WP-P0-23**, **WP-V4-07**, gate **G2**; register **O-08** |
+| **R8** | `DISARM`, `KILL`, `FLATTEN` and a possible future automatic emergency reduction were used interchangeably, and the dashboard package carried them as one undifferentiated command surface | **Four operations defined and kept separate**, each with owner, phase availability, authorization, simulation/reconciliation/evidence requirement and dashboard/API naming: **DISARM** · **KILL (cancel-and-latch, no automatic flatten)** · **authenticated operator FLATTEN** · **future automatic Guardian emergency reduction/closure (not built, not authorized)**. New package **WP-V2B-10**. **Completed in the R1 correction pass:** the stale Guardian tier label *"KILL all - flatten"* is replaced with **cancel-and-latch only**; the false claim that the **running** Bridge already separates KILL and FLATTEN is replaced with the accurate current state — **one `/api/kill` path with an optional `flatten` parameter, no separate FLATTEN operation, the separation created by the V2 plan**; **KILL is scoped to risk-increasing entry/add orders and preserves valid reduce-only protective orders**, with a reconcile gate proving **both** zero risk-increasing working orders **and** protective orders still live, so §10.2 rule 3 and the command contract agree; **FLATTEN owns the controlled cancel-and-replace of protection**; and the package ordering **WP-V2B-01 → WP-V2B-10 → WP-V2B-06 → WP-V2B-05 → WP-V2B-07 → WP-V4-01** removes the dashboard/command/auth/drill acceptance cycle | **§10.2**, **§10.2a**, **§12.5**, **§12.5a**, §19 **A-15b**; plan **WP-V2B-10**, **WP-V2B-06**, **WP-V2B-05**, **WP-V2B-07**, **WP-V4-01**; register **D-09**, **D-02**, **D-16** |
+| **R9** | G2–G9 named only a handful of carriers, leaving protected runtime, sizing, worker, Guardian, supervisor, command, auth and Pine packages outside the mapping | **G2–G9 mapping completed**, and the rollback/rehearsal and evidence requirement stated per gate. **Completed in the R1 correction pass:** **WP-P0-25 is reclassified T0 and mapped to G3** — protected, cross-cutting architecture takes the highest tier even though the package edits no runtime code, and the mapping is decision-only now with any later implementation separately gated; and the coverage rule is restated **non-numerically as G2 through G9 plus G3-K, applied cumulatively**, with the false *"the three T0 packages that map to G3-K"* / *"the three that map to G4 and G6"* counts removed and the table re-checked. **No protected package is outside the mapping** | plan **§9**, **WP-P0-25**; register **D-12**, **O-14**, **O-17** |
+| **R10** | O-02 and O-29 were carried only by a POC (WP-P0-18), a basic viewer (WP-P0-14) and the analytics-oriented WP-V3-01 — no package delivered the promised production chart and result visuals on real artifacts | New package **WP-V3-11 — Production chart and result-visual surface**: named position, SL, TP, Multi-TP and trailing-stop visual state, every promised result visual and statistic on **real artifacts**, one-click navigation to promising variants, and timeframe/strategy filtering. The separate chart-library POC/cleanup rule is preserved unchanged | **§11.4**, §12.2; plan **WP-V3-11**, **WP-P0-18**; register **O-02**, **O-29** |
+| **R11** | O-16's "permanent OSS-first policy" had **no carrier at all** and no exit story | §13.1 expanded to **provenance and licence, dependency/supply-chain and vulnerability review, maintainer-activity and abandonment criteria, update and incident response, portability/export, replacement/rollback, evidence preservation, and separately owner-authorized retirement or removal**. Carrier **WP-P0-24** assigned with acceptance evidence | **§13.1**, §13.2; plan **WP-P0-24**; register **O-16**, **O-17** |
+| **R12** | §7.2, §8.3 step 5 and Appendix A called the seven `tw_*` keys **inert / dead switches**. The verified truth is mixed: `mtc_v2/core/config.py:58-64` declares and validates all seven; **six** have located behavioural consumers in `position_sizer.py`, `exits.py` and `runner.py`, changing quantity rounding, re-entry timing, margin-call semantics and the break-even / trailing trigger bar; **`tw_margin_call_split_entries` is read and stamped but no behavioural branch has been located** | Recorded key by key: the six verified behavioural keys are active `[DRIFT]` and included in **legacy, golden-suite and parity scope**; `tw_margin_call_split_entries` remains protected as `[DRIFT/UNKNOWN]` and is routed to investigation, not declared economically active or deleted. **No code changed** | **§2 F-8a (new)**, **§3 D-12 (drift row)**, **§7.2**, **§8.3 step 5**, §9.3, §16 M1/M5/M7a, Appendix A; plan **WP-P0-09**, **WP-P0-10**, **WP-P0-11**, **WP-P0-23** |
+| **R13** | The four eligibility states used subjective phrases — *"acceptable repaint behaviour"*, *"no catastrophic basic historical failure"* — with no carrier and no fixtures | Replaced with **falsifiable checks** for lookahead, repaint, data quality and basic failure, each with **D026 fixtures**, carried by new Phase-0 package **WP-P0-21**. **Shadow and testnet loader admission depend on accepted eligibility evidence** (via WP-V2A-10). Covered by **D-14** | **§6.5**, §19 **A-12b**; plan **WP-P0-21**, **WP-V2A-10**; register **D-14** |
+| **R14** | M9 / WP-V2A-09 is a **record-only** package, and M10 / WP-V2B-09 performed a "workflow cutover" to a structure Q2b has not defined — a record cannot perform a cutover | **M9 stays a record.** New package **WP-V2B-11 — Bridge migration and deployment execution** (T0, **separately owner-authorized**, gates G3 + G9) with concrete target, inputs, rollback and acceptance. **M10 rescoped** to cutover **within the current repository only**; anything requiring a topology answer stays with WP-V5-04 under G7. **V1 remains untouched** | **§16 M9/M10**, §17.2b; plan **WP-V2A-09**, **WP-V2B-09**, **WP-V2B-11**, **WP-V5-04**, gates **G3**, **G7**, **G9**; register **D-11**, **O-39** |
+| **R15** | Load-bearing citations — including the Gate-5 verdict this brief's Appendix E is built on — were presented as reproducible without stating whether they exist in the repository | **Appendix F** added: every load-bearing cited audit, report, addendum and corpus inventoried as **TRACKED**, **UNTRACKED** or **ABSENT** at the named base commit. **Absent and untracked artefacts are reclassified as unavailable / non-load-bearing or as an explicit prerequisite**, and false reproducibility claims are removed. **No missing artefact is created — only five files may change** | **Appendix F**, Appendix **E.7**, §1.2, §2 F-19, §12.5, §13.2 |
+| **R16** | The brief invented a `BrokerAdapter` protocol while `IBKR_PAPER_BRIDGE/bridge/broker/base.py` already defines `Broker` (`:154`), `PartialRecoveryBroker` (`:230`) and `FullReconciliationBroker` (`:293`, **including `funding_evidence` at `:320-323`**), with `HyperliquidBroker` (`hyperliquid.py:105`) and `MockBroker` (`mock.py:68`) implementing them | The **existing boundary is recorded as a fact** and a **reuse / extend / deliberately replace-or-rename decision** is required **before** any new adapter protocol is named. Carrier **WP-P0-25** (decision only, no implementation). **Completed in the R1 correction pass: the `FullReconciliationBroker` method inventory was missing `funding_evidence`, and WP-P0-25 is reclassified T0 and mapped to G3** — protected/cross-cutting architecture takes the highest tier even when it edits no runtime code. **The existing structural `Protocol` seam remains the starting point, and no `BrokerAdapter` is invented** | **§2 F-9a (new)**, §4.1, §4.2, §13.3, §17.5; plan **WP-P0-25**, **WP-V5-01**; register **O-14**, **O-17** |
+| **R17** | The authenticated kill/flatten path had **no redundancy requirement**. *(Statement corrected in the R1 correction pass: the prior plan did **not** implement or specify a solitary authenticator. §12.5 required WebAuthn/FIDO2 step-up and said nothing about credential count; it did **not** require redundant authenticators or an out-of-band recovery drill, and the current Bridge has **no WebAuthn path at all**. The defect is the missing requirement, not a specified single key — and it is enforceable: an implementation satisfying §12.5 with one credential would be compliant and would be a single point of failure on the one control that stops the system.)* | **At least two independently registered authenticators** required, **plus documented and drilled out-of-band venue-side access and flatten recovery**. Native exchange stops remain **mitigation, not a substitute**. Carried by protected packages **WP-V2B-10** (semantics and runbook), **WP-V2B-06** (two authenticators, proven locally) and **WP-V2B-07** (the authorized testnet drill evidence), and made a **live-gate dependency**. New safeguard **D-16**. **Completed in the R1 correction pass:** the drill and the completed-authentication obligations are placed on the packages that can actually satisfy them, in the order **B01 → B10 → B06 → B05 → B07 → WP-V4-01**, so no package is required to prove something that does not exist yet | **§12.5**, **§12.5a**, §10.2, §19 **A-15b**, **A-21**; plan **WP-V2B-10**, **WP-V2B-06**, **WP-V2B-05**, **WP-V2B-07**, **WP-V4-01**, gates **G4**, **G5**; register **D-16** |
+
+### 0.6.2 The four new derived safeguards, and why each was necessary
+
+**All four are `DERIVED`. The owner has not seen or acknowledged them.** They take the next sequential identifiers after D-12, per register §6 rule 3, and no identifier beyond D-16 is reserved.
+
+| ID | Safeguard | Why an existing requirement could not carry it |
+|---|---|---|
+| **D-13** | No research artifact is acceptance-bearing for promotion unless it was produced by the **canonical kernel + shared-allocator simulator**; every enabled control is either simulated by that code or named in `UNSIMULATED_CONTROLS`, and promotion is **blocked** when a required control has no evidence | O-18 asks for a connected lifecycle and O-41 asks for lineage **classification**. Neither requires the promotion-deciding simulator itself to be **migrated**, so F-3 had no tracked owner and a classified-but-unmigrated artifact could still decide promotion |
+| **D-14** | Environment admission is a **staged, immutable, identity-bound decision produced from objective falsifiable eligibility evidence before loader admission**; `SHADOW_ELIGIBLE` and `TESTNET_ELIGIBLE` are separate from, and never substitute for, Promotion Authority admission to mainnet or `LIMITED_LIVE` | D-04 covers **Promotion Authority** only, and rewriting an owner-acknowledged safeguard to cover shadow and testnet admission would change the meaning of something already acknowledged. R5's circularity and R13's subjective criteria are one gap and are carried together |
+| **D-15** | **Family-lineage and human-observation leakage** must be controlled, with objective evidence, **before the first `LIVE_CANDIDATE` decision** | §6.6's five rules close **package-level** leakage only. Appendix E O-12 recorded the family-level gap as **acknowledged and not repaired**, and no requirement obliged anyone to close it before promotion |
+| **D-16** | The **authenticated emergency-command path has no single point of failure**: at least two independently registered authenticators, plus documented and drilled out-of-band venue-side access and flatten recovery. Native exchange stops are mitigation, not a substitute | D-09 requires emergency-recovery controls to **exist**; **nothing required the authenticator itself to be redundant, and nothing required an out-of-band recovery drill.** *(Corrected in the R1 correction pass: the prior plan did not implement or specify a solitary authenticator — §12.5 required WebAuthn/FIDO2 step-up and was silent on credential count, and the current Bridge has no WebAuthn path at all.)* **Without an explicit redundancy requirement, a future single-credential implementation would be fully compliant and would be a single point of failure** — a lost or broken key would leave the owner unable to KILL or FLATTEN |
+
+### 0.6.3 What this round did not do
+
+Audit acceptance is still **PENDING**. Implementation is still **NOT AUTHORIZED**. **O-01…O-44 keep their exact wording, numbering and order.** D-01…D-12 keep their IDs, their DERIVED source type and their owner-acknowledged status, and the **D-02 and D-07 clarifications are unchanged**. **No numeric loss-at-stop default was introduced** — the separate lower cap under D-07 remains **UNSET** and still blocks live authorization. No work package started, none became done, and every gate that required the owner's explicit word before still requires it. **This round accepts nothing** — it is a repair by the party under audit, and a re-auditor should read §0.6 as a set of claims, exactly as §E.7 says of §0.3, §0.4 and §0.5.
 
 ---
 
@@ -427,9 +483,72 @@ All five default to `""`, so **with default inputs no alert fires.** The path is
 
 **That is the finding, stated exactly.** The arming action is typing one non-empty string into a text input on a chart, and there is **no second confirmation, no arming state, no audit record and no way for the Bridge to observe it**. A default-off switch with a one-step arming action and no counterparty visibility is not a safe default; it is an unguarded one. **[OWNER — Q3]** approved for removal (§8.3).
 
+## F-8a [FACT, DRIFT] The seven `tw_*` keys are **not** inert — all seven are required, validated configuration; six have verified behavioural consumers, and one does not
+
+**Correction applied 2026-08-22 (§0.6 R12), stated key by key in the R1 correction pass.** Earlier versions of this brief called the `tw_*` keys *"inert"*, *"dead switches"* and safe to delete as cleanup, on the strength of the source comment at `mtc_v2/core/config.py:56-57`: *"TradingView execution-parity research knobs (default-off; no runtime impact until semantic owners are implemented)."* **That blanket comment is demonstrably stale for six keys; the brief repeated it without checking the consumers, while the seventh remains `[DRIFT/UNKNOWN]`.**
+
+**But the repair over-corrected in the other direction.** It said *"every one of the seven has a live reader"* and treated all seven as fully wired and economically active. **Six are. One is not, on the evidence available.** The honest statement, key by key:
+
+| Key | Status | Evidence |
+|---|---|---|
+| `tw_audit_semantics_mode` | **Behaviourally active** | `position_sizer.py:22,61-62` — changes quantity rounding |
+| `tw_be_semantics_mode` | **Behaviourally active** | `exits.py:294-298,302,334` — changes the break-even trigger bar and trigger type |
+| `tw_trailing_semantics_mode` | **Behaviourally active** | `exits.py:294-298,302,334` — changes the trailing trigger bar and trigger type |
+| `tw_margin_call_mode` | **Behaviourally active** | `runner.py:563` — margin-call branch under `== "tradingview"` |
+| `tw_reversal_reentry_mode` | **Behaviourally active** | `runner.py:958,1296-1396` — gates re-entry after a protective exit |
+| `tw_reversal_reentry_delay_bars` | **Behaviourally active** | `runner.py:958,1296-1396` — sets the re-entry delay |
+| **`tw_margin_call_split_entries`** | **`[DRIFT/UNKNOWN]` — behaviourally dormant in the verified implementation** | **Read** at `runner.py:133` and **stamped into the run record** at `runner.py:1057`. **No behavioural branch consuming it has been located in the canonical core.** It is read and recorded; nothing found so far acts on it |
+
+**What follows from the seventh key's status, stated so nobody demands impossible evidence.**
+
+- **It is still a required, validated configuration key and it is not mass-deleted.** `config.py:282-288` requires it; removing it is a configuration-surface change like any other, decided in canonicalization.
+- **It is routed to investigation, not to a behavioural proof.** Its disposition is a question for the **capability canonicalization table (WP-P0-09)**, the **golden suite (WP-P0-10)** and the **parity corpus inventory (WP-P0-06)**: *does a consumer exist anywhere — in a non-canonical path, in Pine, in the legacy engine — or is this a stamped-but-unused key?*
+- **No two-branch behavioural golden fixture is demanded for it.** A fixture cannot pin a branch that has not been shown to exist. **Demanding one would be requiring evidence of a fiction**, and a check that can only pass by inventing its subject is exactly the self-confirming check repo rule D026 forbids. If WP-P0-09 locates a consumer, it gains a branch then; if it does not, the finding is recorded as *"required, validated, stamped, no located behavioural consumer"*.
+- **The other six are unaffected** and carry the full both-branch obligation below.
+
+**The keys are live** — six of them provably so, and the seventh is required configuration whose behaviour is unestablished. **Neither reading supports deleting any of them as cleanup.**
+
+**Declaration —** `mtc_v2/core/config.py:58-64`, seven keys:
+
+`tw_audit_semantics_mode` · `tw_reversal_reentry_mode` · `tw_reversal_reentry_delay_bars` · `tw_margin_call_mode` · `tw_margin_call_split_entries` · `tw_be_semantics_mode` · `tw_trailing_semantics_mode`
+
+They are additionally **validated as required keys** at `config.py:282-288` and range-checked from `:470`, so they are part of the kernel's accepted configuration surface, not stray text.
+
+**Consumer inventory — where each reader lives.** *(Read with the key-by-key table above: six of the seven have a **behavioural** consumer; `tw_margin_call_split_entries` is read and stamped only.)*
+
+| Consumer | Lines | Economic effect when enabled |
+|---|---|---|
+| `mtc_v2/core/position_sizer.py` | `:22` reads `tw_audit_semantics_mode`; `:61-62` — `if self.tw_audit_semantics_mode == "research": rounded_qty = math.floor(raw_qty * 1_000_000.0) / 1_000_000.0` | **Replaces instrument-aware `floor_qty` with a fixed 1e-6 floor — a different traded quantity from identical inputs.** This sits directly inside the F-2 sizing defect |
+| `mtc_v2/core/exits.py` | `:294-298` select `trail_source_bar` / `be_source_bar` from `prev_bar` instead of `bar`; `:302` and `:334` switch break-even and trailing to a close trigger | **Changes which bar arms break-even and trailing, and whether the trigger is intrabar or on close — different exits, different P&L** |
+| `mtc_v2/core/runner.py` | `:130-133` reads the four remaining keys; `:563` margin-call branch under `tw_margin_call_mode == "tradingview"`; `:958` and `:1296-1396` gate re-entry on `tw_reversal_reentry_mode` / `tw_reversal_reentry_delay_bars`; `:1054-1057` stamps all four into the run record | **Changes margin-call handling and whether, and how many bars after a protective exit, a reversal may re-enter — different trade population.** **Exception, recorded precisely: `tw_margin_call_split_entries` appears only at `:133` (read) and `:1057` (stamped). No behavioural branch consuming it has been located in the canonical core — it is `[DRIFT/UNKNOWN]`, behaviourally dormant in the verified implementation, and routed to WP-P0-09 / WP-P0-10 / WP-P0-06 investigation rather than to a behavioural proof** |
+
+**What this changes in the plan.**
+
+1. **They are `[DRIFT]`, not dead code.** The correct statement is: *shipped default-off; all seven required and validated; **six fully wired and economically material when switched on**; **one (`tw_margin_call_split_entries`) read and stamped with no located behavioural consumer — `[DRIFT/UNKNOWN]`**; and one blanket source comment says none of them has runtime impact. That comment is demonstrably stale for the six behavioural keys; its no-impact claim is not yet disproven for `tw_margin_call_split_entries`.*
+2. **They are in scope for legacy, golden and parity work, not for cleanup.** For the **six behaviourally active keys**, `LEGACY_COMPATIBLE` (M7a) must reproduce their behaviour on **both** branches of each switch and the golden suite (WP-P0-10) must pin both branches. For **`tw_margin_call_split_entries`**, the obligation is **investigation, not a two-branch behavioural proof**: WP-P0-09 establishes whether a consumer exists anywhere, WP-P0-06 records the key in the per-corpus `tw_*` vector, and a branch fixture is authored **only if a consumer is found**. The capability canonicalization table (M5, WP-P0-09) decides whether each semantic survives into the kernel. **Deleting any of them is a configuration-surface change and, for the six, a behaviour change — not a tidy-up.**
+3. **They are one of the reasons parity is corpus-dependent (F-7).** A corpus generated with `tw_audit_semantics_mode = "research"` is not comparable with one generated at the default, and no corpus currently records which mode produced it. The Parity Corpus Inventory (WP-P0-06) must capture the `tw_*` vector per corpus.
+4. **No code is changed by this finding.** It is a record of current state.
+
 ## F-9 [FACT] The adapter layer described in the docs does not exist
 
 `MTC_COMMAND_CENTER/07_ADAPTERS/` contains six README files and one Python file (`liveops/dry_run_adapter.py`). Its own README: *"No adapter implementation exists in MVP-0."*
+
+## F-9a [FACT] A broker boundary **already exists** in the Bridge, and it is not the one this brief was inventing
+
+**Added 2026-08-22 (§0.6 R16).** F-9 is about `07_ADAPTERS/`, which is scaffolding. It is **not** evidence that the system has no broker abstraction, and earlier text used it that way while proposing a fresh `BrokerAdapter` protocol (§4.1 layer **A**, §17.5, §13.3). The Bridge already ships three typed protocols and two concrete implementations:
+
+| Artefact | Location | What it is |
+|---|---|---|
+| **`Broker`** | `IBKR_PAPER_BRIDGE/bridge/broker/base.py:154` | The accepted abstract exchange interface: `connect`, `account`, `positions`, `open_orders`, `historical_bars`, `subscribe_bars`, `subscribe_user_events`, `planned_cloids`, `place_bracket`, `submission_recovery_evidence`, `modify_stop`, `cancel`, `cancel_all`, `flatten`, `reprotect_position` |
+| **`PartialRecoveryBroker`** | `base.py:230` | Deliberately **separate** opt-in protocol (TS-P1-004): `lot_unit`, `symbol_snapshot`, `query_order`, `cancel_order_by_cloid`, `place_protective_stop`, `flatten_reduce_only`. Every result is typed and conservative — transport failure maps to `UNKNOWN`, never to claimed success. `OrderManager` feature-detects it and treats absence as *"recovery unavailable"* |
+| **`FullReconciliationBroker`** | `base.py:293` | Separate **read-only** opt-in protocol (TS-P1-005): `lot_unit`, `portfolio_evidence`, `open_orders_evidence`, `fills_evidence`, **`funding_evidence` (`base.py:320-323`, implemented by both `HyperliquidBroker` and `MockBroker`)** — *the fifth method was missing from this inventory and was added in the R1 correction pass; an incomplete inventory of an existing boundary is exactly what makes "we need a new one" look reasonable.* Incomplete pagination fails closed rather than reporting an empty-but-accepted component |
+| **`HyperliquidBroker`** | `bridge/broker/hyperliquid.py:105` | The live concrete implementation |
+| **`MockBroker`** | `bridge/broker/mock.py:68` | The local concrete implementation, and the `INTERNAL_PAPER` fill source of §6.4 |
+| Failure types | `base.py:222`, `:285` | `PartialRecoveryUnavailable`, `FullReconciliationUnavailable`, each carrying a machine-readable `reason_code` |
+
+**Why this matters to the plan.** The existing boundary already embodies three things this brief argues for independently: **capability opt-in by separate protocol** rather than one fat interface, **fail-closed feature detection**, and **evidence-carrying conservative results**. Naming a new `BrokerAdapter` beside it would create a second boundary for the same job — the five-implementations failure (F-1) reproduced at the adapter layer, and a direct contradiction of the minimum-code and OSS-first goals (O-17, §13.3).
+
+**Consequence, recorded as a required decision, not as a design.** Before any new adapter protocol is named anywhere, **WP-P0-25** must decide, with reasoning and cited line references, whether to **reuse** the existing three protocols as-is, **extend** them (for example with the account-snapshot and protection-semantics surfaces V2A needs), or **deliberately replace or rename** them — and, if replace, what happens to the accepted TS-P1-004 / TS-P1-005 contracts and their tests. **Nothing here implements, edits or renames anything.** Until that decision is accepted, "**A** — Broker Adapter" in §4.1 refers to **the existing `Broker` / `PartialRecoveryBroker` / `FullReconciliationBroker` family**, not to a new protocol.
 
 ## F-10 [FACT] The large parity result payload is duplicated across two directories; the directories themselves are **not** identical
 
@@ -501,9 +620,40 @@ Accepted safety contracts exist as document **and** code **and** tests: window s
 
 **Correct statement:** *dormant in the audited default app-initialization path.* **Not established:** that the deployed process is running this tree, this constructor path, or this configuration. No host was inspected. **Deployed activation state must be independently verified before it is relied upon or dismissed** — the same caveat as F-14.
 
-## F-16 [FACT] The live-trading gate is an unsigned draft
+## F-16 [FACT] The live-trading gate is an unsigned draft with **fourteen** hard preconditions
 
-`_AI_MEMORY/LIVE_TRADING_GATE.md`: *"Status: DRAFT … not binding until Baris signs this document."* Six hard preconditions including an 8–16 week paper soak with ≥30 forward trades and daily three-way reconciliation.
+**Correction applied 2026-08-22 (§0.6 R1). v2.1 said "six hard preconditions". That was false.** `_AI_MEMORY/LIVE_TRADING_GATE.md:15-66` lists **fourteen**, under the standing rule at `:17` — *"All items are required. There is no partial credit."* Every downstream statement that counted six (A-21, A-24, gate G5, WP-V4-01, the owner plan and the starting point) has been corrected to fourteen.
+
+`_AI_MEMORY/LIVE_TRADING_GATE.md:3-6`: *"Status: DRAFT … not binding until Baris signs this document."* `:8-10`: *"No AI may recommend going live, imply live readiness, or treat this gate as satisfied. Every item below requires dated evidence for one specific strategy and explicit Baris sign-off."*
+
+### The fourteen canonical hard preconditions, as written
+
+| # | Precondition | What the gate requires |
+|---|---|---|
+| **1** | Strategy robustness | `robust_final = 1`, ≥ 30 lockbox trades, positive excess alpha versus buy-and-hold, CPCV/PBO reports, multi-window stability — **regenerated on a frozen tagged commit** |
+| **2** | Reference lock | Frozen parameters, tagged commit, hashed signal file, and a **deterministic rerun reproducing the same signal file** |
+| **3** | Parity proof *(if Pine participates in monitoring or signalling)* | Dated artifact, ≥ 99 % signal-flag agreement over full history, trade-list diff within the approved tolerance. **A parity artifact older than the last code change on either side is void** |
+| **4** | Paper soak | Pre-registered plan, immutable start date, **8–16 weeks minimum and ≥ 30 new forward trades**, zero unexplained reconciliation breaks, no restarted window unless a new plan is approved |
+| **5** | Testnet proof | Executor/bridge soaked on exchange testnet, **including duplicate-signal injection and kill-process-mid-open-position restart/reconcile behaviour** |
+| **6** | Reconciliation | Daily three-way diff across expected signals, bridge/executor log and exchange statement throughout the paper/testnet period. **Unexplained orphan count must be zero** |
+| **7** | Kill switch | **Three layers documented and drilled with timing evidence** — signal-source pause, bridge/executor halt, API-key revocation. Full flatten target **under five minutes**. *"An un-rehearsed kill switch is not a kill switch"* |
+| **8** | Idempotency | Every payload carries an idempotency key; **dedup behaviour proven by deliberate duplicate delivery** |
+| **9** | Failure drills | Documented behaviour for duplicate signal, dropped signal, malformed payload, wrong environment, and exit-with-no-position |
+| **10** | Capital limit | Dedicated sub-account funded with pilot capital only. **The hard number is signed by the owner before any live pilot** |
+| **11** | Key security | Withdrawal disabled, IP restricted, least-privilege permissions, rotation schedule, secrets stored outside the repository |
+| **12** | Incident response | One-page runbook for reconciliation break, exchange halt, runaway-signal alarm, open-position emergency, and broker/exchange support path |
+| **13** | Monitoring | The Command Center may render **read-only** heartbeat, position summary and last reconciliation status. **It must not send orders or mutate execution state** |
+| **14** | Human approval | Explicit written owner sign-off on the checklist, **per strategy and per capital increase. Never AI-recommended, never implied** |
+
+**Standing rules that travel with the gate** (`:68-74`): dashboard visibility is not gate evidence; scorecard scores are not live-readiness evidence; board/model consensus is not live-readiness evidence; `SYSTEM_TEST_ONLY` artifacts are not strategy evidence; **any attempt to bypass this checklist is a stop-everything incident**.
+
+### How the fourteen must be satisfied
+
+1. **All fourteen pass, or none of them counts.** There is no partial credit and no substitution between preconditions.
+2. **One dated, evidence-bound decision.** The fourteen are evidenced together, at one time, in one signed decision record — not accumulated piecemeal across different artefacts and dates.
+3. **Against the exact economic/deployment identity.** Every item's evidence binds to the same **`deployment_identity_hash`** (§6.7). Evidence gathered against a different allocator, Guardian policy, risk-bucket policy, runtime policy, broker adapter, protection semantics or cost lineage is evidence about a different system, and the applicable forward-evidence period resets.
+4. **D-07's two caps are an *additional* named requirement, not a substitute.** The `LIMITED_LIVE` ≤ 1 % **maximum allocated capital** and the **separate, lower, still-undefined loss-at-stop cap** sit alongside precondition 10 — they satisfy no canonical precondition on their own, and precondition 10's hard number still requires the owner's signature.
+5. **Zero tags makes preconditions 1 and 2 currently unsatisfiable** (F-17, D-7 in §3), independent of any other evidence.
 
 **[OWNER — Q10]** The principle is approved now; the gate is signed only when all evidence and conditions are complete. Until signature, "allowed to trade real money" has no binding definition — and no live capital may be committed.
 
@@ -588,6 +738,8 @@ Accepted safety contracts exist as document **and** code **and** tests: window s
 
 # 3. Contradictions and documentation drift
 
+**Naming collision, stated once.** The `D-n` identifiers in **this table** are **documentation-drift rows**. They are unrelated to the register's `D-01…D-16` **derived safeguards** and to §21.2's `O-n` **open items**. Cite them as "brief §3 D-n", "register D-nn" and "brief §21.2 O-n" respectively (register §1.4 carries the same note).
+
 | # | Document claim | Source reality | Severity |
 |---|---|---|---|
 | D-1 | `07_...RULES.md` §8 "Risk Gate — commission & slippage included" | Slippage post-hoc only; commission a flat 8 bps | **High** |
@@ -601,6 +753,7 @@ Accepted safety contracts exist as document **and** code **and** tests: window s
 | D-9 | `05_PARITY` vs `12_PARITY_PINETS` treated as interchangeable | **The large `parity_results.json` payload is duplicated (identical md5); the directories are not identical** — `MTC_V2_PARITY_CASES.csv` differs, `README_MIGRATION.md` exists only in `12_PARITY_PINETS` (F-10, RF-6). Appendix E recorded this repair; the row itself still said "byte-identical" until the 2026-08-22 round | Low, but **must not** be canonicalized by assumption |
 | D-10 | Docs describing Pine/Python parity as achieved discipline | Corpus-dependent: 27/58 strict TW=Python on cases 103–162 (2026-04-14) versus 437/439 on the 457-case `mtc_backtest` suite (2026-03-04). **The corpora are not established as comparable** (F-7). Neither reading supports "achieved discipline" without the corpus inventory. | **High** |
 | D-11 | v1 of this brief asserted schema controls inert on the running database | Unverified runtime claim; corrected in F-14 | **Corrected in v2** |
+| D-12 | `mtc_v2/core/config.py:56-57` states the `tw_*` keys have *"no runtime impact until semantic owners are implemented"*, and this brief repeated it as "inert / dead switches" | **The semantic owners exist for six of the seven.** `position_sizer.py:22,61-62` changes quantity rounding; `exits.py:294-298,302,334` changes the break-even and trailing trigger bar; `runner.py:563,958,1296-1396` changes margin-call and re-entry behaviour. **`tw_margin_call_split_entries` is the exception: read at `runner.py:133` and stamped at `:1057`, with no behavioural branch located in the canonical core — `[DRIFT/UNKNOWN]`, routed to investigation** (F-8a) | **High** — a stale source comment made an economically live surface look safe to delete |
 ---
 
 # 4. Component responsibility matrix
@@ -613,10 +766,11 @@ For each economic control, exactly **one** component owns the decision, exactly 
 |---|---|---|
 | **K** | Strategy Kernel | Deterministic, bar-driven, no I/O. Bars + config → **intent**. The only authority on economic *intent*. |
 | **S** | Backtest Simulator | Runs K over historical bars; models fills, costs, equity. Contains **no** strategy logic. |
-| **RA** | Risk Allocator | Converts `SizingIntent` + account/bucket state → `AuthorizedQuantity`. **Runs identically in backtest and at runtime.** *(New in v2 — C-7.)* |
+| **RA** | Risk Allocator | Converts `BoundSizingIntent` + the named immutable account/bucket snapshot → `proposed_qty`, which the Guardian then authorizes as `AuthorizedQuantity` or rejects. **The only component that computes a quantity, and it runs identically in backtest and at runtime.** *(New in v2 — C-7; message renamed in the §0.6 R3 four-stage split.)* |
 | **P** | Portfolio Guardian | Account-level, cross-strategy. Budgets, correlation, kill switches. **V2: authorize or reject only** (Q16). |
 | **B** | Bridge / Order Manager | Idempotency, submission, acknowledgement, fills, reconciliation, recovery. Executes accepted intent exactly, or rejects loudly. |
-| **A** | Broker Adapter | Venue mechanics: precision, tick/lot, order types, reduce-only, error mapping. |
+| **A** | Broker Adapter | Venue mechanics: precision, tick/lot, order types, reduce-only, error mapping. **This is the *existing* Bridge boundary — `Broker` / `PartialRecoveryBroker` / `FullReconciliationBroker` (`bridge/broker/base.py:154,230,293`) with `HyperliquidBroker` and `MockBroker` — not a new protocol.** Whether to reuse, extend or deliberately replace it is decided by **WP-P0-25** before any new adapter protocol is named (F-9a, §0.6 R16). |
+| **OR** | Decision Orchestrator | The execution-domain component that turns K's snapshot-independent `SizingRequest` into a snapshot-bound decision: it obtains the immutable `AccountSnapshot`, binds `snapshot_id` and `allocation_policy_version`, and hands the bound intent to RA. **It performs no sizing arithmetic and holds no strategy logic.** *(New in the 2026-08-22 fifth round — §5.5, §0.6 R3. It names a responsibility that previously had no owner, which is why the sizing contract read as circular.)* |
 | **D** | Dashboard | Display; and, on the execution surface only, explicitly confirmed operator commands. |
 | **X** | Retire | Should not exist in the target architecture. |
 
@@ -628,8 +782,8 @@ For each economic control, exactly **one** component owns the decision, exactly 
 | Signal transforms (confirmation, L18b, level retest) | Pine, mtc_v2 `confirmation.py`, mtc_runner `confirmation_layer.py` | **K module** | Changes *when* an entry is valid → economic intent |
 | Entry gates and filters (14 families) | Pine, mtc_v2 `gates.py`, mtc_runner `modules/filters/*` | **K modules** | Same reason |
 | Trade direction (long/short/both/flip/regime lock) | Pine, mtc_v2, mega, bridge `RiskConfig.direction` | **K** decides; **P** may narrow | Kernel owns strategy direction; portfolio may restrict, never widen |
-| **Sizing *intent*** (risk %, method, stop) | four implementations, none agreeing | **K** emits `SizingIntent` | Risk appetite is strategy economics |
-| **Final executable quantity** | Pine, mtc_v2, mtc_runner, bridge — all four claim it | **RA proposes `AuthorizedQuantity`; P authorizes or rejects it; B executes or rejects** | A strategy must not allocate a *shared* account. Exactly one component proposes a number. C-7. |
+| **Sizing *request*** (method, one request constant from the frozen package, stop) | four implementations, none agreeing | **K** emits `SizingRequest` — snapshot-independent, **untrusted**, never an executable quantity | Risk appetite is strategy economics; the account is not the kernel's business (§5.4, §5.5) |
+| **Final executable quantity** | Pine, mtc_v2, mtc_runner, bridge — all four claim it | **RA computes `proposed_qty`; P authorizes it unchanged as `AuthorizedQuantity` or rejects it; B executes or rejects** | A strategy must not allocate a *shared* account. Exactly one component proposes a number. C-7. |
 | Initial SL | Pine, mtc_v2 `exits.py`, mtc_runner `sl_calculator.py`, mega `stop`, bridge strategy | **K core** | The stop is the risk unit; sizing depends on it |
 | TP (single: ATR / % / R) | Pine, mtc_v2, mtc_runner `tp_calculator.py`, mega `r_mult` | **K core** | Economic intent |
 | **Multi-TP (TP1 fraction + TP2)** | Pine, mtc_v2, mtc_runner only. mega absent. Bridge structurally impossible | **K module**; **B** carries legs from V2, executes them from V3 | C-11 + C-19 |
@@ -730,7 +884,7 @@ graph TB
         R11["Promotion Authority - separate from explorer"]
     end
     subgraph CONTRACTS["CONTRACTS PACKAGE - versioned, in-repo now"]
-        K1["SizingIntent / OrderIntent / ExitIntent"]
+        K1["SizingRequest / BoundSizingIntent / OrderIntent / ExitIntent"]
         K2["StrategyPackage + frozen instrument metadata"]
         K3["Candidate identity + package hash"]
         K4["Risk + allocation policy schema"]
@@ -774,9 +928,9 @@ The two orange boxes are **the same code**. That is the mechanism, not a wish.
 ```
 strategy_kernel/
   core/                          # MANDATORY - every strategy carries this
-    types.py                     # Bar, Position, SizingIntent, OrderIntent, ExitIntent
+    types.py                     # Bar, Position, SizingRequest, OrderIntent, ExitIntent
     instrument.py                # FROZEN metadata: tick, lot, min_qty, min_notional, multiplier
-    sizing.py                    # emits SizingIntent - ONE implementation
+    sizing.py                    # emits SizingRequest - ONE implementation
     stops.py                     # exactly one stop concept (ATR / percent / swing)
     targets.py                   # exactly one target concept (ATR / percent / R)
     lifecycle.py                 # single-position state machine, opposite-signal exit
@@ -804,16 +958,33 @@ strategy_kernel/
 
 Three schemas, all versioned, all in the contracts package.
 
-**`SizingIntent` — emitted by K.**
+**Repaired 2026-08-22 (§0.6 R3).** v2.1 had a single `SizingIntent` that was described as pure kernel output while carrying a bound `snapshot_id` and a `snapshot_taken_at`. A kernel defined as `Bars + config → intent` with **no I/O** cannot know an account snapshot, so the contract contradicted the layer definition and made K an account authority by the back door. The contract is now **two messages across three owners**.
+
+**`SizingRequest` — emitted by K. Snapshot-independent. Contains no account state and no executable quantity.**
+
+**The distinction this contract turns on, stated before the fields (completed in the R1 correction pass).** Earlier wording said the message "contains no quantity and no notional" while the same table defined `qty_request` and `notional_request`, and acceptance criterion **A-10c** required the schema to reject "a quantity or a notional result" — which would have rejected the very fields `FIXED_QTY` and `FIXED_NOTIONAL` require. Two different things were being called by one word:
+
+- A **request value** is a **snapshot-independent, untrusted constant read out of the frozen strategy/package configuration**. It contains no account state, it is not derived from anything the kernel looked up, and it is **never** an executable, proposed, authorized or final quantity. `requested_fixed_qty`, `requested_fixed_notional` and `requested_risk_fraction` are request values, and K is **required** to emit exactly one of them for the matching method.
+- An **account-derived, allocator-proposed, Guardian-authorized or executable** quantity or notional is something else entirely. K may **never** emit one, and may never read or bind account or bucket state to produce one.
+
+**The schema rejects the second class and requires the first.** *(Names may vary in the contracts package as long as they vary consistently and preserve the `requested_…` prefix that marks the class.)*
 
 | Group | Fields |
 |---|---|
 | Method | `sizing_method` ∈ {`RISK_AT_STOP`, `FIXED_NOTIONAL`, `FIXED_QTY`, `VOLATILITY_TARGET`, `SOURCE_DEFINED`} |
-| Request | `risk_request_pct` \| `notional` \| `qty` \| `vol_target_params` |
-| Basis | `stop_price` (required for `RISK_AT_STOP`), `entry_reference_price` |
-| Reference | **`allocator_reference_qty`** *(optional; replay, parity and audit only)* — produced by calling **the one shared Risk Allocator function** against the bound snapshot, never by a second sizing implementation living inside the kernel. **The kernel performs no independent account-quantity calculation at runtime, and this field is absent from production intents.** *(Renamed from `kernel_reference_qty` and redefined in the 2026-08-22 repair round — §0.3 item 5. The old name implied a second runtime recipe, which is exactly the F-2 defect one layer higher.)* |
-| **Snapshot binding** | **`snapshot_id`** — content hash of the immutable `AccountSnapshot` (§5.5). RA must compute against the identical id or the intent is rejected `SNAPSHOT_MISMATCH`. |
-| Provenance | `instrument_metadata_hash`, `kernel_version`, `snapshot_taken_at` |
+| **Request value** — one, matching `sizing_method`, **from the frozen strategy/package configuration** | `requested_risk_fraction` \| `requested_fixed_notional` \| `requested_fixed_qty` \| `vol_target_params` \| `source_defined_request` — **exactly one, matching `sizing_method`**. All are **untrusted constants**: the schema asserts their class, and RA validates and may reject them |
+| Basis | `stop_price` (**required** for `RISK_AT_STOP`), `entry_reference_price`, `direction` |
+| Provenance | `instrument_metadata_hash`, `kernel_version`, `package_hash`, `decision_bar_ts` |
+| **Forbidden by schema** | `snapshot_id`, `account_equity`, `bucket_capital`, `allocation_policy_version`, `proposed_qty`, `authorized_qty`, `final_qty`, `notional_result`, and any other **account-derived, allocator-proposed, Guardian-authorized or executable** quantity or notional — **a `SizingRequest` carrying any of these is rejected by the contract test, not merely discouraged.** The `requested_…` fields above are **not** in this class and are **not** rejected |
+
+**`BoundSizingIntent` — produced by the Decision Orchestrator (OR). This is the message RA consumes.**
+
+| Group | Fields |
+|---|---|
+| Payload | The complete, unmodified `SizingRequest`. **OR may not alter a single field of it** |
+| **Snapshot binding** | **`snapshot_id`** — content hash of the immutable `AccountSnapshot` (§5.5); **`snapshot_taken_at`**; **`snapshot_deadline_ms`** — the per-worker freshness deadline declared in the frozen package |
+| Policy binding | **`allocation_policy_version`**, `bucket_id`, `deployment_identity_hash` (§6.7) |
+| Reference | **`allocator_reference_qty`** *(optional; replay, parity and audit only)* — produced by calling **the one shared Risk Allocator function** against this bound snapshot, never by a second sizing implementation. **It is absent from production intents and is never read by the submission path.** *(Renamed from `kernel_reference_qty` in the 2026-08-22 second round — §0.3 item 5 — and moved off the kernel message here, because computing it requires the snapshot the kernel is forbidden to see.)* |
 
 **`OrderIntent` — produced by RA + P, consumed by B.**
 
@@ -822,7 +993,7 @@ Three schemas, all versioned, all in the contracts package.
 | Identity | `intent_id` (deterministic: `candidate_id + bar_ts + seq`), `candidate_id`, `package_hash`, `worker_id`, `revision` |
 | Timing | `decision_bar_ts`, `emitted_at`, `valid_until_bar_ts` |
 | Economics | `action` ∈ {`OPEN`,`ADD`,`REDUCE`,`CLOSE`,`MODIFY_STOP`,`MODIFY_TARGET`}, `direction`, `authorized_qty`, `qty_semantics` ∈ {**`DELTA`**, **`TARGET_TOTAL`**}, `qty_unit` ∈ {base, quote, contracts} |
-| Authorization | `authorization` ∈ {`AUTHORIZED_AS_REQUESTED`, `REJECTED`}; **V2 has no `RESIZED` value** (Q16). `allocation_policy_version`, `snapshot_id` (must equal the `SizingIntent` value), `rejection_reason` ∈ {`SNAPSHOT_MISMATCH`, `SNAPSHOT_STALE`, `REFERENCE_DIVERGENCE`, `BUCKET_LIMIT`, `CORRELATED_EXPOSURE`, `EXPOSURE_LIMIT`, …} |
+| Authorization | `authorization` ∈ {`AUTHORIZED_AS_REQUESTED`, `REJECTED`}; **V2 has no `RESIZED` value** (Q16). `allocation_policy_version`, `snapshot_id` (must equal the `BoundSizingIntent` value), `deployment_identity_hash`, `rejection_reason` ∈ {`SNAPSHOT_MISMATCH`, `SNAPSHOT_STALE`, `REFERENCE_DIVERGENCE`, `BUCKET_LIMIT`, `CORRELATED_EXPOSURE`, `EXPOSURE_LIMIT`, …} |
 | Protection | `stop_price`, `stop_semantics` ∈ {**`STRATEGY_NATIVE`**, `STRATEGY_SYNTHETIC_PLUS_EMERGENCY_NATIVE`}; `tp_legs[]` each `{leg_id, price, qty_fraction, activation, oco_group}` |
 | Reasons | `entry_reason`, `exit_reason`, `blocked_by[]` |
 
@@ -842,40 +1013,75 @@ Three schemas, all versioned, all in the contracts package.
 ```mermaid
 sequenceDiagram
     participant K as Strategy Kernel
+    participant OR as Decision Orchestrator
+    participant SS as Account Snapshot Service
     participant RA as Risk Allocator
     participant P as Portfolio Guardian
     participant B as Bridge
-    K->>RA: SizingIntent {method RISK_AT_STOP, risk_at_stop = R_policy (symbolic), stop 58000, snapshot_id} - no quantity
-    Note over RA: bucket capital, live equity, open exposure,<br/>margin, venue limits, allocation_policy_version
-    RA->>RA: authorized_qty = policy(SizingIntent, account_state)
-    RA->>P: candidate OrderIntent
+    K->>OR: SizingRequest {method RISK_AT_STOP,<br/>requested_risk_fraction from FROZEN PACKAGE CONFIG, stop 58000}<br/>NO snapshot, NO account state, NO executable quantity
+    OR->>SS: request immutable snapshot for this decision
+    SS-->>OR: AccountSnapshot {snapshot_id, taken_at, equity, bucket_capital, exposure, margin}
+    OR->>RA: BoundSizingIntent {SizingRequest unchanged + snapshot_id + allocation_policy_version}<br/>OR binds identity only - NO sizing arithmetic
+    Note over RA: bucket capital, live equity, open exposure,<br/>margin, venue limits, allocation-policy CAPS
+    RA->>RA: proposed_qty = resolve(request, snapshot)<br/>then apply bound allocation-policy caps:<br/>PROPOSE IN FULL or REJECT - never lower the request
+    RA->>P: candidate OrderIntent {proposed_qty}
     P->>P: bucket loss budget, correlation, exposure caps
     alt all checks pass
-        P->>B: OrderIntent AUTHORIZED_AS_REQUESTED
+        P->>B: OrderIntent AUTHORIZED_AS_REQUESTED - the quantity becomes FINAL here
     else any check fails
-        P-->>K: REJECTED + machine-readable reason
+        P-->>OR: REJECTED + machine-readable reason
     end
     Note over B: executes exactly, or rejects loudly.<br/>Never recomputes quantity.
 ```
 
-**Reading the `SizingIntent` in that diagram.** `R_policy` is a **symbolic placeholder for the risk-at-stop value the allocation policy defines**, carried with the intent and versioned by `allocation_policy_version`. It is deliberately **not** written as a literal percentage here, because **this document sets no vNext or `LIMITED_LIVE` risk-at-stop policy value**. The **0.5 % / 1.0 %** figures that appear in finding **F-2** (§2) are **current-state evidence of today's divergence** — observations of what the existing MTC and Bridge code already do — and are **not proposed vNext defaults**; nothing may be promoted from that evidence into a policy value. `R_policy` is also **a different quantity from the `LIMITED_LIVE` ≤ 1 % ceiling**: that 1 % is the **maximum capital allocated** to the first live strategy, whereas `R_policy` governs **loss-at-stop (risk-to-stop)**, which carries a **separate and lower cap that remains undefined and must be defined and evidenced before any live authorization** (owner clarification D-07, §0.5). Nothing in this example may be read as proposing a value for either cap; the example's purpose is only to show that **K states a risk request and a stop, and never a quantity**.
+### The four stages, and who owns each
+
+**Repaired 2026-08-22 (§0.6 R3).** v2.1 said in one place that K is pure `Bars + config` and in another that K binds an account snapshot and emits a sizing intent from which a quantity follows. Both cannot be true. The stages below remove the contradiction by naming a fourth owner — the **Decision Orchestrator** — for the responsibility that previously had none.
+
+| Stage | Owner | Input | Output | Explicitly may not |
+|---|---|---|---|---|
+| **1 — Request** | **K (Strategy Kernel)** | Bars + frozen config + frozen instrument metadata. **No I/O, no account state** | **`SizingRequest`** — method, **one untrusted request constant from the frozen package**, stop, entry reference, provenance | Read or bind account or bucket state; emit any **account-derived, allocator-proposed, Guardian-authorized or executable** quantity or notional; emit an equity or leverage figure; know which bucket or account it will trade. *(Emitting `requested_fixed_qty` / `requested_fixed_notional` / `requested_risk_fraction` from the frozen configuration is **required**, not forbidden — they are request constants, not results.)* |
+| **2 — Bind** | **OR (Decision Orchestrator)** | K's `SizingRequest`, verbatim | **`BoundSizingIntent`** — the request plus `snapshot_id`, `snapshot_taken_at`, `snapshot_deadline_ms`, `allocation_policy_version`, `bucket_id`, `deployment_identity_hash` | Alter any field of the `SizingRequest`; perform sizing arithmetic; hold strategy logic; choose a snapshot after seeing what quantity it would produce |
+| **3 — Propose** | **RA (Risk Allocator)** | `BoundSizingIntent` + the named immutable snapshot | **`proposed_qty`** — the **only** quantity computation in the system — deterministic, versioned, **one implementation**, identical code in backtest and runtime, with the **bound allocation-policy caps applied as propose-in-full-or-reject** | Change the strategy's request; **lower a request to fit a cap** (a cap breach rejects); propose a partial quantity; recompute against a different snapshot |
+| **4 — Authorize** | **P (Portfolio Guardian)** | The candidate `OrderIntent` carrying `proposed_qty` | **`AuthorizedQuantity`** — authorize in full or reject in full. **The final executable quantity does not exist before this stage completes** | Produce a different number; partially authorize; resize |
+
+**Then, and only then, B executes exactly or rejects loudly.** A quantity that has not passed stage 4 has no executable status anywhere in the system, and no component may act on `proposed_qty` as though it were final.
+
+### Method semantics, without making K an account authority
+
+Each method is stated as **what K requests** and **what RA resolves**. In every case K emits a **snapshot-independent, untrusted request constant taken from the frozen strategy/package configuration**, and RA resolves it against the bound snapshot and then applies the **bound allocation-policy caps** — so K never needs to know the account, and the allocation policy never has to be inside the kernel's message.
+
+**Where the number in the request comes from — corrected in the R1 correction pass.** Earlier text made K emit `risk_request_pct` while also saying the value was the one *"the allocation policy assigns"* and *"resolved at stage 2/3"*. Both cannot be true, and it made K a downstream reader of a policy it is forbidden to see. **The numeric request comes from the frozen strategy/package configuration, for every method including `RISK_AT_STOP`.** The **allocation policy contributes caps, not the request**: RA applies the bound policy's caps to the request and either proposes the requested economic result **in full** or **rejects**. Because **V2 has no resize path**, a cap breach **rejects** — it never silently lowers the request. **No numeric default for any request field is introduced anywhere in this document.**
+
+| `sizing_method` | What **K** requests (snapshot-independent constant from the frozen package) | What **RA** resolves, then caps |
+|---|---|---|
+| **`RISK_AT_STOP`** | `requested_risk_fraction` — a **fraction declared in the frozen strategy/package configuration**, plus a **required** `stop_price` and `entry_reference_price`. **It is not read from, and not assigned by, the allocation policy** | `risk_capital = bucket_capital × requested_risk_fraction`; `per_unit_risk = |entry − stop| × contract_multiplier`; `proposed_qty = risk_capital / per_unit_risk`, then precision, `min_qty` and `min_notional` from the **frozen package metadata**. RA then applies the **bound allocation-policy caps** (risk-at-stop ceiling, leverage, exposure) and **either proposes the requested economic result in full or rejects** — a cap breach is `REJECTED`, never a quietly smaller order. **`per_unit_risk == 0` is a rejection, never a division** |
+| **`FIXED_QTY`** | `requested_fixed_qty` in **instrument units**, declared in the frozen package — a *strategy-relative* constant, not an account allocation | Validates it against precision, `min_qty`, `min_notional`, then the bound allocation-policy caps. **RA may reject it; RA may not scale it.** If a cap binds, the outcome is `REJECTED`, not a smaller order |
+| **`FIXED_NOTIONAL`** | `requested_fixed_notional` in **quote currency**, declared in the frozen package | `proposed_qty = requested_fixed_notional / (entry_reference_price × contract_multiplier)`, then the same rounding and cap checks. Same rule: **reject, never scale** |
+| **`VOLATILITY_TARGET`** | `vol_target_params` — target volatility and the estimator, both declared in the frozen package and computed by K **from bars only** | Converts K's volatility-scaled exposure fraction into a quantity against bucket capital, then the same rounding and cap checks, with the same reject-never-scale rule |
+| **`SOURCE_DEFINED`** | **Nothing arbitrary, and nothing account-aware.** At package freeze the source's own sizing rule must **compile into one of the snapshot-independent request forms above** — a `requested_risk_fraction`, a `requested_fixed_qty`, a `requested_fixed_notional` or a `vol_target_params` set — via the **versioned substitute catalogue** (§6.2), and the compiled form is what K emits. **If it cannot be so expressed, it is recorded in the Missing-Rule Ledger as `NOT_EXPRESSIBLE` and the candidate uses a named catalogue substitute instead.** **K never executes an account-aware sizing expression, and no expression is evaluated at decision time inside K** | Resolves the compiled request exactly as it would resolve a natively declared one, then the same rounding and cap checks |
+
+**The invariant across all five:** K emits an **untrusted request constant** from the frozen package; **OR binds the immutable snapshot and the policy identity and performs no sizing arithmetic**; **RA is the only component that computes `proposed_qty`**, applying the bound allocation-policy caps and proposing in full or rejecting; **P authorizes that number unchanged or rejects it**. **No method gives K an account figure, no method lets OR compute, and no method gives RA a discretionary trim.**
+
+**Reading the `SizingRequest` in that diagram.** The request field carries a **value declared in the frozen strategy/package configuration**, deliberately shown without a literal percentage, because **this document sets no vNext or `LIMITED_LIVE` risk-at-stop value and introduces no numeric default**. The **0.5 % / 1.0 %** figures in finding **F-2** (§2) are **current-state evidence of today's divergence** — observations of what the existing MTC and Bridge code already do — and are **not proposed vNext defaults**; nothing may be promoted from that evidence into a policy value. The requested risk-at-stop fraction is also **a different quantity from the `LIMITED_LIVE` ≤ 1 % ceiling**: that 1 % is the **maximum capital allocated** to the first live strategy, whereas this field governs **loss-at-stop (risk-to-stop)**, which carries a **separate and lower cap that remains undefined and must be defined and evidenced before any live authorization** (owner clarification D-07, §0.5). Nothing in this example may be read as proposing a value for either cap; the example's purpose is only to show that **K states an untrusted request constant — which may be `requested_fixed_qty` — and, where applicable, a stop; K never states an account-derived, allocator-proposed, Guardian-authorized or executable quantity**.
 
 ### The ownership words, defined exactly
 
-**Correction applied in v2.1 (RF-4).** v2.0 left "requested" ambiguous and made the reference-quantity check a *test-only* tripwire. A test does not fail closed in production. The three roles are now defined so that only one component ever proposes a number.
+**Correction applied in v2.1 (RF-4), extended 2026-08-22 (§0.6 R3).** v2.0 left "requested" ambiguous and made the reference-quantity check a *test-only* tripwire. A test does not fail closed in production. v2.1 then defined three roles, but gave K the snapshot binding — which contradicted K's own definition. **Four roles are now defined so that only one component ever proposes a number, and the component that binds the snapshot is not the component that computes anything.**
 
 | Component | Owns | Never does |
 |---|---|---|
-| **Kernel (K)** | **Requests risk.** Emits `SizingIntent`: method, risk percentage, stop, snapshot binding. **It computes no account quantity.** | Compute or propose an account quantity |
-| **Risk Allocator (RA)** | **Proposes `AuthorizedQuantity`.** `authorized_qty = policy(SizingIntent, snapshot)` — deterministic, versioned, **one implementation**, identical code in backtest and runtime. | Change the strategy's risk request |
-| **Portfolio Guardian (P)** | **Authorizes or rejects** the quantity RA proposed. | Produce a different number |
+| **Kernel (K)** | **Requests.** Emits `SizingRequest`: method, **one untrusted request constant read from the frozen strategy/package configuration**, stop, entry reference, provenance. **It reads and binds no account or bucket state, and the constant it emits is never an executable, proposed, authorized or final quantity.** | Read or bind account or bucket state; emit an account-derived, allocator-proposed, Guardian-authorized or executable quantity or notional; carry `snapshot_id` or `allocation_policy_version` |
+| **Decision Orchestrator (OR)** | **Binds** the request to exactly one immutable `AccountSnapshot` and one `allocation_policy_version`, producing `BoundSizingIntent`. **It binds identity; it performs no sizing arithmetic of any kind.** | Alter the request; compute, adjust or validate a quantity; retry against a second snapshot to obtain a different answer |
+| **Risk Allocator (RA)** | **Computes and proposes the quantity — the only component that does.** `proposed_qty = resolve(request, snapshot)`, then the **bound allocation-policy caps** applied as propose-in-full-or-reject — deterministic, versioned, **one implementation**, identical code in backtest and runtime. | Change the strategy's request; lower a request to fit a cap; propose a partial quantity |
+| **Portfolio Guardian (P)** | **Authorizes the quantity RA proposed, unchanged, or rejects it.** **`AuthorizedQuantity` is created here and nowhere else.** | Produce a different number; compute a quantity of its own |
 | **Bridge (B)** | **Executes or rejects** the authorized intent, exactly. | Recompute a quantity |
 
-"Authorize in full or reject in full" therefore means: **P authorizes the quantity RA proposed** — never a quantity K proposed, because K never proposes one.
+"Authorize in full or reject in full" therefore means: **P authorizes the quantity RA proposed** — never a quantity K proposed, because K never proposes one, and never a quantity OR proposed, because OR computes nothing.
 
-### Snapshot identity — the fail-closed rule
+### Snapshot identity — producer, freshness owner, and the fail-closed rule
 
-K and RA must compute against **the same immutable account snapshot**, or the intent is refused.
+The **bound intent** and the **RA computation** must name **the same immutable account snapshot**, or the intent is refused.
 
 ```
 AccountSnapshot
@@ -888,23 +1094,33 @@ AccountSnapshot
   instrument_metadata_hash
 ```
 
-Binding rules:
+**Who produces it, and who owns freshness — named 2026-08-22 (§0.6 R3), because "the snapshot" previously had no owner.**
 
-1. **One snapshot per decision.** `SizingIntent.snapshot_id` and the RA computation must carry the **identical** `snapshot_id`. The snapshot is immutable once taken.
-2. **Mismatch is a runtime STOP, not a test failure.** If `SizingIntent.snapshot_id != RA.snapshot_id`, the intent is **REJECTED** with machine-readable reason `SNAPSHOT_MISMATCH`, logged, surfaced on the dashboard, and **no order is submitted**. It is never reconciled by preferring one side.
-3. **Staleness is also a STOP.** If the snapshot is older than a declared per-worker deadline at the moment RA computes, reject with `SNAPSHOT_STALE`.
-4. **Divergence within one snapshot is a defect, not a policy.** With `snapshot_id`, `allocation_policy_version` and allocator code hash equal, a **deterministic recomputation of the same allocator function** must reproduce `authorized_qty` within a stated tolerance. It does not compare against a second sizing implementation — none exists. Divergence rejects with `REFERENCE_DIVERGENCE` **and** fails the parity test suite. Both, not either.
-5. **Different-snapshot operation is not permitted in V2.** Any future design where K sizes against one snapshot and RA against another requires its own versioned allocation policy, its own simulation and its own parity evidence — it is not an implementation detail.
+| Responsibility | Owner | Rule |
+|---|---|---|
+| **Producing the snapshot** | The **Account Snapshot Service** in the **execution domain**, built on the Bridge's existing authoritative risk snapshot (`IBKR_PAPER_BRIDGE/docs/27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md`) rather than a second source of account truth. **The research domain never produces one** — it has no credentials and no venue truth. In backtest and replay the `PortfolioSimulator` produces it from simulated state **through the same type and the same hash function** | One snapshot per decision, immutable once taken, content-addressed by `snapshot_id` |
+| **Declaring the freshness deadline** | The **frozen strategy package**, as `snapshot_deadline_ms` per worker. It is package data, not a global constant, because a 1 D strategy and a 15 m strategy do not have the same tolerance | The deadline is bound by `runtime_policy_json` **inside `deployment_identity_hash`** (§6.7), so changing it mints a **new composite identity and resets that environment's evidence clock**, even though `package_hash` itself is unchanged. *(Corrected in the R1 correction pass: earlier wording placed `snapshot_deadline_ms` inside `package_hash`, contradicting §6.7's own component list.)* |
+| **Enforcing the deadline** | **RA, at the moment it computes** — not OR at the moment it binds. Binding and computing can be separated by a queue, a retry or a restart, and only the enforcing side sees the real age | Age is measured from `snapshot_taken_at` to the RA computation instant |
+| **Fail-closed behaviour** | **RA rejects and nothing is submitted.** There is no degraded mode, no "use the last good snapshot", and no automatic re-request that would let the system retry until it gets a snapshot it likes | Reject, surface, stop |
 
-**Why this matters concretely.** Without rule 2, a kernel risk request formed against a $10,000 account snapshot and an allocator proposal computed against a $5,000 bucket snapshot (0.025 BTC) both satisfy the schema, and the Guardian stamps the result `AUTHORIZED_AS_REQUESTED` — a label that would then be false. That is precisely the class of silent divergence F-2 documents, reintroduced one layer higher.
+**Binding rules:**
+
+1. **One snapshot per decision.** `BoundSizingIntent.snapshot_id` and the RA computation must carry the **identical** `snapshot_id`. The snapshot is immutable once taken.
+2. **Mismatch is a runtime STOP, not a test failure.** If `BoundSizingIntent.snapshot_id != RA.snapshot_id`, the intent is **REJECTED** with machine-readable reason `SNAPSHOT_MISMATCH`, logged, surfaced on the dashboard, and **no order is submitted**. It is never reconciled by preferring one side.
+3. **Staleness is also a STOP.** If `now − snapshot_taken_at > snapshot_deadline_ms` at the moment RA computes, reject with `SNAPSHOT_STALE`. **No snapshot at all is the same outcome**, with reason `SNAPSHOT_UNAVAILABLE`: absence of account truth is never treated as permission.
+4. **Divergence within one snapshot is a defect, not a policy.** With `snapshot_id`, `allocation_policy_version` and allocator code hash equal, a **deterministic recomputation of the same allocator function** must reproduce `proposed_qty` within a stated tolerance. It does not compare against a second sizing implementation — none exists. Divergence rejects with `REFERENCE_DIVERGENCE` **and** fails the parity test suite. Both, not either.
+5. **Different-snapshot operation is not permitted in V2.** Any future design where one stage binds one snapshot and another computes against a second requires its own versioned allocation policy, its own simulation and its own parity evidence — it is not an implementation detail.
+6. **No snapshot shopping.** OR obtains **one** snapshot per decision and may not request another because the first produced an unwelcome result. A rejected decision is re-formed on the **next bar** with a fresh snapshot and a new `intent_id`, never retried inside the same bar against a different snapshot.
+
+**Why this matters concretely.** Without rule 2, a risk request bound to a $10,000 account snapshot and an allocator proposal computed against a $5,000 bucket snapshot (0.025 BTC) both satisfy the schema, and the Guardian stamps the result `AUTHORIZED_AS_REQUESTED` — a label that would then be false. That is precisely the class of silent divergence F-2 documents, reintroduced one layer higher. Without rule 6, the same defect returns as a *legal* behaviour: retry until the account looks the way you wanted.
 
 ### Four properties that make this safe
 
 1. **The Risk Allocator is one implementation, imported by both the portfolio backtest and the live worker.** If it is not simulated, this design is worse than v1 — the entire force of ChatGPT report 1's objection, satisfied by construction rather than by policy.
 2. **V2 has no resize path.** The allocator's V2 policy is *single-strategy pass-through*: allocate the requested risk percentage against the bucket's capital, then authorize in full or reject in full. No discretionary trim exists.
 
-   **Scope of the no-resizing rule — owner clarification, 2026-08-22 (register D-02, §0.5).** This rule governs **new-order sizing**: no component may substitute a different quantity for the one the Risk Allocator proposed. It is **not** a prohibition on a **separately authorized** emergency **reduction or closure of existing exposure**. Such an action, if it is ever built, is a **distinct, explicit, tested safety policy** with a machine-readable reason and its own simulated equivalent — **never silent resizing**, and never a runtime discretionary trim of a new order. **This clarification authorizes neither its implementation nor its use**; the design belongs to the V3 allocation-policy work (§17.3, WP-V3-10) and is the *distinction* recorded as Appendix E **O-11**.
-3. **Snapshot identity fails closed at runtime** (rules 1–5 above), and is additionally covered by a **D026 RED/GREEN acceptance case**: a deliberate snapshot-drift and bucket-capital-divergence fixture must be shown RED without the guard and GREEN with it, before the guard counts as evidence.
+   **Scope of the no-resizing rule — owner clarification, 2026-08-22 (register D-02, §0.5).** This rule governs **new-order sizing**: no component may substitute a different quantity for the one the Risk Allocator proposed. It is **not** a prohibition on a **separately authorized** emergency **reduction or closure of existing exposure**. Such an action, if it is ever built, is a **distinct, explicit, tested safety policy** with a machine-readable reason and its own simulated equivalent — **never silent resizing**, and never a runtime discretionary trim of a new order. **This clarification authorizes neither its implementation nor its use**; the design belongs to the V3 allocation-policy work (§17.3, WP-V3-10) and is the *distinction* recorded as Appendix E **O-11**. **Where it sits among the emergency operations — added 2026-08-22 (§0.6 R8):** an *automatic Guardian* emergency reduction or closure is the **fourth and only unbuilt** of the four emergency operations in §10.2. It is distinct from **DISARM**, from **KILL (cancel-and-latch)** and from an **authenticated operator FLATTEN**, all three of which are existing or planned V2 capabilities and none of which resizes anything. **Nothing in this document authorizes automatic emergency resizing in V2.**
+3. **Snapshot identity fails closed at runtime** (rules 1–6 above), and is additionally covered by a **D026 RED/GREEN acceptance case**: a deliberate snapshot-drift and bucket-capital-divergence fixture must be shown RED without the guard and GREEN with it, before the guard counts as evidence.
 4. **The Bridge must fail if it computes a quantity while an authorized intent is present.** This is acceptance criterion **A-9** and it is the mechanical guarantee that F-2 cannot recur.
 
 **Migration note.** Today's Bridge originates the quantity (`risk.py:380-381`). During V2 that code path becomes reachable only when **no** authorized intent is present — i.e. never, once workers run kernels. It is not deleted in V2; it is fenced by a test that fails if both paths are live.
@@ -965,27 +1181,31 @@ flowchart TD
     DEC1 -->|yes| S5
     S4 --> S5["5 SOURCE_COMPLETED_BASELINE"]
     S5 --> S6["6 MTC_ENRICHED - optional modules"]
-    S6 --> FREEZE1["7 FREEZE baseline/enriched package_hash<br/>its own evidence clock starts"]
-    FREEZE1 --> SHADOW["8 FORWARD_SHADOW on THAT hash<br/>live bars, zero orders"]
+    S6 --> FREEZE1["7 FREEZE baseline/enriched package_hash<br/>strategy semantics frozen - no clock yet"]
+    FREEZE1 --> MINT1["7b MINT deployment_identity_hash<br/>allocator, policy, guardian, runtime,<br/>protection, adapter, costs bound<br/>THE FORWARD CLOCK STARTS HERE"]
+    MINT1 --> SHADOW["8 FORWARD_SHADOW on THAT composite<br/>live bars, zero orders"]
     FREEZE1 --> S7["9 Optimization - trial identities only<br/>TrialRecord catalog, no promotable package"]
     S7 --> S8["10 Walk-forward folds + lockbox"]
     S8 --> S9["11 Buy-and-hold + excess alpha"]
     S9 --> S10["12 DSR p>=0.95 + BH-FDR"]
     S10 --> S11["13 CPCV / PBO / parameter stability"]
     S11 --> AB{"14 A/B: signal vs baseline vs enriched"}
-    AB --> FREEZE2["14b FREEZE each SELECTED optimized package<br/>NEW package_hash, NEW evidence clock"]
-    FREEZE2 --> SHADOW2["14c FORWARD_SHADOW on the new hash<br/>the baseline window does NOT transfer"]
+    AB --> FREEZE2["14b FREEZE each SELECTED optimized package<br/>NEW package_hash - strategy semantics only"]
+    FREEZE2 --> MINT2["14b-ii MINT its deployment_identity_hash<br/>NEW composite, NEW clock at zero"]
+    MINT2 --> SHADOW2["14c FORWARD_SHADOW on the new composite<br/>the baseline window does NOT transfer"]
     SHADOW --> TPE{"15 TESTNET_PAPER_ELIGIBLE?"}
     SHADOW2 --> TPE
     TPE -->|safety criteria met| TESTNET["16 EXCHANGE_TESTNET execution fleet<br/>real order lifecycle, no real money"]
     TESTNET --> S12["17 Multi-strategy portfolio test"]
-    S12 --> LC["18 LIVE_CANDIDATE - full statistics complete"]
-    LC --> GATE["19 Signed live gate - owner"]
+    S12 --> LC["18 LIVE_CANDIDATE - full statistics complete<br/>+ accepted family/human-observation leakage record"]
+    LC --> GATE["19 Signed live gate - owner<br/>ALL FOURTEEN preconditions, one dated decision,<br/>bound to the exact deployment_identity_hash"]
     GATE --> LL["20 LIMITED_LIVE - 1 strategy<br/>&lt;=1% of account as MAXIMUM ALLOCATED CAPITAL<br/>separate LOWER loss-at-stop cap: UNSET - blocks live authorization"]
     LL --> S16["21 Scale up / suspend / retire"]
     style SE fill:#ef6c00,color:#fff
     style FREEZE1 fill:#6a1b9a,color:#fff
     style FREEZE2 fill:#6a1b9a,color:#fff
+    style MINT1 fill:#4527a0,color:#fff
+    style MINT2 fill:#4527a0,color:#fff
     style SHADOW fill:#2e7d32,color:#fff
     style SHADOW2 fill:#2e7d32,color:#fff
     style TESTNET fill:#2e7d32,color:#fff
@@ -996,13 +1216,14 @@ flowchart TD
 
 ### The freeze rule, stated without contradiction
 
-**Repaired 2026-08-22 (§0.3 item 3).** Earlier wording implied one freeze that both preceded optimization and survived it. It cannot: optimization changes parameters, and a parameter change mints a new hash (§6.7). The corrected rule has three parts and no exception:
+**Repaired 2026-08-22 (§0.3 item 3), extended by §0.6 R2 and completed in the R1 correction pass.** Earlier wording implied one freeze that both preceded optimization and survived it. It cannot: optimization changes parameters, and a parameter change mints a new hash (§6.7). A second, subtler error survived that repair: it treated **`package_hash` alone** as the thing that starts an evidence clock. It is not. The corrected rule has four parts and no exception:
 
-1. **The baseline/enriched package freezes early** — step 7 — so a forward clock can start immediately on *that exact artefact*. It is a legitimate promotable candidate in its own right, and it is what step 8 shadows.
-2. **Optimization does not produce a promotable package.** It produces **trial identities** (`trial_id`, `param_hash`, `evaluation_run_hash`) inside the catalog. A trial is an evaluation record, not a deployable artefact, and nothing may be promoted or shadowed directly from a trial row.
-3. **Each *selected* optimized configuration is then frozen as a new package** — step 14b — receiving **its own `package_hash` and its own evidence clock, starting at zero.** The baseline's shadow window does **not** transfer to it. Two packages from one family therefore accumulate two independent forward records, which is exactly what §6.6 rule 3 requires.
+1. **The baseline/enriched package freezes early** — step 7. **`package_hash` freezes strategy semantics and is a component of lineage; on its own it starts no acceptance-bearing clock.** It is a legitimate promotable candidate in its own right.
+2. **The forward clock starts when the composite identity is minted and admitted** — step 7b. An acceptance-bearing forward clock begins only when the full environment-specific **`deployment_identity_hash`** (§6.7) exists — strategy semantics **plus** allocator, allocation policy, Guardian code and policy, risk-bucket and economic policy, runtime policy, protection semantics, broker adapter and cost lineage — **and** an admission decision for that environment has been issued (§11.5). That composite is what step 8 shadows.
+3. **Optimization does not produce a promotable package.** It produces **trial identities** (`trial_id`, `param_hash`, `evaluation_run_hash`) inside the catalog. A trial is an evaluation record, not a deployable artefact, and nothing may be promoted or shadowed directly from a trial row.
+4. **Each *selected* optimized configuration is then frozen as a new package** — step 14b — receiving **its own `package_hash`**, and its own **`deployment_identity_hash`** at step 14b-ii, whose clock starts at zero. The baseline's shadow window does **not** transfer to it. **And the same rule runs the other way:** a material change to *any* bound component — the allocator, the allocation policy, a Guardian threshold, `snapshot_deadline_ms`, the broker adapter, the fee schedule — mints a **new composite** and **resets that environment's clock**, with `package_hash` unchanged. Earlier evidence remains readable as history, marked **`PRIOR_IDENTITY`**, and never counts toward a gate.
 
-The calendar win is real but narrower than v2.0 implied: it comes from starting a clock on the *baseline* while the statistics run, and from starting each optimized package's clock the moment it is selected rather than after the whole battery completes — not from carrying one window across a changing artefact.
+The calendar win is real but narrower than v2.0 implied: it comes from starting a clock on the *baseline* composite while the statistics run, and from starting each optimized package's clock the moment its composite is minted rather than after the whole battery completes — not from carrying one window across a changing artefact, and not from treating a strategy-only hash as if it were the system that traded.
 
 ## 6.4 Four forward environments — never conflated
 
@@ -1017,12 +1238,33 @@ The calendar win is real but narrower than v2.0 implied: it comes from starting 
 
 ## 6.5 Eligibility states
 
+**Repaired 2026-08-22 (§0.6 R5, R13).** The v2.1 table used unfalsifiable phrases — *"acceptable repaint behaviour"*, *"no catastrophic basic historical failure"* — which cannot be shown RED against a deliberate mutation and therefore cannot be evidence under D026. It also had **no carrier**: no work package produced an eligibility verdict, and nothing recorded one. Both are fixed below. The criteria are carried by **WP-P0-21**; the admission *decisions* are carried by **WP-V2A-10** (see §11.5).
+
 | State | Requirements | Consumes |
 |---|---|---|
-| **`SHADOW_ELIGIBLE`** | Deterministic rules; no unresolved lookahead; acceptable repaint behaviour; frozen package hash; data-quality checks passed | Nothing but CPU |
-| **`TESTNET_PAPER_ELIGIBLE`** | All of the above **plus**: valid sizing semantics; valid protection semantics; Bridge-compatible lifecycle; reconciliation-safe execution; no catastrophic basic historical failure. **Does not require the full statistical battery.** | Exchange rate limits, reconciliation capacity, operator attention |
-| **`LIVE_CANDIDATE`** | Full statistical battery complete (WF, lockbox, CPCV, PBO, DSR ≥ 0.95, BH-FDR, sensitivity) **and** sufficient forward evidence from shadow + testnet on the same `package_hash` | Owner review |
-| **`LIMITED_LIVE_APPROVED`** | Signed live gate; all six preconditions evidenced | Real capital |
+| **`SHADOW_ELIGIBLE`** | Every check in the falsifiable table below passes: **deterministic replay**, **no unresolved lookahead**, **bounded repaint**, **data quality**, plus a frozen `package_hash` and a frozen `deployment_identity_hash` (§6.7) | Nothing but CPU |
+| **`TESTNET_PAPER_ELIGIBLE`** | All of the above **plus**: valid sizing semantics (a `SizingRequest` that RA can resolve for the bound bucket, §5.5); valid protection semantics (`stop_semantics = STRATEGY_NATIVE` with a placeable reduce-only stop); Bridge-compatible lifecycle; reconciliation-safe execution; and the **basic-failure floor** below. **Does not require the full statistical battery.** | Exchange rate limits, reconciliation capacity, operator attention |
+| **`LIVE_CANDIDATE`** | Full statistical battery complete (WF, lockbox, CPCV, PBO, DSR ≥ 0.95, BH-FDR, sensitivity) **and** sufficient forward evidence from shadow + testnet on the same **`deployment_identity_hash`** (§6.7) **and** an accepted **family/human-observation leakage record** (§6.6, WP-P0-22) | Owner review |
+| **`LIMITED_LIVE_APPROVED`** | Signed live gate; **all fourteen** canonical hard preconditions evidenced in one dated decision against the exact `deployment_identity_hash` (F-16); D-07's two caps both stated and evidenced | Real capital |
+
+### The falsifiable checks that replace the subjective phrases
+
+Each row states the check, the objective threshold, and the **D026 fixture** that must be RED without the check and GREEN with it. **A check with no fixture is not a check.** Where a threshold is currently unset, it is marked `[OPEN]` and **blocks the state until it is set** — it does not default to permissive.
+
+| Check | Objective test | Verdict rule | D026 fixture |
+|---|---|---|---|
+| **Deterministic replay** | Same bars + same config + same seed, run twice → **byte-identical intent stream hash** (§9.6 test 1) | Any byte difference ⇒ **FAIL** | A deliberate nondeterminism injected into the kernel (unordered iteration or unseeded RNG) must turn the check RED |
+| **Lookahead** | **For each decision at bar `t`, re-run the candidate over the prefix ending at and including `t`** — that is, remove only the bars **strictly after `t`**, keeping the decision bar itself — and compare **the intent at `t`** with **the full-series intent at `t`**. *(Corrected in the R1 correction pass: the earlier wording truncated the series **from** the decision bar onwards rather than after it, which deletes the decision bar itself and therefore deletes the decision being tested. A check that removes its own subject cannot be RED for the right reason.)* | Any intent at `t` that differs between the prefix run and the full-series run ⇒ **FAIL, no tolerance** | A fixture strategy that reads `bar[t+1]` must turn the check RED |
+| **Repaint** | Re-evaluate every historical bar **as if it were live**, replaying bar-by-bar, and diff the resulting signal series against the vectorized full-history series | **Zero** signal flips on **closed** bars ⇒ PASS. Any flip on a closed bar ⇒ **FAIL**. Flips on the **forming** bar are permitted **only** when the package declares `bar_close_only = true` and the runtime is proven to act on closed bars only. **"Acceptable repaint" is removed as a concept — repaint on a closed bar is never acceptable** | A fixture using a repainting indicator on closed bars must turn the check RED |
+| **Data quality** | Per (symbol, timeframe) over the evaluation window: **zero duplicate timestamps**, **zero out-of-order timestamps**, **gap ratio ≤ `[OPEN]` threshold with every gap enumerated**, zero NaN/zero/negative OHLCV values, and a **recorded dataset hash** | Any duplicate or out-of-order bar ⇒ **FAIL**. Gaps above the threshold ⇒ **FAIL**. Threshold unset ⇒ **BLOCKED**, never PASS | A dataset with an injected duplicate bar and an injected 3-bar gap must turn the check RED |
+| **Basic-failure floor** *(replaces "no catastrophic basic historical failure")* | Four counted properties over the evaluation window, each with a stated number rather than an adjective: **(a)** trade count ≥ `[OPEN]` minimum; **(b)** no single trade whose loss exceeds `[OPEN]` × the intended risk-at-stop unit — i.e. the stop demonstrably functioned; **(c)** zero simulated events the Bridge cannot express (unrepresentable order types, negative or sub-`min_qty` quantities, stops on the wrong side); **(d)** zero simulated liquidation or margin-call events under the frozen instrument metadata | Any (c) or (d) event ⇒ **FAIL**. (a) or (b) unmet ⇒ **FAIL**. Any threshold unset ⇒ **BLOCKED** | A fixture whose stop is placed on the wrong side of the position, and one whose quantity falls below `min_qty`, must each turn the check RED |
+| **Unsimulated controls** | The candidate's enabled controls are compared against what the canonical simulator actually executed (§9.1, WP-P0-20) | Any enabled control that is neither simulated nor listed in `UNSIMULATED_CONTROLS` ⇒ **FAIL**. Any **required** control listed as unsimulated ⇒ **blocks promotion**, though not necessarily shadow | A fixture enabling a control the simulator does not model, with an empty manifest, must turn the check RED |
+
+**Three rules about the verdicts themselves:**
+
+1. **The verdict is a record, not an opinion.** Each check emits a machine-readable result — check id, threshold, measured value, PASS/FAIL/BLOCKED, dataset hash, `deployment_identity_hash`, timestamp — and the set of results is the input to the admission decision in §11.5.
+2. **`BLOCKED` is not `FAIL` and is never `PASS`.** An unset threshold, a missing dataset hash or an unavailable check yields `BLOCKED`, which stops the state as firmly as a failure and names what is missing.
+3. **A verdict binds to an identity.** Re-running against a different `deployment_identity_hash` produces a new verdict; the old one does not transfer (§6.7).
 
 **[OWNER — Q17] Fleet sizing is capacity-driven, not a fixed number.** Start small and increase the testnet fleet only while exchange rate limits, event processing and reconciliation remain reliable. The binding constraints are measured, not guessed:
 
@@ -1034,11 +1276,21 @@ The calendar win is real but narrower than v2.0 implied: it comes from starting 
 
 **[C-2 — the error v1 made.]** Running shadow in parallel with optimization is only sound if shadow observations cannot influence the strategy being observed. Five binding rules:
 
-1. **Freeze first.** A `package_hash` is frozen *before* any shadow observation of it is collected. No exceptions. This applies identically to the early baseline package and to every optimized package selected later (§6.3) — each is frozen before it is watched.
-2. **Timestamp the window.** `evidence_window_start` is recorded at freeze; every observation carries it.
-3. **Never modify a running package.** Any code, parameter, module or substitute change mints a **new hash and a new clock**. The old window does not transfer.
+1. **Freeze first, then mint the composite.** A `package_hash` is frozen *before* any shadow observation of it is collected, and the environment-specific **`deployment_identity_hash`** is minted before the clock starts (§6.3, §6.7). No exceptions. This applies identically to the early baseline package and to every optimized package selected later — each is frozen, composited and admitted before it is watched.
+2. **Timestamp the window.** `evidence_window_start` is recorded when the composite identity is minted; every observation carries it **and the `deployment_identity_hash` it belongs to**.
+3. **Never modify a running identity.** Any code, parameter, module or substitute change mints a **new `package_hash`**; any change to the allocator, allocation policy, Guardian policy, risk-bucket or economic policy, runtime policy, protection semantics, broker adapter or cost lineage mints a **new `deployment_identity_hash` with `package_hash` unchanged**. Either way a **new composite and a new clock** exist, the old window does not transfer, and the old window is marked `PRIOR_IDENTITY`.
 4. **Mark contaminated data.** Shadow data reviewed by a human or an optimizer during the research phase is labelled `OBSERVED_DURING_RESEARCH` and is **navigational only** — it can never be cited as confirmation.
 5. **Only untouched post-freeze periods count.** Confirmation evidence is the portion of the window nobody looked at while decisions were still open.
+
+### Rules 6–8 — family-level and human-observation leakage (added 2026-08-22, §0.6 R6)
+
+**The gap being closed.** Rules 1–5 close leakage **at the level of one package**. Appendix E **O-12** recorded the level above them as a real residual gap and did **not** repair it: observing package A can inform the parameters of sibling package B, and B's freeze then looks clean while its design was shaped by A's forward window. The same applies to a human who watches a family's shadow feed and then chooses which sibling to promote. **That gap is now a blocking control before the first `LIVE_CANDIDATE` decision, with a carrier (WP-P0-22) and objective evidence — it is no longer an acknowledged-but-open item.**
+
+6. **Family lineage is recorded, not inferred.** Every package carries a **`family_id`** derived from its source provenance, producer and parameter neighbourhood — the taxonomy already present in `STRATEGY_RESEARCH_REGISTRY.json` and `TAG_DICTIONARY.json` seeds it (§10.3 mechanism 2). A package with no established `family_id` is `UNKNOWN`, and `UNKNOWN` **blocks** `LIVE_CANDIDATE`; it does not default to "unrelated".
+7. **Sibling observation contaminates the sibling.** If any forward observation of package A was **available to the decision** that produced sibling package B — same `family_id`, and A's `evidence_window_start` earlier than B's freeze — then B's forward evidence carries `FAMILY_OBSERVED`, and the contaminated portion is **navigational only**, exactly as rule 4 treats direct observation. The contaminated portion is the intersection of A's observed window with B's evidence window, computed, not estimated.
+8. **The untouched window is computed from a ledger, not asserted.** Every human view and every optimizer read of a shadow record appends to an **append-only observation ledger** — who or what, when, which `package_hash`, which `family_id`, which window. Confirmation evidence is the window that the ledger shows nobody read, and **an absent or incomplete ledger yields zero confirmation evidence** rather than a presumption of cleanliness.
+
+**Objective evidence required before the first `LIVE_CANDIDATE`** (WP-P0-22 acceptance): the family lineage graph with every member's `family_id` resolved or explicitly `UNKNOWN`; the observation ledger; the computed untouched window per candidate; and a **D026 fixture** in which a deliberately contaminated sibling — one whose parameters were chosen after its sibling's window was read — is shown **RED** without the control and **GREEN** with it. **Candidate eligibility (WP-V2A-10), Promotion Authority (WP-V3-03) and live admission (WP-V4-01) all depend on this record.**
 
 ## 6.7 Candidate identity and evidence binding
 
@@ -1065,17 +1317,51 @@ evaluation_run_hash = SHA256( package_hash                              # HOW IT
                                                                         # search regime, preregistered space
 
 trial_id            = <evaluation_run_hash>.<param_hash>.<seq>          # one optimization trial
-run_id              = <package_hash>.<environment>.<seq>                # one execution in one environment
+
+deployment_identity_hash                                                # THE ECONOMIC / DEPLOYMENT IDENTITY
+                    = SHA256( package_hash                              # strategy semantics (above)
+                            ‖ allocator_code_sha
+                            ‖ allocation_policy_version
+                            ‖ guardian_code_sha
+                            ‖ guardian_policy_json                      # authorize/reject rules, thresholds
+                            ‖ risk_bucket_policy_json                   # bucket capital, caps, session rule
+                            ‖ economic_policy_json                      # account guards: daily loss, max DD,
+                                                                        #   consecutive-loss, exposure, leverage
+                            ‖ runtime_policy_json                       # freshness thresholds, DEGRADED policy,
+                                                                        #   snapshot_deadline_ms, worker isolation
+                            ‖ protection_semantics_json                 # stop_semantics, reduce-only contract,
+                                                                        #   same-bar collision policy
+                            ‖ broker_adapter_id + broker_adapter_version
+                            ‖ cost_lineage_json )                       # venue fee schedule, funding schedule,
+                                                                        #   slippage model id and parameters
+
+run_id              = <deployment_identity_hash>.<environment>.<seq>    # one execution in one environment
 ```
+
+**Why the composite exists — repaired 2026-08-22 (§0.6 R2).** v2.1 bound forward and live evidence clocks to `package_hash` alone. But `package_hash` deliberately contains **only deployable strategy semantics**, so the allocator, the allocation policy, the Guardian and its thresholds, the risk-bucket and account-guard policy, the runtime freshness policy, the protection semantics, the broker adapter and the cost lineage could **all** change without minting a new identity. Six weeks of testnet evidence gathered under one allocator and one fee schedule would then be presented, unchanged, as evidence for a different economic system. **`deployment_identity_hash` is the thing that actually traded, and it is what forward and live evidence now binds to.**
+
+**The canonical rule, stated once and governing every other statement in this document set.** *(Completed in the R1 correction pass — earlier text still carried package-hash-only clock claims in C-6, §0.3 item 3, the §6.3 lifecycle, DL-25 and Appendix D C2. Each of those is now marked superseded and extended by this rule.)*
+
+1. **`package_hash` freezes strategy semantics and is a component of lineage.** It does **not**, by itself, start or own a forward evidence clock, and no document may say that it does.
+2. **An acceptance-bearing forward clock starts only when the full environment-specific `deployment_identity_hash` is minted and admitted** for that environment (§6.3 step 7b / 14b-ii, §11.5).
+3. **Economic, forward, promotion and live evidence binds to the composite.** Anything weaker is not acceptance evidence.
+4. **Any material change to a bound component mints a new composite and resets that environment's clock.** Earlier evidence remains readable as history, marked **`PRIOR_IDENTITY`**, and never counts toward a gate.
+5. **Historical statements are retained only when clearly marked superseded.** Where an older row (C-6, §0.3 item 3, DL-25, Appendix D C2) records what was decided at the time, it stays as history with an explicit pointer here; it is never quoted as the current rule.
+
+`environment` is deliberately **outside** the hash: shadow, internal paper, testnet and limited live are **labels on the evidence**, not different identities. That is what allows one identity's evidence to be compared across environments.
 
 **The binding rules:**
 
-- **Deployable identity is `package_hash`.** It contains nothing about datasets, costs, simulators or evaluation configuration. Two evaluations of the same shipped strategy share it.
-- **Every evaluation result — backtest, walk-forward, lockbox, CPCV, DSR/BH-FDR — is reported under an `evaluation_run_hash`**, and therefore always names its dataset, cost model, simulator and configuration. A dataset or cost-model change mints a new `evaluation_run_hash`; it does **not** mint a new package.
-- **Forward and live evidence — shadow, internal paper, testnet, limited live — belongs to the exact `package_hash`**, because that is the artefact that ran. Its evidence clock is per package (§6.3, §6.6).
-- **A change to anything inside `package_hash`** — parameters, modules, substitutes, kernel version, instrument metadata — **mints a new package, a new evidence clock, and invalidates the transfer of any prior forward window** (§6.6 rule 3).
-- `candidate_id` aggregates packages **for navigation and family-level multiple-testing accounting only**.
-- `package_hash` **and** the `evaluation_run_hash` that justified promotion are both stamped into the promotion decision artifact (§11.5); `package_hash` alone is stamped into `OrderIntent`, every fill record and every dashboard log line — full provenance from intake to live fill.
+- **Strategy identity is `package_hash`.** It contains nothing about datasets, costs, simulators or evaluation configuration. Two evaluations of the same shipped strategy share it.
+- **Evaluation identity is `evaluation_run_hash`.** Every evaluation result — backtest, walk-forward, lockbox, CPCV, DSR/BH-FDR — is reported under it and therefore always names its dataset, cost model, simulator and configuration. A dataset or cost-model change mints a new `evaluation_run_hash`; it does **not** mint a new package.
+- **Economic/deployment identity is `deployment_identity_hash`, and it is what forward and live evidence binds to.** Shadow, internal paper, testnet and limited-live evidence belongs to the exact composite, because that is the system that ran. The evidence clock is per composite (§6.3, §6.6).
+- **A change to anything inside `package_hash`** — parameters, modules, substitutes, kernel version, instrument metadata — mints a new package **and** therefore a new `deployment_identity_hash` (§6.6 rule 3).
+- **A change to any other bound component mints a new `deployment_identity_hash` while leaving `package_hash` unchanged.** This is the case v2.1 could not express, and it is the common one: swapping the allocation policy, retuning a Guardian threshold, changing `snapshot_deadline_ms`, replacing the broker adapter or updating the fee schedule are all material identity changes.
+- **A material identity change resets the applicable forward-evidence period.** Shadow, testnet and limited-live windows accumulated under the old composite **do not transfer** to the new one, for every environment whose behaviour the changed component can affect. The old windows remain readable as history and are marked `PRIOR_IDENTITY`; they are never counted toward a gate.
+- **Which environments a change affects is declared, not assumed.** Each bound component names the environments its change invalidates — for example, a cost-lineage change invalidates every environment; a Guardian threshold change invalidates every environment in which the Guardian ran; a broker-adapter change invalidates testnet and live but not shadow, which places no orders. **The declaration is part of the component's schema and defaults to "all environments" when unstated.**
+- **Six evidence classes bind to the composite:** `TrialRecord` rows (§11.2), deterministic replay artifacts (§11.3), **eligibility verdicts** (§6.5), **environment admission decisions** (§11.5), **promotion decision artifacts** (§11.5) and **rollback records** (§16 M9, WP-V2B-11). An artifact of any of these classes without a `deployment_identity_hash` is unusable as evidence.
+- `candidate_id` aggregates packages **for navigation and family-level multiple-testing accounting only**, and `family_id` (§6.6 rule 6) aggregates them for leakage control.
+- **What is stamped where:** the promotion decision artifact (§11.5) carries `package_hash`, the `evaluation_run_hash` that justified it, **and** the `deployment_identity_hash`; `OrderIntent`, every fill record and every dashboard log line carry **`package_hash` and `deployment_identity_hash`** — full provenance from intake to live fill, including the policy and adapter that shaped the fill.
 
 Antigravity's formula collapses candidate and package into one identifier. Adopted as the **`package_hash`** definition; `candidate_id` is retained separately, because without it family lineage and cross-package multiple-testing accounting are lost.
 
@@ -1125,10 +1411,10 @@ Assessment of the ~200 keys in `mtc_v2/core/config.py`, **revised for the reduce
 | Behavioural limits (max trades/day, cooldown, recovery, equity-curve, MAE) | ~14 | split | **MODULE (kernel)** — simulated, never moved to the Guardian |
 | Account guards (daily loss, max DD, consecutive losses) | ~6 | Guardian | **GUARDIAN** |
 | Candle pattern + level proximity gates | 6 | module | **MODULE** |
-| `tw_*` TradingView-parity research knobs | 7 | retire | **RETIRE** — `config.py:56-58` states they have *"no runtime impact until semantic owners are implemented"*. Dead switches on a protected surface are a liability. |
-| `wt_*` WunderTrading | 13 | retire | **RETIRE [OWNER — Q3]** |
+| `tw_*` TradingView-parity research knobs | 7 | retire | **DECIDE IN CANONICALIZATION — corrected 2026-08-22 (§0.6 R12).** v2.1 said RETIRE on the strength of the blanket source comment at `config.py:56-57` (*"no runtime impact until semantic owners are implemented"*). **That comment is demonstrably stale for six keys** — `position_sizer.py:22,61-62`, `exits.py:294-298,302,334`, `runner.py:130-133,563,958,1296-1396` (F-8a, §3 D-12). **Those six change quantity rounding, break-even/trailing trigger bars, margin-call handling and re-entry timing**; for those, both branches must be **pinned by the golden suite (WP-P0-10)** and **reproduced by `LEGACY_COMPATIBLE` (WP-P0-11)**, and only `CORRECTED_VNEXT` (WP-P0-12) may change the behaviour. **The seventh, `tw_margin_call_split_entries`, is `[DRIFT/UNKNOWN]` — required and validated, read at `runner.py:133` and stamped at `:1057`, with no located behavioural consumer; the comment's no-impact claim is not yet disproven for this key — and it goes to WP-P0-09 / WP-P0-06 investigation rather than to a two-branch fixture.** All seven remain a **capability decision (WP-P0-09)**. **Not a cleanup, and not a mass deletion.** |
+| `wt_*` WunderTrading | 13 | retire | **RETIRE [OWNER — Q3]** — genuinely consumerless in Python (F-8); the live path is the Pine `alert()` emission, removed by **WP-P0-23** under gate G2 |
 
-**Result: mandatory core ≈ 30 keys; optional modules ≈ 130; retired ≈ 20.** A real reduction of the *mandatory* surface with no researched capability lost.
+**Result: mandatory core ≈ 30 keys; optional modules ≈ 130; retired ≈ 13 (`wt_*`), plus 7 `tw_*` keys whose disposition is decided in canonicalization rather than assumed.** A real reduction of the *mandatory* surface with no researched capability lost — and, after the R12 correction, **no economically live capability quietly deleted as cleanup either**.
 
 ## 7.3 `02_MTC_BACKTEST` — harvest then freeze
 
@@ -1199,15 +1485,41 @@ Removing the Pine `alert()` emissions is a **routing and behaviour change on a p
 - the freeze tag (step 1) must exist first, so the controller is recoverable;
 - and the CI guard (step 6) must be able to fail, proven by a deliberate violation, before it counts as protection.
 
+**The end state, stated before the steps — corrected in the R1 correction pass.** The earlier design removed the `alert()` emissions from a **new visualization copy** while leaving the original `MTC_V2.pine` **unchanged and still active**, and then demanded a whole-repo CI guard with an **empty allowlist**. Those two things cannot both hold: the original still contains `alert(`, so the guard would be RED forever and the package could never pass. Worse, the design's own success condition would have been *"the alert-capable controller is still the maintained active file"* — the opposite of de-fanging.
+
+**The authorized end state is therefore:**
+
+1. **The frozen tag and Git history preserve the original controller, unchanged and recoverable.** Nothing is deleted (Q5, Q13).
+2. **The maintained active Pine source is transformed in place into visualization-only Pine.** `MTC_V2.pine` itself is the file that becomes visualization-only — or, if WP-P0-19's accepted design names a different active path, that path instead — but **exactly one maintained active Pine source exists either way**. An alert-capable original is **not** left active under any name.
+3. **The two `alert()` emissions and the 13 `wt_*` inputs are removed from that active source.** The 13 consumerless Python `wt_*` keys in `mtc_v2/core/config.py:226-238` remain the **separately named exact scope** the package already approves.
+4. **Across the entire active source tree, zero `.pine` files contain `alert(`, under an allowlist that is empty.** That is what makes the guard satisfiable.
+5. **Rollback restores the controller from the immutable tag**, walked at least once.
+
 The steps below are the **design** for that change, not a work order:
 
-1. Freeze the current file by tag: `legacy/mtc-v2-pine-controller-2026-08-21`. History preserved per the standing instruction not to delete capability.
-2. Copy to `visualization/MTC_V2_VIEW.pine` with a header stating it is not a controller.
-3. **Delete lines 2020 and 2028** (`alert(...)` emissions) from the visualization copy.
-4. Delete the 13 `wt_*` inputs from the visualization copy, and the 13 dead `wt_*` keys from `mtc_v2/core/config.py:226-238`.
-5. Delete the 7 inert `tw_*` keys (`config.py:56-58`) in the same change.
-6. Add a repo-guard check: any `.pine` file containing `alert(` must appear in an explicit allowlist, empty by default; CI fails otherwise.
+1. Freeze the current file by tag: `legacy/mtc-v2-pine-controller-2026-08-21`. History preserved per the standing instruction not to delete capability. **This tag is the only place the alert-capable controller continues to exist.**
+2. **Transform the maintained active Pine source in place** into visualization-only Pine, headed *"VISUALIZATION ONLY — NOT A CONTROLLER"*. *(Earlier text said "copy to `visualization/MTC_V2_VIEW.pine`" and left the original active. If WP-P0-19's accepted design prefers a renamed active path, the rename is part of the same change — **what may not happen is two maintained active Pine sources, or an active source that still contains `alert(`**.)*
+3. **Delete lines 2020 and 2028** (`alert(...)` emissions) **from the active source**, so that no active `.pine` file emits an order alert.
+4. Delete the 13 `wt_*` inputs from the active Pine source, and the 13 dead `wt_*` keys from `mtc_v2/core/config.py:226-238`. **These are genuinely consumerless** — grepping `wt_` in `runner.py`, `exits.py` and `results.py` returns nothing (F-8).
+5. **The 7 `tw_*` keys are a different case and are NOT part of this change — corrected 2026-08-22 (§0.6 R12).** v2.1 listed them here as "inert keys" to delete alongside the `wt_*` block. **They are not one inert group:** `mtc_v2/core/config.py:58-64` declares them, `:282-288` requires them, and `position_sizer.py:22,61-62`, `exits.py:294-298,302,334` and `runner.py:130-133,563,958,1296-1396` consume them — **six of the seven changing quantity rounding, break-even and trailing trigger bars, margin-call handling and re-entry timing, and the seventh (`tw_margin_call_split_entries`) read and stamped only, `[DRIFT/UNKNOWN]`** (F-8a, §3 D-12). Deleting the six is an **economic behaviour change** to the kernel; deleting the seventh is a change to a required, validated configuration surface whose behaviour is unestablished. **Neither is de-fanging Pine.** They are therefore routed to the kernel consolidation chain — decided in the capability canonicalization table (**WP-P0-09**), pinned on **both branches** by the golden suite (**WP-P0-10**), and reproduced exactly by `LEGACY_COMPATIBLE` (**WP-P0-11**) before `CORRECTED_VNEXT` (**WP-P0-12**) may change anything. **The blanket source comment at `config.py:56-57`, demonstrably stale for the six behavioural keys and unverified for the seventh, is itself part of what must be corrected there; this round corrects no code.**
+6. Add a repo-guard check over the **entire active source tree**: any `.pine` file containing `alert(` must appear in an explicit allowlist, and **the allowlist is empty** — so the check passes only when **no active `.pine` file contains `alert(` anywhere**. The frozen tag is outside the active tree and is not scanned. **Per D026 the guard must be shown RED when an `alert(` is deliberately reintroduced anywhere in the active tree, and GREEN after its removal**, before it counts as protection.
 7. Register the divergence alarm as a scheduled job with a threshold and a notification path (§12.3).
+
+### Design and implementation are two packages, not one — repaired 2026-08-22 (§0.6 R7)
+
+**The defect.** `WP-P0-19` produces the design above — the file and line list, the visualization-copy plan, the CI-guard specification, the divergence-alarm specification and a rollback path. It is explicitly **design only** and **writes no Pine and no config**. But other text treated it as though it performed the change: `WP-V4-07` listed *"WP-P0-19 executed"* as its dependency, and gate **G2** named *"WP-P0-19 execution"* as the thing it gates — describing an execution step that **no package defined**. A gate over an undefined package cannot be satisfied and cannot be refused.
+
+**The split, now explicit:**
+
+| | **WP-P0-19 — design** | **WP-P0-23 — implementation** |
+|---|---|---|
+| Produces | The authorization package: exact files and lines, the **in-place transformation plan naming the one maintained active Pine source**, CI-guard spec, alarm spec, rollback path | The actual edit: the frozen tag, **the active Pine source transformed in place to visualization-only**, the deleted `alert()` emissions, the deleted `wt_*` block, the CI guard in place |
+| Touches Pine or config | **No** | **Yes — protected surface** |
+| Tier | T2 | **T0** |
+| Authorization | G1-IA | **G1-IA *and* G2 — its own exact-change owner authorization naming the files and lines, and its own audit round** |
+| Evidence | The owner has a package specific enough to authorize or refuse | Freeze tag exists **before** the edit; **zero `.pine` files in the active tree contain `alert(` under an empty allowlist**, with the guard proven **RED when an `alert(` is deliberately reintroduced anywhere in the active tree and GREEN after removal**, per D026; the visualization-only source renders identically to the frozen original on a fixed chart and reference dataset; a **rollback path walked at least once**, restoring the controller from its tag |
+
+**Until WP-P0-23 is separately authorized and accepted, the correct state is unchanged from v2.1:** the finding stands (F-8), the decision stands (Q3 / DL-07), and `MTC_V2.pine` is untouched — **which is precisely why the alert path is still live today and why the package's end state must remove it from the active tree rather than beside it.** **This document authorizes neither package, and this repair round edited no Pine.**
 
 ---
 
@@ -1221,11 +1533,44 @@ There is no third category. Today every control in the F-3 table sits in an impl
 
 **Corollary (Principle 6, §5.1):** anything that changes economics at runtime must be simulated identically. This is why two Antigravity sub-rules are rejected in §12.3 — feed staleness and correlation breach may **block**, never silently resize.
 
+### 9.1a The canonical simulator must actually be migrated — added 2026-08-22 (§0.6 R4)
+
+**The gap.** §9.1 states the principle and §9.2 states how each control *would* be reproduced, but **no work package migrated the engine that actually decides promotion**. `mega_walk_forward.simulate_slice` (`03_QUANTLENS/tools/mega_walk_forward.py:648`) is the canonical research engine per `AGENTS.md`, it simulates almost none of the production control set (F-3), and it is not a leaf.
+
+**The dependent-tool inventory, classified — corrected in the R1 correction pass.** Earlier text listed eight tools and said they *"all reference it, so the whole validation battery inherits its economics."* That was too coarse: the eight are four different relationships, and a migration plan that treats them as one will either over-scope or miss a case.
+
+| Class | Tools | Relationship to `simulate_slice` | What migration owes it |
+|---|---|---|---|
+| **Direct callers** | `multiwindow_oos.py`, `cpcv_validator.py`, `finalize_bootstrap_bh.py`, `reference_producer.py` | Call the canonical function. **These genuinely inherit its economics** | Re-based with the canonical path, or explicitly retired, or left on the legacy path with results stamped `SIGNAL_SCREEN_ONLY` |
+| **Independent simulators** | `rigorous_walk_forward.py`, `rigorous_walk_forward_parallel.py` | **Define their own simulators.** They do **not** inherit `simulate_slice`'s economics; they have economics of their own, which are separately unmigrated | Named individually in the migration record with their own disposition. **Do not claim they inherit the canonical function** |
+| **Patchers** | `variant_missing_knobs.py` | **Patches the mega engine** rather than calling the function as published | Migration must state what happens to the patch surface; a patcher can silently reintroduce unmigrated behaviour |
+| **Reporting consumers** | `enrich_gate3_evidence.py` | **Describes the semantics** in reporting; it does not execute the simulation | Its descriptions must be updated to match the migrated semantics, and it is not a simulation dependency |
+
+**These four classes are tracked separately everywhere.** No document may say the eight tools all reference or inherit the canonical function.
+
+Meanwhile `TrialRecord` (§11.1), the Explorer (§11.4), deterministic replay (§11.3) and the Promotion Authority (§11.5) were all designed to sit **on top of** it and were treated as acceptance-bearing. **A perfectly catalogued, beautifully charted record of a simulation that models no sizing, no guards, no filters, post-hoc slippage and gap-free stop fills is a high-fidelity record of the wrong economics.**
+
+**The rule, stated as a gate rather than an aspiration.**
+
+1. **`WP-P0-20` migrates the canonical path *and* delivers the one shared allocator.** `simulate_slice` and the battery that depends on it are re-based on the kernel **K** and on the **one versioned shared Risk Allocator implementation**, following the four-stage sizing model §5.5 defines, so a research quantity and a runtime quantity are computed by the same code. It is a **T0** package because it decides what a promotion number means.
+
+   **Corrected in the R1 correction pass — the previous sequencing did not close this gap.** The earlier text made WP-P0-20 merely *conform to a contract* and allowed a conforming stand-in stamped `ALLOCATOR_NOT_YET_SHARED` in the run manifest. A stamped stand-in still let WP-P0-20 pass its gate, and let `TrialRecord`, the Explorer and everything downstream proceed as though the shared allocator existed. **A label on a substitute is not the shared allocator.** The rule now is:
+
+   - **WP-P0-20 delivers the one versioned shared Risk Allocator implementation/package**, and the canonical `mega_walk_forward.simulate_slice` path **imports and uses that exact implementation together with the kernel**. Import identity is proven by import, not asserted.
+   - **A stand-in may exist only as a non-accepting development state.** Runs produced against a stand-in are stamped **`SIGNAL_SCREEN_ONLY`** (§9.4) and **can never satisfy A-7b or D-13**. There is no manifest stamp that makes a stand-in acceptance-bearing, and `ALLOCATOR_NOT_YET_SHARED` is **withdrawn as an accepting state**.
+   - **WP-V2A-03 is runtime wiring, not first delivery.** It wires the **already accepted** shared allocator into the Decision Orchestrator and the live worker and proves **import identity / equivalence** between the research and runtime call sites. It may not be described as the package that first delivers the allocator implementation.
+2. **Every enabled control is simulated or declared.** For each candidate run, the set of controls the package enables is diffed against the set the simulator executed. Anything enabled and not executed is written into **`UNSIMULATED_CONTROLS`** in the run manifest, with a reason. **There is no silent third category, and an empty manifest that has not been *computed* is a defect, not a pass.**
+3. **Promotion is blocked when a required control lacks evidence.** Each control is classified `REQUIRED` or `INFORMATIONAL` in the frozen package. A `REQUIRED` control appearing in `UNSIMULATED_CONTROLS` **blocks promotion** — it does not merely annotate it. Execution-integrity properties (reconciliation, partial fills, restart recovery, order identity) remain correctly `INFORMATIONAL`, with the reason §9.2 already gives.
+4. **Nothing downstream is acceptance-bearing until this lands, and the dependency graph now says so.** `TrialRecord` rows, Explorer views, replay artifacts and promotion decisions produced from the **unmigrated** engine remain valid as *navigation and screening* and are stamped `SIGNAL_SCREEN_ONLY` (§9.4) — they may **not** be cited as acceptance evidence for promotion, eligibility or any gate. **Corrected in the R1 correction pass:** earlier text said WP-P0-13 and WP-P0-14 *"may still be built before WP-P0-20 accepts"*, which let the catalog and the viewer proceed on the unmigrated path with nothing preventing their rows from being read as evidence. **WP-P0-20 is now a real dependency of WP-P0-13**; **WP-P0-14 depends on it transitively through WP-P0-13** and must **explicitly refuse to present rows from the unmigrated path as acceptance-bearing**, showing their `SIGNAL_SCREEN_ONLY` class on every surface that renders them. **WP-V3-02 (replay) and WP-V3-03 (promotion) keep their existing dependency on it.**
+5. **Historical artifacts are not retro-blessed.** Migration changes what *future* runs mean. Existing artifacts keep their §9.4 lineage class, and no existing result becomes `FULL_KERNEL_SIMULATION` by virtue of the migration happening.
+
+This is tracked as derived safeguard **D-13**.
+
 ## 9.2 How each production control is reproduced
 
 | Control | Simulation approach | Note |
 |---|---|---|
-| Sizing intent | Kernel `sizing.py`, identical code | |
+| Sizing **request** (`SizingRequest`) | Kernel `sizing.py`, identical code | Snapshot-independent request constants from the frozen package (§5.4); the kernel emits no account-derived or executable quantity |
 | **Authorized quantity** | **Risk Allocator proposes it, identical code, inside a `PortfolioSimulator`; the simulated Guardian authorizes or rejects** | The seam that makes multi-strategy backtests honest. Vocabulary is fixed: **RA proposes · Guardian authorizes or rejects · Bridge executes or rejects** |
 | Leverage caps | Kernel internal cap in K; account cap in the simulated Guardian | Three distinct caps, distinctly named |
 | Initial SL | Kernel; simulator checks intrabar touch | **Gap modelling added:** if `open` is already beyond the stop, fill at `open`, not at the stop. Today mega fills at the stop regardless (F-3) — the most optimistic assumption in the pipeline |
@@ -1298,7 +1643,7 @@ Every historical result is stamped with a lineage class:
 |---|---|
 | `SIGNAL_SCREEN_ONLY` | `mega_walk_forward.simulate_slice` — no sizing, no guards, no filters, post-hoc slippage |
 | `PARTIAL_EXECUTION_MODEL` | `MTCRunner` light-risk profile — risk ON, filters/guards OFF |
-| `FULL_KERNEL_SIMULATION` | New kernel + simulator, all enabled controls simulated |
+| `FULL_KERNEL_SIMULATION` | New kernel + simulator, all enabled controls simulated. **Reachable only after WP-P0-20 (§9.1a); no existing artifact is reclassified into this class by the migration happening** |
 | `PORTFOLIO_SIMULATION` | Above, plus `PortfolioSimulator` with allocator and Guardian |
 | `UNCLASSIFIED` | Provenance not established — usable for navigation only |
 
@@ -1384,7 +1729,7 @@ graph TB
     A --> B["Bridge Order Manager"]
     G --> T3["Tier 3: pause worker"]
     G --> T4["Tier 4: pause bucket"]
-    G --> T5["Tier 5: KILL all - flatten"]
+    G --> T5["Tier 5: KILL all - cancel-and-latch only, no flatten"]
     style G fill:#ef6c00,color:#fff
     style T5 fill:#c62828,color:#fff
 ```
@@ -1398,6 +1743,30 @@ graph TB
 5. **Guardian state is simulated** in `PortfolioSimulator` using the same policy objects, so a portfolio backtest reflects portfolio behaviour.
 6. **Future resizing is a separately versioned `PortfolioAllocationPolicy`** with its own historical simulator, runtime implementation and parity tests — introduced no earlier than V3, and never as a runtime adjustment.
 7. **What rule 1 covers — owner clarification, 2026-08-22 (register D-02, §0.5).** Rules 1 and 6 are about **sizing a new order**. They do **not** prohibit a **separately authorized emergency reduction or closure of existing exposure**. Any such capability is a **distinct, explicit, tested safety policy** — versioned, simulated, reason-carrying and separately authorized — and is **never** silent resizing. **Nothing here authorizes it to be built or used**, and no such capability exists in V2. The general question of whether reducing *existing* exposure may be treated differently from sizing *new* entries is Appendix E **O-11**, whose **distinction is now resolved** by this clarification while the **policy design remains open** under WP-V3-10.
+
+### 10.2a Emergency operations — four distinct things, never one word
+
+**Added 2026-08-22 (§0.6 R8); corrected in the R1 correction pass.** The document set used `DISARM`, `KILL`, `FLATTEN` and "emergency reduction" loosely and sometimes interchangeably — the Guardian tier ladder above labelled its top tier as a kill **that flattens**, as though the two were one action. **That label is corrected in the diagram to `KILL all — cancel-and-latch only, no flatten`.** Conflating them is how an operator who wanted to stop new orders ends up closing positions at market, or the reverse. **The four are defined below and kept separate everywhere: contract, API, dashboard, simulation and evidence.**
+
+**What the running Bridge actually does today, stated accurately.** The first repair said the running Bridge *"treats them as separate"*. It does not. **The current Bridge exposes one `/api/kill` path with an optional `flatten` parameter** (`bridge/engine/engine.py:391-404` `kill(flatten: bool = False)` — latch `KILLED` and `cancel_all()`, flattening **only** when the caller passes the flag; `bridge/api/routes.py:113-129`). **There are no separate KILL and FLATTEN API operations in the running Bridge.** What the current code gets right is that flatten is **not** implicit; what it does not have is the **separation** — one path, one parameter, one confirmation. **The V2 plan creates that separation (WP-V2B-10); it does not describe something already there.**
+
+| | **DISARM** | **KILL** | **FLATTEN** | **Automatic Guardian emergency reduction / closure** |
+|---|---|---|---|---|
+| **What it does** | Stops the system **originating new entries**. Existing positions, existing native protective orders and reconciliation all continue untouched | **Cancel-and-latch, protection-preserving.** Cancels **risk-increasing working orders — entries and adds** — and latches the app state to `KILLED` so nothing re-arms. **Valid reduce-only native protective orders for existing exposure are preserved, not cancelled.** **Does not close any position, and does not automatically flatten** | Closes existing exposure with reduce-only orders, on explicit operator command. **FLATTEN owns the controlled cancellation and replacement of protective orders where closing the position requires it** | Would reduce or close **existing** exposure automatically, on a Guardian rule, with no operator in the loop |
+| **Owner** | **B** enforces; **D** requests | **B** enforces; **D** requests | **B** enforces; **D** requests | **P** would decide; **B** would enforce |
+| **Phase availability** | Exists today (V1); carried through V2 | Exists today (V1) **as the single `/api/kill` path**, which currently cancels working orders indiscriminately; the **protection-preserving, entry-only cancellation semantics are new in V2B** | **Does not exist as an operation today** — today there is only an optional `flatten` parameter on the one `/api/kill` path. It **becomes a separately named operation with its own API path, confirmation and audit record** in V2B | **Does not exist and is not built in V2 or V3.** Design study only, WP-V3-10 |
+| **Authorization** | Authenticated operator | Authenticated operator, typed confirmation | Authenticated operator, typed confirmation **and WebAuthn/FIDO2 step-up** (§12.5), on a path with **no single authenticator** (D-16) | Would need its **own** owner authorization, its own T0 audit and its own acceptance record — none of which exists |
+| **Simulation / reconciliation / evidence** | State transition recorded; no economic effect to simulate | Cancellation set recorded; the **next reconcile cycle must confirm two things together** — **(a) zero risk-increasing working orders remain** (entries, adds) and **(b) every expected reduce-only protective order for existing exposure is still live at the venue**. **A residual risk-increasing order and a missing protective order both raise `PROTECTION_DRIFT`.** *(Corrected in the R1 correction pass: the earlier gate demanded "zero working orders remain" of every kind, which would have been satisfied only by cancelling the protection §10.2 rule 3 requires KILL to keep — the gate contradicted the command contract.)* | Reduce-only fills reconciled three ways; **drilled with timing evidence** against the live gate's five-minute full-flatten target (F-16 precondition 7); a chaos drill exercises the cancel/place failure path (§12.4 invariant 6) | Would require a **simulated equivalent in `PortfolioSimulator`** before it could exist at all, per Principle 6 |
+| **Dashboard / API naming** | `DISARM` · `POST /api/disarm` | `KILL` · `POST /api/kill` — **the `flatten` parameter is retired in favour of the separate operation, so that "kill" never silently closes a position** | `FLATTEN` · `POST /api/flatten` — a distinct button, a distinct confirmation, a distinct audit record | Reserved. **No name is allocated on the live surface for an unbuilt capability** |
+
+**Four rules that keep them separate:**
+
+1. **KILL never flattens implicitly.** Stopping the machine and closing the book are different decisions with different consequences, and an operator under pressure must not get the second by asking for the first.
+2. **FLATTEN is always attributable.** Every flatten records who, when, from which device, which authenticator, and which positions — and stamps `human_override = true` on the affected trades (§12.4).
+3. **Native exchange stops remain live through DISARM and KILL** (§10.2 rule 3). The reduce-only stop at the venue is the protection that survives the process being gone; cancelling it is a FLATTEN-class decision, never a side effect. **This is why KILL's cancellation set is scoped to risk-increasing entry and add orders, and why its reconciliation gate proves protection is still there rather than proving nothing is there.** **FLATTEN owns the controlled cancel-and-replace of protective orders where closing the position requires it**, under its own confirmation, step-up authentication and audit record.
+4. **Nothing here authorizes automatic emergency resizing in V2.** The fourth column is documented so that it cannot arrive by accident under another name. It is the capability the owner's **D-02 clarification** says is *not prohibited* if separately authorized — and "not prohibited" is not "authorized" (§5.5, §17.3, Appendix E O-11).
+
+Carried by **WP-V2B-10**, with the authentication redundancy of **D-16** carried by **WP-V2B-06**.
 
 **Worker isolation — [OWNER — Q4] HYBRID:**
 
@@ -1467,7 +1836,7 @@ trials/run_id=<...>/strategy=<...>/symbol=<...>/timeframe=<...>/part-000.parquet
 
 | Column group | Columns |
 |---|---|
-| Identity | `run_id`, `candidate_id`, `package_hash`, **`evaluation_run_hash`** (§6.7 — carries dataset, costs, simulator and evaluation configuration), `trial_id`, `param_hash`, `exit_mode` |
+| Identity | `run_id`, `candidate_id`, `package_hash`, **`deployment_identity_hash`** (§6.7 — the composite economic/deployment identity; **mandatory, and a row without it is unusable as evidence**), **`evaluation_run_hash`** (§6.7 — carries dataset, costs, simulator and evaluation configuration), `family_id` (§6.6 rule 6), `trial_id`, `param_hash`, `exit_mode` |
 | Search lineage | `search_regime` (grid \| tpe \| random), `preregistered_space_hash`, `trial_index_in_family`, `family_size` |
 | Parameters | one typed column per parameter (sparse, nullable) |
 | Modules | `modules_enabled[]`, `modules_enabled_count` |
@@ -1530,7 +1899,7 @@ Guarantees, stated separately:
 
 - **Every trial is immediately locatable and filterable** from the catalog.
 - **Selected trials open immediately** from materialized artifacts.
-- **Non-materialized trials trigger deterministic replay** using the exact kernel code hash, parameters, dataset hash and cost model, then are cached.
+- **Non-materialized trials trigger deterministic replay** using the exact kernel code hash, parameters, dataset hash and cost model, then are cached. **The replay artifact binds to the `deployment_identity_hash` it was produced under (§6.7); a replay whose composite identity differs from the row's is a new artifact, not a reconstruction of the old one.**
 - **A maximum replay-time target is defined** (proposal: ≤ 60 s for a single strategy×symbol×timeframe; measured, then fixed).
 - Replay is only possible because the kernel is deterministic (§9.6 test 1) — the same property that makes parity testable makes storage cheap.
 
@@ -1563,6 +1932,30 @@ Guarantees, stated separately:
 
 Plateau-versus-needle is the single most useful overfitting visual available for this data, and it comes almost free once the catalog exists.
 
+**PRODUCTION CHART AND RESULT-VISUAL SURFACE — V3, `WP-V3-11`.** *Added 2026-08-22 (§0.6 R10).*
+
+**The gap.** O-02 and O-29 promise a **TradingView-like** surface showing positions, entries, exits, SL, TP, Multi-TP and trailing stops as they actually moved, plus the full result statistic set. Before this round the only carriers were a **2–3 day library POC** (WP-P0-18), a **"basic candlestick chart with entry/exit markers"** in the Minimum Explorer (WP-P0-14), and WP-V3-01, whose named screens are all **parameter-space analytics** — parallel coordinates, response surfaces, importance, Pareto — and contain no trade-level chart at all. **A POC is not a product and a basic marker chart is not the promised surface**, so the owner's most visible requirement had no production owner.
+
+`WP-V3-11` is that owner. It renders **real artifacts** — `trades.parquet`, `equity.parquet`, `levels.parquet` and `intents.jsonl` from §11.2 Tier 2, joined to the OHLCV bundle by hash — not mock data and not a demo dataset.
+
+**Named visual state, each explicitly required:**
+
+| Element | What must be visible |
+|---|---|
+| **Position** | Open/closed span shaded on the chart, direction, size, entry and exit markers with prices and timestamps |
+| **Stop loss** | The stop **as a stepped series over time**, not a single line — every revision, with the reason for each |
+| **Take profit** | The target series, including revisions |
+| **Multi-TP** | Each leg (`leg_id`, price, `qty_fraction`, activation, `oco_group`) drawn separately, with **partial fills visibly reducing remaining quantity** |
+| **Trailing stop** | The full trailing history as a stepped series, with the activation bar marked |
+| **Break-even** | The break-even trigger bar and the resulting stop revision |
+| **No-trade reasons** | Bars where an entry was blocked, with the machine-readable reason on hover — because a blocked system and a quiet market must never look the same (§5.1 principle 8) |
+
+**Named result visuals and statistics, on real artifacts:** equity curve **versus buy-and-hold** on the same axes; drawdown and run-up curves; the walk-forward fold ribbon with the lockbox segment marked; per-fold and lockbox statistics (return, Sharpe, max DD, trades, profit factor, expectancy in R, win rate); DSR p-value, BH-FDR survivorship, CPCV pass ratio and PBO; cost sensitivity including `net_after_slippage_pct` and the fee/slippage model ids; the parameter set and the preregistered search space; `simulator_class`, `UNSIMULATED_CONTROLS` and `rejection_reasons`; and the `SIGNAL_EDGE` / `SOURCE_COMPLETED_BASELINE` / `MTC_ENRICHED` comparison.
+
+**Two navigation requirements the owner asked for by name:** **one-click movement to promising variants** — from any chart, jump to the next variant by a chosen ranking without returning to a filter form — and **timeframe and strategy filtering** applied consistently across the chart, the statistics and the ranking table.
+
+**What this package is not.** It is the **research-domain** surface: read-only, no credentials, no lifecycle actions, and it may not promote anything (that is WP-V3-03). The **execution-side** chart panels stay with WP-V2B-05, and drag-and-drop stays with WP-V2B-08 / WP-V3-07 / WP-V4-03 under their own gates. **The chart-library POC and its cleanup rule are unchanged**: WP-P0-18 still decides the library before this package commits to one, and retiring the POC remains a separate, explicitly owner-authorized act after its evidence is preserved (§13.2, plan §1.3).
+
 ## 11.5 Promotion authority is separate from the explorer
 
 **[C-21]** Exploring a strategy and changing its lifecycle status are different actions with different consequences.
@@ -1570,17 +1963,40 @@ Plateau-versus-needle is the single most useful overfitting visual available for
 | Surface | May do | May not do |
 |---|---|---|
 | **Explorer** | read, filter, compare, chart, bookmark, pin, **prepare a promotion packet** | change any lifecycle status |
-| **Promotion Authority** (separate screen, separate confirmation) | `APPROVE`, `REJECT`, `REQUEST_MORE_EVIDENCE` | anything else |
+| **Environment Admission Authority** (WP-V2A-10) | issue `SHADOW_ELIGIBLE` and `TESTNET_ELIGIBLE` admission decisions from accepted eligibility evidence | admit anything to mainnet or `LIMITED_LIVE`; produce eligibility evidence itself |
+| **Promotion Authority** (separate screen, separate confirmation) | `APPROVE`, `REJECT`, `REQUEST_MORE_EVIDENCE`; **and it alone admits to mainnet / `LIMITED_LIVE`** | anything else |
 
-Approval writes an **immutable decision artifact** first:
+### Two admission authorities, because one of them cannot exist yet — repaired 2026-08-22 (§0.6 R5)
+
+**The circularity.** v2.1 said the loader accepts *only* hashes traceable to a Promotion Authority decision artifact. But the Promotion Authority is **V3 (WP-V3-03)**, while the loader must admit packages for **`FORWARD_SHADOW` in V2A** and **`EXCHANGE_TESTNET` in V2B**. As written, either nothing could load until V3 — deleting the forward clocks that §6.8 depends on — or the rule would quietly be ignored the first time somebody needed to run a shadow package. **Neither is acceptable, and the fix is not to weaken the loader.**
+
+**Staged admission.** Admission is split into three immutable, identity-bound decisions produced by two authorities, in order:
+
+| Decision | Issued by | Available from | Requires | Admits to |
+|---|---|---|---|---|
+| **`SHADOW_ELIGIBLE`** | Environment Admission Authority | **V2A** | An accepted `SHADOW_ELIGIBLE` eligibility verdict set (§6.5, WP-P0-21) plus a frozen `package_hash` and `deployment_identity_hash` | `FORWARD_SHADOW` only — zero orders anywhere |
+| **`TESTNET_ELIGIBLE`** | Environment Admission Authority | **V2B** | An accepted `TESTNET_PAPER_ELIGIBLE` verdict set, plus the sizing, protection, lifecycle and reconciliation criteria of §6.5 | `INTERNAL_PAPER` and `EXCHANGE_TESTNET` only |
+| **`PROMOTED`** | **Promotion Authority, and only the Promotion Authority** | **V3** | The full statistical battery, forward evidence on the same `deployment_identity_hash`, the leakage record (§6.6, WP-P0-22), and the signed live gate for live capital | Mainnet and `LIMITED_LIVE` |
+
+**Five rules that make staging safe rather than a loophole:**
+
+1. **Every admission decision is immutable and identity-bound.** It names `package_hash`, `deployment_identity_hash`, the eligibility verdict set it consumed, the issuer, the timestamp, and the **exact environment set** it admits to. It is appended, never edited.
+2. **Admission is produced *before* the loader is asked.** The loader consults an existing record; it never creates one, and it never infers one from the absence of a problem.
+3. **The loader's admission check is empty and fail-closed by default.** With no admission record naming the requested environment for this exact `deployment_identity_hash`, the load is **refused** with a machine-readable reason. This is the same shape as the Pine CI guard: an allowlist that is empty until something is deliberately added to it.
+4. **No decision widens another.** `SHADOW_ELIGIBLE` never admits to testnet; `TESTNET_ELIGIBLE` never admits to mainnet; and **nothing except a Promotion Authority decision admits to real capital.** An escalation is a new decision with new evidence, not a re-reading of an old one.
+5. **A material identity change revokes admission.** Because the record binds `deployment_identity_hash`, any change under §6.7 leaves the new identity with **no** admission record — so it is refused until re-admitted. Revocation is automatic and silent-by-construction rather than a process someone has to remember.
+
+Approval by either authority writes an **immutable decision artifact** first:
 
 ```
-decision_id, candidate_id, package_hash, decision, reason (required free text),
-evidence_references[], simulator_class, unsimulated_controls_hash,
+decision_id, candidate_id, package_hash, deployment_identity_hash,
+authority ∈ {ENVIRONMENT_ADMISSION, PROMOTION}, decision, admits_to_environments[],
+reason (required free text), evidence_references[], eligibility_verdict_set_id,
+leakage_record_id, simulator_class, unsimulated_controls_hash,
 timestamp, approver, previous_state, new_state
 ```
 
-The canonical `PROMOTION_REGISTRY.json` is then appended **from that artifact**. The package loader accepts **only** hashes that appear in registry entries derived from decision artifacts — which is what finally makes F-6 (an empty registry) impossible to ignore.
+The canonical `PROMOTION_REGISTRY.json` is appended **from Promotion Authority artifacts**; environment admission records live in their own append-only store and are never written into the promotion registry, so a shadow admission can never be mistaken for a promotion. **The package loader accepts only identities traceable to a decision artifact of the appropriate authority for the requested environment** — which is what finally makes F-6 (an empty registry) impossible to ignore, without making the forward clocks impossible to start.
 
 **This whole application is read-only with respect to trading and holds no credentials.**
 
@@ -1757,6 +2173,48 @@ The V2 proposal (`DASHBOARD_UNIFIED_ARCHITECTURE_PROPOSAL_20260818_V2.md`) and t
 - **Step-up authentication** via WebAuthn/FIDO2 hardware key or platform biometric for `ARM`, `KILL`, `FLATTEN`, and any future `DRAG_SL_TP`. This is strictly better than TOTP: it is phishing-resistant and origin-bound.
 - **[REC] Keycloak and equivalent IAM servers are rejected** at one-operator scale — a full identity server is more attack surface than the problem it solves here.
 
+### 12.5a Break-glass redundancy — the kill path must not have a single point of failure
+
+**Added 2026-08-22 (§0.6 R17), tracked as derived safeguard D-16. History corrected in the R1 correction pass.** The earlier wording claimed that the design above placed **exactly one** WebAuthn/FIDO2 authenticator in front of `ARM`, `KILL` and `FLATTEN`. **That is not what the prior plan did.** Stated accurately:
+
+- **The prior plan neither implemented nor specified a solitary authenticator.** §12.5 required **WebAuthn/FIDO2 step-up** on privileged actions. It said **nothing at all** about how many credentials are registered.
+- **What it did not require is the gap:** it did **not** require **redundant authenticators**, and it did **not** require a **rehearsed out-of-band venue-side recovery path**. Neither obligation existed anywhere in the document set.
+- **And the current Bridge has no WebAuthn path at all** — step-up authentication is a V2 design commitment, not an existing capability, so there is no deployed single-key design to describe either.
+
+**D-16 remains justified on exactly that gap, and it is a stronger justification than the one it replaces.** Without an **explicit redundancy requirement**, a future **single-credential implementation** satisfying §12.5 to the letter would be fully compliant — and would be a single point of failure on the one control that stops the system, reachable only over a private mesh, on a host with no public port. Those network properties are correct against an attacker and unhelpful against an accident. The live gate's precondition 7 already demands three kill layers *"documented and drilled with timing evidence"* with a **five-minute full-flatten target** (F-16) — a target a single-credential implementation cannot honour on the day the credential is lost, broken, wiped or simply elsewhere.
+
+**Two independent mechanisms are required, and neither substitutes for the other.**
+
+**1 — At least two independently registered authenticators.**
+
+- **Two or more** WebAuthn/FIDO2 credentials are registered against the operator account before any emergency command path is considered complete: **a primary and at least one backup, stored separately**, and **not both bound to the same device or the same platform authenticator** — two credentials on one phone is one credential.
+- **Each registered authenticator is proven to work independently, in two stages.** Registration is not evidence. **Locally (WP-V2B-06):** each credential is exercised **alone** against the command surface, with the other absent, and the redundancy state machine is falsified. **At a venue (WP-V2B-07, gate G4):** a **`FLATTEN` on testnet completed with the backup alone**, the primary physically absent. **The local proof does not wait on the testnet package, and the testnet proof is not claimed by the local one.**
+- **Losing one authenticator degrades the system to a named state, not to silence.** With one credential remaining, the dashboard shows a persistent `AUTH_REDUNDANCY_LOST` warning and re-registering a second is a blocking action before further live operation.
+- **Registration and de-registration are themselves privileged, audited, append-only actions** — and de-registering the last-but-one credential requires explicit confirmation naming what it leaves behind.
+
+**2 — Documented and drilled out-of-band venue-side access and flatten recovery.**
+
+Both authenticators can be present and the path still be unusable: the mesh can be down, the VPS unreachable, the process wedged, or the dashboard broken. The out-of-band path answers *"how does the owner close positions when our own software cannot be reached at all"*.
+
+- **A written runbook**, satisfying the live gate's precondition 12, covering: reaching the venue's own interface directly, cancelling working orders there, closing positions there, and revoking the API key — the third of precondition 7's three kill layers, which is the only one that does not depend on our software running. **The runbook is produced and accepted by WP-V2B-10, whose acceptance claims no drill.**
+- **Credential and access prerequisites named in advance** — which venue account, which access method, where the recovery material is kept — **written as a prerequisite, never stored in this repository, and never created, requested or handled by any agent** (plan gate G6).
+- **Drilled, with objective evidence**, on **testnet only**, **by WP-V2B-07** under gate G4: a dated record showing the operator flattening a real testnet position **entirely through the venue's own interface**, with the Bridge deliberately unreachable, and the **elapsed time measured** against the five-minute target. **An undrilled runbook is not a recovery path, on exactly the reasoning the live gate applies to kill switches** — which is why the runbook and the drill are **separate acceptances in separate packages** rather than one package obliged to drill before the testnet package exists.
+- **Reconciliation afterwards is part of the drill**, not an afterthought: the system, once reachable again, must observe the venue-side closure and reconcile to it rather than fighting it or re-opening.
+
+**Native exchange stops remain mitigation, not a substitute.** The `STRATEGY_NATIVE` reduce-only stop (Q7, D-03) means a position has protection while the process is dead — a real and important property, and the reason V2A proves it locally (WP-V2A-06) and V2B proves it at a venue (WP-V2B-07). But a resting stop protects **one** position at **one** price; it does not close a book, does not respond to an operator, and does not help when the exposure that must go is on the profitable side of the stop. **It reduces the cost of losing the command path; it does not remove the requirement to have one.**
+
+**Carriers, ordering and gate dependency — reordered in the R1 correction pass to remove an acceptance cycle.** The earlier arrangement had the dashboard depend on the emergency operations, the emergency operations depend on the dashboard, the auth package require a testnet FLATTEN before the testnet package existed, and the testnet package sit outside the chain — a practical cycle in which nothing could be accepted first. **No package was added to fix it; the existing packages were reordered:**
+
+| Order | Package | Depends on | What its acceptance may claim | What it may **not** claim |
+|---|---|---|---|---|
+| 1 | **WP-V2B-10** — emergency operations | **WP-V2B-01** | The **DISARM / KILL / FLATTEN semantics defined and implemented locally**, with FLATTEN **fail-closed and unavailable** until step-up auth exists; the **out-of-band runbook produced** | **No venue or testnet drill; no completed authentication** |
+| 2 | **WP-V2B-06** — zero-trust access and two authenticators | **WP-V2B-10** | Private-mesh access, **step-up auth**, and **two independently registered authenticators proven to fail closed and to work independently, locally** | **No testnet FLATTEN** — the testnet package does not exist yet |
+| 3 | **WP-V2B-05** — Execution Dashboard V2 | **WP-V2B-01**, **WP-V2B-10**, **WP-V2B-06** | Rendering command surfaces whose semantics are **already defined** and whose paths are **already protected** | Defining emergency semantics; supplying authentication |
+| 4 | **WP-V2B-07** — testnet fleet | + **WP-V2B-10**, **WP-V2B-06**, **WP-V2B-05** | The **authorized testnet evidence**: backup-authenticator-only FLATTEN with the primary absent; the out-of-band venue-side closure with the Bridge unreachable; **elapsed time**; the subsequent reconciliation. Already carries **G4** and the testnet-credential boundary (**G6**) | Anything on mainnet |
+| 5 | **WP-V4-01** — live-gate evidence pack | + **WP-V2B-07** drill evidence, and **WP-V2B-10** / **WP-V2B-06** | Consuming all of the above as evidence for preconditions 7 and 12 | Signing anything — only the owner signs |
+
+All five are **T0** except as tiered in the delivery plan, and **gate G5 is not satisfiable without stages 1–4 complete.**
+
 ---
 
 # 13. Open-source adoption
@@ -1784,6 +2242,29 @@ Two gates added by this brief:
 This brief therefore states **no categorical legal conclusions**. Where a licence is likely incompatible with the intended distribution model, the entry reads *"requires a documented licensing review before adoption in this integration mode"* — legal risk can justify rejection, but this is an architecture document, not legal advice.
 
 **Operational-cost gate.** Every new *service* (as opposed to library) must name who patches it, who monitors it, and what happens when it is down. For one non-technical operator this gate correctly rejects most infrastructure in the input research documents.
+
+### 13.1a The full acceptance set — expanded 2026-08-22 (§0.6 R11)
+
+**The gap.** O-16 asks for a **permanent** OSS-first policy with *"license, quality, maintenance, security and integration review"*. v2.1 delivered a one-paragraph policy, two gates and an adoption matrix — and **no carrier at all**: no work package owned the policy, produced the dependency ledger, or answered what happens when an adopted project is abandoned, compromised or has to be removed. A permanent policy with no owner and no exit is a preference, not a policy. **`WP-P0-24` is the carrier**, and the twelve criteria below are its acceptance evidence. They apply **before adoption**, **on every version bump**, and **at review cadence** thereafter.
+
+| # | Criterion | What must be evidenced |
+|---|---|---|
+| **1** | **Provenance** | Canonical upstream URL, the exact commit or tag adopted, its published hash, and the path by which it was obtained. **A package obtained from a mirror or a re-upload is not adopted until the upstream original is confirmed** |
+| **2** | **Licence** | Licence identifier and full text captured at the adopted version; **integration mode declared** per the C-18 gate; obligations that follow from that mode stated. Where the licence is likely incompatible with the intended distribution model, the entry reads *"requires a documented licensing review before adoption in this integration mode"* — this brief states no categorical legal conclusion |
+| **3** | **Dependency and supply chain** | The full transitive dependency set at the adopted version, each pinned **with a hash**; the count of transitive dependencies recorded as a cost; any dependency that is itself unmaintained named. The Bridge's existing discipline is the standard — `requirements.in` plus a hash-pinned lock whose installer **refuses unpinned or unhashed requirements** (F-13) |
+| **4** | **Vulnerability review** | Known advisories at the adopted version, checked against a named source and dated; unresolved advisories listed with severity and exposure in **this** integration mode. **"No advisories found" requires naming the source and the date, or it is not evidence** |
+| **5** | **Maintainer and activity** | Number of active maintainers, release cadence, median time to close a security issue, and whether the project has a documented security-reporting path. A **single-maintainer** project on a money-adjacent surface is recorded as a named risk, not silently accepted |
+| **6** | **Abandonment criteria, declared in advance** | The objective conditions that will classify the project **abandoned** — for example no release and no security response within a stated window, or an archived upstream repository. **Declared at adoption, so the decision is not made under pressure later** |
+| **7** | **Update policy** | Who checks for updates, on what cadence, and how a version bump is tested against **this** repository's artifacts before it lands. A bump is a change with its own review, never an automatic action |
+| **8** | **Incident response** | What happens on a published vulnerability, a compromised release, or a breaking upstream change: who is notified, what is disabled first, and the pinned-version fallback. For a money-adjacent dependency the first action is **disable or pin**, never "wait for the next release" |
+| **9** | **Portability and export** | Data written by, or locked inside, the project must be exportable to an open format the rest of the system can read. **A dependency that can hold data hostage is not adopted on a money-adjacent surface** |
+| **10** | **Replacement and rollback** | The named alternative, the estimated switching cost, and a **rollback path to the previous state** that has been walked at least once rather than assumed |
+| **11** | **Evidence preservation** | Findings, measurements, benchmarks and the decision record are preserved **before** any retirement or removal, per the standing constraint (plan §1.3) |
+| **12** | **Retirement and removal** | Stopping maintenance is **not** authorization to delete. Retirement or removal of an adopted component or a POC is a **separate, explicitly owner-authorized cleanup act**, performed only after criterion 11 is satisfied, and **no package may schedule its own automatic deletion** |
+
+**Two rules about the ledger itself:** it is **append-only** — a superseded entry is marked superseded, never edited away, so the history of what was trusted when survives; and **every entry names the integration mode**, because criteria 2, 4, 8 and 9 all have different answers for `EMBED_SOURCE` than for `POC_ONLY`.
+
+**Independent validation of financial calculations remains mandatory and is not one of the twelve** — it is the standing OSS-FIRST clause above, and QuantStats is the current example (§13.2): verify Sharpe, Sortino and Calmar against our own implementation before trusting a number.
 
 ## 13.2 Adoption matrix
 
@@ -1818,7 +2299,7 @@ Verified against primary sources on 2026-08-21.
 
 ## 13.3 What is still built in house
 
-Strategy kernel, `SizingIntent` / `OrderIntent` / `ExitIntent` contracts, Risk Allocator and allocation policy, Portfolio Guardian, reconciliation semantics, promotion registry and authority, and the two dashboards. These encode *your* decisions about money; adopting a library here means adopting someone else's risk philosophy silently.
+Strategy kernel, `SizingRequest` / `BoundSizingIntent` / `OrderIntent` / `ExitIntent` contracts, Risk Allocator and allocation policy, Portfolio Guardian, reconciliation semantics, promotion registry and authority, and the two dashboards. These encode *your* decisions about money; adopting a library here means adopting someone else's risk philosophy silently.
 
 ---
 
@@ -1853,7 +2334,7 @@ MTC_COMMAND_CENTER/contracts/          # new, in the current repository
   mtc_contracts/
     __init__.py                        # __version__
     identity.py                        # candidate_id, package_hash formula (§6.7)
-    sizing.py                          # SizingIntent
+    sizing.py                          # SizingRequest + BoundSizingIntent
     orders.py                          # OrderIntent, ExitIntent, qty_semantics, stop_semantics
     package.py                         # StrategyPackage + frozen instrument metadata
     risk.py                            # RiskBucket, allocation policy schema, guard policy schema
@@ -1988,8 +2469,9 @@ flowchart TD
     M6 --> M7a["M7a LEGACY_COMPATIBLE - kernel reproduces legacy exactly"]
     M7a --> M7b["M7b CORRECTED_VNEXT - documented fixes, new semver"]
     M7b --> M8["M8 PARITY VERIFICATION - three tests, falsified"]
-    M8 --> M9["M9 BRIDGE MIGRATION - exact accepted commit"]
-    M9 --> M10["M10 WORKFLOW CUTOVER"]
+    M8 --> M9["M9 BRIDGE MIGRATION RECORD - exact accepted commit"]
+    M9 --> M9b["M9b BRIDGE MIGRATION EXECUTION - separately authorized, rehearsed, rollback proven"]
+    M9b --> M10["M10 WORKFLOW CUTOVER - inside this repository only"]
     M10 --> M11["M11 BRANCH PRUNE - owner-approved exact targets"]
     M11 --> M12["M12 READ-ONLY ARCHIVAL - never deleted"]
     style M7a fill:#ef6c00,color:#fff
@@ -2006,14 +2488,15 @@ flowchart TD
 | **M4 Contracts** | Build `MTC_COMMAND_CENTER/contracts/` per §14.3. **[OWNER — Q2a]** | Package installable; compatibility and consumer tests green |
 | **M4b Context routing** | Implement §15 in place; **measure** before/after per task class. | Measured reduction recorded; feeds the Q2b decision |
 | **M5 Canonicalization** | Complete the capability table (§7.3) for every economically meaningful capability. Decide intended semantics where implementations disagree. | Table complete and reviewed; no capability marked "whichever is easier" |
-| **M6 Golden Suite** | Author the **25** scenario families (§9.3) as deterministic fixtures with expected outputs derived from the **decided** semantics. Family 18 additionally requires a D026 RED/GREEN snapshot-drift case. | All 25 families have fixtures; each fails against a deliberate mutation |
-| **M7a `LEGACY_COMPATIBLE`** | Kernel + simulator reproduce frozen legacy behaviour **exactly**, including the known defects. Must reproduce the **entry-signal golden** (858/858 over 48,077 bars) bit-identically **and** the legacy branch of every applicable golden family. **[OWNER — Q1, Q15]** | Bit-identical signal-file hash; every legacy-branch fixture green. **Any unexplained mismatch stops the migration.** |
+| **M6 Golden Suite** | Author the **25** scenario families (§9.3) as deterministic fixtures with expected outputs derived from the **decided** semantics. Family 18 additionally requires a D026 RED/GREEN snapshot-drift case. **Added 2026-08-22 (§0.6 R12): every fixture whose behaviour a *behaviourally active* `tw_*` key can change is authored on BOTH branches of that key** — default and enabled — because six of those keys are live (F-8a), not inert. That touches families 3 and 6 (quantity rounding, via `tw_audit_semantics_mode`), 10 and 11 (break-even and trailing trigger bar, via `tw_be_semantics_mode` / `tw_trailing_semantics_mode`) and 2 (re-entry and flip, via `tw_reversal_reentry_*`). **No new family is added; existing families gain a branch.** **`tw_margin_call_split_entries` is excluded from the both-branch obligation** — it is `[DRIFT/UNKNOWN]` with no located behavioural consumer, and a branch fixture is authored only if WP-P0-09 finds one. | All 25 families have fixtures; each fails against a deliberate mutation; **every family sensitive to a behaviourally active `tw_*` key carries both branches**; **`tw_margin_call_split_entries` carries an investigation record, not a fabricated branch** |
+| **M7a `LEGACY_COMPATIBLE`** | Kernel + simulator reproduce frozen legacy behaviour **exactly**, including the known defects. Must reproduce the **entry-signal golden** (858/858 over 48,077 bars) bit-identically **and** the legacy branch of every applicable golden family. **[OWNER — Q1, Q15]** **Added 2026-08-22 (§0.6 R12): "legacy behaviour" includes the semantics of the six behaviourally active `tw_*` keys on both branches** — a kernel that reproduces only the default branch has reproduced half the legacy engine. **`tw_margin_call_split_entries` is excluded from that obligation while it remains `[DRIFT/UNKNOWN]` (F-8a).** | Bit-identical signal-file hash; every legacy-branch fixture green, **including both branches of each behaviourally active `tw_*` key**. **Any unexplained mismatch stops the migration.** |
 | **M7b `CORRECTED_VNEXT`** | Apply documented fixes under a **new semantic version**: F-2 Gap 1 (contract multiplier), Gap 2 (min notional), Gap 3 (frozen instrument metadata), gap-aware stop fills, in-path slippage, named same-bar collision policy, real fee schedule. Each fix carries a defect record, before/after evidence, RED/GREEN falsification, and new expected golden artifacts. **[OWNER — Q15]** | Every intentional difference is documented and tested. **No undocumented behavioural difference exists between M7a and M7b.** |
 | **M8 Parity verification** | The three §9.6 tests, each shown RED against a deliberate mutation (repo rule D026). | All green, all falsified, commands and real output recorded |
-| **M9 Bridge migration** | **[C-16] Not "wholesale".** The migration record must name: accepted source commit; included and excluded Bridge V2 packages; current audit status of each; baseline test results; configuration and schema version; deployment identity; known inactive capabilities (F-14); post-migration reproduction criteria. Unaccepted or master-only V2 work stays separately classified. | Named commit; package inclusion list; baseline suite reproduced |
-| **M10 Workflow cutover** | New structure becomes where work happens. Old location banner: *"FROZEN — read-only reference."* | One week of real work with no fallback |
+| **M9 Bridge migration RECORD** | **[C-16] Not "wholesale". Renamed and rescoped 2026-08-22 (§0.6 R14): M9 is a *record*, and a record performs nothing.** It must name: accepted source commit; included and excluded Bridge V2 packages; current audit status of each; baseline test results; configuration and schema version; deployment identity (**`deployment_identity_hash`**, §6.7); known inactive capabilities (F-14); post-migration reproduction criteria. Unaccepted or master-only V2 work stays separately classified. **Carried by WP-V2A-09 (T2, docs/evidence).** | Named commit; package inclusion list; baseline suite reproduced. **Exit is a complete, accurate record — not a migrated Bridge** |
+| **M9b Bridge migration EXECUTION** | **New step, 2026-08-22 (§0.6 R14).** The step that actually moves the Bridge to the named commit and package set, and deploys it. It **consumes** M9's record as its plan and **may not restate it**. It requires: the **exact target** (commit, package inclusion list, configuration and schema version, host and deployment identity); **inputs** (M9 accepted, host-access authorization, a rehearsal on a copy); a **rollback path walked at least once, not asserted**; and **acceptance** (post-migration baseline suite reproduced against the named criteria, `deployment_identity_hash` recorded, deployed schema version independently verified). **Separately owner-authorized under gates G3 and G9. Bridge V1 is not touched: the deployed V1 candidate keeps soaking, and this step targets the V2 line only.** **Carried by WP-V2B-11 (T0).** | Rehearsed on a copy; rollback proven; baseline reproduced; deployed identity recorded. **Never performed during an armed window, never combined with another change** |
+| **M10 Workflow cutover — *within the current repository*** | **Rescoped 2026-08-22 (§0.6 R14).** v2.1 said *"New structure becomes where work happens"* — but **Q2b defers the topology decision**, so "the new structure" was undefined and M10 was a cutover to a destination nobody had chosen. M10 now means only the **stage-local structure that Phase 0 actually builds inside this repository** (§15.2, WP-P0-05) plus the contracts package and tag/ledger discipline: work happens in the routed stage folders, the contracts package is consumed from a released version, and superseded locations carry the banner *"FROZEN — read-only reference."* **Anything that requires the topology answer — moving trees between repositories, creating a second repository, or archiving this one — is not M10. It is M12 and WP-V5-04, under gate G7, after the WP-P0-05 measurement.** **Carried by WP-V2B-09 (T1).** | One week of real work in the routed structure with no fallback; superseded locations banner as frozen read-only; **no repository created, moved or archived** |
 | **M11 Branch prune** | **[C-17, OWNER — Q13]** Only after M0–M3. Prerequisites: active worktrees and processes inventoried; unmerged and unpushed commits identified; evidence-bearing branches tagged; ledger complete; **explicit owner authorization of exact deletion targets**. | Owner-approved target list; every deletion has a preserved tag |
-| **M12 Archival** | Old repository archived read-only, full history intact, ledger cross-linked both ways. **Never deleted.** | Archive reachable; ledger resolves in both directions |
+| **M12 Archival** | Old repository archived read-only, full history intact, ledger cross-linked both ways. **Never deleted.** **Clarified 2026-08-22 (§0.6 R14): this step is contingent on the Q2b topology answer and is carried by WP-V5-04 under gate G7. If Q2b keeps one repository, there is no "old repository" to archive and M12 reduces to the read-only banners already applied in M10.** | Archive reachable; ledger resolves in both directions — **or**, if no split is chosen, a recorded decision that M12 is not applicable |
 
 **The two gates that make this safe.** M7a proves the migration moved nothing by accident. M7b proves every intentional change was intended. v1 collapsed these into one step and would have silently carried the F-2 sizing defect into the canonical kernel — the single most important correction in this revision.
 
@@ -2025,11 +2508,11 @@ flowchart TD
 
 | | |
 |---|---|
-| **Scope** | Contracts package in place (Q2a). Tag namespaces. Context routing + measurement (Q2b input). Migration M0–M6. Kernel consolidation M7a → M7b. `TrialRecord` contract and trial-catalog writer. **Minimum Explorer.** Branch-freshness guard. |
-| **Explicit non-goals** | No new trading features. No multi-strategy runtime. No broker work. **No Bridge behaviour change. No execution-dashboard rework** — clarified 2026-08-22 (§0.3 item 9): the non-goal is the *execution* surface, because the research-side **Minimum Explorer is explicitly in scope** above. Building a read-only research viewer is not "dashboard rework". **The V1 soak is untouched.** No repository topology decision. No Bridge runtime wiring of the contracts package (§14.3). |
+| **Scope** | Contracts package in place (Q2a). Tag namespaces. Context routing + measurement (Q2b input). Migration M0–M6. Kernel consolidation M7a → M7b. `TrialRecord` contract and trial-catalog writer. **Minimum Explorer.** Branch-freshness guard. **Added 2026-08-22 (§0.6):** the **canonical research-simulator migration, which also delivers the one shared Risk Allocator implementation** (WP-P0-20, T0, A-7b); the **objective eligibility criteria and fixtures** (WP-P0-21, A-7c); the **family/human-observation leakage control** (WP-P0-22, A-7d); the **Pine de-fang implementation** (WP-P0-23, T0, **separately authorized under G2** — in Phase 0 by sequence, not by permission); the **OSS lifecycle policy and dependency ledger** (WP-P0-24); and the **broker-boundary reuse/extend/replace decision** (WP-P0-25, **T0 under G3**, decision only — protected, cross-cutting architecture takes the highest tier even though it writes no code, and any later implementation is separately gated). |
+| **Explicit non-goals** | No new trading features. No multi-strategy runtime. No broker work **— WP-P0-25 decides the broker boundary on paper and implements nothing**. **No Bridge behaviour change. No execution-dashboard rework** — clarified 2026-08-22 (§0.3 item 9): the non-goal is the *execution* surface, because the research-side **Minimum Explorer is explicitly in scope** above. Building a read-only research viewer is not "dashboard rework". **The V1 soak is untouched.** No repository topology decision. No Bridge runtime wiring of the contracts package (§14.3). **No production chart surface — that is WP-V3-11, deliberately not pulled forward.** |
 | **Dependencies** | Q1, Q2a, Q15 — all answered |
 | **Risks** | Kernel consolidation changes behaviour silently → M7a is the mitigation and is non-negotiable |
-| **Acceptance** | A-1 … A-7 |
+| **Acceptance** | A-1 … A-7, **A-7b, A-7c, A-7d** |
 | **Migration impact** | High — this is the migration |
 | **OSS to evaluate** | Parquet/PyArrow, DuckDB (adopt); Optuna vs grid comparison (§11.1); optuna-dashboard **only as an optional ≤ 2-day isolated POC** (§13.2) — never a second maintained viewer; **retirement or removal is separately owner-authorized, after its findings, measurements and decision record are preserved** |
 | **Owner decisions needed** | none outstanding |
@@ -2040,11 +2523,11 @@ flowchart TD
 
 | | |
 |---|---|
-| **Scope** | Multi-worker supervisor — **hybrid isolation (Q4)**: shared isolated workers for the shadow fleet, one process per strategy/bucket for testnet and paper. Risk Allocator, shared by simulator and runtime. Portfolio Guardian, **authorize-or-reject only (Q16)**, with Risk Buckets. Worker identity and per-worker state. Frozen-package loader with hash verification. Schema activation v4→v8 behind its own T0 contract. Execution Dashboard V2 from the accepted Package 3 prototype. Zero-trust access + WebAuthn step-up. `FORWARD_SHADOW` on real feeds. `EXCHANGE_TESTNET` execution fleet, **capacity-driven (Q17)**. Kernel↔Bridge integration behind `SizingIntent`/`OrderIntent`. Native strategy stop (Q7). Drag-and-drop **simulation mode only**. |
+| **Scope** | Multi-worker supervisor — **hybrid isolation (Q4)**: shared isolated workers for the shadow fleet, one process per strategy/bucket for testnet and paper. Risk Allocator, shared by simulator and runtime. Portfolio Guardian, **authorize-or-reject only (Q16)**, with Risk Buckets. Worker identity and per-worker state. Frozen-package loader with hash verification. Schema activation v4→v8 behind its own T0 contract. Execution Dashboard V2 from the accepted Package 3 prototype. Zero-trust access + WebAuthn step-up. `FORWARD_SHADOW` on real feeds. `EXCHANGE_TESTNET` execution fleet, **capacity-driven (Q17)**. Kernel↔Bridge integration behind `SizingRequest` → `BoundSizingIntent` → `OrderIntent` (§5.4, §5.5). Native strategy stop (Q7). Drag-and-drop **simulation mode only**. |
 | **Explicit non-goals** | **No live Multi-TP execution (C-19).** No paper or live drag-and-drop. No IBKR. No equities. No mainnet. No embedded AI assistant. No advanced explorer. No Guardian resizing. |
 | **Dependencies** | Phase 0 complete. Package 7 exchange reverification (Q6). Package 1 §A.2 store decision. |
 | **Risks** | Schema activation on a live store is the highest-risk operation in the plan → separate T0 contract, rehearsed on a copy, with rollback, never during an armed window |
-| **Acceptance** | A-8 … A-15 |
+| **Acceptance** | A-8 … A-15, **A-10c, A-12b, A-15b** |
 | **Migration impact** | Moderate — Bridge migrates from an exact accepted commit (M9) |
 | **OSS to evaluate** | none new, deliberately |
 | **Owner decisions needed** | Q6 resolves after Package 7 |
@@ -2053,9 +2536,10 @@ flowchart TD
 
 | | |
 |---|---|
-| **Scope** | Frozen-package loader with hash verification. Worker identity and per-worker state, **one worker first**. Risk Allocator as a pure, versioned function, **imported by the backtest simulator on day one**. Kernel↔Bridge integration behind `SizingIntent` / `OrderIntent`: the Bridge accepts an authorized intent and **refuses to originate a quantity when one is present**. `AccountSnapshot` identity with fail-closed rejection. **Native strategy stop (Q7) — the contract and its semantics, proven locally only:** reduce-only placement / amendment / cancellation against a deterministic adapter-emulator or replay, the identical backtest model of a continuously active protective order, and a **local process-kill/restart harness** in which the emulator retains the protective order while the worker dies. **No credentials, no venue contact.** `FORWARD_SHADOW` on real feeds — zero orders anywhere. |
+| **Scope** | Frozen-package loader with hash verification. Worker identity and per-worker state, **one worker first**. **Runtime wiring of the one shared Risk Allocator already delivered and accepted in Phase 0 by WP-P0-20**, with **import-identity / equivalence proof** that the research call site and the runtime call site use the same implementation — **V2A does not first deliver the allocator**. Kernel↔Bridge integration behind `SizingRequest` → `BoundSizingIntent` → `OrderIntent`: the Bridge accepts an authorized intent and **refuses to originate a quantity when one is present**. `AccountSnapshot` identity with fail-closed rejection. **Native strategy stop (Q7) — the contract and its semantics, proven locally only:** reduce-only placement / amendment / cancellation against a deterministic adapter-emulator or replay, the identical backtest model of a continuously active protective order, and a **local process-kill/restart harness** in which the emulator retains the protective order while the worker dies. **No credentials, no venue contact.** `FORWARD_SHADOW` on real feeds — zero orders anywhere. |
 | **Explicit non-goals** | No Portfolio Guardian beyond a pass-through stub. No multi-bucket logic. **No schema activation.** **No testnet orders and no venue contact of any kind** — the real exchange-native protective-order and process-kill survival drill is **WP-V2B-07 in V2B**, under the testnet gate. No dashboard replacement. No drag-and-drop of any kind. |
-| **Acceptance** | **A-9, A-10, A-10b, A-12** |
+| **Acceptance** | **A-9, A-10, A-10b, A-10c, A-12, A-12b** |
+| **Added 2026-08-22 (§0.6)** | The **Decision Orchestrator** stage of §5.5 (part of WP-V2A-03/04/05, not a separate package) and the **Environment Admission Authority** (**WP-V2A-10**, T0), which issues the `SHADOW_ELIGIBLE` decision the loader requires before a shadow package may load. |
 | **Why first** | It is the change that makes a backtest number mean something, it moves no money, and it can be proven entirely in replay. |
 | **Protected surfaces** | Bridge engine and risk paths — T0, own authorization and audit |
 
@@ -2065,7 +2549,8 @@ flowchart TD
 |---|---|
 | **Scope** | Portfolio Guardian, **authorize-or-reject only (Q16)**, with Risk Buckets and simulated Guardian policy objects. Multi-worker supervisor under **hybrid isolation (Q4)**. `PortfolioSimulator` sharing allocator and Guardian code. Schema activation v4→v8 **behind its own T0 contract**, rehearsed on a copy, after the deployed schema version is independently verified (F-14). Execution Dashboard V2 from the accepted Package 3 prototype. Zero-trust access + WebAuthn step-up. `EXCHANGE_TESTNET` execution fleet, **capacity-driven (Q17)** — and, inside it, the **real exchange-native protective-order and process-kill survival drill** that V2A could only prove locally (§5.4, §0.4 RF-T2-3). Drag-and-drop **simulation mode only**. |
 | **Explicit non-goals** | Same as the V2 table above, plus: no live capital, no Guardian resizing, no paper/live drag-and-drop. |
-| **Acceptance** | **A-8, A-11, A-13, A-14, A-15** |
+| **Acceptance** | **A-8, A-11, A-13, A-14, A-15, A-15b** |
+| **Added 2026-08-22 (§0.6)** | The **emergency-operations contract** separating DISARM / KILL / FLATTEN and producing the out-of-band venue-side runbook (**WP-V2B-10**, T0, §10.2a, §12.5a); **two independently registered authenticators** on WP-V2B-06 (D-16); the **testnet drill evidence** — backup-only FLATTEN and out-of-band venue-side closure — on **WP-V2B-07** under G4; and the **Bridge migration and deployment execution** carrier (**WP-V2B-11**, T0, M9b, separately authorized under G3 + G9 — M9's record cannot perform a migration). **Ordering, corrected in the R1 correction pass: WP-V2B-01 → WP-V2B-10 → WP-V2B-06 → WP-V2B-05 → WP-V2B-07**, so the semantics are defined before they are protected, protected before they are rendered, and rendered before they are drilled at a venue. No package was added to achieve this. |
 | **Dependencies** | V2A accepted. Package 7 exchange reverification (Q6). Package 1 §A.2 store decision. |
 | **Gate between the halves** | V2B does not start until V2A's acceptance criteria are green **and** the schema-activation T0 contract is written and separately authorized. |
 
@@ -2073,7 +2558,7 @@ flowchart TD
 
 | | |
 |---|---|
-| **Scope** | Advanced Explorer: parallel coordinates, 3-D response surfaces with plateau/needle detection, parameter importance, Pareto, comparison, `SIGNAL_EDGE`/baseline/enriched A/B. Full artifact tier + deterministic replay + 20 GB retention (Q9). Promotion Authority + immutable decision artifacts. Portfolio backtesting with allocator and Guardian simulated. Correlation gates: promotion, runtime, live monitor. Live-vs-backtest divergence reporting. Missing-Rule Ledger in the promotion packet. **Multi-TP: testnet execution, partial fills, reconciliation.** Drag-and-drop **paper/testnet mode**. **NautilusTrader POC (Q12).** |
+| **Scope** | Advanced Explorer: parallel coordinates, 3-D response surfaces with plateau/needle detection, parameter importance, Pareto, comparison, `SIGNAL_EDGE`/baseline/enriched A/B. **Added 2026-08-22 (§0.6 R10): the production chart and result-visual surface (WP-V3-11) — named position, SL, TP, Multi-TP and trailing-stop visual state plus every promised result visual and statistic, on real artifacts, with one-click variant navigation and timeframe/strategy filtering.** Full artifact tier + deterministic replay + 20 GB retention (Q9). Promotion Authority + immutable decision artifacts. Portfolio backtesting with allocator and Guardian simulated. Correlation gates: promotion, runtime, live monitor. Live-vs-backtest divergence reporting. Missing-Rule Ledger in the promotion packet. **Multi-TP: testnet execution, partial fills, reconciliation.** Drag-and-drop **paper/testnet mode**. **NautilusTrader POC (Q12).** |
 | **Explicit non-goals** | No live drag-and-drop. No new brokers in production. No ML. No Guardian resizing without a versioned, backtested allocation policy. **No emergency existing-exposure reduction capability is built here either: under the D-02 clarification (§0.5) that would be a distinct, separately authorized, explicit and tested safety policy, and V3 carries only the WP-V3-10 design study of Appendix E O-11 and O-12.** |
 | **Dependencies** | Phase 0 trial catalog; V2 execution evidence flowing back; auth hardened |
 | **Risks** | Explorer scope creep into a general BI tool → cap at the named screens |
@@ -2087,7 +2572,7 @@ flowchart TD
 |---|---|
 | **Scope** | Drag-and-drop **live mode** with the full §12.4 safety chain and human-override accounting. Signed live-trading gate **(Q10)**. **`LIMITED_LIVE`: one strategy, ≤ 1 % of account (Q11) — owner clarification 2026-08-22: the 1 % is the MAXIMUM CAPITAL ALLOCATED to that strategy; loss-at-stop / risk-to-stop carries a SEPARATE and LOWER cap that must be defined and evidenced before live authorization, and no number for it is set here (register D-07, §0.5).** Multi-bucket operation (day/swing/position) with calibrated allocations. Mobile monitoring. TradingView divergence alarm as a scheduled job. **Live Multi-TP after chaos and restart drills.** |
 | **Explicit non-goals** | No IBKR. No scaling beyond the agreed live cohort. No second live strategy until the first has a full evidence cycle. |
-| **Dependencies** | V3 complete; reconciliation active; auth hardened; **signed live gate with all six preconditions evidenced** |
+| **Dependencies** | V3 complete; reconciliation active; auth hardened; **signed live gate with all FOURTEEN canonical hard preconditions evidenced together, in one dated decision, against the exact `deployment_identity_hash`** (corrected 2026-08-22, §0.6 R1/R2 — earlier text said "six") |
 | **Risks** | First phase where a UI bug can move real money → step-up auth, server-side validation, `state_version` concurrency, acknowledgement-only success, chaos-drilled rollback |
 | **Acceptance** | A-21 … A-24 |
 | **Owner decisions needed** | Q10 signature; live-cohort expansion beyond one strategy; **the value of the separate, lower loss-at-stop cap under the D-07 clarification — it must be defined and evidenced before live authorization and is deliberately unset here** |
@@ -2096,7 +2581,7 @@ flowchart TD
 
 | | |
 |---|---|
-| **Scope** | IBKR adapter behind the same `BrokerAdapter` protocol. Equity swing bucket with calendar, session and corporate-action handling. Multi-venue portfolio view. |
+| **Scope** | IBKR adapter behind **the broker boundary WP-P0-25 decides** — the existing `Broker` / `PartialRecoveryBroker` / `FullReconciliationBroker` family reused, extended, or deliberately replaced (F-9a, §0.6 R16). **Corrected 2026-08-22: earlier text said "the same `BrokerAdapter` protocol", naming a protocol that does not exist while three that do were already in the Bridge.** Equity swing bucket with calendar, session and corporate-action handling. Multi-venue portfolio view. |
 | **Explicit non-goals** | No FIX. No colocation. No HFT. |
 | **Dependencies** | V4 stable with real money for a defined period; NautilusTrader POC verdict |
 | **Risks** | Equities bring corporate actions, halts, sessions and PDT rules — genuinely new failure modes, not "a second adapter" |
@@ -2143,34 +2628,50 @@ flowchart TD
 - **A-4** Exactly one strategy kernel exists. `mtc_v2` and `02_MTC_BACKTEST/src/engine` are tagged legacy and referenced by no runtime import. The capability canonicalization table is complete.
 - **A-5 (`LEGACY_COMPATIBLE`)** The kernel reproduces the **entry-signal golden** (858/858 over 48,077 BTCUSD 1h bars) bit-identically, **and** the legacy branch of every applicable golden-suite family, **including the known defects**.
 - **A-6 (`CORRECTED_VNEXT`)** Every documented fix is applied under a new semantic version, each with a defect record, before/after evidence and RED/GREEN falsification. **No undocumented behavioural difference exists between A-5 and A-6.** Phase 0 is not complete until this passes.
-- **A-7** The optimizer writes an optimizer-independent `TrialRecord`: one row per trial, Parquet, DuckDB-queryable, including `rejection_reasons`, `search_regime`, `family_size` and `simulator_class`. The Minimum Explorer renders it.
+- **A-7** The optimizer writes an optimizer-independent `TrialRecord`: one row per trial, Parquet, DuckDB-queryable, including `rejection_reasons`, `search_regime`, `family_size`, `simulator_class` and **`deployment_identity_hash`**. The Minimum Explorer renders it. **Scope limit (§9.1a):** until A-7b passes, rows produced from the unmigrated canonical engine are stamped `SIGNAL_SCREEN_ONLY` and are **not acceptance evidence** for any gate.
+- **A-7b (canonical simulator migration, §0.6 R4 — corrected in the R1 correction pass)** The canonical promotion-deciding path — `mega_walk_forward.simulate_slice` and its **direct callers** (§9.1a) — **imports and runs the kernel together with the one versioned shared Risk Allocator implementation delivered by WP-P0-20**, following §5.5. **Import identity is proven by import, not by assertion or by a manifest stamp.** For every run, enabled controls are **either simulated by that code or enumerated in a computed `UNSIMULATED_CONTROLS` manifest**, and a control classified `REQUIRED` that appears in that manifest **blocks promotion**. Proven by a **D026** fixture in which a package enabling an unmodelled required control is shown promotable without the gate (RED) and blocked with it (GREEN). **An uncomputed empty manifest fails acceptance.** **A stand-in allocator cannot satisfy this criterion at all**: it is a non-accepting development state whose runs are stamped `SIGNAL_SCREEN_ONLY`, and the former `ALLOCATOR_NOT_YET_SHARED` accepting path is **withdrawn** — a labelled substitute is not the shared allocator. **Phase 0 is not complete without this, and no downstream artifact is acceptance-bearing before it.** *(Derived safeguard D-13. **WP-V2A-03 / A-10 then wire the same accepted implementation into the runtime and prove research↔runtime import identity**; that is runtime wiring, not the first delivery of the allocator.)*
+- **A-7c (objective eligibility, §0.6 R5/R13)** The four eligibility states are decided by the **falsifiable checks in §6.5** — deterministic replay, lookahead, repaint, data quality, basic-failure floor, unsimulated controls — each with a stated threshold and each shown **RED against its named D026 fixture**. **No subjective phrase remains in the criteria**, an unset threshold yields `BLOCKED` rather than `PASS`, and every verdict binds to a `deployment_identity_hash`.
+- **A-7d (leakage control, §0.6 R6)** Family lineage, the append-only observation ledger and the computed untouched window exist per §6.6 rules 6–8, with a **D026** fixture in which a deliberately contaminated sibling is RED without the control and GREEN with it. **Required before the first `LIVE_CANDIDATE` decision.** *(Derived safeguard D-15.)*
 
 ## Bridge V2
 
 - **A-8** Two or more workers run concurrently under the hybrid isolation model (Q4), each with an immutable identity tuple and isolated state, on one release.
 - **A-9** The Bridge executes an accepted `OrderIntent` exactly or rejects it loudly. **A test proves that a Bridge-originated quantity in the presence of an authorized intent fails.**
-- **A-10** The **Risk Allocator computes and proposes the full `AuthorizedQuantity`**; the **Portfolio Guardian authorizes that quantity in full or rejects it in full**. Neither component resizes an order, and no partial authorization exists anywhere in the path (vocabulary per §5.4–§5.5: K requests risk · RA proposes quantity · P authorizes or rejects · B executes or rejects). **A test proves the V2 `OrderIntent` schema has no `RESIZED` authorization value** and that no code path produces a partial authorization.
-- **A-10b (snapshot fail-closed, RF-4)** Kernel and allocator compute against one immutable `AccountSnapshot`. A **runtime** mismatch or stale snapshot **rejects** with `SNAPSHOT_MISMATCH` / `SNAPSHOT_STALE` and submits no order; divergence within one snapshot rejects with `REFERENCE_DIVERGENCE` **and** fails the parity suite. Proven by a **D026 RED/GREEN** snapshot-drift and bucket-capital-divergence fixture: RED without the guard, GREEN with it.
+- **A-10** The **Risk Allocator computes and proposes the full `proposed_qty`**; the **Portfolio Guardian authorizes that quantity unchanged as `AuthorizedQuantity` or rejects it in full**. Neither component resizes an order, and no partial authorization exists anywhere in the path (vocabulary per §5.4–§5.5: K requests risk · RA proposes quantity · P authorizes or rejects · B executes or rejects). **A test proves the V2 `OrderIntent` schema has no `RESIZED` authorization value** and that no code path produces a partial authorization.
+- **A-10b (snapshot fail-closed, RF-4; stages repaired §0.6 R3)** The **bound intent** and the allocator compute against one immutable `AccountSnapshot`. A **runtime** mismatch, stale snapshot or absent snapshot **rejects** with `SNAPSHOT_MISMATCH` / `SNAPSHOT_STALE` / `SNAPSHOT_UNAVAILABLE` and submits no order; divergence within one snapshot rejects with `REFERENCE_DIVERGENCE` **and** fails the parity suite. Proven by a **D026 RED/GREEN** snapshot-drift and bucket-capital-divergence fixture: RED without the guard, GREEN with it.
+- **A-10c (sizing stage ownership, §0.6 R3 — corrected in the R1 correction pass)** The four stages of §5.5 are enforced by contract, not convention. **The contract test rejects the right class of field and only that class:**
+  - **REJECTED by the schema:** a `SizingRequest` carrying `snapshot_id`, `allocation_policy_version`, any account or bucket figure, or any **account-derived, allocator-proposed, Guardian-authorized or executable** quantity or notional (`proposed_qty`, `authorized_qty`, `final_qty`, `notional_result`).
+  - **REQUIRED by the schema, and a test proves they are NOT rejected:** the single matching **request constant from the frozen strategy/package configuration** — `requested_risk_fraction`, `requested_fixed_qty`, `requested_fixed_notional` or `vol_target_params`. *(The earlier wording rejected "a quantity or a notional result" outright, which would have made `FIXED_QTY` and `FIXED_NOTIONAL` unsatisfiable.)*
+  - A test proves the Decision Orchestrator's output contains the kernel's request **byte-identically** and that **OR performs no sizing arithmetic**; that **no component other than RA computes a quantity**; that the **Guardian authorizes RA's number unchanged or rejects it**; and that **no executable quantity exists before Guardian authorization**.
+  - **`RISK_AT_STOP` additionally proves the request's numeric source is the frozen package configuration, not the allocation policy**, and that RA applies the bound allocation-policy caps as **propose-in-full-or-reject**.
+  - **`SOURCE_DEFINED` additionally proves** that a source rule requiring account state **fails to freeze**, is recorded `NOT_EXPRESSIBLE` and takes a named catalogue substitute — and that **no account-aware sizing expression is evaluated inside K**.
+  - `RISK_AT_STOP`, `FIXED_QTY`, `FIXED_NOTIONAL`, `VOLATILITY_TARGET` and `SOURCE_DEFINED` each have a fixture showing **rejection rather than scaling** when a cap binds, and **`per_unit_risk == 0` rejects rather than divides**. Falsified per D026.
+- **A-12b (environment admission, §0.6 R5/R13)** Shadow and testnet loading are admitted **only** by an immutable, identity-bound `SHADOW_ELIGIBLE` / `TESTNET_ELIGIBLE` decision issued from accepted eligibility evidence **before** the loader is asked. **A test proves the loader's admission allowlist is empty by default and refuses an unadmitted identity with a machine-readable reason**; that no admission decision widens another; that **only the Promotion Authority admits to mainnet or `LIMITED_LIVE`**; and that a change to `deployment_identity_hash` **revokes admission automatically**. Falsified per D026. *(Derived safeguard D-14.)*
 - **A-11** `PortfolioSimulator` imports **the same allocator and the same Guardian policy objects** as the runtime. A portfolio backtest of ≥ 2 strategies produces results that differ from the sum of individual backtests in an explainable way.
 - **A-12** Simulator↔Worker replay equivalence: identical `OrderIntent` streams — including allocator output — on identical bars. Falsified per D026.
 - **A-13** Every Guardian rejection carries a machine-readable reason, appears in the decision stream, and is visible on the dashboard.
 - **A-14** Schema v8 is active on a **rehearsed** migration with a proven rollback, **after** the deployed schema version has been independently verified (F-14). Daily controls and exposure gates demonstrably enforcing.
-- **A-15** The execution dashboard shows desired / accepted / actual as three separate columns, plus per-panel staleness, block reason, package-hash integrity, and the seven freshness states — with **no state that silently changes position size**.
+- **A-15** The execution dashboard shows desired / accepted / actual as three separate columns, plus per-panel staleness, block reason, package-hash integrity, and the seven freshness states — with **no state that silently changes position size** — and renders `DISARM`, `KILL` and `FLATTEN` as three separate controls only after their semantics and authentication dependencies are accepted.
+- **A-15b (emergency operations and break-glass redundancy, §0.6 R8/R17 — restructured in the R1 correction pass so its parts are provable in order)** This criterion is satisfied by **three separately evidenced stages**, because the earlier single-block form required a testnet drill before the testnet package existed and required completed authentication before the auth package existed — a practical acceptance cycle.
+  - **A-15b-i (local, WP-V2B-10).** `DISARM`, `KILL` and `FLATTEN` are **three separate operations** with three separate API paths and three separate audit records. **Dashboard rendering belongs only to downstream WP-V2B-05 / A-15 and is not an acceptance condition here.** **A test proves `KILL` closes no position** — it cancels **risk-increasing entry and add orders**, latches, and **leaves valid reduce-only protective orders live** — and that the previous `flatten` parameter on the kill path no longer exists. **KILL's reconcile obligation is proven by a fixture that leaves a residual entry order and by a fixture that removes an expected protective order: both raise `PROTECTION_DRIFT`.** `FLATTEN` requires typed confirmation and is **fail-closed and unavailable until step-up authentication exists (A-15b-ii)**. The out-of-band venue-side runbook is **produced and reviewed**; **A-15b-i claims no drill and no completed authentication**. **No automatic emergency reduction of existing exposure exists**, proven by a test that no such code path is reachable.
+  - **A-15b-ii (local, WP-V2B-06).** **At least two independently registered authenticators exist, not both bound to the same device or platform authenticator**, each proven to work independently **against the local command surface**; `AUTH_REDUNDANCY_LOST` appears when one is removed; de-registering the last-but-one requires explicit confirmation. **Step-up authentication is enforced on ARM, KILL and FLATTEN**, proven by tests that the action fails without it. **A-15b-ii requires no venue contact and no testnet FLATTEN.**
+  - **A-15b-iii (testnet, WP-V2B-07, gate G4).** A **testnet `FLATTEN` completed using the backup authenticator alone with the primary absent**; the out-of-band venue-side runbook **drilled on testnet with the Bridge deliberately unreachable, elapsed time measured against the five-minute target**; and the subsequent reconciliation shown to **observe** the venue-side closure rather than fight it.
+  - All three stages falsified per D026. *(Derived safeguard D-16; live-gate preconditions 7 and 12. **Gate G5 requires all three**, and WP-V4-01 consumes A-15b-iii's drill evidence.)*
 
 ## V3
 
 - **A-16** From the explorer, any trial in a 100,000-trial run is **locatable and filterable immediately**; a materialized trial **opens immediately**; a non-materialized trial is produced by **deterministic replay within the stated time target** and then cached. *(Replaces v1's A-13, which was self-contradictory.)*
 - **A-17** Every promotion packet contains the `SIGNAL_EDGE` / `SOURCE_COMPLETED_BASELINE` / `MTC_ENRICHED` comparison, the Missing-Rule Ledger, the `UNSIMULATED_CONTROLS` manifest and the `simulator_class`.
-- **A-18** `PROMOTION_REGISTRY.json` contains ≥ 1 real entry, produced from an **immutable decision artifact** created on the Promotion Authority screen — not from the explorer. The package loader accepts only hashes traceable to such an artifact.
+- **A-18** `PROMOTION_REGISTRY.json` contains ≥ 1 real entry, produced from an **immutable decision artifact** created on the Promotion Authority screen — not from the explorer. The package loader accepts only identities traceable to a decision artifact **of the authority appropriate to the requested environment** (§11.5): the Environment Admission Authority for shadow and testnet, the Promotion Authority for mainnet and `LIMITED_LIVE`. **Added 2026-08-22 (§0.6 R6): no promotion decision may be recorded without a referenced, accepted family/human-observation leakage record (§6.6 rules 6–8) — a promotion artifact whose `leakage_record_id` is absent or `UNKNOWN` is refused by the Promotion Authority, not merely flagged.**
 - **A-19** Multi-TP executes end to end on testnet, including a partial TP1 fill reconciled correctly.
 - **A-20** Drag-and-drop paper mode satisfies all eight §12.4 invariants, each proven by a test that fails without the control, plus a chaos drill proving the cancel/place failure path re-protects or escalates to flatten and pages the operator.
 
 ## V4
 
-- **A-21** The live-trading gate is signed and every one of its six preconditions has dated evidence bound to a single `package_hash`.
+- **A-21 (repaired 2026-08-22, §0.6 R1/R2/R17)** The live-trading gate is signed and **every one of its fourteen canonical hard preconditions** (F-16) has **dated evidence, presented together in one decision, bound to a single `deployment_identity_hash`** (§6.7) — not to `package_hash` alone, because the allocator, Guardian policy, risk-bucket and account-guard policy, runtime policy, protection semantics, broker adapter and cost lineage all shape what the evidence means. **There is no partial credit and no substitution between preconditions**, and evidence gathered under a superseded identity is marked `PRIOR_IDENTITY` and does not count. **D-07's two caps — the ≤ 1 % maximum allocated capital and the separate, lower, evidenced loss-at-stop cap — are an additional named requirement alongside precondition 10, never a substitute for any precondition.** **D-16's break-glass evidence (two independently registered authenticators; the drilled out-of-band venue-side flatten with measured elapsed time) is required by preconditions 7 and 12.**
 - **A-22** Live drag-and-drop requires WebAuthn/FIDO2 step-up, and a `STALE_STATE_VERSION` rejection is proven under a concurrent-fill test.
 - **A-23** Performance reporting splits `PURE_STRATEGY_PERFORMANCE` from `OPERATOR_MODIFIED_PERFORMANCE`.
-- **A-24** `LIMITED_LIVE` runs one strategy at ≤ 1 % of account with daily three-way reconciliation and zero unexplained orphans. **Owner clarification, 2026-08-22 (register D-07, §0.5): the ≤ 1 % is the maximum capital allocated to that strategy. A separate and lower loss-at-stop / risk-to-stop cap must be defined and evidenced before live authorization, and A-24 is not satisfiable until that cap has a stated, evidenced value. No value is invented here.**
+- **A-24** `LIMITED_LIVE` runs one strategy at ≤ 1 % of account with daily three-way reconciliation and zero unexplained orphans. **Owner clarification, 2026-08-22 (register D-07, §0.5): the ≤ 1 % is the maximum capital allocated to that strategy. A separate and lower loss-at-stop / risk-to-stop cap must be defined and evidenced before live authorization, and A-24 is not satisfiable until that cap has a stated, evidenced value. No value is invented here.** **Added 2026-08-22 (§0.6 R1): A-24 additionally requires A-21 — all fourteen preconditions evidenced together against the exact `deployment_identity_hash`. The two caps do not stand in for any of the fourteen, and precondition 10's hard capital number still requires the owner's separate signature.**
 
 ---
 
@@ -2211,7 +2712,7 @@ flowchart TD
 |---|---|
 | DL-23 | Kernel mandatory core reduced to ~30 config keys; Multi-TP, break-even, trailing, time exits, pyramiding, flip and filter-block exits become optional modules with identical historical and runtime code. |
 | DL-24 | Four source profiles replace "naked": `SOURCE_LITERAL`, `SIGNAL_EDGE`, `SOURCE_COMPLETED_BASELINE`, `MTC_ENRICHED`. An incomplete source is never auto-rejected. |
-| DL-25 | All promotion evidence binds to `package_hash`; `candidate_id` is family lineage only; evidence never merges across hashes. |
+| DL-25 | Promotion evidence binds to a frozen hash, never to `candidate_id`, which is family lineage only; evidence never merges across identities. **Superseded and extended 2026-08-22 (§0.6 R2, §6.7): `package_hash` freezes strategy semantics and is a component of lineage — it does not by itself start or own a forward evidence clock. Economic, forward, promotion and live evidence binds to the composite `deployment_identity_hash`, and a material change to any bound component mints a new composite and resets that environment's clock, with earlier evidence retained as `PRIOR_IDENTITY`.** |
 | DL-26 | Shadow leakage rules: freeze before observation; timestamped windows; `OBSERVED_DURING_RESEARCH` marking; a changed package resets the clock. |
 | DL-27 | Four forward environments never conflated: `FORWARD_SHADOW`, `INTERNAL_PAPER`, `EXCHANGE_TESTNET`, `LIMITED_LIVE`. |
 | DL-28 | `TESTNET_PAPER_ELIGIBLE` does not require the full statistical battery — only the safety criteria in §6.5. |
@@ -2283,18 +2784,18 @@ Ordered. **Classification repaired 2026-08-22 (§0.3 item 13).** v2.0 called ite
 | # | Action | Nature | Tier |
 |---|---|---|---|
 | 1 | **Freeze what evidence depends on.** Create the first tags — current master, Pine controller, MTC_V2 kernel, `02_MTC_BACKTEST`, the parity oracle set, the accepted Bridge V1 candidate. Removes the F-17/D-7 contradiction the same day. Changes no code, but **creates and pushes Git refs**. | **WRITE — Git refs** (non-destructive, additive) | T2, half a day |
-| 2 | **Build the contracts package skeleton in place (Q2a).** Schemas only, no consumers wired: `SizingIntent`, `OrderIntent`, `ExitIntent`, `StrategyPackage`, identity/hash formulae (§6.7, including `evaluation_run_hash`), `TrialRecord`, lineage. Versioned from the first commit. | **WRITE — new files, new package** | **T1** *(matches WP-P0-04 — schemas that will later govern money-moving code)* |
+| 2 | **Build the contracts package skeleton in place (Q2a).** Schemas only, no consumers wired: `SizingRequest`, `BoundSizingIntent`, `OrderIntent`, `ExitIntent`, `StrategyPackage`, `AccountSnapshot`, identity/hash formulae (§6.7, including `evaluation_run_hash` and `deployment_identity_hash`), `TrialRecord`, lineage. Versioned from the first commit. | **WRITE — new files, new package** | **T1** *(matches WP-P0-04 — schemas that will later govern money-moving code)* |
 | 3 | **Implement stage-local context routing and measure it (Q2b input).** Highest return per hour, reversible, and its measurement is the evidence base for O-1. **Moves and rewrites governance files** (`AGENTS.md`, handoffs), so it is a write with a real blast radius on how every future agent behaves. | **WRITE — governance/context files** | **T1** *(matches WP-P0-05 — a wrong edit misroutes every future agent)* |
 | 4 | **Write the Kernel Consolidation Contract**: mandatory core vs modules (§5.3, §7.2), the capability canonicalization table template, and the **25** golden families (§9.3) — with M7a/M7b as the acceptance structure. | **DOCUMENTATION ONLY** | T2 |
 | 5 | **Fix branch hygiene without deleting anything.** Do **not** "bring the working checkout to master" in place: the checkout is dirty, 60 commits behind (F-19) and holds untracked evidence. Instead **create a verified clean isolated worktree from `master`** for new work, confirm it is clean and at the intended commit before use, and **leave the current checkout untouched — including every untracked file in it — until M0/M1 has inventoried and classified that untracked material read-only** (§16 M0/M1; delivery-plan WP-P0-01). That dependency is real, not decorative: the untracked artefacts are the part of this checkout that exists nowhere else. Then add a branch-freshness check to the repo guard. **No pruning** until M11 and explicit target approval (Q13). | **WRITE — new worktree + repo-guard change**; explicitly **no destructive Git** | **T1** *(matches WP-P0-15 — it adds a check to the repo guard, which is product tooling, not documentation)* |
-| 6 | **De-fang TradingView (Q3).** Tag the controller, create the visualization copy, delete the `alert()` emissions and the `wt_*`/`tw_*` keys, add the CI guard. | **WRITE — protected surface. See the authorization note below.** | **T0** |
+| 6 | **De-fang TradingView (Q3) — two packages, not one.** **(a) WP-P0-19, design only, T2:** produce the exact file/line list, the **in-place transformation plan naming the one maintained active Pine source**, the empty-allowlist CI-guard specification, the divergence-alarm specification and the rollback path. Writes no Pine and no config. **(b) WP-P0-23, implementation, T0:** tag the controller, **transform the active Pine source in place into visualization-only Pine**, delete the two `alert()` emissions and the **13 `wt_*`** inputs/keys, and land the CI guard so that **zero `.pine` files in the active tree contain `alert(` under an empty allowlist**. **The alert-capable original survives only in the frozen tag — it does not remain active.** **The 7 `tw_*` keys are excluded — they are live, not inert (F-8a, §0.6 R12), and belong to the kernel chain WP-P0-09 → WP-P0-12.** | (a) **DOCUMENTATION ONLY** · (b) **WRITE — protected surface. See the authorization note below.** | (a) T2 · (b) **T0** |
 | 7 | **Change the writer before building any UI.** Emit `TrialRecord` (Parquet, one row per trial, with `rejection_reasons`, `search_regime` and `evaluation_run_hash`) and full artifacts for selected trials. | **WRITE — research surface** | T1 |
 | 8 | **Optional, timeboxed `optuna-dashboard` POC.** ≤ 2 days, **only if** it demonstrably saves work on the Minimum Explorer. Isolated by construction — see §13.2. Not a decision to adopt Optuna (O-2). **Skip it entirely if the Minimum Explorer is already close.** Once the Minimum Explorer renders `TrialRecord`, development and maintenance stop; **stopping maintenance does not authorize deletion** — cleanup is a **separate, explicitly owner-authorized act performed after findings, measurements and the decision record are preserved.** | **WRITE — isolated local POC tooling** | **T1 if POC code is built.** If it is skipped and produces **only a documented skip decision**, that closure artefact alone is **T2** *(matches WP-P0-17)* |
 | 9 | **Run the chart-library POC (Q19).** 2–3 days, draggable level in both candidates. Isolated by construction; the same rule as item 8 applies — evidence is preserved and **retirement or removal requires a separate, explicit owner-authorized cleanup**. | **WRITE — isolated POC code** | T1 |
 | 10 | **Begin kernel consolidation** once items 2 and 4 are accepted, with M7a as a hard gate and M7b inside the same phase. | **WRITE — protected surface** | **T0** |
 | 11 | **Keep Bridge V1 soaking, untouched.** Nothing above requires touching the frozen V1 candidate. | **NO ACTION — protective constraint** | — |
 
-**Authorization note on item 6 — this document does not authorize it.** Deleting the `alert()` emissions changes **order-routing behaviour on a protected surface**. Q3 records the owner's *decision* that Pine should stop routing orders; it is not an implementation authorization. Item 6 requires its **own T0 authorization, its own audit round, and its own acceptance record** before any line of `MTC_V2.pine` or `mtc_v2/core/config.py` is edited. The same applies to item 10. Until then the correct state is: the finding stands (F-8), the decision stands (Q3), and the file is unchanged.
+**Authorization note on item 6 — this document does not authorize it.** Deleting the `alert()` emissions changes **order-routing behaviour on a protected surface**. Q3 records the owner's *decision* that Pine should stop routing orders; it is not an implementation authorization. **Item 6(b) — WP-P0-23 — requires its own T0 authorization naming the exact files and lines, its own audit round, and its own acceptance record** before any line of `MTC_V2.pine` or `mtc_v2/core/config.py` is edited; **item 6(a) — WP-P0-19 — prepares that authorization package and may not perform the change.** Both still require G1-IA, and 6(b) additionally requires **G2**. The same applies to item 10. Until then the correct state is: the finding stands (F-8), the decision stands (Q3), and the file is unchanged. **Nothing in the 2026-08-22 fifth repair round edited Pine or any configuration.**
 
 **Sequencing note.** Items 1, 2, 3, 5 can run in parallel and none touches trading logic — but all four write to the repository, so each needs the normal commit discipline and none is "safe because it is read-only". Item 4 is the only genuinely documentation-only item. Items 6 and 10 are the T0 items and are separately authorized. Item 10 should not start before item 4 is accepted. Bounded work packages, their dependencies and their parallel-safe peers are enumerated in `MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`.
 ---
@@ -2326,7 +2827,11 @@ Every non-obvious claim, with its verification path. All verified in the audit s
 | Parity 27/58 **— corpus-limited** | `12_PARITY_PINETS/parity_summary.md`, exact for cases 103–162 only. **Not** repository-wide: `02_MTC_BACKTEST/parity_suite_350/PARITY_STATUS_FINAL_20260304.md` reports 437/439 (99.54 %) on 457 cases, of which 121 are reuses. `01_MTC_PROJECT/reports/FACTORY_REGRESSION_SUITE_V1/full_current/FULL_FACTORY_SUITE_REPORT.md` reports 163 cases with 160 NOT_COMPARABLE. See F-7. |
 | Golden is entry-signal only | `IBKR_PAPER_BRIDGE/docs/03_STATUS.md` |
 | WunderTrading live alerts | `MTC_V2.pine:2020,2028`; dead config `mtc_v2/core/config.py:226-238` |
-| Inert `tw_*` knobs | `mtc_v2/core/config.py:56-58` |
+| **`tw_*` knobs are NOT inert as one group — six are behaviourally active, one is `[DRIFT/UNKNOWN]`** *(corrected 2026-08-22, §0.6 R12; stated key by key in the R1 correction pass)* | **Declared** `mtc_v2/core/config.py:58-64` (seven keys), **required** at `:282-288`, range-checked from `:470`. **Behaviourally consumed** at `position_sizer.py:22,61-62` (`tw_audit_semantics_mode`, quantity rounding), `exits.py:294-298,302,334` (`tw_be_semantics_mode` / `tw_trailing_semantics_mode`, trigger bar), `runner.py:563` (`tw_margin_call_mode`), `runner.py:958,1296-1396` (`tw_reversal_reentry_mode` / `_delay_bars`). **`tw_margin_call_split_entries` is read at `runner.py:133` and stamped at `:1057` only — no behavioural branch located in the canonical core.** The source comment at `config.py:56-57` claiming *"no runtime impact"* is **demonstrably stale for the six behavioural keys; its claim remains unverified for `tw_margin_call_split_entries`**. See F-8a and §3 D-12 |
+| **The existing broker boundary** *(added 2026-08-22, §0.6 R16)* | `IBKR_PAPER_BRIDGE/bridge/broker/base.py:154` `Broker(Protocol)`, `:230` `PartialRecoveryBroker(Protocol)`, `:293` `FullReconciliationBroker(Protocol)` **including `funding_evidence` at `:320-323`, implemented by both concrete brokers *(added in the R1 correction pass)***, `:222` / `:285` the two `…Unavailable` reason-code types; `bridge/broker/hyperliquid.py:105` `HyperliquidBroker`; `bridge/broker/mock.py:68` `MockBroker`. See F-9a |
+| **Canonical simulator has dependants of four different kinds** *(added 2026-08-22, §0.6 R4; classified in the R1 correction pass)* | `mega_walk_forward.py:648` `simulate_slice`. **Direct callers:** `multiwindow_oos.py`, `cpcv_validator.py`, `finalize_bootstrap_bh.py`, `reference_producer.py`. **Independent simulators (they define their own, and do NOT inherit this function's economics):** `rigorous_walk_forward.py`, `rigorous_walk_forward_parallel.py`. **Patcher of the mega engine:** `variant_missing_knobs.py`. **Reporting consumer that only describes the semantics:** `enrich_gate3_evidence.py`. Migrating it is not a leaf change, **and the four classes are not interchangeable** — see §9.1a |
+| **Live gate has fourteen preconditions, not six** *(corrected 2026-08-22, §0.6 R1)* | `_AI_MEMORY/LIVE_TRADING_GATE.md:15-66`; the no-partial-credit rule at `:17`; standing rules at `:68-74`. See F-16 |
+| **The running Bridge has ONE kill path with an optional `flatten` parameter — it does NOT have separate KILL and FLATTEN operations** *(added 2026-08-22, §0.6 R8; heading corrected in the R1 correction pass, which previously claimed the running Bridge already separates them)* | `bridge/engine/engine.py:391-404` — `kill(flatten: bool = False)` latches `KILLED` and calls `cancel_all()`, and flattens **only** when the flag is passed; `:406-412` `acknowledge_kill()` returns to `DISARMED`; `bridge/api/routes.py:113-129` exposes `/api/kill` and `/api/kill/ack` — **and no `/api/flatten`**; `bridge/app.py:109-110` sets `DISARMED` unless already `KILLED`. **Flatten is not implicit today, but it is also not a separate operation: the separation is created by the V2 plan (WP-V2B-10), not observed in the running Bridge.** See §10.2a |
 | Unenforced filter-block master toggle | `mtc_v2/core/config.py:131-135` |
 | Adapters are scaffolding | `07_ADAPTERS/README.md` |
 | Duplicate parity **payload** (not directories) | md5 `08de2da65cc850a3feeeef72d1fd1ba9` for `parity_results.json` in both trees. **One file hash cannot establish directory identity**; `git diff --no-index --name-status` shows `MTC_V2_PARITY_CASES.csv` differs, `README_MIGRATION.md` exists only in `12_PARITY_PINETS`, and a `.pyc` only in `05_PARITY`. See F-10. |
@@ -2388,7 +2893,7 @@ Verified 2026-08-21.
 | # | Point | Verdict | Where it landed |
 |---|---|---|---|
 | C1 | Separate strategy intent from final order quantity | **ACCEPT** | §4.2, §5.4, §5.5, C-7 |
-| C2 | Forward evidence must belong to `package_hash` | **ACCEPT** | §6.7, C-6 |
+| C2 | Forward evidence must belong to `package_hash` | **ACCEPT — as recorded in 2026-08-21; SUPERSEDED AND EXTENDED 2026-08-22 (§0.6 R2)** | §6.7, C-6. The reviewer's point — that forward evidence must belong to a frozen hash rather than to `candidate_id` — stands. **The specific binding does not: `package_hash` freezes strategy semantics only and does not by itself start or own a forward clock. Forward, promotion and live evidence binds to the composite `deployment_identity_hash`.** This row is retained as the historical disposition, not as the current rule |
 | C3 | Correct the naked-strategy decision path; three states; no auto-reject | **ACCEPT** | §6.1–§6.3, C-8 |
 | C4 | `LEGACY_COMPATIBLE` vs `CORRECTED_VNEXT` — legacy reproduction alone preserves defects | **ACCEPT** | §16 M7a/M7b, Q15, C-1. **Best single catch of the four reviews** |
 | C5 | Classify historical results by engine lineage | **ACCEPT** | §9.4, C-15 |
@@ -2466,9 +2971,9 @@ All four *pre-audit* reviews left the core findings standing. The subsequent Cod
 
 ---
 
-**END OF MAIN BODY — v2.1.  Appendices A–E follow and are part of this brief.**
+**END OF MAIN BODY — v2.1.  Appendices A–F follow and are part of this brief.**
 
-*Sections 1–22 were prepared read-only. No code, logic, deployment, archive, order, or Git state was modified in preparing them; the 2026-08-22 repair round edited this document only. The owner decisions in §21.1 are binding; everything else authorizes no implementation.*
+*Sections 1–22 were prepared read-only. No code, logic, deployment, archive, order, or Git state was modified in preparing them; the 2026-08-22 repair rounds edited documentation only. The owner decisions in §21.1 are binding; everything else authorizes no implementation.*
 
 ---
 
@@ -2525,7 +3030,7 @@ All four *pre-audit* reviews left the core findings standing. The subsequent Cod
 | Audit point | Disposition |
 |---|---|
 | "Blocking is strictly safer than reducing" is too categorical for **existing** exposure | **Partially accepted, as an open question.** The V2 rule stands unchanged — block, never silently resize (Q16) — because a runtime resize with no simulated equivalent breaks parity. The auditor is right that the reasoning is weaker for *reducing existing* exposure than for *sizing new* entries. Recorded as **O-11** for the V3 allocation-policy work, not resolved in that pass. **Updated 2026-08-22 (§0.5): the owner's D-02 clarification resolves the DISTINCTION — the no-resizing rule governs new-order sizing and does not prohibit a separately authorized, explicit, tested emergency reduction or closure of existing exposure. The V2 rule is unchanged, no such capability is authorized to be built or used, and the policy design remains open under O-11 / WP-V3-10.** |
-| §6.6 does not fully close family-level or human-observation leakage | **Acknowledged, not repaired in this pass.** The five freeze-first rules close package-level leakage. Family-level contamination — where observing package A informs the parameters of sibling package B — is a real residual gap, recorded as **O-12**. |
+| §6.6 does not fully close family-level or human-observation leakage | **Acknowledged, not repaired in that pass. REPAIRED 2026-08-22 (§0.6 R6).** The five freeze-first rules close package-level leakage. Family-level contamination — where observing package A informs the parameters of sibling package B — was a real residual gap, recorded as **O-12**. It is now closed by **§6.6 rules 6–8** (recorded `family_id`, `FAMILY_OBSERVED` contamination of siblings, and an append-only observation ledger from which the untouched window is **computed** rather than asserted), carried by **WP-P0-22**, evidenced by **A-7d**, tracked as derived safeguard **D-15**, and made a dependency of candidate eligibility, the Promotion Authority and live admission. |
 | Appendix D summaries could not be checked against verbatim source reviews | **Acknowledged.** The four external review texts were supplied in-session and are not stored in the repository, so Appendix D is verifiable for internal traceability only. Recorded as a limitation, not repaired. |
 
 ## E.6 Open items created by this audit
@@ -2533,7 +3038,7 @@ All four *pre-audit* reviews left the core findings standing. The subsequent Cod
 | # | Item | Due |
 |---|---|---|
 | **O-11** | Whether reducing *existing* exposure may be treated differently from sizing *new* entries under the no-runtime-resize rule. **Distinction RESOLVED 2026-08-22 by the owner's D-02 clarification (§0.5, §5.5, §10.2 rule 7): it may — but only as a separately authorized, explicit, tested safety policy, never as silent resizing, and nothing authorizes building or using one. The remaining open part is the policy design itself.** | V3 allocation-policy design — **WP-V3-10, design only** |
-| **O-12** | Family-level and human-observation leakage in the shadow-evidence rules | Before the first `LIVE_CANDIDATE` promotion |
+| **O-12** | Family-level and human-observation leakage in the shadow-evidence rules. **CLOSED as an open item 2026-08-22 (§0.6 R6): the control is specified in §6.6 rules 6–8, carried by WP-P0-22, evidenced by A-7d and tracked as derived safeguard D-15. It remains due before the first `LIVE_CANDIDATE` promotion — what changed is that it now has a specification, a carrier, objective evidence and blocking dependencies, instead of being an acknowledged gap with none of those.** | Before the first `LIVE_CANDIDATE` promotion — **WP-P0-22** |
 | **O-13** | Parity Corpus Inventory — resolves whether the March/April gap is a regression or a scope difference | Phase 0; blocks citing F-7 in any decision |
 | **O-14** | Run/Result Inventory — can upgrade or refute F-22's scope | Phase 0 |
 | **O-15** | Writer Inventory — precedes `TrialRecord` design | Phase 0 |
@@ -2550,6 +3055,97 @@ All four *pre-audit* reviews left the core findings standing. The subsequent Cod
 
 **Owner acknowledgement is not audit acceptance.** The owner's 2026-08-22 acknowledgement of the twelve derived safeguards sits on the owner-decision axis alone. It does not accept this document, does not authorize any package to be implemented (**G1-IA**), and does not authorize any deployment, host contact, schema activation, credential use, testnet or live action. **AUDIT ACCEPTANCE: PENDING. IMPLEMENTATION AUTHORIZED: NO.**
 
+**Fifth repair round, 2026-08-22 (§0.6).** An owner-authorized documentation round repaired the **seventeen blockers R1 … R17 of the G1 architecture acceptance audit round 1 (T0)**, adding four derived safeguards (**D-13…D-16**, not owner-acknowledged) and ten work packages. **It did not change this acceptance status**, and like §0.3, §0.4 and §0.5 it is a set of claims by the party under audit. **Its own provenance is held to the standard this appendix applies to Gate-5:** no transcript or report of that G1 round exists at the frozen base commit and none is created here (Appendix F), so **claims about the audit event are session provenance and non-load-bearing**, while **R1 … R17 stand on the reproduced source facts recorded in §0.6.1**.
+
+**Provenance of this appendix itself — stated plainly (§0.6 R15).** Appendix E is built on `CODEX_AUDIT_MASTER_BRIEF_VERDICT_2026-08-21.md` and its run log. **Neither file is present in the repository at the base commit of this repair round** (Appendix F). What that does and does not mean:
+
+- **The eight required findings RF-1…RF-8 do not depend on the verdict file.** Each was **reproduced against real source** before repair, and each is independently re-checkable today from the paths cited in §E.1 and Appendix A. **They stand on the source, not on the report.**
+- **The claims that *do* depend on the missing file are the ones about the audit as an event** — that it was performed by a named model at a named effort, that it returned `REQUEST_CHANGES`, that it raised exactly eight findings, eight citation deficiencies, one count error and three nits. **Those are now unverifiable from this repository and must be read as unverified provenance, not as reproducible record.** The header line naming auditor, verdict and file path is retained as a historical statement of what the authoring lineage recorded, and is **not load-bearing** for any finding, requirement, count or gate.
+- **The same applies to Appendix D.** §E.5 already recorded that the four external review texts were supplied in-session and are not stored in the repository, so Appendix D is verifiable for internal traceability only. Appendix F extends that honesty to every other load-bearing citation rather than leaving it as one buried caveat.
+- **Nothing is created to fix this.** Only five documents may change in this round, so no missing artefact is reconstructed, and a re-auditor should treat an absent artefact as absent rather than assume it exists elsewhere.
+
 ---
 
-**END OF BRIEF — v2.1** *(main body §0–§22 plus Appendices A–E)*
+# Appendix F — Cited-artefact provenance inventory
+
+**Added 2026-08-22 (§0.6 R15).** Every load-bearing cited audit, report, addendum and corpus, checked for presence **in the working tree of the named base commit of this repair round** — branch `codex/g1-architecture-repair-r1-20260822`, base `15788c59b4dffe90d88f5214d40246206647338c`, a clean checkout.
+
+**How to read the status column.**
+
+| Status | Meaning |
+|---|---|
+| **TRACKED** | Present in the clean checkout at the base commit, therefore tracked in Git and reproducible by anyone at that commit |
+| **UNTRACKED** | Present on some working machine but not in the checkout at that commit. **None is recorded as UNTRACKED here**, because a clean checkout cannot observe another machine's untracked files — WP-P0-01 is the package that inventories them, and until it runs, "untracked" is a category this table can describe but not populate |
+| **ABSENT** | **Not present at the base commit.** It may exist on another branch, on another machine, or nowhere. **This inventory does not assert which**, and absence here is the only fact it records |
+
+**There are exactly three statuses.** *(Normalized in the R1 correction pass.)* TRACKED, UNTRACKED and ABSENT are the whole vocabulary. Reasons for absence — git-ignored by design, generated at runtime, held on another machine, never created — are **explanatory facts recorded in the consequence column**, never a fourth status. An artefact that is git-ignored is **ABSENT** at the base commit like any other artefact that is not there.
+
+**The current round's own audit artefacts — stated plainly.** This repair round answers the **G1 architecture acceptance audit round 1 (T0)**. **No transcript, report or verdict file for that round is present at the frozen base commit `15788c59b4dffe90d88f5214d40246206647338c`, and none is commit-addressable in this five-file round** — this round may write to five documents and creates no audit artefact. Therefore:
+
+- **The blockers R1 … R17 are not affected.** Each was reproduced against real source before repair and is re-checkable today from the paths cited in §0.6.1 and Appendix A. **They stand on the source facts, not on the report.**
+- **Every claim about the audit *event*** — that it was performed, by whom, at what effort, with how many rounds, returning exactly seventeen blockers — is **session provenance**. It is **not commit-addressable, not reproducible from this repository, and not load-bearing** for any finding, requirement, count, tier, gate or acceptance criterion.
+- **Nothing is created to close the gap.** No audit artefact is written, reconstructed or inferred, and a re-auditor should treat the absent transcript as absent rather than assume it exists elsewhere. This is exactly the standard §E.7 applies to the 2026-08-21 Gate-5 verdict.
+
+**The four rules this inventory imposes.**
+
+1. **An ABSENT artefact is not reproducible evidence.** Any claim that rests on it is **unverified provenance**, and this document says so at the point of citation rather than in a footnote.
+2. **An ABSENT artefact is not load-bearing.** No requirement, count, tier, gate or acceptance criterion may depend on one. Where a dependency existed, it is either re-grounded on a TRACKED source or converted into an **explicit prerequisite** — a thing that must be produced or located before the dependent work proceeds.
+3. **Nothing is reconstructed here.** This round may change five documents only, so no missing artefact is recreated, and no content is inferred from its filename.
+4. **Volatile facts stay volatile.** Presence at one commit is not presence forever. A re-auditor re-runs this check at their own base commit rather than trusting this table's date.
+
+## F.1 Audit, review and proposal documents
+
+| Cited artefact | Cited in | Status at base commit | Consequence |
+|---|---|---|---|
+| `11_TRIAGE/CODEX_AUDIT_MASTER_BRIEF_VERDICT_2026-08-21.md` | §0.2 C-25, §1.2, Appendix **E** header | **ABSENT** | The **findings** RF-1…RF-8 stand on reproduced source (§E.1, Appendix A) and are unaffected. The **claims about the audit event** — auditor identity, effort, verdict, and the counts 8/8/1/3 — are **unverified provenance** and are not load-bearing (§E.7) |
+| `…_RUN_2026-08-21.log` (the Gate-5 transcript) | Appendix **E** header | **ABSENT** | Same. Cited as a historical pointer only |
+| **The transcripts, reports and verdict of the G1 architecture acceptance audit round 1 (T0)** — the review this round answers | §0.2 C-29, §0.6, §0.6.1, §0.6.2, §E.7 | **ABSENT** *(no such file exists at the frozen base, and this round creates none)* | The **blockers R1 … R17 stand on the reproduced source facts recorded in §0.6.1** and are re-checkable from the cited paths. Every claim about the audit **event** is **session provenance**: not commit-addressable, not reproducible from this repository, and **not load-bearing** for any finding, requirement, count, tier, gate or acceptance criterion |
+| `DASHBOARD_UNIFIED_ARCHITECTURE_PROPOSAL_20260818.md` (+ the `(1)` duplicate) | §3 D-4, Appendix **C** | **ABSENT** | Its **disposition** in Appendix C is retained as a record of what was reviewed. **D-4's drift claim** — that it cites a prototype path not on master — cannot be re-verified here and is marked unverified. It carries no requirement |
+| `DASHBOARD_UNIFIED_ARCHITECTURE_PROPOSAL_20260818_V2.md` | §12.5, Appendix **C** | **ABSENT** | §12.5 endorses it as "the execution-dashboard specification". **Re-grounded as a prerequisite:** WP-V2B-05's stated input *"the accepted Package 3 prototype"* must resolve to an artefact the implementer can actually read; if it cannot be located, the dashboard specification is written from §12.3–§12.5 of this brief, which are self-contained |
+| `ARCHITECTURAL_ADDENDUM_AND_ENHANCEMENT_SPECIFICATION_2026-08-21.md` (Antigravity) | §0.2 C-20, Appendix **C**, Appendix **D.4** | **ABSENT** | Everything adopted from it — the drag-and-drop state machine (§12.4), the seven freshness states (§12.3), runtime correlation gating (§10.3), risk buckets (§10.1), the zero-trust topology (§12.5) and the `package_hash` formula (§6.7) — **is written out in full in this brief** and does not depend on the source document. The **disposition table** in D.4 is unverified provenance |
+| `11_TRIAGE/DASHBOARD_V2_EXTERNAL_PATTERN_ADDENDUM_2026-08-17.md` | §12.5 twice, Appendix **D.4 G-7** | **ABSENT** | Cited only for *consistency* with the Tailscale/UFW design, which stands on its own. **Consistency claim marked unverified**; no requirement depends on it |
+| `Deepresearc 2/Gemini.md`, `Deepresearc 2/Chatgbt.md`, `Deepreseach/` (grok, perplexity, deepseek, Manus) | §1.4, Appendix **C** | **ABSENT** | §1.4 **rejects** their architectural conclusion, and §13.2 evaluates the named projects **against their own primary sources** (Appendix B), not against these files. Nothing load-bearing |
+| The four peer-review texts behind Appendix **D** (Codex memo, ChatGPT 1, ChatGPT 2, Antigravity) | Appendix **D**, §1.2 | **ABSENT** — already recorded in §E.5 | Appendix D remains **verifiable for internal traceability only**: the changes C-1…C-24 are visible in this document, but the attribution to a specific reviewer point is not re-checkable |
+| `tools_v2/observability/CHAOS_DRILLS_DESIGN.md` | §12.4 invariant 6 | **ABSENT** at base — F-19 records `tools_v2/` as **master-only** | Named as *"the right home"* for the chaos drill, which is a **placement recommendation, not evidence**. **Converted to a prerequisite** of WP-V3-07: the chaos drill needs a home, and where that is gets decided when the package is authorized |
+| `11_TRIAGE/OWNER_DECISION_AUDIT_TIERS_2026-08-09.md` | Root `AGENTS.md` tier policy, quoted in plan §0 | **TRACKED** | Tier definitions are re-checkable |
+| `11_TRIAGE/DESIGN_DEFECT_PATTERNS_2026-08-10.md` | §2 F-4, §2 F-7, §16 M1 | **TRACKED** | The self-confirming-check standard and pattern 1 are re-checkable |
+| `00_AGENT_PROTOCOLS/MTC_REPO_GUARD_PROTOCOL.md` | The header's *"Authority of this document"* note | **TRACKED** — at `00_AGENT_PROTOCOLS/`, not the repository root | Path recorded here; the governance claim stands |
+
+## F.2 Parity corpora and result artifacts
+
+| Cited artefact | Cited in | Status at base commit | Consequence |
+|---|---|---|---|
+| `12_PARITY_PINETS/parity_summary.md` (Corpus A) | §2 F-7, §3 D-10, §8.1, Appendix A | **TRACKED** | 27/58 figure re-checkable |
+| `02_MTC_BACKTEST/parity_suite_350/PARITY_STATUS_FINAL_20260304.md` (Corpus B) | §2 F-7, §9.3, Appendix A | **TRACKED** | 437/439 figure and the 121 reuses re-checkable |
+| `01_MTC_PROJECT/reports/FACTORY_REGRESSION_SUITE_V1/full_current/FULL_FACTORY_SUITE_REPORT.md` (Corpus C) | §2 F-7, Appendix A | **ABSENT** | The **160 `NOT_COMPARABLE`** figure is **unverified at this commit**. F-7's conclusion does not depend on it — the corpus-comparability problem is established by Corpora A and B alone — but **WP-P0-06 must locate or reconstruct Corpus C, or record it as unavailable**, rather than quote the figure |
+| `IBKR_PAPER_BRIDGE/docs/03_STATUS.md` (Corpus D, the 858/858 entry golden) | §2 F-7, §9.3, §16 M7a, §19 A-5, Appendix A | **TRACKED** | The golden and its explicit *"entry-signal parity only"* caveat are re-checkable. **This is the one parity artefact a hard acceptance criterion depends on, and it is present** |
+| `01_MTC_PROJECT/05_PARITY/` and `12_PARITY_PINETS/` trees, `parity_results.json` in both | §2 F-10, §3 D-9, §16 M1 | **TRACKED** | The duplication and the directory differences are re-checkable |
+| `05_BACKTEST_RESULTS/MEGA_results_iter_10_20260602_042506_results.json` | §2 F-4, Appendix A | **ABSENT** | *Status normalized in the R1 correction pass: this table has three statuses and "git-ignored" is not one of them.* The **status** is ABSENT at the base commit. The **explanation** is a separate fact: the path is git-ignored by design (`.gitignore:98`, F-5), so it is **never reproducible from Git** and may be present or absent depending on the machine — which is why no claim may rest on it. The F-4 finding stands on `mega_walk_forward.py:1477-1482`, which is TRACKED. **WP-P0-07 measures the artifact estate at execution time** rather than quoting this file |
+| `03_QUANTLENS/_user_guide/07_BACKTEST_AND_OPTIMIZATION_RULES.md` | §2 F-3, F-22, F-18, Appendix A | **TRACKED** | The `:287-294` snapshot heading and the §8 "slippage included" drift claim are re-checkable |
+| `11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md` | §2 F-18 | **TRACKED** | Byte count re-checkable |
+| `_AI_MEMORY/FORWARD_PAPER_QUEUE.md` | §2 F-22, Appendix A | **TRACKED** | The DSR 0.492 observation exception is re-checkable |
+
+## F.3 Source, memory and registry paths
+
+| Cited artefact | Status at base commit | Note |
+|---|---|---|
+| `_AI_MEMORY/LIVE_TRADING_GATE.md` | **TRACKED** | **The fourteen preconditions are re-checkable.** The single most load-bearing citation in the document set (F-16, A-21, A-24, G5) rests on a tracked file |
+| `_AI_MEMORY/GLOBAL_HANDOFF.md`, `NEXT_STEPS.md`, `DECISIONS.md`, `AI_RULES.md`, `START_HERE.md`, `LESSONS.md`, `PROJECT_MEMORY.md` | **TRACKED** | F-18's byte counts and the D021 VPS record are re-checkable |
+| `05_REGISTRY/PROMOTION_REGISTRY.json`, `STRATEGY_REGISTRY.json`, `STRATEGY_RESEARCH_REGISTRY.json`, `TRIAGE_CANDIDATE_REGISTRY.json`, `RESEARCH_RUN_REGISTRY.json`, `TAG_DICTIONARY.json` | **TRACKED** | F-6 and F-21 re-checkable |
+| `01_MTC_PROJECT/01_PINE/MTC_V2.pine`; `01_MTC_PROJECT/00_PYTHON/mtc_v2/core/*`; `02_MTC_BACKTEST/src/*`; `03_QUANTLENS/tools/mega_walk_forward.py`; `IBKR_PAPER_BRIDGE/bridge/*` | **TRACKED** | **Every F-1, F-2, F-3, F-4, F-8, F-8a, F-9a, F-14 and F-15 line citation rests on tracked source.** This is why the findings survive the absence of the audit reports |
+| `IBKR_PAPER_BRIDGE/docs/21`–`31`, `RELEASE_EVIDENCE_CONTRACT.md`, `RUNTIME_BASELINE_CONTRACT.md` | **TRACKED** | The nine accepted safety contracts of F-13, and `docs/27` — the authoritative risk snapshot that §5.5's Account Snapshot Service builds on — are re-checkable |
+| `MTC_COMMAND_CENTER/07_ADAPTERS/` | **TRACKED** — six READMEs and one Python file | F-9 re-checkable |
+| `IBKR_PAPER_BRIDGE/dashboard_v2_prototype/`, `IBKR_PAPER_BRIDGE/tools_v2/` | **ABSENT** at base | Consistent with **F-19**, which records Packages 3/4/5a as present on `master` and absent from the working line. **This round did not read `master`, so their presence there is F-19's claim, re-stated, not re-verified.** WP-V2B-05's dependency on "the accepted Package 3 prototype" is therefore a **prerequisite to locate**, not an available input |
+| `01_MTC_PROJECT/reports/` | **ABSENT** at base | The reason Corpus C is absent |
+
+## F.4 What changed in the document set because of this inventory
+
+1. **§E.7 now states which Appendix E claims are unverified provenance** and which stand on reproduced source.
+2. **No requirement, count, tier, gate or acceptance criterion depends on an ABSENT artefact.** The one hard acceptance criterion that depended on a parity corpus (A-5, the 858/858 entry golden) depends on a **TRACKED** one.
+3. **Three dependencies became explicit prerequisites** rather than assumed inputs: the Package 3 prototype for WP-V2B-05, Corpus C for WP-P0-06, and a home for the chaos drill in WP-V3-07.
+4. **No artefact was created, reconstructed or inferred**, and the five-file limit of this round was not exceeded to satisfy any of the above.
+5. **The current round's own audit provenance is held to the same standard** *(added in the R1 correction pass)*: the G1 architecture acceptance audit round 1 (T0) transcripts and reports are **ABSENT** at the frozen base and are **not commit-addressable in this round**. Claims about that audit event are **session provenance and non-load-bearing**; R1 … R17 stand on the reproduced source facts recorded in §0.6.
+
+---
+
+**END OF BRIEF — v2.1** *(main body §0–§22 plus Appendices A–F)*
