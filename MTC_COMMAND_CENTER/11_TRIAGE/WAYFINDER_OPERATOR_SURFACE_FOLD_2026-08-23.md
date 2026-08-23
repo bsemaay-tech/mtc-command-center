@@ -1,6 +1,6 @@
 # WAYFINDER OPERATOR-SURFACE FOLD — 2026-08-23 (map #95)
 
-**Status:** owner-decision record and documentation-fold candidate on a branch. **Not merged.** Planning only — **implementation authorized: NO.** Per D-12, nothing here authorizes trading code, Pine, Bridge behaviour, host contact, credentials, deployment, testnet, live, ARM, KILL, FLATTEN or any work package to start.
+**Status:** owner-decision record reconciled onto `feature/wayfinder-final-red-team-20260824` from current master on 2026-08-24 under the owner's separate acceptance. Planning only — **implementation authorized: NO.** Per D-12, nothing here authorizes trading code, Pine, Bridge behaviour, host contact, credentials, deployment, testnet, live, ARM, KILL, FLATTEN or any work package to start. Git history is authoritative for final merge status.
 
 **What this is.** GitHub map issue [Execution Dashboard & Trading Chart decision map (#95)](https://github.com/bsemaay-tech/mtc-command-center/issues/95) settled what the owner must see, which controls may appear at each stage, what the execution chart may contain, and how mobile access is staged. Two research tickets established reuse options and the brownfield execution-surface facts. Four owner-grilled tickets then recorded the decisions. **Detail lives in each ticket's final resolution comment; this document indexes and assigns the decisions to existing planning carriers.**
 
@@ -102,7 +102,7 @@ This is an owner-gated definition artifact. Changing the doctrine requires the o
 - No package starts and no G1-IA/G2–G9 gate is satisfied.
 - No settled map is reopened and no owner outcome or safeguard text changes.
 - No chart library or tearsheet library is selected here; no numeric value is invented.
-- No merge is performed by this fold candidate.
+- The original fold candidate performed no merge; its current-master reconciliation and merge are separate owner-authorized Git administration.
 
 ---
 
@@ -110,6 +110,7 @@ This is an owner-gated definition artifact. Changing the doctrine requires the o
 
 - Base: `origin/master` at `577e36eb4b44657b00e0ebd801bdb0e2b1da569a`.
 - Branch: `feature/wayfinder-fold-map95-20260823` in isolated worktree `C:\WF104`.
+- Current-master reconciliation: `feature/wayfinder-final-red-team-20260824` in `C:\WFREDTEAM_20260824`, starting from `0baea68ee3bd85a3a57068cc3a3c4876b197d690`; later map-#96 and map-#97 text preserved.
 - Editing discipline: exact anchored patches only; no broad replacement, protected path or owner outcome document.
 - Checks completed on the branch candidate: exact changed-path review, package/requirement recount, marker searches and whitespace check. Repo guard is re-run after the audit repair below.
 - Counts: requirements **60 = 44 + 16** unchanged; packages **76** unchanged.
