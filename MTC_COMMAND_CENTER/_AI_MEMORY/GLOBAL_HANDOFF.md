@@ -9,6 +9,19 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol Lead] 2026-08-23 — Map 97 repository/context/delivery fold complete
+
+Map #97 decision tickets #114–#116 were resolved from the owner's eighteen-choice
+acceptance and folded on `feature/wayfinder-fold-map97-20260823` at `2bc11fd8`. The fold
+ratifies the stage-routed monorepo through Phase 0–V3, strict research/execution trust zones,
+the small-router/stage-context doctrine, and immutable/reversible delivery rules. It adds no
+requirement, package, gate or tier (60 requirements, 76 packages) and authorizes no code,
+repository split, migration, cleanup, CI activation, host, credential, deployment, testnet,
+live or trading action. The sole T2 reviewer reproduced scope and content checks but was
+stopped after 52 minutes under the owner's explicit stop instruction before returning a
+verdict; no accepting model-audit verdict is claimed. Lead checks and repo guard passed.
+The owner explicitly authorized the Map #97 fold and merge without another prompt.
+
 ## [Codex gpt-5.6-sol Lead] 2026-08-23 — Map 96 safety/operations fold completed
 
 Map #96 decision tickets #107 through #110 were resolved from the owner's six-choice

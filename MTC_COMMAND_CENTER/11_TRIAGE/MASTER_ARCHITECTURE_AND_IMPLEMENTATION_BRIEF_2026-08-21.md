@@ -8,7 +8,7 @@
 > | Field | Value |
 > |---|---|
 > | **Document state** | **v2.1 REPAIRED** — the 2026-08-21 Gate-5 findings are repaired (Appendix E), a second owner-authorized T2 documentation round applied the repairs listed in §0.3, a third owner-authorized T2 documentation round applied the repairs listed in §0.4, a **fourth owner-authorized T2 documentation round** applied the repairs listed in **§0.5** (owner acknowledgement of D-01…D-12, the D-02 and D-07 clarifications, and removal of a reserved future safeguard identifier), and a **fifth owner-authorized documentation round** repaired the **seventeen blockers R1 … R17 raised by the G1 architecture acceptance audit round 1 (T0)**, listed in **§0.6**. **The version remains v2.1; no repair round is an acceptance.** **A subsequent status-only record, §0.7 (2026-08-23), carries the current acceptance and acknowledgement position and changes no architecture text, count, package, gate or authorization** |
-> | **Current counts (§0.6 governs the totals; §0.7 governs status)** | **60 tracked requirements = 44 owner outcomes (O-01…O-44, unchanged) + 16 derived safeguards (D-01…D-16)**. **All 16 are now owner-acknowledged** — D-01…D-12 on **2026-08-22** (D-02 and D-07 with their recorded clarifications), **D-13…D-16 on 2026-08-23 AS WRITTEN**. **They remain DERIVED permanently, their safeguard text is unchanged, and they never become original owner outcomes.** **75 work-package definitions** *(69 before the 2026-08-23 wayfinder decision fold — C-31; the six additions are owner-decided in `WAYFINDER_DECISION_FOLD_2026-08-23.md`)*. Counts quoted inside §0.3, §0.4 and §0.5 are historical to those rounds and are not the current totals |
+> | **Current counts (§0.6 governs the totals; §0.7 governs status)** | **60 tracked requirements = 44 owner outcomes (O-01…O-44, unchanged) + 16 derived safeguards (D-01…D-16)**. **All 16 are now owner-acknowledged** — D-01…D-12 on **2026-08-22** (D-02 and D-07 with their recorded clarifications), **D-13…D-16 on 2026-08-23 AS WRITTEN**. **They remain DERIVED permanently, their safeguard text is unchanged, and they never become original owner outcomes.** **76 work-package definitions** *(69 before the 2026-08-23 wayfinder decision fold — C-31; six additions are owner-decided in `WAYFINDER_DECISION_FOLD_2026-08-23.md`, which brought the count to 75, and the map-#79 execution-architecture fold then added the seventh, **WP-P0-31 Lifecycle Ledger and Registrar** — §10.4, §17.1 — bringing it to the canonical 76)*. Counts quoted inside §0.3, §0.4 and §0.5 are historical to those rounds and are not the current totals |
 > | **AUDIT ACCEPTANCE** | **SATISFIED for gate G1, at the exact candidate commit `c81aacb83f89ebc2454ddc80b4fd619ae8fd57f5` (parent / fixed point `e71248a2576132b3e3363df00b7f2ce5425902aa`), cycle C2-R1, 2026-08-23** — two fresh, independent, read-only flagship audits at `xhigh` (`claude-opus-5` **PASS**; Codex `gpt-5.6-sol` **PASS**), supplemental Standards and Spec axes **PASS**, **no unresolved required finding**, final audited worktree clean. **The acceptance attaches to that candidate commit only; a later status-record commit is not itself audited.** Acceptance remains governed by the **current root `AGENTS.md`**: the **tier-required independent audit(s)** at the **highest applicable tier at the actual gate**, with the auditor identity, effort and count that policy names **at the time of that gate**. This document does **not** decide a permanent tier, an auditor count or a model identity. The 2026-08-21 Codex Slot-B `REQUEST_CHANGES` on **v2.0** is **historical provenance only**. **G1 acceptance is not implementation authorization: `G1-IA` is unsatisfied, every work package is NOT STARTED, and no deployment, host, credential, testnet or live act is authorized.** Appendix E §E.7 is the canonical acceptance record and now carries this result |
 > | **IMPLEMENTATION AUTHORIZED** | **NO.** Nothing in this document authorizes code, migration, deployment, schema activation, host contact, credential use, broker action, TESTNET/MAINNET action, ARM, or an order |
 > | **DECISIONS APPROVED** | **YES, for the owner decisions in §21.1 only.** Those are binding. Everything else is analysis and proposal |
@@ -50,7 +50,7 @@
 |---|---|---|
 | **Q1** | One authoritative Python Strategy Kernel; allocation resolved by Allocator/Guardian | §5, §7, §16 |
 | **Q2a** | Versioned contracts package, in place, now | §14.3 |
-| **Q2b** | Repository topology deferred; route and measure context first | §14.4, §15 |
+| **Q2b** | Repository topology — **stage-routed monorepo is the default through Phase 0–V3**; route and measure context in place, and consider a split later only if measured cost or the security/deployment boundary justifies it *(reconciled 2026-08-23 by the map-#97 fold; §21.1 remains canonical)* | §14.4, **§14.6**, §15, **§15.5** |
 | **Q3** | Pine becomes visualization and divergence monitoring only | §8.3 |
 | **Q4** | Hybrid worker isolation | §10.2, §17.2 |
 | **Q5** | Harvest then freeze the duplicate engine; do not delete | §7.3, §16 |
@@ -87,7 +87,7 @@ Six of these are corrections of **errors in v1**, not refinements.
 | C-10 | Module count removed from the DSR calculation; preregistered search family used instead; complexity reported separately. | Codex §7, ChatGPT 2 §5 | Correction |
 | C-11 | Kernel mandatory core reduced from ~50 config keys to ~30; Multi-TP, break-even, trailing, time exits, pyramiding, flip, filter-block exits become modules. | ChatGPT 1 §3 | Improvement |
 | C-12 | Kernel Economic Golden Suite replaces v1's "entry golden + one parity case". Seventeen families in v2.0; **25 families since v2.1** (families 18–25 added from the Gate-5 design review, §9.3). | Codex §4, ChatGPT 1 §5, ChatGPT 2 §2 | **Gate strengthened** |
-| C-13 | Repository topology deferred; contracts package defined in place now. | ChatGPT 2 §1, Codex §10, Q2a/Q2b | Sequencing |
+| C-13 | Repository topology deferred; contracts package defined in place now. **Deferral closed 2026-08-23 by the map-#97 fold (§14.4, §14.6): the stage-routed monorepo is the ratified default through Phase 0–V3, with a later split only on a measured trigger. C-13 is retained as the historical sequencing correction of v1's assumed split, not as the current position.** | ChatGPT 2 §1, Codex §10, Q2a/Q2b | Sequencing, **later answered** |
 | C-14 | AI context routing decoupled from migration — implemented now, in the current repo, and measured. | ChatGPT 2 §9, Q2b | Sequencing |
 | C-15 | Historical artifacts classified by engine lineage rather than dismissed uniformly. | Codex §5 | Correction |
 | C-16 | Bridge migration must name an exact accepted commit and package inclusion list — not "wholesale". | Codex §12 | Correction |
@@ -246,7 +246,7 @@ Audit acceptance is still **PENDING**. Implementation is still **NOT AUTHORIZED*
 
 **What is still unsatisfied, stated plainly.** **`G1-IA` remains unsatisfied.** **Every work package remains NOT STARTED**, and each one separately requires the owner's **explicit implementation authorization for that specific package**. **Implementation, code, host contact, credential use, testnet action, live action, deployment, repository push, trading and spending all remain UNAUTHORIZED**, and the protected gates G2 … G9 still require the owner's word, each in its own act.
 
-**Counts and identifiers are untouched by this record.** **60 tracked requirements = 44 owner outcomes (O-01…O-44) + 16 derived safeguards (D-01…D-16). 69 work-package definitions.** No O, D, WP, gate, tier or dependency identifier changed, and no normative text changed.
+**Counts and identifiers are untouched by this record.** The counts stated here are the **historical counts as they stood at the exact accepted candidate commit `c81aacb8…`**, not current totals: **60 tracked requirements = 44 owner outcomes (O-01…O-44) + 16 derived safeguards (D-01…D-16), and 69 work-package definitions at that commit.** The **current canonical totals remain 60 requirements = 44 owner outcomes + 16 derived safeguards, and 76 work packages**; later folds added work-package definitions after `c81aacb8…` without changing the requirement count. No O, D, WP, gate, tier or dependency identifier changed, and no normative text changed.
 
 ---
 
@@ -496,7 +496,7 @@ v2.0 claimed *"No tool in the research toolchain persists per-trial records"*, s
 | executable / skipped / not-comparable counts, with reuses separated from executions |
 | unresolved mismatches, named |
 
-**[OWNER — RF-1.5–1.8]** The inventory and all parity evidence stay **in the current repository** during Phase 0. No parity work moves and no new repository is created now; Q2b (topology) remains deferred. If parity ever moves, it moves through a hash-preserving migration ledger, and the old repository remains a read-only archive.
+**[OWNER — RF-1.5–1.8]** The inventory and all parity evidence stay **in the current repository** during Phase 0. No parity work moves and no new repository is created now. *(Updated 2026-08-23, map #97 fold: this previously read "Q2b (topology) remains deferred". **Q2b is answered — the stage-routed monorepo is the default through Phase 0–V3** (§14.4, §14.6) — which makes this paragraph's instruction stronger, not weaker: parity evidence has no other repository to move to unless a later measured trigger fires.)* If parity ever moves, it moves through a hash-preserving migration ledger, and the old repository remains a read-only archive.
 
 **What can be said today, precisely.** Entry-signal parity is proven for one strategy, one symbol, one timeframe (Corpus D). Beyond that, **parity status is corpus-dependent and the corpora are not yet comparable.** That uncertainty — not a blanket absence of parity — is the reason the Kernel Economic Golden Suite (§9.3) replaces v1's single-golden gate.
 
@@ -727,7 +727,7 @@ Accepted safety contracts exist as document **and** code **and** tests: window s
 | `11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md` | 32,402 |
 | **Total** | **709,001 bytes ≈ 180,000 tokens** |
 
-**Scope correction (C-13/C-14).** This proves a **context-routing** problem. It does not, by itself, prove a Git-topology problem. §15 fixes the routing in place; §14.4 defers topology until the fix is measured. **[OWNER — Q2b]**
+**Scope correction (C-13/C-14).** This proves a **context-routing** problem. It does not, by itself, prove a Git-topology problem. §15 fixes the routing in place. **[OWNER — Q2b]** *(Updated 2026-08-23, map #97 fold: the second half previously read "§14.4 defers topology until the fix is measured". **The topology doctrine is now ratified — the stage-routed monorepo is the default through Phase 0–V3** (§14.4, §14.6) — and the measurement this finding motivates is now the evidence for the later conditional-split trigger. The finding itself, and the byte figures above, are unchanged: they are a dated audit measurement, as is the separate 2026-08-23 ticket-#112 inventory recorded in §14.6.3.)*
 
 ## F-19 [FACT] The working checkout is 60 commits behind master
 
@@ -2561,14 +2561,14 @@ v1 recommended three repositories plus a contracts package, citing the 180,000-t
 
 ## 14.2 Direction of travel (owner-stated, unchanged)
 
-Research, execution and versioned contracts are to be **separated gradually**, with the current repository ending as a **read-only archive**. What changes is only *when the topology is fixed and on what evidence*.
+Research, execution and versioned contracts are to be **separated gradually**, with the current repository ending as a **read-only archive**. What changes is only *when the topology is fixed and on what evidence*. **[Updated 2026-08-23, map #97 fold: the topology is now fixed for Phase 0–V3 — see the table below and §14.6. The "read-only archive" outcome belongs to the conditional-split path; under the ratified default it is the frozen-banner discipline of §16 M10/M12, and nothing is deleted on either path.]**
 
 **Two different separations — clarified 2026-08-22 (§0.3 item 11). Do not conflate them again.**
 
 | Separation | Status | Meaning |
 |---|---|---|
 | **Logical and trust-domain separation** | **BINDING NOW** | Research holds no credentials; execution is small, audited and authenticated; they communicate only through frozen, hash-verified packages and versioned contracts (§5.1 principle 7, §5.2, §12.1). Execution never imports research source. This constraint is **not** deferred, is **not** contingent on Q2b, and must be satisfied inside the current repository from Phase 0 onwards |
-| **Separate Git repositories** | **DEFERRED — Q2b** | Whether that logical boundary is expressed as one stage-routed repository or three repositories is a packaging question, decided at the end of Phase 0 on measured evidence (§14.4) |
+| **Separate Git repositories** | **DECIDED 2026-08-23 — Q2b, map #97 fold (§14.6)** | The packaging question is answered: **one stage-routed repository is the default through Phase 0–V3.** A split into separate repositories is a **later, conditional** option, considered only after stage-routing measurement and only if measured cost or the security/deployment boundary justifies it (§14.4, §14.6). *Until 2026-08-23 this row read "**DEFERRED — Q2b** … decided at the end of Phase 0 on measured evidence"; the measurement it required still gates the conditional split.* |
 
 A single repository can satisfy the binding separation and today does not; three repositories can violate it if execution imports research source. The boundary is the requirement — the topology is an implementation of it.
 
@@ -2609,18 +2609,22 @@ Stated plainly: Phase 0 makes divergence *detectable*; V2A makes it *impossible*
 
 **Why this is the highest-value early step:** it is the only structural artefact that makes the five-recipe problem *detectable* if it starts to recur. A breaking change becomes a version bump instead of a silent divergence discovered six weeks later.
 
-## 14.4 Q2b — topology deferred, decided on measurement
+## 14.4 Q2b — stage-routed monorepo now, a measured conditional split later
+
+**Map-#97 amendment (2026-08-23, [Decide: repository topology (#114)](https://github.com/bsemaay-tech/mtc-command-center/issues/114)) — read this before the sequence below.** The macro doctrine is **no longer undecided**. **Option A, the stage-routed monorepo, is the ratified default through Phase 0, V2 and V3.** Option B is retained below **as the conditional alternative it now is**, not as an equal candidate awaiting a coin toss: it is considered only after the stage-routing measurement exists and only if **measured cost** or the **security/deployment boundary** justifies it, and if triggered it targets **contracts + research + execution** with the present repository preserved **read-only**. The four-step sequence below is unchanged and still binding — **it is now the evidence path for the conditional trigger rather than for the macro choice**. Full doctrine, carriers and dated research inputs: **§14.6**.
+
+*This section previously carried the heading "Q2b — topology deferred, decided on measurement". The deferral was true from 2026-08-21 until 2026-08-23 and is preserved as history in §21.1's Q2b row; it is not the current position.*
 
 **Sequence:**
 
 1. Implement stage-local context routing **in the current repository** (§15).
 2. **Measure** default agent context per task class, cold-start time, and the actual per-task token cost. Record before/after.
 3. Complete the migration inventory and classification (§16 M0–M1) so the true blast radius of a split is known.
-4. **Then** choose topology against measured evidence on: default onboarding tokens, cold-start time, cross-domain change complexity, CI complexity, contract-version drift risk, multi-repo PR overhead, local development complexity, publishing overhead, and migration cost.
+4. **Then** evaluate the **conditional-split trigger** against measured evidence on: default onboarding tokens, cold-start time, cross-domain change complexity, CI complexity, contract-version drift risk, multi-repo PR overhead, local development complexity, publishing overhead, and migration cost. *(Reworded 2026-08-23, map #97 fold: this step read "**Then** choose topology against measured evidence". The macro choice is no longer open — Option A is the ratified default through Phase 0–V3 — so what this evidence decides is only whether the conditional split of §14.6.1 item 3 is ever triggered. The evidence list itself is unchanged, and an absent trigger is a valid terminal state.)*
 
-**The two options that will be compared:**
+**The two options — Option A is the ratified default, Option B the conditional alternative (map #97, §14.6):**
 
-**Option A — stage-routed monorepo**
+**Option A — stage-routed monorepo — RATIFIED DEFAULT through Phase 0–V3**
 
 ```
 platform/
@@ -2630,7 +2634,7 @@ platform/
 ```
 with strict local `AGENTS.md` and stage-local context.
 
-**Option B — three repositories + contracts package**
+**Option B — three repositories + contracts package — CONDITIONAL, considered only on a measured trigger**
 
 ```mermaid
 graph TB
@@ -2650,7 +2654,74 @@ graph TB
 
 ## 14.5 Kernel home
 
-`[OPEN]`, resolved by Q2b. Under either option the kernel is consumed by execution as a **pinned, hash-verified package**, exactly like a third-party dependency. Execution never imports research source.
+Under either option the kernel is consumed by execution as a **pinned, hash-verified package**, exactly like a third-party dependency. Execution never imports research source.
+
+**Map-#97 amendment (2026-08-23, [Decide: repository topology (#114)](https://github.com/bsemaay-tech/mtc-command-center/issues/114)).** Because the stage-routed monorepo is the ratified default (§14.4, §14.6), the kernel's home **through Phase 0–V3 is a routed stage inside this repository**. The consumption rule above is unchanged and is the reason the home was never load-bearing. What stays `[OPEN]` is narrower than before: **only where the kernel lands if the conditional split is later triggered** — the residual scope of §21.2 **O-7**.
+
+## 14.6 Repository topology and delivery doctrine — map #97 fold (2026-08-23)
+
+Owner-ratified through the [Repository, AI Context, Migration & Delivery decision map — topology on the table (queue 7/8) (#97)](https://github.com/bsemaay-tech/mtc-command-center/issues/97). The decision text lives in the resolution comments for [Decide: repository topology (#114)](https://github.com/bsemaay-tech/mtc-command-center/issues/114) and [Decide: versioning, migration and delivery doctrine (#116)](https://github.com/bsemaay-tech/mtc-command-center/issues/116); the AI-context half is **§15.5**, from [Decide: AI-context architecture (#115)](https://github.com/bsemaay-tech/mtc-command-center/issues/115). Current-state inputs come from [Research: repository topology and AI-context inventory (#112)](https://github.com/bsemaay-tech/mtc-command-center/issues/112) and [Research: context-loss and process-failure postmortem sweep (#113)](https://github.com/bsemaay-tech/mtc-command-center/issues/113); the applying record is [Fold: repo, context and delivery decisions into the planning set (#117)](https://github.com/bsemaay-tech/mtc-command-center/issues/117), written up as `WAYFINDER_REPOSITORY_CONTEXT_DELIVERY_FOLD_2026-08-23.md`. **This is a doctrine and carrier fold only.** It reopens nothing from maps #37, #54, #67, #78, #79 or #96, **adds no requirement and no work package, creates no tag, invents no number**, and authorizes no implementation, migration, host contact, credential, deployment, testnet, live or trading action (D-12).
+
+### 14.6.1 Topology — ratified
+
+1. **The stage-routed monorepo is the default through Phase 0, V2 and V3.** Option A of §14.4 is the answer, not a candidate.
+2. **Research and execution remain strict logical and trust zones**, exactly as §14.2 already binds them, and **execution consumes only frozen, hash-verified packages**. This survives every topology and is not contingent on one.
+3. **A later split is considered only after stage-routing measurement**, and **only if measured cost or the security/deployment boundary justifies it**. Absent a measured trigger there is no split to schedule.
+4. **If triggered**, the target is **contracts + research + execution** repositories, with **the present repository preserved read-only**.
+5. **Large run outputs and evidence leave ordinary Git storage** for **indexed, immutable, hash-verified artifact storage**; **Git keeps source, contracts, small manifests and pointers**. This direction is independent of the split question. **It is carried by existing packages — no new package is created for it:**
+   - **WP-P0-01** classifies the existing large tracked **and untracked** artifacts, so the direction has a subject rather than an assumption. An artifact whose owner or purpose cannot be established is recorded `UNKNOWN`, and an `UNKNOWN` blocks any move or cleanup touching it.
+   - **WP-P0-03** supplies the **bidirectional migration ledger** (`old_path → new_location → sha256 → status`, §16 M3), which is what makes any later relocation reversible and traceable.
+   - **WP-P0-13** (trial catalog) and **WP-V3-02** (full artifact tier, deterministic replay, retention and protected classes) are the **existing destinations for new evidence** under the §11.2/§11.3 artifact tiers.
+   - **WP-V2B-09** performs the **in-repository workflow cutover** so that **new** writes land at those destinations and **Git holds the hash and index pointers** rather than the payloads. **It deletes no history and de-tracks no historical path.**
+   - **Any de-tracking or removal of a historical path remains a separately owner-authorized, exact-target act under gate G8**, performed only after freeze tags and evidence preservation. **No history rewrite is authorized by this doctrine or by any of the carriers above.**
+
+   What remains open is the **artifact-store technology** and the **exact target lists** — to be settled against the §11.2/§11.3 tiers and the §16 M3 ledger at the recommended fresh G1 round. *(Amended 2026-08-23 within the map-#97 fold: this item previously read "Its executable carrier is not assigned by this fold", which left a ratified direction with no owner. The assignment above is a cross-reference and extension of existing carriers; no package, gate or tier is added.)*
+6. **Migration deletes nothing.** **Inventory → freeze tags → a bidirectional ledger → rehearsal and rollback proof → mechanically checked checkout liveness** all precede any move or cleanup. Old source stays readable.
+
+### 14.6.2 Versioning, migration and delivery — ratified
+
+1. **Package, release and legacy tag namespaces are immutable, and existing tags never move** (§15.4).
+2. **Master is protected.** Short-lived named branches and isolated worktrees are the normal working shape, and **rescue refs stay preserved until explicitly dispositioned**.
+3. **Shared contracts are versioned and mismatched consumers fail closed.** Multi-version compatibility is built **only after measured need** — the §14.3 rules and the existing refuse-on-skew handshake are unchanged.
+4. **The migration sequence is: inventory → classify → freeze → ledger → rehearse → verify → cut over → prove rollback → archive.** **Old source remains readable and is never silently deleted.** §16 already expresses this as M0 … M12; see the map-#97 amendment there.
+5. **OPS-C activates CI progressively** (WP-P0-27). **The existing T0–T3 audit-tier policy applies once at work-package boundaries, with its existing immediate-T0 exception, exactly as `AGENTS.md` states it.** **No new reviewer count, audit class or stacked audit is created here** — this fold decides placement and cadence only.
+6. **Mechanical guards block concurrent writers, and block cleanup, when ownership, process/scheduled-task dependency or checkout purpose is `UNKNOWN`.** An `UNKNOWN` is a stop, never a default-to-safe-looking-delete.
+
+### 14.6.3 Dated research findings — ticket #112 and #113, not timeless facts
+
+**Every figure below is a dated measurement taken on 2026-08-23** against ticket #112's recorded `origin/master` snapshot and the local workspace. They are **evidence for the doctrine above, not requirements, not thresholds, and not current-state claims for any later date.** Repository findings never become requirements (register §5, rule 4).
+
+From [Research: repository topology and AI-context inventory (#112)](https://github.com/bsemaay-tech/mtc-command-center/issues/112):
+
+- About **1.02 GiB** tracked, of which `MTC_COMMAND_CENTER` held about **97 %** of tracked bytes.
+- `03_QUANTLENS` was about **828 MiB**. **Four dormant dated run-output trees totalled about 796 MiB — about 78 % of all tracked bytes**, and one **90 MiB** tree was **gitignored yet still tracked**. This is the direct evidence for §14.6.1 item 5.
+- The main checkout held about **116 MiB of untracked agent-run logs**, and **6 of the 7 mandated onboarding files had uncommitted local edits** at measurement time.
+- The mandated onboarding chain was about **654 KiB**; `GLOBAL_HANDOFF` + `NEXT_STEPS` were about **590 KiB** and **structurally regrow through append-only usage after manual rotation** — the evidence for §15.5's archive rule.
+- **Tags: zero at measurement.** Remote branches **121** including pointer; local branches **164**; active worktrees **35**. **These counts are dated and volatile and must never be turned into permanent requirements** — they are the same class of fact as F-17's dated snapshot.
+- `docs/DEPRECATED_FILES.md` and `docs/EXCLUDED_PROJECTS.md` were **byte-identical**; `docs/ACTIVE_FILES.md` and `docs/DECISIONS.md` **collided by name with different canonical `_AI_MEMORY` files** — the evidence for explicit canonical homes.
+- The **frozen legacy repository** at `C:\LAB\tradingview-lab`, about **6.01 GiB**, **remained read-only and off-limits, and no content inside it was read.**
+- **The architectural implication, stated as the ticket stated it:** large artifacts out of ordinary Git, lean routed context, explicit canonical homes, and **no cleanup based on git cleanliness or age alone**.
+
+From [Research: context-loss and process-failure postmortem sweep (#113)](https://github.com/bsemaay-tech/mtc-command-center/issues/113) — **fourteen recorded process-failure patterns, ranked**:
+
+- **Worst:** a **cleanup heuristic nearly queued the checkout backing the live scheduled task for removal**, because **no liveness check existed**. Owner review caught it. This is why §14.6.2 item 6 is a hard stop rather than a warning.
+- **Second:** **two Lead sessions wrote the same shared transport artifacts concurrently**; loss was avoided by luck, and `SESSION_LOCK` was created **afterwards**.
+- **Third:** repeated **Windows worktree-removal failures left git state and disk reality divergent**, including multi-gigabyte ACL-locked husks.
+- **Cross-cutting:** **git clean/pushed/mtime cannot establish checkout liveness.** A **checked registry** must carry owner, worktree, path, write scope and process/scheduled-task dependency.
+- **Canonical memory can drift when the real work lives on another branch or ref.** Close-out must reconcile **current master, the work branch and durable tracker state** before a claim is released (§15.5).
+- **The existing audit tiers catch wrong conclusions better than evidence-authoring or process failures.** **Mechanical claim checks and literal execution verification belong at the delivery boundary** — which is why WP-P0-27 carries them and why **the settled tier policy is not changed and no stacked audit is added**.
+
+### 14.6.4 Carriers — existing packages only
+
+| Doctrine | Carrier |
+|---|---|
+| Stage-local context routing, the router/`CONTEXT_MAP`/glossary shape, and the **measurement** that is the conditional-split trigger evidence | **WP-P0-05** |
+| CI activation and the **mechanical delivery guards** — claim, ownership and liveness checks | **WP-P0-27 (OPS-C)** — **planned, not built** |
+| **In-repository** routed cutover — the terminal topology state through Phase 0–V3 | **WP-V2B-09** |
+| **Only** a later, condition-triggered repository split, under gate **G7** | **WP-V5-04** |
+| **Large run outputs and evidence out of ordinary Git** (item 5 above) — classification, ledger, destinations for new evidence, and the in-repository write-destination cutover | **WP-P0-01** classifies the existing large tracked/untracked artifacts · **WP-P0-03** supplies the bidirectional ledger · **WP-P0-13** and **WP-V3-02** are the existing catalog and artifact-tier destinations for new evidence · **WP-V2B-09** cuts the in-repository workflow over to those destinations and to Git-held hash/index pointers. **De-tracking or removing any historical path stays a separately authorized exact-target act under gate G8**, after freeze and evidence preservation; **no history rewrite.** Store technology and exact target lists remain `[OPEN]` |
+
+**No package is added, removed or renumbered by this fold: the totals remain 60 requirements = 44 owner outcomes + 16 derived safeguards, and 76 work packages.** **This fold creates no tag** (§15.4).
 
 ---
 
@@ -2680,7 +2751,7 @@ Each stage folder carries exactly four small files:
 
 **Default context for any task = root (≈ 24 KB incl. decisions) + one stage (≤ 18 KB) ≈ 42 KB ≈ 11,000 tokens** — a **~94 % reduction**.
 
-**Measurement is part of the deliverable.** Record, per task class, the before and after context size and cold-start time. That measurement is the evidence base for Q2b.
+**Measurement is part of the deliverable.** Record, per task class, the before and after context size and cold-start time. That measurement is the evidence base for Q2b — **and, since the map-#97 fold answered Q2b's macro axis on 2026-08-23, specifically for the conditional-split trigger of §14.6.1 item 3.** The deliverable and the caps above are unchanged.
 
 ## 15.3 History available, never loaded
 
@@ -2699,6 +2770,25 @@ Each stage folder carries exactly four small files:
 | `legacy/<name>/<date>` | a frozen historical reference (e.g. the Pine controller) |
 
 Without this, "frozen package" and "tagged commit" remain words the repository cannot honour — and `LIVE_TRADING_GATE.md` precondition 2 stays unsatisfiable.
+
+**Map-#97 amendment (2026-08-23, [Decide: versioning, migration and delivery doctrine (#116)](https://github.com/bsemaay-tech/mtc-command-center/issues/116)).** The three namespaces above are **ratified and immutable as written** — `pkg/<candidate_id>/<package_hash>`, `release/<component>/<semver>` and `legacy/<name>/<date>`. **An existing tag never moves**, and a superseded freeze is answered with a new tag, never with a retarget. **This fold creates no tag** and does not change when the first tags appear: that remains §16 M2, under its own authorization.
+
+## 15.5 AI-context architecture — map #97 fold (2026-08-23)
+
+Owner-ratified in [Decide: AI-context architecture (#115)](https://github.com/bsemaay-tech/mtc-command-center/issues/115) under the [Repository, AI Context, Migration & Delivery decision map — topology on the table (queue 7/8) (#97)](https://github.com/bsemaay-tech/mtc-command-center/issues/97), on the dated inventory in [Research: repository topology and AI-context inventory (#112)](https://github.com/bsemaay-tech/mtc-command-center/issues/112) and the failure sweep in [Research: context-loss and process-failure postmortem sweep (#113)](https://github.com/bsemaay-tech/mtc-command-center/issues/113). **It settles the shape §15.1–§15.3 already proposed; it changes none of their caps and adds none.**
+
+1. **Root `AGENTS.md` becomes a small router — when WP-P0-05 is separately authorized and implemented, and not before.** The `≤ 6 KB` cap of §15.2 is the existing cap and stands unchanged.
+2. **`CONTEXT_MAP.md` routes an agent to exactly one relevant stage** — one, not a shortlist. Its `≤ 2 KB` cap is unchanged.
+3. **Each stage carries small local rules, inputs, outputs, tests and a current handoff** — the five files and their existing caps in §15.2, unchanged.
+4. **`CONTEXT.md` is a lazy, terminology-only glossary.** It is created **only where stable domain language actually needs one**, and it is **never a spec, a procedure or a handoff**. A `CONTEXT.md` that starts explaining how to do something has become the thing this rule exists to prevent.
+5. **Historical handoffs become indexed, search-on-demand archives and are not loaded by default**; **current stage handoffs stay capped and current-only.** This is §15.3's rule, now ratified, and it is the answer to the measured fact that the two append-only handoff files regrow after every manual rotation (§14.6.3).
+6. **Every write task uses a shared GitHub claim** carrying **issue, branch, worktree, paths and live-dependency status.** **`SESSION_LOCK` is a checked mirror and history, not the sole collision guard** — it was created *after* the concurrent-write near-miss, and a guard that only one of two sessions consults is not a guard.
+7. **Canonical current-state reconciliation is mandatory at close-out:** current `master`, the work branch and durable tracker state are reconciled **before a claim is released**, because canonical memory drifts precisely when the real work lives on another ref.
+
+**Carrier: WP-P0-05, which already owns this scope.** The mechanical half of item 6 — the claim, ownership and liveness checks that must actually run — is **WP-P0-27 (OPS-C), planned and unbuilt**.
+
+**What this fold explicitly does NOT do.** It **does not edit `AGENTS.md`, `CLAUDE.md`, the `_AI_MEMORY` onboarding chain, or any stage directory.** Those are **future WP-P0-05 implementation changes** and each requires **separate owner authorization (`G1-IA`) and the T1 audit WP-P0-05 already carries**. **No new tier, reviewer count or audit class is created by saying so.** Deciding the shape of a router is not permission to move a single governance file.
+
 ---
 
 # 16. Safe migration and archival plan
@@ -2734,7 +2824,7 @@ flowchart TD
 | **M2 Freeze** | Tag: current master; the Pine controller; the MTC_V2 kernel; `02_MTC_BACKTEST`; the parity oracle set; the accepted Bridge V1 candidate; every branch identified in M1 as evidence-bearing. | Tags exist and are pushed. **The repository's first tags (F-17).** |
 | **M3 Ledger** | `MIGRATION_LEDGER.json`: `old_path → new_location → sha256 → status`. Append-only, resolvable in both directions. | Every `CANONICAL` file has a ledger row |
 | **M4 Contracts** | Build `MTC_COMMAND_CENTER/contracts/` per §14.3. **[OWNER — Q2a]** | Package installable; compatibility and consumer tests green |
-| **M4b Context routing** | Implement §15 in place; **measure** before/after per task class. | Measured reduction recorded; feeds the Q2b decision |
+| **M4b Context routing** | Implement §15 in place, **in the shape §15.5 ratified**; **measure** before/after per task class. | Measured reduction recorded; **feeds the conditional-split trigger evaluation** — *updated 2026-08-23 (map #97 fold): this read "feeds the Q2b decision", whose macro axis is now answered (§14.4, §14.6)* |
 | **M5 Canonicalization** | Complete the capability table (§7.3) for every economically meaningful capability. Decide intended semantics where implementations disagree. | Table complete and reviewed; no capability marked "whichever is easier" |
 | **M6 Golden Suite** | Author the **25** scenario families (§9.3) as deterministic fixtures with expected outputs derived from the **decided** semantics. Family 18 additionally requires a D026 RED/GREEN snapshot-drift case. **Added 2026-08-22 (§0.6 R12): every fixture whose behaviour a *behaviourally active* `tw_*` key can change is authored on BOTH branches of that key** — default and enabled — because six of those keys are live (F-8a), not inert. That touches families 3 and 6 (quantity rounding, via `tw_audit_semantics_mode`), 10 and 11 (break-even and trailing trigger bar, via `tw_be_semantics_mode` / `tw_trailing_semantics_mode`) and 2 (re-entry and flip, via `tw_reversal_reentry_*`). **No new family is added; existing families gain a branch.** **`tw_margin_call_split_entries` is excluded from the both-branch obligation** — it is `[DRIFT/UNKNOWN]` with no located behavioural consumer, and a branch fixture is authored only if WP-P0-09 finds one. | All 25 families have fixtures; each fails against a deliberate mutation; **every family sensitive to a behaviourally active `tw_*` key carries both branches**; **`tw_margin_call_split_entries` carries an investigation record, not a fabricated branch** |
 | **M7a `LEGACY_COMPATIBLE`** | Kernel + simulator reproduce frozen legacy behaviour **exactly**, including the known defects. Must reproduce the **entry-signal golden** (858/858 over 48,077 bars) bit-identically **and** the legacy branch of every applicable golden family. **[OWNER — Q1, Q15]** **Added 2026-08-22 (§0.6 R12): "legacy behaviour" includes the semantics of the six behaviourally active `tw_*` keys on both branches** — a kernel that reproduces only the default branch has reproduced half the legacy engine. **`tw_margin_call_split_entries` is excluded from that obligation while it remains `[DRIFT/UNKNOWN]` (F-8a).** | Bit-identical signal-file hash; every legacy-branch fixture green, **including both branches of each behaviourally active `tw_*` key**. **Any unexplained mismatch stops the migration.** |
@@ -2745,6 +2835,14 @@ flowchart TD
 | **M10 Workflow cutover — *within the current repository*** | **Rescoped 2026-08-22 (§0.6 R14).** v2.1 said *"New structure becomes where work happens"* — but **Q2b defers the topology decision**, so "the new structure" was undefined and M10 was a cutover to a destination nobody had chosen. M10 now means only the **stage-local structure that Phase 0 actually builds inside this repository** (§15.2, WP-P0-05) plus the contracts package and tag/ledger discipline: work happens in the routed stage folders, the contracts package is consumed from a released version, and superseded locations carry the banner *"FROZEN — read-only reference."* **Anything that requires the topology answer — moving trees between repositories, creating a second repository, or archiving this one — is not M10. It is M12 and WP-V5-04, under gate G7, after the WP-P0-05 measurement.** **Carried by WP-V2B-09 (T1).** | One week of real work in the routed structure with no fallback; superseded locations banner as frozen read-only; **no repository created, moved or archived** |
 | **M11 Branch prune** | **[C-17, OWNER — Q13]** Only after M0–M3. Prerequisites: active worktrees and processes inventoried; unmerged and unpushed commits identified; evidence-bearing branches tagged; ledger complete; **explicit owner authorization of exact deletion targets**. | Owner-approved target list; every deletion has a preserved tag |
 | **M12 Archival** | Old repository archived read-only, full history intact, ledger cross-linked both ways. **Never deleted.** **Clarified 2026-08-22 (§0.6 R14): this step is contingent on the Q2b topology answer and is carried by WP-V5-04 under gate G7. If Q2b keeps one repository, there is no "old repository" to archive and M12 reduces to the read-only banners already applied in M10.** | Archive reachable; ledger resolves in both directions — **or**, if no split is chosen, a recorded decision that M12 is not applicable |
+
+**Map-#97 amendment (2026-08-23, [Decide: versioning, migration and delivery doctrine (#116)](https://github.com/bsemaay-tech/mtc-command-center/issues/116)) — the ratified sequence, mapped onto the steps above.** The owner-ratified order is **inventory → classify → freeze → ledger → rehearse → verify → cut over → prove rollback → archive**, and **old source remains readable and is never silently deleted**. The table above already expresses it: **M0 inventory · M1 classify · M2 freeze · M3 ledger · M9b rehearsal, verification and a rollback walked rather than asserted · M10 cutover · M12 archival**. **No step is added, removed or renumbered.** Three things are now settled that the steps previously left to a deferred decision:
+
+- **M10 and M12 read against a ratified default.** M10's dated rescoping note ("*Rescoped 2026-08-22 … Q2b defers the topology decision*") is **historical to that round and stays as written**. Its operative content is unchanged and now rests on an answer rather than a deferral: **M10 is the in-repository routed cutover (WP-V2B-09) and is the terminal topology state through Phase 0–V3**, while **M12 and WP-V5-04 under gate G7 carry only the later, condition-triggered split** (§14.4, §14.6). **M12's "if no split is chosen, M12 reduces to the read-only banners already applied in M10" branch is now the default path**, not the fallback.
+- **`UNKNOWN` is a hard stop, mechanically.** M1 already blocks cleanup, prune, move and migration on any `UNKNOWN` classification. The ratified doctrine extends the same rule to **ownership, process/scheduled-task dependency and checkout purpose**, and requires the check to be **mechanical** rather than a reviewer's habit — because a cleanup heuristic once queued the checkout backing the **live scheduled task** for removal, and only owner review caught it (§14.6.3). **Git cleanliness, pushed state and mtime do not establish liveness.**
+- **Tags and rescue refs.** M2's tags land in the immutable namespaces of §15.4 and **never move afterwards**; **rescue refs are preserved until explicitly dispositioned**, and M11's prune still requires the owner's exact target list under gate G8. **This fold creates no tag and prunes nothing.**
+
+**Large artifacts.** The direction that run outputs and evidence leave ordinary Git storage for indexed, immutable, hash-verified artifact storage (§14.6.1 item 5) **is ratified doctrine, and it is carried by existing packages inside this same M0 … M12 chain — no step and no package is added.** **M1 classification (WP-P0-01)** covers the large tracked and untracked artifacts; **M3's ledger (WP-P0-03)** is the bidirectional record that makes any relocation reversible; **M10's cutover (WP-V2B-09)** points **new** writes at the §11.2/§11.3 artifact-tier destinations built by **WP-P0-13** and **WP-V3-02**, leaving hash and index pointers in Git. **This schedules no move of historical material and de-tracks nothing:** removing or de-tracking any historical path is a **separately owner-authorized, exact-target act under gate G8**, after M2's freeze tags and evidence preservation, and **no history rewrite is authorized**. The **store technology** and the **exact target lists** stay `[OPEN]` and are reconciled against the §11.2/§11.3 tiers and this section's M3 ledger at the recommended fresh G1 round.
 
 **The two gates that make this safe.** M7a proves the migration moved nothing by accident. M7b proves every intentional change was intended. v1 collapsed these into one step and would have silently carried the F-2 sizing defect into the canonical kernel — the single most important correction in this revision.
 
@@ -2757,7 +2855,7 @@ flowchart TD
 | | |
 |---|---|
 | **Scope** | Contracts package in place (Q2a). Tag namespaces. Context routing + measurement (Q2b input). Migration M0–M6. Kernel consolidation M7a → M7b. `TrialRecord` contract and trial-catalog writer. **Minimum Explorer. Lifecycle Ledger and Registrar (WP-P0-31, map #79 fold), the sole append-only lifecycle authority used by later admission, promotion and supervisor writers.** Branch-freshness guard. **Added 2026-08-22 (§0.6):** the **canonical research-simulator migration, which also delivers the one shared Risk Allocator implementation** (WP-P0-20, T0, A-7b); the **objective eligibility criteria and fixtures** (WP-P0-21, A-7c); the **family/human-observation leakage control** (WP-P0-22, A-7d); the **Pine de-fang implementation** (WP-P0-23, T0, **separately authorized under G2** — in Phase 0 by sequence, not by permission); the **OSS lifecycle policy and dependency ledger** (WP-P0-24); and the **broker-boundary reuse/extend/replace decision** (WP-P0-25, **T0 under G3**, decision only — protected, cross-cutting architecture takes the highest tier even though it writes no code, and any later implementation is separately gated). |
-| **Explicit non-goals** | No new trading features. No multi-strategy runtime. No broker work **— WP-P0-25 decides the broker boundary on paper and implements nothing**. **No Bridge behaviour change. No execution-dashboard rework** — clarified 2026-08-22 (§0.3 item 9): the non-goal is the *execution* surface, because the research-side **Minimum Explorer is explicitly in scope** above. Building a read-only research viewer is not "dashboard rework". **The V1 soak is untouched.** No repository topology decision. No Bridge runtime wiring of the contracts package (§14.3). **No production chart surface — that is WP-V3-11, deliberately not pulled forward.** |
+| **Explicit non-goals** | No new trading features. No multi-strategy runtime. No broker work **— WP-P0-25 decides the broker boundary on paper and implements nothing**. **No Bridge behaviour change. No execution-dashboard rework** — clarified 2026-08-22 (§0.3 item 9): the non-goal is the *execution* surface, because the research-side **Minimum Explorer is explicitly in scope** above. Building a read-only research viewer is not "dashboard rework". **The V1 soak is untouched.** **No repository split, no topology migration and no topology implementation** — *reworded 2026-08-23 (map #97 fold): this read "No repository topology decision", which is stale, because the macro topology **is** decided (§14.4, §14.6): the stage-routed monorepo is the ratified default through Phase 0–V3. What Phase 0 excludes is the **act** — no second repository, no tree moved between repositories, no archival of this one; Phase 0 builds the routed structure in place (WP-P0-05) and produces the measurement that a later conditional-split trigger would be evaluated against.* No Bridge runtime wiring of the contracts package (§14.3). **No production chart surface — that is WP-V3-11, deliberately not pulled forward.** |
 | **Dependencies** | Q1, Q2a, Q15 — all answered |
 | **Risks** | Kernel consolidation changes behaviour silently → M7a is the mitigation and is non-negotiable |
 | **Acceptance** | A-1 … A-7, **A-7b, A-7c, A-7d** |
@@ -2860,7 +2958,7 @@ flowchart TD
 | R-16 | Lifecycle Ledger receives no valid admission/promotion record | High | Medium | The loader accepts only an identity traceable to the appropriate immutable decision record in WP-P0-31; its default allowlist is empty |
 | R-17 | Slippage and gap optimism carried into live sizing | High | High | In-path slippage + gap-aware stop fills land in **M7b**, before any capital decision |
 | R-18 | Bridge V1 soak disturbed by V2 work | Medium | High | V2 in separate branches/worktrees; V1 candidate frozen; standing rule unchanged |
-| R-19 | **Q2b never gets decided** — routing improves, the topology question drifts forever | Medium | Low | M4b's measurement is a deliverable with a recorded result; the decision is scheduled at the end of Phase 0 |
+| R-19 | **The topology question drifts forever.** *Restated 2026-08-23 (map #97 fold): the original risk was "Q2b never gets decided". **The macro doctrine is now decided** — stage-routed monorepo through Phase 0–V3 (§14.4, §14.6) — so the residual risk is narrower: the measured re-evaluation of the conditional split never happens, or a split is argued for without a measured trigger* | Medium | Low | M4b's measurement is a deliverable with a recorded result (WP-P0-05); **the split is condition-triggered, so an absent trigger is a valid terminal state, not a drift**; WP-V5-04 under gate G7 is the only carrier that may act on one |
 | R-20 | Testnet fleet grows past reconciliation capacity | Medium | High | Q17: capacity-driven growth, with reconciliation reliability as the explicit stop condition |
 | R-21 | Human overrides silently flatter strategy performance | Medium | Medium | `human_override = true`; `PURE_STRATEGY` vs `OPERATOR_MODIFIED` split (§12.4) |
 | R-22 | **F-22 is misread as "the research is broken"** | Medium | Medium | It is not. The statistics are honest and correctly calibrated. It means **two constraints bind at once** — discovery of a statistically credible candidate, and calendar-time forward evidence. The lifecycle funds both in parallel; neither is treated as a substitute for the other |
@@ -2938,8 +3036,8 @@ flowchart TD
 | **DL-02** | Migration uses two milestones — `LEGACY_COMPATIBLE` then `CORRECTED_VNEXT`, fixes documented and falsification-tested. *(Q1, Q15)* |
 | **DL-03** | Final shared-account quantity is resolved by the Risk Allocator / Portfolio Guardian, not the kernel. *(Q1)* |
 | **DL-04** | Versioned contracts package defined **in place** in the current repository now. *(Q2a)* |
-| **DL-05** | Repository topology deferred; context routing implemented and measured first. *(Q2b)* |
-| **DL-06** | Research, execution and contracts separate gradually; the old repository ends as a read-only archive, never deleted. *(Q2)* |
+| **DL-05** | Repository topology deferred; context routing implemented and measured first. *(Q2b)* **Superseded on the macro axis 2026-08-23 by the map-#97 fold ([Decide: repository topology (#114)](https://github.com/bsemaay-tech/mtc-command-center/issues/114), §14.4, §14.6): the stage-routed monorepo is the default through Phase 0–V3, and a split is a later, condition-triggered option only. The routing-and-measurement sequencing this row records is unchanged and still binding — it is now the evidence path for that trigger. §21.1's Q2b row governs.** |
+| **DL-06** | Research, execution and contracts separate gradually; the old repository ends as a read-only archive, never deleted. *(Q2)* **Clarified 2026-08-23 (map #97 fold, §14.6.1): the logical/trust separation is binding now and under every topology; "the old repository ends as a read-only archive" applies to the conditional-split path, and under the ratified default there is no second repository and the read-only outcome is the banner discipline of M10/M12. Nothing is deleted on either path.** |
 | **DL-07** | Pine becomes visualization and observational divergence monitoring only; all order-routing capability removed. *(Q3)* |
 | **DL-08** | Hybrid worker isolation: shared isolated workers for shadow, one process per strategy/bucket for paper and live. *(Q4)* |
 | **DL-09** | `02_MTC_BACKTEST`: harvest, then freeze as legacy. Do not delete. *(Q5)* |
@@ -2990,7 +3088,7 @@ flowchart TD
 |---|---|---|
 | **Q1** | One authoritative kernel? | **YES.** Two milestones: `LEGACY_COMPATIBLE` exact reproduction, then `CORRECTED_VNEXT` with fixes documented and tested separately. Final shared-account allocation resolved by the Portfolio Guardian / Risk Allocator. |
 | **Q2a** | Versioned contracts package now? | **YES**, in place inside the current repository. No repository migration required for this step. |
-| **Q2b** | Repository topology? | **DEFER.** Implement stage-local context routing first and measure the real reduction. Decide later on measured context, security, deployment and release-boundary evidence. |
+| **Q2b** | Repository topology? | **ANSWERED 2026-08-23 — [Decide: repository topology (#114)](https://github.com/bsemaay-tech/mtc-command-center/issues/114), map #97 fold (§14.6).** The **stage-routed monorepo is the default topology through Phase 0, V2 and V3.** Research and execution remain **strict logical and trust zones**, and execution consumes only frozen, hash-verified packages. **A later split is considered only after stage-routing measurement, and only if measured cost or the security/deployment boundary justifies it**; if triggered it targets **contracts + research + execution** repositories with the present repository preserved **read-only**. **Large run outputs and evidence leave ordinary Git storage** for indexed, immutable, hash-verified artifact storage, while Git keeps source, contracts, small manifests and pointers. **Any migration deletes nothing:** inventory, freeze tags, a bidirectional ledger, rehearsal and rollback proof, and mechanically checked checkout liveness precede any move or cleanup. *The original 2026-08-21 answer — "**DEFER.** Implement stage-local context routing first and measure the real reduction. Decide later on measured context, security, deployment and release-boundary evidence." — is preserved here as the historical decision it was; the sequencing it required is unchanged, and what changed is that the macro doctrine is no longer undecided.* **This answers the doctrine, not an authorization: no repository is created, moved, split or archived, and `G1-IA` and gate G7 are untouched.** |
 | **Q3** | Demote Pine, cut order routing? | **YES.** Visualization and observational divergence monitoring only. Remove all order-routing capability. |
 | **Q4** | Worker isolation? | **HYBRID.** Shared isolated workers acceptable for large-scale forward shadow; paper and live use one process per strategy or risk bucket. |
 | **Q5** | Retire `02_MTC_BACKTEST`? | **YES.** Harvest useful components, then freeze the duplicate engine as legacy. Do not delete. |
@@ -3013,13 +3111,13 @@ flowchart TD
 
 | # | Question | When it becomes due | Current lean |
 |---|---|---|---|
-| **O-1** | Repository topology: stage-routed monorepo or three repositories? | End of Phase 0, on M4b measurement | Decide on evidence; if routing solves the cost, judge the split on the security boundary alone |
+| **O-1** | ~~Repository topology: stage-routed monorepo or three repositories?~~ **ANSWERED on the macro axis 2026-08-23** — [Decide: repository topology (#114)](https://github.com/bsemaay-tech/mtc-command-center/issues/114), map #97 fold (§14.4, §14.6): **stage-routed monorepo through Phase 0–V3.** **What remains open is only the conditional-split trigger evaluation** — whether measured cost or the security/deployment boundary ever justifies the split | The trigger evaluation is due after the WP-P0-05 measurement exists; **an absent trigger is a valid terminal state, not an unanswered question** | Judge the split on measured cost and the security/deployment boundary alone. **The row keeps its `O-1` identifier and is not renumbered** |
 | **O-2** | Optuna as primary optimizer, or keep grid search? | After the §11.1 comparison | Keep grid until measurement justifies the change — the DSR family definition depends on it |
 | **O-3** | Chart library selection | After the Q19 POC | Lightweight Charts favoured on licence, ecosystem and footprint |
 | **O-4** | Correlation threshold ρ and `max_correlated_group_pct` | First portfolio simulation | Calibrate against your own instrument set; 0.70 / 25 % are placeholders |
 | **O-5** | Bucket allocations and drawdown halts | After the first portfolio simulations | Calibrate; 30/50/20 and 3/6/10 % are hypotheses |
 | **O-6** | Global portfolio overlay values (gross ≤ 1.5×, liq. distance ≥ 25 %, daily loss ≤ 2.5 %) | Before multi-bucket operation | Placeholders requiring calibration |
-| **O-7** | Kernel home under the chosen topology | With O-1 | Consumed by execution as a pinned package either way |
+| **O-7** | Kernel home under the chosen topology. **Narrowed 2026-08-23 (map #97 fold, §14.5): through Phase 0–V3 the kernel's home is a routed stage inside this repository; this row now covers only where it lands if the conditional split is later triggered** | With O-1's trigger evaluation | Consumed by execution as a pinned package either way |
 | **O-8** | Replay-time target for non-materialized trials | During Phase 0 explorer work | Measure first, then fix the number |
 | **O-9** | Live-cohort expansion beyond one strategy | After the first full live evidence cycle | Not before |
 | **O-10** | Whether Pine is hand-maintained or generated | V4+ | Hand-maintain 1–3 strategies; do not build a generator in V2 |
@@ -3036,7 +3134,7 @@ Ordered. **Classification repaired 2026-08-22 (§0.3 item 13).** v2.0 called ite
 |---|---|---|---|
 | 1 | **Freeze what evidence depends on.** Create the first tags — current master, Pine controller, MTC_V2 kernel, `02_MTC_BACKTEST`, the parity oracle set, the accepted Bridge V1 candidate. Removes the F-17/D-7 contradiction the same day. Changes no code, but **creates and pushes Git refs**. | **WRITE — Git refs** (non-destructive, additive) | T2, half a day |
 | 2 | **Build the contracts package skeleton in place (Q2a).** Schemas only, no consumers wired: `SizingRequest`, `BoundSizingIntent`, `OrderIntent`, `ExitIntent`, `StrategyPackage`, `AccountSnapshot`, identity/hash formulae (§6.7, including `evaluation_run_hash` and `deployment_identity_hash`), `TrialRecord`, lineage. Versioned from the first commit. | **WRITE — new files, new package** | **T1** *(matches WP-P0-04 — schemas that will later govern money-moving code)* |
-| 3 | **Implement stage-local context routing and measure it (Q2b input).** Highest return per hour, reversible, and its measurement is the evidence base for O-1. **Moves and rewrites governance files** (`AGENTS.md`, handoffs), so it is a write with a real blast radius on how every future agent behaves. | **WRITE — governance/context files** | **T1** *(matches WP-P0-05 — a wrong edit misroutes every future agent)* |
+| 3 | **Implement stage-local context routing and measure it (Q2b input), in the shape §15.5 ratified.** Highest return per hour, reversible, and its measurement is the evidence base for **O-1's remaining conditional-split trigger** *(narrowed 2026-08-23, map #97 fold — O-1's macro axis is answered)*. **Moves and rewrites governance files** (`AGENTS.md`, handoffs), so it is a write with a real blast radius on how every future agent behaves — **and it stays unauthorized until WP-P0-05 receives `G1-IA`; the map-#97 fold decided the shape and edited no governance file.** | **WRITE — governance/context files** | **T1** *(matches WP-P0-05 — a wrong edit misroutes every future agent)* |
 | 4 | **Write the Kernel Consolidation Contract**: mandatory core vs modules (§5.3, §7.2), the capability canonicalization table template, and the **25** golden families (§9.3) — with M7a/M7b as the acceptance structure. | **DOCUMENTATION ONLY** | T2 |
 | 5 | **Fix branch hygiene without deleting anything.** Do **not** "bring the working checkout to master" in place: the checkout is dirty, 60 commits behind (F-19) and holds untracked evidence. Instead **create a verified clean isolated worktree from `master`** for new work, confirm it is clean and at the intended commit before use, and **leave the current checkout untouched — including every untracked file in it — until M0/M1 has inventoried and classified that untracked material read-only** (§16 M0/M1; delivery-plan WP-P0-01). That dependency is real, not decorative: the untracked artefacts are the part of this checkout that exists nowhere else. Then add a branch-freshness check to the repo guard. **No pruning** until M11 and explicit target approval (Q13). | **WRITE — new worktree + repo-guard change**; explicitly **no destructive Git** | **T1** *(matches WP-P0-15 — it adds a check to the repo guard, which is product tooling, not documentation)* |
 | 6 | **De-fang TradingView (Q3) — two packages, not one.** **(a) WP-P0-19, design only, T2:** produce the exact file/line list, the **in-place transformation plan naming the one maintained active Pine source**, the empty-allowlist CI-guard specification, the divergence-alarm specification and the rollback path. Writes no Pine and no config. **(b) WP-P0-23, implementation, T0:** tag the controller, **transform the active Pine source in place into visualization-only Pine**, delete the two `alert()` emissions and the **13 `wt_*`** inputs/keys, and land the CI guard so that **zero `.pine` files in the active tree contain `alert(` under an empty allowlist**. **The alert-capable original survives only in the frozen tag — it does not remain active.** **The 7 `tw_*` keys are excluded — they are live, not inert (F-8a, §0.6 R12), and belong to the kernel chain WP-P0-09 → WP-P0-12.** | (a) **DOCUMENTATION ONLY** · (b) **WRITE — protected surface. See the authorization note below.** | (a) T2 · (b) **T0** |
@@ -3207,7 +3305,7 @@ Verified 2026-08-21.
 | Conflict | Positions | Resolution |
 |---|---|---|
 | **Guardian resizing** | Codex C1, ChatGPT 2 G2-3 and Antigravity G-3 want the portfolio layer to compute or adjust quantity. ChatGPT 1 G1-2 wants veto-only to preserve parity | Both are right about different halves. The Risk Allocator seam exists and is **simulated by the same code** — which removes G1-2's objection by construction. V2 ships it in authorize-or-reject configuration **[OWNER — Q16]**; resizing arrives later only as a versioned, backtested `PortfolioAllocationPolicy` |
-| **Repository topology** | v1 and Antigravity assume the three-repo split. Codex C10 and ChatGPT 2 G2-1 challenge it | Split into Q2a (contracts now, no migration) and Q2b (topology deferred, decided on measurement). **[OWNER]** ratified both |
+| **Repository topology** | v1 and Antigravity assume the three-repo split. Codex C10 and ChatGPT 2 G2-1 challenge it | Split into Q2a (contracts now, no migration) and Q2b (topology deferred, decided on measurement). **[OWNER]** ratified both. **Q2b's deferral was closed on 2026-08-23 by the map-#97 fold (§14.4, §14.6): the stage-routed monorepo is the default through Phase 0–V3, and the three-repository split survives only as a later, condition-triggered option — so the challengers' position prevailed on the macro axis** |
 | **Runtime economic adjustment** | Antigravity G-2 and G-3 propose automatic resizing on stale feeds and correlation breaches | Rejected under Principle 6 and Q16. Both become **blocks**, not resizes |
 | **DSR threshold** | Antigravity G-6 proposes ≥ 0.95; `FORWARD_PAPER_QUEUE.md` shows 0.50 in use | No conflict. 0.95 is already implemented (`mega_walk_forward.py:1695`); 0.50 is an owner exception for **observation only, never promotion**. Recorded as F-22 |
 | **Naked terminology** | Codex C3, ChatGPT 1 G1-1 and ChatGPT 2 G2-4 propose three different but compatible taxonomies | Merged into four names: `SOURCE_LITERAL`, `SIGNAL_EDGE` (an evaluation profile, not a strategy), `SOURCE_COMPLETED_BASELINE`, `MTC_ENRICHED` |
