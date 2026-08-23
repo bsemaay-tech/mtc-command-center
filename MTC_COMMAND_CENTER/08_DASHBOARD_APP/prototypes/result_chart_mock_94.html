@@ -8,51 +8,49 @@
 -->
 <meta charset="utf-8">
 <title>Result Chart Mock</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
   :root{
-    --surface:#f7f7f5; --panel:#ffffff; --panel-2:#f0f0ed; --border:#e0e0db;
-    --ink:#1c1e21; --ink-2:#5f6368; --ink-3:#94989d;
-    --grid:#ebebe7;
-    --up:#089981; --down:#e5484d; --equity:#3e63dd; --trail:#b45309;
-    --up-soft:rgba(8,153,129,.12); --down-soft:rgba(229,72,77,.10);
-    --equity-soft:rgba(62,99,221,.10);
-    --sel:#3e63dd;
-    --pill-bg:#1c1e21; --pill-ink:#f7f7f5;
-    --shadow:0 2px 10px rgba(28,30,33,.08);
+    --surface:#ffffff; --panel:#ffffff; --panel-2:#f8f9fd; --border:#e0e3eb;
+    --ink:#131722; --ink-2:#787b86; --ink-3:#787b86;
+    --grid:#e0e3eb;
+    --up:#089981; --down:#f23645; --equity:#2962ff; --trail:#b45309;
+    --up-soft:rgba(8,153,129,.12); --down-soft:rgba(242,54,69,.35); --loss-bar:rgba(242,54,69,.35);
+    --equity-soft:rgba(41,98,255,.10);
+    --sel:#2962ff;
+    --pill-bg:#131722; --pill-ink:#ffffff;
+    --shadow:0 2px 10px rgba(19,23,34,.08);
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --surface:#141517; --panel:#1c1e21; --panel-2:#232528; --border:#2e3136;
-      --ink:#e8eaed; --ink-2:#a3a7ad; --ink-3:#6d7178;
-      --grid:#26282c;
-      --up:#0fa693; --down:#ea5b60; --equity:#5a7bea; --trail:#c26a0a;
-      --up-soft:rgba(15,166,147,.16); --down-soft:rgba(234,91,96,.13);
-      --equity-soft:rgba(90,123,234,.14);
-      --sel:#5a7bea;
-      --pill-bg:#e8eaed; --pill-ink:#141517;
+      --surface:#131722; --panel:#1e222d; --panel-2:#2a2e39; --border:#2a2e39;
+      --ink:#d1d4dc; --ink-2:#787b86; --ink-3:#787b86;
+      --grid:#2a2e39;
+      --up:#089981; --down:#f23645; --equity:#2962ff; --trail:#c26a0a;
+      --up-soft:rgba(8,153,129,.16); --down-soft:rgba(242,54,69,.35); --loss-bar:rgba(242,54,69,.35);
+      --equity-soft:rgba(41,98,255,.14);
+      --sel:#2962ff;
+      --pill-bg:#d1d4dc; --pill-ink:#131722;
       --shadow:0 2px 12px rgba(0,0,0,.4);
     }
   }
   :root[data-theme="dark"]{
-    --surface:#141517; --panel:#1c1e21; --panel-2:#232528; --border:#2e3136;
-    --ink:#e8eaed; --ink-2:#a3a7ad; --ink-3:#6d7178;
-    --grid:#26282c;
-    --up:#0fa693; --down:#ea5b60; --equity:#5a7bea; --trail:#c26a0a;
-    --up-soft:rgba(15,166,147,.16); --down-soft:rgba(234,91,96,.13);
-    --equity-soft:rgba(90,123,234,.14);
-    --sel:#5a7bea;
-    --pill-bg:#e8eaed; --pill-ink:#141517;
+    --surface:#131722; --panel:#1e222d; --panel-2:#2a2e39; --border:#2a2e39;
+    --ink:#d1d4dc; --ink-2:#787b86; --ink-3:#787b86;
+    --grid:#2a2e39;
+    --up:#089981; --down:#f23645; --equity:#2962ff; --trail:#c26a0a;
+    --up-soft:rgba(8,153,129,.16); --down-soft:rgba(242,54,69,.35); --loss-bar:rgba(242,54,69,.35);
+    --equity-soft:rgba(41,98,255,.14);
+    --sel:#2962ff;
+    --pill-bg:#d1d4dc; --pill-ink:#131722;
     --shadow:0 2px 12px rgba(0,0,0,.4);
   }
   *{box-sizing:border-box; margin:0}
   body{
     background:var(--surface); color:var(--ink);
-    font-family:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-family:-apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif;
     font-size:13px; line-height:1.45; min-height:100vh;
   }
-  .mono{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums}
+  .mono{font-variant-numeric:tabular-nums}
 
   /* ---------- navigation spine header (shared) ---------- */
   header{
@@ -203,6 +201,61 @@
     #vB .ledger{width:216px}
     #vC .rail{width:236px}
   }
+
+  /* ---------- TV strategy tester report (#94 addendum) ---------- */
+  #tvReport{border-top:2px solid var(--border); background:var(--panel); padding:0 0 80px}
+  .tvr-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
+  .tvr-toolbar .tvr-name{font-size:14px;font-weight:600;margin-right:8px}
+  .tvr-chip{font-size:11px;color:var(--ink-2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;background:var(--panel)}
+  .tvr-kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+  .tvr-kpi{background:var(--panel);padding:14px 16px}
+  .tvr-kpi .lbl{font-size:11px;color:var(--ink-2);margin-bottom:4px}
+  .tvr-kpi .val{font-size:22px;font-weight:600;line-height:1.2}
+  .tvr-kpi .sub{font-size:12px;color:var(--ink-2);margin-top:2px}
+  .tvr-block{padding:16px;border-bottom:1px solid var(--border)}
+  .tvr-block h2{font-size:14px;font-weight:600;margin-bottom:12px}
+  .tvr-perf-wrap{display:flex;gap:0;min-height:340px}
+  .tvr-legend{width:180px;flex:none;padding:12px 8px 12px 16px;border-right:1px solid var(--border);font-size:11px;color:var(--ink-2)}
+  .tvr-leg-item{display:flex;align-items:center;gap:6px;margin-bottom:8px;cursor:default}
+  .tvr-leg-dot{width:10px;height:3px;border-radius:1px;flex:none}
+  .tvr-perf-chart{flex:1;position:relative;min-height:340px}
+  .tvr-perf-chart canvas{position:absolute;inset:0;width:100%;height:100%}
+  .tvr-pill{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px}
+  .tvr-pill button{font:inherit;font-size:12px;padding:5px 12px;border-radius:99px;border:1px solid var(--border);background:var(--panel-2);color:var(--ink-2);cursor:pointer}
+  .tvr-pill button.on{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  .tvr-mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .tvr-mini-stat .lbl{font-size:11px;color:var(--ink-2)}
+  .tvr-mini-stat .val{font-size:16px;font-weight:600;margin-top:2px}
+  .tvr-mini-stat .sub{font-size:11px;color:var(--ink-2)}
+  .tvr-canvas-box{position:relative;height:220px;background:var(--panel)}
+  .tvr-canvas-box canvas{position:absolute;inset:0;width:100%;height:100%}
+  .tvr-canvas-box.tall{height:280px}
+  .tvr-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .tvr-split h3{font-size:12px;font-weight:600;margin-bottom:8px;color:var(--ink-2)}
+  .tvr-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:12px}
+  .tvr-bar-row .lbl{width:72px;flex:none;color:var(--ink-2)}
+  .tvr-bar-track{flex:1;height:18px;background:var(--panel-2);border-radius:2px;position:relative;overflow:hidden}
+  .tvr-bar-track .center{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border)}
+  .tvr-bar-track .seg{position:absolute;top:2px;bottom:2px;border-radius:1px}
+  .tvr-bar-row .net{width:72px;text-align:right;font-weight:600}
+  .tvr-chips{display:flex;gap:6px;margin-bottom:10px}
+  .tvr-chips span{font-size:11px;padding:3px 10px;border:1px solid var(--border);border-radius:4px;color:var(--ink-2)}
+  .tvr-chips span.on{background:var(--panel-2);color:var(--ink);font-weight:500}
+  .tvr-tab-panel{display:none}
+  .tvr-tab-panel.on{display:block}
+  .tvr-table{width:100%;border-collapse:collapse;font-size:12px}
+  .tvr-table th,.tvr-table td{padding:8px 12px;border-bottom:1px solid var(--border);text-align:right}
+  .tvr-table th:first-child,.tvr-table td:first-child{text-align:left;color:var(--ink-2)}
+  .tvr-table .pct{display:block;font-size:11px;color:var(--ink-2);margin-top:1px}
+  .tvr-tooltip{position:absolute;z-index:10;display:none;background:#131722;color:#d1d4dc;font-size:11px;padding:8px 10px;border-radius:4px;pointer-events:none;white-space:nowrap;line-height:1.5}
+  .tvr-value-pill{position:absolute;right:8px;font-size:11px;padding:2px 6px;border-radius:3px;font-weight:600}
+  @media (max-width:900px){
+    .tvr-kpi-row,.tvr-mini-stats{grid-template-columns:repeat(2,1fr)}
+    .tvr-split{grid-template-columns:1fr}
+    .tvr-perf-wrap{flex-direction:column}
+    .tvr-legend{width:100%;border-right:none;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px 16px;padding:8px 16px}
+    .tvr-leg-item{margin:0}
+  }
 </style>
 
 <header>
@@ -274,6 +327,8 @@
     </aside>
   </div>
 </div>
+
+<section id="tvReport" aria-label="TradingView strategy tester report mock"></section>
 
 <div id="switcher" role="group" aria-label="prototype variant switcher">
   <button id="swPrev" aria-label="previous variant">‹</button>
@@ -391,8 +446,8 @@ function readTokens(){
        upSoft:g('--up-soft'), downSoft:g('--down-soft'), eqSoft:g('--equity-soft')};
 }
 readTokens();
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{readTokens(); drawAll();});
-new MutationObserver(()=>{readTokens(); drawAll();})
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{readTokens(); drawAll(); drawTvAll();});
+new MutationObserver(()=>{readTokens(); drawAll(); drawTvAll();})
   .observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 
 /* ============ shared chart state ============ */
@@ -435,7 +490,7 @@ function drawPrice(){
   const pad=(pmax-pmin)*0.08; pmin-=pad; pmax+=pad;
   const yOf = p => (pmax-p)/(pmax-pmin)*ph;
 
-  ctx.font = '10px "IBM Plex Mono",monospace';
+  ctx.font = '10px -apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif';
   // grid + y axis
   const steps = 6;
   for(let k=0;k<=steps;k++){
@@ -464,7 +519,7 @@ function drawPrice(){
   for(let i=lo;i<=hi;i++){ const x=xOf(i+0.5,w), y=yOf(ema20[i]); i===lo?ctx.moveTo(x,y):ctx.lineTo(x,y); }
   ctx.stroke(); ctx.restore();
   // overlay legend (identity by colored mark + text token, per read-only display)
-  ctx.font='9px "IBM Plex Mono",monospace'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.font='9px -apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
   ctx.strokeStyle=C.equity; ctx.lineWidth=2;
   ctx.beginPath(); ctx.moveTo(8,32); ctx.lineTo(20,32); ctx.stroke();
   ctx.fillStyle=C.ink2; ctx.fillText('EMA20',24,32);
@@ -488,7 +543,7 @@ function drawPrice(){
         const y=yOf(p); if(y<0||y>ph) return;
         ctx.strokeStyle=col; ctx.lineWidth=1; ctx.setLineDash([5,4]);
         ctx.beginPath(); ctx.moveTo(x1,y+.5); ctx.lineTo(x2,y+.5); ctx.stroke(); ctx.setLineDash([]);
-        ctx.fillStyle=col; ctx.font='9px "IBM Plex Mono",monospace';
+        ctx.fillStyle=col; ctx.font='9px -apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif';
         ctx.textAlign='left'; ctx.textBaseline=below?'top':'bottom';
         ctx.fillText(`${lab} ${fmtP(p)}`, x1+3, below?y+3:y-2);
       };
@@ -499,7 +554,7 @@ function drawPrice(){
         ctx.strokeStyle=C.trail; ctx.lineWidth=1.6; ctx.beginPath();
         sel.trailPath.forEach((p,k)=>{ const x=xOf(p.i+0.5,w), y=yOf(p.v); k?ctx.lineTo(x,y):ctx.moveTo(x,y); });
         ctx.stroke();
-        ctx.fillStyle=C.trail; ctx.font='9px "IBM Plex Mono",monospace';
+        ctx.fillStyle=C.trail; ctx.font='9px -apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif';
         const lp=sel.trailPath[sel.trailPath.length-1];
         ctx.fillText('trail', Math.min(xOf(lp.i,w)+4,pw-28), yOf(lp.v)-4);
       }
@@ -540,14 +595,14 @@ function drawPrice(){
       ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(pw,y+.5); ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle=C.ink; ctx.fillRect(pw,y-8,AXIS_W,16);
-      ctx.fillStyle=C.panel; ctx.font='10px "IBM Plex Mono",monospace';
+      ctx.fillStyle=C.panel; ctx.font='10px -apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif';
       ctx.textAlign='left'; ctx.textBaseline='middle';
       ctx.fillText(fmtP(hover.price), pw+6, y);
     }
     ctx.setLineDash([]);
     const b = candles[Math.round(hover.i)];
     if(b){
-      ctx.fillStyle=C.ink; ctx.font='10px "IBM Plex Mono",monospace';
+      ctx.fillStyle=C.ink; ctx.font='10px -apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif';
       ctx.textAlign='left'; ctx.textBaseline='top';
       const txt=`${fmtT(b.t)}  O ${fmtP(b.o)}  H ${fmtP(b.h)}  L ${fmtP(b.l)}  C ${fmtP(b.c)}`;
       const tw=ctx.measureText(txt).width, tx=pw-tw-18;
@@ -569,7 +624,7 @@ function drawEquity(){
   for(let i=lo;i<=hi;i++){ emin=Math.min(emin,equity[i]); emax=Math.max(emax,ddPeak[i]); }
   const pad=(emax-emin)*0.12||1; emin-=pad; emax+=pad;
   const yOf=v=>(emax-v)/(emax-emin)*ph;
-  ctx.font='10px "IBM Plex Mono",monospace';
+  ctx.font='10px -apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif';
   // grid
   for(let k=0;k<=2;k++){
     const v=emin+(emax-emin)*k/2, y=yOf(v);
@@ -602,7 +657,7 @@ function drawEquity(){
     const i=Math.round(hover.i);
     if(i>=0&&i<N){
       const txt=`equity ${fmtP(equity[i])}  ·  dd ${(((ddPeak[i]-equity[i])/ddPeak[i])*100).toFixed(1)}%`;
-      ctx.font='10px "IBM Plex Mono",monospace';
+      ctx.font='10px -apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif';
       const tw=ctx.measureText(txt).width, tx=pw-tw-18;
       ctx.fillStyle=C.panel; ctx.fillRect(tx,4,tw+12,16);
       ctx.strokeStyle=C.border; ctx.strokeRect(tx+.5,4.5,tw+11,15);
@@ -610,7 +665,8 @@ function drawEquity(){
     }
   }
 }
-function drawAll(){ drawPrice(); drawEquity(); }
+function drawTvAll(){}
+function drawAll(){ drawPrice(); drawEquity(); drawTvAll(); }
 
 /* ---------- pan / zoom / hover / click ---------- */
 let drag=null;
@@ -849,8 +905,525 @@ addEventListener('keydown', e=>{
   if(e.key==='ArrowLeft') mount(vi-1);
   if(e.key==='ArrowRight') mount(vi+1);
 });
-addEventListener('resize', drawAll);
-if(document.fonts && document.fonts.ready) document.fonts.ready.then(drawAll);
+addEventListener('resize', ()=>{ drawAll(); drawTvAll(); });
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ drawAll(); drawTvAll(); });
+
+
+/* ============ buy & hold + TV report derived metrics ============ */
+const bh = new Float64Array(N);
+for(let i=0;i<N;i++) bh[i] = 10000 * candles[i].c / candles[0].c;
+const cumPnL = new Float64Array(N);
+for(let i=0;i<N;i++) cumPnL[i] = equity[i] - 10000;
+
+const TVR = {perfHover:null, canvases:[]};
+const FF = '-apple-system,BlinkMacSystemFont,"Trebuchet MS",Roboto,Ubuntu,sans-serif';
+
+function tvrSetup(cv){
+  const box=cv.parentElement, r=box.getBoundingClientRect();
+  const dpr=devicePixelRatio||1;
+  cv.width=Math.max(1,Math.round(r.width*dpr));
+  cv.height=Math.max(1,Math.round(r.height*dpr));
+  const ctx=cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w:r.width,h:r.height};
+}
+
+function grossMetrics(){
+  const wins=trades.filter(t=>t.pnl>0), losses=trades.filter(t=>t.pnl<0);
+  const gp=wins.reduce((s,t)=>s+t.pnl,0);
+  const gl=Math.abs(losses.reduce((s,t)=>s+t.pnl,0));
+  const pf=gl>0?gp/gl:99;
+  const netUsd=equity[N-1]-10000;
+  const bhRet=(bh[N-1]-10000)/10000*100;
+  return {gp,gl,pf,netUsd,bhRet,wins,losses};
+}
+
+function runUpDrawdownSegs(){
+  const segs=[]; let i=0, pk=equity[0], tr=equity[0], kind='up', start=0;
+  while(i<N){
+    if(equity[i]>=pk){ pk=equity[i]; if(kind==='down'){ segs.push({kind:'down',start,end:i-1,from:tr,to:equity[i-1]}); kind='up'; start=i; tr=equity[i-1]; } pk=equity[i]; }
+    else if(equity[i]<tr){ if(kind==='up'){ segs.push({kind:'up',start,end:i-1,from:tr,to:pk}); kind='down'; start=i; tr=pk; } }
+    i++;
+  }
+  segs.push(kind==='up'?{kind:'up',start,end:N-1,from:tr,to:pk}:{kind:'down',start,end:N-1,from:tr,to:equity[N-1]});
+  return segs;
+}
+
+function dailyPnL(){
+  const m=new Map();
+  for(const t of trades){
+    const d=new Date(candles[t.exitIdx].t).toISOString().slice(0,10);
+    m.set(d,(m.get(d)||0)+t.pnl);
+  }
+  return [...m.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([d,v])=>({d,v}));
+}
+
+function pct(v,base=10000){ return (v/base*100); }
+function fmtUsd(v){ return `${v>=0?'+':''}${v.toLocaleString('en-US',{maximumFractionDigits:2})} USDT`; }
+function fmtPct(v){ return `${v>=0?'+':''}${v.toFixed(2)}%`; }
+
+function drawTvPerf(){
+  const cv=document.getElementById('tvrPerfCv'); if(!cv) return;
+  const tip=document.getElementById('tvrPerfTip');
+  const {ctx,w,h}=tvrSetup(cv);
+  ctx.clearRect(0,0,w,h);
+  const legW=0, axisR=72, padT=12, padB=36, rdH=14;
+  const pw=w-legW-axisR, ph=h-padT-padB-rdH;
+  let ymin=Math.min(0,...cumPnL,...bh.map(v=>v-10000));
+  let ymax=Math.max(...cumPnL,...bh.map(v=>v-10000));
+  const pad=(ymax-ymin)*0.08||100; ymin-=pad; ymax+=pad;
+  const xOf=i=>i/(N-1)*pw;
+  const yOf=v=>padT+(ymax-v)/(ymax-ymin)*ph;
+  const y0=yOf(0);
+  // grid + zero line
+  ctx.strokeStyle=C.grid; ctx.lineWidth=1;
+  for(let k=0;k<=4;k++){
+    const v=ymin+(ymax-ymin)*k/4, y=yOf(v);
+    ctx.beginPath(); ctx.moveTo(legW,y+.5); ctx.lineTo(legW+pw,y+.5); ctx.stroke();
+    ctx.fillStyle=C.ink2; ctx.font=`10px ${FF}`; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(fmtUsd(v), legW+pw+6, y);
+  }
+  ctx.strokeStyle=C.ink3; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(legW,y0+.5); ctx.lineTo(legW+pw,y0+.5); ctx.stroke(); ctx.setLineDash([]);
+  // cumulative PnL area + line
+  ctx.beginPath();
+  for(let i=0;i<N;i++){ const x=legW+xOf(i); i?ctx.lineTo(x,yOf(cumPnL[i])):ctx.moveTo(x,yOf(cumPnL[i])); }
+  ctx.lineTo(legW+xOf(N-1),y0); ctx.lineTo(legW,y0); ctx.closePath();
+  ctx.fillStyle=C.upSoft; ctx.fill();
+  ctx.strokeStyle=C.up; ctx.lineWidth=2; ctx.beginPath();
+  for(let i=0;i<N;i++){ const x=legW+xOf(i), y=yOf(cumPnL[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+  ctx.stroke();
+  // buy & hold
+  ctx.strokeStyle=C.equity; ctx.lineWidth=1.5; ctx.beginPath();
+  for(let i=0;i<N;i++){ const v=bh[i]-10000, x=legW+xOf(i), y=yOf(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+  ctx.stroke();
+  // excursion ticks at trade exits
+  for(const t of trades){
+    const ex=excursions(t);
+    const x=legW+xOf(t.exitIdx);
+    const mfeH=Math.min(12, ex.mfeR*8), maeH=Math.min(12, ex.maeR*8);
+    ctx.strokeStyle=C.up; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x,y0); ctx.lineTo(x,y0-mfeH); ctx.stroke();
+    ctx.strokeStyle=C.down;
+    ctx.beginPath(); ctx.moveTo(x,y0); ctx.lineTo(x,y0+maeH); ctx.stroke();
+  }
+  // run-up/drawdown strip
+  const rdY=padT+ph+8;
+  const segs=runUpDrawdownSegs();
+  for(const s of segs){
+    const x1=legW+xOf(s.start), x2=legW+xOf(s.end);
+    ctx.fillStyle=s.kind==='up'?C.up:C.down;
+    ctx.globalAlpha=s.kind==='up'?0.55:0.45;
+    ctx.fillRect(x1,rdY,x2-x1||2,rdH-4);
+  }
+  ctx.globalAlpha=1;
+  // x labels
+  ctx.fillStyle=C.ink2; ctx.font=`10px ${FF}`; ctx.textAlign='center'; ctx.textBaseline='top';
+  [0,Math.floor(N/2),N-1].forEach(i=>ctx.fillText(fmtT(candles[i].t), legW+xOf(i), rdY+rdH));
+  // value pills
+  const finPnL=cumPnL[N-1], finBh=bh[N-1]-10000;
+  // crosshair
+  if(TVR.perfHover!=null){
+    const i=Math.max(0,Math.min(N-1,TVR.perfHover));
+    const x=legW+xOf(i);
+    ctx.strokeStyle=C.ink3; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.moveTo(x+.5,padT); ctx.lineTo(x+.5,padT+ph); ctx.stroke(); ctx.setLineDash([]);
+    if(tip){
+      const tNear=trades.reduce((b,t)=>Math.abs(t.exitIdx-i)<Math.abs(b.exitIdx-i)?t:b,trades[0]);
+      const ex=excursions(tNear);
+      tip.style.display='block';
+      tip.style.left=(x+12)+'px'; tip.style.top='40px';
+      tip.innerHTML=`${fmtT(candles[i].t)}<br>Cumulative PnL ${fmtUsd(cumPnL[i])}<br>Favorable excursion +${(ex.mfeR*tNear.risk/10000*100).toFixed(2)}%<br>Adverse excursion −${(ex.maeR*tNear.risk/10000*100).toFixed(2)}%<br>Buy and hold ${fmtUsd(bh[i]-10000)}`;
+    }
+  } else if(tip) tip.style.display='none';
+}
+
+function drawBarChart(cv, data, opts={}){
+  if(!cv) return;
+  const {ctx,w,h}=tvrSetup(cv);
+  ctx.clearRect(0,0,w,h);
+  const pad={l:40,r:12,t:12,b:24}, pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
+  if(!data.length) return;
+  const vals=data.map(d=>d.v), maxV=Math.max(...vals.map(Math.abs),1);
+  const bw=Math.max(2,pw/data.length*0.65), gap=pw/data.length;
+  const mid=pad.t+ph/2;
+  ctx.strokeStyle=C.grid; ctx.beginPath(); ctx.moveTo(pad.l,mid+.5); ctx.lineTo(pad.l+pw,mid+.5); ctx.stroke();
+  data.forEach((d,i)=>{
+    const x=pad.l+i*gap+gap/2-bw/2;
+    const hh=(Math.abs(d.v)/maxV)*(ph/2-4);
+    ctx.fillStyle=d.v>=0?C.up:C.down;
+    if(opts.ghost){ ctx.globalAlpha=0.25; ctx.fillStyle=d.v>=0?C.up:C.down; }
+    if(d.v>=0) ctx.fillRect(x, mid-hh, bw, hh);
+    else ctx.fillRect(x, mid, bw, hh);
+    ctx.globalAlpha=1;
+    if(opts.bench!=null){
+      const bhv=opts.bench[i]||0, bhh=(Math.abs(bhv)/maxV)*(ph/2-4);
+      ctx.fillStyle='#787b86';
+      const bx=x+bw+1;
+      if(bhv>=0) ctx.fillRect(bx, mid-bhh, bw*0.5, bhh);
+      else ctx.fillRect(bx, mid, bw*0.5, bhh);
+    }
+  });
+}
+
+function drawAreaChart(cv, data, color){
+  if(!cv||!data.length) return;
+  const {ctx,w,h}=tvrSetup(cv);
+  ctx.clearRect(0,0,w,h);
+  const pad={l:36,r:8,t:8,b:20}, pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
+  const maxV=Math.max(...data,100);
+  const xOf=i=>pad.l+i/(data.length-1)*pw;
+  const yOf=v=>pad.t+(1-v/maxV)*ph;
+  ctx.beginPath();
+  data.forEach((v,i)=>{ const x=xOf(i), y=yOf(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.lineTo(xOf(data.length-1),pad.t+ph); ctx.lineTo(xOf(0),pad.t+ph); ctx.closePath();
+  ctx.fillStyle=color||C.equity; ctx.globalAlpha=0.25; ctx.fill(); ctx.globalAlpha=1;
+  ctx.strokeStyle=color||C.equity; ctx.lineWidth=1.5; ctx.beginPath();
+  data.forEach((v,i)=>{ const x=xOf(i), y=yOf(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.stroke();
+}
+
+function drawHistogram(cv, buckets){
+  if(!cv) return;
+  const {ctx,w,h}=tvrSetup(cv);
+  ctx.clearRect(0,0,w,h);
+  const pad={l:36,r:12,t:12,b:28}, pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
+  const maxC=Math.max(...buckets.map(b=>b.c),1);
+  const bw=pw/buckets.length*0.8, gap=pw/buckets.length;
+  const mid=pad.l+pw/2;
+  buckets.forEach((b,i)=>{
+    const x=pad.l+i*gap+gap/2-bw/2;
+    const hh=(b.c/maxC)*(ph-8);
+    ctx.fillStyle=b.mid>=0?C.up:C.down;
+    ctx.fillRect(x, pad.t+ph-hh, bw, hh);
+  });
+  // avg lines
+  const avgWin=buckets.filter(b=>b.mid>0).reduce((s,b)=>s+b.mid*b.c,0)/Math.max(trades.filter(t=>t.pnl>0).length,1);
+  const avgLoss=buckets.filter(b=>b.mid<0).reduce((s,b)=>s+b.mid*b.c,0)/Math.max(trades.filter(t=>t.pnl<0).length,1);
+  [{v:avgLoss,c:C.down},{v:avgWin,c:C.up}].forEach(({v,c})=>{
+    const x=mid+v*gap*4;
+    ctx.strokeStyle=c; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,pad.t+ph); ctx.stroke(); ctx.setLineDash([]);
+  });
+}
+
+function drawDonut(cv, parts){
+  if(!cv) return;
+  const {ctx,w,h}=tvrSetup(cv);
+  ctx.clearRect(0,0,w,h);
+  const cx=w*0.38, cy=h/2, r=Math.min(w,h)*0.32, ir=r*0.58;
+  let a=-Math.PI/2, total=parts.reduce((s,p)=>s+p.v,0);
+  parts.forEach(p=>{
+    const sweep=p.v/total*Math.PI*2;
+    ctx.beginPath(); ctx.arc(cx,cy,r,a,a+sweep); ctx.arc(cx,cy,ir,a+sweep,a,true);
+    ctx.closePath(); ctx.fillStyle=p.c; ctx.fill(); a+=sweep;
+  });
+  ctx.fillStyle=C.ink; ctx.font=`600 18px ${FF}`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(total, cx, cy-6);
+  ctx.font=`11px ${FF}`; ctx.fillStyle=C.ink2; ctx.fillText('Total trades', cx, cy+12);
+}
+
+function drawStreakChart(cv){
+  if(!cv) return;
+  const {ctx,w,h}=tvrSetup(cv);
+  ctx.clearRect(0,0,w,h);
+  const pad={l:40,r:12,t:12,b:24}, pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
+  const mid=pad.t+ph/2;
+  let streak=0, kind=0, bars=[];
+  trades.forEach(t=>{ const w=t.pnl>0?1:t.pnl<0?-1:0; if(w===kind){ streak++; bars[bars.length-1].n=streak; } else { kind=w; streak=1; bars.push({k:w,n:1}); } });
+  const maxN=Math.max(...bars.map(b=>b.n),1);
+  const bw=Math.max(3,pw/bars.length*0.7), gap=pw/bars.length;
+  ctx.strokeStyle=C.grid; ctx.beginPath(); ctx.moveTo(pad.l,mid); ctx.lineTo(pad.l+pw,mid); ctx.stroke();
+  bars.forEach((b,i)=>{
+    const x=pad.l+i*gap+gap/2-bw/2, hh=(b.n/maxN)*(ph/2-4);
+    ctx.fillStyle=b.k>0?C.up:C.down;
+    if(b.k>0) ctx.fillRect(x, mid-hh, bw, hh);
+    else ctx.fillRect(x, mid, bw, hh);
+  });
+}
+
+function drawAltGrowth(cv, segs){
+  if(!cv) return;
+  const {ctx,w,h}=tvrSetup(cv);
+  ctx.clearRect(0,0,w,h);
+  const pad={l:36,r:8,t:8,b:20}, pw=w-pad.l-pad.r, ph=h-pad.t-pad.b;
+  const maxP=Math.max(...segs.map(s=>Math.abs((s.to-s.from)/10000*100)),1);
+  const bw=Math.max(4,pw/segs.length*0.65), gap=pw/segs.length;
+  segs.forEach((s,i)=>{
+    const pct=(s.to-s.from)/10000*100;
+    const x=pad.l+i*gap+gap/2-bw/2, hh=Math.abs(pct)/maxP*(ph-8);
+    const isLast=i===segs.length-1;
+    ctx.fillStyle=s.kind==='up'?(isLast?'#089981':C.up):C.down;
+    ctx.fillRect(x, pad.t+ph-hh, bw, hh);
+  });
+}
+
+function drawHorizCompare(cv, items){
+  if(!cv) return;
+  const {ctx,w,h}=tvrSetup(cv);
+  ctx.clearRect(0,0,w,h);
+  const rowH=h/items.length;
+  items.forEach((it,i)=>{
+    const y=i*rowH+rowH/2, maxW=w*0.45;
+    const ww=(it.pct/100)*maxW;
+    ctx.fillStyle=it.c;
+    if(it.pct>=0) ctx.fillRect(w/2, y-8, ww, 16);
+    else ctx.fillRect(w/2-ww, y-8, ww, 16);
+    ctx.fillStyle=C.ink2; ctx.font=`11px ${FF}`; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(it.label, 8, y);
+    ctx.textAlign='right'; ctx.fillStyle=C.ink;
+    ctx.fillText(fmtPct(it.pct), w-8, y);
+  });
+}
+
+function drawTvAll(){
+  drawTvPerf();
+  ['tvrBreakCv','tvrDailyCv','tvrBenchCv','tvrMarginCv','tvrAltCv','tvrHistCv','tvrDonutCv','tvrStreakCv','tvrCompareCv'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el && el._draw) el._draw();
+  });
+}
+
+function renderTvReport(){
+  const gm=grossMetrics();
+  const netUsd=gm.netUsd;
+  const winN=gm.wins.length, lossN=gm.losses.length, beN=trades.length-winN-lossN;
+  const pf=gm.pf;
+  const longT=trades.filter(t=>t.dir>0), shortT=trades.filter(t=>t.dir<0);
+  const segs=runUpDrawdownSegs();
+  const days=dailyPnL();
+  const marginData=Array.from({length:N},(_,i)=>Math.min(100, Math.abs(candles[i].h-candles[i].l)/Math.max(atrArr[i],1)*35+(i%17)*2.1));
+  const retBuckets=(()=>{
+    const bs=[]; for(let x=-6;x<=6;x+=1) bs.push({mid:x,c:0});
+    trades.forEach(t=>{ const p=t.pnl/10000*100; const b=bs[Math.max(0,Math.min(bs.length-1,Math.round(p+6)))]; b.c++; });
+    return bs;
+  })();
+  const streakStats=(()=>{
+    let lw=0,ll=0,cw=0,cl=0,mw=0,ml=0,aw=0,al=0,wc=0,lc=0;
+    trades.forEach(t=>{ if(t.pnl>0){ cw++; lc=0; mw=Math.max(mw,cw); wc++; } else if(t.pnl<0){ cl++; cw=0; ml=Math.max(ml,cl); lc++; } else { cw=0; cl=0; } });
+    aw=wc?mw:0; al=lc?ml:0; return {mw,ml,aw,al};
+  })();
+  const avgWin=winN?gm.wins.reduce((s,t)=>s+t.pnl,0)/winN:0;
+  const avgLoss=lossN?Math.abs(gm.losses.reduce((s,t)=>s+t.pnl,0)/lossN):0;
+  const largestWin=Math.max(0,...trades.map(t=>t.pnl));
+  const largestLoss=Math.min(0,...trades.map(t=>t.pnl));
+  const outlierN=trades.filter(t=>Math.abs(t.r)>2).length;
+  const outlierPnL=trades.filter(t=>Math.abs(t.r)>2).reduce((s,t)=>s+t.pnl,0);
+  const avgBars=trades.reduce((s,t)=>s+t.bars,0)/trades.length;
+  const cagr=((equity[N-1]/10000)**(365/14)-1)*100;
+  const sharpe=1.24, sortino=1.68;
+  const corr=0.42;
+  const runUpDays=segs.filter(s=>s.kind==='up').reduce((s,x)=>s+(x.end-x.start)*15/60/24,0)/Math.max(segs.filter(s=>s.kind==='up').length,1);
+  const ddDays=segs.filter(s=>s.kind==='down').reduce((s,x)=>s+(x.end-x.start)*15/60/24,0)/Math.max(segs.filter(s=>s.kind==='down').length,1);
+
+  document.getElementById('tvReport').innerHTML=`
+  <div class="tvr-toolbar">
+    <span class="tvr-name">MTCV2_1404 (mock)</span>
+    <span class="tvr-chip">May 4, 2026 — May 18, 2026</span>
+    <span class="tvr-chip">10K USDT</span>
+    <span class="tvr-chip">Default detalization</span>
+    <span class="tvr-chip">Script execution ①</span>
+  </div>
+  <div class="tvr-kpi-row">
+    <div class="tvr-kpi"><div class="lbl">Total PnL</div><div class="val mono ${cls(netUsd)}">${fmtUsd(netUsd)}</div><div class="sub mono">${fmtPct(stats.net)}</div></div>
+    <div class="tvr-kpi"><div class="lbl">Max drawdown</div><div class="val mono neg">${fmtUsd(-stats.maxdd/100*10000)}</div><div class="sub mono">−${stats.maxdd.toFixed(2)}%</div></div>
+    <div class="tvr-kpi"><div class="lbl">Profitable trades</div><div class="val mono">${stats.wr.toFixed(2)}%</div><div class="sub mono">${winN}/${trades.length}</div></div>
+    <div class="tvr-kpi"><div class="lbl">Profit factor</div><div class="val mono">${pf.toFixed(3)}</div></div>
+  </div>
+  <div class="tvr-block">
+    <div class="tvr-perf-wrap">
+      <div class="tvr-legend">
+        <div class="tvr-leg-item"><span class="tvr-leg-dot" style="background:${C.up}"></span>Cumulative PnL</div>
+        <div class="tvr-leg-item"><span class="tvr-leg-dot" style="background:${C.equity}"></span>Buy and hold</div>
+        <div class="tvr-leg-item"><span class="tvr-leg-dot" style="background:${C.up}"></span>Trades excursions</div>
+        <div class="tvr-leg-item"><span class="tvr-leg-dot" style="background:${C.up}"></span>Run-ups and drawdowns</div>
+        <div class="tvr-leg-item" style="opacity:.5">⌄</div>
+      </div>
+      <div class="tvr-perf-chart" id="tvrPerfBox">
+        <canvas id="tvrPerfCv"></canvas>
+        <div class="tvr-tooltip" id="tvrPerfTip"></div>
+        <div class="tvr-value-pill mono" style="top:24px;background:${C.up};color:#fff">${fmtUsd(cumPnL[N-1])}</div>
+        <div class="tvr-value-pill mono" style="top:48px;background:${C.equity};color:#fff">${fmtUsd(bh[N-1]-10000)}</div>
+      </div>
+    </div>
+  </div>
+  <div class="tvr-block">
+    <h2>Performance analysis</h2>
+    <div class="tvr-pill" data-tabs="perf">
+      <button class="on" data-tab="break">Breakdown</button>
+      <button data-tab="period">Periodical</button>
+      <button data-tab="bench">Benchmarking</button>
+      <button data-tab="margin">Margin usage</button>
+      <button data-tab="growth">Growth and decline</button>
+    </div>
+    <div class="tvr-tab-panel on" data-panel="break">
+      <div class="tvr-mini-stats">
+        <div class="tvr-mini-stat"><div class="lbl">Gross profit</div><div class="val mono pos">${fmtUsd(gm.gp)}</div><div class="sub mono">${fmtPct(pct(gm.gp))}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Gross loss</div><div class="val mono neg">${fmtUsd(-gm.gl)}</div><div class="sub mono">−${pct(gm.gl).toFixed(2)}%</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Profit factor</div><div class="val mono">${pf.toFixed(3)}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Commission load</div><div class="val mono">0.00%</div></div>
+      </div>
+      <h3 style="font-size:12px;margin-bottom:8px;color:var(--ink-2)">Profits and losses</h3>
+      <div class="tvr-chips"><span class="on">By signals</span><span>By side</span></div>
+      ${['All signals','L4-Long','L4-Short'].map((lab,idx)=>{
+        const subset=idx===0?trades:idx===1?longT:shortT;
+        const gp2=subset.filter(t=>t.pnl>0).reduce((s,t)=>s+t.pnl,0);
+        const gl2=Math.abs(subset.filter(t=>t.pnl<0).reduce((s,t)=>s+t.pnl,0));
+        const net2=gp2-gl2; const tot=gp2+gl2||1;
+        return `<div class="tvr-bar-row"><span class="lbl">${lab}</span><div class="tvr-bar-track"><div class="center"></div>
+          <div class="seg" style="left:${50-gl2/tot*50}%;width:${gl2/tot*50}%;background:var(--loss-bar)"></div>
+          <div class="seg" style="left:50%;width:${gp2/tot*50}%;background:${C.up};opacity:.85"></div>
+        </div><span class="net mono ${cls(net2)}">${fmtUsd(net2)}</span></div>`;
+      }).join('')}
+      <div class="tvr-canvas-box" style="margin-top:12px"><canvas id="tvrBreakCv"></canvas></div>
+    </div>
+    <div class="tvr-tab-panel" data-panel="period">
+      <div class="tvr-mini-stats">
+        <div class="tvr-mini-stat"><div class="lbl">Annualized return (CAGR)</div><div class="val mono ${cls(cagr)}">${fmtPct(cagr)}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Total return</div><div class="val mono ${cls(stats.net)}">${fmtPct(stats.net)}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Sharpe ratio</div><div class="val mono">${sharpe.toFixed(2)}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Sortino ratio</div><div class="val mono">${sortino.toFixed(2)}</div></div>
+      </div>
+      <h3 style="font-size:12px;margin-bottom:8px;color:var(--ink-2)">Daily PnL</h3>
+      <div class="tvr-chips"><span class="on">Daily</span><span>Weekly</span><span>Quarterly</span><span>Yearly</span></div>
+      <div class="tvr-canvas-box tall"><canvas id="tvrDailyCv"></canvas></div>
+    </div>
+    <div class="tvr-tab-panel" data-panel="bench">
+      <div class="tvr-mini-stats">
+        <div class="tvr-mini-stat"><div class="lbl">Strategy return</div><div class="val mono pos">${fmtPct(stats.net)}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Buy and hold return</div><div class="val mono ${cls(gm.bhRet)}">${fmtPct(gm.bhRet)}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Strategy outperformance</div><div class="val mono ${cls(stats.net-gm.bhRet)}">${fmtPct(stats.net-gm.bhRet)}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Correlation</div><div class="val mono">${corr.toFixed(2)}</div></div>
+      </div>
+      <h3 style="font-size:12px;margin-bottom:8px;color:var(--ink-2)">Strategy vs benchmark</h3>
+      <div class="tvr-canvas-box tall"><canvas id="tvrBenchCv"></canvas></div>
+    </div>
+    <div class="tvr-tab-panel" data-panel="margin">
+      <div class="tvr-mini-stats">
+        <div class="tvr-mini-stat"><div class="lbl">Margin efficiency</div><div class="val mono">${(marginData.reduce((a,b)=>a+b,0)/N).toFixed(2)}%</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Average margin used</div><div class="val mono">${(marginData.reduce((a,b)=>a+b,0)/N*0.82).toFixed(2)}%</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Margin calls</div><div class="val mono">0</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Total liquidated volume</div><div class="val mono">0 USDT</div></div>
+      </div>
+      <h3 style="font-size:12px;margin-bottom:8px;color:var(--ink-2)">Margin utilization</h3>
+      <div class="tvr-canvas-box tall"><canvas id="tvrMarginCv"></canvas></div>
+    </div>
+    <div class="tvr-tab-panel" data-panel="growth">
+      <div class="tvr-mini-stats">
+        <div class="tvr-mini-stat"><div class="lbl">Average run-up duration</div><div class="val mono">${runUpDays.toFixed(1)} days</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Average drawdown duration</div><div class="val mono">${ddDays.toFixed(1)} days</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Max drawdown</div><div class="val mono neg">${fmtUsd(-stats.maxdd/100*10000)}</div><div class="sub mono">−${stats.maxdd.toFixed(2)}%</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Max drawdown as % of initial capital</div><div class="val mono neg">−${stats.maxdd.toFixed(2)}%</div></div>
+      </div>
+      <div class="tvr-split">
+        <div><h3>Alternating growth and decline</h3><div class="tvr-canvas-box"><canvas id="tvrAltCv"></canvas></div></div>
+        <div><h3>Comparison of growth and decline periods</h3><div class="tvr-canvas-box"><canvas id="tvrCompareCv"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="tvr-block">
+    <h2>Trades analysis</h2>
+    <div class="tvr-pill" data-tabs="trade">
+      <button class="on" data-tab="dist">Distribution</button>
+      <button data-tab="streak">Streaks</button>
+      <button data-tab="details">Trades analysis details</button>
+    </div>
+    <div class="tvr-tab-panel on" data-panel="dist">
+      <div class="tvr-mini-stats">
+        <div class="tvr-mini-stat"><div class="lbl">Expected payoff</div><div class="val mono ${cls(netUsd/trades.length)}">${fmtUsd(netUsd/trades.length)}</div><div class="sub mono">${fmtPct(stats.net/trades.length)}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Outliers PnL</div><div class="val mono ${cls(outlierPnL)}">${fmtUsd(outlierPnL)}</div><div class="sub mono">${fmtPct(outlierPnL/10000*100)}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Largest profit</div><div class="val mono pos">${fmtUsd(largestWin)}</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Largest loss</div><div class="val mono neg">${fmtUsd(largestLoss)}</div></div>
+      </div>
+      <div class="tvr-split">
+        <div><h3>Returns distribution</h3><div class="tvr-canvas-box"><canvas id="tvrHistCv"></canvas></div></div>
+        <div><h3>Trades distribution</h3><div class="tvr-canvas-box"><canvas id="tvrDonutCv"></canvas></div>
+          <div style="margin-top:8px;font-size:12px;color:var(--ink-2)">
+            <div><span style="color:${C.up}">●</span> Winners ${winN} (${(winN/trades.length*100).toFixed(1)}%)</div>
+            <div><span style="color:${C.down}">●</span> Losers ${lossN} (${(lossN/trades.length*100).toFixed(1)}%)</div>
+            <div><span style="color:#787b86">●</span> Breakevens ${beN} (${(beN/trades.length*100).toFixed(1)}%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tvr-tab-panel" data-panel="streak">
+      <div class="tvr-mini-stats">
+        <div class="tvr-mini-stat"><div class="lbl">Longest winning streak</div><div class="val mono">${streakStats.mw} trades</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Longest losing streak</div><div class="val mono">${streakStats.ml} trades</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Average winning streak</div><div class="val mono">${streakStats.aw.toFixed(1)} trades</div></div>
+        <div class="tvr-mini-stat"><div class="lbl">Average losing streak</div><div class="val mono">${streakStats.al.toFixed(1)} trades</div></div>
+      </div>
+      <h3 style="font-size:12px;margin-bottom:8px;color:var(--ink-2)">Winning and losing streaks</h3>
+      <div class="tvr-chips"><span class="on">Count</span><span>Amount</span></div>
+      <div class="tvr-canvas-box tall"><canvas id="tvrStreakCv"></canvas></div>
+    </div>
+    <div class="tvr-tab-panel" data-panel="details">
+      <table class="tvr-table">
+        <thead><tr><th>Metric</th><th>All</th><th>Long</th><th>Short</th></tr></thead>
+        <tbody>${[
+          ['Total trades', trades.length, longT.length, shortT.length],
+          ['Total open trades', 0, 0, 0],
+          ['Total winners', winN, longT.filter(t=>t.pnl>0).length, shortT.filter(t=>t.pnl>0).length],
+          ['Total losers', lossN, longT.filter(t=>t.pnl<0).length, shortT.filter(t=>t.pnl<0).length],
+          ['Percent profitable', stats.wr.toFixed(2)+'%', (longT.filter(t=>t.pnl>0).length/Math.max(longT.length,1)*100).toFixed(2)+'%', (shortT.filter(t=>t.pnl>0).length/Math.max(shortT.length,1)*100).toFixed(2)+'%'],
+        ].map(r=>`<tr>${r.map((c,i)=>`<td class="${i?'mono':''}">${c}</td>`).join('')}</tr>`).join('')}
+        <tr><td>Average PnL</td><td class="mono">${fmtUsd(netUsd/trades.length)}<span class="pct">${fmtPct(stats.net/trades.length)}</span></td><td class="mono">${fmtUsd(longT.reduce((s,t)=>s+t.pnl,0)/Math.max(longT.length,1))}</td><td class="mono">${fmtUsd(shortT.reduce((s,t)=>s+t.pnl,0)/Math.max(shortT.length,1))}</td></tr>
+        <tr><td>Average profit</td><td class="mono pos">${fmtUsd(avgWin)}</td><td class="mono pos">${fmtUsd(longT.filter(t=>t.pnl>0).reduce((s,t)=>s+t.pnl,0)/Math.max(longT.filter(t=>t.pnl>0).length,1)||0)}</td><td class="mono pos">${fmtUsd(shortT.filter(t=>t.pnl>0).reduce((s,t)=>s+t.pnl,0)/Math.max(shortT.filter(t=>t.pnl>0).length,1)||0)}</td></tr>
+        <tr><td>Average loss</td><td class="mono neg">${fmtUsd(-avgLoss)}</td><td class="mono neg">${fmtUsd(-Math.abs(longT.filter(t=>t.pnl<0).reduce((s,t)=>s+t.pnl,0)/Math.max(longT.filter(t=>t.pnl<0).length,1)||0))}</td><td class="mono neg">${fmtUsd(-Math.abs(shortT.filter(t=>t.pnl<0).reduce((s,t)=>s+t.pnl,0)/Math.max(shortT.filter(t=>t.pnl<0).length,1)||0))}</td></tr>
+        <tr><td>Average profit/average loss</td><td class="mono">${avgLoss? (avgWin/avgLoss).toFixed(2):'—'}</td><td class="mono">—</td><td class="mono">—</td></tr>
+        <tr><td>Largest profit</td><td class="mono pos">${fmtUsd(largestWin)}<span class="pct">+${pct(largestWin).toFixed(2)}%</span></td><td class="mono">—</td><td class="mono">—</td></tr>
+        <tr><td>Largest loss</td><td class="mono neg">${fmtUsd(largestLoss)}<span class="pct">${fmtPct(largestLoss/10000*100)}</span></td><td class="mono">—</td><td class="mono">—</td></tr>
+        <tr><td>Outliers</td><td class="mono">${outlierN} · ${fmtUsd(outlierPnL)}</td><td class="mono">—</td><td class="mono">—</td></tr>
+        <tr><td>Average bars in trades</td><td class="mono">${avgBars.toFixed(1)}</td><td class="mono">${(longT.reduce((s,t)=>s+t.bars,0)/Math.max(longT.length,1)).toFixed(1)}</td><td class="mono">${(shortT.reduce((s,t)=>s+t.bars,0)/Math.max(shortT.length,1)).toFixed(1)}</td></tr>
+        <tr><td>Average bars in winners</td><td class="mono">${(gm.wins.reduce((s,t)=>s+t.bars,0)/Math.max(winN,1)).toFixed(1)}</td><td class="mono">—</td><td class="mono">—</td></tr>
+        <tr><td>Average bars in losers</td><td class="mono">${(gm.losses.reduce((s,t)=>s+t.bars,0)/Math.max(lossN,1)).toFixed(1)}</td><td class="mono">—</td><td class="mono">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+
+  // tab switching
+  document.querySelectorAll('.tvr-pill').forEach(pill=>{
+    pill.querySelectorAll('button').forEach(btn=>{
+      btn.onclick=()=>{
+        pill.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+        btn.classList.add('on');
+        const sec=pill.closest('.tvr-block');
+        sec.querySelectorAll('.tvr-tab-panel').forEach(p=>p.classList.remove('on'));
+        sec.querySelector(`[data-panel="${btn.dataset.tab}"]`).classList.add('on');
+        requestAnimationFrame(drawTvAll);
+      };
+    });
+  });
+
+  const perfCv=document.getElementById('tvrPerfCv');
+  perfCv.addEventListener('pointermove', e=>{
+    const r=perfCv.getBoundingClientRect();
+    const x=e.clientX-r.left, pw=r.width-72;
+    TVR.perfHover=Math.round(x/pw*(N-1));
+    drawTvPerf();
+  });
+  perfCv.addEventListener('pointerleave', ()=>{ TVR.perfHover=null; drawTvPerf(); });
+
+  const benchBh=days.map(d=>{ const i=candles.findIndex(c=>new Date(c.t).toISOString().slice(0,10)===d.d); return i>=0?(bh[i]-bh[Math.max(0,i-96)]):0; });
+  document.getElementById('tvrBreakCv')._draw=()=>drawBarChart(document.getElementById('tvrBreakCv'), days.map(d=>({v:d.v})));
+  document.getElementById('tvrDailyCv')._draw=()=>drawBarChart(document.getElementById('tvrDailyCv'), days.map(d=>({v:d.v})), {ghost:true});
+  document.getElementById('tvrBenchCv')._draw=()=>drawBarChart(document.getElementById('tvrBenchCv'), days.map(d=>({v:d.v})), {bench:benchBh});
+  document.getElementById('tvrMarginCv')._draw=()=>drawAreaChart(document.getElementById('tvrMarginCv'), marginData, C.equity);
+  document.getElementById('tvrAltCv')._draw=()=>drawAltGrowth(document.getElementById('tvrAltCv'), segs);
+  document.getElementById('tvrHistCv')._draw=()=>drawHistogram(document.getElementById('tvrHistCv'), retBuckets);
+  document.getElementById('tvrDonutCv')._draw=()=>drawDonut(document.getElementById('tvrDonutCv'), [{v:winN,c:C.up},{v:lossN,c:C.down},{v:beN,c:'#787b86'}]);
+  document.getElementById('tvrStreakCv')._draw=()=>drawStreakChart(document.getElementById('tvrStreakCv'));
+  document.getElementById('tvrCompareCv')._draw=()=>drawHorizCompare(document.getElementById('tvrCompareCv'), [
+    {label:'Run-up Maximum',pct:Math.max(...segs.filter(s=>s.kind==='up').map(s=>(s.to-s.from)/10000*100),0),c:C.up},
+    {label:'Run-up Average',pct:segs.filter(s=>s.kind==='up').reduce((a,s)=>a+(s.to-s.from)/10000*100,0)/Math.max(segs.filter(s=>s.kind==='up').length,1),c:C.up},
+    {label:'Run-up Current',pct:(segs[segs.length-1].kind==='up'?(segs[segs.length-1].to-segs[segs.length-1].from)/10000*100:0),c:'#089981'},
+    {label:'Drawdown Maximum',pct:-stats.maxdd,c:C.down},
+    {label:'Drawdown Average',pct:-segs.filter(s=>s.kind==='down').reduce((a,s)=>a+(s.from-s.to)/10000*100,0)/Math.max(segs.filter(s=>s.kind==='down').length,1),c:C.down},
+  ]);
+  drawTvAll();
+}
+
+renderTvReport();
 
 mount(2);   // owner picked C — open on it
 select(selId,true);
