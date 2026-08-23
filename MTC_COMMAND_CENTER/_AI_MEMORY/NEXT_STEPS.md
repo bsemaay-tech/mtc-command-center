@@ -8,16 +8,18 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
-## CURRENT (2026-08-23) — Map 96 fold complete; Map 97 is next
+## CURRENT (2026-08-23) — Map 97 fold complete; queue 8/8 is next
 
-Map #96 tickets #107–#110 are settled and the documentation fold is committed at
-`d20ed55f` on `feature/wayfinder-fold-map96-20260823`; owner-authorized merge/issue closure
-is the final administrative step. Lead checks passed and the owner explicitly stopped the
-remaining T2 reviewer round, so no model-audit acceptance is claimed. Nothing operational was
-authorized and live readiness remains **NOT READY**.
+Map #97 tickets #114–#116 are settled and the documentation fold is committed at
+`2bc11fd8` on `feature/wayfinder-fold-map97-20260823`; the owner explicitly authorized its
+merge and issue closure without another prompt. Lead checks and repo guard passed. The sole
+T2 reviewer was stopped after 52 minutes under the owner's explicit instruction before it
+returned a verdict, so no accepting model-audit verdict is claimed. Nothing operational was
+authorized; counts remain 60 requirements and 76 packages.
 
-1. **[AI: Claude or Codex] Wayfinder Map #97:** resolve tickets #114, #115 and #116, then
-   documentation fold #117. Planning only unless the owner separately expands authority.
+1. **[AI: Claude or Codex] Wayfinder queue 8/8:** create/claim the final red-team decision map
+   only when the owner continues the planning programme. No queue-8 GitHub map is currently
+   open; verify current `origin/master`, issues and writers before creating one.
 2. **[AI: Barış] Map #95 branch remains deliberately unmerged:** do not merge or represent it
    as accepted without the owner's separate word.
 

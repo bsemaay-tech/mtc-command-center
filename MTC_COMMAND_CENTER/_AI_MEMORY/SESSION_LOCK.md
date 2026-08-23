@@ -31,7 +31,7 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **Codex Lead `/root`** — Map #97 planning fold only; handoff, next-step and lock records; no onboarding restructure, runtime, host, credential or economic action | 2026-08-23 |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — Map #97 Gate-7 write-back completed and released 2026-08-23 | — |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-17 00:54 +03; foreign partial preserved | — |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released cleanly at Gate 7 | 2026-08-17 03:54 +03 |
@@ -47,11 +47,21 @@ Workstreams not listed: add a row before writing.
 
 | Master architecture planning documents (kernel fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/WAYFINDER_KERNEL_FOLD_2026-08-23.md` | **RELEASED** - map #67 kernel fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-map67-20260823` (worktree C:\WFFOLD67, from master `3d6a621c`) | 2026-08-23 |
 | Master architecture planning documents (Map #96 fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/WAYFINDER_SAFETY_OPERATIONS_FOLD_2026-08-23.md` | **RELEASED** — issue #111 fold completed at `d20ed55f` in isolated worktree `C:\WF111`; implementation authorized: NO | 2026-08-23 |
-| Master architecture planning documents (Map #97 fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/WAYFINDER_REPOSITORY_CONTEXT_DELIVERY_FOLD_2026-08-23.md` | **Codex Lead `/root`** — issue #117 documentation fold in isolated worktree `C:\WF117`; one counterpart implementer; implementation authorized: NO | 2026-08-23 |
+| Master architecture planning documents (Map #97 fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/WAYFINDER_REPOSITORY_CONTEXT_DELIVERY_FOLD_2026-08-23.md` | **RELEASED** — issue #117 fold completed at `2bc11fd8` in isolated worktree `C:\WF117`; implementation authorized: NO | 2026-08-23 |
 | Master architecture planning documents (lifecycle fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/WAYFINDER_LIFECYCLE_FOLD_2026-08-23.md` | **RELEASED** — map #54 lifecycle fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-map54-20260823` (worktree C:\WFFOLD54, based on the #37 fold branch) | 2026-08-23 |
 | Master architecture planning documents (fold branch) | `11_TRIAGE/MASTER_*_2026-08-2*.md`, `11_TRIAGE/WAYFINDER_DECISION_FOLD_2026-08-23.md` | **RELEASED** — wayfinder fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-20260823` (worktree C:\WFOLD) | 2026-08-23 |
 
 ## Log
+
+- **2026-08-23 (repository/context/delivery fold, map #97):** Codex Lead claimed and
+  released the Map-#97 planning and shared-memory rows. Tickets #114–#116 were folded into
+  the brief, work-package plan, traceability register and
+  `11_TRIAGE/WAYFINDER_REPOSITORY_CONTEXT_DELIVERY_FOLD_2026-08-23.md`; substantive commit
+  `2bc11fd8` on `feature/wayfinder-fold-map97-20260823`. Counts remain 60 requirements and
+  76 packages; no implementation or operational action was authorized. The sole T2 reviewer
+  reproduced the fixed point, exact four-file scope, clean diff and substantive content but
+  was stopped after 52 minutes by the owner's explicit instruction before returning a
+  verdict; no accepting model verdict is claimed. Lead verification and repo guard passed.
 
 - **2026-08-23 (safety/operations fold, map #96):** Codex Lead claimed and released the
   Map-#96 planning and shared-memory rows. Tickets #107–#110 were folded into the brief,
