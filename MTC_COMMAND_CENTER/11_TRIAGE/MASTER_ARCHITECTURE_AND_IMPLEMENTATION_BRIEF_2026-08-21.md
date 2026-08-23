@@ -1894,6 +1894,15 @@ graph TB
 3. **Native exchange stops remain live through DISARM and KILL** (§10.2 rule 3). The reduce-only stop at the venue is the protection that survives the process being gone; cancelling it is a FLATTEN-class decision, never a side effect. **This is why KILL's cancellation set is scoped to risk-increasing entry and add orders, and why its reconciliation gate proves protection is still there rather than proving nothing is there.** **FLATTEN owns the controlled cancel-and-replace of protective orders where closing the position requires it**, under its own confirmation, step-up authentication and audit record.
 4. **Nothing here authorizes automatic emergency resizing in V2.** The fourth column is documented so that it cannot arrive by accident under another name. It is the capability the owner's **D-02 clarification** says is *not prohibited* if separately authorized — and "not prohibited" is not "authorized" (§5.5, §17.3, Appendix E O-11).
 
+**Map-#96 amendment (2026-08-23) — the control set is ARM / DISARM / KILL / FLATTEN, and all four share one command lifecycle.** Owner-ratified through the [Safety, Operations & Production Readiness decision map (#96)](https://github.com/bsemaay-tech/mtc-command-center/issues/96), ticket [Decide: emergency-control and break-glass doctrine (#107)](https://github.com/bsemaay-tech/mtc-command-center/issues/107), whose resolution comment carries the detail. It refines the table above and reopens nothing in it.
+
+- **ARM joins the set as the state the other three act against.** ARM **permits eligible automated new entries and places none itself** — arming is permission, never an order. **DISARM** blocks new risk while existing protection and exit handling continue. **KILL** persistently blocks new risk and cancels pending risk-increasing entry and add orders while valid reduce-only protection stays live. **FLATTEN** adds scope-wide reduce-only closure and **leaves the scope KILLED until an explicit recovery and reconciliation step**; it never re-arms anything.
+- **Who may act.** Automated rules may **DISARM or suspend**. The Guardian **vetoes intent and never writes lifecycle state** (§10.4). **KILL and FLATTEN require an authenticated owner/operator request, and there is no automatic FLATTEN** — the fourth column above remains unbuilt, unnamed on the live surface and unauthorized.
+- **Authorization ladder.** DISARM is immediate from an authenticated private session; **ARM** requires **fresh WebAuthn/FIDO2 plus confirmation**; **KILL** requires **fresh step-up plus a separated two-step confirmation**; **FLATTEN** requires the **strongest confirmation, naming the scope and the exposure being closed**. **Notifications contain no control buttons** — an alert is never a command surface.
+- **One command lifecycle.** Every emergency command carries a **unique command ID** and moves `REQUESTED → ACKNOWLEDGED → RECONCILED`, or terminates `FAILED` or `UNKNOWN`. **An uncertain outcome is never auto-retried:** risky actions freeze until venue reconciliation resolves what actually happened.
+- **The deployed Bridge does not implement any of this**, and this amendment does not claim it does — see §12.6.5 for the current-truth record, including that the deployed `/api/kill?flatten=true` path on schema v4 latches `KILLED` and blocks submissions without cancelling or flattening.
+- Every number this doctrine implies — confirmation timeouts, drill intervals, reconciliation deadlines — remains `[OPEN]`.
+
 Carried by **WP-V2B-10**, with the authentication redundancy of **D-16** carried by **WP-V2B-06**.
 
 **Worker isolation — [OWNER — Q4] HYBRID:**
@@ -2376,6 +2385,83 @@ Both authenticators can be present and the path still be unusable: the mesh can 
 | 5 | **WP-V4-01** — live-gate evidence pack | + **WP-V2B-07** drill evidence, and **WP-V2B-10** / **WP-V2B-06** | Consuming all of the above as evidence for preconditions 7 and 12 | Signing anything — only the owner signs |
 
 All five are **T0** except as tiered in the delivery plan, and **gate G5 is not satisfiable without stages 1–4 complete.**
+
+**Map-#96 amendment (2026-08-23, ticket [Decide: emergency-control and break-glass doctrine (#107)](https://github.com/bsemaay-tech/mtc-command-center/issues/107)) — what the out-of-band path must reach, and when it must be re-proven.** The break-glass path is an **independent venue-side path exercisable from both the approved phone and the approved laptop**, and it must be able to **cancel risk-increasing orders, close exposure reduce-only, and verify the resulting positions and orders at the venue** — recording evidence afterwards rather than depending on our own software to record it. **If the venue itself is unavailable, the scope remains KILLED and the flatten is reported unconfirmed**; nothing is assumed closed. The path is **proven before testnet eligibility, before live eligibility, after any relevant control or credential change, and after any incident**, and it is **re-drilled on a recurring interval whose value is `[OPEN]`**. **The runbook contains no secrets** — it names prerequisites and locations, never credential material (gate G6). This adds obligations to the runbook and the drill schedule; it changes no carrier, and the drill still belongs to **WP-V2B-07** under G4.
+
+## 12.6 Safety, operations, credentials and live-readiness decisions — map #96 fold (2026-08-23)
+
+Owner-ratified through the [Safety, Operations & Production Readiness decision map (#96)](https://github.com/bsemaay-tech/mtc-command-center/issues/96); the detail lives in the resolution comments for [Decide: emergency-control and break-glass doctrine (#107)](https://github.com/bsemaay-tech/mtc-command-center/issues/107), [Decide: incident, backup and recovery doctrine (#108)](https://github.com/bsemaay-tech/mtc-command-center/issues/108), [Decide: credentials and access architecture (#109)](https://github.com/bsemaay-tech/mtc-command-center/issues/109) and [Decide: the live-gate readiness register (#110)](https://github.com/bsemaay-tech/mtc-command-center/issues/110), with current-truth inputs from [Research: failure-mode catalog vs existing safety mechanisms (#105)](https://github.com/bsemaay-tech/mtc-command-center/issues/105) and [Research: ops baseline in the repo — deploy, rollback, backup, observability, credentials (#106)](https://github.com/bsemaay-tech/mtc-command-center/issues/106). **This is a doctrine and carrier fold only.** It reopens nothing from maps #37, #54, #67, #78 or #79, adds no requirement and no work package, leaves every unratified number `[OPEN]`, and authorizes no implementation, host contact, credential, deployment, testnet, live or trading action (D-12).
+
+### 12.6.1 Emergency controls — where the doctrine lives
+
+The ARM / DISARM / KILL / FLATTEN semantics, the authorization ladder, the `REQUESTED → ACKNOWLEDGED → RECONCILED` command lifecycle and the no-automatic-FLATTEN rule are stated in **§10.2a**, in place, as an amendment to the table that already governs them. The break-glass obligations — the independent venue-side path, its capabilities, the venue-unavailable rule and the proof occasions — are stated in **§12.5a**. Carriers are unchanged: **WP-V2B-10** defines and implements locally, **WP-V2B-06** supplies authentication and redundancy, **WP-V2B-05** renders, **WP-V2B-07** performs the authorized testnet drills, **WP-V4-01** consumes all of it as evidence.
+
+### 12.6.2 Incident, backup and recovery — ratified doctrine
+
+**Recovery is human-led and hours-scale.** There is **no second host and no automatic failover**; the exact recovery-time target is `[OPEN]` and is owner-set, not inferred.
+
+**What is backed up.** Operational databases, ledgers, audit logs, approved configuration, deployment identity, release manifests and the essential runbooks. The **already-ratified cadence stands unchanged** — daily backups of every store, hourly synchronisation of critical ledgers during active windows (map #37, WP-P0-26). **Protected evidence is never auto-deleted**, and **no plaintext secret enters an ordinary backup**.
+
+**A backup counts only when a restore has been proven.** An **isolated restore** must demonstrate integrity, readability and reconciliation before the copy is treated as protection. That proof is required **before any forward clock starts, after any backup or schema change, after any failed recovery, and periodically** — the recurring interval is `[OPEN]`.
+
+**Failure responses, fail-closed.** Host or process failure **blocks new risk and pages the owner**; venue-side protection continues where the venue permits it. Recovery rebuilds from the **last accepted immutable release plus a verified backup**, and **portfolio reconciliation gates the return to operation**. An open-position emergency during an outage uses the break-glass path of §12.5a, not an improvised one.
+
+**Storage is a safety surface.** **Low disk blocks new risk and alerts before failure**; **full disk is fail-closed**, never deletes protected evidence, preserves protection best-effort, and requires repair plus reconciliation before operation resumes. **No such code path or ratified implemented mechanism exists today** (§12.6.5); this is design, not description.
+
+**Incident classes and monitoring.** Three classes: **safety/control**, **truth/evidence**, **availability**. Safety incidents and unexplained evidence incidents **page and suspend the affected risk**; serious safety or evidence incidents **require a postmortem before resumption**. External monitoring covers **heartbeat, feed and venue freshness, reconciliation, protection state, disk and backup health**. **An alert acknowledgement never clears the underlying fault**, and **alerts carry no secrets and no controls**. Timing and escalation values are `[OPEN]`.
+
+### 12.6.3 Credentials and access — ratified doctrine
+
+**Stages never share credentials.** Simulation and `INTERNAL_PAPER` hold **no exchange credential at all**; `EXCHANGE_TESTNET` uses **testnet-only** credentials; live uses **distinct agent wallets per risk bucket or worker**. **No credential is ever reused across stages.**
+
+**Least privilege by construction.** A worker receives **only its own scoped credential**. The **dashboard, research surfaces, AI tooling and the notification path hold no exchange key**. The **master wallet stays offline and off KVM2**. **Until the venue's withdrawal restrictions are verified from a primary source, agent keys are treated as able to move funds** — the least-trust stance already recorded for WP-P0-28/WP-P0-29.
+
+**Secrets have exactly one road in.** Secrets never enter **Git, issues, documents, logs, evidence, ordinary backups or AI prompts**. Provisioning is **owner-gated** and exposes the value **only to the process that requires it, through restricted operating-system storage**. **Agents verify presence and permissions; they never read or print a value** (gate G6).
+
+**Access.** **Private mesh only, approved devices, named non-shared accounts.** **WebAuthn/FIDO2 plus an independent backup authenticator** (D-16), with **fresh step-up on dangerous controls**. **Research access and execution access remain separated** (O-33, §12.1).
+
+**Lifecycle and compromise.** Creation, activation, rotation, revocation, expiry and destruction are **permanently audited**. Compromise triggers **immediate rotation**; **expiry warnings and a proven revocation drill are required before live**, and the **calendar rotation interval is `[OPEN]` pending the venue's verified rules**. On **suspected compromise the affected scope auto-DISARMS and the owner is alerted**; the owner then revokes, invokes KILL/FLATTEN or the venue route as needed, isolates, rotates, preserves evidence and reconciles. **Live eligibility is blocked until a clean recovery.** **There is still no automatic FLATTEN.**
+
+### 12.6.4 Live-readiness register — ratified doctrine
+
+**One canonical register is authoritative: `_AI_MEMORY/LIVE_TRADING_GATE.md`.** **No supporting document — brief, plan, dashboard, evidence pack or fold — may declare readiness.** The register keeps its **fourteen top-level categories** (F-16); map-#96 subproofs nest **under** them and create no fifteenth category and no competing count.
+
+**Row status enum: `UNKNOWN`, `BLOCKED`, `IN PROGRESS`, `PROVEN`, `EXPIRED` — and only `PROVEN` counts.** Every row records its **carrier, scope, the exact evidence, the commit/deployment identity, the proof date, the invalidation condition and the current blocker**.
+
+**The single-signature boundary.** **Paper, shadow and testnet eligibility is automatic** once the owner-approved definitions are proven — **no repeated owner signature per stage**. **Only the live transition receives an explicit owner signature**, and **this fold is not that signature and authorizes no actual stage action**.
+
+**Coverage.** Strategy honesty · frozen identity · parity where applicable · paper and testnet evidence · reconciliation · Guardian · idempotency · emergency controls · break-glass · backup and restore · monitoring · disk-full · recovery and rollback · credentials · custody · venue review · incident response · signed capital limits. **Thresholds that the owner has not ratified stay `[OPEN]`.**
+
+**What is not evidence.** Claims, dashboards, AI opinions and test summaries **alone do not count**. Evidence **binds to the exact artifact and environment that produced it**. **Failure-path tests require D026 RED/GREEN**, and **emergency, restore, revocation and recovery drills require dated results**.
+
+**Invalidation.** A relevant change to strategy, code, policy, configuration, credential, venue, host or capital **invalidates the affected rows**. **Any hard row at `UNKNOWN`, `BLOCKED` or `EXPIRED` blocks the live signature.** A serious incident **suspends readiness until recovery and reconciliation**. **Current status: `NOT READY`.**
+
+### 12.6.5 Current-truth blockers carried into the register
+
+Recorded from [Research: failure-mode catalog vs existing safety mechanisms (#105)](https://github.com/bsemaay-tech/mtc-command-center/issues/105) and [Research: ops baseline in the repo — deploy, rollback, backup, observability, credentials (#106)](https://github.com/bsemaay-tech/mtc-command-center/issues/106) as **repository-evidence statements, not live inspections**, and as **readiness blockers, not permission to repair anything**:
+
+1. **The deployed Bridge runs schema v4.** The v5–v9 safety mechanisms are **code-complete and tested but inactive on that deployed database** according to repository evidence. Consequently the deployed **`/api/kill?flatten=true`** path **only latches `KILLED` and blocks submissions — under v4 it does not cancel and does not flatten.**
+2. **There is no recurring backup and no repeatable restore drill for live KVM2 state.** One install-time archive was restored once.
+3. **There is no active live monitoring or alerting.** Phase-Watch is inactive and the Telegram deployment is held.
+4. **`Restart=no` and the absence of systemd install enablement are deliberate** — and **without monitoring, an outage could go unnoticed**.
+5. **Rollback has never been proven as a real alternate-release rollback.**
+6. **Disk-full has no current code path and no ratified implemented mechanism.**
+7. **Deployment execution evidence is stranded off master**, and **master carries stale deployment wording** — consistent with F-14/F-15, where the deployed version, configuration and schema version remain **UNVERIFIED** and may not be assumed.
+8. **There is zero functioning CI.** **OPS-C (WP-P0-27) is planned and unbuilt**, and no document may describe it as built.
+
+### 12.6.6 Carriers
+
+| Doctrine | Carrier |
+|---|---|
+| Emergency operations, uncertain commands, break-glass runbook | **WP-V2B-10** |
+| Authentication, private access, authenticators, secret-delivery boundary | **WP-V2B-06** |
+| Authorized-stage testnet and drill evidence | **WP-V2B-07** |
+| Backup, restore, external dead-man, incident/recovery and disk/storage doctrine | **WP-P0-26 (OPS-A)** |
+| Continuous checks and ops verification | **WP-P0-27 (OPS-C)** — planned, **not built** |
+| Custody and operational credential-lifecycle boundary | **WP-P0-29 (VEN-C)** |
+| Canonical live-readiness register and the sole owner signature | **WP-V4-01** |
+
+**No package is added, removed or renumbered by this fold: the totals remain 60 requirements = 44 owner outcomes + 16 derived safeguards, and 76 work packages.**
 
 ---
 

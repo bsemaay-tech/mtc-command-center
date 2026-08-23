@@ -9,6 +9,17 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol Lead] 2026-08-23 — Map 96 safety/operations fold completed
+
+Map #96 decision tickets #107 through #110 were resolved from the owner's six-choice
+acceptances and folded on `feature/wayfinder-fold-map96-20260823` at `d20ed55f`. The fold
+creates the single fourteen-category live-readiness register, records the emergency-control,
+incident/recovery and credential/access doctrine, and keeps overall status **NOT READY**.
+No requirement or work package was added or renumbered (60 requirements, 76 packages), and
+no code, host, credential, deployment, testnet or live action was authorized. The remaining
+T2 review was stopped by explicit owner override after Lead verification; no accepting model
+verdict is claimed. Owner separately authorized the Map #96 merge without another prompt.
+
 ## [Claude Fable Lead] 2026-08-18 — WORKTREE CLEANUP CLOSED (132→9); Phase Watch V3 reviewed, T0 pair capacity-gated
 
 Owner's autonomous continuation dispatch executed to completion in a clean control

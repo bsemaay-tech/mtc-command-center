@@ -8,6 +8,19 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
+## CURRENT (2026-08-23) — Map 96 fold complete; Map 97 is next
+
+Map #96 tickets #107–#110 are settled and the documentation fold is committed at
+`d20ed55f` on `feature/wayfinder-fold-map96-20260823`; owner-authorized merge/issue closure
+is the final administrative step. Lead checks passed and the owner explicitly stopped the
+remaining T2 reviewer round, so no model-audit acceptance is claimed. Nothing operational was
+authorized and live readiness remains **NOT READY**.
+
+1. **[AI: Claude or Codex] Wayfinder Map #97:** resolve tickets #114, #115 and #116, then
+   documentation fold #117. Planning only unless the owner separately expands authority.
+2. **[AI: Barış] Map #95 branch remains deliberately unmerged:** do not merge or represent it
+   as accepted without the owner's separate word.
+
 ## AFTER THE 2026-08-18 CLEANUP RUN — worktrees 132→9 DONE; Phase Watch V3 findings recorded
 
 State: cleanup CLOSED (`11_TRIAGE/WORKTREE_CLEANUP_EXECUTION_2026-08-18.md`);
