@@ -280,3 +280,4 @@ Workstreams not listed: add a row before writing.
   planı" successor) claimed all five WP-I rows. Verified via session listing that the rule
   author ("Codex gece çalışması değerlendirmesi" session) committed `15d48088` at 13:46:53
   as its final act and is no longer running — exactly one active Lead loop exists.
+- 2026-08-23 evening: Fable Lead (wayfinder session) claimed + released the map-#78 explorer fold workstream on branch feature/wayfinder-fold-map78-20260823 (worktree C:\WF86, base ab35ca66); scope: brief SEC 11.6 + 12.2 + KLineChart row, plan WP-P0-14/P0-18/V3-01/V3-11 amendment text, fold doc WAYFINDER_EXPLORER_FOLD_2026-08-23.md. Single-session fold, no other workstream touched.

@@ -2126,6 +2126,20 @@ timestamp, approver, previous_state, new_state
 
 ---
 
+## 11.6 Explorer decisions — map #78 fold (2026-08-23)
+
+**[MAP #78 — owner-ratified 2026-08-23; detail lives in each ticket's resolution comment; D-12: nothing here authorizes implementation.]**
+
+1. **Result charts show trade-truth, bounded (#84).** Minimum chart content = candles + entry/exit markers per trade + drawn protective levels (stop, take-profits, trailing path) + an aligned equity/drawdown pane + a chart-linked trade list. "TradingView-like" is BOUNDED to read-only evidence display: no drawing tools, no indicator *editing*, no alerts, no order entry. V3 additions: replay scrubbing, multi-candidate overlay comparison, parameter surfaces.
+2. **Layout ratified from the prototype (#94):** **Inspector** — chart + right-rail per-trade evidence card (entry/exit/stop/TPs, R, duration, MAE/MFE, fees/funding) + a compact linked trade list (`prototype/result-chart-mock-94`, `ce7d227a`/`578f3cfd`). **Read-only display of the strategy's own indicators is IN scope** — requiring the indicator series to be carried in the §11.2 per-trial artifacts.
+3. **Chart-library POC criteria (#84) — six, each failable:** (a) a full 2-year 15m window (~70k candles) with smooth pan/zoom; (b) ≥6 overlay series + hundreds of trade markers without jank; (c) a synchronized second pane with linked crosshair; (d) fully programmatic annotation from artifact JSON, zero manual steps; (e) license fit — self-hostable, offline, no external calls, private commercial use; (f) runs in the plain research-dashboard web stack. **Candidate order: Lightweight Charts → ECharts → the gated TV Charting Library only if the free options fail** (supersedes the earlier KLineChart comparator).
+4. **Backbone (#82): a derived, rebuildable read index** over the lifecycle ledger + TrialRecord catalog + artifact stores + dataset registry — never authoritative, deletable and rebuildable at any time, every view freshness-stamped. **Two stages:** Stage 1 = extend the proven `mcc_readonly` + web-app layer with a ledger reader (zero new plumbing); Stage 2 = the index arrives WITH the TrialRecord catalog. **Host = the owner PC, local-only**; KVM2 (execution domain) never hosts research browsing.
+5. **Phase-0 minimum vs Stage-2/V3 (#83):** P0 = family tree with lifecycle states; per-candidate "where is it and why" (rejection reasons + re-entry eligibility); screens-vs-evidence labelling; basic summary result views **including the TV-style KPI row**. **The trade-truth chart (+ indicator overlays + MAE/MFE/fees) is the FIRST Stage-2 addition, carried by WP-V3-11 — it leaves Phase-0 scope.** Daily home screen = the family tree + a ledger-derived "what changed since yesterday" strip. V3 analytics order: cross-candidate comparison → parameter importance → Pareto/parallel-coordinates/3-D surfaces.
+6. **Navigation + search (#85):** a six-level spine on every screen — family → candidate → package → deployment identity → evidence window → trial — all nodes clickable; **rejection reasons and re-entry triggers are first-class spine nodes.** Faceted search, staged: Phase-0 = state + symbol + tag + free text; performance-range + provenance facets arrive with the Stage-2 index.
+7. **Explorer display doctrine — new owner-gated definition, v1 (#83 + #85; registered in the fold doc §3):** (a) **no naked numbers** — every number/graph carries its evidence-class badge + legacy-vs-new flag + freshness stamp; (b) **labels are facets, never evidence** — diagnostic labels, advisory verdicts and provenance stamps filter/sort only, always badged, and an advisory verdict never renders beside scorecard numbers without its "advisory, not evidence" badge; (c) **history never hidden** — PRIOR_IDENTITY windows visible as grayed spine nodes, never merged; (d) legacy-vs-new is structural at index level, rendered differently everywhere; (e) replay-broken trials always carry a visible warning.
+
+Fold record: `11_TRIAGE/WAYFINDER_EXPLORER_FOLD_2026-08-23.md`.
+
 # 12. Dashboard and charting architecture
 
 ## 12.1 Two trust domains; one owner-facing entry point permitted
@@ -2151,6 +2165,8 @@ timestamp, approver, previous_state, new_state
 A portal that links two isolated applications satisfies all four. A single process serving both does not.
 
 ## 12.2 Charting — decision gated behind a POC
+
+**Amended by the map #78 fold (2026-08-23, §11.6):** the owner ratified **six failable POC pass criteria** for the result chart — ~70k-candle smooth pan/zoom; ≥6 overlays + hundreds of markers without jank; a synced second pane with linked crosshair; fully programmatic annotation from artifact JSON; self-hostable offline license fit; plain research-dashboard web stack — and the **candidate order Lightweight Charts → ECharts → the gated TV Charting Library only if the free options fail**, superseding the earlier KLineChart comparator (its dependency-inventory row is annotated in place). The POC executes under the explorer package's own authorization (D-12). Detail: map #78 ticket #84.
 
 **[OWNER — Q19]** Run a **2–3 day proof of concept** before selecting, comparing at minimum:
 
@@ -2398,7 +2414,7 @@ Verified against primary sources on 2026-08-21.
 |---|---|---|---|---|
 | [**NautilusTrader**](https://github.com/nautechsystems/nautilus_trader) | LGPL-3.0-only | ~26.8k ★ | `POC_ONLY` in V3 | **[OWNER — Q12] POC first; do not replace the Bridge in V2.** Ships **stable** adapters for **both Hyperliquid and Interactive Brokers**, and documents that *"the same execution semantics and deterministic time model operate in both research and live systems."* That matches your multi-broker + parity requirement exactly. POC scope: an independent backtest of one promoted candidate as a second opinion. Any later production use requires a documented licensing review of the linking boundary. |
 | [**Lightweight Charts**](https://github.com/tradingview/lightweight-charts) | Apache-2.0 (attribution) | ~17k ★ | `LINK_AS_DEPENDENCY` | **Favourite, decision gated on the Q19 POC** |
-| **KLineChart** | Apache-2.0 | active | `LINK_AS_DEPENDENCY` | **POC comparator (Q19)** |
+| **KLineChart** | Apache-2.0 | active | `LINK_AS_DEPENDENCY` | **POC comparator (Q19)** *(superseded 2026-08-23, map #78 fold: ratified comparator order is Lightweight Charts → ECharts → gated TV Charting Library last — §11.6, ticket #84)* |
 | [**Perspective**](https://github.com/finos/perspective) | Apache-2.0 | ~11.1k ★ | `LINK_AS_DEPENDENCY` | **ADOPT — research only** |
 | [**DuckDB**](https://github.com/duckdb/duckdb) | MIT | ~40.5k ★ | `LINK_AS_DEPENDENCY` | **ADOPT.** Queries Parquet directly; embedded, no service to operate |
 | **Parquet / PyArrow** | Apache-2.0 | — | `LINK_AS_DEPENDENCY` | **ADOPT** — already declared |
