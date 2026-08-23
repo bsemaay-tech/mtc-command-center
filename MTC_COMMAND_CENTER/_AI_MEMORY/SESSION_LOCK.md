@@ -45,10 +45,22 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 
 Workstreams not listed: add a row before writing.
 
+| Master architecture planning documents (kernel fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/WAYFINDER_KERNEL_FOLD_2026-08-23.md` | **RELEASED** - map #67 kernel fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-map67-20260823` (worktree C:\WFFOLD67, from master `3d6a621c`) | 2026-08-23 |
 | Master architecture planning documents (lifecycle fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/WAYFINDER_LIFECYCLE_FOLD_2026-08-23.md` | **RELEASED** — map #54 lifecycle fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-map54-20260823` (worktree C:\WFFOLD54, based on the #37 fold branch) | 2026-08-23 |
 | Master architecture planning documents (fold branch) | `11_TRIAGE/MASTER_*_2026-08-2*.md`, `11_TRIAGE/WAYFINDER_DECISION_FOLD_2026-08-23.md` | **RELEASED** — wayfinder fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-20260823` (worktree C:\WFOLD) | 2026-08-23 |
 
 ## Log
+
+- **2026-08-23 (kernel fold, map #67):** Claude Fable 5 claimed and released the kernel-fold
+  row for the owner-decided map #67 fold (fold task GH #77): new brief section 9.7 (kernel &
+  economic-honesty governance), two rows added to the section-6.5 admission-mechanics block,
+  amendment paragraphs on WP-P0-20 (seed named + acceptance additions) and WP-P0-30 (collector =
+  earliest deliverable, most-time-critical wave-1 flag), plus fold record
+  `11_TRIAGE/WAYFINDER_KERNEL_FOLD_2026-08-23.md` (control-parity checklist v1, statistical-battery
+  definition v1, known-divergence register, corrections incl. VEN-C/VEN-E label). Branch
+  `feature/wayfinder-fold-map67-20260823` from master `3d6a621c`; main checkout untouched.
+  Requirements 60; packages 75; owner docs untouched; nothing authorized (D-12). MATERIAL -
+  fresh G1 round recommended.
 
 - **2026-08-23 (lifecycle fold, map #54):** Claude Fable 5 claimed and released the
   lifecycle-fold row for the owner-decided map #54 fold (fold task GH #66): eight anchored
