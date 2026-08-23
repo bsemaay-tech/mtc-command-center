@@ -9,6 +9,32 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Codex gpt-5.6-sol Lead] 2026-08-24 — Final Wayfinder planning programme complete
+
+The final planning run started from master `0baea68ee3bd85a3a57068cc3a3c4876b197d690` and
+finished the remaining Wayfinder administration without starting implementation. Map #95's
+owner-accepted operator-surface content was reconciled onto current master at substantive commit
+`f6c039e2` with status correction `f77c7171`; **the original divergent branch was not merged**.
+Settled parent maps #54, #67, #78, #79 and #95 are closed after ancestry/content verification.
+
+Queue 8/8 is [map #118](https://github.com/bsemaay-tech/mtc-command-center/issues/118),
+with research #119–#122, disposition #123 and fold #124; all are CLOSED. The final six-file
+planning candidate is `7fa6a66c873fcd2380595461f1c1cd31e610c52e`, with record
+`11_TRIAGE/WAYFINDER_FINAL_RED_TEAM_FOLD_2026-08-24.md`. Lead checks reproduced exact scope,
+44 OWNER + 16 DERIVED unchanged requirement-text cells, 76 unchanged unique package IDs, the
+dependency/gate/reuse corrections, and no protected path. The one permitted GLM-5.2 T2 helper
+failed **before model execution** because the local CredentialManager module is absent; nothing
+was installed, no substitute reviewer was stacked, and **no model-review verdict is claimed**.
+
+One genuinely new choice remains **`[OPEN]`**: OPEN-01, zero-build vanilla JavaScript versus a
+bounded framework/build step for optional execution-UI table/query reuse. Recommendation: permit
+the build step only if WP-V2B-05 later measures less custom table/freshness code without weakening
+the ratified private/read-only/security boundaries. It does not block unrelated work and no choice
+was made here. The amended planning set is material: a fresh G1 acceptance is recommended before
+any affected package's `G1-IA`; **no `G1-IA`, code, host, credential, deployment, testnet/live,
+trading or destructive authority was granted**. Shared-memory and final-planning claims are
+released in `SESSION_LOCK.md` by this closeout.
+
 ## [Codex gpt-5.6-sol Lead] 2026-08-23 — Map 97 repository/context/delivery fold complete
 
 Map #97 decision tickets #114–#116 were resolved from the owner's eighteen-choice

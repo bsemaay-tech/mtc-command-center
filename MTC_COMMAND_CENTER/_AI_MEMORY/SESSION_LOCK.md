@@ -31,7 +31,7 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
-| Shared memory layer | `_AI_MEMORY/GLOBAL_HANDOFF.md`, `_AI_MEMORY/NEXT_STEPS.md`, `_AI_MEMORY/SESSION_LOCK.md` | **CLAIMED — Codex Lead final Wayfinder overnight run** on `feature/wayfinder-final-red-team-20260824` in `C:\WFREDTEAM_20260824`; Gate-7 planning records only | 2026-08-24 00:22 +03 |
+| Shared memory layer | `_AI_MEMORY/GLOBAL_HANDOFF.md`, `_AI_MEMORY/NEXT_STEPS.md`, `_AI_MEMORY/SESSION_LOCK.md` | **UNCLAIMED — released 2026-08-24 after final Wayfinder Gate-7 closeout** | — |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-17 00:54 +03; foreign partial preserved | — |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released cleanly at Gate 7 | 2026-08-17 03:54 +03 |
@@ -45,14 +45,24 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 
 Workstreams not listed: add a row before writing.
 
-| Final Wayfinder red-team planning run | GitHub queue 8/8 and settled-map administration; `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md`, `11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, operator/final-red-team fold records | **CLAIMED — Codex Lead** on `feature/wayfinder-final-red-team-20260824` in `C:\WFREDTEAM_20260824`; T2 planning/docs plus T3 GitHub administration only; implementation/live/destructive authority: NO; deadline 2026-08-24 06:22:52 +03 | 2026-08-24 00:22 +03 |
+| Final Wayfinder red-team planning run | GitHub queue 8/8 and settled-map administration; `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md`, `11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, operator/final-red-team fold records | **RELEASED — complete 2026-08-24**; queue #118–#124 closed; final six-file fold candidate `7fa6a66c`; no implementation/live/destructive authority | 2026-08-24 00:22 +03 → released Gate 7 |
 | Master architecture planning documents (kernel fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/WAYFINDER_KERNEL_FOLD_2026-08-23.md` | **RELEASED** - map #67 kernel fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-map67-20260823` (worktree C:\WFFOLD67, from master `3d6a621c`) | 2026-08-23 |
-| Master architecture planning documents (Map #96 fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/WAYFINDER_SAFETY_OPERATIONS_FOLD_2026-08-23.md` | **RELEASED** — issue #111 fold completed at `d20ed55f` in isolated worktree `C:\WF111`; implementation authorized: NO | 2026-08-23 |
-| Master architecture planning documents (Map #97 fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/WAYFINDER_REPOSITORY_CONTEXT_DELIVERY_FOLD_2026-08-23.md` | **RELEASED** — issue #117 fold completed at `2bc11fd8` in isolated worktree `C:\WF117`; implementation authorized: NO | 2026-08-23 |
+| Master architecture planning documents (Map #96 fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/WAYFINDER_SAFETY_OPERATIONS_FOLD_2026-08-23.md` | **RELEASED** — issue #111; substantive fold-content commit `d20ed55f`, closeout branch tip `5db04f68`, both ancestors of current master; implementation authorized: NO | 2026-08-23 |
+| Master architecture planning documents (Map #97 fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`, `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `11_TRIAGE/WAYFINDER_REPOSITORY_CONTEXT_DELIVERY_FOLD_2026-08-23.md` | **RELEASED** — issue #117; substantive fold-content commit `2bc11fd8`, closeout branch tip `57b4a7f6`, both ancestors of current master; implementation authorized: NO | 2026-08-23 |
 | Master architecture planning documents (lifecycle fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/WAYFINDER_LIFECYCLE_FOLD_2026-08-23.md` | **RELEASED** — map #54 lifecycle fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-map54-20260823` (worktree C:\WFFOLD54, based on the #37 fold branch) | 2026-08-23 |
 | Master architecture planning documents (fold branch) | `11_TRIAGE/MASTER_*_2026-08-2*.md`, `11_TRIAGE/WAYFINDER_DECISION_FOLD_2026-08-23.md` | **RELEASED** — wayfinder fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-20260823` (worktree C:\WFOLD) | 2026-08-23 |
 
 ## Log
+
+- **2026-08-24 (final Wayfinder red-team, queue 8/8):** Codex Lead reconciled the accepted
+  Map-#95 content without merging its divergent branch, closed settled parent maps #54/#67/#78/
+  #79/#95, and completed GitHub queue #118–#124. The final six-file planning candidate is
+  `7fa6a66c` with record `11_TRIAGE/WAYFINDER_FINAL_RED_TEAM_FOLD_2026-08-24.md`.
+  Counts and identities reproduce at 60 = 44 OWNER + 16 DERIVED and 76 unchanged package IDs;
+  D-12 remains binding. The single GLM-5.2 T2 helper failed before model execution because its
+  local CredentialManager module is absent; no install or substitute review ran, no model verdict
+  is claimed, and Lead direct checks passed. OPEN-01 remains `[OPEN]`. Both final-planning and
+  shared-memory claims are released here; no implementation or operational action was authorized.
 
 - **2026-08-23 (repository/context/delivery fold, map #97):** Codex Lead claimed and
   released the Map-#97 planning and shared-memory rows. Tickets #114–#116 were folded into

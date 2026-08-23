@@ -8,20 +8,31 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
-## CURRENT (2026-08-23) — Map 97 fold complete; queue 8/8 is next
+## CURRENT (2026-08-24) — Wayfinder planning complete; implementation remains unauthorized
 
-Map #97 tickets #114–#116 are settled and the documentation fold is committed at
-`2bc11fd8` on `feature/wayfinder-fold-map97-20260823`; the owner explicitly authorized its
-merge and issue closure without another prompt. Lead checks and repo guard passed. The sole
-T2 reviewer was stopped after 52 minutes under the owner's explicit instruction before it
-returned a verdict, so no accepting model-audit verdict is claimed. Nothing operational was
-authorized; counts remain 60 requirements and 76 packages.
+All eight Wayfinder queues are complete. Queue 8 map #118, research #119–#122, disposition #123
+and fold #124 are CLOSED. The final planning candidate is
+`7fa6a66c873fcd2380595461f1c1cd31e610c52e`; record:
+`11_TRIAGE/WAYFINDER_FINAL_RED_TEAM_FOLD_2026-08-24.md`. Counts remain exactly 60 requirements
+= 44 OWNER + 16 DERIVED and 76 packages. Lead checks passed. The one permitted GLM-5.2 T2 helper
+failed before model execution because its local CredentialManager dependency is absent, so no
+model-review verdict is claimed and nothing was installed.
 
-1. **[AI: Claude or Codex] Wayfinder queue 8/8:** create/claim the final red-team decision map
-   only when the owner continues the planning programme. No queue-8 GitHub map is currently
-   open; verify current `origin/master`, issues and writers before creating one.
-2. **[AI: Barış] Map #95 branch remains deliberately unmerged:** do not merge or represent it
-   as accepted without the owner's separate word.
+Map #95 is reconciled honestly: its owner-accepted content is present on master through
+`f6c039e2` / `f77c7171`, issue #95 is CLOSED, and **the original divergent branch itself remains
+unmerged**. Maps #54, #67, #78 and #79 are also CLOSED after their fold tips were verified as
+ancestors of master.
+
+Next, in order:
+
+1. **[AI: Barış, only when WP-V2B-05 preparation reaches this choice] OPEN-01:** keep the
+   execution UI zero-build vanilla JavaScript, or allow a bounded framework/build step for
+   optional table/query reuse. **Recommendation:** allow it only if measured evidence shows less
+   custom table/freshness code without weakening the private/read-only/security boundaries.
+2. **[AI: Claude or Codex, only after a new owner instruction] Before any affected package can
+   start:** run the fresh G1 acceptance recommended for the materially amended planning set, then
+   obtain the owner's explicit `G1-IA` for one exact package. **None is granted.** No code, host,
+   credential, deployment, testnet/live, trading or destructive action is authorized.
 
 ## AFTER THE 2026-08-18 CLEANUP RUN — worktrees 132→9 DONE; Phase Watch V3 findings recorded
 
