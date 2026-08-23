@@ -149,6 +149,11 @@
   /* variant C — inspector */
   #vC .cols{display:flex; flex:1; min-height:0}
   #vC .main{display:flex; flex-direction:column; flex:1; min-width:0}
+  #vC .kpis{display:flex; flex-wrap:wrap; border-bottom:1px solid var(--border); background:var(--panel)}
+  #vC .kpi{padding:7px 14px 6px; border-right:1px solid var(--border); display:flex; flex-direction:column; gap:0}
+  #vC .kpi .k{font-size:9px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3)}
+  #vC .kpi .v{font-size:14px; font-weight:600}
+  #vC .kpi .s{font-size:10px; color:var(--ink-3)}
   #vC .equity-slot{height:96px}
   #vC .rail{
     width:320px; flex:none; border-left:1px solid var(--border); background:var(--panel);
@@ -258,6 +263,7 @@
 <div class="variant" id="vC">
   <div class="cols">
     <div class="main">
+      <div class="kpis" id="kpiC"></div>
       <div class="chart-slot" data-slot="chart"><span class="pane-tag">price · MTC-PERP (synthetic) · 15m</span></div>
       <div class="equity-slot" data-slot="equity"><span class="pane-tag">equity / drawdown</span></div>
     </div>
@@ -303,6 +309,12 @@ const atrAt = i => {                   // crude ATR(14) for level placement
   for(let j=Math.max(1,i-14); j<=i; j++){ s += candles[j].h-candles[j].l; k++; }
   return s/Math.max(k,1);
 };
+// strategy's own indicators (read-only overlays): EMA20 + ATR band around it
+const ema20 = new Float64Array(N), atrArr = new Float64Array(N);
+{
+  const k = 2/21; let e = candles[0].c;
+  for(let i=0;i<N;i++){ e = candles[i].c*k + e*(1-k); ema20[i]=e; atrArr[i]=atrAt(i); }
+}
 
 /* ============ trades: simulated forward from entries ============ */
 const trades = [];
@@ -442,6 +454,22 @@ function drawPrice(){
     ctx.strokeStyle=C.grid; ctx.beginPath(); ctx.moveTo(x+.5,ph); ctx.lineTo(x+.5,ph+4); ctx.stroke();
     ctx.fillStyle=C.ink3; ctx.fillText(fmtT(candles[i].t), x, ph+7);
   }
+  // strategy indicator overlays (read-only): ATR band fill, then EMA20 line
+  ctx.save(); ctx.beginPath(); ctx.rect(0,0,pw,ph); ctx.clip();
+  ctx.globalAlpha=0.10; ctx.fillStyle=C.trail; ctx.beginPath();
+  for(let i=lo;i<=hi;i++){ const x=xOf(i+0.5,w); i===lo?ctx.moveTo(x,yOf(ema20[i]+atrArr[i])):ctx.lineTo(x,yOf(ema20[i]+atrArr[i])); }
+  for(let i=hi;i>=lo;i--){ ctx.lineTo(xOf(i+0.5,w), yOf(ema20[i]-atrArr[i])); }
+  ctx.closePath(); ctx.fill(); ctx.globalAlpha=1;
+  ctx.strokeStyle=C.equity; ctx.lineWidth=1.2; ctx.beginPath();
+  for(let i=lo;i<=hi;i++){ const x=xOf(i+0.5,w), y=yOf(ema20[i]); i===lo?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+  ctx.stroke(); ctx.restore();
+  // overlay legend (identity by colored mark + text token, per read-only display)
+  ctx.font='9px "IBM Plex Mono",monospace'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  ctx.strokeStyle=C.equity; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(8,32); ctx.lineTo(20,32); ctx.stroke();
+  ctx.fillStyle=C.ink2; ctx.fillText('EMA20',24,32);
+  ctx.globalAlpha=0.35; ctx.fillStyle=C.trail; ctx.fillRect(62,27,12,10); ctx.globalAlpha=1;
+  ctx.fillStyle=C.ink2; ctx.fillText('ATR band',78,32);
   // candles
   const bw = Math.max(1, pw/(view.i1-view.i0)*0.7);
   for(let i=lo;i<=hi;i++){
@@ -684,6 +712,38 @@ statChips(document.getElementById('statsA'));
 statChips(document.getElementById('statsB'));
 document.getElementById('winA').textContent='2026-05-04 → 2026-05-18 UTC';
 
+/* variant C: TV-strategy-tester-style KPI row (all fake, derived from the seeded trades) */
+{
+  const gw = trades.filter(t=>t.pnl>0).reduce((s,t)=>s+t.pnl,0);
+  const gl = Math.abs(trades.filter(t=>t.pnl<0).reduce((s,t)=>s+t.pnl,0));
+  const netUsd = equity[N-1]-10000;
+  const avgR = trades.reduce((s,t)=>s+t.r,0)/trades.length;
+  const bh = (candles[N-1].c/candles[0].c-1)*100;
+  const wins = trades.filter(t=>t.pnl>0);
+  const kpi=(k,v,cl,s)=>`<div class="kpi"><span class="k">${k}</span><span class="v mono ${cl||''}">${v}</span>${s?`<span class="s mono">${s}</span>`:''}</div>`;
+  document.getElementById('kpiC').innerHTML =
+    kpi('net profit', USD(netUsd), cls(netUsd), `${stats.net>=0?'+':'−'}${Math.abs(stats.net).toFixed(1)}%`)+
+    kpi('profit factor', gl>0?(gw/gl).toFixed(2):'∞', cls(gw-gl))+
+    kpi('win rate', `${stats.wr.toFixed(0)}%`, '', `${wins.length}/${stats.n}`)+
+    kpi('max drawdown', `−${stats.maxdd.toFixed(1)}%`, 'neg')+
+    kpi('total trades', stats.n)+
+    kpi('avg trade', R(avgR), cls(avgR))+
+    kpi('buy & hold', `${bh>=0?'+':'−'}${Math.abs(bh).toFixed(1)}%`, cls(bh), 'same window');
+}
+
+/* per-trade excursions (MAE/MFE) computed from the candles */
+function excursions(t){
+  let mae=0, mfe=0;
+  for(let j=t.entryIdx+1; j<=t.exitIdx; j++){
+    const b=candles[j];
+    const adverse = t.dir>0 ? t.entry-b.l : b.h-t.entry;
+    const fav     = t.dir>0 ? b.h-t.entry : t.entry-b.l;
+    if(adverse>mae) mae=adverse;
+    if(fav>mfe) mfe=fav;
+  }
+  return {maeR: mae/t.risk, mfeR: mfe/t.risk};
+}
+
 /* variant A table */
 document.getElementById('tbodyA').innerHTML = trades.map(t=>`
   <tr data-tid="${t.id}">
@@ -724,6 +784,7 @@ document.getElementById('clistC').innerHTML = trades.map(t=>`
 /* variant C inspector */
 function renderInspector(){
   const t=trades.find(x=>x.id===selId); if(!t) return;
+  const exc=excursions(t);
   const el=document.getElementById('insp');
   el.innerHTML=`
     <div class="insp-top">
@@ -744,6 +805,8 @@ function renderInspector(){
       <div><span class="k">duration</span><span class="v mono">${t.bars} bars · ${(t.bars/4).toFixed(1)}h</span></div>
       <div><span class="k">entered</span><span class="v mono">${fmtT(candles[t.entryIdx].t)}</span></div>
       <div><span class="k">exited</span><span class="v mono">${fmtT(candles[t.exitIdx].t)}</span></div>
+      <div><span class="k">mae / mfe</span><span class="v mono">−${exc.maeR.toFixed(2)}R / +${exc.mfeR.toFixed(2)}R</span></div>
+      <div><span class="k">fees + funding</span><span class="v mono">−$1.6 · −$0.4 <span style="color:var(--ink-3)">(mock)</span></span></div>
     </div>`;
   const step=d=>{
     const i=trades.findIndex(x=>x.id===selId);
@@ -764,7 +827,7 @@ document.addEventListener('click', e=>{
 const VARIANTS=[
   {id:'vA', name:'A · Chart-first'},
   {id:'vB', name:'B · Ledger-first'},
-  {id:'vC', name:'C · Inspector'},
+  {id:'vC', name:'C · Inspector (owner pick)'},
 ];
 let vi=0;
 function mount(k){
@@ -789,6 +852,6 @@ addEventListener('keydown', e=>{
 addEventListener('resize', drawAll);
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(drawAll);
 
-mount(0);
+mount(2);   // owner picked C — open on it
 select(selId,true);
 </script>
