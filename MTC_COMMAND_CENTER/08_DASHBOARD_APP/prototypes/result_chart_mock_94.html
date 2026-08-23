@@ -1,0 +1,794 @@
+<!--
+  PROTOTYPE — issue #94 "Prototype: the result-chart screen mock" (wayfinder map #78).
+  THROWAWAY. Fake seeded data, zero pipelines (D-12). Three structurally different
+  layout variants of the explorer result-chart screen, switchable with the floating
+  bar or the arrow keys. Read-only evidence display per the ratified #84 bound:
+  pan/zoom candles, overlays, markers, synced panes — no drawing tools, no indicator
+  editing, no alerts, no order entry.
+-->
+<meta charset="utf-8">
+<title>Result Chart Mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --surface:#f7f7f5; --panel:#ffffff; --panel-2:#f0f0ed; --border:#e0e0db;
+    --ink:#1c1e21; --ink-2:#5f6368; --ink-3:#94989d;
+    --grid:#ebebe7;
+    --up:#089981; --down:#e5484d; --equity:#3e63dd; --trail:#b45309;
+    --up-soft:rgba(8,153,129,.12); --down-soft:rgba(229,72,77,.10);
+    --equity-soft:rgba(62,99,221,.10);
+    --sel:#3e63dd;
+    --pill-bg:#1c1e21; --pill-ink:#f7f7f5;
+    --shadow:0 2px 10px rgba(28,30,33,.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --surface:#141517; --panel:#1c1e21; --panel-2:#232528; --border:#2e3136;
+      --ink:#e8eaed; --ink-2:#a3a7ad; --ink-3:#6d7178;
+      --grid:#26282c;
+      --up:#0fa693; --down:#ea5b60; --equity:#5a7bea; --trail:#c26a0a;
+      --up-soft:rgba(15,166,147,.16); --down-soft:rgba(234,91,96,.13);
+      --equity-soft:rgba(90,123,234,.14);
+      --sel:#5a7bea;
+      --pill-bg:#e8eaed; --pill-ink:#141517;
+      --shadow:0 2px 12px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --surface:#141517; --panel:#1c1e21; --panel-2:#232528; --border:#2e3136;
+    --ink:#e8eaed; --ink-2:#a3a7ad; --ink-3:#6d7178;
+    --grid:#26282c;
+    --up:#0fa693; --down:#ea5b60; --equity:#5a7bea; --trail:#c26a0a;
+    --up-soft:rgba(15,166,147,.16); --down-soft:rgba(234,91,96,.13);
+    --equity-soft:rgba(90,123,234,.14);
+    --sel:#5a7bea;
+    --pill-bg:#e8eaed; --pill-ink:#141517;
+    --shadow:0 2px 12px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box; margin:0}
+  body{
+    background:var(--surface); color:var(--ink);
+    font-family:"IBM Plex Sans",-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:13px; line-height:1.45; min-height:100vh;
+  }
+  .mono{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums}
+
+  /* ---------- navigation spine header (shared) ---------- */
+  header{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    padding:10px 16px; border-bottom:1px solid var(--border); background:var(--panel);
+  }
+  .spine{display:flex; align-items:center; gap:4px; flex-wrap:wrap; min-width:0}
+  .crumb{
+    display:inline-flex; flex-direction:column; gap:1px; padding:4px 10px;
+    border:1px solid var(--border); border-radius:6px; background:var(--panel-2);
+    cursor:pointer; transition:border-color .12s;
+  }
+  .crumb:hover{border-color:var(--ink-3)}
+  .crumb .lvl{font-size:9px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3)}
+  .crumb .val{font-size:12px; font-weight:500; white-space:nowrap}
+  .crumb.here{border-color:var(--sel); background:var(--equity-soft)}
+  .sep{color:var(--ink-3); font-size:11px; padding:0 1px}
+  .hdr-right{margin-left:auto; display:flex; align-items:center; gap:8px}
+  .badge{
+    font-size:10px; letter-spacing:.08em; text-transform:uppercase; font-weight:600;
+    padding:4px 9px; border-radius:99px; border:1px solid var(--border); color:var(--ink-2);
+  }
+  .badge.ro{border-color:var(--up); color:var(--up)}
+  .badge.proto{border-color:var(--trail); color:var(--trail)}
+
+  /* ---------- stat chips ---------- */
+  .stats{display:flex; gap:8px; flex-wrap:wrap}
+  .stat{
+    padding:5px 12px; border:1px solid var(--border); border-radius:6px; background:var(--panel);
+    display:flex; flex-direction:column; gap:0;
+  }
+  .stat .k{font-size:9px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3)}
+  .stat .v{font-size:14px; font-weight:600}
+  .pos{color:var(--up)} .neg{color:var(--down)}
+
+  /* ---------- layout shells ---------- */
+  .variant{display:none}
+  .variant.active{display:flex; flex-direction:column; height:calc(100vh - 57px)}
+  .chart-slot{position:relative; flex:1; min-height:180px; background:var(--panel)}
+  .equity-slot{position:relative; border-top:1px solid var(--border); background:var(--panel)}
+  .pane-tag{
+    position:absolute; top:6px; left:8px; z-index:3; font-size:9px; letter-spacing:.09em;
+    text-transform:uppercase; color:var(--ink-3); background:var(--panel);
+    padding:2px 6px; border-radius:4px; border:1px solid var(--border); opacity:.9; pointer-events:none;
+  }
+  canvas{position:absolute; inset:0; width:100%; height:100%; display:block; cursor:crosshair}
+
+  /* variant A — chart-first */
+  #vA .toolbar{display:flex; gap:8px; align-items:center; padding:8px 16px; border-bottom:1px solid var(--border); background:var(--panel)}
+  #vA .equity-slot{height:150px}
+  #vA .strip{
+    border-top:1px solid var(--border); background:var(--panel); overflow:auto; flex:none;
+    max-height:190px;
+  }
+  #vA table{border-collapse:collapse; width:100%; white-space:nowrap}
+  #vA th{
+    font-size:9px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3);
+    text-align:left; padding:6px 14px 4px; position:sticky; top:0; background:var(--panel);
+  }
+  #vA td{padding:4px 14px; border-top:1px solid var(--border); font-size:12px; cursor:pointer}
+  #vA tr.sel td{background:var(--equity-soft)}
+  #vA tr:hover td{background:var(--panel-2)}
+  #vA tr.sel:hover td{background:var(--equity-soft)}
+
+  /* variant B — ledger-first */
+  #vB .cols{display:flex; flex:1; min-height:0}
+  #vB .ledger{
+    width:300px; flex:none; border-right:1px solid var(--border); background:var(--panel);
+    display:flex; flex-direction:column; min-height:0;
+  }
+  #vB .ledger-head{padding:10px 14px; border-bottom:1px solid var(--border)}
+  #vB .ledger-head h2{font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-2); font-weight:600}
+  #vB .ledger-stats{display:flex; gap:12px; margin-top:6px}
+  #vB .ledger-stats .stat{border:none; padding:0; background:none}
+  #vB .rows{overflow-y:auto; flex:1}
+  #vB .trow{
+    padding:8px 14px; border-bottom:1px solid var(--border); cursor:pointer;
+    display:grid; grid-template-columns:auto 1fr auto; gap:2px 10px; align-items:center;
+  }
+  #vB .trow:hover{background:var(--panel-2)}
+  #vB .trow.sel{background:var(--equity-soft); box-shadow:inset 3px 0 0 var(--sel)}
+  #vB .rmeta{grid-column:1/4; display:flex; gap:8px; font-size:11px; color:var(--ink-2)}
+  #vB .main{display:flex; flex-direction:column; flex:1; min-width:0}
+  #vB .equity-slot{height:140px}
+
+  .dirchip{
+    font-size:10px; font-weight:600; letter-spacing:.05em; padding:2px 7px; border-radius:4px;
+  }
+  .dirchip.L{background:var(--up-soft); color:var(--up)}
+  .dirchip.S{background:var(--down-soft); color:var(--down)}
+  .rbar{height:4px; border-radius:2px; grid-column:1/4; background:var(--panel-2); position:relative; overflow:hidden}
+  .rbar i{position:absolute; top:0; bottom:0; display:block}
+
+  /* variant C — inspector */
+  #vC .cols{display:flex; flex:1; min-height:0}
+  #vC .main{display:flex; flex-direction:column; flex:1; min-width:0}
+  #vC .equity-slot{height:96px}
+  #vC .rail{
+    width:320px; flex:none; border-left:1px solid var(--border); background:var(--panel);
+    display:flex; flex-direction:column; min-height:0;
+  }
+  #vC .insp{padding:14px; border-bottom:1px solid var(--border)}
+  #vC .insp-top{display:flex; align-items:center; gap:8px; margin-bottom:10px}
+  #vC .insp-top .nav{margin-left:auto; display:flex; gap:4px}
+  #vC .insp-top button{
+    border:1px solid var(--border); background:var(--panel-2); color:var(--ink);
+    border-radius:5px; width:26px; height:24px; cursor:pointer; font-size:12px;
+  }
+  #vC .insp-top button:hover{border-color:var(--ink-3)}
+  #vC .bigr{font-size:30px; font-weight:600; letter-spacing:-.02em; margin:2px 0 10px}
+  #vC .kv{display:grid; grid-template-columns:1fr 1fr; gap:8px 14px}
+  #vC .kv div{display:flex; flex-direction:column}
+  #vC .kv .k{font-size:9px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3)}
+  #vC .kv .v{font-size:13px; font-weight:500}
+  #vC .clist{overflow-y:auto; flex:1}
+  #vC .crow{
+    display:flex; gap:9px; align-items:center; padding:6px 14px; cursor:pointer;
+    border-bottom:1px solid var(--border); font-size:12px;
+  }
+  #vC .crow:hover{background:var(--panel-2)}
+  #vC .crow.sel{background:var(--equity-soft); box-shadow:inset 3px 0 0 var(--sel)}
+  #vC .clist-head{
+    padding:8px 14px 4px; font-size:9px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-3);
+  }
+
+  /* ---------- floating variant switcher (not part of the design) ---------- */
+  #switcher{
+    position:fixed; bottom:14px; left:50%; transform:translateX(-50%); z-index:50;
+    display:flex; align-items:center; gap:2px; padding:5px 7px; border-radius:99px;
+    background:var(--pill-bg); color:var(--pill-ink); box-shadow:var(--shadow);
+    font-size:12px; user-select:none;
+  }
+  #switcher button{
+    background:none; border:none; color:inherit; cursor:pointer; font-size:14px;
+    width:26px; height:24px; border-radius:99px;
+  }
+  #switcher button:hover{background:rgba(128,128,128,.25)}
+  #switcher .lbl{min-width:150px; text-align:center; font-weight:500}
+  #switcher .keys{opacity:.55; font-size:10px; padding:0 4px}
+  button:focus-visible,.crumb:focus-visible{outline:2px solid var(--sel); outline-offset:1px}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+  @media (max-width:760px){
+    #vB .ledger{width:216px}
+    #vC .rail{width:236px}
+  }
+</style>
+
+<header>
+  <nav class="spine" aria-label="lineage">
+    <span class="crumb" tabindex="0"><span class="lvl">family</span><span class="val">MTC_V2 · breakout-atr</span></span>
+    <span class="sep">›</span>
+    <span class="crumb" tabindex="0"><span class="lvl">candidate</span><span class="val mono">cand_7f3a-r2</span></span>
+    <span class="sep">›</span>
+    <span class="crumb" tabindex="0"><span class="lvl">package</span><span class="val mono">WP-EXP-03</span></span>
+    <span class="sep">›</span>
+    <span class="crumb" tabindex="0"><span class="lvl">identity</span><span class="val mono">id_a41c9</span></span>
+    <span class="sep">›</span>
+    <span class="crumb here" tabindex="0"><span class="lvl">window</span><span class="val mono">W-041 · OOS · 15m</span></span>
+  </nav>
+  <div class="hdr-right">
+    <span class="badge proto" title="Issue #94 — throwaway mock, seeded fake data, no pipelines">prototype · fake data</span>
+    <span class="badge ro" title="Ratified bound (#84): pan/zoom, overlays, markers, synced panes — no drawing tools, no indicator editing, no alerts, no order entry">read-only evidence</span>
+  </div>
+</header>
+
+<!-- ================= variant A : chart-first ================= -->
+<div class="variant" id="vA">
+  <div class="toolbar">
+    <div class="stats" id="statsA"></div>
+    <span style="margin-left:auto" class="mono" id="winA"></span>
+  </div>
+  <div class="chart-slot" data-slot="chart"><span class="pane-tag">price · MTC-PERP (synthetic) · 15m</span></div>
+  <div class="equity-slot" data-slot="equity"><span class="pane-tag">equity / drawdown</span></div>
+  <div class="strip">
+    <table>
+      <thead><tr>
+        <th>#</th><th>dir</th><th>entry (utc)</th><th>entry px</th><th>exit px</th>
+        <th>stop</th><th>exit</th><th>R</th><th>pnl</th><th>bars</th>
+      </tr></thead>
+      <tbody id="tbodyA"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ================= variant B : ledger-first ================= -->
+<div class="variant" id="vB">
+  <div class="cols">
+    <aside class="ledger">
+      <div class="ledger-head">
+        <h2>Trade ledger — W-041</h2>
+        <div class="ledger-stats stats" id="statsB"></div>
+      </div>
+      <div class="rows" id="rowsB"></div>
+    </aside>
+    <div class="main">
+      <div class="chart-slot" data-slot="chart"><span class="pane-tag">price · MTC-PERP (synthetic) · 15m</span></div>
+      <div class="equity-slot" data-slot="equity"><span class="pane-tag">equity / drawdown</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= variant C : inspector ================= -->
+<div class="variant" id="vC">
+  <div class="cols">
+    <div class="main">
+      <div class="chart-slot" data-slot="chart"><span class="pane-tag">price · MTC-PERP (synthetic) · 15m</span></div>
+      <div class="equity-slot" data-slot="equity"><span class="pane-tag">equity / drawdown</span></div>
+    </div>
+    <aside class="rail">
+      <div class="insp" id="insp"></div>
+      <div class="clist-head">all trades</div>
+      <div class="clist" id="clistC"></div>
+    </aside>
+  </div>
+</div>
+
+<div id="switcher" role="group" aria-label="prototype variant switcher">
+  <button id="swPrev" aria-label="previous variant">‹</button>
+  <span class="lbl" id="swLbl"></span>
+  <button id="swNext" aria-label="next variant">›</button>
+  <span class="keys">← →</span>
+</div>
+
+<script>
+'use strict';
+/* ============ seeded fake data (mulberry32) ============ */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rnd = mulberry32(940841);
+const N = 1344;                       // 14 days of 15m bars
+const T0 = Date.UTC(2026,4,4);        // 2026-05-04T00:00Z
+const BAR = 15*60*1000;
+const candles = [];
+{
+  let p = 43250, drift = 0;
+  for(let i=0;i<N;i++){
+    if(i%180===0) drift = (rnd()-0.5)*22;          // regime shift every ~2 days
+    const vol = 24 + 46*Math.abs(Math.sin(i/96*Math.PI*2)) * (0.6+rnd()*0.8);
+    const o = p;
+    const c = p + drift + (rnd()-0.5)*2*vol;
+    const h = Math.max(o,c) + rnd()*vol*0.6;
+    const l = Math.min(o,c) - rnd()*vol*0.6;
+    candles.push({t:T0+i*BAR, o, h, l, c});
+    p = c;
+  }
+}
+const atrAt = i => {                   // crude ATR(14) for level placement
+  let s=0,k=0;
+  for(let j=Math.max(1,i-14); j<=i; j++){ s += candles[j].h-candles[j].l; k++; }
+  return s/Math.max(k,1);
+};
+
+/* ============ trades: simulated forward from entries ============ */
+const trades = [];
+{
+  let i = 40, id = 1;
+  while(i < N-60 && trades.length < 16){
+    const dir = rnd() < 0.55 ? 1 : -1;                       // 1 long, -1 short
+    const e = candles[i], atr = atrAt(i);
+    const entry = e.c;
+    const stop0 = entry - dir*atr*1.7;
+    const tp1 = entry + dir*atr*1.8, tp2 = entry + dir*atr*3.4;
+    const useTrail = rnd() < 0.35;
+    let stop = stop0, peak = entry, exitIdx=-1, exitPx=0, reason='TIME';
+    const trailPath = [];
+    for(let j=i+1; j<Math.min(i+120,N); j++){
+      const b = candles[j];
+      if(useTrail){
+        peak = dir>0 ? Math.max(peak,b.h) : Math.min(peak,b.l);
+        const t = peak - dir*atr*1.9;
+        if(dir>0 ? t>stop : t<stop) stop = t;
+        trailPath.push({i:j, v:stop});
+      }
+      if(dir>0 ? b.l<=stop : b.h>=stop){
+        exitIdx=j; exitPx=stop;
+        reason = (useTrail && (dir>0 ? stop>entry : stop<entry)) ? 'TRAIL':'SL';
+        break;
+      }
+      if(!useTrail && (dir>0 ? b.h>=tp2 : b.l<=tp2)){ exitIdx=j; exitPx=tp2; reason='TP2'; break; }
+      if(!useTrail && rnd()<0.035 && (dir>0 ? b.h>=tp1 : b.l<=tp1)){ exitIdx=j; exitPx=tp1; reason='TP1'; break; }
+    }
+    if(exitIdx<0){ exitIdx=Math.min(i+120,N-1); exitPx=candles[exitIdx].c; reason='TIME'; }
+    const risk = Math.abs(entry-stop0);
+    const r = dir*(exitPx-entry)/risk;
+    // risk-based sizing story: 1R = $100 (1% of the 10k start)
+    trades.push({id:id++, dir, entryIdx:i, entry, exitIdx, exit:exitPx,
+                 stop:stop0, tp1, tp2, useTrail, trailPath, reason, risk,
+                 r, pnl: r*100, bars:exitIdx-i});
+    i = exitIdx + 12 + Math.floor(rnd()*50);
+  }
+}
+
+/* ============ equity / drawdown per bar (10k start, MTM) ============ */
+const equity = new Float64Array(N);
+{
+  let realized = 10000;
+  let ti = 0;
+  for(let i=0;i<N;i++){
+    while(ti<trades.length && trades[ti].exitIdx < i){ realized += trades[ti].pnl; ti++; }
+    let mtm = 0;
+    const tr = trades[ti];
+    if(tr && tr.entryIdx <= i && i < tr.exitIdx)
+      mtm = tr.dir*(candles[i].c-tr.entry)/tr.risk*100;
+    else if(tr && i===tr.exitIdx) mtm = tr.pnl;   // apply at exit bar, realized catches up next bar
+    equity[i] = realized + mtm;
+  }
+}
+const ddPeak = new Float64Array(N);
+{ let pk=-1e9; for(let i=0;i<N;i++){ pk=Math.max(pk,equity[i]); ddPeak[i]=pk; } }
+const stats = (()=>{
+  const wins = trades.filter(t=>t.pnl>0).length;
+  const net = (equity[N-1]-10000)/10000*100;
+  let maxdd = 0; for(let i=0;i<N;i++) maxdd = Math.max(maxdd,(ddPeak[i]-equity[i])/ddPeak[i]*100);
+  return {net, wr:wins/trades.length*100, maxdd, n:trades.length};
+})();
+
+/* ============ theme tokens for canvas ============ */
+let C = {};
+function readTokens(){
+  const s = getComputedStyle(document.documentElement);
+  const g = n => s.getPropertyValue(n).trim();
+  C = {up:g('--up'), down:g('--down'), equity:g('--equity'), trail:g('--trail'),
+       ink:g('--ink'), ink2:g('--ink-2'), ink3:g('--ink-3'), grid:g('--grid'),
+       panel:g('--panel'), border:g('--border'), sel:g('--sel'),
+       upSoft:g('--up-soft'), downSoft:g('--down-soft'), eqSoft:g('--equity-soft')};
+}
+readTokens();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{readTokens(); drawAll();});
+new MutationObserver(()=>{readTokens(); drawAll();})
+  .observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+/* ============ shared chart state ============ */
+const view = {i0: N-420, i1: N};           // visible index range (floats)
+let hover = null;                          // {i, price|null, src}
+const richTrade = trades.find(t=>t.useTrail && t.r>0) || trades[trades.length-3] || trades[0];
+let selId = richTrade.id;
+
+const priceCv = document.createElement('canvas');
+const eqCv = document.createElement('canvas');
+const fmtP = x => x.toLocaleString('en-US',{minimumFractionDigits:0, maximumFractionDigits:0});
+const fmtT = t => { const d=new Date(t); return `${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')} ${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`; };
+const AXIS_W = 62, AXIS_H = 20;
+
+function setupCanvas(cv){
+  const r = cv.parentElement.getBoundingClientRect();
+  const dpr = devicePixelRatio||1;
+  cv.width = Math.max(1,Math.round(r.width*dpr));
+  cv.height = Math.max(1,Math.round(r.height*dpr));
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx, w:r.width, h:r.height};
+}
+const xOf = (i,w) => (i-view.i0)/(view.i1-view.i0)*(w-AXIS_W);
+const iOf = (x,w) => view.i0 + x/(w-AXIS_W)*(view.i1-view.i0);
+
+/* ---------- price pane ---------- */
+function drawPrice(){
+  if(!priceCv.parentElement) return;
+  const {ctx,w,h} = setupCanvas(priceCv);
+  const pw = w-AXIS_W, ph = h-AXIS_H;
+  ctx.clearRect(0,0,w,h);
+  const lo = Math.max(0,Math.floor(view.i0)), hi = Math.min(N-1,Math.ceil(view.i1));
+  let pmin=1e12, pmax=-1e12;
+  for(let i=lo;i<=hi;i++){ pmin=Math.min(pmin,candles[i].l); pmax=Math.max(pmax,candles[i].h); }
+  const sel = trades.find(t=>t.id===selId);
+  if(sel && sel.entryIdx<=hi && sel.exitIdx>=lo){
+    pmin=Math.min(pmin,sel.stop,sel.tp2,sel.tp1); pmax=Math.max(pmax,sel.stop,sel.tp2,sel.tp1);
+  }
+  const pad=(pmax-pmin)*0.08; pmin-=pad; pmax+=pad;
+  const yOf = p => (pmax-p)/(pmax-pmin)*ph;
+
+  ctx.font = '10px "IBM Plex Mono",monospace';
+  // grid + y axis
+  const steps = 6;
+  for(let k=0;k<=steps;k++){
+    const p = pmin + (pmax-pmin)*k/steps, y = yOf(p);
+    ctx.strokeStyle=C.grid; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(pw,y+.5); ctx.stroke();
+    ctx.fillStyle=C.ink3; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(fmtP(p), pw+6, Math.min(Math.max(y,7),ph-7));
+  }
+  // x axis ticks
+  const tickEvery = Math.max(1, Math.round((view.i1-view.i0)/ (pw/95) ));
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  for(let i=Math.ceil(view.i0/tickEvery)*tickEvery; i<view.i1; i+=tickEvery){
+    if(i<0||i>=N) continue;
+    const x = xOf(i,w);
+    ctx.strokeStyle=C.grid; ctx.beginPath(); ctx.moveTo(x+.5,ph); ctx.lineTo(x+.5,ph+4); ctx.stroke();
+    ctx.fillStyle=C.ink3; ctx.fillText(fmtT(candles[i].t), x, ph+7);
+  }
+  // candles
+  const bw = Math.max(1, pw/(view.i1-view.i0)*0.7);
+  for(let i=lo;i<=hi;i++){
+    const b=candles[i], x=xOf(i+0.5,w), up=b.c>=b.o;
+    ctx.strokeStyle = ctx.fillStyle = up?C.up:C.down;
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x,yOf(b.h)); ctx.lineTo(x,yOf(b.l)); ctx.stroke();
+    const y1=yOf(Math.max(b.o,b.c)), y2=yOf(Math.min(b.o,b.c));
+    ctx.fillRect(x-bw/2, y1, bw, Math.max(1,y2-y1));
+  }
+  // selected trade overlays: stop / TPs / trailing path
+  if(sel){
+    const x1=Math.max(0,xOf(sel.entryIdx,w)), x2=Math.min(pw,xOf(sel.exitIdx+1,w));
+    if(x2>0 && x1<pw){
+      const lvl=(p,col,lab,below)=>{
+        const y=yOf(p); if(y<0||y>ph) return;
+        ctx.strokeStyle=col; ctx.lineWidth=1; ctx.setLineDash([5,4]);
+        ctx.beginPath(); ctx.moveTo(x1,y+.5); ctx.lineTo(x2,y+.5); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle=col; ctx.font='9px "IBM Plex Mono",monospace';
+        ctx.textAlign='left'; ctx.textBaseline=below?'top':'bottom';
+        ctx.fillText(`${lab} ${fmtP(p)}`, x1+3, below?y+3:y-2);
+      };
+      lvl(sel.stop, C.down, 'SL', sel.dir>0);
+      lvl(sel.tp1, C.up, 'TP1', sel.dir<0);
+      lvl(sel.tp2, C.up, 'TP2', sel.dir<0);
+      if(sel.useTrail && sel.trailPath.length){
+        ctx.strokeStyle=C.trail; ctx.lineWidth=1.6; ctx.beginPath();
+        sel.trailPath.forEach((p,k)=>{ const x=xOf(p.i+0.5,w), y=yOf(p.v); k?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+        ctx.stroke();
+        ctx.fillStyle=C.trail; ctx.font='9px "IBM Plex Mono",monospace';
+        const lp=sel.trailPath[sel.trailPath.length-1];
+        ctx.fillText('trail', Math.min(xOf(lp.i,w)+4,pw-28), yOf(lp.v)-4);
+      }
+    }
+  }
+  // trade markers + connectors
+  for(const t of trades){
+    if(t.exitIdx<view.i0-2 || t.entryIdx>view.i1+2) continue;
+    const ex=xOf(t.entryIdx+0.5,w), ey=yOf(t.entry);
+    const xx=xOf(t.exitIdx+0.5,w), xy=yOf(t.exit);
+    const isSel = t.id===selId;
+    // connector
+    ctx.strokeStyle = t.pnl>=0?C.up:C.down; ctx.globalAlpha=isSel?0.9:0.45;
+    ctx.setLineDash([3,3]); ctx.lineWidth=isSel?1.6:1;
+    ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(xx,xy); ctx.stroke(); ctx.setLineDash([]);
+    ctx.globalAlpha=1;
+    // entry triangle
+    const s = isSel?7:5;
+    ctx.fillStyle = t.dir>0?C.up:C.down;
+    ctx.beginPath();
+    if(t.dir>0){ ctx.moveTo(ex,ey+s+9); ctx.lineTo(ex-s,ey+s*2+9); ctx.lineTo(ex+s,ey+s*2+9); }
+    else{ ctx.moveTo(ex,ey-s-9); ctx.lineTo(ex-s,ey-s*2-9); ctx.lineTo(ex+s,ey-s*2-9); }
+    ctx.closePath(); ctx.fill();
+    if(isSel){ ctx.strokeStyle=C.ink; ctx.lineWidth=1; ctx.stroke(); }
+    // exit dot with surface ring
+    ctx.beginPath(); ctx.arc(xx,xy,isSel?5:3.5,0,7);
+    ctx.fillStyle = t.pnl>=0?C.up:C.down; ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle=C.panel; ctx.stroke();
+    if(isSel){ ctx.lineWidth=1; ctx.strokeStyle=C.ink; ctx.stroke(); }
+  }
+  // crosshair
+  if(hover){
+    const x = xOf(hover.i+0.5,w);
+    ctx.strokeStyle=C.ink3; ctx.lineWidth=1; ctx.setLineDash([2,3]);
+    ctx.beginPath(); ctx.moveTo(x+.5,0); ctx.lineTo(x+.5,ph); ctx.stroke();
+    if(hover.src==='price' && hover.price!=null){
+      const y=yOf(hover.price);
+      ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(pw,y+.5); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle=C.ink; ctx.fillRect(pw,y-8,AXIS_W,16);
+      ctx.fillStyle=C.panel; ctx.font='10px "IBM Plex Mono",monospace';
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillText(fmtP(hover.price), pw+6, y);
+    }
+    ctx.setLineDash([]);
+    const b = candles[Math.round(hover.i)];
+    if(b){
+      ctx.fillStyle=C.ink; ctx.font='10px "IBM Plex Mono",monospace';
+      ctx.textAlign='left'; ctx.textBaseline='top';
+      const txt=`${fmtT(b.t)}  O ${fmtP(b.o)}  H ${fmtP(b.h)}  L ${fmtP(b.l)}  C ${fmtP(b.c)}`;
+      const tw=ctx.measureText(txt).width, tx=pw-tw-18;
+      ctx.fillStyle=C.panel; ctx.fillRect(tx,4,tw+12,16);
+      ctx.strokeStyle=C.border; ctx.strokeRect(tx+.5,4.5,tw+11,15);
+      ctx.fillStyle=C.ink2; ctx.fillText(txt,tx+6,8);
+    }
+  }
+}
+
+/* ---------- equity pane ---------- */
+function drawEquity(){
+  if(!eqCv.parentElement) return;
+  const {ctx,w,h} = setupCanvas(eqCv);
+  const pw=w-AXIS_W, ph=h-6;
+  ctx.clearRect(0,0,w,h);
+  const lo=Math.max(0,Math.floor(view.i0)), hi=Math.min(N-1,Math.ceil(view.i1));
+  let emin=1e12,emax=-1e12;
+  for(let i=lo;i<=hi;i++){ emin=Math.min(emin,equity[i]); emax=Math.max(emax,ddPeak[i]); }
+  const pad=(emax-emin)*0.12||1; emin-=pad; emax+=pad;
+  const yOf=v=>(emax-v)/(emax-emin)*ph;
+  ctx.font='10px "IBM Plex Mono",monospace';
+  // grid
+  for(let k=0;k<=2;k++){
+    const v=emin+(emax-emin)*k/2, y=yOf(v);
+    ctx.strokeStyle=C.grid; ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(pw,y+.5); ctx.stroke();
+    ctx.fillStyle=C.ink3; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText(fmtP(v), pw+6, Math.min(Math.max(y,7),ph-7));
+  }
+  // drawdown fill: between peak and equity
+  ctx.beginPath();
+  for(let i=lo;i<=hi;i++){ const x=xOf(i+0.5,w); i===lo?ctx.moveTo(x,yOf(ddPeak[i])):ctx.lineTo(x,yOf(ddPeak[i])); }
+  for(let i=hi;i>=lo;i--){ ctx.lineTo(xOf(i+0.5,w),yOf(equity[i])); }
+  ctx.closePath(); ctx.fillStyle=C.downSoft; ctx.fill();
+  // equity line
+  ctx.strokeStyle=C.equity; ctx.lineWidth=1.7; ctx.beginPath();
+  for(let i=lo;i<=hi;i++){ const x=xOf(i+0.5,w),y=yOf(equity[i]); i===lo?ctx.moveTo(x,y):ctx.lineTo(x,y); }
+  ctx.stroke();
+  // exit tick marks on the curve
+  for(const t of trades){
+    if(t.exitIdx<lo||t.exitIdx>hi) continue;
+    const x=xOf(t.exitIdx+0.5,w), y=yOf(equity[t.exitIdx]);
+    ctx.beginPath(); ctx.arc(x,y,t.id===selId?4:2.4,0,7);
+    ctx.fillStyle=t.pnl>=0?C.up:C.down; ctx.fill();
+    ctx.lineWidth=1.6; ctx.strokeStyle=C.panel; ctx.stroke();
+  }
+  // synced crosshair
+  if(hover){
+    const x=xOf(hover.i+0.5,w);
+    ctx.strokeStyle=C.ink3; ctx.setLineDash([2,3]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x+.5,0); ctx.lineTo(x+.5,ph); ctx.stroke(); ctx.setLineDash([]);
+    const i=Math.round(hover.i);
+    if(i>=0&&i<N){
+      const txt=`equity ${fmtP(equity[i])}  ·  dd ${(((ddPeak[i]-equity[i])/ddPeak[i])*100).toFixed(1)}%`;
+      ctx.font='10px "IBM Plex Mono",monospace';
+      const tw=ctx.measureText(txt).width, tx=pw-tw-18;
+      ctx.fillStyle=C.panel; ctx.fillRect(tx,4,tw+12,16);
+      ctx.strokeStyle=C.border; ctx.strokeRect(tx+.5,4.5,tw+11,15);
+      ctx.fillStyle=C.ink2; ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillText(txt,tx+6,8);
+    }
+  }
+}
+function drawAll(){ drawPrice(); drawEquity(); }
+
+/* ---------- pan / zoom / hover / click ---------- */
+let drag=null;
+function priceFromY(y){
+  const r=priceCv.getBoundingClientRect();
+  const ph=r.height-AXIS_H;
+  const lo=Math.max(0,Math.floor(view.i0)), hi=Math.min(N-1,Math.ceil(view.i1));
+  let pmin=1e12,pmax=-1e12;
+  for(let i=lo;i<=hi;i++){ pmin=Math.min(pmin,candles[i].l); pmax=Math.max(pmax,candles[i].h); }
+  const sel=trades.find(t=>t.id===selId);
+  if(sel && sel.entryIdx<=hi && sel.exitIdx>=lo){ pmin=Math.min(pmin,sel.stop,sel.tp2,sel.tp1); pmax=Math.max(pmax,sel.stop,sel.tp2,sel.tp1); }
+  const pad=(pmax-pmin)*0.08; pmin-=pad; pmax+=pad;
+  return pmax-(y/ph)*(pmax-pmin);
+}
+function attachNav(cv, src){
+  cv.addEventListener('pointerdown', e=>{
+    drag={x:e.clientX, i0:view.i0, i1:view.i1, moved:false, src};
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointermove', e=>{
+    const r=cv.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+    if(drag){
+      const di=(drag.x-e.clientX)/(r.width-AXIS_W)*(drag.i1-drag.i0);
+      if(Math.abs(drag.x-e.clientX)>3) drag.moved=true;
+      const span=drag.i1-drag.i0;
+      view.i0=Math.max(-60,Math.min(N+60-span, drag.i0+di));
+      view.i1=view.i0+span;
+    }
+    hover={i:Math.max(0,Math.min(N-1,iOf(x,r.width))), price: src==='price'?priceFromY(y):null, src};
+    drawAll();
+  });
+  cv.addEventListener('pointerup', e=>{
+    if(drag && !drag.moved && src==='price'){
+      // hit-test markers
+      const r=cv.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+      let best=null, bd=14;
+      const ph=r.height-AXIS_H;
+      const lo=Math.max(0,Math.floor(view.i0)), hi=Math.min(N-1,Math.ceil(view.i1));
+      let pmin=1e12,pmax=-1e12;
+      for(let i=lo;i<=hi;i++){ pmin=Math.min(pmin,candles[i].l); pmax=Math.max(pmax,candles[i].h); }
+      const selT=trades.find(t=>t.id===selId);
+      if(selT && selT.entryIdx<=hi && selT.exitIdx>=lo){ pmin=Math.min(pmin,selT.stop,selT.tp2,selT.tp1); pmax=Math.max(pmax,selT.stop,selT.tp2,selT.tp1); }
+      const pad=(pmax-pmin)*0.08; pmin-=pad; pmax+=pad;
+      const yy=p=>(pmax-p)/(pmax-pmin)*ph;
+      for(const t of trades){
+        const cand=[[xOf(t.entryIdx+0.5,r.width),yy(t.entry)],[xOf(t.exitIdx+0.5,r.width),yy(t.exit)]];
+        for(const [cx,cy] of cand){
+          const d=Math.hypot(mx-cx,my-cy);
+          if(d<bd){bd=d;best=t;}
+        }
+      }
+      if(best) select(best.id,false);
+    }
+    drag=null;
+  });
+  cv.addEventListener('pointerleave', ()=>{ hover=null; drawAll(); });
+  cv.addEventListener('wheel', e=>{
+    e.preventDefault();
+    const r=cv.getBoundingClientRect(), x=e.clientX-r.left;
+    const f = e.deltaY>0?1.12:1/1.12;
+    const anchor=iOf(x,r.width);
+    let span=(view.i1-view.i0)*f;
+    span=Math.max(24,Math.min(N+120,span));
+    const frac=(anchor-view.i0)/(view.i1-view.i0);
+    view.i0=anchor-span*frac; view.i1=view.i0+span;
+    drawAll();
+  },{passive:false});
+}
+attachNav(priceCv,'price'); attachNav(eqCv,'equity');
+
+/* ---------- selection + jump ---------- */
+function select(id, jump=true){
+  selId=id;
+  const t=trades.find(x=>x.id===id);
+  if(jump && t){
+    const len=Math.max(40,(t.exitIdx-t.entryIdx)*3);
+    const mid=(t.entryIdx+t.exitIdx)/2;
+    view.i0=mid-len/2; view.i1=mid+len/2;
+  }
+  document.querySelectorAll('[data-tid]').forEach(el=>{
+    el.classList.toggle('sel', +el.dataset.tid===id);
+  });
+  renderInspector();
+  drawAll();
+}
+
+/* ---------- shared renderers ---------- */
+const R=v=>`${v>=0?'+':'−'}${Math.abs(v).toFixed(2)}R`;
+const USD=v=>`${v>=0?'+':'−'}$${Math.abs(v).toFixed(0)}`;
+const cls=v=>v>=0?'pos':'neg';
+function statChips(el){
+  el.innerHTML=`
+    <div class="stat"><span class="k">net</span><span class="v mono ${cls(stats.net)}">${stats.net>=0?'+':''}${stats.net.toFixed(1)}%</span></div>
+    <div class="stat"><span class="k">trades</span><span class="v mono">${stats.n}</span></div>
+    <div class="stat"><span class="k">win rate</span><span class="v mono">${stats.wr.toFixed(0)}%</span></div>
+    <div class="stat"><span class="k">max dd</span><span class="v mono neg">−${stats.maxdd.toFixed(1)}%</span></div>`;
+}
+statChips(document.getElementById('statsA'));
+statChips(document.getElementById('statsB'));
+document.getElementById('winA').textContent='2026-05-04 → 2026-05-18 UTC';
+
+/* variant A table */
+document.getElementById('tbodyA').innerHTML = trades.map(t=>`
+  <tr data-tid="${t.id}">
+    <td class="mono">${String(t.id).padStart(2,'0')}</td>
+    <td><span class="dirchip ${t.dir>0?'L':'S'}">${t.dir>0?'LONG':'SHORT'}</span></td>
+    <td class="mono">${fmtT(candles[t.entryIdx].t)}</td>
+    <td class="mono">${fmtP(t.entry)}</td>
+    <td class="mono">${fmtP(t.exit)}</td>
+    <td class="mono">${fmtP(t.stop)}</td>
+    <td class="mono">${t.reason}</td>
+    <td class="mono ${cls(t.r)}">${R(t.r)}</td>
+    <td class="mono ${cls(t.pnl)}">${USD(t.pnl)}</td>
+    <td class="mono">${t.bars}</td>
+  </tr>`).join('');
+
+/* variant B ledger rows */
+const maxAbsR=Math.max(...trades.map(t=>Math.abs(t.r)));
+document.getElementById('rowsB').innerHTML = trades.map(t=>`
+  <div class="trow" data-tid="${t.id}">
+    <span class="dirchip ${t.dir>0?'L':'S'}">${t.dir>0?'L':'S'}</span>
+    <span class="mono" style="font-size:12px">${fmtT(candles[t.entryIdx].t)}</span>
+    <span class="mono ${cls(t.r)}" style="font-weight:600">${R(t.r)}</span>
+    <span class="rmeta"><span>#${String(t.id).padStart(2,'0')}</span><span>${t.reason}</span><span>${t.bars} bars</span><span class="${cls(t.pnl)}">${USD(t.pnl)}</span></span>
+    <span class="rbar"><i style="background:var(--${t.r>=0?'up':'down'});
+      left:${t.r>=0?50:50-Math.abs(t.r)/maxAbsR*50}%;
+      width:${Math.abs(t.r)/maxAbsR*50}%"></i></span>
+  </div>`).join('');
+
+/* variant C compact list */
+document.getElementById('clistC').innerHTML = trades.map(t=>`
+  <div class="crow" data-tid="${t.id}">
+    <span class="dirchip ${t.dir>0?'L':'S'}">${t.dir>0?'L':'S'}</span>
+    <span class="mono">#${String(t.id).padStart(2,'0')}</span>
+    <span class="mono" style="color:var(--ink-2)">${fmtT(candles[t.entryIdx].t)}</span>
+    <span class="mono ${cls(t.r)}" style="margin-left:auto;font-weight:600">${R(t.r)}</span>
+  </div>`).join('');
+
+/* variant C inspector */
+function renderInspector(){
+  const t=trades.find(x=>x.id===selId); if(!t) return;
+  const el=document.getElementById('insp');
+  el.innerHTML=`
+    <div class="insp-top">
+      <span class="dirchip ${t.dir>0?'L':'S'}">${t.dir>0?'LONG':'SHORT'}</span>
+      <span class="mono" style="color:var(--ink-2)">trade #${String(t.id).padStart(2,'0')} · ${t.reason}</span>
+      <span class="nav">
+        <button id="prevT" aria-label="previous trade">‹</button>
+        <button id="nextT" aria-label="next trade">›</button>
+      </span>
+    </div>
+    <div class="bigr mono ${cls(t.r)}">${R(t.r)}</div>
+    <div class="kv">
+      <div><span class="k">entry</span><span class="v mono">${fmtP(t.entry)}</span></div>
+      <div><span class="k">exit</span><span class="v mono">${fmtP(t.exit)}</span></div>
+      <div><span class="k">stop</span><span class="v mono">${fmtP(t.stop)}</span></div>
+      <div><span class="k">tp1 / tp2</span><span class="v mono">${fmtP(t.tp1)} / ${fmtP(t.tp2)}</span></div>
+      <div><span class="k">pnl</span><span class="v mono ${cls(t.pnl)}">${USD(t.pnl)}</span></div>
+      <div><span class="k">duration</span><span class="v mono">${t.bars} bars · ${(t.bars/4).toFixed(1)}h</span></div>
+      <div><span class="k">entered</span><span class="v mono">${fmtT(candles[t.entryIdx].t)}</span></div>
+      <div><span class="k">exited</span><span class="v mono">${fmtT(candles[t.exitIdx].t)}</span></div>
+    </div>`;
+  const step=d=>{
+    const i=trades.findIndex(x=>x.id===selId);
+    const n=trades[(i+d+trades.length)%trades.length];
+    select(n.id);
+  };
+  el.querySelector('#prevT').onclick=()=>step(-1);
+  el.querySelector('#nextT').onclick=()=>step(1);
+}
+
+/* row clicks (all variants) */
+document.addEventListener('click', e=>{
+  const row=e.target.closest('[data-tid]');
+  if(row) select(+row.dataset.tid);
+});
+
+/* ---------- variant switching ---------- */
+const VARIANTS=[
+  {id:'vA', name:'A · Chart-first'},
+  {id:'vB', name:'B · Ledger-first'},
+  {id:'vC', name:'C · Inspector'},
+];
+let vi=0;
+function mount(k){
+  vi=(k+VARIANTS.length)%VARIANTS.length;
+  document.querySelectorAll('.variant').forEach(el=>el.classList.remove('active'));
+  const host=document.getElementById(VARIANTS[vi].id);
+  host.classList.add('active');
+  host.querySelector('[data-slot="chart"]').appendChild(priceCv);
+  host.querySelector('[data-slot="equity"]').appendChild(eqCv);
+  document.getElementById('swLbl').textContent=VARIANTS[vi].name;
+  drawAll();
+  requestAnimationFrame(drawAll);
+}
+document.getElementById('swPrev').onclick=()=>mount(vi-1);
+document.getElementById('swNext').onclick=()=>mount(vi+1);
+addEventListener('keydown', e=>{
+  const t=e.target;
+  if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+  if(e.key==='ArrowLeft') mount(vi-1);
+  if(e.key==='ArrowRight') mount(vi+1);
+});
+addEventListener('resize', drawAll);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(drawAll);
+
+mount(0);
+select(selId,true);
+</script>
