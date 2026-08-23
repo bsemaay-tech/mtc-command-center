@@ -45,8 +45,33 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 
 Workstreams not listed: add a row before writing.
 
+| Master architecture planning documents (lifecycle fold branch) | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `11_TRIAGE/WAYFINDER_LIFECYCLE_FOLD_2026-08-23.md` | **RELEASED** — map #54 lifecycle fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-map54-20260823` (worktree C:\WFFOLD54, based on the #37 fold branch) | 2026-08-23 |
+| Master architecture planning documents (fold branch) | `11_TRIAGE/MASTER_*_2026-08-2*.md`, `11_TRIAGE/WAYFINDER_DECISION_FOLD_2026-08-23.md` | **RELEASED** — wayfinder fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-20260823` (worktree C:\WFOLD) | 2026-08-23 |
+
 ## Log
 
+- **2026-08-23 (lifecycle fold, map #54):** Claude Fable 5 claimed and released the
+  lifecycle-fold row for the owner-decided map #54 fold (fold task GH #66): eight anchored
+  amendments to the brief (§6.3 banner, §6.4 brownfield carrier, §6.5 admission mechanics,
+  §6.6 succession sentence, new §6.9 tail/re-entry/succession, §11.5 one-ledger paragraph,
+  A-18 re-worded, §17.2/§17.2b cohort cross-refs) plus fold record
+  `11_TRIAGE/WAYFINDER_LIFECYCLE_FOLD_2026-08-23.md` (mapping table, worthiness checklist
+  v0.1 DRAFT, record-type register, registry-retirement deferral note). Work happened ONLY on
+  branch `feature/wayfinder-fold-map54-20260823` stacked on `feature/wayfinder-fold-20260823`
+  (`46fb8159`); the main checkout untouched. Requirement count stays 60; package count stays
+  75; no owner document edited; nothing authorized (D-12). Amendments declared MATERIAL —
+  fresh G1 round recommended before G1-IA on affected packages.
+
+- **2026-08-23 (wayfinder fold):** Claude Fable 5 claimed and released the planning-documents
+  row for the owner-decided wayfinder fold (decision map GH #37, ticket #49): six packages
+  added (WP-P0-26…30, WP-V4-09), thirteen amended in place, the brief's §17.2 ghost
+  dependencies re-pointed, package count 69→75; fold record
+  `11_TRIAGE/WAYFINDER_DECISION_FOLD_2026-08-23.md`. Work happened ONLY on branch
+  `feature/wayfinder-fold-20260823` from accepted base `764da27f` — the main checkout and its
+  foreign uncommitted edits were not touched, and no other branch's SESSION_LOCK state is
+  overwritten by this branch-local record. No owner outcome reworded; requirement count stays
+  60; nothing authorized. A fresh G1 acceptance round over the amended set is recommended
+  before G1-IA on affected packages.
 - **2026-08-18 ~17:10 +03:** Fable Lead cleanup session claimed-and-released the
   new "Worktree cleanup + Phase Watch V3 review" row in a single run: 124
   worktrees deregistered (115 clean, 9 ACL husks), 36 rescue branches pushed,
