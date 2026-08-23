@@ -44,7 +44,20 @@ its own verdict file), so they do not require ownership of RP6/RP7/transport/pat
 
 Workstreams not listed: add a row before writing.
 
+| Master architecture planning documents (fold branch) | `11_TRIAGE/MASTER_*_2026-08-2*.md`, `11_TRIAGE/WAYFINDER_DECISION_FOLD_2026-08-23.md` | **RELEASED** — wayfinder fold complete 2026-08-23; work confined to branch `feature/wayfinder-fold-20260823` (worktree C:\WFOLD) | 2026-08-23 |
+
 ## Log
+
+- **2026-08-23 (wayfinder fold):** Claude Fable 5 claimed and released the planning-documents
+  row for the owner-decided wayfinder fold (decision map GH #37, ticket #49): six packages
+  added (WP-P0-26…30, WP-V4-09), thirteen amended in place, the brief's §17.2 ghost
+  dependencies re-pointed, package count 69→75; fold record
+  `11_TRIAGE/WAYFINDER_DECISION_FOLD_2026-08-23.md`. Work happened ONLY on branch
+  `feature/wayfinder-fold-20260823` from accepted base `764da27f` — the main checkout and its
+  foreign uncommitted edits were not touched, and no other branch's SESSION_LOCK state is
+  overwritten by this branch-local record. No owner outcome reworded; requirement count stays
+  60; nothing authorized. A fresh G1 acceptance round over the amended set is recommended
+  before G1-IA on affected packages.
 
 - **2026-08-17 03:54 +03:** Codex Lead `01a00921` completed a clean Gate-7
   release of the Shared memory layer and Bridge Help / System Map rows. The
