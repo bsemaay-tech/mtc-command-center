@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -313,12 +314,18 @@ def test_bundle_never_contains_a_wal_shm_trio(tmp_path, bundle_dir, capsys):
 
 
 def test_invariants_preserve_risk_and_history(source_db, bundle_dir, capsys):
+    with closing(sqlite3.connect(source_db)) as source:
+        source_schema_row = source.execute(
+            "SELECT value FROM meta WHERE key = 'schema_version'"
+        ).fetchone()
+    assert source_schema_row is not None
+
     rc, _ = create(source_db, bundle_dir, capsys)
     assert rc == 0
     inv = read_manifest(bundle_dir)["invariants"]
 
     assert inv["app_state"] == "DISARMED"
-    assert inv["schema_version"] == "2"
+    assert inv["schema_version"] == source_schema_row[0]
     assert inv["open_trades"] == 1
     assert inv["live_orders"] == 1
     assert inv["closed_trades"] == 3
