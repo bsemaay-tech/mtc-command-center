@@ -1,8 +1,11 @@
 # WP-P0-24 append-only dependency ledger
 
-**Created:** 2026-08-24  
-**Package audit tier:** T1  
-**Scope:** every component that §13.2 of `MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md` marks **ADOPT** or **KEEP**. Combined rows are split into individual components.  
+**Created:** 2026-08-24
+
+**Package audit tier:** T1
+
+**Scope:** every component that §13.2 of `MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md` marks **ADOPT** or **KEEP**. Combined rows are split into individual components.
+
 **Authority:** this ledger can reject or hold a component. It does not authorize adoption, update, retirement or removal.
 
 ## Append-only contract
@@ -54,8 +57,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0001 — Perspective (FINOS)
 
-**Brief status:** ADOPT — research only.  
-**Ledger disposition:** **REJECTED FOR IMPLEMENTATION until a separate adoption package selects a version and closes controls 1–5 and 10.** No Perspective package or asset is present in the inspected manifests.  
+**Brief status:** ADOPT — research only.
+
+**Ledger disposition:** **REJECTED FOR IMPLEMENTATION until a separate adoption package selects a version and closes controls 1–5 and 10.** No Perspective package or asset is present in the inspected manifests.
+
 **Integration mode:** `LINK_AS_DEPENDENCY`, research UI only; never execution truth.
 
 | # | Criterion | Evidence and rule |
@@ -75,8 +80,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0002 — DuckDB
 
-**Brief status:** ADOPT.  
-**Ledger disposition:** **REJECTED FOR IMPLEMENTATION until an exact version, hash lock and real Parquet benchmark/rollback are accepted.** No DuckDB dependency was found in inspected manifests.  
+**Brief status:** ADOPT.
+
+**Ledger disposition:** **REJECTED FOR IMPLEMENTATION until an exact version, hash lock and real Parquet benchmark/rollback are accepted.** No DuckDB dependency was found in inspected manifests.
+
 **Integration mode:** `LINK_AS_DEPENDENCY`, embedded research query layer only.
 
 | # | Criterion | Evidence and rule |
@@ -96,8 +103,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0003 — Apache Parquet format
 
-**Brief status:** ADOPT — already declared.  
-**Ledger disposition:** **HOLD AT EXISTING FORMAT USE; no new writer/reader adoption authorized until a format-version/subset contract exists.**  
+**Brief status:** ADOPT — already declared.
+
+**Ledger disposition:** **HOLD AT EXISTING FORMAT USE; no new writer/reader adoption authorized until a format-version/subset contract exists.**
+
 **Integration mode:** `FILE_OR_API_INTEROP` (open file format; not a linked executable dependency).
 
 | # | Criterion | Evidence and rule |
@@ -117,8 +126,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0004 — PyArrow
 
-**Brief status:** ADOPT — already declared.  
-**Ledger disposition:** **REJECTED at existing `23.0.0` for new/continued adoption evidence because of an affected advisory and unhashed lock. Existing protected code remains untouched; upgrade/removal needs separate authority.**  
+**Brief status:** ADOPT — already declared.
+
+**Ledger disposition:** **REJECTED at existing `23.0.0` for new/continued adoption evidence because of an affected advisory and unhashed lock. Existing protected code remains untouched; upgrade/removal needs separate authority.**
+
 **Integration mode:** `LINK_AS_DEPENDENCY`, research data reader/writer.
 
 | # | Criterion | Evidence and rule |
@@ -138,8 +149,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0005 — QuantStats
 
-**Brief status:** ADOPT with independent validation.  
-**Ledger disposition:** **REJECTED FOR IMPLEMENTATION until exact version/lock, financial RED/GREEN validation and rollback exist.**  
+**Brief status:** ADOPT with independent validation.
+
+**Ledger disposition:** **REJECTED FOR IMPLEMENTATION until exact version/lock, financial RED/GREEN validation and rollback exist.**
+
 **Integration mode:** `LINK_AS_DEPENDENCY`, research reporting only.
 
 | # | Criterion | Evidence and rule |
@@ -159,8 +172,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0006 — vectorbt open edition
 
-**Brief status:** KEEP as enrichment only, not primary engine.  
-**Ledger disposition:** **HOLD EXISTING OPTIONAL IMPORT; REJECT NEW/EXPANDED USE until version, licence and hash lock are resolved.** Existing `03_QUANTLENS/tools/vbt_enrichment.py` remains untouched.  
+**Brief status:** KEEP as enrichment only, not primary engine.
+
+**Ledger disposition:** **HOLD EXISTING OPTIONAL IMPORT; REJECT NEW/EXPANDED USE until version, licence and hash lock are resolved.** Existing `03_QUANTLENS/tools/vbt_enrichment.py` remains untouched.
+
 **Integration mode:** `LINK_AS_DEPENDENCY`, optional research enrichment only.
 
 | # | Criterion | Evidence and rule |
@@ -180,8 +195,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0007 — hyperliquid-python-sdk 0.24.0
 
-**Brief status:** KEEP — existing adapter dependency.  
-**Ledger disposition:** **HOLD AT EXISTING PIN.** This entry records, but does not authorize, the already pinned state. No update/expansion is authorized.  
+**Brief status:** KEEP — existing adapter dependency.
+
+**Ledger disposition:** **HOLD AT EXISTING PIN.** This entry records, but does not authorize, the already pinned state. No update/expansion is authorized.
+
 **Integration mode:** `LINK_AS_DEPENDENCY` behind the existing project adapter; money-adjacent/broker surface.
 
 | # | Criterion | Evidence and rule |
@@ -201,8 +218,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0008 — FastAPI 0.140.0
 
-**Brief status:** KEEP.  
-**Ledger disposition:** **HOLD AT EXISTING PIN.** No update/expansion authorized.  
+**Brief status:** KEEP.
+
+**Ledger disposition:** **HOLD AT EXISTING PIN.** No update/expansion authorized.
+
 **Integration mode:** `LINK_AS_DEPENDENCY`, Bridge HTTP/WebSocket application framework.
 
 | # | Criterion | Evidence and rule |
@@ -222,8 +241,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0009 — Uvicorn 0.51.0
 
-**Brief status:** KEEP.  
-**Ledger disposition:** **HOLD AT EXISTING PIN.** No update/expansion authorized.  
+**Brief status:** KEEP.
+
+**Ledger disposition:** **HOLD AT EXISTING PIN.** No update/expansion authorized.
+
 **Integration mode:** `LINK_AS_DEPENDENCY`, ASGI server process library in the Bridge environment.
 
 | # | Criterion | Evidence and rule |
@@ -243,8 +264,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0010 — Pydantic 2.13.4
 
-**Brief status:** KEEP.  
-**Ledger disposition:** **HOLD AT EXISTING PIN.** No update/expansion authorized.  
+**Brief status:** KEEP.
+
+**Ledger disposition:** **HOLD AT EXISTING PIN.** No update/expansion authorized.
+
 **Integration mode:** `LINK_AS_DEPENDENCY`, Bridge validation/serialization library.
 
 | # | Criterion | Evidence and rule |
@@ -264,8 +287,10 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 
 ## Entry 0011 — Tailscale client and hosted control service
 
-**Brief status:** ADOPT for private access.  
-**Ledger disposition:** **REJECTED FOR IMPLEMENTATION in this package until exact client version/hash, hosted-service terms, account/export, outage behaviour and T0 network package are separately accepted.** No install/account/contact occurred.  
+**Brief status:** ADOPT for private access.
+
+**Ledger disposition:** **REJECTED FOR IMPLEMENTATION in this package until exact client version/hash, hosted-service terms, account/export, outage behaviour and T0 network package are separately accepted.** No install/account/contact occurred.
+
 **Integration mode:** `SEPARATE_LOCAL_PROCESS` for the client plus `FILE_OR_API_INTEROP` with the hosted control service; network/host surface.
 
 | # | Criterion | Evidence and rule |
@@ -307,10 +332,12 @@ The full text was read from the exact adopted wheel for existing Bridge packages
 
 ### Entry DEMO-0001 — fictional `example-grid` 1.0
 
-**Status:** **SUPERSEDED by entry DEMO-0002 — retained, never edited away**.  
+**Status:** **SUPERSEDED by entry DEMO-0002 — retained, never edited away**.
+
 This deliberately fictional record proves that an old trusted statement remains visible. It is not a dependency, adoption, licence conclusion or recommendation.
 
 ### Entry DEMO-0002 — fictional `example-grid` 1.1 status marker
 
-**SUPERSEDES:** entry DEMO-0001.  
+**SUPERSEDES:** entry DEMO-0001.
+
 Reason: demonstration-only version change. In a real entry this successor would repeat all twelve criteria with new evidence; the old bytes would remain.

@@ -1,8 +1,11 @@
 # PROPOSAL — not applied; amending root governance is a separate change under its own authorization
 
-**Package:** WP-P0-24  
-**Prepared:** 2026-08-24  
-**Audit tier of this proposal package:** T1  
+**Package:** WP-P0-24
+
+**Prepared:** 2026-08-24
+
+**Audit tier of this proposal package:** T1
+
 **Authority:** proposal only. This file does not amend `AGENTS.md`, authorize an adoption or update, or authorize retirement/removal.
 
 ## Proposed `AGENTS.md` text

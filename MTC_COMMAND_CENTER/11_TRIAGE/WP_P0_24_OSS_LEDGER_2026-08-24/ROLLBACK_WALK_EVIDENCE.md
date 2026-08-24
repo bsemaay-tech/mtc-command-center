@@ -1,8 +1,11 @@
 # FastAPI 0.140.0 rollback walk — real command evidence
 
-**Date:** 2026-08-24  
-**Component:** FastAPI 0.140.0, entry 0008 in `DEPENDENCY_LEDGER.md`  
-**Environment:** throwaway venv under this output directory; Python 3.14.2; pip 25.3; no repository interpreter/environment changed.  
+**Date:** 2026-08-24
+
+**Component:** FastAPI 0.140.0, entry 0008 in `DEPENDENCY_LEDGER.md`
+
+**Environment:** throwaway venv under this output directory; Python 3.14.2; pip 25.3; no repository interpreter/environment changed.
+
 **Scope:** component distribution only, installed with `--no-deps`. This proves that the exact hash-verified FastAPI artifact can be installed, removed and restored. It does **not** claim the Bridge application or its full 56-package environment was run under Python 3.14, and it does not replace Bridge compatibility tests for a future version change.
 
 ## Why this is a rollback
