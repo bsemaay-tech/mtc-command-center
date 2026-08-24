@@ -35,6 +35,7 @@ class EligibilityCheckResult(ContractModel):
     dataset_hash: Sha256 | None
     deployment_identity_hash: Sha256
     timestamp: datetime
+    environment_lineage: EnvironmentLineage
     blocked_reason: NonEmptyStr | None = None
 
     @model_validator(mode="after")

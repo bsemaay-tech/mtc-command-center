@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0 repair round 1 - 2026-08-25
+
+- Deep-freeze all nested contract containers and detach caller-owned inputs.
+- Require environment lineage on execution evidence records and individual
+  eligibility check results.
+- Make environment-lineage exclusion directly testable across all identity hashes.
+- Exact-pin runtime, test, and build dependencies under committed constraints.
+
 All notable contract changes are recorded here. This package follows Semantic
 Versioning. A field removal, required-field addition, enum narrowing/expansion
 that an older fail-closed consumer cannot accept, or identity-preimage change is

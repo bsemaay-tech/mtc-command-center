@@ -59,8 +59,9 @@ def compute_package_hash(
     modules_enabled_json: Any,
     substitute_catalogue_versions_json: Any,
     instrument_metadata_json: Any,
+    environment_lineage: Any | None = None,
 ) -> str:
-    """Hash deployable strategy semantics only; environment is excluded."""
+    """Hash deployable semantics; accepted lineage context is excluded."""
 
     return _hash_named_parts(
         spec_json=spec_json,
@@ -80,8 +81,9 @@ def compute_evaluation_run_hash(
     simulator_class: str,
     simulator_version: str,
     evaluation_config_json: Any,
+    environment_lineage: Any | None = None,
 ) -> str:
-    """Hash how a package was evaluated; environment lineage remains separate."""
+    """Hash evaluation inputs; accepted lineage context remains separate."""
 
     return _hash_named_parts(
         package_hash=package_hash,
@@ -107,8 +109,9 @@ def compute_deployment_identity_hash(
     broker_adapter_id: str,
     broker_adapter_version: str,
     cost_lineage_json: Any,
+    environment_lineage: Any | None = None,
 ) -> str:
-    """Hash the complete economic/deployment identity from brief section 6.7."""
+    """Hash economic identity; accepted environment lineage stays excluded."""
 
     return _hash_named_parts(
         package_hash=package_hash,

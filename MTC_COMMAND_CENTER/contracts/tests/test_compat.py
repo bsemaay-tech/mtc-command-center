@@ -1,4 +1,6 @@
+import tomllib
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -63,3 +65,41 @@ def test_every_public_contract_model_emits_json_schema():
             assert schema["title"] == name
             model_names.append(name)
     assert len(model_names) >= 25
+
+
+def test_all_direct_dependencies_are_exact_pins_covered_by_constraints():
+    package_root = Path(__file__).parents[1]
+    project = tomllib.loads((package_root / "pyproject.toml").read_text("utf-8"))
+    expected = {
+        "setuptools": "84.0.0",
+        "wheel": "0.48.0",
+        "pydantic": "2.13.4",
+        "pytest": "9.1.1",
+        "ruff": "0.16.4",
+        "build": "1.5.0",
+    }
+    declared = (
+        project["build-system"]["requires"]
+        + project["project"]["dependencies"]
+        + project["project"]["optional-dependencies"]["test"]
+        + project["project"]["optional-dependencies"]["build"]
+    )
+    assert {name: version for name, version in map(_split_pin, declared)} == expected
+
+    constraint_lines = (
+        (package_root / "constraints.txt").read_text("utf-8").splitlines()
+    )
+    constraints = {
+        name: version
+        for name, version in map(
+            _split_pin,
+            (line for line in constraint_lines if line and not line.startswith("#")),
+        )
+    }
+    assert expected.items() <= constraints.items()
+
+
+def _split_pin(requirement: str) -> tuple[str, str]:
+    parts = requirement.split("==")
+    assert len(parts) == 2 and all(parts), f"dependency is not exact-pinned: {requirement}"
+    return parts[0].lower(), parts[1]

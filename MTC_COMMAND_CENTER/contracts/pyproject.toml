@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools==84.0.0", "wheel==0.48.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,11 +10,11 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "LicenseRef-Proprietary"
 authors = [{name = "MTC Command Center"}]
-dependencies = ["pydantic>=2.12,<3"]
+dependencies = ["pydantic==2.13.4"]
 
 [project.optional-dependencies]
-test = ["pytest>=9,<10"]
-build = ["build>=1.2,<2"]
+test = ["pytest==9.1.1", "ruff==0.16.4"]
+build = ["build==1.5.0"]
 
 [tool.setuptools.packages.find]
 where = ["."]

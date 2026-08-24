@@ -154,6 +154,7 @@ def test_evidence_window_gap_and_three_way_reconciliation_are_identity_scoped():
         ended_at=None,
         status="OPEN",
         outage_threshold_ms=None,
+        environment_lineage=lineage(),
     )
     gap = EvidenceGapRecord(
         gap_id="gap-1",
@@ -167,6 +168,7 @@ def test_evidence_window_gap_and_three_way_reconciliation_are_identity_scoped():
         explained=False,
         reconciliation_record_id=None,
         invalidates_window=True,
+        environment_lineage=lineage(),
     )
     reconciliation = ReconciliationRecord(
         reconciliation_id="recon-1",
@@ -180,9 +182,64 @@ def test_evidence_window_gap_and_three_way_reconciliation_are_identity_scoped():
         venue_hash="8" * 64,
         status="DIVERGED",
         breaks=["POSITION"],
+        environment_lineage=lineage(),
     )
     assert gap.invalidates_window is True
     assert reconciliation.mode is ReconciliationMode.THREE_WAY
+
+
+@pytest.mark.parametrize(
+    ("model", "payload"),
+    [
+        (
+            EvidenceWindow,
+            {
+                "window_id": "window-1",
+                "worker_id": "worker-1",
+                "environment": "EXCHANGE_TESTNET",
+                "deployment_identity_hash": "4" * 64,
+                "started_at": datetime(2026, 8, 24, tzinfo=UTC),
+                "ended_at": None,
+                "status": "OPEN",
+            },
+        ),
+        (
+            EvidenceGapRecord,
+            {
+                "gap_id": "gap-1",
+                "window_id": "window-1",
+                "worker_id": "worker-1",
+                "environment": "EXCHANGE_TESTNET",
+                "deployment_identity_hash": "4" * 64,
+                "gap_started_at": datetime(2026, 8, 24, tzinfo=UTC),
+                "gap_ended_at": None,
+                "reason": "worker death",
+                "explained": False,
+                "reconciliation_record_id": None,
+                "invalidates_window": True,
+            },
+        ),
+        (
+            ReconciliationRecord,
+            {
+                "reconciliation_id": "recon-1",
+                "mode": "THREE_WAY",
+                "worker_id": "worker-1",
+                "environment": "EXCHANGE_TESTNET",
+                "deployment_identity_hash": "4" * 64,
+                "observed_at": datetime(2026, 8, 24, tzinfo=UTC),
+                "intended_or_authorized_hash": "6" * 64,
+                "store_hash": "7" * 64,
+                "venue_hash": "8" * 64,
+                "status": "MATCHED",
+                "breaks": [],
+            },
+        ),
+    ],
+)
+def test_execution_evidence_records_require_environment_lineage(model, payload):
+    with pytest.raises(ValidationError):
+        model.model_validate(payload)
 
 
 def test_lifecycle_event_admits_exactly_four_writer_classes():

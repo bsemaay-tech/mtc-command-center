@@ -15,8 +15,9 @@ lifecycle, admission, promotion, broker, or trading action.
   runtime sizing method. A normalizable rule is represented by its compiled
   native `SizingRequest`; a non-normalizable rule uses `MissingRuleRecord` with
   status `NOT_EXPRESSIBLE` and a versioned named substitute.
-- Every model is immutable and carries contract version `0.1.0`. Unknown fields
-  are rejected. Kernel/Bridge version skew is represented by
+- Every model is deeply immutable and carries contract version `0.1.0`. Nested
+  mappings, sequences, and sets are detached from caller inputs and frozen.
+  Unknown fields are rejected. Kernel/Bridge version skew is represented by
   `ContractHandshake`; consumers must refuse mismatches and co-deploy v0.
 - Every numeric policy/freshness/window threshold is `[OPEN]` (`None`) unless
   separately owner-ratified. Consumers must treat unset as fail-closed. These
@@ -36,21 +37,29 @@ The mathematical `SHA256(A ‖ B …)` formulae are encoded as canonical UTF-8 J
 objects with fixed component names, lexicographically sorted keys, compact
 separators, decimal values rendered as strings, enum values rendered as strings,
 and timestamps rendered as ISO 8601. This makes field boundaries unambiguous and
-dictionary ordering irrelevant. Environment lineage is not an accepted argument
-to any identity-hash function.
+dictionary ordering irrelevant. Identity functions accept environment lineage as
+call context so exclusion can be tested directly, but never add it to a preimage.
 
 ## Build and install
 
-Build an artifact from this directory:
+Create or activate a virtual environment, then install the exact recorded tooling
+under the committed constraints:
 
 ```powershell
-python -m build
+python -m pip install --constraint .\constraints.txt pip==26.2.1
+python -m pip install --constraint .\constraints.txt build==1.5.0 pytest==9.1.1 ruff==0.16.4 setuptools==84.0.0 wheel==0.48.0
+```
+
+Build an artifact from this directory using that pinned environment:
+
+```powershell
+python -m build --no-isolation
 ```
 
 Install the generated wheel, not this source path:
 
 ```powershell
-python -m pip install .\dist\mtc_contracts-0.1.0-py3-none-any.whl
+python -m pip install --constraint .\constraints.txt .\dist\mtc_contracts-0.1.0-py3-none-any.whl
 ```
 
 Run the package tests:

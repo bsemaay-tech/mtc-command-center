@@ -1,5 +1,8 @@
 from datetime import UTC, datetime
 
+import pytest
+from pydantic import ValidationError
+
 from mtc_contracts import (
     EligibilityCheckResult,
     EligibilityState,
@@ -62,6 +65,7 @@ def test_blocked_check_is_distinct_and_names_what_is_missing():
         deployment_identity_hash="b" * 64,
         timestamp=datetime(2026, 8, 24, tzinfo=UTC),
         blocked_reason="gap threshold is [OPEN]",
+        environment_lineage=lineage(),
     )
     verdict = EligibilityVerdictSet(
         verdict_set_id="verdict-set-1",
@@ -80,3 +84,17 @@ def test_blocked_check_is_distinct_and_names_what_is_missing():
     assert check.outcome is VerdictOutcome.BLOCKED
     assert verdict.target_state is EligibilityState.SHADOW_ELIGIBLE
     assert verdict.outcome is VerdictOutcome.BLOCKED
+
+
+def test_eligibility_check_result_requires_its_own_environment_lineage():
+    with pytest.raises(ValidationError):
+        EligibilityCheckResult(
+            check_id="data-quality-gap-ratio",
+            threshold=None,
+            measured_value=None,
+            outcome="BLOCKED",
+            dataset_hash="a" * 64,
+            deployment_identity_hash="b" * 64,
+            timestamp=datetime(2026, 8, 24, tzinfo=UTC),
+            blocked_reason="gap threshold is [OPEN]",
+        )

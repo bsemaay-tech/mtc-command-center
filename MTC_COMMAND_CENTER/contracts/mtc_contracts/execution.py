@@ -9,7 +9,7 @@ from typing import Annotated
 from pydantic import Field, model_validator
 
 from .base import ContractModel, NonEmptyStr, Sha256, require_utc
-from .lineage import Environment
+from .lineage import Environment, EnvironmentLineage
 from .risk import GuardianVetoClass
 
 
@@ -70,6 +70,7 @@ class EvidenceWindow(ContractModel):
     started_at: datetime
     ended_at: datetime | None
     status: EvidenceWindowStatus
+    environment_lineage: EnvironmentLineage
     outage_threshold_ms: Annotated[int, Field(gt=0)] | None = Field(
         default=None, description="[OPEN]; unset is fail-closed"
     )
@@ -94,6 +95,7 @@ class EvidenceGapRecord(ContractModel):
     explained: bool
     reconciliation_record_id: NonEmptyStr | None
     invalidates_window: bool
+    environment_lineage: EnvironmentLineage
 
     @model_validator(mode="after")
     def validate_timestamps(self) -> EvidenceGapRecord:
@@ -126,6 +128,7 @@ class ReconciliationRecord(ContractModel):
     venue_hash: Sha256
     status: ReconciliationStatus
     breaks: tuple[NonEmptyStr, ...]
+    environment_lineage: EnvironmentLineage
 
     @model_validator(mode="after")
     def validate_mode(self) -> ReconciliationRecord:
