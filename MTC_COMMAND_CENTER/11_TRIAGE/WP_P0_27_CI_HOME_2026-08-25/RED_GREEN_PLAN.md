@@ -42,7 +42,8 @@ git switch -c demo/wp-p0-27-red-20260825 $laneCommit
 @'
 def test_ci_red_probe():
     assert False, "deliberate WP-P0-27 D026 red probe"
-'@ | Set-Content -LiteralPath 'IBKR_PAPER_BRIDGE\tests\test_ci_red_probe.py' -Encoding utf8NoBOM
+'@ | ForEach-Object { [System.IO.File]::WriteAllText((Join-Path (Get-Location) 'IBKR_PAPER_BRIDGE\tests\test_ci_red_probe.py'), $_, (New-Object System.Text.UTF8Encoding($false))) }
+# (BOM-less UTF-8 via .NET — Windows PowerShell 5.1 has no `-Encoding utf8NoBOM`; PowerShell 7 users may substitute `Set-Content -Encoding utf8NoBOM`.)
 git add -- IBKR_PAPER_BRIDGE/tests/test_ci_red_probe.py
 git commit -m "test(ci): deliberate WP-P0-27 red probe"
 $redCommit = git rev-parse HEAD
