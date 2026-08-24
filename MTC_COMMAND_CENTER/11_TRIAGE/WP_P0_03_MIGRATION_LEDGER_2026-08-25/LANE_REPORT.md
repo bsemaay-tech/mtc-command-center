@@ -77,8 +77,7 @@ No other path is authorized for staging.
 
 - Required package commit message:
   `feat(wp-p0-03): append-only migration ledger for all Tier-A canonical paths (T2, lane O 2026-08-25)`.
-- Package commit SHA: **SELF — replaced with the exact SHA in the closeout commit after
-  the package commit exists**.
+- Package commit SHA: `e810eec1fba04be003a897cb9a84eec82eee4c60`.
 - Closeout commit SHA: **SELF — printed in the terminal lane summary because a commit
   cannot contain its own SHA without changing it**.
 - Open acceptance action: the Lead independently performs the single T2 Gate-5 review.
