@@ -10,9 +10,9 @@
   Maximum commits the branch merge-base may lag local origin/master before it is stale.
   Default: 30. MTC_REPO_GUARD_MAX_BEHIND_COMMITS overrides the default when this parameter
   is not supplied.
-.PARAMETER BlockStaleBranch
-  When true (the default), a stale branch makes the final result BLOCKED. Set false only for
-  a warning-only diagnostic run.
+.PARAMETER WarnOnlyStaleBranch
+  When present, a stale branch emits a warning instead of making the final result BLOCKED.
+  Blocking remains the default.
 .NOTES
   Exit code 0 = PASS, 1 = BLOCKED. Does not stage, commit, push, or write anything.
 #>
@@ -21,7 +21,7 @@ param(
   [ValidateRange(0, 2147483647)]
   [int]$MaxBehindCommits = 30,
 
-  [bool]$BlockStaleBranch = $true
+  [switch]$WarnOnlyStaleBranch
 )
 
 $ErrorActionPreference = 'Stop'
@@ -77,15 +77,29 @@ if ($maxBehindConfigError -ne '') {
     Line '[freshness] unavailable: local origin/master ref is missing (no fetch attempted)'
     $blocked += 'branch freshness cannot be evaluated: local origin/master ref is missing'
   } else {
-    $originTip = (git rev-parse $originRef 2>$null).Trim()
-    $originEpochText = (git show -s --format=%ct $originRef 2>$null).Trim()
-    $mergeBase = (git merge-base HEAD $originRef 2>$null).Trim()
-    if ($LASTEXITCODE -ne 0 -or $mergeBase -eq '' -or $originEpochText -notmatch '^\d+$') {
+    $freshnessInputsAvailable = $true
+    try {
+      $originTip = (git rev-parse $originRef 2>$null).Trim()
+      if ($LASTEXITCODE -ne 0 -or $originTip -eq '') { throw 'could not resolve local origin/master tip' }
+      $originEpochText = (git show -s --format=%ct $originRef 2>$null).Trim()
+      if ($LASTEXITCODE -ne 0 -or $originEpochText -notmatch '^\d+$') { throw 'could not resolve local origin/master age' }
+      $mergeBase = (git merge-base HEAD $originRef 2>$null).Trim()
+      if ($LASTEXITCODE -ne 0 -or $mergeBase -eq '') { throw 'could not resolve merge-base' }
+    } catch {
+      $freshnessInputsAvailable = $false
+    }
+    if (-not $freshnessInputsAvailable) {
       Line '[freshness] unavailable: could not resolve merge-base or local origin/master age (no fetch attempted)'
       $blocked += 'branch freshness cannot be evaluated against local origin/master'
     } else {
-      $behindText = (git rev-list --count "$mergeBase..$originRef" 2>$null).Trim()
-      if ($LASTEXITCODE -ne 0 -or $behindText -notmatch '^\d+$') {
+      $behindCountAvailable = $true
+      try {
+        $behindText = (git rev-list --count "$mergeBase..$originRef" 2>$null).Trim()
+        if ($LASTEXITCODE -ne 0 -or $behindText -notmatch '^\d+$') { throw 'could not count commits behind' }
+      } catch {
+        $behindCountAvailable = $false
+      }
+      if (-not $behindCountAvailable) {
         Line '[freshness] unavailable: could not count commits behind local origin/master (no fetch attempted)'
         $blocked += 'branch freshness cannot be evaluated against local origin/master'
       } else {
@@ -98,8 +112,8 @@ if ($maxBehindConfigError -ne '') {
         if ($behind -gt $MaxBehindCommits) {
           $staleMessage = "STALE BRANCH: '$branch' is $behind commit(s) behind local origin/master (limit $MaxBehindCommits)"
           Line "[freshness] $staleMessage"
-          if ($BlockStaleBranch) { $blocked += $staleMessage }
-          else { $warn += "$staleMessage; blocking disabled by -BlockStaleBranch" }
+          if ($WarnOnlyStaleBranch) { $warn += "$staleMessage; blocking disabled by -WarnOnlyStaleBranch" }
+          else { $blocked += $staleMessage }
         }
       }
     }

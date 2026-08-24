@@ -21,7 +21,9 @@ if (Test-Path -LiteralPath $Worktree) {
 }
 
 # Verify that the target resolves to a commit, then inspect exactly what it is.
-$ResolvedTarget = (git -C $Repo rev-parse --verify "$Target^{commit}").Trim()
+$ResolvedTarget = ''
+try { $ResolvedTarget = (git -C $Repo rev-parse --verify "$Target^{commit}" 2>$null).Trim() }
+catch { $ResolvedTarget = '' }
 if ($LASTEXITCODE -ne 0 -or -not $ResolvedTarget) {
     throw "Target is not a valid local commit: $Target"
 }
@@ -52,9 +54,16 @@ if ($ActualHead -ne $ResolvedTarget) {
 git -C $Worktree status --short --branch
 git -C $Worktree log -1 --oneline --decorate
 Write-Output "VERIFIED CLEAN WORKTREE: $Worktree at $ActualHead on $Branch"
+
+# Link worktree verification to the offline branch-freshness gate before work begins.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$Worktree\MTC_COMMAND_CENTER\tools\repo_guard.ps1"
+if ($LASTEXITCODE -ne 0) {
+    throw 'Repo guard blocked the new worktree. Recreate it from current origin/master or rebase.'
+}
 ```
 
-Only begin work after the final `VERIFIED CLEAN WORKTREE` line.
+Only begin work after the `VERIFIED CLEAN WORKTREE` line and a final `RESULT: PASS` from the
+repo guard.
 
 ## Teardown
 

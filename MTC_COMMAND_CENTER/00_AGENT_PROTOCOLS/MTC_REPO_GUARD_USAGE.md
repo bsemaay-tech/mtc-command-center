@@ -12,6 +12,16 @@ pwsh -File MTC_COMMAND_CENTER\tools\repo_guard.ps1
 Confirms: not on `master`, clean/known dirty set, no protected-scope edits, no risky untracked
 files. Branch first if it reports working on `master`.
 
+## Branch freshness
+
+The guard works offline against the locally known `origin/master`; it never fetches and prints
+that ref's commit age. A branch is stale when its merge-base is more than 30 commits behind.
+Override the limit with `-MaxBehindCommits <n>` or, when that parameter is absent,
+`MTC_REPO_GUARD_MAX_BEHIND_COMMITS`. Use `-WarnOnlyStaleBranch` only for a diagnostic PASS with
+a warning. If stale blocking fires, recreate the worktree from current `origin/master` using
+[`CLEAN_WORKTREE_PROCEDURE.md`](../11_TRIAGE/WP_P0_15_FRESHNESS_2026-08-24/CLEAN_WORKTREE_PROCEDURE.md),
+or rebase the branch.
+
 ## Before commit
 
 ```powershell

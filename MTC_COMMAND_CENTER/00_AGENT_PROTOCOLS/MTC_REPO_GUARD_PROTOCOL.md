@@ -21,6 +21,16 @@ promote). This file is the **single entry rule set**; those two carry the detail
    not BLOCK** — by design. Rule 3 (exact staged files only) already stops them reaching a
    commit; the warning just flags leaked local artifacts so you keep them out of the repo.
 
+## Branch freshness
+
+The guard checks the branch merge-base against local `origin/master` only: it is offline, never
+fetches, and reports the local ref's commit age. More than 30 commits behind is BLOCKED by default.
+Set the limit with `-MaxBehindCommits <n>` or, if that parameter is absent, the
+`MTC_REPO_GUARD_MAX_BEHIND_COMMITS` environment variable. `-WarnOnlyStaleBranch` changes stale
+to WARN for diagnostics. When BLOCKED stale, recreate the worktree from current `origin/master`
+per [`CLEAN_WORKTREE_PROCEDURE.md`](../11_TRIAGE/WP_P0_15_FRESHNESS_2026-08-24/CLEAN_WORKTREE_PROCEDURE.md),
+or rebase.
+
 ## Final report format (every task ends with this)
 
 ```

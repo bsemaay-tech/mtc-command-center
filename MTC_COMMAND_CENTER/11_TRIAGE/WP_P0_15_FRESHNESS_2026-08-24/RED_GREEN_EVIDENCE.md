@@ -138,24 +138,93 @@ The empty output before `PRE_CONTROL_STATUS_RC=0` is the real clean-status resul
 
 ## Override checks
 
-The same 528-behind fixture also proved the default-on block can be disabled explicitly for a
-diagnostic run, and that both supported threshold override routes work:
+Working directory for all three checks: `C:\WPP015_TMP_STALE`. Every guard invocation used the
+canonical Windows PowerShell 5.1 `-File` route. The GREEN section above freshly proves default
+blocking mode through the same route (`RESULT: BLOCKED`, exit 1).
+
+### Warn-only switch
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File 'C:\WPP015_20260824\MTC_COMMAND_CENTER\tools\repo_guard.ps1' -WarnOnlyStaleBranch
+Write-Output "WARN_ONLY_RC=$LASTEXITCODE"
+```
+
+Real output:
 
 ```text
+=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    tmp/wp-p0-15-stale-demo-20260824
+[freshness] local origin/master tip fbb05d7f46bc78b2875aa6d029e7fb2f2a8b14d7 age=0 day(s) (commit timestamp; no fetch attempted)
+[freshness] branch merge-base 3bfe62a5ecb1f61bbac7f4dbdeef0239884adb8f is 528 commit(s) behind local origin/master (limit 30)
 [freshness] STALE BRANCH: 'tmp/wp-p0-15-stale-demo-20260824' is 528 commit(s) behind local origin/master (limit 30)
-WARN: STALE BRANCH: 'tmp/wp-p0-15-stale-demo-20260824' is 528 commit(s) behind local origin/master (limit 30); blocking disabled by -BlockStaleBranch
+[dirty]     clean
+[staged]    none
+[protected] none
+[untracked] no risky files
+[unpushed]  no upstream set
+
+WARN: STALE BRANCH: 'tmp/wp-p0-15-stale-demo-20260824' is 528 commit(s) behind local origin/master (limit 30); blocking disabled by -WarnOnlyStaleBranch
+WARN: no upstream tracking branch
 RESULT: PASS
 WARN_ONLY_RC=0
+```
+
+### Environment threshold override
+
+```powershell
+$env:MTC_REPO_GUARD_MAX_BEHIND_COMMITS = '600'
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File 'C:\WPP015_20260824\MTC_COMMAND_CENTER\tools\repo_guard.ps1'
+Write-Output "ENV_OVERRIDE_RC=$LASTEXITCODE"
+Remove-Item Env:\MTC_REPO_GUARD_MAX_BEHIND_COMMITS
+```
+
+Real output:
+
+```text
+=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    tmp/wp-p0-15-stale-demo-20260824
+[freshness] local origin/master tip fbb05d7f46bc78b2875aa6d029e7fb2f2a8b14d7 age=0 day(s) (commit timestamp; no fetch attempted)
 [freshness] branch merge-base 3bfe62a5ecb1f61bbac7f4dbdeef0239884adb8f is 528 commit(s) behind local origin/master (limit 600)
+[dirty]     clean
+[staged]    none
+[protected] none
+[untracked] no risky files
+[unpushed]  no upstream set
+
+WARN: no upstream tracking branch
 RESULT: PASS
 ENV_OVERRIDE_RC=0
+```
+
+### Parameter threshold override and precedence
+
+The environment is deliberately set to zero here. The explicit parameter still selects 600,
+proving parameter precedence as well as successful `-File` binding.
+
+```powershell
+$env:MTC_REPO_GUARD_MAX_BEHIND_COMMITS = '0'
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File 'C:\WPP015_20260824\MTC_COMMAND_CENTER\tools\repo_guard.ps1' -MaxBehindCommits 600
+Write-Output "PARAM_OVERRIDE_RC=$LASTEXITCODE"
+Remove-Item Env:\MTC_REPO_GUARD_MAX_BEHIND_COMMITS
+```
+
+Real output:
+
+```text
+=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    tmp/wp-p0-15-stale-demo-20260824
+[freshness] local origin/master tip fbb05d7f46bc78b2875aa6d029e7fb2f2a8b14d7 age=0 day(s) (commit timestamp; no fetch attempted)
 [freshness] branch merge-base 3bfe62a5ecb1f61bbac7f4dbdeef0239884adb8f is 528 commit(s) behind local origin/master (limit 600)
+[dirty]     clean
+[staged]    none
+[protected] none
+[untracked] no risky files
+[unpushed]  no upstream set
+
+WARN: no upstream tracking branch
 RESULT: PASS
 PARAM_OVERRIDE_RC=0
 ```
-
-The environment variable is `MTC_REPO_GUARD_MAX_BEHIND_COMMITS`; the parameter is
-`-MaxBehindCommits`. Explicit parameter input takes precedence over the environment variable.
 
 ## Fixture removal
 
