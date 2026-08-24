@@ -376,7 +376,7 @@
       "safety": [
         "KILL is sticky: it survives a restart and requires an explicit operator acknowledgement to leave.",
         "KILL is NOT production-hardened. There is a recorded hardening gap and it must not be described as a finished emergency system.",
-        "The concrete gap: the Dashboard requests KILL with flatten=false, and the engine's KILL path calls cancel_all() regardless. Cancelling everything can remove the exchange-native protective orders while the position itself stays open, which leaves an unprotected position — the opposite of what an emergency stop should produce.",
+        "The concrete caveat today: the Dashboard requests KILL with flatten=false, and Engine.kill() never calls cancel_all(). On store schemas without the v9 kill-evidence contract (the deployed default) KILL latches KILLED and mutates no orders at all — it cancels nothing and does not flatten. With schema-v9 kill evidence enabled it cancels only orders classified risk-increasing, preserves qualifying reduce-only protection when flatten=false, and starts a controlled flatten only when flatten was actually requested.",
         "DISARM and KILL are never blocked by the stale-state confirmation header, because a safety action must not fail because a browser tab is out of date."
       ],
       "connections": [
@@ -394,7 +394,7 @@
       "technical": [
         "app_state lives in the meta table so KILLED survives a process restart; a restart always creates a new run_id.",
         "ARM requires a matching X-Confirm state_version header. DISARM and KILL deliberately do not.",
-        "Engine.kill(flatten=False) sets KILLED and then awaits broker.cancel_all() under the symbol lock; broker.flatten is only reached when flatten is true. Engine.disarm_runtime() cancels open orders whose role is ENTRY, skipping any symbol under submission quarantine or active partial recovery, then runs order-manager reconciliation.",
+        "Engine.kill() latches KILLED in memory and in the store first; without schema-v9 kill evidence (the default) it stops there and touches no orders. With kill evidence enabled it opens a durable kill epoch, cancels only orders classified risk-increasing, requires proof of qualifying reduce-only protection when flatten=false (SAFE_RETAINED, otherwise UNRESOLVED), and runs a controlled flatten only when flatten=true. Engine.disarm_runtime() cancels open orders whose role is ENTRY, skipping any symbol under submission quarantine or active partial recovery, then runs order-manager reconciliation.",
         "Automatic DISARM paths in the engine include stale data, the daily loss limit, equity divergence above one percent, and an unacknowledged order past the abort deadline.",
         "On restart or reconnect, reconciliation must complete before ARM is possible."
       ]
@@ -1037,7 +1037,7 @@
         "ARM does not place an order and does not mean a trade is coming. It is permission, not an instruction.",
         "DISARM does not automatically flatten. An open position stays open, its exchange-side protection stays in place, and runtime reconciliation, protection and notification work continues.",
         "KILL as wired in this interface does not flatten either — the button sends flatten=false.",
-        "KILL does not leave protection alone. Even with flatten=false the engine calls cancel_all(), so exchange-native protective orders can be cancelled while the position stays open. Treat this as the recorded hardening gap, not as a safe emergency stop.",
+        "KILL does not cancel protective orders: the engine never calls cancel_all(). Without schema-v9 kill evidence (the deployed default) KILL latches the state and mutates no orders; with it, only orders classified risk-increasing are cancelled, and with flatten=false a qualifying reduce-only protection must be proven to remain, otherwise the episode reports UNRESOLVED.",
         "These three buttons are the owner-operated controls. They are not the only way the state changes: the runtime can disarm itself automatically as a fail-safe.",
         "None of these are protected by a login, a second factor, a role check or a session timeout, because none of those exist yet."
       ],
@@ -1063,7 +1063,7 @@
       ],
       "technical": [
         "ARM sends the X-Confirm header carrying state_version; DISARM and KILL deliberately do not.",
-        "The KILL request is issued as /api/kill?flatten=false by the current interface, and the engine's KILL path still calls broker.cancel_all()."
+        "The KILL request is issued as /api/kill?flatten=false by the current interface; the engine's KILL path never calls broker.cancel_all() — without schema-v9 kill evidence it only latches KILLED, and with it it cancels only classified risk-increasing orders while preserving qualifying reduce-only protection."
       ]
     },
     {
@@ -1633,7 +1633,7 @@
   "glossary": [
     { "term": "ARM", "plain": "Permission, not an instruction. It lets eligible future signals become orders. It does not create a trade, and it only gates new entries — reconciliation, protection and safety work run either way." },
     { "term": "DISARM", "plain": "Stops new entries and cancels pending entry orders when it is safe to do so, then reconciles. It does not close a position you already have, and exchange-side protection stays in place. The owner can press it, and the runtime can also enter it automatically as a fail-safe." },
-    { "term": "KILL", "plain": "Emergency stop that sticks across restarts. As wired in this interface it does not flatten positions (flatten=false), yet the engine still cancels all orders — so a position can be left open with its protective orders cancelled. This is the recorded hardening gap: KILL is not production-hardened." },
+    { "term": "KILL", "plain": "Emergency stop that sticks across restarts. As wired in this interface it does not flatten positions (flatten=false), and the engine never cancels everything: without schema-v9 kill evidence (the deployed default) it only latches the KILLED state and touches no orders, and with it it cancels only risk-increasing orders while keeping qualifying protection in place. KILL is still not production-hardened." },
     { "term": "TESTNET", "plain": "The exchange's practice environment with mock money. It proves the machinery works. It proves nothing about profit." },
     { "term": "MAINNET", "plain": "Real money. Behind a separate owner and audit gate, plus a three-part technical lock." },
     { "term": "Reduce-only", "plain": "An order that can only make a position smaller, never larger. Protective stops are reduce-only so they can never accidentally open a new trade." },
