@@ -23,10 +23,9 @@ lifecycle, admission, promotion, broker, or trading action.
   `model_construct()` bypasses validation by design, and instances built with it
   are neither validated nor deeply frozen. No consumer of this package may create
   a contract object with `model_construct()` (or `copy(update=...)`-style
-  validation bypasses); only normal construction and `model_validate` produce
-  valid, immutable contract objects — the supported entry points are normal
-  construction and validation from RAW input (`model_validate` /
-  `model_validate_json` on plain data). Any object made via a bypass carries no
+  validation bypasses). The supported entry points — the only ways to obtain a
+  valid, immutable contract object — are: normal construction,
+  `model_validate` on raw Python data, and `model_validate_json` on raw JSON. Any object made via a bypass carries no
   contract guarantee, **and re-validating a bypass-built instance does not
   sanitize it** — `model_validate()` applied to a `model_construct()` object can
   return that same instance with unparsed nested content, so the only remedy is
