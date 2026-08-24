@@ -147,6 +147,8 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 | 11 | Evidence preservation | Shared E plus vulnerable fixtures (if lawfully available), advisory snapshot, exact bytes/hashes and format round trips. |
 | 12 | Retirement/removal | Shared R. This rejection is not authority to edit protected requirements, uninstall anything or delete data. |
 
+**Status:** **SUPERSEDED by entry 0012 — retained, never edited away**.
+
 ## Entry 0005 — QuantStats
 
 **Brief status:** ADOPT with independent validation.
@@ -169,6 +171,8 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 | 10 | Replacement/rollback | Replacement: existing NumPy/pandas metric implementation plus static templates. Switching cost medium. Rollback removes the pinned reporting layer and regenerates the same report from preserved inputs; not walked. |
 | 11 | Evidence preservation | Shared E plus identical input series, parameter conventions, independent outputs, mismatch decisions and rendered reports. |
 | 12 | Retirement/removal | Shared R; failed metrics and rejected reports remain evidence. |
+
+**Status:** **SUPERSEDED by entry 0013 — retained, never edited away**.
 
 ## Entry 0006 — vectorbt open edition
 
@@ -308,6 +312,8 @@ Research was read-only and limited to repository manifests, PyPI JSON/release ar
 | 11 | Evidence preservation | Shared E plus client package/signature, policy, device inventory, outage test and redacted access logs; never credentials or auth keys. |
 | 12 | Retirement/removal | Shared R. Account/device/client cleanup requires exact, separately owner-authorized host/account actions; nothing is auto-removed. |
 
+**Status:** **SUPERSEDED by entry 0014 — retained, never edited away**.
+
 ---
 
 ## Annex A — Bridge hash-locked transitive set
@@ -341,3 +347,117 @@ This deliberately fictional record proves that an old trusted statement remains 
 **SUPERSEDES:** entry DEMO-0001.
 
 Reason: demonstration-only version change. In a real entry this successor would repeat all twelve criteria with new evidence; the old bytes would remain.
+
+---
+
+## Repair round 1 superseding entries
+
+## Entry 0012 — PyArrow
+
+**SUPERSEDES:** entry 0004.
+
+**Reason:** correct the mechanically counted number of pinned package lines in the backtest lock. All other evidence and rules are carried forward unchanged.
+
+**Brief status:** ADOPT — already declared.
+
+**Ledger disposition:** **REJECTED at existing `23.0.0` for new/continued adoption evidence because of an affected advisory and unhashed lock. Existing protected code remains untouched; upgrade/removal needs separate authority.**
+
+**Integration mode:** `LINK_AS_DEPENDENCY`, research data reader/writer.
+
+**Pin-count command (PowerShell, run from the repository root):**
+
+```powershell
+$pinLines = Select-String -LiteralPath 'MTC_COMMAND_CENTER\02_MTC_BACKTEST\requirements-lock.txt' -Pattern '^[A-Za-z0-9_.-]+=='
+$pinLines | ForEach-Object { $_.Line }
+"COUNT=$($pinLines.Count)"
+```
+
+**Command output:**
+
+```text
+ccxt==4.5.36
+numpy==2.4.2
+optuna==4.7.0
+pandas==2.3.3
+plotly==6.5.2
+pyarrow==23.0.0
+pydantic==2.12.5
+pytest==9.0.2
+pytest-cov==7.0.0
+python-dateutil==2.9.0.post0
+pytz==2025.2
+streamlit==1.54.0
+tqdm==4.67.3
+COUNT=13
+```
+
+A pin is defined here as a non-comment line whose complete package-name prefix matches `[A-Za-z0-9_.-]+` and is immediately followed by `==` and a version. On that mechanical definition the file has **13 pinned package lines**. The earlier counts of 14 and 12 are not supported by the file.
+
+| # | Criterion | Evidence and rule |
+|---:|---|---|
+| 1 | Provenance | Declared pin `pyarrow==23.0.0` in the backtest lock. Upstream tag `apache-arrow-23.0.0` resolves to annotated object `b503a105d1d61445280bdbdb1a643ca8b31d0674`, commit `eafe3a9e620cf94683dee2347f370c35156dc965`. PyPI sdist SHA-256 `180e3150e7edfcd182d3d9afba72f7cf19839a497cc76555a8dce998a8f67615`; upload 2026-01-18. Historical acquisition path is not recorded. |
+| 2 | Licence | Apache-2.0; full canonical text/hash recorded in entry 0003. Linking/distribution must include the licence, preserve applicable notices and changed-file notices, and inspect the exact distribution NOTICE. The package-specific NOTICE capture is missing, so the criterion is incomplete. |
+| 3 | Dependency/supply chain | The command and output above show that `requirements-lock.txt` has **13 pinned package lines** under the stated mechanical definition, but it has **zero hashes** and does not encode a dependency graph. PyPI reports no mandatory Python dependency for 23.0.0, but the native wheel remains an artifact requiring a hash. Bridge supply-chain floor fails. |
+| 4 | Vulnerabilities | **2026-08-24 OSV: affected.** `GHSA-rgxp-2hwp-jwgg` / `CVE-2026-25087` / `PYSEC-2026-113`: potential use-after-free reading IPC with pre-buffering; CVSS v3 vector `AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:H`. OSV range is introduced 15.0.0, fixed 23.0.1; 23.0.0 is listed affected. Exposure is direct when this research dependency reads attacker-controlled/malformed Arrow IPC with pre-buffering; Parquet-only trusted local use narrows but does not erase parser/native-code risk. |
+| 5 | Maintainer/activity | Arrow: 14 releases/12 months; current repo activity. Human maintainer count not established from automated release publishing. Median security closure time not public. GitHub community profile exposed no repository policy file; Apache's project security channel must be captured separately before acceptance. |
+| 6 | Abandonment | Shared A, plus abandoned at a pin if a published HIGH advisory affecting the used parser path remains without an available fixed pin for 30 days. This pin is rejected now because a fixed release exists but is not adopted. |
+| 7 | Update | Owner: protected backtest package Lead. Monthly until the advisory is resolved, then quarterly per U. A change is at least T0/T1 according to protected-surface classification and must round-trip real Parquet/IPC fixtures, run parity gates and prove RED/GREEN for this advisory path if used as closure evidence. |
+| 8 | Incident | Shared I. Immediate policy action: block new installs and untrusted IPC ingestion at 23.0.0; notify Lead/owner. Do not self-upgrade this protected dependency. A separately authorized change may pin a fixed version after full validation. |
+| 9 | Portability/export | Durable outputs remain Parquet plus schema/manifest; bounded recovery export is CSV/JSON. No Arrow in-memory object is the only copy. |
+| 10 | Replacement/rollback | Replacement: DuckDB native Parquet reader for bounded queries, or the previous accepted PyArrow lock if safe. Switching cost medium/high. A PyArrow rollback has not been walked; current pin cannot count as a safe target while affected. |
+| 11 | Evidence preservation | Shared E plus vulnerable fixtures (if lawfully available), advisory snapshot, exact bytes/hashes and format round trips. |
+| 12 | Retirement/removal | Shared R. This rejection is not authority to edit protected requirements, uninstall anything or delete data. |
+
+## Entry 0013 — QuantStats
+
+**SUPERSEDES:** entry 0005.
+
+**Reason:** replace the judgement word in the abandonment condition with repository-observed RED evidence and elapsed-time events. All other evidence and rules are carried forward unchanged.
+
+**Brief status:** ADOPT with independent validation.
+
+**Ledger disposition:** **REJECTED FOR IMPLEMENTATION until exact version/lock, financial RED/GREEN validation and rollback exist.**
+
+**Integration mode:** `LINK_AS_DEPENDENCY`, research reporting only.
+
+| # | Criterion | Evidence and rule |
+|---:|---|---|
+| 1 | Provenance | Canonical [ranaroussi/quantstats](https://github.com/ranaroussi/quantstats). Latest observed PyPI `0.0.81`, uploaded 2026-01-13, sdist SHA-256 `91f44895e4481167255384c2297193233255b427e3a09a3fa111a5ce77e9b44a`. No version/tag/commit/artifact or acquisition path is adopted. |
+| 2 | Licence | PyPI/upstream declare Apache-2.0. No exact adopted-version licence/NOTICE capture. Linking obligations follow entry 0003. Until exact distribution texts are captured it **requires a documented licensing review before adoption in this integration mode**. |
+| 3 | Dependency/supply chain | No lock. PyPI 0.0.81 declares 8 runtime dependencies (`matplotlib`, `numpy`, `pandas`, `python-dateutil`, `scipy`, `seaborn`, `tabulate`, `yfinance`) plus optional Plotly; complete closure/hashes unknown. This is a substantial supply-chain cost and gate failure. |
+| 4 | Vulnerabilities | 2026-08-24: no exact selected version, so no acceptable version review. Selected package and full transitive lock must be batch-queried in OSV. Network-fetch features such as yfinance must be excluded or separately authorized. |
+| 5 | Maintainer/activity | 3 releases/12 months; one human release publisher (single-maintainer proxy, named money-adjacent calculation risk); repo pushed 2026-07-20. Median security closure time not public; no repository security-policy file exposed. |
+| 6 | Abandonment | Shared A with stricter 180-day no human merge/release activity because financial calculations are involved, or two or more upstream issues for which (a) each issue is reproduced RED by this repository's WP-V3-11 reuse-amendment metric-validation fixtures against the pinned QuantStats version and (b) each remains open upstream with no fix included in an upstream stable release for 90 consecutive calendar days from the repository's dated RED reproduction. |
+| 7 | Update | Owner: WP-V3-11/reporting Lead. Quarterly per U. Sharpe, Sortino and Calmar must be independently compared on identical real artifacts; each new regression test must show RED against a deliberate metric mutation and GREEN with accepted behaviour. |
+| 8 | Incident | Disable QuantStats rendering/calculation and use the repository's independently verified calculations. Preserve reports; never wait for upstream or allow a metric to influence promotion while disputed. |
+| 9 | Portability/export | Inputs/outputs are preserved as returns/trades in CSV/Parquet/JSON and static HTML. No yfinance cache or QuantStats object is canonical. |
+| 10 | Replacement/rollback | Replacement: existing NumPy/pandas metric implementation plus static templates. Switching cost medium. Rollback removes the pinned reporting layer and regenerates the same report from preserved inputs; not walked. |
+| 11 | Evidence preservation | Shared E plus identical input series, parameter conventions, independent outputs, mismatch decisions and rendered reports. |
+| 12 | Retirement/removal | Shared R; failed metrics and rejected reports remain evidence. |
+
+## Entry 0014 — Tailscale client and hosted control service
+
+**SUPERSEDES:** entry 0011.
+
+**Reason:** replace the judgement phrase in the hosted-service abandonment condition with enumerated licence, capacity, feature and price events. All other evidence and rules are carried forward unchanged.
+
+**Brief status:** ADOPT for private access.
+
+**Ledger disposition:** **REJECTED FOR IMPLEMENTATION in this package until exact client version/hash, hosted-service terms, account/export, outage behaviour and T0 network package are separately accepted.** No install/account/contact occurred.
+
+**Integration mode:** `SEPARATE_LOCAL_PROCESS` for the client plus `FILE_OR_API_INTEROP` with the hosted control service; network/host surface.
+
+| # | Criterion | Evidence and rule |
+|---:|---|---|
+| 1 | Provenance | Canonical client [tailscale/tailscale](https://github.com/tailscale/tailscale). Latest observed release `v1.102.3`, 2026-08-20, but no version/tag/commit/binary hash or acquisition path is adopted. Hosted service is separately sourced and no account was created. |
+| 2 | Licence | GitHub reports BSD-3-Clause for the client; the hosted control service has separate terms. Exact client text/binary notices and service terms were not captured for an adopted version. It **requires a documented licensing review before adoption in this integration mode**. No categorical legal conclusion is made. |
+| 3 | Dependency/supply chain | No client binary/container/package lock or signature/hash policy exists in this repo; hosted service dependencies are opaque. Gate fails. Any accepted client must use vendor-published integrity/signing evidence and an exact platform package. |
+| 4 | Vulnerabilities | 2026-08-24: exact-version review impossible. Check Tailscale advisories/security bulletins and OS/package advisories for the selected client; include exposure as a privileged network daemon and control-plane dependency. Review attempted; exact source version not selected. |
+| 5 | Maintainer/activity | 28 releases/12 months; 6 human release publishers observed; pushed 2026-08-24. Median security closure time not public. GitHub security-policy query attempted but source was unreachable tonight after HTTP 403/rate limit. Hosted-service operational ownership/SLA remains separately unknown. |
+| 6 | Abandonment | Shared A with stricter conditions: no supported client security release for 90 days; control service unavailable for 24 consecutive hours without documented recovery; export/API for required ACL/device state removed; or, without prior owner acceptance recorded in this ledger, any of these events occurs: the client licence identifier changes from BSD-3-Clause; the device limit of the deployment's used tier drops below the deployment's recorded device count; subnet routes, ACLs or auth keys are removed from the used tier; or a non-zero price is introduced for the used tier. |
+| 7 | Update | Owner: separately authorized network/host Lead. Monthly plus events per U. Every client change is T0 and must be tested offline/on an authorized non-production fixture; this ledger authorizes no host or account action. |
+| 8 | Incident | First revoke/disable the affected private-access path through an explicitly authorized operator procedure and fall back to the named access path; preserve device/ACL evidence. Do not expose a public listener as a workaround. |
+| 9 | Portability/export | ACL/policy must live as reviewable text; device inventory/audit events export to JSON/CSV where service permits. Repository operation cannot depend on non-exportable hosted-only state. |
+| 10 | Replacement/rollback | Replacement: existing SSH tunnel first, self-managed WireGuard only under separate T0 design. Switching cost medium/high. Rollback must remove/disable the client and prove private access through the previous authorized path without widening exposure; not walked and not permitted in this lane. |
+| 11 | Evidence preservation | Shared E plus client package/signature, policy, device inventory, outage test and redacted access logs; never credentials or auth keys. |
+| 12 | Retirement/removal | Shared R. Account/device/client cleanup requires exact, separately owner-authorized host/account actions; nothing is auto-removed. |

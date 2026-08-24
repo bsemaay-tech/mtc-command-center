@@ -107,3 +107,45 @@ Its SHA cannot be embedded in the bytes that create that same SHA. The final CLI
 ## Boundary confirmation
 
 No Pine, parity, MTC_V2, Bridge runtime, schema, deployment, host, credential, Docker, WSL, testnet, live, trading, account, push or merge action occurred. The dirty `C:\LAB\Tradingview_LAB_CLEAN` checkout and all named sibling worktrees were not touched. No AI CLI or sub-agent was spawned.
+
+## Repair round 1 of maximum 2 — T1 Gate-5 findings
+
+**Repair status:** implementer repair complete; fresh Lead Gate-5 re-audit remains Lead-owned.
+
+This round appends three complete superseding entries under the ledger's append-only contract:
+
+1. **Entry 0012 — PyArrow** supersedes entry 0004. It records the exact PowerShell pin-count command and all output lines. A pin is defined as a non-comment line whose package-name prefix matches `[A-Za-z0-9_.-]+` immediately followed by `==` and a version. The actual file has **13** such lines, resolving the previous 14-versus-12 discrepancy from the file itself.
+2. **Entry 0013 — QuantStats** supersedes entry 0005. Its abandonment condition now requires two or more upstream issues, repository WP-V3-11 fixture RED reproduction against the pinned version, and 90 consecutive calendar days without an upstream stable-release fix.
+3. **Entry 0014 — Tailscale client and hosted control service** supersedes entry 0011. Its abandonment condition now enumerates licence-identifier change, device-limit reduction below recorded deployment count, removal of subnet routes/ACLs/auth keys from the used tier, or introduction of a non-zero used-tier price, each without prior owner acceptance recorded in the ledger.
+
+Entries 0004, 0005 and 0011 retain their original text and each has only the permitted appended status marker: `SUPERSEDED by entry N — retained, never edited away`.
+
+### Repair self-QA
+
+The UTF-8 structural parser was rerun over entries 0012–0014. Verbatim result:
+
+```text
+ENTRY=0012 CRITERIA_1_TO_12=True INTEGRATION_MODE=True ABANDONMENT_JUDGEMENT_WORDS=0
+ENTRY=0013 CRITERIA_1_TO_12=True INTEGRATION_MODE=True ABANDONMENT_JUDGEMENT_WORDS=0
+ENTRY=0014 CRITERIA_1_TO_12=True INTEGRATION_MODE=True ABANDONMENT_JUDGEMENT_WORDS=0
+ACTIVE_ABANDONMENT_JUDGEMENT_WORDS=0
+CROSSREF=0004<->0012 OLD_TO_NEW=True NEW_TO_OLD=True
+CROSSREF=0005<->0013 OLD_TO_NEW=True NEW_TO_OLD=True
+CROSSREF=0011<->0014 OLD_TO_NEW=True NEW_TO_OLD=True
+PARSER_RESULT=PASS
+```
+
+The active-entry scan checks the abandonment row of every non-superseded real entry for `material`, `significant` and `reasonable`; it found zero occurrences. Historical occurrences remain only inside the retained superseded entries, as required by the append-only contract.
+
+The repair commit stages exactly:
+
+```text
+MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_24_OSS_LEDGER_2026-08-24/DEPENDENCY_LEDGER.md
+MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_24_OSS_LEDGER_2026-08-24/LANE_REPORT.md
+```
+
+Required commit message:
+
+`fix(wp-p0-24): repair round 1 - superseding entries for count + objective criteria`
+
+The commit SHA is reported by the final CLI output because it cannot be embedded in the bytes that determine that same SHA. No push or merge is performed.
