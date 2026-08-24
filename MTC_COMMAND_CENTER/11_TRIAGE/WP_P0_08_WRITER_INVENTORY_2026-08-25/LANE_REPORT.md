@@ -33,12 +33,13 @@ The inventory closes the evidence-gathering part of brief Appendix E open item O
 
 ## Staged files
 
-The exact intended staged list is the three deliverables above. The implementer will verify it with `git diff --cached --name-only` before committing; no wildcard add is permitted.
+The staged list was verified with `git diff --cached --name-only` before the substantive commit and contained exactly the three deliverables above. No wildcard add was used.
 
 ## Commit record
 
 - Starting/base SHA: `0aa57ef66aa66999b6cac8e368095ca51a3d1d18`.
-- Substantive package commit SHA: to be recorded in the closeout commit after the exact requested commit is created; the completion output will print all SHAs.
+- Substantive package commit SHA: `9fdc3608444087a8dc8f06ac8801228d38a098dd`.
+- The closeout commit that records the substantive SHA cannot record its own hash without changing it; both SHAs are printed in the completion output.
 
 ## Open issues / Lead actions
 
