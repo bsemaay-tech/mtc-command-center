@@ -335,12 +335,16 @@ def test_help_flow_step_states_agree_with_component_status(help_map: dict):
     assert assistant_step["state"] == "planned"
 
 
-def test_help_knowledge_does_not_claim_repo_onboarding_points_at_the_map(help_map: dict):
-    """The coding-agent onboarding entry points do not direct agents to the map."""
+def test_help_knowledge_pins_ai_source_and_onboarding_guards(help_map: dict):
+    """The map is canonical Help data, but coding-agent onboarding does not point at it."""
     memory = _component(help_map, "repo_ai_memory")
     edge = next(c for c in memory["connections"] if c["to"] == "help_map")
-    assert edge["kind"] == "planned", "repo _AI_MEMORY does not point at help_map.json yet"
-    assert "does not currently point coding agents at help_map.json" in _blob(memory)
+    assert edge["kind"] == "planned", "coding-agent onboarding does not point at help_map.json"
+    assert "canonical ai-readable knowledge source for the help surface is help_map.json" in _blob(
+        memory
+    )
+    assert "live _ai_memory handoff records reference it historically" in _blob(memory)
+    assert "coding-agent onboarding files do not currently direct agents to it" in _blob(memory)
 
     reverse = next(
         c for c in _component(help_map, "help_map")["connections"] if c["to"] == "repo_ai_memory"
@@ -350,6 +354,7 @@ def test_help_knowledge_does_not_claim_repo_onboarding_points_at_the_map(help_ma
     onboarding_paths = [
         REPO_ROOT / "AGENTS.md",
         REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "START_HERE.md",
+        REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "AI_RULES.md",
         REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "PROJECT_MEMORY.md",
     ]
     pointing = [
@@ -359,6 +364,12 @@ def test_help_knowledge_does_not_claim_repo_onboarding_points_at_the_map(help_ma
         and "help_map.json" in path.read_text(encoding="utf-8", errors="ignore")
     ]
     assert not pointing, "repo onboarding now points at help_map.json; promote the edge to data"
+
+    handoff = (
+        REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "GLOBAL_HANDOFF.md"
+    ).read_text(encoding="utf-8", errors="ignore")
+    assert "help_map.json" in handoff
+    assert "help_map.json retired-KILL-claim correction" in handoff
 
 
 def test_help_knowledge_avoids_cost_free_and_signature_claims():

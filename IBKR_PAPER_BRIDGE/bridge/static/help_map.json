@@ -1454,7 +1454,7 @@
         "Has nothing to do with live trading, and is never read by the Bridge at runtime.",
         "Is not the planned Dashboard operational memory.",
         "Is never written to by the Bridge application.",
-        "Does not currently point coding agents at help_map.json. No file under MTC_COMMAND_CENTER/_AI_MEMORY references it today; the only pointer that exists is docs/31_HELP_SYSTEM_MAP_INDEX.md. Adding that pointer is outstanding work."
+        "The canonical AI-readable knowledge source for the Help surface is help_map.json. Live _AI_MEMORY handoff records reference it historically, but coding-agent onboarding files do not currently direct agents to it; adding an onboarding pointer remains outstanding work."
       ],
       "boundaries": [
         "This is a development-time artefact. The Bridge application never writes into the command centre and never imports from it at runtime."
