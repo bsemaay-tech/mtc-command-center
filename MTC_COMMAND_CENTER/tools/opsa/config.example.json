@@ -1,0 +1,16 @@
+{
+  "schema": "mtc.opsa_backup_config/v1",
+  "backup_root": "D:/EXAMPLE/BACKUP_ROOT_CHANGE_ME",
+  "stores": [
+    {
+      "id": "ledger_store",
+      "path": "C:/EXAMPLE/EVIDENCE/PATH/ledger_store",
+      "class": "protected"
+    },
+    {
+      "id": "run_artifacts",
+      "path": "C:/EXAMPLE/EVIDENCE/PATH/run_artifacts",
+      "class": "bulk"
+    }
+  ]
+}
