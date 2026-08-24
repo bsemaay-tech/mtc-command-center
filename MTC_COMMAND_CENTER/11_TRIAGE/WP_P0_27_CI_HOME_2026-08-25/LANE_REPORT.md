@@ -123,3 +123,39 @@ MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_27_CI_HOME_2026-08-25/LANE_REPORT.md
 The Windows LF-pin repair is separately scoped and is not an open implementation item inside
 Lane K. No live GitHub, repository-setting, host, deploy, venue or notification-channel action is
 claimed.
+
+## Lane R status - 2026-08-25 Linux RED diagnosis
+
+**Status:** **DONE - DIAGNOSIS ONLY; NO FIX EXECUTED**
+
+**Role:** Codex implementer under Claude Lead
+
+**Audit tier:** **T2** documentation for this lane; the recommended protected WAL/cutover
+repair is a separately authorized **T0** scope.
+
+GitHub run `32781394607` was fetched with the requested `gh run view ... --log-failed`
+command and traced at its exact PR head,
+`3899d6f984ddc7c41b632e99e616941524b0cec1`. The Ubuntu/Python-3.12.14 result was
+`25 failed, 1326 passed, 1 warning`: two `test_order_state.py` GC-referent failures
+and 23 `test_wal_state_bundle.py` failures.
+
+The order-state pair is classified **TEST defect**: CPython 3.12 exposes Enum-member
+runtime dictionaries through `gc.get_referents`, while CPython 3.14 does not. Those
+dictionaries are not backing storage for `_ImmutableMapping`; the adjacent behavioral
+mutation tests and direct holder-attack tests pass.
+
+The WAL cluster is classified **PRODUCT defect - serious on Linux deployment**. The
+read-only opener runs `SELECT 1`, which reads no database table and does not guarantee WAL
+attachment. The capture's before snapshot is therefore early; the first real SQLite read
+creates/updates WAL/SHM state inside the bracket, and the tool mistakes its own sidecar
+lifecycle/`ctime_ns` evidence for an external writer. Stable capture returns exit 2
+`source_changed_during_capture`, cascading into every verify test that requires a baseline
+bundle. Removing sidecar/ctime checks or using `--allow-live-source` is explicitly not a
+safe repair.
+
+Full evidence, all 25 node classifications, the snapshot/locking/order mechanism, and a
+non-executed repair recommendation are recorded in `LINUX_RED_DIAGNOSIS.md`. Focused local
+contrast on Windows/Python 3.14.2 produced `41 passed` for the WAL module, `2 passed` for
+the two GC-container tests, and `2 passed` for the paired behavioral mutation tests. No
+WSL, Docker, source edit, host, deploy, credential, broker, trading, Pine, parity, schema,
+or MTC action occurred.
