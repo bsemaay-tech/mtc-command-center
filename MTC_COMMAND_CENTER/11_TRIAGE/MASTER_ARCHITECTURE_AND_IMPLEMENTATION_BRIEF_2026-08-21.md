@@ -670,7 +670,7 @@ Accepted safety contracts exist as document **and** code **and** tests: window s
 
 ## F-14 [FACT + UNVERIFIED RUNTIME] Several accepted Bridge capabilities are not activated by the default initialization path
 
-**Verified from source:** `bridge/store/db.py:263-264` — `SCHEMA_VERSION_BASELINE = 4` is the `initialize()` default; `bridge/app.py:108` calls `store.initialize()` with no target. Under that default path the following are not enabled:
+**Verified from source:** `bridge/store/db.py:268` *(pointer re-anchored 2026-08-24, owner-authorized closure repair — the prior `:263-264` pointer had drifted against the planning candidate baseline; the fact itself is unchanged)* — `SCHEMA_VERSION_BASELINE = 4` is the `initialize()` default; `bridge/app.py:108` calls `store.initialize()` with no target. Under that default path the following are not enabled:
 
 - partial-fill recovery (schema v5)
 - full reconciliation (v6)
@@ -687,7 +687,7 @@ Accepted safety contracts exist as document **and** code **and** tests: window s
 **Verified from source:**
 - `bridge/engine/llm_gate.py` exists.
 - `bridge/app.py:158` constructs `BridgeEngine` **without an `llm_gate` argument**.
-- `bridge/engine/engine.py:62,114` therefore installs `NullLLMGate`.
+- `bridge/engine/engine.py:70,133` therefore installs `NullLLMGate` *(pointers re-anchored 2026-08-24, owner-authorized closure repair — the prior `:62,114` had drifted; the `llm_gate` field declaration is at `:70` and the unconditional `NullLLMGate()` install at `:133`; the fact itself is unchanged)*.
 - `config/bridge.yaml:39-50` sets `regime_enabled: false` and `veto_enabled: false`.
 - `anthropic` remains a direct dependency in `requirements.in`.
 
@@ -3264,8 +3264,8 @@ Every non-obvious claim, with its verification path. All verified in the audit s
 | Adapters are scaffolding | `07_ADAPTERS/README.md` |
 | Duplicate parity **payload** (not directories) | md5 `08de2da65cc850a3feeeef72d1fd1ba9` for `parity_results.json` in both trees. **One file hash cannot establish directory identity**; `git diff --no-index --name-status` shows `MTC_V2_PARITY_CASES.csv` differs, `README_MIGRATION.md` exists only in `12_PARITY_PINETS`, and a `.pyc` only in `05_PARITY`. See F-10. |
 | Two optimizers; Optuna already present | `02_MTC_BACKTEST/src/optimize/runner.py`; `src/optimizer_v0/search.py`; `02_MTC_BACKTEST/requirements.txt` |
-| Schema v4 default | `bridge/store/db.py:263-264`; `bridge/app.py:108` |
-| LLM gate dormant **in the default init path** | `bridge/app.py:158` (constructs `BridgeEngine` with no `llm_gate`); `bridge/engine/engine.py:62,114`; `config/bridge.yaml:39-50`. **Establishes the default constructor path only — not deployed runtime state.** See F-15. |
+| Schema v4 default | `bridge/store/db.py:268` *(re-anchored 2026-08-24, owner-authorized closure repair)*; `bridge/app.py:108` |
+| LLM gate dormant **in the default init path** | `bridge/app.py:158` (constructs `BridgeEngine` with no `llm_gate`); `bridge/engine/engine.py:70,133` *(re-anchored 2026-08-24, owner-authorized closure repair)*; `config/bridge.yaml:39-50`. **Establishes the default constructor path only — not deployed runtime state.** See F-15. |
 | Live gate unsigned | `_AI_MEMORY/LIVE_TRADING_GATE.md` |
 | Bridge dependency surface | `IBKR_PAPER_BRIDGE/requirements.in` |
 | Onboarding chain 709,001 bytes | `wc -c` over the nine files in F-18 |
