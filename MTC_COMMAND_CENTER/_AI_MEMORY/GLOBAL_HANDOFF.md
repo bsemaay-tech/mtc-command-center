@@ -9,6 +9,35 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [Claude Fable 5 Lead] 2026-08-24 — help_map.json retired-KILL-claim correction (T2, Bridge Help workstream)
+
+During the 2026-08-24 Wayfinder G1 audits a claude-opus-5 auditor noted (out of audit scope) that
+`IBKR_PAPER_BRIDGE/bridge/static/help_map.json` still claimed the engine's KILL path calls
+`cancel_all()`. That claim is retired: `Engine.kill()` never calls `cancel_all()` — without
+schema-v9 kill evidence (deployed default, schema v4) it latches KILLED only
+(`bridge/engine/engine.py:450-455`); with kill evidence it cancels only classified
+risk-increasing orders (`bridge/engine/orders.py:1787-1797`), preserves qualifying reduce-only
+protection when flatten=false (`orders.py:1853-1874`), and controlled flatten starts separately
+(`orders.py:1882`).
+
+- **Branch:** `feature/help-map-kill-wording` (from master `8750b253`). One file, 5 string
+  values corrected: lines 379, 397, 1040, 1066 (component text) + 1636 (glossary KILL entry,
+  found by the T2 auditor; scope amended for it — the original 3-line report undercounted).
+- **Gate 1:** T2 docs-class, unprotected (help/UI text only; no engine/order/schema/Pine/parity
+  touch). Two-tier honored: Claude lead → Codex `gpt-5.6-sol` implemented both rounds via
+  `Invoke-CodexForClaude.ps1 -Account secondary`.
+- **Audit (T2, single round):** GLM audit route (`Invoke-GlmAudit.ps1`). Verdict: 4 values
+  factually accurate + 1 required finding (stale line 1636) — reproduced by lead, repaired in
+  the single allowed T2 repair round using the auditor's prescribed remedy. INFO nits F2/F3
+  recorded, no action. NOTE: `glm.ps1` printed `unrecognized_model glm-5.2[1m]` yet produced a
+  full report — the audit model identity is uncertain (possible fallback); the audit route
+  config deserves a check next session.
+- **Verification (lead, real data):** `json.loads` PASS UTF-8 no BOM; repo-wide sweep — the only
+  remaining cancel-all mentions in the file are negations ("never calls cancel_all()"); guard
+  PASS pre-commit. Lines 378/1049 ("not production-hardened") intentionally retained.
+- **Note for owner:** the RUNNING dashboard on KVM2 serves its deployed copy — it shows the old
+  text until a redeploy, which stays owner-gated. Repo text is now correct.
+
 ## [Codex gpt-5.6-sol Lead] 2026-08-24 — Final Wayfinder planning programme complete
 
 The final planning run started from master `0baea68ee3bd85a3a57068cc3a3c4876b197d690` and
