@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools==84.0.0", "wheel==0.48.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mtc-contracts"
+version = "0.1.0"
+description = "Versioned data contracts for the MTC research and execution boundaries"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "LicenseRef-Proprietary"
+authors = [{name = "MTC Command Center"}]
+dependencies = ["pydantic==2.13.4"]
+
+[project.optional-dependencies]
+test = ["pytest==9.1.1", "ruff==0.16.4"]
+build = ["build==1.5.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mtc_contracts*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers"]
