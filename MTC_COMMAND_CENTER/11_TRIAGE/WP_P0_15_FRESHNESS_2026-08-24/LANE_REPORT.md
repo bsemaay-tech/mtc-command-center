@@ -62,15 +62,16 @@ MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_15_FRESHNESS_2026-08-24/CLEAN_WORKTREE_PROCED
 MTC_COMMAND_CENTER/tools/repo_guard.ps1
 ```
 
-Exact paths to stage for the documentation/evidence commit containing this report:
+Documentation/evidence commit:
+
+`6dcdd0591624a471aebcd405c7a5b41f15312250`
+
+Exact paths staged for that commit:
 
 ```text
 MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_15_FRESHNESS_2026-08-24/LANE_REPORT.md
 MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_15_FRESHNESS_2026-08-24/RED_GREEN_EVIDENCE.md
 ```
-
-The final documentation commit cannot embed its own content-derived SHA; its exact SHA is printed
-in the implementer's terminal/final handoff immediately after commit.
 
 ## Open issues
 

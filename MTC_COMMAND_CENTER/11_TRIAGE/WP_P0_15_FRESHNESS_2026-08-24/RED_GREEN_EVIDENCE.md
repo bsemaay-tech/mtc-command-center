@@ -200,4 +200,3 @@ is the expected `show-ref --verify --quiet` result proving the temporary branch 
 PASS. RED and GREEN executed different guard bytes against the identical deliberately stale
 worktree. RED passed without detecting staleness; GREEN emitted `STALE BRANCH`, blocked, and
 returned 1. The committed modified guard separately passed from a clean, fresh control worktree.
-
