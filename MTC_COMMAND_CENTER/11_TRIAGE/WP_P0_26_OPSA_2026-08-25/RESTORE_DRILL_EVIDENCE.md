@@ -779,3 +779,118 @@ compileall rc=0 (no output)
 The prior 23 tests remain green; five closure tests were added. No live evidence
 store, host, credential, notifier service, trading logic, Pine, parity, schema, or
 deployment surface was touched.
+
+## C8. Closure iteration 2 — non-empty manifest fields before confinement (2026-08-25)
+
+The closure-audit finding was reproduced against exact pre-fix HEAD `eaaf5e07`.
+`resolve_confined_path()` converted `None` to the literal child name `None`, so a
+file record missing `store_id` passed the first confinement preflight and later
+raised `KeyError`. An empty path (`rel`) returned rc 3, but emitted only the generic
+path-safety line rather than the structured invalid-record check-failure.
+
+### C8.1 RED — final tests against an exact HEAD temp copy
+
+The production files came from `git archive HEAD`; only the new `test_opsa.py` was
+copied over them. `%TEMP%` below is the sole normalization of the real path.
+
+```powershell
+$redRoot = "$env:TEMP\opsa_closure2_red_763c3e9f379b408ca992cdb24e5c2d3f"
+New-Item -ItemType Directory -Path $redRoot
+git archive --format=tar -o "$redRoot\head.tar" HEAD MTC_COMMAND_CENTER/tools/opsa
+tar -xf "$redRoot\head.tar" -C $redRoot
+$redOpsa = "$redRoot\MTC_COMMAND_CENTER\tools\opsa"
+Copy-Item MTC_COMMAND_CENTER\tools\opsa\test_opsa.py "$redOpsa\test_opsa.py" -Force
+python -m pytest -q --tb=short `
+  "$redOpsa\test_opsa.py::BackupRestoreTests::test_restore_cli_missing_store_id_is_structured_check_failure_without_writes" `
+  "$redOpsa\test_opsa.py::BackupRestoreTests::test_restore_cli_empty_path_is_structured_check_failure_without_writes"
+```
+
+Real pytest output:
+
+```text
+FF                                                                       [100%]
+================================== FAILURES ===================================
+test_restore_cli_missing_store_id_is_structured_check_failure_without_writes
+E   AssertionError: 'Traceback' unexpectedly found in 'Traceback (most recent call last):\n...
+E   KeyError: \'store_id\'\n'
+
+test_restore_cli_empty_path_is_structured_check_failure_without_writes
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+2 failed in 0.42s
+RED_RC=1
+```
+
+A CLI-level summary from the same preserved temp copy retained the decisive real
+values (the tests also assert that the restore target was never created):
+
+```text
+MISSING_STORE_ID_RC=1
+MISSING_STORE_ID_STDERR_FIRST=Traceback (most recent call last):
+MISSING_STORE_ID_STDERR_LAST=KeyError: 'store_id'
+MISSING_STORE_ID_TRACEBACK=True
+MISSING_STORE_ID_TARGET_EXISTS=False
+EMPTY_PATH_REL_RC=3
+EMPTY_PATH_REL_STDERR_FIRST=error: unsafe manifest path for run opsa-20260825T020000.000Z: unsafe empty/NUL path component: ''
+EMPTY_PATH_REL_STDERR_LAST=error: unsafe manifest path for run opsa-20260825T020000.000Z: unsafe empty/NUL path component: ''
+EMPTY_PATH_REL_TRACEBACK=False
+EMPTY_PATH_REL_TARGET_EXISTS=False
+```
+
+This is the required D026 RED: the missing field reproduces the audited rc-1
+traceback, and the empty field proves the prior rc 3 was not the required structured
+invalid-record outcome.
+
+### C8.2 GREEN — structured CLI outcomes and no writes
+
+The two regression tests drive `restore.py` through its public CLI. The repaired
+preflight uses the shared non-empty-string validator for `record`, `run_id`,
+`store_id`, `rel`, and file `sha256` before any path confinement.
+
+```powershell
+python -m pytest -q --tb=short `
+  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::BackupRestoreTests::test_restore_cli_missing_store_id_is_structured_check_failure_without_writes `
+  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::BackupRestoreTests::test_restore_cli_empty_path_is_structured_check_failure_without_writes
+```
+
+```text
+..                                                                       [100%]
+2 passed in 0.23s
+```
+
+Real CLI summaries from the repaired tree:
+
+```text
+MISSING_STORE_ID_RC=3
+MISSING_STORE_ID_STDERR={"status": "check_failed", "error": "invalid_manifest_record", "field": "store_id", "detail": "manifest file record field 'store_id' must be a non-empty string", "run_id": "opsa-20260825T020000.000Z"}
+MISSING_STORE_ID_TRACEBACK=False
+MISSING_STORE_ID_TARGET_EXISTS=False
+EMPTY_PATH_REL_RC=3
+EMPTY_PATH_REL_STDERR={"status": "check_failed", "error": "invalid_manifest_record", "field": "rel", "detail": "manifest file record field 'rel' must be a non-empty string", "run_id": "opsa-20260825T020000.000Z"}
+EMPTY_PATH_REL_TRACEBACK=False
+EMPTY_PATH_REL_TARGET_EXISTS=False
+```
+
+### C8.3 Uniform sweep and full-suite GREEN
+
+`opsa_common.py` no longer stringifies arbitrary confinement components: only real
+strings and `Path` objects enter path analysis. Backup config `backup_root` and every
+store `id`/`path`/`class` use the same shared validator. Heartbeat ids use it before
+filename interpolation (the empty-id case joined the existing confinement subtests).
+`backup.py` already reaches paths only through validated config and generated tree
+entries. `watchdog.py` contains no equivalent `None`-to-path coercion: its optional
+notifier/state paths are guarded before `Path(...)`, so no production change was
+required there.
+
+```powershell
+python -m pytest -q MTC_COMMAND_CENTER/tools/opsa/test_opsa.py
+python -m compileall -q MTC_COMMAND_CENTER/tools/opsa
+```
+
+```text
+..............................                                    [100%]
+30 passed, 7 subtests passed in 1.08s
+COMPILEALL_RC=0
+```
+
+No live evidence store, host, credential, notifier service, trading logic, Pine,
+parity, schema, or deployment surface was touched.

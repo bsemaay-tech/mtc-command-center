@@ -46,6 +46,29 @@ RC_ALERT = 2
 RC_CHECK_FAILED = 3
 
 
+class RequiredFieldError(ValueError):
+    """A required external-input field is absent, non-string, or empty."""
+
+    def __init__(self, field: str, context: str):
+        self.field = field
+        self.context = context
+        super().__init__(f"{context} field {field!r} must be a non-empty string")
+
+
+def require_non_empty_string(value: object, field: str, context: str) -> str:
+    """Return a required string field or raise before it reaches path handling."""
+    if not isinstance(value, str) or not value:
+        raise RequiredFieldError(field, context)
+    return value
+
+
+def require_non_empty_string_field(record: object, field: str, context: str) -> str:
+    """Validate one required field from an external mapping without coercing it."""
+    if not isinstance(record, dict):
+        raise RequiredFieldError(field, context)
+    return require_non_empty_string(record.get(field), field, context)
+
+
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -162,7 +185,13 @@ def resolve_confined_path(root: Path, *parts: str | Path) -> Path:
         raise ValueError("confined path requires at least one child component")
 
     for part in parts:
-        raw = str(part)
+        if isinstance(part, Path):
+            raw = str(part)
+        elif isinstance(part, str):
+            raw = part
+        else:
+            raise ValueError(
+                f"path component must be a non-empty string or Path, got {type(part).__name__}")
         if not raw or "\x00" in raw:
             raise ValueError(f"unsafe empty/NUL path component: {raw!r}")
 
@@ -200,16 +229,14 @@ def load_backup_config(config_path: Path) -> dict:
     config = json.loads(Path(config_path).read_text(encoding="utf-8"))
     if config.get("schema") != CONFIG_SCHEMA:
         raise ValueError(f"config schema must be {CONFIG_SCHEMA}, got {config.get('schema')!r}")
-    if not isinstance(config.get("backup_root"), str) or not config["backup_root"]:
-        raise ValueError("config must set backup_root")
+    require_non_empty_string_field(config, "backup_root", "backup config")
     stores = config.get("stores")
     if not isinstance(stores, list) or not stores:
         raise ValueError("config must set a non-empty stores list")
     seen_ids: set[str] = set()
-    for store in stores:
+    for index, store in enumerate(stores):
         for field in ("id", "path", "class"):
-            if not isinstance(store.get(field), str) or not store[field]:
-                raise ValueError(f"every store needs non-empty string fields id/path/class: {store!r}")
+            require_non_empty_string_field(store, field, f"backup config store[{index}]")
         if store["id"] in seen_ids:
             raise ValueError(f"duplicate store id: {store['id']!r}")
         resolve_confined_path(Path(config["backup_root"]), "runs", "_config_check",

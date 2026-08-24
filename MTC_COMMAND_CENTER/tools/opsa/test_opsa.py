@@ -16,6 +16,7 @@ import hashlib
 import io
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -220,6 +221,52 @@ class BackupRestoreTests(unittest.TestCase):
         self.assertFalse(target.exists())
         self.assertEqual(rc, 3)
 
+    def _run_restore_cli_with_record(self, record: dict) -> tuple[subprocess.CompletedProcess, Path]:
+        run_id = "opsa-20260825T020000.000Z"
+        payload = b"field-validation-fixture"
+        record = {"record": "file", "run_id": run_id,
+                  "rel": "payload.bin", "sha256": hashlib.sha256(payload).hexdigest(),
+                  **record}
+        source = self.backup_root / "runs" / str(record.get("store_id")) / "payload.bin"
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_bytes(payload)
+        lines = [
+            {"record": "run_start", "schema": "mtc.opsa_manifest/v1", "run_id": run_id},
+            record,
+            {"record": "run_end", "run_id": run_id, "status": "ok", "files": 1,
+             "errors": []},
+        ]
+        self.manifest.write_text(
+            "".join(json.dumps(line) + "\n" for line in lines), encoding="utf-8")
+        target = self.root / "restore_target"
+        result = subprocess.run(
+            [sys.executable, str(TOOLS_DIR / "restore.py"),
+             "--config", str(self.config), "--run", run_id, "--to", str(target)],
+            cwd=TOOLS_DIR, capture_output=True, text=True, check=False,
+        )
+        return result, target
+
+    def _assert_structured_manifest_check_failure(
+            self, result: subprocess.CompletedProcess, target: Path, field: str) -> None:
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertEqual(result.returncode, 3)
+        report = json.loads(result.stderr.strip().splitlines()[-1])
+        self.assertEqual(report["status"], "check_failed")
+        self.assertEqual(report["error"], "invalid_manifest_record")
+        self.assertEqual(report["field"], field)
+        self.assertFalse(target.exists())
+
+    def test_restore_cli_missing_store_id_is_structured_check_failure_without_writes(self):
+        """D026: a missing store_id is rejected before confinement, never stringified."""
+        result, target = self._run_restore_cli_with_record({})
+        self._assert_structured_manifest_check_failure(result, target, "store_id")
+
+    def test_restore_cli_empty_path_is_structured_check_failure_without_writes(self):
+        """D026: an empty manifest path (rel) is rejected before confinement."""
+        result, target = self._run_restore_cli_with_record(
+            {"store_id": "ledger_store", "rel": ""})
+        self._assert_structured_manifest_check_failure(result, target, "rel")
+
     def test_backup_rejects_percent_encoded_parent_store_id_without_writes(self):
         """D026: encoded separators in ids are rejected, not treated as safe literals."""
         encoded = write_config(
@@ -236,7 +283,7 @@ class BackupRestoreTests(unittest.TestCase):
 class HeartbeatPathTests(unittest.TestCase):
     def test_heartbeat_rejects_traversal_absolute_and_drive_ids_without_writes(self):
         """D026: unsafe heartbeat ids cannot write inside or beside the state root."""
-        cases = ("../escaped", "..%2Fescaped", "{absolute}", "C:drive_escape")
+        cases = ("", "../escaped", "..%2Fescaped", "{absolute}", "C:drive_escape")
         for case in cases:
             with self.subTest(case=case), tempfile.TemporaryDirectory(
                     prefix="opsa_hb_path_") as tmp:

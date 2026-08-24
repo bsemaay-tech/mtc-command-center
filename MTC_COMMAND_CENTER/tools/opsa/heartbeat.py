@@ -35,12 +35,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from opsa_common import (  # noqa: E402
-    HEARTBEAT_SCHEMA, RC_CHECK_FAILED, atomic_write_json, resolve_confined_path,
-    utc_now_iso,
+    HEARTBEAT_SCHEMA, RC_CHECK_FAILED, atomic_write_json, require_non_empty_string,
+    resolve_confined_path, utc_now_iso,
 )
 
 
 def emit(state_dir: Path, beat_id: str, seq: int, note: str | None = None) -> Path:
+    beat_id = require_non_empty_string(beat_id, "id", "heartbeat")
     path = resolve_confined_path(state_dir, f"{beat_id}.hb.json")
     atomic_write_json(path, {
         "schema": HEARTBEAT_SCHEMA,

@@ -31,8 +31,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from opsa_common import (  # noqa: E402
-    RC_CHECK_FAILED, RC_OK, read_jsonl, resolve_confined_path, sha256_file,
-    utc_now_iso,
+    RC_CHECK_FAILED, RC_OK, RequiredFieldError, read_jsonl,
+    require_non_empty_string, require_non_empty_string_field, resolve_confined_path,
+    sha256_file, utc_now_iso,
 )
 
 RC_ERROR = 1
@@ -95,11 +96,29 @@ def run_restore(config_path: Path, run_id: str | None, target: Path | None,
         print("error: manifest contains no run_start records", file=sys.stderr)
         return RC_CHECK_FAILED
     try:
-        run_dir = resolve_confined_path(backup_root, "runs", resolved)
+        resolved = require_non_empty_string(resolved, "run_id", "manifest run")
+        validated_paths: list[tuple[str, str]] = []
         for record in selected:
-            resolve_confined_path(run_dir, record.get("store_id"), record.get("rel"))
+            record_type = require_non_empty_string_field(
+                record, "record", "manifest record")
+            require_non_empty_string_field(record, "run_id", f"manifest {record_type} record")
+            store_id = require_non_empty_string_field(
+                record, "store_id", f"manifest {record_type} record")
+            rel = require_non_empty_string_field(
+                record, "rel", f"manifest {record_type} record")
+            if record_type == "file":
+                require_non_empty_string_field(record, "sha256", "manifest file record")
+            validated_paths.append((store_id, rel))
+        run_dir = resolve_confined_path(backup_root, "runs", resolved)
+        for store_id, rel in validated_paths:
+            resolve_confined_path(run_dir, store_id, rel)
             if not check_only and target is not None:
-                resolve_confined_path(target, record.get("store_id"), record.get("rel"))
+                resolve_confined_path(target, store_id, rel)
+    except RequiredFieldError as exc:
+        print(json.dumps({"status": "check_failed", "error": "invalid_manifest_record",
+                          "field": exc.field, "detail": str(exc), "run_id": resolved},
+                         ensure_ascii=False), file=sys.stderr)
+        return RC_CHECK_FAILED
     except (TypeError, ValueError) as exc:
         print(f"error: unsafe manifest path for run {resolved}: {exc}", file=sys.stderr)
         return RC_CHECK_FAILED
