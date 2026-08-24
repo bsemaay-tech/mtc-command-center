@@ -193,8 +193,13 @@ def _blob(component: dict) -> str:
                 "permission, not an instruction",
                 "flatten=false",
                 "does not automatically flatten",
-                # KILL cancels everything even when it does not flatten.
-                "even with flatten=false the engine calls cancel_all()",
+                # The current interface has one KILL endpoint, and the engine's
+                # schema-dependent path never broad-cancels protective orders.
+                "/api/kill?flatten=false",
+                "the engine never calls cancel_all()",
+                "without schema-v9 kill evidence",
+                "only orders classified risk-increasing are cancelled",
+                "qualifying reduce-only protection must be proven to remain",
                 # DISARM's real behaviour, and the runtime's own fail-safe path.
                 "cancels pending entry orders when it is safe to do so",
                 "disarm itself automatically as a fail-safe",
@@ -206,9 +211,13 @@ def _blob(component: dict) -> str:
                 "not production-hardened",
                 "sticky",
                 "conditional permission",
-                # The recorded hardening gap, stated as a mechanism not a mood.
-                "calls cancel_all() regardless",
-                "leaves an unprotected position",
+                # KILL's schema-dependent behaviour, stated as mechanisms.
+                "engine.kill() never calls cancel_all()",
+                "without the v9 kill-evidence contract",
+                "it cancels nothing and does not flatten",
+                "cancels only orders classified risk-increasing",
+                "preserves qualifying reduce-only protection",
+                "starts a controlled flatten only when flatten was actually requested",
                 # ARMED gates entries only; safety work is not gated by it.
                 "armed gates new entries and nothing else",
                 "while disarmed or killed",
@@ -326,8 +335,8 @@ def test_help_flow_step_states_agree_with_component_status(help_map: dict):
     assert assistant_step["state"] == "planned"
 
 
-def test_help_knowledge_does_not_claim_repo_memory_points_at_the_map(help_map: dict):
-    """No _AI_MEMORY file references help_map.json today, so no edge may assert it."""
+def test_help_knowledge_does_not_claim_repo_onboarding_points_at_the_map(help_map: dict):
+    """The coding-agent onboarding entry points do not direct agents to the map."""
     memory = _component(help_map, "repo_ai_memory")
     edge = next(c for c in memory["connections"] if c["to"] == "help_map")
     assert edge["kind"] == "planned", "repo _AI_MEMORY does not point at help_map.json yet"
@@ -338,16 +347,18 @@ def test_help_knowledge_does_not_claim_repo_memory_points_at_the_map(help_map: d
     )
     assert reverse["kind"] == "planned"
 
-    memory_root = REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY"
-    if memory_root.is_dir():
-        pointing = [
-            path.name
-            for path in memory_root.rglob("*.md")
-            if "help_map.json" in path.read_text(encoding="utf-8", errors="ignore")
-        ]
-        assert not pointing, (
-            "_AI_MEMORY now points at help_map.json; promote the edge from planned to data"
-        )
+    onboarding_paths = [
+        REPO_ROOT / "AGENTS.md",
+        REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "START_HERE.md",
+        REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "PROJECT_MEMORY.md",
+    ]
+    pointing = [
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in onboarding_paths
+        if path.is_file()
+        and "help_map.json" in path.read_text(encoding="utf-8", errors="ignore")
+    ]
+    assert not pointing, "repo onboarding now points at help_map.json; promote the edge to data"
 
 
 def test_help_knowledge_avoids_cost_free_and_signature_claims():
