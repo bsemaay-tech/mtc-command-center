@@ -192,7 +192,11 @@ def main() -> None:
             raise AssertionError(f"unexpected clean-worktree status record: {record!r}")
         scoped_paths.append(build.decode_path(record[3:]))
     allowed_prefix = "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_01_INVENTORY_2026-08-24/"
-    check(scoped_paths and all(path.startswith(allowed_prefix) for path in scoped_paths), "worktree changes confined to output whitelist", str(len(scoped_paths)))
+    check(
+        all(path.startswith(allowed_prefix) for path in scoped_paths),
+        "worktree clean or changes confined to output whitelist",
+        str(len(scoped_paths)),
+    )
 
     print("GATE DECISION: proceed to Lead-owned Gate 5 (T2)")
 
