@@ -55,8 +55,26 @@ git -C $Worktree status --short --branch
 git -C $Worktree log -1 --oneline --decorate
 Write-Output "VERIFIED CLEAN WORKTREE: $Worktree at $ActualHead on $Branch"
 
-# Link worktree verification to the offline branch-freshness gate before work begins.
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$Worktree\MTC_COMMAND_CENTER\tools\repo_guard.ps1"
+# Link worktree verification to the offline branch-freshness gate before work begins. An old
+# target can predate the freshness check, so never run the target checkout's guard. Extract the
+# current guard from origin/master; until WP-P0-15 is merged, fall back to this feature branch.
+$GuardPath = 'MTC_COMMAND_CENTER/tools/repo_guard.ps1'
+$GuardSpec = "origin/master:$GuardPath"
+$GuardLines = @(git -C $Worktree show $GuardSpec 2>$null)
+$GuardText = $GuardLines -join [Environment]::NewLine
+if ($LASTEXITCODE -ne 0 -or $GuardText -notmatch 'STALE BRANCH') {
+    $GuardSpec = "feature/wp-p0-15-branch-freshness-20260824:$GuardPath"
+    $GuardLines = @(git -C $Repo show $GuardSpec 2>$null)
+    $GuardText = $GuardLines -join [Environment]::NewLine
+}
+if ($LASTEXITCODE -ne 0 -or $GuardText -notmatch 'STALE BRANCH') {
+    throw "Could not extract the current branch-freshness guard from $GuardSpec"
+}
+$CurrentGuard = Join-Path $env:TEMP 'repo_guard_current.ps1'
+$GuardText | Set-Content -LiteralPath $CurrentGuard -Encoding UTF8
+
+Set-Location -LiteralPath $Worktree
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $CurrentGuard
 if ($LASTEXITCODE -ne 0) {
     throw 'Repo guard blocked the new worktree. Recreate it from current origin/master or rebase.'
 }

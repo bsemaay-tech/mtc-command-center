@@ -269,3 +269,265 @@ is the expected `show-ref --verify --quiet` result proving the temporary branch 
 PASS. RED and GREEN executed different guard bytes against the identical deliberately stale
 worktree. RED passed without detecting staleness; GREEN emitted `STALE BRANCH`, blocked, and
 returned 1. The committed modified guard separately passed from a clean, fresh control worktree.
+
+## Closure round — 2026-08-24
+
+This owner-authorized closure round executed the repaired procedure step from inside freshly
+created temporary worktrees. Local `origin/master` was
+`e1a0c2ed11a3bf664e24574373416aa43880c5ec`; its guard still predated WP-P0-15,
+so the documented check selected the committed guard from
+`feature/wp-p0-15-branch-freshness-20260824`. No target checkout's guard was
+executed.
+
+### Stale target: current guard fires from inside the worktree
+
+Working directory for creation: `C:\WPP015_20260824`.
+
+~~~powershell
+$StaleBranch = 'tmp/wp-p0-15-stale-demo-closure-stale-20260824'
+$FreshBranch = 'tmp/wp-p0-15-stale-demo-closure-fresh-20260824'
+$TempWorktree = 'C:\WPP015_TMP_STALE'
+Write-Output "TEMP_PATH_EXISTS=$(Test-Path -LiteralPath $TempWorktree)"
+git show-ref --verify --quiet "refs/heads/$StaleBranch"
+Write-Output "STALE_BRANCH_PRECHECK_RC=$LASTEXITCODE"
+git show-ref --verify --quiet "refs/heads/$FreshBranch"
+Write-Output "FRESH_BRANCH_PRECHECK_RC=$LASTEXITCODE"
+git worktree add -b $StaleBranch $TempWorktree '3bfe62a5ecb1f61bbac7f4dbdeef0239884adb8f'
+Write-Output "STALE_WORKTREE_ADD_RC=$LASTEXITCODE"
+git -C $TempWorktree status --porcelain
+Write-Output "STALE_STATUS_RC=$LASTEXITCODE"
+git -C $TempWorktree rev-parse HEAD
+git -C $TempWorktree branch --show-current
+~~~
+
+Real output (Git's repetitive checkout progress lines omitted):
+
+~~~text
+TEMP_PATH_EXISTS=False
+STALE_BRANCH_PRECHECK_RC=1
+FRESH_BRANCH_PRECHECK_RC=1
+Preparing worktree (new branch 'tmp/wp-p0-15-stale-demo-closure-stale-20260824')
+HEAD is now at 3bfe62a5 test(wpl-p2): audit 5 doc-closure kickoff + milestone log
+STALE_WORKTREE_ADD_RC=0
+STALE_STATUS_RC=0
+3bfe62a5ecb1f61bbac7f4dbdeef0239884adb8f
+tmp/wp-p0-15-stale-demo-closure-stale-20260824
+~~~
+
+The empty line before `STALE_STATUS_RC=0` is the real clean
+`git status --porcelain` result. The repaired final step was then executed
+literally, with diagnostic lines added only to identify the selected guard and working
+directory:
+
+~~~powershell
+$Repo = 'C:\WPP015_20260824'
+$Worktree = 'C:\WPP015_TMP_STALE'
+$GuardPath = 'MTC_COMMAND_CENTER/tools/repo_guard.ps1'
+$GuardSpec = "origin/master:$GuardPath"
+$GuardLines = @(git -C $Worktree show $GuardSpec 2>$null)
+$GuardText = $GuardLines -join [Environment]::NewLine
+if ($LASTEXITCODE -ne 0 -or $GuardText -notmatch 'STALE BRANCH') {
+    $GuardSpec = "feature/wp-p0-15-branch-freshness-20260824:$GuardPath"
+    $GuardLines = @(git -C $Repo show $GuardSpec 2>$null)
+    $GuardText = $GuardLines -join [Environment]::NewLine
+}
+if ($LASTEXITCODE -ne 0 -or $GuardText -notmatch 'STALE BRANCH') {
+    throw "Could not extract the current branch-freshness guard from $GuardSpec"
+}
+$CurrentGuard = Join-Path $env:TEMP 'repo_guard_current.ps1'
+$GuardText | Set-Content -LiteralPath $CurrentGuard -Encoding UTF8
+Write-Output "GUARD_SPEC=$GuardSpec"
+Write-Output "GUARD_TEMP=$CurrentGuard"
+Set-Location -LiteralPath $Worktree
+Write-Output "GUARD_CWD=$((Get-Location).Path)"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $CurrentGuard
+$GuardRc = $LASTEXITCODE
+Write-Output "STALE_CURRENT_GUARD_RC=$GuardRc"
+Set-Location -LiteralPath $Repo
+Write-Output "RETURN_CWD=$((Get-Location).Path)"
+~~~
+
+Real output:
+
+~~~text
+GUARD_SPEC=feature/wp-p0-15-branch-freshness-20260824:MTC_COMMAND_CENTER/tools/repo_guard.ps1
+GUARD_TEMP=C:\Users\BARSEM~1\AppData\Local\Temp\repo_guard_current.ps1
+GUARD_CWD=C:\WPP015_TMP_STALE
+=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    tmp/wp-p0-15-stale-demo-closure-stale-20260824
+[freshness] local origin/master tip e1a0c2ed11a3bf664e24574373416aa43880c5ec age=0 day(s) (commit timestamp; no fetch attempted)
+[freshness] branch merge-base 3bfe62a5ecb1f61bbac7f4dbdeef0239884adb8f is 538 commit(s) behind local origin/master (limit 30)
+[freshness] STALE BRANCH: 'tmp/wp-p0-15-stale-demo-closure-stale-20260824' is 538 commit(s) behind local origin/master (limit 30)
+[dirty]     clean
+[staged]    none
+[protected] none
+[untracked] no risky files
+[unpushed]  no upstream set
+
+WARN: no upstream tracking branch
+BLOCK: STALE BRANCH: 'tmp/wp-p0-15-stale-demo-closure-stale-20260824' is 538 commit(s) behind local origin/master (limit 30)
+RESULT: BLOCKED
+STALE_CURRENT_GUARD_RC=1
+RETURN_CWD=C:\WPP015_20260824
+~~~
+
+The current guard ran from inside the stale worktree, emitted `STALE BRANCH`,
+blocked, and returned 1.
+
+### Stale fixture removal
+
+~~~powershell
+$Repo = 'C:\WPP015_20260824'
+$Worktree = 'C:\WPP015_TMP_STALE'
+$Branch = 'tmp/wp-p0-15-stale-demo-closure-stale-20260824'
+git -C $Worktree status --porcelain
+Write-Output "STALE_PRE_REMOVE_STATUS_RC=$LASTEXITCODE"
+git -C $Worktree rev-parse HEAD
+git -C $Worktree branch --show-current
+git -C $Repo worktree remove $Worktree
+Write-Output "STALE_WORKTREE_REMOVE_RC=$LASTEXITCODE"
+git -C $Repo show-ref --verify --hash "refs/heads/$Branch"
+git -C $Repo branch -D $Branch
+Write-Output "STALE_BRANCH_DELETE_RC=$LASTEXITCODE"
+Write-Output "STALE_PATH_EXISTS=$(Test-Path -LiteralPath $Worktree)"
+git -C $Repo show-ref --verify --quiet "refs/heads/$Branch"
+Write-Output "STALE_BRANCH_POSTCHECK_RC=$LASTEXITCODE"
+~~~
+
+Real output:
+
+~~~text
+STALE_PRE_REMOVE_STATUS_RC=0
+3bfe62a5ecb1f61bbac7f4dbdeef0239884adb8f
+tmp/wp-p0-15-stale-demo-closure-stale-20260824
+STALE_WORKTREE_REMOVE_RC=0
+3bfe62a5ecb1f61bbac7f4dbdeef0239884adb8f
+Deleted branch tmp/wp-p0-15-stale-demo-closure-stale-20260824 (was 3bfe62a5).
+STALE_BRANCH_DELETE_RC=0
+STALE_PATH_EXISTS=False
+STALE_BRANCH_POSTCHECK_RC=1
+~~~
+
+### Fresh target: current guard passes from inside the worktree
+
+Working directory for creation: `C:\WPP015_20260824`.
+
+~~~powershell
+$FreshBranch = 'tmp/wp-p0-15-stale-demo-closure-fresh-20260824'
+$TempWorktree = 'C:\WPP015_TMP_STALE'
+git worktree add -b $FreshBranch $TempWorktree origin/master
+Write-Output "FRESH_WORKTREE_ADD_RC=$LASTEXITCODE"
+git -C $TempWorktree status --porcelain
+Write-Output "FRESH_STATUS_RC=$LASTEXITCODE"
+git -C $TempWorktree rev-parse HEAD
+git -C $TempWorktree branch --show-current
+git -C $TempWorktree rev-parse origin/master
+~~~
+
+Real output (Git's repetitive checkout progress lines omitted):
+
+~~~text
+Preparing worktree (new branch 'tmp/wp-p0-15-stale-demo-closure-fresh-20260824')
+branch 'tmp/wp-p0-15-stale-demo-closure-fresh-20260824' set up to track 'origin/master'.
+HEAD is now at e1a0c2ed merge: WP-P0-24 OSS lifecycle policy + dependency ledger (lane D, T1 PASS-WITH-NITS 2026-08-24)
+FRESH_WORKTREE_ADD_RC=0
+FRESH_STATUS_RC=0
+e1a0c2ed11a3bf664e24574373416aa43880c5ec
+tmp/wp-p0-15-stale-demo-closure-fresh-20260824
+e1a0c2ed11a3bf664e24574373416aa43880c5ec
+~~~
+
+The repaired final step was then executed again:
+
+~~~powershell
+$Repo = 'C:\WPP015_20260824'
+$Worktree = 'C:\WPP015_TMP_STALE'
+$GuardPath = 'MTC_COMMAND_CENTER/tools/repo_guard.ps1'
+$GuardSpec = "origin/master:$GuardPath"
+$GuardLines = @(git -C $Worktree show $GuardSpec 2>$null)
+$GuardText = $GuardLines -join [Environment]::NewLine
+if ($LASTEXITCODE -ne 0 -or $GuardText -notmatch 'STALE BRANCH') {
+    $GuardSpec = "feature/wp-p0-15-branch-freshness-20260824:$GuardPath"
+    $GuardLines = @(git -C $Repo show $GuardSpec 2>$null)
+    $GuardText = $GuardLines -join [Environment]::NewLine
+}
+if ($LASTEXITCODE -ne 0 -or $GuardText -notmatch 'STALE BRANCH') {
+    throw "Could not extract the current branch-freshness guard from $GuardSpec"
+}
+$CurrentGuard = Join-Path $env:TEMP 'repo_guard_current.ps1'
+$GuardText | Set-Content -LiteralPath $CurrentGuard -Encoding UTF8
+Write-Output "GUARD_SPEC=$GuardSpec"
+Write-Output "GUARD_TEMP=$CurrentGuard"
+Set-Location -LiteralPath $Worktree
+Write-Output "GUARD_CWD=$((Get-Location).Path)"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File $CurrentGuard
+$GuardRc = $LASTEXITCODE
+Write-Output "FRESH_CURRENT_GUARD_RC=$GuardRc"
+Set-Location -LiteralPath $Repo
+Write-Output "RETURN_CWD=$((Get-Location).Path)"
+~~~
+
+Real output:
+
+~~~text
+GUARD_SPEC=feature/wp-p0-15-branch-freshness-20260824:MTC_COMMAND_CENTER/tools/repo_guard.ps1
+GUARD_TEMP=C:\Users\BARSEM~1\AppData\Local\Temp\repo_guard_current.ps1
+GUARD_CWD=C:\WPP015_TMP_STALE
+=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    tmp/wp-p0-15-stale-demo-closure-fresh-20260824
+[freshness] local origin/master tip e1a0c2ed11a3bf664e24574373416aa43880c5ec age=0 day(s) (commit timestamp; no fetch attempted)
+[freshness] branch merge-base e1a0c2ed11a3bf664e24574373416aa43880c5ec is 0 commit(s) behind local origin/master (limit 30)
+[dirty]     clean
+[staged]    none
+[protected] none
+[untracked] no risky files
+[unpushed]  in sync with upstream
+
+RESULT: PASS
+FRESH_CURRENT_GUARD_RC=0
+RETURN_CWD=C:\WPP015_20260824
+~~~
+
+The current guard ran from inside the fresh worktree, found a zero-behind merge-base, emitted
+`RESULT: PASS`, and returned 0.
+
+### Fresh fixture removal
+
+~~~powershell
+$Repo = 'C:\WPP015_20260824'
+$Worktree = 'C:\WPP015_TMP_STALE'
+$Branch = 'tmp/wp-p0-15-stale-demo-closure-fresh-20260824'
+git -C $Worktree status --porcelain
+Write-Output "FRESH_PRE_REMOVE_STATUS_RC=$LASTEXITCODE"
+git -C $Worktree rev-parse HEAD
+git -C $Worktree branch --show-current
+git -C $Repo worktree remove $Worktree
+Write-Output "FRESH_WORKTREE_REMOVE_RC=$LASTEXITCODE"
+git -C $Repo show-ref --verify --hash "refs/heads/$Branch"
+git -C $Repo branch -D $Branch
+Write-Output "FRESH_BRANCH_DELETE_RC=$LASTEXITCODE"
+Write-Output "FRESH_PATH_EXISTS=$(Test-Path -LiteralPath $Worktree)"
+git -C $Repo show-ref --verify --quiet "refs/heads/$Branch"
+Write-Output "FRESH_BRANCH_POSTCHECK_RC=$LASTEXITCODE"
+Remove-Item -LiteralPath (Join-Path $env:TEMP 'repo_guard_current.ps1') -ErrorAction SilentlyContinue
+Write-Output "GUARD_TEMP_EXISTS=$(Test-Path -LiteralPath (Join-Path $env:TEMP 'repo_guard_current.ps1'))"
+~~~
+
+Real output:
+
+~~~text
+FRESH_PRE_REMOVE_STATUS_RC=0
+e1a0c2ed11a3bf664e24574373416aa43880c5ec
+tmp/wp-p0-15-stale-demo-closure-fresh-20260824
+FRESH_WORKTREE_REMOVE_RC=0
+e1a0c2ed11a3bf664e24574373416aa43880c5ec
+Deleted branch tmp/wp-p0-15-stale-demo-closure-fresh-20260824 (was e1a0c2ed).
+FRESH_BRANCH_DELETE_RC=0
+FRESH_PATH_EXISTS=False
+FRESH_BRANCH_POSTCHECK_RC=1
+GUARD_TEMP_EXISTS=False
+~~~
+
+Closure adjudication: PASS. The fixed step selected a current guard rather than either target's
+copy, changed location into each created worktree before invocation, blocked the stale target,
+passed the fresh target, and left no temporary worktree, branch, or extracted guard file behind.

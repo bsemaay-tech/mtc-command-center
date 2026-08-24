@@ -68,10 +68,13 @@ All commits on this branch after its `origin/master` base, with one-line content
   procedure.
 - `6dcdd0591624a471aebcd405c7a5b41f15312250` — D026 RED/GREEN evidence and lane report.
 - `10876fb9eb818b00141e8b808fe6a4d706ffc06e` — finalized evidence metadata.
-- `HEAD` — repair round 1: warn-only switch, reachable fail-closed paths, executable override
-  evidence, procedure fixes, protocol docs, and this complete branch inventory. `HEAD` is used
-  because a commit cannot embed its own SHA without changing that SHA; the exact hash is printed
-  in the implementer handoff.
+- `b38a04ce5c0f3dadf78e79259ec5b4b76c993cee` — repair round 1: warn-only switch, reachable
+  fail-closed paths, executable override evidence, procedure fixes, protocol docs, and the
+  complete branch inventory.
+- `HEAD` — owner-authorized closure round: run a freshly extracted current guard from inside
+  the created worktree, with stale/fresh execution evidence. `HEAD` is used because a commit
+  cannot embed its own SHA without changing that SHA; the exact hash is printed in the
+  implementer handoff.
 
 Exact paths staged for the repair commit:
 
