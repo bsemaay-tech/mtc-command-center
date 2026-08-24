@@ -3,13 +3,26 @@
   MTC Repo Guard - dry-run preflight. READ-ONLY: never modifies files, index, or remotes.
 .DESCRIPTION
   Checks current branch, dirty files, staged files, protected-scope changes, risky untracked
-  files, and unpushed commits. Prints per-check status and a final PASS / BLOCKED verdict.
+  files, branch freshness against the local origin/master ref, and unpushed commits. Prints
+  per-check status and a final PASS / BLOCKED verdict. The freshness check never fetches.
   Enforces MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/MTC_REPO_GUARD_PROTOCOL.md.
+.PARAMETER MaxBehindCommits
+  Maximum commits the branch merge-base may lag local origin/master before it is stale.
+  Default: 30. MTC_REPO_GUARD_MAX_BEHIND_COMMITS overrides the default when this parameter
+  is not supplied.
+.PARAMETER BlockStaleBranch
+  When true (the default), a stale branch makes the final result BLOCKED. Set false only for
+  a warning-only diagnostic run.
 .NOTES
   Exit code 0 = PASS, 1 = BLOCKED. Does not stage, commit, push, or write anything.
 #>
 [CmdletBinding()]
-param()
+param(
+  [ValidateRange(0, 2147483647)]
+  [int]$MaxBehindCommits = 30,
+
+  [bool]$BlockStaleBranch = $true
+)
 
 $ErrorActionPreference = 'Stop'
 $protected = @(
@@ -24,6 +37,18 @@ $riskyPatterns  = @('*_server.ps1','START_*','*.tmp','*.log')
 
 $blocked = @()
 $warn    = @()
+$maxBehindConfigError = ''
+
+if (-not $PSBoundParameters.ContainsKey('MaxBehindCommits') -and
+    -not [string]::IsNullOrWhiteSpace($env:MTC_REPO_GUARD_MAX_BEHIND_COMMITS)) {
+  $envMaxBehind = 0
+  if ([int]::TryParse($env:MTC_REPO_GUARD_MAX_BEHIND_COMMITS, [ref]$envMaxBehind) -and
+      $envMaxBehind -ge 0) {
+    $MaxBehindCommits = $envMaxBehind
+  } else {
+    $maxBehindConfigError = "MTC_REPO_GUARD_MAX_BEHIND_COMMITS must be a non-negative integer (received '$($env:MTC_REPO_GUARD_MAX_BEHIND_COMMITS)')"
+  }
+}
 
 function Line($s) { Write-Output $s }
 
@@ -39,6 +64,46 @@ $branch = (git rev-parse --abbrev-ref HEAD).Trim()
 Line "[branch]    $branch"
 if ($branch -eq 'master' -or $branch -eq 'main') {
   $blocked += "on '$branch' - branch first (feature/<scope>)"
+}
+
+# branch freshness (offline: local origin/master only)
+$originRef = 'refs/remotes/origin/master'
+if ($maxBehindConfigError -ne '') {
+  Line "[freshness] configuration error: $maxBehindConfigError"
+  $blocked += "branch freshness cannot be evaluated: $maxBehindConfigError"
+} else {
+  git show-ref --verify --quiet $originRef
+  if ($LASTEXITCODE -ne 0) {
+    Line '[freshness] unavailable: local origin/master ref is missing (no fetch attempted)'
+    $blocked += 'branch freshness cannot be evaluated: local origin/master ref is missing'
+  } else {
+    $originTip = (git rev-parse $originRef 2>$null).Trim()
+    $originEpochText = (git show -s --format=%ct $originRef 2>$null).Trim()
+    $mergeBase = (git merge-base HEAD $originRef 2>$null).Trim()
+    if ($LASTEXITCODE -ne 0 -or $mergeBase -eq '' -or $originEpochText -notmatch '^\d+$') {
+      Line '[freshness] unavailable: could not resolve merge-base or local origin/master age (no fetch attempted)'
+      $blocked += 'branch freshness cannot be evaluated against local origin/master'
+    } else {
+      $behindText = (git rev-list --count "$mergeBase..$originRef" 2>$null).Trim()
+      if ($LASTEXITCODE -ne 0 -or $behindText -notmatch '^\d+$') {
+        Line '[freshness] unavailable: could not count commits behind local origin/master (no fetch attempted)'
+        $blocked += 'branch freshness cannot be evaluated against local origin/master'
+      } else {
+        $originAgeSeconds = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - [int64]$originEpochText
+        if ($originAgeSeconds -lt 0) { $originAgeSeconds = 0 }
+        $originAgeDays = [math]::Floor($originAgeSeconds / 86400)
+        $behind = [int64]$behindText
+        Line "[freshness] local origin/master tip $originTip age=$originAgeDays day(s) (commit timestamp; no fetch attempted)"
+        Line "[freshness] branch merge-base $mergeBase is $behind commit(s) behind local origin/master (limit $MaxBehindCommits)"
+        if ($behind -gt $MaxBehindCommits) {
+          $staleMessage = "STALE BRANCH: '$branch' is $behind commit(s) behind local origin/master (limit $MaxBehindCommits)"
+          Line "[freshness] $staleMessage"
+          if ($BlockStaleBranch) { $blocked += $staleMessage }
+          else { $warn += "$staleMessage; blocking disabled by -BlockStaleBranch" }
+        }
+      }
+    }
+  }
 }
 
 # 2. dirty (tracked, unstaged or modified)
