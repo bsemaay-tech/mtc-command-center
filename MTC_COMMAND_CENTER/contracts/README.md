@@ -24,10 +24,16 @@ lifecycle, admission, promotion, broker, or trading action.
   are neither validated nor deeply frozen. No consumer of this package may create
   a contract object with `model_construct()` (or `copy(update=...)`-style
   validation bypasses); only normal construction and `model_validate` produce
-  valid, immutable contract objects. Any object made via a bypass carries no
-  contract guarantee, and reviews must treat its appearance in consumer code as
-  a defect. *(Documented 2026-08-25, T1 closure round: the bypass is a pydantic
-  escape hatch, not a supported path — no consumer in this repository uses it.)*
+  valid, immutable contract objects — the supported entry points are normal
+  construction and validation from RAW input (`model_validate` /
+  `model_validate_json` on plain data). Any object made via a bypass carries no
+  contract guarantee, **and re-validating a bypass-built instance does not
+  sanitize it** — `model_validate()` applied to a `model_construct()` object can
+  return that same instance with unparsed nested content, so the only remedy is
+  rebuilding from raw data. Reviews must treat any bypass appearance in consumer
+  code as a defect. *(Documented 2026-08-25, T1 closure round; wording scoped in
+  the same round: the bypass is a pydantic escape hatch, not a supported path —
+  no consumer in this repository uses it.)*
 - Every numeric policy/freshness/window threshold is `[OPEN]` (`None`) unless
   separately owner-ratified. Consumers must treat unset as fail-closed. These
   models record shapes and do not apply thresholds.
