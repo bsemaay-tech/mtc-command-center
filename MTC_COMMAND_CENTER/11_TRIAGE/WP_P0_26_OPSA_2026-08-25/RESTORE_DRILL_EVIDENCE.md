@@ -788,35 +788,59 @@ file record missing `store_id` passed the first confinement preflight and later
 raised `KeyError`. An empty path (`rel`) returned rc 3, but emitted only the generic
 path-safety line rather than the structured invalid-record check-failure.
 
-### C8.1 RED — final tests against an exact HEAD temp copy
+### C8.1 RED — `eaaf5e07` implementation + `bbd3fb99` final tests
 
-The production files came from `git archive HEAD`; only the new `test_opsa.py` was
-copied over them. `%TEMP%` below is the sole normalization of the real path.
+Closure-3 replay materialized a new isolated TEMP tree file-by-file. The five
+executable implementation files came from exact pre-fix commit
+`eaaf5e073d3157f779c00145048bd7305fd697ad`; the final regression test came from
+`bbd3fb99946d0a1b726d46a6c50be06837ab878a`. Nothing was copied from the working
+tree, and no mutable `HEAD` expression was used. These are the verbatim commands
+executed from repository root (`cmd.exe` redirection preserves the raw bytes emitted
+by each required `git show <sha>:<path>` invocation):
 
 ```powershell
-$redRoot = "$env:TEMP\opsa_closure2_red_763c3e9f379b408ca992cdb24e5c2d3f"
-New-Item -ItemType Directory -Path $redRoot
-git archive --format=tar -o "$redRoot\head.tar" HEAD MTC_COMMAND_CENTER/tools/opsa
-tar -xf "$redRoot\head.tar" -C $redRoot
-$redOpsa = "$redRoot\MTC_COMMAND_CENTER\tools\opsa"
-Copy-Item MTC_COMMAND_CENTER\tools\opsa\test_opsa.py "$redOpsa\test_opsa.py" -Force
-python -m pytest -q --tb=short `
-  "$redOpsa\test_opsa.py::BackupRestoreTests::test_restore_cli_missing_store_id_is_structured_check_failure_without_writes" `
-  "$redOpsa\test_opsa.py::BackupRestoreTests::test_restore_cli_empty_path_is_structured_check_failure_without_writes"
+$redRoot = Join-Path $env:TEMP 'opsa_d026_red_eaaf5e07_impl_bbd3fb99_test_20260825T3'
+New-Item -ItemType Directory -Path $redRoot | Out-Null
+$implFiles = @('backup.py','heartbeat.py','opsa_common.py','restore.py','watchdog.py')
+function Export-GitBlob([string]$sha, [string]$name, [string]$root) {
+  $repoPath = "MTC_COMMAND_CENTER/tools/opsa/$name"
+  $dest = Join-Path $root $name
+  $spec = "$sha`:$repoPath"
+  $cmdLine = "git show $spec > `"$dest`""
+  & cmd.exe /d /s /c $cmdLine
+  if ($LASTEXITCODE -ne 0) { throw "git show failed rc=$LASTEXITCODE spec=$spec" }
+}
+foreach ($name in $implFiles) { Export-GitBlob 'eaaf5e07' $name $redRoot }
+Export-GitBlob 'bbd3fb99' 'test_opsa.py' $redRoot
+foreach ($name in @($implFiles + 'test_opsa.py')) {
+  $sourceSha = if ($name -eq 'test_opsa.py') { 'bbd3fb99' } else { 'eaaf5e07' }
+  $expected = git rev-parse "$sourceSha`:MTC_COMMAND_CENTER/tools/opsa/$name"
+  $actual = git hash-object (Join-Path $redRoot $name)
+  $match = $expected -eq $actual
+  Write-Output "RED_BLOB $name source=$sourceSha expected=$expected actual=$actual match=$match"
+  if (-not $match) { throw "RED blob mismatch: $name" }
+}
+python -m pytest -q --tb=no `
+  "$redRoot\test_opsa.py::BackupRestoreTests::test_restore_cli_missing_store_id_is_structured_check_failure_without_writes" `
+  "$redRoot\test_opsa.py::BackupRestoreTests::test_restore_cli_empty_path_is_structured_check_failure_without_writes"
+$redRc = $LASTEXITCODE
+Write-Output "RED_RC=$redRc"
 ```
 
-Real pytest output:
+Real blob-identity and pytest output:
 
 ```text
+RED_BLOB backup.py source=eaaf5e07 expected=e0eaea869b046cb7aadfee064d81ad0173569a40 actual=e0eaea869b046cb7aadfee064d81ad0173569a40 match=True
+RED_BLOB heartbeat.py source=eaaf5e07 expected=44f8c1a77a14f4d2d288a39ed05febc5f73e190d actual=44f8c1a77a14f4d2d288a39ed05febc5f73e190d match=True
+RED_BLOB opsa_common.py source=eaaf5e07 expected=f704ff09782cb604108eff04f06cc0a376f73e2e actual=f704ff09782cb604108eff04f06cc0a376f73e2e match=True
+RED_BLOB restore.py source=eaaf5e07 expected=d4c1bb6b55d6ab16f6e9f3eb01ca66459d579630 actual=d4c1bb6b55d6ab16f6e9f3eb01ca66459d579630 match=True
+RED_BLOB watchdog.py source=eaaf5e07 expected=02ae96b01a184159d6d02c4f507bb993b4868797 actual=02ae96b01a184159d6d02c4f507bb993b4868797 match=True
+RED_BLOB test_opsa.py source=bbd3fb99 expected=c37e17efb026c25f1dbdb0105fffdb19331729f2 actual=c37e17efb026c25f1dbdb0105fffdb19331729f2 match=True
 FF                                                                       [100%]
-================================== FAILURES ===================================
-test_restore_cli_missing_store_id_is_structured_check_failure_without_writes
-E   AssertionError: 'Traceback' unexpectedly found in 'Traceback (most recent call last):\n...
-E   KeyError: \'store_id\'\n'
-
-test_restore_cli_empty_path_is_structured_check_failure_without_writes
-E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
-2 failed in 0.42s
+=========================== short test summary info ===========================
+FAILED ..\Users\BARSEM~1\AppData\Local\Temp\opsa_d026_red_eaaf5e07_impl_bbd3fb99_test_20260825T3\test_opsa.py::BackupRestoreTests::test_restore_cli_missing_store_id_is_structured_check_failure_without_writes
+FAILED ..\Users\BARSEM~1\AppData\Local\Temp\opsa_d026_red_eaaf5e07_impl_bbd3fb99_test_20260825T3\test_opsa.py::BackupRestoreTests::test_restore_cli_empty_path_is_structured_check_failure_without_writes
+2 failed in 0.25s
 RED_RC=1
 ```
 
@@ -840,21 +864,47 @@ This is the required D026 RED: the missing field reproduces the audited rc-1
 traceback, and the empty field proves the prior rc 3 was not the required structured
 invalid-record outcome.
 
-### C8.2 GREEN — structured CLI outcomes and no writes
+### C8.2 GREEN — exact `bbd3fb99` HEAD blobs
 
 The two regression tests drive `restore.py` through its public CLI. The repaired
 preflight uses the shared non-empty-string validator for `record`, `run_id`,
 `store_id`, `rel`, and file `sha256` before any path confinement.
 
+At replay time `HEAD` was `bbd3fb99946d0a1b726d46a6c50be06837ab878a`.
+The GREEN TEMP tree was nevertheless materialized from that literal commit rather
+than from the working tree or symbolic `HEAD`, so later commits cannot change its
+inputs. Verbatim commands and real output:
+
 ```powershell
-python -m pytest -q --tb=short `
-  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::BackupRestoreTests::test_restore_cli_missing_store_id_is_structured_check_failure_without_writes `
-  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::BackupRestoreTests::test_restore_cli_empty_path_is_structured_check_failure_without_writes
+$greenRoot = Join-Path $env:TEMP 'opsa_d026_green_bbd3fb99_20260825T3'
+New-Item -ItemType Directory -Path $greenRoot | Out-Null
+foreach ($name in @($implFiles + 'test_opsa.py')) {
+  Export-GitBlob 'bbd3fb99' $name $greenRoot
+}
+foreach ($name in @($implFiles + 'test_opsa.py')) {
+  $expected = git rev-parse "bbd3fb99`:MTC_COMMAND_CENTER/tools/opsa/$name"
+  $actual = git hash-object (Join-Path $greenRoot $name)
+  $match = $expected -eq $actual
+  Write-Output "GREEN_BLOB $name source=bbd3fb99 expected=$expected actual=$actual match=$match"
+  if (-not $match) { throw "GREEN blob mismatch: $name" }
+}
+python -m pytest -q --tb=no `
+  "$greenRoot\test_opsa.py::BackupRestoreTests::test_restore_cli_missing_store_id_is_structured_check_failure_without_writes" `
+  "$greenRoot\test_opsa.py::BackupRestoreTests::test_restore_cli_empty_path_is_structured_check_failure_without_writes"
+$greenRc = $LASTEXITCODE
+Write-Output "GREEN_RC=$greenRc"
 ```
 
 ```text
+GREEN_BLOB backup.py source=bbd3fb99 expected=e0eaea869b046cb7aadfee064d81ad0173569a40 actual=e0eaea869b046cb7aadfee064d81ad0173569a40 match=True
+GREEN_BLOB heartbeat.py source=bbd3fb99 expected=20bc8f71813dc13b4e0ce2015a6c722258626cbf actual=20bc8f71813dc13b4e0ce2015a6c722258626cbf match=True
+GREEN_BLOB opsa_common.py source=bbd3fb99 expected=faef1ad173501a5a220559feda9b5c6f538e5358 actual=faef1ad173501a5a220559feda9b5c6f538e5358 match=True
+GREEN_BLOB restore.py source=bbd3fb99 expected=97e9051319c95772c4b104ac9a4f4e9522259405 actual=97e9051319c95772c4b104ac9a4f4e9522259405 match=True
+GREEN_BLOB watchdog.py source=bbd3fb99 expected=02ae96b01a184159d6d02c4f507bb993b4868797 actual=02ae96b01a184159d6d02c4f507bb993b4868797 match=True
+GREEN_BLOB test_opsa.py source=bbd3fb99 expected=c37e17efb026c25f1dbdb0105fffdb19331729f2 actual=c37e17efb026c25f1dbdb0105fffdb19331729f2 match=True
 ..                                                                       [100%]
-2 passed in 0.23s
+2 passed in 0.25s
+GREEN_RC=0
 ```
 
 Real CLI summaries from the repaired tree:
