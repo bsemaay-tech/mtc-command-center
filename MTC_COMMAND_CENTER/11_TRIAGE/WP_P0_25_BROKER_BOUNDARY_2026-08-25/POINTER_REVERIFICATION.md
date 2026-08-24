@@ -18,7 +18,7 @@ The planning candidate is an ancestor of fresh HEAD. A scoped `git diff --stat` 
 |---|---:|---:|---:|---|
 | `Broker(Protocol)` | `base.py:154` | `base.py:156` | **`base.py:156`** | Complete declaration `:156-212` |
 | `PartialRecoveryUnavailable` | `base.py:222` | `base.py:226` | **`base.py:226`** | Default reason code at `:229`; class ends `:231` |
-| `PartialRecoveryBroker(Protocol)` | `base.py:230` | `base.py:234` | **`base.py:234`** | Complete declaration `:234-274` |
+| `PartialRecoveryBroker(Protocol)` | `base.py:230` | `base.py:234` | **`base.py:234`** | Complete declaration `:234-275` (last method body ellipsis at `:275`; the individual `flatten_reduce_only` method remains `:271-274`) |
 | `FullReconciliationUnavailable` | `base.py:285` | `base.py:339` | **`base.py:339`** | Default reason code at `:342`; class ends `:344` |
 | `FullReconciliationBroker(Protocol)` | `base.py:293` | `base.py:347` | **`base.py:347`** | Complete declaration `:347-378` |
 | `FullReconciliationBroker.funding_evidence` | `base.py:320-323` | `base.py:374-378` | **`base.py:374-378`** | Fifth method, after `fills_evidence` |
