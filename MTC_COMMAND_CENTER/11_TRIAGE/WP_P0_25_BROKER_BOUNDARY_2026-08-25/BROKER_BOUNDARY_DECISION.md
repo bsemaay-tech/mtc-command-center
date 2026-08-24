@@ -4,13 +4,13 @@
 
 **Audit tier / protected gate:** T0 / G3, decision-only
 
-**Decision:** **Reuse the existing structural `Protocol` family as-is. Do not rename it, do not add a parallel boundary, and do not add methods to the three accepted protocols in this package.**
+**Decision:** **Reuse the existing structural `Protocol` family as-is. Do not rename it, do not add a parallel boundary, and do not add methods to the four accepted protocols in this package.**
 
 This is an architecture decision, not implementation authority. Any V2A or V5 code remains separately gated, and WP-V5-01 remains the implementation carrier for a future IBKR adapter (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:564-575`, `:1040-1042`).
 
 ## 1. Starting point: the boundary already exists
 
-The starting point is the structural `typing.Protocol` seam in `IBKR_PAPER_BRIDGE/bridge/broker/base.py`, not a new adapter abstraction. The family consists of the broad `Broker` protocol and two deliberately separate opt-in capability protocols, `PartialRecoveryBroker` and `FullReconciliationBroker` (`IBKR_PAPER_BRIDGE/bridge/broker/base.py:156-212`, `:216-222`, `:234-275`, `:329-335`, `:347-378`). `HyperliquidBroker` and `MockBroker` structurally implement every method in all three protocols (`IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py:115`, `IBKR_PAPER_BRIDGE/bridge/broker/mock.py:70`; implementation anchors in section 2).
+The starting point is the structural `typing.Protocol` seam in `IBKR_PAPER_BRIDGE/bridge/broker/base.py`, not a new adapter abstraction. The family consists of the broad `Broker` protocol and three deliberately separate opt-in capability protocols: `PartialRecoveryBroker`, `KillRecoveryBroker`, and `FullReconciliationBroker` (`IBKR_PAPER_BRIDGE/bridge/broker/base.py:156-212`, `:234-275`, `:280-325`, `:347-378`). `HyperliquidBroker` and `MockBroker` structurally implement every method in all four protocols (`IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py:115`, `IBKR_PAPER_BRIDGE/bridge/broker/mock.py:70`; AST-exact implementation anchors in section 2).
 
 This resolves the apparent F-9/F-9a conflict: F-9 describes the empty `07_ADAPTERS` scaffolding, while F-9a records the working Bridge boundary (`MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:619-640`). Layer A already defines that family as the broker-adapter boundary rather than a new protocol (`MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:853-865`).
 
@@ -22,20 +22,20 @@ Declared at `IBKR_PAPER_BRIDGE/bridge/broker/base.py:156`. Its complete method s
 
 | Method | Declaration |
 |---|---:|
-| `connect` | `base.py:159` |
-| `account` | `base.py:162` |
-| `positions` | `base.py:165` |
-| `open_orders` | `base.py:168` |
-| `historical_bars` | `base.py:171` |
-| `subscribe_bars` | `base.py:174` |
-| `subscribe_user_events` | `base.py:177` |
-| `planned_cloids` | `base.py:180` |
+| `connect` | `base.py:159-160` |
+| `account` | `base.py:162-163` |
+| `positions` | `base.py:165-166` |
+| `open_orders` | `base.py:168-169` |
+| `historical_bars` | `base.py:171-172` |
+| `subscribe_bars` | `base.py:174-175` |
+| `subscribe_user_events` | `base.py:177-178` |
+| `planned_cloids` | `base.py:180-181` |
 | `place_bracket` | `base.py:183-186` |
 | `submission_recovery_evidence` | `base.py:188-191` |
-| `modify_stop` | `base.py:193` |
-| `cancel` | `base.py:196` |
-| `cancel_all` | `base.py:199` |
-| `flatten` | `base.py:202` |
+| `modify_stop` | `base.py:193-194` |
+| `cancel` | `base.py:196-197` |
+| `cancel_all` | `base.py:199-200` |
+| `flatten` | `base.py:202-203` |
 | `reprotect_position` | `base.py:205-212` |
 
 Concrete implementation anchors, in the same order, are `hyperliquid.py:152,212,247,259,265,284,297,360,370,630,856,893,899,904,924` and `mock.py:143,146,153,156,180,185,204,207,216,276,324,332,338,344,352`.
@@ -46,14 +46,29 @@ Declared at `IBKR_PAPER_BRIDGE/bridge/broker/base.py:234`. Its complete method s
 
 | Method | Declaration | Hyperliquid | Mock |
 |---|---:|---:|---:|
-| `lot_unit` | `base.py:243` | `hyperliquid.py:975` | `mock.py:377` |
-| `symbol_snapshot` | `base.py:247` | `hyperliquid.py:1040` | `mock.py:394` |
-| `query_order` | `base.py:251` | `hyperliquid.py:1171` | `mock.py:457` |
-| `cancel_order_by_cloid` | `base.py:255` | `hyperliquid.py:1348` | `mock.py:499` |
-| `place_protective_stop` | `base.py:259-268` | `hyperliquid.py:1418` | `mock.py:571` |
-| `flatten_reduce_only` | `base.py:271-274` | `hyperliquid.py:1466` | `mock.py:618` |
+| `lot_unit` | `base.py:243-245` | `hyperliquid.py:975` | `mock.py:377` |
+| `symbol_snapshot` | `base.py:247-249` | `hyperliquid.py:1040` | `mock.py:394` |
+| `query_order` | `base.py:251-253` | `hyperliquid.py:1171` | `mock.py:457` |
+| `cancel_order_by_cloid` | `base.py:255-257` | `hyperliquid.py:1348` | `mock.py:499` |
+| `place_protective_stop` | `base.py:259-269` | `hyperliquid.py:1418` | `mock.py:571` |
+| `flatten_reduce_only` | `base.py:271-275` | `hyperliquid.py:1466` | `mock.py:618` |
 
 The capability is feature-detected from exactly these six callable methods (`IBKR_PAPER_BRIDGE/bridge/engine/orders.py:79-86`, `:3754-3759`). Missing capability fails closed to `UNPROTECTED_ABORT` with no broker mutation, as the accepted TS-P1-004 contract and regression test require (`IBKR_PAPER_BRIDGE/docs/25_PARTIAL_FILL_PROTECTION_CONTRACT.md:340-348`, `IBKR_PAPER_BRIDGE/tests/test_partial_fill_protection.py:900-911`).
+
+### `KillRecoveryBroker`
+
+Declared at `IBKR_PAPER_BRIDGE/bridge/broker/base.py:280`. Its complete method set is:
+
+| Method | Declaration | Hyperliquid | Mock |
+|---|---:|---:|---:|
+| `lot_unit` | `base.py:281-282` | `hyperliquid.py:975` | `mock.py:377` |
+| `symbol_snapshot` | `base.py:284-285` | `hyperliquid.py:1040` | `mock.py:394` |
+| `capture_kill_evidence` | `base.py:287-296` | `hyperliquid.py:1840` | `mock.py:948` |
+| `query_order` | `base.py:298-299` | `hyperliquid.py:1171` | `mock.py:457` |
+| `kill_cancel_order_by_cloid` | `base.py:301-311` | `hyperliquid.py:1357` | `mock.py:536` |
+| `kill_flatten_reduce_only` | `base.py:313-325` | `hyperliquid.py:1479` | `mock.py:639` |
+
+TS-P1-009 introduced this separate capability in `a7358ff3`. The engine feature-detects exactly these six callable methods (`IBKR_PAPER_BRIDGE/bridge/engine/orders.py:88-95`, `:316-317`) and returns non-accepting `KILL_BROKER_API_UNAVAILABLE` when the complete surface is absent (`:1742-1745`). Kill-evidence capture separately converts a missing `capture_kill_evidence` callable into typed unavailable components (`IBKR_PAPER_BRIDGE/bridge/engine/reconcile.py:209-238`). The capability is documented at `IBKR_PAPER_BRIDGE/docs/01_ARCHITECTURE.md:204-207`.
 
 ### `FullReconciliationBroker`
 
@@ -61,10 +76,10 @@ Declared at `IBKR_PAPER_BRIDGE/bridge/broker/base.py:347`. Its complete method s
 
 | Method | Declaration | Hyperliquid | Mock |
 |---|---:|---:|---:|
-| `lot_unit` | `base.py:356` | `hyperliquid.py:975` | `mock.py:377` |
-| `portfolio_evidence` | `base.py:360` | `hyperliquid.py:1597` | `mock.py:907` |
-| `open_orders_evidence` | `base.py:364` | `hyperliquid.py:1780` | `mock.py:989` |
-| `fills_evidence` | `base.py:368-371` | `hyperliquid.py:1880` | `mock.py:1050` |
+| `lot_unit` | `base.py:356-358` | `hyperliquid.py:975` | `mock.py:377` |
+| `portfolio_evidence` | `base.py:360-362` | `hyperliquid.py:1597` | `mock.py:907` |
+| `open_orders_evidence` | `base.py:364-366` | `hyperliquid.py:1780` | `mock.py:989` |
+| `fills_evidence` | `base.py:368-372` | `hyperliquid.py:1880` | `mock.py:1050` |
 | **`funding_evidence`** | **`base.py:374-378`** | **`hyperliquid.py:1894`** | **`mock.py:1147`** |
 
 `funding_evidence` is therefore present in the protocol and both concrete implementations. The full reconciler checks exactly these five methods and maps a missing one to the non-accepting `FULL_RECONCILE_API_UNAVAILABLE` result (`IBKR_PAPER_BRIDGE/bridge/engine/reconcile.py:277-289`, `:486-494`). The nominal bounded-read test also calls all four evidence methods, including `funding_evidence` (`IBKR_PAPER_BRIDGE/tests/test_reconciliation.py:557-572`).
@@ -84,9 +99,11 @@ O-17 prefers libraries and narrow adapters over importing a whole platform, whil
 
 | Option | Minimum-code price | OSS-first price | Contract and operational price | Verdict |
 |---|---|---|---|---|
-| **Reuse as-is** | **Lowest.** Zero broker-boundary code or rename in WP-P0-25. V2A composes existing typed evidence and protection primitives; V5 wraps a selected OSS client behind the same narrow family. | Best fit. An OSS venue client remains an implementation detail rather than exporting its object model into Bridge consumers. | TS-P1-004/005 protocols, tests, reason codes, fail-closed feature detection, and Hyperliquid/Mock implementations remain unchanged. | **Chosen.** |
+| **Reuse as-is** | **Lowest.** Zero broker-boundary code or rename in WP-P0-25. V2A composes existing typed evidence and protection primitives; V5 wraps a selected OSS client behind the same narrow family. | Best fit. An OSS venue client remains an implementation detail rather than exporting its object model into Bridge consumers. | TS-P1-004/005 and TS-P1-009 protocols, tests, reason codes, fail-closed feature detection, and Hyperliquid/Mock implementations remain unchanged. | **Chosen.** |
 | **Extend** | Moderate. Even an additive capability would require at least the protocol declaration, Hyperliquid and Mock implementations, a feature-detecting consumer, fixtures/tests, and contract documentation. | Still compatible if the addition is a narrow capability, but speculative additions before a reproduced gap violate minimum-code. | Additive extension can avoid breaking old fakes, but it creates another accepted surface and another parity obligation for every venue. | Reject now. Reconsider only from a separately authorized package with a demonstrated missing primitive. |
-| **Deliberately replace or rename** | Highest. Every adapter, consumer, fake, contract, test, reason code, documentation pointer, and migration/compatibility path must move together; a transition period risks two boundaries. | Weakest fit. Replacing the local safety seam with a platform ontology risks importing a whole framework or maintaining a translation layer around local safety semantics. | It would disturb accepted TS-P1-004/005 behavior and require explicit compatibility and evidence migration. There is no reproduced defect that justifies that cost. | Reject. |
+| **Deliberately replace or rename** | Highest. Every adapter, consumer, fake, contract, test, reason code, documentation pointer, and migration/compatibility path must move together; a transition period risks two boundaries. | Weakest fit. Replacing the local safety seam with a platform ontology risks importing a whole framework or maintaining a translation layer around local safety semantics. | It would disturb accepted TS-P1-004/005 and TS-P1-009 behavior and require explicit compatibility and evidence migration. There is no reproduced defect that justifies that cost. | Reject. |
+
+The pricing remains valid after correcting the inventory from three protocols to four. `KillRecoveryBroker` is another already-implemented narrow opt-in capability, so it adds no code to the **reuse as-is** option; extending or replacing the family would still incur the same implementation, conformance, migration, and OSS-boundary costs described above.
 
 ## 4. Exact V2A mapping onto the chosen boundary
 
@@ -97,22 +114,23 @@ The broker boundary owns venue mechanics and typed venue evidence. Snapshot iden
 | Immutable account snapshot for WP-V2A-04 | **Reused as-is, as upstream input only.** `FullReconciliationBroker.portfolio_evidence()` (`base.py:360-362`), whose `PortfolioEvidence` contains positions, balances, and margin from one account observation (`bridge/engine/types.py:1135-1145`), together with the other broker evidence methods `open_orders_evidence`, `fills_evidence`, and `funding_evidence` (`base.py:364-378`). Each component already carries status, observation time, exactness, completeness, and a reason code (`bridge/engine/types.py:1061-1090`). These typed reads are consumed **only** through the chain `FullReconciler` → **accepted checkpoint** → `Store.load_authoritative_risk_snapshot` → **Account Snapshot Service**. No broker method is added, renamed, or read directly to build a snapshot. | The **Account Snapshot Service produces and content-hashes the immutable snapshot**, built on the Bridge's existing authoritative risk snapshot rather than a second source of account truth (`MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:1215`). Between broker evidence and that service, `Store.load_authoritative_risk_snapshot` validates the sole pointer's **complete accepted checkpoint** and all seven components under one pinned committed epoch, and only then yields the immutable `AuthoritativeRiskSnapshot` (`IBKR_PAPER_BRIDGE/docs/27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md:36-72`). The **Decision Orchestrator only consumes and binds** that produced snapshot — `snapshot_id`, `snapshot_taken_at`, deadline, bucket/exposure state, and allocation-policy identity — and constructs or hashes nothing itself (`MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:1082-1089`, `:1215`; `MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:707-715`). The adapter does not invent these account-policy fields. | Any component not accepted, or any mismatch/staleness/reference divergence, rejects with no order (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:707-715`). A direct broker point-read is never a fallback: missing, stale, superseded, incomplete, or tampered evidence is a reason-coded veto with **no point-read fallback**, retry, automatic re-arm, or submission (`IBKR_PAPER_BRIDGE/docs/27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md:36-72`, esp. `:66-72`). |
 | Legacy account read | `Broker.account()` remains unchanged (`base.py:162`). Its current value has only `equity`, `available_margin`, and `withdrawable` (`bridge/engine/types.py:60-63`). | It is not promoted into the canonical V2A immutable snapshot authority. The Account Snapshot Service is fed only through the reconciled `FullReconciler` → accepted checkpoint → `Store.load_authoritative_risk_snapshot` chain in the row above, never by a direct account point-read (`IBKR_PAPER_BRIDGE/docs/27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md:36-72`). | A legacy three-float read cannot satisfy snapshot identity by assertion, and no point-read fallback exists to supply one (`IBKR_PAPER_BRIDGE/docs/27_AUTHORITATIVE_RISK_SNAPSHOT_CONTRACT.md:66-72`). |
 | Authorized-intent submission seam for WP-V2A-05 | `Broker.planned_cloids`, `place_bracket`, and `submission_recovery_evidence` (`base.py:180-191`). | Bridge maps an already authorized `OrderIntent` to the existing `OrderPlan`; the adapter executes venue mechanics and returns typed submission evidence. It does not compute or alter quantity (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:717-725`). | A Bridge-originated quantity in the presence of an authorized intent is rejected by WP-V2A-05's required fence (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:724`). |
-| Native reduce-only stop semantics for WP-V2A-06 | `PartialRecoveryBroker.lot_unit`, `symbol_snapshot`, `query_order`, `cancel_order_by_cloid`, and `place_protective_stop` (`base.py:243-268`). Existing `Broker.modify_stop` remains available at `base.py:193`, but acceptance must come from fresh typed evidence, not its `None` return. | WP-V2A-06 owns the local emulator/replay semantics and D026 proof for placement, amendment, cancellation, process death, and re-attachment. It does not add venue contact (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:727-734`). | Missing capability, inexact snapshot, unknown outcome, or inability to verify the one exact reduce-only stop is non-accepting. No untyped return is treated as proof. |
-| Local zero-venue proof | `MockBroker` is the existing local concrete implementation (`bridge/broker/mock.py:70`) and implements all three method sets (section 2). | The emulator/replay harness remains V2A-owned; real-venue survival remains WP-V2B-07, not this decision (`MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:1102-1104`). | Any reachable credential or venue path fails WP-V2A-06 acceptance (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:733-734`). |
+| Native reduce-only stop semantics for WP-V2A-06 | `PartialRecoveryBroker.lot_unit`, `symbol_snapshot`, `query_order`, `cancel_order_by_cloid`, and `place_protective_stop` (`base.py:243-269`). Existing `Broker.modify_stop` remains available at `base.py:193-194`, but acceptance must come from fresh typed evidence, not its `None` return. | WP-V2A-06 owns the local emulator/replay semantics and D026 proof for placement, amendment, cancellation, process death, and re-attachment. It does not add venue contact (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:727-734`). | Missing capability, inexact snapshot, unknown outcome, or inability to verify the one exact reduce-only stop is non-accepting. No untyped return is treated as proof. |
+| Local zero-venue proof | `MockBroker` is the existing local concrete implementation (`bridge/broker/mock.py:70`) and implements all four method sets (section 2). | The emulator/replay harness remains V2A-owned; real-venue survival remains WP-V2B-07, not this decision (`MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:1102-1104`). | Any reachable credential or venue path fails WP-V2A-06 acceptance (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:733-734`). |
 
 This mapping requires no new broker method. If implementation evidence later proves that the existing typed primitives cannot express one required operation safely, the only permitted reconsideration is a separately authorized **additive, narrow opt-in capability** in the existing family. It must not enlarge `Broker` speculatively or create a parallel top-level boundary.
 
 ## 5. Exact V5 mapping onto the chosen boundary
 
-WP-V5-01 implements a future IBKR concrete adapter behind the same family. It must implement `Broker`; it opts into the complete `PartialRecoveryBroker` and `FullReconciliationBroker` capabilities only where the venue/client can meet their evidence and fail-closed contracts. A missing opt-in surface stays explicitly unavailable rather than silently absent, using the existing capability detection and reason-code semantics (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:1040`).
+WP-V5-01 implements a future IBKR concrete adapter behind the same family. It must implement `Broker`. For each opt-in capability—`PartialRecoveryBroker`, `KillRecoveryBroker`, and `FullReconciliationBroker`—it must either implement the complete surface or explicitly declare that capability unavailable in its adapter capability contract; a partial or silently missing surface is forbidden. In particular, kill recovery requires all six methods inventoried in section 2 or an explicit unavailable declaration, with the existing all-callable feature detection failing closed to `KILL_BROKER_API_UNAVAILABLE` and no kill action (`IBKR_PAPER_BRIDGE/bridge/engine/orders.py:88-95`, `:316-317`, `:1742-1745`). The other missing opt-in surfaces remain non-accepting under their existing capability detection and reason-code semantics (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:1040`).
 
 WP-V5-02 owns the genuinely new equity concerns—calendar, sessions, corporate actions, and halts—rather than pretending they are generic adapter parity (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:1041`; `MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:3021-3029`). WP-V5-03 consumes canonical, reconciled portfolio truth across venues and must not merge venue-specific risk semantics (`MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:1042`). An OSS IBKR client may therefore be wrapped behind this boundary, but its SDK types and risk assumptions do not become Bridge contracts, matching O-17 (`REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md:140`).
 
 No IBKR class, protocol, method, adapter, SDK selection, or code is authorized or created by this decision.
 
-## 6. Consequences for TS-P1-004 and TS-P1-005
+## 6. Consequences for TS-P1-004, TS-P1-005, and TS-P1-009
 
 - TS-P1-004's separate `PartialRecoveryBroker` surface, its fail-closed feature detection, and all named test suites remain unchanged (`IBKR_PAPER_BRIDGE/docs/25_PARTIAL_FILL_PROTECTION_CONTRACT.md:3-15`, `:340-348`).
+- TS-P1-009's separate `KillRecoveryBroker` surface, all six methods, epoch-fenced mutation boundaries, feature detection, `KILL_BROKER_API_UNAVAILABLE` result, and existing tests remain unchanged (`IBKR_PAPER_BRIDGE/bridge/broker/base.py:280-325`; `bridge/engine/orders.py:88-95`, `:1742-1745`; `IBKR_PAPER_BRIDGE/docs/01_ARCHITECTURE.md:204-207`).
 - TS-P1-005's separate read-only `FullReconciliationBroker`, all five methods including `funding_evidence`, the `FullReconciliationUnavailable` behavior, and all named test suites remain unchanged (`IBKR_PAPER_BRIDGE/docs/26_FULL_RECONCILIATION_CONTRACT.md:455-482`).
 - `PARTIAL_RECOVERY_API_UNAVAILABLE` and `FULL_RECONCILE_API_UNAVAILABLE` remain the canonical default unavailability reason codes (`base.py:226-231`, `:339-344`). No alias, translation, deprecation, or migration is introduced.
 - No existing test is deleted, renamed, weakened, or reclassified. A future venue implementation inherits the applicable existing conformance surface and must add venue-specific tests without changing the accepted behavior.
@@ -127,7 +145,7 @@ A repository-wide exact-token sweep found **eight** pre-decision occurrences of 
 - `MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:572,1040`
 - `REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md:137,140`
 
-Every occurrence is corrective, historical, or the acceptance rule itself: none declares, imports, or promises a protocol by that name. The current positive architecture names `Broker`, `PartialRecoveryBroker`, and `FullReconciliationBroker` (`MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:623-640`, `:853-865`; plan `:1040`). This decision creates no protocol with the nonexistent name and does not use that name for the chosen boundary.
+Every occurrence is corrective, historical, or the acceptance rule itself: none declares, imports, or promises a protocol by that name. Fresh source re-verification establishes the current positive family as `Broker`, `PartialRecoveryBroker`, `KillRecoveryBroker`, and `FullReconciliationBroker` (`IBKR_PAPER_BRIDGE/bridge/broker/base.py:156-378`); the planning prose at `MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:623-640`, `:853-865` and plan `:1040` names only three and is incomplete on that point. This decision creates no protocol with the nonexistent name and does not use that name for the chosen boundary.
 
 Broader case-insensitive prose such as “broker adapter” describes the layer or a concrete adapter, not a Python protocol. Those ordinary-language references do not conflict with this decision.
 
