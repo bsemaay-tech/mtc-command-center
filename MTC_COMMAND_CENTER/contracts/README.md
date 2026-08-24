@@ -19,6 +19,15 @@ lifecycle, admission, promotion, broker, or trading action.
   mappings, sequences, and sets are detached from caller inputs and frozen.
   Unknown fields are rejected. Kernel/Bridge version skew is represented by
   `ContractHandshake`; consumers must refuse mismatches and co-deploy v0.
+- **`model_construct()` is FORBIDDEN for contract consumers.** Pydantic's
+  `model_construct()` bypasses validation by design, and instances built with it
+  are neither validated nor deeply frozen. No consumer of this package may create
+  a contract object with `model_construct()` (or `copy(update=...)`-style
+  validation bypasses); only normal construction and `model_validate` produce
+  valid, immutable contract objects. Any object made via a bypass carries no
+  contract guarantee, and reviews must treat its appearance in consumer code as
+  a defect. *(Documented 2026-08-25, T1 closure round: the bypass is a pydantic
+  escape hatch, not a supported path — no consumer in this repository uses it.)*
 - Every numeric policy/freshness/window threshold is `[OPEN]` (`None`) unless
   separately owner-ratified. Consumers must treat unset as fail-closed. These
   models record shapes and do not apply thresholds.
