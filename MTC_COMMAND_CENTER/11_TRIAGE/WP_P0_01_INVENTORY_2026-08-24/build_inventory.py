@@ -139,10 +139,18 @@ def validate_roots() -> None:
         raise RuntimeError(f"clean root mismatch: {clean_top}")
     if Path(dirty_top).resolve() != DIRTY_ROOT.resolve():
         raise RuntimeError(f"dirty root mismatch: {dirty_top}")
-    if head != FIXED_SHA:
-        raise RuntimeError(f"clean worktree HEAD {head} != fixed SHA {FIXED_SHA}")
     if branch != EXPECTED_BRANCH:
         raise RuntimeError(f"branch {branch!r} != {EXPECTED_BRANCH!r}")
+    if head != FIXED_SHA:
+        ancestor = run_git(CLEAN_ROOT, ["merge-base", "--is-ancestor", FIXED_SHA, head], check=False)
+        if ancestor.returncode != 0:
+            raise RuntimeError(f"fixed SHA {FIXED_SHA} is not an ancestor of lane HEAD {head}")
+        changed = run_git(CLEAN_ROOT, ["diff", "--name-only", "-z", FIXED_SHA, head]).stdout
+        changed_paths = [decode_path(value) for value in changed.split(b"\0") if value]
+        allowed_prefix = "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_01_INVENTORY_2026-08-24/"
+        outside = [path for path in changed_paths if not path.startswith(allowed_prefix)]
+        if outside:
+            raise RuntimeError(f"lane descendants changed paths outside the inventory output: {outside}")
 
 
 def tracked_files() -> list[TrackedFile]:

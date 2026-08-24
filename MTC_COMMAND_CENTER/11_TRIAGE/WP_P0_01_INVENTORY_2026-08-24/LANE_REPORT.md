@@ -158,8 +158,8 @@ reproducible rules/scripts, deterministic Tier-B samples, and fresh-count reconc
 
 ## Commit SHA and open issues
 
-- Substantive package commit: **PENDING exact-path commit** (filled by the report-only closeout commit).
-- The report-only closeout commit cannot embed its own SHA without changing itself; both exact SHAs are
+- Substantive package commit: `9877bdd2616d1322ceda80e009a6d86961574e89`.
+- The closeout commit cannot embed its own SHA without changing itself; both exact SHAs are
   printed in the final lane summary.
 - Open classification issue: `tmprepo_map_inventory.md` remains `UNKNOWN` by design; no owner or durable
   evidence role can be established safely from its path/content.
