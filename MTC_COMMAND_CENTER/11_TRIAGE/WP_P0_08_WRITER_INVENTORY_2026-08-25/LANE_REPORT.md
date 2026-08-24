@@ -46,3 +46,13 @@ The staged list was verified with `git diff --cached --name-only` before the sub
 1. The Lead must perform the single T2 review round and independently inspect the actual files/diff; this implementer does not claim Gate-5 acceptance.
 2. Recommendations do not authorize WP-P0-13, schema work, writer changes or retirement/deletion. Those require their own scope and gates.
 3. Static inventory establishes persistence capability, not runtime invocation history. If WP-P0-13 needs last-used provenance, derive it from run registries/artifacts as a separate read-only evidence step.
+
+## Repair round 1 — widened sweep roots
+
+The single allowed T2 repair round addressed both Lead-reproduced findings at their shared root cause. The sweep now covers all 389 source files under `MTC_COMMAND_CENTER/03_QUANTLENS/`, including the previously omitted `04_PYTHON_PROTOTYPES/` and `strategies/` trees. The widened scan found 101 sink-bearing files and a 90-file sink/semantic intersection.
+
+Exactly four additional sink-bearing files were exposed outside `tools/` and `research/`: the Dual-RSI prototype JSON writer and the STG046 three-CSV visual-debug harness now have full inventory rows; the STG046 generic CSV helper is accounted with its caller; and the STG002 PineTS parity-result writer is explicitly named under the parity/system-test exclusion. No sibling prototype or strategy writer matched the same sweep.
+
+The unknown-writer capability test was re-run against the widened root. The generic pattern found both planted Parquet and SQLite sink lines, the probe was removed with `apply_patch`, and `Test-Path` returned `False`. Only the three lane deliverables were edited. No source, writer, schema, trading logic, Pine/parity/MTC_V2/Bridge file or behavior changed, and every retirement statement remains a future migration recommendation with no deletion authority.
+
+Repair commit message: `fix(wp-p0-08): repair round 1 - widen sweep roots, add missed writers`.

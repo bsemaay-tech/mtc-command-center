@@ -2,7 +2,7 @@
 
 Date: 2026-08-25
 
-Scope: read-only inventory of structured trial, evaluation, run-result, and trade writers under `MTC_COMMAND_CENTER/03_QUANTLENS/tools/` and the legacy `MTC_COMMAND_CENTER/03_QUANTLENS/research/` toolchain.
+Scope: read-only inventory of structured trial, evaluation, run-result, and trade writers across every source tree under `MTC_COMMAND_CENTER/03_QUANTLENS/`: `tools/`, `research/`, `04_PYTHON_PROTOTYPES/`, and `strategies/`.
 
 Audit tier: T2. No writer was changed.
 
@@ -58,6 +58,13 @@ In the verdict column, **RETIRE** means retire that file/output as an independen
 | `tools/build_run_plan.py:439-441` | `run_plan.json` plus `artifact_index.json` per planned run. | Run/candidate references and planned artifact pointers. | No actual trial metrics; package/deployment/evaluation/trial/family hashes and E are not a complete TrialRecord row. | **RETIRE** from trial/result authority; retain only as a pre-run manifest/index linked by canonical `run_id`. |
 | `tools/progress_emitter.py:64-77`, `:162-168` | Atomic JSON status snapshot plus append-only JSONL progress events per run. | Operational run state, timestamps and event payloads. | Deliberately lacks the entire TrialRecord metric/search contract. | **RETIRE** from trial/result authority while retaining the operational progress contract separately; never treat heartbeat/status as evidence rows. |
 
+## Prototype and strategy source trees
+
+| Writer (file:line) | Persistence unit and format | TrialRecord fields already present | Missing against target | Recommendation |
+|---|---|---|---|---|
+| `04_PYTHON_PROTOTYPES/QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK_prototype.py:154-210`, `:249-267`, `:263-271` | One `*_results.json` document per prototype invocation, containing per-symbol summaries and the full combined trade list. | Strategy name and run timestamp; per-symbol trade count, win rate, average/net return and long/short counts; trades contain symbol, side, entry/exit timestamps and prices, raw and cost-adjusted return, exit reason and bars held. | All immutable I, S, typed P (the source constants are not persisted as trial parameters), M, F, most canonical L, B/St/C lineage fields, Ln/G/Fl/E; no trial or artifact identity, and no qty/R/MAE/MFE in the trade list. | **RETIRE** the standalone results JSON from result authority after its useful selected-trial summary/trade data is identity-keyed in the catalog/Tier-2 artifacts. This is a migration recommendation only: it authorizes no deletion or writer change. |
+| `strategies/STG046_qlr_r215f4fj7v8/python_visual_backtest_harness.py:43-45` (generic CSV helper `python_signal_model.py:44-47`; signal fields `:188-214`; trade/equity construction `mtc_compatible_risk_adapter.py:41-76`) | Three CSVs per visual-debug invocation: bar-level `signals_debug.csv`, trade-level `trades_debug.csv`, and bar-level `equity_debug.csv`. | Signals carry timestamp/OHLCV plus VWAP, slope, range, setup/pulse and initial-stop debug fields; trades carry entry/exit time, side, prices, qty, P&L points and exit reason; equity carries timestamp, position, active stop and realized/unrealized/total points. | Entire TrialRecord I/S/P/M/F/L/B/St/C/Ln/G/Fl/E contract; configuration is read externally but not persisted in the CSVs. As Tier-2 artifacts, trades lack R/MAE/MFE and equity lacks canonical drawdown/run-up. | **RETIRE** the three debug CSVs from independent result authority after any useful selected-trial diagnostics are linked to immutable catalog identity. This does not authorize deleting the harness, helper or outputs. |
+
 ## Legacy research toolchain
 
 | Writer (file:line) | Persistence unit and format | TrialRecord fields already present | Missing against target | Recommendation |
@@ -85,14 +92,14 @@ The generic sink sweep also found writers that do not persist trial, trade, eval
 - Markdown/report-only writers (`aggregate_overnight_iters.py`, `buy_hold_baseline.py`, `generate_morning_report.py`, `heavy_night_report.py`, `morning_close_*`, `write_overnight_morning_report.py`, and research report generators);
 - source/spec/registry/intake writers (`build_strategy_param_specs.py`, `build_strategy_research_registry.py`, `build_triage_registry.py`, `extract_strategy_metadata.py`, `generate_producer_specs.py`, intake inventories/rankings and transcript audits);
 - selection/queue/disposition writers (`build_forward_paper_queue.py`, `build_needs_backtest_selector.py`, `retriage_helper.py`, `gen_retriage_worklist.py`);
-- parity/system-test writers and test fixtures (`faz3b_self_parity.py`, `tools/vertical_slice/*`, `tools/tests/*`, Stage-2B `synthetic_tests.py` copies);
+- parity/system-test writers and test fixtures (`faz3b_self_parity.py`, `tools/vertical_slice/*`, `tools/tests/*`, Stage-2B `synthetic_tests.py` copies, and `strategies/STG002_ql_alpha_link_8ema_1h/compare_link_pinets_parity.py`, which writes only `PINETS_PARITY_RESULT.json`);
 - watchdog logs and source-generation helpers.
 
-Those files remain in the raw search results documented in `SEARCH_LOG.md`; they are excluded from the verdict tables because they do not claim to be trial/trade/result persistence. No Parquet, DuckDB or SQLite TrialRecord writer exists today. The only SQLite hits in scope are the planted capability probe described in `SEARCH_LOG.md`; it was deleted before staging.
+The fourth newly swept sink file, `strategies/STG046_qlr_r215f4fj7v8/python_signal_model.py`, is not a separate writer: its generic `write_csv` helper is called by and accounted with the STG046 harness row above. Thus all four sink-bearing files added by the widened roots are explicit: two writer rows, one named parity-result exclusion, and one helper folded into its caller. The files from the original `tools/` and `research/` sweep remain in the raw search results documented in `SEARCH_LOG.md` and retain their table/exclusion classifications above. Excluded files do not claim to be trial/trade/result persistence. No Parquet, DuckDB or SQLite TrialRecord writer exists today. The only SQLite hits in scope are the planted capability probe described in `SEARCH_LOG.md`; it was deleted before staging.
 
 ## Consolidated disposition
 
 1. Make `mega_walk_forward.py` (after WP-P0-20 migration) the single direct `TrialRecord` emitter.
 2. Treat CPCV, PBO, robustness and gate scoring as identity-keyed producers/consumers around that row, not standalone catalogs or in-place JSON mutators.
-3. Materialize selected-trial trade/equity/intent/level artifacts once, keyed by immutable identity; migrate the useful columns from `reference_producer.py`, batch writers and Stage-2/Stage-2B traces.
+3. Materialize selected-trial trade/equity/intent/level artifacts once, keyed by immutable identity; migrate the useful columns from `reference_producer.py`, the prototype and STG046 debug writers, batch writers and Stage-2/Stage-2B traces.
 4. Retire every legacy JSON/CSV result set from authority after migration and verification. This recommendation authorizes no deletion or writer change.

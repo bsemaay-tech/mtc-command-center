@@ -12,10 +12,12 @@ Starting HEAD: `0aa57ef66aa66999b6cac8e368095ca51a3d1d18`
 
 The search was intentionally sink-first. It did not begin with known writer names such as `all_trials` or `trials.append`, because the master brief records that such a self-confirming grep missed real writers (`MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:400-414`).
 
-Search roots:
+Search root: all source trees under `MTC_COMMAND_CENTER/03_QUANTLENS/`:
 
-- `MTC_COMMAND_CENTER/03_QUANTLENS/tools`
-- `MTC_COMMAND_CENTER/03_QUANTLENS/research`
+- `tools/`
+- `research/`
+- `04_PYTHON_PROTOTYPES/`
+- `strategies/`
 
 Source extensions: `*.py`, `*.ps1`, `*.sh`, `*.js`, `*.ts`.
 
@@ -28,20 +30,26 @@ The inventory used four passes:
 
 ## Commands and observed output
 
-### 1. Enumerate the two source roots
+### 1. Enumerate the complete QuantLens source root
 
 ```powershell
-$tool = @(rg --files 'MTC_COMMAND_CENTER/03_QUANTLENS/tools' -g '*.py' -g '*.ps1' -g '*.sh' -g '*.js' -g '*.ts')
-$research = @(rg --files 'MTC_COMMAND_CENTER/03_QUANTLENS/research' -g '*.py' -g '*.ps1' -g '*.sh' -g '*.js' -g '*.ts')
-"RG_TOOLS_SOURCE_FILES=$($tool.Count)"
-"RG_RESEARCH_SOURCE_FILES=$($research.Count)"
+$root = 'MTC_COMMAND_CENTER/03_QUANTLENS'
+$source = @(rg --files $root -g '*.py' -g '*.ps1' -g '*.sh' -g '*.js' -g '*.ts')
+"RG_ALL_SOURCE_FILES=$($source.Count)"
+$source | ForEach-Object {
+    $rel = $_ -replace '^MTC_COMMAND_CENTER[\\/]03_QUANTLENS[\\/]',''
+    ($rel -split '[\\/]')[0]
+} | Group-Object | Sort-Object Name | ForEach-Object { "$($_.Name)=$($_.Count)" }
 ```
 
 Observed:
 
 ```text
-RG_TOOLS_SOURCE_FILES=118
-RG_RESEARCH_SOURCE_FILES=172
+RG_ALL_SOURCE_FILES=389
+04_PYTHON_PROTOTYPES=20
+research=172
+strategies=79
+tools=118
 ```
 
 ### 2. Generic sink and semantic intersection
@@ -49,35 +57,58 @@ RG_RESEARCH_SOURCE_FILES=172
 ```powershell
 $sink = 'to_csv|to_json|to_parquet|to_sql|write_csv|write_json|write_parquet|sqlite3\.connect|duckdb\.connect|csv\.(writer|DictWriter)|json\.dump|write_text|write_bytes|\.write\('
 $sem = 'trial|evaluation|trade|result|parameter[_ -]?sweep|walk.?forward|equity|run_id'
-$toolSink = @(rg -l -i --glob '*.py' --glob '*.ps1' --glob '*.sh' --glob '*.js' --glob '*.ts' $sink 'MTC_COMMAND_CENTER/03_QUANTLENS/tools')
-$resSink = @(rg -l -i --glob '*.py' --glob '*.ps1' --glob '*.sh' --glob '*.js' --glob '*.ts' $sink 'MTC_COMMAND_CENTER/03_QUANTLENS/research')
-$toolSem = @(rg -l -i --glob '*.py' --glob '*.ps1' --glob '*.sh' --glob '*.js' --glob '*.ts' $sem 'MTC_COMMAND_CENTER/03_QUANTLENS/tools')
-$resSem = @(rg -l -i --glob '*.py' --glob '*.ps1' --glob '*.sh' --glob '*.js' --glob '*.ts' $sem 'MTC_COMMAND_CENTER/03_QUANTLENS/research')
-$toolBoth = @($toolSink | Where-Object { $toolSem -contains $_ })
-$resBoth = @($resSink | Where-Object { $resSem -contains $_ })
+$sinkFiles = @(rg -l -i --glob '*.py' --glob '*.ps1' --glob '*.sh' --glob '*.js' --glob '*.ts' $sink $root)
+$semanticFiles = @(rg -l -i --glob '*.py' --glob '*.ps1' --glob '*.sh' --glob '*.js' --glob '*.ts' $sem $root)
+$both = @($sinkFiles | Where-Object { $semanticFiles -contains $_ })
+"SINK_FILES=$($sinkFiles.Count)"
+"SEMANTIC_FILES=$($semanticFiles.Count)"
+"SINK_AND_SEMANTIC_FILES=$($both.Count)"
+$sinkFiles | ForEach-Object {
+    $rel = $_ -replace '^MTC_COMMAND_CENTER[\\/]03_QUANTLENS[\\/]',''
+    ($rel -split '[\\/]')[0]
+} | Group-Object | Sort-Object Name | ForEach-Object { "SINK_TREE_$($_.Name)=$($_.Count)" }
+$both | ForEach-Object {
+    $rel = $_ -replace '^MTC_COMMAND_CENTER[\\/]03_QUANTLENS[\\/]',''
+    ($rel -split '[\\/]')[0]
+} | Group-Object | Sort-Object Name | ForEach-Object { "BOTH_TREE_$($_.Name)=$($_.Count)" }
 ```
 
 Observed:
 
 ```text
-TOOLS_SINK_FILES=58
-RESEARCH_SINK_FILES=39
-TOOLS_SINK_AND_SEMANTIC_FILES=51
-RESEARCH_SINK_AND_SEMANTIC_FILES=36
+SINK_FILES=101
+SEMANTIC_FILES=150
+SINK_AND_SEMANTIC_FILES=90
+SINK_TREE_04_PYTHON_PROTOTYPES=1
+SINK_TREE_research=39
+SINK_TREE_strategies=3
+SINK_TREE_tools=58
+BOTH_TREE_04_PYTHON_PROTOTYPES=1
+BOTH_TREE_research=36
+BOTH_TREE_strategies=2
+BOTH_TREE_tools=51
 ```
 
-The 87-file intersection was a candidate set, not the answer. Manual source inspection removed report-only, registry, dataset, selection, test-fixture and intake/audit-administration false positives; these classes are accounted for in `WRITER_INVENTORY.md`.
+The 90-file intersection was a candidate set, not the answer. Manual source inspection removed report-only, registry, dataset, selection, test-fixture and intake/audit-administration false positives; these classes are accounted for in `WRITER_INVENTORY.md`. The one sink-bearing strategy helper omitted from the semantic intersection was followed to its three call sites and accounted with the STG046 harness writer.
+
+The widened roots added exactly four sink-bearing files beyond the original `tools/` and `research/` set:
+
+- `04_PYTHON_PROTOTYPES/QL_2026-05-01_SWING_1H_DUAL_RSI_60_40_PULLBACK_prototype.py` — inventory row;
+- `strategies/STG046_qlr_r215f4fj7v8/python_visual_backtest_harness.py` — inventory row;
+- `strategies/STG046_qlr_r215f4fj7v8/python_signal_model.py` — generic helper accounted with its harness caller;
+- `strategies/STG002_ql_alpha_link_8ema_1h/compare_link_pinets_parity.py` — named parity/system-test exclusion.
+
+No other prototype or strategy source file matched the sink pattern, so there is no unaccounted sibling writer of either shape.
 
 ### 3. Structured artifact-name cross-check
 
 ```powershell
 rg -n -i --glob '*.py' \
   'trades?\.(csv|json|jsonl|parquet)|results?\.(csv|json|jsonl|parquet)|evaluations?\.(csv|json|jsonl|parquet)|trials?\.(csv|json|jsonl|parquet)|run_status\.json|best_params|params_json|trades_for_strategy' \
-  'MTC_COMMAND_CENTER/03_QUANTLENS/tools' \
-  'MTC_COMMAND_CENTER/03_QUANTLENS/research'
+  'MTC_COMMAND_CENTER/03_QUANTLENS'
 ```
 
-This independently exposed the legacy `parameter_sweep.csv`, `trades.csv`, `results.csv`, `all_evaluations.csv`, scorecard and audit-result families. It also verified the five examples already named by the brief and found additional writers without relying on those names.
+This independently exposed the legacy `parameter_sweep.csv`, `trades.csv`, `results.csv`, `all_evaluations.csv`, scorecard and audit-result families, plus the prototype `*_results.json`, STG046 debug CSVs and STG002 parity result in the widened roots. It also verified the five examples already named by the brief and found additional writers without relying on those names.
 
 ### 4. Exact target-field cross-check
 
@@ -93,7 +124,7 @@ def persist_surprise_trial_ledger(frame) -> None:
     sqlite3.connect("surprise_trial_ledger.sqlite").close()
 ```
 
-The same generic sink sweep was run over the real toolchain plus the package directory:
+The same generic sink sweep was re-run over the widened, complete QuantLens source root plus the package directory:
 
 ```powershell
 rg -n -i --glob '*.py' --glob '*.ps1' --glob '*.sh' --glob '*.js' --glob '*.ts' \
@@ -106,8 +137,8 @@ rg -n -i --glob '*.py' --glob '*.ps1' --glob '*.sh' --glob '*.js' --glob '*.ts' 
 Observed output:
 
 ```text
-MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_08_WRITER_INVENTORY_2026-08-25\wp_p0_08_discovery_probe.py:8:    frame.to_parquet(Path("surprise_trial_ledger.parquet"), index=False)
-MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_08_WRITER_INVENTORY_2026-08-25\wp_p0_08_discovery_probe.py:9:    sqlite3.connect("surprise_trial_ledger.sqlite").close()
+MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_08_WRITER_INVENTORY_2026-08-25\wp_p0_08_discovery_probe.py:6:    frame.to_parquet(Path("surprise_trial_ledger.parquet"), index=False)
+MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_08_WRITER_INVENTORY_2026-08-25\wp_p0_08_discovery_probe.py:7:    sqlite3.connect("surprise_trial_ledger.sqlite").close()
 ```
 
 The probe was then deleted with `apply_patch`. Verification:
