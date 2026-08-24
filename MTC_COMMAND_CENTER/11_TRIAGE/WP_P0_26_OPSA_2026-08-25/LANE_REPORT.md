@@ -105,22 +105,25 @@ No new third-party dependency: standard library only, per the lane contract.
 
 - Verified worktree clean on `feature/wp-p0-26-opsa-tooling-20260825` at `0aa57ef6`
   (= local `origin/master` tip) before any edit; repo guard preflight PASS.
-- All tool invocations recorded verbatim in `RESTORE_DRILL_EVIDENCE.md`; every
-  claimed check has its real output captured there.
-- Drill fixtures were created and destroyed inside this worktree only; no read of
-  any store outside the worktree.
-- `python -m unittest test_opsa` green (19/19) before staging.
+- Commands offered as D026 proof are recorded with their real output in
+  `RESTORE_DRILL_EVIDENCE.md`.
+- Round-0 drill fixtures stayed inside this worktree; continuation falsification
+  copies stayed under `%TEMP%`. No real evidence store was read.
+- Round-0 `python -m unittest test_opsa` was green (19/19). Continuation final
+  validation uses the mandated command
+  `python -m pytest -q MTC_COMMAND_CENTER/tools/opsa/test_opsa.py` (23/23).
 
 ## Commit inventory and staged paths
 
-Single commit on this branch after its `origin/master` base `0aa57ef6`:
+Branch history after its base `0aa57ef6`:
 
-- `HEAD` — `feat(wp-p0-26): OPS-A local backup/restore + watchdog tooling (T1 partial, lane J 2026-08-25)`.
-  `HEAD` is referenced because a commit cannot embed its own SHA without changing
-  that SHA; the exact hash is printed in the implementer handoff and below in this
-  report after committing (see "Final report" in the handoff message).
+- `73b72bd0` — `feat(wp-p0-26): OPS-A local backup/restore + watchdog tooling (T1 partial, lane J 2026-08-25)`.
+- `40b31e0a` — quota-interrupted WIP repair, preserved verbatim as required.
+- `HEAD` — `fix(wp-p0-26): complete repair round 1 - notifier coverage, delete-guard needles`.
+  `HEAD` is used because a commit cannot embed its own SHA without changing it;
+  the exact final SHA is printed in the implementer handoff.
 
-Exact paths staged:
+Original delivery paths:
 
 ```text
 MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/LANE_REPORT.md
@@ -134,6 +137,13 @@ MTC_COMMAND_CENTER/tools/opsa/opsa_common.py
 MTC_COMMAND_CENTER/tools/opsa/restore.py
 MTC_COMMAND_CENTER/tools/opsa/test_opsa.py
 MTC_COMMAND_CENTER/tools/opsa/watchdog.py
+```
+
+Exact paths staged by the continuation completion commit:
+
+```text
+MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/LANE_REPORT.md
+MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/RESTORE_DRILL_EVIDENCE.md
 ```
 
 Handoff files (`_AI_MEMORY/GLOBAL_HANDOFF.md`, `_AI_MEMORY/NEXT_STEPS.md`) were
@@ -219,11 +229,15 @@ handoff entries said, in brief):
 
 ### Post-repair state
 
-- Unit suite: **23 tests, OK** (`python -m unittest test_opsa`, § C5): 19 original
+- Unit suite: **23 tests, OK**
+  (`python -m pytest -q MTC_COMMAND_CENTER/tools/opsa/test_opsa.py`, § C6.6): 19 original
   + 4 new (notifier coverage ×2, invalid-`--now`, per-id non-regression guard);
   nit-4 assertion folded into the existing check-only test.
-- Commit (this branch, after `73b72bd0`):
-  `fix(wp-p0-26): repair round 1 - notifier coverage, delete-guard needles, scope revert`.
+- Continuation state assessment: all 2 REQUIRED items, scope item 3, and all 5 nits
+  independently rechecked; fresh D026 transcripts and the watchdog rc 0/2/3 matrix
+  are in `RESTORE_DRILL_EVIDENCE.md` § C6.
+- Completion commit (this branch, after WIP `40b31e0a`):
+  `fix(wp-p0-26): complete repair round 1 - notifier coverage, delete-guard needles`.
   No push. Staged paths listed in the implementer handoff message and the final
   report.
 

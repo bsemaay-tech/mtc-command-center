@@ -499,6 +499,185 @@ OK
 per-id non-regression guard); the nit-4 assertion was folded into the existing
 check-only test.
 
+## C6. Continuation after interrupted WIP — fresh verification (2026-08-25)
+
+The continuing Codex implementer treated every R1 item as unverified. The inherited
+worktree was clean at WIP commit `40b31e0a`; scratch stayed outside the repo under
+`%TEMP%`. No tracked file was checked out, reset, or stashed.
+
+### C6.1 Required #1 — fresh RED on the exact pre-fix watchdog
+
+The archive supplies the `73b72bd0` package; only the current regression test is
+copied over:
+
+```powershell
+$scratch = Join-Path $env:TEMP 'opsa_r1_fresh_20260825_codex'
+New-Item -ItemType Directory -Path $scratch
+git archive --format=zip --output="$scratch\old.zip" 73b72bd0 MTC_COMMAND_CENTER/tools/opsa
+Expand-Archive -LiteralPath "$scratch\old.zip" -DestinationPath "$scratch\old_tree"
+$old = "$scratch\old_tree\MTC_COMMAND_CENTER\tools\opsa"
+Copy-Item MTC_COMMAND_CENTER\tools\opsa\test_opsa.py "$old\test_opsa.py" -Force
+cd $old
+python -m pytest -q test_opsa.py::WatchdogTests::test_missing_state_dir_yields_rc3_and_exactly_one_notifier_event
+```
+
+Real output (the decisive failure is retained):
+
+```text
+F                                                                        [100%]
+================================== FAILURES ===================================
+_ WatchdogTests.test_missing_state_dir_yields_rc3_and_exactly_one_notifier_event _
+>       events = self._events()
+test_opsa.py:260:
+...
+E       FileNotFoundError: [Errno 2] No such file or directory:
+E       'C:\Users\BARSEM~1\AppData\Local\Temp\opsa_wd_ghiha3je\alerts.jsonl'
+---------------------------- Captured stderr call -----------------------------
+error: state dir does not exist: C:\Users\BARSEM~1\AppData\Local\Temp\opsa_wd_ghiha3je\gone
+FAILED test_opsa.py::WatchdogTests::test_missing_state_dir_yields_rc3_and_exactly_one_notifier_event
+1 failed in 0.14s
+```
+
+This is the required RED: the old checker returns rc 3, but zero notifier events
+are delivered and the notifier file does not exist.
+
+### C6.2 Required #2 — fresh RED on both auditor mutants
+
+Each mutant began as a separate copy of the current `tools/opsa` directory. These
+exact diffs were applied to the temp copies:
+
+```diff
+--- mutant_a/restore.py
++++ mutant_a/restore.py
+@@
+         dest = Path(target) / record["store_id"] / record["rel"]
++        dest.unlink(missing_ok=True)  # D026 MUTANT A
+
+--- mutant_b/restore.py
++++ mutant_b/restore.py
+@@
+ import json
++import os
+ import shutil
+@@
+             dest.parent.mkdir(parents=True, exist_ok=True)
++            os.rmdir(dest.parent)  # D026 MUTANT B
+```
+
+Exact command, run once in each mutant directory:
+
+```powershell
+python -m pytest -q test_opsa.py::NoDeleteGuaranteeTests::test_no_delete_calls_in_opsa_tools
+```
+
+Real mutant-A output:
+
+```text
+E       AssertionError: Lists differ: ['restore.py: .unlink('] != []
+E       - ['restore.py: .unlink(']
+E       + [] : delete code path found: ['restore.py: .unlink(']
+FAILED test_opsa.py::NoDeleteGuaranteeTests::test_no_delete_calls_in_opsa_tools
+1 failed in 0.13s
+```
+
+Real mutant-B output:
+
+```text
+E       AssertionError: Lists differ: ['restore.py: os.rmdir(', 'restore.py: .rmdir('] != []
+E       - ['restore.py: os.rmdir(', 'restore.py: .rmdir(']
+E       + [] : delete code path found: ['restore.py: os.rmdir(', 'restore.py: .rmdir(']
+FAILED test_opsa.py::NoDeleteGuaranteeTests::test_no_delete_calls_in_opsa_tools
+1 failed in 0.12s
+```
+
+The pre-fix `73b72bd0` scanner was copied over each unchanged mutant and the same
+test was re-run. Real output proves the old fence was blind to both forms:
+
+```text
+=== PRE-FIX SCAN vs mutant_a ===
+.                                                                        [100%]
+1 passed in 0.04s
+rc=0
+=== PRE-FIX SCAN vs mutant_b ===
+.                                                                        [100%]
+1 passed in 0.04s
+rc=0
+```
+
+### C6.3 Clean-tree GREEN for both required repairs
+
+```powershell
+python -m pytest -q `
+  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::WatchdogTests::test_missing_state_dir_yields_rc3_and_exactly_one_notifier_event `
+  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::NoDeleteGuaranteeTests::test_no_delete_calls_in_opsa_tools
+```
+
+```text
+..                                                                       [100%]
+2 passed in 0.04s
+```
+
+### C6.4 Scope item #3 — byte equality to base
+
+```powershell
+foreach ($p in 'MTC_COMMAND_CENTER/_AI_MEMORY/GLOBAL_HANDOFF.md',
+               'MTC_COMMAND_CENTER/_AI_MEMORY/NEXT_STEPS.md') {
+  $base = git rev-parse "0aa57ef6:$p"
+  $current = git hash-object -- $p
+  "$p base=$base current=$current equal=$($base -eq $current)"
+}
+```
+
+```text
+MTC_COMMAND_CENTER/_AI_MEMORY/GLOBAL_HANDOFF.md base=e85635fe9e437b5bf41aa1e3e58877ba01c21028 current=e85635fe9e437b5bf41aa1e3e58877ba01c21028 equal=True
+MTC_COMMAND_CENTER/_AI_MEMORY/NEXT_STEPS.md base=d422d9445d1fb156d4a983821c1a43a25ec85f3e current=d422d9445d1fb156d4a983821c1a43a25ec85f3e equal=True
+```
+
+Both files are byte-identical to base `0aa57ef6`.
+
+### C6.5 Watchdog return-code checks
+
+A fresh heartbeat was emitted under `%TEMP%`, checked fresh, then checked against
+a far-future deterministic `--now`; missing-directory and invalid-`--now` arms
+followed. Real terminal summary:
+
+```text
+feed: state=ok emitted_at=2026-08-24T20:21:05Z age_seconds=0.2
+FRESH_RC=0
+feed: state=silent emitted_at=2026-08-24T20:21:05Z age_seconds=2283305935.0 bound_seconds=900.0
+SILENT_RC=2
+{"overall": "check_failed", "ids": {}, "error": "state dir does not exist: ...\\gone"}
+MISSING_DIR_RC=3
+MISSING_DIR_EVENT_COUNT=1
+{"overall": "check_failed", "ids": {}, "error": "invalid --now value: Invalid isoformat string: 'not-a-timestamp'"}
+BAD_NOW_RC=3
+BAD_NOW_EVENT_COUNT=1
+```
+
+### C6.6 Mandated full pytest suite
+
+```powershell
+python -m pytest -q MTC_COMMAND_CENTER/tools/opsa/test_opsa.py
+```
+
+```text
+.......................                                                  [100%]
+23 passed in 0.57s
+```
+
+### C6.7 Eight-item continuation assessment
+
+| R1 item | Current implementation check | Fresh evidence/status |
+|---|---|---|
+| Required 1 | Synthetic `_watchdog_check` event on empty-id check-failures | RED C6.1; GREEN C6.3; rc matrix C6.5 |
+| Required 2 | `.unlink(`, `os.rmdir(`, `.rmdir(`, `shutil.move(`, `os.truncate(` banned; `.write_bytes(` remains allowed | Both mutants RED and old fence blind in C6.2; clean GREEN C6.3 |
+| Scope 3 | Both memory-file blob IDs equal base `0aa57ef6` | Exact blob equality C6.4 |
+| Nit 4 | `dirs_recreated` increments only inside the real-create branch | Existing RED/GREEN C4; full suite C6.6 |
+| Nit 5 | Docs identify rc 3 as this package's extension | Source inspection + full suite C6.6 |
+| Nit 6 | Invalid `--now` produces record/event and rc 3 | C6.5 (`BAD_NOW_RC=3`, one event) |
+| Nit 7 | Config contains only neutral `C:/EXAMPLE` / `D:/EXAMPLE` placeholders | Source inspection; no canonical-checkout path hit |
+| Nit 8 | Backup import absent; no `BaseException` no-op; `line_number` docs/code aligned | Source inspection + full suite C6.6 |
+
 ## R1 verdict table
 
 | Repair/nit | RED shown | GREEN shown |
