@@ -285,6 +285,8 @@ All nine are owner-decision records and plan-amendment passes. **Together they a
 
 **The V-Next round-2 repair, 2026-08-24** *(the delivery plan §0 carries its matching entry)*. The fresh dual-flagship G1 round on the V-Next-amended set split — `claude-opus-5` xhigh **PASS-WITH-NITS**, `gpt-5.6-sol` xhigh **REQUEST_CHANGES** — and both reproduced required findings are repaired: in this brief, **§17's roadmap cells now carry the `V-NEXT` tags** (P0-16/P0-17 in §17.1's OSS row; WP-V2B-08's simulation dragging in §17.2/§17.2b; WP-V3-01/V3-07/V3-08/V3-10/V3-11 in §17.3; WP-V4-03 and the WP-V4-06 command stages in §17.4) **and §17.4's dependency cell no longer requires "V3 complete" — V3's `V-NEXT` rows are not V4 preconditions**; in the delivery plan, **WP-V2B-07's former Milestone 1 is split into Milestone 1A (paper — no `G4`/`G6`, own `G1-IA`) and Milestone 1B (venue — `G4`+`G6`+`G1-IA`)** so the ratified paper-admission split is operationally complete. **Counts unchanged (60 = 44 + 16; 76); no gate weakened; nothing authorized; no acceptance claimed — a fresh dual-flagship round on the repaired exact SHA follows.**
 
+**The V-Next round-3 repair, 2026-08-24** *(the delivery plan §0 carries its matching entry)*. Dual-flagship round 2 split again (`claude-opus-5` xhigh PASS-WITH-NITS; `gpt-5.6-sol` xhigh REQUEST_CHANGES, three residual sites, all Lead-reproduced). Repaired here: in this brief, **§17.3's OSS cell and §17.5's dependency cell now tag/qualify the `V-NEXT` WP-V3-08 NautilusTrader POC**; in the delivery plan, the map-#96 *"G4 and G6 already govern this package"* clause is scoped to the venue milestones, the §9 T0-step coverage summary names **Milestone 1A as carrying neither `G4` nor `G6`**, the split narrative counts **three** milestones, and **Milestone 1A states its `G9` position**. **Counts unchanged; no gate weakened; nothing authorized; no acceptance claimed — the final permitted dual-flagship round (3 of 3) follows.**
+
 ### 0.8.3 Acceptance status of the amended set, stated without pre-claiming anything
 
 **These four are separate facts and none of them implies another.**
@@ -2994,7 +2996,7 @@ flowchart TD
 | **Dependencies** | Phase 0 trial catalog; V2 execution evidence flowing back; auth hardened |
 | **Risks** | Explorer scope creep into a general BI tool → cap at the named screens |
 | **Acceptance** | A-16 … A-20 |
-| **OSS to evaluate** | Perspective, QuantStats (with independent validation), NautilusTrader POC |
+| **OSS to evaluate** | Perspective, QuantStats (with independent validation), NautilusTrader POC — **`V-NEXT` (WP-V3-08, owner-ratified deferral 2026-08-24; evaluated when that package runs)** |
 | **Owner decisions needed** | Q18 calibration review after the first portfolio simulations |
 
 ## 17.4 V4
@@ -3014,7 +3016,7 @@ flowchart TD
 |---|---|
 | **Scope** | IBKR adapter behind **the broker boundary WP-P0-25 decides** — the existing `Broker` / `PartialRecoveryBroker` / `FullReconciliationBroker` family reused, extended, or deliberately replaced (F-9a, §0.6 R16). **Corrected 2026-08-22: earlier text said "the same `BrokerAdapter` protocol", naming a protocol that does not exist while three that do were already in the Bridge.** Equity swing bucket with calendar, session and corporate-action handling. Multi-venue portfolio view. |
 | **Explicit non-goals** | No FIX. No colocation. No HFT. |
-| **Dependencies** | V4 stable with real money for a defined period; NautilusTrader POC verdict |
+| **Dependencies** | V4 stable with real money for a defined period; NautilusTrader POC verdict *(WP-V3-08 is `V-NEXT` — owner-ratified deferral 2026-08-24 — so this verdict arrives with the V-Next work; V5 sits after first live either way and no pre-live path runs through it)* |
 | **Risks** | Equities bring corporate actions, halts, sessions and PDT rules — genuinely new failure modes, not "a second adapter" |
 | **OSS to evaluate** | NautilusTrader IBKR adapter (its strongest single argument); lighter IBKR clients as the alternative |
 | **Owner decisions needed** | adopt Nautilus as the adapter layer, or write a second adapter |
