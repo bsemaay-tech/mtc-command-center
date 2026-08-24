@@ -12,6 +12,7 @@ same falsifications, automated. Standard library only.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import json
 import os
@@ -24,6 +25,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from opsa_common import parse_utc_iso, utc_now  # noqa: E402
 import backup  # noqa: E402
+import heartbeat  # noqa: E402
 import restore  # noqa: E402
 import watchdog  # noqa: E402
 
@@ -147,6 +149,107 @@ class BackupRestoreTests(unittest.TestCase):
         # Newest run must carry the CHANGED content (proves --latest, not --first).
         self.assertEqual((target / "ledger_store" / "ledger.jsonl").read_bytes(),
                          b'{"row":1,"note":"CHANGED"}\r\n')
+
+    def test_nonexistent_run_is_check_failure_not_empty_success(self):
+        """D026: an explicit unknown run id must fail closed with rc 3."""
+        self.assertEqual(self._run_backup(), 0)
+        target = self.root / "restored"
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            rc = restore.run_restore(
+                self.config, run_id="opsa-19000101T000000.000Z", target=target)
+        self.assertEqual(rc, 3)
+        self.assertIn("run id not found in manifest", stderr.getvalue())
+        self.assertFalse(target.exists())
+
+    def test_partial_run_declaring_files_but_having_no_records_fails_closed(self):
+        """D026: a partial manifest cannot turn zero restored records into success."""
+        run_id = "opsa-20260825T000000.000Z"
+        self.backup_root.mkdir(parents=True)
+        lines = [
+            {"record": "run_start", "schema": "mtc.opsa_manifest/v1", "run_id": run_id},
+            {"record": "dir", "run_id": run_id, "store_id": "ledger_store",
+             "rel": "empty_dir"},
+            {"record": "run_end", "run_id": run_id, "status": "partial", "files": 1,
+             "errors": ["copy failed"]},
+        ]
+        self.manifest.write_text(
+            "".join(json.dumps(line) + "\n" for line in lines), encoding="utf-8")
+
+        for check_only in (False, True):
+            with self.subTest(check_only=check_only):
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                target = None if check_only else self.root / "restored"
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    rc = restore.run_restore(
+                        self.config, run_id=run_id, target=target, check_only=check_only)
+                self.assertEqual(rc, 3)
+                self.assertIn("nothing to verify", stderr.getvalue())
+                summary = json.loads(stdout.getvalue().strip().splitlines()[-1])
+                self.assertEqual(summary["status"], "failed")
+                self.assertEqual(summary["verified_against_manifest"], 0)
+                self.assertEqual(summary["errors"], 1)
+                if target is not None:
+                    self.assertFalse(target.exists())
+
+    def test_restore_rejects_plain_parent_store_id_before_any_outside_write(self):
+        """D026: a malicious manifest store id cannot escape the restore target."""
+        run_id = "opsa-20260825T010000.000Z"
+        payload = b"must stay confined"
+        source = self.backup_root / "runs" / "outside" / "payload.bin"
+        source.parent.mkdir(parents=True)
+        source.write_bytes(payload)
+        lines = [
+            {"record": "run_start", "schema": "mtc.opsa_manifest/v1", "run_id": run_id},
+            {"record": "file", "run_id": run_id, "store_id": "../outside",
+             "rel": "payload.bin", "sha256": hashlib.sha256(payload).hexdigest()},
+            {"record": "run_end", "run_id": run_id, "status": "ok", "files": 1,
+             "errors": []},
+        ]
+        self.manifest.parent.mkdir(parents=True, exist_ok=True)
+        self.manifest.write_text(
+            "".join(json.dumps(line) + "\n" for line in lines), encoding="utf-8")
+        target = self.root / "restore_target"
+        outside = self.root / "outside" / "payload.bin"
+
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            rc = restore.run_restore(self.config, run_id=run_id, target=target)
+
+        self.assertFalse(outside.exists())
+        self.assertFalse(target.exists())
+        self.assertEqual(rc, 3)
+
+    def test_backup_rejects_percent_encoded_parent_store_id_without_writes(self):
+        """D026: encoded separators in ids are rejected, not treated as safe literals."""
+        encoded = write_config(
+            self.root, self.backup_root,
+            [{"id": "..%2Foutside", "path": str(self.store), "class": "protected"}],
+        )
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            rc = backup.run_backup(encoded)
+        self.assertEqual(rc, 3)
+        self.assertFalse(self.manifest.exists())
+        self.assertFalse((self.backup_root / "runs").exists())
+
+
+class HeartbeatPathTests(unittest.TestCase):
+    def test_heartbeat_rejects_traversal_absolute_and_drive_ids_without_writes(self):
+        """D026: unsafe heartbeat ids cannot write inside or beside the state root."""
+        cases = ("../escaped", "..%2Fescaped", "{absolute}", "C:drive_escape")
+        for case in cases:
+            with self.subTest(case=case), tempfile.TemporaryDirectory(
+                    prefix="opsa_hb_path_") as tmp:
+                root = Path(tmp)
+                state_dir = root / "state"
+                beat_id = str(root / "absolute") if case == "{absolute}" else case
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(
+                        io.StringIO()):
+                    rc = heartbeat.main([
+                        "emit", "--state-dir", str(state_dir), "--id", beat_id,
+                    ])
+                self.assertEqual(list(root.rglob("*.hb.json")), [])
+                self.assertEqual(rc, 3)
 
 
 class WatchdogTests(unittest.TestCase):

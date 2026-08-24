@@ -37,8 +37,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from opsa_common import (  # noqa: E402
-    MANIFEST_SCHEMA, RC_OK, append_jsonl, load_backup_config, run_id_for,
-    sha256_file, utc_now, utc_now_iso,
+    MANIFEST_SCHEMA, RC_CHECK_FAILED, RC_OK, append_jsonl, load_backup_config,
+    resolve_confined_path, run_id_for, sha256_file, utc_now, utc_now_iso,
 )
 
 RC_ERROR = 1
@@ -78,7 +78,11 @@ def iter_tree(base: Path):
 
 
 def run_backup(config_path: Path, dry_run: bool = False, store_filter: set[str] | None = None) -> int:
-    config = load_backup_config(config_path)
+    try:
+        config = load_backup_config(config_path)
+    except (OSError, ValueError) as exc:
+        print(f"error: invalid backup config: {exc}", file=sys.stderr)
+        return RC_CHECK_FAILED
     backup_root = Path(config["backup_root"])
     stores = config["stores"]
     if store_filter:
@@ -91,7 +95,7 @@ def run_backup(config_path: Path, dry_run: bool = False, store_filter: set[str] 
 
     started = utc_now()
     run_id = run_id_for(started)
-    run_dir = backup_root / "runs" / run_id
+    run_dir = resolve_confined_path(backup_root, "runs", run_id)
     manifest_path = backup_root / "manifest.jsonl"
 
     print(json.dumps({"mode": "dry-run" if dry_run else "backup", "run_id": run_id,
@@ -141,7 +145,13 @@ def run_backup(config_path: Path, dry_run: bool = False, store_filter: set[str] 
                 continue
 
             _, src_file, rel = item
-            dest_file = run_dir / store_id / rel  # pathlib accepts POSIX rel on Windows too
+            try:
+                dest_file = resolve_confined_path(run_dir, store_id, rel)
+            except ValueError as exc:
+                msg = f"store {store_id!r}: unsafe destination for {rel!r}: {exc}"
+                errors.append(msg)
+                print(f"ERROR {msg}", file=sys.stderr)
+                continue
             try:
                 src_hash = sha256_file(src_file)
                 size = src_file.stat().st_size

@@ -31,7 +31,8 @@ import json
 import os
 import tempfile
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
+from urllib.parse import unquote
 
 MANIFEST_SCHEMA = "mtc.opsa_manifest/v1"
 HEARTBEAT_SCHEMA = "mtc.opsa_heartbeat/v1"
@@ -143,6 +144,57 @@ def to_posix_rel(path: Path, base: Path) -> str:
     return Path(path).resolve().relative_to(Path(base).resolve()).as_posix()
 
 
+def resolve_confined_path(root: Path, *parts: str | Path) -> Path:
+    """Resolve a destination that must remain strictly below ``root``.
+
+    User- or manifest-controlled path parts are rejected when they are absolute,
+    carry a Windows drive/UNC prefix, contain a parent component, or encode such a
+    component with URL-style escapes.  Both the literal and repeatedly-decoded forms
+    are checked so an id such as ``..%2Foutside`` cannot bypass the same rule that
+    rejects ``../outside``.  The returned path is canonical and strictly inside the
+    canonical root; equality with the root itself is not sufficient.
+    """
+    root_resolved = Path(root).expanduser().resolve()
+    literal_candidate = root_resolved
+    decoded_candidate = root_resolved
+
+    if not parts:
+        raise ValueError("confined path requires at least one child component")
+
+    for part in parts:
+        raw = str(part)
+        if not raw or "\x00" in raw:
+            raise ValueError(f"unsafe empty/NUL path component: {raw!r}")
+
+        decoded = raw
+        for _ in range(5):
+            next_value = unquote(decoded)
+            if next_value == decoded:
+                break
+            decoded = next_value
+
+        for value in (raw, decoded):
+            windows = PureWindowsPath(value)
+            normalized_parts = value.replace("\\", "/").split("/")
+            if (Path(value).is_absolute() or windows.drive or windows.root
+                    or ".." in normalized_parts):
+                raise ValueError(f"path escapes configured root: {raw!r}")
+
+        literal_candidate = literal_candidate / raw
+        decoded_candidate = decoded_candidate / decoded
+
+    for candidate in (literal_candidate, decoded_candidate):
+        resolved = candidate.resolve()
+        try:
+            resolved.relative_to(root_resolved)
+        except ValueError as exc:
+            raise ValueError(f"path escapes configured root: {candidate}") from exc
+        if resolved == root_resolved:
+            raise ValueError(f"path must be strictly inside configured root: {candidate}")
+
+    return literal_candidate.resolve()
+
+
 def load_backup_config(config_path: Path) -> dict:
     """Load and validate a backup config; raises with a clear message on schema drift."""
     config = json.loads(Path(config_path).read_text(encoding="utf-8"))
@@ -160,5 +212,7 @@ def load_backup_config(config_path: Path) -> dict:
                 raise ValueError(f"every store needs non-empty string fields id/path/class: {store!r}")
         if store["id"] in seen_ids:
             raise ValueError(f"duplicate store id: {store['id']!r}")
+        resolve_confined_path(Path(config["backup_root"]), "runs", "_config_check",
+                              store["id"])
         seen_ids.add(store["id"])
     return config

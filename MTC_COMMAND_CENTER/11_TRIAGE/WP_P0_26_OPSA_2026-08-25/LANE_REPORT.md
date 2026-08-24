@@ -256,3 +256,65 @@ handoff entries said, in brief):
 5. Retention/size-budget policy and bulk-log archive-then-verify (plan §12.6.2(b))
    — owner-approved exact lists, future package work.
 6. Nothing was pushed or merged.
+
+## Codex CLI 2026-08-25 — owner-authorized closure after the T1 cap
+
+The Claude Lead supplied an owner-authorized, bounded closure contract for the two
+reproduced round-2 defects. This Codex counterpart implementer changed only the
+five OPSA source/test files required by those defects and these two lane records.
+
+### Closure repair 1 — restore now fails closed
+
+- An explicit run id absent from the manifest returns check-failure rc 3 with
+  `error: run id not found in manifest`; it can no longer become an empty rc-0 run.
+- A failed/partial or declared-nonempty run with zero file records returns rc 3 and
+  an explicit `nothing to verify` error in both restore and `--check-only` modes.
+  The summary is `status=failed`, `verified_against_manifest=0`, `errors=1`; no
+  restore directory is created.
+- D026 proof is recorded in `RESTORE_DRILL_EVIDENCE.md` § C7: the exact pre-fix
+  implementation returned rc 0 for the unknown run and for both empty-run modes;
+  the repaired tree returns rc 3.
+
+### Closure repair 2 — every derived path is root-confined
+
+- `opsa_common.resolve_confined_path` canonicalizes the configured root and checks
+  both literal and repeatedly URL-decoded path forms. It rejects parent components,
+  absolute paths, UNC/Windows-rooted forms, drive prefixes, NUL/empty components,
+  and any result that is not strictly below its configured root.
+- Config store ids are validated before `backup.py` creates a manifest; backup
+  destinations, restore backup-source and target destinations, and heartbeat files
+  all use the same helper.
+- Restore preflights every selected source/destination before its first target
+  mutation, so one later malicious manifest record cannot follow an earlier valid
+  write.
+- D026 tests cover plain `../`, `..%2F`, absolute and `C:`-prefixed ids. The exact
+  pre-fix tree wrote outside the restore/state roots (and accepted the encoded id);
+  the repaired tree returns rc 3 and writes no heartbeat or outside restore file.
+
+### Closure QA and impact statement
+
+```text
+Targeted closure regressions: 5 passed, 6 subtests passed in 0.17s
+Full OPSA suite:              28 passed, 6 subtests passed in 0.84s
+Python compileall:            rc 0
+```
+
+Parity/Pine/MTC/trading impact: none. This is local, non-economic OPSA tooling;
+no live host, deployment, credential, schema, notifier, or external service action
+was performed. Full RED/GREEN commands and real output are in the evidence record.
+
+Exact closure paths prepared for the single owner-authorized commit:
+
+```text
+MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/LANE_REPORT.md
+MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/RESTORE_DRILL_EVIDENCE.md
+MTC_COMMAND_CENTER/tools/opsa/backup.py
+MTC_COMMAND_CENTER/tools/opsa/heartbeat.py
+MTC_COMMAND_CENTER/tools/opsa/opsa_common.py
+MTC_COMMAND_CENTER/tools/opsa/restore.py
+MTC_COMMAND_CENTER/tools/opsa/test_opsa.py
+```
+
+Commit message:
+`fix(wp-p0-26): closure - fail-closed restore statuses, root-confined path validation`.
+No push.

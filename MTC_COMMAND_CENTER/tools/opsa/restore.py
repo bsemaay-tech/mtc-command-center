@@ -30,7 +30,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from opsa_common import RC_OK, read_jsonl, sha256_file, utc_now_iso  # noqa: E402
+from opsa_common import (  # noqa: E402
+    RC_CHECK_FAILED, RC_OK, read_jsonl, resolve_confined_path, sha256_file,
+    utc_now_iso,
+)
 
 RC_ERROR = 1
 
@@ -55,7 +58,7 @@ def select_run(records: list[dict], run_id: str | None, store_filter: set[str] |
 
 def verify_backup_file(record: dict, run_dir: Path) -> tuple[bool, str]:
     """Hash-check one file at its backup location against the manifest record."""
-    backup_path = run_dir / record["store_id"] / record["rel"]
+    backup_path = resolve_confined_path(run_dir, record["store_id"], record["rel"])
     try:
         actual = sha256_file(backup_path)
     except OSError as exc:
@@ -67,9 +70,13 @@ def verify_backup_file(record: dict, run_dir: Path) -> tuple[bool, str]:
 
 
 def run_restore(config_path: Path, run_id: str | None, target: Path | None,
-                check_only: bool = False, store_filter: set[str] | None = None) -> int:
+                 check_only: bool = False, store_filter: set[str] | None = None) -> int:
     from opsa_common import load_backup_config  # local import keeps --help fast
-    config = load_backup_config(config_path)
+    try:
+        config = load_backup_config(config_path)
+    except (OSError, ValueError) as exc:
+        print(f"error: invalid backup config: {exc}", file=sys.stderr)
+        return RC_CHECK_FAILED
     backup_root = Path(config["backup_root"])
     manifest_path = backup_root / "manifest.jsonl"
     if not manifest_path.exists():
@@ -78,11 +85,24 @@ def run_restore(config_path: Path, run_id: str | None, target: Path | None,
 
     records = read_jsonl(manifest_path)
     malformed = [r for r in records if r.get("record") == "_malformed"]
+    available_run_ids = {r.get("run_id") for r in records
+                         if r.get("record") == "run_start" and r.get("run_id")}
+    if run_id is not None and run_id not in available_run_ids:
+        print(f"error: run id not found in manifest: {run_id}", file=sys.stderr)
+        return RC_CHECK_FAILED
     resolved, selected = select_run(records, run_id, store_filter)
     if resolved is None:
         print("error: manifest contains no run_start records", file=sys.stderr)
-        return RC_ERROR
-    run_dir = backup_root / "runs" / resolved
+        return RC_CHECK_FAILED
+    try:
+        run_dir = resolve_confined_path(backup_root, "runs", resolved)
+        for record in selected:
+            resolve_confined_path(run_dir, record.get("store_id"), record.get("rel"))
+            if not check_only and target is not None:
+                resolve_confined_path(target, record.get("store_id"), record.get("rel"))
+    except (TypeError, ValueError) as exc:
+        print(f"error: unsafe manifest path for run {resolved}: {exc}", file=sys.stderr)
+        return RC_CHECK_FAILED
 
     mode = "check-only" if check_only else "restore"
     print(json.dumps({"mode": mode, "run_id": resolved, "manifest": str(manifest_path),
@@ -96,10 +116,34 @@ def run_restore(config_path: Path, run_id: str | None, target: Path | None,
     overwritten = 0
     dirs_recreated = 0  # counted only when a directory is actually created (not in --check-only)
 
+    file_records = [record for record in selected if record.get("record") == "file"]
+    run_end = next((record for record in reversed(records)
+                    if record.get("record") == "run_end"
+                    and record.get("run_id") == resolved), {})
+    declared_files = run_end.get("files", "unknown")
+    declared_files_valid = (isinstance(declared_files, int)
+                            and not isinstance(declared_files, bool)
+                            and declared_files >= 0)
+    declares_files = declared_files_valid and declared_files > 0
+    incomplete_empty_run = (not run_end or run_end.get("status") != "ok"
+                            or not declared_files_valid)
+    if not file_records and (check_only or not selected or declares_files or incomplete_empty_run):
+        msg = (f"run {resolved} has nothing to verify: selected zero file records "
+               f"(manifest declares files={declared_files}, status={run_end.get('status', 'missing')})")
+        errors.append(msg)
+        print(f"ERROR {msg}", file=sys.stderr)
+        print(json.dumps({"mode": mode, "run_id": resolved, "status": "failed",
+                          "verified_against_manifest": 0, "restored": 0,
+                          "overwritten": 0, "dirs_recreated": 0,
+                          "errors": len(errors), "finished_at": utc_now_iso()},
+                         ensure_ascii=False))
+        return RC_CHECK_FAILED
+
     for record in selected:
         if record.get("record") == "dir":
             if not check_only and target is not None:
-                (Path(target) / record["store_id"] / record["rel"]).mkdir(parents=True, exist_ok=True)
+                resolve_confined_path(target, record["store_id"], record["rel"]).mkdir(
+                    parents=True, exist_ok=True)
                 dirs_recreated += 1
             continue
 
@@ -115,11 +159,12 @@ def run_restore(config_path: Path, run_id: str | None, target: Path | None,
             print(f"VERIFIED {record['store_id']}/{record['rel']}")
             continue
 
-        dest = Path(target) / record["store_id"] / record["rel"]
+        dest = resolve_confined_path(target, record["store_id"], record["rel"])
         existed = dest.exists()
         try:
             dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(run_dir / record["store_id"] / record["rel"], dest)
+            shutil.copyfile(
+                resolve_confined_path(run_dir, record["store_id"], record["rel"]), dest)
             written_hash = sha256_file(dest)
         except OSError as exc:
             msg = f"{record.get('store_id')}/{record.get('rel')}: restore failed: {exc}"

@@ -34,11 +34,14 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from opsa_common import HEARTBEAT_SCHEMA, atomic_write_json, utc_now_iso  # noqa: E402
+from opsa_common import (  # noqa: E402
+    HEARTBEAT_SCHEMA, RC_CHECK_FAILED, atomic_write_json, resolve_confined_path,
+    utc_now_iso,
+)
 
 
 def emit(state_dir: Path, beat_id: str, seq: int, note: str | None = None) -> Path:
-    path = Path(state_dir) / f"{beat_id}.hb.json"
+    path = resolve_confined_path(state_dir, f"{beat_id}.hb.json")
     atomic_write_json(path, {
         "schema": HEARTBEAT_SCHEMA,
         "id": beat_id,
@@ -77,7 +80,11 @@ def main(argv: list[str]) -> int:
     state_dir.mkdir(parents=True, exist_ok=True)
 
     if args.command == "emit":
-        path = emit(state_dir, args.id, seq=1, note=args.note)
+        try:
+            path = emit(state_dir, args.id, seq=1, note=args.note)
+        except ValueError as exc:
+            print(f"error: unsafe heartbeat id: {exc}", file=sys.stderr)
+            return RC_CHECK_FAILED
         print(f"heartbeat written: {path}")
         return 0
 
@@ -85,7 +92,11 @@ def main(argv: list[str]) -> int:
     try:
         while args.count == 0 or seq < args.count:
             seq += 1
-            path = emit(state_dir, args.id, seq=seq, note=args.note)
+            try:
+                path = emit(state_dir, args.id, seq=seq, note=args.note)
+            except ValueError as exc:
+                print(f"error: unsafe heartbeat id: {exc}", file=sys.stderr)
+                return RC_CHECK_FAILED
             print(f"beat seq={seq} -> {path}", flush=True)
             if args.count != 0 and seq >= args.count:
                 break

@@ -688,3 +688,94 @@ python -m pytest -q MTC_COMMAND_CENTER/tools/opsa/test_opsa.py
 | Nit 4 `dirs_recreated` | C4 (`AssertionError: 1 != 0`) | C4 (`dirs_recreated: 0`) + C5 |
 | Nit 6 invalid `--now` | C3 (traceback rc 1) + C1 | C3 (rc 3 + event) + C5 |
 | Nits 5/7/8 | doc/config only — no executable behaviour changed | inspection (README/opsa_common/config diff) |
+
+## C7. Owner-authorized closure after the T1 cap (2026-08-25)
+
+The closure repairs two Lead-reproduced defects only: empty-success restore outcomes
+and unconfined store/manifest/heartbeat identifiers. Production files from exact
+pre-fix HEAD `f6c2c3da` were copied to
+`%TEMP%\opsa_closure_red_154691eabe2d412ab8c70b3f78ceb62b` before implementation.
+After the regression tests were finalized, only the current `test_opsa.py` was copied
+over that preserved pre-fix implementation.
+
+### C7.1 RED — final tests against exact pre-fix implementation
+
+```powershell
+$red = "$env:TEMP\opsa_closure_red_154691eabe2d412ab8c70b3f78ceb62b"
+Copy-Item MTC_COMMAND_CENTER\tools\opsa\test_opsa.py "$red\test_opsa.py" -Force
+python -m pytest -q --tb=short `
+  "$red\test_opsa.py::BackupRestoreTests::test_nonexistent_run_is_check_failure_not_empty_success" `
+  "$red\test_opsa.py::BackupRestoreTests::test_partial_run_declaring_files_but_having_no_records_fails_closed" `
+  "$red\test_opsa.py::BackupRestoreTests::test_restore_rejects_plain_parent_store_id_before_any_outside_write" `
+  "$red\test_opsa.py::BackupRestoreTests::test_backup_rejects_percent_encoded_parent_store_id_without_writes" `
+  "$red\test_opsa.py::HeartbeatPathTests::test_heartbeat_rejects_traversal_absolute_and_drive_ids_without_writes"
+```
+
+Real decisive output (path prefixes shortened only in this record):
+
+```text
+test_nonexistent_run_is_check_failure_not_empty_success
+E   AssertionError: 0 != 3
+{"mode": "restore", "run_id": "opsa-19000101T000000.000Z", "status": "ok",
+ "verified_against_manifest": 0, "restored": 0, "errors": 0, ...}
+
+test_partial_run_declaring_files_but_having_no_records_fails_closed
+  check_only=False: E   AssertionError: 0 != 3
+  check_only=True:  E   AssertionError: 0 != 3
+
+test_restore_rejects_plain_parent_store_id_before_any_outside_write
+E   AssertionError: True is not false
+
+test_backup_rejects_percent_encoded_parent_store_id_without_writes
+E   AssertionError: 0 != 3
+
+test_heartbeat_rejects_traversal_absolute_and_drive_ids_without_writes
+  ../escaped:      escaped.hb.json was written beside state/
+  ..%2Fescaped:    state/..%2Fescaped.hb.json was written
+  absolute path:   absolute.hb.json was written outside state/
+  C:drive_escape:  state/drive_escape.hb.json was written
+
+9 failed, 2 passed in 0.33s
+```
+
+This RED directly falsifies every closure claim: both restore modes falsely returned
+success with zero verified/restored files, plain traversal wrote outside the restore
+target, encoded traversal was accepted, and every unsafe heartbeat-id class wrote a
+heartbeat file.
+
+### C7.2 GREEN — closure regressions on the repaired tree
+
+```powershell
+python -m pytest -q `
+  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::BackupRestoreTests::test_nonexistent_run_is_check_failure_not_empty_success `
+  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::BackupRestoreTests::test_partial_run_declaring_files_but_having_no_records_fails_closed `
+  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::BackupRestoreTests::test_restore_rejects_plain_parent_store_id_before_any_outside_write `
+  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::BackupRestoreTests::test_backup_rejects_percent_encoded_parent_store_id_without_writes `
+  MTC_COMMAND_CENTER/tools/opsa/test_opsa.py::HeartbeatPathTests::test_heartbeat_rejects_traversal_absolute_and_drive_ids_without_writes
+```
+
+```text
+.....                                                              [100%]
+5 passed, 6 subtests passed in 0.17s
+```
+
+The fixed outcomes are rc 3 with explicit errors. Restore preflights every selected
+source and destination before making a target write; the tests prove the outside
+paths and all heartbeat files remain absent.
+
+### C7.3 GREEN — complete OPSA suite and syntax check
+
+```powershell
+python -m pytest -q MTC_COMMAND_CENTER/tools/opsa/test_opsa.py
+python -m compileall -q MTC_COMMAND_CENTER/tools/opsa
+```
+
+```text
+............................                                       [100%]
+28 passed, 6 subtests passed in 0.84s
+compileall rc=0 (no output)
+```
+
+The prior 23 tests remain green; five closure tests were added. No live evidence
+store, host, credential, notifier service, trading logic, Pine, parity, schema, or
+deployment surface was touched.
