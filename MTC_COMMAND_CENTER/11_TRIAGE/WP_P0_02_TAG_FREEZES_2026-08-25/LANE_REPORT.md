@@ -106,8 +106,9 @@ the repo guard, exact staged-path review, whitespace review, and a final tag rec
 
 - Required package commit message:
   `feat(wp-p0-02): tag namespaces and first freeze tags (T2, lane I 2026-08-25)`.
-- Package commit SHA: **SELF — recorded by the closeout commit after this package commit is
-  created; the first commit cannot contain its own SHA without changing it**.
+- Package commit SHA: `af694a652f52adbbf83546fd302c2d5e2de5c857`.
+- Closeout commit SHA: **SELF — printed in the final lane summary because a commit cannot
+  contain its own SHA without changing it**.
 - Open acceptance action: the Lead must independently perform the single T2 Gate-5 review.
 - Open publication action: after acceptance, the Lead reviews the full 180-tag list and
   pushes the approved refs; this lane performed no push.
