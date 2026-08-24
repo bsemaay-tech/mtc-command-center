@@ -1,15 +1,15 @@
 {
   "schema": "mtc.opsa_backup_config/v1",
-  "backup_root": "D:/mtc_opsa_backups",
+  "backup_root": "D:/EXAMPLE/BACKUP_ROOT_CHANGE_ME",
   "stores": [
     {
       "id": "ledger_store",
-      "path": "C:/LAB/Tradingview_LAB_CLEAN/example/ledger",
+      "path": "C:/EXAMPLE/EVIDENCE/PATH/ledger_store",
       "class": "protected"
     },
     {
       "id": "run_artifacts",
-      "path": "C:/LAB/Tradingview_LAB_CLEAN/example/runs",
+      "path": "C:/EXAMPLE/EVIDENCE/PATH/run_artifacts",
       "class": "bulk"
     }
   ]

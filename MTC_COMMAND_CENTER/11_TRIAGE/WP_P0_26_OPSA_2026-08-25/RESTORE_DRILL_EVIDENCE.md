@@ -155,9 +155,16 @@ python MTC_COMMAND_CENTER/tools/opsa/restore.py --config ... --latest --check-on
 ```text
 FAIL  ledger_store/sub/blob.bin: sha256 mismatch: manifest=785b0751fc2c53dc… actual=82327d431835e86d…
 error: ledger_store/sub/blob.bin: sha256 mismatch: manifest=785b0751fc2c53dc… actual=82327d431835e86d…
-{"mode": "check-only", …, "status": "failed", "verified_against_manifest": 2, "restored": 0, "dirs_recreated": 1, "errors": 1, …}
+{"mode": "check-only", …, "status": "failed", "verified_against_manifest": 2, "restored": 0, "dirs_recreated": 0, "errors": 1, …}
 rc=1 (tampered backup REFUSED; the two untampered files still verified — honest partial report)
 ```
+
+> **R1 nit-4 correction (2026-08-25):** the original run of this step printed
+> `"dirs_recreated": 1` even in `--check-only` mode, where nothing is created — the
+> summary counted dir *records* instead of dirs *created*. Fixed in repair round 1:
+> `dirs_recreated` now counts only directories actually created, so `--check-only`
+> always reports 0. The value above is corrected to match the fixed tool; the fresh
+> reproduction with real output is in the R1 repair section (§ C4).
 
 ---
 
@@ -275,3 +282,230 @@ teardown is provable — the dead-man checker itself behaved correctly throughou
 | Watchdog RED: killed beat flagged + notified | PASS | B2 (rc 2, one alert event) |
 | Corrupt beat → check-failed, not OK/silent | PASS | B3 (rc 3) |
 | Unit suite | PASS | 19/19 OK |
+
+---
+
+# Repair round 1 (2026-08-25) — D026 RED/GREEN for the audit-R1 repairs
+
+**Trigger:** fresh T1 claude-opus-5 audit of commit `73b72bd0` returned REQUEST_CHANGES
+(2 required repairs + scope revert; 5 nits). This section records the new tests and
+falsifications with commands + real output. Environment unchanged (Windows 11, Python
+3.14.2, Git Bash). All RED runs execute against **pre-fix copies in `%TEMP%`** — the
+worktree was never reverted; `73b72bd0` remains the base of these demonstrations
+(`git show 73b72bd0:…` supplies the pre-fix file). Temp scratch dirs were removed
+after this section captured their output.
+
+## C1. Required repair 1 — directory-level check-failures must reach the notifier
+
+**Defect:** with a missing state dir or an empty state dir and no `--expect`,
+`check()` returned empty `ids`, the notify loop iterated nothing, and rc 3 was the
+only trace — the evidence-store-vanished scenario produced ZERO notifier events.
+
+**Fix:** `_notify_outcome()` in `watchdog.py` — when an `alert`/`check_failed`
+outcome carries no per-id events, exactly one synthetic checker-level event
+(id `_watchdog_check`, state `check_failed`, error text) is delivered. New tests:
+`test_missing_state_dir_yields_rc3_and_exactly_one_notifier_event`,
+`test_empty_state_dir_no_expect_notifies_check_failed`, plus non-regression guard
+`test_per_id_outcomes_still_notify_per_id` (normal silent beat still notifies per id).
+
+### RED — new tests vs pre-fix watchdog.py (temp copy)
+
+```bash
+RED=/tmp/opsa_r1_red   # maps to %TEMP%\opsa_r1_red
+rm -rf "$RED" && mkdir -p "$RED"
+cp MTC_COMMAND_CENTER/tools/opsa/*.py "$RED"/
+git show 73b72bd0:MTC_COMMAND_CENTER/tools/opsa/watchdog.py > "$RED/watchdog.py"
+cd "$RED"
+python -m unittest \
+  test_opsa.WatchdogTests.test_missing_state_dir_yields_rc3_and_exactly_one_notifier_event \
+  test_opsa.WatchdogTests.test_empty_state_dir_no_expect_notifies_check_failed \
+  test_opsa.WatchdogTests.test_invalid_now_is_check_failed_not_traceback \
+  test_opsa.WatchdogTests.test_per_id_outcomes_still_notify_per_id
+```
+
+```text
+ERROR: test_missing_state_dir_yields_rc3_and_exactly_one_notifier_event
+  File "…\opsa_r1_red\test_opsa.py", line 254, in test_missing_state_dir_yields_rc3_and_exactly_one_notifier_event
+    events = self._events()
+  FileNotFoundError: [Errno 2] No such file or directory: '…\opsa_wd_u6bh6dsb\alerts.jsonl'
+ERROR: test_empty_state_dir_no_expect_notifies_check_failed
+  FileNotFoundError: [Errno 2] No such file or directory: '…\opsa_wd_fi4t900j\alerts.jsonl'
+ERROR: test_invalid_now_is_check_failed_not_traceback
+  File "…\opsa_r1_red\watchdog.py", line 172, in run_check
+    now = parse_utc_iso(args.now) if args.now else utc_now()
+  ValueError: Invalid isoformat string: 'not-a-timestamp'
+Ran 4 tests in 0.048s
+FAILED (errors=3)
+```
+
+(Tracebacks trimmed to the decisive frames. `FileNotFoundError` on the notifier log
+IS the defect: rc 3 was returned but no event was ever written. The 4th test — the
+per-id non-regression guard — passed on the old code, as expected.)
+
+### GREEN — fixed tool, CLI level
+
+```bash
+cd MTC_COMMAND_CENTER/tools/opsa
+python watchdog.py --state-dir "$TEMP/opsa_r1_vanished_dir" --silence-seconds 60 \
+       --notifier-log "$TEMP/opsa_r1_vanished_alerts.jsonl" ; echo "rc=$?"
+cat "$TEMP/opsa_r1_vanished_alerts.jsonl"
+```
+
+```text
+error: state dir does not exist: C:\Users\…\Temp\opsa_r1_vanished_dir
+{"overall": "check_failed", "ids": {}, "error": "state dir does not exist: …"}
+rc=3
+{"checked_at": "2026-08-24T19:32:09Z", "error": "state dir does not exist: …", "id": "_watchdog_check", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 60.0, "state": "check_failed"}
+```
+
+One notifier event on the vanished-store scenario — the alert record the audit required.
+
+## C2. Required repair 2 — delete-guard needles miss real delete forms
+
+**Defect:** the banned list had `.unlink()` (exact call, no args), so
+`dest.unlink(missing_ok=True)` passed the scan; `os.rmdir(`/`.rmdir(`/`os.truncate(`
+were absent entirely. **Fix:** needles `.unlink(`, `os.rmdir(`, `.rmdir(`,
+`os.truncate(` added (`shutil.move(` already present); `.write_bytes(`/`.write_text(`
+deliberately NOT banned (legitimate overwrites; scope stays deletion/truncation/
+removal of existing paths).
+
+### Auditor's mutant A — `dest.unlink(missing_ok=True)` in restore.py (temp copy)
+
+```bash
+MUTA=/tmp/opsa_r1_mutant_a
+rm -rf "$MUTA" && mkdir -p "$MUTA" && cp MTC_COMMAND_CENTER/tools/opsa/*.py "$MUTA"/
+python - "$MUTA/restore.py" <<'PY'   # insert after: dest = Path(target) / ...
+…dest.unlink(missing_ok=True)  # MUTANT(A)…
+PY
+cd "$MUTA" && python -m unittest test_opsa.NoDeleteGuaranteeTests -v
+```
+
+```text
+First extra element 0:
+'restore.py: .unlink('
+- ['restore.py: .unlink(']
++ [] : delete code path found: ['restore.py: .unlink(']
+Ran 1 test in 0.002s
+FAILED (failures=1)          ← RED with the new needles
+```
+
+### Auditor's mutant B — `os.rmdir(dest.parent)` in restore.py (temp copy)
+
+Same procedure, inserting `import os` + `os.rmdir(dest.parent)` after
+`dest.parent.mkdir(...)`:
+
+```text
+- ['restore.py: os.rmdir(', 'restore.py: .rmdir(']
++ [] : delete code path found: ['restore.py: os.rmdir(', 'restore.py: .rmdir(']
+Ran 1 test in 0.001s
+FAILED (failures=1)          ← RED with the new needles
+```
+
+### Old needles were blind to BOTH mutants (pre-fix scan, same temp copies)
+
+```bash
+git show 73b72bd0:MTC_COMMAND_CENTER/tools/opsa/test_opsa.py > "$MUT/test_opsa.py"
+cd "$MUT" && python -m unittest test_opsa.NoDeleteGuaranteeTests
+```
+
+```text
+=== OLD test_opsa.py vs opsa_r1_mutant_a ===   Ran 1 test … OK
+=== OLD test_opsa.py vs opsa_r1_mutant_b ===   Ran 1 test … OK
+```
+
+The old scan passed both delete mutants — the blind spot is proven, not asserted.
+
+### GREEN — clean worktree
+
+```text
+test_no_delete_calls_in_opsa_tools … ok
+Ran 1 test in 0.001s
+OK
+```
+
+## C3. Nit 6 — unparseable `--now` must be rc 3, not a traceback
+
+### RED — pre-fix CLI (temp copy, old watchdog.py)
+
+```bash
+cd /tmp/opsa_r1_red
+python watchdog.py --state-dir … --silence-seconds 60 --now "garbage-timestamp" ; echo "OLD_rc=$?"
+```
+
+```text
+  File "…\opsa_common.py", line 68, in parse_utc_iso
+    ts = datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
+ValueError: Invalid isoformat string: 'garbage-timestamp'
+OLD_rc=1                     ← raw traceback, rc 1
+```
+
+### GREEN — fixed CLI
+
+```text
+error: invalid --now value: Invalid isoformat string: 'garbage-timestamp'
+{"overall": "check_failed", "ids": {}, "error": "invalid --now value: …"}
+NEW_rc=3
+{"checked_at": "2026-08-24T19:32:03Z", "error": "invalid --now value: …", "id": "_watchdog_check", "schema": "mtc.opsa_watchdog_event/v1", "silence_bound_seconds": 60.0, "state": "check_failed"}
+```
+
+Check-failed record on stdout, one notifier event, rc 3 — never a traceback.
+
+## C4. Nit 4 — `--check-only` no longer reports `dirs_recreated` it did not create
+
+### RED — new unit assertion vs pre-fix restore.py (temp copy)
+
+```bash
+RED2=/tmp/opsa_r1_red2
+rm -rf "$RED2" && mkdir -p "$RED2" && cp MTC_COMMAND_CENTER/tools/opsa/*.py "$RED2"/
+git show 73b72bd0:MTC_COMMAND_CENTER/tools/opsa/restore.py > "$RED2/restore.py"
+cd "$RED2" && python -m unittest test_opsa.BackupRestoreTests.test_check_only_detects_corruption_writes_nothing
+```
+
+```text
+    self.assertEqual(summary["dirs_recreated"], 0)
+AssertionError: 1 != 0
+Ran 1 test in 0.058s
+FAILED (failures=1)
+```
+
+### GREEN — fixed tool, CLI reproduction of the A5 scenario
+
+```bash
+S=/tmp/opsa_r1_nit4   # fixture: one protected store with ledger.jsonl + empty_dir
+python backup.py --config "$S/config.json"           # rc=0
+printf 'tampered' > "$S"/backups/runs/*/ledger_store/ledger.jsonl
+python restore.py --config "$S/config.json" --latest --check-only
+```
+
+```text
+{"mode": "check-only", "run_id": "opsa-20260824T193507.812Z", "status": "failed", "verified_against_manifest": 0, "restored": 0, "overwritten": 0, "dirs_recreated": 0, "errors": 1, "finished_at": "2026-08-24T19:35:07Z"}
+```
+
+`dirs_recreated: 0` in check-only mode (restore mode still counts what it actually
+creates — see A4, where the empty dir was genuinely recreated).
+
+## C5. Full suite after all R1 changes (GREEN)
+
+```bash
+cd MTC_COMMAND_CENTER/tools/opsa && python -m unittest test_opsa
+```
+
+```text
+Ran 23 tests in 0.525s
+OK
+```
+
+19 original tests + 4 new watchdog tests (notifier coverage ×2, invalid-`--now`,
+per-id non-regression guard); the nit-4 assertion was folded into the existing
+check-only test.
+
+## R1 verdict table
+
+| Repair/nit | RED shown | GREEN shown |
+|---|---|---|
+| R1 #1 notifier coverage (missing/empty state dir) | C1 (2 errors: zero events written) | C1 (rc 3 + exactly 1 `_watchdog_check` event) + C5 |
+| R1 #2 delete-guard needles | C2 (both mutants FAILED) + old-needles-blind proof | C2 (clean scan OK) + C5 |
+| R1 #3 scope revert | n/a (git revert; `git diff 0aa57ef6 -- <2 files>` empty) | LANE_REPORT R1 section |
+| Nit 4 `dirs_recreated` | C4 (`AssertionError: 1 != 0`) | C4 (`dirs_recreated: 0`) + C5 |
+| Nit 6 invalid `--now` | C3 (traceback rc 1) + C1 | C3 (rc 3 + event) + C5 |
+| Nits 5/7/8 | doc/config only — no executable behaviour changed | inspection (README/opsa_common/config diff) |

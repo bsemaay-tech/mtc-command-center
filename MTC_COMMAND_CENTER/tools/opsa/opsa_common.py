@@ -2,7 +2,8 @@
 
 Design invariants for every tool in this package (audit against these):
 
-1. **No delete code path at all.** No ``os.remove``, ``os.unlink``, ``shutil.rmtree``
+1. **No delete code path at all.** No ``os.remove``, ``os.unlink``, ``Path.unlink``,
+   ``os.rmdir``, ``Path.rmdir``, ``shutil.rmtree``, ``shutil.move``, ``os.truncate``
    or any other destructive call exists anywhere under ``tools/opsa``. The tools may
    create and overwrite files only. Protected evidence classes can therefore never be
    deleted by this tooling — not by design intent, but by construction.
@@ -18,8 +19,10 @@ Design invariants for every tool in this package (audit against these):
 
 Harvested patterns (see LANE_REPORT.md reuse record):
 - ``_atomic_write_json`` / UTC-Z stamps from ``03_QUANTLENS/tools/progress_emitter.py``
-- exit-code convention (0 ok / 2 alert / 3 check-failure) from
-  ``02_MTC_BACKTEST/scripts/health_alerts.py``.
+- exit-code convention (0 ok / non-zero alert) from
+  ``02_MTC_BACKTEST/scripts/health_alerts.py``; the three-way extension to
+  0 ok / 2 alert / 3 check-failure is THIS package's own addition, not
+  health_alerts.py's (it knows no rc-3 could-not-evaluate class).
 """
 from __future__ import annotations
 
@@ -35,7 +38,8 @@ HEARTBEAT_SCHEMA = "mtc.opsa_heartbeat/v1"
 WATCHDOG_EVENT_SCHEMA = "mtc.opsa_watchdog_event/v1"
 CONFIG_SCHEMA = "mtc.opsa_backup_config/v1"
 
-#: Exit codes (0 ok / 2 alert / 3 could-not-evaluate), per health_alerts.py convention.
+#: Exit codes: 0 ok / 2 alert harvested from health_alerts.py's convention;
+#: 3 could-not-evaluate is this package's extension (honest-wording fix, audit R1 nit 5).
 RC_OK = 0
 RC_ALERT = 2
 RC_CHECK_FAILED = 3
@@ -74,17 +78,15 @@ def parse_utc_iso(value: str) -> datetime:
 def atomic_write_bytes(path: Path, data: bytes) -> None:
     """Write bytes via tmp file + os.replace so readers never see a torn file.
 
-    On failure the tmp file is left on disk (no cleanup — see module docstring).
+    On failure the tmp file is left on disk (no cleanup — see module docstring;
+    a cleanup path would be a delete path, so failure simply propagates).
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp_name = tempfile.mkstemp(dir=str(path.parent), prefix=path.name + ".", suffix=".tmp")
-    try:
-        with os.fdopen(fd, "wb") as handle:
-            handle.write(data)
-        os.replace(tmp_name, path)
-    except BaseException:
-        raise
+    with os.fdopen(fd, "wb") as handle:
+        handle.write(data)
+    os.replace(tmp_name, path)
 
 
 def atomic_write_json(path: Path, payload: dict) -> None:
@@ -120,8 +122,8 @@ def append_jsonl(path: Path, record: dict) -> None:
 def read_jsonl(path: Path) -> list[dict]:
     """Read a JSONL file into a list of records (for restore / audit reads).
 
-    A malformed line is returned as ``{"record": "_malformed", "line": ...}`` so the
-    caller can report it as a check-failure instead of silently skipping it.
+    A malformed line is returned as ``{"record": "_malformed", "line_number": ...}``
+    so the caller can report it as a check-failure instead of silently skipping it.
     """
     records: list[dict] = []
     with open(Path(path), "r", encoding="utf-8") as handle:

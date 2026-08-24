@@ -94,13 +94,13 @@ def run_restore(config_path: Path, run_id: str | None, target: Path | None,
     verified = 0
     restored = 0
     overwritten = 0
-    dir_records = 0
+    dirs_recreated = 0  # counted only when a directory is actually created (not in --check-only)
 
     for record in selected:
         if record.get("record") == "dir":
-            dir_records += 1
             if not check_only and target is not None:
                 (Path(target) / record["store_id"] / record["rel"]).mkdir(parents=True, exist_ok=True)
+                dirs_recreated += 1
             continue
 
         ok, detail = verify_backup_file(record, run_dir)
@@ -140,7 +140,7 @@ def run_restore(config_path: Path, run_id: str | None, target: Path | None,
     status = "ok" if not errors else "failed"
     print(json.dumps({"mode": mode, "run_id": resolved, "status": status,
                       "verified_against_manifest": verified, "restored": restored,
-                      "overwritten": overwritten, "dirs_recreated": dir_records,
+                      "overwritten": overwritten, "dirs_recreated": dirs_recreated,
                       "errors": len(errors), "finished_at": utc_now_iso()},
                      ensure_ascii=False))
     if errors:

@@ -9,31 +9,6 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
-## [GLM-5.3 Implementer] 2026-08-25 — WP-P0-26 OPS-A local tooling delivered (lane J, T1 partial, acceptance OPEN)
-
-Overnight lane J (worktree `C:\WPP026_20260825`, branch `feature/wp-p0-26-opsa-tooling-20260825`,
-single commit, no push). Delivered the LOCAL half of WP-P0-26 only: stdlib-only
-`MTC_COMMAND_CENTER/tools/opsa/` (backup.py with per-file SHA-256 + append-only
-manifest + read-back verify + dry-run; restore.py with triple hash verification and
-`--check-only`; heartbeat.py emitter; watchdog.py checker with pluggable notifier —
-only a local-log notifier ships) plus the evidence package
-`11_TRIAGE/WP_P0_26_OPSA_2026-08-25/` (D026 RED/GREEN drill with real output,
-notifier comparison, lane report). 19/19 unit tests OK. No delete code path exists in
-any tool (mechanically enforced by test). Reuse record in the lane report
-(backup_restore.py CLI shape; QuantLens emitter/watchdog patterns; health_alerts
-exit codes).
-
-- **Status: TOOLING DELIVERED / ACCEPTANCE OPEN** — package acceptance needs the real
-  phone-push drill + KVM2 host step, both G9-gated; notifier recommendation
-  (self-hosted ntfy on the owner PC, honest iOS/uplink caveats) awaits the owner's
-  decision. Detect-to-delivery bound `[OPEN]` per plan.
-- **Scope fence held:** no host/credential/network/signup/schedule/live-store access;
-  drill fixtures were created and removed inside the worktree; the dirty checkout and
-  other worktrees untouched. One stray drill artifact at the worktree root was
-  removed and is disclosed in the drill evidence.
-- **Next:** Lead T1 Gate 5 review (repair cap 2), then owner decisions on notifier +
-  drill authorization. Full detail: `11_TRIAGE/WP_P0_26_OPSA_2026-08-25/LANE_REPORT.md`.
-
 ## [Claude Fable 5 Lead] 2026-08-24 — help_map.json retired-KILL-claim correction (T2, Bridge Help workstream)
 
 During the 2026-08-24 Wayfinder G1 audits a claude-opus-5 auditor noted (out of audit scope) that

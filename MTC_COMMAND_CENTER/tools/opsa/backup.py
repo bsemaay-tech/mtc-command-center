@@ -38,7 +38,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from opsa_common import (  # noqa: E402
     MANIFEST_SCHEMA, RC_OK, append_jsonl, load_backup_config, run_id_for,
-    sha256_file, to_posix_rel, utc_now, utc_now_iso,
+    sha256_file, utc_now, utc_now_iso,
 )
 
 RC_ERROR = 1

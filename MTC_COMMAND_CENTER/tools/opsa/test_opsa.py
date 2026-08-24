@@ -11,6 +11,8 @@ same falsifications, automated. Standard library only.
 """
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import os
 import sys
@@ -122,9 +124,15 @@ class BackupRestoreTests(unittest.TestCase):
         run_dir = next((self.backup_root / "runs").iterdir())
         victim = run_dir / "ledger_store" / "ledger.jsonl"
         victim.write_bytes(b"tampered")
-        rc = restore.run_restore(self.config, run_id=None, target=None, check_only=True)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = restore.run_restore(self.config, run_id=None, target=None, check_only=True)
         self.assertEqual(rc, 1)
         self.assertFalse((self.root / "restored").exists())
+        summary = json.loads(buf.getvalue().strip().splitlines()[-1])
+        # Audit R1 nit 4: --check-only writes nothing, so it must not claim
+        # directories it did not create (old code reported the dir-record count).
+        self.assertEqual(summary["dirs_recreated"], 0)
 
     def test_latest_selects_newest_run(self):
         """--latest restores the highest run_id, not an arbitrary one."""
@@ -159,6 +167,17 @@ class WatchdogTests(unittest.TestCase):
             payload["note"] = note
         (self.state_dir / f"{beat_id}.hb.json").write_text(
             json.dumps(payload), encoding="utf-8")
+
+    def _run_watchdog_cli(self, argv: list[str]) -> tuple[int, dict]:
+        """Run the full CLI (classification + notifier) capturing stdout's JSON report."""
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = watchdog.run_check(argv)
+        return rc, json.loads(buf.getvalue().strip().splitlines()[-1])
+
+    def _events(self) -> list[dict]:
+        return [json.loads(line) for line in
+                (self.root / "alerts.jsonl").read_text(encoding="utf-8").splitlines()]
 
     def test_fresh_heartbeat_ok(self):
         now = utc_now()
@@ -225,19 +244,90 @@ class WatchdogTests(unittest.TestCase):
         self.assertEqual(len(lines), 1)
         self.assertEqual(json.loads(lines[0])["state"], "silent")
 
+    def test_missing_state_dir_yields_rc3_and_exactly_one_notifier_event(self):
+        """Falsification (audit R1 #1): a vanished state dir must reach the notifier.
+
+        Old behaviour: rc 3 with ZERO delivered events — the evidence-store-vanished
+        scenario left no alert record anywhere. Required: rc 3 AND exactly one
+        notifier event (synthetic id ``_watchdog_check`` carrying the error).
+        """
+        rc, report = self._run_watchdog_cli([
+            "--state-dir", str(self.root / "gone"), "--silence-seconds", "900",
+            "--notifier-log", str(self.root / "alerts.jsonl"),
+        ])
+        self.assertEqual(rc, 3)
+        self.assertEqual(report["overall"], "check_failed")
+        events = self._events()
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["id"], "_watchdog_check")
+        self.assertEqual(events[0]["state"], "check_failed")
+        self.assertIn("does not exist", events[0]["error"])
+
+    def test_empty_state_dir_no_expect_notifies_check_failed(self):
+        """Same guarantee for the other empty-ids branch: watching nothing must
+        still leave exactly one notifier event, not a bare rc 3."""
+        rc, report = self._run_watchdog_cli([
+            "--state-dir", str(self.state_dir), "--silence-seconds", "900",
+            "--notifier-log", str(self.root / "alerts.jsonl"),
+        ])
+        self.assertEqual(rc, 3)
+        self.assertEqual(report["overall"], "check_failed")
+        events = self._events()
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["id"], "_watchdog_check")
+        self.assertIn("no heartbeat files", events[0]["error"])
+
+    def test_invalid_now_is_check_failed_not_traceback(self):
+        """Audit R1 nit 6: unparseable --now => check-failed record + notifier event
+        + rc 3, never an unhandled ValueError traceback exiting rc 1."""
+        self._beat("feed", utc_now())
+        rc, report = self._run_watchdog_cli([
+            "--state-dir", str(self.state_dir), "--silence-seconds", "900",
+            "--now", "not-a-timestamp",
+            "--notifier-log", str(self.root / "alerts.jsonl"),
+        ])
+        self.assertEqual(rc, 3)
+        self.assertEqual(report["overall"], "check_failed")
+        self.assertIn("--now", report["error"])
+        events = self._events()
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["id"], "_watchdog_check")
+
+    def test_per_id_outcomes_still_notify_per_id(self):
+        """The synthetic event is an addition, not a replacement: a normal silent
+        beat still notifies exactly once for that id (no _watchdog_check event)."""
+        now = utc_now()
+        self._beat("feed", now - timedelta(seconds=5000))
+        rc, _ = self._run_watchdog_cli([
+            "--state-dir", str(self.state_dir), "--silence-seconds", "900",
+            "--notifier-log", str(self.root / "alerts.jsonl"),
+        ])
+        self.assertEqual(rc, 2)
+        events = self._events()
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]["id"], "feed")
+        self.assertEqual(events[0]["state"], "silent")
+
 
 class NoDeleteGuaranteeTests(unittest.TestCase):
     """The no-delete guarantee is enforced by source inspection, not intent.
 
     A delete path cannot 'accidentally' appear: this test fails if any tool under
-    tools/opsa contains a destructive call. (os.replace is a write, not a delete.)
+    tools/opsa contains a destructive call. (os.replace is a write, not a delete;
+    .write_bytes(/.write_text( are overwrites of files this tooling owns or creates
+    and are deliberately NOT banned — scope is deletion/truncation/removal of
+    existing paths.)
     """
 
     def test_no_delete_calls_in_opsa_tools(self):
         # Call-site syntax (with parens) so docstrings that NAME the banned calls
         # (opsa_common's no-delete guarantee statement) do not self-match.
-        banned = ("os.remove(", "os.unlink(", "shutil.rmtree(", ".unlink()",
-                  ".rmtree(", "send2trash(", "shutil.move(")
+        # ``.unlink(`` covers both ``path.unlink()`` and ``path.unlink(missing_ok=True)``
+        # (audit R1: the old ``.unlink()`` needle missed the missing_ok form); the
+        # same call-site-prefix logic covers rmdir/truncate/move variants.
+        banned = ("os.remove(", "os.unlink(", ".unlink(", "os.rmdir(", ".rmdir(",
+                  "shutil.rmtree(", ".rmtree(", "shutil.move(", "os.truncate(",
+                  "send2trash(")
         offenders: list[str] = []
         tool_files = ["opsa_common.py", "backup.py", "restore.py", "heartbeat.py", "watchdog.py"]
         for name in tool_files:  # the test file itself is out of scope (it names the needles)

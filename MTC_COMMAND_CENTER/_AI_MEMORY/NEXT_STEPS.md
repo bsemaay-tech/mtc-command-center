@@ -8,22 +8,6 @@
 > `archive/NEXT_STEPS_pre-2026-08-01.md`. Grep the archive before claiming an entry does
 > not exist. When this live file exceeds ~2500 lines, rotate again.
 
-## CURRENT (2026-08-25) — WP-P0-26 local tooling delivered (lane J); lead review + owner decisions pending
-
-Status: TOOLING DELIVERED / ACCEPTANCE OPEN. Commit on
-`feature/wp-p0-26-opsa-tooling-20260825` (worktree `C:\WPP026_20260825`), not pushed.
-Next, in order:
-
-1. **[AI: Claude or Codex, as Lead] T1 Gate 5 review** of the lane J delivery
-   (`11_TRIAGE/WP_P0_26_OPSA_2026-08-25/LANE_REPORT.md`; repair cap 2), then
-   authorized merge sequencing per the parallel-lane plan.
-2. **[AI: Barış] Notifier decision** — accept/reject the recommendation in
-   `NOTIFIER_PROPOSAL.md` (self-hosted ntfy on the owner PC; public ntfy.sh fallback;
-   Telegram contingency; Pushover rejected).
-3. **[AI: Barış, gated behind G9] Authorize the real phone-push drill + KVM2
-   host-install step** (T0 for host execution) — package acceptance is claimable only
-   after the measured detect→delivery drill; bound currently `[OPEN]`.
-
 ## CURRENT (2026-08-24) — Wayfinder planning complete; implementation remains unauthorized
 
 All eight Wayfinder queues are complete. Queue 8 map #118, research #119–#122, disposition #123

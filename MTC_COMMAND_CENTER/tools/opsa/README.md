@@ -21,8 +21,12 @@ Standard library only (Python ≥ 3.12). PowerShell is not required.
 
 ## Hard guarantees
 
-1. **No delete code path at all.** No `os.remove(`/`os.unlink(`/`shutil.rmtree(` call
-   exists in any shipped tool (enforced by `test_opsa.py::NoDeleteGuaranteeTests`).
+1. **No delete code path at all.** No destructive call (`os.remove(`, `os.unlink(`,
+   `.unlink(` in any form — including `missing_ok=`, `os.rmdir(`, `.rmdir(`,
+   `shutil.rmtree(`, `.rmtree(`, `shutil.move(`, `os.truncate(`, `send2trash(`)
+   exists in any shipped tool (enforced by `test_opsa.py::NoDeleteGuaranteeTests`;
+   `.write_bytes(`/`.write_text(` overwrites are deliberately not banned — scope is
+   deletion/truncation/removal of existing paths).
    Protected evidence classes cannot be deleted by this tooling — by construction,
    not by intent. Deletions happen only by owner-approved exact lists, outside this
    tooling (plan §12.6.2(b)). A failed atomic write may leave a `*.tmp` file behind;
@@ -35,8 +39,9 @@ Standard library only (Python ≥ 3.12). PowerShell is not required.
 4. **Inability to evaluate is its own outcome** (DESIGN_DEFECT_PATTERNS pattern 1).
    The watchdog distinguishes `silent`/`missing` (ALERT, rc 2) from
    `unreadable`/`bad_timestamp`/`clock_skew` (CHECK-FAILED, rc 3) and never reports OK
-   when it could not actually check. Exit-code convention (0 ok / 2 alert / 3
-   check-failed) harvested from `health_alerts.py`.
+   when it could not actually check. Exit-code convention harvested from
+   `health_alerts.py` (0 ok / non-zero alert); the three-way extension — rc 2 alert
+   vs rc 3 check-failed — is this package's own, not `health_alerts.py`'s.
 5. **Verification is real, not decorative.** Backup re-hashes every file at its
    backup location (`readback=match`); restore re-verifies the backup against the
    manifest AND the restored bytes. The falsification (tampered backup → restore
@@ -77,7 +82,15 @@ python watchdog.py --state-dir D:/hb --silence-seconds 900 --expect my_process
 Process rc: `2` if any ALERT (loudest actionable signal), else `3` if any
 CHECK-FAILED, else `0`. The full per-id truth is always the JSON summary on stdout.
 Empty/absent state dir = CHECK-FAILED (watching nothing cannot be OK — fail-closed).
-Alert payloads carry no secrets and no controls (plan §12.6.2(f)).
+An unparseable `--now` value is itself a CHECK-FAILED record (rc 3), never an
+unhandled traceback.
+
+**Every `alert` and `check_failed` outcome produces at least one notifier event.**
+Directory-level check-failures (missing state dir; nothing to watch; invalid `--now`)
+have no per-id events, so the checker delivers one synthetic checker-level event —
+id `_watchdog_check`, state `check_failed`, carrying the error text — instead of
+leaving rc 3 as the only trace. Alert payloads carry no secrets and no controls
+(plan §12.6.2(f)).
 
 ## Notifier extension point (post-G9)
 
