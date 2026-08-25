@@ -323,7 +323,7 @@ repository bridge on `PYTHONPATH`, and hard-asserted
 |---|---|---|
 | non-empty new WAL | `_is_expected_empty_wal_creation`: replace the empty SHA predicate with `sha256 is not None`, and `size_bytes == 0` with `size_bytes >= 0` | imported `...\nonempty_wal_blind\tools\wal_state_bundle.py`; `assert 0 == 2`; `1 failed in 0.78s`; `pytest_rc=1` |
 | `changed_during_hash=True` | `_snapshot_is_stable`: remove `not component.get("changed_during_hash", False)` | imported `...\hash_instability_blind\tools\wal_state_bundle.py`; `assert 0 == 2`; `1 failed in 0.80s`; `pytest_rc=1` |
-| SHM device drift | remove `shm` from `_changed_snapshot_components`' component loop (the detector-blind mutation that makes the device attack escape) | imported `...\shm_device_blind\tools\wal_state_bundle.py`; `assert 0 == 2`; `1 failed in 0.84s`; `pytest_rc=1` |
+| SHM device drift | `SHM_IDENTITY_FIELDS`: remove `"device"`, and `_changed_snapshot_components`: remove `shm` from the component loop (the detector-blind mutation that makes the device attack escape) | imported `...\shm_device_blind\tools\wal_state_bundle.py`; `assert 0 == 2`; `1 failed in 0.84s`; `pytest_rc=1` |
 | benign existing-SHM initialization | force `_is_safe_shm_initialization` to return `False` | imported `...\benign_shm_reject\tools\wal_state_bundle.py`; expected rc 0 saw `INVALID` rc 2; `1 failed in 0.77s`; `pytest_rc=1` |
 
 ### Restored GREEN and full suite
