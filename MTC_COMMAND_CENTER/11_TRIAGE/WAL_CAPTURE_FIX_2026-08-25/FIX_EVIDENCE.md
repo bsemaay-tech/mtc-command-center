@@ -197,6 +197,7 @@ For each row, `PYTHONPATH` named the isolated mutant first; a separate Python pr
 ```powershell
 $repoBridge = 'C:\WPPWALFIX_20260825\IBKR_PAPER_BRIDGE'
 $testFile = "$repoBridge\tests\test_wal_state_bundle.py"
+$neutralCwd = 'C:\tmp'
 $cases = @(
   @{Name='ordering_old'; Node='test_quiesced_capture_completes_wal_attach_before_drift_boundary'},
   @{Name='writer_blind'; Node='test_concurrent_writer_during_capture_fails_closed'},
@@ -211,10 +212,19 @@ $cases = @(
   @{Name='empty_wal_metadata_blind'; Node='test_empty_wal_created_with_metadata_drift_fails_closed'}
 )
 foreach ($case in $cases) {
-  $env:PYTHONPATH = "$(Join-Path $mutantRoot $case.Name);$repoBridge"
-  python -c "import hashlib; from pathlib import Path; from tools import wal_state_bundle as wal; p=Path(wal.__file__); print(f'import={p} sha256={hashlib.sha256(p.read_bytes()).hexdigest()}')"
-  python -m pytest "$testFile::$($case.Node)" -q --tb=short -p no:cacheprovider
-  Write-Output "pytest_rc=$LASTEXITCODE"
+  $mutantDir = Join-Path $mutantRoot $case.Name
+  $expectedMutant = (Resolve-Path (Join-Path $mutantDir 'tools\wal_state_bundle.py')).Path
+  $env:PYTHONPATH = "$mutantDir;$repoBridge"
+  Push-Location $neutralCwd
+  try {
+    python -c "import hashlib; from pathlib import Path; from tools import wal_state_bundle as wal; actual=Path(wal.__file__).resolve(); expected=Path(r'$expectedMutant').resolve(); assert actual == expected, f'{actual} != {expected}'; print(f'import_asserted={actual} sha256={hashlib.sha256(actual.read_bytes()).hexdigest()}')"
+    if ($LASTEXITCODE -ne 0) { throw 'mutant import assertion failed' }
+    python -m pytest "$testFile::$($case.Node)" -q --tb=short -p no:cacheprovider
+    Write-Output "pytest_rc=$LASTEXITCODE"
+  }
+  finally {
+    Pop-Location
+  }
 }
 ```
 

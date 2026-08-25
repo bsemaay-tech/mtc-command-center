@@ -336,7 +336,9 @@ def test_shm_mode_flip_after_read_connection_initializes_fails_closed(
         store.close()
 
 
-@pytest.mark.parametrize("attack", ["inode_swap", "size_change", "deletion"])
+@pytest.mark.parametrize(
+    "attack", ["inode_swap", "device_change", "size_change", "deletion"]
+)
 def test_shm_initialization_identity_or_presence_attack_fails_closed(
     tmp_path, bundle_dir, capsys, monkeypatch, attack
 ):
@@ -354,6 +356,8 @@ def test_shm_initialization_identity_or_presence_attack_fails_closed(
         if calls["source"] >= 2:
             if attack == "inode_swap":
                 _change_snapshot_metadata(result, "shm", "inode")
+            elif attack == "device_change":
+                _change_snapshot_metadata(result, "shm", "device")
             elif attack == "size_change":
                 _change_snapshot_metadata(
                     result, "shm", "size_bytes", wal.SHM_REGION_BYTES
@@ -441,6 +445,138 @@ def test_empty_wal_created_with_metadata_drift_fails_closed(
     finally:
         if source_wal.exists():
             source_wal.chmod(0o666)
+
+
+def test_nonempty_wal_created_during_capture_fails_closed(
+    source_db, bundle_dir, capsys, monkeypatch
+):
+    real_snapshot = wal._source_snapshot
+    calls = {"source": 0}
+
+    def snapshot_with_nonempty_new_wal(source):
+        result = real_snapshot(source)
+        if Path(source).resolve() == source_db.resolve():
+            calls["source"] += 1
+            if calls["source"] >= 2:
+                metadata = copy.deepcopy(result["db"]["metadata_after_hash"])
+                metadata.update(inode=metadata["inode"] + 1, size_bytes=1)
+                result["wal"] = {
+                    "present": True,
+                    "sha256": wal._sha256_bytes(b"x"),
+                    "metadata_before_hash": copy.deepcopy(metadata),
+                    "metadata_after_hash": copy.deepcopy(metadata),
+                    "changed_during_hash": False,
+                }
+        return result
+
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_nonempty_new_wal)
+    rc, report = create(source_db, bundle_dir, capsys)
+
+    assert calls["source"] == 3
+    assert rc == 2
+    assert report["verdict"] == "INVALID"
+    assert report["drift_evidence"]["changed_components"] == ["wal"]
+
+
+def test_component_changed_during_hash_fails_closed(
+    source_db, bundle_dir, capsys, monkeypatch
+):
+    real_snapshot = wal._source_snapshot
+    calls = {"source": 0}
+    stable_components = {}
+    stable_shm = {}
+
+    def snapshot_with_unstable_shm_hash(source):
+        result = real_snapshot(source)
+        if Path(source).resolve() != source_db.resolve():
+            return result
+        calls["source"] += 1
+        if calls["source"] == 1:
+            stable_components.update(
+                {name: copy.deepcopy(result[name]) for name in ("db", "wal")}
+            )
+            metadata = copy.deepcopy(result["db"]["metadata_after_hash"])
+            metadata.update(inode=metadata["inode"] + 1, size_bytes=wal.SHM_REGION_BYTES)
+            stable_shm.update(
+                {
+                    "present": True,
+                    "sha256": "e" * 64,
+                    "metadata_before_hash": copy.deepcopy(metadata),
+                    "metadata_after_hash": copy.deepcopy(metadata),
+                    "changed_during_hash": False,
+                }
+            )
+            result["shm"] = copy.deepcopy(stable_shm)
+        else:
+            result.update(copy.deepcopy(stable_components))
+            result["shm"] = copy.deepcopy(stable_shm)
+            if calls["source"] == 3:
+                result["shm"]["sha256"] = "f" * 64
+                for key in ("metadata_before_hash", "metadata_after_hash"):
+                    result["shm"][key]["mtime_ns"] += 1
+                    result["shm"][key]["ctime_ns"] += 1
+                result["shm"]["changed_during_hash"] = True
+        return result
+
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_unstable_shm_hash)
+    rc, report = create(source_db, bundle_dir, capsys)
+
+    assert calls["source"] == 3
+    assert rc == 2
+    assert report["verdict"] == "INVALID"
+    assert report["drift_evidence"]["changed_components"] == ["shm"]
+
+
+def test_existing_shm_timestamp_only_initialization_is_accepted(
+    source_db, bundle_dir, capsys, monkeypatch
+):
+    real_snapshot = wal._source_snapshot
+    calls = {"source": 0}
+    initialized_shm = {}
+    stable_components = {}
+
+    def snapshot_with_benign_shm_initialization(source):
+        result = real_snapshot(source)
+        if Path(source).resolve() != source_db.resolve():
+            return result
+        calls["source"] += 1
+        if calls["source"] == 1:
+            stable_components.update(
+                {name: copy.deepcopy(result[name]) for name in ("db", "wal")}
+            )
+            metadata = copy.deepcopy(result["db"]["metadata_after_hash"])
+            metadata.update(inode=metadata["inode"] + 1, size_bytes=wal.SHM_REGION_BYTES)
+            result["shm"] = {
+                "present": True,
+                "sha256": "e" * 64,
+                "metadata_before_hash": copy.deepcopy(metadata),
+                "metadata_after_hash": copy.deepcopy(metadata),
+                "changed_during_hash": False,
+            }
+            initialized_shm.update(copy.deepcopy(result["shm"]))
+        elif calls["source"] == 2:
+            result.update(copy.deepcopy(stable_components))
+            initialized_shm["sha256"] = "f" * 64
+            for key in ("metadata_before_hash", "metadata_after_hash"):
+                initialized_shm[key]["mtime_ns"] += 1
+                initialized_shm[key]["ctime_ns"] += 1
+            result["shm"] = copy.deepcopy(initialized_shm)
+        else:
+            result.update(copy.deepcopy(stable_components))
+            result["shm"] = copy.deepcopy(initialized_shm)
+        return result
+
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_benign_shm_initialization)
+    rc, report = create(source_db, bundle_dir, capsys)
+
+    assert calls["source"] == 3
+    assert rc == 0, report
+    assert report["verdict"] == "CAPTURED"
+    capture = read_manifest(bundle_dir)["source"]["capture_snapshot"]
+    assert capture["changed_components"] == []
+    verify_rc, verify_report = verify(bundle_dir, capsys)
+    assert verify_rc == 0, verify_report
+    assert verify_report["verdict"] == "VALID"
 
 
 def test_hot_wal_with_unusable_shm_is_rejected_before_connecting(
