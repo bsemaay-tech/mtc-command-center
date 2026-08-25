@@ -220,14 +220,94 @@ def tamper_family_10_companion_ohlcv_close_deleted(path: Path) -> None:
     write_fixture_with_manifest_hash(path, 10, fixture_path, data)
 
 
+def tamper_family_02_c32_master_gate_deleted(path: Path) -> None:
+    fixture_path, data = fixture(path, 2)
+    for scenario in data["companion_scenarios"]:
+        if scenario["source"].endswith("(C32/GF-32)"):
+            del scenario["config"]["tw_audit_semantics_mode"]
+    write_fixture_with_manifest_hash(path, 2, fixture_path, data)
+
+
+def tamper_family_10_c36_master_gate_deleted(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    for scenario in data["companion_scenarios"]:
+        if scenario["source"].endswith("(C36/GF-36)"):
+            del scenario["config"]["tw_audit_semantics_mode"]
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
+def tamper_family_11_c37_master_gate_deleted(path: Path) -> None:
+    fixture_path, data = fixture(path, 11)
+    for scenario in data["companion_scenarios"]:
+        if scenario["source"].endswith("(C37/GF-37)"):
+            del scenario["config"]["tw_audit_semantics_mode"]
+    write_fixture_with_manifest_hash(path, 11, fixture_path, data)
+
+
+def tamper_family_10_companion_ohlcv_key_deleted(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C36_GF36_legacy_break_even_modes__local"
+    )
+    del scenario["normalized_bars"][1]["ohlcv"]
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
+def tamper_family_10_companion_bar_deleted(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C36_GF36_legacy_break_even_modes__local"
+    )
+    del scenario["normalized_bars"][2]
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
+def tamper_family_10_companion_bars_reordered(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C36_GF36_legacy_break_even_modes__local"
+    )
+    bars = scenario["normalized_bars"]
+    bars[1], bars[2] = bars[2], bars[1]
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
+def tamper_family_10_companion_bar_index_scrambled(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C36_GF36_legacy_break_even_modes__local"
+    )
+    scenario["normalized_bars"][2]["index"] = 99
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
+def tamper_family_10_companion_bar_not_object(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C36_GF36_legacy_break_even_modes__local"
+    )
+    scenario["normalized_bars"][2] = "not-a-bar"
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
 def tamper_family_02_plural_selector(path: Path) -> None:
     fixture_path, data = fixture(path, 2)
     scenario = data["companion_scenarios"][0]
     selector = scenario["config"].pop("tw_reversal_reentry_mode")
     scenario["config"]["tw_reversal_reentry_modes"] = [selector]
-    scenario["assertion_inputs"]["legacy.local.reentry_bar"][0] = (
-        "config.tw_reversal_reentry_modes"
-    )
+    input_paths = scenario["assertion_inputs"]["legacy.local.reentry_bar"]
+    selector_index = input_paths.index("config.tw_reversal_reentry_mode")
+    input_paths[selector_index] = "config.tw_reversal_reentry_modes"
     write_fixture_with_manifest_hash(path, 2, fixture_path, data)
 
 
@@ -239,13 +319,24 @@ def tamper_family_02_selector_rehomed_fixture_local(path: Path) -> None:
         if "legacy.local.reentry_bar" in scenario["assertion_inputs"]
     )
     scenario_id = scenario["id"]
-    del scenario["assertion_inputs"]["legacy.local.reentry_bar"]
+    original_input_paths = scenario["assertion_inputs"].pop("legacy.local.reentry_bar")
     data["companion_scenarios"] = [
         item for item in data["companion_scenarios"] if item["id"] != scenario_id
     ]
     item = assertion(data, "legacy.local.reentry_bar")
     item["input_paths"] = ["family.number"]
-    write_fixture_with_manifest_hash(path, 2, fixture_path, data)
+    write_json(fixture_path, data)
+    manifest_path = path / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest_item = next(
+        item for item in manifest["families"] if item["number"] == 2
+    )
+    manifest_item["fixture_contract_sha256"] = hashlib.sha256(
+        canonical_bytes(data)
+    ).hexdigest()
+    manifest["companion_assertion_count"] -= 1
+    manifest["assertion_input_path_count"] += 1 - len(original_input_paths)
+    write_json(manifest_path, manifest)
 
 
 def tamper_family_03_missing_literal_input(path: Path) -> None:
@@ -316,8 +407,8 @@ def main() -> int:
             "b1_family_12_empty_primary_inputs",
             tamper_family_12_empty_primary_inputs,
             False,
-            "VERIFY_FAIL reason=family=12 assertion_input_presence_missing "
-            "path=priority.stop_plus_opposite input=config.exit_on_htf_trend_block",
+            "VERIFY_FAIL reason=family=12 normalized_bar_count_mismatch "
+            "context=fixture expected=2 actual=0",
         ),
         (
             "b1_family_03_renamed_companion_assertion",
@@ -397,6 +488,68 @@ def main() -> int:
             "VERIFY_FAIL reason=family=10 normalized_bar_ohlcv_length_mismatch "
             "context=companion:C36_GF36_legacy_break_even_modes__local "
             "index=3 expected=5 actual=4",
+        ),
+        (
+            "r1_family_02_c32_master_gate_deleted",
+            tamper_family_02_c32_master_gate_deleted,
+            False,
+            "VERIFY_FAIL reason=family=02 master_gate_mismatch "
+            "path=legacy.local.reentry_bar input=config.tw_audit_semantics_mode "
+            "expected=research actual=None",
+        ),
+        (
+            "r1_family_10_c36_master_gate_deleted",
+            tamper_family_10_c36_master_gate_deleted,
+            False,
+            "VERIFY_FAIL reason=family=10 master_gate_mismatch "
+            "path=legacy.local.exit input=config.tw_audit_semantics_mode "
+            "expected=research actual=None",
+        ),
+        (
+            "r1_family_11_c37_master_gate_deleted",
+            tamper_family_11_c37_master_gate_deleted,
+            False,
+            "VERIFY_FAIL reason=family=11 master_gate_mismatch "
+            "path=legacy.local.exit input=config.tw_audit_semantics_mode "
+            "expected=research actual=None",
+        ),
+        (
+            "r2_family_10_companion_ohlcv_key_deleted",
+            tamper_family_10_companion_ohlcv_key_deleted,
+            False,
+            "VERIFY_FAIL reason=family=10 normalized_bar_ohlcv_missing "
+            "context=companion:C36_GF36_legacy_break_even_modes__local index=1",
+        ),
+        (
+            "r2_family_10_companion_bar_deleted",
+            tamper_family_10_companion_bar_deleted,
+            False,
+            "VERIFY_FAIL reason=family=10 normalized_bar_count_mismatch "
+            "context=companion:C36_GF36_legacy_break_even_modes__local "
+            "expected=5 actual=4",
+        ),
+        (
+            "r2_family_10_companion_bars_reordered",
+            tamper_family_10_companion_bars_reordered,
+            False,
+            "VERIFY_FAIL reason=family=10 normalized_bar_index_mismatch "
+            "context=companion:C36_GF36_legacy_break_even_modes__local "
+            "position=1 actual=2",
+        ),
+        (
+            "r2_family_10_companion_bar_index_scrambled",
+            tamper_family_10_companion_bar_index_scrambled,
+            False,
+            "VERIFY_FAIL reason=family=10 normalized_bar_index_mismatch "
+            "context=companion:C36_GF36_legacy_break_even_modes__local "
+            "position=2 actual=99",
+        ),
+        (
+            "r3_family_10_companion_bar_not_object",
+            tamper_family_10_companion_bar_not_object,
+            False,
+            "VERIFY_FAIL reason=family=10 normalized_bar_not_object "
+            "context=companion:C36_GF36_legacy_break_even_modes__local index=2",
         ),
         (
             "n4_family_02_selector_rehomed_fixture_local",

@@ -110,6 +110,7 @@
       ],
       "assertion_inputs": {
         "legacy.local.exit": [
+          "config.tw_audit_semantics_mode",
           "config.tw_trailing_semantics_mode",
           "config.trail_start_r",
           "config.trail_distance_atr_mult",
@@ -204,6 +205,7 @@
       ],
       "assertion_inputs": {
         "legacy.tradingview.exit": [
+          "config.tw_audit_semantics_mode",
           "config.tw_trailing_semantics_mode",
           "config.trail_start_r",
           "config.trail_distance_atr_mult",
@@ -298,6 +300,7 @@
       ],
       "assertion_inputs": {
         "legacy.next_bar_confirmed.exit": [
+          "config.tw_audit_semantics_mode",
           "config.tw_trailing_semantics_mode",
           "config.trail_start_r",
           "config.trail_distance_atr_mult",

@@ -53,7 +53,7 @@
   "authority_binding_contract": "Each built fixture has two manifest-local self-consistency hashes: a canonical semantic fixture hash and a hash over every expected path/value, each cited WP-P0-09 line fragment, both stored-hash citations, and the source-mutation descriptor. The verifier recomputes and matches them. Because both stored hashes live in this same manifest tree, a coordinated fixture edit plus recomputation of both hashes is not detected unless an independent coherence check rejects it.",
   "citation_validation_contract": "citation_line_ranges_validated proves only that each counted citation is well formed, its line range exists, and its structural C/GF, cross-cutting-rule, or explicit-non-decision label matches that range. It does not prove that the cited row is relevant to, or decides, the family assertion carrying it.",
   "coherence_validation_contract": "Independent coherence validation covers families 4, 5, 22, and 24 only. At audit fixed point c05e5968 it covered 24 of 230 expected values, leaving 206 outside coherence validation. This repair adds 11 coverage assertions without extending validate_coherence, so the current scope is 24 of 241 expected values and a self-consistent rehash outside those 24 values is not detected.",
-  "assertion_input_contract": "Every expected assertion has an explicit checked input source. Assertions bound to the fixture declare input_paths that must resolve to non-empty values inside that same fixture; companion legacy assertions declare exact paths inside a top-level embedded companion_scenarios run. Any normalized_bars entry with an ohlcv array is checked against the local frozen_metadata.ohlcv_fields declaration open,high,low,close,volume, so deleting a list element cannot silently shift a declared index to a different OHLCV field. Cross-row imports are unsupported in this corpus and are rejected if present. The source counter counts assertions; the path counter counts concrete paths actually resolved. Presence checks do not prove semantic relevance against a coordinated fixture+manifest rehash.",
+  "assertion_input_contract": "Every expected assertion has an explicit checked input source. Assertions bound to the fixture declare input_paths that must resolve to non-empty values inside that same fixture; companion legacy assertions declare exact paths inside a top-level embedded companion_scenarios run. C32, C36, and C37 companion assertions must explicitly declare config.tw_audit_semantics_mode and the scenario must hold the required research value. Declared OHLCV sequences are pinned to hardcoded bar counts and to the local frozen_metadata.ohlcv_fields declaration open,high,low,close,volume; every declared OHLCV bar must be an object with an ohlcv list, and indexed OHLCV sequences must keep index equal to position. Cross-row imports are unsupported in this corpus and are rejected if present. The source counter counts assertions; the path counter counts concrete paths actually resolved. Presence checks do not prove semantic relevance against a coordinated fixture+manifest rehash.",
   "coherence_follow_up": "WP-P0-10-COHERENCE-217: design and add independent semantic/coherence validation for the 217 current expected values outside the existing 24-value checks (the audited 206-value gap plus the 11 assertions added in repair round 2).",
   "d026_status": {
     "built_families": "UNEARNED",
@@ -80,7 +80,7 @@
       "name": "Direction / flip / regime lock",
       "status": "BUILT",
       "fixture": "family_02.json",
-      "fixture_contract_sha256": "2ed8057967e96ead2f0cbb85e5d7c586d9d8023309838c06caa2e43480c4eb58",
+      "fixture_contract_sha256": "8037c13d6d48400ca7931ed071c9c7966a466e08cd55318fd42f1603b4c0efd6",
       "authority_binding_sha256": "45df1c5b6f5bc6bce347b7203d91f8cf99be091a59975bbacfb374d8820b3fb1",
       "wp_p0_09_rows": [
         "C05",
@@ -175,7 +175,7 @@
       "name": "Break-even trigger and buffer",
       "status": "BUILT",
       "fixture": "family_10.json",
-      "fixture_contract_sha256": "5ccd5486fdaefb65b226c73762326bf50d03ea5c3ad6dc31e01b025505561e7c",
+      "fixture_contract_sha256": "691f69d5c27432b7af18f7c3a47ee81a3b464bbdcea94b3cb00e68dbc7f2f1a4",
       "authority_binding_sha256": "916945a76fbb3c2aa1e47a17cb5a95a2d44d27c8de028f8aa2bb7200814a27d7",
       "wp_p0_09_rows": [
         "C14",
@@ -187,7 +187,7 @@
       "name": "Trailing activation and monotonicity",
       "status": "BUILT",
       "fixture": "family_11.json",
-      "fixture_contract_sha256": "52e0f477dc3871c689ddcdd5a09559670defabe760d70d07a05899691a114301",
+      "fixture_contract_sha256": "4238e6cd95d8afd3b4eeef021ca809434a75edbdec9a0087f44aacbc3a61b6b7",
       "authority_binding_sha256": "d0d498cb3d19d7d4f540da7ded93efe8b18d93e826623738abcec0cb62f52dae",
       "wp_p0_09_rows": [
         "C15",
@@ -371,6 +371,6 @@
       ]
     }
   ],
-  "assertion_input_path_count": 2649,
+  "assertion_input_path_count": 2660,
   "family_20_mirror_contract": "family_20 stores mirror_expected_values: already reflected output values used as local, presence-checked inputs for its mirror assertions. The verifier checks those values exist but does not derive them by applying config.rule or config.reflection_pivot."
 }

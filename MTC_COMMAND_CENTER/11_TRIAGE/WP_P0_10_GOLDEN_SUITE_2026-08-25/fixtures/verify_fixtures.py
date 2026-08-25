@@ -27,6 +27,50 @@ EXPECTED_VALUE_COUNT = 241
 COHERENCE_FAMILIES = [4, 5, 22, 24]
 COHERENCE_EXPECTED_VALUE_COUNT = 24
 OHLCV_FIELDS = ["open", "high", "low", "close", "volume"]
+FIXTURE_OHLCV_BAR_COUNTS = {
+    1: 5,
+    7: 4,
+    8: 2,
+    9: 3,
+    10: 4,
+    11: 4,
+    12: 2,
+    14: 4,
+    15: 2,
+    16: 8,
+    22: 3,
+}
+COMPANION_OHLCV_BAR_COUNTS = {
+    "C20_GF20_": 3,
+    "C32_GF32_": 6,
+    "C36_GF36_": 5,
+    "C37_GF37_": 4,
+}
+MASTER_GATE_REQUIREMENTS = {
+    2: {
+        "legacy.local.reentry_bar": ("config.tw_audit_semantics_mode", "research"),
+        "legacy.carry.reentry_bar": ("config.tw_audit_semantics_mode", "research"),
+        "legacy.next_bar_open.reentry": ("config.tw_audit_semantics_mode", "research"),
+        "legacy.next_bar_close.reentry": ("config.tw_audit_semantics_mode", "research"),
+        "legacy.delay.reentry": ("config.tw_audit_semantics_mode", "research"),
+    },
+    10: {
+        "legacy.local.exit": ("config.tw_audit_semantics_mode", "research"),
+        "legacy.next_bar_confirmed.exit": (
+            "config.tw_audit_semantics_mode",
+            "research",
+        ),
+        "legacy.tradingview.exit": ("config.tw_audit_semantics_mode", "research"),
+    },
+    11: {
+        "legacy.local.exit": ("config.tw_audit_semantics_mode", "research"),
+        "legacy.tradingview.exit": ("config.tw_audit_semantics_mode", "research"),
+        "legacy.next_bar_confirmed.exit": (
+            "config.tw_audit_semantics_mode",
+            "research",
+        ),
+    },
+}
 CITATION_PATTERN = re.compile(
     rf"{re.escape(AUTH_PREFIX)}(?P<start>[1-9][0-9]*)-(?P<end>[1-9][0-9]*) "
     r"\((?P<label>[^)]+)\)"
@@ -251,6 +295,17 @@ def require_declared_input(
     )
 
 
+def expected_ohlcv_bar_count(family: int, context: str) -> int | None:
+    if context == "fixture":
+        return FIXTURE_OHLCV_BAR_COUNTS.get(family)
+    if context.startswith("companion:"):
+        scenario_id = context.removeprefix("companion:")
+        for prefix, expected_count in COMPANION_OHLCV_BAR_COUNTS.items():
+            if scenario_id.startswith(prefix):
+                return expected_count
+    return None
+
+
 def validate_normalized_bar_shapes(
     container: dict[str, Any],
     family: int,
@@ -261,15 +316,22 @@ def validate_normalized_bar_shapes(
         isinstance(bars, list),
         f"family={family:02d} normalized_bars_not_list context={context}",
     )
-    ohlcv_bars = [
-        (index, bar)
-        for index, bar in enumerate(bars)
-        if isinstance(bar, dict) and "ohlcv" in bar
-    ]
-    if not ohlcv_bars:
+    metadata = container.get("frozen_metadata")
+    has_ohlcv_contract = isinstance(metadata, dict) and "ohlcv_fields" in metadata
+    if not has_ohlcv_contract:
         return
 
-    metadata = container.get("frozen_metadata")
+    expected_count = expected_ohlcv_bar_count(family, context)
+    require(
+        expected_count is not None,
+        f"family={family:02d} normalized_bar_count_contract_missing "
+        f"context={context}",
+    )
+    require(
+        len(bars) == expected_count,
+        f"family={family:02d} normalized_bar_count_mismatch "
+        f"context={context} expected={expected_count} actual={len(bars)}",
+    )
     require(
         isinstance(metadata, dict),
         f"family={family:02d} frozen_metadata_missing context={context}",
@@ -278,7 +340,26 @@ def validate_normalized_bar_shapes(
         metadata.get("ohlcv_fields") == OHLCV_FIELDS,
         f"family={family:02d} ohlcv_shape_contract_mismatch context={context}",
     )
-    for index, bar in ohlcv_bars:
+    has_index_contract = any(
+        isinstance(bar, dict) and "index" in bar for bar in bars
+    )
+    for index, bar in enumerate(bars):
+        require(
+            isinstance(bar, dict),
+            f"family={family:02d} normalized_bar_not_object "
+            f"context={context} index={index}",
+        )
+        if has_index_contract:
+            require(
+                bar.get("index") == index,
+                f"family={family:02d} normalized_bar_index_mismatch "
+                f"context={context} position={index} actual={bar.get('index')}",
+            )
+        require(
+            "ohlcv" in bar,
+            f"family={family:02d} normalized_bar_ohlcv_missing "
+            f"context={context} index={index}",
+        )
         ohlcv = bar["ohlcv"]
         require(
             isinstance(ohlcv, list),
@@ -291,6 +372,34 @@ def validate_normalized_bar_shapes(
             f"context={context} index={index} expected={len(OHLCV_FIELDS)} "
             f"actual={len(ohlcv)}",
         )
+
+
+def require_master_gate(
+    scenario: dict[str, Any],
+    input_paths: list[Any],
+    family: int,
+    assertion_path: str,
+) -> None:
+    requirement = MASTER_GATE_REQUIREMENTS.get(family, {}).get(assertion_path)
+    if requirement is None:
+        return
+    gate_path, gate_value = requirement
+    require(
+        gate_path in input_paths,
+        f"family={family:02d} master_gate_input_undeclared "
+        f"path={assertion_path} input={gate_path}",
+    )
+    config = scenario.get("config")
+    require(
+        isinstance(config, dict),
+        f"family={family:02d} master_gate_config_missing path={assertion_path}",
+    )
+    gate_key = gate_path.removeprefix("config.")
+    require(
+        config.get(gate_key) == gate_value,
+        f"family={family:02d} master_gate_mismatch path={assertion_path} "
+        f"input={gate_path} expected={gate_value} actual={config.get(gate_key)}",
+    )
 
 
 def require_companion_selector(
@@ -389,6 +498,7 @@ def validate_assertion_input_presence(
                 f"family={family:02d} assertion_input_path_duplicate "
                 f"path={assertion_path}",
             )
+            require_master_gate(scenario, input_paths, family, assertion_path)
             require_companion_selector(scenario, family, assertion_path)
             for input_path in input_paths:
                 require_declared_input(

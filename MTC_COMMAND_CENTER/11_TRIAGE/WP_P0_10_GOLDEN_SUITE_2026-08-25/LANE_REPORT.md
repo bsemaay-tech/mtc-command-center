@@ -663,19 +663,20 @@ The old selector-name grep in the lane now finds only the deliberate plural-sele
 ### Discrimination and invented tamper
 
 Every committed new-gate RED mutates one temporary fixture copy and rejects on the named target
-family before hash comparison; no other fixture is mutated or blamed. Target-family counts:
+family before hash comparison. These were target-fixture-only probes, not cross-applied
+discrimination counts:
 
 ```text
-B1 family12 empty inputs: target=12 other_fixture_kills=0
-B1 family03 renamed assertion: target=03 other_fixture_kills=0
-B1 family01 missing signal_mode: target=01 other_fixture_kills=0
-B1 misspelled cross_row_imprt: target=01 other_fixture_kills=0
-B2 family03 cross_row_import: target=03 other_fixture_kills=0
-B2 family14 cross_row_import: target=14 other_fixture_kills=0
-B3 family20 missing mirror operand: target=20 other_fixture_kills=0
-B4 family02 plural selector: target=02 other_fixture_kills=0
-B6 family03 missing literal input: target=03 other_fixture_kills=0
-B6 family03 missing primary input: target=03 other_fixture_kills=0
+B1 family12 empty inputs: target=12 target_fixture_only=true cross_applied=false
+B1 family03 renamed assertion: target=03 target_fixture_only=true cross_applied=false
+B1 family01 missing signal_mode: target=01 target_fixture_only=true cross_applied=false
+B1 misspelled cross_row_imprt: target=01 target_fixture_only=true cross_applied=false
+B2 family03 cross_row_import: target=03 target_fixture_only=true cross_applied=false
+B2 family14 cross_row_import: target=14 target_fixture_only=true cross_applied=false
+B3 family20 missing mirror operand: target=20 target_fixture_only=true cross_applied=false
+B4 family02 plural selector: target=02 target_fixture_only=true cross_applied=false
+B6 family03 missing literal input: target=03 target_fixture_only=true cross_applied=false
+B6 family03 missing primary input: target=03 target_fixture_only=true cross_applied=false
 ```
 
 Invented tamper not listed in the prompt: delete `family_03.config.entry_reference_price`, retain
@@ -832,3 +833,119 @@ rc=0
 
 Families 18 and 19 remain blocked and absent. No Pine, parity, MTC strategy behavior, Bridge runtime,
 schema, broker/exchange, host, credential, deployment, or live surface changed.
+
+## Round 4c
+
+Starting point: `88d4180c` on `feature/wp-p0-10-golden-suite-20260825`. This is implementer
+self-QA for the second flagship's five required findings; it is not self-acceptance.
+
+### R1 - C32/C36/C37 master gates are declared and enforced
+
+Changed `fixtures/verify_fixtures.py` to require the source-row master gate
+`config.tw_audit_semantics_mode` for the C32, C36, and C37 companion assertions. The affected
+fixtures now declare that input path explicitly, and the verifier checks the scenario value is
+`research` before ordinary input presence/count accounting. `manifest.json` was updated for the
+three moved fixture-contract hashes and `assertion_input_path_count=2660`.
+
+Executed RED/GREEN:
+
+```text
+BASELINE rc=0 clean=true detail=no_named_rejection
+TAMPER name=r1_family_02_c32_master_gate_deleted optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=02 master_gate_mismatch path=legacy.local.reentry_bar input=config.tw_audit_semantics_mode expected=research actual=None
+TAMPER name=r1_family_10_c36_master_gate_deleted optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 master_gate_mismatch path=legacy.local.exit input=config.tw_audit_semantics_mode expected=research actual=None
+TAMPER name=r1_family_11_c37_master_gate_deleted optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=11 master_gate_mismatch path=legacy.local.exit input=config.tw_audit_semantics_mode expected=research actual=None
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=27/27 result=PASS
+```
+
+### R2 - bar granularity pinned
+
+Changed the normalized-bar validator to enforce hardcoded OHLCV bar counts for declared OHLCV
+contexts, per-bar `ohlcv` presence, five-field OHLCV shape, and `index == position` for indexed
+OHLCV sequences. The bar counts live in verifier constants, so a fixture-local metadata edit cannot
+legalize a short sequence.
+
+Executed RED/GREEN:
+
+```text
+BASELINE rc=0 clean=true detail=no_named_rejection
+TAMPER name=r2_family_10_companion_ohlcv_key_deleted optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 normalized_bar_ohlcv_missing context=companion:C36_GF36_legacy_break_even_modes__local index=1
+TAMPER name=r2_family_10_companion_bar_deleted optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 normalized_bar_count_mismatch context=companion:C36_GF36_legacy_break_even_modes__local expected=5 actual=4
+TAMPER name=r2_family_10_companion_bars_reordered optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 normalized_bar_index_mismatch context=companion:C36_GF36_legacy_break_even_modes__local position=1 actual=2
+TAMPER name=r2_family_10_companion_bar_index_scrambled optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 normalized_bar_index_mismatch context=companion:C36_GF36_legacy_break_even_modes__local position=2 actual=99
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=27/27 result=PASS
+```
+
+### R3 - malformed normalized-bar members reject
+
+The validator no longer filters to already-valid dictionary bars with `ohlcv`; for declared OHLCV
+contexts, each member is checked in place and malformed members fail by name.
+
+```text
+TAMPER name=r3_family_10_companion_bar_not_object optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 normalized_bar_not_object context=companion:C36_GF36_legacy_break_even_modes__local index=2
+```
+
+### R4 - executable RED for N-2 and N-4
+
+The missing D026-style RED was supplied with the `6c01c0eb` verifier extracted to a temp file:
+
+```text
+cmd /c "git show 6c01c0eb:MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/verify_fixtures.py > C:\tmp\wp_p010_old_verify_6c01c0eb.py"
+python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py --verifier C:\tmp\wp_p010_old_verify_6c01c0eb.py | Select-String -Pattern 'BASELINE|n2_family_10_companion_ohlcv_close_deleted|n4_family_02_selector_rehomed_fixture_local|VERIFIER_REGRESSION_SUMMARY'
+
+BASELINE rc=0 clean=true detail=no_named_rejection
+TAMPER name=n2_family_10_companion_ohlcv_close_deleted optimized=false rc=0 rejected=false detail=no_named_rejection
+TAMPER name=n4_family_02_selector_rehomed_fixture_local optimized=false rc=0 rejected=false detail=no_named_rejection
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=16/27 result=FAIL
+```
+
+Current GREEN for those same committed cases:
+
+```text
+TAMPER name=n2_family_10_companion_ohlcv_close_deleted optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 normalized_bar_ohlcv_length_mismatch context=companion:C36_GF36_legacy_break_even_modes__local index=3 expected=5 actual=4
+TAMPER name=n4_family_02_selector_rehomed_fixture_local optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=02 companion_selector_fixture_local_forbidden path=legacy.local.reentry_bar
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=27/27 result=PASS
+```
+
+The N-4 tamper now updates manifest-local `companion_assertion_count` and
+`assertion_input_path_count` in the temp copy, so a missing selector-local-forbidden check is not
+masked by counter drift.
+
+### R5 - cross-kill label corrected
+
+The previous cross-kill-looking lines were relabelled in the historical section as
+`target_fixture_only=true cross_applied=false`. No cross-application discrimination was claimed or
+measured. The corrected number for those old probes is therefore: cross-applied mutations run `0`;
+target-fixture-only probes listed `10`.
+
+### Matrix and invariants
+
+```text
+python -m py_compile ...verify_fixtures.py ...test_verify_fixtures.py
+rc=0
+
+verifier plain: rc=0
+SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=397 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_sources_validated=241 assertion_input_paths_checked=2660 fixture_assertions_validated=224 companion_assertions_validated=17 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+verifier -O: rc=1
+VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+verifier PYTHONOPTIMIZE=2: rc=1
+VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+harness plain: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=27/27 result=PASS
+harness -O: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=27/27 result=PASS
+harness PYTHONOPTIMIZE=2: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=27/27 result=PASS
+
+EXPECTED_PATH_VALUE_MAPS_UNCHANGED=23/23 changed=[]
+EXPECTED_OUTPUT_AND_STATE_HASHES_UNCHANGED=46/46 changed=[]
+VERIFY_RUNS_RC=0,0
+OUTPUT_FILES=23,23
+BYTE_IDENTICAL=23/23 MISMATCHES=[]
+STDOUT_IDENTICAL=true
+git diff --check
+rc=0
+```
+
+Families 18 and 19 remain blocked and absent. No asserted expected path/value, output hash, or state
+hash changed. No Pine, parity, MTC strategy behavior, Bridge runtime, schema, broker/exchange, host,
+credential, deployment, or live surface changed.
+
+Not closed here: independent flagship acceptance/adjudication, and the disclosed coordinated-rehash
+semantic-relevance limitation outside R1/R2 remains out of scope.

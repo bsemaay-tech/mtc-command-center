@@ -134,6 +134,7 @@
       ],
       "assertion_inputs": {
         "legacy.local.reentry_bar": [
+          "config.tw_audit_semantics_mode",
           "config.tw_reversal_reentry_mode",
           "normalized_bars.1.ohlcv.3",
           "normalized_bars.2.raw",
@@ -248,6 +249,7 @@
       ],
       "assertion_inputs": {
         "legacy.carry.reentry_bar": [
+          "config.tw_audit_semantics_mode",
           "config.tw_reversal_reentry_mode",
           "config.tw_reversal_reentry_delay_bars",
           "normalized_bars.1.raw",
@@ -363,6 +365,7 @@
       ],
       "assertion_inputs": {
         "legacy.next_bar_open.reentry": [
+          "config.tw_audit_semantics_mode",
           "config.tw_reversal_reentry_mode",
           "config.tw_reversal_reentry_delay_bars",
           "normalized_bars.2.raw",
@@ -477,6 +480,7 @@
       ],
       "assertion_inputs": {
         "legacy.next_bar_close.reentry": [
+          "config.tw_audit_semantics_mode",
           "config.tw_reversal_reentry_mode",
           "config.tw_reversal_reentry_delay_bars",
           "normalized_bars.2.raw",
@@ -592,6 +596,7 @@
       ],
       "assertion_inputs": {
         "legacy.delay.reentry": [
+          "config.tw_audit_semantics_mode",
           "config.tw_reversal_reentry_mode",
           "config.tw_reversal_reentry_delay_bars",
           "normalized_bars.4.raw",
