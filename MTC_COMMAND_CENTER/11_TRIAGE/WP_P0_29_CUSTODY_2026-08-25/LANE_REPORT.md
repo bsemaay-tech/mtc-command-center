@@ -8,7 +8,7 @@
 
 **Audit tier:** T2 — owner-signable policy documents
 
-**Status:** IMPLEMENTER DRAFT PACKAGE COMPLETE; OWNER SIGNATURE AND LEAD ACCEPTANCE PENDING
+**Status:** OWNER SIGNATURE GIVEN 2026-08-25; LEAD ACCEPTANCE OF THE SIGNATURE COMMIT PENDING
 
 ## 1. Scope and authority result
 
