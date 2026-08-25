@@ -7,6 +7,7 @@ secret, or contacts a network endpoint.
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import os
@@ -414,6 +415,80 @@ def test_canonical_ledger_and_all_three_row_fixtures_validate():
     fixtures = PROGRAM / "evidence" / "fixtures"
     for name in ("valid_publishable_only.jsonl", "valid_restricted_only.jsonl", "valid_mixed.jsonl"):
         assert validator.validate_file(fixtures / name) == 1
+
+
+def test_canonical_ledger_artifact_fresh_autocrlf_checkout_matches_recorded_identity(tmp_path):
+    ledger_path = PROGRAM / "evidence" / "EVIDENCE_LEDGER.jsonl"
+    rows = [json.loads(line) for line in read(ledger_path).splitlines() if line.strip()]
+    assert len(rows) == 1
+    row = rows[0]
+    artifact_path = Path(row["publishable_artifact_path"])
+    assert artifact_path.as_posix() == (
+        "MTC_COMMAND_CENTER/11_TRIAGE/KVM2_PROGRAM/evidence/ledger_schema.json"
+    )
+
+    blob = subprocess.run(
+        ["git", "show", f"HEAD:{artifact_path.as_posix()}"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        check=True,
+    ).stdout
+    assert hashlib.sha256(blob).hexdigest() == row["artifact_sha256"]
+
+    checkout_root = tmp_path / "fresh-autocrlf-checkout"
+    checkout_root.mkdir()
+    subprocess.run(
+        ["git", "-c", "init.defaultBranch=main", "init", "--quiet"],
+        cwd=checkout_root,
+        capture_output=True,
+        check=True,
+    )
+    (checkout_root / ".gitattributes").write_bytes((REPO_ROOT / ".gitattributes").read_bytes())
+    checkout_artifact = checkout_root / artifact_path
+    checkout_artifact.parent.mkdir(parents=True)
+    checkout_artifact.write_bytes(blob)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.autocrlf=false",
+            "add",
+            "--",
+            ".gitattributes",
+            artifact_path.as_posix(),
+        ],
+        cwd=checkout_root,
+        capture_output=True,
+        check=True,
+    )
+    checkout_artifact.unlink()
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "core.autocrlf=true",
+            "checkout-index",
+            "--force",
+            "--",
+            artifact_path.as_posix(),
+        ],
+        cwd=checkout_root,
+        capture_output=True,
+        check=True,
+    )
+
+    assert hashlib.sha256(checkout_artifact.read_bytes()).hexdigest() == row["artifact_sha256"]
+    attributes = subprocess.run(
+        ["git", "check-attr", "text", "eol", "--", artifact_path.as_posix()],
+        cwd=checkout_root,
+        text=True,
+        capture_output=True,
+        check=True,
+    ).stdout.splitlines()
+    assert attributes == [
+        f"{artifact_path.as_posix()}: text: set",
+        f"{artifact_path.as_posix()}: eol: lf",
+    ]
 
 
 def test_ledger_rejects_all_declared_synthetic_invalid_cases():
