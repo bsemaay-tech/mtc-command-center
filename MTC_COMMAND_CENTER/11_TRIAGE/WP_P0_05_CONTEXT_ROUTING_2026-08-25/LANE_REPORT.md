@@ -20,10 +20,10 @@ filesystem-byte, `.NET File.ReadAllLines`, and `ceil(bytes/4)` method.
 | Task class | BEFORE bytes / approx. tokens | AFTER bytes / approx. tokens | Reduction |
 |---|---:|---:|---:|
 | ALWAYS-LOAD | 672,863 / 168,216 | 12,769 / 3,193 | 98.10% |
-| Research run | 952,196 / 238,049 | 291,471 / 72,868 | 69.39% |
+| Research run | 952,196 / 238,049 | 292,051 / 73,013 | 69.33% |
 | Bridge work | 729,009 / 182,253 | 73,461 / 18,366 | 89.92% |
-| Planning | 766,876 / 191,719 | 86,861 / 21,716 | 88.67% |
-| Git/handoff | 797,836 / 199,459 | 53,269 / 13,318 | 93.32% |
+| Planning | 766,876 / 191,719 | 87,846 / 21,962 | 88.54% |
+| Git/handoff | 797,836 / 199,459 | 53,526 / 13,382 | 93.29% |
 
 The numbers are evidence for a later conditional-split trigger only. They do not re-decide the
 ratified monorepo topology.
@@ -49,14 +49,120 @@ ratified monorepo topology.
 - `SESSION_LOCK.md` now states the ratified GitHub-claim/checked-mirror model and removes the unsafe
   age/cleanliness takeover heuristic.
 
+## Repair round 1 — routed consumers and proof
+
+### R1 routed handoff contract
+
+The five audit-named consumers now write current state to the selected stage `HANDOFF.md`, treat
+`_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md` as read-only history, and identify
+`SESSION_LOG.md` as retired:
+
+- `04_SHARED/prompts/05_ai_workflow/{01_office_hours_scope_review,07_handoff_update,08_backtest_launch}.md`
+- `_AI_MEMORY/STRATEGY_RESEARCH_WORKFLOW.md`
+- `_deepseek_driver/README.md`
+
+The old-path `_AI_MEMORY/SESSION_LOG.md` tombstone now explicitly forbids appends, links its
+historical archive, and routes current state to the selected stage `HANDOFF.md`.
+
+The mandated repo-wide sweep found five additional routed consumers and they received the same
+repair: Gate prompts `02_engineering_plan_review.md`, `03_implementation_task.md`,
+`05_qa_test_review.md`, `06_security_review.md`, plus
+`11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md`. Historical/evidence prompts, manifests, inventories,
+and pre-router lazy records remain unchanged because the root/stage route does not consume them.
+
+Sweep output:
+
+```text
+ROUTED_STALE_PATH_SWEEP
+routed_files_or_dirs=58
+all_mentions=10
+allowed_history_or_retirement_mentions=10
+stale_write_or_dead_path_mentions=0
+ROUTED_CURRENT_DESTINATIONS
+stage_HANDOFF_mentions=33
+history_GLOBAL_exists=True
+history_NEXT_exists=True
+history_DECISIONS_exists=True
+root_DECISIONS_exists=True
+retired_SESSION_LOG_tombstone_exists=True
+MTC_AGENTS_exists=True
+
+ROUTED_MARKDOWN_LINK_CHECK
+routed_files=69
+local_links_checked=32
+missing=0
+```
+
+### R2 exhaustive rule verification
+
+The pre-repair checklist had 11 row-level failures. Four were audit-named (`R045`, `R046`, `R067`,
+`R077`); executing all rows exposed seven more (`R019`, `R040`, `R044`, `R066`, `R080`, `R090`,
+`R169`). Repairs:
+
+- `R019`: focused repair returns to the same implementer within the tier cap.
+- `R040`/`R044`: audit sessions are fresh/non-resumed; Codex audits are ephemeral/read-only.
+- `R045`/`R046`: exact D025 secondary identities plus dedicated frozen-SHA worktree and empty
+  `git status --porcelain` proof are binding in governance `AGENTS.md`.
+- `R066`: repository GLM tiers explicitly override provider-default mappings.
+- `R067`: the fixed external helper that hard-maps all tiers to GLM-5.2 remains out of scope for
+  routine work in conditional `AI_ACCOUNT_AND_MODEL_ROUTING.md`.
+- `R077`: `--no-session-persistence` does not reduce active context or save quota, in the same
+  conditional routing source.
+- `R080`: unexpectedly large runs record measured token/context consumption.
+- `R090`: AI Boardroom is proposed only for high-stakes ambiguous decisions.
+- `R169`: subscription-route preference preserves exact-model, cost, and independence rules.
+
+Every row then ran as an explicit fixed-string `rg` check against its claimed destination. Multi-part
+rows required every distinguishing string to resolve. Result:
+
+```text
+EXPLICIT_CHECKLIST_FINAL
+checked=240
+pass=240
+fail=0
+failed_ids=none
+```
+
+### Measurement movement
+
+ALWAYS-LOAD remains exactly **12,769 B / 3,193 tokens / 115 lines**. Bridge remains exactly
+**73,461 B / 18,366 tokens / 1,166 lines**. The routed repairs changed three classes:
+
+- Research: **292,051 B / 73,013 tokens / 7,392 lines** (was 291,471 B / 72,868 tokens).
+- Planning: **87,846 B / 21,962 tokens / 1,397 lines** (was 86,861 B / 21,716 tokens).
+- Git/handoff: **53,526 B / 13,382 tokens / 648 lines** (was 53,269 B / 13,318 tokens).
+
+`AFTER_MEASUREMENT.md` records the recomputed per-file and aggregate figures. Governance
+`AGENTS.md` is 6,023 LF bytes (6,106 projected CRLF bytes), below the 6 KiB cap in either form.
+
+### Repair QA
+
+```text
+STAGE_SET_CHECK stages=8 required_files=40 missing=0
+CAP_CHECK failures=0
+UTF8_CHECK changed=16 failures=0
+MEASUREMENT_CHECK match=True
+BASELINE_SIZE_MATCH=True
+BASELINE_SHA_MATCH=True
+INDEX_DETERMINISTIC=True
+INDEX_ROWS=1374
+repo_guard.ps1: RESULT: PASS
+```
+
+The index changed only its canonical runbook summary row and was regenerated twice to the same
+SHA-256 (`FD71EBEC0D38D037A1D9E23291CB5E81CC674AE64BABE2B8CB72BC7BAD401FD0`). No protected
+runtime, trading, Pine, parity, MTC behavior, schema, host, deploy, credential, or secret file was
+changed.
+
 ## Full rule-mapping checklist
 
 The enumerated old-rule set is the entry/onboarding layer that was replaced or moved: root
 entrypoints/`AGENTS.md`, `_AI_MEMORY/{START_HERE,LESSONS,AI_RULES,PROJECT_MEMORY,DO_NOT_TOUCH,
 DECISIONS,GLOBAL_HANDOFF,NEXT_STEPS,SESSION_LOCK}.md`, and the pre-existing local MTC/QuantLens
-onboarding/handoff files changed by this package. Task-specific authorities such as the backtest
-rules, runbook, prompt library, account-routing file, schemas and defect catalogue were not rewritten;
-their rules remain at the same paths and are routed conditionally by stage inputs.
+onboarding/handoff files changed by this package. Task-specific authorities remain at the same paths
+and are routed conditionally by stage inputs. This repair changed only stale routing/handoff text in
+the prompt library, account-routing file, and runbook; it did not change backtest/trading rules,
+schemas, or the defect catalogue.
 
 ### A. Entry chain and router
 
@@ -85,7 +191,7 @@ their rules remain at the same paths and are routed conditionally by stage input
 | R016 | Codex Lead delegates implementation to Claude; Claude Lead to Codex | Root Lead/counterpart invariant; governance gate actors |
 | R017 | Implementer may use cheap sub-agent only when useful/in scope | Governance Delegation rules; stage protected restrictions |
 | R018 | Lead inspects actual diff/files, scope, protected surfaces and real validation | Root acceptance invariant; governance G5 and `TESTS.md` |
-| R019 | Lead sends focused repair to same implementer on failure | Governance audit contract |
+| R019 | Lead sends focused repair to same implementer on failure | Governance audit contract, restored and execution-verified |
 | R020 | Repair caps T0=3/T1=2/T2=1/T3=0 then stop/report | Root and governance audit table |
 | R021 | Hygiene/commit sequencing only after accepting review and within authority | Root claim/reconciliation rules; governance `OUTPUTS.md` |
 | R022 | Gate 5 is Lead's independent audit, not report review | Root and governance G5 |
@@ -106,13 +212,13 @@ their rules remain at the same paths and are routed conditionally by stage input
 | R037 | Claude auditor exact `claude-opus-5` | Governance audit contract |
 | R038 | Claude effort xhigh T0/high T1/medium T2 fallback | Governance tier table and exact-model paragraph |
 | R039 | No Claude alias/fallback; unavailable means BLOCK absent waiver | Governance audit contract |
-| R040 | Claude audit is fresh, no resume/continue | Governance fresh-session rule |
+| R040 | Claude audit is fresh, no resume/continue | Governance fresh/non-resumed audit-session rule |
 | R041 | Codex auditor exact `gpt-5.6-sol` | Governance audit contract |
 | R042 | Codex effort xhigh T0/high T1/medium T2 fallback; protected must be T0 | Governance tier table and exact-model paragraph |
 | R043 | No Codex alias/fallback; unavailable means BLOCK absent waiver | Governance audit contract |
-| R044 | Codex audit fresh/ephemeral/read-only | Governance fresh-session/audit evidence contract |
-| R045 | DeepSeek canonical slot uses ClinePass V4 Flash and isolated clean worktree | Governance four-auditor/secondary-model rules; legacy exact command remains grep-on-demand in archived source |
-| R046 | GLM canonical slot exact 5.2, fresh isolated clean worktree | Governance four-auditor/secondary-model rules |
+| R044 | Codex audit fresh/ephemeral/read-only | Governance exact ephemeral/read-only audit rule |
+| R045 | DeepSeek canonical slot uses ClinePass V4 Flash and isolated clean worktree | Governance D025 identity + frozen-SHA worktree + empty-status proof |
+| R046 | GLM canonical slot exact 5.2, fresh isolated clean worktree | Governance D025 identity + frozen-SHA worktree + empty-status proof |
 | R047 | Auditor unable to execute mandated suite returns BLOCK | Governance audit contract |
 | R048 | Any required finding binds after Lead reproduces it; unreproduced stays recorded | Governance G5/audit contract |
 | R049 | Explicit four-auditor acceptance needs both flagships and no reproduced required finding | Governance audit contract |
@@ -136,14 +242,14 @@ their rules remain at the same paths and are routed conditionally by stage input
 |---|---|---|
 | R058 | Cline CLI is first choice for bounded cheap implementation | Governance Delegation rules |
 | R059 | `_deepseek_driver` is fallback and its README is mandatory before use | Governance `INPUTS.md` |
-| R060 | Cheap work uses exact allowlists and is audited on real data | Governance `AGENTS.md`/`INPUTS.md` |
+| R060 | Cheap work uses exact allowlists and is audited on real data | Routed `_deepseek_driver/README.md` via governance `INPUTS.md` |
 | R061 | Cheap harness never writes Pine/parity/MTC/.git; schemas only approved | Root safety; governance and affected stage rules |
-| R062 | Hand-edit only trivial one-liner; serialize same-file, parallelize disjoint | Governance context/parallel rules (worded as cheapest useful path and same-file serialization) |
+| R062 | Hand-edit only trivial one-liner; serialize same-file, parallelize disjoint | Routed `_deepseek_driver/README.md` via governance `INPUTS.md` |
 | R063 | Update relevant handoff after writes | Governance `OUTPUTS.md`; stage handoffs |
 | R064 | GLM entitlement/quota facts are dated and must be reverified | Governance GLM paragraph; account-routing file remains conditional input |
 | R065 | API listing does not prove Coding Plan entitlement; never assume GLM-5.1 | Governance GLM paragraph |
-| R066 | Provider default mapping is overridden by repo cheapest-capable routing | Governance GLM paragraph |
-| R067 | Fixed 5.2 helper is out of scope for routine work | Preserved in lazy `_AI_MEMORY/AI_ACCOUNT_AND_MODEL_ROUTING.md`; governance says read it for route diagnosis |
+| R066 | Provider default mapping is overridden by repo cheapest-capable routing | Governance GLM paragraph, restored explicitly |
+| R067 | Fixed 5.2 helper is out of scope for routine work | Conditional `_AI_MEMORY/AI_ACCOUNT_AND_MODEL_ROUTING.md`, restored explicitly |
 | R068 | Discovery/mechanics uses verified 4.5-Air else 4.7 | Governance GLM paragraph |
 | R069 | Ordinary code uses GLM-4.7 | Governance GLM paragraph |
 | R070 | GLM-5.1 only when active route confirms entitlement | Governance GLM paragraph |
@@ -153,10 +259,10 @@ their rules remain at the same paths and are routed conditionally by stage input
 | R074 | Large source uses line/symbol reads; default max 400–500 lines | Governance context discipline |
 | R075 | Batch independent checks; avoid many tiny turns | Governance context discipline |
 | R076 | Fresh session for excessive context; no resume unless owner authorizes | Governance context discipline/audit fresh-session rule |
-| R077 | `--no-session-persistence` does not save active context/quota | Preserved in conditional account/model-routing source; not a default task rule |
+| R077 | `--no-session-persistence` does not save active context/quota | Conditional account/model-routing source, restored explicitly |
 | R078 | Tier-4 evidence package is compact, not whole-session | Governance compact-evidence rule |
 | R079 | Exact permissions avoid denial loops; stop broad exploration when evidence found | Governance context discipline |
-| R080 | Record unexpectedly large token/context consumption | Governance `INPUTS.md` cost trigger and handoff output |
+| R080 | Record unexpectedly large token/context consumption | Governance context discipline, restored explicitly |
 | R081 | Every GLM task records classification/protection/model/rationale/paths/budget/fallback/credits | Governance GLM routing-record sentence |
 | R082 | Commit completed agent work before next agent touches same files | Governance parallel rule |
 | R083 | Never hand dirty same-file changes to a next agent; pause if commit unauthorized | Governance parallel rule |
@@ -166,7 +272,7 @@ their rules remain at the same paths and are routed conditionally by stage input
 | R087 | Session/model-routing cost checks use CodeBurn | Governance `INPUTS.md` |
 | R088 | Long backtests use supervisor + watchdog | QuantLens `AGENTS.md`/`TESTS.md` |
 | R089 | Local tools never touch protected Pine/MTC/parity/schemas | Root and stage protection rules |
-| R090 | Boardroom is proposed only for high-stakes ambiguous decisions | Governance Boardroom rule |
+| R090 | Boardroom is proposed only for high-stakes ambiguous decisions | Governance Boardroom rule, restored explicitly |
 | R091 | Real Boardroom requires explicit owner approval; dry-run does not | Governance Boardroom rule |
 | R092 | Boardroom is read-only/redacted; never send secrets or whole repo | Governance Boardroom plus root secret rule |
 | R093 | Board consensus is not trading/promotion approval; provider failure is recorded | Governance Boardroom; QuantLens output boundary |
@@ -209,7 +315,7 @@ their rules remain at the same paths and are routed conditionally by stage input
 | R120 | Protected behavior remains approval-gated | Root and product stages |
 | R121 | Strategy-research read order and intake route | QuantLens `AGENTS.md`/`INPUTS.md` |
 | R122 | `AI_RULES`: canonical state roles for handoff/next/decisions/protection/active/lock/memory | Current stage `HANDOFF`; root `DECISIONS`; `DO_NOT_TOUCH` conditional; `SESSION_LOCK` mirror; old journals history |
-| R123 | `SESSION_LOG.md` retired; do not write | Remains retired; absent from every routed output |
+| R123 | `SESSION_LOG.md` retired; do not write | Routed prompts explicitly forbid append/recreation; tombstone remains |
 | R124 | G1 restates request/value/smallest change/whitelist/forbidden/tier/success | Governance G1 and `INPUTS.md` |
 | R125 | G2 includes flow/modules/edges/rollback/protected impact; trivial skip | Governance G2 |
 | R126 | G3 minimal/no unrelated/no speculative/stay whitelist | Governance G3 |
@@ -269,7 +375,7 @@ unchanged in lazy `_AI_MEMORY/LESSONS.md`; they are loaded only when editing the
 | R166 | End completed units with concrete next steps | Governance `OUTPUTS.md` |
 | R167 | Update durable records before next work unit | Governance G7/`OUTPUTS.md` |
 | R168 | Continue through safe already-authorized work; do not ask routine questions | Root scope/authority invariants; governance handoff contract |
-| R169 | Use subscription routes while preserving exact-model/cost/independence rules | Governance delegation/audit rules |
+| R169 | Use subscription routes while preserving exact-model/cost/independence rules | Governance delegation rules, restored explicitly |
 | R170 | Autonomy never waives merge/destructive/host/deploy/credential/broker/ARM/trading/protected gates | Root safety; Bridge rules |
 | R171 | Bridge legacy name means Hyperliquid paper/TESTNET runtime | Bridge `AGENTS.md`/`CONTEXT.md` |
 | R172 | Bridge startup forces DISARMED unless KILLED; ARM explicit | Bridge `AGENTS.md`/`CONTEXT.md` |
@@ -362,7 +468,7 @@ Every decision remains verbatim in the moved full archive and has one dated link
 
 ## Explicit supersessions / deliberately dropped rules
 
-No binding rule was silently discarded. These four old instructions were deliberately replaced by
+No binding rule was silently discarded. These five old instructions were deliberately replaced by
 later owner-ratified or package-authorized rules:
 
 1. Old default read of `GLOBAL_HANDOFF.md` + `NEXT_STEPS.md` → capped current stage handoff; full
@@ -373,6 +479,10 @@ later owner-ratified or package-authorized rules:
    cannot prove liveness; `UNKNOWN` now stops and GitHub claim is primary.
 4. Old fixed `C:\LAB\Tradingview_LAB_CLEAN` entry assumption → canonical repo identity retained while
    explicitly permitting isolated worktrees of that repository. The frozen sibling remains forbidden.
+5. `_AI_MEMORY/SPRINT_WORKFLOW.md` → deliberately dropped from routed planning. Its seven-gate loop
+   is superseded by governance `AGENTS.md` plus the current-gate prompt selected through `INPUTS.md`,
+   and its old journal/roster directions are stale. The file remains a historical reference named
+   only under the canonical runbook's “past runbooks” list; it is not a current procedure or route.
 
 Superseded decision clauses (D009 by D009-revised, D020 model by D022, D024 advisory limit by D025,
 blanket auditor count/cadence by D028) remain indexed and preserved, but are not active rules.
@@ -402,11 +512,10 @@ blanket auditor count/cadence by D028) remain indexed and preserved, but are not
 - Current stage handoffs are distilled from the branch's archived journals at base `0253d014`; the
   Lead must reconcile current `master`, this branch, and durable tracker state before releasing the
   live claim, as the ratified doctrine requires.
-- `repo_guard.ps1` reports BLOCKED only because its coarse protected prefix covers the five new
-  onboarding Markdown files under `02_MTC_BACKTEST`. The owner brief explicitly authorizes this
-  package's per-stage context files; no backtest code/config/data was touched. The separate staged
-  hardcoded-path audit passed. The guard has no input for a recorded task-specific approval, so its
-  nonzero result is retained rather than relabelled.
+- The initial implementation close-out below retains its then-current coarse guard BLOCK. This
+  repair round's guard is PASS: it sees only the 16 unprotected governance/evidence paths in this
+  round. That does not retroactively reclassify the original owner-authorized onboarding files under
+  `02_MTC_BACKTEST`.
 
 ## Implementer close-out record
 

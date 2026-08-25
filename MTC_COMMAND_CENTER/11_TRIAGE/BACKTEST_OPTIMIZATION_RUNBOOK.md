@@ -28,10 +28,10 @@
 
 ## 0. PRE-READ (zorunlu, 5dk)
 
-1. `AGENTS.md` + `_AI_MEMORY/START_HERE.md` + `_AI_MEMORY/AI_RULES.md`
+1. Root `AGENTS.md` + `DECISIONS.md` + `CONTEXT_MAP.md`, then the five files in the selected QuantLens stage
 2. **`03_QUANTLENS/_user_guide/07_BACKTEST_AND_OPTIMIZATION_RULES.md`** ← CANONICAL STANDART (4 gate, classification, promotion, antigravity, morning report format)
 3. **Bu dosya** (BACKTEST_OPTIMIZATION_RUNBOOK.md) — operasyonel yürütme
-4. `_AI_MEMORY/GLOBAL_HANDOFF.md` + `NEXT_STEPS.md` (mevcut iş listesi)
+4. `03_QUANTLENS/HANDOFF.md` (mevcut durum ve sonraki adımlar); eski günlükler `_AI_MEMORY/history/` altında yalnızca grep-on-demand geçmiş
 5. Son arşiv: `11_TRIAGE/lessons_archive/OVERNIGHT_LESSONS_*.md` (en yeni 1 tane)
 6. `git status` + `git log --oneline -10`
 
@@ -347,7 +347,7 @@ Loop `=== DEADLINE ===` marker yazınca sırayla, **atlama yasak**:
    - `11_TRIAGE/lessons_archive/OVERNIGHT_LESSONS_<date>.md` yaz (özet + bulgular G1..Gn + aksiyon + artifact).
    - `lessons_archive/OVERNIGHT_LESSONS_INDEX.md`'e satır ekle.
    - Yeni anti-pattern → bu runbook §8 tablosuna (A-serisi). Yeni guideline → ilgili bölüme. CHANGELOG'a 1 satır.
-6. **Handoff güncelle** — `GLOBAL_HANDOFF.md` (model+tarih başlık), `NEXT_STEPS.md` (AI-tag'li followup), `SESSION_LOG.md` (1 satır).
+6. **Handoff güncelle** — `03_QUANTLENS/HANDOFF.md` (model+tarih başlık, kanıt, engeller, AI-tag'li sonraki adımlar). `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md` arşivdir; `SESSION_LOG.md` emeklidir.
 7. **Loop'u durdur** — reschedule yok. Kullanıcı uyuyorsa `PushNotification` ile tek satır sonuç.
 
 > Kapanış 4 (dashboard) ve 5 (lessons) **birlikte** sabah teslimatının parçası. Sadece rapor yazıp bırakma — Command Center güncellenmemişse ve ders arşivlenmemişse gece **tamamlanmamış** sayılır.

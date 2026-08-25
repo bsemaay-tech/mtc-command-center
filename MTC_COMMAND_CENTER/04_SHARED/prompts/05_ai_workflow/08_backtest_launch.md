@@ -132,8 +132,8 @@ python aggregate_overnight_iters.py
 1. `lessons_archive/OVERNIGHT_LESSONS_YYYY-MM-DD.md` yaz (ham gözlem, B-numaralı bulgular)
 2. Yeni anti-pattern → `BACKTEST_OPTIMIZATION_RUNBOOK.md` §8 tablosuna ekle
 3. `lessons_archive/OVERNIGHT_LESSONS_INDEX.md` yeni satır
-4. `_AI_MEMORY/GLOBAL_HANDOFF.md` + `SESSION_LOG.md` güncelle
-5. `NEXT_STEPS.md` yarın yapılacaklar
+4. `MTC_COMMAND_CENTER/03_QUANTLENS/HANDOFF.md` güncelle: current state, evidence, blockers, next actions
+5. `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md` salt-okunur arşivdir; `SESSION_LOG.md` emekli edilmiştir
 
 ## WRITE-BACK
 
@@ -141,6 +141,8 @@ Bu prompt biterken zorunlu dosya güncellemeleri:
 - `11_TRIAGE/lessons_archive/OVERNIGHT_LESSONS_YYYY-MM-DD.md` (yeni)
 - `11_TRIAGE/lessons_archive/OVERNIGHT_LESSONS_INDEX.md` (satır ekle)
 - `11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md` (anti-pattern merge, CHANGELOG)
-- `_AI_MEMORY/GLOBAL_HANDOFF.md`
-- `_AI_MEMORY/SESSION_LOG.md`
-- `_AI_MEMORY/NEXT_STEPS.md`
+- `03_QUANTLENS/HANDOFF.md` (current state + next actions)
+
+`_AI_MEMORY/history/GLOBAL_HANDOFF.md` ve `_AI_MEMORY/history/NEXT_STEPS.md`
+yalnızca grep-on-demand geçmiştir; append etme. `_AI_MEMORY/SESSION_LOG.md`
+emekli edilmiştir; yeniden oluşturma.

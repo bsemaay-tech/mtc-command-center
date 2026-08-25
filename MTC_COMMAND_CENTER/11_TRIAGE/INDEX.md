@@ -49,7 +49,7 @@
 | `AUDIT2_READINESS_PACKAGE/OPEN_QUESTIONS_FOR_DISPATCHER.md` | - | Open questions for the Audit 2 dispatcher | Status: NOT READY FOR DISPATCH. [refreshed 2026-08-12] |
 | `audits/CODEX_T0_COLLECTOR_gpt56sol_xhigh_20260817.txt` | 2026-08-17 | T0 adversarial security review â€” phase-watch Option B collector + notifier | node.exe : Reading additional input from stdin... |
 | `BACKTEST_ARTIFACT_READER_INTEGRATION_REPORT_2026-06-15.md` | 2026-06-15 | Backtest Artifact Reader Integration Report — 2026-06-15 | Phase: Read-Only Backtest Artifact Contract + Profile-Separated Result Integration. |
-| `BACKTEST_OPTIMIZATION_RUNBOOK.md` | - | BACKTEST + OPTIMIZATION RUNBOOK (cold-start uyumlu) | 1. `AGENTS.md` + `_AI_MEMORY/START_HERE.md` + `_AI_MEMORY/AI_RULES.md` |
+| `BACKTEST_OPTIMIZATION_RUNBOOK.md` | - | BACKTEST + OPTIMIZATION RUNBOOK (cold-start uyumlu) | 1. Root `AGENTS.md` + `DECISIONS.md` + `CONTEXT_MAP.md`, then the five files in the selected QuantLens stage |
 | `BACKTEST_WORKFLOW_AUDIT_2026-06-13.md` | 2026-06-13 | Backtest / Optimization Workflow Audit - 2026-06-13 | This is a read-only audit. No backtest was started, no existing repo file was modified, and `MTC_V2.pine` was not touched. |
 | `BACKTEST_WORKFLOW_UPDATE_WORKLIST_2026-06-13.md` | 2026-06-13 | Backtest Workflow Update Worklist - 2026-06-13 | 1. Add schemas and fixtures first. |
 | `block_bootstrap_christian_or.py` | - | block bootstrap christian or | """Deeper validation for QL_OPEN_RANGE_5PCT_STOP_CHRISTIAN_5M. |

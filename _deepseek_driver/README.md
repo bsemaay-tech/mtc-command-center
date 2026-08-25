@@ -67,4 +67,7 @@ Tool-calling models = fully autonomous (read+edit+verify). Non-tool models = pro
    validation. Accept only on your own green result.
 4. **Serialize tasks that touch the same files**; parallelize disjoint ones.
 5. **Huge inputs:** pre-extract a small sample (the model can't read 5MB; harness caps at 60KB).
-6. Every accepted batch: update handoff (`SESSION_LOG`, `NEXT_STEPS`, `GLOBAL_HANDOFF`).
+6. Every accepted batch: supply factual evidence for the Lead to update the selected stage's
+   `HANDOFF.md` and any triggered root decision or durable claim record.
+   `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md` are read-only archives;
+   `_AI_MEMORY/SESSION_LOG.md` is retired.

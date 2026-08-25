@@ -32,14 +32,19 @@ Prompt templates live in `MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/`.
 
 Highest overlap wins. T2 deployed-identity findings alone escalate to one T1 flagship check.
 Invoked Claude is exact `claude-opus-5`; invoked Codex exact `gpt-5.6-sol`; no alias/fallback.
-Unavailable exact model/effort is BLOCK unless the owner waives. Every audit round is fresh, with
-only scope, plan, diff/files, evidence, and repo rules—never implementer-session continuation.
+Unavailable exact model/effort is BLOCK unless owner-waived. Each audit is fresh, receives only
+scope, plan, diff/files, evidence, and repo rules, and is never resumed/continued. Codex audits are
+ephemeral and read-only.
 Verdicts: PASS; PASS-WITH-NITS (optional only); REQUEST_CHANGES; BLOCK.
+After a non-accepting verdict, Lead sends the same implementer a focused repair within the tier cap.
 
 An auditor unable to run the mandated suite returns BLOCK; a source-only view is supplemental.
 In an explicitly owner-designated four-auditor review, both flagships must accept and no reproduced
 required finding from DeepSeek V4 Flash or GLM-5.2 may remain. Secondary auditors gain no protected
 implementation authority.
+D025 secondary identities are `cline-pass/deepseek-v4-flash` via ClinePass and GLM-5.2 via Z.AI
+Coding Plan. Both audit in a dedicated worktree at the frozen SHA; afterwards require empty
+`git status --porcelain` as proof they edited nothing.
 
 ## Delegation and context discipline
 
@@ -48,12 +53,17 @@ implementation authority.
 - Implementer sub-delegation is optional: Cline first, `_deepseek_driver` fallback; use the cheapest
   capable route. Never send Pine, parity, MTC, trading, Bridge-protected, or schema work to a cheap
   model without explicit approval. The Lead still audits real results.
+- Prefer subscription routes over external-credit routes while preserving exact-model, cost, and
+  independence requirements.
 - GLM routing: discovery/mechanics = 4.5-Air only if verified, else 4.7; ordinary code = 4.7;
   GLM-5.1 only if active entitlement confirms it; difficult/protected/exact request = 5.2. Record
   classification, protected reason, provider/model, why not cheaper, exact paths, context budget,
   fallback, and external-credit use. Re-verify time-sensitive entitlement/quota.
+  These repository tiers override provider-default model mappings.
 - Targeted `rg` first; line/symbol reads before full files over 400–500 lines; batch independent
-  checks; stop broad exploration when evidence exists; start fresh if context is excessive.
+  checks; stop broad exploration when evidence exists; start fresh if context is excessive. Resume
+  or continue only with explicit owner authorization. Record measured token/context consumption
+  after unexpectedly large runs.
 - Probe a changed CLI/model route cheaply before spending a dispatch. Codex lanes must not spawn
   Claude children; verify the guard. Commit completed agent work before another agent receives the
   same files; if commit is not authorized, pause instead of handing off dirty shared files.
@@ -64,8 +74,9 @@ implementation authority.
   `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1` (default `-Account secondary`);
   never run bare `codex` or route to the desktop `.codex` home. Read the account-routing file only
   when choosing/checking an account, quota, or credential source.
-- A real AI Boardroom run requires explicit owner approval because it spends external tokens and
-  transmits redacted slices. Dry-run is allowed. It is read-only and never trading approval.
+- Propose AI Boardroom only for a high-stakes ambiguous decision. A real run needs owner approval
+  because it spends external tokens and transmits redacted slices. Dry-run is allowed; the tool is
+  read-only and never trading approval.
 - Board provider failures are recorded and the remaining read-only run may continue; failure never
   upgrades coverage or authority.
 - After an accepted safe work unit, continue only into the next already-authorized safe unit. At a
