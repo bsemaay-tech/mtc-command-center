@@ -1,5 +1,25 @@
 # Governance stage handoff
 
+## [Codex gpt-5.6-sol Implementer] 2026-08-25 - Doc lane closeout AO
+
+- Branch/worktree: `fix/doc-reconcile-combined-20260825` at `C:\WPPDOCCLOSE_20260825`; merged
+  audited doc heads `6a31079c` (CI policy) and `a8e85b20` (live gate), then applied the required
+  T2 documentation amendments.
+- CI policy current state: `CI_POLICY.md` supersedes this page, `RED_GREEN_PLAN.md` section 2, and
+  `LANE_REPORT.md` owner-action bypass instructions. Ruleset 21444962 has no bypass actors; in
+  practice, `master` is reached through PR heads carrying green `Bridge suite (Python 3.12)`.
+  `pine-defang-guard.yml` runs on every push and pull request but is not required.
+- Live-gate current state: `LIVE_TRADING_GATE.md` withdraws the stale zero-CI blocker without moving
+  any readiness row. Sibling stale copies are disclosed; the normative brief line still needs
+  owner/Lead disposition. `legacy/pine-controller/2026-08-25` is WP-P0-23 freeze evidence, so not
+  every `legacy/*` tag is cleanup residue.
+- Safety: docs-only. No code, workflow, protected path, host, credential, repository setting,
+  testnet/live action, or `master` merge changed by this lane. `history/GLOBAL_HANDOFF.md` is
+  restored byte-identical to `master`; current handoff lives here.
+- Evidence to rerun: `git diff 6a31079c -- <CI_POLICY.md>`; `git diff a8e85b20 --
+  <LIVE_TRADING_GATE.md>`; `git grep -n "zero functioning CI" origin/master`; `(Get-Item
+  MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md).Length`.
+
 ## [Codex gpt-5.6-sol Implementer] 2026-08-25 — WP-P0-05 context routing
 
 - Package: WP-P0-05, owner-authorized `G1-IA`, audit tier T1.

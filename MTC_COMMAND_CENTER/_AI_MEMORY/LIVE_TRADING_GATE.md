@@ -202,6 +202,16 @@ so no check named above currently runs automatically."* That claim is stale and 
   2026-08-25) is **active** with `required_status_checks` for **`Bridge suite (Python 3.12)`** plus
   `deletion` and `non_fast_forward` rules, and **no bypass actors**; the legacy branch-protection
   API returns 404 because enforcement is via the ruleset, not legacy protection.
+- Sibling-copy disclosure (`origin/master`, observed 2026-08-25): the withdrawn zero-CI claim also
+  stands in four planning records outside this register. The brief line
+  `MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:2527`
+  is unconditional and normative, including "no document may describe it as built", and needs
+  owner/Lead disposition. The plan lines
+  `MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:594`
+  and `:1031` carry the same claim scoped to WP-P0-27 remaining unaccepted, so they lift by their
+  own terms after merge `d5e5e98e` while remaining literally stale. The fold line
+  `MTC_COMMAND_CENTER/11_TRIAGE/WAYFINDER_SAFETY_OPERATIONS_FOLD_2026-08-23.md:126` carries the
+  same planned/unbuilt sentence. This lane discloses those siblings only and does not edit them.
 
 **This correction changes no row status above.** CI runs the Bridge test suite and the Pine alert
 guard; none of the fourteen categories' named evidence — per-strategy soaks, testnet drills,
@@ -210,8 +220,10 @@ produced or accepted by it, so every row's evidence remains `None accepted`. **W
 stale zero is not authorization to repair the remaining blockers, and it gates no row.**
 
 **Adjacent literal staleness noticed, not corrected here (lane AM scope is the CI claim only):**
-rows 1 and 2 say "zero tags exist in the repository". True on 2026-08-23; since 2026-08-24 22:08
-+0300 the repository carries 180 `legacy/*` archive tags (worktree-cleanup residue). No frozen
-strategy-identity tag exists, which is what those rows mean, but the literal sentence is no longer
-exact. Left for the Lead/owner to reword or ratify.
+rows 1 and 2 say "zero tags exist in the repository". True on 2026-08-23; since 2026-08-24 22:07:53
++0300 the repository carries 180 `legacy/*` tags. Most are worktree-cleanup archive tags, but
+`legacy/pine-controller/2026-08-25` is not residue: tag object `3075bd66` peels to commit
+`77a10e65` and is cited by the WP-P0-23 merge (`59bf7723`) as the freeze preserving the
+alert-capable Pine original. No frozen strategy-identity tag exists, which is what those rows mean,
+but the literal sentence is no longer exact. Left for the Lead/owner to reword or ratify.
 

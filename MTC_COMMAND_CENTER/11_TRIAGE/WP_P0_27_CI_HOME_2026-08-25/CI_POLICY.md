@@ -83,19 +83,19 @@ Enforcement behavior actually observed on 2026-08-25, recorded in the merge comm
 - PR #127 then merged with `Bridge suite (Python 3.12)` green on `fff0ba8b`. **No admin
   override was used; the empty bypass list is deliberate.**
 
-This corrects what this page and `LANE_REPORT.md` §"Owner action text" previously planned: an
-explicit owner/Lead/admin bypass for direct pushes was **not** configured, and a direct push is
-not a merge-around path. Changing that is an owner edit of ruleset 21444962, never a lane
-action. Consequence for every lane: work reaches `master` only through a PR into `master` with
-`Bridge suite (Python 3.12)` green on an up-to-date head — plan merges accordingly.
+This corrects what this page, `RED_GREEN_PLAN.md` §2, and `LANE_REPORT.md` §"Owner action text"
+previously planned: an explicit owner/Lead/admin bypass for direct pushes was **not** configured,
+and a direct push is not a merge-around path. Changing that is an owner edit of ruleset 21444962,
+never a lane action. Consequence for every lane: work reaches `master` only through a PR into
+`master` with `Bridge suite (Python 3.12)` green on an up-to-date head — plan merges accordingly.
 
 ## Progressive required-check policy
 
 The first required check is enforced today; the set is what stays progressive. Only
-`Bridge suite (Python 3.12)` is in rule 21444962's required list. `master` also runs the
-repo-root workflow `.github/workflows/pine-defang-guard.yml` (WP-P0-23), whose
-`pine-alert-guard` check is green on `59bf7723` but is **not** required — that is this policy
-operating as designed, not an oversight.
+`Bridge suite (Python 3.12)` is in rule 21444962's required list. The repo-root workflow
+`.github/workflows/pine-defang-guard.yml` (WP-P0-23) runs on every push and pull request,
+including `master`; its `pine-alert-guard` check is green on `59bf7723` but is **not** required —
+that is this policy operating as designed, not an oversight.
 
 A later guard becomes required only after its owning package delivers the executable check, D026
 RED/GREEN evidence exists, the applicable audit tier accepts it, and the Lead asks the owner to
