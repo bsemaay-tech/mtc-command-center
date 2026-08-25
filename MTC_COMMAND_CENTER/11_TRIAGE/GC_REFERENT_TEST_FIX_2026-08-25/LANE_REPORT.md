@@ -4,83 +4,84 @@ Role: Codex implementer under live Claude lead.
 
 Branch: `fix/gc-referent-tests-20260825`
 
-Audit tier classification: T1. This lane changed Bridge test code only. It did not touch product code, deploy/host scripts, credentials, Pine, parity, schemas, broker/exchange behavior, or trading logic. The live Claude lead owns independent acceptance.
+Audit tier classification: T1. This lane changed Bridge test code plus one product docstring that was rechecked and found inaccurate after the new helper behavior. It did not touch deploy/host scripts, credentials, Pine, parity, schemas, broker/exchange behavior, or trading logic. The live Claude lead owns independent acceptance.
 
-## Diagnosis Confirmation
+## Replacement Applied
 
-I read the required diagnosis from:
-
-`feature/wp-p0-27-ci-home-20260825:MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_27_CI_HOME_2026-08-25/LINUX_RED_DIAGNOSIS.md`
-
-The branch path in the dispatch brief omitted the `MTC_COMMAND_CENTER/11_TRIAGE/` prefix; the file exists at the path above.
-
-I confirmed the diagnosis against `IBKR_PAPER_BRIDGE/tests/test_order_state.py` and `IBKR_PAPER_BRIDGE/bridge/engine/types.py`: the two red tests were asserting that the full transitive CPython GC referent graph contains no mutable containers. That overreaches the invariant. On CPython 3.12, `gc.get_referents(OrderState.MEMBER)` can expose Enum member implementation dictionaries; those dictionaries are runtime-owned Enum internals, not mutable policy backing data for `ORDER_STATE_TRANSITIONS` or `RAW_ORDER_STATUS_ALIASES`. The adjacent behavior-changing attack tests remain sound and were preserved.
-
-## Fix
-
-Changed only `IBKR_PAPER_BRIDGE/tests/test_order_state.py`.
-
-The GC traversal now treats `Enum` members as runtime-owned atomic values, the same way it already treated classes as traversal boundaries:
+Changed `IBKR_PAPER_BRIDGE/tests/test_order_state.py` from stopping traversal at every `Enum` member to traversing Enum members while skipping only the small Enum-internal member dictionary:
 
 ```python
-from enum import Enum
+_ENUM_INTERNAL_KEYS = frozenset({"_value_", "_name_", "__objclass__", "_sort_order_"})
 
 ...
 
-if isinstance(referent, (type, Enum)):
+if isinstance(referent, type):
+    continue
+if isinstance(referent, dict) and set(referent) <= _ENUM_INTERNAL_KEYS:
     continue
 ```
 
-This keeps mutable policy containers visible. If the holder owns a `dict`, `list`, `set`, or `bytearray`, the repaired tests still collect it and fail. It only prevents traversal into Enum member implementation state, so the assertion no longer depends on whether a specific CPython version exposes `OrderState.OPEN.__dict__` through `gc.get_referents`.
+This is strictly better than the previous fix because mutable containers owned by the immutable mapping holder still remain visible, and mutable containers reachable only through an `Enum` member are visible again. The helper now ignores only the runtime-owned Enum internal dictionary that made the original assertion depend on interpreter internals.
 
-Local version observation:
-
-```text
-python -c "import gc, sys; from IBKR_PAPER_BRIDGE.bridge.engine.types import OrderState; refs=gc.get_referents(OrderState.OPEN); print(sys.version); print(any(r is OrderState.OPEN.__dict__ for r in refs)); print([type(r).__name__ for r in refs[:10]])"
-
-3.14.2 (tags/v3.14.2:df79316, Dec  5 2025, 17:18:21) [MSC v.1944 64 bit (AMD64)]
-False
-['str', 'str', 'EnumType', 'int', 'EnumType']
-```
-
-The diagnosis records CPython 3.12 CI exposing the Enum member dictionary. The repaired helper stops at the Enum member before that version-specific detail can matter.
-
-Extra interpreter check:
+Local referent probe after the change:
 
 ```text
-py -0p
+python -c "import tests.test_order_state as t; refs=t._transitive_gc_referents(t.ORDER_STATE_TRANSITIONS); print('count', len(refs)); print('types', sorted({type(r).__name__ for r in refs})); print('order_states', sum(isinstance(r, t.OrderState) for r in refs)); print('mutable', [type(r).__name__ for r in refs if isinstance(r, (dict, list, set, bytearray))])"
 
- -V:3.14 *        C:\Python314\python.exe
- -V:3.13          C:\Users\BarışSemaay\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\python.exe
- -V:Astral/CPython3.13.13 C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.13.13-windows-x86_64-none\python.exe
+count 55
+types ['OrderState', 'frozenset', 'int', 'str', 'tuple']
+order_states 11
+mutable []
 ```
 
-The 3.13.13 interpreter could not run pytest here:
+## Version Boundary Correction
+
+The prior report understated the exposure as CPython 3.12-specific. The auditor verified the Enum-member coverage loss on 3.12, 3.13, and 3.14. I also checked the local 3.13.13 interpreter with a standalone `str, Enum` member:
 
 ```text
-& 'C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.13.13-windows-x86_64-none\python.exe' -m pytest IBKR_PAPER_BRIDGE/tests/test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container IBKR_PAPER_BRIDGE/tests/test_order_state.py::test_gc_referents_of_raw_aliases_contain_no_mutable_container -q
+& 'C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.13.13-windows-x86_64-none\python.exe' -c "import gc, sys; from enum import Enum; Status = Enum('Status', {'OPEN': 'OPEN'}, type=str); refs=gc.get_referents(Status.OPEN); print(sys.version); print(any(r is Status.OPEN.__dict__ for r in refs)); print([type(r).__name__ for r in refs])"
 
-C:\Users\BarışSemaay\AppData\Roaming\uv\python\cpython-3.13.13-windows-x86_64-none\python.exe: No module named pytest
+3.13.13 (main, Jun  2 2026, 22:38:31) [MSC v.1944 64 bit (AMD64)]
+True
+['dict', 'EnumType']
 ```
 
-## D026 RED/GREEN Evidence
+The same local 3.13.13 interpreter still cannot run the Bridge pytest nodes because it lacks `pydantic`; no 3.13 pytest result is claimed from this lane.
 
-Scratch copy used for mutations:
+## Blind-Spot RED/GREEN
 
-`C:\tmp\gc_ref_d026_20260825_1430`
+Temporary product mutation used to prove the auditor's blind spot is closed:
 
-Scratch baseline after copying the repaired tests:
+```python
+OrderState.FILLED.poisoned_policy = {OrderState.FILLED: frozenset({OrderState.OPEN})}
+```
+
+This creates a genuinely mutable policy container reachable only through `OrderState.FILLED`.
+
+RED:
 
 ```text
-python -m pytest tests/test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container tests/test_order_state.py::test_gc_referents_of_raw_aliases_contain_no_mutable_container -q
+python -m pytest tests/test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container -q
 
-..                                                                       [100%]
-2 passed in 1.02s
+F                                                                        [100%]
+FAILED tests/test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container
+E       AssertionError: assert [{<OrderState...N: 'OPEN'>})}] == []
+E         Left contains one more item: {<OrderState.FILLED: 'FILLED'>: frozenset({<OrderState.OPEN: 'OPEN'>})}
+1 failed in 0.53s
 ```
 
-### Transition Referent Test
+GREEN after restoring the temporary mutation:
 
-Scratch mutation in `bridge/engine/types.py`:
+```text
+python -m pytest tests/test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container -q
+
+.                                                                        [100%]
+1 passed in 0.38s
+```
+
+## Original D026 RED/GREEN
+
+Repeated the prior mutation:
 
 ```diff
 -(OrderState.FILLED, frozenset({OrderState.FILLED})),
@@ -93,117 +94,55 @@ RED:
 python -m pytest tests/test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container -q
 
 F                                                                        [100%]
-================================== FAILURES ===================================
-________ test_gc_referents_of_transitions_contain_no_mutable_container ________
-
-    def test_gc_referents_of_transitions_contain_no_mutable_container():
-        referents = _transitive_gc_referents(ORDER_STATE_TRANSITIONS)
-        mutable = [r for r in referents if isinstance(r, (dict, list, set, bytearray))]
->       assert mutable == []
-E       AssertionError: assert [{<OrderState...D: 'FILLED'>}] == []
-E
-E         Left contains one more item: {<OrderState.FILLED: 'FILLED'>}
-E         Use -v to get more diff
-
-tests\test_order_state.py:402: AssertionError
-=========================== short test summary info ===========================
 FAILED tests/test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container
-1 failed in 1.24s
+E       AssertionError: assert [{<OrderState...D: 'FILLED'>}] == []
+E         Left contains one more item: {<OrderState.FILLED: 'FILLED'>}
+1 failed in 0.63s
 ```
 
-Restored mutation:
-
-```diff
--(OrderState.FILLED, {OrderState.FILLED}),
-+(OrderState.FILLED, frozenset({OrderState.FILLED})),
-```
-
-GREEN:
+GREEN after restoring `frozenset({OrderState.FILLED})`:
 
 ```text
 python -m pytest tests/test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container -q
 
 .                                                                        [100%]
-1 passed in 0.86s
+1 passed in 0.52s
 ```
 
-### Raw-Alias Referent Test
+## Corrected Statements
 
-Scratch mutation in `bridge/engine/types.py`:
-
-```diff
--("OPEN", OrderState.OPEN),
-+["OPEN", OrderState.OPEN],
-```
-
-RED:
-
-```text
-python -m pytest tests/test_order_state.py::test_gc_referents_of_raw_aliases_contain_no_mutable_container -q
-
-F                                                                        [100%]
-================================== FAILURES ===================================
-________ test_gc_referents_of_raw_aliases_contain_no_mutable_container ________
-
-    def test_gc_referents_of_raw_aliases_contain_no_mutable_container():
-        referents = _transitive_gc_referents(RAW_ORDER_STATUS_ALIASES)
-        mutable = [r for r in referents if isinstance(r, (dict, list, set, bytearray))]
->       assert mutable == []
-E       AssertionError: assert [['OPEN', <Or...PEN: 'OPEN'>]] == []
-E
-E         Left contains one more item: ['OPEN', <OrderState.OPEN: 'OPEN'>]
-E         Use -v to get more diff
-
-tests\test_order_state.py:420: AssertionError
-=========================== short test summary info ===========================
-FAILED tests/test_order_state.py::test_gc_referents_of_raw_aliases_contain_no_mutable_container
-1 failed in 0.76s
-```
-
-Restored mutation:
-
-```diff
--["OPEN", OrderState.OPEN],
-+("OPEN", OrderState.OPEN),
-```
-
-GREEN:
-
-```text
-python -m pytest tests/test_order_state.py::test_gc_referents_of_raw_aliases_contain_no_mutable_container -q
-
-.                                                                        [100%]
-1 passed in 0.42s
-```
+- The old statement "This keeps mutable policy containers visible" was incomplete. Accurate replacement: holder-owned mutable containers remain visible, and Enum-member-owned mutable containers are visible again; only Enum-internal dictionaries with keys contained in `_ENUM_INTERNAL_KEYS` are skipped.
+- The old CPython 3.12-only attribution was wrong. The exposure is not bounded to 3.12; the auditor verified it on 3.12, 3.13, and 3.14, and the local standalone 3.13.13 check exposes the member dictionary.
+- `IBKR_PAPER_BRIDGE/bridge/engine/types.py` docstring was rechecked under the new helper behavior. It was still slightly wrong because the traversal reaches Enum `_sort_order_` `int` values. I corrected the docstring from "tuples, `frozenset`s, and `OrderState`/`str` values" to "tuples, `frozenset`s, `int`s, and `OrderState`/`str` values".
 
 ## Verification
 
 Focused repaired tests:
 
 ```text
-python -m pytest IBKR_PAPER_BRIDGE/tests/test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container IBKR_PAPER_BRIDGE/tests/test_order_state.py::test_gc_referents_of_raw_aliases_contain_no_mutable_container -q
+python -m pytest tests/test_order_state.py::test_gc_referents_of_transitions_contain_no_mutable_container tests/test_order_state.py::test_gc_referents_of_raw_aliases_contain_no_mutable_container -q
 
 ..                                                                       [100%]
-2 passed in 1.07s
+2 passed in 0.42s
 ```
 
-Adjacent behavior-changing attack tests:
+Adjacent behavior-changing GC attack tests:
 
 ```text
-python -m pytest IBKR_PAPER_BRIDGE/tests/test_order_state.py::test_gc_referents_of_transitions_cannot_alter_can_transition IBKR_PAPER_BRIDGE/tests/test_order_state.py::test_gc_referents_of_raw_aliases_cannot_alter_normalization -q
+python -m pytest tests/test_order_state.py::test_gc_referents_of_transitions_cannot_alter_can_transition tests/test_order_state.py::test_gc_referents_of_raw_aliases_cannot_alter_normalization -q
 
 ..                                                                       [100%]
-2 passed in 0.41s
+2 passed in 0.42s
 ```
 
-Required full file:
+Full order-state file:
 
 ```text
-python -m pytest IBKR_PAPER_BRIDGE/tests/test_order_state.py -q
+python -m pytest tests/test_order_state.py -q
 
 ........................................................................ [ 52%]
 .................................................................        [100%]
-137 passed in 1.69s
+137 passed in 1.58s
 ```
 
 Whole Bridge suite:
@@ -211,34 +150,27 @@ Whole Bridge suite:
 ```text
 python -m pytest tests -q --ignore=TSP1009B.pytest_tmp_s1r1
 
-1370 passed, 1 warning in 182.06s (0:03:02)
+1370 passed, 1 warning in 157.18s (0:02:37)
 ```
 
 Warning summary:
 
 ```text
-..\..\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1
-  C:\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
-    from starlette.testclient import TestClient as TestClient  # noqa
+C:\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
 ```
 
-Diff scope before report:
+No Claude CLI was launched or authenticated by this lane. A process check observed pre-existing `claude` processes on the host, including Claude Code processes outside this Codex shell; I did not start or interact with them.
+
+CodeBurn at start:
 
 ```text
-git diff --stat
-
-IBKR_PAPER_BRIDGE/tests/test_order_state.py | 10 ++++++----
-1 file changed, 6 insertions(+), 4 deletions(-)
+Today  $349.73  1526 calls    Month  $3517.58  13777 calls
 ```
-
-`git diff --check` exited 0.
-
-No Claude CLI was launched or authenticated by this lane. A process check observed pre-existing `claude` processes on the host, including Claude Code processes parented outside this Codex shell; I did not start or interact with them.
 
 CodeBurn at close:
 
 ```text
-Today  $341.38  1483 calls    Month  $3509.23  13734 calls
+Today  $355.89  1574 calls    Month  $3523.74  13825 calls
 ```
 
 ## Final Commit SHA

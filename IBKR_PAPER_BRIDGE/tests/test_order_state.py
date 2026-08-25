@@ -7,7 +7,6 @@ import subprocess
 import sys
 import textwrap
 from datetime import UTC, datetime
-from enum import Enum
 from pathlib import Path
 
 import pytest
@@ -38,6 +37,8 @@ from bridge.engine.types import (
 )
 
 ALL_STATES = tuple(OrderState)
+
+_ENUM_INTERNAL_KEYS = frozenset({"_value_", "_name_", "__objclass__", "_sort_order_"})
 
 EXPECTED_TRANSITIONS: dict[OrderState, set[OrderState]] = {
     OrderState.PENDING_NEW: {OrderState.PENDING_NEW, OrderState.SUBMITTING},
@@ -376,8 +377,8 @@ def test_mutating_a_copy_of_raw_aliases_does_not_affect_normalization():
 def _transitive_gc_referents(obj, limit=200):
     """BFS over gc.get_referents, stopping at runtime-owned atoms so the
     walk stays scoped to policy data reachable from `obj`, not surrounding
-    class/module/Enum implementation machinery. Bounded by `limit` as a
-    runaway-graph guard.
+    class/module implementation machinery. Bounded by `limit` as a runaway-
+    graph guard.
     """
     seen_ids = {id(obj)}
     frontier = [obj]
@@ -385,7 +386,9 @@ def _transitive_gc_referents(obj, limit=200):
     while frontier and len(collected) < limit:
         current = frontier.pop()
         for referent in gc.get_referents(current):
-            if isinstance(referent, (type, Enum)):
+            if isinstance(referent, type):
+                continue
+            if isinstance(referent, dict) and set(referent) <= _ENUM_INTERNAL_KEYS:
                 continue
             marker = id(referent)
             if marker in seen_ids:
