@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>WP-P0-18 · Lightweight Charts drag POC</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #091019;
+      --panel: #111a25;
+      --panel-2: #162231;
+      --line: #263548;
+      --ink: #dbe7f4;
+      --muted: #8091a7;
+      --teal: #2dd4bf;
+      --amber: #f59e0b;
+      --red: #fb7185;
+      --blue: #60a5fa;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 13px/1.45 Inter, ui-sans-serif, system-ui, sans-serif; }
+    header { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: #0d1621; }
+    h1 { margin: 0; font-size: 15px; font-weight: 650; }
+    .tag { padding: 3px 8px; border: 1px solid var(--amber); border-radius: 999px; color: var(--amber); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .spacer { flex: 1; }
+    button { border: 1px solid #36506b; border-radius: 5px; background: #17283a; color: var(--ink); padding: 6px 10px; cursor: pointer; }
+    button:hover { border-color: var(--teal); }
+    main { padding: 12px; }
+    .metrics { display: grid; grid-template-columns: repeat(7, minmax(110px, 1fr)); gap: 8px; margin-bottom: 10px; }
+    .metric { min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+    .metric b { display: block; color: var(--muted); font-size: 9px; letter-spacing: .09em; text-transform: uppercase; }
+    .metric span { display: block; margin-top: 2px; overflow: hidden; font-size: 14px; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+    #chart-shell { position: relative; height: 680px; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); }
+    #chart { position: absolute; inset: 0; }
+    #drag-line { position: absolute; z-index: 12; right: 84px; left: 0; height: 20px; transform: translateY(-50%); cursor: ns-resize; touch-action: none; user-select: none; }
+    #drag-line::before { position: absolute; right: 0; left: 0; top: 9px; border-top: 2px dashed var(--amber); content: ""; }
+    #drag-label { position: absolute; right: 5px; top: 0; padding: 2px 7px; border: 1px solid var(--amber); border-radius: 4px; background: #2a1e08; color: #ffd68a; font: 11px/15px ui-monospace, SFMono-Regular, Consolas, monospace; }
+    #drag-line.dragging::before { border-top-style: solid; }
+    #drag-line.dragging #drag-label { background: var(--amber); color: #111827; }
+    footer { display: flex; gap: 18px; flex-wrap: wrap; padding: 9px 3px 0; color: var(--muted); font-size: 11px; }
+    footer strong { color: var(--ink); }
+    #error { display: none; margin: 10px 0; padding: 10px; border: 1px solid var(--red); color: #fecdd3; white-space: pre-wrap; }
+    @media (max-width: 920px) {
+      .metrics { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      #chart-shell { height: 600px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="tag">Disposable POC</span>
+    <h1>Lightweight Charts 5.2.1 · draggable protection level</h1>
+    <span class="spacer"></span>
+    <button id="synthetic-drag" type="button">Run drag probe</button>
+  </header>
+  <main>
+    <section class="metrics" aria-label="Measured POC metrics">
+      <div class="metric"><b>Dataset</b><span id="m-data">building…</span></div>
+      <div class="metric"><b>Overlays</b><span id="m-overlays">7 + pane</span></div>
+      <div class="metric"><b>Generate</b><span id="m-generate">—</span></div>
+      <div class="metric"><b>API ingest</b><span id="m-ingest">—</span></div>
+      <div class="metric"><b>First paint</b><span id="m-paint">—</span></div>
+      <div class="metric"><b>Drag dispatch p95</b><span id="m-drag">—</span></div>
+      <div class="metric"><b>Level</b><span id="m-level">—</span></div>
+    </section>
+    <pre id="error"></pre>
+    <section id="chart-shell" aria-label="Seeded market chart with draggable horizontal level">
+      <div id="chart"></div>
+      <div id="drag-line" role="slider" aria-label="Draggable protection level" aria-orientation="vertical" tabindex="0">
+        <span id="drag-label">LEVEL —</span>
+      </div>
+    </section>
+    <footer>
+      <span><strong>Offline:</strong> vendored IIFE, no network requests</span>
+      <span><strong>Input:</strong> seeded fake 1-minute bars and generated markers</span>
+      <span><strong>Interaction:</strong> pointer events; drag the amber line or use ↑/↓ while focused</span>
+      <span><strong>Licence:</strong> Apache-2.0; attribution logo enabled</span>
+    </footer>
+  </main>
+  <script src="vendor/lightweight-charts-5.2.1.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
