@@ -3,7 +3,8 @@
 **Status:** the day-one workflow is already on `master` through WAL-branch carry commit
 `67a53a32` and master merge `110305c0`, before this package's own acceptance. The repository
 required-check configuration remains unconfigured. **Audit tier: T1.** The workflow reports and
-gates repository changes only. It deploys nothing and contacts no host or venue.
+will gate repository changes only after the owner configures the required status check. It deploys
+nothing and contacts no host or venue.
 
 Do not mark the package gate closed yet. The gate requires a green suite run on `master`;
 current `master` is red for two known GC-referent tests whose fix is on

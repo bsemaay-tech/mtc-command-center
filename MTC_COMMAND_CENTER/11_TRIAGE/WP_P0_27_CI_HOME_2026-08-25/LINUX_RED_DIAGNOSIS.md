@@ -10,7 +10,7 @@ Bridge persistence/cutover tool was a separate T0 lane.
 **Evidence target:** GitHub Actions run `32781394607`, PR #125, commit
 `3899d6f984ddc7c41b632e99e616941524b0cec1`
 
-**Environment:** `ubuntu-latest`, CPython 3.12.14
+**Environment:** `ubuntu-24.04`, CPython 3.12.14
 
 **Scope:** diagnose only; no Bridge source or test was edited.
 

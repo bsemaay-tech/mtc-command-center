@@ -16,6 +16,16 @@ day-one workflow onto this branch for the Linux proof run`) and then reached `ma
 merge commit `110305c0` on 2026-08-25. The Lead reported byte-identity between the copies.
 The implementer rechecked the Git blob identity during reconciliation:
 
+The `67a53a32` commit message's "audited PASS" wording was provenance for the WAL lane's T0
+audit scope, not a WP-P0-27 acceptance. At that point, the workflow blob was a CI rider inside
+the WAL capture-ordering repair range: the T0 auditor contract was `claude-opus-5` plus
+`gpt-5.6-sol` at xhigh, and the recorded Codex flagship verdict covered the two WAL Bridge files,
+the WAL evidence documents, and the identical `.github/workflows/ci.yml` blob `3394d9ff...` at
+WAL head `67a53a32`, with GitHub run `32806840756` on that head. WP-P0-27's own package
+acceptance did not exist at 2026-08-25 06:53 +0300; this report therefore treats the carried CI
+file as upstream provenance only, while this package's acceptance gate remains open on the
+GC-referent fix merge and green `master` run.
+
 ```text
 HEAD:.github/workflows/ci.yml          3394d9ffdb53d3da0d94efe4f308f16a8838d1ba
 origin/master:.github/workflows/ci.yml 3394d9ffdb53d3da0d94efe4f308f16a8838d1ba
