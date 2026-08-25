@@ -35,11 +35,34 @@ key.
 
 Non-actions
 -----------
-Read-only against the source (opened with `mode=ro`). No network, no exchange
-call, no service control, no scheduler access, no mutation of the source
-database or its sidecars. It is offline tooling; running it against a live
-runtime worktree requires the separate owner authorization that governs that
-runtime.
+Opened against the source with `mode=ro`; the tool issues no application write.
+SQLite connection initialization may materialize an empty WAL/SHM or update SHM
+read marks only as described below. No network, exchange call, service control,
+or scheduler access. It is offline tooling; running it against a live runtime
+worktree requires the separate owner authorization that governs that runtime.
+
+Capture boundary and exact SQLite self-effects
+----------------------------------------------
+The arrival snapshot is provenance for all three source files and the drift
+boundary for `bridge.db` and `bridge.db-wal`. The `bridge.db-shm` boundary is
+taken inside `_connect_readonly`, immediately after a fetched schema read has
+completed connection initialization and before the connection is returned.
+Thus cold SHM creation happens before, rather than being exempted from, the SHM
+capture interval.
+
+Only two initialization/capture effects are tolerated:
+
+* `bridge.db-wal` may be created between arrival and the boundary only when it
+  is a stable zero-byte regular file whose mode equals `bridge.db`'s mode.
+* An existing `bridge.db-shm` may change content hash (and the consequent
+  mtime/ctime) after the boundary only while presence, device, inode, mode, and
+  exact size remain unchanged and `bridge.db` plus `bridge.db-wal` bytes and all
+  their metadata are identical.
+
+There are no other exceptions. In particular, SHM presence, device, inode,
+mode/permission, or size changes are always drift after its boundary; WAL
+metadata movement after its boundary is always drift; and any component that
+moves while it is being hashed is always drift.
 
 Invocation
 ----------
@@ -69,6 +92,7 @@ import json
 import re
 import sqlite3
 import stat
+import struct
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -84,6 +108,16 @@ CAPTURE_MODE = "sqlite_online_backup"
 #: means the bundle was produced (or later touched) by something other than the
 #: online-backup path this tool guarantees.
 FORBIDDEN_SIDECARS = ("-wal", "-shm", "-journal")
+
+SHM_REGION_BYTES = 32768
+WAL_INDEX_HDR_BYTES = 48
+WAL_INDEX_HDR_ISINIT_OFFSET = 12
+WAL_INDEX_HDR_SALT_OFFSET = 32
+WAL_INDEX_HDR_CKSUM_OFFSET = 40
+WAL_INDEX_SALT_BYTES = 8
+WAL_INDEX_MAX_VERSION = 3007000
+WAL_HEADER_SALT_OFFSET = 16
+SHM_IDENTITY_FIELDS = ("device", "inode", "mode", "size_bytes")
 
 #: Tables the bridge schema (v2) must expose for the invariants below to mean
 #: anything. A missing table fails closed rather than reporting zeros.
@@ -211,24 +245,105 @@ def _num(value: Any) -> float | None:
     return None if value is None else round(float(value), FLOAT_NDIGITS)
 
 
-def _connect_readonly(path: Path) -> sqlite3.Connection:
+def _wal_is_hot(wal_path: Path) -> bool:
+    """Return true when the WAL carries state or its size cannot be read."""
+    try:
+        return wal_path.stat().st_size > 0
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return True
+
+
+def _walindex_checksum(data: bytes) -> tuple[int, int]:
+    """Reproduce SQLite's native-endian WAL-index header checksum."""
+    words = struct.unpack(f"={len(data) // 4}I", data)
+    s1 = s2 = 0
+    for index in range(0, len(words), 2):
+        s1 = (s1 + words[index] + s2) & 0xFFFFFFFF
+        s2 = (s2 + words[index + 1] + s1) & 0xFFFFFFFF
+    return s1, s2
+
+
+def _shm_holds_usable_wal_index(shm_path: Path, wal_path: Path) -> bool:
+    """Validate the duplicated WAL-index header and its link to the WAL."""
+    header_span = 2 * WAL_INDEX_HDR_BYTES
+    wal_span = WAL_HEADER_SALT_OFFSET + WAL_INDEX_SALT_BYTES
+    try:
+        with shm_path.open("rb") as handle:
+            head = handle.read(header_span)
+        with wal_path.open("rb") as handle:
+            wal_head = handle.read(wal_span)
+    except OSError:
+        return False
+    if len(head) != header_span or len(wal_head) != wal_span:
+        return False
+
+    header = head[:WAL_INDEX_HDR_BYTES]
+    if header != head[WAL_INDEX_HDR_BYTES:]:
+        return False
+    if header[WAL_INDEX_HDR_ISINIT_OFFSET] == 0:
+        return False
+    if struct.unpack_from("=I", header, 0)[0] != WAL_INDEX_MAX_VERSION:
+        return False
+    stored = struct.unpack_from("=2I", header, WAL_INDEX_HDR_CKSUM_OFFSET)
+    if _walindex_checksum(header[:WAL_INDEX_HDR_CKSUM_OFFSET]) != stored:
+        return False
+    salt_end = WAL_INDEX_HDR_SALT_OFFSET + WAL_INDEX_SALT_BYTES
+    return (
+        header[WAL_INDEX_HDR_SALT_OFFSET:salt_end]
+        == wal_head[WAL_HEADER_SALT_OFFSET:wal_span]
+    )
+
+
+def _shm_is_structurally_usable(shm_path: Path) -> bool:
+    """Require a readable regular SHM made of whole SQLite regions."""
+    try:
+        shm_stat = shm_path.lstat()
+    except OSError:
+        return False
+    if not stat.S_ISREG(shm_stat.st_mode):
+        return False
+    if shm_stat.st_size < SHM_REGION_BYTES or shm_stat.st_size % SHM_REGION_BYTES:
+        return False
+    try:
+        with shm_path.open("rb") as handle:
+            return len(handle.read(1)) == 1
+    except OSError:
+        return False
+
+
+def _connect_readonly(
+    path: Path,
+    *,
+    capture_boundary: bool = False,
+) -> sqlite3.Connection | tuple[sqlite3.Connection, dict[str, dict[str, Any]]]:
     """Open *path* strictly read-only so the source can never be mutated.
 
-    Known limitation: SQLite cannot open a WAL database read-only when a hot
-    `-wal` exists without its `-shm` (a crashed writer). That case fails closed
-    here; recovering it needs a read-write connection and therefore a separate
-    owner authorization — it is never done silently by this tool.
+    SQLite cannot safely open a hot WAL read-only without a usable matching
+    `-shm`: opening could rebuild the WAL index in the source directory. That
+    state fails closed before connecting; recovery needs separate authorization.
     """
+    wal = path.with_name(path.name + "-wal")
+    shm = path.with_name(path.name + "-shm")
+    if _wal_is_hot(wal) and not (
+        _shm_is_structurally_usable(shm)
+        and _shm_holds_usable_wal_index(shm, wal)
+    ):
+        raise BundleError(
+            "source database has a hot WAL without a usable -shm WAL-index and "
+            "cannot be opened read-only; recover it under separate authorization first"
+        )
     try:
         uri = f"{path.resolve().as_uri()}?mode=ro"
     except ValueError as exc:  # pragma: no cover - defensive
         raise BundleError("cannot resolve source database path") from exc
     try:
         conn = sqlite3.connect(uri, uri=True)
-        conn.execute("SELECT 1")
+        # A constant SELECT may not attach the WAL on the deployment SQLite.
+        # Finish a real schema read before the capture drift boundary opens.
+        conn.execute("SELECT name FROM sqlite_master LIMIT 1").fetchone()
     except sqlite3.Error as exc:
-        wal = path.with_name(path.name + "-wal")
-        shm = path.with_name(path.name + "-shm")
         if wal.is_file() and not shm.is_file():
             raise BundleError(
                 "source database has a hot WAL without -shm and cannot be opened "
@@ -238,7 +353,16 @@ def _connect_readonly(path: Path) -> sqlite3.Connection:
             f"cannot open database read-only: {exc.__class__.__name__}"
         ) from exc
     conn.row_factory = sqlite3.Row
-    return conn
+    if not capture_boundary:
+        return conn
+    try:
+        # Take the source-side boundary inside the connection initializer. No
+        # caller-visible gap remains after the schema read has attached WAL.
+        snapshot = _source_snapshot(path)
+    except Exception:
+        conn.close()
+        raise
+    return conn, snapshot
 
 
 def _table_names(conn: sqlite3.Connection) -> set[str]:
@@ -477,36 +601,135 @@ def _changed_snapshot_components(
     return changed
 
 
+def _snapshot_is_stable(component: dict[str, Any]) -> bool:
+    """Return true when one component did not move while it was hashed."""
+    return (
+        not component.get("changed_during_hash", False)
+        and component.get("metadata_before_hash")
+        == component.get("metadata_after_hash")
+    )
+
+
+def _shm_identity_is_stable(
+    before_shm: dict[str, Any],
+    after_shm: dict[str, Any],
+) -> bool:
+    if not (
+        before_shm.get("present", False)
+        and after_shm.get("present", False)
+        and _snapshot_is_stable(before_shm)
+        and _snapshot_is_stable(after_shm)
+    ):
+        return False
+    before_metadata = before_shm["metadata_after_hash"]
+    after_metadata = after_shm["metadata_before_hash"]
+    return all(
+        before_metadata.get(field) == after_metadata.get(field)
+        for field in SHM_IDENTITY_FIELDS
+    )
+
+
+def _db_and_wal_are_identical(
+    before: dict[str, dict[str, Any]],
+    after: dict[str, dict[str, Any]],
+) -> bool:
+    return all(
+        before[component] == after[component]
+        and not before[component].get("changed_during_hash", False)
+        and not after[component].get("changed_during_hash", False)
+        for component in ("db", "wal")
+    )
+
+
+def _is_read_connection_shm_effect(
+    before: dict[str, dict[str, Any]],
+    after: dict[str, dict[str, Any]],
+) -> bool:
+    """Recognize only SQLite read-mark writes to an existing SHM.
+
+    Content plus its mtime/ctime may move. Presence, device, inode, mode, and
+    exact size must not. DB and WAL bytes and every item of their snapshot
+    metadata must be identical across the same capture interval.
+    """
+    before_shm = before["shm"]
+    after_shm = after["shm"]
+    if not (
+        _shm_identity_is_stable(before_shm, after_shm)
+        and before_shm.get("sha256") != after_shm.get("sha256")
+    ):
+        return False
+    before_metadata = before_shm["metadata_after_hash"]
+    after_metadata = after_shm["metadata_before_hash"]
+    if not any(
+        before_metadata.get(field) != after_metadata.get(field)
+        for field in ("mtime_ns", "ctime_ns")
+    ):
+        return False
+    return _db_and_wal_are_identical(before, after)
+
+
+def _is_safe_shm_initialization(
+    arrival: dict[str, dict[str, Any]],
+    before: dict[str, dict[str, Any]],
+) -> bool:
+    """Guard an arrival SHM's identity while initialization precedes its boundary."""
+    if not (
+        _shm_identity_is_stable(arrival["shm"], before["shm"])
+        and _db_and_wal_are_identical(arrival, before)
+    ):
+        return False
+    if arrival["shm"].get("sha256") != before["shm"].get("sha256"):
+        return _is_read_connection_shm_effect(arrival, before)
+    # SQLite may open the existing SHM writable and advance only mtime during
+    # initialization. This happens before the embedded SHM capture boundary.
+    return True
+
+
+def _is_expected_empty_wal_creation(
+    arrival: dict[str, dict[str, Any]],
+    before: dict[str, dict[str, Any]],
+) -> bool:
+    """Recognize only stable zero-byte WAL creation at the database mode."""
+    arrival_wal = arrival["wal"]
+    before_wal = before["wal"]
+    database_metadata = arrival["db"].get("metadata_after_hash", {})
+    wal_metadata = before_wal.get("metadata_after_hash", {})
+    return (
+        not arrival_wal.get("present", False)
+        and before_wal.get("present", False)
+        and before_wal.get("sha256") == _sha256_bytes(b"")
+        and _snapshot_is_stable(before_wal)
+        and wal_metadata.get("size_bytes") == 0
+        and wal_metadata.get("mode") == database_metadata.get("mode")
+    )
+
+
 def _capture_changed_components(
     arrival: dict[str, dict[str, Any]],
     before: dict[str, dict[str, Any]],
     after: dict[str, dict[str, Any]],
 ) -> list[str]:
-    """Return capture drift once, in deterministic component order.
-
-    DB/WAL drift starts at arrival. SHM drift starts after the read connection
-    opens because SQLite may update its own shared-memory read marks on open.
-    """
+    """Return capture drift once, in deterministic component order."""
     arrival_to_before = set(_changed_snapshot_components(arrival, before))
-    if (
-        not arrival["wal"].get("present", False)
-        and before["wal"].get("present", False)
-        and before["wal"].get("sha256") == _sha256_bytes(b"")
-        and not before["wal"].get("changed_during_hash", False)
+    if "wal" in arrival_to_before and _is_expected_empty_wal_creation(
+        arrival, before
     ):
-        # SQLite can materialise a zero-byte WAL while a read-only WAL-mode
-        # database opens. It contains no source state; every other WAL
-        # presence/content/metadata transition remains drift.
         arrival_to_before.discard("wal")
+    if "shm" in arrival_to_before:
+        # A cold SHM's first authoritative state is the embedded post-init
+        # boundary. Existing SHM identity is still guarded across initialization.
+        if not arrival["shm"].get("present", False) or _is_safe_shm_initialization(
+            arrival, before
+        ):
+            arrival_to_before.discard("shm")
     before_to_after = set(_changed_snapshot_components(before, after))
+    if "shm" in before_to_after and _is_read_connection_shm_effect(before, after):
+        before_to_after.discard("shm")
     return [
         component
         for component in ("db", "wal", "shm")
         if component in before_to_after
-        or (
-            component in {"db", "wal"}
-            and component in arrival_to_before
-        )
+        or component in arrival_to_before
     ]
 
 
@@ -615,13 +838,10 @@ def create_bundle(
     }
 
     failures: list[str] = []
-    src = _connect_readonly(source)
+    source_connection = _connect_readonly(source, capture_boundary=True)
+    assert isinstance(source_connection, tuple)  # narrowed by capture_boundary
+    src, source_snapshot_before = source_connection
     try:
-        # SQLite can update read marks in an existing -shm while establishing a
-        # read-only connection. Bracket the actual integrity/invariant/backup
-        # capture after that setup and before close so our own connection
-        # lifecycle is not misreported as source-writer drift.
-        source_snapshot_before = _source_snapshot(source)
         if not source_snapshot_before["db"].get("present") \
            or not source_snapshot_before["db"].get("sha256"):
             raise BundleError(

@@ -1,6 +1,7 @@
 # WP-P0-29 VEN-C — Custody Runbook Draft
 
-**Status:** DRAFT FOR OWNER SIGNATURE · policy design only · T2
+**Status:** SIGNED/ACCEPTED · policy design only · T2
+**Signed by owner Barış, 2026-08-25.**
 
 **Date:** 2026-08-25
 

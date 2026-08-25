@@ -2,7 +2,8 @@
 
 **Venue:** Hyperliquid
 
-**Status:** DRAFT FOR OWNER REVIEW AND SIGNATURE · T2 · no authenticated read
+**Status:** SIGNED/ACCEPTED · T2 · no authenticated read
+**Signed by owner Barış, 2026-08-25.**
 
 **Review date:** 2026-08-25
 
