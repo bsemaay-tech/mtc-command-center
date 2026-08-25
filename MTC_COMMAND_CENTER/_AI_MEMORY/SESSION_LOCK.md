@@ -32,7 +32,6 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
 | Shared memory layer | `_AI_MEMORY/GLOBAL_HANDOFF.md`, `_AI_MEMORY/NEXT_STEPS.md`, `_AI_MEMORY/SESSION_LOCK.md` | **UNCLAIMED — released 2026-08-24 after final Wayfinder Gate-7 closeout** | — |
-| WP-P0-10 golden-suite fixtures | `11_TRIAGE/WP_P0_10_GOLDEN_SUITE_2026-08-25/` | **Codex implementer lane AD-2 — live Claude Lead dispatch; serialized writer** | 2026-08-25 13:39 +03 |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-17 00:54 +03; foreign partial preserved | — |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released cleanly at Gate 7 | 2026-08-17 03:54 +03 |

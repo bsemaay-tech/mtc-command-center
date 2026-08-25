@@ -206,6 +206,9 @@
   },
   "companion_corpus": {
     "path": "IBKR_PAPER_BRIDGE/tests/fixtures/golden_signals.json",
+    "git_blob_oid": "31bdafae4d4d94787508043e9681874f9dc43bda",
+    "declared_bar_count": 48077,
+    "declared_signal_count": 858,
     "role": "existing 858-event companion corpus; referenced, not overwritten",
     "scope_label": "ENTRY SIGNAL GOLDEN"
   }
