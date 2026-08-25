@@ -57,6 +57,18 @@
         "value": "BUY:2@100.50",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -64,6 +76,18 @@
         "value": "SELL:2@109.50",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -71,6 +95,18 @@
         "value": "0.201",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -78,6 +114,18 @@
         "value": "0.219",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -85,6 +133,18 @@
         "value": "-0.0201",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -92,6 +152,18 @@
         "value": "18.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -99,6 +171,18 @@
         "value": "17.5599",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -106,6 +190,18 @@
         "value": 2,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -113,6 +209,18 @@
         "value": 1,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -121,6 +229,18 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -128,6 +248,18 @@
         "value": "FLAT",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -135,6 +267,18 @@
         "value": "FROZEN_EXPLICIT",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       }
     ],

@@ -60,6 +60,21 @@
         "value": "FRESH:ORDER",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:716-738 (C27/GF-27)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -67,6 +82,21 @@
         "value": "AGING:ORDER",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:716-738 (C27/GF-27)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -74,6 +104,21 @@
         "value": "AGING:ORDER",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:716-738 (C27/GF-27)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -81,6 +126,21 @@
         "value": "MISSED_DECISION_STALE:NO_ORDER",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:716-738 (C27/GF-27)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -88,6 +148,21 @@
         "value": "FRESHNESS_BOUND_UNSET_FAIL_CLOSED:NO_ORDER",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:716-738 (C27/GF-27)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -95,6 +170,21 @@
         "value": true,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:678-688 (C25/GF-25)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -102,6 +192,21 @@
         "value": false,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:678-688 (C25/GF-25)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -110,6 +215,21 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:678-688 (C25/GF-25)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -117,6 +237,21 @@
         "value": 1,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -124,6 +259,21 @@
         "value": "REJECT:BELOW_MIN_NOTIONAL",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -131,6 +281,21 @@
         "value": true,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:716-738 (C27/GF-27)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       },
       {
@@ -138,6 +303,21 @@
         "value": false,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:678-688 (C25/GF-25)"
+        ],
+        "input_paths": [
+          "config.freshness_bound.aging_endpoints_inclusive",
+          "config.freshness_bound.aging_upper_s",
+          "config.freshness_bound.fresh_below_s",
+          "config.host_timezones.0",
+          "config.host_timezones.1",
+          "config.host_timezones.2",
+          "config.session_calendar",
+          "frozen_metadata.funding_boundary",
+          "frozen_metadata.ntp_offset",
+          "frozen_metadata.symbol",
+          "frozen_metadata.timeframe",
+          "frozen_metadata.venue",
+          "normalized_bars"
         ]
       }
     ],

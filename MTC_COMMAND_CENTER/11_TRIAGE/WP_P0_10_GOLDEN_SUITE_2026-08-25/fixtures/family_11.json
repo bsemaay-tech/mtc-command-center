@@ -27,72 +27,266 @@
     ]
   },
   "companion_scenarios": [
-      {
-        "id": "C37_GF37_legacy_trailing_modes",
-        "source": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:972-987 (C37/GF-37)",
-        "config": {
-          "tw_audit_semantics_mode": "research",
-          "tw_trailing_semantics_modes": ["local", "tradingview", "next_bar_confirmed"],
-          "execution_profile_id": "raw_close_only_v1",
-          "use_trailing": true,
-          "trail_start_r": "1.0",
-          "trail_distance_atr_mult": "1.5",
-          "trail_atr": "2.0",
-          "use_break_even": false,
-          "use_sl": true,
-          "use_sl_percent": true,
-          "sl_percent": "5.0",
-          "tp_mode": "None",
-          "initial_capital": "1000",
-          "risk_per_long_pct": "0.5",
-          "max_leverage_cap": "1.0",
-          "all_gates_disabled": true
-        },
-        "frozen_metadata": {
-          "instrument_price_tick": "0.01",
-          "instrument_qty_step": "1.0",
-          "instrument_min_qty": "0",
-          "instrument_min_notional": "0",
-          "instrument_contract_multiplier": "1"
-        },
-        "normalized_bars": [
-          {"index": 0, "ohlcv": ["100", "100", "100", "100", "1"], "raw": "LONG"},
-          {"index": 1, "ohlcv": ["101", "107", "101", "104", "1"], "raw": "NONE"},
-          {"index": 2, "ohlcv": ["104", "106", "103", "106", "1"], "raw": "NONE"},
-          {"index": 3, "ohlcv": ["106", "106", "102", "103", "1"], "raw": "NONE"}
-        ],
-        "assertion_inputs": {
-          "legacy.local.exit": [
-            "config.tw_trailing_semantics_modes",
-            "config.trail_start_r",
-            "config.trail_distance_atr_mult",
-            "config.trail_atr",
-            "normalized_bars.0.ohlcv.3",
-            "normalized_bars.1.ohlcv.0",
-            "normalized_bars.1.ohlcv.1",
-            "normalized_bars.1.ohlcv.2"
+    {
+      "id": "C37_GF37_legacy_trailing_modes__local",
+      "source": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:972-987 (C37/GF-37)",
+      "config": {
+        "tw_audit_semantics_mode": "research",
+        "execution_profile_id": "raw_close_only_v1",
+        "use_trailing": true,
+        "trail_start_r": "1.0",
+        "trail_distance_atr_mult": "1.5",
+        "trail_atr": "2.0",
+        "use_break_even": false,
+        "use_sl": true,
+        "use_sl_percent": true,
+        "sl_percent": "5.0",
+        "tp_mode": "None",
+        "initial_capital": "1000",
+        "risk_per_long_pct": "0.5",
+        "max_leverage_cap": "1.0",
+        "all_gates_disabled": true,
+        "tw_trailing_semantics_mode": "local"
+      },
+      "frozen_metadata": {
+        "instrument_price_tick": "0.01",
+        "instrument_qty_step": "1.0",
+        "instrument_min_qty": "0",
+        "instrument_min_notional": "0",
+        "instrument_contract_multiplier": "1"
+      },
+      "normalized_bars": [
+        {
+          "index": 0,
+          "ohlcv": [
+            "100",
+            "100",
+            "100",
+            "100",
+            "1"
           ],
-          "legacy.tradingview.exit": [
-            "config.tw_trailing_semantics_modes",
-            "config.trail_start_r",
-            "config.trail_distance_atr_mult",
-            "config.trail_atr",
-            "normalized_bars.1.ohlcv.3",
-            "normalized_bars.2.ohlcv.0",
-            "normalized_bars.2.ohlcv.2",
-            "normalized_bars.2.ohlcv.3"
+          "raw": "LONG"
+        },
+        {
+          "index": 1,
+          "ohlcv": [
+            "101",
+            "107",
+            "101",
+            "104",
+            "1"
           ],
-          "legacy.next_bar_confirmed.exit": [
-            "config.tw_trailing_semantics_modes",
-            "config.trail_start_r",
-            "config.trail_distance_atr_mult",
-            "config.trail_atr",
-            "normalized_bars.1.ohlcv.1",
-            "normalized_bars.2.ohlcv.0",
-            "normalized_bars.2.ohlcv.2"
-          ]
+          "raw": "NONE"
+        },
+        {
+          "index": 2,
+          "ohlcv": [
+            "104",
+            "106",
+            "103",
+            "106",
+            "1"
+          ],
+          "raw": "NONE"
+        },
+        {
+          "index": 3,
+          "ohlcv": [
+            "106",
+            "106",
+            "102",
+            "103",
+            "1"
+          ],
+          "raw": "NONE"
         }
+      ],
+      "assertion_inputs": {
+        "legacy.local.exit": [
+          "config.tw_trailing_semantics_mode",
+          "config.trail_start_r",
+          "config.trail_distance_atr_mult",
+          "config.trail_atr",
+          "normalized_bars.0.ohlcv.3",
+          "normalized_bars.1.ohlcv.0",
+          "normalized_bars.1.ohlcv.1",
+          "normalized_bars.1.ohlcv.2"
+        ]
       }
+    },
+    {
+      "id": "C37_GF37_legacy_trailing_modes__tradingview",
+      "source": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:972-987 (C37/GF-37)",
+      "config": {
+        "tw_audit_semantics_mode": "research",
+        "execution_profile_id": "raw_close_only_v1",
+        "use_trailing": true,
+        "trail_start_r": "1.0",
+        "trail_distance_atr_mult": "1.5",
+        "trail_atr": "2.0",
+        "use_break_even": false,
+        "use_sl": true,
+        "use_sl_percent": true,
+        "sl_percent": "5.0",
+        "tp_mode": "None",
+        "initial_capital": "1000",
+        "risk_per_long_pct": "0.5",
+        "max_leverage_cap": "1.0",
+        "all_gates_disabled": true,
+        "tw_trailing_semantics_mode": "tradingview"
+      },
+      "frozen_metadata": {
+        "instrument_price_tick": "0.01",
+        "instrument_qty_step": "1.0",
+        "instrument_min_qty": "0",
+        "instrument_min_notional": "0",
+        "instrument_contract_multiplier": "1"
+      },
+      "normalized_bars": [
+        {
+          "index": 0,
+          "ohlcv": [
+            "100",
+            "100",
+            "100",
+            "100",
+            "1"
+          ],
+          "raw": "LONG"
+        },
+        {
+          "index": 1,
+          "ohlcv": [
+            "101",
+            "107",
+            "101",
+            "104",
+            "1"
+          ],
+          "raw": "NONE"
+        },
+        {
+          "index": 2,
+          "ohlcv": [
+            "104",
+            "106",
+            "103",
+            "106",
+            "1"
+          ],
+          "raw": "NONE"
+        },
+        {
+          "index": 3,
+          "ohlcv": [
+            "106",
+            "106",
+            "102",
+            "103",
+            "1"
+          ],
+          "raw": "NONE"
+        }
+      ],
+      "assertion_inputs": {
+        "legacy.tradingview.exit": [
+          "config.tw_trailing_semantics_mode",
+          "config.trail_start_r",
+          "config.trail_distance_atr_mult",
+          "config.trail_atr",
+          "normalized_bars.1.ohlcv.3",
+          "normalized_bars.2.ohlcv.0",
+          "normalized_bars.2.ohlcv.2",
+          "normalized_bars.2.ohlcv.3"
+        ]
+      }
+    },
+    {
+      "id": "C37_GF37_legacy_trailing_modes__next_bar_confirmed",
+      "source": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:972-987 (C37/GF-37)",
+      "config": {
+        "tw_audit_semantics_mode": "research",
+        "execution_profile_id": "raw_close_only_v1",
+        "use_trailing": true,
+        "trail_start_r": "1.0",
+        "trail_distance_atr_mult": "1.5",
+        "trail_atr": "2.0",
+        "use_break_even": false,
+        "use_sl": true,
+        "use_sl_percent": true,
+        "sl_percent": "5.0",
+        "tp_mode": "None",
+        "initial_capital": "1000",
+        "risk_per_long_pct": "0.5",
+        "max_leverage_cap": "1.0",
+        "all_gates_disabled": true,
+        "tw_trailing_semantics_mode": "next_bar_confirmed"
+      },
+      "frozen_metadata": {
+        "instrument_price_tick": "0.01",
+        "instrument_qty_step": "1.0",
+        "instrument_min_qty": "0",
+        "instrument_min_notional": "0",
+        "instrument_contract_multiplier": "1"
+      },
+      "normalized_bars": [
+        {
+          "index": 0,
+          "ohlcv": [
+            "100",
+            "100",
+            "100",
+            "100",
+            "1"
+          ],
+          "raw": "LONG"
+        },
+        {
+          "index": 1,
+          "ohlcv": [
+            "101",
+            "107",
+            "101",
+            "104",
+            "1"
+          ],
+          "raw": "NONE"
+        },
+        {
+          "index": 2,
+          "ohlcv": [
+            "104",
+            "106",
+            "103",
+            "106",
+            "1"
+          ],
+          "raw": "NONE"
+        },
+        {
+          "index": 3,
+          "ohlcv": [
+            "106",
+            "106",
+            "102",
+            "103",
+            "1"
+          ],
+          "raw": "NONE"
+        }
+      ],
+      "assertion_inputs": {
+        "legacy.next_bar_confirmed.exit": [
+          "config.tw_trailing_semantics_mode",
+          "config.trail_start_r",
+          "config.trail_distance_atr_mult",
+          "config.trail_atr",
+          "normalized_bars.1.ohlcv.1",
+          "normalized_bars.2.ohlcv.0",
+          "normalized_bars.2.ohlcv.2"
+        ]
+      }
+    }
   ],
   "frozen_metadata": {
     "price_tick": "0.01",
@@ -150,6 +344,21 @@
         "value": 1,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:483-493 (C15/GF-15)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.initial_stop",
+          "config.legacy_modes.0",
+          "config.legacy_modes.1",
+          "config.legacy_modes.2",
+          "config.trail_atr",
+          "config.trail_distance_atr_mult",
+          "config.trail_start_r",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -157,6 +366,21 @@
         "value": 2,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:483-493 (C15/GF-15)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.initial_stop",
+          "config.legacy_modes.0",
+          "config.legacy_modes.1",
+          "config.legacy_modes.2",
+          "config.trail_atr",
+          "config.trail_distance_atr_mult",
+          "config.trail_start_r",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -164,6 +388,21 @@
         "value": "103.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:483-493 (C15/GF-15)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.initial_stop",
+          "config.legacy_modes.0",
+          "config.legacy_modes.1",
+          "config.legacy_modes.2",
+          "config.trail_atr",
+          "config.trail_distance_atr_mult",
+          "config.trail_start_r",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -171,6 +410,21 @@
         "value": "bar2@103.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:483-493 (C15/GF-15)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.initial_stop",
+          "config.legacy_modes.0",
+          "config.legacy_modes.1",
+          "config.legacy_modes.2",
+          "config.trail_atr",
+          "config.trail_distance_atr_mult",
+          "config.trail_start_r",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -178,6 +432,21 @@
         "value": "100.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:483-493 (C15/GF-15)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.initial_stop",
+          "config.legacy_modes.0",
+          "config.legacy_modes.1",
+          "config.legacy_modes.2",
+          "config.trail_atr",
+          "config.trail_distance_atr_mult",
+          "config.trail_start_r",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -185,6 +454,21 @@
         "value": "TRAIL_MONOTONIC_REJECTED",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:483-493 (C15/GF-15)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.initial_stop",
+          "config.legacy_modes.0",
+          "config.legacy_modes.1",
+          "config.legacy_modes.2",
+          "config.trail_atr",
+          "config.trail_distance_atr_mult",
+          "config.trail_start_r",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -214,6 +498,21 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:483-493 (C15/GF-15)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.initial_stop",
+          "config.legacy_modes.0",
+          "config.legacy_modes.1",
+          "config.legacy_modes.2",
+          "config.trail_atr",
+          "config.trail_distance_atr_mult",
+          "config.trail_start_r",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -221,6 +520,21 @@
         "value": "FLAT",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:483-493 (C15/GF-15)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.initial_stop",
+          "config.legacy_modes.0",
+          "config.legacy_modes.1",
+          "config.legacy_modes.2",
+          "config.trail_atr",
+          "config.trail_distance_atr_mult",
+          "config.trail_start_r",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -228,6 +542,21 @@
         "value": "TRAIL_STOP",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:483-493 (C15/GF-15)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.initial_stop",
+          "config.legacy_modes.0",
+          "config.legacy_modes.1",
+          "config.legacy_modes.2",
+          "config.trail_atr",
+          "config.trail_distance_atr_mult",
+          "config.trail_start_r",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       }
     ],

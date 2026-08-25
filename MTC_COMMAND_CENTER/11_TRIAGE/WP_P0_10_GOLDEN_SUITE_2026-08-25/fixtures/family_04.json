@@ -35,6 +35,17 @@
         "value": "100",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.entry",
+          "config.requested_risk_fraction",
+          "config.sizing_method",
+          "config.stop",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -42,6 +53,17 @@
         "value": "50",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.entry",
+          "config.requested_risk_fraction",
+          "config.sizing_method",
+          "config.stop",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -49,6 +71,17 @@
         "value": "2",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.entry",
+          "config.requested_risk_fraction",
+          "config.sizing_method",
+          "config.stop",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -56,6 +89,17 @@
         "value": "100",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.entry",
+          "config.requested_risk_fraction",
+          "config.sizing_method",
+          "config.stop",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -63,6 +107,17 @@
         "value": "2.0",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.entry",
+          "config.requested_risk_fraction",
+          "config.sizing_method",
+          "config.stop",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -71,6 +126,17 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.entry",
+          "config.requested_risk_fraction",
+          "config.sizing_method",
+          "config.stop",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -78,6 +144,17 @@
         "value": "10",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.entry",
+          "config.requested_risk_fraction",
+          "config.sizing_method",
+          "config.stop",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -85,6 +162,17 @@
         "value": "UNOPENED_STATIC_CASE",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.entry",
+          "config.requested_risk_fraction",
+          "config.sizing_method",
+          "config.stop",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       }
     ],

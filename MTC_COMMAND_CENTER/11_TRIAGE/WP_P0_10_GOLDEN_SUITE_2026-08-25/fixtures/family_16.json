@@ -125,6 +125,18 @@
         "value": "ENTER_LONG:1@100.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -132,6 +144,18 @@
         "value": "BLOCK:ENTRY_SPACING",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -139,6 +163,18 @@
         "value": "ADD_LONG:2@97.50",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -146,6 +182,18 @@
         "value": "STOP_MONOTONIC_REJECTED",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -153,6 +201,18 @@
         "value": "NONE",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -160,6 +220,18 @@
         "value": "3",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -167,6 +239,18 @@
         "value": "98.3333333",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -174,6 +258,18 @@
         "value": "95.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -181,6 +277,18 @@
         "value": "10.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -189,6 +297,18 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -196,6 +316,18 @@
         "value": "BLOCK:POST_EXIT_COOLDOWN",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -203,6 +335,18 @@
         "value": "BLOCK:POST_EXIT_COOLDOWN",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -210,6 +354,18 @@
         "value": "ENTER_LONG:1@100.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -218,6 +374,18 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -225,6 +393,18 @@
         "value": "LONG:1@100.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -232,6 +412,18 @@
         "value": "-25.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       }
     ],

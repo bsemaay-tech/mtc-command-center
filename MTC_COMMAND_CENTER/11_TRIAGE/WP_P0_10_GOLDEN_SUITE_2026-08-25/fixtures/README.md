@@ -2,7 +2,7 @@
 
 This directory is a new data-only corpus. It does not overwrite or recapture any existing parity corpus.
 
-Each built family has one JSON fixture containing literal configuration, frozen metadata, normalized bars (or an empty list for static validation), cited expected-output assertions, a canonical output SHA-256, a final-state SHA-256, and one GF field-8 source-mutation descriptor. Expected values come from the cited WP-P0-09 row, never from executing A, B, Pine, or future kernel code.
+Each built family has one JSON fixture containing literal primary or companion configuration, frozen metadata, normalized bars (or an empty list for static validation), cited expected-output assertions, a canonical output SHA-256, a final-state SHA-256, and one GF field-8 source-mutation descriptor. Expected values come from the cited WP-P0-09 row, never from executing A, B, Pine, or future kernel code.
 
 The comparison seam is deliberately narrow: a future subject normalizes its result to an object whose keys are the fixture assertion paths. Canonical bytes are UTF-8 JSON with sorted keys, compact separators, and one LF terminator. The local verifier changes one copied expected-output path and confirms that the fixture comparator detects the mismatch and returns to byte identity after restoration. These are **fixture-contract self-consistency checks only**. They do not execute a producer or the GF field-8 source mutations.
 
@@ -16,7 +16,7 @@ python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\ve
 
 The verifier contains no economic implementation. It validates the complete manifest and file set with explicit, optimization-safe checks; validates that each cited line range exists and has a structurally matching WP-P0-09 C/GF, cross-cutting-rule, or explicit-non-decision label; verifies the LF-normalized authority hash and the two manifest-local hashes for each fixture; checks the stored output/state hashes; and checks the named arithmetic and idempotence relationships for families 4, 5, 22, and 24.
 
-Legacy assertions must also declare their input source. A legacy assertion is accepted only when its required input paths resolve inside a literal top-level `companion_scenarios` record, or when the assertion carries an explicit `cross_row_import` naming a cited row and the imported inputs. The current six affected families use embedded companion scenarios, so their legacy arms are regenerable without consulting another fixture. The verifier accounts for every expected assertion and rejects a missing declared input before hash comparison.
+Every expected assertion must declare a checked input source. Fixture-local assertions carry `input_paths` that resolve to non-empty values inside the same JSON fixture. Companion legacy assertions are accepted only when their required input paths resolve inside a literal top-level `companion_scenarios` run. Cross-row imports are not part of this corpus; any `cross_row*` assertion field is rejected. The verifier accounts for 241 assertion sources and also reports the larger count of concrete input paths resolved before hash comparison.
 
 Those two fixture hashes are self-consistency checks, not an external trust anchor: both stored hashes live in `manifest.json`. A coordinated fixture edit plus recomputation of both hashes is therefore not detected unless one of the independent coherence checks rejects it. At audit fixed point `c05e5968`, coherence validation covered 24 of 230 expected values and left 206 unchecked. This repair adds 11 coverage assertions without extending `validate_coherence`, so the current scope is 24 of 241 expected values; a self-consistent rehash outside those 24 values is not detected. Named follow-up `WP-P0-10-COHERENCE-217` covers the 217 current values outside coherence validation.
 
@@ -30,7 +30,7 @@ Run the committed tamper regression harness from the repository root:
 python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py
 ```
 
-It executes the clean corpus and eight isolated temporary tamper copies: GF-08's bug quantity with inverted descriptor polarity and recomputed internal hashes, a fabricated citation range, three cross-field contradictions, a missing companion input after recomputing the same-tree fixture hash, and the manifest-count corruption under normal and optimized Python.
+It executes the clean corpus and isolated temporary tamper copies covering the inherited coherence/hash checks, the audited B1/B2 probes, family 20's embedded mirror operands, singular companion selectors, missing declared inputs, and manifest-count corruption under normal and optimized Python.
 
 `manifest.json` enumerates all 25 binding families. Families 18 and 19 have no JSON fixture because WP-P0-09 explicitly does not decide their required `SNAPSHOT_MISMATCH` and `REFERENCE_DIVERGENCE` semantics. Their blockers and unblock conditions are recorded in the manifest and lane report.
 

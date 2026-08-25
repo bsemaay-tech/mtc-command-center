@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -138,11 +139,101 @@ def tamper_manifest_built_count(path: Path) -> None:
     write_json(manifest_path, data)
 
 
-def tamper_family_03_absent_undeclared_input(path: Path) -> None:
+def tamper_family_12_empty_primary_inputs(path: Path) -> None:
+    fixture_path, data = fixture(path, 12)
+    data["config"] = {}
+    data["normalized_bars"] = []
+    write_fixture_with_manifest_hash(path, 12, fixture_path, data)
+
+
+def tamper_family_03_renamed_companion_assertion(path: Path) -> None:
     fixture_path, data = fixture(path, 3)
+    data["companion_scenarios"] = [
+        scenario
+        for scenario in data["companion_scenarios"]
+        if "legacy_precision.research_qty" not in scenario["assertion_inputs"]
+    ]
+    item = assertion(data, "legacy_precision.research_qty")
+    item["path"] = "compat_precision.research_qty"
+    recompute_internal_hashes(data)
+    write_fixture_with_manifest_hash(path, 3, fixture_path, data)
+
+
+def tamper_family_01_missing_signal_mode(path: Path) -> None:
+    fixture_path, data = fixture(path, 1)
+    del data["config"]["signal_mode"]
+    write_fixture_with_manifest_hash(path, 1, fixture_path, data)
+
+
+def tamper_cross_row_misspelling(path: Path) -> None:
+    fixture_path, data = fixture(path, 1)
+    item = assertion(data, "producer.bar0.raw")
+    del item["input_paths"]
+    item["cross_row_imprt"] = {
+        "source": item["citations"][0],
+        "inputs": {"whatever": "not a real path"},
+    }
+    write_fixture_with_manifest_hash(path, 1, fixture_path, data)
+
+
+def tamper_family_03_cross_row_import(path: Path) -> None:
+    fixture_path, data = fixture(path, 3)
+    data["companion_scenarios"] = [
+        scenario
+        for scenario in data["companion_scenarios"]
+        if "legacy_precision.research_qty" not in scenario["assertion_inputs"]
+    ]
+    item = assertion(data, "legacy_precision.research_qty")
+    item["cross_row_import"] = {
+        "source": item["citations"][0],
+        "inputs": {"input_not_present_in_cited_row": "not a real path"},
+    }
+    write_fixture_with_manifest_hash(path, 3, fixture_path, data)
+
+
+def tamper_family_14_cross_row_imports(path: Path) -> None:
+    fixture_path, data = fixture(path, 14)
+    data["companion_scenarios"] = []
+    for target in ("legacy.long_stop_close_only", "legacy.short_stop_close_only"):
+        item = assertion(data, target)
+        item["cross_row_import"] = {
+            "source": item["citations"][0],
+            "inputs": {"whatever": "not a real path"},
+        }
+    write_fixture_with_manifest_hash(path, 14, fixture_path, data)
+
+
+def tamper_family_20_missing_mirror_operand(path: Path) -> None:
+    fixture_path, data = fixture(path, 20)
+    del data["mirror_operands"]["family_03"]["qty"]
+    write_fixture_with_manifest_hash(path, 20, fixture_path, data)
+
+
+def tamper_family_02_plural_selector(path: Path) -> None:
+    fixture_path, data = fixture(path, 2)
     scenario = data["companion_scenarios"][0]
-    del scenario["config"]["tw_qty_precision_mode"]
-    del scenario["assertion_inputs"]["legacy_precision.research_qty"]
+    selector = scenario["config"].pop("tw_reversal_reentry_mode")
+    scenario["config"]["tw_reversal_reentry_modes"] = [selector]
+    scenario["assertion_inputs"]["legacy.local.reentry_bar"][0] = (
+        "config.tw_reversal_reentry_modes"
+    )
+    write_fixture_with_manifest_hash(path, 2, fixture_path, data)
+
+
+def tamper_family_03_missing_literal_input(path: Path) -> None:
+    fixture_path, data = fixture(path, 3)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if "legacy_precision.research_qty" in scenario["assertion_inputs"]
+    )
+    del scenario["literal_inputs"]["raw_quantity"]
+    write_fixture_with_manifest_hash(path, 3, fixture_path, data)
+
+
+def tamper_family_03_missing_primary_input(path: Path) -> None:
+    fixture_path, data = fixture(path, 3)
+    del data["config"]["entry_reference_price"]
     write_fixture_with_manifest_hash(path, 3, fixture_path, data)
 
 
@@ -151,14 +242,20 @@ def run_verifier(
     fixture_dir: Path,
     output_dir: Path,
     optimized: bool = False,
+    optimize_env: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     command = [sys.executable]
     if optimized:
         command.append("-O")
     command.extend([str(verifier), str(fixture_dir), str(output_dir)])
+    env = os.environ.copy()
+    env.pop("PYTHONOPTIMIZE", None)
+    if optimize_env is not None:
+        env["PYTHONOPTIMIZE"] = optimize_env
     return subprocess.run(
         command,
         cwd=Path.cwd(),
+        env=env,
         text=True,
         encoding="utf-8",
         errors="replace",
@@ -191,11 +288,75 @@ def main() -> int:
         ("family_05_incoherent_accept", tamper_family_05_incoherent_accept, False, None),
         ("family_24_duplicate_effects", tamper_family_24_duplicate_effects, False, None),
         (
-            "family_03_absent_undeclared_input",
-            tamper_family_03_absent_undeclared_input,
+            "b1_family_12_empty_primary_inputs",
+            tamper_family_12_empty_primary_inputs,
+            False,
+            "VERIFY_FAIL reason=family=12 assertion_input_presence_missing "
+            "path=priority.stop_plus_opposite input=config.exit_on_htf_trend_block",
+        ),
+        (
+            "b1_family_03_renamed_companion_assertion",
+            tamper_family_03_renamed_companion_assertion,
             False,
             "VERIFY_FAIL reason=family=03 assertion_input_source_undeclared "
-            "path=legacy_precision.research_qty",
+            "path=compat_precision.research_qty",
+        ),
+        (
+            "b1_family_01_missing_signal_mode",
+            tamper_family_01_missing_signal_mode,
+            False,
+            "VERIFY_FAIL reason=family=01 assertion_input_presence_missing "
+            "path=producer.bar0.raw input=config.signal_mode",
+        ),
+        (
+            "b1_cross_row_misspelling",
+            tamper_cross_row_misspelling,
+            False,
+            "VERIFY_FAIL reason=family=01 cross_row_import_unsupported "
+            "field=cross_row_imprt path=producer.bar0.raw",
+        ),
+        (
+            "b2_family_03_cross_row_import",
+            tamper_family_03_cross_row_import,
+            False,
+            "VERIFY_FAIL reason=family=03 cross_row_import_unsupported "
+            "field=cross_row_import path=legacy_precision.research_qty",
+        ),
+        (
+            "b2_family_14_cross_row_imports",
+            tamper_family_14_cross_row_imports,
+            False,
+            "VERIFY_FAIL reason=family=14 cross_row_import_unsupported "
+            "field=cross_row_import path=legacy.long_stop_close_only",
+        ),
+        (
+            "b3_family_20_missing_mirror_operand",
+            tamper_family_20_missing_mirror_operand,
+            False,
+            "VERIFY_FAIL reason=family=20 assertion_input_presence_missing "
+            "path=mirror.family_03.qty input=mirror_operands.family_03.qty",
+        ),
+        (
+            "b4_family_02_plural_selector",
+            tamper_family_02_plural_selector,
+            False,
+            "VERIFY_FAIL reason=family=02 companion_selector_mismatch "
+            "path=legacy.local.reentry_bar selector=tw_reversal_reentry_mode "
+            "expected=local actual=None",
+        ),
+        (
+            "b6_family_03_missing_literal_input",
+            tamper_family_03_missing_literal_input,
+            False,
+            "VERIFY_FAIL reason=family=03 assertion_input_presence_missing "
+            "path=legacy_precision.research_qty input=literal_inputs.raw_quantity",
+        ),
+        (
+            "b6_family_03_missing_primary_input",
+            tamper_family_03_missing_primary_input,
+            False,
+            "VERIFY_FAIL reason=family=03 assertion_input_presence_missing "
+            "path=request.accepted input=config.entry_reference_price",
         ),
         ("manifest_built_count_normal", tamper_manifest_built_count, False, None),
         ("manifest_built_count_optimized", tamper_manifest_built_count, True, None),

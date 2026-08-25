@@ -96,6 +96,29 @@
         "value": "NONE",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -103,6 +126,29 @@
         "value": "NONE",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -110,6 +156,29 @@
         "value": "SHORT",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -117,6 +186,29 @@
         "value": "LONG",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -124,6 +216,29 @@
         "value": "NONE",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -137,6 +252,29 @@
         ],
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -149,6 +287,29 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:131-141 (C01/GF-01)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -156,6 +317,29 @@
         "value": 3,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -163,6 +347,29 @@
         "value": "LONG",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -170,6 +377,29 @@
         "value": "1",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -177,6 +407,29 @@
         "value": "109.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       },
       {
@@ -185,6 +438,29 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:131-141 (C01/GF-01)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
         ]
       }
     ],

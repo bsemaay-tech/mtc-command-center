@@ -35,6 +35,15 @@
         "value": 2,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
         ]
       },
       {
@@ -42,6 +51,15 @@
         "value": 1,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
         ]
       },
       {
@@ -49,6 +67,15 @@
         "value": "STALE_REVISION_IGNORED",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
         ]
       },
       {
@@ -56,6 +83,15 @@
         "value": 3,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
         ]
       },
       {
@@ -63,6 +99,15 @@
         "value": 2,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
         ]
       },
       {
@@ -70,6 +115,15 @@
         "value": 1,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
         ]
       },
       {
@@ -77,6 +131,15 @@
         "value": 3,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
         ]
       },
       {
@@ -84,6 +147,15 @@
         "value": "CANCELLED",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
         ]
       }
     ],

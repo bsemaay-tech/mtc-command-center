@@ -33,6 +33,15 @@
         "value": "APPLIED",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.action",
+          "config.deliveries",
+          "config.intent_id",
+          "config.qty",
+          "frozen_metadata.bar_id",
+          "frozen_metadata.deployment_id",
+          "frozen_metadata.worker_id"
         ]
       },
       {
@@ -40,6 +49,15 @@
         "value": "DUPLICATE_NOOP",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.action",
+          "config.deliveries",
+          "config.intent_id",
+          "config.qty",
+          "frozen_metadata.bar_id",
+          "frozen_metadata.deployment_id",
+          "frozen_metadata.worker_id"
         ]
       },
       {
@@ -47,6 +65,15 @@
         "value": true,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.action",
+          "config.deliveries",
+          "config.intent_id",
+          "config.qty",
+          "frozen_metadata.bar_id",
+          "frozen_metadata.deployment_id",
+          "frozen_metadata.worker_id"
         ]
       },
       {
@@ -54,6 +81,15 @@
         "value": 1,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.action",
+          "config.deliveries",
+          "config.intent_id",
+          "config.qty",
+          "frozen_metadata.bar_id",
+          "frozen_metadata.deployment_id",
+          "frozen_metadata.worker_id"
         ]
       },
       {
@@ -61,6 +97,15 @@
         "value": 1,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.action",
+          "config.deliveries",
+          "config.intent_id",
+          "config.qty",
+          "frozen_metadata.bar_id",
+          "frozen_metadata.deployment_id",
+          "frozen_metadata.worker_id"
         ]
       },
       {
@@ -68,6 +113,15 @@
         "value": "1",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.action",
+          "config.deliveries",
+          "config.intent_id",
+          "config.qty",
+          "frozen_metadata.bar_id",
+          "frozen_metadata.deployment_id",
+          "frozen_metadata.worker_id"
         ]
       },
       {
@@ -75,6 +129,15 @@
         "value": 1,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.action",
+          "config.deliveries",
+          "config.intent_id",
+          "config.qty",
+          "frozen_metadata.bar_id",
+          "frozen_metadata.deployment_id",
+          "frozen_metadata.worker_id"
         ]
       }
     ],

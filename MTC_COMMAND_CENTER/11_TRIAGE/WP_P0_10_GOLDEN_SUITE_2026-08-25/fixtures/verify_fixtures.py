@@ -32,7 +32,54 @@ CITATION_PATTERN = re.compile(
 )
 ROW_LABEL_PATTERN = re.compile(r"C(?P<c>[0-9]{2})/GF-(?P<gf>[0-9]{2})")
 CROSS_CUTTING_PATTERN = re.compile(r"cross-cutting rule (?P<rule>[1-4])")
-LEGACY_ASSERTION_PATTERN = re.compile(r"^legacy(?:\.|_)")
+COMPANION_SELECTOR_REQUIREMENTS = {
+    2: {
+        "legacy.local.reentry_bar": (
+            "tw_reversal_reentry_mode",
+            "local",
+        ),
+        "legacy.carry.reentry_bar": (
+            "tw_reversal_reentry_mode",
+            "carry_to_next_bar_after_protective_exit",
+        ),
+        "legacy.next_bar_open.reentry": (
+            "tw_reversal_reentry_mode",
+            "next_bar_open_after_protective_exit_signal",
+        ),
+        "legacy.next_bar_close.reentry": (
+            "tw_reversal_reentry_mode",
+            "next_bar_close_after_protective_exit_signal",
+        ),
+        "legacy.delay.reentry": (
+            "tw_reversal_reentry_mode",
+            "delay_after_protective_exit",
+        ),
+    },
+    3: {
+        "legacy_precision.off_qty": ("tw_audit_semantics_mode", "off"),
+        "legacy_precision.research_qty": ("tw_audit_semantics_mode", "research"),
+    },
+    6: {
+        "legacy_precision.off": ("tw_audit_semantics_mode", "off"),
+        "legacy_precision.research": ("tw_audit_semantics_mode", "research"),
+    },
+    10: {
+        "legacy.local.exit": ("tw_be_semantics_mode", "local"),
+        "legacy.next_bar_confirmed.exit": (
+            "tw_be_semantics_mode",
+            "next_bar_confirmed",
+        ),
+        "legacy.tradingview.exit": ("tw_be_semantics_mode", "tradingview"),
+    },
+    11: {
+        "legacy.local.exit": ("tw_trailing_semantics_mode", "local"),
+        "legacy.tradingview.exit": ("tw_trailing_semantics_mode", "tradingview"),
+        "legacy.next_bar_confirmed.exit": (
+            "tw_trailing_semantics_mode",
+            "next_bar_confirmed",
+        ),
+    },
+}
 
 
 class VerificationError(Exception):
@@ -203,14 +250,39 @@ def require_declared_input(
     )
 
 
+def require_companion_selector(
+    scenario: dict[str, Any],
+    family: int,
+    assertion_path: str,
+) -> None:
+    selector = COMPANION_SELECTOR_REQUIREMENTS.get(family, {}).get(assertion_path)
+    if selector is None:
+        return
+    selector_key, selector_value = selector
+    config = scenario.get("config")
+    require(
+        isinstance(config, dict),
+        f"family={family:02d} companion_selector_config_missing "
+        f"path={assertion_path}",
+    )
+    require(
+        config.get(selector_key) == selector_value,
+        f"family={family:02d} companion_selector_mismatch "
+        f"path={assertion_path} selector={selector_key} "
+        f"expected={selector_value} actual={config.get(selector_key)}",
+    )
+
+
 def validate_assertion_input_presence(
     fixture: dict[str, Any],
     assertions: list[dict[str, Any]],
     authority_lines: list[str],
-) -> tuple[int, int, int, int]:
+) -> tuple[int, int, int, int, int, int]:
     family = fixture["family"]["number"]
     assertions_by_path = {item["path"]: item for item in assertions}
     assigned_sources: dict[str, str] = {}
+    checked_input_paths = 0
+    direct_assertions = 0
     companion_assertions = 0
     cross_row_imports = 0
     citation_count = 0
@@ -269,6 +341,7 @@ def validate_assertion_input_presence(
                 f"family={family:02d} assertion_input_path_duplicate "
                 f"path={assertion_path}",
             )
+            require_companion_selector(scenario, family, assertion_path)
             for input_path in input_paths:
                 require_declared_input(
                     scenario,
@@ -276,55 +349,60 @@ def validate_assertion_input_presence(
                     family,
                     assertion_path,
                 )
+                checked_input_paths += 1
             assigned_sources[assertion_path] = f"companion:{scenario_id}"
             companion_assertions += 1
 
     for item in assertions:
         assertion_path = item["path"]
-        cross_row_import = item.get("cross_row_import")
-        if cross_row_import is not None:
+        for key in item:
+            if key.startswith("cross_row"):
+                raise VerificationError(
+                    f"family={family:02d} cross_row_import_unsupported "
+                    f"field={key} path={assertion_path}"
+                )
+        if assertion_path in assigned_sources:
             require(
-                isinstance(cross_row_import, dict),
-                f"family={family:02d} cross_row_import_not_object "
-                f"path={assertion_path}",
-            )
-            require(
-                assertion_path not in assigned_sources,
+                "input_paths" not in item,
                 f"family={family:02d} assertion_input_source_duplicate "
                 f"path={assertion_path}",
             )
-            source = cross_row_import.get("source")
-            resolve_citation(source, authority_lines)
-            citation_count += 1
-            require(
-                source in item.get("citations", []),
-                f"family={family:02d} cross_row_source_not_assertion_citation "
-                f"path={assertion_path}",
+            continue
+        input_paths = item.get("input_paths")
+        require(
+            isinstance(input_paths, list) and input_paths,
+            f"family={family:02d} assertion_input_source_undeclared "
+            f"path={assertion_path}",
+        )
+        require(
+            len(input_paths) == len(set(input_paths)),
+            f"family={family:02d} assertion_input_path_duplicate "
+            f"path={assertion_path}",
+        )
+        for input_path in input_paths:
+            require_declared_input(
+                fixture,
+                input_path,
+                family,
+                assertion_path,
             )
-            imported_inputs = cross_row_import.get("inputs")
-            require(
-                isinstance(imported_inputs, dict) and imported_inputs,
-                f"family={family:02d} cross_row_inputs_missing path={assertion_path}",
-            )
-            assigned_sources[assertion_path] = "cross_row_import"
-            cross_row_imports += 1
-
-    for assertion_path in assertions_by_path:
-        if LEGACY_ASSERTION_PATTERN.match(assertion_path):
-            require(
-                assertion_path in assigned_sources,
-                f"family={family:02d} assertion_input_source_undeclared "
-                f"path={assertion_path}",
-            )
-        elif assertion_path not in assigned_sources:
-            assigned_sources[assertion_path] = "primary_fixture"
+            checked_input_paths += 1
+        assigned_sources[assertion_path] = "fixture"
+        direct_assertions += 1
 
     require(
         set(assigned_sources) == set(assertions_by_path),
         f"family={family:02d} assertion_input_source_accounting_mismatch",
     )
 
-    return len(assigned_sources), companion_assertions, cross_row_imports, citation_count
+    return (
+        len(assigned_sources),
+        checked_input_paths,
+        direct_assertions,
+        companion_assertions,
+        cross_row_imports,
+        citation_count,
+    )
 
 
 def build_authority_binding(
@@ -620,12 +698,17 @@ def validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
         "manifest_assertion_input_source_count_mismatch",
     )
     require(
+        isinstance(manifest.get("assertion_input_path_count"), int)
+        and manifest["assertion_input_path_count"] >= EXPECTED_VALUE_COUNT,
+        "manifest_assertion_input_path_count_missing",
+    )
+    require(
         isinstance(manifest.get("companion_assertion_count"), int),
         "manifest_companion_assertion_count_missing",
     )
     require(
-        isinstance(manifest.get("cross_row_import_count"), int),
-        "manifest_cross_row_import_count_missing",
+        manifest.get("cross_row_import_count") == 0,
+        "manifest_cross_row_import_count_must_be_zero",
     )
     require(
         manifest.get("authority") == AUTHORITY_RELATIVE_PATH,
@@ -656,7 +739,7 @@ def validate_fixture(
     fixture: dict[str, Any],
     manifest_item: dict[str, Any],
     authority_lines: list[str],
-) -> tuple[int, bytes, str, str, Any, int, set[str], int, int, int]:
+) -> tuple[int, bytes, str, str, Any, int, set[str], int, int, int, int]:
     number = manifest_item["number"]
     require(
         fixture.get("schema_version") == "wp-p0-10-golden-fixture-v1",
@@ -713,7 +796,9 @@ def validate_fixture(
         expected[path] = item["value"]
 
     (
-        input_presence_count,
+        input_source_count,
+        input_path_count,
+        direct_assertions,
         companion_assertions,
         cross_row_imports,
         input_source_citation_count,
@@ -772,7 +857,9 @@ def validate_fixture(
         mutation["to"],
         citation_count,
         coherence_paths,
-        input_presence_count,
+        input_source_count,
+        input_path_count,
+        direct_assertions,
         companion_assertions,
         cross_row_imports,
     )
@@ -835,7 +922,9 @@ def main() -> int:
     mismatch_detected = 0
     match_restored = 0
     coherence_paths_by_family: dict[int, set[str]] = {}
-    assertion_input_presence_validated = 0
+    assertion_input_sources_validated = 0
+    assertion_input_paths_checked = 0
+    fixture_assertions_validated = 0
     companion_assertions_validated = 0
     cross_row_imports_validated = 0
     for manifest_item in families:
@@ -858,7 +947,9 @@ def main() -> int:
             mutation_to,
             citation_count,
             coherence_paths,
-            input_presence_count,
+            input_source_count,
+            input_path_count,
+            direct_assertions,
             companion_assertions,
             cross_row_imports,
         ) = validate_fixture(fixture, manifest_item, authority_lines)
@@ -866,7 +957,9 @@ def main() -> int:
         citation_line_ranges_validated += citation_count
         if coherence_paths:
             coherence_paths_by_family[number] = coherence_paths
-        assertion_input_presence_validated += input_presence_count
+        assertion_input_sources_validated += input_source_count
+        assertion_input_paths_checked += input_path_count
+        fixture_assertions_validated += direct_assertions
         companion_assertions_validated += companion_assertions
         cross_row_imports_validated += cross_row_imports
 
@@ -931,13 +1024,17 @@ def main() -> int:
         "measured_coherence_expected_value_count_mismatch",
     )
     require(
-        assertion_input_presence_validated == expected_values_total,
-        "assertion_input_presence_count_mismatch",
+        assertion_input_sources_validated == expected_values_total,
+        "assertion_input_source_count_mismatch",
     )
     require(
-        assertion_input_presence_validated
+        assertion_input_sources_validated
         == manifest.get("assertion_input_source_count"),
         "measured_assertion_input_source_count_mismatch",
+    )
+    require(
+        assertion_input_paths_checked == manifest.get("assertion_input_path_count"),
+        "measured_assertion_input_path_count_mismatch",
     )
     require(
         companion_assertions_validated == manifest.get("companion_assertion_count"),
@@ -963,9 +1060,10 @@ def main() -> int:
         "coherence_families="
         f"{','.join(f'{number:02d}' for number in measured_coherence_families)} "
         f"coherence_expected_values_validated={measured_coherence_expected_values} "
-        f"assertion_input_presence_validated={assertion_input_presence_validated} "
+        f"assertion_input_sources_validated={assertion_input_sources_validated} "
+        f"assertion_input_paths_checked={assertion_input_paths_checked} "
+        f"fixture_assertions_validated={fixture_assertions_validated} "
         f"companion_assertions_validated={companion_assertions_validated} "
-        f"cross_row_imports_validated={cross_row_imports_validated} "
         f"expected_values_total={expected_values_total} "
         f"contract_mismatch_detected={mismatch_detected} "
         f"contract_match_restored={match_restored} "

@@ -387,10 +387,10 @@ executed self-QA only and does not self-accept.
 
 ### 8.1 Per-fixture repair choice
 
-All six fixtures use **option 1: embed the companion-row inputs in the fixture**. No assertion uses
-`cross_row_import`. These legacy arms are genuinely part of the named family, so carrying their
-literal scenario inputs makes the fixture independently regenerable and avoids preserving a hidden
-dependency on another row's prose.
+All six fixtures use **option 1: embed the companion-row inputs in the fixture**. No shipped
+assertion uses cross-row imports, and Round 4b supersedes this section by making any `cross_row*`
+assertion field reject. These legacy arms are genuinely part of the named family, so carrying their
+literal scenario inputs avoids preserving a hidden dependency on another row's prose.
 
 | Fixture | Embedded deciding scenario | Assertions made self-contained | Why option 1 |
 |---|---|---|---|
@@ -423,19 +423,19 @@ byte-identical to `d576cd42`.
 
 ### 8.3 Assertion-input gate and falsified regression
 
-`verify_fixtures.py` now assigns every expected assertion an input source. Primary assertions use
-the fixture's primary config/frozen metadata/bars. Every `legacy.*` / `legacy_*` assertion must have
-one exact terminal disposition: required paths inside an embedded companion scenario, or an explicit
-`cross_row_import` whose source is one of that assertion's validated citations and whose inputs are
-declared. Duplicate assignment, an unknown assertion, an uncited source, an undeclared legacy
-assertion, or a missing/empty required input rejects before fixture-hash comparison.
+Round 4b supersedes the automatic primary-source design recorded here. The current verifier requires
+every expected assertion to have an explicit checked source: either fixture-local `input_paths` or
+required paths inside an embedded companion scenario. Duplicate assignment, an unknown assertion, an
+unsupported cross-row field, an undeclared assertion, or a missing/empty required input rejects
+before fixture-hash comparison.
 
-Measured corpus accounting is bound to the manifest:
+Current corpus accounting is bound to the manifest:
 
 ```text
-assertion_input_presence_validated=241
+assertion_input_sources_validated=241
+assertion_input_paths_checked=2649
+fixture_assertions_validated=224
 companion_assertions_validated=17
-cross_row_imports_validated=0
 ```
 
 The committed regression removes `family_03`'s research-mode config input, removes the
@@ -468,15 +468,12 @@ This is real D026 RED/GREEN closure evidence for the **verifier defect only**. I
 derives the family set and value count from those returned sets, checks both against the manifest,
 and prints the measured values. The old output literals at former lines 705-707 are gone.
 
-Two independent final verifier processes produced the same measured summary:
+Round 4b supersedes the exact final-summary lines previously recorded here; the live verifier now
+prints a path-resolved input counter rather than the old presence counter. See the Round 4b section
+below for the current two-run determinism transcript.
 
 ```text
-SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=387 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_presence_validated=241 companion_assertions_validated=17 cross_row_imports_validated=0 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
-SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=387 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_presence_validated=241 companion_assertions_validated=17 cross_row_imports_validated=0 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
-VERIFY_RUNS_RC=0,0
-OUTPUT_FILES=23,23
-BYTE_IDENTICAL=23/23 MISMATCHES=0
-STDOUT_IDENTICAL=true
+current_summary_moved_to_round_4b=true
 ```
 
 ### 8.5 Family-1 companion path resolution
@@ -525,3 +522,193 @@ Owner-authorized AD-FIX3 starting commit: `d576cd42b6a360167180616ea093f8fa192b1
 The exact repair commit SHA is printed as the last line of the implementer's final output. A tracked
 report cannot contain the SHA of the same commit that contains it because inserting that SHA changes
 the commit.
+
+## Round 4b — the gate generalizes, and the companion inputs are real
+
+Starting point: `1dcb70665b82df19350c207a83974dd4f738ec10` on
+`feature/wp-p0-10-golden-suite-20260825`. This is implementer self-QA only; it is not an
+accepting Gate-5 verdict.
+
+### Gate design
+
+The name-prefix gate is removed. Every assertion now needs one explicit checked source:
+
+- Fixture-local assertions carry `input_paths`, and every path must resolve to a non-empty value in
+  the same fixture JSON.
+- Companion assertions are bound through `companion_scenarios[*].assertion_inputs`, and every path
+  must resolve inside that literal companion run.
+- Cross-row imports are unsupported in this corpus. Any assertion field whose name starts with
+  `cross_row` rejects before hash comparison.
+- The summary now separates source count from path count:
+  `assertion_input_sources_validated=241`, `assertion_input_paths_checked=2649`,
+  `fixture_assertions_validated=224`, `companion_assertions_validated=17`.
+
+This is still an input-presence gate, not a semantic-relevance prover. A coordinated fixture and
+manifest rehash can still replace a declared input with an unrelated present path; that remains the
+disclosed coordinated-rehash limitation.
+
+### B1 and B2 probes
+
+Committed harness output for the four B1 probes and both B2 probes:
+
+```text
+TAMPER name=b1_family_12_empty_primary_inputs optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=12 assertion_input_presence_missing path=priority.stop_plus_opposite input=config.exit_on_htf_trend_block
+TAMPER name=b1_family_03_renamed_companion_assertion optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=03 assertion_input_source_undeclared path=compat_precision.research_qty
+TAMPER name=b1_family_01_missing_signal_mode optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=01 assertion_input_presence_missing path=producer.bar0.raw input=config.signal_mode
+TAMPER name=b1_cross_row_misspelling optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=01 cross_row_import_unsupported field=cross_row_imprt path=producer.bar0.raw
+TAMPER name=b2_family_03_cross_row_import optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=03 cross_row_import_unsupported field=cross_row_import path=legacy_precision.research_qty
+TAMPER name=b2_family_14_cross_row_imports optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=14 cross_row_import_unsupported field=cross_row_import path=legacy.long_stop_close_only
+```
+
+The old round-4 P2b shape using `tw_qty_precision_mode` is now obsolete because family 03 uses the
+actual C31 selector, `tw_audit_semantics_mode`. Running the old-shape tamper against the current
+verifier still rejects at the selector gate:
+
+```text
+B1_P2B_OLDSHAPE rc=1 detail=VERIFY_FAIL reason=family=03 companion_selector_mismatch path=legacy_precision.off_qty selector=tw_audit_semantics_mode expected=off actual=None
+```
+
+### Family 20
+
+`family_20.json` now embeds `mirror_operands` for the 14 mirrored long-side operands. Its mirror
+assertions reference those local operands through `input_paths`, so the family no longer passes
+with only `reflection_pivot`, `rule`, and an empty bar list.
+
+```text
+TAMPER name=b3_family_20_missing_mirror_operand optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=20 assertion_input_presence_missing path=mirror.family_03.qty input=mirror_operands.family_03.qty
+```
+
+### Companion selectors
+
+The invented selector names are gone from shipped fixtures. The literal companion runs now carry
+the actual singular selectors:
+
+```text
+family_02: tw_reversal_reentry_mode = local | carry_to_next_bar_after_protective_exit | next_bar_open_after_protective_exit_signal | next_bar_close_after_protective_exit_signal | delay_after_protective_exit
+family_03: tw_audit_semantics_mode = off | research
+family_06: tw_audit_semantics_mode = off | research
+family_10: tw_be_semantics_mode = local | next_bar_confirmed | tradingview
+family_11: tw_trailing_semantics_mode = local | tradingview | next_bar_confirmed
+```
+
+The selector regression reintroduces the family-02 plural key and is rejected:
+
+```text
+TAMPER name=b4_family_02_plural_selector optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=02 companion_selector_mismatch path=legacy.local.reentry_bar selector=tw_reversal_reentry_mode expected=local actual=None
+```
+
+No expected value moved:
+
+```text
+expected_path_value_maps_unchanged=23/23 changed=[]
+output_hashes_unchanged=23/23 changed=[]
+state_hashes_unchanged=23/23 changed=[]
+```
+
+All 23 `fixture_contract_sha256` values moved because every built fixture now carries explicit
+input declarations. The 46 output/state hashes are unchanged.
+
+### Optimization matrix
+
+```text
+verifier plain: rc=0 SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=397 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_sources_validated=241 assertion_input_paths_checked=2649 fixture_assertions_validated=224 companion_assertions_validated=17 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+verifier -O: rc=1 VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+verifier PYTHONOPTIMIZE=2: rc=1 VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+harness plain: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=17/17 result=PASS
+harness -O: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=17/17 result=PASS
+harness PYTHONOPTIMIZE=2: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=17/17 result=PASS
+```
+
+The harness strips ambient `PYTHONOPTIMIZE` for nominal child verifier runs and applies optimization
+only to the explicit optimized child case.
+
+### D026-style falsification for the verifier test
+
+The old committed test deleted both the field and the mapping. The current harness adds a direct
+field-presence branch for family 03. A pre-fix verifier from `1dcb7066` accepts the missing primary
+input after the fixture hash is recomputed; the current verifier rejects it by name:
+
+```text
+old_1dcb7066 rc=0 detail=no_named_rejection
+current_worktree rc=1 detail=VERIFY_FAIL reason=family=03 assertion_input_presence_missing path=request.accepted input=config.entry_reference_price
+```
+
+The companion literal-input branch is also committed:
+
+```text
+TAMPER name=b6_family_03_missing_literal_input optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=03 assertion_input_presence_missing path=legacy_precision.research_qty input=literal_inputs.raw_quantity
+```
+
+This proves the verifier regression, not economic D026 for the 23 families; their manifest status
+remains `D026 UNEARNED`.
+
+### Contract and grep
+
+`fixtures/README.md`, `fixtures/manifest.json`, and the earlier AD-FIX3 report section now describe
+the current input-source contract. Repo-wide stale-claim grep:
+
+```text
+rg -n <stale round-4 contract phrase set> C:\WPP010_20260825
+rc=1 no output
+```
+
+The old selector-name grep in the lane now finds only the deliberate plural-selector tamper in
+`test_verify_fixtures.py`.
+
+### Discrimination and invented tamper
+
+Every committed new-gate RED mutates one temporary fixture copy and rejects on the named target
+family before hash comparison; no other fixture is mutated or blamed. Target-family counts:
+
+```text
+B1 family12 empty inputs: target=12 other_fixture_kills=0
+B1 family03 renamed assertion: target=03 other_fixture_kills=0
+B1 family01 missing signal_mode: target=01 other_fixture_kills=0
+B1 misspelled cross_row_imprt: target=01 other_fixture_kills=0
+B2 family03 cross_row_import: target=03 other_fixture_kills=0
+B2 family14 cross_row_import: target=14 other_fixture_kills=0
+B3 family20 missing mirror operand: target=20 other_fixture_kills=0
+B4 family02 plural selector: target=02 other_fixture_kills=0
+B6 family03 missing literal input: target=03 other_fixture_kills=0
+B6 family03 missing primary input: target=03 other_fixture_kills=0
+```
+
+Invented tamper not listed in the prompt: delete `family_03.config.entry_reference_price`, retain
+the assertion declaration, and recompute the fixture hash. Outcome:
+
+```text
+TAMPER name=b6_family_03_missing_primary_input optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=03 assertion_input_presence_missing path=request.accepted input=config.entry_reference_price
+```
+
+The disputed unrelated-but-present path item was tested separately:
+
+```text
+UNRELATED_PRESENT_PATH_PROBE rc=0 accepted=true detail=no_named_rejection
+SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=397 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_sources_validated=241 assertion_input_paths_checked=2629 fixture_assertions_validated=224 companion_assertions_validated=17 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+```
+
+Ruling: this is the disclosed coordinated-rehash limitation, not a separate in-scope repair. The
+input gate proves existence of declared fixture paths; it cannot prove arithmetic relevance after an
+author rewrites the declaration and the same-tree manifest hash together. The manifest and README now
+say that explicitly.
+
+### Final checks
+
+```text
+python -m py_compile ...verify_fixtures.py ...test_verify_fixtures.py
+rc=0
+python ...verify_fixtures.py ...fixtures C:\tmp\wp_p010_r4b_det_1
+python ...verify_fixtures.py ...fixtures C:\tmp\wp_p010_r4b_det_2
+VERIFY_RUNS_RC=0,0
+OUTPUT_FILES=23,23
+BYTE_IDENTICAL=23/23 MISMATCHES=[]
+STDOUT_IDENTICAL=true
+git diff --check
+rc=0
+```
+
+Families 18 and 19 remain blocked and absent. No Pine, parity, MTC strategy behavior, Bridge
+runtime, schema, broker/exchange, host, credential, deployment, or live surface changed.
+
+Not closed here: independent acceptance is still for the Lead/auditors, and the coordinated-rehash
+semantic-relevance limitation remains disclosed and out of scope.

@@ -39,6 +39,19 @@
         "value": "1.5",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -46,6 +59,19 @@
         "value": "15.0",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -53,6 +79,19 @@
         "value": "REJECT",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -60,6 +99,19 @@
         "value": "BELOW_MIN_NOTIONAL",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -67,6 +119,19 @@
         "value": 0,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -74,6 +139,19 @@
         "value": false,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -82,6 +160,19 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -90,6 +181,19 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -98,6 +202,19 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -106,6 +223,19 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -114,6 +244,19 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -122,6 +265,19 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -130,6 +286,19 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -138,6 +307,19 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.direction",
+          "config.price",
+          "config.raw_quantity",
+          "config.reflection_pivot",
+          "config.short_twin.direction",
+          "config.short_twin.price",
+          "config.short_twin.raw_quantity",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.qty_step"
         ]
       }
     ],

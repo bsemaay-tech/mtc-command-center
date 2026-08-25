@@ -70,6 +70,17 @@
         "value": true,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.modes.0",
+          "config.modes.1",
+          "config.symbol",
+          "config.timeframe",
+          "config.venue",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -77,6 +88,17 @@
         "value": true,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.modes.0",
+          "config.modes.1",
+          "config.symbol",
+          "config.timeframe",
+          "config.venue",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -84,6 +106,17 @@
         "value": 1,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.modes.0",
+          "config.modes.1",
+          "config.symbol",
+          "config.timeframe",
+          "config.venue",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -91,6 +124,17 @@
         "value": "BAR_DRIFT",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.modes.0",
+          "config.modes.1",
+          "config.symbol",
+          "config.timeframe",
+          "config.venue",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -98,6 +142,17 @@
         "value": 0,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.modes.0",
+          "config.modes.1",
+          "config.symbol",
+          "config.timeframe",
+          "config.venue",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -105,6 +160,17 @@
         "value": "OUT_OF_ORDER_BAR",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.modes.0",
+          "config.modes.1",
+          "config.symbol",
+          "config.timeframe",
+          "config.venue",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -112,6 +178,17 @@
         "value": true,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.modes.0",
+          "config.modes.1",
+          "config.symbol",
+          "config.timeframe",
+          "config.venue",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -119,6 +196,17 @@
         "value": "DUPLICATE_NOOP",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.modes.0",
+          "config.modes.1",
+          "config.symbol",
+          "config.timeframe",
+          "config.venue",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       },
       {
@@ -126,6 +214,17 @@
         "value": true,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.modes.0",
+          "config.modes.1",
+          "config.symbol",
+          "config.timeframe",
+          "config.venue",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
         ]
       }
     ],

@@ -46,6 +46,22 @@
         "value": "NON_FINITE_INPUT:entry_reference_price",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -53,6 +69,22 @@
         "value": "NON_POSITIVE_INPUT:bucket_capital",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -61,6 +93,22 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -69,6 +117,22 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -77,6 +141,22 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -85,6 +165,22 @@
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -92,6 +188,22 @@
         "value": "BLOCK:adx_filter",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -99,6 +211,22 @@
         "value": "PASS",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -106,6 +234,22 @@
         "value": 0,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       },
       {
@@ -113,6 +257,22 @@
         "value": false,
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
         ]
       }
     ],
