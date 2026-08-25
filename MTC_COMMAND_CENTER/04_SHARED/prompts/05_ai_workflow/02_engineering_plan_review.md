@@ -45,6 +45,5 @@ Refuse to start coding inside this gate.
 
 ## WRITE-BACK
 
-- Append a one-line entry to `SESSION_LOG.md` summarizing the plan.
-- Update `ACTIVE_FILES.md` if the plan introduces files outside the
-  current working set.
+- Supply the accepted plan facts to the Lead for the selected stage's `HANDOFF.md` if they change
+  current state. Do not append a session journal or historical handoff.

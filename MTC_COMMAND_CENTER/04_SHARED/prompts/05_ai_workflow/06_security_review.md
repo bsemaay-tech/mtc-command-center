@@ -70,6 +70,6 @@ commit hooks. Never recommend force-pushing as a fix.
 
 ## WRITE-BACK
 
-- If a finding is fixed in the same sprint: note in `GLOBAL_HANDOFF.md`.
-- If a finding is deferred: log in `NEXT_STEPS.md` with severity tag.
-- If a sticky security decision was made: log in `DECISIONS.md`.
+- Record fixed and deferred findings, including severity, in the selected stage's `HANDOFF.md`.
+- If a sticky owner security decision was made, add its linked summary to root `DECISIONS.md`.
+- Do not append `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md`; they are archives.

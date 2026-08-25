@@ -37,7 +37,8 @@ existing matured strategies/indicators into new robust candidates. This does
 14. Register the run in `05_REGISTRY/RESEARCH_RUN_REGISTRY.json`; backtest summaries
     in `05_REGISTRY/RESEARCH_BACKTEST_REGISTRY.json`.
 15. Confirm it shows in **Strategy Research Lab** tab (`/dashboard` → research).
-16. Update `_AI_MEMORY/GLOBAL_HANDOFF.md` and `_AI_MEMORY/NEXT_STEPS.md`.
+16. Update `03_QUANTLENS/HANDOFF.md` with current state, evidence, blockers, and next actions.
+    `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md` are read-only history, not write targets.
 
 ## Hard rules
 - No new production strategy / no live trading in a research run.

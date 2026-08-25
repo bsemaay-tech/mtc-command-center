@@ -1,6 +1,6 @@
 # 08 — Backtest Launch
 
-> WORKFLOW MAPPING: The numbered sections below are backtest-domain Stages, not replacements for repository Gates G1-G7. Lead/Implementer ownership and acceptance follow `AGENTS.md` and `AI_RULES.md`.
+> WORKFLOW MAPPING: The numbered sections below are backtest-domain Stages, not replacements for repository Gates G1-G7. Lead/Implementer ownership and acceptance follow root `AGENTS.md` and the selected stage's five routed files.
 
 > **Bu prompt'u kullan:** HER backtest. Üç senaryo da aynı gate'ler:
 > - **In-day single strategy** ("BTC 1h'de bu RSI stratejisini test et")
@@ -11,14 +11,13 @@
 >
 > **MTC V2 BIG_OVERNIGHT için:** `01_MTC_PROJECT/docs/optimization/BIG_OVERNIGHT_OPTIMIZATION_RUNBOOK.md`'a git, oradan devam et. Aşağıdaki adımlar QuantLens research içindir.
 
-## Backtest Stage 0 — ZORUNLU PRE-READ (iki dosya)
+## Backtest Stage 0 — ZORUNLU PRE-READ (routed context + canonical inputs)
 
-1. `AGENTS.md` (repo kökü)
-2. `MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md`
-3. `MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md`
-4. **`MTC_COMMAND_CENTER/03_QUANTLENS/_user_guide/07_BACKTEST_AND_OPTIMIZATION_RULES.md`** ← CANONICAL kurallar (4 gate, classification, promotion, antigravity, morning report)
-5. **`MTC_COMMAND_CENTER/11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md`** ← operasyonel yürütme (tool komutları, worker, monitor)
-6. `MTC_COMMAND_CENTER/11_TRIAGE/lessons_archive/` en yeni 1 dosya
+1. Root `AGENTS.md` ve root `DECISIONS.md`.
+2. Root `CONTEXT_MAP.md` ile tam bir stage seç; o stage'in `AGENTS.md`, `INPUTS.md`, `OUTPUTS.md`, `TESTS.md`, `HANDOFF.md` dosyaları.
+3. **`MTC_COMMAND_CENTER/03_QUANTLENS/_user_guide/07_BACKTEST_AND_OPTIMIZATION_RULES.md`** ← CANONICAL kurallar (4 gate, classification, promotion, antigravity, morning report)
+4. **`MTC_COMMAND_CENTER/11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md`** ← operasyonel yürütme (tool komutları, worker, monitor)
+5. `MTC_COMMAND_CENTER/11_TRIAGE/lessons_archive/` en yeni 1 dosya
 
 Atlama YASAK. Skip yaparsan A1-A15 anti-pattern'lerinden birini tekrarlarsın.
 
@@ -132,8 +131,8 @@ python aggregate_overnight_iters.py
 1. `lessons_archive/OVERNIGHT_LESSONS_YYYY-MM-DD.md` yaz (ham gözlem, B-numaralı bulgular)
 2. Yeni anti-pattern → `BACKTEST_OPTIMIZATION_RUNBOOK.md` §8 tablosuna ekle
 3. `lessons_archive/OVERNIGHT_LESSONS_INDEX.md` yeni satır
-4. `_AI_MEMORY/GLOBAL_HANDOFF.md` + `SESSION_LOG.md` güncelle
-5. `NEXT_STEPS.md` yarın yapılacaklar
+4. `MTC_COMMAND_CENTER/03_QUANTLENS/HANDOFF.md` güncelle: current state, evidence, blockers, next actions
+5. `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md` salt-okunur arşivdir; `SESSION_LOG.md` emekli edilmiştir
 
 ## WRITE-BACK
 
@@ -141,6 +140,8 @@ Bu prompt biterken zorunlu dosya güncellemeleri:
 - `11_TRIAGE/lessons_archive/OVERNIGHT_LESSONS_YYYY-MM-DD.md` (yeni)
 - `11_TRIAGE/lessons_archive/OVERNIGHT_LESSONS_INDEX.md` (satır ekle)
 - `11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md` (anti-pattern merge, CHANGELOG)
-- `_AI_MEMORY/GLOBAL_HANDOFF.md`
-- `_AI_MEMORY/SESSION_LOG.md`
-- `_AI_MEMORY/NEXT_STEPS.md`
+- `03_QUANTLENS/HANDOFF.md` (current state + next actions)
+
+`_AI_MEMORY/history/GLOBAL_HANDOFF.md` ve `_AI_MEMORY/history/NEXT_STEPS.md`
+yalnızca grep-on-demand geçmiştir; append etme. `_AI_MEMORY/SESSION_LOG.md`
+emekli edilmiştir; yeniden oluşturma.

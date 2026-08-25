@@ -2,8 +2,8 @@
 
 **Mandatory before stopping**, regardless of sprint size.
 
-This prompt does **not** create new handoff files. It updates the
-canonical ones inside `MTC_COMMAND_CENTER/_AI_MEMORY/`.
+This prompt updates the selected stage's existing `HANDOFF.md` plus only the
+durable records triggered by the completed work.
 
 ## Prompt
 
@@ -19,50 +19,33 @@ factual inputs (commit hashes, test results, exact file lists) to the
 lead; final write-back content and authorized sequencing are
 Lead-owned.
 
-Do NOT create new files. Update only the existing ones inside
-MTC_COMMAND_CENTER/_AI_MEMORY/.
+Do not create a new handoff or session journal.
 
 Steps:
 
-1. GLOBAL_HANDOFF.md  (always update)
-   Set fields:
-   - Last updated:       <ISO date>
-   - Updated by:         <model name + session label>
-   - Active project:     <subproject name>
-   - Current objective:  <one sentence>
-   - Current phase:      <gate or milestone>
-   - Current blockers:   <one line, or "none">
-   - Where to continue:  <file path or gate to run next>
-   - Warnings:           <parity / DO_NOT_TOUCH / approval-needed flags>
+1. The selected stage's `HANDOFF.md` (always update)
+   - Use `## [MODEL_NAME] YYYY-MM-DD — Topic`.
+   - Record only current state: practical next actions, exact paths/commands,
+     unresolved authorization, test evidence, and commit SHA.
+   - Keep the file at or below 4 KiB; rotate stale detail to grep-on-demand
+     history instead of growing another journal.
 
-2. NEXT_STEPS.md  (always update)
-   - Move completed items from "Immediate" to "Recently Closed" with
-     date + short note + commit hash if any.
-   - Add new "Immediate" items uncovered during this sprint
-     (including out-of-scope items Gate 3 noticed but did not fix).
+2. Root `DECISIONS.md` (update only if a sticky owner decision was made)
+   - Add one dated linked summary; keep detailed wording in its source record.
 
-3. SESSION_LOG.md  (always update)
-   - Append ONE line:
-     "<ISO date> | <model> | <one-sentence summary> | <commit hash>"
+3. Durable tracker/shared GitHub claim and `_AI_MEMORY/SESSION_LOCK.md` mirror
+   (update only when applicable)
+   - Before releasing the claim, reconcile current `master`, the work branch,
+     and durable tracker state. `UNKNOWN` ownership or liveness is a stop.
 
-4. DECISIONS.md  (update IF a sticky decision was made)
-   - Append a new D### entry with phase + one-line rationale.
-
-5. ACTIVE_FILES.md  (update IF working set changed)
-   - Add files now in active rotation.
-   - Remove files no longer relevant.
-
-6. PROJECT_MEMORY.md  (update IF a stable repo fact changed)
-   - Layout change, new module, new contract, new policy doc, etc.
-   - Do not log per-session noise here.
-
-7. SESSION_LOCK.md
-   - If you held a write lock, release it (set Status: unlocked).
+Historical homes:
+- `_AI_MEMORY/history/GLOBAL_HANDOFF.md` and
+  `_AI_MEMORY/history/NEXT_STEPS.md` are read-only, search-on-demand archives.
+- `_AI_MEMORY/SESSION_LOG.md` is retired; do not recreate or append it.
 
 Report:
-- List of memory files updated, with the exact change made to each.
-- Confirmation that no file outside _AI_MEMORY/ was modified inside
-  this gate.
+- List every handoff, decision, tracker, or claim file updated, with the exact
+  change made to each.
 - Suggested next gate / next prompt for the following session.
 ```
 

@@ -1,6 +1,1 @@
-Read `AGENTS.md` first.
-Then read `MTC_COMMAND_CENTER\_AI_MEMORY\START_HERE.md`.
-Use token-efficient workflow.
-MANDATORY — launching Codex: always use `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1` (default `-Account secondary`). Never run bare `codex`, and never route to the desktop home `C:\Users\BarışSemaay\.codex`. Routes and snapshot quotas: `MTC_COMMAND_CENTER\_AI_MEMORY\AI_ACCOUNT_AND_MODEL_ROUTING.md`.
-Update handoff files before stopping.
-Do not scan the full repo unless required.
+Read root `AGENTS.md`, root `DECISIONS.md`, and root `CONTEXT_MAP.md`; select exactly one stage and follow its five-file contract. Do not load `_AI_MEMORY/history/` by default. Claude-led dispatch must use the launcher route named by the governance stage; never run bare `codex`.
