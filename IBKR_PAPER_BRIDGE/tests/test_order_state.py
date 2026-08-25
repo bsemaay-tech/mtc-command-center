@@ -7,6 +7,7 @@ import subprocess
 import sys
 import textwrap
 from datetime import UTC, datetime
+from enum import Enum
 from pathlib import Path
 
 import pytest
@@ -373,9 +374,10 @@ def test_mutating_a_copy_of_raw_aliases_does_not_affect_normalization():
 
 
 def _transitive_gc_referents(obj, limit=200):
-    """BFS over gc.get_referents, skipping type objects (classes) so the
-    walk stays scoped to *data* reachable from `obj`, not the surrounding
-    class/module machinery. Bounded by `limit` as a runaway-graph guard.
+    """BFS over gc.get_referents, stopping at runtime-owned atoms so the
+    walk stays scoped to policy data reachable from `obj`, not surrounding
+    class/module/Enum implementation machinery. Bounded by `limit` as a
+    runaway-graph guard.
     """
     seen_ids = {id(obj)}
     frontier = [obj]
@@ -383,7 +385,7 @@ def _transitive_gc_referents(obj, limit=200):
     while frontier and len(collected) < limit:
         current = frontier.pop()
         for referent in gc.get_referents(current):
-            if isinstance(referent, type):
+            if isinstance(referent, (type, Enum)):
                 continue
             marker = id(referent)
             if marker in seen_ids:
