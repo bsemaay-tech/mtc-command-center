@@ -154,7 +154,20 @@ if ($risky.Count -gt 0) {
   $warn += "risky untracked file(s) present - do NOT commit ($((($risky | Sort-Object -Unique) -join ', ')))"
 } else { Line '[untracked] no risky files' }
 
-# 6. unpushed commits
+# 6. Pine alert invariant
+try {
+  $pineAlertOutput = @(& python MTC_COMMAND_CENTER/tools/check_no_pine_alerts.py 2>&1)
+  $pineAlertExit = $LASTEXITCODE
+  $pineAlertOutput | ForEach-Object { Line "[pine-alert] $_" }
+  if ($null -eq $pineAlertExit -or $pineAlertExit -ne 0) {
+    $blocked += "Pine alert invariant scanner returned nonzero (rc=$pineAlertExit)"
+  }
+} catch {
+  Line "[pine-alert] scanner could not execute: $($_.Exception.Message)"
+  $blocked += 'Pine alert invariant scanner could not execute'
+}
+
+# 7. unpushed commits
 $ahead = ''
 try { $ahead = (git rev-list --count "@{u}..HEAD" 2>$null).Trim() } catch { $ahead = '' }
 if ($ahead -eq '') { Line '[unpushed]  no upstream set'; $warn += 'no upstream tracking branch' }
