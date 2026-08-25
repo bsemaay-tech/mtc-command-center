@@ -1,5 +1,5 @@
 {
-  "schema_version": "wp-p0-10-golden-suite-manifest-v1",
+  "schema_version": "wp-p0-10-golden-suite-manifest-v2",
   "suite": "WP-P0-10 Kernel Economic Golden Suite",
   "family_count": 25,
   "built_count": 23,
@@ -34,13 +34,26 @@
     19
   ],
   "authority": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+  "authority_text_lf_sha256": "422f4577d779918255669ecdc86f991a96112aac1fac504ac417c11c735dae16",
+  "authority_text_hash_form": "UTF-8 decoded authority text with CRLF and CR normalized to LF; existing terminal newline preserved",
   "output_normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+  "fixture_contract_check": "The 23 declared source-mutation descriptors are exercised only against copies of their expected mappings. The resulting mismatch/restoration pairs are fixture-contract self-consistency checks, not kernel execution or D026 mutation evidence.",
+  "authority_binding_contract": "Each built fixture has a canonical semantic fixture hash and an authority-binding hash over every expected path/value, every cited WP-P0-09 line fragment, both stored-hash citations, and the source-mutation descriptor. This binds the accepted corpus to the exact authority content and rejects rehashed fixture tampering.",
+  "d026_status": {
+    "built_families": "UNEARNED",
+    "earned_count": 0,
+    "unearned_count": 23,
+    "reason": "GF field 8 names source mutations, but this package has no kernel subject on which to execute them.",
+    "unearned_until": "WP-P0-11/WP-P0-12/WP-P0-20 deliver the canonical kernel subjects and each source mutation is demonstrated against the exact pre-fix behaviour or an equivalent producer mutation, then with the fix present."
+  },
   "families": [
     {
       "number": 1,
       "name": "Entry signal",
       "status": "BUILT",
       "fixture": "family_01.json",
+      "fixture_contract_sha256": "5337c0155fcbf7b7403b1487d6c6217150b158585808c683a013cd11048a452a",
+      "authority_binding_sha256": "dd6c176cf78e26935f19955ae39e067e28001ea681a6b78c3f39b76b9ada9ece",
       "wp_p0_09_rows": [
         "C01",
         "C42"
@@ -51,6 +64,8 @@
       "name": "Direction / flip / regime lock",
       "status": "BUILT",
       "fixture": "family_02.json",
+      "fixture_contract_sha256": "99da7d28fb44076d1cdd77434fa56af7f0c57daac8fe643858dc90c663424724",
+      "authority_binding_sha256": "45df1c5b6f5bc6bce347b7203d91f8cf99be091a59975bbacfb374d8820b3fb1",
       "wp_p0_09_rows": [
         "C05",
         "C21",
@@ -63,6 +78,8 @@
       "name": "Position sizing",
       "status": "BUILT",
       "fixture": "family_03.json",
+      "fixture_contract_sha256": "e47e977de1a20ac2e046854d179efa4c4f527810d4e3a3b8ac3c51539808fc3f",
+      "authority_binding_sha256": "322523a18daab949fa6ddbb853c245a9ea683ebde0c9316c360ba23216234f13",
       "wp_p0_09_rows": [
         "C07",
         "C31"
@@ -73,6 +90,8 @@
       "name": "Contract multiplier",
       "status": "BUILT",
       "fixture": "family_04.json",
+      "fixture_contract_sha256": "fe0dd8d063444f49308eb3f5a43cca4ec819fb15d267ba29404652ee8543d325",
+      "authority_binding_sha256": "835ca0d61ff71ac30dfb291eed57d314cab79b31411d5c90e8b54e29208f2795",
       "wp_p0_09_rows": [
         "C08"
       ]
@@ -82,6 +101,8 @@
       "name": "Minimum notional",
       "status": "BUILT",
       "fixture": "family_05.json",
+      "fixture_contract_sha256": "8087bd645a1b67e2d95843ed36ef8b259743ce311dbb95197e9c22845e4b567f",
+      "authority_binding_sha256": "2ce99ffe0b84750860f21263e6849548b80dd7a0b551c9558cdd68af98510622",
       "wp_p0_09_rows": [
         "C09"
       ]
@@ -91,6 +112,8 @@
       "name": "Rounding / qty step / min qty",
       "status": "BUILT",
       "fixture": "family_06.json",
+      "fixture_contract_sha256": "d82815ce5901e107481e430eefd558d66f21cf3694ba94588120590282e8725d",
+      "authority_binding_sha256": "eae771058b2cabdaa6e13ea247810ce760eebc813eb896f87a73caf51156c7e1",
       "wp_p0_09_rows": [
         "C09",
         "C31"
@@ -101,6 +124,8 @@
       "name": "SL calculation (ATR / percent / swing)",
       "status": "BUILT",
       "fixture": "family_07.json",
+      "fixture_contract_sha256": "9a5a0aa51f9a27993552932b94ed21acc6adf4064ff8cdfffa9c66b3703a1e00",
+      "authority_binding_sha256": "09c4ff83d81bbdfd143cfce8c8b0fb5b270fec19542230d77ea4394f8b4b107a",
       "wp_p0_09_rows": [
         "C11",
         "C24"
@@ -111,6 +136,8 @@
       "name": "TP calculation (ATR / percent / R)",
       "status": "BUILT",
       "fixture": "family_08.json",
+      "fixture_contract_sha256": "9e531fe02e3f36345e7527b925e4e20711ec8b076d2e773296265b317a7de74f",
+      "authority_binding_sha256": "8208aaeb7365e9397babcdb3353f10668b5d65c1de33d53d600fa703747a2fa6",
       "wp_p0_09_rows": [
         "C12",
         "C24"
@@ -121,6 +148,8 @@
       "name": "Multi-TP lifecycle incl. partial TP1 fill",
       "status": "BUILT",
       "fixture": "family_09.json",
+      "fixture_contract_sha256": "3773362bc27c78313b9614ea32489cc4db1a90fca8fbe842bd4e2f0031d0e49c",
+      "authority_binding_sha256": "e5f0c950862abfca56d8071ec4a4ea7f2ea4a92a6f0e04f3b2a373c306f9ffc4",
       "wp_p0_09_rows": [
         "C13"
       ]
@@ -130,6 +159,8 @@
       "name": "Break-even trigger and buffer",
       "status": "BUILT",
       "fixture": "family_10.json",
+      "fixture_contract_sha256": "a57a58f4a343fc09059573ac3acb653e5c5ac79f0e042c9a5fcb68b1fbbf5336",
+      "authority_binding_sha256": "916945a76fbb3c2aa1e47a17cb5a95a2d44d27c8de028f8aa2bb7200814a27d7",
       "wp_p0_09_rows": [
         "C14",
         "C36"
@@ -140,6 +171,8 @@
       "name": "Trailing activation and monotonicity",
       "status": "BUILT",
       "fixture": "family_11.json",
+      "fixture_contract_sha256": "f057cc5194c14ef07b75e991909f2f11710c1dc5a45e79756bed95f89af20923",
+      "authority_binding_sha256": "d0d498cb3d19d7d4f540da7ded93efe8b18d93e826623738abcec0cb62f52dae",
       "wp_p0_09_rows": [
         "C15",
         "C37"
@@ -150,6 +183,8 @@
       "name": "Opposite-signal exit",
       "status": "BUILT",
       "fixture": "family_12.json",
+      "fixture_contract_sha256": "1c9a229a14f768534fef6c5fe3cf61043e197bc9281f72338d3ffe9a6d847e01",
+      "authority_binding_sha256": "cb7bbb17f1d60501cb87667772f43643497151a9aa0d5558f093f8279c3e6cba",
       "wp_p0_09_rows": [
         "C05",
         "C16",
@@ -161,6 +196,8 @@
       "name": "Time exit (bars / EOD / EOW)",
       "status": "BUILT",
       "fixture": "family_13.json",
+      "fixture_contract_sha256": "ced868787e545e82380447283ced6923b63dc1e20782e46e1c59f879df2eab50",
+      "authority_binding_sha256": "e6ad401a44e5900d20b6dba3ed6fe18cb4b4f46d51d1a617b595dd0b21f5f62f",
       "wp_p0_09_rows": [
         "C17",
         "C25"
@@ -171,6 +208,8 @@
       "name": "Bar gaps through the stop",
       "status": "BUILT",
       "fixture": "family_14.json",
+      "fixture_contract_sha256": "e1c8ef08a33d4af7dbf2f1c42186acaee1560b4b1e068f82a52699ccfad261a6",
+      "authority_binding_sha256": "71d5c2dc2f6e85e4922c3ed694fccdeb7657c966894368d22d28807f92af85a6",
       "wp_p0_09_rows": [
         "C11",
         "C20"
@@ -181,6 +220,8 @@
       "name": "Same-bar SL/TP collision",
       "status": "BUILT",
       "fixture": "family_15.json",
+      "fixture_contract_sha256": "24306aec321e32a6c2c8d5810a4de61539904c85968da29fc2ed9244645d5617",
+      "authority_binding_sha256": "ebc65744d8220e4b57c216a0c31b85a3cc61892311ff7b17df85943565c0eb1e",
       "wp_p0_09_rows": [
         "C19"
       ]
@@ -190,6 +231,8 @@
       "name": "Pyramiding / add / partial reduction",
       "status": "BUILT",
       "fixture": "family_16.json",
+      "fixture_contract_sha256": "ec508e573a2eb8382619858980b2fd6bed1c5060aef5401e07a38ceb7eb41914",
+      "authority_binding_sha256": "28ec8645fde998be3cfffb27058089e8fcb73163374e75a46207b35a95517dd5",
       "wp_p0_09_rows": [
         "C06",
         "C13"
@@ -200,6 +243,8 @@
       "name": "Fees, slippage, funding",
       "status": "BUILT",
       "fixture": "family_17.json",
+      "fixture_contract_sha256": "6bed65329a58eaac61af5ca60e7289424b2219b03d145863415a3c2c8e8b881f",
+      "authority_binding_sha256": "804efbdb4e81615dadffad7a7dd7d2dba3ce4c7681b161a5722d08c81ff4eebb",
       "wp_p0_09_rows": [
         "C08",
         "C22"
@@ -218,7 +263,7 @@
       "authority_evidence": [
         "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1282-1287 (explicit non-decision)"
       ],
-      "unblocks_when": "WP-P0-09 adds a decided eight-field row for SNAPSHOT_MISMATCH, including the guard-absent RED and guard-present GREEN outputs.",
+      "unblocks_when": "WP-P0-09 adds a decided eight-field row for SNAPSHOT_MISMATCH, including exact failing output under the absent guard and passing kernel output with the guard present.",
       "coverage_note": "Genuine D026 snapshot-drift coverage hole; not cosmetic and not waived."
     },
     {
@@ -234,13 +279,15 @@
         "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1282-1287 (explicit non-decision)",
         "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
       ],
-      "unblocks_when": "WP-P0-09 adds a decided eight-field row for REFERENCE_DIVERGENCE and the authorize-unchanged-or-reject boundary, including exact RED/GREEN outputs."
+      "unblocks_when": "WP-P0-09 adds a decided eight-field row for REFERENCE_DIVERGENCE and the authorize-unchanged-or-reject boundary, including exact failing pre-fix and passing fixed kernel outputs."
     },
     {
       "number": 20,
       "name": "Short-side symmetry",
       "status": "BUILT",
       "fixture": "family_20.json",
+      "fixture_contract_sha256": "f49e0dcc35ef4e8462767c05e403136e17f6b08452791f53dadeca9d4486b2df",
+      "authority_binding_sha256": "61124871e8739e65b9ce3a9aa6b42236dd21cf5250399772a031342927aa582c",
       "wp_p0_09_rows": [
         "C24",
         "cross-cutting rule 2"
@@ -251,6 +298,8 @@
       "name": "NaN / zero / boundary precision",
       "status": "BUILT",
       "fixture": "family_21.json",
+      "fixture_contract_sha256": "fd6660abc554a13d5e7628bcddd971ad9062b2b8872dc31bc2c3bd0577f99cf5",
+      "authority_binding_sha256": "e2bdbd6af30f0275f79b18d19ac574845a705e6fb9317be8511a7c3e55acce23",
       "wp_p0_09_rows": [
         "C07",
         "C09",
@@ -262,6 +311,8 @@
       "name": "Duplicate and reordered bars",
       "status": "BUILT",
       "fixture": "family_22.json",
+      "fixture_contract_sha256": "13eff5b1ae10a941cc2143fcfc28504593c031350a8d7e3c880e82d8cca12a1b",
+      "authority_binding_sha256": "25abd52e450c112336eaa2951c6afbff1408b41e989f359da22c71cbb334b186",
       "wp_p0_09_rows": [
         "C26"
       ]
@@ -271,6 +322,8 @@
       "name": "Cancellation and revision ordering",
       "status": "BUILT",
       "fixture": "family_23.json",
+      "fixture_contract_sha256": "8e97967f350ebd9b1023092132144348d44e9009a084e5e17036bddad61b6c4b",
+      "authority_binding_sha256": "33d70f45929576d0cedb913d7e1798834c5e6f1479e76c40a45274ffe54056b4",
       "wp_p0_09_rows": [
         "C26"
       ]
@@ -280,6 +333,8 @@
       "name": "OrderIntent idempotence",
       "status": "BUILT",
       "fixture": "family_24.json",
+      "fixture_contract_sha256": "0abf27dce5e71ce547f90b82ebea47a42edddc2f23fa990b7f1ed6394d8df85a",
+      "authority_binding_sha256": "ebc0312b2cdc7d2eea39ecc3dc79d26a776a328403c29d77ad76581ecc2493cc",
       "wp_p0_09_rows": [
         "C26"
       ]
@@ -289,6 +344,8 @@
       "name": "Venue and session edge cases",
       "status": "BUILT",
       "fixture": "family_25.json",
+      "fixture_contract_sha256": "ab65b0fb230799225797bb448782c8f2e0bbd7762086ed655640f777a6be4cef",
+      "authority_binding_sha256": "8cb4fca7dce2ba42364cbd96c09e085f65110400d7f0a5ad82cbd5bc6645ad68",
       "wp_p0_09_rows": [
         "C09",
         "C17",

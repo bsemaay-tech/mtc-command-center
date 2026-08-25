@@ -1,18 +1,18 @@
-# WP-P0-10 Kernel Economic Golden Suite — Implementer Lane Report
+# WP-P0-10 Kernel Economic Golden Suite — Implementer Repair Report
 
 **Date:** 2026-08-25
 
 **Branch:** `feature/wp-p0-10-golden-suite-20260825`
 
-**Redispatch starting HEAD:** `c8a873ea680dc3c643c10ab074e62a39a8cf2bac`
+**Repair starting HEAD:** `306d8172b9a7159a70f92b81087afcb31902ebbb`
 
-**Audit tier:** T0, as assigned by the package contract
+**Audit tier:** T0, retained from the package contract; both flagships re-audit after this handoff
 
-**Implementer status:** 23 families built; families 18 and 19 remain formally blocked; independent Lead acceptance is pending
+**Implementer status:** repair and self-QA complete; 23 families remain built; families 18 and 19 remain formally blocked; independent Lead acceptance is pending
 
-**Acceptance language:** none; this is implementation and self-QA evidence, not an audit verdict
+**Acceptance language:** none; this is implementation and executed self-QA evidence, not an audit verdict
 
-## 1. Scope and fixture contract
+## 1. Scope and corrected evidence claim
 
 The binding package contract is
 `MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:382-389`.
@@ -21,34 +21,36 @@ The fixed family catalogue is
 The semantic authority is
 `MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md`.
 
-The new data-only corpus is under `fixtures/`. It does not edit kernel, optimizer, Pine,
-Bridge, schema, contract, or existing parity-corpus files. The existing 858-event Bridge /
-QuantLens corpus is referenced by family 1 as a companion, labelled **ENTRY SIGNAL GOLDEN**, and
-pinned by Git blob OID `31bdafae4d4d94787508043e9681874f9dc43bda`; it was not copied,
-recaptured, or modified.
+The fixture corpus is unchanged. No expected value, source configuration, frozen metadata, bar,
+citation, output hash, final-state hash, or source-mutation descriptor in any `family_*.json` file
+was edited by this repair. No kernel, optimizer, Pine, Bridge, schema, contract, or existing parity
+corpus file was touched. The existing 858-event companion corpus remains referenced by family 1 at
+Git blob OID `31bdafae4d4d94787508043e9681874f9dc43bda` and was not copied or modified.
 
-Each built fixture records:
+### D026 status — UNEARNED for all 23 built families
 
-1. literal configuration, frozen metadata, and normalized bars (or an empty bar list for static validation);
-2. expected output as `{path, value, citations}` assertions;
-3. at least one exact WP-P0-09 row citation adjacent to **every** expected assertion;
-4. canonical output and final-state SHA-256 values under the normalization declared in `fixtures/README.md`; and
-5. one exact single-field candidate-output mutation, its WP-P0-09 discriminator citation, and its restoration value.
+The 23 pairs previously reported as per-family mutation evidence are only **fixture-contract
+self-consistency checks**. The verifier copies the expected mapping, substitutes the fixture's GF
+field-8 value at one declared path, observes that the two mappings differ, restores the expected
+value, and observes byte identity. That proves the comparison seam notices one changed datum. It
+does not execute a producer, an exact pre-fix implementation, or an equivalent producer mutation.
 
-`fixtures/verify_fixtures.py` contains no economic implementation. It checks the data contract,
-requires every expected assertion and mutation to cite the WP-P0-09 table, verifies the stored
-hashes, applies exactly one declared candidate-output mutation per family, requires exactly one
-mismatch, restores the field, and requires byte identity. This is the fixture comparison seam
-future kernel subjects must drive; no expected value was captured from A, B, Pine, or current
-runtime behaviour.
+**D026 therefore remains UNEARNED for all 23 built families.** GF field 8 names source mutations,
+but the canonical kernel subjects they target arrive later in WP-P0-11, WP-P0-12, and WP-P0-20.
+D026 can be earned only when those subjects exist and each exact pre-fix behaviour (or equivalent
+producer mutation) is demonstrated to fail, followed by a passing execution with the fix present.
+This is not partial satisfaction: `earned=0`, `unearned=23`.
 
-## 2. All 25 families, build status, and oracle authority
+The counters were renamed so no downstream consumer can mistake local dictionary comparison for
+mutation evidence:
 
-The precise citation behind every expected value is stored beside that value in the named JSON
-fixture. The table below gives the complete deciding-row set for each family; the verifier rejected
-any assertion whose `citations` list was empty or did not resolve into the WP-P0-09 authority file.
+- old `red=` → `contract_mismatch_detected=`;
+- old `restored=` / `green=` → `contract_match_restored=`;
+- the summary now also emits `d026_earned=0 d026_unearned=23`.
 
-| # | Fixed family name | Status / fixture | Decided WP-P0-09 oracle rows |
+## 2. All 25 families and authority
+
+| # | Fixed family name | Status / fixture | Deciding WP-P0-09 rows |
 |---:|---|---|---|
 | 1 | Entry signal | **BUILT** — `fixtures/family_01.json` | C01/GF-01 `:131-141`; C42/GF-42 `:1222-1270` |
 | 2 | Direction / flip / regime lock | **BUILT** — `fixtures/family_02.json` | C05/GF-05 `:227-237`; C21/GF-21 `:606-616`; C32/GF-32 `:830-863`; C33/GF-33 `:871-886` |
@@ -67,139 +69,216 @@ any assertion whose `citations` list was empty or did not resolve into the WP-P0
 | 15 | Same-bar SL/TP collision | **BUILT** — `fixtures/family_15.json` | C19/GF-19 `:557-567` |
 | 16 | Pyramiding / add / partial reduction | **BUILT** — `fixtures/family_16.json` | C06/GF-06 `:245-281`; C13/GF-13 `:447-457` |
 | 17 | Fees, slippage, funding | **BUILT** — `fixtures/family_17.json` | C08/GF-08 `:324-334`; C22/GF-22 `:624-634` |
-| 18 | Snapshot drift / bucket-capital divergence | **BLOCKED — UNBUILT** | WP-P0-09 explicit non-decision `:1282-1287`; no `SNAPSHOT_MISMATCH` row exists |
-| 19 | Allocator ↔ Guardian boundary | **BLOCKED — UNBUILT** | C07 partially decides quantity ownership at `:291-316`, but WP-P0-09 explicitly leaves the internal split undecided at `:1282-1287`; no `REFERENCE_DIVERGENCE` row exists |
-| 20 | Short-side symmetry | **BUILT** — `fixtures/family_20.json` | C24/GF-24 `:660-670`; cross-cutting reflection rule `:1274-1276` |
+| 18 | Snapshot drift / bucket-capital divergence | **BLOCKED — UNBUILT** | explicit non-decision `:1282-1287` |
+| 19 | Allocator ↔ Guardian boundary | **BLOCKED — UNBUILT** | C07/GF-07 `:291-316`; explicit non-decision `:1282-1287` |
+| 20 | Short-side symmetry | **BUILT** — `fixtures/family_20.json` | C24/GF-24 `:660-670`; cross-cutting rule 2 `:1274-1276` |
 | 21 | NaN / zero / boundary precision | **BUILT** — `fixtures/family_21.json` | C07/GF-07 `:291-316`; C09/GF-09 `:342-352`; C24/GF-24 `:660-670` |
 | 22 | Duplicate and reordered bars | **BUILT** — `fixtures/family_22.json` | C26/GF-26 `:696-706` |
 | 23 | Cancellation and revision ordering | **BUILT** — `fixtures/family_23.json` | C26/GF-26 `:696-706` |
 | 24 | `OrderIntent` idempotence | **BUILT** — `fixtures/family_24.json` | C26/GF-26 `:696-706` |
 | 25 | Venue and session edge cases | **BUILT** — `fixtures/family_25.json` | C09/GF-09 `:342-352`; C17/GF-17 `:519-529`; C22/GF-22 `:624-634`; C25/GF-25 `:678-688`; C27/GF-27 `:716-738` |
 
-## 3. Per-family targeted RED, restoration, and GREEN evidence
+Families 18 and 19 remain blocked and unbuilt. No `family_18.json` or `family_19.json` exists,
+and this repair does not attempt to decide their missing `SNAPSHOT_MISMATCH` or
+`REFERENCE_DIVERGENCE` semantics.
 
-Each mutation below changed one candidate-output path only. The executed verifier required
-`mismatch_count=1` and required the only mismatching path to be the declared target. “RESTORED”
-means that exact path was put back to its fixture value before the byte comparison.
+## 3. What the 23 declared pairs actually check
 
-| # | Exact single-field mutation and real RED output | Real restoration and GREEN output |
-|---:|---|---|
-| 1 | `producer.bar4.raw`: `NONE → LONG`; `RED mismatch_count=1 path=producer.bar4.raw expected="NONE" actual="LONG"` | `RESTORED ... value="NONE"`; `GREEN byte_match=true sha256=91eef43f7169d2e28d39238181a8248506adbb182d2bc5c9885d5043805ad285` |
-| 2 | `events.bar2`: `NONE → ENTER_SHORT`; `RED mismatch_count=1 path=events.bar2 expected="NONE" actual="ENTER_SHORT"` | `RESTORED ... value="NONE"`; `GREEN byte_match=true sha256=ced1f206dff54019b905e954d80ffd2181b104c9c7231ec3ad3c48ccd04864b3` |
-| 3 | `request.has_snapshot_id`: `false → true`; `RED mismatch_count=1 path=request.has_snapshot_id expected=false actual=true` | `RESTORED ... value=false`; `GREEN byte_match=true sha256=e5d8b74eef8667f02d99e5df137f9a648aae0eed19c26961151f41c0fe8d6fe6` |
-| 4 | `resolution.proposed_qty`: `2 → 20`; `RED mismatch_count=1 path=resolution.proposed_qty expected="2" actual="20"` | `RESTORED ... value="2"`; `GREEN byte_match=true sha256=11a4b28d02f2fa141f110cbc1e74004ec71328979326b87625582c6b1ea8b4d5` |
-| 5 | `decision.outcome`: `REJECT → ACCEPT`; `RED mismatch_count=1 path=decision.outcome expected="REJECT" actual="ACCEPT"` | `RESTORED ... value="REJECT"`; `GREEN byte_match=true sha256=d62f3739b539187d67e6c258348b39718648e9fd38b09e3c0fae018928524602` |
-| 6 | `round.quantity`: `1.23 → 1.239`; `RED mismatch_count=1 path=round.quantity expected="1.23" actual="1.239"` | `RESTORED ... value="1.23"`; `GREEN byte_match=true sha256=0c6d749e01512e96e614f0fbc76db61691ba43a9e74a127fe92cb4733a2dcc3f` |
-| 7 | `swing.long.stop`: `97.00 → 90.00`; `RED mismatch_count=1 path=swing.long.stop expected="97.00" actual="90.00"` | `RESTORED ... value="97.00"`; `GREEN byte_match=true sha256=f8ec773fa7df3a892c61ab7a355e2f57429d29d1eb1539be3ba7e129a1fe548a` |
-| 8 | `missing_stop.outcome`: `BLOCK → TARGET_AT_102.00`; `RED mismatch_count=1 path=missing_stop.outcome expected="BLOCK" actual="TARGET_AT_102.00"` | `RESTORED ... value="BLOCK"`; `GREEN byte_match=true sha256=181a1d0a10782909b0487aa1fe9eb90f8572546f0306e462661b048b420633b8` |
-| 9 | `fills.tp1.qty`: `4 → 10`; `RED mismatch_count=1 path=fills.tp1.qty expected="4" actual="10"` | `RESTORED ... value="4"`; `GREEN byte_match=true sha256=e5ed0bdba1c023410c3aee3924dd9405b44688577582fe263fb34e2f640af0ce` |
-| 10 | `canonical.exit_bar`: `3 → 2`; `RED mismatch_count=1 path=canonical.exit_bar expected=3 actual=2` | `RESTORED ... value=3`; `GREEN byte_match=true sha256=4ad1ef2864af7bc72fc6cacb8f78c504f34da91e50d274f5d4ae0ca4aa1668b5` |
-| 11 | `canonical.stop_effective_bar`: `2 → 1`; `RED mismatch_count=1 path=canonical.stop_effective_bar expected=2 actual=1` | `RESTORED ... value=2`; `GREEN byte_match=true sha256=7ab8da96a1b534f2b636365a09de19fa8d90e8cbb26720400bf4a94dfbf408be` |
-| 12 | `priority.filter_without_stop_or_opposite`: `ma_filter → htf_trend_filter`; `RED mismatch_count=1 path=priority.filter_without_stop_or_opposite expected="ma_filter" actual="htf_trend_filter"` | `RESTORED ... value="ma_filter"`; `GREEN byte_match=true sha256=8d5b57c24500d04c2bec12740983e02f813aad0346e9caef01c61805b15752ee` |
-| 13 | `eod_exit.timestamp`: `2026-01-02T21:45:00Z → 2026-01-05T00:00:00Z`; `RED mismatch_count=1 path=eod_exit.timestamp expected="2026-01-02T21:45:00Z" actual="2026-01-05T00:00:00Z"` | `RESTORED ... value="2026-01-02T21:45:00Z"`; `GREEN byte_match=true sha256=0194a890d4f65022f0779048c3b3e5758eb74814fcb75046fbba265b3a74f464` |
-| 14 | `fills.long_stop_gap`: `90.00 → 91.00`; `RED mismatch_count=1 path=fills.long_stop_gap expected="90.00" actual="91.00"` | `RESTORED ... value="90.00"`; `GREEN byte_match=true sha256=d1e13a43ecff20559df15b9bf50609851055c84e4122a9f0588c67f62ca52989` |
-| 15 | `stop_first.fill`: `95.00 → 105.00`; `RED mismatch_count=1 path=stop_first.fill expected="95.00" actual="105.00"` | `RESTORED ... value="95.00"`; `GREEN byte_match=true sha256=1445452e6f3d6840044e5a5f33e2b6f7af403765ca111d698d1caff407659c91` |
-| 16 | `events.bar5`: `BLOCK:POST_EXIT_COOLDOWN → ENTER_LONG:1@100.00`; `RED mismatch_count=1 path=events.bar5 expected="BLOCK:POST_EXIT_COOLDOWN" actual="ENTER_LONG:1@100.00"` | `RESTORED ... value="BLOCK:POST_EXIT_COOLDOWN"`; `GREEN byte_match=true sha256=9a9e6ee85ad88ef167e0c2562a4519403fcf55f78673a96bf670abbd312ce62d` |
-| 17 | `pnl.net`: `17.5599 → 18.00`; `RED mismatch_count=1 path=pnl.net expected="17.5599" actual="18.00"` | `RESTORED ... value="17.5599"`; `GREEN byte_match=true sha256=2c51205f4b48a0406dad3fe4b4d7273b15d94d351330fe7b661f188a0646c661` |
-| 20 | `mirror.family_07.stop`: `105.00 → 95.00`; `RED mismatch_count=1 path=mirror.family_07.stop expected="105.00" actual="95.00"` | `RESTORED ... value="105.00"`; `GREEN byte_match=true sha256=db46cf79bba84207562a1b122335ee574efb761632ee2247bedba3a37795c8a7` |
-| 21 | `adx.exact_25`: `BLOCK:adx_filter → PASS`; `RED mismatch_count=1 path=adx.exact_25 expected="BLOCK:adx_filter" actual="PASS"` | `RESTORED ... value="BLOCK:adx_filter"`; `GREEN byte_match=true sha256=d6a234fb0a83858e07a491c863bb4bbb747d36dac8252f93bf1942f4b5e5e46d` |
-| 22 | `duplicate.intent_count`: `1 → 2`; `RED mismatch_count=1 path=duplicate.intent_count expected=1 actual=2` | `RESTORED ... value=1`; `GREEN byte_match=true sha256=056ffd37b7450e84d14b48b106ac14f116f399482c04c66c60973f1cf4133d40` |
-| 23 | `revision.accepted`: `2 → 1`; `RED mismatch_count=1 path=revision.accepted expected=2 actual=1` | `RESTORED ... value=2`; `GREEN byte_match=true sha256=54094df873625f83bd1cb1c3370a5480b0044bd029d36612cc36e301e7f77221` |
-| 24 | `economic_effects.count`: `1 → 2`; `RED mismatch_count=1 path=economic_effects.count expected=1 actual=2` | `RESTORED ... value=1`; `GREEN byte_match=true sha256=0900f02fe9222f87459ba33e544d0fe173ea0c77b80f9d69fbbb49f2670d81e9` |
-| 25 | `freshness.age_45_001`: `MISSED_DECISION_STALE:NO_ORDER → AGING:ORDER`; `RED mismatch_count=1 path=freshness.age_45_001 expected="MISSED_DECISION_STALE:NO_ORDER" actual="AGING:ORDER"` | `RESTORED ... value="MISSED_DECISION_STALE:NO_ORDER"`; `GREEN byte_match=true sha256=941e3340642546e168ccdb78f39a30ff89958999810a931edda565776d14b3b5` |
+The following values are retained as GF field-8 **source-mutation descriptors**. The local
+verifier exercises them only by substituting the candidate value into a copy of the expected
+mapping. Every row below therefore has the same limited meaning: one fixture-contract mismatch is
+detected at the named path, and the contract matches byte-for-byte after restoration.
 
-Executed command for each independent run (different empty output directories):
+| # | Stored descriptor exercised against copied expected mapping |
+|---:|---|
+| 1 | `producer.bar4.raw`: `NONE → LONG` |
+| 2 | `events.bar2`: `NONE → ENTER_SHORT` |
+| 3 | `request.has_snapshot_id`: `false → true` |
+| 4 | `resolution.proposed_qty`: `2 → 20` |
+| 5 | `decision.outcome`: `REJECT → ACCEPT` |
+| 6 | `round.quantity`: `1.23 → 1.239` |
+| 7 | `swing.long.stop`: `97.00 → 90.00` |
+| 8 | `missing_stop.outcome`: `BLOCK → TARGET_AT_102.00` |
+| 9 | `fills.tp1.qty`: `4 → 10` |
+| 10 | `canonical.exit_bar`: `3 → 2` |
+| 11 | `canonical.stop_effective_bar`: `2 → 1` |
+| 12 | `priority.filter_without_stop_or_opposite`: `ma_filter → htf_trend_filter` |
+| 13 | `eod_exit.timestamp`: `2026-01-02T21:45:00Z → 2026-01-05T00:00:00Z` |
+| 14 | `fills.long_stop_gap`: `90.00 → 91.00` |
+| 15 | `stop_first.fill`: `95.00 → 105.00` |
+| 16 | `events.bar5`: `BLOCK:POST_EXIT_COOLDOWN → ENTER_LONG:1@100.00` |
+| 17 | `pnl.net`: `17.5599 → 18.00` |
+| 20 | `mirror.family_07.stop`: `105.00 → 95.00` |
+| 21 | `adx.exact_25`: `BLOCK:adx_filter → PASS` |
+| 22 | `duplicate.intent_count`: `1 → 2` |
+| 23 | `revision.accepted`: `2 → 1` |
+| 24 | `economic_effects.count`: `1 → 2` |
+| 25 | `freshness.age_45_001`: `MISSED_DECISION_STALE:NO_ORDER → AGING:ORDER` |
+
+Clean verifier command:
 
 ```powershell
-python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\verify_fixtures.py MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures C:\tmp\wp_p010_committed_run1_20260825
-python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\verify_fixtures.py MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures C:\tmp\wp_p010_committed_run2_20260825
+python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\verify_fixtures.py MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures C:\tmp\wp_p010_adfix_baseline_20260825
 ```
 
-Real terminal summary from each process:
+Real summary:
 
 ```text
-SUMMARY built=23 blocked=2 red=23 restored=23 green=23
+SUMMARY built=23 blocked=2 authority_bindings_verified=23 authority_citations_resolved=362 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
 ```
 
-The full terminal output produced the 69 per-family lines transcribed in the table above: one RED,
-one RESTORED, and one GREEN for every built family.
+The two per-family lines are now `FIXTURE_CONTRACT_MISMATCH_DETECTED` and
+`FIXTURE_CONTRACT_MATCH_RESTORED`. No output calls them mutation failure/passing evidence.
 
-## 4. Two-process determinism evidence
+## 4. Verifier repair
 
-The two commands above were separate Python processes and rendered one normalized output file per
-built family. A byte-array comparison over files with the same names returned:
+`fixtures/verify_fixtures.py` now:
+
+1. uses explicit `VerificationError` gates throughout; it contains no language-level assertion gate;
+2. exits immediately with `VERIFY_FAIL reason=python_optimization_forbidden __debug__=false` under optimized Python;
+3. rejects duplicate JSON keys and non-JSON constants;
+4. validates the exact 25-entry manifest, 23/2 family partition, blocked evidence, and exact fixture file set;
+5. reads the authority document and verifies its LF-normalized SHA-256 (`422f4577…dae16`);
+6. resolves all 362 fixture citations, checks their ranges, enclosing C section, GF identity, or exact cross-cutting/non-decision rule content;
+7. checks a canonical semantic hash for every complete fixture, so configuration, frozen metadata, bars, expectations, citations, and descriptors are no longer dead unchecked inputs;
+8. checks an authority-binding hash over every expected path/value paired with the exact cited line-fragment hashes, both stored-hash citations, and the source-mutation descriptor;
+9. recomputes the normalized expected-output and final-state hashes; and
+10. checks the arithmetic/coherence relationships targeted by the audits for families 4, 5, 22, and 24 before accepting their authority bindings.
+
+Outputs are written only after the complete corpus validates, so a rejected later family does not
+leave a newly rendered partial result set.
+
+## 5. Executable regression falsification for the verifier repairs
+
+The committed harness is `fixtures/test_verify_fixtures.py`. It copies the corpus to isolated
+temporary directories, applies each exact tamper, recomputes the fixture-internal hashes where the
+auditor did so, executes the selected verifier as a subprocess, and requires every invalid corpus
+to return nonzero.
+
+### 5.1 Exact pre-repair behaviour at `306d8172` — regression harness fails
+
+The old verifier's source content was extracted from Git to
+`C:\tmp\wp_p010_verify_fixtures_306d8172.py`, then run through the new regression harness:
+
+```powershell
+$oldPath='C:\tmp\wp_p010_verify_fixtures_306d8172.py'
+$source = git show '306d8172:MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/verify_fixtures.py'
+[System.IO.File]::WriteAllText($oldPath, (($source -join "`n") + "`n"), [System.Text.UTF8Encoding]::new($false))
+python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py --verifier $oldPath
+```
+
+Real output (command exit `1`):
 
 ```text
-DETERMINISM_RUNS=2
+BASELINE rc=0 clean=true detail=no_named_rejection
+TAMPER name=family_04_bug_value optimized=false rc=0 rejected=false detail=no_named_rejection
+TAMPER name=family_06_fabricated_citations optimized=false rc=0 rejected=false detail=no_named_rejection
+TAMPER name=family_04_incoherent_risk optimized=false rc=0 rejected=false detail=no_named_rejection
+TAMPER name=family_05_incoherent_accept optimized=false rc=0 rejected=false detail=no_named_rejection
+TAMPER name=family_24_duplicate_effects optimized=false rc=0 rejected=false detail=no_named_rejection
+TAMPER name=manifest_built_count_normal optimized=false rc=1 rejected=true detail=unnamed_nonzero_rejection
+TAMPER name=manifest_built_count_optimized optimized=true rc=0 rejected=false detail=no_named_rejection
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=1/7 result=FAIL
+```
+
+This is the executed falsification of the exact pre-repair verifier. Six invalid states were still
+accepted; only the ordinary, non-optimized count corruption happened to return nonzero.
+
+### 5.2 Repaired verifier — all seven tamper cases reject
+
+Command:
+
+```powershell
+python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py
+```
+
+Real output (command exit `0`):
+
+```text
+BASELINE rc=0 clean=true detail=no_named_rejection
+TAMPER name=family_04_bug_value optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=04 coherence=proposed_qty expected=2.00 actual=20
+TAMPER name=family_06_fabricated_citations optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=citation_range_out_of_bounds citation=MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:99999-99999 (C99/GF-99) authority_lines=1290
+TAMPER name=family_04_incoherent_risk optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=04 coherence=per_unit_risk expected=50 actual=25
+TAMPER name=family_05_incoherent_accept optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=05 coherence=minimum_notional_outcome expected=REJECT actual=ACCEPT
+TAMPER name=family_24_duplicate_effects optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=24 coherence=economic_effects_count expected=1 actual=2
+TAMPER name=manifest_built_count_normal optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=manifest_built_count expected=23 actual=22
+TAMPER name=manifest_built_count_optimized optimized=true rc=1 rejected=true detail=VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=7/7 result=PASS
+```
+
+No reported tamper still passes. The family-04 case reproduces the auditor's exact bug value
+(`proposed_qty=20`), inverted descriptor polarity, and recomputed internal output/state hashes.
+The family-06 case reproduces the nonexistent `:99999-99999 (C99/GF-99)` citation. The remaining
+three data cases reproduce the contradictory risk, minimum-notional, and duplicate-effect states.
+The manifest count corruption rejects under both ordinary Python and optimized Python; optimized
+mode rejects before reading the corrupt manifest.
+
+This executed fail-before/pass-after evidence applies to the verifier defects repaired in this
+round. It does **not** upgrade the 23 economic fixtures to D026 evidence.
+
+## 6. Counts, determinism, scope, and handoff
+
+Final family counts remain **23 BUILT, 2 BLOCKED, 25 TOTAL**. Built family numbers are
+`1..17,20..25`; blocked numbers are exactly `18,19`.
+
+The clean verifier still renders 23 canonical output files. Two independent final processes and a
+byte comparison are run again in Gate 4 before the repair commit. The exact result is recorded in
+the final self-QA addendum below; no deterministic-kernel claim is made because no kernel runs.
+
+Protected-surface impact: none. Pine, MTC strategy behaviour, TradingView parity, kernel, optimizer,
+Bridge, schemas, broker/exchange code, hosts, credentials, and deployments are untouched.
+
+The required T0 dual-flagship re-audit belongs to the live Claude Lead after this implementer
+handoff. No audit, merge, push, or acceptance claim is issued here.
+
+## 7. Final Gate-4 self-QA addendum
+
+Final commands and real output after the complete implementation:
+
+```text
+python -m py_compile fixtures/verify_fixtures.py fixtures/test_verify_fixtures.py
+PY_COMPILE=PASS
+
+python -m json.tool <each manifest/family JSON>
+JSON_FILES=24/24 PASS
+
+python fixtures/verify_fixtures.py fixtures C:\tmp\wp_p010_adfix_final_run1_20260825
+python fixtures/verify_fixtures.py fixtures C:\tmp\wp_p010_adfix_final_run2_20260825
+SUMMARY built=23 blocked=2 authority_bindings_verified=23 authority_citations_resolved=362 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+SUMMARY built=23 blocked=2 authority_bindings_verified=23 authority_citations_resolved=362 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
 OUTPUT_FILES_RUN1=23
 OUTPUT_FILES_RUN2=23
 BYTE_IDENTICAL=23/23
 MISMATCHES=0
-FAMILY_01_SHA256=91eef43f7169d2e28d39238181a8248506adbb182d2bc5c9885d5043805ad285
+
+python fixtures/test_verify_fixtures.py
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=7/7 result=PASS
+
+git diff --check
+FIXTURE_EXPECTED_VALUE_FILES_CHANGED=0
+PROTECTED_PATH_CHANGES=0
+ASSERT_GATES=0
 ```
 
-The normalization contract is fixed in `fixtures/README.md` and repeated in each fixture:
-UTF-8 JSON object of assertion path to value, sorted keys, compact separators, and one LF terminator.
-This evidence establishes deterministic fixture-oracle rendering; it does not claim that a future
-kernel implementation has already executed the scenarios.
+`ruff` was not installed on this machine (`CommandNotFoundException`), so no Ruff result is
+claimed. Python compilation, strict JSON parsing, the executable verifier, deterministic rendering,
+and the tamper regression harness all ran successfully.
 
-## 5. Formal blockers: families 18 and 19
+Regression-risk note: the verifier now deliberately fails if the authority text or any fixture's
+semantic content changes without a reviewed manifest-binding update. That makes authority drift
+visible but means an intentional future WP-P0-09/corpus revision must update the pinned bindings in
+the same reviewed package. There is no strategy/parity runtime risk because this lane is never
+imported by those runtimes.
 
-### 5.1 Family 18 — snapshot drift / bucket-capital divergence
+**Gate-4 decision:** hand off to the live Claude Lead for the required independent T0 dual-flagship
+re-audit. The implementer does not self-accept.
 
-Family 18 remains **BLOCKED and unbuilt**. The WP-P0-09 table explicitly says it does not decide
-snapshot-drift handling (`CAPABILITY_CANONICALIZATION_TABLE.md:1282-1287`), and the literal
-`SNAPSHOT_MISMATCH` occurs zero times in all three merged WP-P0-09 documents. C07 carries snapshot
-identity, but it does not decide the mismatch trigger, typed rejection event, no-order result, final
-state, or guard-removal discriminator.
+## 8. Git record
 
-Unblock condition: WP-P0-09 must add a decided eight-field row specifying the exact
-`SNAPSHOT_MISMATCH` input, ordered event/rejection, quantities and no-order result, final state, and
-the guard-absent RED / guard-present GREEN discriminator. This is a **genuine D026 coverage hole**:
-the required snapshot-drift regression case does not exist and is not waived as a cosmetic gap.
+Original fixture corpus commit: `5ff870ee` (`test(wp-p0-10): add 23 cited golden fixtures`).
 
-### 5.2 Family 19 — Allocator ↔ Guardian boundary
+Repair starting commit: `306d8172b9a7159a70f92b81087afcb31902ebbb`.
 
-Family 19 remains **BLOCKED and unbuilt**. C07 decides that RA owns `proposed_qty` and that the
-Guardian authorizes it unchanged or rejects, but WP-P0-09 expressly leaves the internal split
-undecided (`CAPABILITY_CANONICALIZATION_TABLE.md:1282-1287`). The literal
-`REFERENCE_DIVERGENCE` occurs zero times in all three merged WP-P0-09 documents, so there is no
-row-derived discriminator, tolerance, typed rejection event, no-resize/no-order result, or final
-state.
-
-Unblock condition: WP-P0-09 must add a decided eight-field `REFERENCE_DIVERGENCE` row specifying
-the deterministic recomputation comparison, any tolerance, authorize-unchanged-or-reject result,
-ordered events, no-order/final-state oracle, and exact RED/GREEN discriminator.
-
-No fixture file named `family_18.json` or `family_19.json` exists. Their statuses and unblock
-conditions are first-class entries in `fixtures/manifest.json`, preventing absence from being read
-as completion.
-
-## 6. Counts, scope, and implementer self-QA
-
-**Final counts: 23 BUILT, 2 BLOCKED, 25 TOTAL.** Built family numbers are
-`1..17,20..25`; blocked numbers are exactly `18,19`.
-
-Checks executed during implementation:
-
-- fixture verifier, twice in separate processes: `built=23 blocked=2 red=23 restored=23 green=23` each time;
-- two-run byte comparison: `BYTE_IDENTICAL=23/23`, `MISMATCHES=0`;
-- JSON/citation integrity: all expected assertion paths unique, every citation non-empty and rooted in the WP-P0-09 canonicalization table, every stored output hash and state hash reproduced;
-- blocked-manifest integrity: exactly families 18 and 19, each with missing semantics and an unblock condition;
-- no family-18 or family-19 fixture file exists;
-- family-1 companion corpus identity: Git blob `31bdafae4d4d94787508043e9681874f9dc43bda`, declared `48077` bars and `858` signals;
-- no protected implementation or existing parity-corpus path changed.
-
-The required T0 dual-flagship audit belongs to the live Claude Lead and follows this implementer
-handoff. No audit or acceptance claim is issued here.
-
-## 7. Git record
-
-Fixture corpus commit: `5ff870ee` (`test(wp-p0-10): add 23 cited golden fixtures`).
-
-The final pushed branch SHA is printed as the last line of the implementer's final output. A tracked
-report cannot contain the SHA of the same commit that contains it: inserting that SHA changes the
-tree and therefore changes the commit. This report records the stable content commit above and the
-final output supplies the exact pushed tip without asserting a false self-reference.
-
-**Final pushed commit SHA:** supplied in implementer output after commit and push.
+The exact repair commit SHA is printed as the last line of the implementer's final output. A tracked
+report cannot contain the SHA of the same commit that contains it because inserting that SHA changes
+the commit.
