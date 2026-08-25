@@ -179,10 +179,39 @@ advance so that a future proof carries its own expiry rule; stating it now prove
 | 14 | Human approval | the single live signature; sub-live eligibility is automatic and takes no signature | Baris alone | Per strategy and per capital increase: the **one** explicit live signature. Sub-live eligibility is automatic and takes no signature | `None accepted` | `—` | `—` | Any hard row falling to `UNKNOWN`, `BLOCKED` or `EXPIRED`; any strategy, capital, venue or host change; a serious incident | `UNKNOWN` — none exists |
 
 **Standing register blockers that cut across rows** (repository evidence, recorded 2026-08-23 from
-research tickets #105 and #106 — no live inspection is claimed): the deployed Bridge runs **schema
-v4**, so the v5–v9 safety mechanisms are code-complete and tested but **inactive** on that deployed
-database; **deployment execution evidence is stranded off master and master carries stale deployment
-wording**; and there is **zero functioning CI** — OPS-C (WP-P0-27) is planned and unbuilt, so no check
-named above currently runs automatically. **These are blockers. They are not authorization to repair
-them.**
+research tickets #105 and #106 — no live inspection is claimed; the third 2026-08-23 blocker, "zero
+functioning CI", was corrected 2026-08-25 — see the dated correction below): the deployed Bridge runs
+**schema v4**, so the v5–v9 safety mechanisms are code-complete and tested but **inactive** on that
+deployed database; and **deployment execution evidence is stranded off master and master carries
+stale deployment wording**. **These are blockers. They are not authorization to repair them.**
+
+**CI correction (2026-08-25, lane AM — repository state at `master` `59bf7723` plus read-only
+GitHub evidence reproduced by the implementer):** the 2026-08-23 register recorded a third
+cross-cutting blocker — *"there is zero functioning CI — OPS-C (WP-P0-27) is planned and unbuilt,
+so no check named above currently runs automatically."* That claim is stale and is withdrawn:
+
+- `.github/workflows/ci.yml` — the WP-P0-27 repo-root workflow (Bridge suite, Python 3.12,
+  hash-locked dependency install, `compileall`) — reached `master` through merge `110305c0`; the
+  WP-P0-27 package (lane K, T1 PASS-WITH-NITS) merged at `d5e5e98e`; and the GC-referent repair
+  `cef1d070` turned the `master` CI run green (run `32863496339`, created 2026-08-25T15:04:24Z).
+  The latest `master` push, at `59bf7723`, is green: CI run `32868549932` and Pine Defang Guard
+  run `32868550067` both completed `success` on 2026-08-25.
+- `.github/workflows/pine-defang-guard.yml` (WP-P0-23) also runs on every push and pull request;
+  it is deliberately **not** a required check (progressive policy as designed).
+- `master` is protected: repository ruleset **21444962** ("Protect master – required CI", created
+  2026-08-25) is **active** with `required_status_checks` for **`Bridge suite (Python 3.12)`** plus
+  `deletion` and `non_fast_forward` rules, and **no bypass actors**; the legacy branch-protection
+  API returns 404 because enforcement is via the ruleset, not legacy protection.
+
+**This correction changes no row status above.** CI runs the Bridge test suite and the Pine alert
+guard; none of the fourteen categories' named evidence — per-strategy soaks, testnet drills,
+three-way reconciliation, kill-switch drills, deployed-host monitoring, the owner signature — is
+produced or accepted by it, so every row's evidence remains `None accepted`. **Withdrawing the
+stale zero is not authorization to repair the remaining blockers, and it gates no row.**
+
+**Adjacent literal staleness noticed, not corrected here (lane AM scope is the CI claim only):**
+rows 1 and 2 say "zero tags exist in the repository". True on 2026-08-23; since 2026-08-24 22:08
++0300 the repository carries 180 `legacy/*` archive tags (worktree-cleanup residue). No frozen
+strategy-identity tag exists, which is what those rows mean, but the literal sentence is no longer
+exact. Left for the Lead/owner to reword or ratify.
 
