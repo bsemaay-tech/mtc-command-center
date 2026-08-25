@@ -52,4 +52,5 @@ def test_tp_mode_none_null_is_numeric_before_runner_validation() -> None:
 
     assert canonical["tp_r_multiple"] is None
     assert overrides["tp_r_multiple"] == 1.0
+    assert not any(key.startswith("wt_") for key in overrides)
     validate_config(merged)

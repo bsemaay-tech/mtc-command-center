@@ -31,7 +31,7 @@ Only these two new Markdown files were written, both under
 |---|---|---|
 | Exact file and line list | PASS | Authorization package §3 |
 | One maintained active source transformed in place | PASS — `MTC_V2.pine`; no copy or rename | §§2, 7 |
-| No `alert(` in any active `.pine`; empty allowlist | PASS as specified; current pre-change state correctly remains RED | §6 |
+| No `alert(` / `alertcondition(` in any active `.pine`; empty allowlist | PASS as amended; current pre-change state correctly remains RED | §6 |
 | D026-provable CI guard | PASS as specification only; pre-fix RED, arbitrary-tree RED, and repaired GREEN required | §6.3 |
 | 13 Pine inputs + 13 Python keys mapping | PASS, one-to-one with current lines and validation fallout | §4 |
 | Seven `tw_*` keys explicitly out of scope | PASS, key by key; six active and one `[DRIFT/UNKNOWN]` | §5 |

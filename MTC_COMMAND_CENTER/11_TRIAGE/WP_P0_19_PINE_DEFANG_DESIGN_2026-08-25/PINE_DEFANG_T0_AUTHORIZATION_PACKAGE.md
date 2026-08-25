@@ -34,9 +34,11 @@ Pine revision, create a TradingView alert, or contact a host or venue under this
    title and all calculation, order-simulation, plotting, table, label, and render logic remain
    unchanged.
 4. Its 13 `wt_*` UI inputs and the complete L25 WunderTrading dispatch block are absent.
-   Consequently it compiles without dangling `wt_*` references and contains no `alert(`.
+   Consequently it compiles without dangling `wt_*` references and contains neither
+   `alert(` nor `alertcondition(`.
 5. Across the whole checked-out repository, every `.pine` file is scanned and **zero** files
-   contain the literal byte sequence `alert(`. The allowlist is literally empty.
+   contain either literal ASCII byte sequence `alert(` or `alertcondition(`. The allowlist is
+   literally empty.
 6. The matching 13 `wt_*` defaults and their validation logic are absent from the canonical
    Python configuration. The optimization-only `integrations_disabled` compatibility switch
    remains accepted as an empty no-op so existing optimization profiles do not emit removed,
@@ -134,9 +136,10 @@ their later validation/consumers remain byte-unmodified by its diff.
    nonzero **BLOCK**, not a clean result.
 2. Walk the entire checked-out repository root recursively, excluding only `.git` metadata.
    It must include tracked and untracked `.pine` files and paths containing spaces.
-3. Read each `.pine` file as bytes and search for the literal ASCII byte sequence `alert(`.
-   This deliberately catches code, comments, mixed case only when exact, and any location in
-   the file. It is a simple policy invariant, not a Pine parser.
+3. Read each `.pine` file as bytes and search independently for the literal ASCII byte
+   sequences `alert(` and `alertcondition(`. This deliberately catches code, comments, mixed
+   case only when exact, and any location in the file. It is a simple policy invariant, not a
+   Pine parser.
 4. Use an explicit immutable allowlist whose value is empty. There is no path, generated-file,
    example, archive, or comment exception.
 5. Print every violating repository-relative path in deterministic ordinal order and exit
@@ -150,10 +153,26 @@ their later validation/consumers remain byte-unmodified by its diff.
 The policy predicate is equivalent to the following independent repository-root check:
 
 ```powershell
-$hits = @(rg -l -F --glob '*.pine' 'alert(' .)
-if ($LASTEXITCODE -notin 0,1) { throw "pine scan could not be evaluated: rc=$LASTEXITCODE" }
-if ($hits.Count -ne 0) { $hits; throw "pine alert allowlist is empty" }
+$hits = @()
+foreach ($needle in @('alert(', 'alertcondition(')) {
+    $needleHits = @(rg -l -F --glob '*.pine' $needle .)
+    if ($LASTEXITCODE -notin 0,1) {
+        throw "pine scan could not be evaluated for $needle: rc=$LASTEXITCODE"
+    }
+    $hits += $needleHits
+}
+$hits = @($hits | Sort-Object -Unique)
+if ($hits.Count -ne 0) { $hits; throw "pine alert-family allowlist is empty" }
 ```
+
+**2026-08-25 owner-authorized amendment:** the byte-level invariant above is widened from
+`alert(` alone to both `alert(` and `alertcondition(`. As a consequence, WP-P0-23 de-fanged
+one third-party archived Q-Trend indicator in place:
+`MTC_COMMAND_CENTER/03_QUANTLENS/00_INBOX_REPORTS/1 Haziran/Stg Q Trend/Q Trend.pine`.
+Its five alert-condition declarations were commented out; the original remains recoverable from
+Git history at commit `480598eaad02788b12d8b505cb93bcc346c1e5bd`. This amendment does not
+authorize any broader Pine, parser, TradingView, deployment, host, credential, broker, testnet,
+live, or trading action.
 
 The Python scanner, not shell-specific grep behavior, is the CI authority. The independent
 `rg` command is an audit cross-check.
@@ -181,17 +200,18 @@ all three arms below. Specifications or asserted outcomes do not count.
 1. **RED — exact pre-fix behavior.** Run the new scanner before deleting the existing dispatch
    block. It must return nonzero and name
    `MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine` with two matches.
-2. **RED — arbitrary-tree falsification.** After the real source is clean, create one temporary
-   `.pine` probe under the checked-out repository but outside `01_PINE`, containing the literal
-   `alert(`. The scanner must return nonzero and name that exact probe. This proves the guard is
-   repo-wide rather than hard-coded to the controller path. Remove the probe and prove `git
-   status --short` contains no residue.
+2. **RED — arbitrary-tree falsification.** After the real source is clean, create temporary
+   `.pine` probe(s) under the checked-out repository but outside `01_PINE`, covering both
+   literal needles: `alert(` and `alertcondition(`. The scanner must return nonzero and name the
+   exact probe path(s). This proves the guard is repo-wide rather than hard-coded to the
+   controller path and proves both byte needles are load-bearing. Remove the probe(s) and prove
+   `git status --short` contains no residue.
 3. **GREEN — repaired state.** Run the identical scanner after removal. It must return zero and
    report `matches=0 allowlist=0`. Independently run the `rg` cross-check and record an empty
    result with `rg` exit 1 (the documented no-match status), not mistake exit 1 for tool failure.
 
-A test that merely asserts the scanner's source contains `alert(`, or a test that scans only a
-fixture directory, is supplemental and does not satisfy D026.
+A test that merely asserts the scanner's source contains one of these byte needles, or a test
+that scans only a fixture directory, is supplemental and does not satisfy D026.
 
 ## 7. In-place Pine transformation plan
 
@@ -280,6 +300,7 @@ git diff -- $pine $config
 git hash-object $pine
 git hash-object $config
 rg -n -F --glob '*.pine' 'alert(' .
+rg -n -F --glob '*.pine' 'alertcondition(' .
 git status --short
 ```
 
@@ -302,8 +323,8 @@ All items are cumulative:
 - [ ] Diff touches only the files and anchors in section 3.
 - [ ] Exactly one maintained active Pine source exists: `MTC_V2.pine`.
 - [ ] Pine compiles; lines 176–188 and 2007–2028 are gone; no dangling `wt_*` reference exists.
-- [ ] Repo-wide scanner and independent `rg` check find zero `.pine` files containing `alert(`;
-  allowlist size is zero.
+- [ ] Repo-wide scanner and independent `rg` check find zero `.pine` files containing either
+  `alert(` or `alertcondition(`; allowlist size is zero.
 - [ ] D026 pre-fix RED, arbitrary-tree RED, and repaired GREEN all ran with real recorded output.
 - [ ] The 13 Python defaults and the complete L25 validation block are gone.
 - [ ] The mapper consumes `integrations_disabled` as an empty no-op and emits no `wt_*` key;
