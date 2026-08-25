@@ -12,6 +12,32 @@
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
 
+## [GLM-5.3 Implementer (Claude Code harness)] 2026-08-25 — Lane AK: CI_POLICY.md reconciled with the live branch protection (T2 docs, PENDING LEAD AUDIT)
+
+`WP_P0_27_CI_HOME_2026-08-25/CI_POLICY.md` claimed the required-check configuration "remains
+unconfigured" and planned an explicit owner/Lead/admin bypass for direct pushes. Both claims are
+now false. Ground truth verified 2026-08-25 via read-only `gh api` (rulesets, ruleset detail,
+branch rules, branch protection, check runs, run list, PR #127): repo ruleset **21444962
+"Protect master – required CI"** is **active** (created 2026-08-25T18:24:47+03:00) on
+`~DEFAULT_BRANCH` with exactly three rules — `deletion`, `non_fast_forward`, and
+`required_status_checks` requiring **`Bridge suite (Python 3.12)`** (strict up-to-date policy,
+no create-time exemption). **`bypass_actors` is empty** and `current_user_can_bypass` is
+`never`; legacy branch protection is absent (404). Observed behavior per the `59bf7723` merge
+message: direct push to `master` rejected (GH013); PRs must be up to date; first protected
+merge was PR #127. Consequence now recorded in the policy: **work reaches `master` only via a
+PR with the check green on an up-to-date head — no bypass exists for anyone.**
+
+Also reconciled in the same file: GC-referent fix confirmed merged (`cef1d070`, master green
+since 15:04:24Z, before ruleset creation — protection was activated on a green master);
+`pine-alert-guard` (WP-P0-23) runs on master but is NOT a required check (progressive policy
+working as designed); rollback section now names ruleset 21444962. `LANE_REPORT.md` §"Owner
+action text" still carries the old bypass plan and is superseded by the policy's live section —
+left untouched as historical implementer handoff.
+
+- **Branch:** `fix/ci-policy-reconcile-20260825` (from master `59bf7723`), documentation-only.
+- **Gate 1:** T2 (docs/evidence, no protected surface). **Awaiting Lead T2 audit — not
+  self-accepted, not merged.** No repository/GitHub setting was changed by this lane.
+
 ## [Claude Fable 5 Lead] 2026-08-24 — help_map.json retired-KILL-claim correction (T2, Bridge Help workstream)
 
 During the 2026-08-24 Wayfinder G1 audits a claude-opus-5 auditor noted (out of audit scope) that
