@@ -1,0 +1,160 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 2,
+    "name": "Direction / flip / regime lock",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C05",
+      "C21",
+      "C32",
+      "C33"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "allow_same_close_reversal": false,
+    "enable_long": true,
+    "enable_short": true,
+    "regime_lock": false,
+    "legacy_branch_matrix": {
+      "tw_audit_semantics_mode": "research",
+      "tw_reversal_reentry_delay_bars": 2
+    }
+  },
+  "frozen_metadata": {
+    "price_tick": "0.01",
+    "qty_step": "1.0",
+    "contract_multiplier": "1"
+  },
+  "normalized_bars": [
+    {
+      "index": 0,
+      "ts": "2026-01-01T00:00:00Z",
+      "close": "100",
+      "raw": "LONG"
+    },
+    {
+      "index": 1,
+      "ts": "2026-01-01T00:00:01Z",
+      "close": "95",
+      "raw": "SHORT"
+    },
+    {
+      "index": 2,
+      "ts": "2026-01-01T00:00:02Z",
+      "close": "95",
+      "raw": "NONE"
+    },
+    {
+      "index": 3,
+      "ts": "2026-01-01T00:00:03Z",
+      "close": "95",
+      "raw": "SHORT"
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "events.bar0",
+        "value": "ENTER_LONG",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:227-237 (C05/GF-05)"
+        ]
+      },
+      {
+        "path": "events.bar1",
+        "value": "EXIT_LONG:OPP_SIGNAL",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:227-237 (C05/GF-05)"
+        ]
+      },
+      {
+        "path": "events.bar2",
+        "value": "NONE",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:227-237 (C05/GF-05)"
+        ]
+      },
+      {
+        "path": "events.bar3",
+        "value": "ENTER_SHORT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:227-237 (C05/GF-05)"
+        ]
+      },
+      {
+        "path": "legacy.local.reentry_bar",
+        "value": 2,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:830-863 (C32/GF-32)"
+        ]
+      },
+      {
+        "path": "legacy.carry.reentry_bar",
+        "value": 3,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:830-863 (C32/GF-32)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:871-886 (C33/GF-33)"
+        ]
+      },
+      {
+        "path": "legacy.next_bar_open.reentry",
+        "value": "bar3@99.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:830-863 (C32/GF-32)"
+        ]
+      },
+      {
+        "path": "legacy.next_bar_close.reentry",
+        "value": "bar4@100.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:830-863 (C32/GF-32)"
+        ]
+      },
+      {
+        "path": "legacy.delay.reentry",
+        "value": "bar5@100.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:830-863 (C32/GF-32)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:871-886 (C33/GF-33)"
+        ]
+      },
+      {
+        "path": "state.position.side",
+        "value": "SHORT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:227-237 (C05/GF-05)"
+        ]
+      },
+      {
+        "path": "state.no_stale_decision_carried",
+        "value": true,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:227-237 (C05/GF-05)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:606-616 (C21/GF-21)"
+        ]
+      }
+    ],
+    "sha256": "ced1f206dff54019b905e954d80ffd2181b104c9c7231ec3ad3c48ccd04864b3",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "51f4c156613c73de59b48f1300239cd9a5d902c40770d7a04eea6790083eb11c",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "events.bar2",
+    "from": "NONE",
+    "to": "ENTER_SHORT",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:227-237 (C05/GF-05)",
+    "rationale": "Inject exactly the stale deferred-side entry that C05 forbids."
+  }
+}

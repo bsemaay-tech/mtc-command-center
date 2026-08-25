@@ -1,0 +1,97 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 24,
+    "name": "OrderIntent idempotence",
+    "status": "BUILT"
+  },
+  "fixture_type": "static-validation",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C26"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "intent_id": "sha256:fixed-order-intent",
+    "deliveries": 2,
+    "action": "ENTER_LONG",
+    "qty": "1"
+  },
+  "frozen_metadata": {
+    "deployment_id": "dep-test",
+    "worker_id": "worker-test",
+    "bar_id": "TESTVENUE|TESTUSDT|1m|2026-01-01T00:00:00Z"
+  },
+  "normalized_bars": [],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "intent.first_delivery",
+        "value": "APPLIED",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "intent.second_delivery",
+        "value": "DUPLICATE_NOOP",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "intent.identity_stable",
+        "value": true,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "fills.count",
+        "value": 1,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "economic_effects.count",
+        "value": 1,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "state.position.qty",
+        "value": "1",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "state.intent_ledger_entries",
+        "value": 1,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      }
+    ],
+    "sha256": "0900f02fe9222f87459ba33e544d0fe173ea0c77b80f9d69fbbb49f2670d81e9",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "a25bdf5591fb649ecd54d1b11a98ad68641f388a19fdb383ba5c3aed52aa20ca",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "economic_effects.count",
+    "from": 1,
+    "to": 2,
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)",
+    "rationale": "Give the duplicate delivery exactly one extra economic effect while identity remains fixed."
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 22,
+    "name": "Duplicate and reordered bars",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C26"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "venue": "TESTVENUE",
+    "symbol": "TESTUSDT",
+    "timeframe": "1m",
+    "modes": [
+      "LIVE",
+      "RECOVERY"
+    ]
+  },
+  "frozen_metadata": {
+    "price_tick": "0.01",
+    "qty_step": "1.0",
+    "contract_multiplier": "1"
+  },
+  "normalized_bars": [
+    {
+      "id": "B1",
+      "ts": "2026-01-01T00:00:00Z",
+      "ohlcv": [
+        "100",
+        "101",
+        "99",
+        "100",
+        "1"
+      ]
+    },
+    {
+      "id": "B2",
+      "ts": "2026-01-01T00:01:00Z",
+      "ohlcv": [
+        "100",
+        "102",
+        "100",
+        "101",
+        "1"
+      ]
+    },
+    {
+      "id": "B3",
+      "ts": "2026-01-01T00:02:00Z",
+      "ohlcv": [
+        "101",
+        "103",
+        "101",
+        "102",
+        "1"
+      ]
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "duplicate.event_stream_equal_baseline",
+        "value": true,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "duplicate.final_state_hash_equal_baseline",
+        "value": true,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "duplicate.intent_count",
+        "value": 1,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "drift.reason",
+        "value": "BAR_DRIFT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "drift.events_after_block",
+        "value": 0,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "live_reorder.reason",
+        "value": "OUT_OF_ORDER_BAR",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "recovery_reorder.sorted_then_equal_baseline",
+        "value": true,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "state.duplicate_disposition",
+        "value": "DUPLICATE_NOOP",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      },
+      {
+        "path": "state.live_reorder_blocked",
+        "value": true,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ]
+      }
+    ],
+    "sha256": "056ffd37b7450e84d14b48b106ac14f116f399482c04c66c60973f1cf4133d40",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "c7be5dbb54949b09eb6a6456c361d2f1af1b7040a2095f06e951ca7964b704c3",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "duplicate.intent_count",
+    "from": 1,
+    "to": 2,
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)",
+    "rationale": "Process exactly one duplicate bar twice, changing only the emitted-intent count."
+  }
+}

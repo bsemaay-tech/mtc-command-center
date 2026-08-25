@@ -1,0 +1,107 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 4,
+    "name": "Contract multiplier",
+    "status": "BUILT"
+  },
+  "fixture_type": "static-validation",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C08"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "sizing_method": "RISK_AT_STOP",
+    "requested_risk_fraction": "0.01",
+    "entry": "100",
+    "stop": "95",
+    "direction": "LONG"
+  },
+  "frozen_metadata": {
+    "bucket_capital": "10000",
+    "contract_multiplier": "10",
+    "price_tick": "0.01",
+    "qty_step": "0.01"
+  },
+  "normalized_bars": [],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "resolution.risk_capital",
+        "value": "100",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ]
+      },
+      {
+        "path": "resolution.per_unit_risk",
+        "value": "50",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ]
+      },
+      {
+        "path": "resolution.proposed_qty",
+        "value": "2",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ]
+      },
+      {
+        "path": "resolution.realised_risk_at_stop",
+        "value": "100",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ]
+      },
+      {
+        "path": "resolution.fee_at_0_1_pct",
+        "value": "2.0",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ]
+      },
+      {
+        "path": "short_twin.proposed_qty",
+        "value": "2",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ]
+      },
+      {
+        "path": "state.contract_multiplier",
+        "value": "10",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ]
+      },
+      {
+        "path": "state.position",
+        "value": "UNOPENED_STATIC_CASE",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)"
+        ]
+      }
+    ],
+    "sha256": "11a4b28d02f2fa141f110cbc1e74004ec71328979326b87625582c6b1ea8b4d5",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "8cb081b68067ebd9f12d33f21bad5eb531e7d9cefae1112a6aa6ad590d7093d9",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "resolution.proposed_qty",
+    "from": "2",
+    "to": "20",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:324-334 (C08/GF-08)",
+    "rationale": "Delete the multiplier from the denominator; only proposed quantity is mutated in the candidate output."
+  }
+}

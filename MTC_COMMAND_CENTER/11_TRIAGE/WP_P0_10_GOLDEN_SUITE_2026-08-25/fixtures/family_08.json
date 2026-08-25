@@ -1,0 +1,138 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 8,
+    "name": "TP calculation (ATR / percent / R)",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C12",
+      "C24"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "tp_mode": "R",
+    "tp_r_multiple": "2.0",
+    "entry": "100",
+    "stop": "95",
+    "atr_ready": false
+  },
+  "frozen_metadata": {
+    "price_tick": "0.01",
+    "qty_step": "1.0",
+    "contract_multiplier": "1"
+  },
+  "normalized_bars": [
+    {
+      "index": 0,
+      "ohlcv": [
+        "100",
+        "100",
+        "100",
+        "100",
+        "1"
+      ]
+    },
+    {
+      "index": 1,
+      "ohlcv": [
+        "112",
+        "112",
+        "112",
+        "112",
+        "1"
+      ]
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "target.long",
+        "value": "110.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:429-439 (C12/GF-12)"
+        ]
+      },
+      {
+        "path": "target.gap_fill",
+        "value": "112.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:429-439 (C12/GF-12)"
+        ]
+      },
+      {
+        "path": "target.touch_fill",
+        "value": "110.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:429-439 (C12/GF-12)"
+        ]
+      },
+      {
+        "path": "missing_stop.outcome",
+        "value": "BLOCK",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:429-439 (C12/GF-12)"
+        ]
+      },
+      {
+        "path": "missing_stop.reason",
+        "value": "TARGET_UNAVAILABLE_MISSING_STOP",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:429-439 (C12/GF-12)"
+        ]
+      },
+      {
+        "path": "atr_unready.reason",
+        "value": "TARGET_UNAVAILABLE_ATR_NOT_READY",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:429-439 (C12/GF-12)"
+        ]
+      },
+      {
+        "path": "short_twin.target",
+        "value": "90.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:429-439 (C12/GF-12)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ]
+      },
+      {
+        "path": "short_twin.gap_fill",
+        "value": "88.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:429-439 (C12/GF-12)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ]
+      },
+      {
+        "path": "state.position_after_gap",
+        "value": "FLAT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:429-439 (C12/GF-12)"
+        ]
+      }
+    ],
+    "sha256": "181a1d0a10782909b0487aa1fe9eb90f8572546f0306e462661b048b420633b8",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "9c6779a32f6d3988367655a5ab88f369a5236c4ece22514bfcd3b1f4827850c1",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "missing_stop.outcome",
+    "from": "BLOCK",
+    "to": "TARGET_AT_102.00",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:429-439 (C12/GF-12)",
+    "rationale": "Mutate only the missing-stop outcome to B's percent-target substitution."
+  }
+}

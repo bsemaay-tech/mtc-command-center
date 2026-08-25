@@ -1,0 +1,135 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 3,
+    "name": "Position sizing",
+    "status": "BUILT"
+  },
+  "fixture_type": "static-validation",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C07",
+      "C31"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "sizing_method": "RISK_AT_STOP",
+    "requested_risk_fraction": "0.01",
+    "stop_price": "95",
+    "entry_reference_price": "100",
+    "direction": "LONG"
+  },
+  "frozen_metadata": {
+    "bucket_capital": "10000",
+    "contract_multiplier": "1",
+    "qty_step": "0.01",
+    "snapshot_id": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "normalized_bars": [],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "request.accepted",
+        "value": true,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+        ]
+      },
+      {
+        "path": "request.has_snapshot_id",
+        "value": false,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+        ]
+      },
+      {
+        "path": "request.has_executable_quantity",
+        "value": false,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+        ]
+      },
+      {
+        "path": "resolution.risk_capital",
+        "value": "100",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+        ]
+      },
+      {
+        "path": "resolution.per_unit_risk",
+        "value": "5",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+        ]
+      },
+      {
+        "path": "resolution.proposed_qty",
+        "value": "20",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+        ]
+      },
+      {
+        "path": "resolution.fixed_qty",
+        "value": "3",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+        ]
+      },
+      {
+        "path": "resolution.fixed_notional_qty",
+        "value": "10",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+        ]
+      },
+      {
+        "path": "legacy_precision.off_qty",
+        "value": "1.23",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:812-822 (C31/GF-31)"
+        ]
+      },
+      {
+        "path": "legacy_precision.research_qty",
+        "value": "1.234567",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:812-822 (C31/GF-31)"
+        ]
+      },
+      {
+        "path": "state.bound_request_byte_identical",
+        "value": true,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+        ]
+      },
+      {
+        "path": "state.quantity_owner",
+        "value": "RISK_ALLOCATOR",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+        ]
+      }
+    ],
+    "sha256": "e5d8b74eef8667f02d99e5df137f9a648aae0eed19c26961151f41c0fe8d6fe6",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "09ccf39d8bb650232f95431f2f68d075d464fd9426ca33b703e694254d6aae2b",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "request.has_snapshot_id",
+    "from": false,
+    "to": true,
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)",
+    "rationale": "Attach snapshot identity to SizingRequest, violating the decided ownership boundary in one field."
+  }
+}

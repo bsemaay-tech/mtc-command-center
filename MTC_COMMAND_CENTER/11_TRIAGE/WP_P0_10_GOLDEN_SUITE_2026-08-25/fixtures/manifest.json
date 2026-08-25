@@ -1,0 +1,301 @@
+{
+  "schema_version": "wp-p0-10-golden-suite-manifest-v1",
+  "suite": "WP-P0-10 Kernel Economic Golden Suite",
+  "family_count": 25,
+  "built_count": 23,
+  "blocked_count": 2,
+  "built_family_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25
+  ],
+  "blocked_family_numbers": [
+    18,
+    19
+  ],
+  "authority": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+  "output_normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+  "families": [
+    {
+      "number": 1,
+      "name": "Entry signal",
+      "status": "BUILT",
+      "fixture": "family_01.json",
+      "wp_p0_09_rows": [
+        "C01",
+        "C42"
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Direction / flip / regime lock",
+      "status": "BUILT",
+      "fixture": "family_02.json",
+      "wp_p0_09_rows": [
+        "C05",
+        "C21",
+        "C32",
+        "C33"
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Position sizing",
+      "status": "BUILT",
+      "fixture": "family_03.json",
+      "wp_p0_09_rows": [
+        "C07",
+        "C31"
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Contract multiplier",
+      "status": "BUILT",
+      "fixture": "family_04.json",
+      "wp_p0_09_rows": [
+        "C08"
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Minimum notional",
+      "status": "BUILT",
+      "fixture": "family_05.json",
+      "wp_p0_09_rows": [
+        "C09"
+      ]
+    },
+    {
+      "number": 6,
+      "name": "Rounding / qty step / min qty",
+      "status": "BUILT",
+      "fixture": "family_06.json",
+      "wp_p0_09_rows": [
+        "C09",
+        "C31"
+      ]
+    },
+    {
+      "number": 7,
+      "name": "SL calculation (ATR / percent / swing)",
+      "status": "BUILT",
+      "fixture": "family_07.json",
+      "wp_p0_09_rows": [
+        "C11",
+        "C24"
+      ]
+    },
+    {
+      "number": 8,
+      "name": "TP calculation (ATR / percent / R)",
+      "status": "BUILT",
+      "fixture": "family_08.json",
+      "wp_p0_09_rows": [
+        "C12",
+        "C24"
+      ]
+    },
+    {
+      "number": 9,
+      "name": "Multi-TP lifecycle incl. partial TP1 fill",
+      "status": "BUILT",
+      "fixture": "family_09.json",
+      "wp_p0_09_rows": [
+        "C13"
+      ]
+    },
+    {
+      "number": 10,
+      "name": "Break-even trigger and buffer",
+      "status": "BUILT",
+      "fixture": "family_10.json",
+      "wp_p0_09_rows": [
+        "C14",
+        "C36"
+      ]
+    },
+    {
+      "number": 11,
+      "name": "Trailing activation and monotonicity",
+      "status": "BUILT",
+      "fixture": "family_11.json",
+      "wp_p0_09_rows": [
+        "C15",
+        "C37"
+      ]
+    },
+    {
+      "number": 12,
+      "name": "Opposite-signal exit",
+      "status": "BUILT",
+      "fixture": "family_12.json",
+      "wp_p0_09_rows": [
+        "C05",
+        "C16",
+        "C21"
+      ]
+    },
+    {
+      "number": 13,
+      "name": "Time exit (bars / EOD / EOW)",
+      "status": "BUILT",
+      "fixture": "family_13.json",
+      "wp_p0_09_rows": [
+        "C17",
+        "C25"
+      ]
+    },
+    {
+      "number": 14,
+      "name": "Bar gaps through the stop",
+      "status": "BUILT",
+      "fixture": "family_14.json",
+      "wp_p0_09_rows": [
+        "C11",
+        "C20"
+      ]
+    },
+    {
+      "number": 15,
+      "name": "Same-bar SL/TP collision",
+      "status": "BUILT",
+      "fixture": "family_15.json",
+      "wp_p0_09_rows": [
+        "C19"
+      ]
+    },
+    {
+      "number": 16,
+      "name": "Pyramiding / add / partial reduction",
+      "status": "BUILT",
+      "fixture": "family_16.json",
+      "wp_p0_09_rows": [
+        "C06",
+        "C13"
+      ]
+    },
+    {
+      "number": 17,
+      "name": "Fees, slippage, funding",
+      "status": "BUILT",
+      "fixture": "family_17.json",
+      "wp_p0_09_rows": [
+        "C08",
+        "C22"
+      ]
+    },
+    {
+      "number": 18,
+      "name": "Snapshot drift / bucket-capital divergence",
+      "status": "BLOCKED",
+      "missing_semantics": [
+        "SNAPSHOT_MISMATCH trigger",
+        "typed rejection event",
+        "no-order/final-state oracle",
+        "D026 guard-removal discriminator"
+      ],
+      "authority_evidence": [
+        "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1282-1287 (explicit non-decision)"
+      ],
+      "unblocks_when": "WP-P0-09 adds a decided eight-field row for SNAPSHOT_MISMATCH, including the guard-absent RED and guard-present GREEN outputs.",
+      "coverage_note": "Genuine D026 snapshot-drift coverage hole; not cosmetic and not waived."
+    },
+    {
+      "number": 19,
+      "name": "Allocator ↔ Guardian boundary",
+      "status": "BLOCKED",
+      "missing_semantics": [
+        "REFERENCE_DIVERGENCE discriminator/tolerance",
+        "typed rejection event",
+        "no-resize/no-order/final-state oracle"
+      ],
+      "authority_evidence": [
+        "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1282-1287 (explicit non-decision)",
+        "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+      ],
+      "unblocks_when": "WP-P0-09 adds a decided eight-field row for REFERENCE_DIVERGENCE and the authorize-unchanged-or-reject boundary, including exact RED/GREEN outputs."
+    },
+    {
+      "number": 20,
+      "name": "Short-side symmetry",
+      "status": "BUILT",
+      "fixture": "family_20.json",
+      "wp_p0_09_rows": [
+        "C24",
+        "cross-cutting rule 2"
+      ]
+    },
+    {
+      "number": 21,
+      "name": "NaN / zero / boundary precision",
+      "status": "BUILT",
+      "fixture": "family_21.json",
+      "wp_p0_09_rows": [
+        "C07",
+        "C09",
+        "C24"
+      ]
+    },
+    {
+      "number": 22,
+      "name": "Duplicate and reordered bars",
+      "status": "BUILT",
+      "fixture": "family_22.json",
+      "wp_p0_09_rows": [
+        "C26"
+      ]
+    },
+    {
+      "number": 23,
+      "name": "Cancellation and revision ordering",
+      "status": "BUILT",
+      "fixture": "family_23.json",
+      "wp_p0_09_rows": [
+        "C26"
+      ]
+    },
+    {
+      "number": 24,
+      "name": "OrderIntent idempotence",
+      "status": "BUILT",
+      "fixture": "family_24.json",
+      "wp_p0_09_rows": [
+        "C26"
+      ]
+    },
+    {
+      "number": 25,
+      "name": "Venue and session edge cases",
+      "status": "BUILT",
+      "fixture": "family_25.json",
+      "wp_p0_09_rows": [
+        "C09",
+        "C17",
+        "C22",
+        "C25",
+        "C27"
+      ]
+    }
+  ]
+}

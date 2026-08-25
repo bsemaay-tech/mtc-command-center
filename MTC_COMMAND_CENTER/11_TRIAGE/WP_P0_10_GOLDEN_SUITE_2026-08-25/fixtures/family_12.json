@@ -1,0 +1,142 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 12,
+    "name": "Opposite-signal exit",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C05",
+      "C16",
+      "C21"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "exit_on_opposite_signal": true,
+    "exit_on_ma_block": true,
+    "exit_on_htf_trend_block": true,
+    "stop_percent": "5.0"
+  },
+  "frozen_metadata": {
+    "price_tick": "0.01",
+    "qty_step": "1.0",
+    "contract_multiplier": "1",
+    "entry_qty": "1"
+  },
+  "normalized_bars": [
+    {
+      "index": 0,
+      "ohlcv": [
+        "100",
+        "100",
+        "100",
+        "100",
+        "1"
+      ],
+      "raw": "LONG"
+    },
+    {
+      "index": 1,
+      "ohlcv": [
+        "100",
+        "100",
+        "94",
+        "96",
+        "1"
+      ],
+      "raw": "SHORT"
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "priority.stop_plus_opposite",
+        "value": "STOP",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:501-511 (C16/GF-16)"
+        ]
+      },
+      {
+        "path": "priority.opposite_without_stop",
+        "value": "OPP_SIGNAL",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:501-511 (C16/GF-16)"
+        ]
+      },
+      {
+        "path": "priority.filter_without_stop_or_opposite",
+        "value": "ma_filter",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:501-511 (C16/GF-16)"
+        ]
+      },
+      {
+        "path": "priority.full_exit_reasons_per_bar",
+        "value": 1,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:501-511 (C16/GF-16)"
+        ]
+      },
+      {
+        "path": "same_bar_after_stop.entry_count",
+        "value": 0,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:606-616 (C21/GF-21)"
+        ]
+      },
+      {
+        "path": "same_close_reversal.order",
+        "value": [
+          "EXIT_LONG:OPP_SIGNAL",
+          "ENTER_SHORT"
+        ],
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:227-237 (C05/GF-05)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:606-616 (C21/GF-21)"
+        ]
+      },
+      {
+        "path": "short_twin.priority_identical",
+        "value": true,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:501-511 (C16/GF-16)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ]
+      },
+      {
+        "path": "state.position_after_stop",
+        "value": "FLAT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:501-511 (C16/GF-16)"
+        ]
+      },
+      {
+        "path": "state.reason_after_stop",
+        "value": "STOP",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:501-511 (C16/GF-16)"
+        ]
+      }
+    ],
+    "sha256": "8d5b57c24500d04c2bec12740983e02f813aad0346e9caef01c61805b15752ee",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "4b25ab17f3efbd1f0c6e86157c294c5cf73fc5990f07c61c0caa7484747e3812",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "priority.filter_without_stop_or_opposite",
+    "from": "ma_filter",
+    "to": "htf_trend_filter",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:501-511 (C16/GF-16)",
+    "rationale": "Reorder exactly one filter-reason output while preserving the exit itself."
+  }
+}

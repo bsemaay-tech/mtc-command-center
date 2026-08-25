@@ -1,0 +1,132 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 13,
+    "name": "Time exit (bars / EOD / EOW)",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C17",
+      "C25"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "time_stop_bars": 3,
+    "time_stop_condition": "Loss Only",
+    "loss_threshold": "-5.0",
+    "time_stop_eod": true,
+    "venue_calendar": "FROZEN_TEST_CAL_24x5"
+  },
+  "frozen_metadata": {
+    "calendar_last_friday_bar": "2026-01-02T21:45:00Z",
+    "next_session_bar": "2026-01-05T00:00:00Z",
+    "contract_multiplier": "1"
+  },
+  "normalized_bars": [
+    {
+      "index": 5,
+      "close": "100"
+    },
+    {
+      "index": 6,
+      "close": "100"
+    },
+    {
+      "index": 7,
+      "close": "100"
+    },
+    {
+      "index": 8,
+      "close": "100"
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "bars_exit.bar",
+        "value": 8,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)"
+        ]
+      },
+      {
+        "path": "bars_exit.reason",
+        "value": "TIME_STOP_BARS",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)"
+        ]
+      },
+      {
+        "path": "loss_exit.current_unrealised_pnl",
+        "value": "-10",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)"
+        ]
+      },
+      {
+        "path": "loss_exit.reason",
+        "value": "TIME_STOP_LOSS",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)"
+        ]
+      },
+      {
+        "path": "eod_exit.timestamp",
+        "value": "2026-01-02T21:45:00Z",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:678-688 (C25/GF-25)"
+        ]
+      },
+      {
+        "path": "eod_exit.reason",
+        "value": "TIME_STOP_EOD",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)"
+        ]
+      },
+      {
+        "path": "calendar_missing.reason",
+        "value": "CALENDAR_UNAVAILABLE",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)"
+        ]
+      },
+      {
+        "path": "short_twin.absolute_loss",
+        "value": "10",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ]
+      },
+      {
+        "path": "state.position_after_eod",
+        "value": "FLAT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)"
+        ]
+      }
+    ],
+    "sha256": "0194a890d4f65022f0779048c3b3e5758eb74814fcb75046fbba265b3a74f464",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "f2040cbf286d4299b23c021ca7421ea9c7d9e1fe02cc5c057dc681234f177a8f",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "eod_exit.timestamp",
+    "from": "2026-01-02T21:45:00Z",
+    "to": "2026-01-05T00:00:00Z",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:519-529 (C17/GF-17)",
+    "rationale": "Move only the EOD exit timestamp to the rival next-period behaviour."
+  }
+}

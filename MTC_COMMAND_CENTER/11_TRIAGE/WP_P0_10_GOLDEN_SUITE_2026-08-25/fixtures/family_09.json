@@ -1,0 +1,149 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 9,
+    "name": "Multi-TP lifecycle incl. partial TP1 fill",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C13"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "tp_mode": "Multi",
+    "tp1_r_multiple": "1.0",
+    "tp1_close_pct": "40.0",
+    "tp2_r_multiple": "2.0",
+    "entry_qty": "10",
+    "entry": "100",
+    "stop": "95"
+  },
+  "frozen_metadata": {
+    "price_tick": "0.01",
+    "qty_step": "1.0",
+    "contract_multiplier": "1"
+  },
+  "normalized_bars": [
+    {
+      "index": 0,
+      "ohlcv": [
+        "100",
+        "100",
+        "100",
+        "100",
+        "1"
+      ]
+    },
+    {
+      "index": 1,
+      "ohlcv": [
+        "101",
+        "106",
+        "101",
+        "104",
+        "1"
+      ]
+    },
+    {
+      "index": 2,
+      "ohlcv": [
+        "104",
+        "111",
+        "104",
+        "110",
+        "1"
+      ]
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "fills.tp1.qty",
+        "value": "4",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:447-457 (C13/GF-13)"
+        ]
+      },
+      {
+        "path": "fills.tp1.price",
+        "value": "105.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:447-457 (C13/GF-13)"
+        ]
+      },
+      {
+        "path": "fills.tp2.qty",
+        "value": "6",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:447-457 (C13/GF-13)"
+        ]
+      },
+      {
+        "path": "fills.tp2.price",
+        "value": "110.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:447-457 (C13/GF-13)"
+        ]
+      },
+      {
+        "path": "fills.total_closed_qty",
+        "value": "10",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:447-457 (C13/GF-13)"
+        ]
+      },
+      {
+        "path": "metrics.closed_lifecycles",
+        "value": 1,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:447-457 (C13/GF-13)"
+        ]
+      },
+      {
+        "path": "short_twin.fragment_qty",
+        "value": [
+          "4",
+          "6"
+        ],
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:447-457 (C13/GF-13)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1274-1276 (cross-cutting rule 2)"
+        ]
+      },
+      {
+        "path": "state.position",
+        "value": "FLAT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:447-457 (C13/GF-13)"
+        ]
+      },
+      {
+        "path": "state.lifecycle_closed",
+        "value": true,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:447-457 (C13/GF-13)"
+        ]
+      }
+    ],
+    "sha256": "e5ed0bdba1c023410c3aee3924dd9405b44688577582fe263fb34e2f640af0ce",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "0a81058c3e1bb3461870381b3829962d038c8f5951eeaf742994a826857fdd14",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "fills.tp1.qty",
+    "from": "4",
+    "to": "10",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:447-457 (C13/GF-13)",
+    "rationale": "Mutate only TP1 quantity to initial quantity, creating the exact 16-closed-from-10 defect."
+  }
+}
