@@ -6,7 +6,7 @@
 
 **Audit tier:** T2
 
-**Status:** DOCUMENTATION HALF IMPLEMENTED; independent T2 review pending at the work-package commit
+**Status:** DOCUMENTATION HALF COMPLETE; independent T2 review PASS
 
 **Eligibility read:** **EXCLUDED — G6-gated T0 owner action, not authorized, not started, not performed**
 
@@ -39,7 +39,7 @@ No blog, forum, community SDK, secondary article, authenticated page, or private
 ## Commit record
 
 - Base: `46f5bafbf82f3366c8bc7ee08f6f0eee08d46138`
-- Work-package commit: **PENDING** — populated after the exact requested commit is created. A Git commit cannot contain its own SHA; this report will receive the work-package SHA in a report-only metadata follow-up after T2 review.
+- Work-package commit: `faafc19775a3047d2613812ff334abdc6bb86a34`
 - Required subject: `docs(wp-p0-28): venue-fact verification + Q6 binding specs, doc half (T2, lane T 2026-08-25)`
 
 ## Verification record
@@ -47,4 +47,6 @@ No blog, forum, community SDK, secondary article, authenticated page, or private
 - Worktree/branch/base preflight: clean `feature/wp-p0-28-venue-facts-20260825` at `46f5bafb…`.
 - Public-source boundary: only unauthenticated public HTTPS documentation/source reads.
 - Exact-path check: only the three files listed above are authorized for staging.
-- Content checks and independent T2 verdict: pending the work-package commit.
+- Lead checks at the frozen work-package commit: exact three-file scope; 16 VERIFIED / 4 UNKNOWN fact dispositions; all required consumer IDs and fail-closed virtual-book terms present; `git diff --check` PASS; clean worktree.
+- Independent T2 reviewer: Codex `gpt-5.6-sol`, medium effort, fresh read-only session (GLM-5.2 preferred route was unavailable for executable review through the installed wrapper).
+- Independent T2 verdict: **PASS**. The reviewer reproduced the exact scope, official-source traceability, material venue claims, UNKNOWN boundaries, settled-Q6 binding, deterministic fallback rules, consumer edges, and clean worktree.
