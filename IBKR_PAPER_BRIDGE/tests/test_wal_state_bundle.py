@@ -337,7 +337,7 @@ def test_shm_mode_flip_after_read_connection_initializes_fails_closed(
 
 
 @pytest.mark.parametrize(
-    "attack", ["inode_swap", "device_change", "size_change", "deletion"]
+    "attack", ["device_change", "inode_swap", "mode_change", "size_change", "deletion"]
 )
 def test_shm_initialization_identity_or_presence_attack_fails_closed(
     tmp_path, bundle_dir, capsys, monkeypatch, attack
@@ -347,23 +347,45 @@ def test_shm_initialization_identity_or_presence_attack_fails_closed(
     _seed(store)
     real_snapshot = wal._source_snapshot
     calls = {"source": 0}
+    initialized_shm = {}
+    stable_components = {}
 
     def snapshot_with_attack(source):
         result = real_snapshot(source)
         if Path(source).resolve() != source_db.resolve():
             return result
         calls["source"] += 1
-        if calls["source"] >= 2:
-            if attack == "inode_swap":
-                _change_snapshot_metadata(result, "shm", "inode")
-            elif attack == "device_change":
-                _change_snapshot_metadata(result, "shm", "device")
-            elif attack == "size_change":
-                _change_snapshot_metadata(
-                    result, "shm", "size_bytes", wal.SHM_REGION_BYTES
-                )
-            else:
+        if calls["source"] == 1:
+            stable_components.update(
+                {name: copy.deepcopy(result[name]) for name in ("db", "wal")}
+            )
+            metadata = copy.deepcopy(result["db"]["metadata_after_hash"])
+            metadata.update(inode=metadata["inode"] + 1, size_bytes=wal.SHM_REGION_BYTES)
+            result["shm"] = {
+                "present": True,
+                "sha256": "e" * 64,
+                "metadata_before_hash": copy.deepcopy(metadata),
+                "metadata_after_hash": copy.deepcopy(metadata),
+                "changed_during_hash": False,
+            }
+            initialized_shm.update(copy.deepcopy(result["shm"]))
+        else:
+            result.update(copy.deepcopy(stable_components))
+            if attack == "deletion":
                 result["shm"] = {"present": False}
+            else:
+                result["shm"] = copy.deepcopy(initialized_shm)
+                result["shm"]["sha256"] = "f" * 64
+                for key in ("metadata_before_hash", "metadata_after_hash"):
+                    result["shm"][key]["mtime_ns"] += 1
+                    result["shm"][key]["ctime_ns"] += 1
+                identity_fields = {
+                    "device_change": "device",
+                    "inode_swap": "inode",
+                    "mode_change": "mode",
+                    "size_change": "size_bytes",
+                }
+                _change_snapshot_metadata(result, "shm", identity_fields[attack])
         return result
 
     monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_attack)

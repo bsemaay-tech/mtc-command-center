@@ -304,9 +304,11 @@ Gate 4 self-QA: **PASS on Windows**, including D026 RED/GREEN and the full scope
    `changed_during_hash=True`. `_snapshot_is_stable` prevents the benign-SHM
    exemption: create returns rc 2 / `INVALID`, with
    `changed_components == ["shm"]`.
-3. The `device_change` arm added to
-   `test_shm_initialization_identity_or_presence_attack_fails_closed` proves
-   SHM device identity drift is rejected with rc 2 / `INVALID` and
+3. The parametrized identity arms in
+   `test_shm_initialization_identity_or_presence_attack_fails_closed` now prove
+   SHM `device`, `inode`, `mode`, and `size_bytes` identity drift in an
+   otherwise-exempt initialization shape: stable DB/WAL, SHM hash movement, and
+   mtime/ctime movement still return rc 2 / `INVALID` with
    `changed_components == ["shm"]`.
 4. `test_existing_shm_timestamp_only_initialization_is_accepted` proves the
    positive boundary: stable DB/WAL, stable SHM identity, SHM content change,
@@ -323,16 +325,64 @@ repository bridge on `PYTHONPATH`, and hard-asserted
 |---|---|---|
 | non-empty new WAL | `_is_expected_empty_wal_creation`: replace the empty SHA predicate with `sha256 is not None`, and `size_bytes == 0` with `size_bytes >= 0` | imported `...\nonempty_wal_blind\tools\wal_state_bundle.py`; `assert 0 == 2`; `1 failed in 0.78s`; `pytest_rc=1` |
 | `changed_during_hash=True` | `_snapshot_is_stable`: remove `not component.get("changed_during_hash", False)` | imported `...\hash_instability_blind\tools\wal_state_bundle.py`; `assert 0 == 2`; `1 failed in 0.80s`; `pytest_rc=1` |
-| SHM device drift | `SHM_IDENTITY_FIELDS`: remove `"device"`, and `_changed_snapshot_components`: remove `shm` from the component loop (the detector-blind mutation that makes the device attack escape) | imported `...\shm_device_blind\tools\wal_state_bundle.py`; `assert 0 == 2`; `1 failed in 0.84s`; `pytest_rc=1` |
+| SHM device identity drift | `SHM_IDENTITY_FIELDS = ("device", "inode", "mode", "size_bytes")` -> `SHM_IDENTITY_FIELDS = ("inode", "mode", "size_bytes")` | imported `C:\tmp\LANE_WFIX2_IDENTITY_MUTANTS_20260825_131327\drop_device\tools\wal_state_bundle.py`; sha256 `b4374b4115fc2578f13c8d74dad695695c9907ead6d3041a01c86de516d45d1d`; `assert 0 == 2`; `1 failed in 0.99s`; `red_pytest_rc=1` |
+| SHM inode identity drift | `SHM_IDENTITY_FIELDS = ("device", "inode", "mode", "size_bytes")` -> `SHM_IDENTITY_FIELDS = ("device", "mode", "size_bytes")` | imported `C:\tmp\LANE_WFIX2_IDENTITY_MUTANTS_20260825_131327\drop_inode\tools\wal_state_bundle.py`; sha256 `ae966eb8af09b986e3ae5029d7c9e1d5f654f6c18bb0794f5ceab91abe5180f4`; `assert 0 == 2`; `1 failed in 0.90s`; `red_pytest_rc=1` |
+| SHM mode identity drift | `SHM_IDENTITY_FIELDS = ("device", "inode", "mode", "size_bytes")` -> `SHM_IDENTITY_FIELDS = ("device", "inode", "size_bytes")` | imported `C:\tmp\LANE_WFIX2_IDENTITY_MUTANTS_20260825_131327\drop_mode\tools\wal_state_bundle.py`; sha256 `7901f974e6f28c834aa230beff973dd68c2044b428c3f121915fe3caf72294ca`; `assert 0 == 2`; `1 failed in 0.98s`; `red_pytest_rc=1` |
+| SHM size identity drift | `SHM_IDENTITY_FIELDS = ("device", "inode", "mode", "size_bytes")` -> `SHM_IDENTITY_FIELDS = ("device", "inode", "mode")` | imported `C:\tmp\LANE_WFIX2_IDENTITY_MUTANTS_20260825_131327\drop_size_bytes\tools\wal_state_bundle.py`; sha256 `a2ae4f722e0a57c3beb50fc758ee7dc95c8999ce486f3cdfc6fdc5e08eae49b6`; `assert 0 == 2`; `1 failed in 0.90s`; `red_pytest_rc=1` |
 | benign existing-SHM initialization | force `_is_safe_shm_initialization` to return `False` | imported `...\benign_shm_reject\tools\wal_state_bundle.py`; expected rc 0 saw `INVALID` rc 2; `1 failed in 0.77s`; `pytest_rc=1` |
+
+Exact WFIX2 single-field mutant diffs:
+
+```diff
+# drop_device
+-SHM_IDENTITY_FIELDS = ("device", "inode", "mode", "size_bytes")
++SHM_IDENTITY_FIELDS = ("inode", "mode", "size_bytes")
+
+# drop_inode
+-SHM_IDENTITY_FIELDS = ("device", "inode", "mode", "size_bytes")
++SHM_IDENTITY_FIELDS = ("device", "mode", "size_bytes")
+
+# drop_mode
+-SHM_IDENTITY_FIELDS = ("device", "inode", "mode", "size_bytes")
++SHM_IDENTITY_FIELDS = ("device", "inode", "size_bytes")
+
+# drop_size_bytes
+-SHM_IDENTITY_FIELDS = ("device", "inode", "mode", "size_bytes")
++SHM_IDENTITY_FIELDS = ("device", "inode", "mode")
+```
+
+WFIX2 correction note: the previous SHM device row used a compound mutant that
+both removed `"device"` from `SHM_IDENTITY_FIELDS` and removed `shm` from the
+generic `_changed_snapshot_components` loop. A second independent flagship
+isolated the halves on 2026-08-25 and found that dropping `"device"` alone left
+the `device_change` arm and the full file green; the RED came from the generic
+`shm` loop removal. The compound row is superseded and is no longer counted as
+identity-field closure evidence. The four single-field rows above are the
+replacement closure evidence.
+
+Superseded prior record, retained for audit trail: SHM device drift used
+`SHM_IDENTITY_FIELDS`: remove `"device"`, and `_changed_snapshot_components`:
+remove `shm` from the component loop; it imported
+`...\shm_device_blind\tools\wal_state_bundle.py`; failed with `assert 0 == 2`,
+`1 failed in 0.84s`, `pytest_rc=1`.
 
 ### Restored GREEN and full suite
 
 ```text
-....                                                                     [100%]
-4 passed in 1.24s
+.....                                                                    [100%]
+5 passed in 1.70s
 focused_green_rc=0
 ```
+
+Each single-field mutant was then restored by removing the mutant `PYTHONPATH`
+entry and rerunning the corresponding repository producer arm:
+
+| Restored field | Test node | Repository GREEN |
+|---|---|---|
+| `device` | `test_shm_initialization_identity_or_presence_attack_fails_closed[device_change]` | `1 passed in 0.76s`; `green_pytest_rc=0` |
+| `inode` | `test_shm_initialization_identity_or_presence_attack_fails_closed[inode_swap]` | `1 passed in 0.72s`; `green_pytest_rc=0` |
+| `mode` | `test_shm_initialization_identity_or_presence_attack_fails_closed[mode_change]` | `1 passed in 0.73s`; `green_pytest_rc=0` |
+| `size_bytes` | `test_shm_initialization_identity_or_presence_attack_fails_closed[size_change]` | `1 passed in 0.75s`; `green_pytest_rc=0` |
 
 Exact required full-suite command, run from `IBKR_PAPER_BRIDGE`:
 
@@ -341,8 +391,8 @@ python -m pytest tests/test_wal_state_bundle.py -q
 ```
 
 ```text
-..........................................................               [100%]
-58 passed in 11.47s
+...........................................................              [100%]
+59 passed in 11.46s
 full_rc=0
 ```
 
