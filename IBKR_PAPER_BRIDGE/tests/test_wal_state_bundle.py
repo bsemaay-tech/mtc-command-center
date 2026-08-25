@@ -6,6 +6,7 @@ runtime, no C:\\P2RT, no service, no network.
 
 from __future__ import annotations
 
+import copy
 import json
 import shutil
 import sqlite3
@@ -289,6 +290,154 @@ def test_quiesced_capture_completes_wal_attach_before_drift_boundary(
     assert verify_report["verdict"] == "VALID"
 
 
+def _change_snapshot_metadata(snapshot, component, field, amount=1):
+    for key in ("metadata_before_hash", "metadata_after_hash"):
+        snapshot[component][key][field] += amount
+
+
+def test_shm_mode_flip_after_read_connection_initializes_fails_closed(
+    tmp_path, bundle_dir, capsys, monkeypatch
+):
+    """Reproduce the auditor's real 0666 -> 0444 initialization-window attack."""
+    source_db = tmp_path / "live-mode-flip" / "bridge.db"
+    store = Store(source_db)
+    _seed(store)
+    source_shm = source_db.with_name(source_db.name + "-shm")
+    real_snapshot = wal._source_snapshot
+    calls = {"source": 0}
+
+    def snapshot_with_mode_flip(source):
+        if Path(source).resolve() == source_db.resolve():
+            calls["source"] += 1
+            if calls["source"] == 2:
+                # _connect_readonly has completed the schema read and is about
+                # to embed the SHM boundary before returning to its caller.
+                assert source_shm.stat().st_mode & 0o777 == 0o666
+                source_shm.chmod(0o444)
+        return real_snapshot(source)
+
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_mode_flip)
+    try:
+        rc, report = create(source_db, bundle_dir, capsys)
+
+        assert calls["source"] == 3
+        assert rc == 2
+        assert report["verdict"] == "INVALID"
+        assert report["failures"] == ["source_changed_during_capture"]
+        assert report["drift_evidence"]["changed_components"] == ["shm"]
+        assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+        assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    finally:
+        if source_shm.exists():
+            source_shm.chmod(0o666)
+        store.close()
+
+
+@pytest.mark.parametrize("attack", ["inode_swap", "size_change", "deletion"])
+def test_shm_initialization_identity_or_presence_attack_fails_closed(
+    tmp_path, bundle_dir, capsys, monkeypatch, attack
+):
+    source_db = tmp_path / f"live-{attack}" / "bridge.db"
+    store = Store(source_db)
+    _seed(store)
+    real_snapshot = wal._source_snapshot
+    calls = {"source": 0}
+
+    def snapshot_with_attack(source):
+        result = real_snapshot(source)
+        if Path(source).resolve() != source_db.resolve():
+            return result
+        calls["source"] += 1
+        if calls["source"] >= 2:
+            if attack == "inode_swap":
+                _change_snapshot_metadata(result, "shm", "inode")
+            elif attack == "size_change":
+                _change_snapshot_metadata(
+                    result, "shm", "size_bytes", wal.SHM_REGION_BYTES
+                )
+            else:
+                result["shm"] = {"present": False}
+        return result
+
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_attack)
+    try:
+        rc, report = create(source_db, bundle_dir, capsys)
+
+        assert calls["source"] == 3
+        assert rc == 2
+        assert report["verdict"] == "INVALID"
+        assert report["failures"] == ["source_changed_during_capture"]
+        assert report["drift_evidence"]["changed_components"] == ["shm"]
+        assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+        assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    finally:
+        store.close()
+
+
+def test_shm_deletion_then_creation_after_boundary_fails_closed(
+    tmp_path, bundle_dir, capsys, monkeypatch
+):
+    source_db = tmp_path / "live-shm-recreate" / "bridge.db"
+    store = Store(source_db)
+    _seed(store)
+    real_snapshot = wal._source_snapshot
+    calls = {"source": 0}
+
+    def snapshot_with_recreation(source):
+        result = real_snapshot(source)
+        if Path(source).resolve() == source_db.resolve():
+            calls["source"] += 1
+            if calls["source"] == 2:
+                result["shm"] = {"present": False}
+        return result
+
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_recreation)
+    try:
+        rc, report = create(source_db, bundle_dir, capsys)
+
+        assert calls["source"] == 3
+        assert rc == 2
+        assert report["verdict"] == "INVALID"
+        assert report["failures"] == ["source_changed_during_capture"]
+        assert report["drift_evidence"]["changed_components"] == ["shm"]
+        assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+        assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    finally:
+        store.close()
+
+
+def test_empty_wal_created_with_metadata_drift_fails_closed(
+    source_db, bundle_dir, capsys, monkeypatch
+):
+    source_wal = source_db.with_name(source_db.name + "-wal")
+    real_snapshot = wal._source_snapshot
+    calls = {"source": 0}
+
+    def snapshot_with_wal_mode_drift(source):
+        if Path(source).resolve() == source_db.resolve():
+            calls["source"] += 1
+            if calls["source"] == 2:
+                assert source_wal.stat().st_size == 0
+                assert source_wal.stat().st_mode & 0o777 == 0o666
+                source_wal.chmod(0o444)
+        return real_snapshot(source)
+
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_wal_mode_drift)
+    try:
+        rc, report = create(source_db, bundle_dir, capsys)
+
+        assert calls["source"] == 3
+        assert rc == 2
+        assert report["verdict"] == "INVALID"
+        assert report["failures"] == ["source_changed_during_capture"]
+        assert report["drift_evidence"]["changed_components"] == ["wal"]
+        assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+        assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    finally:
+        if source_wal.exists():
+            source_wal.chmod(0o666)
+
+
 def test_hot_wal_with_unusable_shm_is_rejected_before_connecting(
     tmp_path, bundle_dir, monkeypatch
 ):
@@ -390,38 +539,75 @@ def test_hot_wal_with_unrelated_shm_is_rejected_before_connecting(
     assert not (bundle_dir / wal.MANIFEST_NAME).exists()
 
 
-def test_capture_drift_ignores_arrival_to_before_shm_only_change():
-    arrival = {
-        "db": {"sha256": "db"},
-        "wal": {"sha256": "wal"},
-        "shm": {"sha256": "shm-arrival"},
+def test_capture_drift_allows_only_existing_shm_readmark_content_change():
+    stable_metadata = {
+        "device": 1,
+        "inode": 2,
+        "mode": 0o666,
+        "size_bytes": wal.SHM_REGION_BYTES,
+        "mtime_ns": 10,
+        "ctime_ns": 10,
+    }
+    database = {
+        "present": True,
+        "sha256": "db",
+        "metadata_before_hash": stable_metadata,
+        "metadata_after_hash": stable_metadata,
+        "changed_during_hash": False,
     }
     before = {
-        "db": {"sha256": "db"},
-        "wal": {"sha256": "wal"},
-        "shm": {"sha256": "shm-before"},
+        "db": database,
+        "wal": {"present": False},
+        "shm": {
+            "present": True,
+            "sha256": "shm-before",
+            "metadata_before_hash": stable_metadata,
+            "metadata_after_hash": stable_metadata,
+            "changed_during_hash": False,
+        },
     }
-    after = {component: dict(state) for component, state in before.items()}
+    arrival = copy.deepcopy(before)
+    after = copy.deepcopy(before)
+    after["shm"]["sha256"] = "shm-after"
+    for key in ("metadata_before_hash", "metadata_after_hash"):
+        after["shm"][key] = dict(stable_metadata, mtime_ns=20, ctime_ns=20)
 
     assert wal._capture_changed_components(arrival, before, after) == []
 
 
 def test_capture_drift_ignores_read_open_empty_wal_materialization():
+    database_metadata = {
+        "device": 1,
+        "inode": 2,
+        "mode": 0o666,
+        "size_bytes": 4096,
+        "mtime_ns": 10,
+        "ctime_ns": 10,
+    }
+    wal_metadata = dict(database_metadata, inode=3, size_bytes=0)
     arrival = {
-        "db": {"present": True, "sha256": "db"},
+        "db": {
+            "present": True,
+            "sha256": "db",
+            "metadata_before_hash": database_metadata,
+            "metadata_after_hash": database_metadata,
+            "changed_during_hash": False,
+        },
         "wal": {"present": False},
         "shm": {"present": False},
     }
     before = {
-        "db": {"present": True, "sha256": "db"},
+        "db": copy.deepcopy(arrival["db"]),
         "wal": {
             "present": True,
             "sha256": wal._sha256_bytes(b""),
+            "metadata_before_hash": wal_metadata,
+            "metadata_after_hash": wal_metadata,
             "changed_during_hash": False,
         },
         "shm": {"present": True, "sha256": "sqlite-read-marks"},
     }
-    after = {component: dict(state) for component, state in before.items()}
+    after = copy.deepcopy(before)
 
     assert wal._capture_changed_components(arrival, before, after) == []
 
@@ -724,12 +910,16 @@ def test_concurrent_writer_during_capture_fails_closed(
         def close(self):
             self.conn.close()
 
-    def connect_with_concurrent_writer(path):
-        conn = real_connect(path)
+    def connect_with_concurrent_writer(path, **kwargs):
+        connected = real_connect(path, **kwargs)
+        if isinstance(connected, tuple):
+            conn, snapshot = connected
+        else:
+            conn, snapshot = connected, None
         if Path(path).resolve() == source_db.resolve() and not wrapped["done"]:
             wrapped["done"] = True
-            return ConcurrentWriterBackupProxy(conn)
-        return conn
+            conn = ConcurrentWriterBackupProxy(conn)
+        return (conn, snapshot) if snapshot is not None else conn
 
     monkeypatch.setattr(wal, "_connect_readonly", connect_with_concurrent_writer)
     rc, report = create(source_db, bundle_dir, capsys)
@@ -742,11 +932,6 @@ def test_concurrent_writer_during_capture_fails_closed(
     assert report["drift_evidence"]["changed_components"]
     assert not (bundle_dir / wal.MANIFEST_NAME).exists()
     assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
-
-
-def _change_snapshot_metadata(snapshot, component, field):
-    for key in ("metadata_before_hash", "metadata_after_hash"):
-        snapshot[component][key][field] += 1
 
 
 @pytest.mark.parametrize(
@@ -802,7 +987,7 @@ def test_arrival_to_before_non_summary_mutation_fails_closed(
     real_connect = wal._connect_readonly
     mutated = {"done": False}
 
-    def connect_after_arrival_mutation(path):
+    def connect_after_arrival_mutation(path, **kwargs):
         if Path(path).resolve() == source_db.resolve() and not mutated["done"]:
             mutated["done"] = True
             writer = sqlite3.connect(source_db)
@@ -814,7 +999,7 @@ def test_arrival_to_before_non_summary_mutation_fails_closed(
                 writer.commit()
             finally:
                 writer.close()
-        return real_connect(path)
+        return real_connect(path, **kwargs)
 
     monkeypatch.setattr(wal, "_connect_readonly", connect_after_arrival_mutation)
     rc, report = create(source_db, bundle_dir, capsys)
@@ -835,7 +1020,7 @@ def test_allow_live_source_records_arrival_to_before_drift(
     real_connect = wal._connect_readonly
     mutated = {"done": False}
 
-    def connect_after_arrival_mutation(path):
+    def connect_after_arrival_mutation(path, **kwargs):
         if Path(path).resolve() == source_db.resolve() and not mutated["done"]:
             mutated["done"] = True
             writer = sqlite3.connect(source_db)
@@ -847,7 +1032,7 @@ def test_allow_live_source_records_arrival_to_before_drift(
                 writer.commit()
             finally:
                 writer.close()
-        return real_connect(path)
+        return real_connect(path, **kwargs)
 
     monkeypatch.setattr(wal, "_connect_readonly", connect_after_arrival_mutation)
     rc, report = create(
@@ -950,10 +1135,16 @@ def test_create_discards_partial_database_when_backup_raises(
         def close(self):
             self.conn.close()
 
-    def connect_once_failing(path):
+    def connect_once_failing(path, **kwargs):
         calls["count"] += 1
-        conn = real_connect(path)
-        return FailingBackupProxy(conn) if calls["count"] == 1 else conn
+        connected = real_connect(path, **kwargs)
+        if isinstance(connected, tuple):
+            conn, snapshot = connected
+        else:
+            conn, snapshot = connected, None
+        if calls["count"] == 1:
+            conn = FailingBackupProxy(conn)
+        return (conn, snapshot) if snapshot is not None else conn
 
     monkeypatch.setattr(wal, "_connect_readonly", connect_once_failing)
     rc, _ = create(source_db, bundle_dir, capsys)
