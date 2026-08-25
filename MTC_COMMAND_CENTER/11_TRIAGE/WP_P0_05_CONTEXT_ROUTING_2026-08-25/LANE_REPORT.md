@@ -269,16 +269,16 @@ Round 2 recorded **241 extracted / 241 found / 0 missing**, but the subsequent f
 four false positives in that result. The corrected inherited result is therefore **241 extracted /
 237 found / 4 missing**, not zero. The owner-authorized round-3 result is recorded below.
 
-### Measurement movement in this round
+### Measurement movement in round 2
 
 The scoped rules and route corrections changed every measured class. Actual filesystem figures moved
 from `a5a66989` as follows:
 
-- Root router: 12,769 → **12,959 B**; the realistic catch-all floor is **24,623 B**.
+- Root router: 12,769 → **12,959 B**; the realistic catch-all floor was **24,623 B**.
 - Research: 292,051 → **292,343 B**.
 - Bridge: 73,461 → **73,683 B**.
-- Planning: 87,846 → **99,882 B**, including the still-required 11,527-byte G2 `AI_RULES.md` read.
-- Git/handoff: 53,526 → **53,958 B**.
+- Planning: 87,846 → **99,882 B**, which included the still-required 11,527-byte G2 `AI_RULES.md` read.
+- Git/handoff: 53,526 → **53,958 B** in round 2.
 
 `AFTER_MEASUREMENT.md` contains the affected per-file/class arithmetic and CRLF projections.
 Governance `AGENTS.md` remains 6,023 LF bytes / 6,106 projected CRLF bytes, below 6 KiB in both
