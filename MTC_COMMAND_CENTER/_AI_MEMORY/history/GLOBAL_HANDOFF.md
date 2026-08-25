@@ -37,6 +37,36 @@ left untouched as historical implementer handoff.
 - **Branch:** `fix/ci-policy-reconcile-20260825` (from master `59bf7723`), documentation-only.
 - **Gate 1:** T2 (docs/evidence, no protected surface). **Awaiting Lead T2 audit — not
   self-accepted, not merged.** No repository/GitHub setting was changed by this lane.
+## [GLM-5.3 Implementer (Claude Code harness)] 2026-08-25 — Lane AM: LIVE_TRADING_GATE zero-CI claim withdrawn (T2 docs, PENDING LEAD AUDIT)
+
+The live gate register's cross-cutting blockers paragraph (recorded 2026-08-23, fold map #96) still
+claimed *"zero functioning CI — OPS-C (WP-P0-27) is planned and unbuilt, so no check named above
+currently runs automatically."* WP-P0-27 landed on 2026-08-25, so the claim is stale. Corrected in
+`_AI_MEMORY/LIVE_TRADING_GATE.md` with a dated in-place correction note; evidence independently
+reproduced by this implementer (read-only `gh api` + `gh run list` + git), not copied from lane AK's
+pending record:
+
+- `ci.yml` on `master` via `110305c0`; WP-P0-27 package merged `d5e5e98e` (lane K, T1
+  PASS-WITH-NITS); GC-referent repair `cef1d070` green (run `32863496339`); latest `master` push
+  `59bf7723` green — CI run `32868549932`, Pine Defang Guard run `32868550067`, both `success`.
+- Ruleset **21444962** "Protect master – required CI" **active**: `required_status_checks` for
+  `Bridge suite (Python 3.12)`, `deletion`, `non_fast_forward`, **no bypass actors**; legacy
+  branch-protection 404 is expected (ruleset enforcement, not legacy).
+- Explicit guard retained in the register: the correction changes **no row status** — CI produces
+  none of the fourteen categories' named evidence; every row stays `None accepted`; withdrawing the
+  stale zero authorizes no repair and gates no row.
+
+**Flag for Lead/owner (noticed, NOT corrected — outside lane AM scope):** register rows 1–2 say
+"zero tags exist in the repository". True on 2026-08-23; since 2026-08-24 22:08 +0300 the repo
+carries 180 `legacy/*` archive tags (cleanup residue). No frozen strategy-identity tag exists —
+which is what those rows mean — but the literal sentence is now inexact and needs owner-approved
+rewording or ratification.
+
+- **Branch:** `fix/live-gate-ci-claim-20260825` (from `master` `59bf7723`), two-file docs-only
+  diff: `LIVE_TRADING_GATE.md` + this entry. No code, workflow, protected-surface, host,
+  credential, or repository-setting change; no write-verb GitHub call; no PR opened.
+- **Gate 1 suggestion for Lead:** T2 (docs/evidence). Single-reviewer, one round. **Awaiting Lead
+  audit — not self-accepted, not merged.**
 
 ## [Claude Fable 5 Lead] 2026-08-24 — help_map.json retired-KILL-claim correction (T2, Bridge Help workstream)
 
