@@ -1,11 +1,11 @@
 # Lane R - Linux CI failure diagnosis
 
-**Status:** DIAGNOSIS COMPLETE; NO FIX EXECUTED
+**Status:** DIAGNOSIS COMPLETE; DOWNSTREAM REPAIR STATUS UPDATED
 
 **Role:** Codex implementer under Claude Lead
 
-**Audit tier:** T2 for this documentation-only lane. Any repair to the protected
-Bridge persistence/cutover tool is T0 and needs its own authorization and audit.
+**Audit tier:** T2 for this documentation-only lane. The later repair to the protected
+Bridge persistence/cutover tool was a separate T0 lane.
 
 **Evidence target:** GitHub Actions run `32781394607`, PR #125, commit
 `3899d6f984ddc7c41b632e99e616941524b0cec1`
@@ -14,19 +14,38 @@ Bridge persistence/cutover tool is T0 and needs its own authorization and audit.
 
 **Scope:** diagnose only; no Bridge source or test was edited.
 
+## 2026-08-25 downstream repair status
+
+- The WAL product defect diagnosed here is fixed and merged on `master` through merge
+  `110305c0`. The fix includes D026 coverage for the capture-ordering bug and mutation-proven
+  SHM identity-field coverage.
+- The two GC-referent test defects diagnosed here are fixed on
+  `fix/gc-referent-tests-20260825` at `25eac11c`, pending audit and not yet merged. This branch
+  must not duplicate that repair.
+- The final GC repair skips only the Enum-internal member dictionary whose keys are contained in
+  `_value_`, `_name_`, `__objclass__`, and `_sort_order_`. It does not stop at the Enum member.
+  A first attempt that stopped at the member was shown to lose real coverage on 3.12, 3.13 and
+  3.14.
+- The original CPython 3.12 attribution below was too narrow. A later standalone CPython 3.13.13
+  probe also exposed the Enum-member dictionary through `gc.get_referents`; any CI matrix entry
+  on 3.13 is inside the blast radius.
+- With the GC fix applied, the GC lane recorded the whole Bridge suite as
+  `1370 passed, 1 warning`. The package gate still cannot claim green on `master` until that
+  fix merges and the suite runs green there.
+
 ## Executive conclusion
 
 The 25 failures have two root causes:
 
 | Failure family | Count | Classification | Conclusion |
 |---|---:|---|---|
-| `test_order_state.py:400` and `:418` | 2 | **TEST defect** | The tests confuse a CPython 3.12 GC-introspection detail with mutability of the mapping's policy data. CPython 3.12 exposes each `Enum` member's runtime dictionary through `gc.get_referents`; CPython 3.14 does not. The immutable holder and the behavior-changing attack tests remain sound. |
-| `test_wal_state_bundle.py` | 23 | **PRODUCT defect** | **SERIOUS: the Linux deployment path is genuinely unsafe/unusable.** The capture opens a WAL database but only executes `SELECT 1`, which does not attach/read the database. On the Linux deployment stack, the first real read occurs after the drift bracket opens, and SQLite's own WAL/SHM initialization is misclassified as an external writer. A stable, quiesced source is rejected as `source_changed_during_capture`. |
+| `test_order_state.py:400` and `:418` | 2 | **TEST defect** | The tests confuse interpreter GC-introspection details with mutability of the mapping's policy data. CPython 3.12 and a later standalone CPython 3.13.13 probe expose each `Enum` member's runtime dictionary through `gc.get_referents`; this is not bounded to 3.12. The immutable holder and the behavior-changing attack tests remain sound. Fix: `25eac11c`, pending audit and not merged. |
+| `test_wal_state_bundle.py` | 23 | **PRODUCT defect** | **SERIOUS: the Linux deployment path was genuinely unsafe/unusable.** The capture opened a WAL database but only executed `SELECT 1`, which did not attach/read the database. On the Linux deployment stack, the first real read occurred after the drift bracket opened, and SQLite's own WAL/SHM initialization was misclassified as an external writer. Fixed and merged through `110305c0`. |
 
-The WAL result is not acceptable baseline noise. `wal_state_bundle.py` is the
+The WAL result was not acceptable baseline noise. `wal_state_bundle.py` is the
 state-capture tool used by the ordered single-writer cutover, where
-`--allow-live-source` is intentionally forbidden. In its current form, a normal
-Linux capture can fail closed even when no external writer exists. Conversely,
+`--allow-live-source` is intentionally forbidden. In the diagnosed form, a normal
+Linux capture could fail closed even when no external writer existed. Conversely,
 weakening the detector by ignoring WAL/SHM changes would risk accepting a genuinely
 moving source. The repair must distinguish tool-created SQLite sidecar activity from
 real source drift without removing the safety fence.
@@ -92,17 +111,21 @@ behavior of the Linux deployment stack, which is the environment that matters.
    `gc.get_referents()`. It stops only at `type` objects; it does not treat Enum
    instances or other runtime-owned objects as traversal boundaries.
 3. On CI's CPython 3.12, `gc.get_referents(OrderState.MEMBER)` exposes the member's
-   implementation dictionary. The failure output proves the identity of those
-   dictionaries: the first contains `_value_`, `_name_`, `__objclass__`, and
-   `_sort_order_`. The transition walk reports 11 dictionaries (one per state),
-   and the alias walk reports 8 reachable member dictionaries.
+   implementation dictionary. A later standalone CPython 3.13.13 probe exposed the same class
+   of member dictionary, so the exposure is not bounded to 3.12. The failure output proves the
+   identity of those dictionaries: the first contains `_value_`, `_name_`, `__objclass__`, and
+   `_sort_order_`. The transition walk reports 11 dictionaries (one per state), and the alias
+   walk reports 8 reachable member dictionaries.
 4. Those dictionaries are not a mutable list/dict backing `_ImmutableMapping`.
    They belong to Python's Enum objects, which are policy values stored inside the
    immutable holder.
-5. The platform-pass is itself misleading. On local CPython 3.14,
+5. The local platform-pass was itself misleading. On local CPython 3.14,
    `OrderState.OPEN.__dict__` still exists and has the same four keys, but
    `gc.get_referents(OrderState.OPEN)` no longer returns that dictionary. The test
-   passes because GC traversal changed, not because the product became more immutable.
+   passes because GC traversal changed, not because the product became more immutable. The first
+   attempted fix then stopped at the Enum member and lost coverage for mutable containers
+   reachable through an Enum member on 3.12, 3.13 and 3.14; the final repair skips only the
+   Enum-internal dictionary.
 6. The immediately adjacent behavior tests at `test_order_state.py:403-412` and
    `:421-430` try to mutate every dict/list found by the same traversal and then
    re-check `can_transition()` / `normalize_raw_order_status()`. They are absent
@@ -113,26 +136,26 @@ behavior of the Linux deployment stack, which is the environment that matters.
 
 ### Classification
 
-**TEST defect, twice.** The assertion `mutable == []` is platform/runtime conditional
+**TEST defect, twice.** The assertion `mutable == []` is interpreter-GC conditional
 and broader than the security property it is meant to establish. It inspects CPython
 object-graph implementation details beyond the immutable holder's owned storage and
 therefore produces a false failure on the deployment interpreter. No evidence in run
-32781394607 shows that either policy can be changed through the exported mappings.
+32781394607 shows that either policy can be changed through the exported mappings. The fix at
+`25eac11c` preserves visibility of mutable policy containers and skips only Enum-internal member
+dictionaries; it is pending audit and not yet merged.
 
-### Recommended repair (not executed)
+### Repair status
 
-1. Make the traversal contract explicit. Treat `Enum` members as atomic values, just
-   as the helper already treats `type` objects as terminal, or replace the generic
-   transitive GC walk with a structural walk limited to the holder's tuple/frozenset
-   storage.
+1. The first attempted repair treated `Enum` members as atomic values, just as the helper already
+   treated `type` objects as terminal. That was shown to lose real coverage for mutable containers
+   reachable through Enum members on 3.12, 3.13 and 3.14.
 2. Retain the behavioral attack tests and direct assignment/replacement tests. They
    assert the real contract: callers cannot change transition or normalization behavior.
-3. Add an explicit CPython 3.12 regression arm demonstrating that Enum member
-   dictionaries may be GC referents without being backing containers of the holder.
-4. Under D026, prove RED against the old broad helper on Python 3.12 and GREEN with the
-   scoped helper, then run the same test on the supported Windows interpreter. Do not
-   make the assertion conditional on `sys.platform`; the distinction is traversal
-   ownership, not an OS waiver.
+3. The accepted candidate approach on `fix/gc-referent-tests-20260825` skips only dictionaries
+   whose keys are contained in `_value_`, `_name_`, `__objclass__`, and `_sort_order_`.
+4. The GC lane recorded D026 RED/GREEN evidence for the original broad-helper failure and for the
+   Enum-member blind spot, then recorded `1370 passed, 1 warning` for the whole Bridge suite with
+   the fix applied. That is not master-gate evidence until the branch passes audit and merges.
 
 ## Failure family 2 - WAL/SHM capture drift
 
@@ -247,7 +270,12 @@ The tests that deliberately expect drift, or pass `--allow-live-source`, remain 
 That is consistent with the diagnosis: the detector and failure plumbing work, but the
 capture boundary wrongly includes activity caused by the capture tool itself.
 
-### Recommended repair (not executed)
+### Repair status - implemented and merged
+
+This recommendation was later implemented in the T0 WAL lane and merged to `master` through
+`110305c0`. The merged fix uses a real fetched schema read before the drift boundary, keeps
+writer drift detection after the boundary, and adds mutation-proven coverage for the ordering bug
+and SHM identity fields. The historical repair criteria were:
 
 1. Before opening SQLite, fail closed on source states that a read-only open cannot
    safely consume without creating/rebuilding WAL-index state - especially a non-empty
@@ -271,22 +299,22 @@ capture boundary wrongly includes activity caused by the capture tool itself.
    makes no connection and creates no source sidecar before refusal.
 7. Apply D026 RED/GREEN evidence on the exact Linux deployment class and run the full
    Bridge suite. Because this is protected persistence/cutover behavior on the Linux
-   deployment platform, the repair belongs in a separately authorized T0 lane with both
+   deployment platform, the repair belonged in a separately authorized T0 lane with both
    required flagship auditors.
 
 ## Ranked hypotheses and disposition
 
 | Rank | Hypothesis | Prediction | Result |
 |---:|---|---|---|
-| 1 | `SELECT 1` leaves WAL unattached until the first real read, placing tool-created sidecars inside the bracket. | Stable source: db remains stable, WAL/SHM change, capture returns INVALID; forcing a schema read before `source_snapshot_before` should remove false drift without ignoring later writer drift. | **Supported by log, ordering, source, and prior Linux evidence. Root cause.** |
+| 1 | `SELECT 1` leaves WAL unattached until the first real read, placing tool-created sidecars inside the bracket. | Stable source: db remains stable, WAL/SHM change, capture returns INVALID; forcing a schema read before `source_snapshot_before` should remove false drift without ignoring later writer drift. | **Supported by log, ordering, source, and prior Linux evidence. Root cause; later fixed and merged through `110305c0`.** |
 | 2 | An actual concurrent writer modified the fixture. | Database/invariants should also change or the failure should be intermittent. | **Rejected.** All 23 cases fail consistently; db reports stable, fixture is closed, changed components are deterministically WAL/SHM. |
 | 3 | `ctime_ns` alone is a bad cross-platform assertion. | Removing/normalizing ctime alone would make otherwise identical sidecar snapshots equal. | **Insufficient and unsafe.** The sidecar lifecycle/presence itself moves; ctime is one evidence field, not the root ordering defect. |
 | 4 | The 23 WAL tests contain independent Linux-only expectations. | Failures should reach distinct intended assertions and report distinct reasons. | **Rejected.** Every node stops at the same baseline `create()` result, exit 2 with `source_changed_during_capture`. |
 
 ## Scope and safety statement
 
-No WSL, Docker, host, service, credential, broker, exchange, testnet/live, Pine,
-parity, MTC, schema, Bridge source, or test file was changed. No fix was applied.
-The only local execution was read-only/focused testing against temporary pytest data on
-Windows. This document recommends a repair for later authorization; it does not authorize
-or implement one.
+The original Lane R diagnosis changed no WSL, Docker, host, service, credential, broker,
+exchange, testnet/live, Pine, parity, MTC, schema, Bridge source, or test file. Its only local
+execution was read-only/focused testing against temporary pytest data on Windows. Subsequent
+repair work happened in separate lanes: WAL is fixed and merged through `110305c0`; GC-referent
+tests are fixed at `25eac11c` and await audit/merge. This branch only updates the documentation.

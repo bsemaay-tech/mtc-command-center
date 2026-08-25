@@ -1,13 +1,20 @@
 # WP-P0-27 live RED/GREEN and required-check plan
 
-**Executor:** Claude Lead after T1 acceptance. Lane K does not push, change repository settings,
-or run the live demonstration. Preserve the green and red run URLs, job logs, notification
-evidence and repository-rule screenshot/export in the final acceptance package.
+**Executor:** Claude Lead after T1 acceptance and after `master` is green. This reconciliation
+lane pushes the feature branch as requested, but does not change repository settings or run the
+live demonstration. Preserve the green and red run URLs, job logs, notification evidence and
+repository-rule screenshot/export in the final acceptance package.
 
-## 1. Establish GREEN on the implementation branch
+**Current blocker:** do not run this plan yet. The workflow is already on `master` through
+`67a53a32`/`110305c0`, but current `master` is red for the two known GC-referent tests. Their fix
+exists at `fix/gc-referent-tests-20260825` commit `25eac11c`, pending audit and not yet merged.
+The first GREEN arm below starts only after that fix, or its accepted successor, reaches `master`
+and the complete suite is green.
 
-From the accepted Lane K worktree, record the immutable implementation identity and push only
-the feature branch:
+## 1. Establish GREEN after the GC-referent dependency merges
+
+From the accepted reconciled Lane K worktree, record the immutable implementation identity. The
+feature branch may already be pushed by the implementer; if not, push only this feature branch:
 
 ```powershell
 git status --short --branch
@@ -15,21 +22,31 @@ $laneCommit = git rev-parse HEAD
 git push -u origin feature/wp-p0-27-ci-home-20260825
 ```
 
-Open a pull request from `feature/wp-p0-27-ci-home-20260825` into `master`. In GitHub Actions,
-open workflow `CI`, job `Bridge suite (Python 3.12)`, and verify all four executable phases are
-green: checkout/setup, hash-locked install, compile, and
+After the GC-referent fix is on `master`, open or refresh a pull request from
+`feature/wp-p0-27-ci-home-20260825` into `master`. In GitHub Actions, open workflow `CI`, job
+`Bridge suite (Python 3.12)`, and verify all four executable phases are green: checkout/setup,
+hash-locked install, compile, and
 `python -m pytest IBKR_PAPER_BRIDGE/tests -q`. The Linux checkout must pass the canonical ledger
 test described in `CI_POLICY.md`; a skip, xfail or filtered suite is not GREEN. Record the run URL,
 head SHA, runner OS, Python version, exact pytest summary and job conclusion.
 
 ## 2. Make the check required for PRs into master
 
-After GitHub has registered the green check context, configure the `master` ruleset or branch
-protection to require `Bridge suite (Python 3.12)` for pull requests. Pending, skipped, cancelled
-and failed conclusions must not satisfy the rule. Retain the explicit Lead/admin bypass so direct
-Lead pushes remain possible; do not disable the push-to-`master` workflow trigger. Demonstrate
-that the green PR is merge-eligible and record the exact setting. Do not merge merely to prove
-the setting.
+After GitHub has registered the green check context, ask the owner to configure the `master`
+ruleset or branch protection to require `Bridge suite (Python 3.12)` for pull requests. Pending,
+skipped, cancelled and failed conclusions must not satisfy the rule. Retain the explicit
+Lead/admin bypass so direct Lead pushes remain possible; do not disable the push-to-`master`
+workflow trigger. Demonstrate that the green PR is merge-eligible and record the exact setting.
+Do not merge merely to prove the setting.
+
+Owner click path:
+
+1. Open repository settings for `bsemaay-tech/mtc-command-center`.
+2. Open **Rules** or **Branches** and edit the `master` rule.
+3. Enable **Require status checks to pass before merging**.
+4. Select **Bridge suite (Python 3.12)**.
+5. Keep the owner/Lead/admin direct-push bypass enabled.
+6. Save the rule and preserve a screenshot or export.
 
 ## 3. Falsify the check: RED
 
@@ -84,5 +101,6 @@ evidence policy; do not delete the branch without the required authority.
 | RED (deliberate probe) | Pending Lead run | Pending | Must block | Must name `test_ci_red_probe` | Pending email proof |
 | GREEN (revert) | Pending Lead run | Pending | Must allow | Full suite, no filtering | Not applicable |
 
-The package remains `LIVE DEMO PENDING LEAD` until all three arms and the repository setting are
-recorded. A source review of the YAML is supplemental and cannot replace this execution.
+The package remains `ACCEPTANCE GATE OPEN ON GC FIX MERGE` until `master` is green, all three
+arms and the repository setting are recorded. A source review of the YAML is supplemental and
+cannot replace this execution.
