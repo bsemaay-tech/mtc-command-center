@@ -25,7 +25,14 @@
     "price_tick": "0.01",
     "qty_step": "1.0",
     "contract_multiplier": "1",
-    "entry_qty": "1"
+    "entry_qty": "1",
+    "ohlcv_fields": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume"
+    ]
   },
   "normalized_bars": [
     {

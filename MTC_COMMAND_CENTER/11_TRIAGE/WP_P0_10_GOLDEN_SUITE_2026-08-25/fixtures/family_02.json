@@ -55,7 +55,14 @@
         "instrument_qty_step": "0.000001",
         "instrument_min_qty": "0",
         "instrument_min_notional": "0",
-        "instrument_contract_multiplier": "1"
+        "instrument_contract_multiplier": "1",
+        "ohlcv_fields": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ]
       },
       "normalized_bars": [
         {
@@ -162,7 +169,14 @@
         "instrument_qty_step": "0.000001",
         "instrument_min_qty": "0",
         "instrument_min_notional": "0",
-        "instrument_contract_multiplier": "1"
+        "instrument_contract_multiplier": "1",
+        "ohlcv_fields": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ]
       },
       "normalized_bars": [
         {
@@ -270,7 +284,14 @@
         "instrument_qty_step": "0.000001",
         "instrument_min_qty": "0",
         "instrument_min_notional": "0",
-        "instrument_contract_multiplier": "1"
+        "instrument_contract_multiplier": "1",
+        "ohlcv_fields": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ]
       },
       "normalized_bars": [
         {
@@ -377,7 +398,14 @@
         "instrument_qty_step": "0.000001",
         "instrument_min_qty": "0",
         "instrument_min_notional": "0",
-        "instrument_contract_multiplier": "1"
+        "instrument_contract_multiplier": "1",
+        "ohlcv_fields": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ]
       },
       "normalized_bars": [
         {
@@ -485,7 +513,14 @@
         "instrument_qty_step": "0.000001",
         "instrument_min_qty": "0",
         "instrument_min_notional": "0",
-        "instrument_contract_multiplier": "1"
+        "instrument_contract_multiplier": "1",
+        "ohlcv_fields": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ]
       },
       "normalized_bars": [
         {

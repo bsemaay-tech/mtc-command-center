@@ -26,6 +26,7 @@ EXPECTED_BLOCKED = [18, 19]
 EXPECTED_VALUE_COUNT = 241
 COHERENCE_FAMILIES = [4, 5, 22, 24]
 COHERENCE_EXPECTED_VALUE_COUNT = 24
+OHLCV_FIELDS = ["open", "high", "low", "close", "volume"]
 CITATION_PATTERN = re.compile(
     rf"{re.escape(AUTH_PREFIX)}(?P<start>[1-9][0-9]*)-(?P<end>[1-9][0-9]*) "
     r"\((?P<label>[^)]+)\)"
@@ -250,6 +251,48 @@ def require_declared_input(
     )
 
 
+def validate_normalized_bar_shapes(
+    container: dict[str, Any],
+    family: int,
+    context: str,
+) -> None:
+    bars = container.get("normalized_bars")
+    require(
+        isinstance(bars, list),
+        f"family={family:02d} normalized_bars_not_list context={context}",
+    )
+    ohlcv_bars = [
+        (index, bar)
+        for index, bar in enumerate(bars)
+        if isinstance(bar, dict) and "ohlcv" in bar
+    ]
+    if not ohlcv_bars:
+        return
+
+    metadata = container.get("frozen_metadata")
+    require(
+        isinstance(metadata, dict),
+        f"family={family:02d} frozen_metadata_missing context={context}",
+    )
+    require(
+        metadata.get("ohlcv_fields") == OHLCV_FIELDS,
+        f"family={family:02d} ohlcv_shape_contract_mismatch context={context}",
+    )
+    for index, bar in ohlcv_bars:
+        ohlcv = bar["ohlcv"]
+        require(
+            isinstance(ohlcv, list),
+            f"family={family:02d} normalized_bar_ohlcv_not_list "
+            f"context={context} index={index}",
+        )
+        require(
+            len(ohlcv) == len(OHLCV_FIELDS),
+            f"family={family:02d} normalized_bar_ohlcv_length_mismatch "
+            f"context={context} index={index} expected={len(OHLCV_FIELDS)} "
+            f"actual={len(ohlcv)}",
+        )
+
+
 def require_companion_selector(
     scenario: dict[str, Any],
     family: int,
@@ -308,6 +351,11 @@ def validate_assertion_input_presence(
             f"family={family:02d} companion_scenario_id_duplicate id={scenario_id}",
         )
         scenario_ids.add(scenario_id)
+        validate_normalized_bar_shapes(
+            scenario,
+            family,
+            f"companion:{scenario_id}",
+        )
         source = scenario.get("source")
         resolve_citation(source, authority_lines)
         citation_count += 1
@@ -368,6 +416,11 @@ def validate_assertion_input_presence(
                 f"path={assertion_path}",
             )
             continue
+        require(
+            assertion_path not in COMPANION_SELECTOR_REQUIREMENTS.get(family, {}),
+            f"family={family:02d} companion_selector_fixture_local_forbidden "
+            f"path={assertion_path}",
+        )
         input_paths = item.get("input_paths")
         require(
             isinstance(input_paths, list) and input_paths,
@@ -768,6 +821,7 @@ def validate_fixture(
         isinstance(fixture.get("normalized_bars"), list),
         f"family={number:02d} normalized_bars_not_list",
     )
+    validate_normalized_bar_shapes(fixture, number, "fixture")
 
     expected_output = fixture.get("expected_output")
     require(

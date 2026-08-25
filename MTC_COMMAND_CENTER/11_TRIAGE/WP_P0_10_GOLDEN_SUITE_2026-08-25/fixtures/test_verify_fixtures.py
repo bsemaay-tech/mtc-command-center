@@ -203,10 +203,21 @@ def tamper_family_14_cross_row_imports(path: Path) -> None:
     write_fixture_with_manifest_hash(path, 14, fixture_path, data)
 
 
-def tamper_family_20_missing_mirror_operand(path: Path) -> None:
+def tamper_family_20_missing_mirror_expected_value(path: Path) -> None:
     fixture_path, data = fixture(path, 20)
-    del data["mirror_operands"]["family_03"]["qty"]
+    del data["mirror_expected_values"]["family_03"]["qty"]
     write_fixture_with_manifest_hash(path, 20, fixture_path, data)
+
+
+def tamper_family_10_companion_ohlcv_close_deleted(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C36_GF36_legacy_break_even_modes__local"
+    )
+    del scenario["normalized_bars"][3]["ohlcv"][3]
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
 
 
 def tamper_family_02_plural_selector(path: Path) -> None:
@@ -217,6 +228,23 @@ def tamper_family_02_plural_selector(path: Path) -> None:
     scenario["assertion_inputs"]["legacy.local.reentry_bar"][0] = (
         "config.tw_reversal_reentry_modes"
     )
+    write_fixture_with_manifest_hash(path, 2, fixture_path, data)
+
+
+def tamper_family_02_selector_rehomed_fixture_local(path: Path) -> None:
+    fixture_path, data = fixture(path, 2)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if "legacy.local.reentry_bar" in scenario["assertion_inputs"]
+    )
+    scenario_id = scenario["id"]
+    del scenario["assertion_inputs"]["legacy.local.reentry_bar"]
+    data["companion_scenarios"] = [
+        item for item in data["companion_scenarios"] if item["id"] != scenario_id
+    ]
+    item = assertion(data, "legacy.local.reentry_bar")
+    item["input_paths"] = ["family.number"]
     write_fixture_with_manifest_hash(path, 2, fixture_path, data)
 
 
@@ -242,7 +270,6 @@ def run_verifier(
     fixture_dir: Path,
     output_dir: Path,
     optimized: bool = False,
-    optimize_env: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     command = [sys.executable]
     if optimized:
@@ -250,8 +277,6 @@ def run_verifier(
     command.extend([str(verifier), str(fixture_dir), str(output_dir)])
     env = os.environ.copy()
     env.pop("PYTHONOPTIMIZE", None)
-    if optimize_env is not None:
-        env["PYTHONOPTIMIZE"] = optimize_env
     return subprocess.run(
         command,
         cwd=Path.cwd(),
@@ -330,11 +355,11 @@ def main() -> int:
             "field=cross_row_import path=legacy.long_stop_close_only",
         ),
         (
-            "b3_family_20_missing_mirror_operand",
-            tamper_family_20_missing_mirror_operand,
+            "b3_family_20_missing_mirror_expected_value",
+            tamper_family_20_missing_mirror_expected_value,
             False,
             "VERIFY_FAIL reason=family=20 assertion_input_presence_missing "
-            "path=mirror.family_03.qty input=mirror_operands.family_03.qty",
+            "path=mirror.family_03.qty input=mirror_expected_values.family_03.qty",
         ),
         (
             "b4_family_02_plural_selector",
@@ -359,7 +384,27 @@ def main() -> int:
             "path=request.accepted input=config.entry_reference_price",
         ),
         ("manifest_built_count_normal", tamper_manifest_built_count, False, None),
-        ("manifest_built_count_optimized", tamper_manifest_built_count, True, None),
+        (
+            "manifest_built_count_optimized",
+            tamper_manifest_built_count,
+            True,
+            "VERIFY_FAIL reason=python_optimization_forbidden",
+        ),
+        (
+            "n2_family_10_companion_ohlcv_close_deleted",
+            tamper_family_10_companion_ohlcv_close_deleted,
+            False,
+            "VERIFY_FAIL reason=family=10 normalized_bar_ohlcv_length_mismatch "
+            "context=companion:C36_GF36_legacy_break_even_modes__local "
+            "index=3 expected=5 actual=4",
+        ),
+        (
+            "n4_family_02_selector_rehomed_fixture_local",
+            tamper_family_02_selector_rehomed_fixture_local,
+            False,
+            "VERIFY_FAIL reason=family=02 companion_selector_fixture_local_forbidden "
+            "path=legacy.local.reentry_bar",
+        ),
     ]
 
     with tempfile.TemporaryDirectory(prefix="wp_p010_verifier_regression_") as temp:

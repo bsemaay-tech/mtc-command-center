@@ -51,7 +51,14 @@
         "instrument_qty_step": "1.0",
         "instrument_min_qty": "0",
         "instrument_min_notional": "0",
-        "instrument_contract_multiplier": "1"
+        "instrument_contract_multiplier": "1",
+        "ohlcv_fields": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ]
       },
       "normalized_bars": [
         {
@@ -148,7 +155,14 @@
         "instrument_qty_step": "1.0",
         "instrument_min_qty": "0",
         "instrument_min_notional": "0",
-        "instrument_contract_multiplier": "1"
+        "instrument_contract_multiplier": "1",
+        "ohlcv_fields": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ]
       },
       "normalized_bars": [
         {
@@ -245,7 +259,14 @@
         "instrument_qty_step": "1.0",
         "instrument_min_qty": "0",
         "instrument_min_notional": "0",
-        "instrument_contract_multiplier": "1"
+        "instrument_contract_multiplier": "1",
+        "ohlcv_fields": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ]
       },
       "normalized_bars": [
         {
@@ -323,7 +344,14 @@
     "price_tick": "0.01",
     "qty_step": "1.0",
     "contract_multiplier": "1",
-    "entry_qty": "1"
+    "entry_qty": "1",
+    "ohlcv_fields": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume"
+    ]
   },
   "normalized_bars": [
     {

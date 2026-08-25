@@ -494,6 +494,9 @@ referenced only; it was not copied or modified.
 
 ### 8.6 Final Gate-4 checks
 
+Superseded by Round 4b and the Round 4b nit closure for tamper-regression counts; this is a
+historical AD-FIX3 snapshot, not the current harness result.
+
 ```text
 PY_COMPILE=PASS files=2
 JSON_PARSE=PASS files=24/24
@@ -570,12 +573,14 @@ B1_P2B_OLDSHAPE rc=1 detail=VERIFY_FAIL reason=family=03 companion_selector_mism
 
 ### Family 20
 
-`family_20.json` now embeds `mirror_operands` for the 14 mirrored long-side operands. Its mirror
-assertions reference those local operands through `input_paths`, so the family no longer passes
-with only `reflection_pivot`, `rule`, and an empty bar list.
+`family_20.json` now embeds `mirror_expected_values` for the 14 already reflected mirror outputs.
+The verifier presence-checks these local values but does not derive them by applying `config.rule`
+or `config.reflection_pivot`. Its mirror assertions reference those local values through
+`input_paths`, so the family no longer passes with only `reflection_pivot`, `rule`, and an empty bar
+list.
 
 ```text
-TAMPER name=b3_family_20_missing_mirror_operand optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=20 assertion_input_presence_missing path=mirror.family_03.qty input=mirror_operands.family_03.qty
+TAMPER name=b3_family_20_missing_mirror_expected_value optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=20 assertion_input_presence_missing path=mirror.family_03.qty input=mirror_expected_values.family_03.qty
 ```
 
 ### Companion selectors
@@ -614,9 +619,9 @@ input declarations. The 46 output/state hashes are unchanged.
 verifier plain: rc=0 SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=397 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_sources_validated=241 assertion_input_paths_checked=2649 fixture_assertions_validated=224 companion_assertions_validated=17 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
 verifier -O: rc=1 VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
 verifier PYTHONOPTIMIZE=2: rc=1 VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
-harness plain: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=17/17 result=PASS
-harness -O: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=17/17 result=PASS
-harness PYTHONOPTIMIZE=2: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=17/17 result=PASS
+harness plain: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=19/19 result=PASS
+harness -O: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=19/19 result=PASS
+harness PYTHONOPTIMIZE=2: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=19/19 result=PASS
 ```
 
 The harness strips ambient `PYTHONOPTIMIZE` for nominal child verifier runs and applies optimization
@@ -712,3 +717,118 @@ runtime, schema, broker/exchange, host, credential, deployment, or live surface 
 
 Not closed here: independent acceptance is still for the Lead/auditors, and the coordinated-rehash
 semantic-relevance limitation remains disclosed and out of scope.
+
+## Round 4b nit closure
+
+Starting point: `6c01c0eb` on `feature/wp-p0-10-golden-suite-20260825`. This is implementer
+self-QA for the five PASS-WITH-NITS items only; it is not self-acceptance.
+
+### N-1 - optimized harness case has mutation power
+
+Changed `fixtures/test_verify_fixtures.py` case 17,
+`manifest_built_count_optimized`, to require the named reason
+`VERIFY_FAIL reason=python_optimization_forbidden`. I also deleted the unused `optimize_env`
+parameter from `run_verifier`; no dead parameter now implies extra coverage. This was a
+regression-coverage hole only: the committed verifier already rejected optimized Python directly.
+
+Crippled-verifier proof, made from a scratch copy with the `__debug__` guard removed:
+
+```text
+CRIPPLED_GUARD_HITS=0
+CRIPPLED_DIRECT_O rc=0 SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=397 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_sources_validated=241 assertion_input_paths_checked=2649 fixture_assertions_validated=224 companion_assertions_validated=17 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+CRIPPLED_HARNESS rc=1
+TAMPER name=manifest_built_count_optimized optimized=true rc=1 rejected=false detail=VERIFY_FAIL reason=manifest_built_count expected=23 actual=22
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=18/19 result=FAIL
+```
+
+Case 17 now fails on the crippled scratch verifier because it no longer accepts any nonzero as
+enough. With the real verifier restored, the expanded harness passes 19/19; the extra two cases are
+the N-2 and N-4 regressions below.
+
+### N-2 - OHLCV list length pinned
+
+Changed `fixtures/verify_fixtures.py` to validate every `normalized_bars[*].ohlcv` list against the
+local `frozen_metadata.ohlcv_fields` declaration `open,high,low,close,volume`. I chose the
+frozen-metadata shape route instead of adding per-path length declarations because it pins the bar
+schema once per fixture or companion run and covers every indexed OHLCV path without expanding 2649
+input-path entries.
+
+All fixture or companion containers that actually carry OHLCV arrays now declare that shape. The
+auditor's INV-1 class, deleting a companion OHLCV close from family 10 after rehash, is now rejected
+by name:
+
+```text
+TAMPER name=n2_family_10_companion_ohlcv_close_deleted optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 normalized_bar_ohlcv_length_mismatch context=companion:C36_GF36_legacy_break_even_modes__local index=3 expected=5 actual=4
+```
+
+### N-3 - mirror values disclosed honestly
+
+Chose option (b): rename the stored family-20 field to `mirror_expected_values` and disclose exactly
+what it is. This is the narrow nit-closure repair: deriving real long-side operands would require new
+arithmetic rules, including non-price PnL cases, outside this passing-property closure. No expected
+value moved.
+
+`fixtures/README.md` and `fixtures/manifest.json` now state that family 20 stores already reflected
+outputs, presence-checked but not derived by applying `config.rule` or `config.reflection_pivot`.
+Repo/package grep has no remaining hits for the previous `mirror_` + `operands` field token:
+
+```text
+$old = "mirror_" + "operands"
+rg -n $old -S MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25
+rc=1 no output
+```
+
+The family-20 tamper now follows the truthful field name:
+
+```text
+TAMPER name=b3_family_20_missing_mirror_expected_value optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=20 assertion_input_presence_missing path=mirror.family_03.qty input=mirror_expected_values.family_03.qty
+```
+
+### N-4 - selector-bound assertions cannot opt out
+
+Changed the fixture-local assertion branch to reject any assertion path listed in
+`COMPANION_SELECTOR_REQUIREMENTS`. Moving a selector-bound assertion out of its companion scenario
+now fails before counter accounting can hide it:
+
+```text
+TAMPER name=n4_family_02_selector_rehomed_fixture_local optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=02 companion_selector_fixture_local_forbidden path=legacy.local.reentry_bar
+```
+
+### N-5 - stale counts marked and scanned
+
+Added a supersession marker to section 8.6 naming Round 4b and this nit closure. I also scanned the
+lane package for other count-bearing snapshots. The historical 381-count and 7/7 snapshots remain in
+earlier repair sections as executed history; section 8.3 and 8.5 already had Round 4b supersession
+markers; section 8.6 now has one; the Round 4b matrix was updated from 17/17 to the current 19/19.
+
+Relevant grep commands:
+
+```text
+rg -n "tamper_rejected=[0-9]+/[0-9]+|assertion_input_paths_checked=[0-9]+|companion_assertions_validated=[0-9]+|fixture_assertions_validated=[0-9]+|citation_line_ranges_validated=[0-9]+|expected_values_total=[0-9]+|contract_mismatch_detected=[0-9]+|contract_match_restored=[0-9]+" -S MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\LANE_REPORT.md MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\README.md MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\manifest.json
+$old = "mirror_" + "operands"; rg -n $old -S MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25
+```
+
+### Final checks
+
+```text
+python -m py_compile ...verify_fixtures.py ...test_verify_fixtures.py
+rc=0
+JSON_PARSE=PASS files=24/24
+EXPECTED_PATH_VALUE_MAPS_UNCHANGED=23/23 changed=[]
+EXPECTED_OUTPUT_AND_STATE_HASHES_UNCHANGED=46/46 changed=[]
+verifier plain: rc=0 SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=397 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_sources_validated=241 assertion_input_paths_checked=2649 fixture_assertions_validated=224 companion_assertions_validated=17 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+verifier -O: rc=1 VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+verifier PYTHONOPTIMIZE=2: rc=1 VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+harness plain: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=19/19 result=PASS
+harness -O: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=19/19 result=PASS
+harness PYTHONOPTIMIZE=2: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=19/19 result=PASS
+VERIFY_RUNS_RC=0,0
+OUTPUT_FILES=23,23
+BYTE_IDENTICAL=23/23 MISMATCHES=[]
+STDOUT_IDENTICAL=true
+git diff --check
+rc=0
+```
+
+Families 18 and 19 remain blocked and absent. No Pine, parity, MTC strategy behavior, Bridge runtime,
+schema, broker/exchange, host, credential, deployment, or live surface changed.
