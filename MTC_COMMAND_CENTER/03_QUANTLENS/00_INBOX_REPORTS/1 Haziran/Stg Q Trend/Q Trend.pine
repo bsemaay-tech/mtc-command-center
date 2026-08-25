@@ -1,4 +1,8 @@
 //@version=5
+// De-fanged on 2026-08-25: five Q-Trend alert-condition declarations are disabled.
+// Reason: the owner-authorized Pine alert invariant was widened to include alert-condition declarations.
+// Owner authorization: Baris, 2026-08-25.
+// Original pre-de-fang file is recoverable from git history at commit 480598eaad02788b12d8b505cb93bcc346c1e5bd.
 indicator("Q-Trend", overlay = 1) 
 
 
@@ -71,8 +75,8 @@ barcolor(color_bars ? colour : na) // Bar coloring
 
 
 // Alerts
-alertcondition(change_up and ls[1] != "B", "Q-Trend BUY", "Q-Trend BUY signal were given.") // Buy alert.
-alertcondition(change_down and ls[1] != "S", "Q-Trend SELL", "Q-Trend SELL signal were given.") // Sell alert.
-alertcondition((change_up and ls[1] != "B") or (change_down and ls[1] != "S"), "Q-Trend Signal", "Q-Trend gave you a signal!")
-alertcondition(change_up and ls[1] != "B" and strong_buy, "Strong BUY signal", "Q-Trend gave a Strong Buy signal!")
-alertcondition(change_down and ls[1] != "S" and strong_sell, "Strong SELL signal", "Q-Trend gave a Strong Sell signal!")
+// disabled alert-condition: change_up and ls[1] != "B", "Q-Trend BUY", "Q-Trend BUY signal were given." // Buy alert.
+// disabled alert-condition: change_down and ls[1] != "S", "Q-Trend SELL", "Q-Trend SELL signal were given." // Sell alert.
+// disabled alert-condition: (change_up and ls[1] != "B") or (change_down and ls[1] != "S"), "Q-Trend Signal", "Q-Trend gave you a signal!"
+// disabled alert-condition: change_up and ls[1] != "B" and strong_buy, "Strong BUY signal", "Q-Trend gave a Strong Buy signal!"
+// disabled alert-condition: change_down and ls[1] != "S" and strong_sell, "Strong SELL signal", "Q-Trend gave a Strong Sell signal!"

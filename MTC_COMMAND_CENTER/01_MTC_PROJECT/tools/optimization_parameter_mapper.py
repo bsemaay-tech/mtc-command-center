@@ -45,16 +45,7 @@ BUNDLE_OVERRIDES: dict[str, dict[str, Any]] = {
     "visualization_disabled": {
         "debug_mode": False,
     },
-    "integrations_disabled": {
-        "wt_enter_long_code": "",
-        "wt_exit_long_code": "",
-        "wt_enter_short_code": "",
-        "wt_exit_short_code": "",
-        "wt_exit_all_code": "",
-        "wt_use_tp": False,
-        "wt_use_sl": False,
-        "wt_place_cond_orders": False,
-    },
+    "integrations_disabled": {},
 }
 
 
@@ -84,7 +75,7 @@ def mapper_payload() -> dict[str, Any]:
         "bundles": BUNDLE_OVERRIDES,
         "notes": [
             "Mapper is optimization-only and does not change Pine or DEFAULT_CONFIG.",
-            "Guard, visualization, and integration bundles are fixed off in early profiles.",
+            "integrations_disabled is a compatibility no-op after Pine de-fanging.",
         ],
     }
 

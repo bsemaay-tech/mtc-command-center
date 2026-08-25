@@ -1,0 +1,20 @@
+name: Pine Defang Guard
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pine-alert-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Enforce empty Pine alert allowlist
+        run: python MTC_COMMAND_CENTER/tools/check_no_pine_alerts.py

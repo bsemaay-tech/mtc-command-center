@@ -1,4 +1,5 @@
 //@version=6
+// VISUALIZATION ONLY — NOT A CONTROLLER
 // Parity scope ignores broker-capital constraints; keep initial capital high
 // enough so risk-sized entries are not silently rejected on the Pine side while
 // Python still accepts the same raw pulse.
@@ -173,19 +174,6 @@ retest_timeout_bars = input.int(50, "Timeout", minval=1, group="09 Signal Transf
 retest_buffer_pct = input.float(0.1, "Buffer %", minval=0.0, group="09 Signal Transform", inline="lr")
 
 // L25 - WunderTrading Integration
-wt_enter_long_code   = input.string("", "Enter Long Code",   group="10 Integrations")
-wt_exit_long_code    = input.string("", "Exit Long Code",    group="10 Integrations")
-wt_enter_short_code  = input.string("", "Enter Short Code",  group="10 Integrations")
-wt_exit_short_code   = input.string("", "Exit Short Code",   group="10 Integrations")
-wt_exit_all_code     = input.string("", "Exit All Code",     group="10 Integrations")
-wt_order_type        = input.string("market", "Order Type",  options=["market","limit"], group="10 Integrations", inline="wt_ord")
-wt_amount_type       = input.string("quote",  "Amount Type", options=["quote","base"],   group="10 Integrations", inline="wt_ord")
-wt_amount            = input.float(100.0, "Amount",   minval=0.0000001, group="10 Integrations", inline="wt_amt")
-wt_leverage          = input.int(1,       "Leverage", minval=1,         group="10 Integrations", inline="wt_amt")
-wt_use_tp            = input.bool(false, "WT TP",         group="10 Integrations", inline="wt_flags")
-wt_use_sl            = input.bool(false, "WT SL",         group="10 Integrations", inline="wt_flags")
-wt_reduce_only       = input.bool(true,  "Reduce Only",   group="10 Integrations", inline="wt_flags")
-wt_place_cond_orders = input.bool(false, "Cond Orders",   group="10 Integrations")
 
 // L23 - Visualization / Performance
 performance_mode = input.bool(false, "Performance Mode", group="11 Visualization/Performance")
@@ -2004,28 +1992,6 @@ plot(l16_guard_blocked ? 1.0 : 0.0, title="guard_blocked", display=display.none)
 plot(float(l18_confirm_bars_count_state), title="confirm_count", display=display.none)
 plot(use_htf_trend_filter ? htf_trend_line_state : na, title="htf_trend_line", display=display.none)
 
-// ============================================================================
-// SECTION 9 - WUNDERTRADING ALERT DISPATCH (L25)
-// ============================================================================
-bool l25_any_code_set = wt_enter_long_code != "" or wt_exit_long_code != "" or wt_enter_short_code != "" or wt_exit_short_code != "" or wt_exit_all_code != ""
-
-if l25_any_code_set
-    // Entry alert - fires when position opens
-    if l4_position_side_state != 0 and l4_position_side_state[1] == 0
-        string l25_entry_code = l4_position_side_state > 0 ? wt_enter_long_code : wt_enter_short_code
-        if l25_entry_code != ""
-            string l25_tp_str = wt_use_tp and not na(l4_active_tp_price_state) ? ',"tp":' + str.tostring(math.round(l4_active_tp_price_state, 2)) : ""
-            string l25_sl_str = wt_use_sl and not na(l4_active_stop_price_state) ? ',"sl":' + str.tostring(math.round(l4_active_stop_price_state, 2)) : ""
-            string l25_cond_str = wt_place_cond_orders ? ',"place_conditional_orders":true' : ""
-            alert('{"code":"' + l25_entry_code + '","order_type":"' + wt_order_type + '","amount":' + str.tostring(wt_amount) + ',"amount_type":"' + wt_amount_type + '","leverage":' + str.tostring(wt_leverage) + ',"reduce_only":' + (wt_reduce_only ? "true" : "false") + l25_tp_str + l25_sl_str + l25_cond_str + '}', alert.freq_once_per_bar_close)
-
-    // Exit alert - fires when position closes
-    if l4_position_side_state == 0 and l4_position_side_state[1] != 0
-        string l25_exit_code = l4_position_side_state[1] > 0 ? wt_exit_long_code : wt_exit_short_code
-        if l25_exit_code == "" and wt_exit_all_code != ""
-            l25_exit_code := wt_exit_all_code
-        if l25_exit_code != ""
-            alert('{"code":"' + l25_exit_code + '","reduce_only":true}', alert.freq_once_per_bar_close)
 
 // ============================================================================
 // SECTION 6 - VISUALIZATION (L23)
