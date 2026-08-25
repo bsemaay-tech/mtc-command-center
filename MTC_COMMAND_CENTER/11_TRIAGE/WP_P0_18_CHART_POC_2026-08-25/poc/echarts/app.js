@@ -120,6 +120,7 @@
   try {
     if (!window.echarts) throw new Error('Vendored Apache ECharts did not load.');
     const data = buildData();
+    result.actualPoints = data.candles.length;
     result.actualMarkers = data.entries.length + data.exits.length;
     result.generationMs = round(data.generationMs);
     setMetric('#m-data', `${POINTS.toLocaleString()} bars / ${(data.entries.length + data.exits.length).toLocaleString()} markers`);

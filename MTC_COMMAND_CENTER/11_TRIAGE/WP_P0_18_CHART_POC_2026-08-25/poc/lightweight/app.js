@@ -120,6 +120,7 @@
   try {
     if (!window.LightweightCharts) throw new Error('Vendored Lightweight Charts did not load.');
     const data = buildData();
+    result.actualPoints = data.bars.length;
     result.actualMarkers = data.markers.length;
     result.generationMs = round(data.generationMs);
     setMetric('#m-data', `${POINTS.toLocaleString()} bars / ${data.markers.length.toLocaleString()} markers`);

@@ -41,9 +41,26 @@ async function waitForPage(port, targetUrl) {
 async function connect(webSocketUrl) {
   const socket = new WebSocket(webSocketUrl);
   const pending = new Map();
+  const runtimeErrors = [];
+  const externalRequests = [];
   let sequence = 0;
   socket.addEventListener('message', (event) => {
     const message = JSON.parse(event.data);
+    if (message.method === 'Runtime.exceptionThrown') {
+      const details = message.params.exceptionDetails;
+      runtimeErrors.push(`exception: ${details.exception?.description || details.text}`);
+    }
+    if (message.method === 'Runtime.consoleAPICalled' && message.params.type === 'error') {
+      const args = message.params.args.map((arg) => {
+        if (Object.hasOwn(arg, 'value')) return typeof arg.value === 'string' ? arg.value : JSON.stringify(arg.value);
+        return arg.description || arg.unserializableValue || arg.type;
+      });
+      runtimeErrors.push(`console.error: ${args.join(' ')}`);
+    }
+    if (message.method === 'Network.requestWillBeSent') {
+      const { method, url } = message.params.request;
+      if (!url.startsWith('file:') && !url.startsWith('data:')) externalRequests.push(`${method} ${url}`);
+    }
     if (!message.id || !pending.has(message.id)) return;
     const { resolve, reject } = pending.get(message.id);
     pending.delete(message.id);
@@ -56,6 +73,8 @@ async function connect(webSocketUrl) {
   });
   return {
     socket,
+    runtimeErrors,
+    externalRequests,
     send(method, params = {}) {
       sequence += 1;
       return new Promise((resolve, reject) => {
@@ -86,19 +105,34 @@ async function runPage(page) {
     targetUrl,
   ], { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true });
   let browserError = '';
+  let client;
   browser.stderr.on('data', (chunk) => { browserError += chunk.toString(); });
 
   try {
     const port = await waitForPort(profile, browser);
     const target = await waitForPage(port, targetUrl);
-    const client = await connect(target.webSocketDebuggerUrl);
+    client = await connect(target.webSocketDebuggerUrl);
     await client.send('Runtime.enable');
     await client.send('Page.enable');
+    await client.send('Network.enable');
+    await client.send('Page.addScriptToEvaluateOnNewDocument', {
+      source: `addEventListener('unhandledrejection', (event) => {
+        const reason = event.reason instanceof Error ? event.reason.stack || event.reason.message : String(event.reason);
+        console.error('__QA_UNHANDLED_REJECTION__', reason);
+      });`,
+    });
+    client.runtimeErrors.length = 0;
+    client.externalRequests.length = 0;
+    await client.send('Page.navigate', { url: targetUrl });
 
     const wallStarted = performance.now();
     let state = '';
     for (let attempt = 0; attempt < 1200; attempt += 1) {
-      state = await evaluate(client, 'document.body?.dataset.ready || ""');
+      try {
+        state = await evaluate(client, 'document.body?.dataset.ready || ""');
+      } catch {
+        state = '';
+      }
       if (state === 'true' || state === 'error') break;
       await pause(50);
     }
@@ -122,7 +156,7 @@ async function runPage(page) {
     const before = await evaluate(client, `(() => {
       const line = document.querySelector('#drag-line').getBoundingClientRect();
       const shell = document.querySelector('#chart-shell').getBoundingClientRect();
-      return { x: line.left + line.width * 0.55, y: line.top + line.height / 2, shellTop: shell.top, level: window.__POC_RESULTS__.currentLevel };
+      return { x: line.left + line.width * 0.55, y: line.top + line.height / 2, shellTop: shell.top, level: window.__POC_RESULTS__.currentLevel, moves: window.__POC_RESULTS__.pointerMoves || 0 };
     })()`);
     await client.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: before.x, y: before.y });
     await client.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: before.x, y: before.y, button: 'left', buttons: 1, clickCount: 1 });
@@ -131,6 +165,11 @@ async function runPage(page) {
     }
     await client.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: before.x, y: before.y - 64, button: 'left', buttons: 0, clickCount: 1 });
     await pause(250);
+
+    const mouseAfter = await evaluate(client, `({
+      level: window.__POC_RESULTS__.currentLevel,
+      moves: window.__POC_RESULTS__.pointerMoves || 0
+    })`);
 
     const touchBefore = await evaluate(client, `(() => {
       const line = document.querySelector('#drag-line').getBoundingClientRect();
@@ -155,8 +194,9 @@ async function runPage(page) {
     after.results.panProbeWallMs = Math.round(panProbe.wallMs * 100) / 100;
     after.results.dragProbeWallMs = Math.round(dragProbe.wallMs * 100) / 100;
     after.results.dragBefore = before.level;
-    after.results.dragAfter = after.results.currentLevel;
+    after.results.dragAfter = mouseAfter.level;
     after.results.dragDelta = Math.round((after.results.dragAfter - after.results.dragBefore) * 100) / 100;
+    after.results.simulatedMouseMoves = mouseAfter.moves - before.moves;
     after.results.touchBefore = touchBefore.level;
     after.results.touchAfter = after.results.currentLevel;
     after.results.touchDelta = Math.round((after.results.touchAfter - after.results.touchBefore) * 100) / 100;
@@ -166,16 +206,22 @@ async function runPage(page) {
     const screenshotPath = path.join(tmpdir(), `WP_P0_18_${page.id}_QA.png`);
     await writeFile(screenshotPath, Buffer.from(screenshot.data, 'base64'));
     after.results.screenshot = screenshotPath;
+    after.results.runtimeErrors = [...client.runtimeErrors];
+    after.results.externalRequests = [...client.externalRequests];
 
     if (after.error) throw new Error(`${page.id}: ${after.error}`);
+    if (after.results.actualPoints !== 100000) throw new Error(`${page.id}: expected 100000 points, got ${after.results.actualPoints}`);
     if (after.results.actualMarkers !== 5000) throw new Error(`${page.id}: expected 5000 markers, got ${after.results.actualMarkers}`);
-    if (Math.abs(after.results.dragDelta) < 0.2) throw new Error(`${page.id}: real pointer drag did not change the level`);
+    if (after.results.programmaticArtifactAnnotations !== 7) throw new Error(`${page.id}: expected 7 programmatic annotations, got ${after.results.programmaticArtifactAnnotations}`);
+    if (Math.abs(after.results.dragDelta) < 0.2 || after.results.simulatedMouseMoves < 1) throw new Error(`${page.id}: real pointer drag did not change the level`);
     if (Math.abs(after.results.touchDelta) < 0.2 || after.results.simulatedTouchMoves < 1) throw new Error(`${page.id}: simulated touch drag did not change the level`);
     if (!after.canvases.some((canvas) => canvas.width > 1000 && canvas.height > 500)) throw new Error(`${page.id}: no full-size rendered canvas found`);
+    if (after.results.runtimeErrors.length) throw new Error(`${page.id}: runtime error(s): ${after.results.runtimeErrors.join(' | ')}`);
+    if (after.results.externalRequests.length) throw new Error(`${page.id}: external network request(s): ${after.results.externalRequests.join(' | ')}`);
 
-    client.socket.close();
     return after;
   } finally {
+    client?.socket.close();
     browser.kill();
     await Promise.race([new Promise((resolve) => browser.once('exit', resolve)), pause(2000)]);
     if (browserError && !browserError.includes('fallback_task_provider')) {

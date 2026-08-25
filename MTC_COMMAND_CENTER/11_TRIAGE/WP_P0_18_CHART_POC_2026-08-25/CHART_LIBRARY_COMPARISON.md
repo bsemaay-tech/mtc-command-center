@@ -17,7 +17,7 @@ Both pages are offline, seeded-fake-data POCs with the same workload:
 - a linked equity pane;
 - mouse drag, keyboard adjustment, and simulated touch drag.
 
-The committed `poc/qa_browser.mjs` harness opened each page in a fresh Edge profile, sequentially, at 1440×900 with the same headless software-rendering flags. It asserted offline readiness, exact marker count, full-size canvas output, mouse drag, simulated touch drag, and no page error, then captured a screenshot. Final numbers are medians of three clean runs (R12–R14); ranges are shown where useful.
+The committed `poc/qa_browser.mjs` harness opened each page in a fresh Edge profile, sequentially, at 1440×900 with the same headless software-rendering flags. On a harness-controlled reload it asserted 100,000 actual generated points, seven parsed-JSON annotations, exact marker count, full-size canvas output, independently measured mouse and simulated-touch drags, no DOM/runtime/console/unhandled-rejection error, and no non-`file:`/non-`data:` request, then captured a screenshot. Final timing numbers are medians of the three earlier clean runs (R12–R14); ranges are shown where useful. Those earlier runs predate the repaired assertions and are used only for the timing measurements.
 
 Environment: Windows 11 Pro build 26200; Edge 151.0.4129.101; Node 24.13.0; Intel Core i7-13700H (14 cores / 20 logical processors); 31.7 GiB RAM. Measured 2026-08-25, Europe/Chisinau.
 
@@ -45,8 +45,8 @@ The numbers are comparative POC evidence, not production capacity promises. Head
 | ~70k-candle smooth pan/zoom | 100k loaded; pan p95 18.4 ms | 100k loaded; pan p95 23.6 ms | **PASS / PASS.** Both exceeded the scale; Lightweight had the better frame result |
 | ≥6 overlays plus hundreds of markers | Six overlays + draggable level + exactly 5,000 markers; markers visible | Same; final marker coordinate verified inside the plot and markers visible | **PASS / PASS** |
 | Synced second pane and linked crosshair | Native multi-pane chart shares time scale/crosshair; screenshot verified | Two grids with linked x-axis pointer and shared data zoom; screenshot verified | **PASS / PASS** |
-| Programmatic annotation from artifact JSON | Seven annotations built from parsed JSON; no manual drawing | Same | **PASS / PASS** |
-| Self-hostable offline licence fit | Vendored Apache-2.0 package; exact licence copied; attribution logo enabled; runtime scan found no external requests | Vendored Apache-2.0 package; exact licence copied; runtime scan found no external requests | **PASS / PASS** |
+| Programmatic annotation from artifact JSON | Seven annotations built from parsed JSON; harness count asserted; no manual drawing | Same | **PASS / PASS** |
+| Self-hostable offline licence fit | Vendored Apache-2.0 package; exact licence copied; attribution logo enabled; the repair added no external HTML/JS URL and the harness-controlled reload emitted no non-file/data request | Vendored Apache-2.0 package; exact licence copied; the repair added no external HTML/JS URL and the harness-controlled reload emitted no non-file/data request | **PASS / PASS** |
 | Plain research-dashboard web stack | One HTML + one plain JS file + vendored IIFE; no build step | One HTML + one plain JS file + vendored UMD bundle; no build step | **PASS / PASS** |
 
 ## Required decision evidence
