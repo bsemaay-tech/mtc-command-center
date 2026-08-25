@@ -782,3 +782,232 @@ pushed:            yes (feature branch only; no merge)
 remaining dirty:   none after close-out commit
 next action:       live Claude Lead independently inspects/reproduces this evidence and owns acceptance/sequencing
 ```
+
+## Round 5 — handoff-path break
+
+### R1 finding
+
+The live handoff surface is no longer `MTC_COMMAND_CENTER/_AI_MEMORY/GLOBAL_HANDOFF.md`.
+The package report says each stage has a capped `HANDOFF.md`, the old global journals moved to
+`MTC_COMMAND_CENTER/_AI_MEMORY/history/`, and "current state was distilled into the relevant stage
+handoffs." The same report's routed handoff contract says current consumers write current state to
+the selected stage `HANDOFF.md` and treat
+`_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md` as read-only history.
+
+Router evidence agrees: root `AGENTS.md` sends every task through root `DECISIONS.md`, root
+`CONTEXT_MAP.md`, and exactly one selected stage; it also says current state belongs in the selected
+stage's capped `HANDOFF.md` while historical journals are search-on-demand archives. Root
+`CONTEXT_MAP.md` maps workflow/handoff/migration/triage to
+`MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/`, and the governance stage rules say Gate 7 writes the
+selected stage `HANDOFF.md`. For the Help-map correction specifically, the package report maps
+"Help-map repo text fixed but deployed copy awaits authorized redeploy" to `IBKR_PAPER_BRIDGE/HANDOFF.md`.
+
+Therefore a coding agent is routed to the selected stage `HANDOFF.md` for live handoff state. For
+this Help data correction, the live routed file is `IBKR_PAPER_BRIDGE/HANDOFF.md`; the archived
+historical source remains `MTC_COMMAND_CENTER/_AI_MEMORY/history/GLOBAL_HANDOFF.md`.
+
+### R2 choice
+
+I took option (b): the reference should be live. The package already distilled this Help correction
+into the Bridge stage handoff, so repointing the test to archived `GLOBAL_HANDOFF.md` would have made
+the suite green while backing a stale "live" claim. I changed all three surfaces to agree:
+
+- `IBKR_PAPER_BRIDGE/bridge/static/help_map.json`: changed the wording from "Live _AI_MEMORY handoff
+  records" to "Live stage HANDOFF.md records" so the data names the new surface.
+- `IBKR_PAPER_BRIDGE/HANDOFF.md`: added the exact live-stage phrase
+  `help_map.json retired-KILL-claim correction`.
+- `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`: now asserts the correction in
+  `IBKR_PAPER_BRIDGE/HANDOFF.md`, not the archived old global handoff path.
+
+The `kind: "planned"` edges stayed unchanged. They still mean coding-agent onboarding does not
+currently point at `help_map.json`; the handoff reference is historical evidence, not an onboarding
+route to the Help source.
+
+### R3 RED/GREEN
+
+Expanded the onboarding guard from the old four-file list to include root `CONTEXT_MAP.md`, root
+`DECISIONS.md`, and all stage `AGENTS.md` files:
+
+```text
+AGENTS.md
+CONTEXT_MAP.md
+DECISIONS.md
+MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md
+MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md
+MTC_COMMAND_CENTER/_AI_MEMORY/PROJECT_MEMORY.md
+IBKR_PAPER_BRIDGE/AGENTS.md
+mtc_cli/AGENTS.md
+MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AGENTS.md
+MTC_COMMAND_CENTER/01_MTC_PROJECT/AGENTS.md
+MTC_COMMAND_CENTER/02_MTC_BACKTEST/AGENTS.md
+MTC_COMMAND_CENTER/03_QUANTLENS/AGENTS.md
+MTC_COMMAND_CENTER/08_DASHBOARD_APP/AGENTS.md
+MTC_COMMAND_CENTER/12_PARITY_PINETS/AGENTS.md
+```
+
+RED proof: I temporarily added `Temporary R3 guard probe: help_map.json` to newly listed
+`CONTEXT_MAP.md`, then ran:
+
+```text
+python -m pytest IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py::test_help_knowledge_pins_ai_source_and_onboarding_guards -q
+F                                                                        [100%]
+================================== FAILURES ===================================
+__________ test_help_knowledge_pins_ai_source_and_onboarding_guards ___________
+
+help_map = {'audience': 'Non-technical owner first; future AI agents second.', 'components': [{'boundaries': ['Research and the B...n place', 'meaning': 'This link is intended but does not exist today.'}, ...], 'doc_id': 'bridge_help_system_map', ...}
+
+    def test_help_knowledge_pins_ai_source_and_onboarding_guards(help_map: dict):
+        """The map is canonical Help data, but coding-agent onboarding does not point at it."""
+        memory = _component(help_map, "repo_ai_memory")
+        edge = next(c for c in memory["connections"] if c["to"] == "help_map")
+        assert edge["kind"] == "planned", "coding-agent onboarding does not point at help_map.json"
+        assert "canonical ai-readable knowledge source for the help surface is help_map.json" in _blob(
+            memory
+        )
+        assert "live stage handoff.md records reference it historically" in _blob(memory)
+        assert "coding-agent onboarding files do not currently direct agents to it" in _blob(memory)
+
+        reverse = next(
+            c for c in _component(help_map, "help_map")["connections"] if c["to"] == "repo_ai_memory"
+        )
+        assert reverse["kind"] == "planned"
+
+        onboarding_paths = [
+            REPO_ROOT / "AGENTS.md",
+            REPO_ROOT / "CONTEXT_MAP.md",
+            REPO_ROOT / "DECISIONS.md",
+            REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "START_HERE.md",
+            REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "AI_RULES.md",
+            REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "PROJECT_MEMORY.md",
+            REPO_ROOT / "IBKR_PAPER_BRIDGE" / "AGENTS.md",
+            REPO_ROOT / "mtc_cli" / "AGENTS.md",
+            REPO_ROOT / "MTC_COMMAND_CENTER" / "00_AGENT_PROTOCOLS" / "AGENTS.md",
+            REPO_ROOT / "MTC_COMMAND_CENTER" / "01_MTC_PROJECT" / "AGENTS.md",
+            REPO_ROOT / "MTC_COMMAND_CENTER" / "02_MTC_BACKTEST" / "AGENTS.md",
+            REPO_ROOT / "MTC_COMMAND_CENTER" / "03_QUANTLENS" / "AGENTS.md",
+            REPO_ROOT / "MTC_COMMAND_CENTER" / "08_DASHBOARD_APP" / "AGENTS.md",
+            REPO_ROOT / "MTC_COMMAND_CENTER" / "12_PARITY_PINETS" / "AGENTS.md",
+        ]
+        pointing = [
+            path.relative_to(REPO_ROOT).as_posix()
+            for path in onboarding_paths
+            if path.is_file()
+            and "help_map.json" in path.read_text(encoding="utf-8", errors="ignore")
+        ]
+>       assert not pointing, "repo onboarding now points at help_map.json; promote the edge to data"
+E       AssertionError: repo onboarding now points at help_map.json; promote the edge to data
+E       assert not ['CONTEXT_MAP.md']
+
+IBKR_PAPER_BRIDGE\tests\test_dashboard_static.py:376: AssertionError
+============================== warnings summary ===============================
+..\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1
+  C:\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py::test_help_knowledge_pins_ai_source_and_onboarding_guards
+1 failed, 1 warning in 1.48s
+```
+
+GREEN proof after reverting the temporary `CONTEXT_MAP.md` probe:
+
+```text
+python -m pytest IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py::test_help_knowledge_pins_ai_source_and_onboarding_guards -q
+.                                                                        [100%]
+============================== warnings summary ===============================
+..\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1
+  C:\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 1 warning in 0.67s
+```
+
+### Required QA
+
+Static Help/dashboard test:
+
+```text
+python -m pytest IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py -q
+...............................................                          [100%]
+============================== warnings summary ===============================
+..\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1
+  C:\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+47 passed, 1 warning in 0.75s
+```
+
+Full Bridge tests:
+
+```text
+python -m pytest IBKR_PAPER_BRIDGE/tests -q
+........................................................................ [  5%]
+........................................................................ [ 10%]
+........................................................................ [ 15%]
+........................................................................ [ 21%]
+........................................................................ [ 26%]
+........................................................................ [ 31%]
+........................................................................ [ 37%]
+........................................................................ [ 42%]
+........................................................................ [ 47%]
+........................................................................ [ 53%]
+........................................................................ [ 58%]
+........................................................................ [ 63%]
+........................................................................ [ 69%]
+........................................................................ [ 74%]
+........................................................................ [ 79%]
+........................................................................ [ 85%]
+........................................................................ [ 90%]
+........................................................................ [ 95%]
+........................................................                 [100%]
+============================== warnings summary ===============================
+..\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1
+  C:\Users\BarışSemaay\AppData\Roaming\Python\Python314\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1352 passed, 1 warning in 137.02s (0:02:17)
+```
+
+The dispatch reported the failing CI state as `1 failed, 1369 passed`. The required local command
+now ends with `0 failed`, but the local pass count is `1352`, lower than the dispatch count. I did
+not delete tests or test files in this repair: the diff changes one existing static assertion body
+and adds onboarding paths. A local collection check after the full run reported:
+
+```text
+python -m pytest IBKR_PAPER_BRIDGE/tests --collect-only -q
+1352 tests collected in 2.26s
+```
+
+This is a remaining CI/local count discrepancy for the Lead to reconcile; it is not hidden as a
+coverage-equivalent result.
+
+Pre-commit guard, run in the active Windows PowerShell host:
+
+```text
+& 'C:\WPP005_20260825\MTC_COMMAND_CENTER\tools\repo_guard.ps1'
+=== MTC Repo Guard (dry-run, read-only) ===
+[branch]    feature/wp-p0-05-context-routing-20260825
+[freshness] local origin/master tip 59bf7723c0a60534ed93e87da183da7c7d627340 age=0 day(s) (commit timestamp; no fetch attempted)
+[freshness] branch merge-base 0253d014daa61d51f9b4f6d93c1f10d3f3e509de is 37 commit(s) behind local origin/master (limit 30)
+[freshness] STALE BRANCH: 'feature/wp-p0-05-context-routing-20260825' is 37 commit(s) behind local origin/master (limit 30)
+[dirty]     4 entr(y/ies):
+             M IBKR_PAPER_BRIDGE/HANDOFF.md
+             M IBKR_PAPER_BRIDGE/bridge/static/help_map.json
+             M IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py
+             M MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_05_CONTEXT_ROUTING_2026-08-25/LANE_REPORT.md
+[staged]    none
+[protected] none
+[untracked] no risky files
+[unpushed]  in sync with upstream
+
+BLOCK: STALE BRANCH: 'feature/wp-p0-05-context-routing-20260825' is 37 commit(s) behind local origin/master (limit 30)
+RESULT: BLOCKED
+```
+
+The stale-base block is inherited from the dispatched PR branch. I did not merge, rebase, fetch, or
+rewrite the branch because this repair dispatch says to commit and push to the same branch and not
+merge.
