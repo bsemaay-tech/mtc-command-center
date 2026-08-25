@@ -28,6 +28,8 @@ def _resolve_repo_root() -> Path | None:
             cwd=Path(__file__).resolve().parent,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             check=False,
         )
     except OSError as exc:
@@ -37,8 +39,10 @@ def _resolve_repo_root() -> Path | None:
         )
         return None
 
-    if result.returncode != 0 or not result.stdout.strip():
-        detail = result.stderr.strip() or result.stdout.strip() or f"rc={result.returncode}"
+    stdout = result.stdout or ""
+    stderr = result.stderr or ""
+    if result.returncode != 0 or not stdout.strip():
+        detail = stderr.strip() or stdout.strip() or f"rc={result.returncode}"
         print(
             f"PINE_ALERT_GUARD BLOCK reason=git_root_unavailable detail={_one_line(detail)}",
             file=sys.stderr,
@@ -46,7 +50,7 @@ def _resolve_repo_root() -> Path | None:
         return None
 
     try:
-        root = Path(result.stdout.strip()).resolve(strict=True)
+        root = Path(stdout.strip()).resolve(strict=True)
         if not root.is_dir():
             raise NotADirectoryError(root)
     except OSError as exc:
@@ -74,7 +78,7 @@ def _pine_files(root: Path) -> tuple[list[Path], list[tuple[str, str]]]:
     ):
         directory_names[:] = sorted(name for name in directory_names if name != ".git")
         for name in sorted(file_names):
-            if name.endswith(".pine"):
+            if name.lower().endswith(".pine"):
                 candidates.append(Path(directory) / name)
 
     candidates.sort(key=lambda path: _relative_path(root, path))
