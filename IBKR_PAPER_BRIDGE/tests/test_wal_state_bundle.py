@@ -312,7 +312,10 @@ def test_shm_mode_flip_after_read_connection_initializes_fails_closed(
             if calls["source"] == 2:
                 # _connect_readonly has completed the schema read and is about
                 # to embed the SHM boundary before returning to its caller.
-                assert source_shm.stat().st_mode & 0o777 == 0o666
+                # Starting mode is platform-dependent (Windows 0o666 vs a
+                # POSIX umask-masked value); assert only that the flip target
+                # differs so the attack actually mutates the mode.
+                assert source_shm.stat().st_mode & 0o777 != 0o444
                 source_shm.chmod(0o444)
         return real_snapshot(source)
 
@@ -418,7 +421,9 @@ def test_empty_wal_created_with_metadata_drift_fails_closed(
             calls["source"] += 1
             if calls["source"] == 2:
                 assert source_wal.stat().st_size == 0
-                assert source_wal.stat().st_mode & 0o777 == 0o666
+                # Starting mode is platform-dependent; assert only that the
+                # flip target differs so the drift is genuinely introduced.
+                assert source_wal.stat().st_mode & 0o777 != 0o444
                 source_wal.chmod(0o444)
         return real_snapshot(source)
 
