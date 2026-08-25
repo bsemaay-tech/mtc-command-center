@@ -745,3 +745,87 @@ F2 remained explicitly out of scope. An enumerated uppercase
 This is implementer evidence, not self-acceptance. Gate 5 remains with the live Claude lead.
 
 Final AC-FIX implementation commit SHA: bc413924d4e076fcabd98cf645e369ec06d43e97
+
+## 15. AC-F2 - widened Pine alert invariant for alert-condition declarations
+
+Owner authorization: Baris authorized the design amendment on 2026-08-25. WP-P0-19 section 6.1.3
+previously named only the literal `alert(` as the invariant needle; this lane amends that section
+to also cover `alertcondition(`. Nothing else in the design changes, and the allowlist remains
+literally empty.
+
+The scanner now counts two independent byte needles:
+
+~~~
+b"alert("
+b"alertcondition("
+~~~
+
+The widened scanner was first run before touching Q-Trend and caught exactly the owner-authorized
+file:
+
+~~~
+PINE_ALERT_GUARD VIOLATION path=MTC_COMMAND_CENTER/03_QUANTLENS/00_INBOX_REPORTS/1 Haziran/Stg Q Trend/Q Trend.pine matches=5
+PINE_ALERT_GUARD BLOCK files=21 matches=5 allowlist=0
+~~~
+
+Treated file:
+
+~~~
+MTC_COMMAND_CENTER/03_QUANTLENS/00_INBOX_REPORTS/1 Haziran/Stg Q Trend/Q Trend.pine
+~~~
+
+The file is a third-party downloaded Q-Trend Pine v5 indicator in an inbox/archive directory. Its
+five alert-condition declarations carried only human-readable Q-Trend messages, no JSON/webhook
+payload and no venue routing. The active copy was de-fanged in place: the five declarations were
+commented out, the indicator logic/rendering lines were otherwise left unchanged, and the header
+records that the original pre-de-fang file is recoverable from git history at commit
+`480598eaad02788b12d8b505cb93bcc346c1e5bd`.
+
+Honest scope statement: the invariant now covers alert emission and alert-condition declaration. It
+does not claim that all alert-related or WunderTrading material has been removed from the repository.
+Payload builders in a Pine library and the original dispatch block quoted inside two tracked `.md`
+files still exist and are guard-invisible by design.
+
+AC-F2 proof, all from `C:\WPP023_20260825`:
+
+New needle RED, with a scratch lowercase `.pine` containing only `alertcondition(`:
+
+~~~
+PINE_ALERT_GUARD VIOLATION path=ACF2_ALERTCONDITION_PROBE.pine matches=1
+PINE_ALERT_GUARD BLOCK files=22 matches=1 allowlist=0
+~~~
+
+New needle GREEN after deleting that scratch file:
+
+~~~
+PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
+~~~
+
+Old needle RED, with a scratch lowercase `.pine` containing only `alert(`:
+
+~~~
+PINE_ALERT_GUARD VIOLATION path=ACF2_ALERT_PROBE.pine matches=1
+PINE_ALERT_GUARD BLOCK files=22 matches=1 allowlist=0
+~~~
+
+Old needle GREEN after deleting that scratch file:
+
+~~~
+PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
+~~~
+
+Case-insensitive enumeration still holds, with an uppercase `.PINE` file containing only
+`alertcondition(`:
+
+~~~
+PINE_ALERT_GUARD VIOLATION path=ACF2_CASE_PROBE.PINE matches=1
+PINE_ALERT_GUARD BLOCK files=22 matches=1 allowlist=0
+~~~
+
+Final whole-tree sweep after all scratch files were removed:
+
+~~~
+PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
+~~~
+
+This is implementer evidence, not self-acceptance. Gate 5 remains with the live Claude lead.
