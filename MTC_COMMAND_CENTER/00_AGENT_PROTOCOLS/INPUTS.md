@@ -6,6 +6,7 @@ Read only the rows triggered by the scoped task.
 |---|---|
 | Any write | Shared GitHub claim: issue, branch, worktree, exact paths, live-dependency status; check `_AI_MEMORY/SESSION_LOCK.md` as mirror/history |
 | Gate workflow | `04_SHARED/prompts/05_ai_workflow/00_index.md` and the one current-gate prompt |
+| Lesson-system edit | `_AI_MEMORY/LESSONS.md` |
 | Protected paths | `_AI_MEMORY/DO_NOT_TOUCH.md`; `09_DOCS/PROTECTED_PATHS_POLICY.md` |
 | Account/model/quota operation | `_AI_MEMORY/AI_ACCOUNT_AND_MODEL_ROUTING.md`; verify current state, do not trust dated snapshots |
 | DeepSeek fallback | `_deepseek_driver/README.md` before dispatch |

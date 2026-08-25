@@ -4,6 +4,7 @@
 - G2 implementation plan when required; G3 minimal diff; G4 commands and real output.
 - Evidence package compact enough for a fresh independent reviewer.
 - Current state in this stage's `HANDOFF.md`; sticky owner decisions in root `DECISIONS.md`.
+- `_AI_MEMORY/PROJECT_MEMORY.md` if a stable repo fact changed.
 - Git commits with exact staged paths—never `git add .`; push only when authorized; never merge from
   an implementer lane unless the task explicitly grants it.
 

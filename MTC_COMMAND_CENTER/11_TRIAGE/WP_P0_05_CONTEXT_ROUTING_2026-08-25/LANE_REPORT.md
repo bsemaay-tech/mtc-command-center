@@ -23,14 +23,14 @@ mixed-checkout bytes and the CRLF projection needed for a like-for-like fresh ch
 | Root router only (not a floor) | 672,863 / 168,216 | 12,959 / 3,240 | 13,077 / 3,270 | 98.06% |
 | Research run | 952,196 / 238,049 | 292,343 / 73,086 | 292,572 / 73,143 | 69.27% |
 | Bridge work | 729,009 / 182,253 | 73,683 / 18,421 | 73,871 / 18,468 | 89.87% |
-| Planning | 766,876 / 191,719 | 99,882 / 24,971 | 100,181 / 25,046 | 86.94% |
-| Git/handoff | 797,836 / 199,459 | 53,958 / 13,490 | 54,281 / 13,571 | 93.20% |
+| Planning | 766,876 / 191,719 | 100,728 / 25,182 | 101,037 / 25,260 | 86.82% |
+| Git/handoff | 797,836 / 199,459 | 54,804 / 13,701 | 55,137 / 13,785 | 93.09% |
 
 At audited pre-repair SHA `a5a66989`, **12,769 B / 3,193 tokens / 98.10%** was true for the root
-router alone. The global rules restored in this round moved that smaller surface to the figures
-above. It was never the ALWAYS-LOAD floor: every task also reads one stage. The current catch-all
-floor is root plus `00_AGENT_PROTOCOLS/`: **24,623 B / 6,156 tokens** on disk, or **24,900 B / 6,225
-tokens** projected CRLF, a same-form **96.30%** reduction. The minimum `mtc_cli/` floor is 15,973 B
+router alone. Later global-rule repairs moved that smaller surface to the figures above. It was
+never the ALWAYS-LOAD floor: every task also reads one stage. The current catch-all floor is root
+plus `00_AGENT_PROTOCOLS/`: **25,469 B / 6,368 tokens** on disk, or **25,756 B / 6,439 tokens**
+projected CRLF, a same-form **96.17%** reduction. The minimum `mtc_cli/` floor is 15,973 B
 projected CRLF (97.63%); the QuantLens floor is 19,089 B (97.16%).
 
 The numbers are evidence for a later conditional-split trigger only. They do not re-decide the
@@ -207,11 +207,11 @@ included in the Planning measurement; it is not hidden behind the sweep disclosu
 ### F2/F3 — router versus floor and line-ending basis
 
 The 98.10% headline is retained with its true boundary: at `a5a66989` it measured the
-**12,769-byte root router alone**. The restored global rules moved the current root router to
-12,959 B actual LF/mixed bytes and 13,077 B projected CRLF. Every task also loads one stage. The
-realistic catch-all floor is root + `00_AGENT_PROTOCOLS/`: 24,623 B actual and 24,900 B projected
-CRLF, a same-form 96.30% reduction from the 672,863-byte BEFORE baseline. The `mtc_cli/` minimum and
-QuantLens floors are published beside it in `AFTER_MEASUREMENT.md`.
+**12,769-byte root router alone**. The round-2 repairs moved that router to 12,959 B actual LF/mixed
+bytes and 13,077 B projected CRLF. At round-2 tip `6f537849`, the catch-all floor was root +
+`00_AGENT_PROTOCOLS/`: 24,623 B actual and 24,900 B projected CRLF, a same-form 96.30% reduction
+from the 672,863-byte BEFORE baseline. Round 3's current figures are recorded below and in
+`AFTER_MEASUREMENT.md`.
 
 The BEFORE nine-file baseline is CRLF filesystem data. New routed files are LF on disk and in their
 Git blobs. Both comparison tables now label the mixed working-tree figures and publish a separate
@@ -265,9 +265,9 @@ missing**. Every missing rule and its old location was:
 | Never create per-model log files at repository root | old `AGENTS.md:266` | root `AGENTS.md` |
 | Never work on `master`; create `feature/<scope>` first | old `_AI_MEMORY/DO_NOT_TOUCH.md:26` | root `AGENTS.md` |
 
-Final reverse result: **241 extracted / 241 found / 0 missing**. Thus there are no unreported missing
-source-rule groups after this repair. This result supersedes the forward checklist as proof; the
-legacy table remains below only as a traceability index.
+Round 2 recorded **241 extracted / 241 found / 0 missing**, but the subsequent flagship audit found
+four false positives in that result. The corrected inherited result is therefore **241 extracted /
+237 found / 4 missing**, not zero. The owner-authorized round-3 result is recorded below.
 
 ### Measurement movement in this round
 
@@ -316,6 +316,58 @@ parity, UI, chart, Pine, runtime, schema, host, deploy, or trading surface; no p
 lint/typecheck, parity smoke, or visual check applies. Independent acceptance remains with the live
 Claude Lead.
 
+## Owner-authorized repair round 3 — four lost rules
+
+The owner authorized a bounded second cap waiver for exactly the four false positives. Original
+wording was recovered from baseline `0253d014` before choosing each routed home:
+
+| Repair | Exact original text from Git history | New routed home |
+|---|---|---|
+| Non-author evidence execution | `_AI_MEMORY/AI_RULES.md:131-135`: “An artifact may not be dispatched to a flagship audit until its published QA command has been executed VERBATIM by someone other than the author — happy path plus at least one RED/mutant arm. Extraction-based verification does not substitute. If the verbatim run and an extraction disagree, that disagreement is itself a finding.” | `00_AGENT_PROTOCOLS/TESTS.md:3-6` |
+| BLOCK-class consequence | `_AI_MEMORY/AI_RULES.md:136-140`: “A regression fence carried from a prior round may change only with a per-change discriminating-power proof in the repair report: old and new assertion executed against the same deviant output, both outcomes quoted. A silently changed carried fence is an automatic BLOCK-class finding. Any claim about old code's behaviour must be established by executing the old code, not by reading it.” | `00_AGENT_PROTOCOLS/TESTS.md:12-14` |
+| Lesson-system trigger | `_AI_MEMORY/LESSONS.md:3-12`; exact contract reproduced below. | `00_AGENT_PROTOCOLS/INPUTS.md:9` now routes lesson-system edits to the unchanged source contract. |
+| Stable-fact write-back | `_AI_MEMORY/AI_RULES.md:108`: “`PROJECT_MEMORY.md` — if a stable repo fact changed”; `_AI_MEMORY/PROJECT_MEMORY.md:3`: “Stable repository facts. Update only when a fact actually changes.” | `00_AGENT_PROTOCOLS/OUTPUTS.md:7`; the G2 required read remains at `02_engineering_plan_review.md:26`. |
+
+Exact `git show 0253d014:MTC_COMMAND_CENTER/_AI_MEMORY/LESSONS.md` contract excerpt:
+
+```text
+Contract (Lesson Ladder Stage 1, created 2026-08-15). Hard cap: 40 entries.
+Adding entry #41 requires merging or retiring an existing one — no unbounded growth.
+Format per entry: Trigger / Rule / Why, one line each, plus scope and status.
+scope: global = applies to every project on this machine (mirror to the global layer when promoted);
+scope: repo = this repo only. status: ACTIVE | SUPERSEDED(→id) | RETIRED. The agent that caused an
+incident may PROPOSE a lesson but the Lead (or owner) accepts it. Weekly retro candidates land in
+C:\LAB\LESSON_LADDER\retro\ — accepted ones get added here by hand. If the same ACTIVE lesson is
+violated 3+ times, escalate it to mechanical enforcement (hook/test/permission) — see the ladder:
+doc → instruction → skill → hook → test → permission boundary.
+```
+
+The routed reachability grep resolves root router → governance catch-all → the selected stage's
+five mandatory files → the four destinations:
+
+```text
+AGENTS.md:10: Use CONTEXT_MAP.md to select exactly one stage
+CONTEXT_MAP.md:16: workflow/audit/planning/Git/handoff/... -> MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/
+CONTEXT_MAP.md:18: read AGENTS.md, INPUTS.md, OUTPUTS.md, TESTS.md, HANDOFF.md
+00_AGENT_PROTOCOLS/INPUTS.md:9: Lesson-system edit -> _AI_MEMORY/LESSONS.md
+00_AGENT_PROTOCOLS/OUTPUTS.md:7: _AI_MEMORY/PROJECT_MEMORY.md if a stable repo fact changed
+00_AGENT_PROTOCOLS/TESTS.md:4: VERBATIM by someone other than the author
+00_AGENT_PROTOCOLS/TESTS.md:13: automatic BLOCK-class finding
+02_engineering_plan_review.md:26: required read of _AI_MEMORY/PROJECT_MEMORY.md
+```
+
+The same baseline-first 241-group reverse inventory was rerun after the bounded patch. The diff
+removes no routed binding rule, the 237 previously found groups remain present, and all four audited
+false positives now resolve to the exact destinations above. Final reverse result: **241 extracted /
+241 found / 0 missing**.
+
+Only the governance stage set grew, by 846 actual bytes / 856 projected-CRLF bytes and 10 lines.
+Root, Research, and Bridge remain byte-exact at 12,959 B, 292,343 B, and 73,683 B. Planning moved
+99,882 → **100,728 B** actual (100,181 → **101,037 B** projected); Git/handoff moved 53,958 →
+**54,804 B** actual (54,281 → **55,137 B** projected). The catch-all floor moved 24,623 →
+**25,469 B** actual and 24,900 → **25,756 B** projected; its same-form reduction moved 96.30% →
+**96.17%**. `AFTER_MEASUREMENT.md` contains the recomputed arithmetic.
+
 ## Legacy forward rule-mapping checklist — traceability only
 
 The enumerated old-rule set is the entry/onboarding layer that was replaced or moved: root
@@ -326,7 +378,7 @@ and are routed conditionally by stage inputs. This repair changed only stale rou
 the prompt library, account-routing file, and runbook; it did not change backtest/trading rules,
 schemas, or the defect catalogue.
 
-This table is not closure evidence. The reverse source-first result above is the controlling
+This table is not closure evidence. The round-3 reverse source-first result above is the controlling
 verification record.
 
 ### A. Entry chain and router
@@ -681,12 +733,12 @@ blanket auditor count/cadence by D028) remain indexed and preserved, but are not
   Lead must reconcile current `master`, this branch, and durable tracker state before releasing the
   live claim, as the ratified doctrine requires.
 - The honest 59-file sweep ends with two stale required reads of `_AI_MEMORY/AI_RULES.md` in the G2
-  and G5 prompts. They were not in the owner-authorized repair list; the live Lead must disposition
-  them rather than relying on the earlier false zero.
+  and G5 prompts. Together those reads account for 11,527 B of Planning. They were not in the
+  owner-authorized repair list; the live Lead must disposition them.
 - The initial implementation close-out below retains its then-current coarse guard BLOCK. This
-  repair round's guard is PASS: it sees only the eight unprotected governance/evidence paths in this
-  round. That does not retroactively reclassify the original owner-authorized onboarding files under
-  `02_MTC_BACKTEST`.
+  refers to the initial package only. Repair round 2's guard was PASS on eight unprotected paths;
+  round 3's scoped result is recorded below. Neither reclassifies the original owner-authorized
+  onboarding files under `02_MTC_BACKTEST`.
 
 ## Implementer close-out records
 
@@ -712,6 +764,19 @@ branch:            feature/wp-p0-05-context-routing-20260825
 files changed:     8 exact governance/onboarding/evidence paths
 checks run:        source-rule RED/GREEN; F1 RED/GREEN; 59-file honest sweep; caps; UTF-8; actual + CRLF measurement; baseline SHA/size; deterministic 1,374-row index; 59-file links; staged scope; repo guard
 guard:             PASS (8 unprotected paths; no risky untracked file)
+commit:            this report is part of the final repair commit; final branch-tip SHA is printed by the dispatch
+pushed:            yes (feature branch only; no merge)
+remaining dirty:   none after close-out commit
+next action:       live Claude Lead independently inspects/reproduces this evidence and owns acceptance/sequencing
+```
+
+### Owner-authorized repair round 3
+
+```text
+branch:            feature/wp-p0-05-context-routing-20260825
+files changed:     6 exact governance/evidence paths
+checks run:        four original-source/reachability greps; reverse 241-group delta; caps; UTF-8; actual + CRLF measurement; baseline SHA/size; staged scope; repo guard
+guard:             PASS (6 unprotected paths; no risky untracked file)
 commit:            this report is part of the final repair commit; final branch-tip SHA is printed by the dispatch
 pushed:            yes (feature branch only; no merge)
 remaining dirty:   none after close-out commit

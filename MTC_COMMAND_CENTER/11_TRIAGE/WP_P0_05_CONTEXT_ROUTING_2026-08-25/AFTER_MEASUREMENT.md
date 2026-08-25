@@ -35,8 +35,8 @@ This uses the BEFORE evidence's exact method:
 | **Root router only** | — | — | **12,959** | **3,240** | 118 | Claude entrypoint, root router, route map, capped decisions index; excludes the mandatory stage |
 | Research run | 279,384 | 69,846 | 292,343 | 73,086 | 7,394 | Full strategy-research session proceeding to canonical backtest, same inputs/gates/registries as BEFORE plus the one QuantLens stage |
 | Bridge work | 60,724 | 15,181 | 73,683 | 18,421 | 1,170 | Bridge work designing/auditing an executable check, same defect catalogue plus the one Bridge stage |
-| Planning | 86,923 | 21,731 | 99,882 | 24,971 | 1,578 | Gate-1/Gate-2 planning for an executable check, current gate prompts and their required reads plus the one governance stage |
-| Git/handoff | 40,999 | 10,250 | 53,958 | 13,490 | 653 | Full write-session close-out, governance stage, Gate-7 prompt, and checked `SESSION_LOCK` mirror |
+| Planning | 87,769 | 21,943 | 100,728 | 25,182 | 1,588 | Gate-1/Gate-2 planning for an executable check, current gate prompts and their required reads plus the one governance stage |
+| Git/handoff | 41,845 | 10,462 | 54,804 | 13,701 | 663 | Full write-session close-out, governance stage, Gate-7 prompt, and checked `SESSION_LOCK` mirror |
 
 The unconditional floor is root router plus one selected stage. The smallest stage is shown for the
 lower bound, QuantLens for a common product route, and `00_AGENT_PROTOCOLS/` because it is the
@@ -46,7 +46,7 @@ catch-all for every repository path not assigned elsewhere:
 |---|---:|---:|---:|
 | Root + `mtc_cli/` (smallest) | 15,806 / 3,952 | 15,973 / 3,994 | 97.63% |
 | Root + `03_QUANTLENS/` | 18,879 / 4,720 | 19,089 / 4,773 | 97.16% |
-| Root + `00_AGENT_PROTOCOLS/` (catch-all) | **24,623 / 6,156** | **24,900 / 6,225** | **96.30%** |
+| Root + `00_AGENT_PROTOCOLS/` (catch-all) | **25,469 / 6,368** | **25,756 / 6,439** | **96.17%** |
 
 ## Before versus after
 
@@ -55,8 +55,8 @@ catch-all for every repository path not assigned elsewhere:
 | Root router only (not a floor) | 672,863 / 168,216 | 12,959 / 3,240 | 659,904 (98.07%) | 13,077 / 3,270 | 659,786 (98.06%) |
 | Research run | 952,196 / 238,049 | 292,343 / 73,086 | 659,853 (69.30%) | 292,572 / 73,143 | 659,624 (69.27%) |
 | Bridge work | 729,009 / 182,253 | 73,683 / 18,421 | 655,326 (89.89%) | 73,871 / 18,468 | 655,138 (89.87%) |
-| Planning | 766,876 / 191,719 | 99,882 / 24,971 | 666,994 (86.98%) | 100,181 / 25,046 | 666,695 (86.94%) |
-| Git/handoff | 797,836 / 199,459 | 53,958 / 13,490 | 743,878 (93.24%) | 54,281 / 13,571 | 743,555 (93.20%) |
+| Planning | 766,876 / 191,719 | 100,728 / 25,182 | 666,148 (86.87%) | 101,037 / 25,260 | 665,839 (86.82%) |
+| Git/handoff | 797,836 / 199,459 | 54,804 / 13,701 | 743,032 (93.13%) | 55,137 / 13,785 | 742,699 (93.09%) |
 
 These measurements support the later conditional-split trigger only. They do not decide repository
 topology; the stage-routed monorepo doctrine is already ratified.
@@ -103,22 +103,22 @@ topology; the stage-routed monorepo doctrine is already ratified.
 
 | Path/group | Bytes | Lines | Approx. tokens |
 |---|---:|---:|---:|
-| `00_AGENT_PROTOCOLS/{AGENTS,INPUTS,OUTPUTS,TESTS,HANDOFF}.md` | 11,664 | 159 | 2,916 |
+| `00_AGENT_PROTOCOLS/{AGENTS,INPUTS,OUTPUTS,TESTS,HANDOFF}.md` | 12,510 | 169 | 3,128 |
 | `04_SHARED/prompts/05_ai_workflow/00_index.md` | 3,080 | 35 | 770 |
 | `04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md` | 2,688 | 59 | 672 |
 | `04_SHARED/prompts/05_ai_workflow/02_engineering_plan_review.md` | 1,818 | 49 | 455 |
 | `_AI_MEMORY/AI_RULES.md` (required by the G2 prompt; stale but still load-bearing) | 11,527 | 176 | 2,882 |
 | `11_TRIAGE/DESIGN_DEFECT_PATTERNS_2026-08-10.md` | 56,146 | 982 | 14,037 |
-| **TOTAL** | **86,923** | **1,460** | **21,731** |
+| **TOTAL** | **87,769** | **1,470** | **21,943** |
 
 ### Git/handoff increment
 
 | Path/group | Bytes | Lines | Approx. tokens |
 |---|---:|---:|---:|
-| `00_AGENT_PROTOCOLS/{AGENTS,INPUTS,OUTPUTS,TESTS,HANDOFF}.md` | 11,664 | 159 | 2,916 |
+| `00_AGENT_PROTOCOLS/{AGENTS,INPUTS,OUTPUTS,TESTS,HANDOFF}.md` | 12,510 | 169 | 3,128 |
 | `04_SHARED/prompts/05_ai_workflow/07_handoff_update.md` | 2,124 | 54 | 531 |
 | `_AI_MEMORY/SESSION_LOCK.md` | 27,211 | 322 | 6,803 |
-| **TOTAL** | **40,999** | **535** | **10,250** |
+| **TOTAL** | **41,845** | **545** | **10,462** |
 
 ## Boundary notes
 
