@@ -291,3 +291,77 @@ No lint PASS is claimed because Ruff is not installed in this interpreter.
 ## Implementer verdict and remaining acceptance work
 
 Gate 4 self-QA: **PASS on Windows**, including D026 RED/GREEN and the full scoped WAL suite. This is not final T0 acceptance. The Claude Lead must independently inspect the actual commit, run fresh Linux CI for the repair SHA, and complete the required `claude-opus-5` xhigh plus `gpt-5.6-sol` xhigh reviews within the T0 round cap.
+
+## Test-completeness round 2026-08-25
+
+### Added coverage
+
+1. `test_nonempty_wal_created_during_capture_fails_closed` proves that a newly
+   created one-byte WAL is not covered by the stable zero-byte WAL exemption:
+   create returns rc 2 / `INVALID`, with `changed_components == ["wal"]`.
+2. `test_component_changed_during_hash_fails_closed` constructs an otherwise
+   recognizable existing-SHM read-mark change whose after snapshot has
+   `changed_during_hash=True`. `_snapshot_is_stable` prevents the benign-SHM
+   exemption: create returns rc 2 / `INVALID`, with
+   `changed_components == ["shm"]`.
+3. The `device_change` arm added to
+   `test_shm_initialization_identity_or_presence_attack_fails_closed` proves
+   SHM device identity drift is rejected with rc 2 / `INVALID` and
+   `changed_components == ["shm"]`.
+4. `test_existing_shm_timestamp_only_initialization_is_accepted` proves the
+   positive boundary: stable DB/WAL, stable SHM identity, SHM content change,
+   and mtime/ctime-only movement matching `_is_read_connection_shm_effect`
+   produce rc 0 / `CAPTURED`, no changed components, then verify rc 0 / `VALID`.
+
+### D026 RED records
+
+Every run used neutral cwd `C:\tmp`, placed the isolated mutant ahead of the
+repository bridge on `PYTHONPATH`, and hard-asserted
+`Path(wal.__file__).resolve() == expected_mutant.resolve()` before pytest.
+
+| Test | Exact producer mutation | Real RED output |
+|---|---|---|
+| non-empty new WAL | `_is_expected_empty_wal_creation`: replace the empty SHA predicate with `sha256 is not None`, and `size_bytes == 0` with `size_bytes >= 0` | imported `...\nonempty_wal_blind\tools\wal_state_bundle.py`; `assert 0 == 2`; `1 failed in 0.78s`; `pytest_rc=1` |
+| `changed_during_hash=True` | `_snapshot_is_stable`: remove `not component.get("changed_during_hash", False)` | imported `...\hash_instability_blind\tools\wal_state_bundle.py`; `assert 0 == 2`; `1 failed in 0.80s`; `pytest_rc=1` |
+| SHM device drift | remove `shm` from `_changed_snapshot_components`' component loop (the detector-blind mutation that makes the device attack escape) | imported `...\shm_device_blind\tools\wal_state_bundle.py`; `assert 0 == 2`; `1 failed in 0.84s`; `pytest_rc=1` |
+| benign existing-SHM initialization | force `_is_safe_shm_initialization` to return `False` | imported `...\benign_shm_reject\tools\wal_state_bundle.py`; expected rc 0 saw `INVALID` rc 2; `1 failed in 0.77s`; `pytest_rc=1` |
+
+### Restored GREEN and full suite
+
+```text
+....                                                                     [100%]
+4 passed in 1.24s
+focused_green_rc=0
+```
+
+Exact required full-suite command, run from `IBKR_PAPER_BRIDGE`:
+
+```powershell
+python -m pytest tests/test_wal_state_bundle.py -q
+```
+
+```text
+..........................................................               [100%]
+58 passed in 11.47s
+full_rc=0
+```
+
+### Self-contained replay hardening and scope proof
+
+The earlier D026 replay now pins neutral cwd `C:\tmp`, resolves the expected
+mutant producer path, asserts the imported `wal.__file__` equals that path, and
+throws before pytest if the assertion process is nonzero. It can no longer
+silently exercise the repository producer from `IBKR_PAPER_BRIDGE`.
+
+Pre-commit `git diff --stat`:
+
+```text
+ IBKR_PAPER_BRIDGE/tests/test_wal_state_bundle.py   | 138 ++++++++++++++++++++-
+ .../WAL_CAPTURE_FIX_2026-08-25/FIX_EVIDENCE.md     |  18 ++-
+ 2 files changed, 151 insertions(+), 5 deletions(-)
+```
+
+`git diff --name-only -- IBKR_PAPER_BRIDGE/tools/wal_state_bundle.py` printed
+no path: the production guard was not modified.
+
+Final implementation commit SHA: `ed9b0ff63375e47bebfc17a857465f48500bc944`.
