@@ -748,10 +748,12 @@ Final AC-FIX implementation commit SHA: bc413924d4e076fcabd98cf645e369ec06d43e97
 
 ## 15. AC-F2 - widened Pine alert invariant for alert-condition declarations
 
-Owner authorization: Baris authorized the design amendment on 2026-08-25. WP-P0-19 section 6.1.3
-previously named only the literal `alert(` as the invariant needle; this lane amends that section
-to also cover `alertcondition(`. Nothing else in the design changes, and the allowlist remains
-literally empty.
+Owner authorization: Baris authorized the design amendment on 2026-08-25. The invariant is actually
+defined in WP-P0-19's authorization package under `## 6. Empty-allowlist CI guard specification`,
+specifically `### 6.1 Scanner contract`; there is no numbered subsection below `6.1` in that
+document.
+This lane amends that scanner contract to cover both `alert(` and `alertcondition(`. Nothing else in
+the design changes, and the allowlist remains literally empty.
 
 The scanner now counts two independent byte needles:
 
@@ -783,8 +785,20 @@ records that the original pre-de-fang file is recoverable from git history at co
 
 Honest scope statement: the invariant now covers alert emission and alert-condition declaration. It
 does not claim that all alert-related or WunderTrading material has been removed from the repository.
-Payload builders in a Pine library and the original dispatch block quoted inside two tracked `.md`
-files still exist and are guard-invisible by design.
+Payload builders in a Pine library still exist. The earlier count of 2 tracked markdown files was
+wrong: a tracked markdown sweep for exact guard-family literals (`alert(` and/or `alertcondition(`)
+finds nine files. These markdown literals are guard-invisible by design because documentation is not
+active Pine, and they remain recoverable by paste:
+
+- `MTC_COMMAND_CENTER/03_QUANTLENS/strategies/STG046_qlr_r215f4fj7v8/VALIDATION_REPORT_BALANCED.md`
+- `MTC_COMMAND_CENTER/03_QUANTLENS/strategies/STG046_qlr_r215f4fj7v8/VALIDATION_REPORT_CLEAN.md`
+- `MTC_COMMAND_CENTER/03_QUANTLENS/strategies/STG046_qlr_r215f4fj7v8/VALIDATION_REPORT_STRATEGY_REVIEW.md`
+- `MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`
+- `MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`
+- `MTC_COMMAND_CENTER/11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`
+- `MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_19_PINE_DEFANG_DESIGN_2026-08-25/LANE_REPORT.md`
+- `MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_19_PINE_DEFANG_DESIGN_2026-08-25/PINE_DEFANG_T0_AUTHORIZATION_PACKAGE.md`
+- `MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_23_PINE_DEFANG_2026-08-25/LANE_REPORT.md`
 
 AC-F2 proof, all from `C:\WPP023_20260825`:
 
@@ -829,3 +843,17 @@ PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
 ~~~
 
 This is implementer evidence, not self-acceptance. Gate 5 remains with the live Claude lead.
+
+## 16. Known residuals deliberately not fixed in this lane
+
+F-3: a `VIOLATION` or `UNEVALUATED` line whose path contains characters unencodable in the active
+stdout encoding can still raise `UnicodeEncodeError` when output is piped under an encoding such as
+cp1254. That traceback can collide with the same exit-code bucket used for "violations found". This
+lane records the residual only; repairing it is a code change to the protected audited package.
+
+F-4: the guard remains a byte-level invariant, not a Pine parser. The byte needles miss Pine call
+forms with whitespace between the function name and opening parenthesis, including `alert (` and
+`alertcondition (`. The extension predicate also misses degenerate names such as `x.pine.`. These
+forms were pre-existing escapes for `alert(` and are now equally true of the widened
+`alertcondition(` needle. They would evade this guard until a separate authorized code round changes
+the scanner.
