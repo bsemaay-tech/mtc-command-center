@@ -606,3 +606,142 @@ was not in the eleven-row package and was not attempted.
 This report is an implementer handoff, not an acceptance verdict.
 
 Final implementation commit SHA: f25152abe4747c888734fcfed988cdad1af3a944
+
+## 14. AC-FIX follow-up — F3 case-variant enumeration and F4 Unicode root
+
+**Date:** 2026-08-25
+
+**Role:** Codex implementer, Gates 3–4 only; the live Claude lead retains Gate-5 acceptance.
+
+**Repair audit tier:** T1 — bounded local-only non-economic guard code.
+**Repair scope:** `MTC_COMMAND_CENTER/tools/check_no_pine_alerts.py` only; this report is the
+separately required evidence append. No Pine, config, mapper, test, `repo_guard.ps1`, workflow,
+parity, MTC, trading, host, deployment, or credential surface changed.
+
+### 14.1 F3 D026 — case-variant extension was fail-open
+
+The untouched scanner was copied into the same relative path in scratch Git repo
+`C:\tmp\wpp023_acfix_red_case`. With untracked `CASE_PROBE.PINE` containing `alert(`, the
+pre-fix scanner silently omitted the file:
+
+~~~
+COMMAND: python MTC_COMMAND_CENTER\tools\check_no_pine_alerts.py
+PINE_ALERT_GUARD PASS files=0 matches=0 allowlist=0
+EXIT_CODE=0
+~~~
+
+The repair changes only the filename predicate from `name.endswith(".pine")` to
+`name.lower().endswith(".pine")`. The exact same untracked probe then went RED and was named:
+
+~~~
+COMMAND: python MTC_COMMAND_CENTER\tools\check_no_pine_alerts.py
+PINE_ALERT_GUARD VIOLATION path=CASE_PROBE.PINE matches=1
+PINE_ALERT_GUARD BLOCK files=1 matches=1 allowlist=0
+EXIT_CODE=1
+~~~
+
+After deleting the probe through `apply_patch`, the scratch repo returned GREEN:
+
+~~~
+PINE_ALERT_GUARD PASS files=0 matches=0 allowlist=0
+EXIT_CODE=0
+~~~
+
+Enumeration was checked beyond the literal example. `_pine_files()` uses `os.walk()` over the
+filesystem, prunes only `.git`, and does not derive candidates from Git, so untracked and ignored
+Pine files are in scope. The untracked `.PINE` mutation above proves that behavior dynamically.
+The current worktree inventory is:
+
+~~~
+FILESYSTEM_PINE_COUNT=21
+LOWERCASE_DOT_PINE_COUNT=21
+CASE_VARIANT_COUNT=0
+GIT_TRACKED_PINE_COUNT=21
+~~~
+
+Thus the repo currently uses only lowercase `.pine`, while the repaired predicate covers every
+ASCII case spelling. No directory-following rule or invariant needle was widened.
+
+### 14.2 F4 — Windows locale decoding crash and error-code collision
+
+The local runtime reports `locale.getpreferredencoding(False) == "cp1254"`. An untouched scanner
+copy under real Git root `C:\tmp\wpp023_acfix_nonascii\Barış_Şemaay` reproduced the reported
+failure before the repair:
+
+~~~
+Exception in thread Thread-1 (_readerthread):
+UnicodeDecodeError: 'charmap' codec can't decode byte 0x9e ... cp1254.py
+...
+File "...check_no_pine_alerts.py", line 40, in _resolve_repo_root
+    if result.returncode != 0 or not result.stdout.strip():
+AttributeError: 'NoneType' object has no attribute 'strip'
+EXIT_CODE=1
+~~~
+
+The subprocess now explicitly uses `encoding="utf-8", errors="replace"`; captured stdout and
+stderr are also normalized to strings before evaluation. The exact real Unicode Git root now
+decodes, resolves, scans, and exits normally:
+
+~~~
+PINE_ALERT_GUARD PASS files=0 matches=0 allowlist=0
+EXIT_CODE=0
+~~~
+
+To falsify the failure classification in that same Unicode-path repo, a scratch `git.exe` emitted
+the UTF-8 root plus a nonexistent `missing` component. The repaired top-level CLI produced its
+contracted named BLOCK and the distinct inability-to-evaluate code:
+
+~~~
+PINE_ALERT_GUARD BLOCK reason=git_root_invalid detail=[WinError 2] Sistem belirtilen dosyayı bulamıyor: 'C:\\tmp\\wpp023_acfix_nonascii\\Barış_Şemaay\\missing'
+EXIT_CODE=2
+~~~
+
+A valid Unicode repository correctly PASSes; an invalid decoded root correctly BLOCKs. Neither
+case can now fall through to the violation code 1 via the former `None.strip()` crash.
+
+### 14.3 Existing fail-closed arms and no-regression proof
+
+All requested arms were re-executed against the repaired scanner/current unchanged carrier:
+
+| Arm | Observed terminal evidence | Exit |
+|---|---|---:|
+| Scanner violation (`CASE_PROBE.PINE`) through `repo_guard.ps1` | scanner `BLOCK files=1 matches=1`; carrier `RESULT: BLOCKED` | scanner 1; carrier 1 |
+| Scanner missing through `repo_guard.ps1` | `[pine-alert] scanner could not execute: ... [Errno 2] No such file or directory`; `RESULT: BLOCKED` | carrier 1 |
+| Interpreter absent through `repo_guard.ps1` | `[pine-alert] scanner could not execute: F4 forced interpreter absent`; `RESULT: BLOCKED` | carrier 1 |
+| Unreadable `READ_FAIL.pine` held with `FileShare.None` | `UNEVALUATED path=READ_FAIL.pine`; `BLOCK files=1 ... errors=1` | scanner 2 |
+| Non-Git directory | `BLOCK reason=git_root_unavailable detail=fatal: not a git repository ...` | scanner 2 |
+
+The required fixed-worktree carrier run after the one-file implementation commit was:
+
+~~~
+[dirty]     clean
+[pine-alert] PINE_ALERT_GUARD PASS files=21 matches=0 allowlist=0
+[unpushed]  1 commit(s) ahead of upstream
+
+RESULT: PASS
+EXIT_CODE=0
+~~~
+
+Additional checks:
+
+~~~
+python -m py_compile MTC_COMMAND_CENTER\tools\check_no_pine_alerts.py
+EXIT_CODE=0
+
+git diff --check
+EXIT_CODE=0
+
+git show --stat --oneline bc413924
+bc413924 fix(guard): scan Pine paths case-insensitively
+ MTC_COMMAND_CENTER/tools/check_no_pine_alerts.py | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+~~~
+
+F2 remained explicitly out of scope. An enumerated uppercase
+`ONLY_ALERTCONDITION.PINE` containing only `alertcondition(` produced
+`PINE_ALERT_GUARD PASS files=1 matches=0 allowlist=0`; `ALERT_NEEDLE` remains the literal
+`b"alert("`.
+
+This is implementer evidence, not self-acceptance. Gate 5 remains with the live Claude lead.
+
+Final AC-FIX implementation commit SHA: bc413924d4e076fcabd98cf645e369ec06d43e97
