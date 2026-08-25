@@ -461,3 +461,36 @@ A pin is defined here as a non-comment line whose complete package-name prefix m
 | 10 | Replacement/rollback | Replacement: existing SSH tunnel first, self-managed WireGuard only under separate T0 design. Switching cost medium/high. Rollback must remove/disable the client and prove private access through the previous authorized path without widening exposure; not walked and not permitted in this lane. |
 | 11 | Evidence preservation | Shared E plus client package/signature, policy, device inventory, outage test and redacted access logs; never credentials or auth keys. |
 | 12 | Retirement/removal | Shared R. Account/device/client cleanup requires exact, separately owner-authorized host/account actions; nothing is auto-removed. |
+
+---
+
+## Owner-authorized dependency update — 2026-08-25
+
+## Entry 0015 — PyArrow 23.0.1 security pin
+
+**SUPERSEDES:** entry 0012.
+
+**Reason:** owner-authorized bump of the protected backtest lock from `pyarrow==23.0.0` to the OSV fixed boundary `pyarrow==23.0.1` for `GHSA-rgxp-2hwp-jwgg` / `CVE-2026-25087` / `PYSEC-2026-113`, with a fresh complete-lock install, real and synthetic Parquet/Arrow IPC round-trips, and an offline engine dry-run. Earlier entries remain unchanged.
+
+**Brief status:** ADOPT at exactly `23.0.1` — owner-authorized advisory remediation with independent Lead acceptance still required.
+
+**Ledger disposition:** **ACCEPTED AS THE DECLARED PIN FOR THIS OWNER-AUTHORIZED ADVISORY REMEDIATION after implementer compatibility validation. The lock's missing hashes and incomplete transitive closure remain explicit supply-chain debt; this entry is not broader acceptance of that debt.**
+
+**Integration mode:** `LINK_AS_DEPENDENCY`, research data reader/writer.
+
+**Validation evidence:** `MTC_COMMAND_CENTER/11_TRIAGE/PYARROW_BUMP_2026-08-25/FIX_EVIDENCE.md` and `LANE_REPORT.md`.
+
+| # | Criterion | Evidence and rule |
+|---:|---|---|
+| 1 | Provenance | Declared pin `pyarrow==23.0.1` in `02_MTC_BACKTEST/requirements-lock.txt`. Fresh Python 3.13 pip acquisition selected `pyarrow-23.0.1-cp313-cp313-win_amd64.whl`, 27,540,749 bytes, SHA-256 `cecfb12ef629cf6be0b1887f9f86463b0dd3dc3195ae6224e74006be4736035a`. Exact acquisition command and output are preserved in the validation evidence. No other pin changed. |
+| 2 | Licence | Installed 23.0.1 metadata declares `Apache-2.0`. Exact wheel captures `pyarrow-23.0.1.dist-info/licenses/LICENSE.txt`, 115,832 bytes, SHA-256 `1149fe68558c3e9841aa055e3bdeb42f0c5693cc9ba4ff370b82d6bbac04ae9e`, and `NOTICE.txt`, 2,997 bytes, SHA-256 `2ccca1e730e671f55b8028facf2261a6f74b561a4d96a2ccd743be19c5619236`. Linking/distribution must include the licence, preserve applicable notices and changed-file notices, and re-inspect the exact distributed artifact. This is evidence, not legal advice. |
+| 3 | Dependency/supply chain | The backtest lock still contains exactly 13 direct pinned lines and zero hashes. A fresh environment installed the complete bumped lock and `pip check` reported `No broken requirements found`; imported PyArrow reported 23.0.1. Pip resolved additional transitive packages not represented in the 13-line lock, so hash-complete/transitive supply-chain closure still fails and must not be inferred from the successful install. |
+| 4 | Vulnerabilities | **2026-08-25 OSV:** exact query for `PyPI:pyarrow` 23.0.1 returned HTTP 200, raw `{}`, zero vulnerability records. OSV advisory `GHSA-rgxp-2hwp-jwgg` aliases `CVE-2026-25087` and `PYSEC-2026-113`; its ecosystem range is introduced 15.0.0 and fixed 23.0.1, and its explicit affected versions end at 23.0.0. This closes the named advisory for the selected version; it is not evidence that no unrelated or future vulnerability exists. |
+| 5 | Maintainer/activity | Carried forward from entry 0012: Arrow showed active maintenance and frequent releases; human maintainer count and median security closure time were not established. The availability of 23.0.1 at OSV's fixed boundary is the relevant dated security-response event for this update. |
+| 6 | Abandonment | Shared A, plus abandoned at a pin if a published HIGH advisory affecting the used parser path remains without an available fixed pin for 30 days. The previous affected pin is replaced; future affected-pin events trigger the same rule. |
+| 7 | Update | Owner: protected backtest package Lead. Review quarterly after this advisory closure and immediately on a relevant advisory. Any later version change needs separate authority, T0/T1 classification per the then-current protected-surface rules, a fresh complete-lock install, real and synthetic Parquet/Arrow IPC schema/value/byte round-trips, and an offline engine smoke that does not execute research unless separately authorized. D026 RED/GREEN remains mandatory for any regression test offered as defect-closure evidence. No RED/GREEN test is claimed here: a safe approved fixture for the native malformed-IPC use-after-free path is unavailable, so the named-advisory closure evidence is OSV's fixed boundary and exact-version result plus successful compatibility round-trips, as recorded in the owner-authorized update evidence. |
+| 8 | Incident | Shared I. If a relevant advisory again affects the declared pin, block new affected installs and untrusted IPC ingestion, notify the Lead/owner, preserve evidence, and use only a separately authorized fixed version. Do not loosen parser or validation behavior as a workaround. |
+| 9 | Portability/export | Durable outputs remain Parquet plus schema/manifest; bounded recovery export is CSV/JSON. No Arrow in-memory object is the only copy. Real-data-derived and synthetic validation covered both Parquet and Arrow IPC without changing the repository source fixture. |
+| 10 | Replacement/rollback | Replacement remains DuckDB's native Parquet reader for bounded queries or another separately accepted safe reader. Do not roll back to affected 23.0.0. If 23.0.1 proves incompatible, disable the affected input path and select a separately approved safe version/replacement; no engine rollback is needed because no engine/source file changed. |
+| 11 | Evidence preservation | Shared E plus the exact source path/hash, generated fixture hashes, schema/value/byte comparison results, selected wheel hash, licence/NOTICE hashes, OSV query timestamps/results, and offline dry-run output in `PYARROW_BUMP_2026-08-25/FIX_EVIDENCE.md`. No exploit fixture was fabricated or claimed. |
+| 12 | Retirement/removal | Shared R. This pin bump is not authority to remove PyArrow, delete data, change engine behavior, or alter Pine/parity/MTC/trading logic. Any retirement or replacement remains separately owner-authorized protected work. |
