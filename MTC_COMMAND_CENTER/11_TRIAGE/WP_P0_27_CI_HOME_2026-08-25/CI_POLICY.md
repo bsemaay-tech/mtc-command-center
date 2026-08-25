@@ -1,15 +1,22 @@
 # WP-P0-27 CI policy
 
-**Status:** the day-one workflow is already on `master` through WAL-branch carry commit
-`67a53a32` and master merge `110305c0`, before this package's own acceptance. The repository
-required-check configuration remains unconfigured. **Audit tier: T1.** The workflow reports and
-will gate repository changes only after the owner configures the required status check. It deploys
-nothing and contacts no host or venue.
+**Status:** reconciled 2026-08-25 (lane AK) with the protection that is actually enforced. The
+required-check configuration this page previously described as "unconfigured" is **live**:
+repository ruleset **21444962 — "Protect master – required CI"**, enforcement `active`, created
+2026-08-25T18:24:47+03:00. The exact configuration and the enforcement behavior actually observed
+are recorded in "Live `master` protection" below; that section is the authority on this page and
+supersedes the future-tense owner instructions this document previously carried. The workflow
+itself reached `master` early, through WAL-branch carry commit `67a53a32` and master merge
+`110305c0`, before this package's own acceptance. It deploys nothing and contacts no host or
+venue. **Audit tier:** T1 for the workflow package (unchanged); the 2026-08-25 reconciliation
+edit is documentation-only (T2).
 
-Do not mark the package gate closed yet. The gate requires a green suite run on `master`;
-current `master` is red for two known GC-referent tests whose fix is on
-`fix/gc-referent-tests-20260825` at `25eac11c`, pending audit and not yet merged. Required-check
-activation waits for that fix to merge and for the check context to be green.
+The GC-referent dependency this page carried is closed: the repair merged to `master` as
+`cef1d070` with the CI check green at 2026-08-25T15:04:24Z, **before** the ruleset was created
+(15:24:47Z), so protection was switched on against an already-green `master` — the ordering this
+policy required. The first merge through the protection was PR #127 (WP-P0-23) at `59bf7723`,
+with `Bridge suite (Python 3.12)` green. Whether the WP-P0-27 package gate now closes is the
+Lead's acceptance call, not this page's.
 
 ## Day-one check
 
@@ -28,45 +35,89 @@ service integration, and cancels a stale run when a newer commit arrives for the
 request or ref. A failed job emits a GitHub error annotation and failure summary. GitHub's
 native Actions failure notification/email is the day-one notification channel; delivery is
 subject to each recipient's GitHub notification settings. No custom mail credential or paging
-secret is introduced.
+secret is introduced. Re-verified 2026-08-25 against the file as it stands on `master`;
+unchanged.
+
+## Live `master` protection (ruleset 21444962)
+
+Recorded 2026-08-25 from the GitHub API (`gh api`), not the settings page. Re-verify with the
+same read-only commands before relying on this section after any owner settings change:
+
+```text
+gh api repos/bsemaay-tech/mtc-command-center/rulesets
+gh api repos/bsemaay-tech/mtc-command-center/rulesets/21444962
+gh api repos/bsemaay-tech/mtc-command-center/rules/branches/master
+gh api repos/bsemaay-tech/mtc-command-center/branches/master/protection
+```
+
+Observed:
+
+- Exactly one ruleset exists: id `21444962`, name **"Protect master – required CI"**, target
+  `branch`, source `bsemaay-tech/mtc-command-center` (Repository), enforcement **`active`**,
+  created and updated `2026-08-25T18:24:47+03:00`.
+- Conditions: `ref_name` includes `~DEFAULT_BRANCH` only and excludes nothing — the ruleset
+  applies to the repository's default branch, `master`, and to nothing else.
+- Exactly three rules reach `master`; the branch endpoint confirms all three come from ruleset
+  21444962 and that no other rule, repository- or org-level, applies:
+  1. `deletion` — `master` cannot be deleted.
+  2. `non_fast_forward` — force-push and history-rewrite updates to `master` are rejected.
+  3. `required_status_checks` — one required context, **`Bridge suite (Python 3.12)`**, reported
+     by GitHub Actions (`integration_id` 15368), with
+     `strict_required_status_checks_policy: true` (the PR head must be up to date with `master`
+     before merging) and `do_not_enforce_on_create: false` (no create-time exemption).
+- `bypass_actors` is **empty** and the querying credential's `current_user_can_bypass` is
+  `never`: no actor, role or account holds a bypass in this ruleset.
+- Legacy branch protection is absent — `branches/master/protection` returns 404 "Branch not
+  protected". Protection is rulesets-only.
+
+Enforcement behavior actually observed on 2026-08-25, recorded in the merge commit message of
+`59bf7723` on `master`:
+
+- A **direct push** to `master` was rejected with **GH013** ("required check expected").
+- A check run on a non-`master`, non-PR ref cannot satisfy the rule, because `ci.yml` triggers
+  only on pushes to `master` and PRs into `master`; a commit that has never been a PR head has
+  no `Bridge suite (Python 3.12)` run. In practice `master` is therefore reached through a pull
+  request whose head carries the green check.
+- The PR was additionally required to **update its branch** against `master` before merging
+  (the strict policy above).
+- PR #127 then merged with `Bridge suite (Python 3.12)` green on `fff0ba8b`. **No admin
+  override was used; the empty bypass list is deliberate.**
+
+This corrects what this page, `RED_GREEN_PLAN.md` §2, and `LANE_REPORT.md` §"Owner action text"
+previously planned: an explicit owner/Lead/admin bypass for direct pushes was **not** configured,
+and a direct push is not a merge-around path. Changing that is an owner edit of ruleset 21444962,
+never a lane action. Consequence for every lane: work reaches `master` only through a PR into
+`master` with `Bridge suite (Python 3.12)` green on an up-to-date head — plan merges accordingly.
 
 ## Progressive required-check policy
 
-After the GC-referent fix merges and the first Lead-run green workflow establishes the check
-context, the Lead asks the owner to configure the repository rules for `master` as follows:
+The first required check is enforced today; the set is what stays progressive. Only
+`Bridge suite (Python 3.12)` is in rule 21444962's required list. The repo-root workflow
+`.github/workflows/pine-defang-guard.yml` (WP-P0-23) runs on every push and pull request,
+including `master`; its `pine-alert-guard` check is green on `59bf7723` but is **not** required —
+that is this policy operating as designed, not an oversight.
 
-- Pull requests into `master` must pass `Bridge suite (Python 3.12)` before merge.
-- The rule applies to every PR author and does not permit a PR to merge around a pending,
-  skipped, cancelled or failed check.
-- Direct Lead pushes remain allowed through the repository's explicit Lead/admin bypass. The
-  bypass does not suppress CI: every direct push to `master` still starts the same workflow.
-- The Lead records the exact ruleset or branch-protection setting and the first required-check
-  demonstration in the acceptance evidence. This repository change is not performed by this lane.
-
-Plain owner click path:
-
-1. Open GitHub repository settings for `bsemaay-tech/mtc-command-center`.
-2. Open **Rules** or **Branches**, then edit the rule that protects `master`.
-3. Enable **Require status checks to pass before merging**.
-4. Select **Bridge suite (Python 3.12)**.
-5. Leave the explicit owner/Lead/admin bypass for direct pushes enabled.
-6. Save the rule and preserve a screenshot or export of the setting.
-
-Activation is intentionally progressive. Day one requires only the Bridge suite and compile
-check. A later guard becomes required only after its owning package delivers the executable
-check, D026 RED/GREEN evidence exists, the applicable audit tier accepts it, and the Lead adds
-its stable check context to the repository rule.
+A later guard becomes required only after its owning package delivers the executable check, D026
+RED/GREEN evidence exists, the applicable audit tier accepts it, and the Lead asks the owner to
+add its stable check context to rule 21444962. Adding or removing a required context is a
+repository-setting change owned by the owner/Lead; no implementation lane performs it. Day one
+requires only the Bridge suite and compile check.
 
 ## Red-master rule
 
 `master` must never stay red. A failed push run is an immediate incident: stop unrelated merges
 and direct pushes, inspect the first failing check, then either fix forward with the smallest
 accepted repair or revert the offending commit with a new revert commit. Do not rewrite history
-or bypass the workflow. The current red state is a named open dependency: two GC-referent tests
-remain red on `master`, and their fix exists at `25eac11c` pending audit. The package gate closes
-only after that fix merges and the suite is green. The native GitHub failure notification is the
-day-one signal; the WP-P0-26 paging channel may become an additional channel only after that
-separate package lands and is accepted.
+or bypass the workflow. The native GitHub failure notification is the day-one signal; the
+WP-P0-26 paging channel may become an additional channel only after that separate package lands
+and is accepted.
+
+Historical record (2026-08-25): the last red run on `master` was `110305c0`
+(2026-08-25T12:10:43Z, failure). The GC-referent repair then merged as `cef1d070` ("repair the
+two GC-referent tests that kept master red", T1 accepted 2026-08-25) and the run on it was green
+at 15:04:24Z; `master` has been green since (`d5e5e98e` 15:08:03Z; `59bf7723` 15:53:06Z, with
+both `CI` and `Pine Defang Guard` successful). The named open dependency this page previously
+carried is closed, and protection was activated only after `master` turned green.
 
 ## Resolved Windows checkout exception for the canonical ledger test
 
@@ -97,7 +148,8 @@ That repair is now on `master`; `.gitattributes` resolves the file as `text eol=
 ledger lane recorded a discriminating fresh-checkout regression plus full-suite evidence. If a
 long-lived Windows worktree still reports `w/crlf` after merging the attribute change, that is a
 stale checkout materialization issue, not a remaining policy exception; a fresh checkout honors
-the pin. The current open blocker for this package is the GC-referent fix, not the ledger file.
+the pin. Neither the ledger file nor the GC-referent pair remains an open blocker for this
+package; both are repaired and merged.
 
 ## Future jobs: named slots, not built
 
@@ -120,5 +172,5 @@ not grant that authority.
 ## Rollback
 
 Revert the workflow commit or remove the workflow through an accepted follow-up commit, then
-remove its required-check context from the repository rule. No runtime, host or deployment state
-is coupled to the workflow.
+remove its required-check context from the repository rule (ruleset 21444962). No runtime, host
+or deployment state is coupled to the workflow.
