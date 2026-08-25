@@ -5,6 +5,8 @@
 - For every regression test offered as closure evidence, show RED against pre-fix behavior or a
   deliberate equivalent mutant and GREEN with the fix. If neither is practical, label it
   supplemental and do not claim closure.
+- Gate-5 auditors state for every new test whether they verified its RED/GREEN evidence; identify
+  each unverified test instead of implying it was reproduced.
 - A carried regression fence changes only with a discriminating-power proof: old and new assertion
   against the same deviant output. Establish old behavior by execution, not reading.
 - Verify persisted encoding, clock domain, hashes, sizes, and identity on disk. With text

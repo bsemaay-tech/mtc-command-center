@@ -14,7 +14,7 @@ Read only the rows triggered by the scoped task.
 | Binary document | Convert with `03_QUANTLENS/tools/markitdown_ingest.py --apply`, then read Markdown, never raw binary |
 | Cost/routing check | `codeburn status`; use `codeburn models` when breakdown matters |
 | Historical fact | Grep `11_TRIAGE/INDEX.md` or `_AI_MEMORY/history/`; open only the matching record |
-| AI Boardroom | `_deepseek_driver/board_runner.py`; output under `11_TRIAGE/FUSION/runs/`; full policy record in `11_TRIAGE/FUSION/FINAL_FUSION_CONSOLIDATED_RECOMMENDATION.md` |
+| AI Boardroom | `_deepseek_driver/board_runner.py`; output under `11_TRIAGE/FUSION/runs/`; full policy record in `11_TRIAGE/FUSION/FINAL_FUSION_CONSOLIDATED_RECOMMENDATION.md`; never send `.env`, API keys, broker/exchange/wallet secrets, or whole-repo dumps |
 
 Before a repair lane, assess inherited state read-only per scope item: implemented, evidenced, both,
 or neither. Comments and reports are not evidence. Check all refs before declaring work missing.

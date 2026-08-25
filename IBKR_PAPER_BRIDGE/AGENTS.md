@@ -8,7 +8,8 @@ concurrency, broker/exchange, credentials, ARM, host/deploy, teardown, or live-f
   live action without exact owner authorization. Never recommend live trading.
 - Startup is fail-closed: every start forces `DISARMED` unless state is `KILLED`; ARM is explicit.
 - Execution accepts only frozen, hash-verified packages. Research labels and system tests grant no
-  execution authority. `LIVE_TRADING_GATE.md` remains unsigned unless the owner explicitly changes it.
+  execution authority. `MTC_COMMAND_CENTER/_AI_MEMORY/LIVE_TRADING_GATE.md` remains unsigned unless
+  the owner explicitly changes it.
 - Preserve transaction, idempotency, order-state, risk, KILL, evidence, and migration contracts.
   Unknown or unevaluable state stops. No schema downgrade or silent historical deletion.
 - Bridge implementation on protected core/runtime stays with a flagship implementer. Cheap models

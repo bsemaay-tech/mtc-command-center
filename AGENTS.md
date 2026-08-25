@@ -45,13 +45,16 @@ Do not load `_AI_MEMORY/history/` by default. Grep it on demand. For triage hist
   PASS-WITH-NITS (optional nits only); REQUEST_CHANGES and BLOCK are non-accepting.
 - A regression test offered as defect-closure evidence must show RED on exact pre-fix behavior or
   an equivalent mutation, then GREEN with the fix, with real commands/output recorded (D026).
+- Work on a `feature/<scope>` branch, never directly on `master`. Stage exact explicit paths; never
+  use `git add .` or `git add -A`.
 - Use a shared GitHub claim for every write task: issue, branch, worktree, exact paths, and live-
   dependency status. `_AI_MEMORY/SESSION_LOCK.md` is a checked mirror/history, not the guard.
   WP-P0-27's mechanical claim/liveness check is planned, not built.
 - Before releasing a claim, reconcile current `master`, the work branch, and durable tracker state.
   Preserve foreign edits; never reset, checkout, stash, or overwrite another lane's work.
 - Current state belongs in the selected stage's capped `HANDOFF.md`. Historical journals are
-  search-on-demand archives. Sticky owner decisions belong in root `DECISIONS.md`.
+  search-on-demand archives. Sticky owner decisions belong in root `DECISIONS.md`; never create
+  per-model log files at repository root.
 
 For workflow, audit-roster, delegation, Git/handoff, or repository-governance work, the selected
 stage is `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/`.
