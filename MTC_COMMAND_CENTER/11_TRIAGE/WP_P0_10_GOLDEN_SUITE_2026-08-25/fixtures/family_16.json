@@ -62,6 +62,17 @@
       "raw": "LONG"
     },
     {
+      "index": 3,
+      "ohlcv": [
+        "97.5",
+        "97.5",
+        "97.5",
+        "97.5",
+        "1"
+      ],
+      "raw": "NONE"
+    },
+    {
       "index": 4,
       "ohlcv": [
         "90",
@@ -131,6 +142,20 @@
         ]
       },
       {
+        "path": "events.bar2.stop_disposition",
+        "value": "STOP_MONOTONIC_REJECTED",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ]
+      },
+      {
+        "path": "events.bar3",
+        "value": "NONE",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ]
+      },
+      {
         "path": "basket.qty_after_add",
         "value": "3",
         "citations": [
@@ -147,6 +172,13 @@
       {
         "path": "basket.shared_stop",
         "value": "95.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ]
+      },
+      {
+        "path": "basket.risk_at_shared_stop",
+        "value": "10.00",
         "citations": [
           "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
         ]
@@ -203,7 +235,7 @@
         ]
       }
     ],
-    "sha256": "9a9e6ee85ad88ef167e0c2562a4519403fcf55f78673a96bf670abbd312ce62d",
+    "sha256": "38c0aae150087b7cedc482f098e9bd6269ade3a146577f4e6f8f8f3b8ce1308a",
     "sha256_citations": [
       "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1272-1276 (cross-cutting rule 1)"
     ],

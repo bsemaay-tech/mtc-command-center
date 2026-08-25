@@ -4,7 +4,7 @@
 
 **Branch:** `feature/wp-p0-10-golden-suite-20260825`
 
-**Repair starting HEAD:** `306d8172b9a7159a70f92b81087afcb31902ebbb`
+**Repair starting HEAD:** `c05e596807534845d1665ef38b2e4b006f269089`
 
 **Audit tier:** T0, retained from the package contract; both flagships re-audit after this handoff
 
@@ -21,11 +21,16 @@ The fixed family catalogue is
 The semantic authority is
 `MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md`.
 
-The fixture corpus is unchanged. No expected value, source configuration, frozen metadata, bar,
-citation, output hash, final-state hash, or source-mutation descriptor in any `family_*.json` file
-was edited by this repair. No kernel, optimizer, Pine, Bridge, schema, contract, or existing parity
-corpus file was touched. The existing 858-event companion corpus remains referenced by family 1 at
-Git blob OID `31bdafae4d4d94787508043e9681874f9dc43bda` and was not copied or modified.
+No previously accepted expected value was changed. Exactly 11 new assertion records were added as
+coverage: eight price-reflected short-twin records in `family_05.json`, and the three GF-06 records
+the deciding row says the fixture asserts in `family_16.json`. Family 5 also gained the literal
+direction/reflection inputs needed to make that twin reproducible; family 16 gained the deciding
+row's literal no-signal bar 3 so its new `events.bar3 = NONE` assertion has an input. Only those two
+fixtures' output hashes and manifest-local fixture/binding hashes changed; their existing assertions, stored
+final-state hashes, and source-mutation descriptors remain unchanged. No other `family_*.json`,
+kernel, optimizer, Pine, Bridge, schema, contract, or existing parity-corpus file was touched. The
+existing 858-event companion corpus remains referenced by family 1 at Git blob OID
+`31bdafae4d4d94787508043e9681874f9dc43bda` and was not copied or modified.
 
 ### D026 status — UNEARNED for all 23 built families
 
@@ -40,6 +45,28 @@ but the canonical kernel subjects they target arrive later in WP-P0-11, WP-P0-12
 D026 can be earned only when those subjects exist and each exact pre-fix behaviour (or equivalent
 producer mutation) is demonstrated to fail, followed by a passing execution with the fix present.
 This is not partial satisfaction: `earned=0`, `unearned=23`.
+
+### Hash, coherence, and citation limits
+
+The per-fixture semantic and authority-content hashes are stored in `manifest.json`, in the same
+tree as the fixtures. They detect an ordinary fixture/manifest mismatch, but they are not an
+external trust anchor: a coordinated fixture edit plus recomputation of both manifest hashes is
+not detected unless an independent coherence check rejects it.
+
+At audited fixed point `c05e5968`, `validate_coherence` covered only families 4, 5, 22, and 24:
+**24 of 230 expected values**, leaving **206** outside coherence validation. This repair does not
+extend `validate_coherence`. The 11 new coverage assertions make the current scope **24 of 241**,
+leaving **217** outside coherence validation. A self-consistent rehash outside those 24 values is
+not detected. Named follow-up **`WP-P0-10-COHERENCE-217`** is to design and add independent
+semantic/coherence validation for those 217 current values (the audited 206-value gap plus the 11
+assertions added here).
+
+The citation counter is now `citation_line_ranges_validated`. Its final value, 381, proves only
+that those 381 ranges are well formed, exist, and carry a structurally matching C/GF,
+cross-cutting-rule, or explicit-non-decision label. It does **not** prove that a row is relevant to,
+or decides, the assertion carrying it. Renaming was chosen over a binding rule because the corpus
+has no sound machine-readable family-to-deciding-row relevance map from which such a rule could be
+derived in this repair.
 
 The counters were renamed so no downstream consumer can mistake local dictionary comparison for
 mutation evidence:
@@ -81,6 +108,10 @@ mutation evidence:
 Families 18 and 19 remain blocked and unbuilt. No `family_18.json` or `family_19.json` exists,
 and this repair does not attempt to decide their missing `SNAPSHOT_MISMATCH` or
 `REFERENCE_DIVERGENCE` semantics.
+
+Family 18 is the brief's specified snapshot-drift D026 case, so its absence is a **genuine D026
+coverage hole**. It is not cosmetic, not waived, and remains blocked on the exact upstream semantic
+decision recorded in the manifest.
 
 ## 3. What the 23 declared pairs actually check
 
@@ -124,7 +155,7 @@ python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\ve
 Real summary:
 
 ```text
-SUMMARY built=23 blocked=2 authority_bindings_verified=23 authority_citations_resolved=362 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=381 coherence_families=04,05,22,24 coherence_expected_values_validated=24 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
 ```
 
 The two per-family lines are now `FIXTURE_CONTRACT_MISMATCH_DETECTED` and
@@ -139,11 +170,18 @@ The two per-family lines are now `FIXTURE_CONTRACT_MISMATCH_DETECTED` and
 3. rejects duplicate JSON keys and non-JSON constants;
 4. validates the exact 25-entry manifest, 23/2 family partition, blocked evidence, and exact fixture file set;
 5. reads the authority document and verifies its LF-normalized SHA-256 (`422f4577…dae16`);
-6. resolves all 362 fixture citations, checks their ranges, enclosing C section, GF identity, or exact cross-cutting/non-decision rule content;
-7. checks a canonical semantic hash for every complete fixture, so configuration, frozen metadata, bars, expectations, citations, and descriptors are no longer dead unchecked inputs;
-8. checks an authority-binding hash over every expected path/value paired with the exact cited line-fragment hashes, both stored-hash citations, and the source-mutation descriptor;
-9. recomputes the normalized expected-output and final-state hashes; and
-10. checks the arithmetic/coherence relationships targeted by the audits for families 4, 5, 22, and 24 before accepting their authority bindings.
+6. validates 381 cited line ranges for syntax, existence, and structural label/range agreement,
+   without claiming relevance to the assertion carrying each citation;
+7. recomputes the manifest-local semantic fixture hash and authority-content hash for every built
+   fixture, without claiming those same-tree hashes reject a coordinated edit plus rehash;
+8. recomputes the normalized expected-output and final-state hashes;
+9. accounts for exactly 241 expected values; and
+10. checks independent arithmetic/coherence relationships for 24 expected values in families 4,
+    5, 22, and 24 only.
+
+The other 217 expected values remain outside independent coherence validation. Hash agreement for
+those values proves self-consistency with the current manifest, not semantic authority under a
+self-consistent rehash.
 
 Outputs are written only after the complete corpus validates, so a rejected later family does not
 leave a newly rendered partial result set.
@@ -219,7 +257,8 @@ round. It does **not** upgrade the 23 economic fixtures to D026 evidence.
 ## 6. Counts, determinism, scope, and handoff
 
 Final family counts remain **23 BUILT, 2 BLOCKED, 25 TOTAL**. Built family numbers are
-`1..17,20..25`; blocked numbers are exactly `18,19`.
+`1..17,20..25`; blocked numbers are exactly `18,19`. The expected-value count is now 241: the
+audited 230 plus 11 added completeness assertions, with zero previously accepted values changed.
 
 The clean verifier still renders 23 canonical output files. Two independent final processes and a
 byte comparison are run again in Gate 4 before the repair commit. The exact result is recorded in
@@ -229,46 +268,112 @@ Protected-surface impact: none. Pine, MTC strategy behaviour, TradingView parity
 Bridge, schemas, broker/exchange code, hosts, credentials, and deployments are untouched.
 
 The required T0 dual-flagship re-audit belongs to the live Claude Lead after this implementer
-handoff. No audit, merge, push, or acceptance claim is issued here.
+handoff. No audit, merge, or acceptance claim is issued here. The branch push is explicitly
+required by the repair brief and occurs only after the scoped commit and final self-QA.
 
 ## 7. Final Gate-4 self-QA addendum
 
-Final commands and real output after the complete implementation:
+The following is real output from the completed repair, not a command template.
+
+Compilation used `py_compile.compile(..., doraise=True)` for both Python files, with generated
+bytecode directed to `C:\tmp` rather than the worktree. Strict JSON parsing enumerated the one
+manifest and all 23 family files and invoked `python -m json.tool` on every path.
 
 ```text
-python -m py_compile fixtures/verify_fixtures.py fixtures/test_verify_fixtures.py
 PY_COMPILE=PASS
-
-python -m json.tool <each manifest/family JSON>
 JSON_FILES=24/24 PASS
+RUFF=NOT_INSTALLED
+```
 
-python fixtures/verify_fixtures.py fixtures C:\tmp\wp_p010_adfix_final_run1_20260825
-python fixtures/verify_fixtures.py fixtures C:\tmp\wp_p010_adfix_final_run2_20260825
-SUMMARY built=23 blocked=2 authority_bindings_verified=23 authority_citations_resolved=362 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
-SUMMARY built=23 blocked=2 authority_bindings_verified=23 authority_citations_resolved=362 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+Complete verifier runs:
+
+```text
+python fixtures/verify_fixtures.py fixtures C:\tmp\wp_p010_adfix2_complete_run1_20260825
+python fixtures/verify_fixtures.py fixtures C:\tmp\wp_p010_adfix2_complete_run2_20260825
+SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=381 coherence_families=04,05,22,24 coherence_expected_values_validated=24 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=381 coherence_families=04,05,22,24 coherence_expected_values_validated=24 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
 OUTPUT_FILES_RUN1=23
 OUTPUT_FILES_RUN2=23
 BYTE_IDENTICAL=23/23
 MISMATCHES=0
-
-python fixtures/test_verify_fixtures.py
-VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=7/7 result=PASS
-
-git diff --check
-FIXTURE_EXPECTED_VALUE_FILES_CHANGED=0
-PROTECTED_PATH_CHANGES=0
-ASSERT_GATES=0
+STDOUT_IDENTICAL=true
 ```
 
-`ruff` was not installed on this machine (`CommandNotFoundException`), so no Ruff result is
-claimed. Python compilation, strict JSON parsing, the executable verifier, deterministic rendering,
-and the tamper regression harness all ran successfully.
+Committed regression harness:
 
-Regression-risk note: the verifier now deliberately fails if the authority text or any fixture's
-semantic content changes without a reviewed manifest-binding update. That makes authority drift
-visible but means an intentional future WP-P0-09/corpus revision must update the pinned bindings in
-the same reviewed package. There is no strategy/parity runtime risk because this lane is never
-imported by those runtimes.
+```text
+python fixtures/test_verify_fixtures.py
+BASELINE rc=0 clean=true detail=no_named_rejection
+TAMPER name=family_04_bug_value optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=04 coherence=proposed_qty expected=2.00 actual=20
+TAMPER name=family_06_fabricated_citations optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=citation_range_out_of_bounds citation=MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:99999-99999 (C99/GF-99) authority_lines=1290
+TAMPER name=family_04_incoherent_risk optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=04 coherence=per_unit_risk expected=50 actual=25
+TAMPER name=family_05_incoherent_accept optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=05 coherence=minimum_notional_outcome expected=REJECT actual=ACCEPT
+TAMPER name=family_24_duplicate_effects optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=24 coherence=economic_effects_count expected=1 actual=2
+TAMPER name=manifest_built_count_normal optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=manifest_built_count expected=23 actual=22
+TAMPER name=manifest_built_count_optimized optimized=true rc=1 rejected=true detail=VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=7/7 result=PASS
+```
+
+Retained round-1 hardening, executed on temporary copies after recomputing both fixture-internal and
+manifest-local hashes for the family-04 tamper:
+
+```text
+RETENTION name=family_04_full_rehash rc=1 rejected=true detail=VERIFY_FAIL reason=family=04 coherence=proposed_qty expected=2.00 actual=20
+RETENTION name=built_count_22 mode=python rc=1 rejected=true detail=VERIFY_FAIL reason=manifest_built_count expected=23 actual=22
+RETENTION name=built_count_22 mode=python_-O rc=1 rejected=true detail=VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+RETENTION name=built_count_22 mode=PYTHONOPTIMIZE_2 rc=1 rejected=true detail=VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+```
+
+Exact old-value preservation and added-coverage arithmetic:
+
+```text
+EXISTING_ASSERTIONS_UNCHANGED family=05 old=6 current=14 added=8 changed=0 result=PASS
+ADDED_PATHS short_twin.decision.outcome,short_twin.decision.reason,short_twin.direction,short_twin.fills.count,short_twin.price,short_twin.quantity.floored,short_twin.quantity.notional,short_twin.state.order_emitted
+EXISTING_ASSERTIONS_UNCHANGED family=16 old=13 current=16 added=3 changed=0 result=PASS
+ADDED_PATHS basket.risk_at_shared_stop,events.bar2.stop_disposition,events.bar3
+FAMILY_05_TWIN direction=SHORT reflected_price=8.0 fixture_price=8.0 notional=12.00 min_notional=20.0 below_min=true
+FAMILY_16_COMPLETENESS normalized_bars=8 bar3_raw=NONE
+FAMILY_16_SHARED_STOP_RISK equation=3*(295/3-95) result=10/1 decimal=10.00
+```
+
+Final scope and claim checks:
+
+```text
+CHANGED_FILES=6
+FAMILY_FILES_CHANGED=2:MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_05.json,MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_16.json
+PROTECTED_PATH_CHANGES=0
+CLAIM_OVERSTATEMENT_HITS=0
+ASSERT_GATES=0
+VALIDATE_COHERENCE_BODY_CHANGED=0
+FAMILY_18_FILE=ABSENT
+FAMILY_19_FILE=ABSENT
+GIT_DIFF_CHECK=PASS
+REPO_GUARD=PASS branch=feature/wp-p0-10-golden-suite-20260825 protected=none risky_untracked=none
+```
+
+Temporary-copy limitation probes recomputed the changed fixture's output/state hashes and both
+manifest-local hashes before executing the final verifier. Their clean acceptance is the evidence
+for the narrowed claims, not a passing semantic-verification claim:
+
+```text
+LIMITATION name=family_17_self_consistent_rehash rc=0 accepted=true
+SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=381 coherence_families=04,05,22,24 coherence_expected_values_validated=24 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+LIMITATION name=family_10_irrelevant_citations replacements=9 rc=0 accepted=true
+SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=381 coherence_families=04,05,22,24 coherence_expected_values_validated=24 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+```
+
+The family-10 probe replaces the eight break-even assertion citations plus the source-mutation
+citation with structurally valid C08/GF-08 ranges. It demonstrates exactly why the counter cannot be
+named or described as relevance/authority binding.
+
+Python compilation, strict JSON parsing, the executable verifier, deterministic rendering, and the
+tamper regression harness all ran successfully.
+
+Regression-risk note: an ordinary one-sided authority, fixture, output-hash, or manifest-hash change
+fails visibly. A coordinated rehash can still pass for the 217 values outside coherence validation;
+that limitation is now explicit and assigned to `WP-P0-10-COHERENCE-217`. An intentional future
+WP-P0-09/corpus revision must update the pinned self-consistency hashes in the same reviewed package.
+There is no strategy/parity runtime risk because this lane is never imported by those runtimes.
 
 **Gate-4 decision:** hand off to the live Claude Lead for the required independent T0 dual-flagship
 re-audit. The implementer does not self-accept.
@@ -277,7 +382,9 @@ re-audit. The implementer does not self-accept.
 
 Original fixture corpus commit: `5ff870ee` (`test(wp-p0-10): add 23 cited golden fixtures`).
 
-Repair starting commit: `306d8172b9a7159a70f92b81087afcb31902ebbb`.
+Repair-round-1 commit: `c05e596807534845d1665ef38b2e4b006f269089`.
+
+Repair-round-2 starting commit: `c05e596807534845d1665ef38b2e4b006f269089`.
 
 The exact repair commit SHA is printed as the last line of the implementer's final output. A tracked
 report cannot contain the SHA of the same commit that contains it because inserting that SHA changes

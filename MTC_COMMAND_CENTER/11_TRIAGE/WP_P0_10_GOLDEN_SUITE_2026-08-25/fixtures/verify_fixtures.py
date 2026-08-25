@@ -23,6 +23,9 @@ NORMALIZATION = (
 )
 EXPECTED_BUILT = list(range(1, 18)) + list(range(20, 26))
 EXPECTED_BLOCKED = [18, 19]
+EXPECTED_VALUE_COUNT = 241
+COHERENCE_FAMILIES = [4, 5, 22, 24]
+COHERENCE_EXPECTED_VALUE_COUNT = 24
 CITATION_PATTERN = re.compile(
     rf"{re.escape(AUTH_PREFIX)}(?P<start>[1-9][0-9]*)-(?P<end>[1-9][0-9]*) "
     r"\((?P<label>[^)]+)\)"
@@ -410,6 +413,25 @@ def validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
         "manifest_blocked_family_numbers_mismatch",
     )
     require(
+        manifest.get("expected_value_count") == EXPECTED_VALUE_COUNT,
+        f"manifest_expected_value_count expected={EXPECTED_VALUE_COUNT} "
+        f"actual={manifest.get('expected_value_count')}",
+    )
+    require(
+        manifest.get("coherence_validated_families") == COHERENCE_FAMILIES,
+        "manifest_coherence_validated_families_mismatch",
+    )
+    require(
+        manifest.get("coherence_expected_value_count")
+        == COHERENCE_EXPECTED_VALUE_COUNT,
+        "manifest_coherence_expected_value_count_mismatch",
+    )
+    require(
+        manifest.get("coherence_unvalidated_expected_value_count")
+        == EXPECTED_VALUE_COUNT - COHERENCE_EXPECTED_VALUE_COUNT,
+        "manifest_coherence_unvalidated_expected_value_count_mismatch",
+    )
+    require(
         manifest.get("authority") == AUTHORITY_RELATIVE_PATH,
         "manifest_authority_path_mismatch",
     )
@@ -592,8 +614,9 @@ def main() -> int:
 
     rendered: list[tuple[int, bytes]] = []
     contract_lines: list[str] = []
-    authority_bindings_verified = 0
-    authority_citations_resolved = 0
+    fixture_manifest_hashes_matched = 0
+    citation_line_ranges_validated = 0
+    expected_values_total = 0
     mismatch_detected = 0
     match_restored = 0
     for manifest_item in families:
@@ -616,13 +639,14 @@ def main() -> int:
             mutation_to,
             citation_count,
         ) = validate_fixture(fixture, manifest_item, authority_lines)
-        authority_bindings_verified += 1
-        authority_citations_resolved += citation_count
+        fixture_manifest_hashes_matched += 1
+        citation_line_ranges_validated += citation_count
 
         expected = {
             item["path"]: item["value"]
             for item in fixture["expected_output"]["assertions"]
         }
+        expected_values_total += len(expected)
         candidate = dict(expected)
         candidate[target] = mutation_to
         mismatches = [
@@ -654,7 +678,15 @@ def main() -> int:
         )
         rendered.append((number, expected_bytes))
 
-    require(authority_bindings_verified == 23, "authority_binding_count expected=23")
+    require(
+        fixture_manifest_hashes_matched == 23,
+        "fixture_manifest_hash_count expected=23",
+    )
+    require(
+        expected_values_total == EXPECTED_VALUE_COUNT,
+        f"expected_value_count expected={EXPECTED_VALUE_COUNT} "
+        f"actual={expected_values_total}",
+    )
     require(mismatch_detected == 23, "contract_mismatch_count expected=23")
     require(match_restored == 23, "contract_restore_count expected=23")
 
@@ -668,8 +700,11 @@ def main() -> int:
     print(
         "SUMMARY "
         "built=23 blocked=2 "
-        f"authority_bindings_verified={authority_bindings_verified} "
-        f"authority_citations_resolved={authority_citations_resolved} "
+        f"fixture_manifest_hashes_matched={fixture_manifest_hashes_matched} "
+        f"citation_line_ranges_validated={citation_line_ranges_validated} "
+        "coherence_families=04,05,22,24 "
+        f"coherence_expected_values_validated={COHERENCE_EXPECTED_VALUE_COUNT} "
+        f"expected_values_total={expected_values_total} "
         f"contract_mismatch_detected={mismatch_detected} "
         f"contract_match_restored={match_restored} "
         "d026_earned=0 d026_unearned=23"

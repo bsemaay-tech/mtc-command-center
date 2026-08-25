@@ -4,6 +4,15 @@
   "family_count": 25,
   "built_count": 23,
   "blocked_count": 2,
+  "expected_value_count": 241,
+  "coherence_validated_families": [
+    4,
+    5,
+    22,
+    24
+  ],
+  "coherence_expected_value_count": 24,
+  "coherence_unvalidated_expected_value_count": 217,
   "built_family_numbers": [
     1,
     2,
@@ -38,7 +47,10 @@
   "authority_text_hash_form": "UTF-8 decoded authority text with CRLF and CR normalized to LF; existing terminal newline preserved",
   "output_normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
   "fixture_contract_check": "The 23 declared source-mutation descriptors are exercised only against copies of their expected mappings. The resulting mismatch/restoration pairs are fixture-contract self-consistency checks, not kernel execution or D026 mutation evidence.",
-  "authority_binding_contract": "Each built fixture has a canonical semantic fixture hash and an authority-binding hash over every expected path/value, every cited WP-P0-09 line fragment, both stored-hash citations, and the source-mutation descriptor. This binds the accepted corpus to the exact authority content and rejects rehashed fixture tampering.",
+  "authority_binding_contract": "Each built fixture has two manifest-local self-consistency hashes: a canonical semantic fixture hash and a hash over every expected path/value, each cited WP-P0-09 line fragment, both stored-hash citations, and the source-mutation descriptor. The verifier recomputes and matches them. Because both stored hashes live in this same manifest tree, a coordinated fixture edit plus recomputation of both hashes is not detected unless an independent coherence check rejects it.",
+  "citation_validation_contract": "citation_line_ranges_validated proves only that each counted citation is well formed, its line range exists, and its structural C/GF, cross-cutting-rule, or explicit-non-decision label matches that range. It does not prove that the cited row is relevant to, or decides, the family assertion carrying it.",
+  "coherence_validation_contract": "Independent coherence validation covers families 4, 5, 22, and 24 only. At audit fixed point c05e5968 it covered 24 of 230 expected values, leaving 206 outside coherence validation. This repair adds 11 coverage assertions without extending validate_coherence, so the current scope is 24 of 241 expected values and a self-consistent rehash outside those 24 values is not detected.",
+  "coherence_follow_up": "WP-P0-10-COHERENCE-217: design and add independent semantic/coherence validation for the 217 current expected values outside the existing 24-value checks (the audited 206-value gap plus the 11 assertions added in repair round 2).",
   "d026_status": {
     "built_families": "UNEARNED",
     "earned_count": 0,
@@ -101,8 +113,8 @@
       "name": "Minimum notional",
       "status": "BUILT",
       "fixture": "family_05.json",
-      "fixture_contract_sha256": "8087bd645a1b67e2d95843ed36ef8b259743ce311dbb95197e9c22845e4b567f",
-      "authority_binding_sha256": "2ce99ffe0b84750860f21263e6849548b80dd7a0b551c9558cdd68af98510622",
+      "fixture_contract_sha256": "2fef5dd3eff309dbdf9d237b65271d2ca980fa7ee582eb555e99c3188493015d",
+      "authority_binding_sha256": "25df88c8c71cca9e5c3644e1b5bf3ba9dad337c4dfeda79ec0d7f8464df69d45",
       "wp_p0_09_rows": [
         "C09"
       ]
@@ -231,8 +243,8 @@
       "name": "Pyramiding / add / partial reduction",
       "status": "BUILT",
       "fixture": "family_16.json",
-      "fixture_contract_sha256": "ec508e573a2eb8382619858980b2fd6bed1c5060aef5401e07a38ceb7eb41914",
-      "authority_binding_sha256": "28ec8645fde998be3cfffb27058089e8fcb73163374e75a46207b35a95517dd5",
+      "fixture_contract_sha256": "80832f2331d4e9b0b9ff5d63b3a50f98e50f350291c0f8af46b827add8dd7c08",
+      "authority_binding_sha256": "03397d67ea5edfe7151269ccad35b9439bba060bb4c35fadccaa4d7bc1507966",
       "wp_p0_09_rows": [
         "C06",
         "C13"
