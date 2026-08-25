@@ -7,10 +7,13 @@ runtime, no C:\\P2RT, no service, no network.
 from __future__ import annotations
 
 import json
+import shutil
 import sqlite3
+import threading
 from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -225,6 +228,166 @@ def test_manifest_records_online_backup_and_both_ends_integrity(source_db, bundl
     for component in ("db", "wal", "shm"):
         assert isinstance(snapshot["before"][component]["present"], bool)
     assert snapshot["before"]["db"]["sha256"] == m["source"]["db_sha256"]
+
+
+def test_quiesced_capture_completes_wal_attach_before_drift_boundary(
+    source_db, bundle_dir, capsys, monkeypatch
+):
+    """Emulate SQLite stacks that attach WAL only on a real schema read."""
+    real_connect = wal.sqlite3.connect
+    real_snapshot = wal._source_snapshot
+    source_uri = f"{source_db.resolve().as_uri()}?mode=ro"
+    main_db_read = {"started": False}
+
+    def connect_with_delayed_attach(database, *args, **kwargs):
+        conn = real_connect(database, *args, **kwargs)
+        if str(database) == source_uri:
+            def authorizer(action, table, _column, _database, _trigger):
+                if action == sqlite3.SQLITE_READ and table in {
+                    "sqlite_master",
+                    "sqlite_schema",
+                }:
+                    main_db_read["started"] = True
+                return sqlite3.SQLITE_OK
+
+            conn.set_authorizer(authorizer)
+        return conn
+
+    def snapshot_with_delayed_sidecars(source):
+        result = real_snapshot(source)
+        if Path(source).resolve() != source_db.resolve():
+            return result
+        if not main_db_read["started"]:
+            result["wal"] = {"present": False}
+            result["shm"] = {"present": False}
+        return result
+
+    monkeypatch.setattr(
+        wal,
+        "sqlite3",
+        SimpleNamespace(
+            connect=connect_with_delayed_attach,
+            Error=sqlite3.Error,
+            Row=sqlite3.Row,
+        ),
+    )
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_delayed_sidecars)
+
+    rc, report = create(source_db, bundle_dir, capsys)
+
+    assert rc == 0, report
+    assert report["verdict"] == "CAPTURED"
+    capture = read_manifest(bundle_dir)["source"]["capture_snapshot"]
+    assert capture["arrival"]["wal"]["present"] is False
+    assert capture["arrival"]["shm"]["present"] is False
+    assert capture["before"]["wal"]["present"] is True
+    assert capture["before"]["shm"]["present"] is True
+    assert capture["before"] == capture["after"]
+    assert capture["changed_components"] == []
+    verify_rc, verify_report = verify(bundle_dir, capsys)
+    assert verify_rc == 0, verify_report
+    assert verify_report["verdict"] == "VALID"
+
+
+def test_hot_wal_with_unusable_shm_is_rejected_before_connecting(
+    tmp_path, bundle_dir, monkeypatch
+):
+    live_db = tmp_path / "live" / "bridge.db"
+    store = Store(live_db)
+    _seed(store)
+    live_wal = live_db.with_name(live_db.name + "-wal")
+    crashed_db = tmp_path / "crashed" / "bridge.db"
+    crashed_wal = crashed_db.with_name(crashed_db.name + "-wal")
+    crashed_shm = crashed_db.with_name(crashed_db.name + "-shm")
+    try:
+        assert live_wal.stat().st_size > 0
+        crashed_db.parent.mkdir(parents=True)
+        shutil.copy2(live_db, crashed_db)
+        shutil.copy2(live_wal, crashed_wal)
+    finally:
+        store.close()
+    crashed_shm.write_bytes(b"")
+    source_before = {
+        path.name: path.read_bytes()
+        for path in (crashed_db, crashed_wal, crashed_shm)
+    }
+    real_connect = sqlite3.connect
+    connect_calls = []
+
+    def counting_connect(database, *args, **kwargs):
+        connect_calls.append(str(database))
+        return real_connect(database, *args, **kwargs)
+
+    monkeypatch.setattr(
+        wal,
+        "sqlite3",
+        SimpleNamespace(
+            connect=counting_connect,
+            Error=sqlite3.Error,
+            Row=sqlite3.Row,
+        ),
+    )
+
+    with pytest.raises(wal.BundleError, match="hot WAL"):
+        wal.create_bundle(crashed_db, bundle_dir, timestamp=TS)
+
+    assert connect_calls == []
+    assert {
+        path.name: path.read_bytes()
+        for path in (crashed_db, crashed_wal, crashed_shm)
+    } == source_before
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+
+
+def test_hot_wal_with_unrelated_shm_is_rejected_before_connecting(
+    tmp_path, bundle_dir, monkeypatch
+):
+    primary_db = tmp_path / "primary" / "bridge.db"
+    other_db = tmp_path / "other" / "bridge.db"
+    primary = Store(primary_db)
+    other = Store(other_db)
+    _seed(primary, run_id="primary")
+    _seed(other, run_id="other")
+    crashed_db = tmp_path / "crashed-unrelated" / "bridge.db"
+    crashed_wal = crashed_db.with_name(crashed_db.name + "-wal")
+    crashed_shm = crashed_db.with_name(crashed_db.name + "-shm")
+    try:
+        primary_wal = primary_db.with_name(primary_db.name + "-wal")
+        other_shm = other_db.with_name(other_db.name + "-shm")
+        crashed_db.parent.mkdir(parents=True)
+        shutil.copy2(primary_db, crashed_db)
+        shutil.copy2(primary_wal, crashed_wal)
+        shutil.copy2(other_shm, crashed_shm)
+    finally:
+        primary.close()
+        other.close()
+    assert wal._shm_is_structurally_usable(crashed_shm) is True
+    assert wal._shm_holds_usable_wal_index(crashed_shm, crashed_wal) is False
+
+    real_connect = sqlite3.connect
+    connect_calls = []
+
+    def counting_connect(database, *args, **kwargs):
+        connect_calls.append(str(database))
+        return real_connect(database, *args, **kwargs)
+
+    monkeypatch.setattr(
+        wal,
+        "sqlite3",
+        SimpleNamespace(
+            connect=counting_connect,
+            Error=sqlite3.Error,
+            Row=sqlite3.Row,
+        ),
+    )
+
+    with pytest.raises(wal.BundleError, match="hot WAL"):
+        wal.create_bundle(crashed_db, bundle_dir, timestamp=TS)
+
+    assert connect_calls == []
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
 
 
 def test_capture_drift_ignores_arrival_to_before_shm_only_change():
@@ -510,6 +673,124 @@ def test_non_summary_source_mutation_during_capture_fails_closed(
     assert rc == 2
     assert report["failures"] == ["source_changed_during_capture"]
     assert calls["n"] == 3
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+
+
+def test_concurrent_writer_during_capture_fails_closed(
+    source_db, bundle_dir, capsys, monkeypatch
+):
+    """Commit a non-summary change after the capture boundary has opened."""
+    real_connect = wal._connect_readonly
+    wrapped = {"done": False}
+    writer_started = threading.Event()
+    writer_finished = threading.Event()
+    writer_errors = []
+
+    class ConcurrentWriterBackupProxy:
+        def __init__(self, conn):
+            self.conn = conn
+
+        def execute(self, *args, **kwargs):
+            return self.conn.execute(*args, **kwargs)
+
+        def backup(self, target):
+            def write_during_capture():
+                writer_started.set()
+                try:
+                    writer = sqlite3.connect(source_db)
+                    try:
+                        writer.execute(
+                            "UPDATE orders SET order_json = ? WHERE cloid = ?",
+                            ('{"symbol":"ETH","concurrent":"changed"}', "cloid-0"),
+                        )
+                        writer.commit()
+                    finally:
+                        writer.close()
+                except Exception as exc:  # pragma: no cover - surfaced below
+                    writer_errors.append(exc)
+                finally:
+                    writer_finished.set()
+
+            thread = threading.Thread(target=write_during_capture, daemon=True)
+            thread.start()
+            assert writer_started.wait(timeout=5)
+            assert writer_finished.wait(timeout=10)
+            thread.join(timeout=5)
+            assert not thread.is_alive()
+            assert writer_errors == []
+            return self.conn.backup(target)
+
+        def close(self):
+            self.conn.close()
+
+    def connect_with_concurrent_writer(path):
+        conn = real_connect(path)
+        if Path(path).resolve() == source_db.resolve() and not wrapped["done"]:
+            wrapped["done"] = True
+            return ConcurrentWriterBackupProxy(conn)
+        return conn
+
+    monkeypatch.setattr(wal, "_connect_readonly", connect_with_concurrent_writer)
+    rc, report = create(source_db, bundle_dir, capsys)
+
+    assert wrapped["done"] is True
+    assert writer_started.is_set()
+    assert writer_finished.is_set()
+    assert rc == 2
+    assert report["failures"] == ["source_changed_during_capture"]
+    assert report["drift_evidence"]["changed_components"]
+    assert not (bundle_dir / wal.MANIFEST_NAME).exists()
+    assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
+
+
+def _change_snapshot_metadata(snapshot, component, field):
+    for key in ("metadata_before_hash", "metadata_after_hash"):
+        snapshot[component][key][field] += 1
+
+
+@pytest.mark.parametrize(
+    ("component", "mutate"),
+    [
+        pytest.param(
+            "db",
+            lambda snapshot: _change_snapshot_metadata(snapshot, "db", "inode"),
+            id="inode_replacement",
+        ),
+        pytest.param(
+            "db",
+            lambda snapshot: _change_snapshot_metadata(snapshot, "db", "mode"),
+            id="permission_mode_change",
+        ),
+        pytest.param(
+            "shm",
+            lambda snapshot: snapshot["shm"].__setitem__("sha256", "f" * 64),
+            id="sidecar_mutation",
+        ),
+    ],
+)
+def test_capture_metadata_and_sidecar_drift_fails_closed(
+    source_db, bundle_dir, capsys, monkeypatch, component, mutate
+):
+    """Inject one stable post-boundary filesystem snapshot change per class."""
+    real_snapshot = wal._source_snapshot
+    calls = {"source": 0}
+
+    def snapshot_with_injected_drift(source):
+        result = real_snapshot(source)
+        if Path(source).resolve() == source_db.resolve():
+            calls["source"] += 1
+            if calls["source"] == 3:
+                mutate(result)
+        return result
+
+    monkeypatch.setattr(wal, "_source_snapshot", snapshot_with_injected_drift)
+    rc, report = create(source_db, bundle_dir, capsys)
+
+    assert calls["source"] == 3
+    assert rc == 2
+    assert report["failures"] == ["source_changed_during_capture"]
+    assert component in report["drift_evidence"]["changed_components"]
     assert not (bundle_dir / wal.MANIFEST_NAME).exists()
     assert not (bundle_dir / wal.BUNDLE_DB_NAME).exists()
 

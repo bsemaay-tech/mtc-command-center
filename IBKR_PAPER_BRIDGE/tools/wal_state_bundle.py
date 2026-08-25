@@ -69,6 +69,7 @@ import json
 import re
 import sqlite3
 import stat
+import struct
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -84,6 +85,15 @@ CAPTURE_MODE = "sqlite_online_backup"
 #: means the bundle was produced (or later touched) by something other than the
 #: online-backup path this tool guarantees.
 FORBIDDEN_SIDECARS = ("-wal", "-shm", "-journal")
+
+SHM_REGION_BYTES = 32768
+WAL_INDEX_HDR_BYTES = 48
+WAL_INDEX_HDR_ISINIT_OFFSET = 12
+WAL_INDEX_HDR_SALT_OFFSET = 32
+WAL_INDEX_HDR_CKSUM_OFFSET = 40
+WAL_INDEX_SALT_BYTES = 8
+WAL_INDEX_MAX_VERSION = 3007000
+WAL_HEADER_SALT_OFFSET = 16
 
 #: Tables the bridge schema (v2) must expose for the invariants below to mean
 #: anything. A missing table fails closed rather than reporting zeros.
@@ -211,24 +221,101 @@ def _num(value: Any) -> float | None:
     return None if value is None else round(float(value), FLOAT_NDIGITS)
 
 
+def _wal_is_hot(wal_path: Path) -> bool:
+    """Return true when the WAL carries state or its size cannot be read."""
+    try:
+        return wal_path.stat().st_size > 0
+    except FileNotFoundError:
+        return False
+    except OSError:
+        return True
+
+
+def _walindex_checksum(data: bytes) -> tuple[int, int]:
+    """Reproduce SQLite's native-endian WAL-index header checksum."""
+    words = struct.unpack(f"={len(data) // 4}I", data)
+    s1 = s2 = 0
+    for index in range(0, len(words), 2):
+        s1 = (s1 + words[index] + s2) & 0xFFFFFFFF
+        s2 = (s2 + words[index + 1] + s1) & 0xFFFFFFFF
+    return s1, s2
+
+
+def _shm_holds_usable_wal_index(shm_path: Path, wal_path: Path) -> bool:
+    """Validate the duplicated WAL-index header and its link to the WAL."""
+    header_span = 2 * WAL_INDEX_HDR_BYTES
+    wal_span = WAL_HEADER_SALT_OFFSET + WAL_INDEX_SALT_BYTES
+    try:
+        with shm_path.open("rb") as handle:
+            head = handle.read(header_span)
+        with wal_path.open("rb") as handle:
+            wal_head = handle.read(wal_span)
+    except OSError:
+        return False
+    if len(head) != header_span or len(wal_head) != wal_span:
+        return False
+
+    header = head[:WAL_INDEX_HDR_BYTES]
+    if header != head[WAL_INDEX_HDR_BYTES:]:
+        return False
+    if header[WAL_INDEX_HDR_ISINIT_OFFSET] == 0:
+        return False
+    if struct.unpack_from("=I", header, 0)[0] != WAL_INDEX_MAX_VERSION:
+        return False
+    stored = struct.unpack_from("=2I", header, WAL_INDEX_HDR_CKSUM_OFFSET)
+    if _walindex_checksum(header[:WAL_INDEX_HDR_CKSUM_OFFSET]) != stored:
+        return False
+    salt_end = WAL_INDEX_HDR_SALT_OFFSET + WAL_INDEX_SALT_BYTES
+    return (
+        header[WAL_INDEX_HDR_SALT_OFFSET:salt_end]
+        == wal_head[WAL_HEADER_SALT_OFFSET:wal_span]
+    )
+
+
+def _shm_is_structurally_usable(shm_path: Path) -> bool:
+    """Require a readable regular SHM made of whole SQLite regions."""
+    try:
+        shm_stat = shm_path.lstat()
+    except OSError:
+        return False
+    if not stat.S_ISREG(shm_stat.st_mode):
+        return False
+    if shm_stat.st_size < SHM_REGION_BYTES or shm_stat.st_size % SHM_REGION_BYTES:
+        return False
+    try:
+        with shm_path.open("rb") as handle:
+            return len(handle.read(1)) == 1
+    except OSError:
+        return False
+
+
 def _connect_readonly(path: Path) -> sqlite3.Connection:
     """Open *path* strictly read-only so the source can never be mutated.
 
-    Known limitation: SQLite cannot open a WAL database read-only when a hot
-    `-wal` exists without its `-shm` (a crashed writer). That case fails closed
-    here; recovering it needs a read-write connection and therefore a separate
-    owner authorization — it is never done silently by this tool.
+    SQLite cannot safely open a hot WAL read-only without a usable matching
+    `-shm`: opening could rebuild the WAL index in the source directory. That
+    state fails closed before connecting; recovery needs separate authorization.
     """
+    wal = path.with_name(path.name + "-wal")
+    shm = path.with_name(path.name + "-shm")
+    if _wal_is_hot(wal) and not (
+        _shm_is_structurally_usable(shm)
+        and _shm_holds_usable_wal_index(shm, wal)
+    ):
+        raise BundleError(
+            "source database has a hot WAL without a usable -shm WAL-index and "
+            "cannot be opened read-only; recover it under separate authorization first"
+        )
     try:
         uri = f"{path.resolve().as_uri()}?mode=ro"
     except ValueError as exc:  # pragma: no cover - defensive
         raise BundleError("cannot resolve source database path") from exc
     try:
         conn = sqlite3.connect(uri, uri=True)
-        conn.execute("SELECT 1")
+        # A constant SELECT may not attach the WAL on the deployment SQLite.
+        # Finish a real schema read before the capture drift boundary opens.
+        conn.execute("SELECT name FROM sqlite_master LIMIT 1").fetchone()
     except sqlite3.Error as exc:
-        wal = path.with_name(path.name + "-wal")
-        shm = path.with_name(path.name + "-shm")
         if wal.is_file() and not shm.is_file():
             raise BundleError(
                 "source database has a hot WAL without -shm and cannot be opened "
