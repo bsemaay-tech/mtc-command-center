@@ -378,13 +378,149 @@ There is no strategy/parity runtime risk because this lane is never imported by 
 **Gate-4 decision:** hand off to the live Claude Lead for the required independent T0 dual-flagship
 re-audit. The implementer does not self-accept.
 
-## 8. Git record
+## 8. Owner-authorized AD-FIX3 — self-contained companion inputs
+
+This bounded round starts from accepted HEAD
+`d576cd42b6a360167180616ea093f8fa192b1e19`. The T0 three-round cap was already spent;
+the owner explicitly authorized this additional repair on 2026-08-25. This implementer records
+executed self-QA only and does not self-accept.
+
+### 8.1 Per-fixture repair choice
+
+All six fixtures use **option 1: embed the companion-row inputs in the fixture**. No assertion uses
+`cross_row_import`. These legacy arms are genuinely part of the named family, so carrying their
+literal scenario inputs makes the fixture independently regenerable and avoids preserving a hidden
+dependency on another row's prose.
+
+| Fixture | Embedded deciding scenario | Assertions made self-contained | Why option 1 |
+|---|---|---|---|
+| `family_02.json` | C32/GF-32 config, metadata, and six literal bars | all five `legacy.*reentry*` paths, including bar 3 open `99.00`, bar 4 close `100.00`, and bar 5 close `100.00` | The five retired re-entry modes are the family-2 legacy matrix; one shared six-bar scenario is their actual input. |
+| `family_03.json` | C31/GF-31 precision modes, qty step `0.01`, raw quantity `1.234567` | `legacy_precision.off_qty`, `legacy_precision.research_qty` | Both quantities are native position-sizing companion arms over one raw quantity. |
+| `family_06.json` | C31/GF-31 precision modes, qty step `0.01`, raw quantity `1.234567` | `legacy_precision.off`, `legacy_precision.research` | The same companion arithmetic directly tests family 6's rounding boundary. |
+| `family_10.json` | C36/GF-36 legacy BE config, metadata, and five bars | the three `legacy.*.exit` assertions | The three break-even modes are the legacy half of the family-10 timing scenario. |
+| `family_11.json` | C37/GF-37 legacy trailing config, metadata, and four bars | the three `legacy.*.exit` assertions | The three trailing modes are the legacy half of family 11 and share one literal bar sequence. |
+| `family_14.json` | C20/GF-20 `LEGACY_CLOSE_ONLY` config, metadata, entry bar, and both adverse-gap bars | both `legacy.*_stop_close_only` assertions | The close-only rival is an explicit named execution profile in the same gap family. |
+
+The companion records live at top-level `companion_scenarios`, separate from the executable primary
+`config`, so provenance metadata cannot be mistaken for a kernel configuration key. Each record
+names its deciding C/GF citation and maps every covered assertion to exact required input paths.
+
+### 8.2 Targeted proof: no expected value changed
+
+The comparison below loads every `family_*.json` from starting HEAD with `git show`, compares the
+complete `path -> value` mapping to the worktree, and separately compares both stored expected-output
+hashes. Real output:
+
+```text
+EXPECTED_PATH_VALUE_MAPS_UNCHANGED=23/23 changed=[]
+EXPECTED_OUTPUT_AND_STATE_HASHES_UNCHANGED=46/46 changed=[]
+```
+
+**No asserted value changed.** The fixture edits are input/provenance additions only; the seven
+changed `fixture_contract_sha256` values in `manifest.json` bind six companion-input additions plus
+family 1's path-status metadata. Every pre-existing expected-output SHA and final-state SHA remains
+byte-identical to `d576cd42`.
+
+### 8.3 Assertion-input gate and falsified regression
+
+`verify_fixtures.py` now assigns every expected assertion an input source. Primary assertions use
+the fixture's primary config/frozen metadata/bars. Every `legacy.*` / `legacy_*` assertion must have
+one exact terminal disposition: required paths inside an embedded companion scenario, or an explicit
+`cross_row_import` whose source is one of that assertion's validated citations and whose inputs are
+declared. Duplicate assignment, an unknown assertion, an uncited source, an undeclared legacy
+assertion, or a missing/empty required input rejects before fixture-hash comparison.
+
+Measured corpus accounting is bound to the manifest:
+
+```text
+assertion_input_presence_validated=241
+companion_assertions_validated=17
+cross_row_imports_validated=0
+```
+
+The committed regression removes `family_03`'s research-mode config input, removes the
+`legacy_precision.research_qty` companion assignment, and recomputes the manifest-local fixture
+hash. The expected assertion remains. That coordinated rehash prevents the existing hash gate from
+being mistaken for semantic coverage: the assertion's input is both absent and undeclared.
+
+RED against the unchanged `d576cd42` verifier, before the gate was added:
+
+```text
+OLD_BASELINE rc=0 detail=no_named_rejection
+OLD_TAMPER name=family_03_absent_undeclared_input rc=0 detail=no_named_rejection
+RED_EXPECTATION expected_nonzero=true observed_rc=0 result=FAIL
+```
+
+GREEN with this repair:
+
+```text
+BASELINE rc=0 clean=true detail=no_named_rejection
+TAMPER name=family_03_absent_undeclared_input optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=03 assertion_input_source_undeclared path=legacy_precision.research_qty
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=8/8 result=PASS
+```
+
+This is real D026 RED/GREEN closure evidence for the **verifier defect only**. It does not change the
+23 economic fixture families' existing `D026 UNEARNED` status.
+
+### 8.4 Measured coherence summary
+
+`validate_coherence` now returns the exact expected paths it actually validated. The main verifier
+derives the family set and value count from those returned sets, checks both against the manifest,
+and prints the measured values. The old output literals at former lines 705-707 are gone.
+
+Two independent final verifier processes produced the same measured summary:
+
+```text
+SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=387 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_presence_validated=241 companion_assertions_validated=17 cross_row_imports_validated=0 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=387 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_presence_validated=241 companion_assertions_validated=17 cross_row_imports_validated=0 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+VERIFY_RUNS_RC=0,0
+OUTPUT_FILES=23,23
+BYTE_IDENTICAL=23/23 MISMATCHES=0
+STDOUT_IDENTICAL=true
+```
+
+### 8.5 Family-1 companion path resolution
+
+The prompt's claim that the path is absent from branch HEAD did not reproduce. Read-only checks at
+`d576cd42` established all three identities:
+
+```text
+git ls-tree -r HEAD -- IBKR_PAPER_BRIDGE/tests/fixtures/golden_signals.json
+100644 blob 31bdafae4d4d94787508043e9681874f9dc43bda  IBKR_PAPER_BRIDGE/tests/fixtures/golden_signals.json
+COMPANION_WORKTREE_PRESENT=True
+COMPANION_BLOB=31bdafae4d4d94787508043e9681874f9dc43bda
+```
+
+`family_01.json` therefore records the truthful status
+`PRESENT_AT_BRANCH_HEAD_AND_WORKTREE` beside the existing exact path and blob OID. The corpus remains
+referenced only; it was not copied or modified.
+
+### 8.6 Final Gate-4 checks
+
+```text
+PY_COMPILE=PASS files=2
+JSON_PARSE=PASS files=24/24
+FIXTURE_MANIFEST_HASHES=23/23 bad=0
+EXPECTED_PATH_VALUE_MAPS_UNCHANGED=23/23 changed=[]
+EXPECTED_OUTPUT_AND_STATE_HASHES_UNCHANGED=46/46 changed=[]
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=8/8 result=PASS
+PROTECTED_PATH_CHANGES=0
+GIT_DIFF_CHECK=PASS
+```
+
+Families 18 and 19 remain blocked and absent. The coordinated-rehash limitation remains disclosed
+and unchanged; this round does not attempt to close it. No Pine, parity, MTC strategy, Bridge,
+schema, broker/exchange, host, credential, deployment, or live surface changed.
+
+## 9. Git record
 
 Original fixture corpus commit: `5ff870ee` (`test(wp-p0-10): add 23 cited golden fixtures`).
 
 Repair-round-1 commit: `c05e596807534845d1665ef38b2e4b006f269089`.
 
 Repair-round-2 starting commit: `c05e596807534845d1665ef38b2e4b006f269089`.
+
+Owner-authorized AD-FIX3 starting commit: `d576cd42b6a360167180616ea093f8fa192b1e19`.
 
 The exact repair commit SHA is printed as the last line of the implementer's final output. A tracked
 report cannot contain the SHA of the same commit that contains it because inserting that SHA changes

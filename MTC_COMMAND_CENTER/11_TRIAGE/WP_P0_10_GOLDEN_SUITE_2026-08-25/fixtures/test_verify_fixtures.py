@@ -62,6 +62,24 @@ def recompute_internal_hashes(data: dict[str, Any]) -> None:
     ).hexdigest()
 
 
+def write_fixture_with_manifest_hash(
+    path: Path,
+    number: int,
+    fixture_path: Path,
+    data: dict[str, Any],
+) -> None:
+    write_json(fixture_path, data)
+    manifest_path = path / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest_item = next(
+        item for item in manifest["families"] if item["number"] == number
+    )
+    manifest_item["fixture_contract_sha256"] = hashlib.sha256(
+        canonical_bytes(data)
+    ).hexdigest()
+    write_json(manifest_path, manifest)
+
+
 def tamper_family_04_bug_value(path: Path) -> None:
     fixture_path, data = fixture(path, 4)
     assertion(data, "resolution.proposed_qty")["value"] = "20"
@@ -83,6 +101,7 @@ def tamper_family_06_citations(path: Path) -> None:
     data["expected_output"]["sha256_citations"] = [fabricated]
     data["expected_output"]["final_state_sha256_citations"] = [fabricated]
     data["deliberate_mutation"]["citation"] = fabricated
+    data["companion_scenarios"][0]["source"] = fabricated
     write_json(fixture_path, data)
 
 
@@ -117,6 +136,14 @@ def tamper_manifest_built_count(path: Path) -> None:
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
     data["built_count"] = 22
     write_json(manifest_path, data)
+
+
+def tamper_family_03_absent_undeclared_input(path: Path) -> None:
+    fixture_path, data = fixture(path, 3)
+    scenario = data["companion_scenarios"][0]
+    del scenario["config"]["tw_qty_precision_mode"]
+    del scenario["assertion_inputs"]["legacy_precision.research_qty"]
+    write_fixture_with_manifest_hash(path, 3, fixture_path, data)
 
 
 def run_verifier(
@@ -157,14 +184,21 @@ def main() -> int:
     parser.add_argument("--verifier", type=Path, default=FIXTURE_DIR / "verify_fixtures.py")
     args = parser.parse_args()
     verifier = args.verifier.resolve()
-    cases: list[tuple[str, Callable[[Path], None], bool]] = [
-        ("family_04_bug_value", tamper_family_04_bug_value, False),
-        ("family_06_fabricated_citations", tamper_family_06_citations, False),
-        ("family_04_incoherent_risk", tamper_family_04_incoherent_risk, False),
-        ("family_05_incoherent_accept", tamper_family_05_incoherent_accept, False),
-        ("family_24_duplicate_effects", tamper_family_24_duplicate_effects, False),
-        ("manifest_built_count_normal", tamper_manifest_built_count, False),
-        ("manifest_built_count_optimized", tamper_manifest_built_count, True),
+    cases: list[tuple[str, Callable[[Path], None], bool, str | None]] = [
+        ("family_04_bug_value", tamper_family_04_bug_value, False, None),
+        ("family_06_fabricated_citations", tamper_family_06_citations, False, None),
+        ("family_04_incoherent_risk", tamper_family_04_incoherent_risk, False, None),
+        ("family_05_incoherent_accept", tamper_family_05_incoherent_accept, False, None),
+        ("family_24_duplicate_effects", tamper_family_24_duplicate_effects, False, None),
+        (
+            "family_03_absent_undeclared_input",
+            tamper_family_03_absent_undeclared_input,
+            False,
+            "VERIFY_FAIL reason=family=03 assertion_input_source_undeclared "
+            "path=legacy_precision.research_qty",
+        ),
+        ("manifest_built_count_normal", tamper_manifest_built_count, False, None),
+        ("manifest_built_count_optimized", tamper_manifest_built_count, True, None),
     ]
 
     with tempfile.TemporaryDirectory(prefix="wp_p010_verifier_regression_") as temp:
@@ -178,7 +212,9 @@ def main() -> int:
         )
 
         rejected = 0
-        for index, (name, mutate, optimized) in enumerate(cases, start=1):
+        for index, (name, mutate, optimized, expected_reason) in enumerate(
+            cases, start=1
+        ):
             case_dir = temp_path / f"case_{index:02d}"
             shutil.copytree(FIXTURE_DIR, case_dir)
             mutate(case_dir)
@@ -188,12 +224,15 @@ def main() -> int:
                 temp_path / f"case_{index:02d}_output",
                 optimized=optimized,
             )
-            was_rejected = result.returncode != 0
+            detail = reason_line(result)
+            was_rejected = result.returncode != 0 and (
+                expected_reason is None or expected_reason in detail
+            )
             rejected += int(was_rejected)
             print(
                 f"TAMPER name={name} optimized={str(optimized).lower()} "
                 f"rc={result.returncode} rejected={str(was_rejected).lower()} "
-                f"detail={reason_line(result)}"
+                f"detail={detail}"
             )
 
     passed = baseline_clean and rejected == len(cases)

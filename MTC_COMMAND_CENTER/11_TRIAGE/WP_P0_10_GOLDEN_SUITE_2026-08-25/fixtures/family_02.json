@@ -26,6 +26,112 @@
       "tw_reversal_reentry_delay_bars": 2
     }
   },
+  "companion_scenarios": [
+      {
+        "id": "C32_GF32_legacy_reentry_modes",
+        "source": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:830-863 (C32/GF-32)",
+        "config": {
+          "tw_audit_semantics_mode": "research",
+          "tw_reversal_reentry_delay_bars": 2,
+          "tw_reversal_reentry_modes": [
+            "local",
+            "delay_after_protective_exit",
+            "carry_to_next_bar_after_protective_exit",
+            "next_bar_open_after_protective_exit_signal",
+            "next_bar_close_after_protective_exit_signal"
+          ],
+          "use_sl": true,
+          "use_sl_percent": true,
+          "sl_percent": "5.0",
+          "tp_mode": "None",
+          "exit_on_opposite_signal": true,
+          "allow_flip": true,
+          "execution_profile_id": "close_only_deterministic_v2",
+          "initial_capital": "1000",
+          "risk_per_long_pct": "0.5",
+          "risk_per_short_pct": "0.5",
+          "max_leverage_cap": "1.0",
+          "cooldown_bars": 0,
+          "max_entries": 1,
+          "regime_lock": false,
+          "all_gates_disabled": true
+        },
+        "frozen_metadata": {
+          "instrument_price_tick": "0.01",
+          "instrument_qty_step": "0.000001",
+          "instrument_min_qty": "0",
+          "instrument_min_notional": "0",
+          "instrument_contract_multiplier": "1"
+        },
+        "normalized_bars": [
+          {
+            "index": 0,
+            "ohlcv": ["100", "100", "100", "100", "1"],
+            "raw": "LONG"
+          },
+          {
+            "index": 1,
+            "ohlcv": ["99", "99", "94", "94", "1"],
+            "raw": "LONG"
+          },
+          {
+            "index": 2,
+            "ohlcv": ["94", "100", "94", "100", "1"],
+            "raw": "LONG"
+          },
+          {
+            "index": 3,
+            "ohlcv": ["99", "100", "99", "100", "1"],
+            "raw": "NONE"
+          },
+          {
+            "index": 4,
+            "ohlcv": ["100", "100", "99", "100", "1"],
+            "raw": "NONE"
+          },
+          {
+            "index": 5,
+            "ohlcv": ["100", "100", "99", "100", "1"],
+            "raw": "LONG"
+          }
+        ],
+        "assertion_inputs": {
+          "legacy.local.reentry_bar": [
+            "config.tw_reversal_reentry_modes",
+            "normalized_bars.1.ohlcv.3",
+            "normalized_bars.2.raw",
+            "normalized_bars.2.ohlcv.3"
+          ],
+          "legacy.carry.reentry_bar": [
+            "config.tw_reversal_reentry_modes",
+            "config.tw_reversal_reentry_delay_bars",
+            "normalized_bars.1.raw",
+            "normalized_bars.3.raw",
+            "normalized_bars.3.ohlcv.3"
+          ],
+          "legacy.next_bar_open.reentry": [
+            "config.tw_reversal_reentry_modes",
+            "config.tw_reversal_reentry_delay_bars",
+            "normalized_bars.2.raw",
+            "normalized_bars.3.ohlcv.0"
+          ],
+          "legacy.next_bar_close.reentry": [
+            "config.tw_reversal_reentry_modes",
+            "config.tw_reversal_reentry_delay_bars",
+            "normalized_bars.2.raw",
+            "normalized_bars.3.raw",
+            "normalized_bars.4.ohlcv.3"
+          ],
+          "legacy.delay.reentry": [
+            "config.tw_reversal_reentry_modes",
+            "config.tw_reversal_reentry_delay_bars",
+            "normalized_bars.4.raw",
+            "normalized_bars.5.raw",
+            "normalized_bars.5.ohlcv.3"
+          ]
+        }
+      }
+  ],
   "frozen_metadata": {
     "price_tick": "0.01",
     "qty_step": "1.0",

@@ -206,6 +206,7 @@
   },
   "companion_corpus": {
     "path": "IBKR_PAPER_BRIDGE/tests/fixtures/golden_signals.json",
+    "path_status": "PRESENT_AT_BRANCH_HEAD_AND_WORKTREE",
     "git_blob_oid": "31bdafae4d4d94787508043e9681874f9dc43bda",
     "declared_bar_count": 48077,
     "declared_signal_count": 858,

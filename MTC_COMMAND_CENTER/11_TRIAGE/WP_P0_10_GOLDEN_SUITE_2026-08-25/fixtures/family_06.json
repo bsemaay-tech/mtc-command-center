@@ -21,6 +21,35 @@
     "raw_quantity": "1.239",
     "min_qty_case": "0.9"
   },
+  "companion_scenarios": [
+      {
+        "id": "C31_GF31_legacy_quantity_precision",
+        "source": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:812-822 (C31/GF-31)",
+        "config": {
+          "tw_audit_semantics_mode_values": ["off", "research"],
+          "tw_qty_precision_mode": "off"
+        },
+        "frozen_metadata": {
+          "instrument_qty_step": "0.01"
+        },
+        "normalized_bars": [],
+        "literal_inputs": {
+          "raw_quantity": "1.234567"
+        },
+        "assertion_inputs": {
+          "legacy_precision.off": [
+            "config.tw_audit_semantics_mode_values",
+            "frozen_metadata.instrument_qty_step",
+            "literal_inputs.raw_quantity"
+          ],
+          "legacy_precision.research": [
+            "config.tw_audit_semantics_mode_values",
+            "config.tw_qty_precision_mode",
+            "literal_inputs.raw_quantity"
+          ]
+        }
+      }
+  ],
   "frozen_metadata": {
     "price_tick": "0.25",
     "qty_step": "0.01",

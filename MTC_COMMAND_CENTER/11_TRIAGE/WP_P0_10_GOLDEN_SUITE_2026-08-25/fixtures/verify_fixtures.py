@@ -32,6 +32,7 @@ CITATION_PATTERN = re.compile(
 )
 ROW_LABEL_PATTERN = re.compile(r"C(?P<c>[0-9]{2})/GF-(?P<gf>[0-9]{2})")
 CROSS_CUTTING_PATTERN = re.compile(r"cross-cutting rule (?P<rule>[1-4])")
+LEGACY_ASSERTION_PATTERN = re.compile(r"^legacy(?:\.|_)")
 
 
 class VerificationError(Exception):
@@ -172,6 +173,160 @@ def resolved_citations(
     return [resolve_citation(citation, authority_lines) for citation in citations]
 
 
+def require_declared_input(
+    scenario: dict[str, Any],
+    input_path: str,
+    family: int,
+    assertion_path: str,
+) -> None:
+    require(
+        isinstance(input_path, str) and input_path,
+        f"family={family:02d} assertion_input_path_invalid path={assertion_path}",
+    )
+    current: Any = scenario
+    for part in input_path.split("."):
+        if isinstance(current, dict) and part in current:
+            current = current[part]
+        elif isinstance(current, list) and part.isdigit() and int(part) < len(current):
+            current = current[int(part)]
+        else:
+            raise VerificationError(
+                f"family={family:02d} assertion_input_presence_missing "
+                f"path={assertion_path} input={input_path}"
+            )
+    require(
+        current is not None and not (
+            isinstance(current, (dict, list, str)) and len(current) == 0
+        ),
+        f"family={family:02d} assertion_input_presence_missing "
+        f"path={assertion_path} input={input_path}",
+    )
+
+
+def validate_assertion_input_presence(
+    fixture: dict[str, Any],
+    assertions: list[dict[str, Any]],
+    authority_lines: list[str],
+) -> tuple[int, int, int, int]:
+    family = fixture["family"]["number"]
+    assertions_by_path = {item["path"]: item for item in assertions}
+    assigned_sources: dict[str, str] = {}
+    companion_assertions = 0
+    cross_row_imports = 0
+    citation_count = 0
+
+    scenarios = fixture.get("companion_scenarios", [])
+    require(
+        isinstance(scenarios, list),
+        f"family={family:02d} companion_scenarios_not_list",
+    )
+    scenario_ids: set[str] = set()
+    for scenario in scenarios:
+        require(
+            isinstance(scenario, dict),
+            f"family={family:02d} companion_scenario_not_object",
+        )
+        scenario_id = scenario.get("id")
+        require(
+            isinstance(scenario_id, str) and scenario_id,
+            f"family={family:02d} companion_scenario_id_missing",
+        )
+        require(
+            scenario_id not in scenario_ids,
+            f"family={family:02d} companion_scenario_id_duplicate id={scenario_id}",
+        )
+        scenario_ids.add(scenario_id)
+        source = scenario.get("source")
+        resolve_citation(source, authority_lines)
+        citation_count += 1
+        assertion_inputs = scenario.get("assertion_inputs")
+        require(
+            isinstance(assertion_inputs, dict) and assertion_inputs,
+            f"family={family:02d} companion_assertion_inputs_missing id={scenario_id}",
+        )
+        for assertion_path, input_paths in assertion_inputs.items():
+            require(
+                assertion_path in assertions_by_path,
+                f"family={family:02d} companion_assertion_unknown "
+                f"id={scenario_id} path={assertion_path}",
+            )
+            require(
+                assertion_path not in assigned_sources,
+                f"family={family:02d} assertion_input_source_duplicate "
+                f"path={assertion_path}",
+            )
+            require(
+                source in assertions_by_path[assertion_path].get("citations", []),
+                f"family={family:02d} companion_source_not_assertion_citation "
+                f"path={assertion_path}",
+            )
+            require(
+                isinstance(input_paths, list) and input_paths,
+                f"family={family:02d} assertion_inputs_missing path={assertion_path}",
+            )
+            require(
+                len(input_paths) == len(set(input_paths)),
+                f"family={family:02d} assertion_input_path_duplicate "
+                f"path={assertion_path}",
+            )
+            for input_path in input_paths:
+                require_declared_input(
+                    scenario,
+                    input_path,
+                    family,
+                    assertion_path,
+                )
+            assigned_sources[assertion_path] = f"companion:{scenario_id}"
+            companion_assertions += 1
+
+    for item in assertions:
+        assertion_path = item["path"]
+        cross_row_import = item.get("cross_row_import")
+        if cross_row_import is not None:
+            require(
+                isinstance(cross_row_import, dict),
+                f"family={family:02d} cross_row_import_not_object "
+                f"path={assertion_path}",
+            )
+            require(
+                assertion_path not in assigned_sources,
+                f"family={family:02d} assertion_input_source_duplicate "
+                f"path={assertion_path}",
+            )
+            source = cross_row_import.get("source")
+            resolve_citation(source, authority_lines)
+            citation_count += 1
+            require(
+                source in item.get("citations", []),
+                f"family={family:02d} cross_row_source_not_assertion_citation "
+                f"path={assertion_path}",
+            )
+            imported_inputs = cross_row_import.get("inputs")
+            require(
+                isinstance(imported_inputs, dict) and imported_inputs,
+                f"family={family:02d} cross_row_inputs_missing path={assertion_path}",
+            )
+            assigned_sources[assertion_path] = "cross_row_import"
+            cross_row_imports += 1
+
+    for assertion_path in assertions_by_path:
+        if LEGACY_ASSERTION_PATTERN.match(assertion_path):
+            require(
+                assertion_path in assigned_sources,
+                f"family={family:02d} assertion_input_source_undeclared "
+                f"path={assertion_path}",
+            )
+        elif assertion_path not in assigned_sources:
+            assigned_sources[assertion_path] = "primary_fixture"
+
+    require(
+        set(assigned_sources) == set(assertions_by_path),
+        f"family={family:02d} assertion_input_source_accounting_mismatch",
+    )
+
+    return len(assigned_sources), companion_assertions, cross_row_imports, citation_count
+
+
 def build_authority_binding(
     fixture: dict[str, Any],
     authority_lines: list[str],
@@ -238,8 +393,14 @@ def require_equal(actual: Any, expected: Any, reason: str) -> None:
     require(actual == expected, f"{reason} expected={expected} actual={actual}")
 
 
-def validate_coherence(fixture: dict[str, Any], expected: dict[str, Any]) -> None:
+def validate_coherence(fixture: dict[str, Any], expected: dict[str, Any]) -> set[str]:
     family = fixture["family"]["number"]
+    validated_paths: set[str] = set()
+
+    def checked_equal(path: str, actual: Any, expected_value: Any, reason: str) -> None:
+        require_equal(actual, expected_value, reason)
+        validated_paths.add(path)
+
     if family == 4:
         config = fixture["config"]
         metadata = fixture["frozen_metadata"]
@@ -251,37 +412,44 @@ def validate_coherence(fixture: dict[str, Any], expected: dict[str, Any]) -> Non
         risk_capital = bucket * risk_fraction
         per_unit_risk = abs(entry - stop) * multiplier
         proposed_qty = risk_capital / per_unit_risk
-        require_equal(
+        checked_equal(
+            "resolution.risk_capital",
             decimal_value(expected, "resolution.risk_capital", family),
             risk_capital,
             "family=04 coherence=risk_capital",
         )
-        require_equal(
+        checked_equal(
+            "resolution.per_unit_risk",
             decimal_value(expected, "resolution.per_unit_risk", family),
             per_unit_risk,
             "family=04 coherence=per_unit_risk",
         )
-        require_equal(
+        checked_equal(
+            "resolution.proposed_qty",
             decimal_value(expected, "resolution.proposed_qty", family),
             proposed_qty,
             "family=04 coherence=proposed_qty",
         )
-        require_equal(
+        checked_equal(
+            "resolution.realised_risk_at_stop",
             decimal_value(expected, "resolution.realised_risk_at_stop", family),
             proposed_qty * abs(entry - stop) * multiplier,
             "family=04 coherence=realised_risk_at_stop",
         )
-        require_equal(
+        checked_equal(
+            "resolution.fee_at_0_1_pct",
             decimal_value(expected, "resolution.fee_at_0_1_pct", family),
             proposed_qty * entry * multiplier * Decimal("0.001"),
             "family=04 coherence=fee_at_0_1_pct",
         )
-        require_equal(
+        checked_equal(
+            "short_twin.proposed_qty",
             decimal_value(expected, "short_twin.proposed_qty", family),
             proposed_qty,
             "family=04 coherence=short_twin_proposed_qty",
         )
-        require_equal(
+        checked_equal(
+            "state.contract_multiplier",
             decimal_value(expected, "state.contract_multiplier", family),
             multiplier,
             "family=04 coherence=state_contract_multiplier",
@@ -293,12 +461,14 @@ def validate_coherence(fixture: dict[str, Any], expected: dict[str, Any]) -> Non
         notional = quantity * Decimal(config["price"]) * Decimal(
             metadata["contract_multiplier"]
         )
-        require_equal(
+        checked_equal(
+            "quantity.floored",
             decimal_value(expected, "quantity.floored", family),
             quantity,
             "family=05 coherence=floored_quantity",
         )
-        require_equal(
+        checked_equal(
+            "quantity.notional",
             decimal_value(expected, "quantity.notional", family),
             notional,
             "family=05 coherence=notional",
@@ -307,43 +477,51 @@ def validate_coherence(fixture: dict[str, Any], expected: dict[str, Any]) -> Non
             notional < Decimal(metadata["min_notional"]),
             "family=05 coherence=fixture_not_below_min_notional",
         )
-        require_equal(
+        checked_equal(
+            "decision.outcome",
             expected.get("decision.outcome"),
             "REJECT",
             "family=05 coherence=minimum_notional_outcome",
         )
-        require_equal(
+        checked_equal(
+            "decision.reason",
             expected.get("decision.reason"),
             "BELOW_MIN_NOTIONAL",
             "family=05 coherence=minimum_notional_reason",
         )
-        require_equal(
+        checked_equal(
+            "fills.count",
             expected.get("fills.count"),
             0,
             "family=05 coherence=minimum_notional_fills",
         )
-        require_equal(
+        checked_equal(
+            "state.order_emitted",
             expected.get("state.order_emitted"),
             False,
             "family=05 coherence=minimum_notional_order_emitted",
         )
     elif family == 22:
-        require_equal(
+        checked_equal(
+            "duplicate.intent_count",
             expected.get("duplicate.intent_count"),
             1,
             "family=22 coherence=duplicate_intent_count",
         )
-        require_equal(
+        checked_equal(
+            "duplicate.event_stream_equal_baseline",
             expected.get("duplicate.event_stream_equal_baseline"),
             True,
             "family=22 coherence=duplicate_event_stream",
         )
-        require_equal(
+        checked_equal(
+            "duplicate.final_state_hash_equal_baseline",
             expected.get("duplicate.final_state_hash_equal_baseline"),
             True,
             "family=22 coherence=duplicate_final_state",
         )
-        require_equal(
+        checked_equal(
+            "state.duplicate_disposition",
             expected.get("state.duplicate_disposition"),
             "DUPLICATE_NOOP",
             "family=22 coherence=duplicate_disposition",
@@ -355,17 +533,20 @@ def validate_coherence(fixture: dict[str, Any], expected: dict[str, Any]) -> Non
             2,
             "family=24 coherence=delivery_count",
         )
-        require_equal(
+        checked_equal(
+            "intent.first_delivery",
             expected.get("intent.first_delivery"),
             "APPLIED",
             "family=24 coherence=first_delivery",
         )
-        require_equal(
+        checked_equal(
+            "intent.second_delivery",
             expected.get("intent.second_delivery"),
             "DUPLICATE_NOOP",
             "family=24 coherence=second_delivery",
         )
-        require_equal(
+        checked_equal(
+            "intent.identity_stable",
             expected.get("intent.identity_stable"),
             True,
             "family=24 coherence=intent_identity",
@@ -375,16 +556,19 @@ def validate_coherence(fixture: dict[str, Any], expected: dict[str, Any]) -> Non
             "economic_effects.count",
             "state.intent_ledger_entries",
         ):
-            require_equal(
+            checked_equal(
+                path,
                 expected.get(path),
                 1,
                 f"family=24 coherence={path.replace('.', '_')}",
             )
-        require_equal(
+        checked_equal(
+            "state.position.qty",
             expected.get("state.position.qty"),
             config.get("qty"),
             "family=24 coherence=position_quantity",
         )
+    return validated_paths
 
 
 def validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
@@ -432,6 +616,18 @@ def validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
         "manifest_coherence_unvalidated_expected_value_count_mismatch",
     )
     require(
+        manifest.get("assertion_input_source_count") == EXPECTED_VALUE_COUNT,
+        "manifest_assertion_input_source_count_mismatch",
+    )
+    require(
+        isinstance(manifest.get("companion_assertion_count"), int),
+        "manifest_companion_assertion_count_missing",
+    )
+    require(
+        isinstance(manifest.get("cross_row_import_count"), int),
+        "manifest_cross_row_import_count_missing",
+    )
+    require(
         manifest.get("authority") == AUTHORITY_RELATIVE_PATH,
         "manifest_authority_path_mismatch",
     )
@@ -460,7 +656,7 @@ def validate_fixture(
     fixture: dict[str, Any],
     manifest_item: dict[str, Any],
     authority_lines: list[str],
-) -> tuple[int, bytes, str, str, Any, int]:
+) -> tuple[int, bytes, str, str, Any, int, set[str], int, int, int]:
     number = manifest_item["number"]
     require(
         fixture.get("schema_version") == "wp-p0-10-golden-fixture-v1",
@@ -516,6 +712,13 @@ def validate_fixture(
         require("value" in item, f"family={number:02d} assertion_value_missing path={path}")
         expected[path] = item["value"]
 
+    (
+        input_presence_count,
+        companion_assertions,
+        cross_row_imports,
+        input_source_citation_count,
+    ) = validate_assertion_input_presence(fixture, assertions, authority_lines)
+
     expected_bytes = canonical_bytes(expected)
     expected_sha = sha256_bytes(expected_bytes)
     require(
@@ -547,10 +750,11 @@ def validate_fixture(
         f"family={number:02d} mutation_rationale_missing",
     )
 
-    validate_coherence(fixture, expected)
+    coherence_paths = validate_coherence(fixture, expected)
     authority_binding_sha, citation_count = build_authority_binding(
         fixture, authority_lines
     )
+    citation_count += input_source_citation_count
     require(
         authority_binding_sha == manifest_item.get("authority_binding_sha256"),
         f"family={number:02d} authority_binding_sha256_mismatch",
@@ -560,7 +764,18 @@ def validate_fixture(
         fixture_contract_sha == manifest_item.get("fixture_contract_sha256"),
         f"family={number:02d} fixture_contract_sha256_mismatch",
     )
-    return number, expected_bytes, expected_sha, target, mutation["to"], citation_count
+    return (
+        number,
+        expected_bytes,
+        expected_sha,
+        target,
+        mutation["to"],
+        citation_count,
+        coherence_paths,
+        input_presence_count,
+        companion_assertions,
+        cross_row_imports,
+    )
 
 
 def main() -> int:
@@ -619,6 +834,10 @@ def main() -> int:
     expected_values_total = 0
     mismatch_detected = 0
     match_restored = 0
+    coherence_paths_by_family: dict[int, set[str]] = {}
+    assertion_input_presence_validated = 0
+    companion_assertions_validated = 0
+    cross_row_imports_validated = 0
     for manifest_item in families:
         status = manifest_item.get("status")
         require(status in {"BUILT", "BLOCKED"}, f"manifest_status_invalid status={status}")
@@ -638,9 +857,18 @@ def main() -> int:
             target,
             mutation_to,
             citation_count,
+            coherence_paths,
+            input_presence_count,
+            companion_assertions,
+            cross_row_imports,
         ) = validate_fixture(fixture, manifest_item, authority_lines)
         fixture_manifest_hashes_matched += 1
         citation_line_ranges_validated += citation_count
+        if coherence_paths:
+            coherence_paths_by_family[number] = coherence_paths
+        assertion_input_presence_validated += input_presence_count
+        companion_assertions_validated += companion_assertions
+        cross_row_imports_validated += cross_row_imports
 
         expected = {
             item["path"]: item["value"]
@@ -689,6 +917,36 @@ def main() -> int:
     )
     require(mismatch_detected == 23, "contract_mismatch_count expected=23")
     require(match_restored == 23, "contract_restore_count expected=23")
+    measured_coherence_families = sorted(coherence_paths_by_family)
+    measured_coherence_expected_values = sum(
+        len(paths) for paths in coherence_paths_by_family.values()
+    )
+    require(
+        measured_coherence_families == manifest.get("coherence_validated_families"),
+        "measured_coherence_families_mismatch",
+    )
+    require(
+        measured_coherence_expected_values
+        == manifest.get("coherence_expected_value_count"),
+        "measured_coherence_expected_value_count_mismatch",
+    )
+    require(
+        assertion_input_presence_validated == expected_values_total,
+        "assertion_input_presence_count_mismatch",
+    )
+    require(
+        assertion_input_presence_validated
+        == manifest.get("assertion_input_source_count"),
+        "measured_assertion_input_source_count_mismatch",
+    )
+    require(
+        companion_assertions_validated == manifest.get("companion_assertion_count"),
+        "measured_companion_assertion_count_mismatch",
+    )
+    require(
+        cross_row_imports_validated == manifest.get("cross_row_import_count"),
+        "measured_cross_row_import_count_mismatch",
+    )
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     for number, expected_bytes in rendered:
@@ -702,8 +960,12 @@ def main() -> int:
         "built=23 blocked=2 "
         f"fixture_manifest_hashes_matched={fixture_manifest_hashes_matched} "
         f"citation_line_ranges_validated={citation_line_ranges_validated} "
-        "coherence_families=04,05,22,24 "
-        f"coherence_expected_values_validated={COHERENCE_EXPECTED_VALUE_COUNT} "
+        "coherence_families="
+        f"{','.join(f'{number:02d}' for number in measured_coherence_families)} "
+        f"coherence_expected_values_validated={measured_coherence_expected_values} "
+        f"assertion_input_presence_validated={assertion_input_presence_validated} "
+        f"companion_assertions_validated={companion_assertions_validated} "
+        f"cross_row_imports_validated={cross_row_imports_validated} "
         f"expected_values_total={expected_values_total} "
         f"contract_mismatch_detected={mismatch_detected} "
         f"contract_match_restored={match_restored} "
