@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 
-ALERT_NEEDLE = b"alert("
+ALERT_NEEDLES = (b"alert(", b"alertcondition(")
 ALLOWLIST: frozenset[str] = frozenset()
 
 
@@ -103,7 +103,7 @@ def main() -> int:
             errors.append((relative, _one_line(exc)))
             continue
 
-        match_count = contents.count(ALERT_NEEDLE)
+        match_count = sum(contents.count(needle) for needle in ALERT_NEEDLES)
         if match_count and relative not in ALLOWLIST:
             violations.append((relative, match_count))
 
