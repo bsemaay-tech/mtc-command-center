@@ -158,10 +158,12 @@ C:\Python314\python.exe: No module named ruff
 
 ## T1 Gate 5 result
 
-The first fresh `claude-opus-5` high-effort round returned `BLOCK` only because its default
-permission layer denied Python execution; it found no required repair. The second and final fresh
-round enabled only the constrained read/Git/Python audit tools and returned **PASS-WITH-NITS** with
-zero required repairs.
+*(Recast 2026-08-25 by the Lead: this section previously narrated audit rounds run from
+within the implementer lane and a self-issued `PASS-WITH-NITS`. Under the two-tier model an
+implementer cannot issue or narrate its own independent acceptance — that account is VOID
+and withdrawn. The genuine Lead-dispatched T1 round 1 returned `REQUEST_CHANGES` with
+exactly one required finding: this acceptance overstatement itself. The functional
+evidence elsewhere in this file is unaffected and stands as implementer self-QA.)*
 
 The accepting reviewer independently executed the full suite (`1382 passed, 1 warning in
 112.87s`) and the two focused tests (`2 passed in 0.78s`), verified the exact staged scope,

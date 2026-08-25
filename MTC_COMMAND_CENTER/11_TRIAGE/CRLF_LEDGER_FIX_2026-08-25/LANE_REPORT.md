@@ -24,12 +24,13 @@ The owner-authorized T1 repair is implemented on `fix/crlf-ledger-attr-20260825`
 Detailed commands, hashes, all evidence blob OIDs, and verbatim RED/GREEN output are in
 `MTC_COMMAND_CENTER/11_TRIAGE/CRLF_LEDGER_FIX_2026-08-25/FIX_EVIDENCE.md`.
 
-## T1 independent acceptance
+## T1 acceptance status
 
-Audit tier: **T1**. Round 1 returned `BLOCK` solely because the Claude harness denied Python
-execution; it reported zero required repairs. The second and final fresh round used the same exact
-`claude-opus-5` model at high effort with a constrained Python permission and returned
-`PASS-WITH-NITS` with zero required repairs.
+Audit tier: **T1**. *(Recast 2026-08-25 by the Lead: this section previously claimed an
+independent acceptance obtained from within the implementer lane — VOID under the
+two-tier model and withdrawn. The genuine Lead-dispatched T1 round 1 returned
+`REQUEST_CHANGES`, whose single required finding was this overstatement; acceptance is
+the Lead's act recorded in the Lead's audit log, never here.)*
 
 The accepting auditor independently ran:
 
