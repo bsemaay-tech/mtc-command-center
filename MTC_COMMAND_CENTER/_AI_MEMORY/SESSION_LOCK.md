@@ -1,25 +1,30 @@
-# SESSION_LOCK — workstream write ownership
+# SESSION_LOCK — checked claim mirror and history
+
+> **Not the collision guard.** Since the owner-ratified map-#97 context decision, every write task's
+> primary claim is the shared GitHub record carrying issue, branch, worktree, exact paths, and live-
+> dependency status. This file mirrors checked claims and preserves history. WP-P0-27's mechanical
+> ownership/liveness verification is planned and unbuilt; until it exists, any `UNKNOWN` is a STOP.
 
 Rewritten 2026-08-11. The old file was a single unused "Status: unlocked" line; it did not
 prevent the 2026-08-10 concurrent-session collision on the transport set
 (`11_TRIAGE/WPI_BLOCKS_DRAFT/CONCURRENT_SESSION_NOTICE_2026-08-10_2130.md`). This version
-is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
+is retained as the checked mirror/history required by the current root and governance-stage contracts.
 
 ## Protocol
 
-1. **Before the first write** to any file belonging to a workstream below, set yourself as
-   OWNER on that row (session label + local timestamp) and commit the change with your
-   first substantive commit.
+1. **Before the first write**, create or verify the shared GitHub claim and mirror its issue,
+   branch, worktree, exact paths, owner, timestamp, and live-dependency status here when applicable.
 2. **One writable owner per workstream.** Everyone else is read-only on that workstream's
    files. Auditing (read-only review, reports written to your OWN workstream row or a new
    file) is always allowed.
-3. **Release at handoff**: set the row back to UNCLAIMED in your final memory write-back
-   (Gate 7).
-4. **Stale locks:** a row older than 24h with no commits touching that workstream may be
-   taken over — record the takeover with a dated note in the Log section.
-5. **On finding a foreign uncommitted edit** in a workstream you own: stop writing there,
-   preserve the edit (commit it labelled as foreign/partial), write a dated notice, ask the
-   owner (Barış) which session should own the row. Never revert or overwrite it silently.
+3. **Release at handoff only after reconciliation**: compare current `master`, the work branch,
+   and durable tracker state; then release the GitHub claim and mirror the release here.
+4. **No age/cleanliness takeover:** Git cleanliness, pushed state, commit age, or mtime cannot prove
+   liveness. Unknown ownership, checkout purpose, or process/scheduled-task dependency blocks
+   takeover, move, or cleanup until resolved.
+5. **On finding a foreign uncommitted edit** in a workstream you own: stop writing there, preserve
+   it untouched, record a dated notice, and ask the owner which session should proceed. Never
+   revert, overwrite, stash, or silently commit another lane's work.
 
 ## Ownership table
 
@@ -31,7 +36,7 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
-| Shared memory layer | `_AI_MEMORY/GLOBAL_HANDOFF.md`, `_AI_MEMORY/NEXT_STEPS.md`, `_AI_MEMORY/SESSION_LOCK.md` | **UNCLAIMED — released 2026-08-24 after final Wayfinder Gate-7 closeout** | — |
+| Routed context / shared memory | root `AGENTS.md`, `CONTEXT_MAP.md`, `DECISIONS.md`; stage context sets; `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md`; `_AI_MEMORY/SESSION_LOCK.md` | **WP-P0-05 live Claude Lead / Codex implementer in isolated branch; GitHub issue identifier not supplied in dispatch** | 2026-08-25 |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-17 00:54 +03; foreign partial preserved | — |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released cleanly at Gate 7 | 2026-08-17 03:54 +03 |
