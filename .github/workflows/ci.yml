@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bridge:
+    name: Bridge suite (Python 3.12)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PYTHONUTF8: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install hash-locked Bridge dependencies
+        run: >-
+          python -m pip install --require-hashes
+          -r IBKR_PAPER_BRIDGE/requirements.lock
+
+      - name: Compile Bridge Python sources
+        run: python -m compileall -q IBKR_PAPER_BRIDGE
+
+      - name: Run Bridge test suite
+        run: python -m pytest IBKR_PAPER_BRIDGE/tests -q
+
+      - name: Publish failure annotation
+        if: ${{ failure() }}
+        run: |
+          echo "::error title=Bridge CI failed::Inspect the failed step and fix forward or revert immediately."
+          {
+            echo "## Bridge CI failed"
+            echo ""
+            echo "Master must not remain red: fix forward or revert immediately."
+          } >> "$GITHUB_STEP_SUMMARY"
