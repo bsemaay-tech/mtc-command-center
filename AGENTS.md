@@ -47,10 +47,13 @@ Do not load `_AI_MEMORY/history/` by default. Grep it on demand. For triage hist
   an equivalent mutation, then GREEN with the fix, with real commands/output recorded (D026).
 - Work on a `feature/<scope>` branch, never directly on `master`. Stage exact explicit paths; never
   use `git add .` or `git add -A`.
-- Use a shared GitHub claim for every write task: issue, branch, worktree, exact paths, and live-
-  dependency status. `_AI_MEMORY/SESSION_LOCK.md` is a checked mirror/history, not the guard.
+- Record every write lane's branch, worktree, exact paths, and live-dependency status.
+  `_AI_MEMORY/SESSION_LOCK.md` is a checked mirror/history, not the guard. The mandatory GitHub-
+  issue claim was retired by owner decision 6 on 2026-08-26. Work reaches `master` only through a
+  PR with `Bridge suite (Python 3.12)` green on an up-to-date head (ruleset 21444962, no bypass).
   WP-P0-27's mechanical claim/liveness check is planned, not built.
-- Before releasing a claim, reconcile current `master`, the work branch, and durable tracker state.
+- Before releasing the write-lane claim, reconcile current `master`, the work branch, and durable
+  tracker state.
   Preserve foreign edits; never reset, checkout, stash, or overwrite another lane's work.
 - Current state belongs in the selected stage's capped `HANDOFF.md`. Historical journals are
   search-on-demand archives. Sticky owner decisions belong in root `DECISIONS.md`; never create

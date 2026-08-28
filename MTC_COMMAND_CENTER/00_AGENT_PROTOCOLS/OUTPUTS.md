@@ -14,6 +14,6 @@ with practical next actions, exact paths/commands, unresolved authorization, tes
 At every close-out, rotate stale detail to the stage's grep-on-demand history and keep `HANDOFF.md`
 current-only and at or below its 4 KiB hard cap.
 
-Before releasing the shared claim, reconcile current `master`, the work branch, and the durable
+Before releasing the write-lane claim, reconcile current `master`, the work branch, and the durable
 tracker. Preserve rescue refs until explicitly dispositioned. Never infer liveness from clean Git,
 push state, age, or mtime.
