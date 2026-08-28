@@ -33,9 +33,27 @@ EXPECTED_ROWS = {
     "C22": ("C22-LEGACY-001", "C22-GF8-MUT-001"),
     "C23": ("C23-LEGACY-001", "C23-GF8-MUT-001"),
     "C24": ("C24-LEGACY-001", "C24-GF8-MUT-001"),
+    "C26": ("C26-LEGACY-001", "C26-GF8-MUT-001"),
+    "C28": ("C28-LEGACY-001", "C28-GF8-MUT-001"),
+    "C29": ("C29-LEGACY-001", "C29-GF8-MUT-001"),
+    "C30": ("C30-LEGACY-001", "C30-GF8-MUT-001"),
+    "C31": ("C31-LEGACY-001", "C31-GF8-MUT-001"),
+    "C33": ("C33-LEGACY-001", "C33-GF8-MUT-001"),
+    "C36": ("C36-LEGACY-001", "C36-GF8-MUT-001"),
+    "C37": ("C37-LEGACY-001", "C37-GF8-MUT-001"),
+    "C38": ("C38-LEGACY-001", "C38-GF8-MUT-001"),
+    "C39": ("C39-LEGACY-001", "C39-GF8-MUT-001"),
+    "C40": ("C40-LEGACY-001", "C40-GF8-MUT-001"),
+    "C41": ("C41-LEGACY-001", "C41-GF8-MUT-001"),
 }
+UNRESOLVED_ROWS = {"C32", "C34", "C35", "C42"}
+EXPECTED_RESULT_ORDER = sorted([*EXPECTED_ROWS, *UNRESOLVED_ROWS])
 EXPECTED_A_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 EXPECTED_A_TREE = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+EXPECTED_CONTROLLER_COMMIT = "77a10e6573d93f8aaf777010ea507bbec0a7668b"
+EXPECTED_CONTROLLER_TREE = "a14d071e3a6ee93735d6c2fc458f16b9f8d19a22"
+EXPECTED_B_COMMIT = "b5ed1afadcff09b69e36b72affeb23de51d84c14"
+EXPECTED_B_TREE = "e8c4f06ba0fc74ce03f195fd946004ae9b458b37"
 EXPECTED_MASTER = "85c3e17f97efa1ba83ef9c679de319a50ad3be04"
 EXPECTED_P009_BLOB = "1c39ab939dfcf5589e5ec8fba4af8966947a67fc"
 EXPECTED_P009_SHA256 = "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
@@ -124,7 +142,7 @@ def main() -> int:
     raw_lines = results_path.read_bytes().splitlines(keepends=True)
     require(raw_lines and all(line.endswith(b"\n") for line in raw_lines), "JSONL newline contract differs")
     records = [json.loads(line) for line in raw_lines]
-    require([record.get("row_id") for record in records] == list(EXPECTED_ROWS), "executed row order differs")
+    require([record.get("row_id") for record in records] == EXPECTED_RESULT_ORDER, "executed row order differs")
 
     clean_green = 0
     mutation_red = 0
@@ -133,18 +151,28 @@ def main() -> int:
     red_mismatch_count = 0
     for record in records:
         row_id = record["row_id"]
+        unhashed = dict(record)
+        recorded_hash = unhashed.pop("record_sha256")
+        require(sha256_bytes(canonical_bytes(unhashed)) == recorded_hash, f"{row_id} record hash differs")
+        if row_id in UNRESOLVED_ROWS:
+            require(record.get("status") == "UNRESOLVED_AUTHORITY_CONTRADICTION", f"{row_id} unresolved status differs")
+            require(record.get("mutation") == "NOT_RUN_NO_AUTHORITY_ESTABLISHED_EXPECTED_ROUTE", f"{row_id} mutation must not run")
+            require(bool(record.get("comparison", {}).get("mismatches")), f"{row_id} contradiction mismatch absent")
+            require(record.get("clean_authority_probe", {}).get("return_code") == 0, f"{row_id} clean probe failed")
+            continue
         scenario_id, mutation_id = EXPECTED_ROWS[row_id]
         require(record.get("scenario_id") == scenario_id, f"{row_id} scenario identity differs")
         require(record.get("status") == "GREEN_AFTER_RED", f"{row_id} status differs")
         require(record.get("mutation", {}).get("mutation_id") == mutation_id, f"{row_id} mutation identity differs")
-        require(record.get("authority", {}).get("commit") == EXPECTED_A_COMMIT, f"{row_id} A commit differs")
-        require(record.get("authority", {}).get("tree_oid") == EXPECTED_A_TREE, f"{row_id} A tree differs")
+        expected_commit, expected_tree = EXPECTED_A_COMMIT, EXPECTED_A_TREE
+        if row_id in {"C28", "C29", "C30"}:
+            expected_commit, expected_tree = EXPECTED_CONTROLLER_COMMIT, EXPECTED_CONTROLLER_TREE
+        elif row_id in {"C38", "C39"}:
+            expected_commit, expected_tree = EXPECTED_B_COMMIT, EXPECTED_B_TREE
+        require(record.get("authority", {}).get("commit") == expected_commit, f"{row_id} authority commit differs")
+        require(record.get("authority", {}).get("tree_oid") == expected_tree, f"{row_id} authority tree differs")
         require(bool(record.get("authority", {}).get("citations")), f"{row_id} citations absent")
         require(all(record.get("contract_binding", {}).values()), f"{row_id} contract binding differs")
-
-        unhashed = dict(record)
-        recorded_hash = unhashed.pop("record_sha256")
-        require(sha256_bytes(canonical_bytes(unhashed)) == recorded_hash, f"{row_id} record hash differs")
 
         red = record["mutation"]["red"]
         red_output = red.get("parsed_output") or {}
@@ -178,7 +206,7 @@ def main() -> int:
         "stop": sum(row.get("status") == "STOP" for row in rows),
         "total": len(rows),
     }
-    require(independently_counted == {"green": 24, "not_applicable": 2, "stop": 16, "total": 42}, "corroboration counts differ")
+    require(independently_counted == {"green": 36, "not_applicable": 2, "stop": 4, "total": 42}, "corroboration counts differ")
     require(corroboration.get("counts") == independently_counted, "reported corroboration counts differ")
     require(corroboration.get("outcome") == "STOP", "partial arm did not remain STOP")
 
@@ -192,12 +220,17 @@ def main() -> int:
     require(batch.get("authority", {}).get("p009_sha256") == EXPECTED_P009_SHA256, "batch P0-09 hash differs")
     require(batch.get("artifacts", {}).get("row_results.jsonl") == sha256_file(results_path), "results hash differs")
     require(batch.get("artifacts", {}).get("row_corroboration.json") == sha256_file(corroboration_path), "corroboration hash differs")
+    unresolved_path = evidence / "unresolved_rows.json"
+    require(batch.get("artifacts", {}).get("unresolved_rows.json") == sha256_file(unresolved_path), "unresolved hash differs")
+    require(batch.get("counts", {}).get("clean_green") == 36, "batch GREEN count differs")
+    require(batch.get("counts", {}).get("unresolved_authority_contradiction") == 4, "batch unresolved count differs")
 
     output = {
         "artifact_hashes": {
             "batch_manifest.json": sha256_file(batch_path),
             "row_corroboration.json": sha256_file(corroboration_path),
             "row_results.jsonl": sha256_file(results_path),
+            "unresolved_rows.json": sha256_file(unresolved_path),
         },
         "compared_expected_leaves": compared_leaves,
         "counts": {
@@ -214,7 +247,8 @@ def main() -> int:
         "outcome": "PASS",
         "p009_blob_oid": p009_blob,
         "p009_sha256": sha256_file(p009_path),
-        "rows": list(EXPECTED_ROWS),
+        "rows": EXPECTED_RESULT_ORDER,
+        "unresolved_rows": sorted(UNRESOLVED_ROWS),
     }
     print(json.dumps(output, sort_keys=True, separators=(",", ":")))
     return 0

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import argparse
 import hashlib
 import json
 import re
@@ -50,7 +51,7 @@ def run(command: list[str], expected_rc: int, replacements: dict[str, str]) -> d
         errors="strict",
         capture_output=True,
         check=False,
-        timeout=60,
+        timeout=300,
     )
     normalized_command = [normalize_evidence(argument, replacements) for argument in command]
     normalized_stdout = normalize_evidence(completed.stdout.rstrip("\r\n"), replacements)
@@ -92,7 +93,10 @@ def refresh_digest(record: dict[str, Any]) -> None:
 
 
 def main() -> int:
-    baseline = Path(r"C:\tmp\p011_gate_final_run1")
+    parser = argparse.ArgumentParser(description="WP-P0-11 executed structural mutations")
+    parser.add_argument("--baseline", required=True, type=Path)
+    args = parser.parse_args()
+    baseline = args.baseline.resolve()
     sequence = baseline / "mtc_v2_legacy_sequence.jsonl"
     first = gate.representative_observation(sequence)
     second = copy.deepcopy(first)
@@ -118,7 +122,7 @@ def main() -> int:
         write_jsonl(expected, expected_records)
 
         cases: list[tuple[str, str, list[dict[str, Any]] | bytes, int]] = []
-        cases.append(("missing_middle_observation", "missing key is named without cascade", [second], 1))
+        cases.append(("missing_first_observation", "missing first key is named without cascade", [second], 1))
         cases.append(("duplicate_observation_identity", "duplicate key is rejected instead of overwritten", [first, first, second], 1))
         cases.append(("reordered_observations", "order mismatch is reported", [second, first], 1))
 
@@ -155,7 +159,7 @@ def main() -> int:
         changed_state = copy.deepcopy(expected_records)
         changed_state[0]["position"]["qty"] = float(3.0).hex()
         refresh_digest(changed_state[0])
-        cases.append(("changed_final_position_state", "position projection and digest differ", changed_state, 1))
+        cases.append(("changed_first_observation_position_state", "first-observation position projection and digest differ", changed_state, 1))
 
         moved_event = copy.deepcopy(expected_records)
         moved_event[1]["events"] = moved_event[0]["events"]
@@ -209,11 +213,24 @@ def main() -> int:
                 "mutation_id": "coordinated_local_receipt_rehash",
                 "protected_class": "external receipt pin rejects locally rehashed provenance",
                 "red": run(compare_command, 1, replacements),
-                "restoration_green": {
-                    "status": "full gate intentionally remains STOP on clean receipt because row evidence is absent",
-                    "return_code": 3,
-                    "as_expected": True,
-                },
+                "restoration_green": run(
+                    [
+                        sys.executable,
+                        "-I",
+                        str(GATE_DIR / "p011_gate.py"),
+                        "compare",
+                        "--receipt",
+                        str(GATE_DIR / "P011_GATE_RECEIPT.json"),
+                        "--baseline",
+                        str(baseline),
+                        "--subject-mode",
+                        "LEGACY_COMPATIBLE",
+                        "--mismatch-ledger",
+                        str(ledger),
+                    ],
+                    3,
+                    replacements,
+                ),
             }
         )
 
@@ -230,11 +247,24 @@ def main() -> int:
                 "mutation_id": "wrong_sequence_producer_identity",
                 "protected_class": "producer provenance differs before comparison",
                 "red": run(wrong_command, 1, replacements),
-                "restoration_green": {
-                    "status": "full gate intentionally remains STOP on clean producer because row evidence is absent",
-                    "return_code": 3,
-                    "as_expected": True,
-                },
+                "restoration_green": run(
+                    [
+                        sys.executable,
+                        "-I",
+                        str(GATE_DIR / "p011_gate.py"),
+                        "compare",
+                        "--receipt",
+                        str(GATE_DIR / "P011_GATE_RECEIPT.json"),
+                        "--baseline",
+                        str(baseline),
+                        "--subject-mode",
+                        "LEGACY_COMPATIBLE",
+                        "--mismatch-ledger",
+                        str(ledger),
+                    ],
+                    3,
+                    replacements,
+                ),
             }
         )
 
@@ -267,11 +297,17 @@ def main() -> int:
                 "mutation_id": "deleted_applicable_c_row",
                 "protected_class": "external legacy-manifest pin rejects coverage loss",
                 "red": run(build_common, 1, replacements),
-                "restoration_green": {
-                    "status": "clean manifest was used by both final baseline builds",
-                    "return_code": 0,
-                    "as_expected": True,
-                },
+                "restoration_green": run(
+                    build_common[:-4]
+                    + [
+                        "--legacy-manifest",
+                        str(GATE_DIR / "p011_legacy_manifest.json"),
+                        "--out",
+                        str(scratch / "restored_manifest_build"),
+                    ],
+                    3,
+                    replacements,
+                ),
             }
         )
 
@@ -288,11 +324,17 @@ def main() -> int:
                 "mutation_id": "changed_resolved_config_and_local_hash",
                 "protected_class": "full resolved snapshot differs from frozen resolve_config",
                 "red": run(profile_command, 1, replacements),
-                "restoration_green": {
-                    "status": "clean profiles were used by both final baseline builds",
-                    "return_code": 0,
-                    "as_expected": True,
-                },
+                "restoration_green": run(
+                    build_common[:-4]
+                    + [
+                        "--legacy-manifest",
+                        str(GATE_DIR / "p011_legacy_manifest.json"),
+                        "--out",
+                        str(scratch / "restored_profile_build"),
+                    ],
+                    3,
+                    replacements,
+                ),
             }
         )
 
@@ -311,11 +353,17 @@ def main() -> int:
                 "mutation_id": "changed_data_byte",
                 "protected_class": "pinned data hash differs before strategy execution",
                 "red": run(data_command, 1, replacements),
-                "restoration_green": {
-                    "status": "clean fixture was used by both final baseline builds",
-                    "return_code": 0,
-                    "as_expected": True,
-                },
+                "restoration_green": run(
+                    build_common[:-4]
+                    + [
+                        "--legacy-manifest",
+                        str(GATE_DIR / "p011_legacy_manifest.json"),
+                        "--out",
+                        str(scratch / "restored_data_build"),
+                    ],
+                    3,
+                    replacements,
+                ),
             }
         )
 
@@ -339,7 +387,7 @@ def main() -> int:
         },
         "mutations": results,
         "explicitly_not_executed": [
-            "40 applicable row-producer GF-field-8 mutations",
+            "4 authority-contradictory row-producer mutations (C32, C34, C35, C42)",
             "independent-subject import/delegation classification mutation",
             "P0-10 round-4d mutations (NONE_DIRECT_BUILD)",
             "missing external anchor path mutation (the authoritative anchor was not moved)",
