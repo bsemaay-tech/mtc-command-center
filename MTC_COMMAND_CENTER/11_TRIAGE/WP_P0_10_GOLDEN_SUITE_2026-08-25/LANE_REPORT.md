@@ -61,9 +61,10 @@ not detected. Named follow-up **`WP-P0-10-COHERENCE-217`** is to design and add 
 semantic/coherence validation for those 217 current values (the audited 206-value gap plus the 11
 assertions added here).
 
-The citation counter is now `citation_line_ranges_validated`. Its final value, 381, proves only
-that those 381 ranges are well formed, exist, and carry a structurally matching C/GF,
-cross-cutting-rule, or explicit-non-decision label. It does **not** prove that a row is relevant to,
+The citation counter is now `citation_line_ranges_validated`. Its value at the initial verifier
+repair, 381, proved only that those 381 ranges were well formed, exist, and carry a structurally
+matching C/GF, cross-cutting-rule, or explicit-non-decision label. The defended current count is
+397 (round 4e pin; unchanged in round 4f). It does **not** prove that a row is relevant to,
 or decides, the assertion carrying it. Renaming was chosen over a binding rule because the corpus
 has no sound machine-readable family-to-deciding-row relevance map from which such a rule could be
 derived in this repair.
@@ -96,8 +97,8 @@ mutation evidence:
 | 15 | Same-bar SL/TP collision | **BUILT** — `fixtures/family_15.json` | C19/GF-19 `:557-567` |
 | 16 | Pyramiding / add / partial reduction | **BUILT** — `fixtures/family_16.json` | C06/GF-06 `:245-281`; C13/GF-13 `:447-457` |
 | 17 | Fees, slippage, funding | **BUILT** — `fixtures/family_17.json` | C08/GF-08 `:324-334`; C22/GF-22 `:624-634` |
-| 18 | Snapshot drift / bucket-capital divergence | **BLOCKED — UNBUILT** | explicit non-decision `:1282-1287` |
-| 19 | Allocator ↔ Guardian boundary | **BLOCKED — UNBUILT** | C07/GF-07 `:291-316`; explicit non-decision `:1282-1287` |
+| 18 | Snapshot drift / bucket-capital divergence | **BLOCKED — UNBUILT** | explicit non-decision `:1288-1296` (was `:1282-1287` on the pre-merge table) |
+| 19 | Allocator ↔ Guardian boundary | **BLOCKED — UNBUILT** | C07/GF-07 `:291-316`; explicit non-decision `:1288-1296` |
 | 20 | Short-side symmetry | **BUILT** — `fixtures/family_20.json` | C24/GF-24 `:660-670`; cross-cutting rule 2 `:1274-1276` |
 | 21 | NaN / zero / boundary precision | **BUILT** — `fixtures/family_21.json` | C07/GF-07 `:291-316`; C09/GF-09 `:342-352`; C24/GF-24 `:660-670` |
 | 22 | Duplicate and reordered bars | **BUILT** — `fixtures/family_22.json` | C26/GF-26 `:696-706` |
@@ -169,8 +170,10 @@ The two per-family lines are now `FIXTURE_CONTRACT_MISMATCH_DETECTED` and
 2. exits immediately with `VERIFY_FAIL reason=python_optimization_forbidden __debug__=false` under optimized Python;
 3. rejects duplicate JSON keys and non-JSON constants;
 4. validates the exact 25-entry manifest, 23/2 family partition, blocked evidence, and exact fixture file set;
-5. reads the authority document and verifies its LF-normalized SHA-256 (`422f4577…dae16`);
-6. validates 381 cited line ranges for syntax, existence, and structural label/range agreement,
+5. reads the authority document and verifies its LF-normalized SHA-256 (then `422f4577…dae16`;
+   round 4f pins the post-merge value `331feb1d…362adc`);
+6. validates cited line ranges for syntax, existence, and structural label/range agreement
+   (381 at this repair; the defended current count is 397),
    without claiming relevance to the assertion carrying each citation;
 7. recomputes the manifest-local semantic fixture hash and authority-content hash for every built
    fixture, without claiming those same-tree hashes reject a coordinated edit plus rehash;
@@ -1211,8 +1214,9 @@ Exact scenario IDs, source ranges, and assertion inventories are also verifier-o
 The entire report was read and the count/claim grep was rerun. No other current claim exceeded the
 final predicate. Earlier `1/7`, `7/7`, `8/8`, `18/19`, `19/19`, `16/27`, and `27/27` harness
 snapshots and the `2629`, `2649`, and earlier `2660` path snapshots were deliberately retained as
-dated historical transcripts; none is presented as the round-4d result. The current values are
-`30/30` and `2660`. The verifier now pins the aggregate declared input-path count at `2660`, so a
+dated historical transcripts; none is presented as the round-4d result. Round 4d's then-current
+harness value was `30/30`; round 4e moved it to `34/34`; the path pin was and remains `2660`.
+The verifier now pins the aggregate declared input-path count at `2660`, so a
 same-tree coordinated rehash that deflates either fixture-local or companion declarations rejects.
 Same-count semantic substitutions outside the independently pinned master gates, selectors, and
 companion identities remain within the disclosed coordinated-rehash limitation.
@@ -1338,3 +1342,113 @@ git diff --check: rc=0
 No fixture JSON, expected path/value map, output/state hash, Pine, parity, MTC strategy behavior,
 Bridge runtime, schema, broker/exchange, host, credential, deployment, or live surface changed.
 Independent flagship acceptance remains pending.
+
+## Round 4f - class-level companion config rule (owner-authorized)
+
+**Date:** 2026-08-28
+
+**Starting point:** `98150b9a` on `feature/wp-p0-10-golden-suite-20260825`, then merge of
+`origin/master` `85c3e17f` (Required 0). Audit tier T0. Implementer Gate-3/Gate-4 only; not
+acceptance.
+
+The owner authorized one class-level repair after round 4e's BLOCK. Point-fixes of named keys are
+out of scope.
+
+### Required 0 - merge and authority identity
+
+Post-merge authority file is 1309 LF lines. Measured LF-normalized SHA-256:
+
+`331feb1d7578bbf804b527e2a658fecbcbf74d00d1e852312860345029362adc`
+
+Command:
+
+```python
+from pathlib import Path
+import hashlib
+p = Path('MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md')
+text = p.read_text(encoding='utf-8').replace('\r\n', '\n').replace('\r', '\n')
+print(hashlib.sha256(text.encode('utf-8')).hexdigest())
+```
+
+The pre-merge pin `422f4577…dae16` was the stale 1290-line copy. Binding hashes of all 23 built
+families changed because cited fragments at the existing C/GF ranges now contain the citation
+re-resolution text. Cross-cutting citations `:1272-1276` / `:1274-1276` were retargeted +6 to
+`:1278-1282` / `:1280-1282` so the section header at `:1278` is in range; blocked-family
+non-decision citations moved `:1282-1287` → `:1288-1296`. **No expected assertion value, output
+hash, or state hash was rewritten.**
+
+### Required 1 - F-1 + F-2 class rule
+
+`COMPANION_CONFIG_PINNED` holds verifier-owned constants for every companion-declared path whose
+authority value does not vary across siblings. `COMPANION_SELECTOR_REQUIREMENTS` remains the
+SIBLING_VARIANT half. `COMPANION_CONFIG_AUTHORITY_SILENT` is empty and must stay explicit.
+`require_companion_config_class` classifies every declared companion `config.*` path into exactly
+one of those three sets; an unclassified path fails closed.
+
+Census, derived from the fixture data (12 distinct companion `config.*` paths / 52 occurrences):
+
+| Set | Count | Keys |
+|---|---:|---|
+| PINNED | 7 | `tw_reversal_reentry_delay_bars=2`, `be_trigger_r="1.0"`, `be_buffer_r="0.0"`, `sl_percent="5.0"`, `trail_start_r="1.0"`, `trail_distance_atr_mult="1.5"`, `trail_atr="2.0"` |
+| SIBLING_VARIANT | 5 | `tw_reversal_reentry_mode`, `tw_be_semantics_mode`, `tw_trailing_semantics_mode`, `tw_audit_semantics_mode`, `execution_profile` |
+| AUTHORITY_SILENT | 0 | — |
+
+Pins verified against the post-merge table: C32 `:832,:840`; C14 `:475`; C36 `:948`; C15 `:493`;
+C37 `:982`; C20 `:585`.
+
+**Fixture-local surface (not closed here):** 101 distinct / 1275 `config.*` declarations live on
+fixture-local `input_paths`. The same presence-without-value hole exists there. Closing it would
+take this same three-set rule over fixture-local declarations, using the prep table's
+87 PINNED / 5 SIBLING_VARIANT / 15 AUTHORITY_SILENT classification. That expansion is for the
+auditors and the owner, not this round. Undeclared companion fields such as `execution_profile_id`
+are also outside the declared-path class rule.
+
+### Required 2 - F-3 authority anchor
+
+`EXPECTED_AUTHORITY_TEXT_LF_SHA256` is verifier-owned and equal to the post-merge measurement
+above. The live file, the constant, and `manifest.authority_text_lf_sha256` must all agree.
+Coordinating only the manifest field against a rewritten authority file now fails
+`authority_text_lf_sha256_expected`.
+
+### Required 3 - F-4 stale present-tense figures
+
+The round-4d "current values are `30/30`" sentence is now dated; round 4e's harness was `34/34`.
+The 381 citation snapshots at `:64` and `:173` are dated as the initial-repair value; current is
+397.
+
+### D026
+
+RED against the pre-class-fix verifier at `98150b9a` (current fixtures, old `verify_fixtures.py`):
+
+```text
+TAMPER name=r4f_family_02_delay_bars_zero ... rc=0 rejected=false
+TAMPER name=r4f_family_10_be_trigger_flipped ... rc=0 rejected=false
+TAMPER name=r4f_family_11_trail_atr_flipped ... rc=0 rejected=false
+TAMPER name=r4f_companion_config_unclassified ... rc=0 rejected=false
+TAMPER name=r4f_authority_r9_rewrite_coordinated ... rc=0 rejected=false
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=34/39 result=FAIL
+```
+
+GREEN with the repaired verifier, same five attacks, plus the carried 34:
+
+```text
+TAMPER name=r4f_family_02_delay_bars_zero ... rc=1 rejected=true detail=VERIFY_FAIL reason=family=02 companion_config_pinned_mismatch path=legacy.carry.reentry_bar key=tw_reversal_reentry_delay_bars expected=2 actual=0
+TAMPER name=r4f_family_10_be_trigger_flipped ... rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 companion_config_pinned_mismatch path=legacy.local.exit key=be_trigger_r expected=1.0 actual=9.9
+TAMPER name=r4f_family_11_trail_atr_flipped ... rc=1 rejected=true detail=VERIFY_FAIL reason=family=11 companion_config_pinned_mismatch path=legacy.local.exit key=trail_atr expected=2.0 actual=9.9
+TAMPER name=r4f_companion_config_unclassified ... rc=1 rejected=true detail=VERIFY_FAIL reason=family=02 companion_config_unclassified path=legacy.local.reentry_bar key=unclassified_probe
+TAMPER name=r4f_authority_r9_rewrite_coordinated ... rc=1 rejected=true detail=VERIFY_FAIL reason=authority_text_lf_sha256_expected expected=331feb1d7578bbf804b527e2a658fecbcbf74d00d1e852312860345029362adc actual=ba2c4b9b379bdccda7529fad5d5b8ab82880a38f50474ec66e22e65cfb80a722
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=39/39 result=PASS
+```
+
+### Final matrix
+
+```text
+verifier plain: rc=0 SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=397 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_sources_validated=241 assertion_input_paths_checked=2660 fixture_assertions_validated=224 companion_assertions_validated=17 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+verifier -O / PYTHONOPTIMIZE=2: rc=1 python_optimization_forbidden
+harness plain / -O / PYTHONOPTIMIZE=2: rc=0 tamper_rejected=39/39 result=PASS
+VERIFY_RUNS_RC=0,0 OUTPUT_FILES=23,23 BYTE_IDENTICAL=23/23 STDOUT_IDENTICAL=true
+```
+
+No expected assertion values, Pine, parity, MTC strategy behavior, Bridge runtime, schema,
+broker/exchange, host, credential, deployment, or live surface changed. Independent flagship
+acceptance remains pending.

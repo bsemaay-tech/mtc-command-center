@@ -26,6 +26,11 @@ EXPECTED_BLOCKED = [18, 19]
 EXPECTED_VALUE_COUNT = 241
 EXPECTED_INPUT_PATH_COUNT = 2660
 EXPECTED_CITATION_LINE_RANGE_COUNT = 397
+# Post-merge master 85c3e17f authority text, LF-normalized SHA-256.
+# Reproduce: UTF-8 read of AUTHORITY_RELATIVE_PATH, CRLF/CR -> LF, sha256 of UTF-8 bytes.
+EXPECTED_AUTHORITY_TEXT_LF_SHA256 = (
+    "331feb1d7578bbf804b527e2a658fecbcbf74d00d1e852312860345029362adc"
+)
 COHERENCE_FAMILIES = [4, 5, 22, 24]
 COHERENCE_EXPECTED_VALUE_COUNT = 24
 OHLCV_FIELDS = ["open", "high", "low", "close", "volume"]
@@ -80,6 +85,26 @@ CITATION_PATTERN = re.compile(
 )
 ROW_LABEL_PATTERN = re.compile(r"C(?P<c>[0-9]{2})/GF-(?P<gf>[0-9]{2})")
 CROSS_CUTTING_PATTERN = re.compile(r"cross-cutting rule (?P<rule>[1-4])")
+# COMPANION_CONFIG_REQUIREMENTS — class rule over every declared companion config.* path.
+# A declared path must sit in exactly one of: PINNED, SIBLING_VARIANT, AUTHORITY_SILENT.
+# PINNED values are verifier-owned constants from the WP-P0-09 table on master 85c3e17f.
+COMPANION_CONFIG_PINNED = {
+    # C32/GF-32 :832 (delay_bars > 0), :840 (delay_bars: 2); C33 :873, :881.
+    "tw_reversal_reentry_delay_bars": 2,
+    # C14/GF-14 :475; C36/GF-36 :948.
+    "be_trigger_r": "1.0",
+    "be_buffer_r": "0.0",
+    # C14 :475; C20 :585; C32 :840; C36 :948; C37 :982.
+    "sl_percent": "5.0",
+    # C15/GF-15 :493; C37/GF-37 :982.
+    "trail_start_r": "1.0",
+    "trail_distance_atr_mult": "1.5",
+    "trail_atr": "2.0",
+}
+# Empty today: no companion-declared config.* path is authority-silent.
+# A new declared path must be pinned, registered here, or the verifier fails closed.
+COMPANION_CONFIG_AUTHORITY_SILENT: frozenset[str] = frozenset()
+# SIBLING_VARIANT half: one discriminating selector per companion assertion.
 COMPANION_SELECTOR_REQUIREMENTS = {
     2: {
         "legacy.local.reentry_bar": (
@@ -536,6 +561,105 @@ def require_companion_selector(
     )
 
 
+def companion_config_key(input_path: str) -> str | None:
+    prefix = "config."
+    if input_path.startswith(prefix) and input_path != prefix:
+        return input_path[len(prefix) :]
+    return None
+
+
+def companion_config_class(
+    family: int,
+    assertion_path: str,
+    key: str,
+) -> str | None:
+    labels: set[str] = set()
+    if key in COMPANION_CONFIG_PINNED:
+        labels.add("pinned")
+    selector = COMPANION_SELECTOR_REQUIREMENTS.get(family, {}).get(assertion_path)
+    if selector is not None and selector[0] == key:
+        labels.add("sibling_variant")
+    gate = MASTER_GATE_REQUIREMENTS.get(family, {}).get(assertion_path)
+    if gate is not None and gate[0] == f"config.{key}":
+        labels.add("sibling_variant")
+    if key in COMPANION_CONFIG_AUTHORITY_SILENT:
+        labels.add("authority_silent")
+    if not labels:
+        return None
+    require(
+        len(labels) == 1,
+        f"family={family:02d} companion_config_classification_overlap "
+        f"path={assertion_path} key={key} classes={sorted(labels)}",
+    )
+    return next(iter(labels))
+
+
+def require_companion_config_sets_disjoint() -> None:
+    pinned = set(COMPANION_CONFIG_PINNED)
+    silent = set(COMPANION_CONFIG_AUTHORITY_SILENT)
+    selector_keys = {
+        key
+        for family_map in COMPANION_SELECTOR_REQUIREMENTS.values()
+        for key, _value in family_map.values()
+    }
+    require(
+        not (pinned & silent),
+        "companion_config_pinned_silent_overlap "
+        f"keys={sorted(pinned & silent)}",
+    )
+    require(
+        not (pinned & selector_keys),
+        "companion_config_pinned_selector_overlap "
+        f"keys={sorted(pinned & selector_keys)}",
+    )
+    require(
+        not (silent & selector_keys),
+        "companion_config_silent_selector_overlap "
+        f"keys={sorted(silent & selector_keys)}",
+    )
+
+
+def require_companion_config_class(
+    scenario: dict[str, Any],
+    input_paths: list[Any],
+    family: int,
+    assertion_path: str,
+) -> None:
+    config = scenario.get("config")
+    require(
+        isinstance(config, dict),
+        f"family={family:02d} companion_config_missing path={assertion_path}",
+    )
+    for input_path in input_paths:
+        if not isinstance(input_path, str):
+            continue
+        key = companion_config_key(input_path)
+        if key is None:
+            continue
+        classification = companion_config_class(family, assertion_path, key)
+        require(
+            classification is not None,
+            f"family={family:02d} companion_config_unclassified "
+            f"path={assertion_path} key={key}",
+        )
+        if classification != "pinned":
+            continue
+        expected = COMPANION_CONFIG_PINNED[key]
+        actual = config.get(key)
+        require(
+            actual == expected,
+            f"family={family:02d} companion_config_pinned_mismatch "
+            f"path={assertion_path} key={key} "
+            f"expected={expected} actual={actual}",
+        )
+        if key == "tw_reversal_reentry_delay_bars":
+            require(
+                isinstance(actual, int) and actual > 0,
+                f"family={family:02d} companion_config_delay_bars_not_positive "
+                f"path={assertion_path} actual={actual}",
+            )
+
+
 def validate_assertion_input_presence(
     fixture: dict[str, Any],
     assertions: list[dict[str, Any]],
@@ -632,6 +756,9 @@ def validate_assertion_input_presence(
             )
             require_master_gate(scenario, input_paths, family, assertion_path)
             require_companion_selector(scenario, family, assertion_path)
+            require_companion_config_class(
+                scenario, input_paths, family, assertion_path
+            )
             for input_path in input_paths:
                 require_declared_input(
                     scenario,
@@ -1182,11 +1309,18 @@ def main() -> int:
 
     manifest = load_json(args.fixture_dir / "manifest.json")
     families = validate_manifest(manifest)
+    require_companion_config_sets_disjoint()
     authority_path = Path.cwd() / Path(AUTHORITY_RELATIVE_PATH)
     authority_text = authority_path.read_text(encoding="utf-8")
+    measured_authority = authority_text_sha256(authority_text)
     require(
-        authority_text_sha256(authority_text)
-        == manifest.get("authority_text_lf_sha256"),
+        measured_authority == EXPECTED_AUTHORITY_TEXT_LF_SHA256,
+        "authority_text_lf_sha256_expected "
+        f"expected={EXPECTED_AUTHORITY_TEXT_LF_SHA256} "
+        f"actual={measured_authority}",
+    )
+    require(
+        measured_authority == manifest.get("authority_text_lf_sha256"),
         "authority_text_lf_sha256_mismatch",
     )
     authority_lines = authority_text.replace("\r\n", "\n").replace("\r", "\n").splitlines()

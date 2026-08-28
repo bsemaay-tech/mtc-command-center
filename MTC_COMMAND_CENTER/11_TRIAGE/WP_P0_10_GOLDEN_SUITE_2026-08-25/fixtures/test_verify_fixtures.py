@@ -524,6 +524,115 @@ def tamper_suite_wide_input_path_deflation(path: Path) -> None:
     write_json(manifest_path, manifest)
 
 
+def tamper_family_02_delay_bars_zero(path: Path) -> None:
+    fixture_path, data = fixture(path, 2)
+    for scenario in data["companion_scenarios"]:
+        declared = [
+            input_path
+            for paths in scenario["assertion_inputs"].values()
+            for input_path in paths
+        ]
+        if "config.tw_reversal_reentry_delay_bars" in declared:
+            scenario["config"]["tw_reversal_reentry_delay_bars"] = 0
+    write_fixture_with_manifest_hash(path, 2, fixture_path, data)
+
+
+def tamper_family_10_be_trigger_flipped(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    for scenario in data["companion_scenarios"]:
+        scenario["config"]["be_trigger_r"] = "9.9"
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
+def tamper_family_11_trail_atr_flipped(path: Path) -> None:
+    fixture_path, data = fixture(path, 11)
+    for scenario in data["companion_scenarios"]:
+        scenario["config"]["trail_atr"] = "9.9"
+    write_fixture_with_manifest_hash(path, 11, fixture_path, data)
+
+
+def tamper_companion_config_unclassified(path: Path) -> None:
+    fixture_path, data = fixture(path, 2)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C32_GF32_legacy_reentry_modes__local"
+    )
+    scenario["config"]["unclassified_probe"] = "x"
+    input_paths = scenario["assertion_inputs"]["legacy.local.reentry_bar"]
+    replaced = False
+    for index, input_path in enumerate(input_paths):
+        if not input_path.startswith("config."):
+            input_paths[index] = "config.unclassified_probe"
+            replaced = True
+            break
+    if not replaced:
+        raise ValueError("no non-config companion path available to rehome")
+    write_fixture_with_manifest_hash(path, 2, fixture_path, data)
+
+
+def lf_sha256(text: str) -> str:
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def seed_authority_work_root(work_root: Path, fixture_src: Path) -> Path:
+    fixture_dest = (
+        work_root
+        / "MTC_COMMAND_CENTER"
+        / "11_TRIAGE"
+        / "WP_P0_10_GOLDEN_SUITE_2026-08-25"
+        / "fixtures"
+    )
+    auth_dest = work_root / AUTHORITY_RELATIVE_PATH
+    fixture_dest.parent.mkdir(parents=True, exist_ok=True)
+    auth_dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(fixture_src, fixture_dest)
+    shutil.copy2(Path.cwd() / AUTHORITY_RELATIVE_PATH, auth_dest)
+    return fixture_dest
+
+
+def tamper_authority_r9_rewrite_coordinated(work_root: Path) -> Path:
+    auth_path = work_root / AUTHORITY_RELATIVE_PATH
+    text = auth_path.read_text(encoding="utf-8")
+    mutated = text.replace(
+        'row R9 uses `execution_profile: "LEGACY_CLOSE_ONLY"`',
+        'row R9 uses `execution_profile: "STANDING_TOUCH"`',
+        1,
+    )
+    mutated = mutated.replace(
+        "profile=LEGACY_CLOSE_ONLY, canonical=false",
+        "profile=STANDING_TOUCH, canonical=false",
+        1,
+    )
+    if mutated == text:
+        raise ValueError("authority R9 rewrite did not change text")
+    auth_path.write_text(mutated, encoding="utf-8")
+    fixture_dir = (
+        work_root
+        / "MTC_COMMAND_CENTER"
+        / "11_TRIAGE"
+        / "WP_P0_10_GOLDEN_SUITE_2026-08-25"
+        / "fixtures"
+    )
+    manifest_path = fixture_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["authority_text_lf_sha256"] = lf_sha256(mutated)
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(work_root)
+        for number in BUILT_FAMILY_NUMBERS:
+            _fixture_path, data = fixture(fixture_dir, number)
+            item = next(
+                entry for entry in manifest["families"] if entry["number"] == number
+            )
+            item["authority_binding_sha256"] = recompute_authority_binding_hash(data)
+    finally:
+        os.chdir(original_cwd)
+    write_json(manifest_path, manifest)
+    return fixture_dir
+
+
 def tamper_suite_wide_citation_deflation(path: Path) -> None:
     manifest_path = path / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -572,6 +681,7 @@ def run_verifier(
     fixture_dir: Path,
     output_dir: Path,
     optimized: bool = False,
+    cwd: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
     command = [sys.executable]
     if optimized:
@@ -581,7 +691,7 @@ def run_verifier(
     env.pop("PYTHONOPTIMIZE", None)
     return subprocess.run(
         command,
-        cwd=Path.cwd(),
+        cwd=str(cwd) if cwd is not None else Path.cwd(),
         env=env,
         text=True,
         encoding="utf-8",
@@ -819,6 +929,35 @@ def main() -> int:
             False,
             "VERIFY_FAIL reason=citation_line_range_count expected=397 actual=326",
         ),
+        (
+            "r4f_family_02_delay_bars_zero",
+            tamper_family_02_delay_bars_zero,
+            False,
+            "VERIFY_FAIL reason=family=02 companion_config_pinned_mismatch "
+            "path=legacy.carry.reentry_bar key=tw_reversal_reentry_delay_bars "
+            "expected=2 actual=0",
+        ),
+        (
+            "r4f_family_10_be_trigger_flipped",
+            tamper_family_10_be_trigger_flipped,
+            False,
+            "VERIFY_FAIL reason=family=10 companion_config_pinned_mismatch "
+            "path=legacy.local.exit key=be_trigger_r expected=1.0 actual=9.9",
+        ),
+        (
+            "r4f_family_11_trail_atr_flipped",
+            tamper_family_11_trail_atr_flipped,
+            False,
+            "VERIFY_FAIL reason=family=11 companion_config_pinned_mismatch "
+            "path=legacy.local.exit key=trail_atr expected=2.0 actual=9.9",
+        ),
+        (
+            "r4f_companion_config_unclassified",
+            tamper_companion_config_unclassified,
+            False,
+            "VERIFY_FAIL reason=family=02 companion_config_unclassified "
+            "path=legacy.local.reentry_bar key=unclassified_probe",
+        ),
     ]
 
     with tempfile.TemporaryDirectory(prefix="wp_p010_verifier_regression_") as temp:
@@ -855,10 +994,35 @@ def main() -> int:
                 f"detail={detail}"
             )
 
-    passed = baseline_clean and rejected == len(cases)
+        auth_index = len(cases) + 1
+        work_root = temp_path / f"case_{auth_index:02d}_root"
+        fixture_dir = seed_authority_work_root(work_root, FIXTURE_DIR)
+        tamper_authority_r9_rewrite_coordinated(work_root)
+        auth_result = run_verifier(
+            verifier,
+            fixture_dir,
+            temp_path / f"case_{auth_index:02d}_output",
+            cwd=work_root,
+        )
+        auth_name = "r4f_authority_r9_rewrite_coordinated"
+        auth_expected = (
+            "VERIFY_FAIL reason=authority_text_lf_sha256_expected "
+            "expected=331feb1d7578bbf804b527e2a658fecbcbf74d00d1e852312860345029362adc"
+        )
+        auth_detail = reason_line(auth_result)
+        auth_rejected = auth_result.returncode != 0 and auth_expected in auth_detail
+        rejected += int(auth_rejected)
+        print(
+            f"TAMPER name={auth_name} optimized=false "
+            f"rc={auth_result.returncode} rejected={str(auth_rejected).lower()} "
+            f"detail={auth_detail}"
+        )
+        case_count = len(cases) + 1
+
+    passed = baseline_clean and rejected == case_count
     print(
         f"VERIFIER_REGRESSION_SUMMARY baseline_clean={int(baseline_clean)} "
-        f"tamper_rejected={rejected}/{len(cases)} result={'PASS' if passed else 'FAIL'}"
+        f"tamper_rejected={rejected}/{case_count} result={'PASS' if passed else 'FAIL'}"
     )
     return 0 if passed else 1
 

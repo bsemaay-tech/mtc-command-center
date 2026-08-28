@@ -46,7 +46,7 @@
     19
   ],
   "authority": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-  "authority_text_lf_sha256": "422f4577d779918255669ecdc86f991a96112aac1fac504ac417c11c735dae16",
+  "authority_text_lf_sha256": "331feb1d7578bbf804b527e2a658fecbcbf74d00d1e852312860345029362adc",
   "authority_text_hash_form": "UTF-8 decoded authority text with CRLF and CR normalized to LF; existing terminal newline preserved",
   "output_normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
   "fixture_contract_check": "The 23 declared source-mutation descriptors are exercised only against copies of their expected mappings. The resulting mismatch/restoration pairs are fixture-contract self-consistency checks, not kernel execution or D026 mutation evidence.",
@@ -68,8 +68,8 @@
       "name": "Entry signal",
       "status": "BUILT",
       "fixture": "family_01.json",
-      "fixture_contract_sha256": "71ffb93663218c110c1730ccd97d1d53b20accc091e9acdc42ef86f9a500476a",
-      "authority_binding_sha256": "dd6c176cf78e26935f19955ae39e067e28001ea681a6b78c3f39b76b9ada9ece",
+      "fixture_contract_sha256": "320c29f5817c7cf2ce3ce21f232c9d90f195927e605bf5a441c969fb98555ae8",
+      "authority_binding_sha256": "c551af2e1f8d19484c98bcaf12c2e7a771c34292fad8d1c62b7bb559b45835f1",
       "wp_p0_09_rows": [
         "C01",
         "C42"
@@ -80,8 +80,8 @@
       "name": "Direction / flip / regime lock",
       "status": "BUILT",
       "fixture": "family_02.json",
-      "fixture_contract_sha256": "8037c13d6d48400ca7931ed071c9c7966a466e08cd55318fd42f1603b4c0efd6",
-      "authority_binding_sha256": "45df1c5b6f5bc6bce347b7203d91f8cf99be091a59975bbacfb374d8820b3fb1",
+      "fixture_contract_sha256": "5f869a62bbd77eb4cd7554d15605e32c777533f7e40ebfe3ad5e9c899b663521",
+      "authority_binding_sha256": "ef33624af3e93ba2f8d03c101b57ec7c10a5e7232ad9b2e46bcca5f21d8e3244",
       "wp_p0_09_rows": [
         "C05",
         "C21",
@@ -94,8 +94,8 @@
       "name": "Position sizing",
       "status": "BUILT",
       "fixture": "family_03.json",
-      "fixture_contract_sha256": "928b3b41f8a347f3a961473c95f5a67391e01dad2978c81ef3781c7d502e10ec",
-      "authority_binding_sha256": "322523a18daab949fa6ddbb853c245a9ea683ebde0c9316c360ba23216234f13",
+      "fixture_contract_sha256": "d2b794fcd5d046382394f56753e006e9f141cdbe7f077fc82af2565f4ecf0863",
+      "authority_binding_sha256": "5443f1d76edc216532ab20cfbe468f16745e55aa5975bab9e285218381c33493",
       "wp_p0_09_rows": [
         "C07",
         "C31"
@@ -106,8 +106,8 @@
       "name": "Contract multiplier",
       "status": "BUILT",
       "fixture": "family_04.json",
-      "fixture_contract_sha256": "c66eab440a7577c8ae23aa3576f8cac9326bbaba38e564a06555447a8fcb6813",
-      "authority_binding_sha256": "835ca0d61ff71ac30dfb291eed57d314cab79b31411d5c90e8b54e29208f2795",
+      "fixture_contract_sha256": "0928930c1224c7d234189cf35dec619869e381dd57e7b2fd017dc207f9174167",
+      "authority_binding_sha256": "5b0c32cc5770aef03a0a34e6397fa2f2661af214ce3cab7b4f0e746bf90ff18c",
       "wp_p0_09_rows": [
         "C08"
       ]
@@ -117,8 +117,8 @@
       "name": "Minimum notional",
       "status": "BUILT",
       "fixture": "family_05.json",
-      "fixture_contract_sha256": "ef146204a2990c6e36953c04c9169575464b8de1acced0332b09365f64224699",
-      "authority_binding_sha256": "25df88c8c71cca9e5c3644e1b5bf3ba9dad337c4dfeda79ec0d7f8464df69d45",
+      "fixture_contract_sha256": "dff37bb2257c3f5b6261ff8fac616fcccf963ba9d47641c83f65ff2ad3406e9c",
+      "authority_binding_sha256": "27173cea692a19e24a164a730b9ab2bd8092cec4e8746d3ef83572e0338fdc28",
       "wp_p0_09_rows": [
         "C09"
       ]
@@ -128,8 +128,8 @@
       "name": "Rounding / qty step / min qty",
       "status": "BUILT",
       "fixture": "family_06.json",
-      "fixture_contract_sha256": "509f7702194d176501e05b36b210fc9d645247a1fc6cbb8d783d0b65435f1b6b",
-      "authority_binding_sha256": "eae771058b2cabdaa6e13ea247810ce760eebc813eb896f87a73caf51156c7e1",
+      "fixture_contract_sha256": "6d7233378d162fd61c727578c5c6897e8ed95bfb82eceafb636a23b4e36741e1",
+      "authority_binding_sha256": "e61b23220fdfabfa931d1933ef24147bc9a6f86c6c971259e9436e6dc183f8e1",
       "wp_p0_09_rows": [
         "C09",
         "C31"
@@ -140,8 +140,8 @@
       "name": "SL calculation (ATR / percent / swing)",
       "status": "BUILT",
       "fixture": "family_07.json",
-      "fixture_contract_sha256": "8cf6032e8ddfd039d28a9728eb4a14c87870e97ad354b6b4c1f9b91a36aa2c69",
-      "authority_binding_sha256": "09c4ff83d81bbdfd143cfce8c8b0fb5b270fec19542230d77ea4394f8b4b107a",
+      "fixture_contract_sha256": "d511d1e447ca090a3fcec0bf0b4278e4806d9f44479af33844967aed50dd4b57",
+      "authority_binding_sha256": "e7fcdefece9add161b3e74d05ac9ce6118a27d984ae41e6267cefaf95d9ce1cd",
       "wp_p0_09_rows": [
         "C11",
         "C24"
@@ -152,8 +152,8 @@
       "name": "TP calculation (ATR / percent / R)",
       "status": "BUILT",
       "fixture": "family_08.json",
-      "fixture_contract_sha256": "01e2a0fc0651e55bf6e6fb55c267a3076dd02844c792459e75e55060a8da0eda",
-      "authority_binding_sha256": "8208aaeb7365e9397babcdb3353f10668b5d65c1de33d53d600fa703747a2fa6",
+      "fixture_contract_sha256": "85da5175eca482145767558ecfbbe56b351c9f7025587a82950b8315e9d82aa0",
+      "authority_binding_sha256": "63077ed6bfacf7eb8f16a089480e5332c01662d73ef3b4009e843017f520d68d",
       "wp_p0_09_rows": [
         "C12",
         "C24"
@@ -164,8 +164,8 @@
       "name": "Multi-TP lifecycle incl. partial TP1 fill",
       "status": "BUILT",
       "fixture": "family_09.json",
-      "fixture_contract_sha256": "7b6a65e68cd22d7e837136c34443479912f91e745bc04d96c38db87fbfce0b74",
-      "authority_binding_sha256": "e5f0c950862abfca56d8071ec4a4ea7f2ea4a92a6f0e04f3b2a373c306f9ffc4",
+      "fixture_contract_sha256": "34962cf6ecea23dea477cc5561192aebdb6ac55cb14201347106e78060bbd656",
+      "authority_binding_sha256": "98044c1703c2df3a42a34a96ba46c8480d716c65ce37512e7718150116e5ee77",
       "wp_p0_09_rows": [
         "C13"
       ]
@@ -175,8 +175,8 @@
       "name": "Break-even trigger and buffer",
       "status": "BUILT",
       "fixture": "family_10.json",
-      "fixture_contract_sha256": "691f69d5c27432b7af18f7c3a47ee81a3b464bbdcea94b3cb00e68dbc7f2f1a4",
-      "authority_binding_sha256": "916945a76fbb3c2aa1e47a17cb5a95a2d44d27c8de028f8aa2bb7200814a27d7",
+      "fixture_contract_sha256": "74211322339346c8984646b37b5054d3b15cb5ee8b103a53ac07478cac0d9cfb",
+      "authority_binding_sha256": "b18c923038631ab4dddb098bf6d9e791bc2c1b4b5d8f0bb715ce7d1ce4fe0497",
       "wp_p0_09_rows": [
         "C14",
         "C36"
@@ -187,8 +187,8 @@
       "name": "Trailing activation and monotonicity",
       "status": "BUILT",
       "fixture": "family_11.json",
-      "fixture_contract_sha256": "4238e6cd95d8afd3b4eeef021ca809434a75edbdec9a0087f44aacbc3a61b6b7",
-      "authority_binding_sha256": "d0d498cb3d19d7d4f540da7ded93efe8b18d93e826623738abcec0cb62f52dae",
+      "fixture_contract_sha256": "6d71d56f1ccc6c8f0413fc5c5cf81c309580a71e68c14eb6ad3724392763cde1",
+      "authority_binding_sha256": "ce6a29d9f66596c37fc95be31a2e9e8a6a50813468125826349a9c6a76c9588d",
       "wp_p0_09_rows": [
         "C15",
         "C37"
@@ -199,8 +199,8 @@
       "name": "Opposite-signal exit",
       "status": "BUILT",
       "fixture": "family_12.json",
-      "fixture_contract_sha256": "f97cf16edb2663ec0fef7bb73ac3fd2a19ba22476a25c977b3e2745f0da2f53d",
-      "authority_binding_sha256": "cb7bbb17f1d60501cb87667772f43643497151a9aa0d5558f093f8279c3e6cba",
+      "fixture_contract_sha256": "fbbf7b7cc1e0f07ddc2d7da43e0ddacfb0682c2c3c283c3afe87e2d8a948e1eb",
+      "authority_binding_sha256": "57ed1d496c421431896f502613fd9805cbab61b3f39c9e7c03ec3e1398d79516",
       "wp_p0_09_rows": [
         "C05",
         "C16",
@@ -212,8 +212,8 @@
       "name": "Time exit (bars / EOD / EOW)",
       "status": "BUILT",
       "fixture": "family_13.json",
-      "fixture_contract_sha256": "f8becb8442a5ef50fbec66c00c1d217c1b2d0807c045a5ad201ac1ebfb6442c0",
-      "authority_binding_sha256": "e6ad401a44e5900d20b6dba3ed6fe18cb4b4f46d51d1a617b595dd0b21f5f62f",
+      "fixture_contract_sha256": "f6ea11b8453c906fcaf44772f19a50814ee1e1c904d8abbb4b8f630e13ae24f7",
+      "authority_binding_sha256": "7abf575a7154754e0f9895cb9f1e5d738512d20357625674ad3806c6b4f470fe",
       "wp_p0_09_rows": [
         "C17",
         "C25"
@@ -224,8 +224,8 @@
       "name": "Bar gaps through the stop",
       "status": "BUILT",
       "fixture": "family_14.json",
-      "fixture_contract_sha256": "bf685cc4d5610830e7f328403a3813698b041d6cff04fe2821fdc0d326b73842",
-      "authority_binding_sha256": "71d5c2dc2f6e85e4922c3ed694fccdeb7657c966894368d22d28807f92af85a6",
+      "fixture_contract_sha256": "c4dab52aa95aafd7a914b802c3e6bd203b61a656d9519308270373b0726cc9a4",
+      "authority_binding_sha256": "6b36d33ef4a6d787b3d66672e881bd582b5dd8b1be8c7b0adf73cbb627a8e406",
       "wp_p0_09_rows": [
         "C11",
         "C20"
@@ -236,8 +236,8 @@
       "name": "Same-bar SL/TP collision",
       "status": "BUILT",
       "fixture": "family_15.json",
-      "fixture_contract_sha256": "2afc3e24e669842ace14b3e679267665ff4b38b3400595e158dbd8ebbd556051",
-      "authority_binding_sha256": "ebc65744d8220e4b57c216a0c31b85a3cc61892311ff7b17df85943565c0eb1e",
+      "fixture_contract_sha256": "9217ee8b1744895a96c8c683eb8764b59cd3efe9261ace05727210d1dac5c36f",
+      "authority_binding_sha256": "93b407b29769e3afef1ff787558ddd79d1d4f8c083ff6d36e05505b2ad3350ef",
       "wp_p0_09_rows": [
         "C19"
       ]
@@ -247,8 +247,8 @@
       "name": "Pyramiding / add / partial reduction",
       "status": "BUILT",
       "fixture": "family_16.json",
-      "fixture_contract_sha256": "03dcc3624a109a32cafee2658409d73a27e5b032a4f6fdc249a44f5ed13d0e4f",
-      "authority_binding_sha256": "03397d67ea5edfe7151269ccad35b9439bba060bb4c35fadccaa4d7bc1507966",
+      "fixture_contract_sha256": "db4f16f7cdebd286eba59913c211f7774aab2f9c2d46ff655fe3ed4378f153c6",
+      "authority_binding_sha256": "9a3e036278d432cdc44242d16921c088192be167fc04e7c0954066f901c88e75",
       "wp_p0_09_rows": [
         "C06",
         "C13"
@@ -259,8 +259,8 @@
       "name": "Fees, slippage, funding",
       "status": "BUILT",
       "fixture": "family_17.json",
-      "fixture_contract_sha256": "447a94a6f19629f3caf8a17c8d5c86ddb0377cca55a0b56e12f0720cdab36080",
-      "authority_binding_sha256": "804efbdb4e81615dadffad7a7dd7d2dba3ce4c7681b161a5722d08c81ff4eebb",
+      "fixture_contract_sha256": "ff5c6320095da082e9f1fceafc043402406afa914e7f473bc966f15448fe624c",
+      "authority_binding_sha256": "2f75e475d8228615d061a18d1deda80d80cd641dd1138f259c613b6399c3c07e",
       "wp_p0_09_rows": [
         "C08",
         "C22"
@@ -277,7 +277,7 @@
         "D026 guard-removal discriminator"
       ],
       "authority_evidence": [
-        "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1282-1287 (explicit non-decision)"
+        "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1288-1296 (explicit non-decision)"
       ],
       "unblocks_when": "WP-P0-09 adds a decided eight-field row for SNAPSHOT_MISMATCH, including exact failing output under the absent guard and passing kernel output with the guard present.",
       "coverage_note": "Genuine D026 snapshot-drift coverage hole; not cosmetic and not waived."
@@ -292,7 +292,7 @@
         "no-resize/no-order/final-state oracle"
       ],
       "authority_evidence": [
-        "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1282-1287 (explicit non-decision)",
+        "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1288-1296 (explicit non-decision)",
         "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
       ],
       "unblocks_when": "WP-P0-09 adds a decided eight-field row for REFERENCE_DIVERGENCE and the authorize-unchanged-or-reject boundary, including exact failing pre-fix and passing fixed kernel outputs."
@@ -302,8 +302,8 @@
       "name": "Short-side symmetry",
       "status": "BUILT",
       "fixture": "family_20.json",
-      "fixture_contract_sha256": "dead692808a57d5f53c0dde3c72038bd508ae16d2d311caaf6b55fd6a1f1d4d1",
-      "authority_binding_sha256": "61124871e8739e65b9ce3a9aa6b42236dd21cf5250399772a031342927aa582c",
+      "fixture_contract_sha256": "7be40c98760ba38268ee0a03f042383579f3bfa597ae05c584e9e6b506e95e43",
+      "authority_binding_sha256": "591b11c41553b3f1a25feae200c6930dde2e199d2e4e389b7c2f68bc177f6246",
       "wp_p0_09_rows": [
         "C24",
         "cross-cutting rule 2"
@@ -314,8 +314,8 @@
       "name": "NaN / zero / boundary precision",
       "status": "BUILT",
       "fixture": "family_21.json",
-      "fixture_contract_sha256": "fe01c5b1bca2be7097ee07ba7dfdde6fc01e6cdc31996b15d56472293ce0b358",
-      "authority_binding_sha256": "e2bdbd6af30f0275f79b18d19ac574845a705e6fb9317be8511a7c3e55acce23",
+      "fixture_contract_sha256": "ff7fa18657a0c508d45246a82adfb5dd1c045fd40bd003a74ec74bc1749d1990",
+      "authority_binding_sha256": "85b609d66054c9f453c1db939ce2026d9fa3bea58d425359848868037cfa09bf",
       "wp_p0_09_rows": [
         "C07",
         "C09",
@@ -327,8 +327,8 @@
       "name": "Duplicate and reordered bars",
       "status": "BUILT",
       "fixture": "family_22.json",
-      "fixture_contract_sha256": "adb59d667dba93ec50f29e5e66ecb9577b67bf965c9e639c1801c6b254a53c1e",
-      "authority_binding_sha256": "25abd52e450c112336eaa2951c6afbff1408b41e989f359da22c71cbb334b186",
+      "fixture_contract_sha256": "af3eb624012ed4ba02f9bc0feee47076474e59adc50e7a7410b50f67bdcc7ef1",
+      "authority_binding_sha256": "f38a7bb6e0dff89fc225320472257e37e46d3232e19271af9ea30c34ed15eccd",
       "wp_p0_09_rows": [
         "C26"
       ]
@@ -338,8 +338,8 @@
       "name": "Cancellation and revision ordering",
       "status": "BUILT",
       "fixture": "family_23.json",
-      "fixture_contract_sha256": "89addf8ed7de145fb9487e0b40de644993b75d04c8fe49fab6608d6bc712fe7d",
-      "authority_binding_sha256": "33d70f45929576d0cedb913d7e1798834c5e6f1479e76c40a45274ffe54056b4",
+      "fixture_contract_sha256": "120a34596070bac42010fa3e5eee0dea1b2702dc2da523730f155e8d8430790a",
+      "authority_binding_sha256": "887719086ad9515dfb5e4ecf39cabf392cf006004a0f5f2de51143781df74787",
       "wp_p0_09_rows": [
         "C26"
       ]
@@ -349,8 +349,8 @@
       "name": "OrderIntent idempotence",
       "status": "BUILT",
       "fixture": "family_24.json",
-      "fixture_contract_sha256": "9f7dbe425f068b876b03a1e8bba2bd874bc88ccc779ec50eef8b383089172e71",
-      "authority_binding_sha256": "ebc0312b2cdc7d2eea39ecc3dc79d26a776a328403c29d77ad76581ecc2493cc",
+      "fixture_contract_sha256": "8194b1f0b842d241879baa2874747d5149fb24ad52e479524a444b4e2469b2a7",
+      "authority_binding_sha256": "1395d8bfe1dcfafabbc4261a14c3e11d82d40e9efc7b67de4bfcd331a7f1b5c9",
       "wp_p0_09_rows": [
         "C26"
       ]
@@ -360,8 +360,8 @@
       "name": "Venue and session edge cases",
       "status": "BUILT",
       "fixture": "family_25.json",
-      "fixture_contract_sha256": "0a04621245d4e7ad8b9325d9d9fc9003e0916c68e152b870ee3e321a176ce840",
-      "authority_binding_sha256": "8cb4fca7dce2ba42364cbd96c09e085f65110400d7f0a5ad82cbd5bc6645ad68",
+      "fixture_contract_sha256": "c238161aee49adb7a661f1f42852a79d994e52e3b85cb4379d3fd2e5976c49e2",
+      "authority_binding_sha256": "3f386ef7061cb972c7f3878f977d0912cd7efb5a68d51b5de552bc09c1327ffa",
       "wp_p0_09_rows": [
         "C09",
         "C17",
