@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -15,6 +16,11 @@ from typing import Any, Callable
 
 
 FIXTURE_DIR = Path(__file__).resolve().parent
+AUTHORITY_RELATIVE_PATH = (
+    "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/"
+    "CAPABILITY_CANONICALIZATION_TABLE.md"
+)
+AUTH_PREFIX = f"{AUTHORITY_RELATIVE_PATH}:"
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -61,6 +67,55 @@ def recompute_internal_hashes(data: dict[str, Any]) -> None:
     data["expected_output"]["final_state_sha256"] = hashlib.sha256(
         canonical_bytes(state)
     ).hexdigest()
+
+
+def resolved_citation(citation: str, authority_lines: list[str]) -> dict[str, str]:
+    match = re.fullmatch(rf"{re.escape(AUTH_PREFIX)}(\d+)-(\d+) \([^)]+\)", citation)
+    if match is None:
+        raise ValueError(f"unsupported citation: {citation}")
+    start, end = (int(value) for value in match.groups())
+    fragment = "\n".join(authority_lines[start - 1 : end]) + "\n"
+    return {
+        "reference": citation,
+        "content_sha256": hashlib.sha256(fragment.encode("utf-8")).hexdigest(),
+    }
+
+
+def recompute_authority_binding_hash(data: dict[str, Any]) -> str:
+    authority_text = (Path.cwd() / AUTHORITY_RELATIVE_PATH).read_text(encoding="utf-8")
+    authority_lines = authority_text.replace("\r\n", "\n").replace("\r", "\n").splitlines()
+    expected_output = data["expected_output"]
+    mutation = data["deliberate_mutation"]
+    binding = {
+        "family": data["family"],
+        "assertions": [
+            {
+                "path": item["path"],
+                "value": item["value"],
+                "citations": [
+                    resolved_citation(citation, authority_lines)
+                    for citation in item["citations"]
+                ],
+            }
+            for item in expected_output["assertions"]
+        ],
+        "output_hash_citations": [
+            resolved_citation(citation, authority_lines)
+            for citation in expected_output["sha256_citations"]
+        ],
+        "state_hash_citations": [
+            resolved_citation(citation, authority_lines)
+            for citation in expected_output["final_state_sha256_citations"]
+        ],
+        "source_mutation_descriptor": {
+            "target": mutation["target"],
+            "from": mutation["from"],
+            "to": mutation["to"],
+            "citation": resolved_citation(mutation["citation"], authority_lines),
+            "rationale": mutation["rationale"],
+        },
+    }
+    return hashlib.sha256(canonical_bytes(binding)).hexdigest()
 
 
 def write_fixture_with_manifest_hash(
@@ -298,6 +353,64 @@ def tamper_family_10_companion_bar_not_object(path: Path) -> None:
     )
     scenario["normalized_bars"][2] = "not-a-bar"
     write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
+def tamper_family_10_companion_ohlcv_metadata_deleted(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C36_GF36_legacy_break_even_modes__local"
+    )
+    del scenario["frozen_metadata"]["ohlcv_fields"]
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
+def tamper_family_10_companion_all_indices_deleted(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C36_GF36_legacy_break_even_modes__local"
+    )
+    for bar in scenario["normalized_bars"]:
+        del bar["index"]
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
+def tamper_family_02_c32_retained_mapping_assertion_renamed(path: Path) -> None:
+    fixture_path, data = fixture(path, 2)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C32_GF32_legacy_reentry_modes__local"
+    )
+    input_paths = scenario["assertion_inputs"].pop("legacy.local.reentry_bar")
+    scenario["assertion_inputs"]["compat.local.reentry_bar"] = [
+        input_path
+        for input_path in input_paths
+        if input_path
+        not in {
+            "config.tw_audit_semantics_mode",
+            "config.tw_reversal_reentry_mode",
+        }
+    ]
+    del scenario["config"]["tw_audit_semantics_mode"]
+    del scenario["config"]["tw_reversal_reentry_mode"]
+    assertion(data, "legacy.local.reentry_bar")["path"] = "compat.local.reentry_bar"
+    recompute_internal_hashes(data)
+    write_json(fixture_path, data)
+    manifest_path = path / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest_item = next(
+        item for item in manifest["families"] if item["number"] == 2
+    )
+    manifest_item["authority_binding_sha256"] = recompute_authority_binding_hash(data)
+    manifest_item["fixture_contract_sha256"] = hashlib.sha256(
+        canonical_bytes(data)
+    ).hexdigest()
+    manifest["assertion_input_path_count"] -= 2
+    write_json(manifest_path, manifest)
 
 
 def tamper_family_02_plural_selector(path: Path) -> None:
@@ -550,6 +663,28 @@ def main() -> int:
             False,
             "VERIFY_FAIL reason=family=10 normalized_bar_not_object "
             "context=companion:C36_GF36_legacy_break_even_modes__local index=2",
+        ),
+        (
+            "r4d_family_10_companion_ohlcv_metadata_deleted",
+            tamper_family_10_companion_ohlcv_metadata_deleted,
+            False,
+            "VERIFY_FAIL reason=family=10 ohlcv_shape_contract_mismatch "
+            "context=companion:C36_GF36_legacy_break_even_modes__local",
+        ),
+        (
+            "r4d_family_10_companion_all_indices_deleted",
+            tamper_family_10_companion_all_indices_deleted,
+            False,
+            "VERIFY_FAIL reason=family=10 normalized_bar_index_mismatch "
+            "context=companion:C36_GF36_legacy_break_even_modes__local "
+            "position=0 actual=None",
+        ),
+        (
+            "r4d_family_02_c32_retained_mapping_assertion_renamed",
+            tamper_family_02_c32_retained_mapping_assertion_renamed,
+            False,
+            "VERIFY_FAIL reason=family=02 companion_assertion_inventory_mismatch "
+            "id=C32_GF32_legacy_reentry_modes__local",
         ),
         (
             "n4_family_02_selector_rehomed_fixture_local",

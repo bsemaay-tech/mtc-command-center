@@ -40,6 +40,7 @@ FIXTURE_OHLCV_BAR_COUNTS = {
     16: 8,
     22: 3,
 }
+FIXTURE_OHLCV_INDEX_FAMILIES = frozenset({1, 7, 8, 9, 10, 11, 12, 15, 16})
 COMPANION_OHLCV_BAR_COUNTS = {
     "C20_GF20_": 3,
     "C32_GF32_": 6,
@@ -122,6 +123,122 @@ COMPANION_SELECTOR_REQUIREMENTS = {
         "legacy.next_bar_confirmed.exit": (
             "tw_trailing_semantics_mode",
             "next_bar_confirmed",
+        ),
+    },
+}
+CompanionScenarioContract = tuple[str, tuple[str, ...], int | None, bool]
+COMPANION_SCENARIO_CONTRACTS: dict[
+    int, dict[str, CompanionScenarioContract]
+] = {
+    2: {
+        "C32_GF32_legacy_reentry_modes__local": (
+            f"{AUTH_PREFIX}830-863 (C32/GF-32)",
+            ("legacy.local.reentry_bar",),
+            COMPANION_OHLCV_BAR_COUNTS["C32_GF32_"],
+            True,
+        ),
+        "C32_GF32_legacy_reentry_modes__carry_to_next_bar_after_protective_exit": (
+            f"{AUTH_PREFIX}830-863 (C32/GF-32)",
+            ("legacy.carry.reentry_bar",),
+            COMPANION_OHLCV_BAR_COUNTS["C32_GF32_"],
+            True,
+        ),
+        "C32_GF32_legacy_reentry_modes__next_bar_open_after_protective_exit_signal": (
+            f"{AUTH_PREFIX}830-863 (C32/GF-32)",
+            ("legacy.next_bar_open.reentry",),
+            COMPANION_OHLCV_BAR_COUNTS["C32_GF32_"],
+            True,
+        ),
+        "C32_GF32_legacy_reentry_modes__next_bar_close_after_protective_exit_signal": (
+            f"{AUTH_PREFIX}830-863 (C32/GF-32)",
+            ("legacy.next_bar_close.reentry",),
+            COMPANION_OHLCV_BAR_COUNTS["C32_GF32_"],
+            True,
+        ),
+        "C32_GF32_legacy_reentry_modes__delay_after_protective_exit": (
+            f"{AUTH_PREFIX}830-863 (C32/GF-32)",
+            ("legacy.delay.reentry",),
+            COMPANION_OHLCV_BAR_COUNTS["C32_GF32_"],
+            True,
+        ),
+    },
+    3: {
+        "C31_GF31_legacy_quantity_precision__off": (
+            f"{AUTH_PREFIX}812-822 (C31/GF-31)",
+            ("legacy_precision.off_qty",),
+            None,
+            False,
+        ),
+        "C31_GF31_legacy_quantity_precision__research": (
+            f"{AUTH_PREFIX}812-822 (C31/GF-31)",
+            ("legacy_precision.research_qty",),
+            None,
+            False,
+        ),
+    },
+    6: {
+        "C31_GF31_legacy_quantity_precision__off": (
+            f"{AUTH_PREFIX}812-822 (C31/GF-31)",
+            ("legacy_precision.off",),
+            None,
+            False,
+        ),
+        "C31_GF31_legacy_quantity_precision__research": (
+            f"{AUTH_PREFIX}812-822 (C31/GF-31)",
+            ("legacy_precision.research",),
+            None,
+            False,
+        ),
+    },
+    10: {
+        "C36_GF36_legacy_break_even_modes__local": (
+            f"{AUTH_PREFIX}938-964 (C36/GF-36)",
+            ("legacy.local.exit",),
+            COMPANION_OHLCV_BAR_COUNTS["C36_GF36_"],
+            True,
+        ),
+        "C36_GF36_legacy_break_even_modes__next_bar_confirmed": (
+            f"{AUTH_PREFIX}938-964 (C36/GF-36)",
+            ("legacy.next_bar_confirmed.exit",),
+            COMPANION_OHLCV_BAR_COUNTS["C36_GF36_"],
+            True,
+        ),
+        "C36_GF36_legacy_break_even_modes__tradingview": (
+            f"{AUTH_PREFIX}938-964 (C36/GF-36)",
+            ("legacy.tradingview.exit",),
+            COMPANION_OHLCV_BAR_COUNTS["C36_GF36_"],
+            True,
+        ),
+    },
+    11: {
+        "C37_GF37_legacy_trailing_modes__local": (
+            f"{AUTH_PREFIX}972-987 (C37/GF-37)",
+            ("legacy.local.exit",),
+            COMPANION_OHLCV_BAR_COUNTS["C37_GF37_"],
+            True,
+        ),
+        "C37_GF37_legacy_trailing_modes__tradingview": (
+            f"{AUTH_PREFIX}972-987 (C37/GF-37)",
+            ("legacy.tradingview.exit",),
+            COMPANION_OHLCV_BAR_COUNTS["C37_GF37_"],
+            True,
+        ),
+        "C37_GF37_legacy_trailing_modes__next_bar_confirmed": (
+            f"{AUTH_PREFIX}972-987 (C37/GF-37)",
+            ("legacy.next_bar_confirmed.exit",),
+            COMPANION_OHLCV_BAR_COUNTS["C37_GF37_"],
+            True,
+        ),
+    },
+    14: {
+        "C20_GF20_legacy_close_only_gap_fills": (
+            f"{AUTH_PREFIX}575-598 (C20/GF-20)",
+            (
+                "legacy.long_stop_close_only",
+                "legacy.short_stop_close_only",
+            ),
+            COMPANION_OHLCV_BAR_COUNTS["C20_GF20_"],
+            False,
         ),
     },
 }
@@ -295,43 +412,27 @@ def require_declared_input(
     )
 
 
-def expected_ohlcv_bar_count(family: int, context: str) -> int | None:
-    if context == "fixture":
-        return FIXTURE_OHLCV_BAR_COUNTS.get(family)
-    if context.startswith("companion:"):
-        scenario_id = context.removeprefix("companion:")
-        for prefix, expected_count in COMPANION_OHLCV_BAR_COUNTS.items():
-            if scenario_id.startswith(prefix):
-                return expected_count
-    return None
-
-
 def validate_normalized_bar_shapes(
     container: dict[str, Any],
     family: int,
     context: str,
+    expected_count: int | None,
+    index_required: bool,
 ) -> None:
     bars = container.get("normalized_bars")
     require(
         isinstance(bars, list),
         f"family={family:02d} normalized_bars_not_list context={context}",
     )
-    metadata = container.get("frozen_metadata")
-    has_ohlcv_contract = isinstance(metadata, dict) and "ohlcv_fields" in metadata
-    if not has_ohlcv_contract:
+    if expected_count is None:
         return
 
-    expected_count = expected_ohlcv_bar_count(family, context)
-    require(
-        expected_count is not None,
-        f"family={family:02d} normalized_bar_count_contract_missing "
-        f"context={context}",
-    )
     require(
         len(bars) == expected_count,
         f"family={family:02d} normalized_bar_count_mismatch "
         f"context={context} expected={expected_count} actual={len(bars)}",
     )
+    metadata = container.get("frozen_metadata")
     require(
         isinstance(metadata, dict),
         f"family={family:02d} frozen_metadata_missing context={context}",
@@ -340,20 +441,18 @@ def validate_normalized_bar_shapes(
         metadata.get("ohlcv_fields") == OHLCV_FIELDS,
         f"family={family:02d} ohlcv_shape_contract_mismatch context={context}",
     )
-    has_index_contract = any(
-        isinstance(bar, dict) and "index" in bar for bar in bars
-    )
     for index, bar in enumerate(bars):
         require(
             isinstance(bar, dict),
             f"family={family:02d} normalized_bar_not_object "
             f"context={context} index={index}",
         )
-        if has_index_contract:
+        if index_required:
+            bar_index = bar.get("index")
             require(
-                bar.get("index") == index,
+                type(bar_index) is int and bar_index == index,
                 f"family={family:02d} normalized_bar_index_mismatch "
-                f"context={context} position={index} actual={bar.get('index')}",
+                f"context={context} position={index} actual={bar_index}",
             )
         require(
             "ohlcv" in bar,
@@ -445,6 +544,7 @@ def validate_assertion_input_presence(
         f"family={family:02d} companion_scenarios_not_list",
     )
     scenario_ids: set[str] = set()
+    expected_scenarios = COMPANION_SCENARIO_CONTRACTS.get(family, {})
     for scenario in scenarios:
         require(
             isinstance(scenario, dict),
@@ -460,12 +560,26 @@ def validate_assertion_input_presence(
             f"family={family:02d} companion_scenario_id_duplicate id={scenario_id}",
         )
         scenario_ids.add(scenario_id)
+        scenario_contract = expected_scenarios.get(scenario_id)
+        require(
+            scenario_contract is not None,
+            f"family={family:02d} companion_scenario_identity_unrecognized "
+            f"id={scenario_id}",
+        )
+        expected_source, expected_assertions, bar_count, index_required = scenario_contract
         validate_normalized_bar_shapes(
             scenario,
             family,
             f"companion:{scenario_id}",
+            bar_count,
+            index_required,
         )
         source = scenario.get("source")
+        require(
+            source == expected_source,
+            f"family={family:02d} companion_source_identity_mismatch "
+            f"id={scenario_id}",
+        )
         resolve_citation(source, authority_lines)
         citation_count += 1
         assertion_inputs = scenario.get("assertion_inputs")
@@ -473,7 +587,13 @@ def validate_assertion_input_presence(
             isinstance(assertion_inputs, dict) and assertion_inputs,
             f"family={family:02d} companion_assertion_inputs_missing id={scenario_id}",
         )
-        for assertion_path, input_paths in assertion_inputs.items():
+        require(
+            set(assertion_inputs) == set(expected_assertions),
+            f"family={family:02d} companion_assertion_inventory_mismatch "
+            f"id={scenario_id}",
+        )
+        for assertion_path in expected_assertions:
+            input_paths = assertion_inputs[assertion_path]
             require(
                 assertion_path in assertions_by_path,
                 f"family={family:02d} companion_assertion_unknown "
@@ -556,6 +676,10 @@ def validate_assertion_input_presence(
     require(
         set(assigned_sources) == set(assertions_by_path),
         f"family={family:02d} assertion_input_source_accounting_mismatch",
+    )
+    require(
+        scenario_ids == set(expected_scenarios),
+        f"family={family:02d} companion_scenario_inventory_mismatch",
     )
 
     return (
@@ -931,7 +1055,13 @@ def validate_fixture(
         isinstance(fixture.get("normalized_bars"), list),
         f"family={number:02d} normalized_bars_not_list",
     )
-    validate_normalized_bar_shapes(fixture, number, "fixture")
+    validate_normalized_bar_shapes(
+        fixture,
+        number,
+        "fixture",
+        FIXTURE_OHLCV_BAR_COUNTS.get(number),
+        number in FIXTURE_OHLCV_INDEX_FAMILIES,
+    )
 
     expected_output = fixture.get("expected_output")
     require(

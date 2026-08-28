@@ -711,7 +711,16 @@ BYTE_IDENTICAL=23/23 MISMATCHES=[]
 STDOUT_IDENTICAL=true
 git diff --check
 rc=0
+MTC_COMMAND_CENTER\tools\repo_guard.ps1
+rc=1 RESULT: BLOCKED only because branch merge-base is 45 commits behind local origin/master (limit 30)
+MTC_COMMAND_CENTER\tools\repo_guard.ps1 -WarnOnlyStaleBranch
+rc=0 RESULT: PASS protected=none risky_untracked=none
 ```
+
+The freshness discrepancy was not repaired: the owner-fixed lane contract requires work on top of
+`2f80357f`, explicitly forbids rebasing, and says repository observations win over prompt figures.
+The current local `origin/master` moved while this isolated lane remained fixed, so stale ancestry
+is recorded rather than rewritten.
 
 Families 18 and 19 remain blocked and absent. No Pine, parity, MTC strategy behavior, Bridge
 runtime, schema, broker/exchange, host, credential, deployment, or live surface changed.
@@ -859,10 +868,11 @@ VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=27/27 result=PASS
 
 ### R2 - bar granularity pinned
 
-Changed the normalized-bar validator to enforce hardcoded OHLCV bar counts for declared OHLCV
-contexts, per-bar `ohlcv` presence, five-field OHLCV shape, and `index == position` for indexed
-OHLCV sequences. The bar counts live in verifier constants, so a fixture-local metadata edit cannot
-legalize a short sequence.
+Changed the normalized-bar validator to enforce hardcoded OHLCV bar counts for verifier-pinned
+fixture families and exact companion scenario identities, per-bar `ohlcv` presence, five-field
+OHLCV shape, and integer `index == position` for the contexts whose verifier contract requires an
+index. The required contexts and counts live in verifier constants, so deleting or rewriting
+fixture-local metadata cannot disable the count, member, shape, or required-index checks.
 
 Executed RED/GREEN:
 
@@ -949,3 +959,262 @@ credential, deployment, or live surface changed.
 
 Not closed here: independent flagship acceptance/adjudication, and the disclosed coordinated-rehash
 semantic-relevance limitation outside R1/R2 remains out of scope.
+
+## Round 4d — attacker-controlled opt-ins removed
+
+**Date:** 2026-08-28
+
+**Starting point:** `2f80357ff245def22aed80dae0ca831fbddc7702` on
+`feature/wp-p0-10-golden-suite-20260825`.
+
+**Audit tier:** T0, retained from the package contract. This is implementer Gate-3/Gate-4 evidence,
+not acceptance; the two independent flagship audits occur after this handoff.
+
+### Finding 1 — required bar validation is contract-driven
+
+`validate_normalized_bar_shapes` no longer consults fixture `frozen_metadata` to decide whether the
+bar gate runs. Fixture contexts receive their required counts from `FIXTURE_OHLCV_BAR_COUNTS`.
+Companion contexts receive count and index requirements only after an exact family/scenario lookup
+in `COMPANION_SCENARIO_CONTRACTS`. A required context with absent/short bars, a non-object member,
+missing or non-list `ohlcv`, a non-five-field `ohlcv`, or missing/wrong shape metadata rejects.
+
+The new tamper deletes only the companion's `ohlcv_fields` key and recomputes its same-tree fixture
+hash. Round 4c accepted it; round 4d rejects it by name.
+
+### Finding 2 — required indexes cannot self-disable
+
+The mutable `any(index)` switch is gone. `FIXTURE_OHLCV_INDEX_FAMILIES` and the exact companion
+scenario contracts identify indexed contexts. Every member in those contexts must carry a value
+whose exact Python type is `int` and whose value equals its zero-based position; booleans do not
+qualify as integers for this gate. The new all-indices-deleted tamper removes every index from a
+C36 companion and recomputes its fixture hash.
+
+### Finding 3 — master gates and selectors are bound to pinned identities
+
+`COMPANION_SCENARIO_CONTRACTS` pins the complete shipped inventory of 16 companion scenarios by
+family, exact scenario ID, exact C/GF source range, exact assertion inventory, required bar count,
+and required-index status. The verifier rejects unknown, missing, renamed, or source-relabelled
+scenarios and rejects assertion inventories that differ from the pinned tuple. Master-gate and
+selector checks therefore receive canonical assertion paths selected from this verifier-owned
+inventory, not paths supplied by the fixture.
+
+The rename tamper retains the C32 companion record and its source mapping, renames both assertion
+sides from `legacy.local.reentry_bar` to `compat.local.reentry_bar`, deletes the master gate and
+selector plus their declared paths, recomputes both manifest-local hashes and the path count, and
+is rejected at the pinned assertion inventory.
+
+### D026 RED — exact round-4c verifier
+
+Exact command:
+
+```powershell
+$oldPath='C:\tmp\wp_p010_verify_fixtures_2f80357f_round4d.py'
+$source=git show '2f80357ff245def22aed80dae0ca831fbddc7702:MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/verify_fixtures.py'
+[System.IO.File]::WriteAllText($oldPath,(($source -join "`n")+"`n"),[System.Text.UTF8Encoding]::new($false))
+python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py --verifier $oldPath
+```
+
+Real selected output; command exit `1`:
+
+```text
+BASELINE rc=0 clean=true detail=no_named_rejection
+TAMPER name=r4d_family_10_companion_ohlcv_metadata_deleted optimized=false rc=0 rejected=false detail=no_named_rejection
+TAMPER name=r4d_family_10_companion_all_indices_deleted optimized=false rc=0 rejected=false detail=no_named_rejection
+TAMPER name=r4d_family_02_c32_retained_mapping_assertion_renamed optimized=false rc=0 rejected=false detail=no_named_rejection
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=27/30 result=FAIL
+ROUND4D_RED_RC=1
+```
+
+### D026 GREEN — repaired verifier
+
+Exact command:
+
+```powershell
+python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py
+```
+
+Real selected output; command exit `0`:
+
+```text
+BASELINE rc=0 clean=true detail=no_named_rejection
+TAMPER name=r4d_family_10_companion_ohlcv_metadata_deleted optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 ohlcv_shape_contract_mismatch context=companion:C36_GF36_legacy_break_even_modes__local
+TAMPER name=r4d_family_10_companion_all_indices_deleted optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=10 normalized_bar_index_mismatch context=companion:C36_GF36_legacy_break_even_modes__local position=0 actual=None
+TAMPER name=r4d_family_02_c32_retained_mapping_assertion_renamed optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=02 companion_assertion_inventory_mismatch id=C32_GF32_legacy_reentry_modes__local
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=30/30 result=PASS
+```
+
+These RED/GREEN demonstrations close verifier defects only. They do not change the 23 economic
+families' `D026 UNEARNED` status.
+
+### Independent count and preservation re-measurement
+
+The following read-only PowerShell measurement loaded all 23 family JSON files independently of
+the verifier's summary. It counted assertion records and declared paths directly, and checked the
+11 hardcoded C32/C36/C37 assertion names for exactly one companion mapping containing
+`config.tw_audit_semantics_mode=research` and the corresponding declared input path:
+
+```powershell
+$fixtureDir='MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures'
+$direct=0; $companion=0; $scenarios=0; $paths=0; $values=0
+$required=@{2=@('legacy.local.reentry_bar','legacy.carry.reentry_bar','legacy.next_bar_open.reentry','legacy.next_bar_close.reentry','legacy.delay.reentry');10=@('legacy.local.exit','legacy.next_bar_confirmed.exit','legacy.tradingview.exit');11=@('legacy.local.exit','legacy.tradingview.exit','legacy.next_bar_confirmed.exit')}
+$masterReach=0; $masterTotal=0
+Get-ChildItem -LiteralPath $fixtureDir -Filter 'family_*.json' | ForEach-Object {
+  $d=Get-Content -Raw -LiteralPath $_.FullName | ConvertFrom-Json
+  $values+=@($d.expected_output.assertions).Count
+  foreach($item in @($d.expected_output.assertions)){if($item.PSObject.Properties.Name -contains 'input_paths'){$direct++;$paths+=@($item.input_paths).Count}}
+  foreach($s in @($d.companion_scenarios)){if($null -ne $s){$scenarios++;foreach($prop in @($s.assertion_inputs.PSObject.Properties)){$companion++;$paths+=@($prop.Value).Count}}}
+  $family=[int]$d.family.number
+  if($required.ContainsKey($family)){foreach($assertionPath in $required[$family]){
+    $masterTotal++
+    $matches=@($d.companion_scenarios | Where-Object {$_.assertion_inputs.PSObject.Properties.Name -contains $assertionPath})
+    if($matches.Count -eq 1){$inputPaths=@($matches[0].assertion_inputs.PSObject.Properties[$assertionPath].Value);if(($inputPaths -contains 'config.tw_audit_semantics_mode') -and $matches[0].config.tw_audit_semantics_mode -eq 'research'){$masterReach++}}
+  }}
+}
+"EXPECTED_VALUES=$values"; "FIXTURE_ASSERTIONS=$direct"; "COMPANION_SCENARIOS=$scenarios"; "COMPANION_ASSERTIONS=$companion"; "ASSERTION_INPUT_PATHS=$paths"; "MASTER_GATE_REACH=$masterReach/$masterTotal"
+```
+
+Real output:
+
+```text
+EXPECTED_VALUES=241
+FIXTURE_ASSERTIONS=224
+COMPANION_SCENARIOS=16
+COMPANION_ASSERTIONS=17
+ASSERTION_INPUT_PATHS=2660
+MASTER_GATE_REACH=11/11
+```
+
+The exact base-comparison command loaded each current fixture and the same path from
+`git show 2f80357ff245def22aed80dae0ca831fbddc7702:<path>`, compared the complete assertion
+`path -> JSON(value)` dictionaries, then compared `expected_output.sha256` and
+`expected_output.final_state_sha256`:
+
+```powershell
+$base='2f80357ff245def22aed80dae0ca831fbddc7702'
+$dir='MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures'
+$maps=0; $hashes=0
+$files=Get-ChildItem -LiteralPath ($dir -replace '/','\') -Filter 'family_*.json'
+foreach($file in $files){
+  $rel="$dir/$($file.Name)"
+  $oldText=(git show "${base}:$rel") -join "`n"
+  $old=$oldText | ConvertFrom-Json
+  $cur=Get-Content -Raw -LiteralPath $file.FullName | ConvertFrom-Json
+  $oldMap=@{}
+  foreach($item in @($old.expected_output.assertions)){$oldMap[$item.path]=($item.value | ConvertTo-Json -Compress)}
+  $same=$oldMap.Count -eq @($cur.expected_output.assertions).Count
+  foreach($item in @($cur.expected_output.assertions)){$same=$same -and $oldMap.ContainsKey($item.path) -and $oldMap[$item.path] -eq ($item.value | ConvertTo-Json -Compress)}
+  if($same){$maps++}
+  if($old.expected_output.sha256 -eq $cur.expected_output.sha256){$hashes++}
+  if($old.expected_output.final_state_sha256 -eq $cur.expected_output.final_state_sha256){$hashes++}
+}
+"EXPECTED_PATH_VALUE_MAPS_UNCHANGED=$maps/$($files.Count)"
+"EXPECTED_OUTPUT_AND_STATE_HASHES_UNCHANGED=$hashes/$($files.Count*2)"
+```
+
+Real output:
+
+```text
+EXPECTED_PATH_VALUE_MAPS_UNCHANGED=23/23
+EXPECTED_OUTPUT_AND_STATE_HASHES_UNCHANGED=46/46
+```
+
+The reported denominators were not copied from this report or from the verifier summary.
+
+Manifest status was re-read independently:
+
+```powershell
+$p='MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\manifest.json'
+$m=Get-Content -Raw -LiteralPath $p | ConvertFrom-Json
+$built=@($m.families | Where-Object {$_.status -eq 'BUILT'})
+$blocked=@($m.families | Where-Object {$_.status -eq 'BLOCKED'})
+"FAMILIES_BUILT=$($built.Count)"
+"FAMILIES_BLOCKED=$($blocked.Count) numbers=$(@($blocked.number)-join ',')"
+"FAMILY_18_FILE=$((Test-Path 'MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\family_18.json').ToString().ToUpper())"
+"FAMILY_19_FILE=$((Test-Path 'MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\family_19.json').ToString().ToUpper())"
+```
+
+```text
+FAMILIES_BUILT=23
+FAMILIES_BLOCKED=2 numbers=18,19
+FAMILY_18_FILE=FALSE
+FAMILY_19_FILE=FALSE
+```
+
+### Final verifier and harness matrix
+
+Commands:
+
+```powershell
+python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\verify_fixtures.py MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures C:\tmp\wp_p010_r4d_plain_20260828
+python -O MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\verify_fixtures.py MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures C:\tmp\wp_p010_r4d_opt_20260828
+$env:PYTHONOPTIMIZE='2'; python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\verify_fixtures.py MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures C:\tmp\wp_p010_r4d_envopt_20260828; Remove-Item Env:PYTHONOPTIMIZE
+python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py
+python -O MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py
+$env:PYTHONOPTIMIZE='2'; python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py; Remove-Item Env:PYTHONOPTIMIZE
+```
+
+Real output:
+
+```text
+verifier plain: rc=0 SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=397 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_sources_validated=241 assertion_input_paths_checked=2660 fixture_assertions_validated=224 companion_assertions_validated=17 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+verifier -O: rc=1 VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+verifier PYTHONOPTIMIZE=2: rc=1 VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+harness plain: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=30/30 result=PASS
+harness -O: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=30/30 result=PASS
+harness PYTHONOPTIMIZE=2: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=30/30 result=PASS
+```
+
+Determinism command:
+
+```powershell
+$v='MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\verify_fixtures.py'
+$f='MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures'
+$a='C:\tmp\wp_p010_r4d_det_a_20260828'; $b='C:\tmp\wp_p010_r4d_det_b_20260828'
+$outA=& python $v $f $a 2>&1; $rcA=$LASTEXITCODE
+$outB=& python $v $f $b 2>&1; $rcB=$LASTEXITCODE
+$filesA=@(Get-ChildItem -File -LiteralPath $a | Sort-Object Name)
+$filesB=@(Get-ChildItem -File -LiteralPath $b | Sort-Object Name)
+$matches=0
+for($i=0;$i -lt [Math]::Min($filesA.Count,$filesB.Count);$i++){if($filesA[$i].Name -eq $filesB[$i].Name -and (Get-FileHash -Algorithm SHA256 -LiteralPath $filesA[$i].FullName).Hash -eq (Get-FileHash -Algorithm SHA256 -LiteralPath $filesB[$i].FullName).Hash){$matches++}}
+"VERIFY_RUNS_RC=$rcA,$rcB"; "OUTPUT_FILES=$($filesA.Count),$($filesB.Count)"; "BYTE_IDENTICAL=$matches/$($filesA.Count)"; "STDOUT_IDENTICAL=$((($outA -join "`n") -ceq ($outB -join "`n")).ToString().ToLower())"
+```
+
+```text
+VERIFY_RUNS_RC=0,0
+OUTPUT_FILES=23,23
+BYTE_IDENTICAL=23/23
+STDOUT_IDENTICAL=true
+```
+
+Compilation and diff hygiene:
+
+```text
+python -m py_compile MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\verify_fixtures.py MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py
+rc=0
+python -m ruff --version
+rc=1 C:\Python314\python.exe: No module named ruff
+git diff --check
+rc=0
+```
+
+### No-overclaim sweep
+
+The round-4c R2 sentence was narrowed from metadata-declared contexts to verifier-pinned fixture
+families and exact companion identities, and now states integer indexes only for contexts whose
+hardcoded contract requires them. Against final code, a fixture metadata edit cannot switch off the
+required count/member/shape/index checks because the gate decision occurs before metadata is read.
+Exact scenario IDs, source ranges, and assertion inventories are also verifier-owned.
+
+The entire report was read and the count/claim grep was rerun. No other current claim exceeded the
+final predicate. Earlier `1/7`, `7/7`, `8/8`, `18/19`, `19/19`, `16/27`, and `27/27` harness
+snapshots and the `2629`, `2649`, and earlier `2660` path snapshots were deliberately retained as
+dated historical transcripts; none is presented as the round-4d result. The current values are
+`30/30` and `2660`. The broad same-tree coordinated-rehash limitation remains true for direct
+fixture-local declarations outside the newly pinned companion inventory and was not narrowed away.
+
+```powershell
+rg -n 'tamper_rejected=[0-9]+/[0-9]+|assertion_input_paths_checked=[0-9]+|fixture_assertions_validated=[0-9]+|companion_assertions_validated=[0-9]+|bar counts live|metadata edit|cannot opt out|all indices|index' MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\LANE_REPORT.md
+```
+
+No Pine, parity, MTC strategy behavior, Bridge runtime, schema, broker/exchange, host, credential,
+deployment, or live surface changed. Independent flagship acceptance remains pending.
