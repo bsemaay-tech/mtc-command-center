@@ -56,7 +56,8 @@ EXPECTED_B_TREE = "e8c4f06ba0fc74ce03f195fd946004ae9b458b37"
 EXPECTED_MASTER = "85c3e17f97efa1ba83ef9c679de319a50ad3be04"
 EXPECTED_P009_BLOB = "1c39ab939dfcf5589e5ec8fba4af8966947a67fc"
 EXPECTED_P009_SHA256 = "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
-EXPECTED_MANIFEST_SHA256 = "13075e23bc2db8517320098f38608851cee123fe57026e9e8607db2a5f08eb2b"
+EXPECTED_GATE_VERSION = "P011-LC-GATE-v2"
+EXPECTED_MANIFEST_SHA256 = "1bc01646e9a00a4ee62c22c6ce1416ed03648e97351e792ae82bbbaff95f52d7"
 
 
 def sha256_bytes(payload: bytes) -> str:
@@ -90,13 +91,62 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+def behavior_signature(record: dict[str, Any]) -> dict[str, Any]:
+    if record.get("status") == "GREEN_AFTER_RED":
+        return {
+            "green_output": record.get("green", {}).get("parsed_output"),
+            "green_return_code": record.get("green", {}).get("return_code"),
+            "mutation_application": record.get("mutation", {}).get("application"),
+            "mutation_id": record.get("mutation", {}).get("mutation_id"),
+            "red_output": record.get("mutation", {}).get("red", {}).get("parsed_output"),
+            "red_return_code": record.get("mutation", {}).get("red", {}).get("return_code"),
+            "row_id": record.get("row_id"),
+            "scenario_id": record.get("scenario_id"),
+            "status": record.get("status"),
+        }
+    return {
+        key: record.get(key)
+        for key in (
+            "actual",
+            "clean_authority_inspection",
+            "comparison",
+            "expected",
+            "mutation",
+            "reason",
+            "row_id",
+            "scenario_id",
+            "status",
+        )
+    } | {
+        "clean_probe_output": record.get("clean_authority_probe", {}).get("parsed_output"),
+        "clean_probe_return_code": record.get("clean_authority_probe", {}).get("return_code"),
+    }
+
+
+def disposition_signature(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: row.get(key)
+        for key in (
+            "producer_execution",
+            "producer_mutation",
+            "row_id",
+            "scenario_ids",
+            "status",
+            "stop_reason",
+        )
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Independent WP-P0-11 row-arm remeasurement")
     parser.add_argument("--evidence", required=True)
     parser.add_argument("--manifest", required=True)
+    parser.add_argument("--prior-evidence", required=True)
+    parser.add_argument("--prior-ref", required=True)
     args = parser.parse_args()
 
     evidence = Path(args.evidence).resolve()
+    prior_evidence = Path(args.prior_evidence).resolve()
     manifest_path = Path(args.manifest).resolve()
     gate_dir = manifest_path.parent
     repo_root = gate_dir.parents[2]
@@ -108,6 +158,7 @@ def main() -> int:
 
     require(sha256_file(manifest_path) == EXPECTED_MANIFEST_SHA256, "legacy manifest hash differs")
     manifest = load_json(manifest_path)
+    require(manifest.get("gate_version") == EXPECTED_GATE_VERSION, "manifest gate version differs")
     require(
         [row.get("row_id") for row in manifest.get("rows", [])]
         == [f"C{index:02d}" for index in range(1, 43)],
@@ -142,6 +193,19 @@ def main() -> int:
     require(raw_lines and all(line.endswith(b"\n") for line in raw_lines), "JSONL newline contract differs")
     records = [json.loads(line) for line in raw_lines]
     require([record.get("row_id") for record in records] == EXPECTED_RESULT_ORDER, "executed row order differs")
+    prior_evidence_rel = prior_evidence.relative_to(repo_root).as_posix()
+    prior_results = subprocess.run(
+        ["git", "show", f"{args.prior_ref}:{prior_evidence_rel}/row_results.jsonl"],
+        cwd=repo_root,
+        capture_output=True,
+        check=True,
+    ).stdout.splitlines()
+    prior_records = [json.loads(line) for line in prior_results]
+    require(
+        [behavior_signature(record) for record in records]
+        == [behavior_signature(record) for record in prior_records],
+        "one or more row behaviors differ from the recorded v1 state",
+    )
 
     clean_green = 0
     mutation_red = 0
@@ -200,6 +264,7 @@ def main() -> int:
 
     corroboration_path = evidence / "row_corroboration.json"
     corroboration = load_json(corroboration_path)
+    require(corroboration.get("gate_version") == EXPECTED_GATE_VERSION, "corroboration gate version differs")
     rows = corroboration.get("rows", [])
     require([row.get("row_id") for row in rows] == [f"C{index:02d}" for index in range(1, 43)], "corroboration row order differs")
     independently_counted = {
@@ -211,9 +276,23 @@ def main() -> int:
     require(independently_counted == {"green": 33, "not_applicable": 2, "stop": 7, "total": 42}, "corroboration counts differ")
     require(corroboration.get("counts") == independently_counted, "reported corroboration counts differ")
     require(corroboration.get("outcome") == "STOP", "partial arm did not remain STOP")
+    prior_corroboration = json.loads(
+        subprocess.run(
+            ["git", "show", f"{args.prior_ref}:{prior_evidence_rel}/row_corroboration.json"],
+            cwd=repo_root,
+            capture_output=True,
+            check=True,
+        ).stdout
+    )
+    require(
+        [disposition_signature(row) for row in rows]
+        == [disposition_signature(row) for row in prior_corroboration.get("rows", [])],
+        "one or more C01-C42 dispositions differ from the recorded v1 state",
+    )
 
     batch_path = evidence / "batch_manifest.json"
     batch = load_json(batch_path)
+    require(batch.get("gate_version") == EXPECTED_GATE_VERSION, "batch gate version differs")
     require(batch.get("legacy_manifest_sha256") == EXPECTED_MANIFEST_SHA256, "batch manifest pin differs")
     require(batch.get("authority", {}).get("a_commit") == EXPECTED_A_COMMIT, "batch A commit differs")
     require(batch.get("authority", {}).get("a_tree_oid") == EXPECTED_A_TREE, "batch A tree differs")
@@ -247,7 +326,10 @@ def main() -> int:
             "total": independently_counted["total"],
         },
         "expected_leaves": expected_leaves,
+        "behavior_identical_to_prior": True,
+        "dispositions_identical_to_prior": True,
         "outcome": "PASS",
+        "prior_ref": args.prior_ref,
         "p009_blob_oid": p009_blob,
         "p009_sha256": sha256_file(p009_path),
         "rows": EXPECTED_RESULT_ORDER,

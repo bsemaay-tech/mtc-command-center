@@ -17,10 +17,10 @@ from pathlib import Path
 from typing import Any, Callable
 
 
-GATE_VERSION = "P011-LC-GATE-v1"
+GATE_VERSION = "P011-LC-GATE-v2"
 SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 A_TREE_OID = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
-LEGACY_MANIFEST_SHA256 = "13075e23bc2db8517320098f38608851cee123fe57026e9e8607db2a5f08eb2b"
+LEGACY_MANIFEST_SHA256 = "1bc01646e9a00a4ee62c22c6ce1416ed03648e97351e792ae82bbbaff95f52d7"
 MERGED_MASTER_COMMIT = "85c3e17f97efa1ba83ef9c679de319a50ad3be04"
 P009_BLOB_OID = "1c39ab939dfcf5589e5ec8fba4af8966947a67fc"
 P009_SHA256 = "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
@@ -38,7 +38,7 @@ A_PACKAGE_REL = A_PYTHON_REL / "mtc_v2"
 A_PYTHON_ROOT = REPO_ROOT / A_PYTHON_REL
 MANIFEST_PATH = GATE_DIR / "p011_legacy_manifest.json"
 RECEIPT_PATH = GATE_DIR / "P011_GATE_RECEIPT.json"
-ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json")
+ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v2.owner-signed.json")
 P009_REL = Path(
     "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/"
     "CAPABILITY_CANONICALIZATION_TABLE.md"
@@ -1962,7 +1962,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         authority_tree_oid=A_TREE_OID,
         citations=(
             "A runner.py:334-350",
-            "P009 pinned blob f96b5325:690-707; current master P009:696-713",
+            "P009 v2 pinned blob 1c39ab93:696-713",
         ),
         complete_inputs={
             "bars": [
@@ -1992,7 +1992,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         authority_name="implementation A at pinned tree",
         authority_commit=SOURCE_COMMIT,
         authority_tree_oid=A_TREE_OID,
-        citations=("A runner.py:1393-1409", "P009 pinned blob f96b5325:804-823; current master P009:810-829"),
+        citations=("A runner.py:1393-1409", "P009 v2 pinned blob 1c39ab93:810-829"),
         complete_inputs={"modes": ["off", "research"], "protective_exit": True},
         expected_observation={"off_pending_reentry": None, "research_branch_reachable": True},
         expected_final_state={"mode_count": 2},
@@ -2011,7 +2011,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         authority_name="implementation A at pinned tree",
         authority_commit=SOURCE_COMMIT,
         authority_tree_oid=A_TREE_OID,
-        citations=("A runner.py:1293-1308", "P009 pinned blob f96b5325:865-887; current master P009:871-893"),
+        citations=("A runner.py:1293-1308", "P009 v2 pinned blob 1c39ab93:871-893"),
         complete_inputs={"candidate_bars": [10, 11, 12], "delay_bars": 2, "protective_exit_bar": 10},
         expected_observation={"reentry_allowed": [False, False, True]},
         expected_final_state={"first_allowed_bar": 12},
@@ -2030,7 +2030,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         authority_name="implementation A at pinned tree",
         authority_commit=SOURCE_COMMIT,
         authority_tree_oid=A_TREE_OID,
-        citations=("A exits.py:286-350", "P009 pinned blob f96b5325:932-965; current master P009:938-971"),
+        citations=("A exits.py:286-350", "P009 v2 pinned blob 1c39ab93:938-971"),
         complete_inputs={"trigger_reached": True, "tw_audit_semantics_mode": "research", "tw_be_semantics_mode": "tradingview"},
         expected_observation={"tradingview_be_branch_reached": True},
         expected_final_state={"be_active": True},
@@ -2044,7 +2044,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         authority_name="implementation A at pinned tree",
         authority_commit=SOURCE_COMMIT,
         authority_tree_oid=A_TREE_OID,
-        citations=("A exits.py:286-330", "P009 pinned blob f96b5325:966-988; current master P009:972-994"),
+        citations=("A exits.py:286-330", "P009 v2 pinned blob 1c39ab93:972-994"),
         complete_inputs={"trigger_reached": True, "tw_audit_semantics_mode": "research", "tw_trailing_semantics_mode": "tradingview"},
         expected_observation={"tradingview_trailing_branch_reached": True},
         expected_final_state={"trail_active": True},
@@ -2058,7 +2058,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         authority_name="implementation B pivot FSM at frozen tag",
         authority_commit=B_COMMIT,
         authority_tree_oid=B_TREE_OID,
-        citations=("B confirmation_layer.py:350-394 at b5ed1afa", "P009 pinned blob f96b5325:989-1070; current master P009:995-1076"),
+        citations=("B confirmation_layer.py:350-394 at b5ed1afa", "P009 v2 pinned blob 1c39ab93:995-1076"),
         complete_inputs={"bar_index": 1, "break_buffer_ticks": 1, "close": 102.0, "high": 102.0, "long_level": 100.0, "min_wait_bars": 1, "mintick": 1.0, "require_close_beyond": True, "wait_long": True, "wait_long_start_bar": 0},
         expected_observation={"long_age_ok": True, "long_break_level": 101.0, "long_pulse": True},
         expected_final_state={"waits_reset": True},
@@ -2078,7 +2078,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         authority_name="implementation B entry-mode producer at frozen tag",
         authority_commit=B_COMMIT,
         authority_tree_oid=B_TREE_OID,
-        citations=("B mtc_runner.py:1220-1225,1660-1674 at b5ed1afa", "P009 pinned blob f96b5325:1071-1090; current master P009:1077-1096"),
+        citations=("B mtc_runner.py:1220-1225,1660-1674 at b5ed1afa", "P009 v2 pinned blob 1c39ab93:1077-1096"),
         complete_inputs={"entry_modes": ["Edge", "Signal"], "first_bar_requires_edge": True, "raw_long": [True, True]},
         expected_observation={"edge_long": [True, False], "first_eval_bar_blocked_without_edge": True, "signal_long": [True, True]},
         expected_final_state={"mode_count": 2},
@@ -2098,7 +2098,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         authority_name="implementation A at pinned tree",
         authority_commit=SOURCE_COMMIT,
         authority_tree_oid=A_TREE_OID,
-        citations=("A htf.py:106-163", "P009 pinned blob f96b5325:1091-1140; current master P009:1097-1146"),
+        citations=("A htf.py:106-163", "P009 v2 pinned blob 1c39ab93:1097-1146"),
         complete_inputs={
             "completed_htf_closes": [
                 {"close": 100.0, "timestamp": "2026-01-01T10:00:00+00:00"},
@@ -2124,7 +2124,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         authority_name="implementation A gate producer at pinned tree",
         authority_commit=SOURCE_COMMIT,
         authority_tree_oid=A_TREE_OID,
-        citations=("A gates.py:27-40,364-411 and runner.py:1227-1239", "P009 pinned blob f96b5325:1141-1200; current master P009:1147-1206"),
+        citations=("A gates.py:27-40,364-411 and runner.py:1227-1239", "P009 v2 pinned blob 1c39ab93:1147-1206"),
         complete_inputs={"close": 100.0, "htf_close": 101.0, "htf_ma_line": None, "htf_ready": True, "ma_line": None},
         expected_observation={
             "gated_signal": {"long": False, "short": False},
@@ -2153,10 +2153,15 @@ def validate_frozen_inputs() -> dict[str, Any]:
     if not ANCHOR_PATH.is_file():
         raise RowStop("external anchor is absent")
     anchor = load_json(ANCHOR_PATH)
+    if anchor.get("gate_version") != GATE_VERSION:
+        raise RowFail("external anchor is not bound to v2")
     if anchor.get("legacy_manifest_sha256") != LEGACY_MANIFEST_SHA256:
         raise RowFail("external anchor does not pin the frozen legacy manifest")
     if anchor.get("receipt_sha256") != sha256_file(RECEIPT_PATH):
         raise RowFail("external anchor does not pin the repository receipt")
+    receipt = load_json(RECEIPT_PATH)
+    if receipt.get("gate_version") != GATE_VERSION:
+        raise RowFail("repository receipt is not bound to v2")
     if sha256_file(P009_PATH) != P009_SHA256:
         raise RowFail("post-merge P0-09 authority SHA-256 differs")
     blob = git("hash-object", "--", P009_REL.as_posix()).stdout.strip()
@@ -2188,6 +2193,8 @@ def validate_frozen_inputs() -> dict[str, Any]:
     if b_commit != B_COMMIT or b_tree != B_TREE_OID:
         raise RowFail(f"implementation B freeze differs: commit={b_commit} tree={b_tree}")
     manifest = load_json(MANIFEST_PATH)
+    if manifest.get("gate_version") != GATE_VERSION:
+        raise RowFail("legacy manifest is not bound to v2")
     expected_ids = [f"C{index:02d}" for index in range(1, 43)]
     if [row.get("row_id") for row in manifest.get("rows", [])] != expected_ids:
         raise RowFail("manifest row identities are not exactly C01-C42 in order")
@@ -2598,7 +2605,7 @@ def build_unresolved_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
         "C28": {
             "citations": [
                 "controller config.py:226-238 and MTC_V2.pine:2010-2028 at 77a10e65",
-                "P009 pinned blob f96b5325:740-759; current master P009:746-765",
+                "P009 v2 pinned blob 1c39ab93:746-765",
             ],
             "source_seams": {
                 "entry_route_expression_present": "string l25_entry_code" in controller_text,
@@ -2610,7 +2617,7 @@ def build_unresolved_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
         "C29": {
             "citations": [
                 "controller config.py:231-238 and MTC_V2.pine:2017-2020 at 77a10e65",
-                "P009 pinned blob f96b5325:760-783; current master P009:766-789",
+                "P009 v2 pinned blob 1c39ab93:766-789",
             ],
             "source_seams": {
                 "amount_present": "wt_amount" in controller_text,
@@ -2622,7 +2629,7 @@ def build_unresolved_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
         "C30": {
             "citations": [
                 "controller config.py:569-584 and MTC_V2.pine:2017-2020 at 77a10e65",
-                "P009 pinned blob f96b5325:784-803; current master P009:790-809",
+                "P009 v2 pinned blob 1c39ab93:790-809",
             ],
             "source_seams": {
                 "protective_payload_inputs_present": all(
@@ -2827,7 +2834,7 @@ print(json.dumps({
                 ],
                 "citations": [
                     "A config.py:458-469",
-                    "P009 pinned blob f96b5325:824-864; current master P009:830-870",
+                    "P009 v2 pinned blob 1c39ab93:830-870",
                 ],
             },
         ),
@@ -2842,7 +2849,7 @@ print(json.dumps({
                 "source_arithmetic": c34_detail,
                 "citations": [
                     "A runner.py:1445-1461",
-                    "P009 pinned blob f96b5325:888-911; current master P009:894-917",
+                    "P009 v2 pinned blob 1c39ab93:894-917",
                 ],
             },
         ),
@@ -2858,7 +2865,7 @@ print(json.dumps({
                 "metadata_after_exception": c35_detail["metadata"],
                 "citations": [
                     "A runner.py:1049-1060; config.py:10",
-                    "P009 pinned blob f96b5325:912-931; current master P009:918-937",
+                    "P009 v2 pinned blob 1c39ab93:918-937",
                 ],
             },
         ),
@@ -2874,7 +2881,7 @@ print(json.dumps({
                 "source_arithmetic": "third RF price 99 is below line 100 while previous direction is 0, so the legacy branch emits one short pulse",
                 "citations": [
                     "A signals/range_filter.py:16-92 and signals/supertrend.py:18-55",
-                    "P009 pinned blob f96b5325:1201-1285; current master P009:1207-1291",
+                    "P009 v2 pinned blob 1c39ab93:1207-1291",
                 ],
             },
         ),

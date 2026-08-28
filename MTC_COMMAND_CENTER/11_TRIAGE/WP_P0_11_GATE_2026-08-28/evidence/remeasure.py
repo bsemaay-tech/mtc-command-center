@@ -12,7 +12,7 @@ from typing import Any
 
 GATE_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = GATE_DIR.parents[2]
-ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json")
+ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v2.owner-signed.json")
 SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 
 

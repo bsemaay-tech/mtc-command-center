@@ -9,19 +9,15 @@
       "<SCRATCH>"
     ]
   },
-  "expected_results": 14,
+  "expected_results": 17,
   "explicitly_not_executed": [
-    "4 authority-contradictory row-producer mutations (C32, C34, C35, C42)",
+    "7 STOP row-producer mutations (C28-C30, C32, C34, C35, C42)",
     "independent-subject import/delegation classification mutation",
     "P0-10 round-4d mutations (NONE_DIRECT_BUILD)",
     "missing external anchor path mutation (the authoritative anchor was not moved)"
   ],
-  "failures": [
-    "deleted_applicable_c_row",
-    "changed_resolved_config_and_local_hash",
-    "changed_data_byte"
-  ],
-  "gate_version": "P011-LC-GATE-v1",
+  "failures": [],
+  "gate_version": "P011-LC-GATE-v2",
   "mutation_count": 17,
   "mutations": [
     {
@@ -565,7 +561,7 @@
           "--receipt",
           "<SCRATCH>\\tampered_receipt.json",
           "--baseline",
-          "C:\\tmp\\p011_gate_committed_run1",
+          "C:\\tmp\\p011_gate_v2_run1_20260828",
           "--subject-mode",
           "LEGACY_COMPATIBLE",
           "--mismatch-ledger",
@@ -587,7 +583,7 @@
           "--receipt",
           "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\P011_GATE_RECEIPT.json",
           "--baseline",
-          "C:\\tmp\\p011_gate_committed_run1",
+          "C:\\tmp\\p011_gate_v2_run1_20260828",
           "--subject-mode",
           "LEGACY_COMPATIBLE",
           "--mismatch-ledger",
@@ -635,7 +631,7 @@
           "--receipt",
           "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\P011_GATE_RECEIPT.json",
           "--baseline",
-          "C:\\tmp\\p011_gate_committed_run1",
+          "C:\\tmp\\p011_gate_v2_run1_20260828",
           "--subject-mode",
           "LEGACY_COMPATIBLE",
           "--mismatch-ledger",
@@ -652,7 +648,7 @@
       "mutation_id": "deleted_applicable_c_row",
       "protected_class": "external legacy-manifest pin rejects coverage loss",
       "red": {
-        "as_expected": false,
+        "as_expected": true,
         "command_argv": [
           "<PYTHON>",
           "-I",
@@ -673,11 +669,11 @@
           "--out",
           "<SCRATCH>\\must_not_be_created_manifest"
         ],
-        "evidence_sha256": "04e2c8187c21bc76ef1c73ec3eeaf85d67e9147aef39b28a09e7e603a8ca793d",
+        "evidence_sha256": "e095f059633c9ff693134af3be01348680fcef7741b06b64df2e95d362162c09",
         "expected_return_code": 1,
-        "return_code": 3,
+        "return_code": 1,
         "stderr": "",
-        "stdout": "{\"outcome\":\"STOP\",\"reason\":\"builder checkout contains changes outside the gate package since the frozen source commit: ['AGENTS.md', 'DECISIONS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/OUTPUTS.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/07_handoff_update.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/LIVE_TRADING_GATE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md', 'mtc_cli/INPUTS.md']\"}"
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"legacy manifest differs from the external pin: 1f5a7dc71a6bbdbec9fad8930b3406d6255d56c22378119fcf20a3d9621cad0e\"}"
       },
       "restoration_green": {
         "as_expected": true,
@@ -701,18 +697,18 @@
           "--out",
           "<SCRATCH>\\restored_manifest_build"
         ],
-        "evidence_sha256": "04e2c8187c21bc76ef1c73ec3eeaf85d67e9147aef39b28a09e7e603a8ca793d",
-        "expected_return_code": 3,
-        "return_code": 3,
+        "evidence_sha256": "faf287a04db9ec1b93c18f847a6c080cf2b9155d126077098407a3fb648b824f",
+        "expected_return_code": 0,
+        "return_code": 0,
         "stderr": "",
-        "stdout": "{\"outcome\":\"STOP\",\"reason\":\"builder checkout contains changes outside the gate package since the frozen source commit: ['AGENTS.md', 'DECISIONS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/OUTPUTS.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/07_handoff_update.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/LIVE_TRADING_GATE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md', 'mtc_cli/INPUTS.md']\"}"
+        "stdout": "{\"artifact_status\":\"SEQUENCE_BUILT_ROW_ARM_STOP_INDEPENDENT_REPRODUCTION_PENDING\",\"command\":\"build-baseline\",\"full_gate_outcome\":\"STOP\",\"full_gate_stop_reason\":\"row producer corroboration/mutations and independent reproduction are not earned\",\"outcome\":\"PASS\",\"output_directory\":\"<SCRATCH>\\\\restored_manifest_build\",\"profile_metrics\":[{\"events\":3509,\"final_state_digest\":\"9a7c449c202f3a83b57e7964f4fbe2521f54b5c9ba3fa6cce3617d8fffe8e541\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_range_filter_default_v1\"},{\"events\":1206,\"final_state_digest\":\"8a3eded32dada6d7a164f52b475974a598ed6b5386c2c1aa71c3f730d18c8055\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_supertrend_default_v1\"}],\"sequence_sha256\":\"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e\",\"total_observations\":96154}"
       }
     },
     {
       "mutation_id": "changed_resolved_config_and_local_hash",
       "protected_class": "full resolved snapshot differs from frozen resolve_config",
       "red": {
-        "as_expected": false,
+        "as_expected": true,
         "command_argv": [
           "<PYTHON>",
           "-I",
@@ -733,11 +729,11 @@
           "--out",
           "<SCRATCH>\\must_not_be_created_profile"
         ],
-        "evidence_sha256": "04e2c8187c21bc76ef1c73ec3eeaf85d67e9147aef39b28a09e7e603a8ca793d",
+        "evidence_sha256": "b80c2aa2f947eddeaf6579dc2fcc1eaca0f5c2c109d37ff925ff1c8028a5f0f0",
         "expected_return_code": 1,
-        "return_code": 3,
+        "return_code": 1,
         "stderr": "",
-        "stdout": "{\"outcome\":\"STOP\",\"reason\":\"builder checkout contains changes outside the gate package since the frozen source commit: ['AGENTS.md', 'DECISIONS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/OUTPUTS.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/07_handoff_update.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/LIVE_TRADING_GATE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md', 'mtc_cli/INPUTS.md']\"}"
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"profile resolved configuration differs from frozen resolve_config: <SCRATCH>\\\\tampered_profile.json\"}"
       },
       "restoration_green": {
         "as_expected": true,
@@ -761,18 +757,18 @@
           "--out",
           "<SCRATCH>\\restored_profile_build"
         ],
-        "evidence_sha256": "04e2c8187c21bc76ef1c73ec3eeaf85d67e9147aef39b28a09e7e603a8ca793d",
-        "expected_return_code": 3,
-        "return_code": 3,
+        "evidence_sha256": "aae78a9893da005799aa9e595e24a7e20f78b914c2d1f9d3a426562d15bcbe3f",
+        "expected_return_code": 0,
+        "return_code": 0,
         "stderr": "",
-        "stdout": "{\"outcome\":\"STOP\",\"reason\":\"builder checkout contains changes outside the gate package since the frozen source commit: ['AGENTS.md', 'DECISIONS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/OUTPUTS.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/07_handoff_update.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/LIVE_TRADING_GATE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md', 'mtc_cli/INPUTS.md']\"}"
+        "stdout": "{\"artifact_status\":\"SEQUENCE_BUILT_ROW_ARM_STOP_INDEPENDENT_REPRODUCTION_PENDING\",\"command\":\"build-baseline\",\"full_gate_outcome\":\"STOP\",\"full_gate_stop_reason\":\"row producer corroboration/mutations and independent reproduction are not earned\",\"outcome\":\"PASS\",\"output_directory\":\"<SCRATCH>\\\\restored_profile_build\",\"profile_metrics\":[{\"events\":3509,\"final_state_digest\":\"9a7c449c202f3a83b57e7964f4fbe2521f54b5c9ba3fa6cce3617d8fffe8e541\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_range_filter_default_v1\"},{\"events\":1206,\"final_state_digest\":\"8a3eded32dada6d7a164f52b475974a598ed6b5386c2c1aa71c3f730d18c8055\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_supertrend_default_v1\"}],\"sequence_sha256\":\"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e\",\"total_observations\":96154}"
       }
     },
     {
       "mutation_id": "changed_data_byte",
       "protected_class": "pinned data hash differs before strategy execution",
       "red": {
-        "as_expected": false,
+        "as_expected": true,
         "command_argv": [
           "<PYTHON>",
           "-I",
@@ -793,11 +789,11 @@
           "--out",
           "<SCRATCH>\\must_not_be_created_data"
         ],
-        "evidence_sha256": "04e2c8187c21bc76ef1c73ec3eeaf85d67e9147aef39b28a09e7e603a8ca793d",
+        "evidence_sha256": "e1657ae017bf1eec2e63c477a0ad2bedd5717ea5cc45e598b7bcfef41c53060c",
         "expected_return_code": 1,
-        "return_code": 3,
+        "return_code": 1,
         "stderr": "",
-        "stdout": "{\"outcome\":\"STOP\",\"reason\":\"builder checkout contains changes outside the gate package since the frozen source commit: ['AGENTS.md', 'DECISIONS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/OUTPUTS.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/07_handoff_update.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/LIVE_TRADING_GATE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md', 'mtc_cli/INPUTS.md']\"}"
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"data SHA-256 mismatch: <SCRATCH>\\\\tampered_data.csv\"}"
       },
       "restoration_green": {
         "as_expected": true,
@@ -821,14 +817,14 @@
           "--out",
           "<SCRATCH>\\restored_data_build"
         ],
-        "evidence_sha256": "04e2c8187c21bc76ef1c73ec3eeaf85d67e9147aef39b28a09e7e603a8ca793d",
-        "expected_return_code": 3,
-        "return_code": 3,
+        "evidence_sha256": "f64c7cfa55c11a6781d613e4106248ad8d1c200647bd969372fae8a841fb75d3",
+        "expected_return_code": 0,
+        "return_code": 0,
         "stderr": "",
-        "stdout": "{\"outcome\":\"STOP\",\"reason\":\"builder checkout contains changes outside the gate package since the frozen source commit: ['AGENTS.md', 'DECISIONS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md', 'MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/OUTPUTS.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md', 'MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/07_handoff_update.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md', 'MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md', 'MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/LIVE_TRADING_GATE.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md', 'MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md', 'mtc_cli/INPUTS.md']\"}"
+        "stdout": "{\"artifact_status\":\"SEQUENCE_BUILT_ROW_ARM_STOP_INDEPENDENT_REPRODUCTION_PENDING\",\"command\":\"build-baseline\",\"full_gate_outcome\":\"STOP\",\"full_gate_stop_reason\":\"row producer corroboration/mutations and independent reproduction are not earned\",\"outcome\":\"PASS\",\"output_directory\":\"<SCRATCH>\\\\restored_data_build\",\"profile_metrics\":[{\"events\":3509,\"final_state_digest\":\"9a7c449c202f3a83b57e7964f4fbe2521f54b5c9ba3fa6cce3617d8fffe8e541\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_range_filter_default_v1\"},{\"events\":1206,\"final_state_digest\":\"8a3eded32dada6d7a164f52b475974a598ed6b5386c2c1aa71c3f730d18c8055\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_supertrend_default_v1\"}],\"sequence_sha256\":\"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e\",\"total_observations\":96154}"
       }
     }
   ],
-  "outcome": "STOP",
+  "outcome": "PASS",
   "restored_results": 17
 }

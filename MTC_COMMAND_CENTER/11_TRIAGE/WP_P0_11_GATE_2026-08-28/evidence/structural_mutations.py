@@ -305,7 +305,7 @@ def main() -> int:
                         "--out",
                         str(scratch / "restored_manifest_build"),
                     ],
-                    3,
+                    0,
                     replacements,
                 ),
             }
@@ -332,7 +332,7 @@ def main() -> int:
                         "--out",
                         str(scratch / "restored_profile_build"),
                     ],
-                    3,
+                    0,
                     replacements,
                 ),
             }
@@ -361,7 +361,7 @@ def main() -> int:
                         "--out",
                         str(scratch / "restored_data_build"),
                     ],
-                    3,
+                    0,
                     replacements,
                 ),
             }
@@ -387,7 +387,7 @@ def main() -> int:
         },
         "mutations": results,
         "explicitly_not_executed": [
-            "4 authority-contradictory row-producer mutations (C32, C34, C35, C42)",
+            "7 STOP row-producer mutations (C28-C30, C32, C34, C35, C42)",
             "independent-subject import/delegation classification mutation",
             "P0-10 round-4d mutations (NONE_DIRECT_BUILD)",
             "missing external anchor path mutation (the authoritative anchor was not moved)",

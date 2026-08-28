@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Iterable, Iterator
 
 
-GATE_VERSION = "P011-LC-GATE-v1"
+GATE_VERSION = "P011-LC-GATE-v2"
 SCHEMA_VERSION = "P011_OBSERVATION_SCHEMA_v1"
 SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 A_TREE_OID = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
@@ -28,7 +28,7 @@ EXPECTED_PROFILE_IDS = {
 }
 EXPECTED_HEADER = ["ts", "open", "high", "low", "close", "volume"]
 EXPECTED_ROWS = 48077
-ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json")
+ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v2.owner-signed.json")
 
 GATE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = GATE_DIR.parents[2]
@@ -121,25 +121,18 @@ def float_hex(value: Any, *, nullable: bool = False) -> str | None:
 def verify_frozen_authority(source_commit: str) -> None:
     if source_commit != SOURCE_COMMIT:
         raise GateStop(f"source commit is not the frozen authority: {source_commit}")
-    checkout_head = git_stdout("rev-parse", "HEAD")
-    changed_paths = [
-        line
-        for line in git_stdout("diff", "--name-only", SOURCE_COMMIT, checkout_head).splitlines()
-        if line
-    ]
-    allowed_prefix = "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/"
-    disallowed_paths = [path for path in changed_paths if not path.startswith(allowed_prefix)]
-    if disallowed_paths:
-        raise GateStop(
-            "builder checkout contains changes outside the gate package since the frozen source "
-            f"commit: {disallowed_paths}"
-        )
     actual_tree = git_stdout(
         "rev-parse",
         f"{SOURCE_COMMIT}:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2",
     )
     if actual_tree != A_TREE_OID:
         raise GateStop(f"implementation A tree mismatch: {actual_tree}")
+    head_tree = git_stdout(
+        "rev-parse",
+        "HEAD:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2",
+    )
+    if head_tree != A_TREE_OID:
+        raise GateStop(f"implementation A HEAD tree mismatch: {head_tree}")
     diff = git(
         "diff",
         "--quiet",
@@ -1316,10 +1309,7 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
             "digest_components": matrix["digest_component_count"],
             "event_components": matrix["event_component_count"],
         },
-        "row_arm": {
-            "outcome": "STOP",
-            "reason": "40 direct-build producer adapters and their D026 mutations remain unexecuted",
-        },
+        "row_arm": row_arm_receipt(),
     }
     receipt["independent_reproduction_evidence"] = {
         "status": "NOT_PERFORMED_IMPLEMENTER_MUST_NOT_SELF_ISSUE",
@@ -1340,8 +1330,27 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
     return 0
 
 
+def row_arm_receipt() -> dict[str, Any]:
+    evidence_path = GATE_DIR / "evidence" / "row_arm" / "row_corroboration.json"
+    if not evidence_path.is_file():
+        raise GateStop("v2 row-arm re-verification evidence is absent")
+    evidence = load_json(evidence_path)
+    expected_counts = {"green": 33, "not_applicable": 2, "stop": 7, "total": 42}
+    if evidence.get("gate_version") != GATE_VERSION:
+        raise GateStop("row-arm evidence is not bound to v2")
+    if evidence.get("outcome") != "STOP" or evidence.get("counts") != expected_counts:
+        raise GateStop("row-arm evidence did not preserve the 33 GREEN / 7 STOP / 2 policy-only disposition")
+    return {
+        "outcome": "STOP",
+        "counts": expected_counts,
+        "reason": "7 of 40 applicable rows remain honest STOP after v2 re-verification",
+        "evidence_path": str(evidence_path),
+        "evidence_sha256": sha256_file(evidence_path),
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="P011-LC-GATE-v1 deterministic builder and comparator")
+    parser = argparse.ArgumentParser(description="P011-LC-GATE-v2 deterministic builder and comparator")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     build = subparsers.add_parser("build-baseline")

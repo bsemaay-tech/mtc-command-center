@@ -1,5 +1,5 @@
 {
-  "applicable_to_not_row_change_policy": "automatic STOP; never a repair to v1",
+  "applicable_to_not_row_change_policy": "automatic STOP; never an in-place gate repair",
   "counts": {
     "applicable": 40,
     "not_a_legacy_reproduction_row": 2,
@@ -9,14 +9,14 @@
   "expected_values_change_policy": "new owner decision, new gate version, new baseline and new external signature",
   "fixture_suite_commit": "NONE_DIRECT_BUILD",
   "frozen_before_subject_run": true,
-  "gate_version": "P011-LC-GATE-v1",
+  "gate_version": "P011-LC-GATE-v2",
   "manifest_schema_version": "P011_LEGACY_MANIFEST_v1",
   "p009_authority": {
-    "blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
-    "citation_refresh_branch_status": "not merged into the accepted base at freeze; recorded as discrepancy, not silently imported",
-    "citation_resolution": "pinned section ranges plus source symbols; known stale line-number drift is not copied as authority",
-    "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
-    "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+    "blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+    "citation_refresh_branch_status": "merged on master and owner-authorized as the v2 authority pin",
+    "citation_resolution": "current-master section ranges plus source symbols; rules, oracles, and expected values are unchanged from v1",
+    "commit": "85c3e17f97efa1ba83ef9c679de319a50ad3be04",
+    "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
   },
   "rows": [
     {
@@ -30,10 +30,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "125-142",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "131-148",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C01",
       "scenarios": [
@@ -57,10 +57,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "125-142",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "131-148",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -97,10 +97,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "143-160",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "149-166",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C02",
       "scenarios": [
@@ -123,10 +123,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "143-160",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "149-166",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -169,10 +169,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "161-197",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "167-203",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C03",
       "scenarios": [
@@ -198,10 +198,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "161-197",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "167-203",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -243,10 +243,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "198-220",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "204-226",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C04",
       "scenarios": [
@@ -274,10 +274,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "198-220",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "204-226",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -314,10 +314,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "221-238",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "227-244",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C05",
       "scenarios": [
@@ -339,10 +339,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "221-238",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "227-244",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -380,10 +380,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "239-282",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "245-288",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C06",
       "scenarios": [
@@ -410,10 +410,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "239-282",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "245-288",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -452,10 +452,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "283-317",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "289-323",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C07",
       "scenarios": [
@@ -479,10 +479,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "283-317",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "289-323",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -517,10 +517,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "318-335",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "324-341",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C08",
       "scenarios": [
@@ -544,10 +544,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "318-335",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "324-341",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -581,10 +581,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "336-353",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "342-359",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C09",
       "scenarios": [
@@ -608,10 +608,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "336-353",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "342-359",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -647,10 +647,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "354-404",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "360-410",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C10",
       "scenarios": [
@@ -673,10 +673,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "354-404",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "360-410",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -712,10 +712,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "405-422",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "411-428",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C11",
       "scenarios": [
@@ -743,10 +743,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "405-422",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "411-428",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -782,10 +782,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "423-440",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "429-446",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C12",
       "scenarios": [
@@ -813,10 +813,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "423-440",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "429-446",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -852,10 +852,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "441-458",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "447-464",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C13",
       "scenarios": [
@@ -890,10 +890,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "441-458",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "447-464",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -939,10 +939,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "459-476",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "465-482",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C14",
       "scenarios": [
@@ -968,10 +968,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "459-476",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "465-482",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1007,10 +1007,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "477-494",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "483-500",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C15",
       "scenarios": [
@@ -1035,10 +1035,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "477-494",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "483-500",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1074,10 +1074,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "495-512",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "501-518",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C16",
       "scenarios": [
@@ -1101,10 +1101,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "495-512",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "501-518",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1140,10 +1140,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "513-530",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "519-536",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C17",
       "scenarios": [
@@ -1167,10 +1167,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "513-530",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "519-536",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1205,10 +1205,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "531-548",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "537-554",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C18",
       "scenarios": [
@@ -1231,10 +1231,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "531-548",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "537-554",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1270,10 +1270,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "549-568",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "555-574",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C19",
       "scenarios": [
@@ -1301,10 +1301,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "549-568",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "555-574",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1339,10 +1339,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "569-599",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "575-605",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C20",
       "scenarios": [
@@ -1364,10 +1364,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "569-599",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "575-605",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1402,10 +1402,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "600-617",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "606-623",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C21",
       "scenarios": [
@@ -1428,10 +1428,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "600-617",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "606-623",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1466,10 +1466,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "618-635",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "624-641",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C22",
       "scenarios": [
@@ -1495,10 +1495,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "618-635",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "624-641",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1537,10 +1537,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "636-653",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "642-659",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C23",
       "scenarios": [
@@ -1563,10 +1563,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "636-653",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "642-659",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1602,10 +1602,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "654-671",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "660-677",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C24",
       "scenarios": [
@@ -1635,10 +1635,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "654-671",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "660-677",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1667,10 +1667,10 @@
       "coverage_credit": "policy consistency only; zero A/B/Pine reproduction credit",
       "disposition": "NOT_A_LEGACY_REPRODUCTION_ROW",
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "672-689",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "678-695",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "proof": "already-decided venue timestamp policy; no A/B legacy implementation is reproduced",
       "row_id": "C25",
@@ -1693,10 +1693,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "690-707",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "696-713",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C26",
       "scenarios": [
@@ -1726,10 +1726,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "690-707",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "696-713",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1757,10 +1757,10 @@
       "coverage_credit": "policy consistency only; zero A/B/Pine reproduction credit",
       "disposition": "NOT_A_LEGACY_REPRODUCTION_ROW",
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "708-739",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "714-745",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "proof": "ticket-45 freshness policy and P0-09 bounds; no A/B legacy implementation is reproduced",
       "row_id": "C27",
@@ -1781,10 +1781,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "740-759",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "746-765",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C28",
       "scenarios": [
@@ -1808,10 +1808,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "740-759",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "746-765",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1855,10 +1855,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "760-783",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "766-789",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C29",
       "scenarios": [
@@ -1881,10 +1881,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "760-783",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "766-789",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1925,10 +1925,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "784-803",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "790-809",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C30",
       "scenarios": [
@@ -1953,10 +1953,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "784-803",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "790-809",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -1994,10 +1994,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "804-823",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "810-829",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C31",
       "scenarios": [
@@ -2021,10 +2021,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "804-823",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "810-829",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2059,10 +2059,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "824-864",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "830-870",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C32",
       "scenarios": [
@@ -2087,10 +2087,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "824-864",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "830-870",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2124,10 +2124,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "865-887",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "871-893",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C33",
       "scenarios": [
@@ -2153,10 +2153,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "865-887",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "871-893",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2194,10 +2194,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "888-911",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "894-917",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C34",
       "scenarios": [
@@ -2223,10 +2223,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "888-911",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "894-917",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2261,10 +2261,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "912-931",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "918-937",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C35",
       "scenarios": [
@@ -2285,10 +2285,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "912-931",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "918-937",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2323,10 +2323,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "932-965",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "938-971",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C36",
       "scenarios": [
@@ -2348,10 +2348,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "932-965",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "938-971",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2385,10 +2385,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "966-988",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "972-994",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C37",
       "scenarios": [
@@ -2410,10 +2410,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "966-988",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "972-994",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2454,10 +2454,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "989-1070",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "995-1076",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C38",
       "scenarios": [
@@ -2487,10 +2487,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "989-1070",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "995-1076",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2532,10 +2532,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "1071-1090",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "1077-1096",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C39",
       "scenarios": [
@@ -2564,10 +2564,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "1071-1090",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "1077-1096",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2609,10 +2609,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "1091-1140",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "1097-1146",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C40",
       "scenarios": [
@@ -2643,10 +2643,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "1091-1140",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "1097-1146",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2687,10 +2687,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "1141-1200",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "1147-1206",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C41",
       "scenarios": [
@@ -2715,10 +2715,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "1141-1200",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "1147-1206",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {
@@ -2759,10 +2759,10 @@
         }
       ],
       "p009_citation": {
-        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
         "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-        "section_lines_at_pinned_blob": "1201-1285",
-        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+        "section_lines_at_pinned_blob": "1207-1291",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
       },
       "row_id": "C42",
       "scenarios": [
@@ -2794,10 +2794,10 @@
             "method": "literal source arithmetic written before subject execution",
             "producer_output_may_not_rebless_expected": true,
             "source": {
-              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
               "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
-              "section_lines_at_pinned_blob": "1201-1285",
-              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+              "section_lines_at_pinned_blob": "1207-1291",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
             }
           },
           "literal_expected_final_state": {

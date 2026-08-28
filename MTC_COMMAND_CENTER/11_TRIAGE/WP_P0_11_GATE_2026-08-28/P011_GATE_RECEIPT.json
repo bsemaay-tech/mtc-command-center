@@ -3,10 +3,10 @@
   "accepted_git_tree": "6972808fb78a3cec7f2d1e80978d4dc3583323b9",
   "baseline_outputs": {
     "artifact_sha256": {
-      "baseline_manifest.json": "5219d0243d9dc85b4c6ff9f12f82788babbe417307c81cd300b19edcaecd5e20",
-      "final_states.json": "1a73b5fa3864bd434aca94cde8ac26d2b8147fa84f1fe87803c9cf122958008d",
+      "baseline_manifest.json": "62d1ef5fc90b36b6c8caec9388a229ec897dca95ca99f2ba9b979f9c20e6cecc",
+      "final_states.json": "045f11c34e5713dcec97987f14f26b8e9a72011d44b91806b382680fbe1e622a",
       "mtc_v2_legacy_sequence.jsonl": "727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e",
-      "row_corroboration.json": "d28acdb573c18bda004d520c5aa6efb7208151fcae1eee3cdfbace918865baaf"
+      "row_corroboration.json": "9d6abe9265f8b332db429c6bc3f8144545902bb03fc44fd60de3bf970a195f0e"
     },
     "conservation": {
       "input_bars_per_profile": 48077,
@@ -38,7 +38,7 @@
       "path": "C:\\WPP011_20260825\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\evidence\\discrimination_matrix\\discrimination_matrix.json",
       "red": 76,
       "restored_green": 76,
-      "sha256": "533184d7049abefa346352c58d4e3fa70d27e18dd37ba25cb4b2874b1c306b86"
+      "sha256": "1bfa108ed6b547af92af6bf08c70da8a7363598278747f78259f3958c88c3a3d"
     },
     "double_build": {
       "artifacts": [
@@ -49,27 +49,35 @@
         },
         {
           "artifact": "final_states.json",
-          "run_1_sha256": "1a73b5fa3864bd434aca94cde8ac26d2b8147fa84f1fe87803c9cf122958008d",
-          "run_2_sha256": "1a73b5fa3864bd434aca94cde8ac26d2b8147fa84f1fe87803c9cf122958008d"
+          "run_1_sha256": "045f11c34e5713dcec97987f14f26b8e9a72011d44b91806b382680fbe1e622a",
+          "run_2_sha256": "045f11c34e5713dcec97987f14f26b8e9a72011d44b91806b382680fbe1e622a"
         },
         {
           "artifact": "row_corroboration.json",
-          "run_1_sha256": "d28acdb573c18bda004d520c5aa6efb7208151fcae1eee3cdfbace918865baaf",
-          "run_2_sha256": "d28acdb573c18bda004d520c5aa6efb7208151fcae1eee3cdfbace918865baaf"
+          "run_1_sha256": "9d6abe9265f8b332db429c6bc3f8144545902bb03fc44fd60de3bf970a195f0e",
+          "run_2_sha256": "9d6abe9265f8b332db429c6bc3f8144545902bb03fc44fd60de3bf970a195f0e"
         },
         {
           "artifact": "baseline_manifest.json",
-          "run_1_sha256": "5219d0243d9dc85b4c6ff9f12f82788babbe417307c81cd300b19edcaecd5e20",
-          "run_2_sha256": "5219d0243d9dc85b4c6ff9f12f82788babbe417307c81cd300b19edcaecd5e20"
+          "run_1_sha256": "62d1ef5fc90b36b6c8caec9388a229ec897dca95ca99f2ba9b979f9c20e6cecc",
+          "run_2_sha256": "62d1ef5fc90b36b6c8caec9388a229ec897dca95ca99f2ba9b979f9c20e6cecc"
         }
       ],
       "byte_identical": true,
-      "run_1": "C:\\tmp\\p011_gate_committed_run1",
-      "run_2": "C:\\tmp\\p011_gate_committed_run2"
+      "run_1": "C:\\tmp\\p011_gate_v2_run1_20260828",
+      "run_2": "C:\\tmp\\p011_gate_v2_run2_20260828"
     },
     "row_arm": {
+      "counts": {
+        "green": 33,
+        "not_applicable": 2,
+        "stop": 7,
+        "total": 42
+      },
+      "evidence_path": "C:\\WPP011_20260825\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\evidence\\row_arm\\row_corroboration.json",
+      "evidence_sha256": "e17f8841d8b3c50151843bfc66fe036d6e458a269a6aac3c38e1004e0e008c8a",
       "outcome": "STOP",
-      "reason": "40 direct-build producer adapters and their D026 mutations remain unexecuted"
+      "reason": "7 of 40 applicable rows remain honest STOP after v2 re-verification"
     },
     "status": "CANDIDATE_SEQUENCE_BUILT_ROW_ARM_STOP_INDEPENDENT_REPRODUCTION_PENDING"
   },
@@ -107,18 +115,18 @@
   "dependency_variant": "DIRECT_BUILD",
   "discrepancies": [
     "The accepted design names C:\\WFMERGE54; this authorized isolated worktree is C:\\WPP011_20260825 at the same accepted commit.",
-    "The P0-09 citation-refresh branch is not merged at this base; v1 pins the current authority blob and uses current section ranges/source symbols instead of stale shifted line numbers.",
+    "P011-LC-GATE-v2 re-pins P0-09 to the current-master citation-resolved blob; no row rule, oracle, or expected value changed from v1.",
     "The upstream normalized-file SHA-256 differs from the emitted fixture SHA-256; both identities are retained.",
     "Current master deleted the wt_* surface; C28-C30 use the controller freeze tag, never current master."
   ],
   "external_anchor": {
     "missing": "STOP",
-    "path": "C:\\LAB\\P011_TRUST_ANCHORS\\P011-LC-GATE-v1.owner-signed.json",
+    "path": "C:\\LAB\\P011_TRUST_ANCHORS\\P011-LC-GATE-v2.owner-signed.json",
     "present_but_mismatched": "FAIL",
     "required": true
   },
   "fixture_suite_commit": "NONE_DIRECT_BUILD",
-  "gate_version": "P011-LC-GATE-v1",
+  "gate_version": "P011-LC-GATE-v2",
   "independent_reproduction_evidence": {
     "artifact_hashes": {},
     "auditor_checkout": null,
@@ -129,9 +137,9 @@
   "legacy_manifest": {
     "frozen_before_subject_run": true,
     "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/p011_legacy_manifest.json",
-    "sha256": "13075e23bc2db8517320098f38608851cee123fe57026e9e8607db2a5f08eb2b"
+    "sha256": "1bc01646e9a00a4ee62c22c6ce1416ed03648e97351e792ae82bbbaff95f52d7"
   },
-  "local_master_observed_at_freeze": "cd3b8486ab8b4ae718c2d97ce2e9226d782488f3",
+  "local_master_observed_at_freeze": "85c3e17f97efa1ba83ef9c679de319a50ad3be04",
   "observation_schema": {
     "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/P011_OBSERVATION_SCHEMA_v1.json",
     "sha256": "c18fb1622ab38b374d65a1304994f0e9f5d8993f948e75d99694bdfceb5fdb2e"
@@ -228,12 +236,12 @@
           "sha256": "5bb78fb6e13c0b141132b6feefe709506a3c1a25980d21b4bc04e3483d313dbc"
         }
       ],
-      "sha256": "7797908a5570c14fa5133dc544f00eba03082cea35bfe41f3dd022acc1655529",
+      "sha256": "15806b5a56d3e93e059b72cac765f84b4bf94d0c1677d8d65c07d6f01357ba7e",
       "status": "PASS"
     },
     "baseline_generator": {
       "path": "p011_gate.py",
-      "sha256": "7797908a5570c14fa5133dc544f00eba03082cea35bfe41f3dd022acc1655529",
+      "sha256": "15806b5a56d3e93e059b72cac765f84b4bf94d0c1677d8d65c07d6f01357ba7e",
       "status": "PASS"
     },
     "subject_adapter": {
@@ -275,9 +283,9 @@
       "tag": "legacy/02-mtc-backtest/2026-08-25"
     },
     "p009": {
-      "blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
-      "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
-      "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      "blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+      "commit": "85c3e17f97efa1ba83ef9c679de319a50ad3be04",
+      "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
     },
     "pine_current": {
       "blob_oid": "0075483d58a2a82cb1ec63b86392cfcf4318fc47",
@@ -303,7 +311,7 @@
     "python_version": "3.14.2 (tags/v3.14.2:df79316, Dec  5 2025, 17:18:21) [MSC v.1944 64 bit (AMD64)]",
     "stage1_generator": {
       "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/stage1_freeze.py",
-      "sha256": "5da940fd83383d0ec9d5935cb91e17536abc254e9492391e2170b51e8a896cf5"
+      "sha256": "c7d00d4a174bd09e0c2223a9d44d425e0648c7fcd42bd870c8f29d01ec17e9d2"
     }
   }
 }

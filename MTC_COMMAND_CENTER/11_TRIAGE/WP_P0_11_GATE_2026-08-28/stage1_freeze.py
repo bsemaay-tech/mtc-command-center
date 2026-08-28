@@ -9,21 +9,25 @@ from pathlib import Path
 from typing import Any
 
 
-GATE_VERSION = "P011-LC-GATE-v1"
+GATE_VERSION = "P011-LC-GATE-v2"
 SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 A_TREE_OID = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
 PINE_FREEZE_COMMIT = "77a10e6573d93f8aaf777010ea507bbec0a7668b"
 B_FREEZE_COMMIT = "b5ed1afadcff09b69e36b72affeb23de51d84c14"
-P009_BLOB_OID = "f96b53258488eb85b0d67509766c3c19f7bdf0bf"
-P009_SHA256 = "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+P009_AUTHORITY_COMMIT = "85c3e17f97efa1ba83ef9c679de319a50ad3be04"
+P009_BLOB_OID = "1c39ab939dfcf5589e5ec8fba4af8966947a67fc"
+P009_SHA256 = "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
 FIXTURE_SHA256 = "3a3a4939fc8e1b725112115971e2663ddbcc1ea5981c37aa1d02d8bc3674a7bb"
 UPSTREAM_MANIFEST_SHA256 = "b4daced1367fabc107a692be03f234af11f0c908bfd2b60d6c65ed23c4de5ea6"
 UPSTREAM_NORMALIZED_SHA256 = "521d30ca5cf340ab3ed37a738fe76e1c4651781d91b797c791ea67f92d89cbac"
+V1_ANCHOR_SHA256 = "eb6a600ff9609789465118a217845c7cac6f8b09f7ecaee2a93242f1f16ec15c"
+OWNER_AUTHORIZATION_SHA256 = "d5da5c81df38de31b629605cd972ce3d9df19185573f6d4018782cae8f2b2ef3"
 
 GATE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = GATE_DIR.parents[2]
 PROFILE_DIR = GATE_DIR / "profiles"
-ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json")
+ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v2.owner-signed.json")
+V1_ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json")
 FIXTURE_PATH = REPO_ROOT / "IBKR_PAPER_BRIDGE" / "tests" / "fixtures" / "BTC_1h_real.csv"
 P009_PATH = (
     REPO_ROOT
@@ -32,8 +36,7 @@ P009_PATH = (
     / "WP_P0_09_CAPABILITY_TABLE_2026-08-25"
     / "CAPABILITY_CANONICALIZATION_TABLE.md"
 )
-LANE_PROMPT = Path(r"C:\tmp\LANE_PROMPTS_20260828\LANE_P1_P011_GATE_BUILD.md")
-DESIGN_PROMPT = Path(r"C:\tmp\LANE_PROMPTS_20260828\P011_GATE_DESIGN_PROPOSAL.md")
+OWNER_AUTHORIZATION_PATH = Path(r"C:\tmp\LANE_PROMPTS_20260828\OWNER_AUTH_P011_GATE_V2.md")
 
 
 def sha256_file(path: Path) -> str:
@@ -76,18 +79,27 @@ def write_json(path: Path, value: Any) -> None:
 
 
 def verify_fixed_inputs() -> dict[str, Any]:
-    if git("rev-parse", "HEAD") != SOURCE_COMMIT:
-        raise SystemExit("STOP: worktree HEAD is not the accepted source commit")
     if git("rev-parse", "5c560306:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2") != A_TREE_OID:
         raise SystemExit("STOP: implementation A tree OID mismatch")
+    if git("rev-parse", "HEAD:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2") != A_TREE_OID:
+        raise SystemExit("STOP: implementation A HEAD tree differs from the frozen source")
+    if git("diff", "--name-only", "--", "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2"):
+        raise SystemExit("STOP: implementation A has worktree edits")
     if git("rev-parse", "legacy/pine-controller/2026-08-25^{commit}") != PINE_FREEZE_COMMIT:
         raise SystemExit("STOP: controller freeze tag mismatch")
     if git("rev-parse", "legacy/02-mtc-backtest/2026-08-25^{commit}") != B_FREEZE_COMMIT:
         raise SystemExit("STOP: B freeze tag mismatch")
-    if git("rev-parse", f"{SOURCE_COMMIT}:MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md") != P009_BLOB_OID:
+    p009_rel = "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md"
+    if git("rev-parse", f"{P009_AUTHORITY_COMMIT}:{p009_rel}") != P009_BLOB_OID:
         raise SystemExit("STOP: P0-09 authority blob mismatch")
+    if git("rev-parse", f"master:{p009_rel}") != P009_BLOB_OID:
+        raise SystemExit("STOP: current master P0-09 authority blob mismatch")
     if sha256_file(P009_PATH) != P009_SHA256:
         raise SystemExit("STOP: P0-09 worktree bytes mismatch")
+    if not V1_ANCHOR_PATH.is_file() or sha256_file(V1_ANCHOR_PATH) != V1_ANCHOR_SHA256:
+        raise SystemExit("STOP: retained v1 external anchor differs")
+    if not OWNER_AUTHORIZATION_PATH.is_file() or sha256_file(OWNER_AUTHORIZATION_PATH) != OWNER_AUTHORIZATION_SHA256:
+        raise SystemExit("STOP: v2 owner authorization basis differs")
     if sha256_file(FIXTURE_PATH) != FIXTURE_SHA256:
         raise SystemExit("STOP: BTC fixture SHA-256 mismatch")
 
@@ -381,7 +393,7 @@ ROW_TITLES = [
     "Signal-producer equation authority",
 ]
 
-ROW_STARTS = [125, 143, 161, 198, 221, 239, 283, 318, 336, 354, 405, 423, 441, 459, 477, 495, 513, 531, 549, 569, 600, 618, 636, 654, 672, 690, 708, 740, 760, 784, 804, 824, 865, 888, 912, 932, 966, 989, 1071, 1091, 1141, 1201]
+ROW_STARTS = [131, 149, 167, 204, 227, 245, 289, 324, 342, 360, 411, 429, 447, 465, 483, 501, 519, 537, 555, 575, 606, 624, 642, 660, 678, 696, 714, 746, 766, 790, 810, 830, 871, 894, 918, 938, 972, 995, 1077, 1097, 1147, 1207]
 
 
 ROW_SCENARIOS: dict[int, dict[str, Any]] = {
@@ -470,7 +482,7 @@ def build_legacy_manifest() -> dict[str, Any]:
     for number, title in enumerate(ROW_TITLES, start=1):
         row_id = f"C{number:02d}"
         start = ROW_STARTS[number - 1]
-        end = ROW_STARTS[number] - 1 if number < len(ROW_STARTS) else 1285
+        end = ROW_STARTS[number] - 1 if number < len(ROW_STARTS) else 1291
         p009_citation = {
             "path": P009_PATH.relative_to(REPO_ROOT).as_posix(),
             "git_blob_oid": P009_BLOB_OID,
@@ -544,13 +556,13 @@ def build_legacy_manifest() -> dict[str, Any]:
         "frozen_before_subject_run": True,
         "subject_run_count_at_freeze": 0,
         "expected_values_change_policy": "new owner decision, new gate version, new baseline and new external signature",
-        "applicable_to_not_row_change_policy": "automatic STOP; never a repair to v1",
+        "applicable_to_not_row_change_policy": "automatic STOP; never an in-place gate repair",
         "p009_authority": {
-            "commit": SOURCE_COMMIT,
+            "commit": P009_AUTHORITY_COMMIT,
             "blob_oid": P009_BLOB_OID,
             "sha256": P009_SHA256,
-            "citation_resolution": "pinned section ranges plus source symbols; known stale line-number drift is not copied as authority",
-            "citation_refresh_branch_status": "not merged into the accepted base at freeze; recorded as discrepancy, not silently imported",
+            "citation_resolution": "current-master section ranges plus source symbols; rules, oracles, and expected values are unchanged from v1",
+            "citation_refresh_branch_status": "merged on master and owner-authorized as the v2 authority pin",
         },
         "separate_p009_non_decisions": [
             {
@@ -602,7 +614,7 @@ def build_receipt(
             },
             "controller_freeze": {"tag": "legacy/pine-controller/2026-08-25", "commit": PINE_FREEZE_COMMIT},
             "implementation_b_freeze": {"tag": "legacy/02-mtc-backtest/2026-08-25", "commit": B_FREEZE_COMMIT},
-            "p009": {"commit": SOURCE_COMMIT, "blob_oid": P009_BLOB_OID, "sha256": P009_SHA256},
+            "p009": {"commit": P009_AUTHORITY_COMMIT, "blob_oid": P009_BLOB_OID, "sha256": P009_SHA256},
         },
         "data_identities": {
             "emitted_fixture": {
@@ -685,7 +697,7 @@ def build_receipt(
         ],
         "discrepancies": [
             "The accepted design names C:\\WFMERGE54; this authorized isolated worktree is C:\\WPP011_20260825 at the same accepted commit.",
-            "The P0-09 citation-refresh branch is not merged at this base; v1 pins the current authority blob and uses current section ranges/source symbols instead of stale shifted line numbers.",
+            "P011-LC-GATE-v2 re-pins P0-09 to the current-master citation-resolved blob; no row rule, oracle, or expected value changed from v1.",
             "The upstream normalized-file SHA-256 differs from the emitted fixture SHA-256; both identities are retained.",
             "Current master deleted the wt_* surface; C28-C30 use the controller freeze tag, never current master.",
         ],
@@ -717,11 +729,16 @@ def main() -> int:
         "owner_identity": "Barış",
         "signature_date": "2026-08-28",
         "signature_basis": {
-            "method": "direct owner authorization in lane prompt",
-            "lane_prompt_path": str(LANE_PROMPT),
-            "lane_prompt_sha256": sha256_file(LANE_PROMPT),
-            "accepted_design_path": str(DESIGN_PROMPT),
-            "accepted_design_sha256": sha256_file(DESIGN_PROMPT),
+            "method": "direct owner authorization for the v2 gate bump",
+            "owner_authorization_path": str(OWNER_AUTHORIZATION_PATH),
+            "owner_authorization_sha256": sha256_file(OWNER_AUTHORIZATION_PATH),
+            "owner_words_verbatim": "Bump to v2 now",
+        },
+        "supersedes_gate_version": "P011-LC-GATE-v1",
+        "retained_v1_anchor": {
+            "path": str(V1_ANCHOR_PATH),
+            "sha256": sha256_file(V1_ANCHOR_PATH),
+            "status": "RETAINED_UNTOUCHED",
         },
         "freeze_state": "STAGE1_FROZEN_STAGE2_CANDIDATE_PENDING",
         "subject_runs_at_signature": 0,
