@@ -295,7 +295,7 @@ Red = highest-risk protected work, each needing its own authorization. Blue = hi
 - **Non-goals:** no moves, no deletions, no branch pruning, no canonicalization decisions. **Specifically for untracked material: this package may not move, stage (`git add`), delete, overwrite, rename or commit any untracked item, and may not `checkout`, `reset`, `clean` or `stash` anything. It reads and records; it changes nothing.**
 
 ### WP-P0-02 · Tag namespaces and the first freezes
-- **Objective:** give the repository immutable freeze points, which it has never had.
+- **Objective:** give the repository immutable freeze points, which it did not have at this plan's 2026-08-22 date (WP-P0-02 has since created them).
 - **Inputs:** WP-P0-01 Tier-A classification and evidence-bearing branch list.
 - **Outputs:** `pkg/`, `release/`, `legacy/` namespaces in use; tags on current master, the Pine controller, the MTC_V2 kernel, `02_MTC_BACKTEST`, the parity oracle set, the accepted Bridge V1 candidate, and every evidence-bearing branch.
 - **Depends on:** WP-P0-01.

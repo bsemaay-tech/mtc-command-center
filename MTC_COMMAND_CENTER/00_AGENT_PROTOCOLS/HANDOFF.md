@@ -28,8 +28,10 @@
   the branch reconciles against current `master`.
   **Final pushed HEAD is the Gate-7 close-out commit containing this record**, resolved from that
   branch ref (not the substantive commit alone) and reported by the implementer. No code, protected
-  strategy/parity/schema surface, tag, setting, host, deploy, trading action, merge or other lane
-  changed.
+  strategy/parity/schema surface, tag, setting, host, deploy, trading action, merge to `master`, or
+  other write lane changed.
+- **Rotation (G7):** the two 2026-08-25 sections this record replaces are appended verbatim to
+  `_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md`; nothing is deleted.
 - **Evidence:** 19 scoped assertions PASS; tag objects `180/180` annotated WP-P0-02; repo guard
   `PASS`; `git diff --check`; exact staged paths; handoff ≤4096 bytes. Environment discrepancy:
   `pwsh` is absent, so the same guard script passed under Windows PowerShell 5.1.
