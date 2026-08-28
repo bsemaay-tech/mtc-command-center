@@ -13,6 +13,7 @@ from typing import Any
 GATE_DIR = Path(__file__).resolve().parents[1]
 REPO_ROOT = GATE_DIR.parents[2]
 ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json")
+SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 
 
 def sha256_file(path: Path) -> str:
@@ -93,8 +94,9 @@ def main() -> int:
     artifact_names = ["mtc_v2_legacy_sequence.jsonl", "final_states.json", "row_corroboration.json", "baseline_manifest.json"]
     result = {
         "git": {
-            "head": git("rev-parse", "HEAD"),
-            "a_tree_oid": git("rev-parse", "5c560306:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2"),
+            "checkout_head": git("rev-parse", "HEAD"),
+            "source_commit": SOURCE_COMMIT,
+            "a_tree_oid": git("rev-parse", f"{SOURCE_COMMIT}:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2"),
             "controller_freeze_commit": git("rev-parse", "legacy/pine-controller/2026-08-25^{commit}"),
             "b_freeze_commit": git("rev-parse", "legacy/02-mtc-backtest/2026-08-25^{commit}"),
         },

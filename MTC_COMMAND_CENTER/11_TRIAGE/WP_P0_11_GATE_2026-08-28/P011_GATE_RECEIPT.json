@@ -3,7 +3,7 @@
   "accepted_git_tree": "6972808fb78a3cec7f2d1e80978d4dc3583323b9",
   "baseline_outputs": {
     "artifact_sha256": {
-      "baseline_manifest.json": "170423601622df078758c32798b8a870ed06252659c41e75533269d2c90e73f7",
+      "baseline_manifest.json": "5219d0243d9dc85b4c6ff9f12f82788babbe417307c81cd300b19edcaecd5e20",
       "final_states.json": "1a73b5fa3864bd434aca94cde8ac26d2b8147fa84f1fe87803c9cf122958008d",
       "mtc_v2_legacy_sequence.jsonl": "727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e",
       "row_corroboration.json": "d28acdb573c18bda004d520c5aa6efb7208151fcae1eee3cdfbace918865baaf"
@@ -59,13 +59,13 @@
         },
         {
           "artifact": "baseline_manifest.json",
-          "run_1_sha256": "170423601622df078758c32798b8a870ed06252659c41e75533269d2c90e73f7",
-          "run_2_sha256": "170423601622df078758c32798b8a870ed06252659c41e75533269d2c90e73f7"
+          "run_1_sha256": "5219d0243d9dc85b4c6ff9f12f82788babbe417307c81cd300b19edcaecd5e20",
+          "run_2_sha256": "5219d0243d9dc85b4c6ff9f12f82788babbe417307c81cd300b19edcaecd5e20"
         }
       ],
       "byte_identical": true,
-      "run_1": "C:\\tmp\\p011_gate_final_run1",
-      "run_2": "C:\\tmp\\p011_gate_final_run2"
+      "run_1": "C:\\tmp\\p011_gate_committed_run1",
+      "run_2": "C:\\tmp\\p011_gate_committed_run2"
     },
     "row_arm": {
       "outcome": "STOP",
@@ -228,12 +228,12 @@
           "sha256": "5bb78fb6e13c0b141132b6feefe709506a3c1a25980d21b4bc04e3483d313dbc"
         }
       ],
-      "sha256": "8cf3556f7889ae677743b312f8ee4d7523ffb079adba3a79839f287e326cda2e",
+      "sha256": "7797908a5570c14fa5133dc544f00eba03082cea35bfe41f3dd022acc1655529",
       "status": "PASS"
     },
     "baseline_generator": {
       "path": "p011_gate.py",
-      "sha256": "8cf3556f7889ae677743b312f8ee4d7523ffb079adba3a79839f287e326cda2e",
+      "sha256": "7797908a5570c14fa5133dc544f00eba03082cea35bfe41f3dd022acc1655529",
       "status": "PASS"
     },
     "subject_adapter": {

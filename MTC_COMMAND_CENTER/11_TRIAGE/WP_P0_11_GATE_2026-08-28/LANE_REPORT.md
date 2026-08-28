@@ -3,7 +3,7 @@
 Date: 2026-08-28
 
 Branch/worktree: `feature/wp-p0-11-kernel-legacy-compatible-20260825` at
-`C:\WPP011_20260825`, frozen implementation-A HEAD
+`C:\WPP011_20260825`. The implementation-A source authority is frozen at
 `5c5603065c994d545c0eaa8c137fa9edd5cdfc28`.
 
 ## Outcome
@@ -52,7 +52,7 @@ authorized external anchor at
 - Families 18 and 19 remain separately visible as outside the C01-C42 legacy-row universe and
   receive no C18 or acceptance credit.
 - Final candidate receipt SHA-256:
-  `0c768b76c8a6f62a129ee833d6dfbbe5086df28a7c023a20d1e8f05a363cb571`.
+  `34823d99e606812bed09325c15381ea03face9b52a6684ec0f7e1152f1aad007`.
   The external anchor matches this receipt and the frozen legacy manifest, records zero subject
   runs, and states that a P0-11 commit touching the anchor is an automatic STOP.
 
@@ -75,7 +75,8 @@ one listed above.
 `p011_gate.py build-baseline`:
 
 - refuses a source commit other than `5c560306...`, checks the A tree OID
-  `7aa6f867d821df08a00358adf2dd4400b9c719e8`, and rejects modified A worktree bytes;
+  `7aa6f867d821df08a00358adf2dd4400b9c719e8`, rejects modified A worktree bytes, and
+  refuses a committed checkout with any post-source change outside this gate package;
 - imports A only after the identity checks and rejects any resolved `mtc_v2` module outside the
   pinned source root;
 - invokes the real `mtc_v2.core.runner.Runner.run` once per profile over the ordered `Bar` stream;
@@ -98,26 +99,26 @@ The same command was run from two absent output paths. These are the literal pro
 executed by the two hidden background processes:
 
 ```powershell
-python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_gate.py build-baseline --source-commit 5c5603065c994d545c0eaa8c137fa9edd5cdfc28 --producer A --data IBKR_PAPER_BRIDGE\tests\fixtures\BTC_1h_real.csv --profile MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\profiles\mtc_v2_legacy_supertrend_default_v1.json --profile MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\profiles\mtc_v2_legacy_range_filter_default_v1.json --legacy-manifest MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_legacy_manifest.json --out C:\tmp\p011_gate_final_run1
-python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_gate.py build-baseline --source-commit 5c5603065c994d545c0eaa8c137fa9edd5cdfc28 --producer A --data IBKR_PAPER_BRIDGE\tests\fixtures\BTC_1h_real.csv --profile MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\profiles\mtc_v2_legacy_supertrend_default_v1.json --profile MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\profiles\mtc_v2_legacy_range_filter_default_v1.json --legacy-manifest MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_legacy_manifest.json --out C:\tmp\p011_gate_final_run2
+python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_gate.py build-baseline --source-commit 5c5603065c994d545c0eaa8c137fa9edd5cdfc28 --producer A --data IBKR_PAPER_BRIDGE\tests\fixtures\BTC_1h_real.csv --profile MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\profiles\mtc_v2_legacy_supertrend_default_v1.json --profile MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\profiles\mtc_v2_legacy_range_filter_default_v1.json --legacy-manifest MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_legacy_manifest.json --out C:\tmp\p011_gate_committed_run1
+python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_gate.py build-baseline --source-commit 5c5603065c994d545c0eaa8c137fa9edd5cdfc28 --producer A --data IBKR_PAPER_BRIDGE\tests\fixtures\BTC_1h_real.csv --profile MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\profiles\mtc_v2_legacy_supertrend_default_v1.json --profile MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\profiles\mtc_v2_legacy_range_filter_default_v1.json --legacy-manifest MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_legacy_manifest.json --out C:\tmp\p011_gate_committed_run2
 ```
 
 Each emitted this real result, differing only in `output_directory`:
 
 ```text
-{"artifact_status":"SEQUENCE_BUILT_ROW_ARM_STOP_INDEPENDENT_REPRODUCTION_PENDING","command":"build-baseline","full_gate_outcome":"STOP","full_gate_stop_reason":"row producer corroboration/mutations and independent reproduction are not earned","outcome":"PASS","output_directory":"C:\\tmp\\p011_gate_final_run1","profile_metrics":[{"events":3509,"final_state_digest":"9a7c449c202f3a83b57e7964f4fbe2521f54b5c9ba3fa6cce3617d8fffe8e541","input_bars":48077,"observations":48077,"profile_id":"mtc_v2_legacy_range_filter_default_v1"},{"events":1206,"final_state_digest":"8a3eded32dada6d7a164f52b475974a598ed6b5386c2c1aa71c3f730d18c8055","input_bars":48077,"observations":48077,"profile_id":"mtc_v2_legacy_supertrend_default_v1"}],"sequence_sha256":"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e","total_observations":96154}
+{"artifact_status":"SEQUENCE_BUILT_ROW_ARM_STOP_INDEPENDENT_REPRODUCTION_PENDING","command":"build-baseline","full_gate_outcome":"STOP","full_gate_stop_reason":"row producer corroboration/mutations and independent reproduction are not earned","outcome":"PASS","output_directory":"C:\\tmp\\p011_gate_committed_run1","profile_metrics":[{"events":3509,"final_state_digest":"9a7c449c202f3a83b57e7964f4fbe2521f54b5c9ba3fa6cce3617d8fffe8e541","input_bars":48077,"observations":48077,"profile_id":"mtc_v2_legacy_range_filter_default_v1"},{"events":1206,"final_state_digest":"8a3eded32dada6d7a164f52b475974a598ed6b5386c2c1aa71c3f730d18c8055","input_bars":48077,"observations":48077,"profile_id":"mtc_v2_legacy_supertrend_default_v1"}],"sequence_sha256":"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e","total_observations":96154}
 ```
 
 Byte-identity command:
 
 ```powershell
-python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_gate.py verify-double-build --run1 C:\tmp\p011_gate_final_run1 --run2 C:\tmp\p011_gate_final_run2
+python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_gate.py verify-double-build --run1 C:\tmp\p011_gate_committed_run1 --run2 C:\tmp\p011_gate_committed_run2
 ```
 
 Real output:
 
 ```text
-{"artifacts":[{"artifact":"mtc_v2_legacy_sequence.jsonl","byte_identical":true,"run1_sha256":"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e","run2_sha256":"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e"},{"artifact":"final_states.json","byte_identical":true,"run1_sha256":"1a73b5fa3864bd434aca94cde8ac26d2b8147fa84f1fe87803c9cf122958008d","run2_sha256":"1a73b5fa3864bd434aca94cde8ac26d2b8147fa84f1fe87803c9cf122958008d"},{"artifact":"row_corroboration.json","byte_identical":true,"run1_sha256":"d28acdb573c18bda004d520c5aa6efb7208151fcae1eee3cdfbace918865baaf","run2_sha256":"d28acdb573c18bda004d520c5aa6efb7208151fcae1eee3cdfbace918865baaf"},{"artifact":"baseline_manifest.json","byte_identical":true,"run1_sha256":"170423601622df078758c32798b8a870ed06252659c41e75533269d2c90e73f7","run2_sha256":"170423601622df078758c32798b8a870ed06252659c41e75533269d2c90e73f7"}],"byte_identical":true,"outcome":"PASS"}
+{"artifacts":[{"artifact":"mtc_v2_legacy_sequence.jsonl","byte_identical":true,"run1_sha256":"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e","run2_sha256":"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e"},{"artifact":"final_states.json","byte_identical":true,"run1_sha256":"1a73b5fa3864bd434aca94cde8ac26d2b8147fa84f1fe87803c9cf122958008d","run2_sha256":"1a73b5fa3864bd434aca94cde8ac26d2b8147fa84f1fe87803c9cf122958008d"},{"artifact":"row_corroboration.json","byte_identical":true,"run1_sha256":"d28acdb573c18bda004d520c5aa6efb7208151fcae1eee3cdfbace918865baaf","run2_sha256":"d28acdb573c18bda004d520c5aa6efb7208151fcae1eee3cdfbace918865baaf"},{"artifact":"baseline_manifest.json","byte_identical":true,"run1_sha256":"5219d0243d9dc85b4c6ff9f12f82788babbe417307c81cd300b19edcaecd5e20","run2_sha256":"5219d0243d9dc85b4c6ff9f12f82788babbe417307c81cd300b19edcaecd5e20"}],"byte_identical":true,"outcome":"PASS"}
 ```
 
 The canonical sequence is 312,842,545 bytes. It contains 96,154 unique observation keys: 48,077
@@ -130,7 +131,7 @@ for each profile is bar 0 at `2021-01-01T06:00:00+00:00`; the last is bar 48,076
 Field/component matrix command and real output:
 
 ```powershell
-python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_gate.py mutation-harness --baseline C:\tmp\p011_gate_final_run1 --out MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\evidence\discrimination_matrix
+python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_gate.py mutation-harness --baseline C:\tmp\p011_gate_committed_run1 --out MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\evidence\discrimination_matrix
 ```
 
 ```text
@@ -172,7 +173,7 @@ moving the authoritative external anchor. These omissions keep the full gate at 
 ## Final comparator result
 
 ```powershell
-python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_gate.py compare --receipt MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\P011_GATE_RECEIPT.json --baseline C:\tmp\p011_gate_final_run1 --subject-mode LEGACY_COMPATIBLE --mismatch-ledger C:\tmp\p011_final_mismatch_ledger.json
+python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_gate.py compare --receipt MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\P011_GATE_RECEIPT.json --baseline C:\tmp\p011_gate_committed_run1 --subject-mode LEGACY_COMPATIBLE --mismatch-ledger C:\tmp\p011_final_mismatch_ledger.json
 ```
 
 ```text
@@ -188,14 +189,15 @@ All counts and identities above were remeasured from bytes, independently of bui
 counts, with:
 
 ```powershell
-python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\evidence\remeasure.py --run1 C:\tmp\p011_gate_final_run1 --run2 C:\tmp\p011_gate_final_run2
+python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\evidence\remeasure.py --run1 C:\tmp\p011_gate_committed_run1 --run2 C:\tmp\p011_gate_committed_run2
 ```
 
 The real output re-established:
 
 - fixture SHA-256 `3a3a...7bb`, exact six-column header, 48,077 data rows, and the two declared
   endpoints;
-- HEAD `5c560306...`, A tree `7aa6f867...`, controller freeze `77a10e65...`, and B freeze
+- source commit `5c560306...` separately from checkout HEAD, A tree `7aa6f867...`, controller
+  freeze `77a10e65...`, and B freeze
   `b5ed1afa...`;
 - two 184-key profile files with the hashes above;
 - 42 manifest rows = 40 applicable + 2 policy-only;
@@ -203,7 +205,7 @@ The real output re-established:
 - 96,154 unique sequence keys, the per-profile/event counts above, and identical run hashes;
 - four byte-identical candidate artifacts;
 - current gate-tool SHA-256
-  `8cf3556f7889ae677743b312f8ee4d7523ffb079adba3a79839f287e326cda2e`, exactly matching the
+  `7797908a5570c14fa5133dc544f00eba03082cea35bfe41f3dd022acc1655529`, exactly matching the
   adapter hash inside both baseline manifests;
 - row arm = 40 STOP + 2 not-applicable + 0 GREEN;
 - matrix = 76 RED + 76 restored GREEN;
@@ -213,10 +215,10 @@ The real output re-established:
 
 ## Discrepancies and non-claims
 
-1. Shared Git churn moved local `master` from `5c560306...` to `cd3b8486...` during the freeze.
-   The authorized worktree HEAD, source commit object, A tree, tags, and inputs remained pinned.
-   The builder correctly binds immutable objects rather than treating the expected shared-ref move
-   as tampering.
+1. Shared Git churn moved local `master` from `5c560306...` through `cd3b8486...` to
+   `85c3e17f...` during the lane. The source commit object, A tree, tags, and inputs remained pinned.
+   Package commits change only this gate directory; the builder rejects any checkout with other
+   post-source changes rather than treating the expected shared-ref move itself as tampering.
 2. Repository A cannot accept its own full resolved snapshot as `Runner` input: `Runner.__init__`
    calls `resolve_config` again, and five derived `use_tp*` output keys are not accepted input keys.
    The first attempt stopped before any observation with:
@@ -245,6 +247,13 @@ The real output re-established:
    not executed in this partial.
 8. No subject exists, no subject classification/import graph is recorded, no independent flagship
    reproduced the build, and this implementer issues no acceptance verdict.
+9. The first committed candidate required checkout `HEAD` itself to equal the frozen A commit,
+   which made the committed gate package impossible to rerun in place. Before push, that check was
+   replaced with the stricter usable invariant described above: every committed change since the
+   source freeze must be inside this gate directory, while A's tree and worktree bytes must still
+   match the source freeze exactly. Both profiles were rebuilt twice into the `committed_run*`
+   directories and the receipt/anchor were repinned. The superseded `final_run*` candidates are
+   not referenced by the final receipt.
 
 ## Remaining work
 

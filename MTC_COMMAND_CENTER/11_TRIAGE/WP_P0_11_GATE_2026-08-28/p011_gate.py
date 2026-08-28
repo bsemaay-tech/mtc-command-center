@@ -121,8 +121,19 @@ def float_hex(value: Any, *, nullable: bool = False) -> str | None:
 def verify_frozen_authority(source_commit: str) -> None:
     if source_commit != SOURCE_COMMIT:
         raise GateStop(f"source commit is not the frozen authority: {source_commit}")
-    if git_stdout("rev-parse", "HEAD") != SOURCE_COMMIT:
-        raise GateStop("builder worktree HEAD is not the frozen source commit")
+    checkout_head = git_stdout("rev-parse", "HEAD")
+    changed_paths = [
+        line
+        for line in git_stdout("diff", "--name-only", SOURCE_COMMIT, checkout_head).splitlines()
+        if line
+    ]
+    allowed_prefix = "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/"
+    disallowed_paths = [path for path in changed_paths if not path.startswith(allowed_prefix)]
+    if disallowed_paths:
+        raise GateStop(
+            "builder checkout contains changes outside the gate package since the frozen source "
+            f"commit: {disallowed_paths}"
+        )
     actual_tree = git_stdout(
         "rev-parse",
         f"{SOURCE_COMMIT}:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2",
