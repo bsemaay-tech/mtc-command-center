@@ -1,37 +1,38 @@
 # Governance stage handoff
 
-## [Codex gpt-5.6-sol Implementer] 2026-08-28 — Owner-decision documentation pack
+## [Codex gpt-5.6-sol Implementer] 2026-08-28 - WP-P0-11 row arm part 3
 
-- **Owner decisions:** OD-20260826-7 now states the owner's directive: correct the 90-hour estimate
-  to the currently verified critical path, state assumptions/inclusions/exclusions, and label it a
-  planning estimate rather than a promise. The base-artifact discrepancy remains only in its
-  detailed source record. P0-11 and promotion-pipeline implementation remain stopped.
-- **Verified tag state:** all 180 annotated `legacy/*` tags are WP-P0-02 code/evidence freezes;
-  `pkg/*` and `release/*` each contain 0 tags. They are not per-strategy identity+signal lockboxes.
-  LIVE_TRADING_GATE rows 1–2 remain `BLOCKED`; both legacy tags whose names contain
-  `bridge-release` are still `legacy/*` WP-P0-02 freezes, not `release/*` tags.
-- **Claim retirement:** Gate 7 and SESSION_LOCK now use durable tracker/write-lane-record and
-  reconciliation wording. The stale WP-P0-05 overlap is `RELEASED / SUPERSEDED` and its missing
-  GitHub-issue fact is retained as explicitly historical. `mtc_cli/INPUTS.md` carried the last
-  surviving requirement and is corrected; a re-sweep of all eight stage contracts (43 files) now
-  finds zero requirements, only the two dated retirement notices. Disclosed, not edited: six
-  `11_TRIAGE` planning/fold/lane records still describe the pre-retirement shared-claim doctrine as
-  ratified at their date; they are not routable stage contracts.
-- **Sibling sweep (complete census, 22 occurrences):** 14 corrected — 2 live-gate rows, 4 across
-  the three named sibling documents, 7 in the technical brief, and the WP-P0-02 acceptance gate at
-  `MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:305`. Eight truthful non-current
-  occurrences remain unchanged and disclosed: brief dated measurement `:2795`, future criteria
-  `:3067` and `:2919`, historical command result `:3292`; Wayfinder dated measurement `:65`;
-  WP-P0-02 lane report `:59`/`:80` and tagging scheme `:86`.
-- **Git / safety:** substantive repair `f78f501d`; worktree `C:\WPD_20260828`; branch
-  `fix/owner-decisions-docpack-20260828`; `origin/master` `cd3b8486` (PR #131) is merged in, so
-  the branch reconciles against current `master`.
-  **Final pushed HEAD is the Gate-7 close-out commit containing this record**, resolved from that
-  branch ref (not the substantive commit alone) and reported by the implementer. No code, protected
-  strategy/parity/schema surface, tag, setting, host, deploy, trading action, merge to `master`, or
-  other write lane changed.
-- **Rotation (G7):** the two 2026-08-25 sections this record replaces are appended verbatim to
-  `_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md`; nothing is deleted.
-- **Evidence:** 19 scoped assertions PASS; tag objects `180/180` annotated WP-P0-02; repo guard
-  `PASS`; `git diff --check`; exact staged paths; handoff ≤4096 bytes. Environment discrepancy:
-  `pwsh` is absent, so the same guard script passed under Windows PowerShell 5.1.
+- **Outcome:** Gate remains `STOP`. Of 42 frozen manifest rows, 33 applicable rows have real clean
+  producer GREEN plus producer-mutation RED, 7 applicable rows STOP, and C25/C27 are policy-only.
+  Independent remeasurement reproduces 134/134 leaves, 33 mutation REDs, and 69 RED mismatches.
+- **Closed here:** C26, C31, C33, C36-C41. C39 now executes `MTCRunner.run` from frozen B rather
+  than parsing its source. C26 claims only the executed A duplicate-bar half; controller L25 is
+  explicitly unevidenced. C41 closes F-3 with raw long true and gated long false.
+- **STOP rows:** C28-C30 are frozen-controller source inspection only; F-1 remains OPEN because no
+  authorized executable Pine producer exists in this lane. C32/C34/C35/C42 are frozen-authority
+  contradictions. No mutation or preservation credit is claimed for any STOP row.
+- **F-4:** option (b) is binding: `evidence/discrimination_matrix/` supports exactly
+  `comparator field-sensitivity self-test, one record`. The rejected additive producer matrix was
+  removed. Frozen receipt numbers remain owner-pinned and are explicitly limited by that wording.
+  Structural evidence executes 17 attacks and 17 restorations: 14 expected REDs, 3 early checkout-
+  guard STOPs, and 17/17 expected restoration outcomes; both inaccurate IDs are corrected.
+- **Evidence:** package `11_TRIAGE/WP_P0_11_GATE_2026-08-28/`; report `LANE_REPORT.md`; row
+  artifacts `evidence/row_arm/`; independent verifier `evidence/row_arm_remeasure.py`; contract and
+  structural transcripts under `evidence/`. Row artifacts rebuild byte-identically; contract
+  mutations reproduce 3 FAIL + 1 STOP; frozen sequence SHA-256 is `727e4381...086e`; repo guard and
+  `git diff --check` PASS.
+- **Independent T0 acceptance at `4d2581e4`:** `gpt-5.6-sol` xhigh PASS, no findings;
+  `claude-opus-5` xhigh PASS-WITH-NITS. Claude's optional nits concern three structurals that stop
+  before their intended comparator attack, C34 derived fields, repeated/proxy leaf counts, dead
+  routing residue, and an incomplete `explicitly_not_executed` list; none changes the truthful STOP.
+- **Git / safety:** implementer `/root`; read-only Lead `/root/p011_g2_lead`; branch
+  `feature/wp-p0-11-kernel-legacy-compatible-20260825`, worktree `C:\WPP011_20260825`;
+  reconciled against `origin/master` `85c3e17f` with 0 master-only commits. Substantive accepted SHA
+  `4d2581e4`; final pushed HEAD is the Gate-7 close-out commit containing this record and is reported
+  by the implementer. No protected/frozen/runtime/economic file, host, trade, PR, merge, tag, setting,
+  credential, or Stage-1 pin changed.
+- **Next authority:** owner resolution is required for C32/C34/C35/C42 and an executable authorized
+  Pine route for C28-C30. The separately escalated Stage-1 re-pin remains outside this task. No PR or
+  merge was authorized.
+- **Rotation:** the superseded owner-decision documentation-pack handoff was appended verbatim to
+  `_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF.md`.
