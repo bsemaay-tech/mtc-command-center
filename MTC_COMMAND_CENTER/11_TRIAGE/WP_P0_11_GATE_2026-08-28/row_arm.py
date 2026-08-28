@@ -61,8 +61,6 @@ C32_AUTHORITY_VALUES = (
     "next_bar_close_after_protective_exit_signal",
 )
 C32_INVALID_CONTROL = "next_bar_open"
-RECURSIVE_EXACT_COMPARATOR_RULE_ID = "RECURSIVE_EXACT_IEEE754_HEX_V1"
-COMPARATOR_RULE_ATTRIBUTE = "__p011_comparison_rule_id__"
 
 GATE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = GATE_DIR.parents[2]
@@ -411,40 +409,6 @@ def compare_exact(
     if type(expected) is not type(actual) or expected != actual:
         mismatches.append({"path": path, "expected": expected, "actual": actual, "reason": "value"})
     return mismatches
-
-
-setattr(compare_exact, COMPARATOR_RULE_ATTRIBUTE, RECURSIVE_EXACT_COMPARATOR_RULE_ID)
-
-
-def comparator_rule_id(comparator: Callable[..., list[dict[str, Any]]]) -> str:
-    rule = getattr(comparator, COMPARATOR_RULE_ATTRIBUTE, None)
-    if type(rule) is not str or not rule:
-        raise RowStop("executed comparator does not declare a rule identifier")
-    return rule
-
-
-def execute_comparison(
-    expected: Any,
-    actual: Any,
-    *,
-    expected_leaf_paths_visited: list[str] | None = None,
-    comparator: Callable[..., list[dict[str, Any]]] = compare_exact,
-) -> tuple[list[dict[str, Any]], str]:
-    rule = comparator_rule_id(comparator)
-    mismatches = comparator(
-        expected,
-        actual,
-        expected_leaf_paths_visited=expected_leaf_paths_visited,
-    )
-    return mismatches, rule
-
-
-def require_executed_comparator(declared_rule: str, executed_rule: str) -> None:
-    if declared_rule != executed_rule:
-        raise RowStop(
-            "executed comparator identifier differs from the manifest contract: "
-            f"declared={declared_rule} executed={executed_rule}"
-        )
 
 
 def _static_signal_producer(signals: list[Any]) -> Any:
@@ -2597,14 +2561,14 @@ def _authority_name_from_module(module_name: str) -> str:
 
 
 def authority_execution_observation(
-    runtime_imports: list[dict[str, str]], *, reason: str
+    runtime_imports: list[dict[str, str]], *, method: str, reason: str
 ) -> dict[str, Any]:
     observed_names = sorted(
         {_authority_name_from_module(item["module"]) for item in runtime_imports}
     )
     return {
         "actual_authority_names": observed_names,
-        "method": "RUNTIME_MODULES_RESOLVED_UNDER_BOUND_AUTHORITY_ROOT_V1",
+        "method": method,
         "reason": reason,
         "runtime_imports": runtime_imports,
     }
@@ -2647,7 +2611,7 @@ def command_run_one(args: argparse.Namespace) -> int:
         "final_state": encode_floats(final_state),
     }
     expected_leaf_paths: list[str] = []
-    mismatches, executed_rule = execute_comparison(
+    mismatches = compare_exact(
         encoded_expected,
         encoded_actual,
         expected_leaf_paths_visited=expected_leaf_paths,
@@ -2655,6 +2619,7 @@ def command_run_one(args: argparse.Namespace) -> int:
     imports = resolved_bindings(authority_root)
     authority_observation = authority_execution_observation(
         imports,
+        method="RUNTIME_MODULES_RESOLVED_UNDER_BOUND_AUTHORITY_ROOT_V1",
         reason="producer returned after importing modules from the bound authority root",
     )
     result = {
@@ -2669,7 +2634,6 @@ def command_run_one(args: argparse.Namespace) -> int:
             "expected_leaf_paths_visited": len(expected_leaf_paths),
             "expected_leaf_count": leaf_count(encoded_expected),
             "mismatches": mismatches,
-            "rule": executed_rule,
         },
         "contract_binding": contract_binding_summary(binding),
         "authority_execution_observation": authority_observation,
@@ -2975,6 +2939,7 @@ print(json.dumps({"_p011_runtime_imports": _p011_runtime_imports}, sort_keys=Tru
         "argv": normalize_argv(argv),
         "authority_execution_observation": authority_execution_observation(
             runtime_imports,
+            method="RUNTIME_MODULES_RESOLVED_UNDER_BOUND_AUTHORITY_ROOT_V1",
             reason=f"{case_id} probe returned after importing modules from the bound authority root",
         ),
         "parsed_output": parsed,
@@ -3039,6 +3004,7 @@ def build_unresolved_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
             binding,
             authority_execution_observation(
                 [],
+                method="NO_PRODUCER_CALL_NO_RESOLUTION_PERFORMED",
                 reason=(
                     "no producer call occurred; this path read frozen source blobs only"
                 ),
@@ -3126,13 +3092,10 @@ print(json.dumps({"results": results}, sort_keys=True, separators=(",", ":")))
         },
     }
     c32_expected_leaf_paths: list[str] = []
-    c32_mismatches, c32_comparison_rule = execute_comparison(
+    c32_mismatches = compare_exact(
         c32_expected,
         c32_actual,
         expected_leaf_paths_visited=c32_expected_leaf_paths,
-    )
-    require_executed_comparator(
-        c32_binding.contract.comparison_rule, c32_comparison_rule
     )
 
     c34_binding = validate_unresolved_contract_binding(manifest, "C34")
@@ -3179,13 +3142,10 @@ print(json.dumps({"default_initial_capital": DEFAULT_CONFIG["initial_capital"],
         "final_state": {"total_exits": 0},
     }
     c34_expected_leaf_paths: list[str] = []
-    c34_mismatches, c34_comparison_rule = execute_comparison(
+    c34_mismatches = compare_exact(
         c34_expected,
         c34_actual,
         expected_leaf_paths_visited=c34_expected_leaf_paths,
-    )
-    require_executed_comparator(
-        c34_binding.contract.comparison_rule, c34_comparison_rule
     )
 
     c35_binding = validate_unresolved_contract_binding(manifest, "C35")
@@ -3222,13 +3182,10 @@ print(json.dumps({"error": error, "metadata": runner.get_debug_metadata()},
         "final_state": {"position_change_from_flag_only": False},
     }
     c35_expected_leaf_paths: list[str] = []
-    c35_mismatches, c35_comparison_rule = execute_comparison(
+    c35_mismatches = compare_exact(
         c35_expected,
         c35_actual,
         expected_leaf_paths_visited=c35_expected_leaf_paths,
-    )
-    require_executed_comparator(
-        c35_binding.contract.comparison_rule, c35_comparison_rule
     )
 
     c42_binding = validate_unresolved_contract_binding(manifest, "C42")
@@ -3272,13 +3229,10 @@ print(json.dumps({
         "final_state": {"producer_count": 2},
     }
     c42_expected_leaf_paths: list[str] = []
-    c42_mismatches, c42_comparison_rule = execute_comparison(
+    c42_mismatches = compare_exact(
         c42_expected,
         c42_actual,
         expected_leaf_paths_visited=c42_expected_leaf_paths,
-    )
-    require_executed_comparator(
-        c42_binding.contract.comparison_rule, c42_comparison_rule
     )
 
     specifications = (
@@ -3289,7 +3243,6 @@ print(json.dumps({
             c32_actual,
             c32_mismatches,
             c32_expected_leaf_paths,
-            c32_comparison_rule,
             c32_probe,
             c32_binding,
             {
@@ -3310,7 +3263,6 @@ print(json.dumps({
             c34_actual,
             c34_mismatches,
             c34_expected_leaf_paths,
-            c34_comparison_rule,
             c34_probe,
             c34_binding,
             {
@@ -3329,7 +3281,6 @@ print(json.dumps({
             c35_actual,
             c35_mismatches,
             c35_expected_leaf_paths,
-            c35_comparison_rule,
             c35_probe,
             c35_binding,
             {
@@ -3349,7 +3300,6 @@ print(json.dumps({
             c42_actual,
             c42_mismatches,
             c42_expected_leaf_paths,
-            c42_comparison_rule,
             c42_probe,
             c42_binding,
             {
@@ -3370,7 +3320,6 @@ print(json.dumps({
         actual,
         mismatches,
         expected_leaf_paths,
-        comparison_rule,
         probe,
         binding,
         detail,
@@ -3393,7 +3342,6 @@ print(json.dumps({
                 "expected_leaf_paths_visited": len(expected_leaf_paths),
                 "expected_leaf_count": leaf_count(expected),
                 "mismatches": encode_floats(mismatches),
-                "rule": comparison_rule,
             },
             "expected": encode_floats(expected),
             "mutation": "NOT_RUN_NO_AUTHORITY_ESTABLISHED_EXPECTED_ROUTE",
@@ -3459,14 +3407,6 @@ def command_build(args: argparse.Namespace) -> int:
         if type(red_observation) is not dict or type(green_observation) is not dict:
             raise RowStop(f"{row_id} authority execution observation is missing")
         require_same_authority_names(red_observation, green_observation, row_id)
-        require_executed_comparator(
-            binding.contract.comparison_rule,
-            red_output.get("comparison", {}).get("rule"),
-        )
-        require_executed_comparator(
-            binding.contract.comparison_rule,
-            green_output.get("comparison", {}).get("rule"),
-        )
         mutation_evidence = consume_producer_mutation_restoration(
             binding,
             mutation_application,

@@ -31,7 +31,7 @@ from scenario_binding import (
 
 GATE_DIR = Path(__file__).resolve().parent
 MANIFEST_PATH = GATE_DIR / "p011_legacy_manifest.json"
-VARIANT_DIR = Path(r"C:\tmp\N23_VARIANTS")
+VARIANT_DIR = Path(r"C:\tmp\N26_VARIANTS")
 REQUIRED_VARIANT_KEYS = (
     "scenario_id",
     "producer_adapter",
@@ -243,11 +243,13 @@ class GateVariantTests(unittest.TestCase):
         )
         observation = row_arm.authority_execution_observation(
             [{"module": "src.engine", "path": "src/engine.py"}],
+            method="RUNTIME_MODULES_RESOLVED_UNDER_BOUND_AUTHORITY_ROOT_V1",
             reason="RULE 2 probe supplied a B runtime import to an A-only row",
         )
         output = row_arm.consume_authority_execution(binding, observation)
         clean_observation = row_arm.authority_execution_observation(
             [{"module": "mtc_v2.core.runner", "path": "mtc_v2/core/runner.py"}],
+            method="RUNTIME_MODULES_RESOLVED_UNDER_BOUND_AUTHORITY_ROOT_V1",
             reason="RULE 2 clean-side observation",
         )
         with self.assertRaises(row_arm.RowStop) as raised:
@@ -274,34 +276,6 @@ class GateVariantTests(unittest.TestCase):
         self.assertFalse(output["exact_set_match"])
         self.assertEqual(["A_CURRENT_MASTER"], output["missing"])
         self.assertEqual(["B_BACKTEST_FREEZE"], output["unexpected"])
-
-    def test_rule2_c_wrong_executed_comparator_id_is_refused(self) -> None:
-        def wrong_comparator(expected: object, actual: object, **_kwargs: object) -> list[dict]:
-            return []
-
-        setattr(
-            wrong_comparator,
-            row_arm.COMPARATOR_RULE_ATTRIBUTE,
-            "WRONG_COMPARATOR_RULE_FOR_RULE2",
-        )
-        _mismatches, executed_rule = row_arm.execute_comparison(
-            {"value": 1}, {"value": 1}, comparator=wrong_comparator
-        )
-        declared_rule = verifier_scenario_contract("C01").comparison_rule
-        with self.assertRaises(row_arm.RowStop) as raised:
-            row_arm.require_executed_comparator(declared_rule, executed_rule)
-        _write_result(
-            "rule2_c_output.json",
-            {
-                "check": "manifest comparator ID vs executed callable comparator ID",
-                "input": {
-                    "declared_rule": declared_rule,
-                    "executed_rule": executed_rule,
-                },
-                "outcome": "REFUSED",
-                "reason": str(raised.exception),
-            },
-        )
 
     def test_eighteen_missing_key_variants_refuse_before_producer(self) -> None:
         results: list[dict] = []
@@ -335,13 +309,6 @@ class GateVariantTests(unittest.TestCase):
         self.assertEqual(18, len(results))
         self.assertTrue(all(item["outcome"] == "REFUSED" for item in results))
         self.assertFalse(any(item["producer_executed"] for item in results))
-
-    def test_comparator_rule_is_bound_to_actual_callable(self) -> None:
-        declared_rule = verifier_scenario_contract("C01").comparison_rule
-        self.assertEqual(
-            declared_rule,
-            row_arm.comparator_rule_id(row_arm.compare_exact),
-        )
 
     def test_wrong_mutation_mismatch_path_is_refused_by_named_consumer(self) -> None:
         binding = row_arm.validate_contract_binding(
@@ -575,10 +542,18 @@ class GateVariantTests(unittest.TestCase):
         c28 = by_row["C28"]["authority_execution"]
         self.assertEqual([], c28["actual_authority_names"])
         self.assertEqual([], c28["observation"]["runtime_imports"])
+        self.assertEqual(
+            "NO_PRODUCER_CALL_NO_RESOLUTION_PERFORMED",
+            c28["observation"]["method"],
+        )
         self.assertIn("no producer call occurred", c28["observation"]["reason"])
         c32 = by_row["C32"]["authority_execution"]
         self.assertEqual(["A_CURRENT_MASTER"], c32["actual_authority_names"])
         self.assertTrue(c32["observation"]["runtime_imports"])
+        self.assertEqual(
+            "RUNTIME_MODULES_RESOLVED_UNDER_BOUND_AUTHORITY_ROOT_V1",
+            c32["observation"]["method"],
+        )
         self.assertIn("probe returned after importing", c32["observation"]["reason"])
 
 

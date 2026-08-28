@@ -85,20 +85,20 @@ comparator visits 134 expected-leaf paths; there are also **33 mutation REDs and
 - Contract mutations remain 3 FAIL + 1 STOP. Structural evidence records 17/17 expected attacks
   and 17/17 expected restorations, SHA-256 `121a96a0...55a7e`.
 
-## Stage-2 executable contract rule
+## Stage-2 executable binding rule
 
-Every acceptance-bearing declaration has an independent verifier-owned typed value, is exact-bound
-before producer execution, and reaches exactly one named executable consumer. A declaration that
-cannot satisfy both conditions does not exist in the contract. PASS or GREEN requires conservation:
-declared leaves = bound leaves = consumed leaves, with no missing, extra, duplicated, or silently
-ignored leaf.
+Every applicable manifest scenario is exact-bound to a verifier-owned typed scenario before its
+producer runs. The binding refuses missing, extra, or unequal values. Producer outputs are then
+compared with the bound expected observation and final state.
 
-The generator now emits typed comparison, expectation-provenance, exact-authority, and complete
-mutation contracts (`stage1_freeze.py:20-22`, `:526-606`). The row arm exact-binds provenance before
-execution, consumes mutation restoration and authority execution through named consumers, and
-requires complete production consumption (`row_arm.py:170-411`, `:2568-2607`). The baseline gate
-also performs terminal named consumption for every scenario declaration before any profile producer
-can run (`p011_gate.py:576-715`).
+**Contract conservation is not enforced.** `scenario_binding.require_complete` has no production
+caller; it is exercised only by its unit tests
+(`C:\tmp\N26_VARIANTS\require_complete_census.txt:1-5`). The gate does not require declared
+leaves = bound leaves = consumed leaves, does not require complete production consumption, and does
+not perform a terminal named consumption pass. The generator emits the typed scenario declarations
+(`stage1_freeze.py:526-606`); the baseline gate and row arm exact-bind those declarations
+(`p011_gate.py:576-636`; `row_arm.py:2472-2558`) and the row arm separately checks producer output,
+mutation behavior, and runtime authority observations (`row_arm.py:156-283`; `:2599-2686`).
 
 The six measured disposition changes are:
 
@@ -111,9 +111,11 @@ The six measured disposition changes are:
 | C39 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | A_CURRENT_MASTER |
 | C41 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | B_BACKTEST_FREEZE |
 
-The measured source for all six rows records the declared set, actual set, missing identity, and
-`CONSERVED` contract ledger (`C:\tmp\N8_VARIANTS\after_changed_rows.jsonl:1-6`). The complete copied-
-pin build remains STOP while all 33 executable producers still prove clean GREEN and mutation RED;
+The measured source for all six rows records the declared set, actual set, and missing identity.
+Current code emits no `CONSERVED` contract ledger and makes no terminal-consumption claim. The
+package-wide removed-behavior grep finds no positive stale claim
+(`C:\tmp\N26_VARIANTS\g802_removed_behavior_grep.txt:1-5`). The complete copied-pin build remains
+STOP while all 33 executable producers still prove clean GREEN and mutation RED;
 the two builds are byte-identical (`C:\tmp\N8_VARIANTS\after_full\batch_manifest.json:1`;
 `C:\tmp\N8_VARIANTS\after_full_2\batch_manifest.json:1`).
 
