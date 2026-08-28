@@ -2,27 +2,28 @@
 
 ## [Codex gpt-5.6-sol Implementer] 2026-08-28 — Owner-decision documentation pack
 
-- **Owner decisions:** all eight 2026-08-26 decisions are recorded verbatim in
-  `_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md` and indexed in root `DECISIONS.md`.
-  P0-11's current start gate is stopped; promotion-pipeline code remains unapproved.
-- **Verified facts:** the unenforced mandatory GitHub-issue claim is retired. Write lanes still
-  record branch, worktree, exact paths and live dependencies; `master` requires a PR with green
-  `Bridge suite (Python 3.12)` on an up-to-date head (ruleset 21444962, no bypass). Exactly 180
-  `legacy/*` tags exist; `legacy/pine-controller/2026-08-25` is tag object `3075bd66` → commit
-  `77a10e65` and is WP-P0-23 freeze evidence, not cleanup residue. Live-gate rows 1–2 remain
-  `BLOCKED` and now say no frozen strategy-identity/release tag exists.
-- **Decision-7 discrepancy:** base/master `5c560306` has no Phase-0 register JSON; the named owner
-  plan and this handoff did not state the corrected chain or a remaining-hours total. No prompt
-  figure or unattached estimate label was inserted. The detailed decision record preserves this
-  repository-versus-coordinator discrepancy.
-- **Planned / blocked / later approval:** only read-only P0-11 provenance and a replacement
-  exact-strategy acceptance-gate package may proceed. Kernel implementation remains blocked until
-  that gate is independently checked. Promotion governance requires its decision package before a
-  later implementation approval; no pipeline code changed here.
-- **Git and safety:** substantive docs commit `2372b4e8` on
-  `fix/owner-decisions-docpack-20260828`, worktree `C:\WPD_20260828`, based on `5c560306`. No code,
-  protected strategy/parity/schema surface, tag, repository setting, host, deploy, trading action,
-  merge or other branch/worktree changed.
-- **Evidence:** verbatim block/clarification comparisons `True`; repo guard `PASS`; `git diff
-  master...HEAD --name-only`; `git tag -l 'legacy/*'`; `(Get-Item
-  MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md).Length` (must remain ≤ 4096 bytes).
+- **Owner decisions:** OD-20260826-7 now states the owner's directive: correct the 90-hour estimate
+  to the currently verified critical path, state assumptions/inclusions/exclusions, and label it a
+  planning estimate rather than a promise. The base-artifact discrepancy remains only in its
+  detailed source record. P0-11 and promotion-pipeline implementation remain stopped.
+- **Verified tag state:** all 180 annotated `legacy/*` tags are WP-P0-02 code/evidence freezes;
+  `pkg/*` and `release/*` each contain 0 tags. They are not per-strategy identity+signal lockboxes.
+  LIVE_TRADING_GATE rows 1–2 remain `BLOCKED`; the legacy tag whose name contains
+  `bridge-release` is still a `legacy/*` WP-P0-02 freeze, not a `release/*` tag.
+- **Claim retirement:** Gate 7 and SESSION_LOCK now use durable tracker/write-lane-record and
+  reconciliation wording. The stale WP-P0-05 overlap is `RELEASED / SUPERSEDED` and its missing
+  GitHub-issue fact is retained as explicitly historical.
+- **Sibling sweep (20 occurrences accounted):** 13 current/stale occurrences were corrected — 2
+  live-gate rows, 4 occurrences across the three named sibling documents, and 7 in the technical
+  brief. Seven truthful non-current occurrences remain unchanged and disclosed: brief dated
+  measurement `:2795`, future criterion `:3067`, historical command result `:3292`; Wayfinder dated
+  measurement `:65`; WP-P0-02 lane report `:59`/`:80` and tagging scheme `:86`.
+- **Git / safety:** substantive repair `f78f501d`; worktree `C:\WPD_20260828`; branch
+  `fix/owner-decisions-docpack-20260828`; `master` and `origin/master` reconcile at `5c560306`.
+  **Final pushed HEAD is the Gate-7 close-out commit containing this record**, resolved from that
+  branch ref (not the substantive commit alone) and reported by the implementer. No code, protected
+  strategy/parity/schema surface, tag, setting, host, deploy, trading action, merge or other lane
+  changed.
+- **Evidence:** 19 scoped assertions PASS; tag objects `180/180` annotated WP-P0-02; repo guard
+  `PASS`; `git diff --check`; exact staged paths; handoff ≤4096 bytes. Environment discrepancy:
+  `pwsh` is absent, so the same guard script passed under Windows PowerShell 5.1.
