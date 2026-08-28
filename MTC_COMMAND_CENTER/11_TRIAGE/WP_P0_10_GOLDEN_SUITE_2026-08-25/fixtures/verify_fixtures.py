@@ -24,6 +24,8 @@ NORMALIZATION = (
 EXPECTED_BUILT = list(range(1, 18)) + list(range(20, 26))
 EXPECTED_BLOCKED = [18, 19]
 EXPECTED_VALUE_COUNT = 241
+EXPECTED_INPUT_PATH_COUNT = 2660
+EXPECTED_CITATION_LINE_RANGE_COUNT = 397
 COHERENCE_FAMILIES = [4, 5, 22, 24]
 COHERENCE_EXPECTED_VALUE_COUNT = 24
 OHLCV_FIELDS = ["open", "high", "low", "close", "volume"]
@@ -123,6 +125,16 @@ COMPANION_SELECTOR_REQUIREMENTS = {
         "legacy.next_bar_confirmed.exit": (
             "tw_trailing_semantics_mode",
             "next_bar_confirmed",
+        ),
+    },
+    14: {
+        "legacy.long_stop_close_only": (
+            "execution_profile",
+            "LEGACY_CLOSE_ONLY",
+        ),
+        "legacy.short_stop_close_only": (
+            "execution_profile",
+            "LEGACY_CLOSE_ONLY",
         ),
     },
 }
@@ -985,9 +997,9 @@ def validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
         "manifest_assertion_input_source_count_mismatch",
     )
     require(
-        isinstance(manifest.get("assertion_input_path_count"), int)
-        and manifest["assertion_input_path_count"] >= EXPECTED_VALUE_COUNT,
-        "manifest_assertion_input_path_count_missing",
+        manifest.get("assertion_input_path_count") == EXPECTED_INPUT_PATH_COUNT,
+        f"manifest_assertion_input_path_count expected={EXPECTED_INPUT_PATH_COUNT} "
+        f"actual={manifest.get('assertion_input_path_count')}",
     )
     require(
         isinstance(manifest.get("companion_assertion_count"), int),
@@ -1327,8 +1339,14 @@ def main() -> int:
         "measured_assertion_input_source_count_mismatch",
     )
     require(
-        assertion_input_paths_checked == manifest.get("assertion_input_path_count"),
-        "measured_assertion_input_path_count_mismatch",
+        assertion_input_paths_checked == EXPECTED_INPUT_PATH_COUNT,
+        f"assertion_input_path_count expected={EXPECTED_INPUT_PATH_COUNT} "
+        f"actual={assertion_input_paths_checked}",
+    )
+    require(
+        citation_line_ranges_validated == EXPECTED_CITATION_LINE_RANGE_COUNT,
+        f"citation_line_range_count expected={EXPECTED_CITATION_LINE_RANGE_COUNT} "
+        f"actual={citation_line_ranges_validated}",
     )
     require(
         companion_assertions_validated == manifest.get("companion_assertion_count"),

@@ -21,6 +21,13 @@ AUTHORITY_RELATIVE_PATH = (
     "CAPABILITY_CANONICALIZATION_TABLE.md"
 )
 AUTH_PREFIX = f"{AUTHORITY_RELATIVE_PATH}:"
+BUILT_FAMILY_NUMBERS = list(range(1, 18)) + list(range(20, 26))
+FORCED_COMPANION_INPUT_PATHS = {
+    "config.tw_audit_semantics_mode",
+    "config.tw_reversal_reentry_mode",
+    "config.tw_be_semantics_mode",
+    "config.tw_trailing_semantics_mode",
+}
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -409,7 +416,6 @@ def tamper_family_02_c32_retained_mapping_assertion_renamed(path: Path) -> None:
     manifest_item["fixture_contract_sha256"] = hashlib.sha256(
         canonical_bytes(data)
     ).hexdigest()
-    manifest["assertion_input_path_count"] -= 2
     write_json(manifest_path, manifest)
 
 
@@ -432,7 +438,7 @@ def tamper_family_02_selector_rehomed_fixture_local(path: Path) -> None:
         if "legacy.local.reentry_bar" in scenario["assertion_inputs"]
     )
     scenario_id = scenario["id"]
-    original_input_paths = scenario["assertion_inputs"].pop("legacy.local.reentry_bar")
+    scenario["assertion_inputs"].pop("legacy.local.reentry_bar")
     data["companion_scenarios"] = [
         item for item in data["companion_scenarios"] if item["id"] != scenario_id
     ]
@@ -448,7 +454,99 @@ def tamper_family_02_selector_rehomed_fixture_local(path: Path) -> None:
         canonical_bytes(data)
     ).hexdigest()
     manifest["companion_assertion_count"] -= 1
-    manifest["assertion_input_path_count"] += 1 - len(original_input_paths)
+    write_json(manifest_path, manifest)
+
+
+def tamper_family_14_execution_profile_flipped(path: Path) -> None:
+    fixture_path, data = fixture(path, 14)
+    scenario = next(
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] == "C20_GF20_legacy_close_only_gap_fills"
+    )
+    scenario["config"]["execution_profile"] = "STANDING_TOUCH"
+    write_fixture_with_manifest_hash(path, 14, fixture_path, data)
+
+
+def tamper_family_14_selector_rehomed_fixture_local(path: Path) -> None:
+    fixture_path, data = fixture(path, 14)
+    scenario_id = "C20_GF20_legacy_close_only_gap_fills"
+    data["companion_scenarios"] = [
+        scenario
+        for scenario in data["companion_scenarios"]
+        if scenario["id"] != scenario_id
+    ]
+    for target in ("legacy.long_stop_close_only", "legacy.short_stop_close_only"):
+        assertion(data, target)["input_paths"] = ["family.number"]
+    write_json(fixture_path, data)
+    manifest_path = path / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest_item = next(
+        item for item in manifest["families"] if item["number"] == 14
+    )
+    manifest_item["fixture_contract_sha256"] = hashlib.sha256(
+        canonical_bytes(data)
+    ).hexdigest()
+    manifest["companion_assertion_count"] -= 2
+    write_json(manifest_path, manifest)
+
+
+def tamper_suite_wide_input_path_deflation(path: Path) -> None:
+    manifest_path = path / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    path_count_delta = 0
+    for number in BUILT_FAMILY_NUMBERS:
+        fixture_path, data = fixture(path, number)
+        for item in data["expected_output"]["assertions"]:
+            input_paths = item.get("input_paths")
+            if input_paths and len(input_paths) > 1:
+                path_count_delta += 1 - len(input_paths)
+                item["input_paths"] = input_paths[:1]
+        for scenario in data.get("companion_scenarios", []):
+            for assertion_path, input_paths in scenario["assertion_inputs"].items():
+                retained = [
+                    input_path
+                    for input_path in input_paths
+                    if input_path in FORCED_COMPANION_INPUT_PATHS
+                ] or input_paths[:1]
+                path_count_delta += len(retained) - len(input_paths)
+                scenario["assertion_inputs"][assertion_path] = retained
+        write_json(fixture_path, data)
+        manifest_item = next(
+            item for item in manifest["families"] if item["number"] == number
+        )
+        manifest_item["fixture_contract_sha256"] = hashlib.sha256(
+            canonical_bytes(data)
+        ).hexdigest()
+    if path_count_delta != -2408:
+        raise ValueError(f"unexpected input-path deflation delta: {path_count_delta}")
+    manifest["assertion_input_path_count"] += path_count_delta
+    write_json(manifest_path, manifest)
+
+
+def tamper_suite_wide_citation_deflation(path: Path) -> None:
+    manifest_path = path / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    for number in BUILT_FAMILY_NUMBERS:
+        fixture_path, data = fixture(path, number)
+        for item in data["expected_output"]["assertions"]:
+            item["citations"] = item["citations"][:1]
+        data["expected_output"]["sha256_citations"] = data["expected_output"][
+            "sha256_citations"
+        ][:1]
+        data["expected_output"]["final_state_sha256_citations"] = data[
+            "expected_output"
+        ]["final_state_sha256_citations"][:1]
+        write_json(fixture_path, data)
+        manifest_item = next(
+            item for item in manifest["families"] if item["number"] == number
+        )
+        manifest_item["authority_binding_sha256"] = recompute_authority_binding_hash(
+            data
+        )
+        manifest_item["fixture_contract_sha256"] = hashlib.sha256(
+            canonical_bytes(data)
+        ).hexdigest()
     write_json(manifest_path, manifest)
 
 
@@ -692,6 +790,34 @@ def main() -> int:
             False,
             "VERIFY_FAIL reason=family=02 companion_selector_fixture_local_forbidden "
             "path=legacy.local.reentry_bar",
+        ),
+        (
+            "r4e_family_14_execution_profile_flipped",
+            tamper_family_14_execution_profile_flipped,
+            False,
+            "VERIFY_FAIL reason=family=14 companion_selector_mismatch "
+            "path=legacy.long_stop_close_only selector=execution_profile "
+            "expected=LEGACY_CLOSE_ONLY actual=STANDING_TOUCH",
+        ),
+        (
+            "r4e_family_14_selector_rehomed_fixture_local",
+            tamper_family_14_selector_rehomed_fixture_local,
+            False,
+            "VERIFY_FAIL reason=family=14 companion_selector_fixture_local_forbidden "
+            "path=legacy.long_stop_close_only",
+        ),
+        (
+            "r4e_suite_wide_input_path_deflation",
+            tamper_suite_wide_input_path_deflation,
+            False,
+            "VERIFY_FAIL reason=manifest_assertion_input_path_count "
+            "expected=2660 actual=252",
+        ),
+        (
+            "r4e_suite_wide_citation_deflation",
+            tamper_suite_wide_citation_deflation,
+            False,
+            "VERIFY_FAIL reason=citation_line_range_count expected=397 actual=326",
         ),
     ]
 

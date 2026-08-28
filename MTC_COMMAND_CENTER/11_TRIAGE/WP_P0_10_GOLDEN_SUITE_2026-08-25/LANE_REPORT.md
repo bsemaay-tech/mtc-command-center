@@ -868,6 +868,9 @@ VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=27/27 result=PASS
 
 ### R2 - bar granularity pinned
 
+Superseded in place by Round 4d: the paragraph below describes the Round 4d verifier-owned bar
+contracts; the `27/27` transcript beneath it remains the executed Round 4c historical result.
+
 Changed the normalized-bar validator to enforce hardcoded OHLCV bar counts for verifier-pinned
 fixture families and exact companion scenario identities, per-bar `ohlcv` presence, five-field
 OHLCV shape, and integer `index == position` for the contexts whose verifier contract requires an
@@ -984,10 +987,10 @@ hash. Round 4c accepted it; round 4d rejects it by name.
 ### Finding 2 — required indexes cannot self-disable
 
 The mutable `any(index)` switch is gone. `FIXTURE_OHLCV_INDEX_FAMILIES` and the exact companion
-scenario contracts identify indexed contexts. Every member in those contexts must carry a value
-whose exact Python type is `int` and whose value equals its zero-based position; booleans do not
-qualify as integers for this gate. The new all-indices-deleted tamper removes every index from a
-C36 companion and recomputes its fixture hash.
+scenario contracts identify index-required contexts. Every member in those contexts must carry a
+value whose exact Python type is `int` and whose value equals its zero-based position; booleans do
+not qualify as integers for this gate. The new all-indices-deleted tamper removes every index from
+a C36 companion and recomputes its fixture hash.
 
 ### Finding 3 — master gates and selectors are bound to pinned identities
 
@@ -1209,8 +1212,10 @@ The entire report was read and the count/claim grep was rerun. No other current 
 final predicate. Earlier `1/7`, `7/7`, `8/8`, `18/19`, `19/19`, `16/27`, and `27/27` harness
 snapshots and the `2629`, `2649`, and earlier `2660` path snapshots were deliberately retained as
 dated historical transcripts; none is presented as the round-4d result. The current values are
-`30/30` and `2660`. The broad same-tree coordinated-rehash limitation remains true for direct
-fixture-local declarations outside the newly pinned companion inventory and was not narrowed away.
+`30/30` and `2660`. The verifier now pins the aggregate declared input-path count at `2660`, so a
+same-tree coordinated rehash that deflates either fixture-local or companion declarations rejects.
+Same-count semantic substitutions outside the independently pinned master gates, selectors, and
+companion identities remain within the disclosed coordinated-rehash limitation.
 
 ```powershell
 rg -n 'tamper_rejected=[0-9]+/[0-9]+|assertion_input_paths_checked=[0-9]+|fixture_assertions_validated=[0-9]+|companion_assertions_validated=[0-9]+|bar counts live|metadata edit|cannot opt out|all indices|index' MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\LANE_REPORT.md
@@ -1218,3 +1223,118 @@ rg -n 'tamper_rejected=[0-9]+/[0-9]+|assertion_input_paths_checked=[0-9]+|fixtur
 
 No Pine, parity, MTC strategy behavior, Bridge runtime, schema, broker/exchange, host, credential,
 deployment, or live surface changed. Independent flagship acceptance remains pending.
+
+## Round 4e - final mechanical repair
+
+**Date:** 2026-08-28
+
+**Starting point:** `c5e0fbc639491a9e0755dde5237b5cc4487162ed` on
+`feature/wp-p0-10-golden-suite-20260825`.
+
+**Audit tier:** T0, retained from the package contract. This is implementer Gate-3/Gate-4 evidence,
+not acceptance.
+
+### R-1 - C20 legacy execution profile is verifier-owned
+
+Family 14 now binds both `legacy.long_stop_close_only` and `legacy.short_stop_close_only` to
+`execution_profile=LEGACY_CLOSE_ONLY` in `COMPANION_SELECTOR_REQUIREMENTS`. The value-flip attack
+changes it to `STANDING_TOUCH`, recomputes the family fixture-contract hash, and is rejected by the
+selector predicate. A second tamper rehomes both assertions as fixture-local declarations and proves
+the existing `companion_selector_fixture_local_forbidden` predicate now covers the two family-14
+paths too.
+
+The lane prompt cites the R9 authority pin at line 578; the repository version places the same R9
+`execution_profile: "LEGACY_CLOSE_ONLY"` statement at line 579. The repository text governs.
+
+### R-2 - declared input-path coverage is pinned
+
+`EXPECTED_INPUT_PATH_COUNT = 2660` is verifier-owned. Both the manifest declaration and the measured
+suite total must equal it. The exact auditor attack retains only the previously verifier-forced
+minimum, removes 2,408 of 2,660 paths, updates all 23 affected fixture-contract hashes and the
+manifest count to 252, and now rejects before attacked-tree equality can self-attest the result.
+
+The no-overclaim sentence above now states the narrower residual accurately: aggregate path
+deflation rejects across fixture-local and companion declarations, while same-count semantic
+substitution outside independently pinned gates, selectors, and identities remains disclosed.
+
+### Applied nits
+
+- The Round 4d index sentence now says `index-required contexts`.
+- The rewritten Round 4c R2 paragraph has an in-place Round 4d supersession marker.
+- `EXPECTED_CITATION_LINE_RANGE_COUNT = 397` now defends the printed citation figure. The auditor's
+  coordinated citation deflation reaches 326 and rejects.
+
+### D026 RED - pre-fix verifier at `c5e0fbc6`
+
+Exact command run after adding the three regression rows and before changing the verifier:
+
+```powershell
+python MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\fixtures\test_verify_fixtures.py
+```
+
+Real selected output; command exit `1`:
+
+```text
+TAMPER name=r4e_family_14_execution_profile_flipped optimized=false rc=0 rejected=false detail=no_named_rejection
+TAMPER name=r4e_suite_wide_input_path_deflation optimized=false rc=0 rejected=false detail=no_named_rejection
+TAMPER name=r4e_suite_wide_citation_deflation optimized=false rc=0 rejected=false detail=no_named_rejection
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=30/33 result=FAIL
+```
+
+### D026 GREEN - repaired verifier
+
+The same command against the repaired verifier returned `0`:
+
+```text
+TAMPER name=r4e_family_14_execution_profile_flipped optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=14 companion_selector_mismatch path=legacy.long_stop_close_only selector=execution_profile expected=LEGACY_CLOSE_ONLY actual=STANDING_TOUCH
+TAMPER name=r4e_family_14_selector_rehomed_fixture_local optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=14 companion_selector_fixture_local_forbidden path=legacy.long_stop_close_only
+TAMPER name=r4e_suite_wide_input_path_deflation optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=manifest_assertion_input_path_count expected=2660 actual=252
+TAMPER name=r4e_suite_wide_citation_deflation optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=citation_line_range_count expected=397 actual=326
+VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=34/34 result=PASS
+```
+
+Two carried tamper helpers stopped rewriting `manifest.assertion_input_path_count`, because the new
+verifier-owned count would otherwise reject before their existing deeper predicates ran. Before
+that bookkeeping adjustment, the repaired verifier returned the new count reason at `2658` and
+`2656`; afterward, the unchanged semantic attacks again reached their original named reasons:
+
+```text
+TAMPER name=r4d_family_02_c32_retained_mapping_assertion_renamed optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=02 companion_assertion_inventory_mismatch id=C32_GF32_legacy_reentry_modes__local
+TAMPER name=n4_family_02_selector_rehomed_fixture_local optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=02 companion_selector_fixture_local_forbidden path=legacy.local.reentry_bar
+```
+
+Thus both forms reject: coordinated count drift is caught by the new aggregate pin, while the
+canonical-count versions preserve the carried inventory and fixture-local-selector fences.
+
+### Final matrix and independent remeasurement
+
+```text
+verifier plain: rc=0 SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=397 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_sources_validated=241 assertion_input_paths_checked=2660 fixture_assertions_validated=224 companion_assertions_validated=17 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
+verifier -O: rc=1 VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+verifier PYTHONOPTIMIZE=2: rc=1 VERIFY_FAIL reason=python_optimization_forbidden __debug__=false
+harness plain: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=34/34 result=PASS
+harness -O: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=34/34 result=PASS
+harness PYTHONOPTIMIZE=2: rc=0 VERIFIER_REGRESSION_SUMMARY baseline_clean=1 tamper_rejected=34/34 result=PASS
+
+ASSERTION_SOURCE_REACH=241/241
+ASSERTION_INPUT_PATHS=2660/2660
+MASTER_GATE_REACH=11/11
+FAMILY14_SELECTOR_REACH=2/2
+EXPECTED_PATH_VALUE_MAPS_UNCHANGED=23/23
+EXPECTED_OUTPUT_AND_STATE_HASHES_UNCHANGED=46/46
+FAMILIES_BUILT=23
+FAMILIES_BLOCKED=2 numbers=18,19
+FAMILY_18_FILE=FALSE
+FAMILY_19_FILE=FALSE
+
+VERIFY_RUNS_RC=0,0
+OUTPUT_FILES=23,23
+BYTE_IDENTICAL=23/23
+STDOUT_IDENTICAL=true
+python -m py_compile verify_fixtures.py test_verify_fixtures.py: rc=0
+git diff --check: rc=0
+```
+
+No fixture JSON, expected path/value map, output/state hash, Pine, parity, MTC strategy behavior,
+Bridge runtime, schema, broker/exchange, host, credential, deployment, or live surface changed.
+Independent flagship acceptance remains pending.
