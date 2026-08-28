@@ -424,6 +424,159 @@ def produce_c05(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
     return observation, {"position_present": runner.state.position is not None}
 
 
+def produce_c06(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.position_manager import PositionManager
+    from mtc_v2.core.types import PortfolioState, RawSignal
+
+    manager = PositionManager(
+        enable_long=True,
+        enable_short=True,
+        regime_lock=False,
+        max_entries=inputs["max_entries"],
+        cooldown_bars=inputs["cooldown_bars"],
+        contract_multiplier=1.0,
+        qty_step=1.0,
+    )
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    raw = RawSignal(long=inputs["side"] == "long", short=inputs["side"] == "short", reason="spacing")
+    decisions: list[bool] = []
+    for index in inputs["entry_bar_indices"]:
+        state.current_bar_index = index
+        state.block_new_entries_this_bar = False
+        state.closed_this_bar_reason = None
+        decision = manager.can_open_raw_signal(raw=raw, state=state)
+        decisions.append(decision.can_open)
+        if decision.can_open:
+            manager.open_position(
+                bar=_bar(index=index, open_=100.0, high=100.0, low=100.0, close=100.0),
+                side=inputs["side"],
+                qty=1.0,
+                state=state,
+                reason="spacing",
+            )
+    active_legs = 0 if state.position is None else sum(leg.qty > 0.0 for leg in state.position.entry_legs)
+    observation = {"active_entry_legs": active_legs, "can_open": decisions}
+    return observation, {"position_side": None if state.position is None else state.position.side}
+
+
+def produce_c07(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.instrument import InstrumentMetadata
+    from mtc_v2.core.position_sizer import PositionSizer
+
+    sizer = PositionSizer(
+        {
+            "risk_per_long_pct": 1.0,
+            "risk_per_short_pct": 1.0,
+            "fallback_size_pct": 1.0,
+            "max_leverage_cap": 1.0,
+            "tw_audit_semantics_mode": "off",
+        }
+    )
+    instrument = InstrumentMetadata(qty_step=inputs["qty_step"], contract_multiplier=1.0)
+    qty = sizer.calc_qty(
+        entry=inputs["entry_price"],
+        sl=inputs["stop_price"],
+        equity=inputs["sizing_equity"],
+        is_long=True,
+        instrument=instrument,
+    )
+    return {"owner": "legacy_kernel", "qty": qty}, {"sizing_snapshot": inputs["sizing_equity"]}
+
+
+def produce_c08(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.position_manager import PositionManager
+    from mtc_v2.core.types import EntryLeg, PortfolioState, Position
+
+    manager = PositionManager(
+        enable_long=True,
+        enable_short=True,
+        regime_lock=False,
+        max_entries=1,
+        cooldown_bars=0,
+        contract_multiplier=inputs["contract_multiplier"],
+        qty_step=1.0,
+    )
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    state.position = Position(
+        side=inputs["side"],
+        entry_price=inputs["entry_price"],
+        avg_entry_price=inputs["entry_price"],
+        qty=inputs["qty"],
+        entry_bar=0,
+        initial_qty=inputs["qty"],
+        entry_legs=[EntryLeg(inputs["entry_price"], inputs["qty"], 0)],
+        lifecycle_id=1,
+        working_exit_reference_qty=inputs["qty"],
+    )
+    manager.close_position(
+        bar=_bar(index=1, open_=inputs["exit_price"], high=inputs["exit_price"], low=inputs["exit_price"], close=inputs["exit_price"]),
+        exit_price=inputs["exit_price"],
+        reason="scenario_exit",
+        state=state,
+    )
+    realized = state.exit_events_this_bar[0].realized_pnl
+    return {"realized_pnl": realized}, {"realized_equity_delta": state.realized_equity}
+
+
+def produce_c09(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.instrument import InstrumentMetadata
+    from mtc_v2.core.position_sizer import PositionSizer
+    from mtc_v2.core.rounding import floor_qty_to_step, floor_to_grid, round_half_up_to_grid
+
+    floored_qty = floor_qty_to_step(inputs["raw_qty"], inputs["qty_step"])
+    rounded_long_stop = floor_to_grid(inputs["long_stop"], inputs["price_tick"])
+    rounded_long_target = round_half_up_to_grid(inputs["long_target"], inputs["price_tick"])
+    sizer = PositionSizer(
+        {
+            "risk_per_long_pct": 1.0,
+            "risk_per_short_pct": 1.0,
+            "fallback_size_pct": 1.0,
+            "max_leverage_cap": 1.0,
+            "tw_audit_semantics_mode": "off",
+        }
+    )
+    instrument = InstrumentMetadata(
+        qty_step=inputs["qty_step"],
+        min_qty=2.0,
+        contract_multiplier=1.0,
+    )
+    rejected_qty = sizer.calc_qty(
+        entry=100.0,
+        sl=90.0,
+        equity=1999.0,
+        is_long=True,
+        instrument=instrument,
+    )
+    observation = {
+        "floored_qty": floored_qty,
+        "rounded_long_stop": rounded_long_stop,
+        "rounded_long_target": rounded_long_target,
+    }
+    return observation, {"below_minimum_rejected": rejected_qty == 0.0}
+
+
+def produce_c10(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.types import RawSignal
+
+    runner = _runner(
+        [RawSignal(False, False, "unused")],
+        max_leverage_cap=inputs["max_leverage_cap"],
+        margin_long_pct=100.0,
+    )
+    blocked = runner._entry_blocked_by_capital(
+        entry_price=inputs["entry_price"],
+        side="long",
+        qty=inputs["qty"],
+        sizing_equity=inputs["sizing_equity"],
+    )
+    observation = {
+        "blocked": blocked,
+        "limit": inputs["sizing_equity"] * inputs["max_leverage_cap"],
+        "notional": inputs["entry_price"] * inputs["qty"] * runner.instrument.contract_multiplier,
+    }
+    return observation, {"position_present": runner.state.position is not None}
+
+
 ROW_CONTRACTS: dict[str, RowContract] = {
     "C01": RowContract(
         row_id="C01",
@@ -536,6 +689,107 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "                    entry_blocked_by_exit = False\n",
         ),
         producer=produce_c05,
+    ),
+    "C06": RowContract(
+        row_id="C06",
+        scenario_id="C06-LEGACY-001",
+        producer_adapter="A.position_manager_spacing",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=(
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_manager.py:101-142",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_manager.py:163-227",
+        ),
+        complete_inputs={"cooldown_bars": 2, "entry_bar_indices": [10, 11, 12], "max_entries": 2, "side": "long"},
+        expected_observation={"active_entry_legs": 2, "can_open": [True, False, True]},
+        expected_final_state={"position_side": "long"},
+        mutation=Mutation(
+            "C06-GF8-MUT-001",
+            "mtc_v2/core/position_manager.py",
+            "            and (state.current_bar_index - state.last_entry_bar_index) < self.cooldown_bars\n",
+            "            and (state.current_bar_index - state.last_entry_bar_index) <= self.cooldown_bars\n",
+        ),
+        producer=produce_c06,
+    ),
+    "C07": RowContract(
+        row_id="C07",
+        scenario_id="C07-LEGACY-001",
+        producer_adapter="A.position_sizer_fixed",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_sizer.py:24-70",),
+        complete_inputs={"entry_price": 100.0, "fixed_qty": 1.0, "qty_step": 1.0, "sizing_equity": 1000.0, "stop_price": 90.0},
+        expected_observation={"owner": "legacy_kernel", "qty": 1.0},
+        expected_final_state={"sizing_snapshot": 1000.0},
+        mutation=Mutation(
+            "C07-GF8-MUT-001",
+            "mtc_v2/core/position_sizer.py",
+            "                risk_amount = equity * (risk_pct / 100.0)\n",
+            "                risk_amount = equity * (risk_pct / 1000.0)\n",
+        ),
+        producer=produce_c07,
+    ),
+    "C08": RowContract(
+        row_id="C08",
+        scenario_id="C08-LEGACY-001",
+        producer_adapter="A.position_manager_multiplier_pnl",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_manager.py:267-309",),
+        complete_inputs={"contract_multiplier": 2.0, "entry_price": 100.0, "exit_price": 110.0, "qty": 3.0, "side": "long"},
+        expected_observation={"realized_pnl": 60.0},
+        expected_final_state={"realized_equity_delta": 60.0},
+        mutation=Mutation(
+            "C08-GF8-MUT-001",
+            "mtc_v2/core/position_manager.py",
+            "            realized_pnl = (exit_price - position.avg_entry_price) * exit_qty * self.contract_multiplier\n",
+            "            realized_pnl = (exit_price - position.avg_entry_price) * exit_qty\n",
+        ),
+        producer=produce_c08,
+    ),
+    "C09": RowContract(
+        row_id="C09",
+        scenario_id="C09-LEGACY-001",
+        producer_adapter="A.rounding",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=(
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/rounding.py:6-33",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_sizer.py:60-68",
+        ),
+        complete_inputs={"long_stop": 99.999, "long_target": 100.005, "price_tick": 0.01, "qty_step": 0.1, "raw_qty": 1.999},
+        expected_observation={"floored_qty": 1.9, "rounded_long_stop": 99.99, "rounded_long_target": 100.01},
+        expected_final_state={"below_minimum_rejected": True},
+        mutation=Mutation(
+            "C09-GF8-MUT-001",
+            "mtc_v2/core/rounding.py",
+            "    units = (value_decimal / step_decimal).quantize(Decimal(\"1\"), rounding=ROUND_DOWN)\n",
+            "    units = (value_decimal / step_decimal).quantize(Decimal(\"1\"), rounding=ROUND_CEILING)\n",
+        ),
+        producer=produce_c09,
+    ),
+    "C10": RowContract(
+        row_id="C10",
+        scenario_id="C10-LEGACY-001",
+        producer_adapter="A.runner_capital_block",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py:1480-1502",),
+        complete_inputs={"entry_price": 100.0, "max_leverage_cap": 1.0, "qty": 11.0, "sizing_equity": 1000.0},
+        expected_observation={"blocked": True, "limit": 1000.0, "notional": 1100.0},
+        expected_final_state={"position_present": False},
+        mutation=Mutation(
+            "C10-GF8-MUT-001",
+            "mtc_v2/core/runner.py",
+            "        return (sizing_equity * self.max_leverage_cap) < required_margin\n",
+            "        return (sizing_equity * self.max_leverage_cap) > required_margin\n",
+        ),
+        producer=produce_c10,
     ),
 }
 
