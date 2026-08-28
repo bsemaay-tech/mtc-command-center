@@ -343,7 +343,7 @@ def test_help_knowledge_pins_ai_source_and_onboarding_guards(help_map: dict):
     assert "canonical ai-readable knowledge source for the help surface is help_map.json" in _blob(
         memory
     )
-    assert "live _ai_memory handoff records reference it historically" in _blob(memory)
+    assert "live stage handoff.md records reference it historically" in _blob(memory)
     assert "coding-agent onboarding files do not currently direct agents to it" in _blob(memory)
 
     reverse = next(
@@ -353,9 +353,19 @@ def test_help_knowledge_pins_ai_source_and_onboarding_guards(help_map: dict):
 
     onboarding_paths = [
         REPO_ROOT / "AGENTS.md",
+        REPO_ROOT / "CONTEXT_MAP.md",
+        REPO_ROOT / "DECISIONS.md",
         REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "START_HERE.md",
         REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "AI_RULES.md",
         REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "PROJECT_MEMORY.md",
+        REPO_ROOT / "IBKR_PAPER_BRIDGE" / "AGENTS.md",
+        REPO_ROOT / "mtc_cli" / "AGENTS.md",
+        REPO_ROOT / "MTC_COMMAND_CENTER" / "00_AGENT_PROTOCOLS" / "AGENTS.md",
+        REPO_ROOT / "MTC_COMMAND_CENTER" / "01_MTC_PROJECT" / "AGENTS.md",
+        REPO_ROOT / "MTC_COMMAND_CENTER" / "02_MTC_BACKTEST" / "AGENTS.md",
+        REPO_ROOT / "MTC_COMMAND_CENTER" / "03_QUANTLENS" / "AGENTS.md",
+        REPO_ROOT / "MTC_COMMAND_CENTER" / "08_DASHBOARD_APP" / "AGENTS.md",
+        REPO_ROOT / "MTC_COMMAND_CENTER" / "12_PARITY_PINETS" / "AGENTS.md",
     ]
     pointing = [
         path.relative_to(REPO_ROOT).as_posix()
@@ -365,9 +375,9 @@ def test_help_knowledge_pins_ai_source_and_onboarding_guards(help_map: dict):
     ]
     assert not pointing, "repo onboarding now points at help_map.json; promote the edge to data"
 
-    handoff = (
-        REPO_ROOT / "MTC_COMMAND_CENTER" / "_AI_MEMORY" / "GLOBAL_HANDOFF.md"
-    ).read_text(encoding="utf-8", errors="ignore")
+    handoff = (REPO_ROOT / "IBKR_PAPER_BRIDGE" / "HANDOFF.md").read_text(
+        encoding="utf-8", errors="ignore"
+    )
     assert "help_map.json" in handoff
     assert "help_map.json retired-KILL-claim correction" in handoff
 

@@ -5,8 +5,8 @@ Use **before writing any code** for a new task.
 ## Inputs to provide
 
 - User request (verbatim).
-- Current `GLOBAL_HANDOFF.md` summary.
-- Relevant `NEXT_STEPS.md` entry, if any.
+- Current selected-stage `HANDOFF.md` summary.
+- Relevant grep-on-demand history entry, if any.
 
 ## Prompt
 
@@ -21,9 +21,10 @@ self-implement work assigned to the implementer.
 
 Read:
 - AGENTS.md
-- MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md
-- MTC_COMMAND_CENTER/_AI_MEMORY/DO_NOT_TOUCH.md
-- MTC_COMMAND_CENTER/_AI_MEMORY/GLOBAL_HANDOFF.md
+- DECISIONS.md
+- CONTEXT_MAP.md
+- The selected stage's AGENTS.md, INPUTS.md, OUTPUTS.md, TESTS.md, and HANDOFF.md
+- Only the task-triggered sources named by that stage's INPUTS.md
 
 Then output, in this exact order:
 
@@ -34,8 +35,8 @@ Then output, in this exact order:
 5. FILES FORBIDDEN: cross-checked against DO_NOT_TOUCH.md.
 6. SUCCESS CRITERIA: how we will know it works (tests, manual check,
    parity smoke, visual diff, etc.).
-7. AUDIT TIER: classify this scope as **T0 / T1 / T2 / T3** per
-   `AGENTS.md` §AUDIT TIER POLICY — PERMANENT DEFAULT, with a
+7. AUDIT TIER: classify this scope as **T0 / T1 / T2 / T3** per root
+   `AGENTS.md` and the selected stage's safety rules, with a
    one-sentence surface rationale, the required auditor count / effort /
    round cap, and the audit cadence (work-package boundary, or immediate
    for T0 surface changes). This classification is mandatory before any
@@ -46,12 +47,13 @@ Then output, in this exact order:
 Refuse to skip any of the nine items.
 Refuse to start coding inside this gate.
 
-NOTE (GLM sub-delegation): If implementation will sub-delegate via Z.AI Coding Plan (GLM), add a ROUTING RECORD to item 4 (FILES ALLOWED) or as a named sub-item. Required fields: classification · protected flag · model+provider · cheaper-model rationale · exact paths · budget · fallback · external API credits. Decision tree and format: `AGENTS.md` §GLM SUPPLEMENTAL ROUTING.
+NOTE (GLM sub-delegation): If implementation will sub-delegate via Z.AI Coding Plan (GLM), add a ROUTING RECORD to item 4 (FILES ALLOWED) or as a named sub-item. Required fields: classification · protected flag · model+provider · cheaper-model rationale · exact paths · budget · fallback · external API credits. Decision tree and format: `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AGENTS.md` Delegation and context discipline.
 ```
 
 ## WRITE-BACK
 
 After Gate 1 completes:
 
-- Update `NEXT_STEPS.md` if the scope reframed the next step.
-- No other memory updates required at this gate.
+- Record the scope contract in the durable tracker/write-lane record as applicable.
+- Update the selected stage's `HANDOFF.md` only if the scope changed its current state.
+- Do not append `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md`; they are archives.

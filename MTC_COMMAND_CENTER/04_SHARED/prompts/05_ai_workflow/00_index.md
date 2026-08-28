@@ -6,10 +6,10 @@ GStack-inspired, repo-local workflow prompts. Generic across AI agents
 
 ## Read first
 
-1. `AGENTS.md` (repo root)
-2. `MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md`
-3. `MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md`
-4. `MTC_COMMAND_CENTER/_AI_MEMORY/SPRINT_WORKFLOW.md`
+1. Read root `AGENTS.md` and root `DECISIONS.md`.
+2. Use root `CONTEXT_MAP.md` to select exactly one stage.
+3. Read that stage's `AGENTS.md`, `INPUTS.md`, `OUTPUTS.md`, `TESTS.md`, and `HANDOFF.md`.
+4. Read this index and only the prompt for the current gate.
 
 ## Prompts
 

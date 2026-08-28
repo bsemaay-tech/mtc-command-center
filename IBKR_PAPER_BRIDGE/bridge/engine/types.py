@@ -173,7 +173,7 @@ class _ImmutableMapping(tuple, Mapping):
     Direct calls to an inherited/base `__class__` descriptor and broader
     runtime compromise are outside the owner-approved threat model documented
     in the contract. A caller walking `gc.get_referents` transitively from an
-    instance of this class only ever reaches tuples, `frozenset`s, and
+    instance of this class only ever reaches tuples, `frozenset`s, `int`s, and
     `OrderState`/`str` values — never a `dict` or `list` it could mutate.
     """
 

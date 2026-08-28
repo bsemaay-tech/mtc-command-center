@@ -222,20 +222,6 @@ DEFAULT_CONFIG: dict[str, object] = {
     "tp1_r_multiple": 3.0,
     "tp1_close_pct": 50.0,
     "tp2_r_multiple": 5.5,
-    # L25 - WunderTrading
-    "wt_enter_long_code":   "",
-    "wt_exit_long_code":    "",
-    "wt_enter_short_code":  "",
-    "wt_exit_short_code":   "",
-    "wt_exit_all_code":     "",
-    "wt_order_type":        "market",
-    "wt_amount_type":       "quote",
-    "wt_amount":            100.0,
-    "wt_leverage":          1,
-    "wt_use_tp":            False,
-    "wt_use_sl":            False,
-    "wt_reduce_only":       True,
-    "wt_place_cond_orders": False,
     "use_break_even": False,
     "be_trigger_r": 1.0,
     "be_buffer_r": 0.1,
@@ -565,23 +551,6 @@ def validate_config(config: dict[str, object]) -> None:
 
     _require_bool(merged, "exit_on_opposite_signal")
 
-    # L25 - WunderTrading
-    _require_str(merged, "wt_order_type")
-    if merged["wt_order_type"] not in {"market", "limit"}:
-        raise ValueError("wt_order_type must be 'market' or 'limit'")
-    _require_str(merged, "wt_amount_type")
-    if merged["wt_amount_type"] not in {"quote", "base"}:
-        raise ValueError("wt_amount_type must be 'quote' or 'base'")
-    _require_number(merged, "wt_amount", greater_than=0.0)
-    _require_int(merged, "wt_leverage", minimum=1)
-    _require_bool(merged, "wt_use_tp")
-    _require_bool(merged, "wt_use_sl")
-    _require_bool(merged, "wt_reduce_only")
-    _require_bool(merged, "wt_place_cond_orders")
-    if bool(merged["wt_use_tp"]) and not bool(merged["use_tp"]):
-        raise ValueError("wt_use_tp requires use_tp=True")
-    if bool(merged["wt_use_sl"]) and not bool(merged["use_sl"]):
-        raise ValueError("wt_use_sl requires use_sl=True")
 
     if merged["use_break_even"] and not merged["use_sl"]:
         raise ValueError("BE requires SL")

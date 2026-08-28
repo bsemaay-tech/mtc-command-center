@@ -1,4 +1,7 @@
-# NEXT_STEPS
+# NEXT_STEPS — historical archive
+
+> **Do not read by default; grep on demand.** Current next actions live in the selected stage's
+> capped `HANDOFF.md`. This file is preserved as the append-only pre-router task journal.
 
 > **Merge note (2026-08-17 night, owner-authorized master merge):** two parallel lanes
 > merged here — the WP-I / bridge lane (first block below) and the housekeeping / phase-watch

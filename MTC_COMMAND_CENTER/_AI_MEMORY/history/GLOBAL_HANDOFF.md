@@ -1,4 +1,7 @@
-# GLOBAL_HANDOFF
+# GLOBAL_HANDOFF — historical archive
+
+> **Do not read by default; grep on demand.** Current state lives in the selected stage's capped
+> `HANDOFF.md`. This file is preserved as the append-only pre-router journal.
 
 > **Merge note (2026-08-17 night, owner-authorized master merge):** two parallel lanes
 > merged here — the WP-I / bridge lane (first block below) and the housekeeping / phase-watch

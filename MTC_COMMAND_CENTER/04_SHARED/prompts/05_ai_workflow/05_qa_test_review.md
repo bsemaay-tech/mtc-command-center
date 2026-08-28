@@ -49,5 +49,5 @@ Never claim PASS without evidence. Never invent test output.
 
 ## WRITE-BACK
 
-- Append a one-line entry to `SESSION_LOG.md` with the QA result.
-- If a new parity edge case was discovered, note it in `NEXT_STEPS.md`.
+- Supply the QA result and any new parity edge case to the Lead for the selected stage's
+  `HANDOFF.md` during Gate 7. Do not append a session journal or historical handoff.

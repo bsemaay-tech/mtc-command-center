@@ -110,7 +110,16 @@ To establish **identity or remaining quota**, use the live method instead — th
 | Isolation | The wrapper creates a **fresh temporary `CLAUDE_CONFIG_DIR` per invocation** and deletes it afterwards, so no ambient Claude account/session state shadows the Coding Plan credential. |
 | Audit helper | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GlmAudit.ps1` |
 
-Canonical GLM **model tiers and the cheapest-capable decision tree** live in `AGENTS.md` §GLM SUPPLEMENTAL ROUTING. Do not copy that table here. Do **not** ask for or paste a Z.AI key anywhere — the wrapper pulls it from Credential Manager and never prints it.
+Canonical GLM model tiers and the cheapest-capable decision tree live in
+`MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AGENTS.md`. Do not copy that table here. Do **not** ask for
+or paste a Z.AI key anywhere — the wrapper pulls it from Credential Manager and never prints it.
+
+The external helper that hard-maps all three tiers to GLM-5.2 is out of scope for routine work.
+Reconfiguring that helper requires separate Barış authorization; its fixed mapping is not a
+routing decision.
+
+`--no-session-persistence` does not reduce active context or save quota; it controls persistence
+only.
 
 **Current state (2026-08-08): WORKING.** Snapshot: 5-hour quota 0% used; weekly quota 51% used, resetting Aug 9 at 11:26; MCP quota 0% used, resetting Aug 26 at 11:26. The plan auto-renews Aug 26 at $16.20. Route remains `glm.ps1` plus Credential Manager target `ZAI_GLM_CODING_PLAN_KEY`.
 

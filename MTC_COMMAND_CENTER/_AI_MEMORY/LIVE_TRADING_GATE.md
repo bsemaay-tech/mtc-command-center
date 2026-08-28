@@ -163,8 +163,8 @@ advance so that a future proof carries its own expiry rule; stating it now prove
 
 | # | Category (unchanged above) | Map-#96 subproofs nested under it | Carrier | Scope | Exact evidence | Commit / deployment identity | Proof date | Invalidation condition | Status · current blocker |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | Strategy robustness | honest-strategy evidence regenerated on a frozen tagged commit | WP-P0-20, WP-P0-21 | Per strategy, per instrument/timeframe set, regenerated on **one** frozen tagged commit | `None accepted` | `—` | `—` | Any change to strategy logic, parameters, data set or simulator; any regeneration on a different commit; a superseding lockbox run | `BLOCKED` — zero tags exist in the repository |
-| 2 | Reference lock | frozen identity; deterministic rerun | WP-P0-02, WP-P0-04 | Per strategy: the frozen parameter set, the tagged commit and the hashed signal file that together define its identity | `None accepted` | `—` | `—` | Any commit touching the referenced code path; any parameter edit; any signal-file hash mismatch on deterministic rerun | `BLOCKED` — zero tags exist in the repository |
+| 1 | Strategy robustness | honest-strategy evidence regenerated on a frozen tagged commit | WP-P0-20, WP-P0-21 | Per strategy, per instrument/timeframe set, regenerated on **one** frozen tagged commit | `None accepted` | `—` | `—` | Any change to strategy logic, parameters, data set or simulator; any regeneration on a different commit; a superseding lockbox run | `BLOCKED` — the 180 annotated `legacy/*` tags are WP-P0-02 code/evidence freezes, not per-strategy identity+signal lockboxes. The `pkg/*` and `release/*` namespaces are empty (0 tags), so the required per-strategy lockbox tag does not exist |
+| 2 | Reference lock | frozen identity; deterministic rerun | WP-P0-02, WP-P0-04 | Per strategy: the frozen parameter set, the tagged commit and the hashed signal file that together define its identity | `None accepted` | `—` | `—` | Any commit touching the referenced code path; any parameter edit; any signal-file hash mismatch on deterministic rerun | `BLOCKED` — the 180 annotated `legacy/*` tags are WP-P0-02 code/evidence freezes, not per-strategy identity+signal lockboxes. The `pkg/*` and `release/*` namespaces are empty (0 tags), so the required per-strategy lockbox tag does not exist |
 | 3 | Parity proof | parity where Pine participates at all | WP-P0-06, WP-P0-23 | Per strategy, **only where Pine participates in monitoring or signalling**; full history, signal flags plus trade-list diff | `None accepted` | `—` | `—` | Any code change on either the Pine or the Python side after the artifact date voids the artifact; any tolerance change | `UNKNOWN` |
 | 4 | Paper soak | `INTERNAL_PAPER` lane evidence only | WP-V2B-07 Lane A | Per strategy, `INTERNAL_PAPER` lane only, over **one** pre-registered immutable window with an immutable start date | `None accepted` | `—` | `—` | Restarting or altering the window without an approved new plan; any strategy or configuration change during it; any unexplained reconciliation break | `UNKNOWN` |
 | 5 | Testnet proof | `EXCHANGE_TESTNET` lane evidence only | WP-V2B-07 Lane B | Per executor/bridge release, `EXCHANGE_TESTNET` venue only, including duplicate-signal injection and kill-process-mid-open-position restart/reconcile | `None accepted` | `—` | `—` | Any executor/Bridge release, schema activation, venue-API change or host change after the soak | `UNKNOWN` |
@@ -179,10 +179,51 @@ advance so that a future proof carries its own expiry rule; stating it now prove
 | 14 | Human approval | the single live signature; sub-live eligibility is automatic and takes no signature | Baris alone | Per strategy and per capital increase: the **one** explicit live signature. Sub-live eligibility is automatic and takes no signature | `None accepted` | `—` | `—` | Any hard row falling to `UNKNOWN`, `BLOCKED` or `EXPIRED`; any strategy, capital, venue or host change; a serious incident | `UNKNOWN` — none exists |
 
 **Standing register blockers that cut across rows** (repository evidence, recorded 2026-08-23 from
-research tickets #105 and #106 — no live inspection is claimed): the deployed Bridge runs **schema
-v4**, so the v5–v9 safety mechanisms are code-complete and tested but **inactive** on that deployed
-database; **deployment execution evidence is stranded off master and master carries stale deployment
-wording**; and there is **zero functioning CI** — OPS-C (WP-P0-27) is planned and unbuilt, so no check
-named above currently runs automatically. **These are blockers. They are not authorization to repair
-them.**
+research tickets #105 and #106 — no live inspection is claimed; the third 2026-08-23 blocker, "zero
+functioning CI", was corrected 2026-08-25 — see the dated correction below): the deployed Bridge runs
+**schema v4**, so the v5–v9 safety mechanisms are code-complete and tested but **inactive** on that
+deployed database; and **deployment execution evidence is stranded off master and master carries
+stale deployment wording**. **These are blockers. They are not authorization to repair them.**
+
+**CI correction (2026-08-25, lane AM — repository state at `master` `59bf7723` plus read-only
+GitHub evidence reproduced by the implementer):** the 2026-08-23 register recorded a third
+cross-cutting blocker — *"there is zero functioning CI — OPS-C (WP-P0-27) is planned and unbuilt,
+so no check named above currently runs automatically."* That claim is stale and is withdrawn:
+
+- `.github/workflows/ci.yml` — the WP-P0-27 repo-root workflow (Bridge suite, Python 3.12,
+  hash-locked dependency install, `compileall`) — reached `master` through merge `110305c0`; the
+  WP-P0-27 package (lane K, T1 PASS-WITH-NITS) merged at `d5e5e98e`; and the GC-referent repair
+  `cef1d070` turned the `master` CI run green (run `32863496339`, created 2026-08-25T15:04:24Z).
+  The latest `master` push, at `59bf7723`, is green: CI run `32868549932` and Pine Defang Guard
+  run `32868550067` both completed `success` on 2026-08-25.
+- `.github/workflows/pine-defang-guard.yml` (WP-P0-23) also runs on every push and pull request;
+  it is deliberately **not** a required check (progressive policy as designed).
+- `master` is protected: repository ruleset **21444962** ("Protect master – required CI", created
+  2026-08-25) is **active** with `required_status_checks` for **`Bridge suite (Python 3.12)`** plus
+  `deletion` and `non_fast_forward` rules, and **no bypass actors**; the legacy branch-protection
+  API returns 404 because enforcement is via the ruleset, not legacy protection.
+- Sibling-copy disclosure (`origin/master`, observed 2026-08-25): the withdrawn zero-CI claim also
+  stands in four planning records outside this register. The brief line
+  `MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md:2527`
+  is unconditional and normative, including "no document may describe it as built", and needs
+  owner/Lead disposition. The plan lines
+  `MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:594`
+  and `:1031` carry the same claim scoped to WP-P0-27 remaining unaccepted, so they lift by their
+  own terms after merge `d5e5e98e` while remaining literally stale. The fold line
+  `MTC_COMMAND_CENTER/11_TRIAGE/WAYFINDER_SAFETY_OPERATIONS_FOLD_2026-08-23.md:126` carries the
+  same planned/unbuilt sentence. This lane discloses those siblings only and does not edit them.
+
+**This correction changes no row status above.** CI runs the Bridge test suite and the Pine alert
+guard; none of the fourteen categories' named evidence — per-strategy soaks, testnet drills,
+three-way reconciliation, kill-switch drills, deployed-host monitoring, the owner signature — is
+produced or accepted by it, so every row's evidence remains `None accepted`. **Withdrawing the
+stale zero is not authorization to repair the remaining blockers, and it gates no row.**
+
+**Tag wording correction (2026-08-28, owner decision 5):** rows 1 and 2 now state the exact current
+facts without moving either readiness row: all 180 annotated `legacy/*` tags are WP-P0-02
+code/evidence freezes; neither `pkg/*` nor `release/*` contains a tag; and those code/evidence
+freezes do not establish the required per-strategy identity+signal lockboxes. Namespace, not a
+word inside a legacy tag name, controls this accounting:
+`legacy/evbr/integration--bridge-release-20260815/2026-08-25` remains a `legacy/*` WP-P0-02 freeze,
+not a `release/*` tag.
 

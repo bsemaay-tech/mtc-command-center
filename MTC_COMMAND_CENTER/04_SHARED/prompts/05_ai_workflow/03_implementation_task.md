@@ -45,4 +45,4 @@ Gate 7 for trivial scopes).
 ## WRITE-BACK
 
 - No memory updates inside Gate 3 itself.
-- Out-of-scope items noticed go into `NEXT_STEPS.md` during Gate 7.
+- Out-of-scope items noticed are factual inputs for the selected stage's `HANDOFF.md` during Gate 7.
