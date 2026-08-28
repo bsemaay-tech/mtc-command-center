@@ -577,6 +577,173 @@ def produce_c10(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
     return observation, {"position_present": runner.state.position is not None}
 
 
+def _exit_config(**overrides: object) -> dict[str, object]:
+    config: dict[str, object] = {
+        "execution_profile_id": "standing_touch",
+        "tp_mode": "None",
+        "use_sl_percent": False,
+        "use_sl_swing_atr": False,
+        "use_trailing": False,
+        "trail_start_r": 1.0,
+        "trail_distance_atr_mult": 1.0,
+        "use_break_even": False,
+        "be_trigger_r": 1.0,
+        "be_buffer_r": 0.0,
+        "tw_audit_semantics_mode": "off",
+        "tw_trailing_semantics_mode": "local",
+        "tw_be_semantics_mode": "local",
+    }
+    config.update(overrides)
+    return config
+
+
+def _scenario_position(*, side: str, entry: float, qty: float, stop: float | None) -> Any:
+    from mtc_v2.core.types import EntryLeg, Position
+
+    return Position(
+        side=side,
+        entry_price=entry,
+        avg_entry_price=entry,
+        qty=qty,
+        entry_bar=0,
+        initial_qty=qty,
+        active_stop_price=stop,
+        entry_legs=[EntryLeg(entry, qty, 0)],
+        lifecycle_id=1,
+        working_exit_reference_qty=qty,
+        initial_risk_per_unit=None if stop is None else abs(entry - stop),
+    )
+
+
+def _manager(*, multiplier: float = 1.0) -> Any:
+    from mtc_v2.core.position_manager import PositionManager
+
+    return PositionManager(
+        enable_long=True,
+        enable_short=True,
+        regime_lock=False,
+        max_entries=1,
+        cooldown_bars=0,
+        contract_multiplier=multiplier,
+        qty_step=0.1,
+    )
+
+
+def produce_c11(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.exits import evaluate_price_exit
+    from mtc_v2.core.types import PortfolioState
+
+    bar_input = inputs["bar"]
+    bar = _bar(index=1, open_=bar_input["open"], high=bar_input["high"], low=bar_input["low"], close=bar_input["close"])
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    state.position = _scenario_position(
+        side=inputs["side"], entry=inputs["entry_price"], qty=1.0, stop=inputs["active_stop_price"]
+    )
+    hit = evaluate_price_exit(_exit_config(), bar=bar, position=state.position)
+    if hit.hit and hit.fill_price is not None:
+        _manager().close_position(bar=bar, exit_price=hit.fill_price, reason=hit.reason or "", state=state)
+    observation = {"fill_price": hit.fill_price, "hit": hit.hit, "reason": "stop_loss" if hit.hit else None}
+    return observation, {"position_present": state.position is not None}
+
+
+def produce_c12(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.exits import evaluate_price_exit
+    from mtc_v2.core.types import PortfolioState, WorkingExit
+
+    bar_input = inputs["bar"]
+    bar = _bar(index=1, open_=bar_input["open"], high=bar_input["high"], low=bar_input["low"], close=bar_input["close"])
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    state.position = _scenario_position(side=inputs["side"], entry=inputs["entry_price"], qty=1.0, stop=None)
+    state.position.active_tp_price = inputs["active_tp_price"]
+    state.position.working_exits = [WorkingExit("TP", "TP", inputs["active_tp_price"], None, 1.0)]
+    hit = evaluate_price_exit(_exit_config(tp_mode="Percent"), bar=bar, position=state.position)
+    if hit.hit and hit.fill_price is not None:
+        _manager().close_position(bar=bar, exit_price=hit.fill_price, reason=hit.reason or "", state=state)
+    observation = {"fill_price": hit.fill_price, "hit": hit.hit, "reason": "take_profit" if hit.hit else None}
+    return observation, {"position_present": state.position is not None}
+
+
+def produce_c13(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.exits import evaluate_price_exit
+    from mtc_v2.core.types import PortfolioState, WorkingExit
+
+    bar = _bar(index=1, open_=inputs["entry_price"], high=inputs["bar_high"], low=inputs["entry_price"], close=inputs["bar_high"])
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    state.position = _scenario_position(side=inputs["side"], entry=inputs["entry_price"], qty=inputs["qty"], stop=None)
+    state.position.working_exits = [
+        WorkingExit(item["id"], item["id"], item["price"], None, item["fraction"])
+        for item in inputs["targets"]
+    ]
+    manager = _manager()
+    config = _exit_config(tp_mode="MultiTP")
+    while state.position is not None:
+        hit = evaluate_price_exit(config, bar=bar, position=state.position)
+        if not hit.hit or hit.fill_price is None:
+            break
+        manager.close_position(
+            bar=bar,
+            exit_price=hit.fill_price,
+            reason=hit.reason or "",
+            state=state,
+            exit_pct=hit.exit_pct,
+            exit_id=hit.exit_id,
+        )
+        if not hit.continue_evaluation_this_bar:
+            break
+    events = state.exit_events_this_bar
+    observation = {
+        "exit_qtys": [event.exit_qty for event in events],
+        "ordered_exit_ids": [event.exit_id for event in events],
+        "realized_pnls": [event.realized_pnl for event in events],
+    }
+    return observation, {"position_present": state.position is not None, "realized_equity_delta": state.realized_equity}
+
+
+def produce_c14(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.exits import STOP_OWNER_BE, update_protective_stop_owner
+
+    position = _scenario_position(side=inputs["side"], entry=inputs["entry_price"], qty=1.0, stop=inputs["initial_stop"])
+    config = _exit_config(
+        use_break_even=True,
+        be_trigger_r=inputs["trigger_r"],
+        be_buffer_r=inputs["buffer_r"],
+        tw_be_semantics_mode=inputs["tw_mode"],
+    )
+    bar = _bar(index=1, open_=inputs["bar_close"], high=inputs["bar_close"], low=inputs["bar_close"], close=inputs["bar_close"])
+    update_protective_stop_owner(config, position=position, bar=bar, price_tick=0.01)
+    observation = {
+        "active_stop_owner": "break_even" if position.active_stop_owner == STOP_OWNER_BE else position.active_stop_owner,
+        "active_stop_price": position.active_stop_price,
+        "be_active": position.be_active,
+    }
+    return observation, {"position_present": True}
+
+
+def produce_c15(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.exits import STOP_OWNER_TRAIL, update_protective_stop_owner
+
+    position = _scenario_position(side=inputs["side"], entry=inputs["entry_price"], qty=1.0, stop=inputs["initial_stop"])
+    config = _exit_config(
+        use_trailing=True,
+        trail_start_r=1.0,
+        trail_distance_atr_mult=inputs["trail_distance_atr_mult"],
+    )
+    bar = _bar(index=1, open_=inputs["bar_close"], high=inputs["bar_close"], low=inputs["bar_close"], close=inputs["bar_close"])
+    update_protective_stop_owner(
+        config,
+        position=position,
+        bar=bar,
+        price_tick=0.01,
+        trail_atr=inputs["trail_atr"],
+    )
+    observation = {
+        "active_stop_owner": "trailing" if position.active_stop_owner == STOP_OWNER_TRAIL else position.active_stop_owner,
+        "trail_active": position.trail_active,
+        "trail_price": position.active_stop_price,
+    }
+    return observation, {"position_present": True}
+
+
 ROW_CONTRACTS: dict[str, RowContract] = {
     "C01": RowContract(
         row_id="C01",
@@ -790,6 +957,142 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "        return (sizing_equity * self.max_leverage_cap) > required_margin\n",
         ),
         producer=produce_c10,
+    ),
+    "C11": RowContract(
+        row_id="C11",
+        scenario_id="C11-LEGACY-001",
+        producer_adapter="A.exits_stop_gap",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py:395-421",),
+        complete_inputs={
+            "active_stop_price": 95.0,
+            "bar": {"close": 92.0, "high": 101.0, "low": 89.0, "open": 90.0},
+            "entry_price": 100.0,
+            "side": "long",
+        },
+        expected_observation={"fill_price": 90.0, "hit": True, "reason": "stop_loss"},
+        expected_final_state={"position_present": False},
+        mutation=Mutation(
+            "C11-GF8-MUT-001",
+            "mtc_v2/core/exits.py",
+            "        if bar.open <= stop_price:\n            fill_price = bar.open\n",
+            "        if bar.open <= stop_price:\n            fill_price = stop_price\n",
+        ),
+        producer=produce_c11,
+    ),
+    "C12": RowContract(
+        row_id="C12",
+        scenario_id="C12-LEGACY-001",
+        producer_adapter="A.exits_target_gap",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py:450-491",),
+        complete_inputs={
+            "active_tp_price": 105.0,
+            "bar": {"close": 111.0, "high": 112.0, "low": 109.0, "open": 110.0},
+            "entry_price": 100.0,
+            "side": "long",
+        },
+        expected_observation={"fill_price": 110.0, "hit": True, "reason": "take_profit"},
+        expected_final_state={"position_present": False},
+        mutation=Mutation(
+            "C12-GF8-MUT-001",
+            "mtc_v2/core/exits.py",
+            "            if bar.open >= target:\n                fill_price = bar.open\n",
+            "            if bar.open >= target:\n                fill_price = target\n",
+        ),
+        producer=produce_c12,
+    ),
+    "C13": RowContract(
+        row_id="C13",
+        scenario_id="C13-LEGACY-001",
+        producer_adapter="A.exits_multitp",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=(
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py:450-491",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_manager.py:267-309",
+        ),
+        complete_inputs={
+            "bar_high": 111.0,
+            "entry_price": 100.0,
+            "qty": 10.0,
+            "side": "long",
+            "targets": [
+                {"fraction": 0.5, "id": "TP1", "price": 105.0},
+                {"fraction": 1.0, "id": "TP2", "price": 110.0},
+            ],
+        },
+        expected_observation={
+            "exit_qtys": [5.0, 5.0],
+            "ordered_exit_ids": ["TP1", "TP2"],
+            "realized_pnls": [25.0, 50.0],
+        },
+        expected_final_state={"position_present": False, "realized_equity_delta": 75.0},
+        mutation=Mutation(
+            "C13-GF8-MUT-001",
+            "mtc_v2/core/exits.py",
+            "        continue_eval = working_exit.kind == \"TP1\"\n        exit_pct = float(working_exit.qty_fraction)\n        if working_exit.kind == \"TP2\":\n            exit_pct = 1.0\n",
+            "        continue_eval = working_exit.kind == \"TP1\"\n        exit_pct = float(working_exit.qty_fraction)\n        if working_exit.kind == \"TP2\":\n            exit_pct = 0.4\n",
+        ),
+        producer=produce_c13,
+    ),
+    "C14": RowContract(
+        row_id="C14",
+        scenario_id="C14-LEGACY-001",
+        producer_adapter="A.exits_break_even_legacy",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py:332-350",),
+        complete_inputs={
+            "bar_close": 111.0,
+            "buffer_r": 0.1,
+            "entry_price": 100.0,
+            "initial_stop": 90.0,
+            "side": "long",
+            "trigger_r": 1.0,
+            "tw_mode": "local",
+        },
+        expected_observation={"active_stop_owner": "break_even", "active_stop_price": 101.0, "be_active": True},
+        expected_final_state={"position_present": True},
+        mutation=Mutation(
+            "C14-GF8-MUT-001",
+            "mtc_v2/core/exits.py",
+            "            target_stop = position.entry_price + (initial_risk * float(config[\"be_buffer_r\"])) * (1.0 if is_long else -1.0)\n",
+            "            target_stop = position.entry_price\n",
+        ),
+        producer=produce_c14,
+    ),
+    "C15": RowContract(
+        row_id="C15",
+        scenario_id="C15-LEGACY-001",
+        producer_adapter="A.exits_trailing_legacy",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py:300-330",),
+        complete_inputs={
+            "bar_close": 110.0,
+            "entry_price": 100.0,
+            "initial_stop": 90.0,
+            "side": "long",
+            "trail_atr": 2.0,
+            "trail_distance_atr_mult": 1.0,
+        },
+        expected_observation={"active_stop_owner": "trailing", "trail_active": True, "trail_price": 108.0},
+        expected_final_state={"position_present": True},
+        mutation=Mutation(
+            "C15-GF8-MUT-001",
+            "mtc_v2/core/exits.py",
+            "        distance = float(config[\"trail_distance_atr_mult\"]) * float(trail_atr)\n",
+            "        distance = float(config[\"trail_distance_atr_mult\"]) * float(trail_atr) * 2.0\n",
+        ),
+        producer=produce_c15,
     ),
 }
 

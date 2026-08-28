@@ -19,6 +19,11 @@ EXPECTED_ROWS = {
     "C08": ("C08-LEGACY-001", "C08-GF8-MUT-001"),
     "C09": ("C09-LEGACY-001", "C09-GF8-MUT-001"),
     "C10": ("C10-LEGACY-001", "C10-GF8-MUT-001"),
+    "C11": ("C11-LEGACY-001", "C11-GF8-MUT-001"),
+    "C12": ("C12-LEGACY-001", "C12-GF8-MUT-001"),
+    "C13": ("C13-LEGACY-001", "C13-GF8-MUT-001"),
+    "C14": ("C14-LEGACY-001", "C14-GF8-MUT-001"),
+    "C15": ("C15-LEGACY-001", "C15-GF8-MUT-001"),
 }
 EXPECTED_A_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 EXPECTED_A_TREE = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
@@ -164,7 +169,7 @@ def main() -> int:
         "stop": sum(row.get("status") == "STOP" for row in rows),
         "total": len(rows),
     }
-    require(independently_counted == {"green": 10, "not_applicable": 2, "stop": 30, "total": 42}, "corroboration counts differ")
+    require(independently_counted == {"green": 15, "not_applicable": 2, "stop": 25, "total": 42}, "corroboration counts differ")
     require(corroboration.get("counts") == independently_counted, "reported corroboration counts differ")
     require(corroboration.get("outcome") == "STOP", "partial arm did not remain STOP")
 
