@@ -11,9 +11,11 @@ audits remain required; the implementer issues no acceptance verdict.
 
 ## Outcome
 
-**Gate outcome: STOP.** `P011-LC-GATE-v2` is an owner-authorized authority re-pin and candidate
-artifact set. Seven applicable rows remain STOP, and no kernel consolidation, protected
-implementation, subject comparison, or live/runtime action was performed.
+**Gate outcome after stage 2: STOP.** The measured copied-pin row arm now reports 27 GREEN,
+13 STOP, and 2 policy-only rows. Six formerly GREEN rows correctly became STOP when the gate began
+checking the exact declared authority set (`C:\tmp\N8_VARIANTS\after_changed_rows.jsonl:1-6`). No
+kernel consolidation, protected implementation edit, subject comparison, or live/runtime action was
+performed.
 
 ## Premise 1 - authority diff
 
@@ -79,6 +81,53 @@ comparator visits 134 expected-leaf paths; there are also **33 mutation REDs and
   `a89d46ef...dcd48`, batch `2767f39d...4967e`.
 - Contract mutations remain 3 FAIL + 1 STOP. Structural evidence records 17/17 expected attacks
   and 17/17 expected restorations, SHA-256 `121a96a0...55a7e`.
+
+## Stage-2 executable contract rule
+
+Every acceptance-bearing declaration has an independent verifier-owned typed value, is exact-bound
+before producer execution, and reaches exactly one named executable consumer. A declaration that
+cannot satisfy both conditions does not exist in the contract. PASS or GREEN requires conservation:
+declared leaves = bound leaves = consumed leaves, with no missing, extra, duplicated, or silently
+ignored leaf.
+
+The generator now emits typed comparison, expectation-provenance, exact-authority, and complete
+mutation contracts (`stage1_freeze.py:20-22`, `:526-606`). The row arm exact-binds provenance before
+execution, consumes mutation restoration and authority execution through named consumers, and
+requires complete production consumption (`row_arm.py:170-411`, `:2568-2607`). The baseline gate
+also performs terminal named consumption for every scenario declaration before any profile producer
+can run (`p011_gate.py:576-715`).
+
+The six measured disposition changes are:
+
+| Row | Before | After | Missing declared authority |
+|---|---|---|---|
+| C03 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | PINE_CURRENT_MASTER |
+| C04 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | PINE_CURRENT_MASTER |
+| C26 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | PINE_CONTROLLER_FREEZE |
+| C38 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | A_CURRENT_MASTER |
+| C39 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | A_CURRENT_MASTER |
+| C41 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | B_BACKTEST_FREEZE |
+
+The measured source for all six rows records the declared set, actual set, missing identity, and
+`CONSERVED` contract ledger (`C:\tmp\N8_VARIANTS\after_changed_rows.jsonl:1-6`). The complete copied-
+pin build remains STOP while all 33 executable producers still prove clean GREEN and mutation RED;
+the two builds are byte-identical (`C:\tmp\N8_VARIANTS\after_full\batch_manifest.json:1`;
+`C:\tmp\N8_VARIANTS\after_full_2\batch_manifest.json:1`).
+
+The exhaustive copied-manifest matrix covers 1,100 declared leaves with mutate, delete, and unknown-
+sibling variants: 3,300/3,300 were refused before producer execution and every clean restoration
+passed (`C:\tmp\N8_VARIANTS\leaf_variant_matrix.json:1`). Named execution-result probes separately
+refuse both a wrong replacement and a mismatch at the wrong path
+(`C:\tmp\N8_VARIANTS\after_consumer_refusals.json:1-2`). The final isolated suite passes 16 tests,
+including the measured producer spy, ninth required key, identity-bound C32 control, and complete
+matrix (`C:\tmp\N8_VARIANTS\unit_green_final.txt:1-21`).
+
+Stage 2 changes the legacy-manifest identity to
+`29ecc19947bd5400293709cccd7fe0e46aceeb013cc8fb0f2d7965a16c515ed3` and changes the gate,
+row-arm, and generator identities (`C:\tmp\N8_VARIANTS\stage2_current_hashes.json:2-6`). The
+receipt, schema, committed evidence, and v2 external anchor remain intentionally stale/protected;
+stage 4 must repin and regenerate them together. In particular, C41 is now STOP, so its existing F3
+row-record evidence must be regenerated rather than carried forward.
 
 ## Scope and audit boundary
 

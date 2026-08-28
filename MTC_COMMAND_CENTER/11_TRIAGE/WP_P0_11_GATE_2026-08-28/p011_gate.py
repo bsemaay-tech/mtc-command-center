@@ -21,14 +21,27 @@ if str(_MODULE_DIR) not in sys.path:
     sys.path.insert(0, str(_MODULE_DIR))
 
 from scenario_binding import (
+    BindingLedger,
+    ConsumerEvidence,
     EXPECTED_ROW_POSITIONS,
+    ExecutionEvidence,
     ManifestRowError,
     ManifestScenarioSource,
     ScenarioBindingError,
     bind_scenario,
+    consume_execution,
     lookup_manifest_row,
+    require_complete,
     verifier_scenario_contract,
     verify_manifest_row_positions,
+)
+from stage1_freeze import (
+    COMPARISON_RULE_ID,
+    EXPECTATION_METHOD_ID,
+    P009_BLOB_OID,
+    P009_PATH,
+    P009_SHA256,
+    ROW_STARTS,
 )
 
 
@@ -560,6 +573,80 @@ def run_profile(profile: dict[str, Any], bars: list[Any], spool_path: Path) -> t
     return outputs, last_record
 
 
+def _validate_expectation_provenance(binding: BindingLedger, row_id: str) -> None:
+    provenance = binding.contract.expectation_derivation
+    row_number = int(row_id[1:])
+    start = ROW_STARTS[row_number - 1]
+    end = ROW_STARTS[row_number] - 1 if row_number < len(ROW_STARTS) else 1291
+    expected_source = {
+        "path": P009_PATH.relative_to(REPO_ROOT).as_posix(),
+        "git_blob_oid": P009_BLOB_OID,
+        "sha256": P009_SHA256,
+        "section_lines_at_pinned_blob": f"{start}-{end}",
+    }
+    if provenance.method != EXPECTATION_METHOD_ID:
+        raise GateFail(f"{row_id} expectation provenance method differs")
+    if provenance.producer_output_may_not_rebless_expected is not True:
+        raise GateFail(f"{row_id} expectation provenance permits producer reblessing")
+    if dict(provenance.source) != expected_source:
+        raise GateFail(f"{row_id} expectation provenance source pin differs")
+
+
+def _terminal_contract_consumption(binding: BindingLedger) -> dict[str, Any]:
+    grouped: dict[str, list[str]] = {}
+    for leaf in binding.declared_leaves:
+        grouped.setdefault(leaf.expected_consumer, []).append(leaf.path)
+    records = {
+        consumer: ConsumerEvidence(
+            consumer=consumer,
+            declaration_paths=tuple(paths),
+            evidence={
+                "terminal_disposition": (
+                    "BOUND_BEFORE_BASELINE_PRODUCER"
+                    if consumer
+                    in {
+                        "scenario_identity_comparator",
+                        "producer_input_binding",
+                        "expectation_provenance_verifier",
+                    }
+                    else "NOT_EXECUTED_BY_SEQUENCE_BUILDER"
+                )
+            },
+        )
+        for consumer, paths in grouped.items()
+    }
+    execution = ExecutionEvidence(
+        comparators=tuple(
+            record
+            for consumer, record in records.items()
+            if consumer
+            not in {"authority_execution", "producer_mutation_restoration"}
+        ),
+        authority_executions=(records["authority_execution"],),
+        mutation_restorations=(records["producer_mutation_restoration"],),
+    )
+    consumption = consume_execution(binding, execution)
+    require_complete(consumption)
+    corroboration = binding.contract.clean_producer_corroboration
+    return {
+        "authority_execution": {
+            "actual_authority_names": [],
+            "declared_authority_names": sorted(corroboration.authority_names),
+            "exact_set_match": False,
+            "missing": sorted(corroboration.authority_names),
+            "terminal_dispositions": [
+                {"authority_name": name, "disposition": "NOT_EXECUTED"}
+                for name in corroboration.authority_names
+            ],
+        },
+        "bound_leaf_count": len(binding.bound_paths),
+        "consumed_leaf_count": len(consumption.consumed_leaves),
+        "consumer_names": sorted(records),
+        "declared_leaf_count": len(binding.declared_leaves),
+        "status": "CONSERVED_STOP",
+    }
+
+
 def validate_legacy_manifest(path: Path, expected_sha256: str) -> dict[str, Any]:
     actual_hash = sha256_file(path)
     if actual_hash != expected_sha256:
@@ -585,7 +672,7 @@ def validate_legacy_manifest(path: Path, expected_sha256: str) -> dict[str, Any]
             if len(scenarios) != 1:
                 raise GateStop(f"applicable row must have exactly one frozen scenario: {row_id}")
             try:
-                bind_scenario(
+                binding = bind_scenario(
                     ManifestScenarioSource(
                         manifest=manifest,
                         row_id=row_id,
@@ -593,6 +680,9 @@ def validate_legacy_manifest(path: Path, expected_sha256: str) -> dict[str, Any]
                     ),
                     verifier_scenario_contract(row_id),
                 )
+                _validate_expectation_provenance(binding, row_id)
+                if binding.contract.comparison_rule != COMPARISON_RULE_ID:
+                    raise GateFail(f"{row_id} comparator identifier differs")
             except ScenarioBindingError as exc:
                 raise GateStop(f"scenario binding refused for {row_id}: {exc}") from exc
     return manifest
@@ -611,6 +701,10 @@ def build_row_corroboration(manifest: dict[str, Any]) -> dict[str, Any]:
                 }
             )
         else:
+            binding = bind_scenario(
+                row["scenarios"][0], verifier_scenario_contract(row["row_id"])
+            )
+            contract_consumption = _terminal_contract_consumption(binding)
             rows.append(
                 {
                     "row_id": row["row_id"],
@@ -618,6 +712,7 @@ def build_row_corroboration(manifest: dict[str, Any]) -> dict[str, Any]:
                     "producer_execution": "PENDING_DIRECT_BUILD_ADAPTER",
                     "producer_mutation": "PENDING_DIRECT_BUILD_MUTATION",
                     "scenario_ids": [item["scenario_id"] for item in row["scenarios"]],
+                    "contract_consumption": contract_consumption,
                 }
             )
     return {
@@ -785,6 +880,23 @@ def command_build_baseline(args: argparse.Namespace) -> int:
         "full_gate_stop_reason": "row producer corroboration/mutations and independent reproduction are not earned",
     }
     print(json.dumps(result, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+    return 0
+
+
+def command_validate_legacy_manifest(args: argparse.Namespace) -> int:
+    path = resolve_user_path(args.legacy_manifest)
+    validate_legacy_manifest(path, args.legacy_manifest_sha256)
+    print(
+        json.dumps(
+            {
+                "legacy_manifest": str(path),
+                "outcome": "PASS",
+                "sha256": args.legacy_manifest_sha256,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
     return 0
 
 
@@ -1379,6 +1491,11 @@ def build_parser() -> argparse.ArgumentParser:
     build.add_argument("--legacy-manifest", required=True)
     build.add_argument("--out", required=True)
     build.set_defaults(func=command_build_baseline)
+
+    validate_manifest = subparsers.add_parser("validate-legacy-manifest")
+    validate_manifest.add_argument("--legacy-manifest", required=True)
+    validate_manifest.add_argument("--legacy-manifest-sha256", required=True)
+    validate_manifest.set_defaults(func=command_validate_legacy_manifest)
 
     compare = subparsers.add_parser("compare")
     compare.add_argument("--receipt", required=True)

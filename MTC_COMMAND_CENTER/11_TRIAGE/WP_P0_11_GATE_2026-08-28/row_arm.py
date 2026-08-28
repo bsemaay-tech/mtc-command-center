@@ -21,22 +21,35 @@ if str(_MODULE_DIR) not in sys.path:
     sys.path.insert(0, str(_MODULE_DIR))
 
 from scenario_binding import (
+    BindingLedger,
+    ConsumerEvidence,
     EXPECTED_ROW_POSITIONS,
+    ExecutionEvidence,
     ManifestScenarioSource,
+    ScenarioBindingError,
     ScenarioShapeError,
     ScenarioValueError,
     ScenarioContract,
     bind_scenario,
+    consume_execution,
     lookup_manifest_row,
-    manifest_scenario,
+    require_complete,
     verifier_scenario_contract,
+)
+from stage1_freeze import (
+    COMPARISON_RULE_ID,
+    CORROBORATION_STATUS,
+    EXPECTATION_METHOD_ID,
+    MUTATION_RESTORED_GREEN,
+    MUTATION_STATUS,
+    ROW_STARTS,
 )
 
 
 GATE_VERSION = "P011-LC-GATE-v2"
 SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 A_TREE_OID = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
-LEGACY_MANIFEST_SHA256 = "50c76fb33eaab4f02dd7930a568c54d965aa88ab6dad9e0b326449d7322c252d"
+LEGACY_MANIFEST_SHA256 = "29ecc19947bd5400293709cccd7fe0e46aceeb013cc8fb0f2d7965a16c515ed3"
 MERGED_MASTER_COMMIT = "85c3e17f97efa1ba83ef9c679de319a50ad3be04"
 P009_BLOB_OID = "1c39ab939dfcf5589e5ec8fba4af8966947a67fc"
 P009_SHA256 = "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
@@ -102,6 +115,9 @@ class RowContract:
     expected_final_state: dict[str, Any]
     mutation: Mutation
     producer: Callable[[dict[str, Any]], tuple[dict[str, Any], dict[str, Any]]]
+    required_authority_names: tuple[str, ...] = ("A_CURRENT_MASTER",)
+    corroboration_status: str = CORROBORATION_STATUS
+    comparison_rule: str = COMPARISON_RULE_ID
     authority_kind: str = "A"
     manifest_expected_observation: dict[str, Any] | None = None
     manifest_expected_final_state: dict[str, Any] | None = None
@@ -117,6 +133,302 @@ def sha256_file(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def mutation_operation_id(mutation: Mutation) -> str:
+    return (
+        "EXACT_TEXT_REPLACE_ONCE_V1:"
+        f"old_sha256={sha256_bytes(mutation.old.encode('utf-8'))}:"
+        f"new_sha256={sha256_bytes(mutation.new.encode('utf-8'))}"
+    )
+
+
+def mutation_application_contract(mutation: Mutation) -> dict[str, Any]:
+    return {
+        "mutation_id": mutation.mutation_id,
+        "operation": mutation_operation_id(mutation),
+        "replacement": {
+            "new": mutation.new,
+            "new_sha256": sha256_bytes(mutation.new.encode("utf-8")),
+            "old": mutation.old,
+            "old_sha256": sha256_bytes(mutation.old.encode("utf-8")),
+        },
+        "source_seam": mutation.target,
+        "target": mutation.target,
+    }
+
+
+def _declaration_paths(binding: BindingLedger, field: str) -> tuple[str, ...]:
+    prefix = f"$.{field}"
+    return tuple(
+        leaf.path
+        for leaf in binding.declared_leaves
+        if leaf.path == prefix or leaf.path.startswith(f"{prefix}.") or leaf.path.startswith(f"{prefix}[")
+    )
+
+
+def _validate_expectation_provenance(contract: ScenarioContract, row_id: str) -> None:
+    provenance = contract.expectation_derivation
+    row_number = int(row_id[1:])
+    start = ROW_STARTS[row_number - 1]
+    end = ROW_STARTS[row_number] - 1 if row_number < len(ROW_STARTS) else 1291
+    expected_source = {
+        "path": P009_REL.as_posix(),
+        "git_blob_oid": P009_BLOB_OID,
+        "sha256": P009_SHA256,
+        "section_lines_at_pinned_blob": f"{start}-{end}",
+    }
+    if provenance.method != EXPECTATION_METHOD_ID:
+        raise RowFail(f"{row_id} expectation provenance method differs")
+    if provenance.producer_output_may_not_rebless_expected is not True:
+        raise RowFail(f"{row_id} expectation provenance permits producer reblessing")
+    if dict(provenance.source) != expected_source:
+        raise RowFail(f"{row_id} expectation provenance source pin differs")
+
+
+def consume_producer_mutation_restoration(
+    binding: BindingLedger,
+    application: dict[str, Any],
+    red: dict[str, Any],
+    green: dict[str, Any],
+) -> ConsumerEvidence:
+    declared = binding.contract.producer_mutation
+    expected_application = {
+        "mutation_id": declared.mutation_id,
+        "operation": declared.mutation,
+        "source_seam": declared.source_seam,
+        "target": declared.source_seam,
+    }
+    actual_application = {
+        key: application.get(key) for key in expected_application
+    }
+    replacement = application.get("replacement")
+    replacement_valid = (
+        type(replacement) is dict
+        and set(replacement)
+        == {"new", "new_sha256", "old", "old_sha256"}
+        and type(replacement.get("old")) is str
+        and type(replacement.get("new")) is str
+        and replacement.get("old_sha256")
+        == sha256_bytes(replacement["old"].encode("utf-8"))
+        and replacement.get("new_sha256")
+        == sha256_bytes(replacement["new"].encode("utf-8"))
+        and application.get("operation")
+        == mutation_operation_id(
+            Mutation(
+                declared.mutation_id,
+                declared.source_seam,
+                replacement["old"],
+                replacement["new"],
+            )
+        )
+    )
+    if actual_application != expected_application or not replacement_valid:
+        raise RowStop(
+            "producer_mutation_restoration refused: declared mutation target or replacement differs"
+        )
+    if declared.status != MUTATION_STATUS:
+        raise RowStop("producer_mutation_restoration refused: mutation status differs")
+    prefix = "MISMATCH_PATH_PRESENT_V1:"
+    if not declared.required_red.startswith(prefix):
+        raise RowStop("producer_mutation_restoration refused: required RED predicate is untyped")
+    required_path = declared.required_red[len(prefix) :]
+    red_output = red.get("parsed_output") or {}
+    red_paths = {
+        item.get("path")
+        for item in red_output.get("comparison", {}).get("mismatches", [])
+        if isinstance(item, dict)
+    }
+    if (
+        red.get("return_code") != 1
+        or red_output.get("outcome") != "FAIL"
+        or required_path not in red_paths
+    ):
+        raise RowStop(
+            "producer_mutation_restoration refused: required RED predicate "
+            f"{declared.required_red} was not observed"
+        )
+    green_output = green.get("parsed_output") or {}
+    green_mismatches = green_output.get("comparison", {}).get("mismatches")
+    if (
+        declared.restored_green != MUTATION_RESTORED_GREEN
+        or green.get("return_code") != 0
+        or green_output.get("outcome") != "PASS"
+        or green_mismatches != []
+    ):
+        raise RowStop(
+            "producer_mutation_restoration refused: clean restoration did not match frozen authority"
+        )
+    return ConsumerEvidence(
+        consumer="producer_mutation_restoration",
+        declaration_paths=_declaration_paths(binding, "producer_mutation"),
+        evidence={
+            "application": application,
+            "declared_required_red": declared.required_red,
+            "observed_red_paths": sorted(red_paths),
+            "restoration": declared.restored_green,
+            "terminal_disposition": "SATISFIED",
+        },
+    )
+
+
+def consume_authority_execution(
+    binding: BindingLedger, actual_authority_names: list[str]
+) -> tuple[ConsumerEvidence, dict[str, Any]]:
+    declared_contract = binding.contract.clean_producer_corroboration
+    declared = tuple(declared_contract.authority_names)
+    actual = tuple(actual_authority_names)
+    if len(declared) != len(set(declared)):
+        raise RowStop("authority_execution refused: declared authority identity is duplicated")
+    if len(actual) != len(set(actual)):
+        raise RowStop("authority_execution refused: executed authority identity is duplicated")
+    declared_set = set(declared)
+    actual_set = set(actual)
+    terminal_dispositions = [
+        {
+            "authority_name": name,
+            "disposition": "EXECUTED" if name in actual_set else "NOT_EXECUTED",
+        }
+        for name in declared
+    ]
+    terminal_dispositions.extend(
+        {"authority_name": name, "disposition": "UNDECLARED_EXECUTION"}
+        for name in sorted(actual_set - declared_set)
+    )
+    evidence = {
+        "actual_authority_names": sorted(actual_set),
+        "declared_authority_names": sorted(declared_set),
+        "exact_set_match": actual_set == declared_set,
+        "missing": sorted(declared_set - actual_set),
+        "status": declared_contract.status,
+        "terminal_dispositions": terminal_dispositions,
+        "unexpected": sorted(actual_set - declared_set),
+    }
+    if declared_contract.status != CORROBORATION_STATUS or declared_contract.required is not True:
+        raise RowStop("authority_execution refused: corroboration declaration differs")
+    return (
+        ConsumerEvidence(
+            consumer="authority_execution",
+            declaration_paths=_declaration_paths(binding, "clean_producer_corroboration"),
+            evidence=evidence,
+        ),
+        evidence,
+    )
+
+
+def _consumer_record(
+    binding: BindingLedger, consumer: str, evidence: dict[str, Any]
+) -> ConsumerEvidence:
+    paths = tuple(
+        leaf.path
+        for leaf in binding.declared_leaves
+        if leaf.expected_consumer == consumer
+    )
+    if not paths:
+        raise RowStop(f"contract consumer has no declaration paths: {consumer}")
+    return ConsumerEvidence(
+        consumer=consumer,
+        declaration_paths=paths,
+        evidence=evidence,
+    )
+
+
+def consume_contract_execution(
+    binding: BindingLedger,
+    evidence_by_consumer: dict[str, dict[str, Any]],
+    authority_record: ConsumerEvidence,
+    mutation_record: ConsumerEvidence,
+) -> dict[str, Any]:
+    comparator_consumers = {
+        leaf.expected_consumer
+        for leaf in binding.declared_leaves
+        if leaf.expected_consumer
+        not in {"authority_execution", "producer_mutation_restoration"}
+    }
+    if set(evidence_by_consumer) != comparator_consumers:
+        raise RowStop(
+            "execution consumer set differs: "
+            f"missing={sorted(comparator_consumers - set(evidence_by_consumer))} "
+            f"extra={sorted(set(evidence_by_consumer) - comparator_consumers)}"
+        )
+    records = tuple(
+        _consumer_record(binding, consumer, evidence_by_consumer[consumer])
+        for consumer in sorted(comparator_consumers)
+    )
+    try:
+        consumption = consume_execution(
+            binding,
+            ExecutionEvidence(
+                comparators=records,
+                authority_executions=(authority_record,),
+                mutation_restorations=(mutation_record,),
+            ),
+        )
+        require_complete(consumption)
+    except ScenarioBindingError as exc:
+        raise RowStop(f"execution conservation refused: {exc}") from exc
+    return {
+        "bound_leaf_count": len(binding.bound_paths),
+        "consumed_leaf_count": len(consumption.consumed_leaves),
+        "consumer_names": sorted(
+            {item.consumer for item in consumption.consumed_leaves}
+        ),
+        "declared_leaf_count": len(binding.declared_leaves),
+        "status": "CONSERVED",
+    }
+
+
+def consume_unresolved_contract(
+    binding: BindingLedger,
+    actual_authority_names: list[str],
+    stop_reason: str,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    authority_record, authority_evidence = consume_authority_execution(
+        binding, actual_authority_names
+    )
+    terminal = {"terminal_disposition": "STOP", "stop_reason": stop_reason}
+    mutation_record = _consumer_record(
+        binding, "producer_mutation_restoration", terminal
+    )
+    evidence_by_consumer = {
+        consumer: terminal
+        for consumer in {
+            leaf.expected_consumer
+            for leaf in binding.declared_leaves
+            if leaf.expected_consumer
+            not in {"authority_execution", "producer_mutation_restoration"}
+        }
+    }
+    return (
+        consume_contract_execution(
+            binding,
+            evidence_by_consumer,
+            authority_record,
+            mutation_record,
+        ),
+        authority_evidence,
+    )
+
+
+def partition_c32_results(
+    results: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    by_value: dict[str, dict[str, Any]] = {}
+    for result in results:
+        value = result.get("value")
+        if type(value) is not str or value in by_value:
+            raise RowStop("C32 authority/control result identity is missing or duplicated")
+        by_value[value] = result
+    expected = set(C32_AUTHORITY_VALUES) | {C32_INVALID_CONTROL}
+    if set(by_value) != expected:
+        raise RowStop(
+            "C32 authority/control result set differs: "
+            f"missing={sorted(expected - set(by_value))} extra={sorted(set(by_value) - expected)}"
+        )
+    return (
+        [by_value[value] for value in C32_AUTHORITY_VALUES],
+        by_value[C32_INVALID_CONTROL],
+    )
 
 
 def load_json(path: Path) -> Any:
@@ -1484,6 +1796,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "                    if raw.long and not self._l18_prev_raw_long and self._l18_confirm_direction == 1:\n                        self._l18_confirm_bars_count = 1\n",
         ),
         producer=produce_c03,
+        required_authority_names=("A_CURRENT_MASTER", "PINE_CURRENT_MASTER"),
     ),
     "C04": RowContract(
         row_id="C04",
@@ -1507,6 +1820,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "                        if dist_pct > buffer_pct:\n",
         ),
         producer=produce_c04,
+        required_authority_names=("A_CURRENT_MASTER", "PINE_CURRENT_MASTER"),
     ),
     "C05": RowContract(
         row_id="C05",
@@ -2028,6 +2342,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "        outputs: list[RawSignal] = []\n        _first_bar: Bar | None = None\n        _seen_bar_identities: set[tuple[object, int]] = set()\n        for bar in bars:\n            _identity = (bar.timestamp, bar.bar_index)\n            if _identity in _seen_bar_identities:\n                continue\n            _seen_bar_identities.add(_identity)\n",
         ),
         producer=produce_c26,
+        required_authority_names=("A_CURRENT_MASTER", "PINE_CONTROLLER_FREEZE"),
         manifest_expected_observation={"duplicate_rejected_by_legacy_runner": False, "producer_outputs": 2},
         manifest_expected_final_state={"last_current_bar_index": 7},
     ),
@@ -2115,6 +2430,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "((close < long_break_level) if self.c.require_close_beyond else (high > long_break_level))",
         ),
         producer=produce_c38,
+        required_authority_names=("B_BACKTEST_FREEZE", "A_CURRENT_MASTER"),
         authority_kind="B",
     ),
     "C39": RowContract(
@@ -2135,6 +2451,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "long_edge = bool(entry_long_signal)",
         ),
         producer=produce_c39,
+        required_authority_names=("A_CURRENT_MASTER", "B_BACKTEST_FREEZE"),
         authority_kind="B",
     ),
     "C40": RowContract(
@@ -2187,6 +2504,7 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "        ma_val = None  # producer mutation removes the legacy substitution\n",
         ),
         producer=produce_c41,
+        required_authority_names=("A_CURRENT_MASTER", "B_BACKTEST_FREEZE"),
         manifest_expected_observation={"htf_substituted_value": 101.0, "missing_ltf_ma_passes": True},
         manifest_expected_final_state={"legacy_substitution_observed": True},
     ),
@@ -2247,7 +2565,7 @@ def validate_frozen_inputs() -> dict[str, Any]:
     return manifest
 
 
-def validate_contract_binding(manifest: dict[str, Any], contract: RowContract) -> dict[str, Any]:
+def validate_contract_binding(manifest: dict[str, Any], contract: RowContract) -> BindingLedger:
     source = ManifestScenarioSource(
         manifest=manifest,
         row_id=contract.row_id,
@@ -2263,19 +2581,42 @@ def validate_contract_binding(manifest: dict[str, Any], contract: RowContract) -
         or manifest_row.get("disposition") != "APPLICABLE"
     ):
         raise RowFail(f"{contract.row_id} disposition/identity differs")
-    verifier_values = verifier_scenario_contract(contract.row_id).as_mapping()
+    verifier_contract = verifier_scenario_contract(contract.row_id)
+    _validate_expectation_provenance(verifier_contract, contract.row_id)
+    verifier_values = verifier_contract.as_mapping()
+    mutation_application = mutation_application_contract(contract.mutation)
     verifier_values.update(
         {
             "scenario_id": contract.scenario_id,
             "producer_adapter": contract.producer_adapter,
             "complete_inputs": contract.complete_inputs,
-            "literal_expected_observation": contract.manifest_expected_observation
-            or contract.expected_observation,
-            "literal_expected_final_state": contract.manifest_expected_final_state
-            or contract.expected_final_state,
+            "literal_expected_observation": (
+                contract.manifest_expected_observation
+                if contract.manifest_expected_observation is not None
+                else contract.expected_observation
+            ),
+            "literal_expected_final_state": (
+                contract.manifest_expected_final_state
+                if contract.manifest_expected_final_state is not None
+                else contract.expected_final_state
+            ),
+            "comparison_rule": contract.comparison_rule,
+            "clean_producer_corroboration": {
+                "status": contract.corroboration_status,
+                "required": True,
+                "authority_names": list(contract.required_authority_names),
+            },
         }
     )
-    verifier_values["producer_mutation"]["mutation_id"] = contract.mutation.mutation_id
+    verifier_values["producer_mutation"].update(
+        {
+            "mutation_id": contract.mutation.mutation_id,
+            "source_seam": mutation_application["source_seam"],
+            "mutation": mutation_application["operation"],
+            "restored_green": MUTATION_RESTORED_GREEN,
+            "status": MUTATION_STATUS,
+        }
+    )
     try:
         ledger = bind_scenario(source, ScenarioContract.from_mapping(verifier_values))
     except ScenarioShapeError as exc:
@@ -2284,11 +2625,33 @@ def validate_contract_binding(manifest: dict[str, Any], contract: RowContract) -
         raise RowFail(f"{contract.row_id} frozen scenario differs: {exc}") from exc
     except ScenarioValueError as exc:
         raise RowFail(f"{contract.row_id} frozen scenario differs: {exc}") from exc
+    return ledger
+
+
+def contract_binding_summary(ledger: BindingLedger) -> dict[str, Any]:
     return {
         "binding_module": "scenario_binding.bind_scenario",
         "bound_leaf_count": len(ledger.bound_paths),
         "declared_leaf_count": len(ledger.declared_leaves),
     }
+
+
+def validate_unresolved_contract_binding(
+    manifest: dict[str, Any], row_id: str
+) -> BindingLedger:
+    contract = verifier_scenario_contract(row_id)
+    _validate_expectation_provenance(contract, row_id)
+    try:
+        return bind_scenario(
+            ManifestScenarioSource(
+                manifest=manifest,
+                row_id=row_id,
+                expected_position=EXPECTED_ROW_POSITIONS[row_id],
+            ),
+            contract,
+        )
+    except ScenarioBindingError as exc:
+        raise RowFail(f"{row_id} frozen scenario differs: {exc}") from exc
 
 
 def bind_authority_root(authority_root: Path, target: str, expected_sha256: str) -> None:
@@ -2333,13 +2696,21 @@ def resolved_bindings(authority_root: Path, contract: RowContract) -> list[dict[
     return rows
 
 
+def executed_authority_name(contract: RowContract) -> str:
+    if contract.authority_kind == "A":
+        return "A_CURRENT_MASTER"
+    if contract.authority_kind == "B":
+        return "B_BACKTEST_FREEZE"
+    raise RowStop(f"no executed authority identity mapping for {contract.authority_kind}")
+
+
 def command_run_one(args: argparse.Namespace) -> int:
     global ACTIVE_AUTHORITY_ROOT
     manifest = load_json(Path(args.manifest).resolve())
     contract = ROW_CONTRACTS.get(args.row)
     if contract is None:
         raise RowStop(f"row adapter is not implemented: {args.row}")
-    bindings = validate_contract_binding(manifest, contract)
+    binding = validate_contract_binding(manifest, contract)
     authority_root = Path(args.authority_root).resolve()
     bind_authority_root(authority_root, contract.mutation.target, args.authority_file_sha256)
     dependency_root = Path(args.dependency_root).resolve()
@@ -2362,25 +2733,28 @@ def command_run_one(args: argparse.Namespace) -> int:
         encoded_actual,
         expected_leaf_paths_visited=expected_leaf_paths,
     )
+    imports = resolved_bindings(authority_root, contract)
     result = {
         "actual": encoded_actual,
         "authority": {
             "commit": contract.authority_commit,
             "name": contract.authority_name,
-            "resolved_imports": resolved_bindings(authority_root, contract),
+            "resolved_imports": imports,
             "tree_oid": contract.authority_tree_oid,
         },
         "comparison": {
             "expected_leaf_paths_visited": len(expected_leaf_paths),
             "expected_leaf_count": leaf_count(encoded_expected),
             "mismatches": mismatches,
-            "rule": "recursive exact key/value equality after IEEE-754 float.hex encoding",
+            "rule": COMPARISON_RULE_ID,
         },
-        "contract_binding": bindings,
+        "contract_binding": contract_binding_summary(binding),
+        "executed_authority_names": [executed_authority_name(contract)],
         "expected": encoded_expected,
         "mode": args.mode,
         "mutation_id": args.mutation_id,
         "outcome": "FAIL" if mismatches else "PASS",
+        "producer_executed": True,
         "row_id": contract.row_id,
         "scenario_id": contract.scenario_id,
     }
@@ -2471,10 +2845,10 @@ def apply_mutation(clean_root: Path, scratch_root: Path, mutation: Mutation) -> 
         )
     target.write_text(source.replace(mutation.old, mutation.new, 1), encoding="utf-8", newline="\n")
     return {
+        **mutation_application_contract(mutation),
         "after_sha256": sha256_file(target),
         "before_sha256": before_sha256,
         "replacement_count": replacement_count,
-        "target": mutation.target,
     }
 
 
@@ -2702,12 +3076,10 @@ def build_unresolved_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     }
     records: list[dict[str, Any]] = []
     for row_id, detail in controller_specs.items():
-        scenario = manifest_scenario(
-            ManifestScenarioSource(
-                manifest=manifest,
-                row_id=row_id,
-                expected_position=EXPECTED_ROW_POSITIONS[row_id],
-            )
+        binding = validate_unresolved_contract_binding(manifest, row_id)
+        contract = binding.contract
+        consumption, authority_execution = consume_unresolved_contract(
+            binding, [], "UNRESOLVED_PRODUCER_EXECUTION"
         )
         record = {
             "authority": {
@@ -2720,10 +3092,13 @@ def build_unresolved_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
                 },
                 "tree_oid": CONTROLLER_TREE_OID,
             },
+            "authority_execution": authority_execution,
             "clean_authority_inspection": detail["source_seams"],
+            "contract_binding": contract_binding_summary(binding),
+            "contract_consumption": consumption,
             "expected": {
-                "observation": scenario["literal_expected_observation"],
-                "final_state": scenario["literal_expected_final_state"],
+                "observation": dict(contract.literal_expected_observation),
+                "final_state": dict(contract.literal_expected_final_state),
             },
             "mutation": "NOT_RUN_NO_EXECUTABLE_PINE_PRODUCER_IN_AUTHORIZED_LANE",
             "reason": (
@@ -2732,20 +3107,14 @@ def build_unresolved_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
                 "producer is available in this lane"
             ),
             "row_id": row_id,
-            "scenario_id": scenario["scenario_id"],
+            "scenario_id": contract.scenario_id,
             "status": "UNRESOLVED_PRODUCER_EXECUTION",
         }
         record["record_sha256"] = result_hash(record)
         records.append(record)
 
-    c32_scenario = manifest_scenario(
-        ManifestScenarioSource(
-            manifest=manifest,
-            row_id="C32",
-            expected_position=EXPECTED_ROW_POSITIONS["C32"],
-        )
-    )
-    c32_inputs = c32_scenario["complete_inputs"]
+    c32_binding = validate_unresolved_contract_binding(manifest, "C32")
+    c32_inputs = dict(c32_binding.contract.complete_inputs)
     c32_probe_values = [*C32_AUTHORITY_VALUES, C32_INVALID_CONTROL]
     c32_script = r'''
 import json, sys
@@ -2763,12 +3132,14 @@ print(json.dumps({"results": results}, sort_keys=True, separators=(",", ":")))
 '''
     c32_probe = _run_unresolved_probe("C32", c32_script)
     c32_results = c32_probe["parsed_output"]["results"]
+    c32_authority_results, c32_control_result = partition_c32_results(c32_results)
     c32_validations = [
-        {"valid": item["valid"], "value": item["value"]} for item in c32_results[:-1]
+        {"valid": item["valid"], "value": item["value"]}
+        for item in c32_authority_results
     ]
     c32_invalid_control = {
-        "valid": c32_results[-1]["valid"],
-        "value": c32_results[-1]["value"],
+        "valid": c32_control_result["valid"],
+        "value": c32_control_result["value"],
     }
     c32_expected = {
         "observation": {
@@ -2787,19 +3158,15 @@ print(json.dumps({"results": results}, sort_keys=True, separators=(",", ":")))
             "validation_by_value": c32_validations,
         },
         "final_state": {
-            "validated_values": [item["value"] for item in c32_results[:-1] if item["valid"]]
+            "validated_values": [
+                item["value"] for item in c32_authority_results if item["valid"]
+            ]
         },
     }
     c32_mismatches = compare_exact(c32_expected, c32_actual)
 
-    c34_scenario = manifest_scenario(
-        ManifestScenarioSource(
-            manifest=manifest,
-            row_id="C34",
-            expected_position=EXPECTED_ROW_POSITIONS["C34"],
-        )
-    )
-    c34_inputs = c34_scenario["complete_inputs"]
+    c34_binding = validate_unresolved_contract_binding(manifest, "C34")
+    c34_inputs = dict(c34_binding.contract.complete_inputs)
     c34_script = r'''
 import json, sys
 sys.path.insert(0, sys.argv[1])
@@ -2843,6 +3210,7 @@ print(json.dumps({"default_initial_capital": DEFAULT_CONFIG["initial_capital"],
     }
     c34_mismatches = compare_exact(c34_expected, c34_actual)
 
+    c35_binding = validate_unresolved_contract_binding(manifest, "C35")
     c35_script = r'''
 import json, sys
 sys.path.insert(0, sys.argv[1])
@@ -2877,6 +3245,7 @@ print(json.dumps({"error": error, "metadata": runner.get_debug_metadata()},
     }
     c35_mismatches = compare_exact(c35_expected, c35_actual)
 
+    c42_binding = validate_unresolved_contract_binding(manifest, "C42")
     c42_script = r'''
 import json, sys
 from datetime import datetime, timezone
@@ -2926,7 +3295,9 @@ print(json.dumps({
             c32_actual,
             c32_mismatches,
             c32_probe,
+            c32_binding,
             {
+                "contract_binding": contract_binding_summary(c32_binding),
                 "validation_by_value": c32_results,
                 "authority_enum": list(C32_AUTHORITY_VALUES),
                 "invalid_control": C32_INVALID_CONTROL,
@@ -2943,7 +3314,9 @@ print(json.dumps({
             c34_actual,
             c34_mismatches,
             c34_probe,
+            c34_binding,
             {
+                "contract_binding": contract_binding_summary(c34_binding),
                 "source_arithmetic": c34_detail,
                 "citations": [
                     "A runner.py:1445-1461",
@@ -2958,7 +3331,9 @@ print(json.dumps({
             c35_actual,
             c35_mismatches,
             c35_probe,
+            c35_binding,
             {
+                "contract_binding": contract_binding_summary(c35_binding),
                 "clean_exception": c35_detail["error"],
                 "metadata_after_exception": c35_detail["metadata"],
                 "citations": [
@@ -2974,7 +3349,9 @@ print(json.dumps({
             c42_actual,
             c42_mismatches,
             c42_probe,
+            c42_binding,
             {
+                "contract_binding": contract_binding_summary(c42_binding),
                 "producer_outputs": c42_detail,
                 "source_arithmetic": "third RF price 99 is below line 100 while previous direction is 0, so the legacy branch emits one short pulse",
                 "citations": [
@@ -2984,7 +3361,16 @@ print(json.dumps({
             },
         ),
     )
-    for row_id, scenario_id, expected, actual, mismatches, probe, detail in specifications:
+    for (
+        row_id,
+        scenario_id,
+        expected,
+        actual,
+        mismatches,
+        probe,
+        binding,
+        detail,
+    ) in specifications:
         if not mismatches:
             raise RowStop(f"{row_id} was expected to preserve an authority contradiction")
         expected_leaf_paths: list[str] = []
@@ -2995,6 +3381,9 @@ print(json.dumps({
         )
         if measured_mismatches != mismatches:
             raise RowStop(f"{row_id} comparison measurement differs from its gate result")
+        consumption, authority_execution = consume_unresolved_contract(
+            binding, ["A_CURRENT_MASTER"], "UNRESOLVED_AUTHORITY_CONTRADICTION"
+        )
         record = {
             "actual": encode_floats(actual),
             "authority": {
@@ -3002,13 +3391,15 @@ print(json.dumps({
                 "name": "implementation A at pinned tree",
                 "tree_oid": A_TREE_OID,
             },
+            "authority_execution": authority_execution,
             "clean_authority_probe": probe,
             "comparison": {
                 "expected_leaf_paths_visited": len(expected_leaf_paths),
                 "expected_leaf_count": leaf_count(expected),
                 "mismatches": encode_floats(mismatches),
-                "rule": "recursive exact key/value equality after IEEE-754 float.hex encoding",
+                "rule": COMPARISON_RULE_ID,
             },
+            "contract_consumption": consumption,
             "expected": encode_floats(expected),
             "mutation": "NOT_RUN_NO_AUTHORITY_ESTABLISHED_EXPECTED_ROUTE",
             "reason": "frozen manifest expectation contradicts the named frozen producer",
@@ -3036,7 +3427,7 @@ def command_build(args: argparse.Namespace) -> int:
     records: list[dict[str, Any]] = []
     for row_id in requested:
         contract = ROW_CONTRACTS[row_id]
-        bindings = validate_contract_binding(manifest, contract)
+        binding = validate_contract_binding(manifest, contract)
         with tempfile.TemporaryDirectory(prefix=f"p011_{row_id.lower()}_") as temp_name:
             temp_root = Path(temp_name).resolve()
             clean_root, materialized_files = materialize_authority(
@@ -3066,6 +3457,67 @@ def command_build(args: argparse.Namespace) -> int:
             )
             if green["return_code"] != 0 or (green["parsed_output"] or {}).get("outcome") != "PASS":
                 raise RowStop(f"{row_id} clean producer did not prove GREEN: {green}")
+        red_output = red["parsed_output"] or {}
+        green_output = green["parsed_output"] or {}
+        red_authorities = red_output.get("executed_authority_names")
+        green_authorities = green_output.get("executed_authority_names")
+        if (
+            type(red_authorities) is not list
+            or red_authorities != green_authorities
+        ):
+            raise RowStop(f"{row_id} executed authority identities differ across RED/GREEN")
+        if (
+            red_output.get("comparison", {}).get("rule") != contract.comparison_rule
+            or green_output.get("comparison", {}).get("rule") != contract.comparison_rule
+        ):
+            raise RowStop(f"{row_id} comparator identifier differs from its contract")
+        mutation_record = consume_producer_mutation_restoration(
+            binding,
+            mutation_application,
+            red,
+            green,
+        )
+        authority_record, authority_evidence = consume_authority_execution(
+            binding, green_authorities
+        )
+        consumption = consume_contract_execution(
+            binding,
+            {
+                "expectation_provenance_verifier": {
+                    "provenance": binding.contract.expectation_derivation.as_mapping(),
+                    "terminal_disposition": "VERIFIED",
+                },
+                "producer_input_binding": {
+                    "complete_inputs": contract.complete_inputs,
+                    "producer_executed": green_output.get("producer_executed") is True,
+                    "terminal_disposition": "BOUND_TO_PRODUCER_CALL",
+                },
+                "recursive_exact_comparator": {
+                    "comparison_rule": contract.comparison_rule,
+                    "green_expected_leaf_paths_visited": green_output.get("comparison", {}).get(
+                        "expected_leaf_paths_visited"
+                    ),
+                    "red_mismatch_paths": [
+                        item.get("path")
+                        for item in red_output.get("comparison", {}).get("mismatches", [])
+                    ],
+                    "terminal_disposition": "COMPARED",
+                },
+                "scenario_identity_comparator": {
+                    "producer_adapter": contract.producer_adapter,
+                    "row_id": green_output.get("row_id"),
+                    "scenario_id": green_output.get("scenario_id"),
+                    "terminal_disposition": "MATCHED",
+                },
+            },
+            authority_record,
+            mutation_record,
+        )
+        row_status = (
+            "GREEN_AFTER_RED"
+            if authority_evidence["exact_set_match"]
+            else "STOP_MISSING_REQUIRED_AUTHORITY"
+        )
         record = {
             "authority": {
                 "citations": list(contract.citations),
@@ -3075,7 +3527,9 @@ def command_build(args: argparse.Namespace) -> int:
                 "name": contract.authority_name,
                 "tree_oid": contract.authority_tree_oid,
             },
-            "contract_binding": bindings,
+            "authority_execution": authority_evidence,
+            "contract_binding": contract_binding_summary(binding),
+            "contract_consumption": consumption,
             "green": green,
             "mutation": {
                 "application": mutation_application,
@@ -3084,8 +3538,10 @@ def command_build(args: argparse.Namespace) -> int:
             },
             "row_id": row_id,
             "scenario_id": contract.scenario_id,
-            "status": "GREEN_AFTER_RED",
+            "status": row_status,
         }
+        if row_status != "GREEN_AFTER_RED":
+            record["stop_reason"] = "MISSING_REQUIRED_AUTHORITY"
         record["record_sha256"] = result_hash(record)
         records.append(record)
 
@@ -3106,21 +3562,26 @@ def command_build(args: argparse.Namespace) -> int:
                     "status": "NOT_A_LEGACY_REPRODUCTION_ROW",
                 }
             )
-        elif row_id in by_row and by_row[row_id]["status"].startswith("UNRESOLVED_"):
-            unresolved_status = by_row[row_id]["status"]
+        elif row_id in by_row and by_row[row_id]["status"] != "GREEN_AFTER_RED":
+            row_status = by_row[row_id]["status"]
+            stop_reason = by_row[row_id].get("stop_reason", row_status)
             corroboration_rows.append(
                 {
                     "evidence_record_sha256": by_row[row_id]["record_sha256"],
                     "producer_execution": (
                         "CLEAN_AUTHORITY_CONTRADICTS_FROZEN_EXPECTATION"
-                        if unresolved_status == "UNRESOLVED_AUTHORITY_CONTRADICTION"
-                        else "NOT_RUN_NO_EXECUTABLE_PINE_PRODUCER_IN_AUTHORIZED_LANE"
+                        if row_status == "UNRESOLVED_AUTHORITY_CONTRADICTION"
+                        else (
+                            "NOT_RUN_NO_EXECUTABLE_PINE_PRODUCER_IN_AUTHORIZED_LANE"
+                            if row_status == "UNRESOLVED_PRODUCER_EXECUTION"
+                            else "STOP_MISSING_REQUIRED_AUTHORITY"
+                        )
                     ),
                     "producer_mutation": by_row[row_id]["mutation"],
                     "row_id": row_id,
                     "scenario_ids": [by_row[row_id]["scenario_id"]],
                     "status": "STOP",
-                    "stop_reason": unresolved_status,
+                    "stop_reason": stop_reason,
                 }
             )
         elif row_id in by_row:
@@ -3190,8 +3651,18 @@ def command_build(args: argparse.Namespace) -> int:
             "p009_sha256": P009_SHA256,
         },
         "counts": {
-            "clean_green": sum(item["status"] == "GREEN_AFTER_RED" for item in records),
-            "mutation_red": sum(item["status"] == "GREEN_AFTER_RED" for item in records),
+            "clean_green": sum(
+                type(item.get("green")) is dict
+                and (item["green"].get("parsed_output") or {}).get("outcome") == "PASS"
+                for item in records
+            ),
+            "mutation_red": sum(
+                type(item.get("mutation")) is dict
+                and type(item["mutation"].get("red")) is dict
+                and (item["mutation"]["red"].get("parsed_output") or {}).get("outcome")
+                == "FAIL"
+                for item in records
+            ),
             "unresolved_authority_contradiction": sum(
                 item["status"] == "UNRESOLVED_AUTHORITY_CONTRADICTION"
                 for item in unresolved_records

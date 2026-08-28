@@ -17,6 +17,15 @@ B_FREEZE_COMMIT = "b5ed1afadcff09b69e36b72affeb23de51d84c14"
 P009_AUTHORITY_COMMIT = "85c3e17f97efa1ba83ef9c679de319a50ad3be04"
 P009_BLOB_OID = "1c39ab939dfcf5589e5ec8fba4af8966947a67fc"
 P009_SHA256 = "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+COMPARISON_RULE_ID = "RECURSIVE_EXACT_IEEE754_HEX_V1"
+EXPECTATION_METHOD_ID = "P009_LITERAL_SOURCE_ARITHMETIC_V1"
+CORROBORATION_STATUS = "REQUIRED_EXACT_AUTHORITY_SET"
+MUTATION_STATUS = "REQUIRED_RED_THEN_GREEN"
+MUTATION_RESTORED_GREEN = "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH"
+UNRESOLVED_MUTATION_OPERATION = "NOT_EXECUTED_UNRESOLVED_ROW_V1"
+UNRESOLVED_MUTATION_REQUIRED_RED = "TERMINAL_STOP_REQUIRED_V1"
+UNRESOLVED_MUTATION_RESTORATION = "NOT_ESTABLISHED_V1"
+UNRESOLVED_MUTATION_STATUS = "UNRESOLVED_EXECUTION"
 FIXTURE_SHA256 = "3a3a4939fc8e1b725112115971e2663ddbcc1ea5981c37aa1d02d8bc3674a7bb"
 UPSTREAM_MANIFEST_SHA256 = "b4daced1367fabc107a692be03f234af11f0c908bfd2b60d6c65ed23c4de5ea6"
 UPSTREAM_NORMALIZED_SHA256 = "521d30ca5cf340ab3ed37a738fe76e1c4651781d91b797c791ea67f92d89cbac"
@@ -440,6 +449,43 @@ ROW_SCENARIOS: dict[int, dict[str, Any]] = {
 }
 
 
+ROW_MUTATION_EXECUTION: dict[int, tuple[str, str, str, str]] = {
+    1: ("mtc_v2/core/runner.py", "ad95a5b021a764a326f74b6db2a5fc5b9f82335d19624e4ddaf853e49a2dad83", "b3adfb6bd97664a9c4e7312c206dd1311dae1091c9bd59feac747309754e4053", "$.observation.gated_long"),
+    2: ("mtc_v2/core/gates.py", "c52bba18466bae57fce418e53999b6885e5ea3449db7068a89bb58b87a6fb8f5", "6b04be3a27f98fa0653b107803512f7db24b624b54f82f906daa88e44afdd17a", "$.final_state.gate_evaluation"),
+    3: ("mtc_v2/core/runner.py", "a2ecd934e15187cff0bd6b24f702dc07c8731deee8bb1b6bd602a14b47f35ddb", "4fbd5a93c017a083a3db00b5244c54110258103e1226e5ae95cfd9cf8d00b6ad", "$.final_state.confirm_direction"),
+    4: ("mtc_v2/core/runner.py", "0deefc1645c6752e620773ddb71ac3ea49d403b44a922cb13ecd0d513590cb16", "9cad46b8e28073b77c04bbafc7707ac1db7ccf6bde21a6d961a939823023b812", "$.final_state.waiting"),
+    5: ("mtc_v2/core/runner.py", "9d0946df2923338f6604adfd543c3f302c9319cfc331c49415488dd3c38d879a", "a47a40ece28de06a4319b2ffe3968c5ff3b3e66e9605b1355fecc2a12e9db66a", "$.final_state.position_present"),
+    6: ("mtc_v2/core/position_manager.py", "2130c27d24f8292c2ae3fad396ee0d7542f6c797aff4e1d94e3bca84f2f26a1d", "58c59acc885ecc277bc0b316fb64e961af07539b91ce499d6880e489f3e7e181", "$.observation.active_entry_legs"),
+    7: ("mtc_v2/core/position_sizer.py", "1ae7dab7b506d611ef802f9652808df9926ab8e862553a348d177931221fd7ad", "5d842be7bd1f9425ea820fc5261fedfed31386fe6c0824922fac1059498350b1", "$.observation.qty.__float_hex__"),
+    8: ("mtc_v2/core/position_manager.py", "3c978f26dfe67a023085e1df7ddafa71edeb3f2db31c1769c199755aff7e230d", "fcd61ceb8b4d64e69ac44dec550fc75b53c5d726f91d4ab6b05710af1a0b5eec", "$.final_state.realized_equity_delta.__float_hex__"),
+    9: ("mtc_v2/core/rounding.py", "c027c7be7f21b9ba97bc4dd2c32183dd7b9192d338fc04e54a7498df3cf32a60", "45975d63f57f5834bd8876bf235a5e485ec2d32e5bb74964bbf6bf4a9484966b", "$.final_state.below_minimum_rejected"),
+    10: ("mtc_v2/core/runner.py", "013ee9cc28f61de6af47bdad04884c5689f33cd83fef0dffcd0bfab7cd62d4f4", "9c05bf2ad8a286947af7222c9f35a923466f07baf3ec8e0b6b24f0c11d1072ba", "$.observation.blocked"),
+    11: ("mtc_v2/core/exits.py", "3ea1281688b1c913b26774741a0267586754406cb0a7e15611b8fd34050d6e31", "e8b7dab6b105da04f9822825b12aad26f9a0518425e709c387d118dbdc3a3c57", "$.observation.fill_price.__float_hex__"),
+    12: ("mtc_v2/core/exits.py", "a0ddf453f0f127fde3815bfb011d335d5bf7c108dc25e66c16c9dc3812141d83", "109bc8c728dd3ef445489722f64d8eb8177f09eeb4c7a6f7ef139d687fd7c448", "$.observation.fill_price.__float_hex__"),
+    13: ("mtc_v2/core/exits.py", "4f6ae95933a45975077819d7a73447685492a68e749a96613bf5ed938b37de6c", "14ec1653e8635823c80e5324b3632a53250d99aa395c06450636071b329b9278", "$.final_state.position_present"),
+    14: ("mtc_v2/core/exits.py", "c08a62e4c26d2902b7081f3bcf54855d0da62f124209724bc9c89962f161f522", "27227b7b51580513b97a93e82929e65b0b2c1f9f7d75bff9dbfe52442c20c77d", "$.observation.active_stop_price.__float_hex__"),
+    15: ("mtc_v2/core/exits.py", "e8b8fa8645ef8a6618c105b29921e2f0af5db5d2031f4c4658aa6bdf8c5ad979", "42c1bbbcb35e05905f2a28d52abe357b51adf758cf4345a3b6a08510a504e6c2", "$.observation.trail_price.__float_hex__"),
+    16: ("mtc_v2/core/runner.py", "5e8445da1a8f1c6d74eb4266aa446157b9b6f30cd5ae43783b148861c2aaa860", "a4a9fb7c943b52adf54e9414151a7592f4c4c17b877a606702316f966ade9b53", "$.final_state.position_present"),
+    17: ("mtc_v2/core/runner.py", "002e491ab4e31ed54310a1fa09cff0f15ead17876bb8c272845d78f1d71d78bd", "758e73f3abf2788f08513afd2706a0e04fd0d37782cb4b2023519a446dcc0197", "$.final_state.position_present"),
+    18: ("mtc_v2/core/runner.py", "74762216379c0f91c7d5ebe2d36545f07ad84eed6ac0979f5d150d0638ea25e5", "aa96326b0eb02e78245ca196fd0590ded80e9c6c17b27d937860e632c2543bbe", "$.final_state.position_present"),
+    19: ("mtc_v2/core/exits.py", "c891ac7ddd3dbff9427dfeba2beeafc16f1a0687cb460a70c84246245a25f937", "8793b52d8994c0e41a7dd32455d9826c4d12640c4e554b2b8e3b401781f852c0", "$.observation.exit_reason"),
+    20: ("mtc_v2/core/position_manager.py", "a60314232b6517679754f2dfd91a0cacf903cf60aa523ad94718c93904503f04", "3f8cd407e6e1118a0181f50ef8b630c74ac7593b12b1ac606394e2c903210d41", "$.observation.entry_fill_price.__float_hex__"),
+    21: ("mtc_v2/core/runner.py", "db570eed9b03719611af710215ad7ed9785374043250bd70106d503ea0a842b4", "94e573d42e0043e2e59dae9e9a78502888630ca5b96a05fc2814e07a3258e6fc", "$.final_state.position_present"),
+    22: ("mtc_v2/core/position_manager.py", "3c978f26dfe67a023085e1df7ddafa71edeb3f2db31c1769c199755aff7e230d", "27f6e73bbfb1666dc99bf4c12df891eba7f540951f4a5004360758207359da9b", "$.observation.gross_pnl.__float_hex__"),
+    23: ("mtc_v2/core/runner.py", "79b679d9f4ac55863d8c6aad7ba51cecc9081c68a1ad01f341c8fd9cdc850d52", "bf6ad2bc42ecaa2f19d743a55e80f125e7daead938798eb4f519011d286ae7d2", "$.final_state.position_preserved_at_end"),
+    24: ("mtc_v2/core/runner.py", "865c36057f21a770817725961296b5014a5089dd103e7f81c58b7422d50ee010", "18a0909bb93e7a9d12517b6e143a077a3e5e20d09f39ef9e42dfcd4143f3539b", "$.observation.bar_valid"),
+    26: ("mtc_v2/core/runner.py", "323090b1241b3a3c3ca58932ebbd3152b876515a9ef3f76397f019af842fdd6d", "b55b612b69d0700fdd746128a32b8993b6e9bdcdf37df8a6c705141fde94c9a2", "$.observation.duplicate_rejected_by_legacy_runner"),
+    31: ("mtc_v2/core/runner.py", "4b4c086b080974455fd423d6360aa05ad7ee4eca6a8d22529ac134495d8f9227", "2b9674feade1b145587d4a309a96219a09419e1cac16bef0ac1a511b007d1c51", "$.observation.research_branch_reachable"),
+    33: ("mtc_v2/core/runner.py", "ac9f7cc57e54c82dc623ffd5e1657fba46a2dd6a9eb90df08ed49ac6bd8fadf4", "0dac5019f5ece8803bb4f169f714e46e15d844a5cdfce94e0876e554f135a9cb", "$.final_state.first_allowed_bar"),
+    36: ("mtc_v2/core/exits.py", "c6a07a9a739340ff30027689aa3e6c5fe4b1484541c60a69e2580c26c0ebed64", "e9a86c7cb991f36794b98fbd3bd8bcc7e012ccec2aded82612b044286cd982c8", "$.final_state.be_active"),
+    37: ("mtc_v2/core/exits.py", "18c81d7380bad828aaf516b37ff8c584d08197028d9457e42e24bdba3025ea73", "981922c97e4143e6813b86f595eee4a827c8e66192f1c6bdd8426776a40e8c36", "$.final_state.trail_active"),
+    38: ("src/modules/confirmation_layer.py", "d05d808cd34c7befe607d8025b24ad646dcfe700bdcb17c2af6d2b5f2ef59bae", "69849df8168bc57ca0d321877b772a98efcaba81029238868db6b9178413726a", "$.final_state.waits_reset"),
+    39: ("src/engine/mtc_runner.py", "6c8c9f966a1ca9fdebbb9b25c3289877218277775cfbc2863890659d66e932e6", "2d78292df2d3f886d1c662c527e5d1d4e028e8becca6030c252c517eff09be32", "$.observation.edge_long[1]"),
+    40: ("mtc_v2/core/htf.py", "b7c15e2847b776e366b698fd9b5500289a619360a29a516e75693f501d5ae35c", "05686dd77c4ff7234d391eb6cd7016dca7b4522ef0ff5cca788266bc441d628d", "$.final_state.selected_timestamp"),
+    41: ("mtc_v2/core/gates.py", "cc3b3711483c40ed79559f9106060feaaa8028f33997743a9d0a4fe10554db41", "11a4ab9b7098939089c202977551ad71582f48ae7300252357ff4a6b610c2c70", "$.final_state.legacy_substitution_observed"),
+}
+
+
 def row_authorities(row_number: int) -> list[dict[str, Any]]:
     if row_number in (28, 29, 30):
         return [
@@ -475,6 +521,31 @@ def row_authorities(row_number: int) -> list[dict[str, Any]]:
             {"name": "PINE_CURRENT_MASTER", "commit": SOURCE_COMMIT, "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine", "role": "equation/source corroboration only; no TradingView execution credit"},
         ]
     return [{"name": "A_CURRENT_MASTER", "commit": SOURCE_COMMIT, "tree_oid": A_TREE_OID, "role": "legacy executable authority"}]
+
+
+def row_mutation_contract(row_number: int, row_id: str, spec: dict[str, Any]) -> dict[str, str]:
+    execution = ROW_MUTATION_EXECUTION.get(row_number)
+    if execution is None:
+        return {
+            "mutation_id": f"{row_id}-GF8-MUT-001",
+            "source_seam": spec["op"],
+            "mutation": UNRESOLVED_MUTATION_OPERATION,
+            "required_red": UNRESOLVED_MUTATION_REQUIRED_RED,
+            "restored_green": UNRESOLVED_MUTATION_RESTORATION,
+            "status": UNRESOLVED_MUTATION_STATUS,
+        }
+    source_seam, old_sha256, new_sha256, required_red_path = execution
+    return {
+        "mutation_id": f"{row_id}-GF8-MUT-001",
+        "source_seam": source_seam,
+        "mutation": (
+            f"EXACT_TEXT_REPLACE_ONCE_V1:old_sha256={old_sha256}:"
+            f"new_sha256={new_sha256}"
+        ),
+        "required_red": f"MISMATCH_PATH_PRESENT_V1:{required_red_path}",
+        "restored_green": MUTATION_RESTORED_GREEN,
+        "status": MUTATION_STATUS,
+    }
 
 
 def build_legacy_manifest() -> dict[str, Any]:
@@ -522,24 +593,17 @@ def build_legacy_manifest() -> dict[str, Any]:
                         "literal_expected_observation": spec["expected"],
                         "literal_expected_final_state": spec["final"],
                         "expectation_derivation": {
-                            "method": "literal source arithmetic written before subject execution",
+                            "method": EXPECTATION_METHOD_ID,
                             "source": p009_citation,
                             "producer_output_may_not_rebless_expected": True,
                         },
-                        "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+                        "comparison_rule": COMPARISON_RULE_ID,
                         "clean_producer_corroboration": {
-                            "status": "FROZEN_PENDING_STAGE2_EXECUTION",
+                            "status": CORROBORATION_STATUS,
                             "required": True,
                             "authority_names": [item["name"] for item in row_authorities(number)],
                         },
-                        "producer_mutation": {
-                            "mutation_id": f"{row_id}-GF8-MUT-001",
-                            "source_seam": spec["op"],
-                            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
-                            "required_red": f"{row_id}-LEGACY-001 exact comparison fails with one terminal row disposition",
-                            "restored_green": "frozen clean authority exactly matches the literal oracle",
-                            "status": "FROZEN_PENDING_STAGE2_EXECUTION",
-                        },
+                        "producer_mutation": row_mutation_contract(number, row_id, spec),
                     }
                 ],
             }
