@@ -327,7 +327,7 @@ The most consequential catch: v1 identified the Pine/Python sizing divergence as
 - **F-7 was overstated.** A 457-case corpus reporting 99.54 % parity exists and v2.0 omitted it. Parity status is corpus-dependent and the corpora are not yet comparable (F-7, RF-1).
 - **F-22 was overstated.** "Zero survivors" is one dated sweep, not an all-time result (F-22, RF-2).
 
-**What survived every review, unchanged:** the five independent implementations (F-1), the unsimulated production control set in the promotion-deciding engine (F-3 — confirmed by full call-path trace), the discarded per-trial data in `mega_walk_forward.py` (F-4, narrowed), the armed Pine order path (F-8 — confirmed exhaustively), the empty promotion registry (F-6), zero tags (F-17) and the 180,000-token onboarding chain (F-18, recomputed exact).
+**What survived every review at the original audit measurement:** the five independent implementations (F-1), the unsimulated production control set in the promotion-deciding engine (F-3 — confirmed by full call-path trace), the discarded per-trial data in `mega_walk_forward.py` (F-4, narrowed), the armed Pine order path (F-8 — confirmed exhaustively), the empty promotion registry (F-6), zero tags at that measurement (F-17) and the 180,000-token onboarding chain (F-18, recomputed exact). **Tag-state correction, 2026-08-28:** 180 annotated WP-P0-02 code/evidence freezes now exist under `legacy/*`; `pkg/*` and `release/*` remain empty (0 tags), so the per-strategy identity+signal lockbox gap remains.
 
 ## 1.3 Verdict on the owner's stated assumptions
 
@@ -742,7 +742,7 @@ Accepted safety contracts exist as document **and** code **and** tests: window s
 2. **One dated, evidence-bound decision.** The fourteen are evidenced together, at one time, in one signed decision record — not accumulated piecemeal across different artefacts and dates.
 3. **Against the exact economic/deployment identity.** Every item's evidence binds to the same **`deployment_identity_hash`** (§6.7). Evidence gathered against a different allocator, Guardian policy, risk-bucket policy, runtime policy, broker adapter, protection semantics or cost lineage is evidence about a different system, and the applicable forward-evidence period resets.
 4. **D-07's two caps are an *additional* named requirement, not a substitute.** The `LIMITED_LIVE` ≤ 1 % **maximum allocated capital** and the **separate, lower, still-undefined loss-at-stop cap** sit alongside precondition 10 — they satisfy no canonical precondition on their own, and precondition 10's hard number still requires the owner's signature.
-5. **Zero tags makes preconditions 1 and 2 currently unsatisfiable** (F-17, D-7 in §3), independent of any other evidence.
+5. **Preconditions 1 and 2 remain unsatisfied:** 180 annotated WP-P0-02 code/evidence freezes exist under `legacy/*`, but `pkg/*` and `release/*` remain empty (0 tags), and no per-strategy identity+signal lockbox tag exists (F-17, D-7 in §3), independent of any other evidence.
 6. **Preconditions 4 and 5 are two environments, two lanes and two claims** *(named in the R2 correction pass; §6.4)*. Precondition **4** is the **`INTERNAL_PAPER` canonical paper soak** — pre-registered plan, immutable start date, 8–16 weeks minimum, ≥ 30 new forward trades, zero unexplained reconciliation breaks, restart only under a newly approved plan. Precondition **5** is the **`EXCHANGE_TESTNET` venue proof**. **Both are carried by `WP-V2B-07` as strictly separate lanes with separate identities, clocks, counters, artifacts and claims, and neither may be presented as evidence for the other** — which is rule 1 applied to the one pair of preconditions most likely to be conflated. No package was added to carry this.
 
 7. **The numbers inside the fourteen are the draft document's own, and they are `[OPEN]`** *(added 2026-08-24, map #123 fold)*. `_AI_MEMORY/LIVE_TRADING_GATE.md` is an **unsigned draft** (`:3-6`), so every numeric threshold quoted above **as written** — `robust_final = 1` and **≥ 30 lockbox trades** (precondition 1), **≥ 99 % signal-flag agreement** (3), **8–16 weeks minimum and ≥ 30 new forward trades** (4), the **under-five-minute full-flatten target** (7), and precondition 10's capital number — is an **unratified draft proposal and stays `[OPEN]`** until the owner ratifies it, exactly as the map-#96 fold recorded. **The qualitative requirement of each precondition is unchanged and binding**: a minimum lockbox-trade count, a stated agreement threshold, a minimum paper window and forward-trade count, a stated flatten-time target, and an owner-signed capital number all remain required — **what is `[OPEN]` is the value, never the obligation**. **No number here is invented, lowered or raised, and no `[OPEN]` value may be treated as satisfied by default.** **D-16's safeguard wording, and the owner's 2026-08-23 acknowledgement of it as written, are unchanged by this note** — D-16 requires the out-of-band recovery path to be *timed against* the gate's flatten target, and that obligation stands whatever value the owner ratifies.
@@ -770,7 +770,7 @@ Accepted safety contracts exist as document **and** code **and** tests: window s
 
 **Counting semantics matter here.** "237 branches" is 137 local plus their remote-tracking counterparts; the number of *distinct* branches a prune would target is 137, and the deletion-target list (M11) must be built from that, not from the ref count.
 
-**The stable, load-bearing metric is zero tags.** It contradicts two binding requirements: `LIVE_TRADING_GATE.md:20-25` requires a *"frozen … tagged commit"*, and the Bridge V2 model requires *frozen approved packages*. The repository has no immutable freeze points, so both requirements are currently unsatisfiable — independent of any volatile count above.
+**The stable, load-bearing gap is the missing per-strategy identity+signal lockbox.** `LIVE_TRADING_GATE.md:20-25` requires a *"frozen … tagged commit"*, and the Bridge V2 model requires *frozen approved packages*. As corrected 2026-08-28, 180 annotated WP-P0-02 code/evidence freezes exist under `legacy/*`, but `pkg/*` and `release/*` remain empty (0 tags); those freezes do not satisfy the per-strategy lockbox requirement.
 
 ## F-18 [FACT] The mandated AI onboarding chain costs ~180,000 tokens before any work begins
 
@@ -840,7 +840,7 @@ Accepted safety contracts exist as document **and** code **and** tests: window s
 | D-4 | Unified proposal cites `08_DASHBOARD_APP/apps/trading_bot_dashboard/` | Not on master; only on unmerged `e0745285` | Medium |
 | D-5 | `docs/27`–`docs/29` describe accepted risk contracts | Not activated by the default init path; deployed state unverified (F-14) | **High** |
 | D-6 | Records treating MTC_V2 as the engine of record | Untouched since 2026-05-31; imported by neither the Bridge nor `02_MTC_BACKTEST`'s engine | Medium |
-| D-7 | `LIVE_TRADING_GATE.md` requires a tagged commit | Zero tags | **High** — gate unsatisfiable as written |
+| D-7 | `LIVE_TRADING_GATE.md` requires a tagged commit | 180 WP-P0-02 code/evidence freezes under `legacy/*`; `pkg/*` and `release/*` empty (0 tags); no per-strategy identity+signal lockbox tag | **High** — gate unsatisfied as written |
 | D-8 | `mega_walk_forward.py` default `BUNDLE_MANIFEST` → `C:\LAB\_MTC_V2_REPO_CLEANUP_ARCHIVE_20260529\…` | A legacy archive outside the repo; code warns loudly (lines 45-56) but does **not** hard-fail | Medium — silent-wrong-data path guarded only by a warning |
 | D-9 | `05_PARITY` vs `12_PARITY_PINETS` treated as interchangeable | **The large `parity_results.json` payload is duplicated (identical md5); the directories are not identical** — `MTC_V2_PARITY_CASES.csv` differs, `README_MIGRATION.md` exists only in `12_PARITY_PINETS` (F-10, RF-6). Appendix E recorded this repair; the row itself still said "byte-identical" until the 2026-08-22 round | Low, but **must not** be canonicalized by assumption |
 | D-10 | Docs describing Pine/Python parity as achieved discipline | Corpus-dependent: 27/58 strict TW=Python on cases 103–162 (2026-04-14) versus 437/439 on the 457-case `mtc_backtest` suite (2026-03-04). **The corpora are not established as comparable** (F-7). Neither reading supports "achieved discipline" without the corpus inventory. | **High** |
@@ -1559,7 +1559,7 @@ Owner-ratified 2026-08-23; full detail in the ticket resolutions ([tail #60](htt
 | Preserve advanced exits/filters/transforms as optional modules | **Approved** | Modules must be **counted and preregistered** — but the count does **not** enter the DSR calculation (C-10, §9.5). |
 | Move account/portfolio kill switches to the Guardian | **Approved with a split** | Account-level (daily loss, max DD, consecutive losses, exposure) → Guardian. **Behavioural** limits (max trades/day, bar cooldown, equity-curve filter, MAE guard) stay in the kernel as modules — moving them would silently un-simulate them. |
 | Retire unused WunderTrading active-path logic | **Approved — more urgent than framed** | It is not unused; it is a **live, unmonitored order path** (F-8). |
-| Freeze the current implementation as legacy reference | **Approved** | Freeze by **git tag + content hash**, not folder rename. Zero tags exist today (F-17), so "frozen" currently has no mechanism. |
+| Freeze the current implementation as legacy reference | **Approved** | Freeze by **git tag + content hash**, not folder rename. **Current-state correction, 2026-08-28:** 180 annotated WP-P0-02 code/evidence freezes exist under `legacy/*`; `pkg/*` and `release/*` remain empty (0 tags), so no per-strategy identity+signal lockbox tag exists (F-17). |
 
 ## 7.2 Are all current MTC_V2 capabilities still necessary?
 
@@ -2856,7 +2856,7 @@ Each stage folder carries exactly four small files:
 
 ## 15.4 Freeze mechanism
 
-**[F-17: zero tags today.]** Three namespaces, introduced immediately:
+**[F-17: zero tags at the original measurement; current state corrected 2026-08-28.]** The 180 annotated `legacy/*` tags are WP-P0-02 code/evidence freezes; `pkg/*` and `release/*` remain empty (0 tags), so the per-strategy identity+signal lockbox gap remains. Three namespaces:
 
 | Namespace | Meaning |
 |---|---|
@@ -3410,7 +3410,7 @@ Verified 2026-08-21.
 
 All four *pre-audit* reviews left the core findings standing. The subsequent Codex Gate-5 audit then narrowed two of them — see Appendix E.
 
-**Confirmed by the Gate-5 audit, unchanged:** the five implementations (F-1, confirmed structurally), the unsimulated control set (F-3, confirmed by full call-path trace), the armed Pine order path (F-8, confirmed exhaustively — only two `alert(` calls exist), the empty promotion registry (F-6), zero tags (F-17), and the 180,000-token onboarding chain (F-18, recomputed to 709,001 bytes exact).
+**Confirmed by the Gate-5 audit at the original measurement:** the five implementations (F-1, confirmed structurally), the unsimulated control set (F-3, confirmed by full call-path trace), the armed Pine order path (F-8, confirmed exhaustively — only two `alert(` calls exist), the empty promotion registry (F-6), zero tags at that measurement (F-17), and the 180,000-token onboarding chain (F-18, recomputed to 709,001 bytes exact). **Tag-state correction, 2026-08-28:** 180 annotated WP-P0-02 code/evidence freezes now exist under `legacy/*`; `pkg/*` and `release/*` remain empty (0 tags), so the per-strategy identity+signal lockbox gap remains.
 
 **Narrowed by the Gate-5 audit:** F-7 (corpus-scoped, not repository-wide), F-22 (one sweep, not all-time), F-4 (`mega_walk_forward.py` only), F-2 (worked example corrected), F-10 (payload, not directories), F-15 (default init path, not runtime).
 

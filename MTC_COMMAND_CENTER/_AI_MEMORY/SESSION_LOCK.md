@@ -1,4 +1,4 @@
-# SESSION_LOCK — checked claim mirror and history
+# SESSION_LOCK — checked write-lane mirror and history
 
 > **Not the collision guard.** Every write task records its branch, worktree, exact paths, and live-
 > dependency status. This file mirrors checked claims and preserves history. The former mandatory
@@ -21,7 +21,8 @@ is retained as the checked mirror/history required by the current root and gover
    files. Auditing (read-only review, reports written to your OWN workstream row or a new
    file) is always allowed.
 3. **Release at handoff only after reconciliation**: compare current `master`, the work branch,
-   and durable tracker state; then release the GitHub claim and mirror the release here.
+   and durable tracker state; then mark the write-lane record released and mirror the reconciled
+   outcome here.
 4. **No age/cleanliness takeover:** Git cleanliness, pushed state, commit age, or mtime cannot prove
    liveness. Unknown ownership, checkout purpose, or process/scheduled-task dependency blocks
    takeover, move, or cleanup until resolved.
@@ -33,14 +34,14 @@ is retained as the checked mirror/history required by the current root and gover
 
 | Workstream | Files (primary home) | Owner | Since |
 |---|---|---|---|
-| Owner-decision documentation pack | Root `AGENTS.md`, `DECISIONS.md`; governance `INPUTS.md`, `OUTPUTS.md`, `HANDOFF.md`; `_AI_MEMORY/{SESSION_LOCK,LIVE_TRADING_GATE}.md`; detailed decision history | **RELEASED 2026-08-28** — substantive docs `2372b4e8`; local/remote `master` and base reconciled at `5c560306`; branch `fix/owner-decisions-docpack-20260828`; no tracked-file live dependency | 2026-08-28 |
+| Owner-decision documentation pack | `AGENTS.md`; `DECISIONS.md`; `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md`; `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/OUTPUTS.md`; `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md`; `MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/07_handoff_update.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/LIVE_TRADING_GATE.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md`; `MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`; `MTC_COMMAND_CENTER/11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md`; `MTC_COMMAND_CENTER/11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md`; `MTC_COMMAND_CENTER/11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md` | **ACTIVE repair round 2026-08-28** — branch `fix/owner-decisions-docpack-20260828`, worktree `C:\WPD_20260828`; no tracked-file live dependency | 2026-08-28 |
 | RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **Codex Lead `019fe77c`** — preserved partial repair; serialized writer only | 2026-08-14 10:30 +03 |
 | Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
-| Routed context / shared memory | root `AGENTS.md`, `CONTEXT_MAP.md`, `DECISIONS.md`; stage context sets; `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md`; `_AI_MEMORY/SESSION_LOCK.md` | **WP-P0-05 live Claude Lead / Codex implementer in isolated branch; GitHub issue identifier not supplied in dispatch** | 2026-08-25 |
+| Routed context / shared memory | root `AGENTS.md`, `CONTEXT_MAP.md`, `DECISIONS.md`; stage context sets; `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md`; `_AI_MEMORY/SESSION_LOCK.md` | **RELEASED / SUPERSEDED 2026-08-28** — historical WP-P0-05 record; its dispatch supplied no GitHub issue identifier, and its formerly live overlap is closed by the owner-decision documentation-pack reconciliation | 2026-08-25 |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-17 00:54 +03; foreign partial preserved | — |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released cleanly at Gate 7 | 2026-08-17 03:54 +03 |
@@ -48,7 +49,7 @@ is retained as the checked mirror/history required by the current root and gover
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
-next session should claim the rows it intends to write before its first write** — and note that
+next session should record the rows it intends to write before its first write** — and note that
 tonight's four Claude Pro audit lanes are READ-ONLY on the block workstreams (each writes only
 its own verdict file), so they do not require ownership of RP6/RP7/transport/pathscope.
 

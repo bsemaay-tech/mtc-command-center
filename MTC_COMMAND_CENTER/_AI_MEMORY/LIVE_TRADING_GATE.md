@@ -163,8 +163,8 @@ advance so that a future proof carries its own expiry rule; stating it now prove
 
 | # | Category (unchanged above) | Map-#96 subproofs nested under it | Carrier | Scope | Exact evidence | Commit / deployment identity | Proof date | Invalidation condition | Status · current blocker |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | Strategy robustness | honest-strategy evidence regenerated on a frozen tagged commit | WP-P0-20, WP-P0-21 | Per strategy, per instrument/timeframe set, regenerated on **one** frozen tagged commit | `None accepted` | `—` | `—` | Any change to strategy logic, parameters, data set or simulator; any regeneration on a different commit; a superseding lockbox run | `BLOCKED` — no frozen strategy-identity/release tag exists. The repository has 180 `legacy/*` tags, including worktree-cleanup rescue tags; `legacy/pine-controller/2026-08-25` (tag object `3075bd66` → commit `77a10e65`) is WP-P0-23 freeze evidence, not cleanup residue |
-| 2 | Reference lock | frozen identity; deterministic rerun | WP-P0-02, WP-P0-04 | Per strategy: the frozen parameter set, the tagged commit and the hashed signal file that together define its identity | `None accepted` | `—` | `—` | Any commit touching the referenced code path; any parameter edit; any signal-file hash mismatch on deterministic rerun | `BLOCKED` — no frozen strategy-identity/release tag exists. The repository has 180 `legacy/*` tags, including worktree-cleanup rescue tags; `legacy/pine-controller/2026-08-25` (tag object `3075bd66` → commit `77a10e65`) is WP-P0-23 freeze evidence, not cleanup residue |
+| 1 | Strategy robustness | honest-strategy evidence regenerated on a frozen tagged commit | WP-P0-20, WP-P0-21 | Per strategy, per instrument/timeframe set, regenerated on **one** frozen tagged commit | `None accepted` | `—` | `—` | Any change to strategy logic, parameters, data set or simulator; any regeneration on a different commit; a superseding lockbox run | `BLOCKED` — the 180 annotated `legacy/*` tags are WP-P0-02 code/evidence freezes, not per-strategy identity+signal lockboxes. The `pkg/*` and `release/*` namespaces are empty (0 tags), so the required per-strategy lockbox tag does not exist |
+| 2 | Reference lock | frozen identity; deterministic rerun | WP-P0-02, WP-P0-04 | Per strategy: the frozen parameter set, the tagged commit and the hashed signal file that together define its identity | `None accepted` | `—` | `—` | Any commit touching the referenced code path; any parameter edit; any signal-file hash mismatch on deterministic rerun | `BLOCKED` — the 180 annotated `legacy/*` tags are WP-P0-02 code/evidence freezes, not per-strategy identity+signal lockboxes. The `pkg/*` and `release/*` namespaces are empty (0 tags), so the required per-strategy lockbox tag does not exist |
 | 3 | Parity proof | parity where Pine participates at all | WP-P0-06, WP-P0-23 | Per strategy, **only where Pine participates in monitoring or signalling**; full history, signal flags plus trade-list diff | `None accepted` | `—` | `—` | Any code change on either the Pine or the Python side after the artifact date voids the artifact; any tolerance change | `UNKNOWN` |
 | 4 | Paper soak | `INTERNAL_PAPER` lane evidence only | WP-V2B-07 Lane A | Per strategy, `INTERNAL_PAPER` lane only, over **one** pre-registered immutable window with an immutable start date | `None accepted` | `—` | `—` | Restarting or altering the window without an approved new plan; any strategy or configuration change during it; any unexplained reconciliation break | `UNKNOWN` |
 | 5 | Testnet proof | `EXCHANGE_TESTNET` lane evidence only | WP-V2B-07 Lane B | Per executor/bridge release, `EXCHANGE_TESTNET` venue only, including duplicate-signal injection and kill-process-mid-open-position restart/reconcile | `None accepted` | `—` | `—` | Any executor/Bridge release, schema activation, venue-API change or host change after the soak | `UNKNOWN` |
@@ -220,8 +220,10 @@ produced or accepted by it, so every row's evidence remains `None accepted`. **W
 stale zero is not authorization to repair the remaining blockers, and it gates no row.**
 
 **Tag wording correction (2026-08-28, owner decision 5):** rows 1 and 2 now state the exact current
-fact without moving either readiness row: no frozen strategy-identity/release tag exists; 180
-`legacy/*` tags exist, including worktree-cleanup rescue tags; and
-`legacy/pine-controller/2026-08-25` is WP-P0-23 freeze evidence, not cleanup residue. Tag object
-`3075bd66` peels to commit `77a10e65`.
+facts without moving either readiness row: all 180 annotated `legacy/*` tags are WP-P0-02
+code/evidence freezes; neither `pkg/*` nor `release/*` contains a tag; and those code/evidence
+freezes do not establish the required per-strategy identity+signal lockboxes. Namespace, not a
+word inside a legacy tag name, controls this accounting:
+`legacy/evbr/integration--bridge-release-20260815/2026-08-25` remains a `legacy/*` WP-P0-02 freeze,
+not a `release/*` tag.
 

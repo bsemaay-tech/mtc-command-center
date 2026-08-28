@@ -184,7 +184,7 @@ Together with my 44, that makes **60 tracked requirements — 44 original owner 
 
 **The promotion registry has never been used.** It is empty. Meanwhile there are 63 structured strategy folders, 172 triage candidates and 159 transcripts. The ladder has never been walked end to end, so candidate identity has no permanent home.
 
-**The repository and context burden is real.** Roughly 8.7 GB and 67,105 files in the working tree, 8,031 tracked files, 137 local branches, **zero tags**, and about 709,000 bytes — roughly 180,000 tokens — of mandatory reading before any AI can start work. Zero tags matters more than it sounds: my own live-trading gate requires a "frozen, tagged commit", and the repository currently has no way to produce one.
+**The repository and context burden is real.** At the original audit measurement, the working tree was roughly 8.7 GB and 67,105 files, with 8,031 tracked files, 137 local branches, **zero tags**, and about 709,000 bytes — roughly 180,000 tokens — of mandatory reading before any AI could start work. **Current-state correction, 2026-08-28:** 180 annotated WP-P0-02 code/evidence freezes now exist under `legacy/*`, while the `pkg/*` and `release/*` namespaces remain empty (0 tags). Those freezes are not per-strategy identity+signal lockboxes, so live-gate rows 1 and 2 remain `BLOCKED`.
 
 **Some "dead" settings in the kernel are not dead at all.** *(Added 2026-08-22; stated setting by setting later the same day.)* Seven `tw_*` settings were described — in my own code comment and then in the technical brief — as having no runtime effect, and the plan listed them for deletion as harmless cleanup. **That was wrong.** All seven are settings the kernel requires and validates, so **none of them is deleted in a batch**.
 
