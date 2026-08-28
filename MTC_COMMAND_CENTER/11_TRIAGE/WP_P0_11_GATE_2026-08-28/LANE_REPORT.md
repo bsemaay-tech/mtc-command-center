@@ -36,7 +36,10 @@ Premise 1 therefore holds; no substantive authority change was absorbed into thi
 
 ## Stage-1 identities and signature
 
-- Legacy manifest: `1bc01646e9a00a4ee62c22c6ce1416ed03648e97351e792ae82bbbaff95f52d7`.
+- Committed legacy manifest: `29ecc19947bd5400293709cccd7fe0e46aceeb013cc8fb0f2d7965a16c515ed3`.
+  The prior owner-signed v2 anchor still carries
+  `1bc01646e9a00a4ee62c22c6ce1416ed03648e97351e792ae82bbbaff95f52d7`; that stale pin is retained
+  deliberately for the stage-4/v3 re-publication obligation described below.
 - Observation schema: `c18fb1622ab38b374d65a1304994f0e9f5d8993f948e75d99694bdfceb5fdb2e`.
 - Profiles: Supertrend `c1570317e0dd9ffc2eb9d4ad652891bce65e3ff2007cbbcbba1523ddb33b78f0`;
   Range Filter `35d40915d9813265d1cc1f4474a770471d3ea443e5a67b12ccb4f9e7270944d8`.

@@ -440,7 +440,7 @@ def bind_scenario(
         )
         for path, value in _leaf_items(expected)
     )
-    paths = tuple(item.path for item in declared)
+    paths = tuple(path for path, _value in _leaf_items(scenario))
     return BindingLedger(contract=contract, declared_leaves=declared, bound_paths=paths)
 
 
@@ -528,7 +528,7 @@ def verifier_scenario_contracts() -> Mapping[str, ScenarioContract]:
             raise ScenarioShapeError(
                 f"verifier literals for {row['row_id']} must contain exactly one scenario"
             )
-        contracts[row["row_id"]] = ScenarioContract.from_mapping(scenarios[0])
+        contracts[row["row_id"]] = ScenarioContract.from_mapping(next(iter(scenarios)))
     return contracts
 
 

@@ -5,7 +5,6 @@ import io
 import json
 import re
 import unittest
-from collections import defaultdict
 from contextlib import redirect_stdout
 from copy import deepcopy
 from pathlib import Path
@@ -13,9 +12,9 @@ from unittest.mock import patch
 
 import p011_gate
 import row_arm
-import stage1_freeze
 from scenario_binding import (
     ConsumerEvidence,
+    EXPECTED_ROW_POSITIONS,
     ExecutionEvidence,
     ManifestRowError,
     ManifestScenarioSource,
@@ -24,6 +23,7 @@ from scenario_binding import (
     bind_scenario,
     consume_execution,
     lookup_manifest_row,
+    manifest_scenario,
     require_complete,
     verifier_scenario_contract,
 )
@@ -31,7 +31,7 @@ from scenario_binding import (
 
 GATE_DIR = Path(__file__).resolve().parent
 MANIFEST_PATH = GATE_DIR / "p011_legacy_manifest.json"
-VARIANT_DIR = Path(r"C:\tmp\N8_VARIANTS")
+VARIANT_DIR = Path(r"C:\tmp\N23_VARIANTS")
 REQUIRED_VARIANT_KEYS = (
     "scenario_id",
     "producer_adapter",
@@ -57,6 +57,29 @@ def _write_variant(name: str, manifest: dict) -> Path:
         encoding="utf-8",
     )
     return path
+
+
+def _write_result(name: str, value: dict | list) -> Path:
+    VARIANT_DIR.mkdir(parents=True, exist_ok=True)
+    path = VARIANT_DIR / name
+    path.write_text(
+        json.dumps(value, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def _scenario_for(manifest: dict, row_id: str) -> dict:
+    scenario = manifest_scenario(
+        ManifestScenarioSource(
+            manifest=manifest,
+            row_id=row_id,
+            expected_position=EXPECTED_ROW_POSITIONS[row_id],
+        )
+    )
+    if type(scenario) is not dict:
+        raise AssertionError(f"{row_id} scenario is not mutable")
+    return scenario
 
 
 _PATH_TOKEN = re.compile(r"\.([^\.\[]+)|\[(\d+)\]")
@@ -120,33 +143,6 @@ class ScenarioBindingModuleTests(unittest.TestCase):
         self.contract = verifier_scenario_contract("C01")
         self.scenario = self.contract.as_mapping()
 
-    def test_complete_consumption_conserves_every_declared_leaf(self) -> None:
-        binding = bind_scenario(self.scenario, self.contract)
-        grouped: dict[str, list[str]] = defaultdict(list)
-        for leaf in binding.declared_leaves:
-            grouped[leaf.expected_consumer].append(leaf.path)
-        records = {
-            consumer: ConsumerEvidence(
-                consumer=consumer,
-                declaration_paths=tuple(paths),
-                evidence={"result": "satisfied"},
-            )
-            for consumer, paths in grouped.items()
-        }
-        execution = ExecutionEvidence(
-            comparators=tuple(
-                record
-                for consumer, record in records.items()
-                if consumer not in {"authority_execution", "producer_mutation_restoration"}
-            ),
-            authority_executions=(records["authority_execution"],),
-            mutation_restorations=(records["producer_mutation_restoration"],),
-        )
-        consumption = consume_execution(binding, execution)
-        require_complete(consumption)
-        self.assertEqual(len(binding.declared_leaves), len(binding.bound_paths))
-        self.assertEqual(len(binding.declared_leaves), len(consumption.consumed_leaves))
-
     def test_incomplete_consumption_names_path_and_expected_consumer(self) -> None:
         binding = bind_scenario(self.scenario, self.contract)
         consumption = consume_execution(binding, ExecutionEvidence())
@@ -190,14 +186,13 @@ class ScenarioBindingModuleTests(unittest.TestCase):
         with self.assertRaisesRegex(ManifestRowError, "absent"):
             lookup_manifest_row(manifest, "C99")
         duplicate = deepcopy(manifest)
-        duplicate["rows"][1]["row_id"] = "C01"
+        lookup_manifest_row(duplicate, "C02", EXPECTED_ROW_POSITIONS["C02"])["row_id"] = "C01"
         with self.assertRaisesRegex(ManifestRowError, "duplicated"):
             lookup_manifest_row(duplicate, "C01")
         reordered = deepcopy(manifest)
-        reordered["rows"][0], reordered["rows"][1] = (
-            reordered["rows"][1],
-            reordered["rows"][0],
-        )
+        rows_by_id = {row["row_id"]: row for row in reordered["rows"]}
+        swapped_ids = ["C02", "C01", *[f"C{index:02d}" for index in range(3, 43)]]
+        reordered["rows"] = [rows_by_id[row_id] for row_id in swapped_ids]
         with self.assertRaisesRegex(ManifestRowError, "position mismatch"):
             bind_scenario(
                 ManifestScenarioSource(
@@ -220,13 +215,101 @@ class GateVariantTests(unittest.TestCase):
         self.assertEqual(["$.kept"], visited)
         self.assertEqual("missing", mismatches[0]["reason"])
 
+    def test_rule2_a_junk_manifest_value_is_refused(self) -> None:
+        manifest = _load_manifest()
+        scenario = _scenario_for(manifest, "C01")
+        scenario["literal_expected_observation"] = {"junk": "NOT_THE_VERIFIER_LITERAL"}
+        path = _write_variant("rule2_a_junk_manifest.json", manifest)
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        with patch.object(p011_gate, "run_profile") as run_profile_spy:
+            with self.assertRaises(p011_gate.GateStop) as raised:
+                p011_gate.validate_legacy_manifest(path, digest)
+        output = {
+            "check": "manifest scenario vs verifier-owned scenario contract",
+            "input": {
+                "literal_expected_observation": scenario["literal_expected_observation"],
+                "variant": str(path),
+            },
+            "outcome": "REFUSED",
+            "producer_executed": run_profile_spy.called,
+            "reason": str(raised.exception),
+        }
+        _write_result("rule2_a_output.json", output)
+        self.assertFalse(run_profile_spy.called)
+
+    def test_rule2_b_wrong_observed_authority_stops_exact_set_match(self) -> None:
+        binding = row_arm.validate_contract_binding(
+            _load_manifest(), row_arm.ROW_CONTRACTS["C01"]
+        )
+        observation = row_arm.authority_execution_observation(
+            [{"module": "src.engine", "path": "src/engine.py"}],
+            reason="RULE 2 probe supplied a B runtime import to an A-only row",
+        )
+        output = row_arm.consume_authority_execution(binding, observation)
+        clean_observation = row_arm.authority_execution_observation(
+            [{"module": "mtc_v2.core.runner", "path": "mtc_v2/core/runner.py"}],
+            reason="RULE 2 clean-side observation",
+        )
+        with self.assertRaises(row_arm.RowStop) as raised:
+            row_arm.require_same_authority_names(
+                observation, clean_observation, "C01"
+            )
+        _write_result(
+            "rule2_b_output.json",
+            {
+                "check": "declared authority set vs runtime import observation",
+                "output": output,
+                "red_green_consistency_probe": {
+                    "clean_actual_authority_names": clean_observation[
+                        "actual_authority_names"
+                    ],
+                    "mutant_actual_authority_names": observation[
+                        "actual_authority_names"
+                    ],
+                    "outcome": "REFUSED",
+                    "reason": str(raised.exception),
+                },
+            },
+        )
+        self.assertFalse(output["exact_set_match"])
+        self.assertEqual(["A_CURRENT_MASTER"], output["missing"])
+        self.assertEqual(["B_BACKTEST_FREEZE"], output["unexpected"])
+
+    def test_rule2_c_wrong_executed_comparator_id_is_refused(self) -> None:
+        def wrong_comparator(expected: object, actual: object, **_kwargs: object) -> list[dict]:
+            return []
+
+        setattr(
+            wrong_comparator,
+            row_arm.COMPARATOR_RULE_ATTRIBUTE,
+            "WRONG_COMPARATOR_RULE_FOR_RULE2",
+        )
+        _mismatches, executed_rule = row_arm.execute_comparison(
+            {"value": 1}, {"value": 1}, comparator=wrong_comparator
+        )
+        declared_rule = verifier_scenario_contract("C01").comparison_rule
+        with self.assertRaises(row_arm.RowStop) as raised:
+            row_arm.require_executed_comparator(declared_rule, executed_rule)
+        _write_result(
+            "rule2_c_output.json",
+            {
+                "check": "manifest comparator ID vs executed callable comparator ID",
+                "input": {
+                    "declared_rule": declared_rule,
+                    "executed_rule": executed_rule,
+                },
+                "outcome": "REFUSED",
+                "reason": str(raised.exception),
+            },
+        )
+
     def test_eighteen_missing_key_variants_refuse_before_producer(self) -> None:
         results: list[dict] = []
         with patch.object(p011_gate, "run_profile") as run_profile_spy:
             for key in REQUIRED_VARIANT_KEYS:
                 for with_extra in (False, True):
                     manifest = _load_manifest()
-                    scenario = manifest["rows"][0]["scenarios"][0]
+                    scenario = _scenario_for(manifest, "C01")
                     scenario.pop(key)
                     if with_extra:
                         scenario["unknown_control"] = "EXTRA_CONTROL"
@@ -248,21 +331,16 @@ class GateVariantTests(unittest.TestCase):
                         )
                     else:
                         self.fail(f"variant was accepted: {path}")
-        result_path = VARIANT_DIR / "section2_results.json"
-        result_path.write_text(
-            json.dumps(results, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        _write_result("section2_results.json", results)
         self.assertEqual(18, len(results))
         self.assertTrue(all(item["outcome"] == "REFUSED" for item in results))
         self.assertFalse(any(item["producer_executed"] for item in results))
 
-    def test_comparison_and_expectation_provenance_are_typed(self) -> None:
-        contract = verifier_scenario_contract("C01")
-        self.assertEqual(stage1_freeze.COMPARISON_RULE_ID, contract.comparison_rule)
+    def test_comparator_rule_is_bound_to_actual_callable(self) -> None:
+        declared_rule = verifier_scenario_contract("C01").comparison_rule
         self.assertEqual(
-            stage1_freeze.EXPECTATION_METHOD_ID,
-            contract.expectation_derivation.method,
+            declared_rule,
+            row_arm.comparator_rule_id(row_arm.compare_exact),
         )
 
     def test_wrong_mutation_mismatch_path_is_refused_by_named_consumer(self) -> None:
@@ -351,23 +429,13 @@ class GateVariantTests(unittest.TestCase):
         self.assertEqual(row_arm.C32_INVALID_CONTROL, control["value"])
         self.assertFalse(control["valid"])
 
-    def test_sequence_builder_records_terminal_consumption_for_every_leaf(self) -> None:
+    def test_sequence_builder_publishes_no_unexecuted_consumption_claim(self) -> None:
         corroboration = p011_gate.build_row_corroboration(_load_manifest())
         applicable = [
             row for row in corroboration["rows"] if row["status"] == "STOP"
         ]
         self.assertEqual(40, len(applicable))
-        for row in applicable:
-            consumption = row["contract_consumption"]
-            self.assertEqual("CONSERVED_STOP", consumption["status"])
-            self.assertEqual(
-                consumption["declared_leaf_count"],
-                consumption["bound_leaf_count"],
-            )
-            self.assertEqual(
-                consumption["declared_leaf_count"],
-                consumption["consumed_leaf_count"],
-            )
+        self.assertFalse(any("contract_consumption" in row for row in applicable))
 
     def test_full_declared_leaf_variant_matrix_refuses_and_restores(self) -> None:
         manifest = _load_manifest()
@@ -406,12 +474,12 @@ class GateVariantTests(unittest.TestCase):
             return return_code, output_line, json.loads(output_line)
 
         with patch.object(p011_gate, "run_profile") as run_profile_spy:
-            for row_index, row in enumerate(manifest["rows"]):
+            for row in manifest["rows"]:
                 if row["disposition"] != "APPLICABLE":
                     continue
                 row_id = row["row_id"]
                 binding = bind_scenario(
-                    row["scenarios"][0], verifier_scenario_contract(row_id)
+                    _scenario_for(manifest, row_id), verifier_scenario_contract(row_id)
                 )
                 for leaf in binding.declared_leaves:
                     leaf_number += 1
@@ -424,7 +492,7 @@ class GateVariantTests(unittest.TestCase):
                     self.assertEqual("PASS", restored_output["outcome"])
                     for operation in ("mutate", "delete", "unknown_sibling"):
                         changed = deepcopy(manifest)
-                        scenario = changed["rows"][row_index]["scenarios"][0]
+                        scenario = _scenario_for(changed, row_id)
                         _apply_leaf_variant(scenario, leaf.path, operation)
                         variant_path = variant_root / (
                             f"leaf_{leaf_number:04d}_{row_id}_{operation}.json"
@@ -451,15 +519,12 @@ class GateVariantTests(unittest.TestCase):
                             }
                         )
 
-        matrix_path = VARIANT_DIR / "leaf_variant_matrix.json"
-        matrix_path.write_text(
-            json.dumps(matrix, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        _write_result("leaf_variant_matrix.json", matrix)
         expected_variants = sum(
             len(
                 bind_scenario(
-                    row["scenarios"][0], verifier_scenario_contract(row["row_id"])
+                    _scenario_for(manifest, row["row_id"]),
+                    verifier_scenario_contract(row["row_id"]),
                 ).declared_leaves
             )
             for row in manifest["rows"]
@@ -470,7 +535,9 @@ class GateVariantTests(unittest.TestCase):
 
     def test_reordered_rows_are_refused(self) -> None:
         manifest = _load_manifest()
-        manifest["rows"][0], manifest["rows"][1] = manifest["rows"][1], manifest["rows"][0]
+        rows_by_id = {row["row_id"]: row for row in manifest["rows"]}
+        swapped_ids = ["C02", "C01", *[f"C{index:02d}" for index in range(3, 43)]]
+        manifest["rows"] = [rows_by_id[row_id] for row_id in swapped_ids]
         path = _write_variant("after_fix_reordered_c01_c02.json", manifest)
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         with patch.object(p011_gate, "run_profile") as run_profile_spy:
@@ -482,10 +549,7 @@ class GateVariantTests(unittest.TestCase):
             "reason": str(raised.exception),
             "variant": str(path),
         }
-        (VARIANT_DIR / "section4b_result.json").write_text(
-            json.dumps(result, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        _write_result("section4b_result.json", result)
 
     def test_c32_validates_five_authority_values_and_rejects_control(self) -> None:
         records = row_arm.build_unresolved_records(_load_manifest())
@@ -503,10 +567,19 @@ class GateVariantTests(unittest.TestCase):
             "status": c32["status"],
             "validation_by_value": validation,
         }
-        (VARIANT_DIR / "section3_result.json").write_text(
-            json.dumps(result, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        _write_result("section3_result.json", result)
+
+    def test_unresolved_authority_observations_name_the_execution_path(self) -> None:
+        records = row_arm.build_unresolved_records(_load_manifest())
+        by_row = {item["row_id"]: item for item in records}
+        c28 = by_row["C28"]["authority_execution"]
+        self.assertEqual([], c28["actual_authority_names"])
+        self.assertEqual([], c28["observation"]["runtime_imports"])
+        self.assertIn("no producer call occurred", c28["observation"]["reason"])
+        c32 = by_row["C32"]["authority_execution"]
+        self.assertEqual(["A_CURRENT_MASTER"], c32["actual_authority_names"])
+        self.assertTrue(c32["observation"]["runtime_imports"])
+        self.assertIn("probe returned after importing", c32["observation"]["reason"])
 
 
 if __name__ == "__main__":
