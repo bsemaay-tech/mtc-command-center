@@ -54,8 +54,6 @@ def main() -> int:
     schema = load(GATE_DIR / "P011_OBSERVATION_SCHEMA_v1.json")
     matrix_path = GATE_DIR / "evidence" / "discrimination_matrix" / "discrimination_matrix.json"
     matrix = load(matrix_path)
-    producer_matrix_path = GATE_DIR / "evidence" / "producer_discrimination_matrix" / "discrimination_matrix.json"
-    producer_matrix = load(producer_matrix_path)
     structural_path = GATE_DIR / "evidence" / "structural_mutations.json"
     structural = load(structural_path)
     receipt_path = GATE_DIR / "P011_GATE_RECEIPT.json"
@@ -153,23 +151,14 @@ def main() -> int:
         },
         "row_arm": row_evidence["counts"],
         "matrix": {
+            "claim": "comparator field-sensitivity self-test, one record",
             "sha256": sha256_file(matrix_path),
             "transcript_sha256": sha256_file(matrix_path.parent / "mutation_transcript.jsonl"),
-            "rows": matrix["matrix_row_count"],
-            "red": matrix["red_count"],
-            "restored_green": matrix["restored_green_count"],
+            "comparator_self_test_rows": matrix["matrix_row_count"],
+            "comparator_mutation_red": matrix["red_count"],
+            "identity_self_comparison_green": matrix["restored_green_count"],
             "digest_components": matrix["digest_component_count"],
             "event_components": matrix["event_component_count"],
-        },
-        "producer_boundary_matrix": {
-            "sha256": sha256_file(producer_matrix_path),
-            "transcript_sha256": sha256_file(producer_matrix_path.parent / "mutation_transcript.jsonl"),
-            "clean_rebuild_sha256": sha256_file(producer_matrix_path.parent / "clean_rebuild.json"),
-            "rows": producer_matrix["matrix_row_count"],
-            "red_then_green": producer_matrix["red_then_green_count"],
-            "unexercised_absent": producer_matrix["unexercised_absent_count"],
-            "outcome": producer_matrix["outcome"],
-            "stop_reasons": producer_matrix["stop_reasons"],
         },
         "structural_mutations": {
             "sha256": sha256_file(structural_path),

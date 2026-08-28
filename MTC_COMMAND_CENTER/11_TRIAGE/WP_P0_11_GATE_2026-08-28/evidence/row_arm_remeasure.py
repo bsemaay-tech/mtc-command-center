@@ -34,9 +34,6 @@ EXPECTED_ROWS = {
     "C23": ("C23-LEGACY-001", "C23-GF8-MUT-001"),
     "C24": ("C24-LEGACY-001", "C24-GF8-MUT-001"),
     "C26": ("C26-LEGACY-001", "C26-GF8-MUT-001"),
-    "C28": ("C28-LEGACY-001", "C28-GF8-MUT-001"),
-    "C29": ("C29-LEGACY-001", "C29-GF8-MUT-001"),
-    "C30": ("C30-LEGACY-001", "C30-GF8-MUT-001"),
     "C31": ("C31-LEGACY-001", "C31-GF8-MUT-001"),
     "C33": ("C33-LEGACY-001", "C33-GF8-MUT-001"),
     "C36": ("C36-LEGACY-001", "C36-GF8-MUT-001"),
@@ -46,7 +43,9 @@ EXPECTED_ROWS = {
     "C40": ("C40-LEGACY-001", "C40-GF8-MUT-001"),
     "C41": ("C41-LEGACY-001", "C41-GF8-MUT-001"),
 }
-UNRESOLVED_ROWS = {"C32", "C34", "C35", "C42"}
+UNRESOLVED_AUTHORITY_ROWS = {"C32", "C34", "C35", "C42"}
+UNRESOLVED_PRODUCER_ROWS = {"C28", "C29", "C30"}
+UNRESOLVED_ROWS = UNRESOLVED_AUTHORITY_ROWS | UNRESOLVED_PRODUCER_ROWS
 EXPECTED_RESULT_ORDER = sorted([*EXPECTED_ROWS, *UNRESOLVED_ROWS])
 EXPECTED_A_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 EXPECTED_A_TREE = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
@@ -155,19 +154,22 @@ def main() -> int:
         recorded_hash = unhashed.pop("record_sha256")
         require(sha256_bytes(canonical_bytes(unhashed)) == recorded_hash, f"{row_id} record hash differs")
         if row_id in UNRESOLVED_ROWS:
-            require(record.get("status") == "UNRESOLVED_AUTHORITY_CONTRADICTION", f"{row_id} unresolved status differs")
-            require(record.get("mutation") == "NOT_RUN_NO_AUTHORITY_ESTABLISHED_EXPECTED_ROUTE", f"{row_id} mutation must not run")
-            require(bool(record.get("comparison", {}).get("mismatches")), f"{row_id} contradiction mismatch absent")
-            require(record.get("clean_authority_probe", {}).get("return_code") == 0, f"{row_id} clean probe failed")
+            if row_id in UNRESOLVED_AUTHORITY_ROWS:
+                require(record.get("status") == "UNRESOLVED_AUTHORITY_CONTRADICTION", f"{row_id} unresolved status differs")
+                require(record.get("mutation") == "NOT_RUN_NO_AUTHORITY_ESTABLISHED_EXPECTED_ROUTE", f"{row_id} mutation must not run")
+                require(bool(record.get("comparison", {}).get("mismatches")), f"{row_id} contradiction mismatch absent")
+                require(record.get("clean_authority_probe", {}).get("return_code") == 0, f"{row_id} clean probe failed")
+            else:
+                require(record.get("status") == "UNRESOLVED_PRODUCER_EXECUTION", f"{row_id} producer status differs")
+                require(record.get("mutation") == "NOT_RUN_NO_EXECUTABLE_PINE_PRODUCER_IN_AUTHORIZED_LANE", f"{row_id} mutation must not run")
+                require(all(record.get("clean_authority_inspection", {}).values()), f"{row_id} source inspection differs")
             continue
         scenario_id, mutation_id = EXPECTED_ROWS[row_id]
         require(record.get("scenario_id") == scenario_id, f"{row_id} scenario identity differs")
         require(record.get("status") == "GREEN_AFTER_RED", f"{row_id} status differs")
         require(record.get("mutation", {}).get("mutation_id") == mutation_id, f"{row_id} mutation identity differs")
         expected_commit, expected_tree = EXPECTED_A_COMMIT, EXPECTED_A_TREE
-        if row_id in {"C28", "C29", "C30"}:
-            expected_commit, expected_tree = EXPECTED_CONTROLLER_COMMIT, EXPECTED_CONTROLLER_TREE
-        elif row_id in {"C38", "C39"}:
+        if row_id in {"C38", "C39"}:
             expected_commit, expected_tree = EXPECTED_B_COMMIT, EXPECTED_B_TREE
         require(record.get("authority", {}).get("commit") == expected_commit, f"{row_id} authority commit differs")
         require(record.get("authority", {}).get("tree_oid") == expected_tree, f"{row_id} authority tree differs")
@@ -206,7 +208,7 @@ def main() -> int:
         "stop": sum(row.get("status") == "STOP" for row in rows),
         "total": len(rows),
     }
-    require(independently_counted == {"green": 36, "not_applicable": 2, "stop": 4, "total": 42}, "corroboration counts differ")
+    require(independently_counted == {"green": 33, "not_applicable": 2, "stop": 7, "total": 42}, "corroboration counts differ")
     require(corroboration.get("counts") == independently_counted, "reported corroboration counts differ")
     require(corroboration.get("outcome") == "STOP", "partial arm did not remain STOP")
 
@@ -222,8 +224,9 @@ def main() -> int:
     require(batch.get("artifacts", {}).get("row_corroboration.json") == sha256_file(corroboration_path), "corroboration hash differs")
     unresolved_path = evidence / "unresolved_rows.json"
     require(batch.get("artifacts", {}).get("unresolved_rows.json") == sha256_file(unresolved_path), "unresolved hash differs")
-    require(batch.get("counts", {}).get("clean_green") == 36, "batch GREEN count differs")
+    require(batch.get("counts", {}).get("clean_green") == 33, "batch GREEN count differs")
     require(batch.get("counts", {}).get("unresolved_authority_contradiction") == 4, "batch unresolved count differs")
+    require(batch.get("counts", {}).get("unresolved_producer_execution") == 3, "batch producer STOP count differs")
 
     output = {
         "artifact_hashes": {
@@ -249,6 +252,8 @@ def main() -> int:
         "p009_sha256": sha256_file(p009_path),
         "rows": EXPECTED_RESULT_ORDER,
         "unresolved_rows": sorted(UNRESOLVED_ROWS),
+        "unresolved_authority_rows": sorted(UNRESOLVED_AUTHORITY_ROWS),
+        "unresolved_producer_rows": sorted(UNRESOLVED_PRODUCER_ROWS),
     }
     print(json.dumps(output, sort_keys=True, separators=(",", ":")))
     return 0

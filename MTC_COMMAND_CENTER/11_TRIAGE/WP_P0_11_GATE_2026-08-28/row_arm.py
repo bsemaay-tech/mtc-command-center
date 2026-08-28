@@ -1037,51 +1037,6 @@ def produce_c24(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
     return observation, {"position_present": entry_opened}
 
 
-def _authority_text(relative: str) -> str:
-    if ACTIVE_AUTHORITY_ROOT is None:
-        raise RowStop("row adapter has no bound authority root")
-    path = (ACTIVE_AUTHORITY_ROOT / relative).resolve()
-    try:
-        path.relative_to(ACTIVE_AUTHORITY_ROOT.resolve())
-    except ValueError as exc:
-        raise RowStop("row adapter source escaped its authority root") from exc
-    if not path.is_file():
-        raise RowStop(f"row adapter source is absent: {relative}")
-    return path.read_text(encoding="utf-8")
-
-
-def _l25_payload(
-    source: str,
-    *,
-    code: str,
-    order_type: str,
-    amount: float,
-    amount_type: str,
-    leverage: int,
-    reduce_only: bool,
-    tp: float | None = None,
-    sl: float | None = None,
-    conditional: bool = False,
-) -> str:
-    amount_key = "amount_type" if ',"amount_type":"' in source else "amount_kind"
-    tp_key = "tp" if ',"tp":' in source else "take_profit"
-    payload: dict[str, Any] = {
-        "code": code,
-        "order_type": order_type,
-        "amount": amount,
-        amount_key: amount_type,
-        "leverage": leverage,
-        "reduce_only": reduce_only,
-    }
-    if tp is not None:
-        payload[tp_key] = round(tp, 2)
-    if sl is not None:
-        payload["sl"] = round(sl, 2)
-    if conditional:
-        payload["place_conditional_orders"] = True
-    return json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
-
-
 def produce_c26(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
     from mtc_v2.core.types import RawSignal
 
@@ -1092,119 +1047,10 @@ def produce_c26(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
         for item in inputs["bars"]
     ]
     outputs = runner.run(bars)
-    pine = _authority_text("controller/MTC_V2.pine")
-    l25_dispatch = all(
-        seam in pine
-        for seam in (
-            "bool l25_any_code_set",
-            "string l25_entry_code",
-            "string l25_exit_code",
-            "alert('{\"code\":\"' + l25_entry_code",
-            "alert('{\"code\":\"' + l25_exit_code",
-        )
-    )
     return {
         "duplicate_rejected_by_legacy_runner": len(outputs) != len(inputs["bars"]),
-        "l25_entry_and_exit_dispatch_present": l25_dispatch,
         "producer_outputs": len(outputs),
-    }, {
-        "last_current_bar_index": runner.state.current_bar_index,
-        "split_authority_halves_covered": l25_dispatch,
-    }
-
-
-def produce_c28(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    pine = _authority_text("controller/MTC_V2.pine")
-    long_route = "wt_exit_long_code" if "l4_position_side_state > 0 ? wt_exit_long_code" in pine else "wt_enter_long_code"
-    routes = {
-        "enter_long": inputs[long_route],
-        "exit_long": inputs["wt_exit_long_code"],
-        "enter_short": inputs["wt_enter_short_code"],
-        "exit_short": inputs["wt_exit_short_code"],
-        "exit_all_fallback": inputs["wt_exit_all_code"],
-    }
-    payload = _l25_payload(
-        pine,
-        code=routes["enter_long"],
-        order_type="market",
-        amount=100.0,
-        amount_type="quote",
-        leverage=1,
-        reduce_only=True,
-    )
-    return {
-        "dispatch_cases": {
-            "all_codes_empty_alert_count": 0,
-            "enter_long_code": routes["enter_long"],
-            "enter_long_payload": payload,
-            "exit_all_fallback_code": routes["exit_all_fallback"],
-            "exit_long_code": routes["exit_long"],
-            "exit_short_code": routes["exit_short"],
-        },
-        "preserved_values": [
-            inputs["wt_enter_long_code"],
-            inputs["wt_exit_long_code"],
-            inputs["wt_enter_short_code"],
-            inputs["wt_exit_short_code"],
-            inputs["wt_exit_all_code"],
-        ],
-    }, {"dispatch_alert_call_count": pine.count("            alert("), "route_key_count": 5}
-
-
-def produce_c29(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    pine = _authority_text("controller/MTC_V2.pine")
-    payload = _l25_payload(
-        pine,
-        code="EL",
-        order_type=inputs["wt_order_type"],
-        amount=inputs["wt_amount"],
-        amount_type=inputs["wt_amount_type"],
-        leverage=inputs["wt_leverage"],
-        reduce_only=True,
-    )
-    return {
-        "amount": inputs["wt_amount"],
-        "amount_type": inputs["wt_amount_type"],
-        "entry_payload": payload,
-        "leverage": inputs["wt_leverage"],
-        "order_type": inputs["wt_order_type"],
-    }, {
-        "legacy_kernel_qty_affected_by_wt_amount": False,
-        "payload_key_count": len(json.loads(payload)) - 2,
-    }
-
-
-def produce_c30(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    pine = _authority_text("controller/MTC_V2.pine")
-    config_source = _authority_text("mtc_v2/core/config.py")
-    cross_validation = (
-        (not inputs["wt_use_tp"] or inputs["use_tp"])
-        and (not inputs["wt_use_sl"] or inputs["use_sl"])
-        and "wt_use_tp requires use_tp=True" in config_source
-        and "wt_use_sl requires use_sl=True" in config_source
-    )
-    payload = _l25_payload(
-        pine,
-        code="EL",
-        order_type="market",
-        amount=100.0,
-        amount_type="quote",
-        leverage=1,
-        reduce_only=inputs["wt_reduce_only"],
-        tp=105.126 if inputs["wt_use_tp"] else None,
-        sl=95.344 if inputs["wt_use_sl"] else None,
-        conditional=inputs["wt_place_cond_orders"],
-    )
-    return {
-        "entry_payload": payload,
-        "wt_place_cond_orders": inputs["wt_place_cond_orders"],
-        "wt_reduce_only": inputs["wt_reduce_only"],
-        "wt_use_sl": inputs["wt_use_sl"],
-        "wt_use_tp": inputs["wt_use_tp"],
-    }, {
-        "cross_validation": "PASS" if cross_validation else "FAIL",
-        "protective_key_count": 4,
-    }
+    }, {"last_current_bar_index": runner.state.current_bar_index}
 
 
 def produce_c31(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -1373,26 +1219,79 @@ def produce_c38(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
 
 
 def produce_c39(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    source = _authority_text("src/engine/mtc_runner.py")
-    edge_is_transition = "entry_long_signal and not prev_entry_long_signal" in source
+    from dataclasses import dataclass
+
+    import pandas as pd
+    from src.config.defaults import MTCConfig
+    from src.engine.mtc_runner import MTCRunner
+
     raw = [bool(item) for item in inputs["raw_long"]]
-    edge: list[bool] = []
-    previous = False
-    for item in raw:
-        edge.append(item and not previous if edge_is_transition else item)
-        previous = item
-    first_bar_gate = all(
-        seam in source
-        for seam in (
-            "first_bar_requires_edge",
-            "not self._first_eval_entry_done",
-            'blocked_reason = "first_bar_no_edge"',
-        )
+    timestamps = pd.date_range("2026-01-01", periods=len(raw), freq="15min", tz="UTC")
+    frame = pd.DataFrame(
+        {
+            "timestamp": timestamps,
+            "open": [100.0] * len(raw),
+            "high": [100.0] * len(raw),
+            "low": [100.0] * len(raw),
+            "close": [100.0] * len(raw),
+            "volume": [1.0] * len(raw),
+        }
+    )
+
+    @dataclass
+    class StubSignal:
+        long_series: Any
+        short_series: Any
+
+        def generate(self, unused_frame: Any) -> tuple[Any, Any]:
+            return self.long_series, self.short_series
+
+    class PassFilter:
+        def __init__(self, allowed: list[bool] | None = None) -> None:
+            self.allowed = allowed or [True] * len(raw)
+
+        def apply_with_details(self, unused_frame: Any) -> tuple[Any, Any, dict[str, Any]]:
+            allowed = pd.Series(self.allowed)
+            return allowed, allowed, {}
+
+    def execute(
+        entry_mode: str,
+        *,
+        eval_start: Any = None,
+        first_filter_blocked: bool = False,
+        trade_during_preroll: bool = False,
+    ) -> list[dict[str, Any]]:
+        config = MTCConfig()
+        config.trade.entry_mode = entry_mode
+        config.trade.first_bar_requires_edge = inputs["first_bar_requires_edge"]
+        config.stop_loss.enabled = False
+        config.take_profit.enabled = False
+        config.trailing.enabled = False
+        config.break_even.enabled = False
+        config.time_stop.enabled = False
+        config.parity.export_debug_csv = True
+        if trade_during_preroll:
+            config.parity.preroll_mode = "trade"
+            config.parity.close_open_at_eval_start = True
+        runner = MTCRunner(config)
+        runner.signal_plugin = StubSignal(pd.Series(raw), pd.Series([False] * len(raw)))
+        runner.filter_chain = PassFilter([False, True] if first_filter_blocked else None)
+        runner._export_debug_csv = lambda **unused: {}
+        output = runner.run(frame, warmup_bars=0, eval_start=eval_start)
+        return output["signal_history"]
+
+    edge_history = execute("Edge")
+    signal_history = execute("Signal")
+    first_eval_history = execute(
+        "Signal",
+        eval_start=timestamps[1],
+        first_filter_blocked=True,
+        trade_during_preroll=True,
     )
     return {
-        "edge_long": edge,
-        "first_eval_bar_blocked_without_edge": first_bar_gate and inputs["first_bar_requires_edge"],
-        "signal_long": raw,
+        "edge_long": [bool(item["long_signal"]) for item in edge_history],
+        "first_eval_bar_blocked_without_edge": first_eval_history[1]["blocked_reason"] == "first_bar_no_edge",
+        "signal_long": [bool(item["entry_signal_long"]) for item in signal_history],
     }, {"mode_count": len(inputs["entry_modes"])}
 
 
@@ -2058,12 +1957,11 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         row_id="C26",
         scenario_id="C26-LEGACY-001",
         producer_adapter="A.runner_duplicate_bar_legacy",
-        authority_name="implementation A duplicate-bar producer plus frozen controller L25 source",
+        authority_name="implementation A duplicate-bar producer; controller L25 half explicitly unevidenced",
         authority_commit=SOURCE_COMMIT,
         authority_tree_oid=A_TREE_OID,
         citations=(
             "A runner.py:334-350",
-            "controller MTC_V2.pine:2010-2028 at 77a10e65",
             "P009 pinned blob f96b5325:690-707; current master P009:696-713",
         ),
         complete_inputs={
@@ -2074,10 +1972,9 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         },
         expected_observation={
             "duplicate_rejected_by_legacy_runner": False,
-            "l25_entry_and_exit_dispatch_present": True,
             "producer_outputs": 2,
         },
-        expected_final_state={"last_current_bar_index": 7, "split_authority_halves_covered": True},
+        expected_final_state={"last_current_bar_index": 7},
         mutation=Mutation(
             "C26-GF8-MUT-001",
             "mtc_v2/core/runner.py",
@@ -2085,119 +1982,8 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "        outputs: list[RawSignal] = []\n        _first_bar: Bar | None = None\n        _seen_bar_identities: set[tuple[object, int]] = set()\n        for bar in bars:\n            _identity = (bar.timestamp, bar.bar_index)\n            if _identity in _seen_bar_identities:\n                continue\n            _seen_bar_identities.add(_identity)\n",
         ),
         producer=produce_c26,
-        authority_kind="HYBRID",
         manifest_expected_observation={"duplicate_rejected_by_legacy_runner": False, "producer_outputs": 2},
         manifest_expected_final_state={"last_current_bar_index": 7},
-    ),
-    "C28": RowContract(
-        row_id="C28",
-        scenario_id="C28-LEGACY-001",
-        producer_adapter="A_FREEZE.resolve_config_route_keys",
-        authority_name="frozen Pine controller L25 payload and dispatch producer",
-        authority_commit=CONTROLLER_COMMIT,
-        authority_tree_oid=CONTROLLER_TREE_OID,
-        citations=(
-            "controller config.py:226-238 and MTC_V2.pine:2010-2028 at 77a10e65",
-            "P009 pinned blob f96b5325:740-759; current master P009:746-765",
-        ),
-        complete_inputs={
-            "wt_enter_long_code": "EL",
-            "wt_enter_short_code": "ES",
-            "wt_exit_all_code": "XA",
-            "wt_exit_long_code": "XL",
-            "wt_exit_short_code": "XS",
-        },
-        expected_observation={
-            "dispatch_cases": {
-                "all_codes_empty_alert_count": 0,
-                "enter_long_code": "EL",
-                "enter_long_payload": "{\"code\":\"EL\",\"order_type\":\"market\",\"amount\":100.0,\"amount_type\":\"quote\",\"leverage\":1,\"reduce_only\":true}",
-                "exit_all_fallback_code": "XA",
-                "exit_long_code": "XL",
-                "exit_short_code": "XS",
-            },
-            "preserved_values": ["EL", "XL", "ES", "XS", "XA"],
-        },
-        expected_final_state={"dispatch_alert_call_count": 2, "route_key_count": 5},
-        mutation=Mutation(
-            "C28-GF8-MUT-001",
-            "controller/MTC_V2.pine",
-            "string l25_entry_code = l4_position_side_state > 0 ? wt_enter_long_code : wt_enter_short_code",
-            "string l25_entry_code = l4_position_side_state > 0 ? wt_exit_long_code : wt_enter_short_code",
-        ),
-        producer=produce_c28,
-        authority_kind="CONTROLLER",
-        manifest_expected_observation={"preserved_values": ["EL", "XL", "ES", "XS", "XA"]},
-        manifest_expected_final_state={"route_key_count": 5},
-    ),
-    "C29": RowContract(
-        row_id="C29",
-        scenario_id="C29-LEGACY-001",
-        producer_adapter="A_FREEZE.resolve_config_payload_keys",
-        authority_name="frozen Pine controller L25 payload producer",
-        authority_commit=CONTROLLER_COMMIT,
-        authority_tree_oid=CONTROLLER_TREE_OID,
-        citations=(
-            "controller config.py:231-238 and MTC_V2.pine:2017-2020 at 77a10e65",
-            "P009 pinned blob f96b5325:760-783; current master P009:766-789",
-        ),
-        complete_inputs={"wt_amount": 2.5, "wt_amount_type": "base", "wt_leverage": 3, "wt_order_type": "limit"},
-        expected_observation={
-            "amount": 2.5,
-            "amount_type": "base",
-            "entry_payload": "{\"code\":\"EL\",\"order_type\":\"limit\",\"amount\":2.5,\"amount_type\":\"base\",\"leverage\":3,\"reduce_only\":true}",
-            "leverage": 3,
-            "order_type": "limit",
-        },
-        expected_final_state={"legacy_kernel_qty_affected_by_wt_amount": False, "payload_key_count": 4},
-        mutation=Mutation(
-            "C29-GF8-MUT-001",
-            "controller/MTC_V2.pine",
-            "',\"amount_type\":\"' + wt_amount_type",
-            "',\"amount_kind\":\"' + wt_amount_type",
-        ),
-        producer=produce_c29,
-        authority_kind="CONTROLLER",
-        manifest_expected_observation={"amount": 2.5, "amount_type": "base", "leverage": 3, "order_type": "limit"},
-        manifest_expected_final_state={"payload_key_count": 4},
-    ),
-    "C30": RowContract(
-        row_id="C30",
-        scenario_id="C30-LEGACY-001",
-        producer_adapter="A_FREEZE.resolve_config_protective_keys",
-        authority_name="frozen controller validation and Pine L25 protective payload producer",
-        authority_commit=CONTROLLER_COMMIT,
-        authority_tree_oid=CONTROLLER_TREE_OID,
-        citations=(
-            "controller config.py:569-584 and MTC_V2.pine:2017-2020 at 77a10e65",
-            "P009 pinned blob f96b5325:784-803; current master P009:790-809",
-        ),
-        complete_inputs={
-            "use_sl": True,
-            "use_tp": True,
-            "wt_place_cond_orders": True,
-            "wt_reduce_only": True,
-            "wt_use_sl": True,
-            "wt_use_tp": True,
-        },
-        expected_observation={
-            "entry_payload": "{\"code\":\"EL\",\"order_type\":\"market\",\"amount\":100.0,\"amount_type\":\"quote\",\"leverage\":1,\"reduce_only\":true,\"tp\":105.13,\"sl\":95.34,\"place_conditional_orders\":true}",
-            "wt_place_cond_orders": True,
-            "wt_reduce_only": True,
-            "wt_use_sl": True,
-            "wt_use_tp": True,
-        },
-        expected_final_state={"cross_validation": "PASS", "protective_key_count": 4},
-        mutation=Mutation(
-            "C30-GF8-MUT-001",
-            "controller/MTC_V2.pine",
-            "',\"tp\":' + str.tostring",
-            "',\"take_profit\":' + str.tostring",
-        ),
-        producer=produce_c30,
-        authority_kind="CONTROLLER",
-        manifest_expected_observation={"wt_place_cond_orders": True, "wt_reduce_only": True, "wt_use_sl": True, "wt_use_tp": True},
-        manifest_expected_final_state={"cross_validation": "PASS", "protective_key_count": 4},
     ),
     "C31": RowContract(
         row_id="C31",
@@ -2519,7 +2305,7 @@ def command_run_one(args: argparse.Namespace) -> int:
             "tree_oid": contract.authority_tree_oid,
         },
         "comparison": {
-            "compared_expected_leaf_count": leaf_count(encoded_expected),
+            "compared_expected_leaf_count": leaf_count(encoded_actual),
             "expected_leaf_count": leaf_count(encoded_expected),
             "mismatches": mismatches,
             "rule": "recursive exact key/value equality after IEEE-754 float.hex encoding",
@@ -2594,8 +2380,8 @@ def materialize_authority(contract: RowContract, destination: Path) -> tuple[Pat
         files.extend(
             _materialize_prefix(
                 f"{B_REF}^{{}}",
-                "MTC_COMMAND_CENTER/02_MTC_BACKTEST",
-                destination,
+                "MTC_COMMAND_CENTER/02_MTC_BACKTEST/src",
+                destination / "src",
             )
         )
         return destination, files
@@ -2685,7 +2471,7 @@ def run_child(
         "parsed_output": parsed,
         "return_code": proc.returncode,
         "stderr": proc.stderr,
-        "stdout": proc.stdout,
+        "stdout": canonical_bytes(parsed).decode("utf-8") if parsed is not None else proc.stdout,
     }
 
 
@@ -2802,6 +2588,84 @@ def _run_unresolved_probe(case_id: str, script: str) -> dict[str, Any]:
 
 
 def build_unresolved_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    controller_pine_path = "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
+    controller_config_path = "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py"
+    controller_pine = _git_blob_bytes(f"{CONTROLLER_REF}^{{}}", controller_pine_path)
+    controller_config = _git_blob_bytes(f"{CONTROLLER_REF}^{{}}", controller_config_path)
+    controller_text = controller_pine.decode("utf-8")
+    config_text = controller_config.decode("utf-8")
+    controller_specs = {
+        "C28": {
+            "citations": [
+                "controller config.py:226-238 and MTC_V2.pine:2010-2028 at 77a10e65",
+                "P009 pinned blob f96b5325:740-759; current master P009:746-765",
+            ],
+            "source_seams": {
+                "entry_route_expression_present": "string l25_entry_code" in controller_text,
+                "exit_route_expression_present": "string l25_exit_code" in controller_text,
+                "entry_alert_present": "alert('{\"code\":\"' + l25_entry_code" in controller_text,
+                "exit_alert_present": "alert('{\"code\":\"' + l25_exit_code" in controller_text,
+            },
+        },
+        "C29": {
+            "citations": [
+                "controller config.py:231-238 and MTC_V2.pine:2017-2020 at 77a10e65",
+                "P009 pinned blob f96b5325:760-783; current master P009:766-789",
+            ],
+            "source_seams": {
+                "amount_present": "wt_amount" in controller_text,
+                "amount_type_present": "wt_amount_type" in controller_text,
+                "leverage_present": "wt_leverage" in controller_text,
+                "order_type_present": "wt_order_type" in controller_text,
+            },
+        },
+        "C30": {
+            "citations": [
+                "controller config.py:569-584 and MTC_V2.pine:2017-2020 at 77a10e65",
+                "P009 pinned blob f96b5325:784-803; current master P009:790-809",
+            ],
+            "source_seams": {
+                "protective_payload_inputs_present": all(
+                    key in controller_text
+                    for key in ("wt_use_tp", "wt_use_sl", "wt_reduce_only", "wt_place_cond_orders")
+                ),
+                "tp_cross_validation_present": "wt_use_tp requires use_tp=True" in config_text,
+                "sl_cross_validation_present": "wt_use_sl requires use_sl=True" in config_text,
+            },
+        },
+    }
+    records: list[dict[str, Any]] = []
+    for row_id, detail in controller_specs.items():
+        scenario = manifest["rows"][int(row_id[1:]) - 1]["scenarios"][0]
+        record = {
+            "authority": {
+                "citations": detail["citations"],
+                "commit": CONTROLLER_COMMIT,
+                "name": "frozen Pine controller L25 producer",
+                "source_files": {
+                    controller_config_path: sha256_bytes(controller_config),
+                    controller_pine_path: sha256_bytes(controller_pine),
+                },
+                "tree_oid": CONTROLLER_TREE_OID,
+            },
+            "clean_authority_inspection": detail["source_seams"],
+            "expected": {
+                "observation": scenario["literal_expected_observation"],
+                "final_state": scenario["literal_expected_final_state"],
+            },
+            "mutation": "NOT_RUN_NO_EXECUTABLE_PINE_PRODUCER_IN_AUTHORIZED_LANE",
+            "reason": (
+                "the frozen scenario asserts configuration values only; source inspection cannot "
+                "establish observable L25 payload/alert dispatch and no authorized executable Pine "
+                "producer is available in this lane"
+            ),
+            "row_id": row_id,
+            "scenario_id": scenario["scenario_id"],
+            "status": "UNRESOLVED_PRODUCER_EXECUTION",
+        }
+        record["record_sha256"] = result_hash(record)
+        records.append(record)
+
     c32_inputs = manifest["rows"][31]["scenarios"][0]["complete_inputs"]
     c32_script = r'''
 import json, sys
@@ -3015,7 +2879,6 @@ print(json.dumps({
             },
         ),
     )
-    records: list[dict[str, Any]] = []
     for row_id, scenario_id, expected, actual, mismatches, probe, detail in specifications:
         if not mismatches:
             raise RowStop(f"{row_id} was expected to preserve an authority contradiction")
@@ -3130,16 +2993,21 @@ def command_build(args: argparse.Namespace) -> int:
                     "status": "NOT_A_LEGACY_REPRODUCTION_ROW",
                 }
             )
-        elif row_id in by_row and by_row[row_id]["status"] == "UNRESOLVED_AUTHORITY_CONTRADICTION":
+        elif row_id in by_row and by_row[row_id]["status"].startswith("UNRESOLVED_"):
+            unresolved_status = by_row[row_id]["status"]
             corroboration_rows.append(
                 {
                     "evidence_record_sha256": by_row[row_id]["record_sha256"],
-                    "producer_execution": "CLEAN_AUTHORITY_CONTRADICTS_FROZEN_EXPECTATION",
-                    "producer_mutation": "NOT_RUN_NO_AUTHORITY_ESTABLISHED_EXPECTED_ROUTE",
+                    "producer_execution": (
+                        "CLEAN_AUTHORITY_CONTRADICTS_FROZEN_EXPECTATION"
+                        if unresolved_status == "UNRESOLVED_AUTHORITY_CONTRADICTION"
+                        else "NOT_RUN_NO_EXECUTABLE_PINE_PRODUCER_IN_AUTHORIZED_LANE"
+                    ),
+                    "producer_mutation": by_row[row_id]["mutation"],
                     "row_id": row_id,
                     "scenario_ids": [by_row[row_id]["scenario_id"]],
                     "status": "STOP",
-                    "stop_reason": "UNRESOLVED_AUTHORITY_CONTRADICTION",
+                    "stop_reason": unresolved_status,
                 }
             )
         elif row_id in by_row:
@@ -3211,7 +3079,14 @@ def command_build(args: argparse.Namespace) -> int:
         "counts": {
             "clean_green": sum(item["status"] == "GREEN_AFTER_RED" for item in records),
             "mutation_red": sum(item["status"] == "GREEN_AFTER_RED" for item in records),
-            "unresolved_authority_contradiction": len(unresolved_records),
+            "unresolved_authority_contradiction": sum(
+                item["status"] == "UNRESOLVED_AUTHORITY_CONTRADICTION"
+                for item in unresolved_records
+            ),
+            "unresolved_producer_execution": sum(
+                item["status"] == "UNRESOLVED_PRODUCER_EXECUTION"
+                for item in unresolved_records
+            ),
             **counts,
         },
         "gate_version": GATE_VERSION,
