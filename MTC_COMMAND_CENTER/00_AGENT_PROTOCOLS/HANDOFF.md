@@ -8,18 +8,24 @@
   detailed source record. P0-11 and promotion-pipeline implementation remain stopped.
 - **Verified tag state:** all 180 annotated `legacy/*` tags are WP-P0-02 code/evidence freezes;
   `pkg/*` and `release/*` each contain 0 tags. They are not per-strategy identity+signal lockboxes.
-  LIVE_TRADING_GATE rows 1–2 remain `BLOCKED`; the legacy tag whose name contains
-  `bridge-release` is still a `legacy/*` WP-P0-02 freeze, not a `release/*` tag.
+  LIVE_TRADING_GATE rows 1–2 remain `BLOCKED`; both legacy tags whose names contain
+  `bridge-release` are still `legacy/*` WP-P0-02 freezes, not `release/*` tags.
 - **Claim retirement:** Gate 7 and SESSION_LOCK now use durable tracker/write-lane-record and
   reconciliation wording. The stale WP-P0-05 overlap is `RELEASED / SUPERSEDED` and its missing
-  GitHub-issue fact is retained as explicitly historical.
-- **Sibling sweep (20 occurrences accounted):** 13 current/stale occurrences were corrected — 2
-  live-gate rows, 4 occurrences across the three named sibling documents, and 7 in the technical
-  brief. Seven truthful non-current occurrences remain unchanged and disclosed: brief dated
-  measurement `:2795`, future criterion `:3067`, historical command result `:3292`; Wayfinder dated
-  measurement `:65`; WP-P0-02 lane report `:59`/`:80` and tagging scheme `:86`.
+  GitHub-issue fact is retained as explicitly historical. `mtc_cli/INPUTS.md` carried the last
+  surviving requirement and is corrected; a re-sweep of all eight stage contracts (43 files) now
+  finds zero requirements, only the two dated retirement notices. Disclosed, not edited: six
+  `11_TRIAGE` planning/fold/lane records still describe the pre-retirement shared-claim doctrine as
+  ratified at their date; they are not routable stage contracts.
+- **Sibling sweep (complete census, 22 occurrences):** 14 corrected — 2 live-gate rows, 4 across
+  the three named sibling documents, 7 in the technical brief, and the WP-P0-02 acceptance gate at
+  `MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md:305`. Eight truthful non-current
+  occurrences remain unchanged and disclosed: brief dated measurement `:2795`, future criteria
+  `:3067` and `:2919`, historical command result `:3292`; Wayfinder dated measurement `:65`;
+  WP-P0-02 lane report `:59`/`:80` and tagging scheme `:86`.
 - **Git / safety:** substantive repair `f78f501d`; worktree `C:\WPD_20260828`; branch
-  `fix/owner-decisions-docpack-20260828`; `master` and `origin/master` reconcile at `5c560306`.
+  `fix/owner-decisions-docpack-20260828`; `origin/master` `cd3b8486` (PR #131) is merged in, so
+  the branch reconciles against current `master`.
   **Final pushed HEAD is the Gate-7 close-out commit containing this record**, resolved from that
   branch ref (not the substantive commit alone) and reported by the implementer. No code, protected
   strategy/parity/schema surface, tag, setting, host, deploy, trading action, merge or other lane

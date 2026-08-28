@@ -302,7 +302,7 @@ Red = highest-risk protected work, each needing its own authorization. Blue = hi
 - **Parallel-safe with:** Lanes 1, 3, 5, 6.
 - **Protected surfaces:** Git refs. **Additive only — no ref is moved or deleted.**
 - **Audit tier:** T2.
-- **Acceptance gate:** tags exist and are pushed; the count of tags is no longer zero; the live-gate precondition "frozen, tagged commit" becomes satisfiable in principle.
+- **Acceptance gate:** tags exist and are pushed; the count of tags is no longer zero. These are code/evidence freezes only: they do not by themselves satisfy the live-gate per-strategy identity+signal lockbox precondition, and `_AI_MEMORY/LIVE_TRADING_GATE.md` rows 1-2 remain `BLOCKED`.
 - **Non-goals:** no pruning, no history rewriting, no force-push, no deletion of anything.
 
 ### WP-P0-03 · Migration ledger
