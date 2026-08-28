@@ -10,12 +10,14 @@ Branch/worktree: `feature/wp-p0-11-kernel-legacy-compatible-20260825` at
 
 Stage 1 is frozen. The Stage 2 sequence builder, closed observation adapter, keyed comparator,
 double-build verifier, 76-row field/component discrimination harness, and 17 structural/provenance
-mutations are built and executed.
+mutations are built and executed. Stage 3 row-arm batch 1 adds C01-C05: five real isolated producer
+mutations are RED and the same five scenarios are GREEN against clean frozen implementation A.
 
-The full gate outcome is **STOP**, not PASS or FAIL. Forty applicable C-row producer adapters and
-their row-specific D026 source mutations are frozen in the manifest but are not implemented or
-executed. Independent flagship reproduction and any future subject comparison are also absent.
-The candidate receipt and external anchor say exactly that.
+The full gate outcome is **STOP**, not PASS or FAIL. Of 40 applicable C-rows, 5 are GREEN after RED
+and 35 remain STOP; C25 and C27 remain policy-only. Independent flagship reproduction and any future
+subject comparison are also absent. The frozen candidate receipt and external anchor remain
+untouched and still truthfully report the pre-Stage-3 row arm as absent; the additive Stage-3
+candidate evidence is not substituted into either frozen artifact.
 
 This is the prompt's permitted truthful partial. No kernel, A, B, Pine, MTC_V2, backtest, adapter,
 schema, Bridge, broker, venue, host, testnet, live, credential, repository-setting, or other
@@ -24,7 +26,8 @@ worktree file was edited.
 Gate-1 tier is T0 because the builder executes strategy code. Repository writes are confined to
 `MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/**`; the only non-repository write is the
 authorized external anchor at
-`C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json`.
+`C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json`. Stage 3 only read that anchor and did
+not modify it.
 
 ## Stage 1 freeze
 
@@ -213,6 +216,91 @@ The real output re-established:
   restorations, with no failures and SHA-256 `60dcfd31...8db`;
 - external receipt/manifest pin matches and subject-run count remains zero.
 
+## Stage 3 row arm — batch 1 (C01-C05)
+
+The required merge of `origin/master` `85c3e17f97efa1ba83ef9c679de319a50ad3be04` landed first as
+merge commit `7dfccae1`. The re-resolved WP-P0-09 authority is now Git blob
+`1c39ab939dfcf5589e5ec8fba4af8966947a67fc`, SHA-256
+`7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249`. The additive
+`row_arm.py` pins that current identity, the frozen manifest/receipt/anchor identities, A commit
+`5c560306...`, and A tree `7aa6f867...` before any producer executes. It rejects committed or
+worktree drift in A. Mutations are applied only to temporary copies of `mtc_v2`; no A, B, Pine,
+Stage-1 artifact, receipt, or external-anchor byte is changed.
+
+The actual build command was:
+
+```powershell
+python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\row_arm.py build --out MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\evidence\row_arm
+```
+
+Real output:
+
+```text
+{"artifacts":{"row_corroboration.json":"ea66cab4fee8f8018a50a46bdea752187f7fbdfe57b28ac3329a0b1538ff9dec","row_results.jsonl":"c9eab1b7baf569e98af7a68d9795fa1c50b9a70dde28ee6763a551149e7d1689"},"command":"build","counts":{"clean_green":5,"green":5,"mutation_red":5,"not_applicable":2,"stop":35,"total":42},"outcome":"STOP","output_directory":"C:\\WPP011_20260825\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\evidence\\row_arm","rows_executed":["C01","C02","C03","C04","C05"]}
+```
+
+`evidence/row_arm/row_results.jsonl` is the complete per-row transcript. It records the literal
+subprocess argv, stdout, stderr and return code; exact before/after source hashes; the one replaced
+source seam; pinned inputs/oracle; every mismatch; every resolved `mtc_v2` import; and the clean
+comparison. Only path prefixes are normalized: the executed Python, repository root and random
+temporary authority-copy root become `<PYTHON>`, `<REPO_ROOT>` and `<SCRATCH>`. No argument,
+semantic value, output line or return code is otherwise changed.
+
+| Row | Frozen legacy authority and arithmetic citation | Producer mutation RED | Clean producer GREEN |
+|---|---|---|---|
+| C01 | A `5c560306...` / tree `7aa6f867...`; `runner.py:495-514`, `:1527-1531` | `C01-GF8-MUT-001`, rc 1: conflict branch disabled; actual `gated_long=true`, `gated_short=true`, `reason=fixture_conflict` | rc 0: 5/5 leaves exact; conflict clears both sides and emits `signal_conflict` |
+| C02 | A `5c560306...`; `gates.py:27-39`, `:389-402` | `C02-GF8-MUT-001`, rc 1: missing MA returns both false; three exact mismatches | rc 0: 5/5 leaves exact; both unready MA and HTF gates pass open |
+| C03 | A `5c560306...`; `runner.py:832-847`, `:860-884`; Pine `MTC_V2.pine:1680-1721` corroborates source only | `C03-GF8-MUT-001`, rc 1: refresh reset `0→1`; actual new-pulse/hold counts `1/0`, fires, direction clears | rc 0: 4/4 leaves exact; new-pulse/hold counts `0/1`, no fire, direction long |
+| C04 | A `5c560306...`; `runner.py:895-921` | `C04-GF8-MUT-001`, rc 1: proximity comparator inverted; wait remains and retest does not fire | rc 0: 5/5 leaves exact; IEEE-754 distance `0x1.999999999999ap-5`, fires, wait clears |
+| C05 | A `5c560306...`; `runner.py:592-607`, `:928-939` | `C05-GF8-MUT-001`, rc 1: exit-block removed; same-bar short opens and final position remains | rc 0: 4/4 leaves exact; `opp_signal` exits first, short is deferred, final state flat |
+
+Three anti-regression properties are enforced at the accepting top-level caller:
+
+1. **Every expected value is compared.** The verifier recursively compares the exact expected and
+   actual key union after `float.hex()` encoding. Batch 1 independently remeasures 23 expected
+   leaves and 23 compared leaves. A missing key, extra key, wrong type, list-length drift, or wrong
+   value is a terminal mismatch; no declared value can be skipped.
+2. **Scenario identity is verifier-pinned.** `row_arm.py` owns the ordered C-row → scenario-ID,
+   adapter, authority, full inputs, literal oracle, citations and mutation-ID registry. It refuses
+   any manifest value that differs; it never learns an accepting identity from the scenario file.
+3. **Required fields fail closed.** The top-level caller requires exactly one scenario and all eight
+   frozen scenario members before producer execution, then requires exact full input/oracle equality
+   to its pinned contract. Omission returns STOP; an omitted expected/actual leaf cannot turn into a
+   skipped check.
+
+The contract mutation command
+`python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\row_arm.py contract-harness
+--out MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\evidence\row_arm_contract_mutations.json`
+executed four top-level cases. Real output was
+`{"artifact_sha256":"85c92c2cc88535c5a59f1a0f94bd75482224af9f84efc32bb29107359771d120","cases":["scenario_identity_changed","required_input_omitted","expected_leaf_omitted","required_scenario_member_omitted"],"counts":{"fail":3,"stop":1,"total":4},"outcome":"PASS"}`.
+
+Independent remeasurement command:
+
+```powershell
+python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\evidence\row_arm_remeasure.py --evidence MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\evidence\row_arm --manifest MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\p011_legacy_manifest.json
+```
+
+Real output:
+
+```text
+{"artifact_hashes":{"batch_manifest.json":"1a26ac5d4b2365091d1cb2f24bf7bc86032b317fbc165aa905557a6f86ee98e5","row_corroboration.json":"ea66cab4fee8f8018a50a46bdea752187f7fbdfe57b28ac3329a0b1538ff9dec","row_results.jsonl":"c9eab1b7baf569e98af7a68d9795fa1c50b9a70dde28ee6763a551149e7d1689"},"compared_expected_leaves":23,"counts":{"applicable":40,"clean_green":5,"green":5,"mutation_red":5,"not_applicable":2,"red_mismatches":14,"stop":35,"total":42},"expected_leaves":23,"outcome":"PASS","p009_blob_oid":"1c39ab939dfcf5589e5ec8fba4af8966947a67fc","p009_sha256":"7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249","rows":["C01","C02","C03","C04","C05"]}
+```
+
+A second build into a separate output path produced the same three artifact hashes. The exact
+`verify-double-build` result was `byte_identical=true`, with `row_results.jsonl c9eab1b7...`,
+`row_corroboration.json ea66cab4...`, and `batch_manifest.json 1a26ac5d...` identical. The scratch
+second-build artifacts were removed after verification; the quoted command/output remains part of
+this report and the committed candidate is `evidence/row_arm/`.
+
+Unresolved/pending rows: C06-C24, C26, and C28-C42 (35 applicable rows) are intentionally STOP
+because the pre-committed batching rule prefers a truthful partial; no authority-silence claim is
+made for them yet. C25 and C27 are not legacy reproduction rows. This row arm does **not** yet cover
+sizing, stops, MultiTP, break-even, trailing, collisions, costs, warm-up, invalid bars, duplicate
+handling, de-fanged controller inputs, the `tw_*` modes, B's pivot/event-mode authorities, HTF
+alignment/readiness equations, or both signal-producer equations. It also does not cover a subject,
+subject import/delegation mutation, independent flagship reproduction, kernel consolidation, or any
+live/economic action. Therefore the full gate remains **STOP**.
+
 ## Discrepancies and non-claims
 
 1. Shared Git churn moved local `master` from `5c560306...` through `cd3b8486...` to
@@ -231,9 +319,10 @@ The real output re-established:
    `Runner.config` equals the frozen 184-key snapshot exactly. No A code was changed. The failed
    scratch directory `C:\tmp\p011_gate_baseline_run1` contains only a zero-byte sequence from that
    stopped attempt and is not referenced by the receipt.
-3. The P0-09 citation-refresh branch was not merged into the accepted base. The manifest pins the
-   current P0-09 blob `f96b5325...` / SHA-256 `6464e6f0...` and uses its current section ranges plus
-   source symbols; it does not silently import or repeat known shifted line numbers.
+3. Stage 1 froze before the P0-09 citation refresh and therefore still pins blob `f96b5325...` /
+   SHA-256 `6464e6f0...`. The required `85c3e17f...` merge changed the repository authority to blob
+   `1c39ab93...` / SHA-256 `7d48871a...`. The frozen manifest was not changed; Stage 3 pins and
+   records the new identity separately and uses direct frozen-source `file:line` citations.
 4. Current master A/Pine has no `wt_*` surface. C28-C30 use
    `legacy/pine-controller/2026-08-25` at `77a10e65...`; current master is not mislabeled as their
    legacy producer.
@@ -254,13 +343,19 @@ The real output re-established:
    match the source freeze exactly. Both profiles were rebuilt twice into the `committed_run*`
    directories and the receipt/anchor were repinned. The superseded `final_run*` candidates are
    not referenced by the final receipt.
+10. Before the required master merge, the routed repository rules still required a GitHub issue
+    claim, so issue #133 was created for this exact branch/worktree/package. The merged rules retire
+    that mandatory mechanism under OD-20260826-6. Issue #133 is therefore only a narrow durable lane
+    record, not an accepting guard or authority expansion.
 
 ## Remaining work
 
-1. Implement and execute the 40 frozen direct-build row producer adapters against their exact
-   current-A, controller-freeze, or B-freeze authority.
-2. Execute and record each row's isolated producer mutation RED and clean-authority GREEN; update
-   `row_corroboration.json` only from real evidence. Frozen expected values must not change.
+1. Continue in manifest order with C06-C24, C26, and C28-C42 against their exact current-A,
+   controller-freeze, or B-freeze authority. C26-C30 and every de-fanged surface must use
+   `legacy/pine-controller/2026-08-25` (`77a10e65...`), never current master A.
+2. Execute and record each of the remaining 35 rows' isolated producer mutation RED and
+   clean-authority GREEN; update the additive Stage-3 `row_corroboration.json` only from real
+   evidence. Frozen Stage-1 expected values and artifacts must not change.
 3. Execute the remaining subject/import and external-anchor mutation cases once an actual subject
    adapter exists; classify that subject as `INDEPENDENT_REIMPLEMENTATION` or `WRAP_MOVE_OF_A` and
    pin its tree and import/call graph.
