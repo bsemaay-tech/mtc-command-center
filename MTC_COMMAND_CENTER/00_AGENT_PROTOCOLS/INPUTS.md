@@ -4,7 +4,7 @@ Read only the rows triggered by the scoped task.
 
 | Trigger | Input |
 |---|---|
-| Any write | Shared GitHub claim: issue, branch, worktree, exact paths, live-dependency status; check `_AI_MEMORY/SESSION_LOCK.md` as mirror/history |
+| Any write | Record branch, worktree, exact paths and live-dependency status; check `_AI_MEMORY/SESSION_LOCK.md` as mirror/history. Work reaches `master` only through a PR with `Bridge suite (Python 3.12)` green on an up-to-date head (ruleset 21444962, no bypass). **2026-08-26:** mandatory GitHub-issue claim retired per owner decision 6. |
 | Gate workflow | `04_SHARED/prompts/05_ai_workflow/00_index.md` and the one current-gate prompt |
 | Lesson-system edit | `_AI_MEMORY/LESSONS.md` |
 | Protected paths | `_AI_MEMORY/DO_NOT_TOUCH.md`; `09_DOCS/PROTECTED_PATHS_POLICY.md` |

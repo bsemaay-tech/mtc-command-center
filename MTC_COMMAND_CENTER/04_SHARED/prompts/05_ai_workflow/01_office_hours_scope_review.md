@@ -54,6 +54,6 @@ NOTE (GLM sub-delegation): If implementation will sub-delegate via Z.AI Coding P
 
 After Gate 1 completes:
 
-- Record the scope contract in the durable tracker/shared claim as applicable.
+- Record the scope contract in the durable tracker/write-lane record as applicable.
 - Update the selected stage's `HANDOFF.md` only if the scope changed its current state.
 - Do not append `_AI_MEMORY/history/{GLOBAL_HANDOFF,NEXT_STEPS}.md`; they are archives.

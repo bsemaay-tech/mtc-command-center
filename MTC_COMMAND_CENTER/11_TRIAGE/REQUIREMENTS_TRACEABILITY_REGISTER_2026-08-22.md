@@ -24,7 +24,7 @@
 - **D-01 to D-12 — DERIVED, and acknowledged by the owner on 2026-08-22.** Safeguards produced by the architecture and audit work. They are enforceable engineering constraints. **The owner has acknowledged all twelve — D-02 and D-07 with the clarifications recorded in §3 — but he did not originate them: they stay DERIVED permanently, and no document may present them back to him as if he had requested them.**
 - **D-13 to D-16 — DERIVED, added 2026-08-22 by the fifth repair round, and owner-acknowledged AS WRITTEN on 2026-08-23.** They came from the **G1 architecture acceptance audit round 1 (T0)** — *the round was previously mislabelled here with a G3 gate identifier; **G3 and G3-K are future protected implementation gates** in the delivery plan §9, and no round of either has been held* — and each row in §3 states the named derivation and why no existing requirement could carry it. **They are enforceable as engineering constraints on the same footing as D-01…D-12.** The outstanding act on the decision-approval axis (D-12) — presenting them to the owner and obtaining his word — **was performed on 2026-08-23, with no change to their wording. They remain DERIVED permanently and never become owner outcomes, and the acknowledgement authorized nothing.**
 
-**Repository findings are not requirements.** The audit produced findings about the current state of the repository (five trade-logic implementations, an empty promotion registry, zero tags, live `tw_*` keys, an existing broker boundary, and so on). They explain *why* some work exists; they are evidence, not requests. They are listed separately in §5 and are deliberately excluded from the count of 60.
+**Repository findings are not requirements.** The audit produced dated findings about the repository (five trade-logic implementations, an empty promotion registry, zero tags at the original measurement, live `tw_*` keys, an existing broker boundary, and so on). They explain *why* some work exists; they are evidence, not requests. They are listed separately in §5 and are deliberately excluded from the count of 60. The current tag-state correction is recorded in F-17.
 
 ### 1.1 Column definitions
 
@@ -250,7 +250,7 @@ These are what the audit found in the repository, cited to files and lines in br
 | **F-14** | Several accepted Bridge capabilities are not enabled by the default init path; deployed state unverified | D-11 |
 | **F-15** | The LLM gate is dormant in the audited default init path; deployed state unknown | D-11 |
 | **F-16** | The live-trading gate is an unsigned draft with **fourteen** hard preconditions and an explicit no-partial-credit rule (`_AI_MEMORY/LIVE_TRADING_GATE.md:15-66`) — **not six, as this document set previously stated** *(corrected 2026-08-22, brief §0.6 R1)* | O-22, D-07, D-16 |
-| **F-17** | 137 local branches, 237 refs, **zero tags**, 8,031 tracked files, 8.7 GB working tree | O-24, O-39 |
+| **F-17** | Original audit snapshot: 137 local branches, 237 refs, **zero tags**, 8,031 tracked files, 8.7 GB working tree. **Current-state correction, 2026-08-28:** 180 annotated WP-P0-02 code/evidence freezes exist under `legacy/*`; `pkg/*` and `release/*` remain empty (0 tags), so no per-strategy identity+signal lockbox tag exists | O-24, O-39 |
 | **F-18** | ~709,001 bytes ≈ 180,000 tokens of mandatory AI onboarding | O-35, O-36 |
 | **F-19** | The working checkout is 60 commits behind master | O-39 |
 | **F-20** | Bridge V1 dashboard surface — seven pages plus KILL | O-01 |

@@ -33,10 +33,11 @@ Steps:
 2. Root `DECISIONS.md` (update only if a sticky owner decision was made)
    - Add one dated linked summary; keep detailed wording in its source record.
 
-3. Durable tracker/shared GitHub claim and `_AI_MEMORY/SESSION_LOCK.md` mirror
+3. Durable tracker/write-lane record and `_AI_MEMORY/SESSION_LOCK.md` mirror
    (update only when applicable)
-   - Before releasing the claim, reconcile current `master`, the work branch,
-     and durable tracker state. `UNKNOWN` ownership or liveness is a stop.
+   - Before marking the write-lane record released, reconcile current `master`,
+     the work branch, and durable tracker state. `UNKNOWN` ownership or liveness
+     is a stop.
 
 Historical homes:
 - `_AI_MEMORY/history/GLOBAL_HANDOFF.md` and
@@ -44,8 +45,8 @@ Historical homes:
 - `_AI_MEMORY/SESSION_LOG.md` is retired; do not recreate or append it.
 
 Report:
-- List every handoff, decision, tracker, or claim file updated, with the exact
-  change made to each.
+- List every handoff, decision, tracker, or write-lane-record file updated,
+  with the exact change made to each.
 - Suggested next gate / next prompt for the following session.
 ```
 

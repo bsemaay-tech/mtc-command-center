@@ -295,14 +295,14 @@ Red = highest-risk protected work, each needing its own authorization. Blue = hi
 - **Non-goals:** no moves, no deletions, no branch pruning, no canonicalization decisions. **Specifically for untracked material: this package may not move, stage (`git add`), delete, overwrite, rename or commit any untracked item, and may not `checkout`, `reset`, `clean` or `stash` anything. It reads and records; it changes nothing.**
 
 ### WP-P0-02 · Tag namespaces and the first freezes
-- **Objective:** give the repository immutable freeze points, which it has never had.
+- **Objective:** give the repository immutable freeze points, which it did not have at this plan's 2026-08-22 date (WP-P0-02 has since created them).
 - **Inputs:** WP-P0-01 Tier-A classification and evidence-bearing branch list.
 - **Outputs:** `pkg/`, `release/`, `legacy/` namespaces in use; tags on current master, the Pine controller, the MTC_V2 kernel, `02_MTC_BACKTEST`, the parity oracle set, the accepted Bridge V1 candidate, and every evidence-bearing branch.
 - **Depends on:** WP-P0-01.
 - **Parallel-safe with:** Lanes 1, 3, 5, 6.
 - **Protected surfaces:** Git refs. **Additive only — no ref is moved or deleted.**
 - **Audit tier:** T2.
-- **Acceptance gate:** tags exist and are pushed; the count of tags is no longer zero; the live-gate precondition "frozen, tagged commit" becomes satisfiable in principle.
+- **Acceptance gate:** tags exist and are pushed; the count of tags is no longer zero. These are code/evidence freezes only: they do not by themselves satisfy the live-gate per-strategy identity+signal lockbox precondition, and `_AI_MEMORY/LIVE_TRADING_GATE.md` rows 1-2 remain `BLOCKED`.
 - **Non-goals:** no pruning, no history rewriting, no force-push, no deletion of anything.
 
 ### WP-P0-03 · Migration ledger
