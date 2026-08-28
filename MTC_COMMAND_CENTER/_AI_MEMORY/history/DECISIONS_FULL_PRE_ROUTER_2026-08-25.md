@@ -63,3 +63,95 @@ D003 | 2026-06-04 | MTC-Engine Validation is an additive shortlist-only funnel s
 
 D001 | Phase 1 | `MTC_COMMAND_CENTER` legacy source is canonical for clean command center copy.
 D002 | 2026-05-31 | Adopt internal CLI layer (`mtc_cli/`) as agent-native tool surface; reject CLI-Anything (wrong target — wraps GUI binaries, brittle generator, no fit). Dashboard buttons wrap CLI 1:1, no business logic in dashboard. CLI becomes sole programmatic writer for `_AI_MEMORY/` canonical files (automates Gate 7). Tracked as SP-001 in `NEXT_STEPS.md`. Start at Gate 1, re-check repo state at scaffold time before any write.
+
+## Owner decisions 2026-08-26 — recorded verbatim
+
+> **Owner decisions — please record these verbatim and proceed only within these boundaries.**
+>
+> **1. WP-P0-11: STOP the current start gate.**
+> Do not start kernel work or accept P0-11 using the current golden-file test. Its reference data
+> belongs to a different strategy, so it cannot prove that the intended strategy was preserved.
+>
+> You are authorised to do read-only provenance work and prepare a replacement acceptance gate. The
+> replacement must be tied to the exact intended strategy, its exact data source, and a verified
+> baseline. Before any implementation starts, show me the new gate, its source provenance, and how it
+> can be falsified.
+>
+> **2. WP-P0-10: use the stricter acceptance bar.**
+> A green test alone is not acceptance evidence. Every claim must match what the code actually
+> enforces.
+>
+> For every claimed protection, require:
+> - independent re-measurement of the stated number or coverage;
+> - a tamper/mutation not supplied by the implementer;
+> - proof that the test fails against the broken behaviour and passes with the repair;
+> - no wording that claims broader protection than the code provides.
+>
+> Continue only when this standard is met. Do not lower the bar to finish the package.
+>
+> **3. Promotion pipeline governance: approve mandatory quality gates for future promotions.**
+> For future strategy promotion, DSR, BH-FDR, robust_final, and positive alpha must be genuine
+> pass/fail gates, not merely scores or report fields.
+>
+> Do not implement this code change yet. First prepare a short decision package containing:
+> - the exact proposed rule;
+> - which current candidates would no longer qualify;
+> - whether any existing paper/live candidate is affected;
+> - the required tests and RED/GREEN falsification evidence;
+> - a rollback-safe implementation plan.
+>
+> This is a forward-looking governance change. Do not rewrite historical research conclusions without
+> separate approval.
+>
+> **4. CI rule: record the real rule now in force.**
+> The mandatory GitHub protection for master is:
+> - required check: "Bridge suite (Python 3.12)";
+> - branch must be up to date before merge;
+> - force-pushes and branch deletion are blocked;
+> - no bypass users.
+>
+> Treat this real GitHub check as the authoritative CI requirement. Do not claim another GitHub
+> requirement exists unless it can be shown to work.
+>
+> **5. Tags: use accurate, non-misleading wording.**
+> Tags must state only what they actually freeze or identify. They must not imply acceptance,
+> deployment, safety proof, or completed audit unless that status is independently evidenced. Record
+> the exact commit SHA, scope, and status with every protected milestone tag.
+>
+> **6. Remove or replace the dead GitHub claim.**
+> If a documented GitHub requirement cannot actually run or enforce anything, retire that claim.
+> Replace it only with a real, demonstrated check. Do not keep a requirement merely because it sounds
+> protective.
+>
+> **7. Correct the 90-hour critical-path record.**
+> Approve correction of the 90-hour estimate to the currently verified critical-path estimate. Do not
+> invent precision: show the assumptions, what is included, what is excluded, and label it as a
+> planning estimate rather than a promise.
+>
+> **8. Reporting and boundaries.**
+> Update the relevant handoff and decision records before stopping. Clearly separate:
+> - owner decision;
+> - verified fact;
+> - planned work;
+> - blocked work;
+> - work requiring a later implementation approval.
+>
+> Do not begin P0-11 kernel implementation or change the promotion pipeline code until the required
+> decision package and acceptance-gate design are presented and independently checked.
+
+### Factual clarification on decision 7 (from the 2026-08-26 coordinator handoff)
+
+The 90 hours was not an over-estimate to reduce. The published critical path OMITTED WP-P0-31
+(NOT_STARTED, 90 h, the largest remaining Phase-0 item), so the path was 90 h LONGER than every
+text artifact claimed. The number correction was applied 2026-08-25 to the register, owner plan
+and AI handoff. Decision 7's remaining requirement is the labelling: planning estimate, not a
+promise, with assumptions / inclusions / exclusions stated.
+
+### Repository discrepancy observed 2026-08-28
+
+At lane base `5c560306`, the tracked repository has no Phase-0 register JSON. Neither
+`OWNER_MASTER_PLAN_2026-08-22.md` nor `00_AGENT_PROTOCOLS/HANDOFF.md` states the corrected chain or a
+remaining-hours total, and the exact corrected chain is absent from tracked `master`. Accordingly,
+this lane did not write prompt-supplied figures into those artifacts or attach an estimate label to
+text that is not present. This records the repository-versus-coordinator discrepancy; it does not
+weaken owner decision 7.

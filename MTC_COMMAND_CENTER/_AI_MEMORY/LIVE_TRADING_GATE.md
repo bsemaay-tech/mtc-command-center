@@ -163,8 +163,8 @@ advance so that a future proof carries its own expiry rule; stating it now prove
 
 | # | Category (unchanged above) | Map-#96 subproofs nested under it | Carrier | Scope | Exact evidence | Commit / deployment identity | Proof date | Invalidation condition | Status · current blocker |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | Strategy robustness | honest-strategy evidence regenerated on a frozen tagged commit | WP-P0-20, WP-P0-21 | Per strategy, per instrument/timeframe set, regenerated on **one** frozen tagged commit | `None accepted` | `—` | `—` | Any change to strategy logic, parameters, data set or simulator; any regeneration on a different commit; a superseding lockbox run | `BLOCKED` — zero tags exist in the repository |
-| 2 | Reference lock | frozen identity; deterministic rerun | WP-P0-02, WP-P0-04 | Per strategy: the frozen parameter set, the tagged commit and the hashed signal file that together define its identity | `None accepted` | `—` | `—` | Any commit touching the referenced code path; any parameter edit; any signal-file hash mismatch on deterministic rerun | `BLOCKED` — zero tags exist in the repository |
+| 1 | Strategy robustness | honest-strategy evidence regenerated on a frozen tagged commit | WP-P0-20, WP-P0-21 | Per strategy, per instrument/timeframe set, regenerated on **one** frozen tagged commit | `None accepted` | `—` | `—` | Any change to strategy logic, parameters, data set or simulator; any regeneration on a different commit; a superseding lockbox run | `BLOCKED` — no frozen strategy-identity/release tag exists. The repository has 180 `legacy/*` tags, including worktree-cleanup rescue tags; `legacy/pine-controller/2026-08-25` (tag object `3075bd66` → commit `77a10e65`) is WP-P0-23 freeze evidence, not cleanup residue |
+| 2 | Reference lock | frozen identity; deterministic rerun | WP-P0-02, WP-P0-04 | Per strategy: the frozen parameter set, the tagged commit and the hashed signal file that together define its identity | `None accepted` | `—` | `—` | Any commit touching the referenced code path; any parameter edit; any signal-file hash mismatch on deterministic rerun | `BLOCKED` — no frozen strategy-identity/release tag exists. The repository has 180 `legacy/*` tags, including worktree-cleanup rescue tags; `legacy/pine-controller/2026-08-25` (tag object `3075bd66` → commit `77a10e65`) is WP-P0-23 freeze evidence, not cleanup residue |
 | 3 | Parity proof | parity where Pine participates at all | WP-P0-06, WP-P0-23 | Per strategy, **only where Pine participates in monitoring or signalling**; full history, signal flags plus trade-list diff | `None accepted` | `—` | `—` | Any code change on either the Pine or the Python side after the artifact date voids the artifact; any tolerance change | `UNKNOWN` |
 | 4 | Paper soak | `INTERNAL_PAPER` lane evidence only | WP-V2B-07 Lane A | Per strategy, `INTERNAL_PAPER` lane only, over **one** pre-registered immutable window with an immutable start date | `None accepted` | `—` | `—` | Restarting or altering the window without an approved new plan; any strategy or configuration change during it; any unexplained reconciliation break | `UNKNOWN` |
 | 5 | Testnet proof | `EXCHANGE_TESTNET` lane evidence only | WP-V2B-07 Lane B | Per executor/bridge release, `EXCHANGE_TESTNET` venue only, including duplicate-signal injection and kill-process-mid-open-position restart/reconcile | `None accepted` | `—` | `—` | Any executor/Bridge release, schema activation, venue-API change or host change after the soak | `UNKNOWN` |
@@ -219,11 +219,9 @@ three-way reconciliation, kill-switch drills, deployed-host monitoring, the owne
 produced or accepted by it, so every row's evidence remains `None accepted`. **Withdrawing the
 stale zero is not authorization to repair the remaining blockers, and it gates no row.**
 
-**Adjacent literal staleness noticed, not corrected here (lane AM scope is the CI claim only):**
-rows 1 and 2 say "zero tags exist in the repository". True on 2026-08-23; since 2026-08-24 22:07:53
-+0300 the repository carries 180 `legacy/*` tags. Most are worktree-cleanup archive tags, but
-`legacy/pine-controller/2026-08-25` is not residue: tag object `3075bd66` peels to commit
-`77a10e65` and is cited by the WP-P0-23 merge (`59bf7723`) as the freeze preserving the
-alert-capable Pine original. No frozen strategy-identity tag exists, which is what those rows mean,
-but the literal sentence is no longer exact. Left for the Lead/owner to reword or ratify.
+**Tag wording correction (2026-08-28, owner decision 5):** rows 1 and 2 now state the exact current
+fact without moving either readiness row: no frozen strategy-identity/release tag exists; 180
+`legacy/*` tags exist, including worktree-cleanup rescue tags; and
+`legacy/pine-controller/2026-08-25` is WP-P0-23 freeze evidence, not cleanup residue. Tag object
+`3075bd66` peels to commit `77a10e65`.
 

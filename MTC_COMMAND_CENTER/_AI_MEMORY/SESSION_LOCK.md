@@ -1,9 +1,10 @@
 # SESSION_LOCK — checked claim mirror and history
 
-> **Not the collision guard.** Since the owner-ratified map-#97 context decision, every write task's
-> primary claim is the shared GitHub record carrying issue, branch, worktree, exact paths, and live-
-> dependency status. This file mirrors checked claims and preserves history. WP-P0-27's mechanical
-> ownership/liveness verification is planned and unbuilt; until it exists, any `UNKNOWN` is a STOP.
+> **Not the collision guard.** Every write task records its branch, worktree, exact paths, and live-
+> dependency status. This file mirrors checked claims and preserves history. The former mandatory
+> GitHub-issue claim was retired by owner decision 6 on 2026-08-26 because it was not enforced.
+> WP-P0-27's mechanical ownership/liveness verification is planned and unbuilt; until it exists,
+> any `UNKNOWN` is a STOP.
 
 Rewritten 2026-08-11. The old file was a single unused "Status: unlocked" line; it did not
 prevent the 2026-08-10 concurrent-session collision on the transport set
@@ -12,8 +13,10 @@ is retained as the checked mirror/history required by the current root and gover
 
 ## Protocol
 
-1. **Before the first write**, create or verify the shared GitHub claim and mirror its issue,
-   branch, worktree, exact paths, owner, timestamp, and live-dependency status here when applicable.
+1. **Before the first write**, create or verify the write-lane record and mirror its branch,
+   worktree, exact paths, owner, timestamp, and live-dependency status here when applicable. Work
+   reaches `master` only through a PR whose up-to-date head has green `Bridge suite (Python 3.12)`
+   under ruleset 21444962, which has no bypass actors.
 2. **One writable owner per workstream.** Everyone else is read-only on that workstream's
    files. Auditing (read-only review, reports written to your OWN workstream row or a new
    file) is always allowed.
@@ -30,6 +33,7 @@ is retained as the checked mirror/history required by the current root and gover
 
 | Workstream | Files (primary home) | Owner | Since |
 |---|---|---|---|
+| Owner-decision documentation pack | Root `AGENTS.md`, `DECISIONS.md`; governance `INPUTS.md`, `OUTPUTS.md`, `HANDOFF.md`; `_AI_MEMORY/{SESSION_LOCK,LIVE_TRADING_GATE}.md`; detailed decision history | **Codex implementer** — owner-authorized docs-only lane `fix/owner-decisions-docpack-20260828` at `C:\WPD_20260828`; no tracked-file live dependency; isolated-worktree `.git` churn expected | 2026-08-28 |
 | RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **Codex Lead `019fe77c`** — preserved partial repair; serialized writer only | 2026-08-14 10:30 +03 |
 | Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
