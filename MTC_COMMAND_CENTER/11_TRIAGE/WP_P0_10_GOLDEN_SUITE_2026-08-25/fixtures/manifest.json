@@ -1,0 +1,377 @@
+{
+  "schema_version": "wp-p0-10-golden-suite-manifest-v2",
+  "suite": "WP-P0-10 Kernel Economic Golden Suite",
+  "family_count": 25,
+  "built_count": 23,
+  "blocked_count": 2,
+  "expected_value_count": 241,
+  "coherence_validated_families": [
+    4,
+    5,
+    22,
+    24
+  ],
+  "coherence_expected_value_count": 24,
+  "coherence_unvalidated_expected_value_count": 217,
+  "assertion_input_source_count": 241,
+  "companion_assertion_count": 17,
+  "cross_row_import_count": 0,
+  "built_family_numbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25
+  ],
+  "blocked_family_numbers": [
+    18,
+    19
+  ],
+  "authority": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+  "authority_text_lf_sha256": "331feb1d7578bbf804b527e2a658fecbcbf74d00d1e852312860345029362adc",
+  "authority_text_hash_form": "UTF-8 decoded authority text with CRLF and CR normalized to LF; existing terminal newline preserved",
+  "output_normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+  "fixture_contract_check": "The 23 declared source-mutation descriptors are exercised only against copies of their expected mappings. The resulting mismatch/restoration pairs are fixture-contract self-consistency checks, not kernel execution or D026 mutation evidence.",
+  "authority_binding_contract": "Each built fixture has two manifest-local self-consistency hashes: a canonical semantic fixture hash and a hash over every expected path/value, each cited WP-P0-09 line fragment, both stored-hash citations, and the source-mutation descriptor. The verifier recomputes and matches them. Because both stored hashes live in this same manifest tree, a coordinated declared-value edit plus recomputation of both hashes is not detected unless an independent coherence check rejects it. The separate declaration-inventory hash covers declaration identity, not values.",
+  "citation_validation_contract": "citation_line_ranges_validated proves only that each counted citation is well formed, its line range exists, and its structural C/GF, cross-cutting-rule, or explicit-non-decision label matches that range. It does not prove that the cited row is relevant to, or decides, the family assertion carrying it.",
+  "coherence_validation_contract": "Independent coherence validation covers families 4, 5, 22, and 24 only. At audit fixed point c05e5968 it covered 24 of 230 expected values, leaving 206 outside coherence validation. This repair adds 11 coverage assertions without extending validate_coherence, so the current scope is 24 of 241 expected values and a self-consistent declared-value rehash outside those 24 values is not detected.",
+  "assertion_input_contract": "Every expected assertion has an explicit checked input source. Assertions bound to the fixture declare input_paths that must resolve to non-empty values inside that same fixture; companion legacy assertions declare exact paths inside a top-level embedded companion_scenarios run. C32, C36, and C37 companion assertions must explicitly declare config.tw_audit_semantics_mode and the scenario must hold the required research value. Declared OHLCV sequences are pinned to hardcoded bar counts and to the local frozen_metadata.ohlcv_fields declaration open,high,low,close,volume; every declared OHLCV bar must be an object with an ohlcv list, and indexed OHLCV sequences must keep index equal to position. Cross-row imports are unsupported in this corpus and are rejected if present. The source counter counts assertions; the path counter counts concrete paths actually resolved. Presence checks do not prove semantic relevance. The declaration-inventory hash preserves the reviewed list of declarations, but it does not compare declared values, identify a changed record, or see a field that was never declared.",
+  "declaration_inventory_contract": "The verifier-owned declaration-inventory digest covers every fixture-local and companion assertion record, including its family, source kind, scenario identity, assertion path, and sorted declared input paths with duplicates preserved. It refuses additions, removals, swaps, renames, and moves while allowing input-path reordering inside an assertion. This is declaration integrity only: declared values and fields absent from every declaration are not covered.",
+  "coherence_follow_up": "WP-P0-10-COHERENCE-217: design and add independent semantic/coherence validation for the 217 current expected values outside the existing 24-value checks (the audited 206-value gap plus the 11 assertions added in repair round 2).",
+  "d026_status": {
+    "built_families": "UNEARNED",
+    "earned_count": 0,
+    "unearned_count": 23,
+    "reason": "GF field 8 names source mutations, but this package has no kernel subject on which to execute them.",
+    "unearned_until": "WP-P0-11/WP-P0-12/WP-P0-20 deliver the canonical kernel subjects and each source mutation is demonstrated against the exact pre-fix behaviour or an equivalent producer mutation, then with the fix present."
+  },
+  "families": [
+    {
+      "number": 1,
+      "name": "Entry signal",
+      "status": "BUILT",
+      "fixture": "family_01.json",
+      "fixture_contract_sha256": "320c29f5817c7cf2ce3ce21f232c9d90f195927e605bf5a441c969fb98555ae8",
+      "authority_binding_sha256": "c551af2e1f8d19484c98bcaf12c2e7a771c34292fad8d1c62b7bb559b45835f1",
+      "wp_p0_09_rows": [
+        "C01",
+        "C42"
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Direction / flip / regime lock",
+      "status": "BUILT",
+      "fixture": "family_02.json",
+      "fixture_contract_sha256": "5f869a62bbd77eb4cd7554d15605e32c777533f7e40ebfe3ad5e9c899b663521",
+      "authority_binding_sha256": "ef33624af3e93ba2f8d03c101b57ec7c10a5e7232ad9b2e46bcca5f21d8e3244",
+      "wp_p0_09_rows": [
+        "C05",
+        "C21",
+        "C32",
+        "C33"
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Position sizing",
+      "status": "BUILT",
+      "fixture": "family_03.json",
+      "fixture_contract_sha256": "d2b794fcd5d046382394f56753e006e9f141cdbe7f077fc82af2565f4ecf0863",
+      "authority_binding_sha256": "5443f1d76edc216532ab20cfbe468f16745e55aa5975bab9e285218381c33493",
+      "wp_p0_09_rows": [
+        "C07",
+        "C31"
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Contract multiplier",
+      "status": "BUILT",
+      "fixture": "family_04.json",
+      "fixture_contract_sha256": "0928930c1224c7d234189cf35dec619869e381dd57e7b2fd017dc207f9174167",
+      "authority_binding_sha256": "5b0c32cc5770aef03a0a34e6397fa2f2661af214ce3cab7b4f0e746bf90ff18c",
+      "wp_p0_09_rows": [
+        "C08"
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Minimum notional",
+      "status": "BUILT",
+      "fixture": "family_05.json",
+      "fixture_contract_sha256": "dff37bb2257c3f5b6261ff8fac616fcccf963ba9d47641c83f65ff2ad3406e9c",
+      "authority_binding_sha256": "27173cea692a19e24a164a730b9ab2bd8092cec4e8746d3ef83572e0338fdc28",
+      "wp_p0_09_rows": [
+        "C09"
+      ]
+    },
+    {
+      "number": 6,
+      "name": "Rounding / qty step / min qty",
+      "status": "BUILT",
+      "fixture": "family_06.json",
+      "fixture_contract_sha256": "6d7233378d162fd61c727578c5c6897e8ed95bfb82eceafb636a23b4e36741e1",
+      "authority_binding_sha256": "e61b23220fdfabfa931d1933ef24147bc9a6f86c6c971259e9436e6dc183f8e1",
+      "wp_p0_09_rows": [
+        "C09",
+        "C31"
+      ]
+    },
+    {
+      "number": 7,
+      "name": "SL calculation (ATR / percent / swing)",
+      "status": "BUILT",
+      "fixture": "family_07.json",
+      "fixture_contract_sha256": "d511d1e447ca090a3fcec0bf0b4278e4806d9f44479af33844967aed50dd4b57",
+      "authority_binding_sha256": "e7fcdefece9add161b3e74d05ac9ce6118a27d984ae41e6267cefaf95d9ce1cd",
+      "wp_p0_09_rows": [
+        "C11",
+        "C24"
+      ]
+    },
+    {
+      "number": 8,
+      "name": "TP calculation (ATR / percent / R)",
+      "status": "BUILT",
+      "fixture": "family_08.json",
+      "fixture_contract_sha256": "85da5175eca482145767558ecfbbe56b351c9f7025587a82950b8315e9d82aa0",
+      "authority_binding_sha256": "63077ed6bfacf7eb8f16a089480e5332c01662d73ef3b4009e843017f520d68d",
+      "wp_p0_09_rows": [
+        "C12",
+        "C24"
+      ]
+    },
+    {
+      "number": 9,
+      "name": "Multi-TP lifecycle incl. partial TP1 fill",
+      "status": "BUILT",
+      "fixture": "family_09.json",
+      "fixture_contract_sha256": "34962cf6ecea23dea477cc5561192aebdb6ac55cb14201347106e78060bbd656",
+      "authority_binding_sha256": "98044c1703c2df3a42a34a96ba46c8480d716c65ce37512e7718150116e5ee77",
+      "wp_p0_09_rows": [
+        "C13"
+      ]
+    },
+    {
+      "number": 10,
+      "name": "Break-even trigger and buffer",
+      "status": "BUILT",
+      "fixture": "family_10.json",
+      "fixture_contract_sha256": "74211322339346c8984646b37b5054d3b15cb5ee8b103a53ac07478cac0d9cfb",
+      "authority_binding_sha256": "b18c923038631ab4dddb098bf6d9e791bc2c1b4b5d8f0bb715ce7d1ce4fe0497",
+      "wp_p0_09_rows": [
+        "C14",
+        "C36"
+      ]
+    },
+    {
+      "number": 11,
+      "name": "Trailing activation and monotonicity",
+      "status": "BUILT",
+      "fixture": "family_11.json",
+      "fixture_contract_sha256": "6d71d56f1ccc6c8f0413fc5c5cf81c309580a71e68c14eb6ad3724392763cde1",
+      "authority_binding_sha256": "ce6a29d9f66596c37fc95be31a2e9e8a6a50813468125826349a9c6a76c9588d",
+      "wp_p0_09_rows": [
+        "C15",
+        "C37"
+      ]
+    },
+    {
+      "number": 12,
+      "name": "Opposite-signal exit",
+      "status": "BUILT",
+      "fixture": "family_12.json",
+      "fixture_contract_sha256": "fbbf7b7cc1e0f07ddc2d7da43e0ddacfb0682c2c3c283c3afe87e2d8a948e1eb",
+      "authority_binding_sha256": "57ed1d496c421431896f502613fd9805cbab61b3f39c9e7c03ec3e1398d79516",
+      "wp_p0_09_rows": [
+        "C05",
+        "C16",
+        "C21"
+      ]
+    },
+    {
+      "number": 13,
+      "name": "Time exit (bars / EOD / EOW)",
+      "status": "BUILT",
+      "fixture": "family_13.json",
+      "fixture_contract_sha256": "f6ea11b8453c906fcaf44772f19a50814ee1e1c904d8abbb4b8f630e13ae24f7",
+      "authority_binding_sha256": "7abf575a7154754e0f9895cb9f1e5d738512d20357625674ad3806c6b4f470fe",
+      "wp_p0_09_rows": [
+        "C17",
+        "C25"
+      ]
+    },
+    {
+      "number": 14,
+      "name": "Bar gaps through the stop",
+      "status": "BUILT",
+      "fixture": "family_14.json",
+      "fixture_contract_sha256": "c4dab52aa95aafd7a914b802c3e6bd203b61a656d9519308270373b0726cc9a4",
+      "authority_binding_sha256": "6b36d33ef4a6d787b3d66672e881bd582b5dd8b1be8c7b0adf73cbb627a8e406",
+      "wp_p0_09_rows": [
+        "C11",
+        "C20"
+      ]
+    },
+    {
+      "number": 15,
+      "name": "Same-bar SL/TP collision",
+      "status": "BUILT",
+      "fixture": "family_15.json",
+      "fixture_contract_sha256": "9217ee8b1744895a96c8c683eb8764b59cd3efe9261ace05727210d1dac5c36f",
+      "authority_binding_sha256": "93b407b29769e3afef1ff787558ddd79d1d4f8c083ff6d36e05505b2ad3350ef",
+      "wp_p0_09_rows": [
+        "C19"
+      ]
+    },
+    {
+      "number": 16,
+      "name": "Pyramiding / add / partial reduction",
+      "status": "BUILT",
+      "fixture": "family_16.json",
+      "fixture_contract_sha256": "db4f16f7cdebd286eba59913c211f7774aab2f9c2d46ff655fe3ed4378f153c6",
+      "authority_binding_sha256": "9a3e036278d432cdc44242d16921c088192be167fc04e7c0954066f901c88e75",
+      "wp_p0_09_rows": [
+        "C06",
+        "C13"
+      ]
+    },
+    {
+      "number": 17,
+      "name": "Fees, slippage, funding",
+      "status": "BUILT",
+      "fixture": "family_17.json",
+      "fixture_contract_sha256": "ff5c6320095da082e9f1fceafc043402406afa914e7f473bc966f15448fe624c",
+      "authority_binding_sha256": "2f75e475d8228615d061a18d1deda80d80cd641dd1138f259c613b6399c3c07e",
+      "wp_p0_09_rows": [
+        "C08",
+        "C22"
+      ]
+    },
+    {
+      "number": 18,
+      "name": "Snapshot drift / bucket-capital divergence",
+      "status": "BLOCKED",
+      "missing_semantics": [
+        "SNAPSHOT_MISMATCH trigger",
+        "typed rejection event",
+        "no-order/final-state oracle",
+        "D026 guard-removal discriminator"
+      ],
+      "authority_evidence": [
+        "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1288-1296 (explicit non-decision)"
+      ],
+      "unblocks_when": "WP-P0-09 adds a decided eight-field row for SNAPSHOT_MISMATCH, including exact failing output under the absent guard and passing kernel output with the guard present.",
+      "coverage_note": "Genuine D026 snapshot-drift coverage hole; not cosmetic and not waived."
+    },
+    {
+      "number": 19,
+      "name": "Allocator ↔ Guardian boundary",
+      "status": "BLOCKED",
+      "missing_semantics": [
+        "REFERENCE_DIVERGENCE discriminator/tolerance",
+        "typed rejection event",
+        "no-resize/no-order/final-state oracle"
+      ],
+      "authority_evidence": [
+        "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1288-1296 (explicit non-decision)",
+        "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)"
+      ],
+      "unblocks_when": "WP-P0-09 adds a decided eight-field row for REFERENCE_DIVERGENCE and the authorize-unchanged-or-reject boundary, including exact failing pre-fix and passing fixed kernel outputs."
+    },
+    {
+      "number": 20,
+      "name": "Short-side symmetry",
+      "status": "BUILT",
+      "fixture": "family_20.json",
+      "fixture_contract_sha256": "7be40c98760ba38268ee0a03f042383579f3bfa597ae05c584e9e6b506e95e43",
+      "authority_binding_sha256": "591b11c41553b3f1a25feae200c6930dde2e199d2e4e389b7c2f68bc177f6246",
+      "wp_p0_09_rows": [
+        "C24",
+        "cross-cutting rule 2"
+      ]
+    },
+    {
+      "number": 21,
+      "name": "NaN / zero / boundary precision",
+      "status": "BUILT",
+      "fixture": "family_21.json",
+      "fixture_contract_sha256": "ff7fa18657a0c508d45246a82adfb5dd1c045fd40bd003a74ec74bc1749d1990",
+      "authority_binding_sha256": "85b609d66054c9f453c1db939ce2026d9fa3bea58d425359848868037cfa09bf",
+      "wp_p0_09_rows": [
+        "C07",
+        "C09",
+        "C24"
+      ]
+    },
+    {
+      "number": 22,
+      "name": "Duplicate and reordered bars",
+      "status": "BUILT",
+      "fixture": "family_22.json",
+      "fixture_contract_sha256": "af3eb624012ed4ba02f9bc0feee47076474e59adc50e7a7410b50f67bdcc7ef1",
+      "authority_binding_sha256": "f38a7bb6e0dff89fc225320472257e37e46d3232e19271af9ea30c34ed15eccd",
+      "wp_p0_09_rows": [
+        "C26"
+      ]
+    },
+    {
+      "number": 23,
+      "name": "Cancellation and revision ordering",
+      "status": "BUILT",
+      "fixture": "family_23.json",
+      "fixture_contract_sha256": "120a34596070bac42010fa3e5eee0dea1b2702dc2da523730f155e8d8430790a",
+      "authority_binding_sha256": "887719086ad9515dfb5e4ecf39cabf392cf006004a0f5f2de51143781df74787",
+      "wp_p0_09_rows": [
+        "C26"
+      ]
+    },
+    {
+      "number": 24,
+      "name": "OrderIntent idempotence",
+      "status": "BUILT",
+      "fixture": "family_24.json",
+      "fixture_contract_sha256": "8194b1f0b842d241879baa2874747d5149fb24ad52e479524a444b4e2469b2a7",
+      "authority_binding_sha256": "1395d8bfe1dcfafabbc4261a14c3e11d82d40e9efc7b67de4bfcd331a7f1b5c9",
+      "wp_p0_09_rows": [
+        "C26"
+      ]
+    },
+    {
+      "number": 25,
+      "name": "Venue and session edge cases",
+      "status": "BUILT",
+      "fixture": "family_25.json",
+      "fixture_contract_sha256": "c238161aee49adb7a661f1f42852a79d994e52e3b85cb4379d3fd2e5976c49e2",
+      "authority_binding_sha256": "3f386ef7061cb972c7f3878f977d0912cd7efb5a68d51b5de552bc09c1327ffa",
+      "wp_p0_09_rows": [
+        "C09",
+        "C17",
+        "C22",
+        "C25",
+        "C27"
+      ]
+    }
+  ],
+  "assertion_input_path_count": 2660,
+  "family_20_mirror_contract": "family_20 stores mirror_expected_values: already reflected output values used as local, presence-checked inputs for its mirror assertions. The verifier checks those values exist but does not derive them by applying config.rule or config.reflection_pivot."
+}

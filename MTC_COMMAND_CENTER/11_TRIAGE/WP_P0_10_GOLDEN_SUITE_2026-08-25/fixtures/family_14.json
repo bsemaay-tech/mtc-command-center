@@ -1,0 +1,298 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 14,
+    "name": "Bar gaps through the stop",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C11",
+      "C20"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "execution_profile": "STANDING_TOUCH",
+    "entry": "100",
+    "stop_percent": "5.0",
+    "target_percent": "5.0"
+  },
+  "companion_scenarios": [
+    {
+      "id": "C20_GF20_legacy_close_only_gap_fills",
+      "source": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)",
+      "config": {
+        "execution_profile": "LEGACY_CLOSE_ONLY",
+        "use_sl": true,
+        "use_sl_percent": true,
+        "sl_percent": "5.0",
+        "tp_mode": "Percent",
+        "tp_percent": "5.0",
+        "slippage": "0",
+        "fees": "0"
+      },
+      "frozen_metadata": {
+        "instrument_price_tick": "0.01",
+        "instrument_qty_step": "1.0",
+        "instrument_contract_multiplier": "1",
+        "entry_quantity": "1",
+        "ohlcv_fields": [
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ]
+      },
+      "normalized_bars": [
+        {
+          "case": "entry",
+          "ohlcv": [
+            "100",
+            "100",
+            "100",
+            "100",
+            "1"
+          ]
+        },
+        {
+          "case": "long_stop_gap",
+          "ohlcv": [
+            "90",
+            "92",
+            "88",
+            "91",
+            "1"
+          ]
+        },
+        {
+          "case": "short_stop_gap",
+          "ohlcv": [
+            "110",
+            "112",
+            "108",
+            "109",
+            "1"
+          ]
+        }
+      ],
+      "assertion_inputs": {
+        "legacy.long_stop_close_only": [
+          "config.execution_profile",
+          "config.sl_percent",
+          "normalized_bars.0.ohlcv.3",
+          "normalized_bars.1.ohlcv.3"
+        ],
+        "legacy.short_stop_close_only": [
+          "config.execution_profile",
+          "config.sl_percent",
+          "normalized_bars.0.ohlcv.3",
+          "normalized_bars.2.ohlcv.3"
+        ]
+      }
+    }
+  ],
+  "frozen_metadata": {
+    "price_tick": "0.01",
+    "qty_step": "1.0",
+    "contract_multiplier": "1",
+    "entry_qty": "1",
+    "ohlcv_fields": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume"
+    ]
+  },
+  "normalized_bars": [
+    {
+      "case": "long_stop_gap",
+      "ohlcv": [
+        "90",
+        "92",
+        "88",
+        "91",
+        "1"
+      ]
+    },
+    {
+      "case": "short_stop_gap",
+      "ohlcv": [
+        "110",
+        "112",
+        "108",
+        "109",
+        "1"
+      ]
+    },
+    {
+      "case": "long_target_gap",
+      "ohlcv": [
+        "109",
+        "110",
+        "108",
+        "110",
+        "1"
+      ]
+    },
+    {
+      "case": "short_target_gap",
+      "ohlcv": [
+        "91",
+        "92",
+        "90",
+        "90",
+        "1"
+      ]
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "fills.long_stop_gap",
+        "value": "90.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.execution_profile",
+          "config.stop_percent",
+          "config.target_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "fills.short_stop_gap",
+        "value": "110.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1280-1282 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.execution_profile",
+          "config.stop_percent",
+          "config.target_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "fills.long_target_gap",
+        "value": "109.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.execution_profile",
+          "config.stop_percent",
+          "config.target_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "fills.short_target_gap",
+        "value": "91.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1280-1282 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.execution_profile",
+          "config.stop_percent",
+          "config.target_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "legacy.long_stop_close_only",
+        "value": "91.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)"
+        ]
+      },
+      {
+        "path": "legacy.short_stop_close_only",
+        "value": "109.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)"
+        ]
+      },
+      {
+        "path": "state.position",
+        "value": "FLAT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.execution_profile",
+          "config.stop_percent",
+          "config.target_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.execution_profile",
+        "value": "STANDING_TOUCH",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)"
+        ],
+        "input_paths": [
+          "config.entry",
+          "config.execution_profile",
+          "config.stop_percent",
+          "config.target_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.entry_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      }
+    ],
+    "sha256": "d1e13a43ecff20559df15b9bf50609851055c84e4122a9f0588c67f62ca52989",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "84263b37dfaac41461daa38df70d854defac71fbea0ee543f3dd0a6189ea3f2d",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "fills.long_stop_gap",
+    "from": "90.00",
+    "to": "91.00",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)",
+    "rationale": "Replace only the long adverse-gap open fill with the close-only rival."
+  }
+}

@@ -1,0 +1,453 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 16,
+    "name": "Pyramiding / add / partial reduction",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C06",
+      "C13"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "max_entries": 3,
+    "entry_spacing_bars": 2,
+    "post_exit_cooldown_bars": 2,
+    "requested_risk_fraction": "0.005",
+    "bucket_capital": "1000",
+    "stop_percent": "5.0"
+  },
+  "frozen_metadata": {
+    "price_tick": "0.01",
+    "qty_step": "1.0",
+    "contract_multiplier": "1",
+    "ohlcv_fields": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume"
+    ]
+  },
+  "normalized_bars": [
+    {
+      "index": 0,
+      "ohlcv": [
+        "100",
+        "100",
+        "100",
+        "100",
+        "1"
+      ],
+      "raw": "LONG"
+    },
+    {
+      "index": 1,
+      "ohlcv": [
+        "99",
+        "99",
+        "99",
+        "99",
+        "1"
+      ],
+      "raw": "LONG"
+    },
+    {
+      "index": 2,
+      "ohlcv": [
+        "98",
+        "98",
+        "97.5",
+        "97.5",
+        "1"
+      ],
+      "raw": "LONG"
+    },
+    {
+      "index": 3,
+      "ohlcv": [
+        "97.5",
+        "97.5",
+        "97.5",
+        "97.5",
+        "1"
+      ],
+      "raw": "NONE"
+    },
+    {
+      "index": 4,
+      "ohlcv": [
+        "90",
+        "90",
+        "90",
+        "90",
+        "1"
+      ],
+      "raw": "NONE"
+    },
+    {
+      "index": 5,
+      "ohlcv": [
+        "100",
+        "100",
+        "100",
+        "100",
+        "1"
+      ],
+      "raw": "LONG"
+    },
+    {
+      "index": 6,
+      "ohlcv": [
+        "100",
+        "100",
+        "100",
+        "100",
+        "1"
+      ],
+      "raw": "LONG"
+    },
+    {
+      "index": 7,
+      "ohlcv": [
+        "100",
+        "100",
+        "100",
+        "100",
+        "1"
+      ],
+      "raw": "LONG"
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "events.bar0",
+        "value": "ENTER_LONG:1@100.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "events.bar1",
+        "value": "BLOCK:ENTRY_SPACING",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "events.bar2",
+        "value": "ADD_LONG:2@97.50",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "events.bar2.stop_disposition",
+        "value": "STOP_MONOTONIC_REJECTED",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "events.bar3",
+        "value": "NONE",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "basket.qty_after_add",
+        "value": "3",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "basket.avg_entry",
+        "value": "98.3333333",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "basket.shared_stop",
+        "value": "95.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "basket.risk_at_shared_stop",
+        "value": "10.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "events.bar4",
+        "value": "EXIT_LONG:3@90.00:STOP",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:575-598 (C20/GF-20)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "events.bar5",
+        "value": "BLOCK:POST_EXIT_COOLDOWN",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "events.bar6",
+        "value": "BLOCK:POST_EXIT_COOLDOWN",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "events.bar7",
+        "value": "ENTER_LONG:1@100.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "short_twin.realised_pnl",
+        "value": "-25.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1280-1282 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.position",
+        "value": "LONG:1@100.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.realised_pnl",
+        "value": "-25.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)"
+        ],
+        "input_paths": [
+          "config.bucket_capital",
+          "config.entry_spacing_bars",
+          "config.max_entries",
+          "config.post_exit_cooldown_bars",
+          "config.requested_risk_fraction",
+          "config.stop_percent",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      }
+    ],
+    "sha256": "38c0aae150087b7cedc482f098e9bd6269ade3a146577f4e6f8f8f3b8ce1308a",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "95d05d56e93f6ace849e92dae04c493dae0bfffee3a6cdb899edd6d3f4512773",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "events.bar5",
+    "from": "BLOCK:POST_EXIT_COOLDOWN",
+    "to": "ENTER_LONG:1@100.00",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:245-281 (C06/GF-06)",
+    "rationale": "Mutate only the first post-exit signal bar to A's premature entry."
+  }
+}

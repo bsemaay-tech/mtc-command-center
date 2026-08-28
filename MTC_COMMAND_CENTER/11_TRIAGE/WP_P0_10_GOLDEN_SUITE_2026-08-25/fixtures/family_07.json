@@ -1,0 +1,253 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 7,
+    "name": "SL calculation (ATR / percent / swing)",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C11",
+      "C24"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "swing_lookback": 3,
+    "swing_atr_mult": "0.0",
+    "percent_stop": "5.0",
+    "atr_ready": false
+  },
+  "frozen_metadata": {
+    "price_tick": "0.01",
+    "qty_step": "1.0",
+    "contract_multiplier": "1",
+    "ohlcv_fields": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume"
+    ]
+  },
+  "normalized_bars": [
+    {
+      "index": 0,
+      "ohlcv": [
+        "98",
+        "99",
+        "98",
+        "98",
+        "1"
+      ]
+    },
+    {
+      "index": 1,
+      "ohlcv": [
+        "97",
+        "98",
+        "97",
+        "97",
+        "1"
+      ]
+    },
+    {
+      "index": 2,
+      "ohlcv": [
+        "99",
+        "100",
+        "99",
+        "99",
+        "1"
+      ]
+    },
+    {
+      "index": 3,
+      "ohlcv": [
+        "100",
+        "100",
+        "90",
+        "100",
+        "1"
+      ],
+      "raw": "LONG"
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "swing.long.stop",
+        "value": "97.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)"
+        ],
+        "input_paths": [
+          "config.atr_ready",
+          "config.percent_stop",
+          "config.swing_atr_mult",
+          "config.swing_lookback",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "swing.decision_bar_low_used",
+        "value": false,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)"
+        ],
+        "input_paths": [
+          "config.atr_ready",
+          "config.percent_stop",
+          "config.swing_atr_mult",
+          "config.swing_lookback",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "atr_unready.outcome",
+        "value": "BLOCK",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)"
+        ],
+        "input_paths": [
+          "config.atr_ready",
+          "config.percent_stop",
+          "config.swing_atr_mult",
+          "config.swing_lookback",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "atr_unready.reason",
+        "value": "STOP_UNAVAILABLE_ATR_NOT_READY",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)"
+        ],
+        "input_paths": [
+          "config.atr_ready",
+          "config.percent_stop",
+          "config.swing_atr_mult",
+          "config.swing_lookback",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "percent.gap_fill",
+        "value": "90.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)"
+        ],
+        "input_paths": [
+          "config.atr_ready",
+          "config.percent_stop",
+          "config.swing_atr_mult",
+          "config.swing_lookback",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "percent.touch_fill",
+        "value": "95.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)"
+        ],
+        "input_paths": [
+          "config.atr_ready",
+          "config.percent_stop",
+          "config.swing_atr_mult",
+          "config.swing_lookback",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "short_twin.stop",
+        "value": "105.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1280-1282 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.atr_ready",
+          "config.percent_stop",
+          "config.swing_atr_mult",
+          "config.swing_lookback",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.position_after_gap",
+        "value": "FLAT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)"
+        ],
+        "input_paths": [
+          "config.atr_ready",
+          "config.percent_stop",
+          "config.swing_atr_mult",
+          "config.swing_lookback",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.reason_after_gap",
+        "value": "STOP",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)"
+        ],
+        "input_paths": [
+          "config.atr_ready",
+          "config.percent_stop",
+          "config.swing_atr_mult",
+          "config.swing_lookback",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      }
+    ],
+    "sha256": "f8ec773fa7df3a892c61ab7a355e2f57429d29d1eb1539be3ba7e129a1fe548a",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "079bb0394a29fea0d390663c1eeffce7201d02d1090bf6ce9ec31371d0a59b22",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "swing.long.stop",
+    "from": "97.00",
+    "to": "90.00",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:411-421 (C11/GF-11)",
+    "rationale": "Include the decision bar in the swing window, changing only the computed stop field."
+  }
+}

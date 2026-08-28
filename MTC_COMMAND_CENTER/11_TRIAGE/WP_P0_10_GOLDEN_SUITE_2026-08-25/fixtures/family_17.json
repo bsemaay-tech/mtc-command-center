@@ -1,0 +1,301 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 17,
+    "name": "Fees, slippage, funding",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C08",
+      "C22"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "taker_rate": "0.001",
+    "slippage_ticks": 1,
+    "funding": {
+      "ts": "2026-01-01T00:30:00Z",
+      "rate": "0.0001",
+      "side_sign": "LONG_PAYS"
+    },
+    "entry_qty": "2"
+  },
+  "frozen_metadata": {
+    "price_tick": "0.50",
+    "qty_step": "1.0",
+    "contract_multiplier": "1"
+  },
+  "normalized_bars": [
+    {
+      "index": 0,
+      "ts": "2026-01-01T00:00:00Z",
+      "close": "100",
+      "raw": "LONG"
+    },
+    {
+      "index": 1,
+      "ts": "2026-01-01T00:30:00Z",
+      "close": "100",
+      "raw": "NONE"
+    },
+    {
+      "index": 2,
+      "ts": "2026-01-01T01:00:00Z",
+      "close": "110",
+      "raw": "SHORT"
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "fills.entry",
+        "value": "BUY:2@100.50",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "fills.exit",
+        "value": "SELL:2@109.50",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "fees.entry",
+        "value": "0.201",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "fees.exit",
+        "value": "0.219",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "funding.amount",
+        "value": "-0.0201",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "pnl.gross",
+        "value": "18.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "pnl.net",
+        "value": "17.5599",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "ledger.fee_items",
+        "value": 2,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "ledger.funding_items",
+        "value": 1,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "short_twin.absolute_qty",
+        "value": "2",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1280-1282 (cross-cutting rule 2)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.position",
+        "value": "FLAT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.cost_model",
+        "value": "FROZEN_EXPLICIT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)"
+        ],
+        "input_paths": [
+          "config.entry_qty",
+          "config.funding.rate",
+          "config.funding.side_sign",
+          "config.funding.ts",
+          "config.slippage_ticks",
+          "config.taker_rate",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "normalized_bars"
+        ]
+      }
+    ],
+    "sha256": "2c51205f4b48a0406dad3fe4b4d7273b15d94d351330fe7b661f188a0646c661",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "8bb4f90acf9d8158c9ba48de345f34a659b766ae3b00dd8c67bd8a4477cae2f8",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "pnl.net",
+    "from": "17.5599",
+    "to": "18.00",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:624-634 (C22/GF-22)",
+    "rationale": "Remove costs from only the net-PnL output, leaving fills and ledger facts unchanged."
+  }
+}

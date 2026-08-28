@@ -1,0 +1,178 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 23,
+    "name": "Cancellation and revision ordering",
+    "status": "BUILT"
+  },
+  "fixture_type": "static-validation",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C26"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "intent_id": "intent-fixed-001",
+    "delivery": [
+      "REVISION:2",
+      "REVISION:1",
+      "CANCEL:3",
+      "CANCEL:3"
+    ]
+  },
+  "frozen_metadata": {
+    "revision_order": "monotonic",
+    "duplicate_policy": "NOOP"
+  },
+  "normalized_bars": [],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "revision.accepted",
+        "value": 2,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
+        ]
+      },
+      {
+        "path": "revision.stale_received",
+        "value": 1,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
+        ]
+      },
+      {
+        "path": "revision.stale_disposition",
+        "value": "STALE_REVISION_IGNORED",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
+        ]
+      },
+      {
+        "path": "cancel.accepted_revision",
+        "value": 3,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
+        ]
+      },
+      {
+        "path": "cancel.delivery_count",
+        "value": 2,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
+        ]
+      },
+      {
+        "path": "cancel.economic_effect_count",
+        "value": 1,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
+        ]
+      },
+      {
+        "path": "state.latest_revision",
+        "value": 3,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
+        ]
+      },
+      {
+        "path": "state.order_status",
+        "value": "CANCELLED",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)"
+        ],
+        "input_paths": [
+          "config.delivery.0",
+          "config.delivery.1",
+          "config.delivery.2",
+          "config.delivery.3",
+          "config.intent_id",
+          "frozen_metadata.duplicate_policy",
+          "frozen_metadata.revision_order"
+        ]
+      }
+    ],
+    "sha256": "54094df873625f83bd1cb1c3370a5480b0044bd029d36612cc36e301e7f77221",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "41b2e951654d2d1537a715ad5b5fe861c6e721f2543dedca57e5442fd23abb38",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "revision.accepted",
+    "from": 2,
+    "to": 1,
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:696-706 (C26/GF-26)",
+    "rationale": "Let exactly one stale revision overwrite revision 2."
+  }
+}

@@ -1,0 +1,295 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 21,
+    "name": "NaN / zero / boundary precision",
+    "status": "BUILT"
+  },
+  "fixture_type": "static-validation",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C07",
+      "C09",
+      "C24"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "numeric_matrix": [
+      "NaN",
+      "+inf",
+      "-inf",
+      "0",
+      "-1"
+    ],
+    "adx_threshold": "25.0",
+    "adx_values": [
+      "25.0",
+      "25.000001"
+    ]
+  },
+  "frozen_metadata": {
+    "price_tick": "0.01",
+    "qty_step": "0.01",
+    "min_qty": "1.0",
+    "min_notional": "20.0",
+    "contract_multiplier": "1",
+    "bucket_capital": "10000"
+  },
+  "normalized_bars": [],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "nan_entry.reason",
+        "value": "NON_FINITE_INPUT:entry_reference_price",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
+        ]
+      },
+      {
+        "path": "zero_equity.reason",
+        "value": "NON_POSITIVE_INPUT:bucket_capital",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
+        ]
+      },
+      {
+        "path": "zero_stop_distance.reason",
+        "value": "NON_POSITIVE_INPUT:stop_distance",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:291-316 (C07/GF-07)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
+        ]
+      },
+      {
+        "path": "min_qty.exact_boundary",
+        "value": "ACCEPT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
+        ]
+      },
+      {
+        "path": "min_notional.exact_boundary",
+        "value": "ACCEPT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
+        ]
+      },
+      {
+        "path": "price_tick.exact_boundary",
+        "value": "UNCHANGED",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:342-352 (C09/GF-09)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
+        ]
+      },
+      {
+        "path": "adx.exact_25",
+        "value": "BLOCK:adx_filter",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
+        ]
+      },
+      {
+        "path": "adx.25_000001",
+        "value": "PASS",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
+        ]
+      },
+      {
+        "path": "fills.invalid_matrix",
+        "value": 0,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
+        ]
+      },
+      {
+        "path": "state.bare_zero_without_reason_allowed",
+        "value": false,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)"
+        ],
+        "input_paths": [
+          "config.adx_threshold",
+          "config.adx_values.0",
+          "config.adx_values.1",
+          "config.numeric_matrix.0",
+          "config.numeric_matrix.1",
+          "config.numeric_matrix.2",
+          "config.numeric_matrix.3",
+          "config.numeric_matrix.4",
+          "frozen_metadata.bucket_capital",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.min_notional",
+          "frozen_metadata.min_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step"
+        ]
+      }
+    ],
+    "sha256": "d6a234fb0a83858e07a491c863bb4bbb747d36dac8252f93bf1942f4b5e5e46d",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "9076dee5939666155bb39e93699f791803c0e14e251aa082985fc01b77dd6d51",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "adx.exact_25",
+    "from": "BLOCK:adx_filter",
+    "to": "PASS",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:660-670 (C24/GF-24)",
+    "rationale": "Change only the equality-boundary result from open-threshold BLOCK to A's >= PASS."
+  }
+}
