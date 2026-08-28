@@ -33,7 +33,7 @@ is retained as the checked mirror/history required by the current root and gover
 
 | Workstream | Files (primary home) | Owner | Since |
 |---|---|---|---|
-| Owner-decision documentation pack | Root `AGENTS.md`, `DECISIONS.md`; governance `INPUTS.md`, `OUTPUTS.md`, `HANDOFF.md`; `_AI_MEMORY/{SESSION_LOCK,LIVE_TRADING_GATE}.md`; detailed decision history | **Codex implementer** — owner-authorized docs-only lane `fix/owner-decisions-docpack-20260828` at `C:\WPD_20260828`; no tracked-file live dependency; isolated-worktree `.git` churn expected | 2026-08-28 |
+| Owner-decision documentation pack | Root `AGENTS.md`, `DECISIONS.md`; governance `INPUTS.md`, `OUTPUTS.md`, `HANDOFF.md`; `_AI_MEMORY/{SESSION_LOCK,LIVE_TRADING_GATE}.md`; detailed decision history | **RELEASED 2026-08-28** — substantive docs `2372b4e8`; local/remote `master` and base reconciled at `5c560306`; branch `fix/owner-decisions-docpack-20260828`; no tracked-file live dependency | 2026-08-28 |
 | RP6-P0 block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP6* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | RP7-WPI-RO block | `11_TRIAGE/WPI_BLOCKS_DRAFT/` RP7* | **Codex Lead `019fe77c`** — preserved partial repair; serialized writer only | 2026-08-14 10:30 +03 |
 | Transport set | `11_TRIAGE/WPI_BLOCKS_DRAFT/` transport/run_p0/run_ro/remote_* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
