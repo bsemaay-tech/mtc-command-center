@@ -744,6 +744,286 @@ def produce_c15(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
     return observation, {"position_present": True}
 
 
+def produce_c16(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.types import RawSignal
+
+    raw = RawSignal(
+        long=inputs["raw_side"] == "long",
+        short=inputs["raw_side"] == "short",
+        reason="opposite",
+        direction=1 if inputs["raw_side"] == "long" else -1,
+        line=96.0,
+    )
+    runner = _runner(
+        [raw],
+        execution_profile_id="raw_close_only_v1",
+        exit_on_opposite_signal=True,
+        exit_on_ma_block=inputs["filter_blocked"],
+    )
+    runner.state.position = _scenario_position(
+        side=inputs["position_side"],
+        entry=100.0,
+        qty=1.0,
+        stop=inputs["active_stop"],
+    )
+    runner.state.total_entries = 1
+    runner.run([_bar(index=1, open_=100.0, high=100.0, low=inputs["bar_low"], close=96.0)])
+    reasons = [event.exit_reason for event in runner.state.exit_events_this_bar]
+    stop_reasons = {"sl_atr_hit", "sl_percent_hit", "sl_swing_atr_hit", "be_hit", "trail_hit"}
+    observation = {
+        "filter_exit_count": sum(reason == "filter_block" for reason in reasons),
+        "first_exit_reason": "stop_loss" if reasons and reasons[0] in stop_reasons else (reasons[0] if reasons else None),
+        "opposite_exit_count": sum(reason == "opp_signal" for reason in reasons),
+    }
+    return observation, {"position_present": runner.state.position is not None}
+
+
+def produce_c17(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.types import RawSignal
+
+    runner = _runner(
+        [RawSignal(False, False, "no_signal")],
+        use_time_stop=True,
+        time_stop_bars=inputs["time_stop_bars"],
+        time_stop_condition=inputs["time_stop_condition"],
+    )
+    runner.state.position = _scenario_position(
+        side="long",
+        entry=100.0,
+        qty=1.0,
+        stop=None,
+    )
+    runner.state.position.entry_bar = inputs["entry_bar"]
+    runner.state.total_entries = 1
+    bar = _bar(
+        index=inputs["current_bar"],
+        open_=inputs["close"],
+        high=inputs["close"],
+        low=inputs["close"],
+        close=inputs["close"],
+    )
+    runner.run([bar])
+    event = runner.state.exit_events_this_bar[0] if runner.state.exit_events_this_bar else None
+    observation = {
+        "exit_price": None if event is None else event.exit_price,
+        "exit_reason": None if event is None else event.exit_reason,
+    }
+    return observation, {"position_present": runner.state.position is not None}
+
+
+def produce_c18(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.types import RawSignal
+
+    raw = RawSignal(
+        long=inputs["candidate_side"] == "long",
+        short=inputs["candidate_side"] == "short",
+        reason="local_guard",
+        direction=1 if inputs["candidate_side"] == "long" else -1,
+        line=100.0,
+    )
+    runner = _runner(
+        [raw],
+        use_max_trades_per_day=inputs["use_max_trades_per_day"],
+        max_trades_per_day=inputs["max_trades_per_day"],
+    )
+    bar = _bar(index=0, open_=100.0, high=100.0, low=100.0, close=100.0)
+    runner._l16_last_trade_day = bar.timestamp.strftime("%Y%m%d")
+    runner._l16_trades_today = inputs["trades_today"]
+    runner.run([bar])
+    entry_opened = runner.state.position is not None
+    observation = {
+        "entry_opened": entry_opened,
+        "guard_blocked": not entry_opened,
+    }
+    return observation, {
+        "position_present": entry_opened,
+        "trades_today": runner._l16_trades_today,
+    }
+
+
+def produce_c19(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.exits import evaluate_price_exit
+    from mtc_v2.core.types import PortfolioState, WorkingExit
+
+    bar_input = inputs["bar"]
+    bar = _bar(
+        index=1,
+        open_=bar_input["open"],
+        high=bar_input["high"],
+        low=bar_input["low"],
+        close=bar_input["close"],
+    )
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    state.position = _scenario_position(side=inputs["side"], entry=100.0, qty=1.0, stop=inputs["stop_price"])
+    state.position.working_exits = [WorkingExit("TP", "TP", inputs["target_price"], None, 1.0)]
+    hit = evaluate_price_exit(
+        _exit_config(execution_profile_id="raw_close_only_v1", tp_mode="Percent"),
+        bar=bar,
+        position=state.position,
+    )
+    if hit.hit and hit.fill_price is not None:
+        _manager().close_position(bar=bar, exit_price=hit.fill_price, reason=hit.reason or "", state=state)
+    stop_reasons = {"sl_atr_hit", "sl_percent_hit", "sl_swing_atr_hit", "be_hit", "trail_hit"}
+    observation = {
+        "exit_reason": "stop_loss" if hit.reason in stop_reasons else "take_profit",
+        "policy_observed": "STOP_FIRST" if hit.is_pessimistic else "TARGET_FIRST",
+    }
+    return observation, {"position_present": state.position is not None}
+
+
+def produce_c20(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.types import RawSignal
+
+    raw = RawSignal(
+        long=inputs["candidate_side"] == "long",
+        short=inputs["candidate_side"] == "short",
+        reason="close_only_fill",
+        direction=1 if inputs["candidate_side"] == "long" else -1,
+        line=inputs["bar_close"],
+    )
+    runner = _runner([raw], execution_profile_id=inputs["execution_profile_id"])
+    bar = _bar(
+        index=0,
+        open_=inputs["bar_close"],
+        high=inputs["bar_close"],
+        low=inputs["bar_close"],
+        close=inputs["bar_close"],
+    )
+    runner.run([bar])
+    position = runner.state.position
+    fill_price = None if position is None else position.avg_entry_price
+    observation = {
+        "entry_fill_price": fill_price,
+        "fill_policy_id": "decision_bar_close" if fill_price == bar.close else "non_close_fill",
+    }
+    return observation, {"position_side": None if position is None else position.side}
+
+
+def produce_c21(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.types import RawSignal
+
+    candidate = inputs["same_bar_candidate"]
+    raw = RawSignal(
+        long=candidate == "long",
+        short=candidate == "short",
+        reason="same_bar_candidate",
+        direction=1 if candidate == "long" else -1,
+        line=96.0,
+    )
+    runner = _runner(
+        [raw],
+        execution_profile_id="raw_close_only_v1",
+        tw_audit_semantics_mode=inputs["tw_audit_semantics_mode"],
+    )
+    runner.state.position = _scenario_position(
+        side=inputs["position_side"],
+        entry=100.0,
+        qty=1.0,
+        stop=95.0 if inputs["stop_hit"] else 90.0,
+    )
+    runner.state.total_entries = 1
+    runner.run([_bar(index=1, open_=100.0, high=100.0, low=94.0, close=96.0)])
+    protective_reasons = {"sl_atr_hit", "sl_percent_hit", "sl_swing_atr_hit", "be_hit", "trail_hit"}
+    observation = {
+        "protective_exit_count": sum(
+            event.exit_reason in protective_reasons for event in runner.state.exit_events_this_bar
+        ),
+        "same_bar_entry_count": runner.state.total_entries - 1,
+    }
+    return observation, {"position_present": runner.state.position is not None}
+
+
+def produce_c22(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.types import PortfolioState
+
+    if any(inputs[name] != 0.0 for name in ("fee", "slippage", "funding")):
+        raise RowStop("legacy cost-absence scenario requires zero cost inputs")
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    state.position = _scenario_position(
+        side=inputs["side"],
+        entry=inputs["entry_price"],
+        qty=inputs["qty"],
+        stop=None,
+    )
+    bar = _bar(
+        index=1,
+        open_=inputs["exit_price"],
+        high=inputs["exit_price"],
+        low=inputs["exit_price"],
+        close=inputs["exit_price"],
+    )
+    _manager().close_position(
+        bar=bar,
+        exit_price=inputs["exit_price"],
+        reason="legacy_cost_absence",
+        state=state,
+    )
+    realized = state.exit_events_this_bar[0].realized_pnl
+    return {"gross_pnl": realized, "realized_pnl": realized}, {
+        "unmodeled_costs": ["fee", "slippage", "funding"]
+    }
+
+
+def produce_c23(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.types import RawSignal
+
+    if inputs["terminal_flatten"]:
+        raise RowStop("legacy terminal-preservation scenario requires terminal_flatten=false")
+    signals = [RawSignal(True, False, "warmup", direction=1, line=100.0) for _ in range(inputs["bars"])]
+    runner = _runner(
+        signals,
+        signal_mode=inputs["signal_mode"],
+        st_atr_len=inputs["st_atr_len"],
+    )
+    runner.state.warmup_bars = inputs["st_atr_len"]
+    runner.state.position = _scenario_position(side="long", entry=100.0, qty=1.0, stop=None)
+    bars = [
+        _bar(index=index, open_=100.0, high=100.0, low=100.0, close=100.0)
+        for index in range(inputs["bars"])
+    ]
+    outputs = runner.run(bars)
+    observation = {
+        "entries": runner.state.total_entries,
+        "implicit_terminal_exit": bool(runner.state.exit_events_this_bar),
+        "observations": len(outputs),
+    }
+    return observation, {"position_preserved_at_end": runner.state.position is not None}
+
+
+def produce_c24(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.types import RawSignal
+
+    bar_input = inputs["bar"]
+    close = float("nan") if bar_input["close"] == "NaN" else float(bar_input["close"])
+    entry_opened = False
+    valid_results: list[bool] = []
+    for side in inputs["side_mirror"]:
+        raw = RawSignal(
+            long=side == "long",
+            short=side == "short",
+            reason="invalid_bar",
+            direction=1 if side == "long" else -1,
+            line=None,
+        )
+        runner = _runner([raw])
+        bar = _bar(
+            index=0,
+            open_=bar_input["open"],
+            high=bar_input["high"],
+            low=bar_input["low"],
+            close=close,
+            volume=bar_input["volume"],
+        )
+        valid_results.append(runner._bar_is_valid(bar))
+        entry_opened = entry_opened or runner.state.position is not None
+    observation = {
+        "bar_valid": all(valid_results),
+        "boundary_rule": "legacy_exact_comparisons",
+        "entry_opened": entry_opened,
+    }
+    return observation, {"position_present": entry_opened}
+
+
 ROW_CONTRACTS: dict[str, RowContract] = {
     "C01": RowContract(
         row_id="C01",
@@ -1093,6 +1373,238 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "        distance = float(config[\"trail_distance_atr_mult\"]) * float(trail_atr) * 2.0\n",
         ),
         producer=produce_c15,
+    ),
+    "C16": RowContract(
+        row_id="C16",
+        scenario_id="C16-LEGACY-001",
+        producer_adapter="A.runner_exit_order",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py:551-704",),
+        complete_inputs={
+            "active_stop": 95.0,
+            "bar_low": 94.0,
+            "filter_blocked": True,
+            "position_side": "long",
+            "raw_side": "short",
+        },
+        expected_observation={
+            "filter_exit_count": 0,
+            "first_exit_reason": "stop_loss",
+            "opposite_exit_count": 0,
+        },
+        expected_final_state={"position_present": False},
+        mutation=Mutation(
+            "C16-GF8-MUT-001",
+            "mtc_v2/core/runner.py",
+            "                    if price_exit.hit and price_exit.fill_price is not None and price_exit.reason is not None:\n",
+            "                    if False and price_exit.hit and price_exit.fill_price is not None and price_exit.reason is not None:\n",
+        ),
+        producer=produce_c16,
+    ),
+    "C17": RowContract(
+        row_id="C17",
+        scenario_id="C17-LEGACY-001",
+        producer_adapter="A.runner_time_exit",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py:667-704",),
+        complete_inputs={
+            "close": 101.0,
+            "current_bar": 2,
+            "entry_bar": 0,
+            "time_stop_bars": 2,
+            "time_stop_condition": "Always",
+        },
+        expected_observation={"exit_price": 101.0, "exit_reason": "time_stop"},
+        expected_final_state={"position_present": False},
+        mutation=Mutation(
+            "C17-GF8-MUT-001",
+            "mtc_v2/core/runner.py",
+            "                        if self._l15_bars_since_entry >= int(self.config[\"time_stop_bars\"]) and cond_ok:\n",
+            "                        if self._l15_bars_since_entry > int(self.config[\"time_stop_bars\"]) and cond_ok:\n",
+        ),
+        producer=produce_c17,
+    ),
+    "C18": RowContract(
+        row_id="C18",
+        scenario_id="C18-LEGACY-001",
+        producer_adapter="A.runner_local_guard",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py:762-820",),
+        complete_inputs={
+            "candidate_side": "long",
+            "max_trades_per_day": 1,
+            "trades_today": 1,
+            "use_max_trades_per_day": True,
+        },
+        expected_observation={"entry_opened": False, "guard_blocked": True},
+        expected_final_state={"position_present": False, "trades_today": 1},
+        mutation=Mutation(
+            "C18-GF8-MUT-001",
+            "mtc_v2/core/runner.py",
+            "                    or self._l16_trades_today < int(self.config[\"max_trades_per_day\"])\n",
+            "                    or self._l16_trades_today <= int(self.config[\"max_trades_per_day\"])\n",
+        ),
+        producer=produce_c18,
+    ),
+    "C19": RowContract(
+        row_id="C19",
+        scenario_id="C19-LEGACY-001",
+        producer_adapter="A.exits_collision",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py:353-379",),
+        complete_inputs={
+            "bar": {"close": 101.0, "high": 106.0, "low": 94.0, "open": 100.0},
+            "side": "long",
+            "stop_price": 95.0,
+            "target_price": 105.0,
+        },
+        expected_observation={"exit_reason": "stop_loss", "policy_observed": "STOP_FIRST"},
+        expected_final_state={"position_present": False},
+        mutation=Mutation(
+            "C19-GF8-MUT-001",
+            "mtc_v2/core/exits.py",
+            "    if stop_hit.hit and target_hit.hit:\n        return PriceExitHit(\n            hit=True,\n            fill_price=stop_hit.fill_price,\n            reason=stop_hit.reason,\n            is_pessimistic=True,\n            exit_pct=1.0,\n            exit_id=stop_hit.exit_id,\n            continue_evaluation_this_bar=False,\n        )\n",
+            "    if stop_hit.hit and target_hit.hit:\n        return target_hit\n",
+        ),
+        producer=produce_c19,
+    ),
+    "C20": RowContract(
+        row_id="C20",
+        scenario_id="C20-LEGACY-001",
+        producer_adapter="A.runner_close_only_fill",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=(
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py:924-1028",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_manager.py:145-186",
+        ),
+        complete_inputs={
+            "bar_close": 100.0,
+            "candidate_side": "long",
+            "execution_profile_id": "close_only_deterministic_v2",
+        },
+        expected_observation={"entry_fill_price": 100.0, "fill_policy_id": "decision_bar_close"},
+        expected_final_state={"position_side": "long"},
+        mutation=Mutation(
+            "C20-GF8-MUT-001",
+            "mtc_v2/core/position_manager.py",
+            "        entry_fill_price = float(fill_price) if fill_price is not None else float(bar.close)\n",
+            "        entry_fill_price = float(fill_price) if fill_price is not None else float(bar.close) + 1.0\n",
+        ),
+        producer=produce_c20,
+    ),
+    "C21": RowContract(
+        row_id="C21",
+        scenario_id="C21-LEGACY-001",
+        producer_adapter="A.runner_protective_reentry",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=(
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py:551-606",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_manager.py:101-142",
+        ),
+        complete_inputs={
+            "position_side": "long",
+            "same_bar_candidate": "short",
+            "stop_hit": True,
+            "tw_audit_semantics_mode": "off",
+        },
+        expected_observation={"protective_exit_count": 1, "same_bar_entry_count": 0},
+        expected_final_state={"position_present": False},
+        mutation=Mutation(
+            "C21-GF8-MUT-001",
+            "mtc_v2/core/runner.py",
+            "                        price_exit_blocked_entry = True\n                        entry_blocked_by_exit = True\n",
+            "                        price_exit_blocked_entry = False\n                        entry_blocked_by_exit = False\n",
+        ),
+        producer=produce_c21,
+    ),
+    "C22": RowContract(
+        row_id="C22",
+        scenario_id="C22-LEGACY-001",
+        producer_adapter="A.position_manager_legacy_cost_absence",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_manager.py:267-309",),
+        complete_inputs={
+            "entry_price": 100.0,
+            "exit_price": 110.0,
+            "fee": 0.0,
+            "funding": 0.0,
+            "qty": 1.0,
+            "side": "long",
+            "slippage": 0.0,
+        },
+        expected_observation={"gross_pnl": 10.0, "realized_pnl": 10.0},
+        expected_final_state={"unmodeled_costs": ["fee", "slippage", "funding"]},
+        mutation=Mutation(
+            "C22-GF8-MUT-001",
+            "mtc_v2/core/position_manager.py",
+            "            realized_pnl = (exit_price - position.avg_entry_price) * exit_qty * self.contract_multiplier\n",
+            "            realized_pnl = (exit_price - position.avg_entry_price) * exit_qty * self.contract_multiplier - 1.0\n",
+        ),
+        producer=produce_c22,
+    ),
+    "C23": RowContract(
+        row_id="C23",
+        scenario_id="C23-LEGACY-001",
+        producer_adapter="A.runner_warmup_terminal",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py:304-310,451-478,1032-1066",),
+        complete_inputs={
+            "bars": 20,
+            "signal_mode": "Supertrend",
+            "st_atr_len": 21,
+            "terminal_flatten": False,
+        },
+        expected_observation={"entries": 0, "implicit_terminal_exit": False, "observations": 20},
+        expected_final_state={"position_preserved_at_end": True},
+        mutation=Mutation(
+            "C23-GF8-MUT-001",
+            "mtc_v2/core/runner.py",
+            "        return outputs\n",
+            "        self.state.position = None\n        return outputs\n",
+        ),
+        producer=produce_c23,
+    ),
+    "C24": RowContract(
+        row_id="C24",
+        scenario_id="C24-LEGACY-001",
+        producer_adapter="A.runner_invalid_bar",
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=("MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py:1565-1575",),
+        complete_inputs={
+            "bar": {"close": "NaN", "high": 101.0, "low": 99.0, "open": 100.0, "volume": 1.0},
+            "side_mirror": ["long", "short"],
+        },
+        expected_observation={
+            "bar_valid": False,
+            "boundary_rule": "legacy_exact_comparisons",
+            "entry_opened": False,
+        },
+        expected_final_state={"position_present": False},
+        mutation=Mutation(
+            "C24-GF8-MUT-001",
+            "mtc_v2/core/runner.py",
+            "        if not all(math.isfinite(price) for price in prices):\n            return False\n",
+            "        if not all(math.isfinite(price) for price in prices):\n            return True\n",
+        ),
+        producer=produce_c24,
     ),
 }
 

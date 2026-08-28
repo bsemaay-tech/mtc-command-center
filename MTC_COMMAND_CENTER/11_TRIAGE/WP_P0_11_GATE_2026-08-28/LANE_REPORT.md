@@ -10,11 +10,11 @@ Branch/worktree: `feature/wp-p0-11-kernel-legacy-compatible-20260825` at
 
 Stage 1 is frozen. The Stage 2 sequence builder, closed observation adapter, keyed comparator,
 double-build verifier, 76-row field/component discrimination harness, and 17 structural/provenance
-mutations are built and executed. Stage 3 row-arm batches 1-3 add C01-C15: fifteen real isolated
-producer mutations are RED and the same fifteen scenarios are GREEN against clean frozen implementation A.
+mutations are built and executed. Stage 3 row-arm batches 1-4 add C01-C24: 24 real isolated
+producer mutations are RED and the same 24 scenarios are GREEN against clean frozen implementation A.
 
-The full gate outcome is **STOP**, not PASS or FAIL. Of 40 applicable C-rows, 15 are GREEN after RED
-and 25 remain STOP; C25 and C27 remain policy-only. Independent flagship reproduction and any future
+The full gate outcome is **STOP**, not PASS or FAIL. Of 40 applicable C-rows, 24 are GREEN after RED
+and 16 remain STOP; C25 and C27 remain policy-only. Independent flagship reproduction and any future
 subject comparison are also absent. The frozen candidate receipt and external anchor remain
 untouched and still truthfully report the pre-Stage-3 row arm as absent; the additive Stage-3
 candidate evidence is not substituted into either frozen artifact.
@@ -169,9 +169,9 @@ repository-root, and run-specific scratch path prefixes with the declared `<PYTH
 generator was rerun twice after this normalization; both runs produced the same
 `60dcfd31...8db` artifact hash.
 
-Not executed and not claimed: the remaining 25 row-producer GF-field-8 mutations, a future
+Not executed and not claimed: the remaining 16 row-producer GF-field-8 mutations, a future
 independent subject's import/delegation mutation, P0-10 mutations (direct-build branch uses none),
-and physically moving the authoritative external anchor. Fifteen additive row mutations are
+and physically moving the authoritative external anchor. Twenty-four additive row mutations are
 documented below; the omissions keep the full gate at STOP.
 
 ## Final comparator result
@@ -217,7 +217,7 @@ The real output re-established:
   restorations, with no failures and SHA-256 `60dcfd31...8db`;
 - external receipt/manifest pin matches and subject-run count remains zero.
 
-## Stage 3 row arm — batches 1-3 (C01-C15)
+## Stage 3 row arm — batches 1-4 (C01-C24)
 
 The required merge of `origin/master` `85c3e17f97efa1ba83ef9c679de319a50ad3be04` landed first as
 merge commit `7dfccae1`. The re-resolved WP-P0-09 authority is now Git blob
@@ -237,7 +237,7 @@ python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\row_arm.py build
 Real output:
 
 ```text
-{"artifacts":{"row_corroboration.json":"079509f37ee44520a9693eeea230e5f25de36b649e3110e504bc1cf75c84a14e","row_results.jsonl":"ff7c453c553659a1a3d09458710f431923698030959190b5f811702b5afb565e"},"command":"build","counts":{"clean_green":15,"green":15,"mutation_red":15,"not_applicable":2,"stop":25,"total":42},"outcome":"STOP","output_directory":"C:\\WPP011_20260825\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\evidence\\row_arm","rows_executed":["C01","C02","C03","C04","C05","C06","C07","C08","C09","C10","C11","C12","C13","C14","C15"]}
+{"artifacts":{"row_corroboration.json":"8cd215ad3282b0748e96e059baafc36e02075be48c34f60c2c32896162d55feb","row_results.jsonl":"126b917d339cf3b7ca4c9e209b30aae24054251a9d538978bb8c24dee1003df7"},"command":"build","counts":{"clean_green":24,"green":24,"mutation_red":24,"not_applicable":2,"stop":16,"total":42},"outcome":"STOP","output_directory":"C:\\WPP011_20260825\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\evidence\\row_arm","rows_executed":["C01","C02","C03","C04","C05","C06","C07","C08","C09","C10","C11","C12","C13","C14","C15","C16","C17","C18","C19","C20","C21","C22","C23","C24"]}
 ```
 
 `evidence/row_arm/row_results.jsonl` is the complete per-row transcript. It records the literal
@@ -264,12 +264,21 @@ semantic value, output line or return code is otherwise changed.
 | C13 | A `5c560306...`; `exits.py:450-491`, `position_manager.py:267-309` | `C13-GF8-MUT-001`, rc 1: TP2 fraction `1.0` changed to `0.4`; second exit is `4`, PnL `40`, equity `65`, and one unit remains | rc 0: 8/8 leaves exact; ordered TP1/TP2 quantities `5/5`, PnLs `25/50`, equity `75`, final flat |
 | C14 | A `5c560306...`; `exits.py:332-350` | `C14-GF8-MUT-001`, rc 1: break-even buffer removed; stop becomes `100` | rc 0: 4/4 leaves exact; break-even activates with owned stop `101` |
 | C15 | A `5c560306...`; `exits.py:300-330` | `C15-GF8-MUT-001`, rc 1: trailing distance doubled; trail becomes `106` | rc 0: 4/4 leaves exact; trailing activates with owned stop `108` |
+| C16 | A `5c560306...`; `runner.py:551-704` | `C16-GF8-MUT-001`, rc 1: protective close disabled; opposite exit wins and same-bar short remains | rc 0: 4/4 leaves exact; the protective stop is the only exit and final state is flat |
+| C17 | A `5c560306...`; `runner.py:667-704` | `C17-GF8-MUT-001`, rc 1: time boundary `>=` changed to `>`; no exit at bar 2 | rc 0: 3/3 leaves exact; time stop exits at close `101` and final state is flat |
+| C18 | A `5c560306...`; `runner.py:762-820` | `C18-GF8-MUT-001`, rc 1: max-trades `<` changed to `<=`; long entry opens | rc 0: 4/4 leaves exact; trade count `1` blocks entry at limit `1` |
+| C19 | A `5c560306...`; `exits.py:353-379` | `C19-GF8-MUT-001`, rc 1: collision result changed from stop to target | rc 0: 3/3 leaves exact; observed policy is `STOP_FIRST`, reason `stop_loss`, final flat |
+| C20 | A `5c560306...`; `runner.py:924-1028`, `position_manager.py:145-186` | `C20-GF8-MUT-001`, rc 1: entry fallback adds `1`; fill `101`, policy `non_close_fill` | rc 0: 3/3 leaves exact; long fills at decision-bar close `100` |
+| C21 | A `5c560306...`; `runner.py:551-606`, `position_manager.py:101-142` | `C21-GF8-MUT-001`, rc 1: protective entry blocks cleared; same-bar short opens | rc 0: 3/3 leaves exact; one protective exit, no same-bar entry, final flat |
+| C22 | A `5c560306...`; `position_manager.py:267-309` | `C22-GF8-MUT-001`, rc 1: one unit deducted from legacy PnL; gross/realized become `9` | rc 0: 5/5 leaves exact; gross/realized `10`, fee/slippage/funding explicitly unmodeled |
+| C23 | A `5c560306...`; `runner.py:304-310`, `:451-478`, `:1032-1066` | `C23-GF8-MUT-001`, rc 1: terminal position is cleared before return | rc 0: 4/4 leaves exact; 20 observations, zero entries/exits, terminal position preserved |
+| C24 | A `5c560306...`; `runner.py:1565-1575` | `C24-GF8-MUT-001`, rc 1: non-finite bar is mislabeled valid | rc 0: 4/4 leaves exact; NaN close is invalid for both side mirrors and opens no entry |
 
 Three anti-regression properties are enforced at the accepting top-level caller:
 
 1. **Every expected value is compared.** The verifier recursively compares the exact expected and
-   actual key union after `float.hex()` encoding. Batches 1-3 independently remeasure 65 expected
-   leaves and 65 compared leaves. A missing key, extra key, wrong type, list-length drift, or wrong
+   actual key union after `float.hex()` encoding. Batches 1-4 independently remeasure 98 expected
+   leaves and 98 compared leaves. A missing key, extra key, wrong type, list-length drift, or wrong
    value is a terminal mismatch; no declared value can be skipped.
 2. **Scenario identity is verifier-pinned.** `row_arm.py` owns the ordered C-row → scenario-ID,
    adapter, authority, full inputs, literal oracle, citations and mutation-ID registry. It refuses
@@ -294,20 +303,19 @@ python -I MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_11_GATE_2026-08-28\evidence\row_arm
 Real output:
 
 ```text
-{"artifact_hashes":{"batch_manifest.json":"68ef080f534206bf5ea16e6cf32dd7d67e712b46595cabafd6ab3e6ed368028d","row_corroboration.json":"079509f37ee44520a9693eeea230e5f25de36b649e3110e504bc1cf75c84a14e","row_results.jsonl":"ff7c453c553659a1a3d09458710f431923698030959190b5f811702b5afb565e"},"compared_expected_leaves":65,"counts":{"applicable":40,"clean_green":15,"green":15,"mutation_red":15,"not_applicable":2,"red_mismatches":30,"stop":25,"total":42},"expected_leaves":65,"outcome":"PASS","p009_blob_oid":"1c39ab939dfcf5589e5ec8fba4af8966947a67fc","p009_sha256":"7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249","rows":["C01","C02","C03","C04","C05","C06","C07","C08","C09","C10","C11","C12","C13","C14","C15"]}
+{"artifact_hashes":{"batch_manifest.json":"a0c3542d35b4b2fac3053cb43d988e8e4f2b5c286d93e75f3945b9fdea66f11c","row_corroboration.json":"8cd215ad3282b0748e96e059baafc36e02075be48c34f60c2c32896162d55feb","row_results.jsonl":"126b917d339cf3b7ca4c9e209b30aae24054251a9d538978bb8c24dee1003df7"},"compared_expected_leaves":98,"counts":{"applicable":40,"clean_green":24,"green":24,"mutation_red":24,"not_applicable":2,"red_mismatches":49,"stop":16,"total":42},"expected_leaves":98,"outcome":"PASS","p009_blob_oid":"1c39ab939dfcf5589e5ec8fba4af8966947a67fc","p009_sha256":"7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249","rows":["C01","C02","C03","C04","C05","C06","C07","C08","C09","C10","C11","C12","C13","C14","C15","C16","C17","C18","C19","C20","C21","C22","C23","C24"]}
 ```
 
 A second build into a separate output path produced the same three artifact hashes. The exact
-`verify-double-build` result was `byte_identical=true`, with `row_results.jsonl ff7c453c...`,
-`row_corroboration.json 079509f3...`, and `batch_manifest.json 68ef080f...` identical. The scratch
+`verify-double-build` result was `byte_identical=true`, with `row_results.jsonl 126b917d...`,
+`row_corroboration.json 8cd215ad...`, and `batch_manifest.json a0c3542d...` identical. The scratch
 second-build artifacts were removed after verification; the quoted command/output remains part of
 this report and the committed candidate is `evidence/row_arm/`.
 
-Unresolved/pending rows: C16-C24, C26, and C28-C42 (25 applicable rows) are intentionally STOP
+Unresolved/pending rows: C26 and C28-C42 (16 applicable rows) are intentionally STOP
 because the pre-committed batching rule prefers a truthful partial; no authority-silence claim is
 made for them yet. C25 and C27 are not legacy reproduction rows. This row arm does **not** yet cover
-collisions, costs, warm-up, invalid bars, duplicate handling, de-fanged controller inputs, the
-`tw_*` modes, B's pivot/event-mode authorities, HTF
+duplicate handling, de-fanged controller inputs, the `tw_*` modes, B's pivot/event-mode authorities, HTF
 alignment/readiness equations, or both signal-producer equations. It also does not cover a subject,
 subject import/delegation mutation, independent flagship reproduction, kernel consolidation, or any
 live/economic action. Therefore the full gate remains **STOP**.
@@ -361,10 +369,11 @@ live/economic action. Therefore the full gate remains **STOP**.
 
 ## Remaining work
 
-1. Continue in manifest order with C16-C24, C26, and C28-C42 against their exact current-A,
-   controller-freeze, or B-freeze authority. C26-C30 and every de-fanged surface must use
+1. Continue in manifest order with C26 and C28-C42 against their exact controller-freeze or
+   B-freeze authority. The current-A adapter must not be reused across that authority seam.
+   C26-C30 and every de-fanged surface must use
    `legacy/pine-controller/2026-08-25` (`77a10e65...`), never current master A.
-2. Execute and record each of the remaining 25 rows' isolated producer mutation RED and
+2. Execute and record each of the remaining 16 rows' isolated producer mutation RED and
    clean-authority GREEN; update the additive Stage-3 `row_corroboration.json` only from real
    evidence. Frozen Stage-1 expected values and artifacts must not change.
 3. Execute the remaining subject/import and external-anchor mutation cases once an actual subject
