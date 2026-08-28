@@ -16,11 +16,27 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable
 
+_MODULE_DIR = Path(__file__).resolve().parent
+if str(_MODULE_DIR) not in sys.path:
+    sys.path.insert(0, str(_MODULE_DIR))
+
+from scenario_binding import (
+    EXPECTED_ROW_POSITIONS,
+    ManifestScenarioSource,
+    ScenarioShapeError,
+    ScenarioValueError,
+    ScenarioContract,
+    bind_scenario,
+    lookup_manifest_row,
+    manifest_scenario,
+    verifier_scenario_contract,
+)
+
 
 GATE_VERSION = "P011-LC-GATE-v2"
 SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 A_TREE_OID = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
-LEGACY_MANIFEST_SHA256 = "1bc01646e9a00a4ee62c22c6ce1416ed03648e97351e792ae82bbbaff95f52d7"
+LEGACY_MANIFEST_SHA256 = "50c76fb33eaab4f02dd7930a568c54d965aa88ab6dad9e0b326449d7322c252d"
 MERGED_MASTER_COMMIT = "85c3e17f97efa1ba83ef9c679de319a50ad3be04"
 P009_BLOB_OID = "1c39ab939dfcf5589e5ec8fba4af8966947a67fc"
 P009_SHA256 = "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
@@ -30,6 +46,14 @@ CONTROLLER_TREE_OID = "a14d071e3a6ee93735d6c2fc458f16b9f8d19a22"
 B_REF = "legacy/02-mtc-backtest/2026-08-25"
 B_COMMIT = "b5ed1afadcff09b69e36b72affeb23de51d84c14"
 B_TREE_OID = "e8c4f06ba0fc74ce03f195fd946004ae9b458b37"
+C32_AUTHORITY_VALUES = (
+    "local",
+    "delay_after_protective_exit",
+    "carry_to_next_bar_after_protective_exit",
+    "next_bar_open_after_protective_exit_signal",
+    "next_bar_close_after_protective_exit_signal",
+)
+C32_INVALID_CONTROL = "next_bar_open"
 
 GATE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = GATE_DIR.parents[2]
@@ -149,7 +173,13 @@ def leaf_count(value: Any) -> int:
     return 1
 
 
-def compare_exact(expected: Any, actual: Any, path: str = "$") -> list[dict[str, Any]]:
+def compare_exact(
+    expected: Any,
+    actual: Any,
+    path: str = "$",
+    *,
+    expected_leaf_paths_visited: list[str] | None = None,
+) -> list[dict[str, Any]]:
     mismatches: list[dict[str, Any]] = []
     if isinstance(expected, dict):
         if not isinstance(actual, dict):
@@ -165,7 +195,14 @@ def compare_exact(expected: Any, actual: Any, path: str = "$") -> list[dict[str,
                     {"path": child, "expected": expected[key], "actual": "missing", "reason": "missing"}
                 )
             else:
-                mismatches.extend(compare_exact(expected[key], actual[key], child))
+                mismatches.extend(
+                    compare_exact(
+                        expected[key],
+                        actual[key],
+                        child,
+                        expected_leaf_paths_visited=expected_leaf_paths_visited,
+                    )
+                )
         return mismatches
     if isinstance(expected, list):
         if not isinstance(actual, list):
@@ -175,8 +212,17 @@ def compare_exact(expected: Any, actual: Any, path: str = "$") -> list[dict[str,
                 {"path": path, "expected": len(expected), "actual": len(actual), "reason": "length"}
             )
         for index, (expected_item, actual_item) in enumerate(zip(expected, actual)):
-            mismatches.extend(compare_exact(expected_item, actual_item, f"{path}[{index}]"))
+            mismatches.extend(
+                compare_exact(
+                    expected_item,
+                    actual_item,
+                    f"{path}[{index}]",
+                    expected_leaf_paths_visited=expected_leaf_paths_visited,
+                )
+            )
         return mismatches
+    if expected_leaf_paths_visited is not None:
+        expected_leaf_paths_visited.append(path)
     if type(expected) is not type(actual) or expected != actual:
         mismatches.append({"path": path, "expected": expected, "actual": actual, "reason": "value"})
     return mismatches
@@ -2202,39 +2248,47 @@ def validate_frozen_inputs() -> dict[str, Any]:
 
 
 def validate_contract_binding(manifest: dict[str, Any], contract: RowContract) -> dict[str, Any]:
-    row = manifest["rows"][int(contract.row_id[1:]) - 1]
-    if row.get("row_id") != contract.row_id or row.get("disposition") != "APPLICABLE":
+    source = ManifestScenarioSource(
+        manifest=manifest,
+        row_id=contract.row_id,
+        expected_position=EXPECTED_ROW_POSITIONS[contract.row_id],
+    )
+    manifest_row = lookup_manifest_row(
+        manifest,
+        contract.row_id,
+        EXPECTED_ROW_POSITIONS[contract.row_id],
+    )
+    if (
+        manifest_row.get("row_id") != contract.row_id
+        or manifest_row.get("disposition") != "APPLICABLE"
+    ):
         raise RowFail(f"{contract.row_id} disposition/identity differs")
-    scenarios = row.get("scenarios")
-    if not isinstance(scenarios, list) or len(scenarios) != 1:
-        raise RowStop(f"{contract.row_id} must contain exactly one scenario")
-    scenario = scenarios[0]
-    required = {
-        "scenario_id",
-        "producer_adapter",
-        "complete_inputs",
-        "literal_expected_observation",
-        "literal_expected_final_state",
-        "comparison_rule",
-        "clean_producer_corroboration",
-        "producer_mutation",
+    verifier_values = verifier_scenario_contract(contract.row_id).as_mapping()
+    verifier_values.update(
+        {
+            "scenario_id": contract.scenario_id,
+            "producer_adapter": contract.producer_adapter,
+            "complete_inputs": contract.complete_inputs,
+            "literal_expected_observation": contract.manifest_expected_observation
+            or contract.expected_observation,
+            "literal_expected_final_state": contract.manifest_expected_final_state
+            or contract.expected_final_state,
+        }
+    )
+    verifier_values["producer_mutation"]["mutation_id"] = contract.mutation.mutation_id
+    try:
+        ledger = bind_scenario(source, ScenarioContract.from_mapping(verifier_values))
+    except ScenarioShapeError as exc:
+        if str(exc).startswith("$ exact key-set mismatch"):
+            raise RowStop(f"{contract.row_id} scenario binding refused: {exc}") from exc
+        raise RowFail(f"{contract.row_id} frozen scenario differs: {exc}") from exc
+    except ScenarioValueError as exc:
+        raise RowFail(f"{contract.row_id} frozen scenario differs: {exc}") from exc
+    return {
+        "binding_module": "scenario_binding.bind_scenario",
+        "bound_leaf_count": len(ledger.bound_paths),
+        "declared_leaf_count": len(ledger.declared_leaves),
     }
-    missing = sorted(required - set(scenario))
-    if missing:
-        raise RowStop(f"{contract.row_id} scenario omits required fields: {missing}")
-    bindings = {
-        "scenario_id": scenario["scenario_id"] == contract.scenario_id,
-        "producer_adapter": scenario["producer_adapter"] == contract.producer_adapter,
-        "complete_inputs": scenario["complete_inputs"] == contract.complete_inputs,
-        "expected_observation": scenario["literal_expected_observation"]
-        == (contract.manifest_expected_observation or contract.expected_observation),
-        "expected_final_state": scenario["literal_expected_final_state"]
-        == (contract.manifest_expected_final_state or contract.expected_final_state),
-        "mutation_id": scenario["producer_mutation"].get("mutation_id") == contract.mutation.mutation_id,
-    }
-    if not all(bindings.values()):
-        raise RowFail(f"{contract.row_id} frozen scenario differs from the verifier-pinned contract: {bindings}")
-    return bindings
 
 
 def bind_authority_root(authority_root: Path, target: str, expected_sha256: str) -> None:
@@ -2302,7 +2356,12 @@ def command_run_one(args: argparse.Namespace) -> int:
         "observation": encode_floats(observation),
         "final_state": encode_floats(final_state),
     }
-    mismatches = compare_exact(encoded_expected, encoded_actual)
+    expected_leaf_paths: list[str] = []
+    mismatches = compare_exact(
+        encoded_expected,
+        encoded_actual,
+        expected_leaf_paths_visited=expected_leaf_paths,
+    )
     result = {
         "actual": encoded_actual,
         "authority": {
@@ -2312,7 +2371,7 @@ def command_run_one(args: argparse.Namespace) -> int:
             "tree_oid": contract.authority_tree_oid,
         },
         "comparison": {
-            "compared_expected_leaf_count": leaf_count(encoded_actual),
+            "expected_leaf_paths_visited": len(expected_leaf_paths),
             "expected_leaf_count": leaf_count(encoded_expected),
             "mismatches": mismatches,
             "rule": "recursive exact key/value equality after IEEE-754 float.hex encoding",
@@ -2643,7 +2702,13 @@ def build_unresolved_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     }
     records: list[dict[str, Any]] = []
     for row_id, detail in controller_specs.items():
-        scenario = manifest["rows"][int(row_id[1:]) - 1]["scenarios"][0]
+        scenario = manifest_scenario(
+            ManifestScenarioSource(
+                manifest=manifest,
+                row_id=row_id,
+                expected_position=EXPECTED_ROW_POSITIONS[row_id],
+            )
+        )
         record = {
             "authority": {
                 "citations": detail["citations"],
@@ -2673,12 +2738,20 @@ def build_unresolved_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
         record["record_sha256"] = result_hash(record)
         records.append(record)
 
-    c32_inputs = manifest["rows"][31]["scenarios"][0]["complete_inputs"]
+    c32_scenario = manifest_scenario(
+        ManifestScenarioSource(
+            manifest=manifest,
+            row_id="C32",
+            expected_position=EXPECTED_ROW_POSITIONS["C32"],
+        )
+    )
+    c32_inputs = c32_scenario["complete_inputs"]
+    c32_probe_values = [*C32_AUTHORITY_VALUES, C32_INVALID_CONTROL]
     c32_script = r'''
 import json, sys
 sys.path.insert(0, sys.argv[1])
 from mtc_v2.core.config import resolve_config
-values = json.loads(''' + repr(json.dumps(c32_inputs["accepted_values"])) + r''')
+values = json.loads(''' + repr(json.dumps(c32_probe_values)) + r''')
 results = []
 for value in values:
     try:
@@ -2690,38 +2763,68 @@ print(json.dumps({"results": results}, sort_keys=True, separators=(",", ":")))
 '''
     c32_probe = _run_unresolved_probe("C32", c32_script)
     c32_results = c32_probe["parsed_output"]["results"]
+    c32_validations = [
+        {"valid": item["valid"], "value": item["value"]} for item in c32_results[:-1]
+    ]
+    c32_invalid_control = {
+        "valid": c32_results[-1]["valid"],
+        "value": c32_results[-1]["value"],
+    }
     c32_expected = {
-        "observation": {"all_values_validate": True},
-        "final_state": {"enum_count": 4},
+        "observation": {
+            "declared_authority_values": list(C32_AUTHORITY_VALUES),
+            "invalid_control": {"valid": False, "value": C32_INVALID_CONTROL},
+            "validation_by_value": [
+                {"valid": True, "value": value} for value in C32_AUTHORITY_VALUES
+            ],
+        },
+        "final_state": {"validated_values": list(C32_AUTHORITY_VALUES)},
     }
     c32_actual = {
-        "observation": {"all_values_validate": all(item["valid"] for item in c32_results)},
-        "final_state": {"enum_count": len(c32_results)},
+        "observation": {
+            "declared_authority_values": c32_inputs["accepted_values"],
+            "invalid_control": c32_invalid_control,
+            "validation_by_value": c32_validations,
+        },
+        "final_state": {
+            "validated_values": [item["value"] for item in c32_results[:-1] if item["valid"]]
+        },
     }
     c32_mismatches = compare_exact(c32_expected, c32_actual)
 
+    c34_scenario = manifest_scenario(
+        ManifestScenarioSource(
+            manifest=manifest,
+            row_id="C34",
+            expected_position=EXPECTED_ROW_POSITIONS["C34"],
+        )
+    )
+    c34_inputs = c34_scenario["complete_inputs"]
     c34_script = r'''
 import json, sys
 sys.path.insert(0, sys.argv[1])
 from mtc_v2.core.config import DEFAULT_CONFIG
 from mtc_v2.core.runner import Runner
 from mtc_v2.core.types import EntryLeg, Position
+inputs = json.loads(''' + repr(json.dumps(c34_inputs)) + r''')
 config = dict(DEFAULT_CONFIG)
-config.update({"initial_capital": 1000.0, "margin_long_pct": 100.0,
-               "tw_audit_semantics_mode": "research", "tw_margin_call_mode": "tradingview"})
+config.update({key: inputs[key] for key in (
+    "initial_capital", "margin_long_pct", "tw_audit_semantics_mode", "tw_margin_call_mode")})
 runner = Runner(config)
-runner.state.position = Position(side="long", entry_price=100.0, avg_entry_price=100.0,
-    qty=10.0, entry_bar=0, initial_qty=10.0,
-    entry_legs=[EntryLeg(entry_price=100.0, qty=10.0, entry_bar=0)],
-    working_exit_reference_qty=10.0)
-mark = 40.0
-unrealized = (mark - 100.0) * 10.0
-equity = 1000.0 + unrealized
-required = mark * 10.0 * 1.0
+runner.state.position = Position(side=inputs["side"], entry_price=inputs["entry_price"],
+    avg_entry_price=inputs["entry_price"], qty=inputs["qty"], entry_bar=0,
+    initial_qty=inputs["qty"],
+    entry_legs=[EntryLeg(entry_price=inputs["entry_price"], qty=inputs["qty"], entry_bar=0)],
+    working_exit_reference_qty=inputs["qty"])
+mark = inputs["mark_price"]
+unrealized = (mark - inputs["entry_price"]) * inputs["qty"]
+equity = inputs["initial_capital"] + unrealized
+required = mark * inputs["qty"] * (inputs["margin_long_pct"] / 100.0)
 deficit = required - equity
 exit_pct = runner._tw_margin_call_exit_pct(mark_price=mark)
 print(json.dumps({"default_initial_capital": DEFAULT_CONFIG["initial_capital"],
-    "assumed_initial_capital": 1000.0, "unrealized": unrealized, "equity_at_mark": equity,
+    "assumed_initial_capital": inputs["initial_capital"], "unrealized": unrealized,
+    "equity_at_mark": equity,
     "required_margin": required, "deficit": deficit, "exit_pct": exit_pct},
     sort_keys=True, separators=(",", ":")))
 '''
@@ -2825,16 +2928,11 @@ print(json.dumps({
             c32_probe,
             {
                 "validation_by_value": c32_results,
-                "authority_enum": [
-                    "local",
-                    "delay_after_protective_exit",
-                    "carry_to_next_bar_after_protective_exit",
-                    "next_bar_open_after_protective_exit_signal",
-                    "next_bar_close_after_protective_exit_signal",
-                ],
+                "authority_enum": list(C32_AUTHORITY_VALUES),
+                "invalid_control": C32_INVALID_CONTROL,
                 "citations": [
                     "A config.py:458-469",
-                    "P009 v2 pinned blob 1c39ab93:830-870",
+                    "P009 v2 pinned blob 1c39ab93:830-869",
                 ],
             },
         ),
@@ -2889,6 +2987,14 @@ print(json.dumps({
     for row_id, scenario_id, expected, actual, mismatches, probe, detail in specifications:
         if not mismatches:
             raise RowStop(f"{row_id} was expected to preserve an authority contradiction")
+        expected_leaf_paths: list[str] = []
+        measured_mismatches = compare_exact(
+            expected,
+            actual,
+            expected_leaf_paths_visited=expected_leaf_paths,
+        )
+        if measured_mismatches != mismatches:
+            raise RowStop(f"{row_id} comparison measurement differs from its gate result")
         record = {
             "actual": encode_floats(actual),
             "authority": {
@@ -2898,7 +3004,7 @@ print(json.dumps({
             },
             "clean_authority_probe": probe,
             "comparison": {
-                "compared_expected_leaf_count": leaf_count(expected),
+                "expected_leaf_paths_visited": len(expected_leaf_paths),
                 "expected_leaf_count": leaf_count(expected),
                 "mismatches": encode_floats(mismatches),
                 "rule": "recursive exact key/value equality after IEEE-754 float.hex encoding",

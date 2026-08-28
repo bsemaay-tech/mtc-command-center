@@ -68,8 +68,9 @@ The v2 comparator self-test records 76/76 RED and 76/76 restored GREEN; matrix S
 ## Complete C01-C42 re-verification
 
 Comparison against recorded branch SHA `9e8a69b32a3460c9a08e8977db99bd7dfe4e5788` found every row behavior
-and disposition identical: **33 GREEN, 7 STOP, 2 policy-only (C25/C27), 134/134 expected leaves,
-33 mutation REDs, and 69 RED mismatches**.
+and disposition identical: **33 GREEN, 7 STOP, and 2 policy-only (C25/C27)**. Across the GREEN
+rows, manifests declare 128 expected leaves, C41 adds 6 verifier-only expected leaves, and the
+comparator visits 134 expected-leaf paths; there are also **33 mutation REDs and 69 RED mismatches**.
 
 - C28-C30 remain STOP because no executable Pine producer was authorized; no Pine was run.
 - C32/C34/C35/C42 remain authority-contradiction STOPs.

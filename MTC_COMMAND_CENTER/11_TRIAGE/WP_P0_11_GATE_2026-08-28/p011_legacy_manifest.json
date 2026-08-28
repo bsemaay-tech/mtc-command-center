@@ -1818,7 +1818,7 @@
             "route_key_count": 5
           },
           "literal_expected_observation": {
-            "preserved_values": [
+            "declared_config_values": [
               "EL",
               "XL",
               "ES",
@@ -2212,6 +2212,7 @@
           "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
           "complete_inputs": {
             "entry_price": 100.0,
+            "initial_capital": 1000.0,
             "margin_long_pct": 100.0,
             "mark_price": 40.0,
             "qty": 10.0,

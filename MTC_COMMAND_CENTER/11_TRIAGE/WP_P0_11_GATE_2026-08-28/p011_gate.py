@@ -16,6 +16,21 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Iterator
 
+_MODULE_DIR = Path(__file__).resolve().parent
+if str(_MODULE_DIR) not in sys.path:
+    sys.path.insert(0, str(_MODULE_DIR))
+
+from scenario_binding import (
+    EXPECTED_ROW_POSITIONS,
+    ManifestRowError,
+    ManifestScenarioSource,
+    ScenarioBindingError,
+    bind_scenario,
+    lookup_manifest_row,
+    verifier_scenario_contract,
+    verify_manifest_row_positions,
+)
+
 
 GATE_VERSION = "P011-LC-GATE-v2"
 SCHEMA_VERSION = "P011_OBSERVATION_SCHEMA_v1"
@@ -554,29 +569,32 @@ def validate_legacy_manifest(path: Path, expected_sha256: str) -> dict[str, Any]
     if not isinstance(rows, list) or len(rows) != 42:
         raise GateStop("legacy manifest does not enumerate 42 rows")
     expected_ids = [f"C{index:02d}" for index in range(1, 43)]
-    if [row.get("row_id") for row in rows] != expected_ids:
-        raise GateFail("legacy manifest row identities are missing, duplicated, or reordered")
+    try:
+        verify_manifest_row_positions(manifest, expected_ids)
+    except ManifestRowError as exc:
+        raise GateFail(str(exc)) from exc
     allowed = {"APPLICABLE", "NOT_A_LEGACY_REPRODUCTION_ROW"}
     if any(row.get("disposition") not in allowed for row in rows):
         raise GateStop("legacy manifest contains a non-terminal disposition")
-    for row in rows:
+    for row_id in expected_ids:
+        row = lookup_manifest_row(manifest, row_id, EXPECTED_ROW_POSITIONS[row_id])
         if row["disposition"] == "APPLICABLE":
             scenarios = row.get("scenarios")
             if not isinstance(scenarios, list) or not scenarios:
                 raise GateStop(f"applicable row has no frozen scenario: {row['row_id']}")
-            for scenario in scenarios:
-                required = {
-                    "scenario_id",
-                    "producer_adapter",
-                    "complete_inputs",
-                    "literal_expected_observation",
-                    "literal_expected_final_state",
-                    "comparison_rule",
-                    "clean_producer_corroboration",
-                    "producer_mutation",
-                }
-                if set(scenario) < required:
-                    raise GateStop(f"scenario is incomplete: {scenario.get('scenario_id')}")
+            if len(scenarios) != 1:
+                raise GateStop(f"applicable row must have exactly one frozen scenario: {row_id}")
+            try:
+                bind_scenario(
+                    ManifestScenarioSource(
+                        manifest=manifest,
+                        row_id=row_id,
+                        expected_position=EXPECTED_ROW_POSITIONS[row_id],
+                    ),
+                    verifier_scenario_contract(row_id),
+                )
+            except ScenarioBindingError as exc:
+                raise GateStop(f"scenario binding refused for {row_id}: {exc}") from exc
     return manifest
 
 
