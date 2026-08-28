@@ -1,0 +1,2856 @@
+{
+  "applicable_to_not_row_change_policy": "automatic STOP; never a repair to v1",
+  "counts": {
+    "applicable": 40,
+    "not_a_legacy_reproduction_row": 2,
+    "total": 42
+  },
+  "dependency_variant": "DIRECT_BUILD",
+  "expected_values_change_policy": "new owner decision, new gate version, new baseline and new external signature",
+  "fixture_suite_commit": "NONE_DIRECT_BUILD",
+  "frozen_before_subject_run": true,
+  "gate_version": "P011-LC-GATE-v1",
+  "manifest_schema_version": "P011_LEGACY_MANIFEST_v1",
+  "p009_authority": {
+    "blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+    "citation_refresh_branch_status": "not merged into the accepted base at freeze; recorded as discrepancy, not silently imported",
+    "citation_resolution": "pinned section ranges plus source symbols; known stale line-number drift is not copied as authority",
+    "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+    "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+  },
+  "rows": [
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "125-142",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C01",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "direction": 1,
+            "line": 100.0,
+            "long": true,
+            "reason": "fixture_conflict",
+            "short": true
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "125-142",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "candidate_side": null,
+            "gated_long": false,
+            "gated_short": false,
+            "reason": "signal_conflict"
+          },
+          "producer_adapter": "A.runner_candidate_side",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C01-GF8-MUT-001",
+            "required_red": "C01-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_candidate_side",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C01-LEGACY-001"
+        }
+      ],
+      "title": "Raw signal production, conflict, direction"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "143-160",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C02",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "htf_close": null,
+            "htf_ready": false,
+            "ma_close": 100.0,
+            "ma_line": null
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "143-160",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "gate_evaluation": "legacy_fail_open"
+          },
+          "literal_expected_observation": {
+            "htf_long_ok": true,
+            "htf_short_ok": true,
+            "ma_long_ok": true,
+            "ma_short_ok": true
+          },
+          "producer_adapter": "A.gates_legacy_fail_open",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C02-GF8-MUT-001",
+            "required_red": "C02-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.gates_legacy_fail_open",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C02-LEGACY-001"
+        }
+      ],
+      "title": "Entry gates, readiness, signal filters"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "executable Python authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "PINE_CURRENT_MASTER",
+          "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine",
+          "role": "equation/source corroboration only; no TradingView execution credit"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "161-197",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C03",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "PINE_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "confirm_bars": 2,
+            "raw_directions": [
+              1,
+              1
+            ],
+            "refresh_on_new_raw": true
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "161-197",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "confirm_direction": 1
+          },
+          "literal_expected_observation": {
+            "confirm_count_after_hold": 1,
+            "confirm_count_after_new_pulse": 0,
+            "fired": false
+          },
+          "producer_adapter": "A.runner_confirmation_refresh",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C03-GF8-MUT-001",
+            "required_red": "C03-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_confirmation_refresh",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C03-LEGACY-001"
+        }
+      ],
+      "title": "N-bar confirmation transform and refresh"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "executable Python authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "PINE_CURRENT_MASTER",
+          "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine",
+          "role": "equation/source corroboration only; no TradingView execution credit"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "198-220",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C04",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "PINE_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "bar": {
+              "close": 100.05,
+              "high": 100.06,
+              "low": 100.04,
+              "open": 100.05
+            },
+            "break_level": 100.0,
+            "buffer_pct": 0.1
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "198-220",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "waiting": false
+          },
+          "literal_expected_observation": {
+            "close_back_required": false,
+            "distance_pct": 0.05,
+            "retest_fires": true,
+            "touch_or_cross_required": false
+          },
+          "producer_adapter": "A.runner_level_retest",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C04-GF8-MUT-001",
+            "required_red": "C04-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_level_retest",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C04-LEGACY-001"
+        }
+      ],
+      "title": "Level retest confirmation"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "221-238",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C05",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "allow_flip": false,
+            "initial_side": "long",
+            "opposite_raw_side": "short"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "221-238",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "deferred_side": "short",
+            "ordered_exit_reasons": [
+              "opp_signal"
+            ],
+            "same_bar_short_entry": false
+          },
+          "producer_adapter": "A.runner_opposite_signal",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C05-GF8-MUT-001",
+            "required_red": "C05-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_opposite_signal",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C05-LEGACY-001"
+        }
+      ],
+      "title": "Direction, regime lock, opposite signal, flip"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "239-282",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C06",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "cooldown_bars": 2,
+            "entry_bar_indices": [
+              10,
+              11,
+              12
+            ],
+            "max_entries": 2,
+            "side": "long"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "239-282",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_side": "long"
+          },
+          "literal_expected_observation": {
+            "active_entry_legs": 2,
+            "can_open": [
+              true,
+              false,
+              true
+            ]
+          },
+          "producer_adapter": "A.position_manager_spacing",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C06-GF8-MUT-001",
+            "required_red": "C06-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.position_manager_spacing",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C06-LEGACY-001"
+        }
+      ],
+      "title": "Pyramiding, adds, entry spacing, exit cooldown"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "283-317",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C07",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "entry_price": 100.0,
+            "fixed_qty": 1.0,
+            "qty_step": 1.0,
+            "sizing_equity": 1000.0,
+            "stop_price": 90.0
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "283-317",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "sizing_snapshot": 1000.0
+          },
+          "literal_expected_observation": {
+            "owner": "legacy_kernel",
+            "qty": 1.0
+          },
+          "producer_adapter": "A.position_sizer_fixed",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C07-GF8-MUT-001",
+            "required_red": "C07-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.position_sizer_fixed",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C07-LEGACY-001"
+        }
+      ],
+      "title": "Sizing request and quantity ownership"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "318-335",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C08",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "contract_multiplier": 2.0,
+            "entry_price": 100.0,
+            "exit_price": 110.0,
+            "qty": 3.0,
+            "side": "long"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "318-335",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "realized_equity_delta": 60.0
+          },
+          "literal_expected_observation": {
+            "realized_pnl": 60.0
+          },
+          "producer_adapter": "A.position_manager_multiplier_pnl",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C08-GF8-MUT-001",
+            "required_red": "C08-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.position_manager_multiplier_pnl",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C08-LEGACY-001"
+        }
+      ],
+      "title": "Contract multiplier"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "336-353",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C09",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "long_stop": 99.999,
+            "long_target": 100.005,
+            "price_tick": 0.01,
+            "qty_step": 0.1,
+            "raw_qty": 1.999
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "336-353",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "below_minimum_rejected": true
+          },
+          "literal_expected_observation": {
+            "floored_qty": 1.9,
+            "rounded_long_stop": 99.99,
+            "rounded_long_target": 100.01
+          },
+          "producer_adapter": "A.rounding",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C09-GF8-MUT-001",
+            "required_red": "C09-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.rounding",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C09-LEGACY-001"
+        }
+      ],
+      "title": "Tick/quantity rounding and minimums"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "354-404",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C10",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "entry_price": 100.0,
+            "max_leverage_cap": 1.0,
+            "qty": 11.0,
+            "sizing_equity": 1000.0
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "354-404",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "blocked": true,
+            "limit": 1000.0,
+            "notional": 1100.0
+          },
+          "producer_adapter": "A.runner_capital_block",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C10-GF8-MUT-001",
+            "required_red": "C10-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_capital_block",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C10-LEGACY-001"
+        }
+      ],
+      "title": "Leverage and margin/liquidation"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "405-422",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C11",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "active_stop_price": 95.0,
+            "bar": {
+              "close": 92.0,
+              "high": 101.0,
+              "low": 89.0,
+              "open": 90.0
+            },
+            "entry_price": 100.0,
+            "side": "long"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "405-422",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "fill_price": 90.0,
+            "hit": true,
+            "reason": "stop_loss"
+          },
+          "producer_adapter": "A.exits_stop_gap",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C11-GF8-MUT-001",
+            "required_red": "C11-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.exits_stop_gap",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C11-LEGACY-001"
+        }
+      ],
+      "title": "Fixed/ATR/swing stops"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "423-440",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C12",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "active_tp_price": 105.0,
+            "bar": {
+              "close": 111.0,
+              "high": 112.0,
+              "low": 109.0,
+              "open": 110.0
+            },
+            "entry_price": 100.0,
+            "side": "long"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "423-440",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "fill_price": 110.0,
+            "hit": true,
+            "reason": "take_profit"
+          },
+          "producer_adapter": "A.exits_target_gap",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C12-GF8-MUT-001",
+            "required_red": "C12-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.exits_target_gap",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C12-LEGACY-001"
+        }
+      ],
+      "title": "Percent/ATR/R targets"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "441-458",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C13",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "bar_high": 111.0,
+            "entry_price": 100.0,
+            "qty": 10.0,
+            "side": "long",
+            "targets": [
+              {
+                "fraction": 0.5,
+                "id": "TP1",
+                "price": 105.0
+              },
+              {
+                "fraction": 1.0,
+                "id": "TP2",
+                "price": 110.0
+              }
+            ]
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "441-458",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false,
+            "realized_equity_delta": 75.0
+          },
+          "literal_expected_observation": {
+            "exit_qtys": [
+              5.0,
+              5.0
+            ],
+            "ordered_exit_ids": [
+              "TP1",
+              "TP2"
+            ],
+            "realized_pnls": [
+              25.0,
+              50.0
+            ]
+          },
+          "producer_adapter": "A.exits_multitp",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C13-GF8-MUT-001",
+            "required_red": "C13-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.exits_multitp",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C13-LEGACY-001"
+        }
+      ],
+      "title": "MultiTP"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "459-476",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C14",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "bar_close": 111.0,
+            "buffer_r": 0.1,
+            "entry_price": 100.0,
+            "initial_stop": 90.0,
+            "side": "long",
+            "trigger_r": 1.0,
+            "tw_mode": "local"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "459-476",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": true
+          },
+          "literal_expected_observation": {
+            "active_stop_owner": "break_even",
+            "active_stop_price": 101.0,
+            "be_active": true
+          },
+          "producer_adapter": "A.exits_break_even_legacy",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C14-GF8-MUT-001",
+            "required_red": "C14-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.exits_break_even_legacy",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C14-LEGACY-001"
+        }
+      ],
+      "title": "Break-even"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "477-494",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C15",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "bar_close": 110.0,
+            "entry_price": 100.0,
+            "initial_stop": 90.0,
+            "side": "long",
+            "trail_atr": 2.0,
+            "trail_distance_atr_mult": 1.0
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "477-494",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": true
+          },
+          "literal_expected_observation": {
+            "active_stop_owner": "trailing",
+            "trail_active": true,
+            "trail_price": 108.0
+          },
+          "producer_adapter": "A.exits_trailing_legacy",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C15-GF8-MUT-001",
+            "required_red": "C15-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.exits_trailing_legacy",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C15-LEGACY-001"
+        }
+      ],
+      "title": "Trailing stop"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "495-512",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C16",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "active_stop": 95.0,
+            "bar_low": 94.0,
+            "filter_blocked": true,
+            "position_side": "long",
+            "raw_side": "short"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "495-512",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "filter_exit_count": 0,
+            "first_exit_reason": "stop_loss",
+            "opposite_exit_count": 0
+          },
+          "producer_adapter": "A.runner_exit_order",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C16-GF8-MUT-001",
+            "required_red": "C16-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_exit_order",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C16-LEGACY-001"
+        }
+      ],
+      "title": "Opposite/filter exits"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "513-530",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C17",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "close": 101.0,
+            "current_bar": 2,
+            "entry_bar": 0,
+            "time_stop_bars": 2,
+            "time_stop_condition": "Always"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "513-530",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "exit_price": 101.0,
+            "exit_reason": "time_stop"
+          },
+          "producer_adapter": "A.runner_time_exit",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C17-GF8-MUT-001",
+            "required_red": "C17-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_time_exit",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C17-LEGACY-001"
+        }
+      ],
+      "title": "Bar/time/PnL exits"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "531-548",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C18",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "candidate_side": "long",
+            "max_trades_per_day": 1,
+            "trades_today": 1,
+            "use_max_trades_per_day": true
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "531-548",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false,
+            "trades_today": 1
+          },
+          "literal_expected_observation": {
+            "entry_opened": false,
+            "guard_blocked": true
+          },
+          "producer_adapter": "A.runner_local_guard",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C18-GF8-MUT-001",
+            "required_red": "C18-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_local_guard",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C18-LEGACY-001"
+        }
+      ],
+      "title": "Session/day limits, guards, recovery"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "549-568",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C19",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "bar": {
+              "close": 101.0,
+              "high": 106.0,
+              "low": 94.0,
+              "open": 100.0
+            },
+            "side": "long",
+            "stop_price": 95.0,
+            "target_price": 105.0
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "549-568",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "exit_reason": "stop_loss",
+            "policy_observed": "STOP_FIRST"
+          },
+          "producer_adapter": "A.exits_collision",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C19-GF8-MUT-001",
+            "required_red": "C19-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.exits_collision",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C19-LEGACY-001"
+        }
+      ],
+      "title": "Same-bar stop/target collision"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "569-599",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C20",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "bar_close": 100.0,
+            "candidate_side": "long",
+            "execution_profile_id": "close_only_deterministic_v2"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "569-599",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_side": "long"
+          },
+          "literal_expected_observation": {
+            "entry_fill_price": 100.0,
+            "fill_policy_id": "decision_bar_close"
+          },
+          "producer_adapter": "A.runner_close_only_fill",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C20-GF8-MUT-001",
+            "required_red": "C20-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_close_only_fill",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C20-LEGACY-001"
+        }
+      ],
+      "title": "Fill assumptions and gaps"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "600-617",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C21",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "position_side": "long",
+            "same_bar_candidate": "short",
+            "stop_hit": true,
+            "tw_audit_semantics_mode": "off"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "600-617",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "protective_exit_count": 1,
+            "same_bar_entry_count": 0
+          },
+          "producer_adapter": "A.runner_protective_reentry",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C21-GF8-MUT-001",
+            "required_red": "C21-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_protective_reentry",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C21-LEGACY-001"
+        }
+      ],
+      "title": "Same-bar re-entry after any exit"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "618-635",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C22",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "entry_price": 100.0,
+            "exit_price": 110.0,
+            "fee": 0.0,
+            "funding": 0.0,
+            "qty": 1.0,
+            "side": "long",
+            "slippage": 0.0
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "618-635",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "unmodeled_costs": [
+              "fee",
+              "slippage",
+              "funding"
+            ]
+          },
+          "literal_expected_observation": {
+            "gross_pnl": 10.0,
+            "realized_pnl": 10.0
+          },
+          "producer_adapter": "A.position_manager_legacy_cost_absence",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C22-GF8-MUT-001",
+            "required_red": "C22-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.position_manager_legacy_cost_absence",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C22-LEGACY-001"
+        }
+      ],
+      "title": "Fees, slippage, funding"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "636-653",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C23",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "bars": 20,
+            "signal_mode": "Supertrend",
+            "st_atr_len": 21,
+            "terminal_flatten": false
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "636-653",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_preserved_at_end": true
+          },
+          "literal_expected_observation": {
+            "entries": 0,
+            "implicit_terminal_exit": false,
+            "observations": 20
+          },
+          "producer_adapter": "A.runner_warmup_terminal",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C23-GF8-MUT-001",
+            "required_red": "C23-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_warmup_terminal",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C23-LEGACY-001"
+        }
+      ],
+      "title": "Warm-up, evaluation boundary, terminal handling"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "654-671",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C24",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "bar": {
+              "close": "NaN",
+              "high": 101.0,
+              "low": 99.0,
+              "open": 100.0,
+              "volume": 1.0
+            },
+            "side_mirror": [
+              "long",
+              "short"
+            ]
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "654-671",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "bar_valid": false,
+            "boundary_rule": "legacy_exact_comparisons",
+            "entry_opened": false
+          },
+          "producer_adapter": "A.runner_invalid_bar",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C24-GF8-MUT-001",
+            "required_red": "C24-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_invalid_bar",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C24-LEGACY-001"
+        }
+      ],
+      "title": "Invalid values, boundary equality, short symmetry"
+    },
+    {
+      "coverage_credit": "policy consistency only; zero A/B/Pine reproduction credit",
+      "disposition": "NOT_A_LEGACY_REPRODUCTION_ROW",
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "672-689",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "proof": "already-decided venue timestamp policy; no A/B legacy implementation is reproduced",
+      "row_id": "C25",
+      "title": "Timestamp discipline"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy runner duplicate/revision behavior",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "77a10e6573d93f8aaf777010ea507bbec0a7668b",
+          "name": "PINE_CONTROLLER_FREEZE",
+          "ref": "legacy/pine-controller/2026-08-25",
+          "role": "historical L25 dispatch corroboration only"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "690-707",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C26",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "PINE_CONTROLLER_FREEZE"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "bars": [
+              {
+                "bar_index": 7,
+                "timestamp": "2026-01-01T00:00:00+00:00"
+              },
+              {
+                "bar_index": 7,
+                "timestamp": "2026-01-01T00:00:00+00:00"
+              }
+            ]
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "690-707",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "last_current_bar_index": 7
+          },
+          "literal_expected_observation": {
+            "duplicate_rejected_by_legacy_runner": false,
+            "producer_outputs": 2
+          },
+          "producer_adapter": "A.runner_duplicate_bar_legacy",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C26-GF8-MUT-001",
+            "required_red": "C26-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_duplicate_bar_legacy",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C26-LEGACY-001"
+        }
+      ],
+      "title": "Duplicate/reordered bars, revisions, idempotence"
+    },
+    {
+      "coverage_credit": "policy consistency only; zero A/B/Pine reproduction credit",
+      "disposition": "NOT_A_LEGACY_REPRODUCTION_ROW",
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "708-739",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "proof": "ticket-45 freshness policy and P0-09 bounds; no A/B legacy implementation is reproduced",
+      "row_id": "C27",
+      "title": "Restart and missed-decision recovery"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "77a10e6573d93f8aaf777010ea507bbec0a7668b",
+          "name": "A_PINE_CONTROLLER_FREEZE",
+          "paths": [
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
+          ],
+          "ref": "legacy/pine-controller/2026-08-25",
+          "role": "legacy authority; current master is prohibited for this deleted surface"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "740-759",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C28",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_PINE_CONTROLLER_FREEZE"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "wt_enter_long_code": "EL",
+            "wt_enter_short_code": "ES",
+            "wt_exit_all_code": "XA",
+            "wt_exit_long_code": "XL",
+            "wt_exit_short_code": "XS"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "740-759",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "route_key_count": 5
+          },
+          "literal_expected_observation": {
+            "preserved_values": [
+              "EL",
+              "XL",
+              "ES",
+              "XS",
+              "XA"
+            ]
+          },
+          "producer_adapter": "A_FREEZE.resolve_config_route_keys",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C28-GF8-MUT-001",
+            "required_red": "C28-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A_FREEZE.resolve_config_route_keys",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C28-LEGACY-001"
+        }
+      ],
+      "title": "WunderTrading route-code inputs"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "77a10e6573d93f8aaf777010ea507bbec0a7668b",
+          "name": "A_PINE_CONTROLLER_FREEZE",
+          "paths": [
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
+          ],
+          "ref": "legacy/pine-controller/2026-08-25",
+          "role": "legacy authority; current master is prohibited for this deleted surface"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "760-783",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C29",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_PINE_CONTROLLER_FREEZE"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "wt_amount": 2.5,
+            "wt_amount_type": "base",
+            "wt_leverage": 3,
+            "wt_order_type": "limit"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "760-783",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "payload_key_count": 4
+          },
+          "literal_expected_observation": {
+            "amount": 2.5,
+            "amount_type": "base",
+            "leverage": 3,
+            "order_type": "limit"
+          },
+          "producer_adapter": "A_FREEZE.resolve_config_payload_keys",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C29-GF8-MUT-001",
+            "required_red": "C29-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A_FREEZE.resolve_config_payload_keys",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C29-LEGACY-001"
+        }
+      ],
+      "title": "WunderTrading order-payload inputs"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "77a10e6573d93f8aaf777010ea507bbec0a7668b",
+          "name": "A_PINE_CONTROLLER_FREEZE",
+          "paths": [
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
+          ],
+          "ref": "legacy/pine-controller/2026-08-25",
+          "role": "legacy authority; current master is prohibited for this deleted surface"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "784-803",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C30",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_PINE_CONTROLLER_FREEZE"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "use_sl": true,
+            "use_tp": true,
+            "wt_place_cond_orders": true,
+            "wt_reduce_only": true,
+            "wt_use_sl": true,
+            "wt_use_tp": true
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "784-803",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "cross_validation": "PASS",
+            "protective_key_count": 4
+          },
+          "literal_expected_observation": {
+            "wt_place_cond_orders": true,
+            "wt_reduce_only": true,
+            "wt_use_sl": true,
+            "wt_use_tp": true
+          },
+          "producer_adapter": "A_FREEZE.resolve_config_protective_keys",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C30-GF8-MUT-001",
+            "required_red": "C30-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A_FREEZE.resolve_config_protective_keys",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C30-LEGACY-001"
+        }
+      ],
+      "title": "WunderTrading protective flags"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "804-823",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C31",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "modes": [
+              "off",
+              "research"
+            ],
+            "protective_exit": true
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "804-823",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "mode_count": 2
+          },
+          "literal_expected_observation": {
+            "off_pending_reentry": null,
+            "research_branch_reachable": true
+          },
+          "producer_adapter": "A.runner_tw_master_switch",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C31-GF8-MUT-001",
+            "required_red": "C31-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_tw_master_switch",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C31-LEGACY-001"
+        }
+      ],
+      "title": "tw_audit_semantics_mode"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "824-864",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C32",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "accepted_values": [
+              "local",
+              "carry_to_next_bar_after_protective_exit",
+              "next_bar_open",
+              "next_bar_close"
+            ]
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "824-864",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "enum_count": 4
+          },
+          "literal_expected_observation": {
+            "all_values_validate": true
+          },
+          "producer_adapter": "A.resolve_config_reentry_enum",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C32-GF8-MUT-001",
+            "required_red": "C32-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.resolve_config_reentry_enum",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C32-LEGACY-001"
+        }
+      ],
+      "title": "tw_reversal_reentry_mode"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "865-887",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C33",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "candidate_bars": [
+              10,
+              11,
+              12
+            ],
+            "delay_bars": 2,
+            "protective_exit_bar": 10
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "865-887",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "first_allowed_bar": 12
+          },
+          "literal_expected_observation": {
+            "reentry_allowed": [
+              false,
+              false,
+              true
+            ]
+          },
+          "producer_adapter": "A.runner_reentry_delay",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C33-GF8-MUT-001",
+            "required_red": "C33-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_reentry_delay",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C33-LEGACY-001"
+        }
+      ],
+      "title": "tw_reversal_reentry_delay_bars"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "888-911",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C34",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "entry_price": 100.0,
+            "margin_long_pct": 100.0,
+            "mark_price": 40.0,
+            "qty": 10.0,
+            "side": "long",
+            "tw_audit_semantics_mode": "research",
+            "tw_margin_call_mode": "tradingview"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "888-911",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "total_exits": 1
+          },
+          "literal_expected_observation": {
+            "exit_reason": "margin_call",
+            "margin_call_branch_reached": true
+          },
+          "producer_adapter": "A.runner_margin_call",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C34-GF8-MUT-001",
+            "required_red": "C34-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_margin_call",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C34-LEGACY-001"
+        }
+      ],
+      "title": "tw_margin_call_mode"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "912-931",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C35",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "debug_mode": true,
+            "tw_margin_call_split_entries": true
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "912-931",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_change_from_flag_only": false
+          },
+          "literal_expected_observation": {
+            "debug_metadata_value": true,
+            "economic_branch_count": 0
+          },
+          "producer_adapter": "A.runner_split_entries_stamp",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C35-GF8-MUT-001",
+            "required_red": "C35-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_split_entries_stamp",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C35-LEGACY-001"
+        }
+      ],
+      "title": "tw_margin_call_split_entries"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "932-965",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C36",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "trigger_reached": true,
+            "tw_audit_semantics_mode": "research",
+            "tw_be_semantics_mode": "tradingview"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "932-965",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "be_active": true
+          },
+          "literal_expected_observation": {
+            "tradingview_be_branch_reached": true
+          },
+          "producer_adapter": "A.runner_be_mode",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C36-GF8-MUT-001",
+            "required_red": "C36-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_be_mode",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C36-LEGACY-001"
+        }
+      ],
+      "title": "tw_be_semantics_mode"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "966-988",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C37",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "trigger_reached": true,
+            "tw_audit_semantics_mode": "research",
+            "tw_trailing_semantics_mode": "tradingview"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "966-988",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "trail_active": true
+          },
+          "literal_expected_observation": {
+            "tradingview_trailing_branch_reached": true
+          },
+          "producer_adapter": "A.runner_trailing_mode",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C37-GF8-MUT-001",
+            "required_red": "C37-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.runner_trailing_mode",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C37-LEGACY-001"
+        }
+      ],
+      "title": "tw_trailing_semantics_mode"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "b5ed1afadcff09b69e36b72affeb23de51d84c14",
+          "name": "B_BACKTEST_FREEZE",
+          "path": "MTC_COMMAND_CENTER/02_MTC_BACKTEST/src/modules/confirmation_layer.py",
+          "ref": "legacy/02-mtc-backtest/2026-08-25",
+          "role": "pivot FSM legacy authority"
+        },
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "inert scaffold preservation only",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "989-1070",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C38",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "B_BACKTEST_FREEZE",
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "bar_index": 1,
+            "break_buffer_ticks": 1,
+            "close": 102.0,
+            "high": 102.0,
+            "long_level": 100.0,
+            "min_wait_bars": 1,
+            "mintick": 1.0,
+            "require_close_beyond": true,
+            "wait_long": true,
+            "wait_long_start_bar": 0
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "989-1070",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "waits_reset": true
+          },
+          "literal_expected_observation": {
+            "long_age_ok": true,
+            "long_break_level": 101.0,
+            "long_pulse": true
+          },
+          "producer_adapter": "B_FREEZE.pivot_fsm",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C38-GF8-MUT-001",
+            "required_red": "C38-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "B_FREEZE.pivot_fsm",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C38-LEGACY-001"
+        }
+      ],
+      "title": "Swing-break/pivot confirmation state machine"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "A legacy behavior",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "b5ed1afadcff09b69e36b72affeb23de51d84c14",
+          "name": "B_BACKTEST_FREEZE",
+          "ref": "legacy/02-mtc-backtest/2026-08-25",
+          "role": "B corroboration where carried"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "1071-1090",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C39",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "B_BACKTEST_FREEZE"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "entry_modes": [
+              "Edge",
+              "Signal"
+            ],
+            "first_bar_requires_edge": true,
+            "raw_long": [
+              true,
+              true
+            ]
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "1071-1090",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "mode_count": 2
+          },
+          "literal_expected_observation": {
+            "edge_long": [
+              true,
+              false
+            ],
+            "first_eval_bar_blocked_without_edge": true,
+            "signal_long": [
+              true,
+              true
+            ]
+          },
+          "producer_adapter": "B_FREEZE.entry_event_mode",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C39-GF8-MUT-001",
+            "required_red": "C39-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "B_FREEZE.entry_event_mode",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C39-LEGACY-001"
+        }
+      ],
+      "title": "Entry-event mode and first-eval-bar edge requirement"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "1091-1140",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C40",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "completed_htf_closes": [
+              {
+                "close": 100.0,
+                "timestamp": "2026-01-01T10:00:00+00:00"
+              },
+              {
+                "close": 200.0,
+                "timestamp": "2026-01-01T11:00:00+00:00"
+              }
+            ],
+            "declared_htf_minutes": 60,
+            "ltf_timestamp": "2026-01-01T10:30:00+00:00"
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "1091-1140",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "selected_timestamp": "2026-01-01T10:00:00+00:00"
+          },
+          "literal_expected_observation": {
+            "future_close_used": false,
+            "selected_close": 100.0
+          },
+          "producer_adapter": "A.htf_prior_closed_lookup",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C40-GF8-MUT-001",
+            "required_red": "C40-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.htf_prior_closed_lookup",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C40-LEGACY-001"
+        }
+      ],
+      "title": "Higher-timeframe series construction and alignment"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "A legacy behavior",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "b5ed1afadcff09b69e36b72affeb23de51d84c14",
+          "name": "B_BACKTEST_FREEZE",
+          "ref": "legacy/02-mtc-backtest/2026-08-25",
+          "role": "B corroboration where carried"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "1141-1200",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C41",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "B_BACKTEST_FREEZE"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "close": 100.0,
+            "htf_close": 101.0,
+            "htf_ma_line": null,
+            "htf_ready": true,
+            "ma_line": null
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "1141-1200",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "legacy_substitution_observed": true
+          },
+          "literal_expected_observation": {
+            "htf_substituted_value": 101.0,
+            "missing_ltf_ma_passes": true
+          },
+          "producer_adapter": "A.gates_readiness_substitution",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C41-GF8-MUT-001",
+            "required_red": "C41-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.gates_readiness_substitution",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C41-LEGACY-001"
+        }
+      ],
+      "title": "Indicator readiness substitution and MA/MACD equation authority"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "executable Python authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "PINE_CURRENT_MASTER",
+          "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine",
+          "role": "equation/source corroboration only; no TradingView execution credit"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "1201-1285",
+        "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+      },
+      "row_id": "C42",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "PINE_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "comparison_rule": "canonical JSON exact equality; floats are compared as IEEE-754 hex in executable evidence",
+          "complete_inputs": {
+            "range_filter": {
+              "prices": [
+                100.0,
+                101.0,
+                99.0
+              ],
+              "rf_range": 1000.0
+            },
+            "supertrend": {
+              "bar_count": 3,
+              "st_use_ha": true
+            }
+          },
+          "expectation_derivation": {
+            "method": "literal source arithmetic written before subject execution",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "f96b53258488eb85b0d67509766c3c19f7bdf0bf",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "1201-1285",
+              "sha256": "6464e6f01a05109816a0433b78ac6eccc50260b77b89093f2444773db6c01068"
+            }
+          },
+          "literal_expected_final_state": {
+            "producer_count": 2
+          },
+          "literal_expected_observation": {
+            "range_filter_event_count": 0,
+            "supertrend_signals": [
+              {
+                "long": false,
+                "reason": "st_ha_not_supported",
+                "short": false
+              },
+              {
+                "long": false,
+                "reason": "st_ha_not_supported",
+                "short": false
+              },
+              {
+                "long": false,
+                "reason": "st_ha_not_supported",
+                "short": false
+              }
+            ]
+          },
+          "producer_adapter": "A.signal_producers",
+          "producer_mutation": {
+            "mutation": "invert or perturb the scenario's primary returned predicate/value in an isolated scratch authority copy",
+            "mutation_id": "C42-GF8-MUT-001",
+            "required_red": "C42-LEGACY-001 exact comparison fails with one terminal row disposition",
+            "restored_green": "frozen clean authority exactly matches the literal oracle",
+            "source_seam": "A.signal_producers",
+            "status": "FROZEN_PENDING_STAGE2_EXECUTION"
+          },
+          "scenario_id": "C42-LEGACY-001"
+        }
+      ],
+      "title": "Signal-producer equation authority"
+    }
+  ],
+  "separate_p009_non_decisions": [
+    {
+      "disposition": "OUTSIDE_C01_C42_LEGACY_ROW_UNIVERSE_NO_CREDIT",
+      "family": 18,
+      "name": "snapshot drift / bucket-capital divergence",
+      "relationship_to_c18": "none"
+    },
+    {
+      "disposition": "OUTSIDE_C01_C42_LEGACY_ROW_UNIVERSE_NO_CREDIT",
+      "family": 19,
+      "name": "allocator / Guardian boundary",
+      "relationship_to_c18": "none"
+    }
+  ],
+  "subject_run_count_at_freeze": 0
+}
