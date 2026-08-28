@@ -50,13 +50,14 @@ This is not partial satisfaction: `earned=0`, `unearned=23`.
 
 The per-fixture semantic and authority-content hashes are stored in `manifest.json`, in the same
 tree as the fixtures. They detect an ordinary fixture/manifest mismatch, but they are not an
-external trust anchor: a coordinated fixture edit plus recomputation of both manifest hashes is
-not detected unless an independent coherence check rejects it.
+external trust anchor: a coordinated declared-value edit plus recomputation of both manifest hashes
+is not detected unless an independent coherence check rejects it. The separate declaration-
+inventory hash pins which paths are declared by which assertions; it does not pin their values.
 
 At audited fixed point `c05e5968`, `validate_coherence` covered only families 4, 5, 22, and 24:
 **24 of 230 expected values**, leaving **206** outside coherence validation. This repair does not
 extend `validate_coherence`. The 11 new coverage assertions make the current scope **24 of 241**,
-leaving **217** outside coherence validation. A self-consistent rehash outside those 24 values is
+leaving **217** outside coherence validation. A self-consistent declared-value rehash outside those 24 values is
 not detected. Named follow-up **`WP-P0-10-COHERENCE-217`** is to design and add independent
 semantic/coherence validation for those 217 current values (the audited 206-value gap plus the 11
 assertions added here).
@@ -184,7 +185,8 @@ The two per-family lines are now `FIXTURE_CONTRACT_MISMATCH_DETECTED` and
 
 The other 217 expected values remain outside independent coherence validation. Hash agreement for
 those values proves self-consistency with the current manifest, not semantic authority under a
-self-consistent rehash.
+self-consistent declared-value rehash. The declaration-inventory hash does not compare those
+values.
 
 Outputs are written only after the complete corpus validates, so a rejected later family does not
 leave a newly rendered partial result set.
@@ -373,7 +375,7 @@ Python compilation, strict JSON parsing, the executable verifier, deterministic 
 tamper regression harness all ran successfully.
 
 Regression-risk note: an ordinary one-sided authority, fixture, output-hash, or manifest-hash change
-fails visibly. A coordinated rehash can still pass for the 217 values outside coherence validation;
+fails visibly. A coordinated declared-value rehash can still pass for the 217 values outside coherence validation;
 that limitation is now explicit and assigned to `WP-P0-10-COHERENCE-217`. An intentional future
 WP-P0-09/corpus revision must update the pinned self-consistency hashes in the same reviewed package.
 There is no strategy/parity runtime risk because this lane is never imported by those runtimes.
@@ -549,9 +551,10 @@ The name-prefix gate is removed. Every assertion now needs one explicit checked 
   `assertion_input_sources_validated=241`, `assertion_input_paths_checked=2649`,
   `fixture_assertions_validated=224`, `companion_assertions_validated=17`.
 
-This is still an input-presence gate, not a semantic-relevance prover. A coordinated fixture and
-manifest rehash can still replace a declared input with an unrelated present path; that remains the
-disclosed coordinated-rehash limitation.
+At Round 4b this was only an input-presence gate, not a semantic-relevance prover: a coordinated
+fixture and manifest rehash could replace a declared input with an unrelated present path. The N1
+declaration-inventory hash now refuses that declaration rewrite, but it still does not prove that a
+declared path is semantically relevant or compare the value at that path.
 
 ### B1 and B2 probes
 
@@ -696,10 +699,10 @@ UNRELATED_PRESENT_PATH_PROBE rc=0 accepted=true detail=no_named_rejection
 SUMMARY built=23 blocked=2 fixture_manifest_hashes_matched=23 citation_line_ranges_validated=397 coherence_families=04,05,22,24 coherence_expected_values_validated=24 assertion_input_sources_validated=241 assertion_input_paths_checked=2629 fixture_assertions_validated=224 companion_assertions_validated=17 expected_values_total=241 contract_mismatch_detected=23 contract_match_restored=23 d026_earned=0 d026_unearned=23
 ```
 
-Ruling: this is the disclosed coordinated-rehash limitation, not a separate in-scope repair. The
-input gate proves existence of declared fixture paths; it cannot prove arithmetic relevance after an
-author rewrites the declaration and the same-tree manifest hash together. The manifest and README now
-say that explicitly.
+Round-4b ruling: this was then the disclosed coordinated-rehash limitation. The N1 inventory hash
+now refuses the declaration rewrite, while the remaining limitation is narrower: existence and
+declaration identity still do not prove arithmetic relevance or pin the value found at a declared
+path.
 
 ### Final checks
 
@@ -1216,10 +1219,11 @@ final predicate. Earlier `1/7`, `7/7`, `8/8`, `18/19`, `19/19`, `16/27`, and `27
 snapshots and the `2629`, `2649`, and earlier `2660` path snapshots were deliberately retained as
 dated historical transcripts; none is presented as the round-4d result. Round 4d's then-current
 harness value was `30/30`; round 4e moved it to `34/34`; the path pin was and remains `2660`.
-The verifier now pins the aggregate declared input-path count at `2660`, so a
-same-tree coordinated rehash that deflates either fixture-local or companion declarations rejects.
-Same-count semantic substitutions outside the independently pinned master gates, selectors, and
-companion identities remain within the disclosed coordinated-rehash limitation.
+Round 4e pinned only the aggregate declared input-path count at `2660`, so deflation rejected but a
+balanced declaration substitution could still pass. The N1 declaration-inventory hash supersedes
+that identity claim: additions, removals, swaps, renames, and moves now reject even at the same
+count. Value changes remain outside this hash except where separate master-gate, selector,
+companion-config, or coherence predicates apply; undeclared fields remain invisible.
 
 ```powershell
 rg -n 'tamper_rejected=[0-9]+/[0-9]+|assertion_input_paths_checked=[0-9]+|fixture_assertions_validated=[0-9]+|companion_assertions_validated=[0-9]+|bar counts live|metadata edit|cannot opt out|all indices|index' MTC_COMMAND_CENTER\11_TRIAGE\WP_P0_10_GOLDEN_SUITE_2026-08-25\LANE_REPORT.md
@@ -1250,16 +1254,17 @@ paths too.
 The lane prompt cites the R9 authority pin at line 578; the repository version places the same R9
 `execution_profile: "LEGACY_CLOSE_ONLY"` statement at line 579. The repository text governs.
 
-### R-2 - declared input-path coverage is pinned
+### R-2 - declared input-path count is pinned
 
 `EXPECTED_INPUT_PATH_COUNT = 2660` is verifier-owned. Both the manifest declaration and the measured
 suite total must equal it. The exact auditor attack retains only the previously verifier-forced
 minimum, removes 2,408 of 2,660 paths, updates all 23 affected fixture-contract hashes and the
 manifest count to 252, and now rejects before attacked-tree equality can self-attest the result.
 
-The no-overclaim sentence above now states the narrower residual accurately: aggregate path
-deflation rejects across fixture-local and companion declarations, while same-count semantic
-substitution outside independently pinned gates, selectors, and identities remains disclosed.
+At Round 4e the narrower claim was only that aggregate path deflation rejected across fixture-local
+and companion declarations. Same-count declaration substitution remained possible until the N1
+inventory hash; declared-value changes remain outside that hash unless another specific predicate
+covers them.
 
 ### Applied nits
 
@@ -1307,8 +1312,9 @@ TAMPER name=r4d_family_02_c32_retained_mapping_assertion_renamed optimized=false
 TAMPER name=n4_family_02_selector_rehomed_fixture_local optimized=false rc=1 rejected=true detail=VERIFY_FAIL reason=family=02 companion_selector_fixture_local_forbidden path=legacy.local.reentry_bar
 ```
 
-Thus both forms reject: coordinated count drift is caught by the new aggregate pin, while the
-canonical-count versions preserve the carried inventory and fixture-local-selector fences.
+Thus both forms rejected through their then-current gates, but the aggregate count did not preserve
+declaration identity: a different balanced declaration inventory could still keep the canonical
+count. N1 closes that structural gap with the verifier-owned digest.
 
 ### Final matrix and independent remeasurement
 
@@ -1397,11 +1403,12 @@ Pins verified against the post-merge table: C32 `:832,:840`; C14 `:475`; C36 `:9
 C37 `:982`; C20 `:585`.
 
 **Fixture-local surface (not closed here):** 101 distinct / 1275 `config.*` declarations live on
-fixture-local `input_paths`. The same presence-without-value hole exists there. Closing it would
-take this same three-set rule over fixture-local declarations, using the prep table's
-87 PINNED / 5 SIBLING_VARIANT / 15 AUTHORITY_SILENT classification. That expansion is for the
-auditors and the owner, not this round. Undeclared companion fields such as `execution_profile_id`
-are also outside the declared-path class rule.
+fixture-local `input_paths`. The same presence-without-value hole exists there. No fixture-local
+classification table exists in the repository: the previously cited 87 PINNED / 5 SIBLING_VARIANT
+/ 15 AUTHORITY_SILENT figures are therefore NOT VERIFIED, and their total of 107 does not reconcile
+with the measured 101 distinct paths. Closing the value hole would require a separately reviewed
+classification. Undeclared companion fields such as `execution_profile_id` are also outside the
+declared-path class rule.
 
 ### Required 2 - F-3 authority anchor
 
@@ -1452,3 +1459,27 @@ VERIFY_RUNS_RC=0,0 OUTPUT_FILES=23,23 BYTE_IDENTICAL=23/23 STDOUT_IDENTICAL=true
 No expected assertion values, Pine, parity, MTC strategy behavior, Bridge runtime, schema,
 broker/exchange, host, credential, deployment, or live surface changed. Independent flagship
 acceptance remains pending.
+
+## N1 - declaration inventory hash and narrowed claim
+
+The verifier now pins SHA-256
+`b1d81fb181894fa810ae88b562d9cf85ec7389f9c74af6b36038fe3c1f69d9df` over 241 canonical
+declaration records containing 2,660 input paths. Fixture-local records use the explicit
+`__fixture__` scenario sentinel. Input paths are sorted with duplicates preserved; the records are
+sorted by their full tuple before compact, ASCII-escaped JSON serialization and UTF-8 hashing.
+
+This check guarantees only that the reviewed declaration list is intact: nothing was added,
+removed, swapped, renamed, or moved between assertions or companion scenarios. It does **not**
+compare declared input values, identify the differing record, prove semantic relevance, or see a
+configuration field no assertion declares. A declared value change can therefore leave this hash
+unchanged.
+
+The V2 balanced substitution was accepted by the unchanged `9a76818f` verifier at 241 records and
+2,660 paths, then refused by the new verifier with `declaration_inventory_hash_mismatch`. V1-V7
+all refuse by that reason; the unmodified corpus and an input-list reorder both pass. Full commands
+and literal output are recorded in `C:\tmp\LANE_PROMPTS_20260828\N1_P010_HASH_REPORT.md`.
+
+Mechanical corrections included here: the nonexistent 87/5/15 prep-table citation is replaced by
+the verified absence and non-reconciling 107-versus-101 totals above; the Round-4d/4e residual now
+names round 4f's pinned companion-config values and N1's structural declaration identity instead
+of implying that the aggregate count protected a same-count inventory.

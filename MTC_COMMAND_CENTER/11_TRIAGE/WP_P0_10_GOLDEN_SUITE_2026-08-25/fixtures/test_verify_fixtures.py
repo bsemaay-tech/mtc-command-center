@@ -16,6 +16,7 @@ from typing import Any, Callable
 
 
 FIXTURE_DIR = Path(__file__).resolve().parent
+VARIANT_ROOT = Path(r"C:\tmp\N1_VARIANTS")
 AUTHORITY_RELATIVE_PATH = (
     "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/"
     "CAPABILITY_CANONICALIZATION_TABLE.md"
@@ -571,6 +572,116 @@ def tamper_companion_config_unclassified(path: Path) -> None:
     write_fixture_with_manifest_hash(path, 2, fixture_path, data)
 
 
+def declaration_v2_balanced_substitution(path: Path) -> None:
+    fixture_path, data = fixture(path, 3)
+    assertion(data, "request.accepted")["input_paths"].remove("config.direction")
+    assertion(data, "request.has_executable_quantity")["input_paths"].append(
+        "family.number"
+    )
+    write_fixture_with_manifest_hash(path, 3, fixture_path, data)
+
+
+def declaration_v1_remove_companion_path(path: Path) -> None:
+    fixture_path, data = fixture(path, 2)
+    scenario = next(
+        item
+        for item in data["companion_scenarios"]
+        if item["id"] == "C32_GF32_legacy_reentry_modes__local"
+    )
+    scenario["assertion_inputs"]["legacy.local.reentry_bar"].remove(
+        "normalized_bars.1.ohlcv.3"
+    )
+    write_fixture_with_manifest_hash(path, 2, fixture_path, data)
+
+
+def declaration_v3_swap_between_assertions(path: Path) -> None:
+    fixture_path, data = fixture(path, 2)
+    local = next(
+        item
+        for item in data["companion_scenarios"]
+        if item["id"] == "C32_GF32_legacy_reentry_modes__local"
+    )["assertion_inputs"]["legacy.local.reentry_bar"]
+    carry = next(
+        item
+        for item in data["companion_scenarios"]
+        if item["id"]
+        == "C32_GF32_legacy_reentry_modes__carry_to_next_bar_after_protective_exit"
+    )["assertion_inputs"]["legacy.carry.reentry_bar"]
+    local_path = "normalized_bars.2.ohlcv.3"
+    carry_path = "normalized_bars.3.ohlcv.3"
+    local[local.index(local_path)] = carry_path
+    carry[carry.index(carry_path)] = local_path
+    write_fixture_with_manifest_hash(path, 2, fixture_path, data)
+
+
+def declaration_v4_move_fixture_to_companion(path: Path) -> None:
+    fixture_path, data = fixture(path, 10)
+    assertion(data, "canonical.arm_bar")["input_paths"].remove("normalized_bars")
+    scenario = next(
+        item
+        for item in data["companion_scenarios"]
+        if item["id"] == "C36_GF36_legacy_break_even_modes__local"
+    )
+    scenario["assertion_inputs"]["legacy.local.exit"].append("normalized_bars")
+    write_fixture_with_manifest_hash(path, 10, fixture_path, data)
+
+
+def declaration_v5_rehome_companion_path(path: Path) -> None:
+    fixture_path, data = fixture(path, 2)
+    local = next(
+        item
+        for item in data["companion_scenarios"]
+        if item["id"] == "C32_GF32_legacy_reentry_modes__local"
+    )["assertion_inputs"]["legacy.local.reentry_bar"]
+    carry = next(
+        item
+        for item in data["companion_scenarios"]
+        if item["id"]
+        == "C32_GF32_legacy_reentry_modes__carry_to_next_bar_after_protective_exit"
+    )["assertion_inputs"]["legacy.carry.reentry_bar"]
+    moved_path = "normalized_bars.2.ohlcv.3"
+    local.remove(moved_path)
+    carry.append(moved_path)
+    write_fixture_with_manifest_hash(path, 2, fixture_path, data)
+
+
+def declaration_v6_duplicate_path(path: Path) -> None:
+    fixture_path, data = fixture(path, 3)
+    assertion(data, "request.accepted")["input_paths"].append("config.direction")
+    write_fixture_with_manifest_hash(path, 3, fixture_path, data)
+
+
+def declaration_v7_rename_assertion(path: Path) -> None:
+    fixture_path, data = fixture(path, 3)
+    assertion(data, "request.accepted")["path"] = "request.accepted_renamed"
+    recompute_internal_hashes(data)
+    write_json(fixture_path, data)
+    manifest_path = path / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest_item = next(
+        item for item in manifest["families"] if item["number"] == 3
+    )
+    manifest_item["authority_binding_sha256"] = recompute_authority_binding_hash(data)
+    manifest_item["fixture_contract_sha256"] = hashlib.sha256(
+        canonical_bytes(data)
+    ).hexdigest()
+    write_json(manifest_path, manifest)
+
+
+def declaration_g2_reorder_paths(path: Path) -> None:
+    fixture_path, data = fixture(path, 3)
+    input_paths = assertion(data, "request.accepted")["input_paths"]
+    input_paths.reverse()
+    write_fixture_with_manifest_hash(path, 3, fixture_path, data)
+
+
+def declaration_duplicate_identity(path: Path) -> None:
+    fixture_path, data = fixture(path, 2)
+    duplicate = json.loads(json.dumps(data["companion_scenarios"][0]))
+    data["companion_scenarios"].append(duplicate)
+    write_fixture_with_manifest_hash(path, 2, fixture_path, data)
+
+
 def lf_sha256(text: str) -> str:
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
@@ -735,8 +846,7 @@ def main() -> int:
             "b1_family_03_renamed_companion_assertion",
             tamper_family_03_renamed_companion_assertion,
             False,
-            "VERIFY_FAIL reason=family=03 assertion_input_source_undeclared "
-            "path=compat_precision.research_qty",
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
         ),
         (
             "b1_family_01_missing_signal_mode",
@@ -749,22 +859,19 @@ def main() -> int:
             "b1_cross_row_misspelling",
             tamper_cross_row_misspelling,
             False,
-            "VERIFY_FAIL reason=family=01 cross_row_import_unsupported "
-            "field=cross_row_imprt path=producer.bar0.raw",
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
         ),
         (
             "b2_family_03_cross_row_import",
             tamper_family_03_cross_row_import,
             False,
-            "VERIFY_FAIL reason=family=03 cross_row_import_unsupported "
-            "field=cross_row_import path=legacy_precision.research_qty",
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
         ),
         (
             "b2_family_14_cross_row_imports",
             tamper_family_14_cross_row_imports,
             False,
-            "VERIFY_FAIL reason=family=14 cross_row_import_unsupported "
-            "field=cross_row_import path=legacy.long_stop_close_only",
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
         ),
         (
             "b3_family_20_missing_mirror_expected_value",
@@ -777,9 +884,7 @@ def main() -> int:
             "b4_family_02_plural_selector",
             tamper_family_02_plural_selector,
             False,
-            "VERIFY_FAIL reason=family=02 companion_selector_mismatch "
-            "path=legacy.local.reentry_bar selector=tw_reversal_reentry_mode "
-            "expected=local actual=None",
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
         ),
         (
             "b6_family_03_missing_literal_input",
@@ -891,15 +996,13 @@ def main() -> int:
             "r4d_family_02_c32_retained_mapping_assertion_renamed",
             tamper_family_02_c32_retained_mapping_assertion_renamed,
             False,
-            "VERIFY_FAIL reason=family=02 companion_assertion_inventory_mismatch "
-            "id=C32_GF32_legacy_reentry_modes__local",
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
         ),
         (
             "n4_family_02_selector_rehomed_fixture_local",
             tamper_family_02_selector_rehomed_fixture_local,
             False,
-            "VERIFY_FAIL reason=family=02 companion_selector_fixture_local_forbidden "
-            "path=legacy.local.reentry_bar",
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
         ),
         (
             "r4e_family_14_execution_profile_flipped",
@@ -913,8 +1016,7 @@ def main() -> int:
             "r4e_family_14_selector_rehomed_fixture_local",
             tamper_family_14_selector_rehomed_fixture_local,
             False,
-            "VERIFY_FAIL reason=family=14 companion_selector_fixture_local_forbidden "
-            "path=legacy.long_stop_close_only",
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
         ),
         (
             "r4e_suite_wide_input_path_deflation",
@@ -955,12 +1057,63 @@ def main() -> int:
             "r4f_companion_config_unclassified",
             tamper_companion_config_unclassified,
             False,
-            "VERIFY_FAIL reason=family=02 companion_config_unclassified "
-            "path=legacy.local.reentry_bar key=unclassified_probe",
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
+        ),
+        (
+            "declaration_v1_remove_companion_path",
+            declaration_v1_remove_companion_path,
+            False,
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
+        ),
+        (
+            "declaration_v2_balanced_substitution",
+            declaration_v2_balanced_substitution,
+            False,
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
+        ),
+        (
+            "declaration_v3_swap_between_assertions",
+            declaration_v3_swap_between_assertions,
+            False,
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
+        ),
+        (
+            "declaration_v4_move_fixture_to_companion",
+            declaration_v4_move_fixture_to_companion,
+            False,
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
+        ),
+        (
+            "declaration_v5_rehome_companion_path",
+            declaration_v5_rehome_companion_path,
+            False,
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
+        ),
+        (
+            "declaration_v6_duplicate_path",
+            declaration_v6_duplicate_path,
+            False,
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
+        ),
+        (
+            "declaration_v7_rename_assertion",
+            declaration_v7_rename_assertion,
+            False,
+            "VERIFY_FAIL reason=declaration_inventory_hash_mismatch",
+        ),
+        (
+            "declaration_duplicate_identity",
+            declaration_duplicate_identity,
+            False,
+            "VERIFY_FAIL reason=declaration_inventory_duplicate_identity",
         ),
     ]
 
-    with tempfile.TemporaryDirectory(prefix="wp_p010_verifier_regression_") as temp:
+    VARIANT_ROOT.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix="wp_p010_verifier_regression_",
+        dir=VARIANT_ROOT,
+    ) as temp:
         temp_path = Path(temp)
         baseline_output = temp_path / "baseline_output"
         baseline = run_verifier(verifier, FIXTURE_DIR, baseline_output)
@@ -1019,10 +1172,28 @@ def main() -> int:
         )
         case_count = len(cases) + 1
 
-    passed = baseline_clean and rejected == case_count
+        control_dir = temp_path / "control_g2_reordered_paths"
+        shutil.copytree(FIXTURE_DIR, control_dir)
+        declaration_g2_reorder_paths(control_dir)
+        control_result = run_verifier(
+            verifier,
+            control_dir,
+            temp_path / "control_g2_output",
+        )
+        control_detail = reason_line(control_result)
+        g2_passed = control_result.returncode == 0
+        print(
+            "CONTROL name=G2_reordered_input_paths "
+            f"rc={control_result.returncode} accepted={str(g2_passed).lower()} "
+            f"detail={control_detail}"
+        )
+
+    controls_passed = int(baseline_clean) + int(g2_passed)
+    passed = baseline_clean and rejected == case_count and g2_passed
     print(
         f"VERIFIER_REGRESSION_SUMMARY baseline_clean={int(baseline_clean)} "
-        f"tamper_rejected={rejected}/{case_count} result={'PASS' if passed else 'FAIL'}"
+        f"tamper_rejected={rejected}/{case_count} "
+        f"controls_passed={controls_passed}/2 result={'PASS' if passed else 'FAIL'}"
     )
     return 0 if passed else 1
 

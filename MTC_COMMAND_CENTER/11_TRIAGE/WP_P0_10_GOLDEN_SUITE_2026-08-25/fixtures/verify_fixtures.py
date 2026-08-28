@@ -1,4 +1,9 @@
-"""Verify the WP-P0-10 fixture contract without claiming kernel evidence."""
+"""Verify the WP-P0-10 fixture contract and its pinned declaration inventory.
+
+The inventory check detects added, removed, swapped, or re-homed declarations. It does
+not compare declared input values, identify the differing record, or see fields that no
+assertion declares. It is not kernel evidence.
+"""
 
 from __future__ import annotations
 
@@ -24,7 +29,15 @@ NORMALIZATION = (
 EXPECTED_BUILT = list(range(1, 18)) + list(range(20, 26))
 EXPECTED_BLOCKED = [18, 19]
 EXPECTED_VALUE_COUNT = 241
+# DECLARATION_INVENTORY_SHA256 is authoritative for declaration-set identity;
+# EXPECTED_INPUT_PATH_COUNT remains a reader-checkable aggregate count.
 EXPECTED_INPUT_PATH_COUNT = 2660
+DECLARATION_INVENTORY_SHA256 = (
+    "b1d81fb181894fa810ae88b562d9cf85ec7389f9c74af6b36038fe3c1f69d9df"
+)
+DECLARATION_INVENTORY_RECORD_COUNT = 241
+DECLARATION_INVENTORY_INPUT_PATH_COUNT = 2660
+FIXTURE_SCENARIO_SENTINEL = "__fixture__"
 EXPECTED_CITATION_LINE_RANGE_COUNT = 397
 # Post-merge master 85c3e17f authority text, LF-normalized SHA-256.
 # Reproduce: UTF-8 read of AUTHORITY_RELATIVE_PATH, CRLF/CR -> LF, sha256 of UTF-8 bytes.
@@ -327,6 +340,177 @@ def load_json(path: Path) -> dict[str, Any]:
     )
     require(isinstance(value, dict), f"json_root_not_object path={path}")
     return value
+
+
+DeclarationInventoryRecord = tuple[int, str, str, str, tuple[str, ...]]
+
+
+def build_declaration_inventory(
+    fixtures: list[dict[str, Any]],
+) -> tuple[list[DeclarationInventoryRecord], int]:
+    records: list[DeclarationInventoryRecord] = []
+    identities: set[tuple[int, str, str, str]] = set()
+
+    def add_record(
+        family: int,
+        source_kind: str,
+        scenario_id: str,
+        assertion_path: Any,
+        input_paths: Any,
+    ) -> None:
+        require(
+            isinstance(assertion_path, str) and assertion_path,
+            f"declaration_inventory_assertion_path_invalid family={family:02d}",
+        )
+        require(
+            isinstance(input_paths, list),
+            "declaration_inventory_input_paths_not_list "
+            f"family={family:02d} path={assertion_path}",
+        )
+        require(
+            all(isinstance(path, str) and path for path in input_paths),
+            "declaration_inventory_input_path_invalid "
+            f"family={family:02d} path={assertion_path}",
+        )
+        identity = (family, source_kind, scenario_id, assertion_path)
+        require(
+            identity not in identities,
+            "declaration_inventory_duplicate_identity "
+            f"family={family:02d} source_kind={source_kind} "
+            f"scenario_id={scenario_id} path={assertion_path}",
+        )
+        identities.add(identity)
+        records.append(
+            (
+                family,
+                source_kind,
+                scenario_id,
+                assertion_path,
+                tuple(sorted(input_paths)),
+            )
+        )
+
+    for fixture in fixtures:
+        family_metadata = fixture.get("family")
+        require(
+            isinstance(family_metadata, dict),
+            "declaration_inventory_family_metadata_missing",
+        )
+        family = family_metadata.get("number")
+        require(
+            type(family) is int,
+            f"declaration_inventory_family_number_invalid actual={family}",
+        )
+        expected_output = fixture.get("expected_output")
+        require(
+            isinstance(expected_output, dict),
+            f"declaration_inventory_expected_output_missing family={family:02d}",
+        )
+        assertions = expected_output.get("assertions")
+        require(
+            isinstance(assertions, list),
+            f"declaration_inventory_assertions_not_list family={family:02d}",
+        )
+        for item in assertions:
+            require(
+                isinstance(item, dict),
+                f"declaration_inventory_assertion_not_object family={family:02d}",
+            )
+            if "input_paths" in item:
+                add_record(
+                    family,
+                    "fixture",
+                    FIXTURE_SCENARIO_SENTINEL,
+                    item.get("path"),
+                    item["input_paths"],
+                )
+
+        scenarios = fixture.get("companion_scenarios", [])
+        require(
+            isinstance(scenarios, list),
+            f"declaration_inventory_companion_scenarios_not_list family={family:02d}",
+        )
+        for scenario in scenarios:
+            require(
+                isinstance(scenario, dict),
+                f"declaration_inventory_companion_scenario_not_object family={family:02d}",
+            )
+            scenario_id = scenario.get("id")
+            require(
+                isinstance(scenario_id, str) and scenario_id,
+                f"declaration_inventory_scenario_id_invalid family={family:02d}",
+            )
+            assertion_inputs = scenario.get("assertion_inputs")
+            require(
+                isinstance(assertion_inputs, dict),
+                "declaration_inventory_assertion_inputs_not_object "
+                f"family={family:02d} scenario_id={scenario_id}",
+            )
+            for assertion_path, input_paths in assertion_inputs.items():
+                add_record(
+                    family,
+                    "companion",
+                    scenario_id,
+                    assertion_path,
+                    input_paths,
+                )
+
+    records.sort()
+    return records, sum(len(record[4]) for record in records)
+
+
+def declaration_inventory_bytes(records: list[DeclarationInventoryRecord]) -> bytes:
+    """Return the reproducible declaration-inventory serialization.
+
+    Each record is ``(family_number, source_kind, scenario_id, assertion_path,
+    sorted_tuple_of_input_paths)``. Fixture-local records use the explicit
+    ``"__fixture__"`` scenario sentinel. Input paths are sorted with duplicates
+    preserved, then records are sorted by the full tuple. The sorted records are
+    converted to a list of lists and serialized with
+    ``json.dumps(..., sort_keys=True, separators=(",", ":"), ensure_ascii=True)``,
+    encoded as UTF-8 without a terminator, and hashed with SHA-256.
+    """
+
+    payload = [
+        [family, source_kind, scenario_id, assertion_path, list(input_paths)]
+        for family, source_kind, scenario_id, assertion_path, input_paths in records
+    ]
+    return json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    ).encode("utf-8")
+
+
+def declaration_inventory_measurements(
+    fixtures: list[dict[str, Any]],
+) -> tuple[str, int, int]:
+    records, input_path_count = build_declaration_inventory(fixtures)
+    return sha256_bytes(declaration_inventory_bytes(records)), len(records), input_path_count
+
+
+def require_declaration_inventory_integrity(fixtures: list[dict[str, Any]]) -> None:
+    actual_sha256, actual_record_count, actual_input_path_count = (
+        declaration_inventory_measurements(fixtures)
+    )
+    reasons: list[str] = []
+    if actual_sha256 != DECLARATION_INVENTORY_SHA256:
+        reasons.append("declaration_inventory_hash_mismatch")
+    if actual_record_count != DECLARATION_INVENTORY_RECORD_COUNT:
+        reasons.append("declaration_inventory_record_count_mismatch")
+    if actual_input_path_count != DECLARATION_INVENTORY_INPUT_PATH_COUNT:
+        reasons.append("declaration_inventory_input_path_count_mismatch")
+    if reasons:
+        raise VerificationError(
+            f"{reasons[0]} reasons={','.join(reasons)} "
+            f"expected_sha256={DECLARATION_INVENTORY_SHA256} "
+            f"actual_sha256={actual_sha256} "
+            f"expected_record_count={DECLARATION_INVENTORY_RECORD_COUNT} "
+            f"actual_record_count={actual_record_count} "
+            f"expected_input_path_count={DECLARATION_INVENTORY_INPUT_PATH_COUNT} "
+            f"actual_input_path_count={actual_input_path_count}"
+        )
 
 
 def authority_text_sha256(text: str) -> str:
@@ -1161,6 +1345,17 @@ def validate_manifest(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     return families
 
 
+def load_built_fixtures(
+    fixture_dir: Path,
+    families: list[dict[str, Any]],
+) -> dict[int, dict[str, Any]]:
+    return {
+        item["number"]: load_json(fixture_dir / item["fixture"])
+        for item in families
+        if item.get("status") == "BUILT"
+    }
+
+
 def validate_fixture(
     fixture: dict[str, Any],
     manifest_item: dict[str, Any],
@@ -1353,6 +1548,8 @@ def main() -> int:
         actual_fixture_names == expected_fixture_names,
         "fixture_file_set_mismatch",
     )
+    fixtures_by_number = load_built_fixtures(args.fixture_dir, families)
+    require_declaration_inventory_integrity(list(fixtures_by_number.values()))
 
     rendered: list[tuple[int, bytes]] = []
     contract_lines: list[str] = []
@@ -1378,7 +1575,7 @@ def main() -> int:
             manifest_item.get("fixture") == expected_name,
             f"family={number:02d} fixture_name_mismatch",
         )
-        fixture = load_json(args.fixture_dir / expected_name)
+        fixture = fixtures_by_number[number]
         (
             number,
             expected_bytes,
