@@ -288,6 +288,8 @@ class GateVariantTests(unittest.TestCase):
             receipt["producer_and_adapter_bindings"]["a_observation_adapter"]["status"],
         )
         self.assertEqual(NARROWED_FINALIZER_STATUS, receipt["baseline_outputs"]["status"])
+        comparison = receipt["baseline_outputs"]["caller_supplied_byte_comparison"]
+        self.assertTrue(comparison["byte_identical"])
         self.assertEqual(NARROWED_FINALIZER_STATUS, anchor["freeze_state"])
 
     def test_finalize_candidate_refuses_zero_row_and_schema_short_matrix(self) -> None:

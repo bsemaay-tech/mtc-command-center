@@ -54,7 +54,7 @@ Premise 1 therefore holds; no substantive authority change was absorbed into thi
   `C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json`, SHA-256
   `eb6a600ff9609789465118a217845c7cac6f8b09f7ecaee2a93242f1f16ec15c`.
 
-## Double build - ephemeral historical scratch evidence
+## Caller-supplied byte comparison - ephemeral historical scratch evidence
 
 The prior round recorded outputs at `C:\tmp\p011_gate_v2_run1_20260828` and
 `C:\tmp\p011_gate_v2_run2_20260828`. They are outside the repository and were not regenerated in
@@ -135,8 +135,9 @@ the repaired disposition or binding sections cites an `N26_VARIANTS` scratch out
    (`LANE_REPORT.md:40-49`).
 4. Extend M3-07's durable-evidence rule to every acceptance-bearing scratch citation. Publish any
    variant matrix or transcript under an authorized repository evidence path or label it ephemeral.
-   Re-cite the Double-build observation counts and four artifact hashes to durable repository
-   evidence, or retain the explicit ephemeral label in this report (`LANE_REPORT.md:57-72`). The
+   Re-cite the caller-supplied byte-comparison observation counts and four artifact hashes to
+   durable repository evidence, or retain the explicit ephemeral label in this report
+   (`LANE_REPORT.md:57-72`). The
    owner-authorization basis at `LANE_REPORT.md:50-52` is also an external `C:\tmp` citation, not a
    repository artifact.
 5. Reconcile the protected receipt's `legacy_manifest.sha256` and
@@ -151,6 +152,10 @@ the repaired disposition or binding sections cites an `N26_VARIANTS` scratch out
 8. Add full discrimination-matrix producer-act verification to the v3 external-reproduction
    contract. A different actor must execute the producers; this finalizer verifies only matrix
    shape and cross-source identity and must not issue producer-execution status.
+9. Verify the producer acts behind the renamed `caller_supplied_byte_comparison` field through the
+   v3 external-reproduction contract; the finalizer measures only caller-supplied byte identity.
+10. Coordinate honest comparison-only labels across the frozen receipt template, protected receipt,
+    and row-arm verifier during v3; this label-only lane may not edit those surfaces.
 
 The observation schema is not a target for the scenario-binding fields: its catalog contains
 observation, signal, event, position, gate-readiness, and account fields, but none of the named
@@ -158,7 +163,7 @@ scenario-contract fields (`P011_OBSERVATION_SCHEMA_v1.json:165-789`).
 
 ## Repair-round-5 inherited evidence boundary
 
-The candidate finalizer now refuses any absent, byte-empty, or logically empty required build
+The candidate finalizer now refuses any absent, byte-empty, or logically empty required candidate
 artifact. Its discrimination matrix must carry nonempty rows and bind its declared count, catalog
 count, ordered paths, schema pin, RED return-code declaration count, and restoration return-code
 declaration count to the independently loaded

@@ -1026,7 +1026,7 @@ def command_compare(args: argparse.Namespace) -> int:
     return 0
 
 
-def command_verify_double_build(args: argparse.Namespace) -> int:
+def command_verify_caller_supplied_byte_comparison(args: argparse.Namespace) -> int:
     run1 = resolve_user_path(args.run1)
     run2 = resolve_user_path(args.run2)
     names = ["mtc_v2_legacy_sequence.jsonl", "final_states.json", "row_corroboration.json", "baseline_manifest.json"]
@@ -1035,12 +1035,12 @@ def command_verify_double_build(args: argparse.Namespace) -> int:
         path1 = run1 / name
         path2 = run2 / name
         if not path1.is_file() or not path2.is_file():
-            raise GateStop(f"double-build artifact is missing: {name}")
+            raise GateStop(f"caller-supplied comparison artifact is missing: {name}")
         hash1 = sha256_file(path1)
         hash2 = sha256_file(path2)
         comparisons.append({"artifact": name, "run1_sha256": hash1, "run2_sha256": hash2, "byte_identical": hash1 == hash2})
     if not all(item["byte_identical"] for item in comparisons):
-        raise GateFail("fresh baseline builds are not byte-identical")
+        raise GateFail("caller-supplied artifact copies are not byte-identical")
     print(json.dumps({"outcome": "PASS", "byte_identical": True, "artifacts": comparisons}, sort_keys=True, separators=(",", ":")))
     return 0
 
@@ -1315,7 +1315,12 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
         raise GateFail("pre-finalization legacy manifest no longer matches the external anchor")
     names = ["mtc_v2_legacy_sequence.jsonl", "final_states.json", "row_corroboration.json", "baseline_manifest.json"]
     artifacts: dict[str, str] = {}
-    double_build: dict[str, Any] = {"run_1": str(run1), "run_2": str(run2), "byte_identical": True, "artifacts": []}
+    caller_supplied_byte_comparison: dict[str, Any] = {
+        "run_1": str(run1),
+        "run_2": str(run2),
+        "byte_identical": True,
+        "artifacts": [],
+    }
     for name in names:
         first = run1 / name
         second = run2 / name
@@ -1330,7 +1335,9 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
         if first_hash != second_hash:
             raise GateFail(f"candidate finalization artifact copies differ: {name}")
         artifacts[name] = first_hash
-        double_build["artifacts"].append({"artifact": name, "run_1_sha256": first_hash, "run_2_sha256": second_hash})
+        caller_supplied_byte_comparison["artifacts"].append(
+            {"artifact": name, "run_1_sha256": first_hash, "run_2_sha256": second_hash}
+        )
     matrix = load_json(mutation_matrix)
     matrix_rows = matrix.get("rows")
     schema = load_json(SCHEMA_PATH)
@@ -1407,7 +1414,7 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
     receipt["baseline_outputs"] = {
         "status": FINALIZER_ACCEPTED_STATUS,
         "artifact_sha256": artifacts,
-        "double_build": double_build,
+        "caller_supplied_byte_comparison": caller_supplied_byte_comparison,
         "conservation": baseline_manifest["conservation"],
         "discrimination_matrix": {
             "path": str(mutation_matrix),
@@ -1484,10 +1491,10 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("--actual-sequence")
     compare.set_defaults(func=command_compare)
 
-    double = subparsers.add_parser("verify-double-build")
-    double.add_argument("--run1", required=True)
-    double.add_argument("--run2", required=True)
-    double.set_defaults(func=command_verify_double_build)
+    caller_comparison = subparsers.add_parser("verify-caller-supplied-byte-comparison")
+    caller_comparison.add_argument("--run1", required=True)
+    caller_comparison.add_argument("--run2", required=True)
+    caller_comparison.set_defaults(func=command_verify_caller_supplied_byte_comparison)
 
     self_test = subparsers.add_parser("self-test-compare")
     self_test.add_argument("--expected", required=True)
