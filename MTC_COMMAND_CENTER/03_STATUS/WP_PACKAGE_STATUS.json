@@ -37,12 +37,12 @@
     {
       "id": "REGISTRY-GUARD",
       "title": "Registry promotion guard (owner: freeze)",
-      "state": "BUILD_IN_PROGRESS",
+      "state": "BUILT_AWAITING_AUDIT",
       "branch": "feature/registry-promotion-guard-20260829",
-      "commit": "-",
-      "detail": "Owner ask-1 answer 'freeze': rebuilds frozen, 44 mis-labelled files untouched, guard build authorized with DEFER stored-data choice. Lane W1 building per SPEC_READY_REGISTRY_GUARD.md (audited + confirmed).",
+      "commit": "1fa12d60",
+      "detail": "Built per spec under DEFER: promotion only on all-promoted-ladder tokens, Option-C empty admission set, RESEARCH_ONLY badge for robust_final, regression suite. RED shown against pre-fix writer; GREEN census 0 stored-pair mismatches; 63 producer specs proven byte-identical (SHA-256 manifest). Tier T1.",
       "owner_gate": false,
-      "next_action": "W1 commit -> audit -> PR"
+      "next_action": "different-model confirm audit -> PR"
     },
     {
       "id": "RANGEFILTER-DOC",
@@ -57,12 +57,12 @@
     {
       "id": "SCORECARD-HONESTY",
       "title": "Gate scorecards: computed regime flag, honest stamps, queue-readable fields (owner: correct + writer-populates)",
-      "state": "BUILD_IN_PROGRESS",
+      "state": "BUILT_AWAITING_AUDIT",
       "branch": "feature/scorecard-honesty-20260829",
-      "commit": "-",
-      "detail": "Owner asks 3+4: fix hardcoded regime_breakdown_present (4 Gate-2 points on the admission path), neutralise ~41 existence-stamps (Option B), writer populates the two numbers the forward-paper queue reads. Stored scorecards NOT regenerated (freeze). Lane W34.",
+      "commit": "54989afe",
+      "detail": "Built: regime_breakdown_present computed (coverage > 0) with 4-point RED shown; exactly 41 of 78 stamps neutralised (pattern-pinned census); writer populates the two queue-read numbers with producer-named values, no fabrication on missing computation. One extra in-scope dependency found+fixed (evaluation builder erased computed false to N_A). Stored artifacts untouched. Tier T1.",
       "owner_gate": false,
-      "next_action": "W34 commit -> audit -> PR"
+      "next_action": "different-model confirm audit -> PR"
     },
     {
       "id": "FLATTEN-MIGRATION-PKG",
