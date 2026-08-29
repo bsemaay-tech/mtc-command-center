@@ -1,8 +1,8 @@
 ﻿{
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-29T12:05:00+03:00",
-  "updated_by": "claude-lead-session-2026-08-29",
+  "generated": "2026-08-29T21:10:00+03:00",
+  "updated_by": "claude-lead-session-2026-08-29-evening",
   "packages": [
     {
       "id": "WP-P0-10",
@@ -67,12 +67,12 @@
     {
       "id": "FLATTEN-MIGRATION-PKG",
       "title": "Controlled-flatten policy + deliberate migration runbook (owner: policy yes, no arming; deliberate only)",
-      "state": "DELIVERED_AWAITING_AUDIT",
+      "state": "CONFIRMED_FOR_OWNER",
       "branch": "-",
       "commit": "-",
-      "detail": "Runbook delivered, then detection audit G12 found 3 HIGH + 3 MEDIUM (wrong backup-tool CLI verbs; post-check probes not targeting the migrated DB; a latch probe that cannot fire). Repair lane W1112b running. Do NOT hand to owner until repaired and re-checked.",
-      "owner_gate": false,
-      "next_action": "W1112b repair -> re-check -> owner review"
+      "detail": "Runbook repaired through W1112b/W1112c (4 findings closed, 2 honest CANNOT recorded) and CONFIRMED FOR OWNER by P17 (AUDIT_P17_RUNBOOK_FINAL.md). Ready for the owner to read: OWNER_RUNBOOK_SCHEMA_MIGRATION_AND_FLATTEN.md. Execution is a separate future owner go in a supervised session.",
+      "owner_gate": true,
+      "next_action": "owner reads runbook; schedules deliberate migration run separately"
     },
     {
       "id": "PINE-GUARD-REQUIRED",
@@ -87,12 +87,12 @@
     {
       "id": "BRIDGE-FAIL-CLOSED",
       "title": "Bridge refuses unimplemented settings (owner: fail closed)",
-      "state": "QUEUED",
+      "state": "DESIGN_COMPLETE_DELTA_RECHECK_RUNNING",
       "branch": "-",
       "commit": "-",
-      "detail": "Owner ask-10 answer authorizes the code work: bridge refuses to start on a setting it does not implement. Design-first per DESIGN_DEFECT_PATTERNS. Build+tests+PR only; NO deployment to any host.",
-      "owner_gate": false,
-      "next_action": "next lane wave (W10): design + build"
+      "detail": "Design COMPLETE: W10c closed both remaining findings; all findings from both flagships (N43, P15) + path-swap closed. Evening session runs an optional both-auditor delta re-confirm of the W10c edits (P20 flagship + N48 detection + Gemini corroboration). BUILD is gated: the design requires an owner-authorized corrected config candidate (exact bridge.yaml bytes) before implementation. Build+tests+PR only; NO deployment to any host.",
+      "owner_gate": true,
+      "next_action": "OWNER: authorize preparing the corrected bridge.yaml candidate (or supply preferences); then build lane"
     },
     {
       "id": "SURVEY-SAFETY-SENTENCE",
@@ -113,6 +113,26 @@
       "detail": "Done 2026-08-29: dirty edits rescue-committed as 1e416b88 on codex/bridge-help-wiki and pushed; root moved to root/current-20260829 at current master content (master itself lives in the WFMERGE54 worktree so the root cannot hold it). Nothing discarded; untracked session artifacts left in place.",
       "owner_gate": false,
       "next_action": "none"
+    },
+    {
+      "id": "WP-P0-12",
+      "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
+      "state": "DESIGN_BLOCKED_SECOND_AUDIT_RUNNING",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Design P012_BUILD_DESIGN_V1.md (W45) audited BLOCK by N45 (self-checking acceptance gate + 3 open semantics + determinism). Evening session dispatched the second-family design audit (G17 Grok + Gemini corroboration per OD-20260829-1). Next: union of both auditors' findings -> one repair round by the author family -> re-audit. BUILD starts only after P0-11 accepts. Tier T0.",
+      "owner_gate": false,
+      "next_action": "G17 second-family audit -> union repair -> re-audit"
+    },
+    {
+      "id": "WP-P0-20",
+      "title": "Control-parity checklist + statistical-battery definition (migration gate papers)",
+      "state": "PAPERS_UNDER_FLAGSHIP_AUDIT",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Both papers delivered (W20P). Grok citation check G16 done: 16 findings (5 HIGH / 6 MEDIUM / 5 LOW), detection only. Evening session dispatched the flagship design audit (P19 Claude Pro + Gemini corroboration) which must reproduce or refute every G16 HIGH/MEDIUM on code facts. Chain stays serial: 11 -> 12 -> 20 -> 13 -> 31M1 -> 14; no downstream build early.",
+      "owner_gate": false,
+      "next_action": "P19 flagship audit -> repair if needed"
     },
     {
       "id": "PROMOTION-DECISION",
