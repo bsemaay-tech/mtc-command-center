@@ -533,6 +533,22 @@ def build_artifact(
             regime_data.get("regime_coverage_count", 0),
             "mega:summary.regime_analysis.regime_coverage_count",
         )
+    elif regime_data.get("regime_breakdown_present") is False:
+        regime["regime_breakdown_present"] = _ok(
+            False, "mega:summary.regime_analysis.regime_breakdown_present"
+        )
+        regime["weak_regime_identified"] = _na(
+            "regime stage ran but no bucket had trades",
+            "mega:summary.regime_analysis.weak_regime_identified",
+        )
+        regime["worst_regime_return_pct"] = _na(
+            "regime stage ran but no bucket had trades",
+            "mega:summary.regime_analysis.worst_regime_return_pct",
+        )
+        metrics["regime_coverage_count"] = _ok(
+            regime_data.get("regime_coverage_count", 0),
+            "mega:summary.regime_analysis.regime_coverage_count",
+        )
     else:
         for _rname in (
             "regime_breakdown_present",
