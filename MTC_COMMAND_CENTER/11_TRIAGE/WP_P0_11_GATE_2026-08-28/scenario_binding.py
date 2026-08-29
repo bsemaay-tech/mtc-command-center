@@ -21,6 +21,11 @@ SCENARIO_TOP_LEVEL_KEYS = frozenset(
 )
 
 EXPECTED_ROW_POSITIONS = {f"C{index:02d}": index - 1 for index in range(1, 43)}
+EXECUTION_OBSERVATION = "EXECUTION_OBSERVATION"
+SOURCE_CORROBORATION = "SOURCE_CORROBORATION"
+AUTHORITY_EVIDENCE_MODES = frozenset(
+    {EXECUTION_OBSERVATION, SOURCE_CORROBORATION}
+)
 
 class ScenarioBindingError(RuntimeError):
     pass
@@ -92,39 +97,108 @@ class ExpectationProvenance:
 
 
 @dataclass(frozen=True)
+class AuthorityRequirement:
+    name: str
+    evidence_mode: str
+
+    @classmethod
+    def from_mapping(cls, value: Mapping[str, Any]) -> AuthorityRequirement:
+        _require_type(value, dict, "$.clean_producer_corroboration.authority_requirements[]")
+        _require_exact_keys(
+            value,
+            {"name", "evidence_mode"},
+            "$.clean_producer_corroboration.authority_requirements[]",
+        )
+        _require_type(
+            value["name"], str, "$.clean_producer_corroboration.authority_requirements[].name"
+        )
+        _require_type(
+            value["evidence_mode"],
+            str,
+            "$.clean_producer_corroboration.authority_requirements[].evidence_mode",
+        )
+        if value["evidence_mode"] not in AUTHORITY_EVIDENCE_MODES:
+            raise ScenarioValueError(
+                "$.clean_producer_corroboration.authority_requirements[].evidence_mode "
+                f"must be one of {sorted(AUTHORITY_EVIDENCE_MODES)}"
+            )
+        return cls(name=value["name"], evidence_mode=value["evidence_mode"])
+
+    def as_mapping(self) -> dict[str, str]:
+        return {"name": self.name, "evidence_mode": self.evidence_mode}
+
+
+@dataclass(frozen=True)
 class ProducerCorroboration:
     status: str
     required: bool
-    authority_names: tuple[str, ...]
+    authority_requirements: tuple[AuthorityRequirement, ...]
+    declaration_format: str = "TYPED"
+
+    @property
+    def authority_names(self) -> tuple[str, ...]:
+        return tuple(item.name for item in self.authority_requirements)
 
     @classmethod
     def from_mapping(cls, value: Mapping[str, Any]) -> ProducerCorroboration:
-        _require_exact_keys(
-            value,
-            {"status", "required", "authority_names"},
-            "$.clean_producer_corroboration",
-        )
+        _require_type(value, dict, "$.clean_producer_corroboration")
+        keys = set(value)
+        typed_keys = {"status", "required", "authority_requirements"}
+        legacy_keys = {"status", "required", "authority_names"}
+        if keys not in (typed_keys, legacy_keys):
+            _require_exact_keys(value, typed_keys, "$.clean_producer_corroboration")
         _require_type(value["status"], str, "$.clean_producer_corroboration.status")
         _require_type(value["required"], bool, "$.clean_producer_corroboration.required")
-        _require_type(
-            value["authority_names"], list, "$.clean_producer_corroboration.authority_names"
-        )
-        if any(type(item) is not str for item in value["authority_names"]):
-            raise ScenarioShapeError(
-                "$.clean_producer_corroboration.authority_names must contain only strings"
+        if keys == legacy_keys:
+            _require_type(
+                value["authority_names"],
+                list,
+                "$.clean_producer_corroboration.authority_names",
+            )
+            if any(type(item) is not str for item in value["authority_names"]):
+                raise ScenarioShapeError(
+                    "$.clean_producer_corroboration.authority_names must contain only strings"
+                )
+            requirements = tuple(
+                AuthorityRequirement(item, EXECUTION_OBSERVATION)
+                for item in value["authority_names"]
+            )
+            declaration_format = "LEGACY_UNTYPED"
+        else:
+            _require_type(
+                value["authority_requirements"],
+                list,
+                "$.clean_producer_corroboration.authority_requirements",
+            )
+            requirements = tuple(
+                AuthorityRequirement.from_mapping(item)
+                for item in value["authority_requirements"]
+            )
+            declaration_format = "TYPED"
+        names = [item.name for item in requirements]
+        if not names or len(names) != len(set(names)):
+            raise ScenarioValueError(
+                "$.clean_producer_corroboration authority names must be nonempty and unique"
             )
         return cls(
             status=value["status"],
             required=value["required"],
-            authority_names=tuple(value["authority_names"]),
+            authority_requirements=requirements,
+            declaration_format=declaration_format,
         )
 
     def as_mapping(self) -> dict[str, Any]:
-        return {
+        result: dict[str, Any] = {
             "status": self.status,
             "required": self.required,
-            "authority_names": list(self.authority_names),
         }
+        if self.declaration_format == "LEGACY_UNTYPED":
+            result["authority_names"] = list(self.authority_names)
+        else:
+            result["authority_requirements"] = [
+                item.as_mapping() for item in self.authority_requirements
+            ]
+        return result
 
 
 @dataclass(frozen=True)
@@ -390,10 +464,10 @@ def manifest_scenario_from_manifest(source: ManifestScenarioSource) -> Mapping[s
 
 
 @lru_cache(maxsize=1)
-def verifier_scenario_contracts() -> Mapping[str, ScenarioContract]:
+def verifier_scenario_contracts(*, stage3: bool = False) -> Mapping[str, ScenarioContract]:
     from stage1_freeze import build_legacy_manifest
 
-    manifest = build_legacy_manifest()
+    manifest = build_legacy_manifest(stage3=False)
     contracts: dict[str, ScenarioContract] = {}
     for row in manifest["rows"]:
         if row["disposition"] != "APPLICABLE":
@@ -404,11 +478,16 @@ def verifier_scenario_contracts() -> Mapping[str, ScenarioContract]:
                 f"verifier literals for {row['row_id']} must contain exactly one scenario"
             )
         contracts[row["row_id"]] = ScenarioContract.from_mapping(next(iter(scenarios)))
+    if stage3:
+        from stage3_oracle_contracts import stage3_oracle_mappings
+
+        for row_id, mapping in stage3_oracle_mappings().items():
+            contracts[row_id] = ScenarioContract.from_mapping(mapping)
     return contracts
 
 
-def verifier_scenario_contract(row_id: str) -> ScenarioContract:
-    contract = verifier_scenario_contracts().get(row_id)
+def verifier_scenario_contract(row_id: str, *, stage3: bool = False) -> ScenarioContract:
+    contract = verifier_scenario_contracts(stage3=stage3).get(row_id)
     if contract is None:
         raise ManifestRowError(f"verifier scenario contract is absent: {row_id}")
     return ScenarioContract.from_mapping(contract.as_mapping())

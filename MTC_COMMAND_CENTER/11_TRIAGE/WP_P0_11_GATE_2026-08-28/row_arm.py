@@ -21,17 +21,25 @@ if str(_MODULE_DIR) not in sys.path:
     sys.path.insert(0, str(_MODULE_DIR))
 
 from scenario_binding import (
+    AuthorityRequirement,
     BindingLedger,
+    EXECUTION_OBSERVATION,
     EXPECTED_ROW_POSITIONS,
     ManifestScenarioSource,
     ScenarioBindingError,
     ScenarioShapeError,
     ScenarioValueError,
     ScenarioContract,
+    SOURCE_CORROBORATION,
     bind_scenario,
     lookup_manifest_row,
     manifest_scenario,
     verifier_scenario_contract,
+)
+from stage3_oracle_contracts import (
+    CORROBORATION_STATUS as STAGE3_CORROBORATION_STATUS,
+    stage3_oracle_mapping,
+    stage3_required_authority_modes,
 )
 from stage1_freeze import (
     CORROBORATION_STATUS,
@@ -41,6 +49,7 @@ from stage1_freeze import (
 
 
 GATE_VERSION = "P011-LC-GATE-v2"
+STAGE3_GATE_VERSION = "P011-LC-GATE-v3"
 SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 A_TREE_OID = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
 LEGACY_MANIFEST_SHA256 = "29ecc19947bd5400293709cccd7fe0e46aceeb013cc8fb0f2d7965a16c515ed3"
@@ -61,6 +70,19 @@ C32_AUTHORITY_VALUES = (
     "next_bar_close_after_protective_exit_signal",
 )
 C32_INVALID_CONTROL = "next_bar_open"
+COMPARISON_RULE_ID = "RECURSIVE_EXACT_IEEE754_HEX_V1"
+AUTHORITY_TERMINAL_DISPOSITIONS = frozenset(
+    {
+        "EXECUTED",
+        "SOURCE_CORROBORATED",
+        "NOT_EXECUTED",
+        "SOURCE_NOT_CORROBORATED",
+        "UNDECLARED_EVIDENCE",
+    }
+)
+EVIDENCE_MODE_NOT_IMPLEMENTED_ROWS = frozenset(
+    {"C03", "C04", "C26", "C38", "C39", "C41"}
+)
 
 GATE_DIR = Path(__file__).resolve().parent
 REPO_ROOT = GATE_DIR.parents[2]
@@ -71,6 +93,7 @@ MANIFEST_PATH = GATE_DIR / "p011_legacy_manifest.json"
 RECEIPT_PATH = GATE_DIR / "P011_GATE_RECEIPT.json"
 SCHEMA_PATH = GATE_DIR / "P011_OBSERVATION_SCHEMA_v1.json"
 ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v2.owner-signed.json")
+STAGE3_SCRATCH_ROOT = Path(r"C:\tmp\N51_VARIANTS")
 P009_REL = Path(
     "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/"
     "CAPABILITY_CANONICALIZATION_TABLE.md"
@@ -111,10 +134,17 @@ class RowContract:
     mutation: Mutation
     producer: Callable[[dict[str, Any]], tuple[dict[str, Any], dict[str, Any]]]
     required_authority_names: tuple[str, ...] = ("A_CURRENT_MASTER",)
+    required_authority_evidence: tuple[tuple[str, str], ...] = ()
     corroboration_status: str = CORROBORATION_STATUS
     authority_kind: str = "A"
     manifest_expected_observation: dict[str, Any] | None = None
     manifest_expected_final_state: dict[str, Any] | None = None
+
+    def authority_requirements(self) -> tuple[AuthorityRequirement, ...]:
+        declared = self.required_authority_evidence or tuple(
+            (name, EXECUTION_OBSERVATION) for name in self.required_authority_names
+        )
+        return tuple(AuthorityRequirement(name, mode) for name, mode in declared)
 
 
 def sha256_bytes(payload: bytes) -> str:
@@ -176,46 +206,135 @@ def consume_producer_mutation_red(
     }
 
 
-def consume_authority_execution(
-    binding: BindingLedger, observation: dict[str, Any]
+def validate_authority_dispositions(
+    requirements: tuple[AuthorityRequirement, ...],
+    terminal_dispositions: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    declared_contract = binding.contract.clean_producer_corroboration
-    declared = tuple(declared_contract.authority_names)
-    actual_names = observation.get("actual_authority_names")
-    runtime_imports = observation.get("runtime_imports")
+    if any(type(item) is not dict for item in terminal_dispositions):
+        raise RowStop("STOP_AUTHORITY_EVIDENCE_INCOMPLETE: malformed terminal disposition")
+    by_name: dict[str, list[dict[str, Any]]] = {}
+    for item in terminal_dispositions:
+        name = item.get("authority_name")
+        disposition = item.get("disposition")
+        if type(name) is not str or disposition not in AUTHORITY_TERMINAL_DISPOSITIONS:
+            raise RowStop("STOP_AUTHORITY_EVIDENCE_INCOMPLETE: malformed terminal disposition")
+        by_name.setdefault(name, []).append(item)
+    required_by_name = {item.name: item for item in requirements}
+    missing = sorted(name for name in required_by_name if name not in by_name)
+    duplicates = sorted(name for name, items in by_name.items() if len(items) != 1)
+    if missing or duplicates:
+        raise RowStop(
+            "STOP_AUTHORITY_EVIDENCE_INCOMPLETE: "
+            f"missing={missing} duplicate={duplicates}"
+        )
+    incompatible: list[str] = []
+    for name, requirement in required_by_name.items():
+        disposition = by_name[name][0]["disposition"]
+        accepted = (
+            disposition == "EXECUTED"
+            if requirement.evidence_mode == EXECUTION_OBSERVATION
+            else disposition == "SOURCE_CORROBORATED"
+        )
+        if not accepted:
+            incompatible.append(name)
+    undeclared = sorted(name for name in by_name if name not in required_by_name)
+    return {
+        "complete": True,
+        "requirements": [item.as_mapping() for item in requirements],
+        "terminal_dispositions": terminal_dispositions,
+        "satisfied": not incompatible and not undeclared,
+        "unsatisfied": sorted(incompatible),
+        "undeclared": undeclared,
+    }
+
+
+def consume_authority_evidence(
+    requirements: tuple[AuthorityRequirement, ...],
+    execution_observation: dict[str, Any],
+    source_observations: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    actual_names = execution_observation.get("actual_authority_names")
+    runtime_imports = execution_observation.get("runtime_imports")
     if (
         type(actual_names) is not list
         or any(type(item) is not str for item in actual_names)
         or type(runtime_imports) is not list
-        or type(observation.get("method")) is not str
-        or type(observation.get("reason")) is not str
+        or type(execution_observation.get("method")) is not str
+        or type(execution_observation.get("reason")) is not str
     ):
         raise RowStop("authority_execution refused: runtime observation is malformed")
-    actual = tuple(actual_names)
-    declared_set = set(declared)
-    actual_set = set(actual)
-    terminal_dispositions = [
+    declared_set = {item.name for item in requirements}
+    actual_set = set(actual_names)
+    terminal_dispositions: list[dict[str, Any]] = []
+    source_by_name = {
+        item.get("authority_name"): item
+        for item in (source_observations or [])
+        if type(item) is dict and type(item.get("authority_name")) is str
+    }
+    for requirement in requirements:
+        if requirement.evidence_mode == EXECUTION_OBSERVATION:
+            terminal_dispositions.append(
+                {
+                    "authority_name": requirement.name,
+                    "evidence_mode": requirement.evidence_mode,
+                    "disposition": (
+                        "EXECUTED" if requirement.name in actual_set else "NOT_EXECUTED"
+                    ),
+                }
+            )
+        else:
+            source = source_by_name.get(requirement.name)
+            terminal_dispositions.append(
+                {
+                    "authority_name": requirement.name,
+                    "evidence_mode": requirement.evidence_mode,
+                    "disposition": (
+                        "SOURCE_CORROBORATED"
+                        if source is not None and source.get("corroborated") is True
+                        else "SOURCE_NOT_CORROBORATED"
+                    ),
+                    "source_observation": source,
+                }
+            )
+    terminal_dispositions.extend(
         {
             "authority_name": name,
-            "disposition": "EXECUTED" if name in actual_set else "NOT_EXECUTED",
+            "evidence_mode": EXECUTION_OBSERVATION,
+            "disposition": "UNDECLARED_EVIDENCE",
         }
-        for name in declared
-    ]
-    terminal_dispositions.extend(
-        {"authority_name": name, "disposition": "UNDECLARED_EXECUTION"}
         for name in sorted(actual_set - declared_set)
     )
-    evidence = {
+    terminal_dispositions.extend(
+        {
+            "authority_name": name,
+            "evidence_mode": SOURCE_CORROBORATION,
+            "disposition": "UNDECLARED_EVIDENCE",
+            "source_observation": source_by_name[name],
+        }
+        for name in sorted(set(source_by_name) - declared_set)
+    )
+    accounting = validate_authority_dispositions(requirements, terminal_dispositions)
+    return {
         "actual_authority_names": sorted(actual_set),
         "declared_authority_names": sorted(declared_set),
-        "exact_set_match": actual_set == declared_set,
-        "missing": sorted(declared_set - actual_set),
-        "observation": observation,
-        "status": declared_contract.status,
-        "terminal_dispositions": terminal_dispositions,
-        "unexpected": sorted(actual_set - declared_set),
+        "exact_set_match": accounting["satisfied"],
+        "execution_observation": execution_observation,
+        "missing": accounting["unsatisfied"],
+        "observation": execution_observation,
+        "source_observations": source_observations or [],
+        "status": STAGE3_CORROBORATION_STATUS,
+        "unexpected": accounting["undeclared"],
+        **accounting,
     }
-    return evidence
+
+
+def consume_authority_execution(
+    binding: BindingLedger, observation: dict[str, Any]
+) -> dict[str, Any]:
+    return consume_authority_evidence(
+        binding.contract.clean_producer_corroboration.authority_requirements,
+        observation,
+    )
 
 
 def partition_c32_results(
@@ -346,6 +465,9 @@ def compare_exact(
     if type(expected) is not type(actual) or expected != actual:
         mismatches.append({"path": path, "expected": expected, "actual": actual, "reason": "value"})
     return mismatches
+
+
+compare_exact.comparison_rule_id = COMPARISON_RULE_ID
 
 
 def _static_signal_producer(signals: list[Any]) -> Any:
@@ -1515,26 +1637,294 @@ def produce_c41(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]
     }, {"legacy_substitution_observed": htf.value == inputs["htf_close"], "raw_gated_independence_evidenced": differs}
 
 
-def produce_c42(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    from mtc_v2.signals.range_filter import RangeFilterSignal
-    from mtc_v2.signals.supertrend import SupertrendSignal
+def _fixture_bar(item: dict[str, Any]) -> Any:
+    return _bar(
+        index=int(item["bar_index"]),
+        open_=float(item["open"]),
+        high=float(item["high"]),
+        low=float(item["low"]),
+        close=float(item["close"]),
+        volume=float(item["volume"]),
+    )
 
-    rf = RangeFilterSignal({"rf_range": inputs["range_filter"]["rf_range"]})
-    rf_signals = [
-        rf.calculate(_bar(index=index, open_=price, high=price, low=price, close=price))
-        for index, price in enumerate(inputs["range_filter"]["prices"])
-    ]
-    st = SupertrendSignal({"st_atr_len": 1, "st_factor": 1.0, "st_use_ha": inputs["supertrend"]["st_use_ha"]})
-    st_signals = [
-        st.calculate(_bar(index=index, open_=100.0, high=100.0, low=100.0, close=100.0))
-        for index in range(inputs["supertrend"]["bar_count"])
-    ]
+
+def _position_summary(position: Any) -> dict[str, Any] | None:
+    if position is None:
+        return None
     return {
-        "range_filter_event_count": sum(item.long or item.short for item in rf_signals),
-        "supertrend_signals": [
-            {"long": item.long, "reason": item.reason, "short": item.short} for item in st_signals
-        ],
-    }, {"producer_count": 2}
+        "side": position.side,
+        "entry_bar": position.entry_bar,
+        "entry_price": position.avg_entry_price,
+        "quantity": position.qty,
+    }
+
+
+def _run_bar_and_capture_events(runner: Any, bar: Any) -> tuple[Any, list[dict[str, Any]]]:
+    before_position = runner.state.position
+    before_side = None if before_position is None else before_position.side
+    before_entries = runner.state.total_entries
+    raw = runner.run([bar])[0]
+    events: list[dict[str, Any]] = []
+    for event in runner.state.exit_events_this_bar:
+        exit_side = before_side or "unknown"
+        events.append(
+            {
+                "bar_index": event.bar_index,
+                "event": f"EXIT_{exit_side.upper()}",
+                "price": event.exit_price,
+                "quantity": event.exit_qty,
+                "reason": event.exit_reason,
+                "realized_pnl": event.realized_pnl,
+            }
+        )
+    if runner.state.total_entries > before_entries and runner.state.position is not None:
+        position = runner.state.position
+        events.append(
+            {
+                "bar_index": bar.bar_index,
+                "event": f"ENTER_{position.side.upper()}",
+                "price": position.avg_entry_price,
+                "quantity": position.qty,
+                "reason": runner.state.opened_this_bar_reason,
+            }
+        )
+    return raw, events
+
+
+def produce_c32(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.config import resolve_config
+    from mtc_v2.core.types import RawSignal
+
+    accepted_values = list(inputs["accepted_values"])
+    if tuple(accepted_values) != C32_AUTHORITY_VALUES:
+        raise RowStop("C32 candidate accepted-value inventory differs from verifier literal")
+    invalid_value = str(inputs["invalid_control"])
+    try:
+        resolve_config({"tw_reversal_reentry_mode": invalid_value})
+    except Exception as exc:
+        invalid_control = {
+            "accepted": False,
+            "accepted_values": accepted_values,
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+            "value": invalid_value,
+        }
+    else:
+        invalid_control = {
+            "accepted": True,
+            "accepted_values": accepted_values,
+            "error_type": None,
+            "error": None,
+            "value": invalid_value,
+        }
+
+    runs: list[dict[str, Any]] = []
+    final_runs: list[dict[str, Any]] = []
+    for value in accepted_values:
+        signals = [
+            RawSignal(
+                bool(item["raw_long"]),
+                bool(item["raw_short"]),
+                "c32_fixture_signal",
+                direction=1 if item["raw_long"] else (-1 if item["raw_short"] else 0),
+                line=float(item["close"]),
+            )
+            for item in inputs["bars"]
+        ]
+        runner = _runner(
+            signals,
+            **dict(inputs["config"]),
+            tw_reversal_reentry_mode=value,
+        )
+        events: list[dict[str, Any]] = []
+        for item in inputs["bars"]:
+            _raw, bar_events = _run_bar_and_capture_events(runner, _fixture_bar(item))
+            events.extend(bar_events)
+        entry_events = [item for item in events if item["event"] == "ENTER_LONG"]
+        if len(entry_events) != 2:
+            raise RowStop(f"C32 {value} did not produce exactly two long entries")
+        reentry = entry_events[-1]
+        runs.append(
+            {
+                "value": value,
+                "events": events,
+                "reentry": {
+                    "bar_index": reentry["bar_index"],
+                    "price": reentry["price"],
+                    "quantity": reentry["quantity"],
+                },
+            }
+        )
+        final_runs.append(
+            {
+                "value": value,
+                "position": _position_summary(runner.state.position),
+                "realized_pnl": runner.state.realized_equity,
+                "total_entries": runner.state.total_entries,
+                "total_exits": runner.state.total_exits,
+            }
+        )
+    return {"runs": runs, "invalid_control": invalid_control}, {"runs": final_runs}
+
+
+def produce_c34(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.types import RawSignal
+
+    observed_arms: dict[str, Any] = {}
+    final_arms: dict[str, Any] = {}
+    for arm in inputs["arms"]:
+        signals = [
+            RawSignal(
+                bool(item["raw_long"]),
+                bool(item["raw_short"]),
+                "c34_fixture_signal",
+                direction=1 if item["raw_long"] else (-1 if item["raw_short"] else 0),
+                line=float(item["close"]),
+            )
+            for item in inputs["bars"]
+        ]
+        runner = _runner(
+            signals,
+            **dict(inputs["config"]),
+            tw_audit_semantics_mode=arm["tw_audit_semantics_mode"],
+            tw_margin_call_mode=arm["tw_margin_call_mode"],
+        )
+        checkpoints: list[dict[str, Any]] = []
+        original = runner._tw_margin_call_exit_pct
+
+        def observe_checkpoint(*, mark_price: float) -> float:
+            position = runner.state.position
+            if position is None:
+                raise RowStop("C34 checkpoint reached without a position")
+            margin_frac = runner.margin_long_pct / 100.0
+            equity = (
+                runner.state.initial_capital
+                + runner.state.realized_equity
+                + (mark_price - position.avg_entry_price) * position.qty
+            )
+            required = mark_price * position.qty * margin_frac
+            exit_fraction = original(mark_price=mark_price)
+            checkpoints.append(
+                {
+                    "mark": mark_price,
+                    "required_margin": required,
+                    "equity": equity,
+                    "deficit": required - equity,
+                    "exit_fraction": exit_fraction,
+                }
+            )
+            return exit_fraction
+
+        runner._tw_margin_call_exit_pct = observe_checkpoint
+        events: list[dict[str, Any]] = []
+        for item in inputs["bars"]:
+            _raw, bar_events = _run_bar_and_capture_events(runner, _fixture_bar(item))
+            events.extend(bar_events)
+        arm_id = str(arm["arm"])
+        observed_arms[arm_id] = {"checkpoints": checkpoints, "events": events}
+        final_close = float(inputs["bars"][-1]["close"])
+        position = runner.state.position
+        equity_at_final_close = runner.state.initial_capital + runner.state.realized_equity
+        if position is not None:
+            equity_at_final_close += (
+                final_close - position.avg_entry_price
+            ) * position.qty
+        final_arms[arm_id] = {
+            "position": _position_summary(position),
+            "realized_pnl": runner.state.realized_equity,
+            "equity_at_final_close": equity_at_final_close,
+            "total_entries": runner.state.total_entries,
+            "total_exits": runner.state.total_exits,
+        }
+    return {
+        "arms": observed_arms,
+        "l1_l3_field_identical": observed_arms["L1"] == observed_arms["L3"],
+    }, {"arms": final_arms}
+
+
+def produce_c42(inputs: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    from mtc_v2.core.config import DEFAULT_CONFIG
+    from mtc_v2.core.runner import Runner
+
+    disabled_gates = (
+        "use_ma_filter",
+        "use_ma_slope_filter",
+        "use_mcginley_filter",
+        "use_volume_filter",
+        "use_adx_filter",
+        "use_chop_filter",
+        "use_atr_vol_floor",
+        "use_macd_regime_filter",
+        "use_macd_cross_filter",
+        "use_macd_hist_filter",
+        "use_macd_zero_dist_filter",
+        "use_candle_pattern_gate",
+        "use_level_proximity_gate",
+        "use_macd_htf_bias",
+        "use_momentum_filter",
+        "use_session_filter",
+    )
+    observed_arms: dict[str, Any] = {}
+    final_arms: dict[str, Any] = {}
+    for arm_id, arm in inputs["arms"].items():
+        config = dict(DEFAULT_CONFIG)
+        for key in disabled_gates:
+            config[key] = False
+        config.update(dict(inputs["common_config"]))
+        config.update(dict(arm["config"]))
+        runner = Runner(config)
+        runner.state.warmup_bars = 0
+        raw_signals: list[dict[str, Any]] = []
+        fills: list[dict[str, Any]] = []
+        for item in arm["bars"]:
+            raw, events = _run_bar_and_capture_events(runner, _fixture_bar(item))
+            raw_signals.append(
+                {
+                    "long": raw.long,
+                    "short": raw.short,
+                    "reason": raw.reason,
+                    "direction": raw.direction,
+                    "line": raw.line,
+                }
+            )
+            fills.extend(events)
+        observed_arms[arm_id] = {"raw_signals": raw_signals, "fills": fills}
+        final_arms[arm_id] = {
+            "position": _position_summary(runner.state.position),
+            "realized_pnl": runner.state.realized_equity,
+            "total_entries": runner.state.total_entries,
+            "total_exits": runner.state.total_exits,
+        }
+    return {"arms": observed_arms}, {"arms": final_arms}
+
+
+def _stage3_row_contract(
+    row_id: str,
+    *,
+    mutation: Mutation,
+    producer: Callable[[dict[str, Any]], tuple[dict[str, Any], dict[str, Any]]],
+    citations: tuple[str, ...],
+) -> RowContract:
+    literal = stage3_oracle_mapping(row_id)
+    return RowContract(
+        row_id=row_id,
+        scenario_id=literal["scenario_id"],
+        producer_adapter=literal["producer_adapter"],
+        authority_name="implementation A at pinned tree",
+        authority_commit=SOURCE_COMMIT,
+        authority_tree_oid=A_TREE_OID,
+        citations=citations,
+        complete_inputs=literal["complete_inputs"],
+        expected_observation=literal["literal_expected_observation"],
+        expected_final_state=literal["literal_expected_final_state"],
+        mutation=mutation,
+        producer=producer,
+        required_authority_names=tuple(
+            name for name, _mode in stage3_required_authority_modes(row_id)
+        ),
+        required_authority_evidence=stage3_required_authority_modes(row_id),
+        corroboration_status=STAGE3_CORROBORATION_STATUS,
+    )
 
 
 ROW_CONTRACTS: dict[str, RowContract] = {
@@ -1605,6 +1995,10 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         ),
         producer=produce_c03,
         required_authority_names=("A_CURRENT_MASTER", "PINE_CURRENT_MASTER"),
+        required_authority_evidence=(
+            ("A_CURRENT_MASTER", EXECUTION_OBSERVATION),
+            ("PINE_CURRENT_MASTER", SOURCE_CORROBORATION),
+        ),
     ),
     "C04": RowContract(
         row_id="C04",
@@ -1629,6 +2023,10 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         ),
         producer=produce_c04,
         required_authority_names=("A_CURRENT_MASTER", "PINE_CURRENT_MASTER"),
+        required_authority_evidence=(
+            ("A_CURRENT_MASTER", EXECUTION_OBSERVATION),
+            ("PINE_CURRENT_MASTER", SOURCE_CORROBORATION),
+        ),
     ),
     "C05": RowContract(
         row_id="C05",
@@ -2151,6 +2549,10 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         ),
         producer=produce_c26,
         required_authority_names=("A_CURRENT_MASTER", "PINE_CONTROLLER_FREEZE"),
+        required_authority_evidence=(
+            ("A_CURRENT_MASTER", EXECUTION_OBSERVATION),
+            ("PINE_CONTROLLER_FREEZE", SOURCE_CORROBORATION),
+        ),
         manifest_expected_observation={"duplicate_rejected_by_legacy_runner": False, "producer_outputs": 2},
         manifest_expected_final_state={"last_current_bar_index": 7},
     ),
@@ -2173,6 +2575,20 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         ),
         producer=produce_c31,
     ),
+    "C32": _stage3_row_contract(
+        "C32",
+        mutation=Mutation(
+            "C32-STAGE3-MUT-001",
+            "mtc_v2/core/runner.py",
+            "            return bars_since_exit < self.tw_reversal_reentry_delay_bars\n",
+            "            return bars_since_exit <= self.tw_reversal_reentry_delay_bars\n",
+        ),
+        producer=produce_c32,
+        citations=(
+            "A config.py:458-469; runner.py:1289-1409",
+            "P009 pinned blob 1c39ab93:830-870",
+        ),
+    ),
     "C33": RowContract(
         row_id="C33",
         scenario_id="C33-LEGACY-001",
@@ -2191,6 +2607,20 @@ ROW_CONTRACTS: dict[str, RowContract] = {
             "            return bars_since_exit <= self.tw_reversal_reentry_delay_bars\n",
         ),
         producer=produce_c33,
+    ),
+    "C34": _stage3_row_contract(
+        "C34",
+        mutation=Mutation(
+            "C34-STAGE3-MUT-001",
+            "mtc_v2/core/runner.py",
+            "        liquidation_qty = (deficit * 4.0) / (mark_price * self.instrument.contract_multiplier * margin_frac)\n",
+            "        liquidation_qty = (deficit * 1.0) / (mark_price * self.instrument.contract_multiplier * margin_frac)\n",
+        ),
+        producer=produce_c34,
+        citations=(
+            "A runner.py:1411-1472; config.py:588-593",
+            "P009 pinned blob 1c39ab93:894-917",
+        ),
     ),
     "C36": RowContract(
         row_id="C36",
@@ -2239,6 +2669,10 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         ),
         producer=produce_c38,
         required_authority_names=("B_BACKTEST_FREEZE", "A_CURRENT_MASTER"),
+        required_authority_evidence=(
+            ("B_BACKTEST_FREEZE", EXECUTION_OBSERVATION),
+            ("A_CURRENT_MASTER", SOURCE_CORROBORATION),
+        ),
         authority_kind="B",
     ),
     "C39": RowContract(
@@ -2260,6 +2694,10 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         ),
         producer=produce_c39,
         required_authority_names=("A_CURRENT_MASTER", "B_BACKTEST_FREEZE"),
+        required_authority_evidence=(
+            ("A_CURRENT_MASTER", SOURCE_CORROBORATION),
+            ("B_BACKTEST_FREEZE", EXECUTION_OBSERVATION),
+        ),
         authority_kind="B",
     ),
     "C40": RowContract(
@@ -2313,8 +2751,27 @@ ROW_CONTRACTS: dict[str, RowContract] = {
         ),
         producer=produce_c41,
         required_authority_names=("A_CURRENT_MASTER", "B_BACKTEST_FREEZE"),
+        required_authority_evidence=(
+            ("A_CURRENT_MASTER", EXECUTION_OBSERVATION),
+            ("B_BACKTEST_FREEZE", SOURCE_CORROBORATION),
+        ),
         manifest_expected_observation={"htf_substituted_value": 101.0, "missing_ltf_ma_passes": True},
         manifest_expected_final_state={"legacy_substitution_observed": True},
+    ),
+    "C42": _stage3_row_contract(
+        "C42",
+        mutation=Mutation(
+            "C42-STAGE3-MUT-001",
+            "mtc_v2/signals/range_filter.py",
+            "        elif previous_direction >= 0 and bar.close < self._line:\n",
+            "        elif previous_direction >= 0 and bar.close < self._line and False:\n",
+        ),
+        producer=produce_c42,
+        citations=(
+            "A signals/supertrend.py:18-155 and signals/range_filter.py:16-92",
+            "Pine MTC_V2.pine:470-483,548-646",
+            "P009 pinned blob 1c39ab93:1231-1276",
+        ),
     ),
 }
 
@@ -2383,6 +2840,29 @@ def validate_frozen_inputs() -> dict[str, Any]:
     return manifest
 
 
+def validate_candidate_inputs(manifest_path: Path) -> dict[str, Any]:
+    resolved = manifest_path.resolve()
+    try:
+        resolved.relative_to(STAGE3_SCRATCH_ROOT.resolve())
+    except ValueError as exc:
+        raise RowStop("candidate manifest must stay inside stage-3 scratch") from exc
+    manifest = load_json(resolved)
+    if manifest.get("gate_version") != STAGE3_GATE_VERSION:
+        raise RowFail("candidate legacy manifest is not bound to v3")
+    expected_ids = [f"C{index:02d}" for index in range(1, 43)]
+    if [row.get("row_id") for row in manifest.get("rows", [])] != expected_ids:
+        raise RowFail("candidate manifest row identities are not exactly C01-C42 in order")
+    if sha256_file(P009_PATH) != P009_SHA256:
+        raise RowFail("post-merge P0-09 authority SHA-256 differs")
+    source_tree = git("rev-parse", f"{SOURCE_COMMIT}:{A_PACKAGE_REL.as_posix()}").stdout.strip()
+    head_tree = git("rev-parse", f"HEAD:{A_PACKAGE_REL.as_posix()}").stdout.strip()
+    if source_tree != A_TREE_OID or head_tree != A_TREE_OID:
+        raise RowFail(f"implementation A tree differs: source={source_tree} head={head_tree}")
+    if git("diff", "--quiet", "--", A_PACKAGE_REL.as_posix(), check=False).returncode != 0:
+        raise RowFail("implementation A has worktree edits")
+    return manifest
+
+
 def validate_contract_binding(manifest: dict[str, Any], contract: RowContract) -> BindingLedger:
     source = ManifestScenarioSource(
         manifest=manifest,
@@ -2399,7 +2879,10 @@ def validate_contract_binding(manifest: dict[str, Any], contract: RowContract) -
         or manifest_row.get("disposition") != "APPLICABLE"
     ):
         raise RowFail(f"{contract.row_id} disposition/identity differs")
-    verifier_contract = verifier_scenario_contract(contract.row_id)
+    typed_authority = manifest.get("gate_version") == STAGE3_GATE_VERSION
+    verifier_contract = verifier_scenario_contract(
+        contract.row_id, stage3=typed_authority
+    )
     verifier_values = verifier_contract.as_mapping()
     mutation_application = mutation_application_contract(contract.mutation)
     verifier_values.update(
@@ -2418,9 +2901,22 @@ def validate_contract_binding(manifest: dict[str, Any], contract: RowContract) -
                 else contract.expected_final_state
             ),
             "clean_producer_corroboration": {
-                "status": contract.corroboration_status,
+                "status": (
+                    STAGE3_CORROBORATION_STATUS
+                    if typed_authority
+                    else contract.corroboration_status
+                ),
                 "required": True,
-                "authority_names": list(contract.required_authority_names),
+                **(
+                    {
+                        "authority_requirements": [
+                            item.as_mapping()
+                            for item in contract.authority_requirements()
+                        ]
+                    }
+                    if typed_authority
+                    else {"authority_names": list(contract.required_authority_names)}
+                ),
             },
         }
     )
@@ -2441,6 +2937,12 @@ def validate_contract_binding(manifest: dict[str, Any], contract: RowContract) -
         raise RowFail(f"{contract.row_id} frozen scenario differs: {exc}") from exc
     except ScenarioValueError as exc:
         raise RowFail(f"{contract.row_id} frozen scenario differs: {exc}") from exc
+    actual_comparison_rule = getattr(compare_exact, "comparison_rule_id", None)
+    if actual_comparison_rule != ledger.contract.comparison_rule:
+        raise RowStop(
+            f"{contract.row_id} comparator identifier differs: "
+            f"declared={ledger.contract.comparison_rule} actual={actual_comparison_rule}"
+        )
     return ledger
 
 
@@ -2606,6 +3108,190 @@ def _git_blob_bytes(ref: str, path: str) -> bytes:
     if proc.returncode != 0:
         raise RowStop(f"git show failed for {ref}:{path}: {proc.stderr.decode(errors='replace').strip()}")
     return proc.stdout
+
+
+def _range_filter_branch_sequence(source: str, *, language: str) -> dict[str, Any]:
+    source = source.replace("\r\n", "\n")
+    canonical = [
+        {"condition": "direction<0 and close>line", "actions": ["line=close-range", "direction=1", "long=true", "reason=flip_long"]},
+        {"condition": "direction<=0 and close>upper", "actions": ["line=close-range", "direction=1", "long=direction!=1", "reason=flip_long_if_long_else_hold"]},
+        {"condition": "direction>=0 and close<line", "actions": ["line=close+range", "direction=-1", "short=direction!=-1", "reason=flip_short_if_short_else_hold"]},
+        {"condition": "direction>0 and close>upper", "actions": ["line=close-range"]},
+        {"condition": "direction<0 and close<lower", "actions": ["line=close+range"]},
+    ]
+    if language == "python":
+        seams = (
+            "if previous_direction < 0 and bar.close > self._line:\n            self._line = bar.close - self.range_size\n            self._direction = 1\n            long_raw = True\n            reason = REASON_RF_FLIP_LONG",
+            "elif previous_direction <= 0 and bar.close > upper_band:\n            self._line = bar.close - self.range_size\n            self._direction = 1\n            long_raw = previous_direction != 1\n            reason = REASON_RF_FLIP_LONG if long_raw else REASON_RF_HOLD",
+            "elif previous_direction >= 0 and bar.close < self._line:\n            self._line = bar.close + self.range_size\n            self._direction = -1\n            short_raw = previous_direction != -1\n            reason = REASON_RF_FLIP_SHORT if short_raw else REASON_RF_HOLD",
+            "elif previous_direction > 0 and bar.close > upper_band:\n            self._line = bar.close - self.range_size",
+            "elif previous_direction < 0 and bar.close < lower_band:\n            self._line = bar.close + self.range_size",
+        )
+    elif language == "pine":
+        seams = (
+            "if rf_prev_direction < 0 and close > rf_line_state\n                    rf_line_state := close - rf_range\n                    rf_direction_state := 1\n                    long_raw := true\n                    raw_reason := REASON_RF_FLIP_LONG",
+            "else if rf_prev_direction <= 0 and close > rf_upper_before\n                    rf_line_state := close - rf_range\n                    rf_direction_state := 1\n                    long_raw := rf_prev_direction != 1\n                    raw_reason := long_raw ? REASON_RF_FLIP_LONG : REASON_RF_HOLD",
+            "else if rf_prev_direction >= 0 and close < rf_line_state\n                    rf_line_state := close + rf_range\n                    rf_direction_state := -1\n                    short_raw := rf_prev_direction != -1\n                    raw_reason := short_raw ? REASON_RF_FLIP_SHORT : REASON_RF_HOLD",
+            "else if rf_prev_direction > 0 and close > rf_upper_before\n                    rf_line_state := close - rf_range",
+            "else if rf_prev_direction < 0 and close < rf_lower_before\n                    rf_line_state := close + rf_range",
+        )
+    else:
+        raise RowStop(f"unknown range-filter source language: {language}")
+    missing = [index + 1 for index, seam in enumerate(seams) if seam not in source]
+    return {
+        "language": language,
+        "branch_count": len(canonical) - len(missing),
+        "missing_branch_ordinals": missing,
+        "normalized_branches": [
+            item for index, item in enumerate(canonical, start=1) if index not in missing
+        ],
+    }
+
+
+def c42_source_corroboration(pine_path: Path | None = None) -> dict[str, Any]:
+    a_rel = "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/signals/range_filter.py"
+    pine_rel = "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
+    a_path = REPO_ROOT / a_rel
+    actual_pine_path = (REPO_ROOT / pine_rel) if pine_path is None else pine_path.resolve()
+    a_bytes = a_path.read_bytes()
+    pine_bytes = actual_pine_path.read_bytes()
+    a_source = a_bytes.decode("utf-8")
+    pine_source = pine_bytes.decode("utf-8")
+    a_sequence = _range_filter_branch_sequence(a_source, language="python")
+    pine_sequence = _range_filter_branch_sequence(pine_source, language="pine")
+    a_blob = git("rev-parse", f"HEAD:{a_rel}").stdout.strip()
+    a_worktree_blob = git("hash-object", "--", a_rel).stdout.strip()
+    clean_pine = actual_pine_path == (REPO_ROOT / pine_rel).resolve()
+    pine_blob = git("rev-parse", f"HEAD:{pine_rel}").stdout.strip() if clean_pine else None
+    pine_worktree_blob = (
+        git("hash-object", "--", pine_rel).stdout.strip()
+        if clean_pine
+        else sha256_bytes(pine_bytes)
+    )
+    sequences_equal = (
+        a_sequence["missing_branch_ordinals"] == []
+        and pine_sequence["missing_branch_ordinals"] == []
+        and a_sequence["normalized_branches"] == pine_sequence["normalized_branches"]
+    )
+    identities_match_git = (
+        a_blob == a_worktree_blob
+        and clean_pine
+        and pine_blob == pine_worktree_blob
+    )
+    return {
+        "authority_name": "PINE_CURRENT_MASTER",
+        "evidence_mode": SOURCE_CORROBORATION,
+        "corroborated": sequences_equal and identities_match_git,
+        "named_producers": [
+            "A_CURRENT_MASTER_RANGE_FILTER_SOURCE",
+            "PINE_CURRENT_MASTER_RANGE_FILTER_SOURCE",
+        ],
+        "a_source": {
+            "path": a_rel,
+            "git_blob_oid": a_blob,
+            "worktree_blob_oid": a_worktree_blob,
+            "sha256": sha256_bytes(a_bytes),
+            "source_range": "42-70",
+            "branch_sequence": a_sequence,
+        },
+        "pine_source": {
+            "path": pine_rel if clean_pine else str(actual_pine_path),
+            "git_blob_oid": pine_blob,
+            "worktree_blob_or_modified_sha256": pine_worktree_blob,
+            "sha256": sha256_bytes(pine_bytes),
+            "source_range": "622-645",
+            "branch_sequence": pine_sequence,
+        },
+        "normalized_branch_sequences_equal": sequences_equal,
+        "git_identities_match_worktree": identities_match_git,
+        "pine_execution_credit": False,
+    }
+
+
+def c42_source_correspondence_evidence() -> dict[str, Any]:
+    clean = c42_source_corroboration()
+    pine_path = REPO_ROOT / "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
+    old = "else if rf_prev_direction > 0 and close > rf_upper_before"
+    new = "else if rf_prev_direction > 0 and close < rf_upper_before"
+    source = pine_path.read_text(encoding="utf-8")
+    if source.count(old) != 1:
+        raise RowStop("C42 Pine source discriminator seam is not unique")
+    with tempfile.TemporaryDirectory(prefix="p011_c42_pine_source_") as temp_name:
+        modified_path = Path(temp_name).resolve() / "MTC_V2.modified.pine"
+        modified_path.write_text(
+            source.replace(old, new, 1), encoding="utf-8", newline="\n"
+        )
+        modified = c42_source_corroboration(modified_path)
+    detected = (
+        modified["corroborated"] is False
+        and 4
+        in modified["pine_source"]["branch_sequence"]["missing_branch_ordinals"]
+    )
+    restored = c42_source_corroboration()
+    return {
+        "clean": clean,
+        "modified_copy": modified,
+        "modified_copy_disposition": "DETECTED" if detected else "NOT_DETECTED",
+        "restoration": {
+            "corroborated": restored["corroborated"],
+            "independence": "NON_INDEPENDENT_WRITER_INTEGRITY_ONLY",
+            "closure_credit": 0,
+        },
+        "satisfied": clean["corroborated"] is True and detected,
+    }
+
+
+def c42_b_configuration_discriminator() -> dict[str, Any]:
+    script = r'''
+import json, sys
+sys.path.insert(0, sys.argv[1])
+sys.path.append(sys.argv[2])
+from src.config.defaults import MTCConfig
+try:
+    MTCConfig(signal_mode="Range Filter", rf_range=10.0)
+except Exception as exc:
+    result = {"refused": True, "error_type": type(exc).__name__, "error": str(exc)}
+else:
+    result = {"refused": False, "error_type": None, "error": None}
+print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+'''
+    with tempfile.TemporaryDirectory(prefix="p011_c42_b_config_") as temp_name:
+        root = Path(temp_name).resolve()
+        files = _materialize_prefix(
+            f"{B_REF}^{{}}",
+            "MTC_COMMAND_CENTER/02_MTC_BACKTEST/src",
+            root / "src",
+        )
+        argv = [
+            str(Path(sys.executable).resolve()),
+            "-I",
+            "-c",
+            script,
+            str(root),
+            str(DEPENDENCY_ROOT),
+        ]
+        proc = subprocess.run(
+            argv,
+            cwd=REPO_ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    lines = [line for line in proc.stdout.splitlines() if line.strip()]
+    parsed = json.loads(lines[-1]) if proc.returncode == 0 and lines else None
+    refused = type(parsed) is dict and parsed.get("refused") is True
+    return {
+        "authority_name": "B_BACKTEST_FREEZE",
+        "boundary": "src.config.defaults.MTCConfig",
+        "requested": {"signal_mode": "Range Filter", "rf_range": 10.0},
+        "refused": refused,
+        "return_code": proc.returncode,
+        "parsed_output": parsed,
+        "stderr": proc.stderr,
+        "materialized_file_count": len(files),
+        "authority_commit": B_COMMIT,
+        "outcome": "REFUSED" if refused else "NOT_REFUSED",
+    }
 
 
 def _materialize_prefix(ref: str, prefix: str, destination: Path) -> list[dict[str, str]]:
@@ -3302,21 +3988,90 @@ print(json.dumps({
     return records
 
 
+def build_stage3_blocked_records(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    blocked = {
+        "C28": "STOP_TRADINGVIEW_DESKTOP_NOT_INSTALLED",
+        "C29": "STOP_TRADINGVIEW_DESKTOP_NOT_INSTALLED",
+        "C30": "STOP_TRADINGVIEW_DESKTOP_NOT_INSTALLED",
+        "C35": "STOP_PROTECTED_IMPLEMENTATION_A_APPROVAL_REQUIRED",
+    }
+    records: list[dict[str, Any]] = []
+    for row_id, status in blocked.items():
+        row = lookup_manifest_row(
+            manifest, row_id, EXPECTED_ROW_POSITIONS[row_id]
+        )
+        scenario = row.get("scenarios", [{}])[0]
+        record = {
+            "authority_execution": {
+                "complete": True,
+                "satisfied": False,
+                "terminal_disposition": status,
+            },
+            "mutation": "NOT_RUN_BLOCKED_BY_DESIGN",
+            "row_id": row_id,
+            "scenario_id": scenario.get("scenario_id"),
+            "status": status,
+            "stop_reason": status,
+        }
+        record["record_sha256"] = result_hash(record)
+        records.append(record)
+    return records
+
+
 def command_build(args: argparse.Namespace) -> int:
-    manifest = validate_frozen_inputs()
+    candidate_manifest_arg = getattr(args, "candidate_manifest", None)
+    manifest_path = (
+        Path(candidate_manifest_arg).resolve()
+        if candidate_manifest_arg
+        else MANIFEST_PATH
+    )
+    candidate_mode = candidate_manifest_arg is not None
+    manifest = (
+        validate_candidate_inputs(manifest_path)
+        if candidate_mode
+        else validate_frozen_inputs()
+    )
     requested = args.rows or list(ROW_CONTRACTS)
-    if requested != sorted(requested) or requested != list(ROW_CONTRACTS)[: len(requested)]:
+    if (
+        requested != sorted(requested)
+        or len(requested) != len(set(requested))
+        or any(row_id not in ROW_CONTRACTS for row_id in requested)
+    ):
+        raise RowStop("rows must be unique implemented adapters in manifest order")
+    if not candidate_mode and requested != list(ROW_CONTRACTS)[: len(requested)]:
         raise RowStop("rows must be a manifest-order prefix of implemented adapters")
     output_dir = Path(args.out).resolve()
+    allowed_root = STAGE3_SCRATCH_ROOT if candidate_mode else GATE_DIR
     try:
-        output_dir.relative_to(GATE_DIR)
+        output_dir.relative_to(allowed_root.resolve())
     except ValueError as exc:
-        raise RowStop("committed row-arm evidence must stay inside the gate package") from exc
+        raise RowStop(f"row-arm evidence must stay inside {allowed_root}") from exc
 
     records: list[dict[str, Any]] = []
     for row_id in requested:
         contract = ROW_CONTRACTS[row_id]
         binding = validate_contract_binding(manifest, contract)
+        if candidate_mode and row_id in EVIDENCE_MODE_NOT_IMPLEMENTED_ROWS:
+            authority_evidence = consume_authority_evidence(
+                binding.contract.clean_producer_corroboration.authority_requirements,
+                authority_execution_observation(
+                    [],
+                    method="NO_STAGE3_EVIDENCE_MODE_EXECUTION",
+                    reason="the design keeps this mixed-authority row blocked pending a separate evidence mechanism",
+                ),
+            )
+            record = {
+                "authority_execution": authority_evidence,
+                "contract_binding": contract_binding_summary(binding),
+                "mutation": "NOT_RUN_EVIDENCE_MODE_NOT_IMPLEMENTED",
+                "row_id": row_id,
+                "scenario_id": contract.scenario_id,
+                "status": "STOP_EVIDENCE_MODE_NOT_IMPLEMENTED",
+                "stop_reason": "STOP_EVIDENCE_MODE_NOT_IMPLEMENTED",
+            }
+            record["record_sha256"] = result_hash(record)
+            records.append(record)
+            continue
         with tempfile.TemporaryDirectory(prefix=f"p011_{row_id.lower()}_") as temp_name:
             temp_root = Path(temp_name).resolve()
             clean_root, materialized_files = materialize_authority(
@@ -3333,6 +4088,7 @@ def command_build(args: argparse.Namespace) -> int:
                 mode="mutant",
                 mutation_id=contract.mutation.mutation_id,
                 scratch_root=scratch_root,
+                manifest_path=manifest_path,
             )
             if red["return_code"] != 1 or (red["parsed_output"] or {}).get("outcome") != "FAIL":
                 raise RowStop(f"{row_id} producer mutation did not prove RED: {red}")
@@ -3343,6 +4099,7 @@ def command_build(args: argparse.Namespace) -> int:
                 mode="clean",
                 mutation_id="NONE_CLEAN_AUTHORITY",
                 scratch_root=temp_root,
+                manifest_path=manifest_path,
             )
             if green["return_code"] != 0 or (green["parsed_output"] or {}).get("outcome") != "PASS":
                 raise RowStop(f"{row_id} clean producer did not prove GREEN: {green}")
@@ -3354,12 +4111,33 @@ def command_build(args: argparse.Namespace) -> int:
             raise RowStop(f"{row_id} authority execution observation is missing")
         require_same_authority_names(red_observation, green_observation, row_id)
         mutation_evidence = consume_producer_mutation_red(binding, red)
-        authority_evidence = consume_authority_execution(
-            binding, green_observation
-        )
+        source_correspondence = None
+        b_configuration_discriminator = None
+        if row_id == "C42" and candidate_mode:
+            source_correspondence = c42_source_correspondence_evidence()
+            b_configuration_discriminator = c42_b_configuration_discriminator()
+            authority_evidence = consume_authority_evidence(
+                binding.contract.clean_producer_corroboration.authority_requirements,
+                green_observation,
+                [source_correspondence["clean"]],
+            )
+        else:
+            authority_evidence = consume_authority_execution(
+                binding, green_observation
+            )
         row_status = (
             "GREEN_AFTER_RED"
             if authority_evidence["exact_set_match"]
+            and (
+                row_id != "C42"
+                or not candidate_mode
+                or (
+                    source_correspondence is not None
+                    and source_correspondence["satisfied"]
+                    and b_configuration_discriminator is not None
+                    and b_configuration_discriminator["refused"]
+                )
+            )
             else "STOP_MISSING_REQUIRED_AUTHORITY"
         )
         record = {
@@ -3384,13 +4162,21 @@ def command_build(args: argparse.Namespace) -> int:
             "scenario_id": contract.scenario_id,
             "status": row_status,
         }
+        if source_correspondence is not None:
+            record["source_correspondence"] = source_correspondence
+        if b_configuration_discriminator is not None:
+            record["b_configuration_discriminator"] = b_configuration_discriminator
         if row_status != "GREEN_AFTER_RED":
             record["stop_reason"] = "MISSING_REQUIRED_AUTHORITY"
         record["record_sha256"] = result_hash(record)
         records.append(record)
 
     full_build = requested == list(ROW_CONTRACTS)
-    unresolved_records = build_unresolved_records(manifest) if full_build else []
+    unresolved_records = (
+        build_stage3_blocked_records(manifest)
+        if full_build and candidate_mode
+        else (build_unresolved_records(manifest) if full_build else [])
+    )
     records.extend(unresolved_records)
     records.sort(key=lambda item: item["row_id"])
     by_row = {record["row_id"]: record for record in records}
@@ -3459,9 +4245,11 @@ def command_build(args: argparse.Namespace) -> int:
     }
     outcome = "PASS" if counts == {"green": 40, "not_applicable": 2, "stop": 0, "total": 42} else "STOP"
     corroboration = {
-        "artifact_schema_version": "P011_ROW_CORROBORATION_v2",
+        "artifact_schema_version": (
+            "P011_ROW_CORROBORATION_v3" if candidate_mode else "P011_ROW_CORROBORATION_v2"
+        ),
         "counts": counts,
-        "gate_version": GATE_VERSION,
+        "gate_version": manifest["gate_version"],
         "outcome": outcome,
         "reason": None if outcome == "PASS" else f"row arm partial: {counts['green']} of 40 applicable rows GREEN",
         "rows": corroboration_rows,
@@ -3474,7 +4262,7 @@ def command_build(args: argparse.Namespace) -> int:
         unresolved_path,
         {
             "artifact_schema_version": "P011_UNRESOLVED_ROWS_v1",
-            "gate_version": GATE_VERSION,
+            "gate_version": manifest["gate_version"],
             "rows": unresolved_records,
         },
     )
@@ -3517,8 +4305,8 @@ def command_build(args: argparse.Namespace) -> int:
             ),
             **counts,
         },
-        "gate_version": GATE_VERSION,
-        "legacy_manifest_sha256": LEGACY_MANIFEST_SHA256,
+        "gate_version": manifest["gate_version"],
+        "legacy_manifest_sha256": sha256_file(manifest_path),
         "outcome": outcome,
         "row_arm_tool_sha256": sha256_file(Path(__file__)),
         "rows_executed": sorted(requested + [item["row_id"] for item in unresolved_records]),
@@ -3607,6 +4395,10 @@ def parser() -> argparse.ArgumentParser:
     build = sub.add_parser("build", help="execute RED/GREEN evidence and write a row-arm batch")
     build.add_argument("--out", required=True)
     build.add_argument("--rows", nargs="*")
+    build.add_argument(
+        "--candidate-manifest",
+        help="development-only v3 manifest under C:\\tmp\\N51_VARIANTS",
+    )
     build.set_defaults(handler=command_build)
 
     contract = sub.add_parser(

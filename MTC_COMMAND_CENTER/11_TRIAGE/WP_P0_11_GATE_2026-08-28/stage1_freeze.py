@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import platform
@@ -10,6 +11,9 @@ from typing import Any
 
 
 GATE_VERSION = "P011-LC-GATE-v2"
+STAGE3_GATE_VERSION = "P011-LC-GATE-v3"
+EXECUTION_OBSERVATION = "EXECUTION_OBSERVATION"
+SOURCE_CORROBORATION = "SOURCE_CORROBORATION"
 SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 A_TREE_OID = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
 PINE_FREEZE_COMMIT = "77a10e6573d93f8aaf777010ea507bbec0a7668b"
@@ -46,6 +50,13 @@ P009_PATH = (
     / "CAPABILITY_CANONICALIZATION_TABLE.md"
 )
 OWNER_AUTHORIZATION_PATH = Path(r"C:\tmp\LANE_PROMPTS_20260828\OWNER_AUTH_P011_GATE_V2.md")
+STAGE3_OWNER_AUTHORIZATION_PATH = Path(
+    r"C:\tmp\LANE_PROMPTS_20260828\OWNER_AUTH_P011_GATE_V3.md"
+)
+STAGE3_SCRATCH_ROOT = Path(r"C:\tmp\N51_VARIANTS")
+STAGE3_ANCHOR_PATH = Path(
+    r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v3.owner-signed.json"
+)
 
 
 def sha256_file(path: Path) -> str:
@@ -449,6 +460,163 @@ ROW_SCENARIOS: dict[int, dict[str, Any]] = {
 }
 
 
+def _stage3_generator_scenarios() -> dict[int, dict[str, Any]]:
+    c32_values = [
+        "local",
+        "delay_after_protective_exit",
+        "carry_to_next_bar_after_protective_exit",
+        "next_bar_open_after_protective_exit_signal",
+        "next_bar_close_after_protective_exit_signal",
+    ]
+    c32_bars = [
+        {"bar_index": 0, "timestamp": "2026-01-01T00:00:00+00:00", "open": 100.0, "high": 100.0, "low": 100.0, "close": 100.0, "volume": 1.0, "raw_long": True, "raw_short": False},
+        {"bar_index": 1, "timestamp": "2026-01-01T00:01:00+00:00", "open": 99.0, "high": 99.0, "low": 94.0, "close": 94.0, "volume": 1.0, "raw_long": True, "raw_short": False},
+        {"bar_index": 2, "timestamp": "2026-01-01T00:02:00+00:00", "open": 94.0, "high": 100.0, "low": 94.0, "close": 100.0, "volume": 1.0, "raw_long": True, "raw_short": False},
+        {"bar_index": 3, "timestamp": "2026-01-01T00:03:00+00:00", "open": 99.0, "high": 100.0, "low": 99.0, "close": 100.0, "volume": 1.0, "raw_long": False, "raw_short": False},
+        {"bar_index": 4, "timestamp": "2026-01-01T00:04:00+00:00", "open": 100.0, "high": 100.0, "low": 99.0, "close": 100.0, "volume": 1.0, "raw_long": False, "raw_short": False},
+        {"bar_index": 5, "timestamp": "2026-01-01T00:05:00+00:00", "open": 100.0, "high": 100.0, "low": 99.0, "close": 100.0, "volume": 1.0, "raw_long": True, "raw_short": False},
+    ]
+    c32_reentries = [
+        (c32_values[0], 2, 100.0, 0.994),
+        (c32_values[1], 5, 100.0, 0.994),
+        (c32_values[2], 3, 100.0, 0.994),
+        (c32_values[3], 3, 99.0, 1.00404),
+        (c32_values[4], 4, 100.0, 0.994),
+    ]
+    c32_runs = []
+    c32_final = []
+    for value, bar_index, price, quantity in c32_reentries:
+        c32_runs.append(
+            {
+                "value": value,
+                "events": [
+                    {"bar_index": 0, "event": "ENTER_LONG", "price": 100.0, "quantity": 1.0, "reason": "c32_fixture_signal"},
+                    {"bar_index": 1, "event": "EXIT_LONG", "price": 94.0, "quantity": 1.0, "reason": "sl_percent_hit", "realized_pnl": -6.0},
+                    {"bar_index": bar_index, "event": "ENTER_LONG", "price": price, "quantity": quantity, "reason": "c32_fixture_signal"},
+                ],
+                "reentry": {"bar_index": bar_index, "price": price, "quantity": quantity},
+            }
+        )
+        c32_final.append(
+            {
+                "value": value,
+                "position": {"side": "long", "entry_bar": bar_index, "entry_price": price, "quantity": quantity},
+                "realized_pnl": -6.0,
+                "total_entries": 2,
+                "total_exits": 1,
+            }
+        )
+
+    c34_bars = [
+        {"bar_index": 0, "timestamp": "2026-01-01T00:00:00+00:00", "open": 100.0, "high": 100.0, "low": 100.0, "close": 100.0, "volume": 10.0, "raw_long": True, "raw_short": False},
+        {"bar_index": 1, "timestamp": "2026-01-01T00:01:00+00:00", "open": 98.0, "high": 98.0, "low": 94.0, "close": 95.0, "volume": 10.0, "raw_long": False, "raw_short": False},
+        {"bar_index": 2, "timestamp": "2026-01-01T00:02:00+00:00", "open": 94.0, "high": 94.0, "low": 88.0, "close": 89.0, "volume": 10.0, "raw_long": False, "raw_short": False},
+        {"bar_index": 3, "timestamp": "2026-01-01T00:03:00+00:00", "open": 88.0, "high": 88.0, "low": 84.0, "close": 85.0, "volume": 10.0, "raw_long": False, "raw_short": False},
+    ]
+    c34_l1 = {"checkpoints": [], "events": [{"bar_index": 0, "event": "ENTER_LONG", "price": 100.0, "quantity": 40.0, "reason": "c34_fixture_signal"}]}
+    c34_l2 = {
+        "checkpoints": [
+            {"mark": 98.0, "required_margin": 784.0, "equity": 920.0, "deficit": -136.0, "exit_fraction": 0.0},
+            {"mark": 94.0, "required_margin": 752.0, "equity": 760.0, "deficit": -8.0, "exit_fraction": 0.0},
+            {"mark": 94.0, "required_margin": 752.0, "equity": 760.0, "deficit": -8.0, "exit_fraction": 0.0},
+            {"mark": 88.0, "required_margin": 704.0, "equity": 520.0, "deficit": 184.0, "exit_fraction": 1.0},
+        ],
+        "events": [
+            {"bar_index": 0, "event": "ENTER_LONG", "price": 100.0, "quantity": 40.0, "reason": "c34_fixture_signal"},
+            {"bar_index": 2, "event": "EXIT_LONG", "price": 88.0, "quantity": 40.0, "reason": "margin_call", "realized_pnl": -480.0},
+        ],
+    }
+    c34_open = {"position": {"side": "long", "entry_bar": 0, "entry_price": 100.0, "quantity": 40.0}, "realized_pnl": 0.0, "equity_at_final_close": 400.0, "total_entries": 1, "total_exits": 0}
+    c34_flat = {"position": None, "realized_pnl": -480.0, "equity_at_final_close": 520.0, "total_entries": 1, "total_exits": 1}
+
+    c42_common = [
+        {"bar_index": 0, "timestamp": "2026-01-01T00:00:00+00:00", "open": 100.0, "high": 102.0, "low": 98.0, "close": 100.0, "volume": 1.0},
+        {"bar_index": 1, "timestamp": "2026-01-01T00:01:00+00:00", "open": 100.0, "high": 102.0, "low": 98.0, "close": 100.0, "volume": 1.0},
+        {"bar_index": 2, "timestamp": "2026-01-01T00:02:00+00:00", "open": 100.0, "high": 102.0, "low": 90.0, "close": 95.0, "volume": 1.0},
+        {"bar_index": 3, "timestamp": "2026-01-01T00:03:00+00:00", "open": 95.0, "high": 110.0, "low": 95.0, "close": 109.0, "volume": 1.0},
+        {"bar_index": 4, "timestamp": "2026-01-01T00:04:00+00:00", "open": 109.0, "high": 110.0, "low": 108.0, "close": 109.0, "volume": 1.0},
+    ]
+    c42_f3_wick = [
+        c42_common[0],
+        {"bar_index": 1, "timestamp": "2026-01-01T00:01:00+00:00", "open": 100.0, "high": 102.0, "low": 94.0, "close": 100.0, "volume": 1.0},
+    ]
+    c42_f4 = [
+        {"bar_index": 0, "timestamp": "2026-01-01T00:00:00+00:00", "open": 100.0, "high": 100.0, "low": 100.0, "close": 100.0, "volume": 1.0},
+        {"bar_index": 1, "timestamp": "2026-01-01T00:01:00+00:00", "open": 115.0, "high": 115.0, "low": 115.0, "close": 115.0, "volume": 1.0},
+        {"bar_index": 2, "timestamp": "2026-01-01T00:02:00+00:00", "open": 104.0, "high": 104.0, "low": 104.0, "close": 104.0, "volume": 1.0},
+    ]
+
+    def raw(long: bool, short: bool, reason: str, direction: int | None, line: float | None) -> dict[str, Any]:
+        return {"long": long, "short": short, "reason": reason, "direction": direction, "line": line}
+
+    c42_observed = {
+        "F1": {"raw_signals": [raw(False, False, "st_ha_not_supported", None, None) for _ in range(5)], "fills": []},
+        "F2": {
+            "raw_signals": [raw(False, False, "st_direction_init", 1, 96.0), raw(False, False, "st_hold_long", 1, 96.0), raw(False, True, "st_flip_short", -1, 104.0), raw(True, False, "st_flip_long", 1, 87.5), raw(False, False, "st_hold_long", 1, 107.0)],
+            "fills": [
+                {"bar_index": 2, "event": "ENTER_SHORT", "price": 95.0, "quantity": 1.0, "reason": "st_flip_short"},
+                {"bar_index": 3, "event": "EXIT_SHORT", "price": 109.0, "quantity": 1.0, "reason": "opp_signal", "realized_pnl": -14.0},
+                {"bar_index": 3, "event": "ENTER_LONG", "price": 109.0, "quantity": 1.0, "reason": "st_flip_long"},
+            ],
+        },
+        "F3_CLOSE": {"raw_signals": [raw(False, False, "st_direction_init", 1, 96.0), raw(False, False, "st_hold_long", 1, 96.0)], "fills": []},
+        "F3_WICK": {"raw_signals": [raw(False, False, "st_direction_init", 1, 96.0), raw(False, True, "st_flip_short", -1, 104.0)], "fills": [{"bar_index": 1, "event": "ENTER_SHORT", "price": 100.0, "quantity": 1.0, "reason": "st_flip_short"}]},
+        "F4": {
+            "raw_signals": [raw(False, False, "rf_init", 0, 100.0), raw(True, False, "rf_flip_long", 1, 105.0), raw(False, True, "rf_flip_short", -1, 114.0)],
+            "fills": [
+                {"bar_index": 1, "event": "ENTER_LONG", "price": 115.0, "quantity": 1.0, "reason": "rf_flip_long"},
+                {"bar_index": 2, "event": "EXIT_LONG", "price": 104.0, "quantity": 1.0, "reason": "opp_signal", "realized_pnl": -11.0},
+                {"bar_index": 2, "event": "ENTER_SHORT", "price": 104.0, "quantity": 1.0, "reason": "rf_flip_short"},
+            ],
+        },
+    }
+    c42_final = {
+        "F1": {"position": None, "realized_pnl": 0.0, "total_entries": 0, "total_exits": 0},
+        "F2": {"position": {"side": "long", "entry_bar": 3, "entry_price": 109.0, "quantity": 1.0}, "realized_pnl": -14.0, "total_entries": 2, "total_exits": 1},
+        "F3_CLOSE": {"position": None, "realized_pnl": 0.0, "total_entries": 0, "total_exits": 0},
+        "F3_WICK": {"position": {"side": "short", "entry_bar": 1, "entry_price": 100.0, "quantity": 1.0}, "realized_pnl": 0.0, "total_entries": 1, "total_exits": 0},
+        "F4": {"position": {"side": "short", "entry_bar": 2, "entry_price": 104.0, "quantity": 1.0}, "realized_pnl": -11.0, "total_entries": 2, "total_exits": 1},
+    }
+    return {
+        32: {
+            "op": "A.runner_reentry_enum_stage3",
+            "inputs": {
+                "accepted_values": c32_values,
+                "invalid_control": "next_bar_open",
+                "config": {"tw_audit_semantics_mode": "research", "tw_reversal_reentry_delay_bars": 2, "use_sl": True, "use_sl_percent": True, "sl_percent": 5.0, "tp_mode": "None", "exit_on_opposite_signal": True, "allow_flip": True, "execution_profile_id": "close_only_deterministic_v2", "initial_capital": 1000.0, "risk_per_long_pct": 0.5, "risk_per_short_pct": 0.5, "max_leverage_cap": 1.0, "cooldown_bars": 0, "max_entries": 1, "regime_lock": False, "instrument_price_tick": 0.01, "instrument_qty_step": 0.000001, "instrument_min_qty": 0.0, "instrument_min_notional": 0.0, "instrument_contract_multiplier": 1.0},
+                "bars": c32_bars,
+            },
+            "expected": {"runs": c32_runs, "invalid_control": {"accepted": False, "accepted_values": c32_values, "error_type": "ValueError", "error": "tw_reversal_reentry_mode must be one of: local, delay_after_protective_exit, carry_to_next_bar_after_protective_exit, next_bar_open_after_protective_exit_signal, next_bar_close_after_protective_exit_signal", "value": "next_bar_open"}},
+            "final": {"runs": c32_final},
+        },
+        34: {
+            "op": "A.runner_margin_call_stage3",
+            "inputs": {
+                "arms": [{"arm": "L1", "tw_audit_semantics_mode": "off", "tw_margin_call_mode": "off"}, {"arm": "L2", "tw_audit_semantics_mode": "research", "tw_margin_call_mode": "tradingview"}, {"arm": "L3", "tw_audit_semantics_mode": "off", "tw_margin_call_mode": "tradingview"}],
+                "config": {"initial_capital": 1000.0, "max_leverage_cap": 5.0, "margin_long_pct": 20.0, "margin_short_pct": 20.0, "use_sl": False, "use_sl_percent": False, "use_sl_atr": False, "use_sl_swing_atr": False, "tp_mode": "None", "fallback_size_pct": 400.0, "cooldown_bars": 0, "max_entries": 1, "instrument_price_tick": 0.01, "instrument_qty_step": 1.0, "instrument_min_qty": 0.0, "instrument_min_notional": 0.0, "instrument_contract_multiplier": 1.0},
+                "bars": c34_bars,
+            },
+            "expected": {"arms": {"L1": c34_l1, "L2": c34_l2, "L3": c34_l1}, "l1_l3_field_identical": True},
+            "final": {"arms": {"L1": c34_open, "L2": c34_flat, "L3": c34_open}},
+        },
+        42: {
+            "op": "A.signal_producers_stage3",
+            "inputs": {
+                "common_config": {"use_confirm_transform": False, "use_level_retest": False, "use_l18b_confirmation": False, "use_sl": False, "use_sl_percent": False, "use_sl_atr": False, "use_sl_swing_atr": False, "tp_mode": "None", "max_entries": 1, "exit_on_opposite_signal": True, "allow_flip": True, "cooldown_bars": 0, "regime_lock": False, "initial_capital": 1000.0, "fallback_size_pct": 11.5, "instrument_price_tick": 0.01, "instrument_qty_step": 1.0, "instrument_min_qty": 0.0, "instrument_min_notional": 0.0, "instrument_contract_multiplier": 1.0},
+                "arms": {
+                    "F1": {"config": {"signal_mode": "Supertrend", "st_atr_len": 1, "st_factor": 1.0, "st_use_wicks": False, "st_use_ha": True}, "bars": c42_common},
+                    "F2": {"config": {"signal_mode": "Supertrend", "st_atr_len": 1, "st_factor": 1.0, "st_use_wicks": False, "st_use_ha": False}, "bars": c42_common},
+                    "F3_CLOSE": {"config": {"signal_mode": "Supertrend", "st_atr_len": 1, "st_factor": 1.0, "st_use_wicks": False, "st_use_ha": False}, "bars": c42_common[:2]},
+                    "F3_WICK": {"config": {"signal_mode": "Supertrend", "st_atr_len": 1, "st_factor": 1.0, "st_use_wicks": True, "st_use_ha": False}, "bars": c42_f3_wick},
+                    "F4": {"config": {"signal_mode": "Range Filter", "rf_range": 10.0}, "bars": c42_f4},
+                },
+            },
+            "expected": {"arms": c42_observed},
+            "final": {"arms": c42_final},
+        },
+    }
+
+
 ROW_MUTATION_EXECUTION: dict[int, tuple[str, str, str, str]] = {
     1: ("mtc_v2/core/runner.py", "ad95a5b021a764a326f74b6db2a5fc5b9f82335d19624e4ddaf853e49a2dad83", "b3adfb6bd97664a9c4e7312c206dd1311dae1091c9bd59feac747309754e4053", "$.observation.gated_long"),
     2: ("mtc_v2/core/gates.py", "c52bba18466bae57fce418e53999b6885e5ea3449db7068a89bb58b87a6fb8f5", "6b04be3a27f98fa0653b107803512f7db24b624b54f82f906daa88e44afdd17a", "$.final_state.gate_evaluation"),
@@ -486,9 +654,9 @@ ROW_MUTATION_EXECUTION: dict[int, tuple[str, str, str, str]] = {
 }
 
 
-def row_authorities(row_number: int) -> list[dict[str, Any]]:
+def row_authorities(row_number: int, *, stage3: bool = False) -> list[dict[str, Any]]:
     if row_number in (28, 29, 30):
-        return [
+        authorities = [
             {
                 "name": "A_PINE_CONTROLLER_FREEZE",
                 "ref": "legacy/pine-controller/2026-08-25",
@@ -500,34 +668,85 @@ def row_authorities(row_number: int) -> list[dict[str, Any]]:
                 "role": "legacy authority; current master is prohibited for this deleted surface",
             }
         ]
-    if row_number == 26:
-        return [
+    elif row_number == 26:
+        authorities = [
             {"name": "A_CURRENT_MASTER", "commit": SOURCE_COMMIT, "tree_oid": A_TREE_OID, "role": "legacy runner duplicate/revision behavior"},
             {"name": "PINE_CONTROLLER_FREEZE", "ref": "legacy/pine-controller/2026-08-25", "commit": PINE_FREEZE_COMMIT, "role": "historical L25 dispatch corroboration only"},
         ]
-    if row_number == 38:
-        return [
+    elif row_number == 38:
+        authorities = [
             {"name": "B_BACKTEST_FREEZE", "ref": "legacy/02-mtc-backtest/2026-08-25", "commit": B_FREEZE_COMMIT, "path": "MTC_COMMAND_CENTER/02_MTC_BACKTEST/src/modules/confirmation_layer.py", "role": "pivot FSM legacy authority"},
             {"name": "A_CURRENT_MASTER", "commit": SOURCE_COMMIT, "tree_oid": A_TREE_OID, "role": "inert scaffold preservation only"},
         ]
-    if row_number in (39, 41):
-        return [
+    elif row_number in (39, 41):
+        authorities = [
             {"name": "A_CURRENT_MASTER", "commit": SOURCE_COMMIT, "tree_oid": A_TREE_OID, "role": "A legacy behavior"},
             {"name": "B_BACKTEST_FREEZE", "ref": "legacy/02-mtc-backtest/2026-08-25", "commit": B_FREEZE_COMMIT, "role": "B corroboration where carried"},
         ]
-    if row_number in (3, 4, 42):
-        return [
+    elif row_number in (3, 4, 42):
+        authorities = [
             {"name": "A_CURRENT_MASTER", "commit": SOURCE_COMMIT, "tree_oid": A_TREE_OID, "role": "executable Python authority"},
             {"name": "PINE_CURRENT_MASTER", "commit": SOURCE_COMMIT, "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine", "role": "equation/source corroboration only; no TradingView execution credit"},
         ]
-    return [{"name": "A_CURRENT_MASTER", "commit": SOURCE_COMMIT, "tree_oid": A_TREE_OID, "role": "legacy executable authority"}]
+    else:
+        authorities = [{"name": "A_CURRENT_MASTER", "commit": SOURCE_COMMIT, "tree_oid": A_TREE_OID, "role": "legacy executable authority"}]
+    if not stage3:
+        return authorities
+    modes_by_row: dict[int, dict[str, str]] = {
+        3: {"A_CURRENT_MASTER": EXECUTION_OBSERVATION, "PINE_CURRENT_MASTER": SOURCE_CORROBORATION},
+        4: {"A_CURRENT_MASTER": EXECUTION_OBSERVATION, "PINE_CURRENT_MASTER": SOURCE_CORROBORATION},
+        26: {"A_CURRENT_MASTER": EXECUTION_OBSERVATION, "PINE_CONTROLLER_FREEZE": SOURCE_CORROBORATION},
+        28: {"A_PINE_CONTROLLER_FREEZE": EXECUTION_OBSERVATION},
+        29: {"A_PINE_CONTROLLER_FREEZE": EXECUTION_OBSERVATION},
+        30: {"A_PINE_CONTROLLER_FREEZE": EXECUTION_OBSERVATION},
+        38: {"B_BACKTEST_FREEZE": EXECUTION_OBSERVATION, "A_CURRENT_MASTER": SOURCE_CORROBORATION},
+        39: {"A_CURRENT_MASTER": SOURCE_CORROBORATION, "B_BACKTEST_FREEZE": EXECUTION_OBSERVATION},
+        41: {"A_CURRENT_MASTER": EXECUTION_OBSERVATION, "B_BACKTEST_FREEZE": SOURCE_CORROBORATION},
+        42: {"A_CURRENT_MASTER": EXECUTION_OBSERVATION, "PINE_CURRENT_MASTER": SOURCE_CORROBORATION},
+    }
+    explicit_modes = modes_by_row.get(row_number, {"A_CURRENT_MASTER": EXECUTION_OBSERVATION})
+    typed: list[dict[str, Any]] = []
+    for authority in authorities:
+        item = dict(authority)
+        item["evidence_mode"] = explicit_modes[item["name"]]
+        typed.append(item)
+    return typed
 
 
-def row_mutation_contract(row_number: int, row_id: str, spec: dict[str, Any]) -> dict[str, str]:
-    execution = ROW_MUTATION_EXECUTION.get(row_number)
+STAGE3_MUTATIONS: dict[int, tuple[str, str, str, str]] = {
+    32: (
+        "mtc_v2/core/runner.py",
+        "ac9f7cc57e54c82dc623ffd5e1657fba46a2dd6a9eb90df08ed49ac6bd8fadf4",
+        "0dac5019f5ece8803bb4f169f714e46e15d844a5cdfce94e0876e554f135a9cb",
+        "$.observation.runs[2].reentry.bar_index",
+    ),
+    34: (
+        "mtc_v2/core/runner.py",
+        "fbd4d97a7f39a4c69c3c8163e47618f6c36f574ed59f7284e33225cfc6401eed",
+        "548b0ed866501ecb61bd61a68a1e166a7d10cfb1708abd2acaeeacc239edf565",
+        "$.final_state.arms.L2.position",
+    ),
+    42: (
+        "mtc_v2/signals/range_filter.py",
+        "75d752d8f6a0d251cd99f55adc71c46dc63cc4259beda48c407e7de2326cb197",
+        "716cd0bddc28df03c85f493f80fa071375bbb362a598d762de41c7662f568c15",
+        "$.observation.arms.F4.raw_signals[2].short",
+    ),
+}
+
+
+def row_mutation_contract(
+    row_number: int, row_id: str, spec: dict[str, Any], *, stage3: bool = False
+) -> dict[str, str]:
+    mutation_prefix = "STAGE3" if stage3 and row_number in STAGE3_MUTATIONS else "GF8"
+    execution = (
+        STAGE3_MUTATIONS.get(row_number)
+        if stage3 and row_number in STAGE3_MUTATIONS
+        else ROW_MUTATION_EXECUTION.get(row_number)
+    )
     if execution is None:
         return {
-            "mutation_id": f"{row_id}-GF8-MUT-001",
+            "mutation_id": f"{row_id}-{mutation_prefix}-MUT-001",
             "source_seam": spec["op"],
             "mutation": UNRESOLVED_MUTATION_OPERATION,
             "required_red": UNRESOLVED_MUTATION_REQUIRED_RED,
@@ -536,7 +755,7 @@ def row_mutation_contract(row_number: int, row_id: str, spec: dict[str, Any]) ->
         }
     source_seam, old_sha256, new_sha256, required_red_path = execution
     return {
-        "mutation_id": f"{row_id}-GF8-MUT-001",
+        "mutation_id": f"{row_id}-{mutation_prefix}-MUT-001",
         "source_seam": source_seam,
         "mutation": (
             f"EXACT_TEXT_REPLACE_ONCE_V1:old_sha256={old_sha256}:"
@@ -548,8 +767,9 @@ def row_mutation_contract(row_number: int, row_id: str, spec: dict[str, Any]) ->
     }
 
 
-def build_legacy_manifest() -> dict[str, Any]:
+def build_legacy_manifest(*, stage3: bool = False) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
+    stage3_scenarios = _stage3_generator_scenarios() if stage3 else {}
     for number, title in enumerate(ROW_TITLES, start=1):
         row_id = f"C{number:02d}"
         start = ROW_STARTS[number - 1]
@@ -560,6 +780,8 @@ def build_legacy_manifest() -> dict[str, Any]:
             "sha256": P009_SHA256,
             "section_lines_at_pinned_blob": f"{start}-{end}",
         }
+        if stage3 and number == 42:
+            p009_citation["section_lines_at_pinned_blob"] = "1231-1276"
         if number in (25, 27):
             proof = (
                 "already-decided venue timestamp policy; no A/B legacy implementation is reproduced"
@@ -577,14 +799,15 @@ def build_legacy_manifest() -> dict[str, Any]:
                 }
             )
             continue
-        spec = ROW_SCENARIOS[number]
+        spec = stage3_scenarios.get(number, ROW_SCENARIOS[number])
+        authorities = row_authorities(number, stage3=stage3)
         rows.append(
             {
                 "row_id": row_id,
                 "title": title,
                 "disposition": "APPLICABLE",
                 "p009_citation": p009_citation,
-                "legacy_authorities": row_authorities(number),
+                "legacy_authorities": authorities,
                 "scenarios": [
                     {
                         "scenario_id": f"{row_id}-LEGACY-001",
@@ -598,12 +821,28 @@ def build_legacy_manifest() -> dict[str, Any]:
                             "producer_output_may_not_rebless_expected": True,
                         },
                         "comparison_rule": COMPARISON_RULE_ID,
-                        "clean_producer_corroboration": {
-                            "status": CORROBORATION_STATUS,
-                            "required": True,
-                            "authority_names": [item["name"] for item in row_authorities(number)],
-                        },
-                        "producer_mutation": row_mutation_contract(number, row_id, spec),
+                        "clean_producer_corroboration": (
+                            {
+                                "status": "REQUIRED_TERMINAL_AUTHORITY_EVIDENCE",
+                                "required": True,
+                                "authority_requirements": [
+                                    {
+                                        "name": item["name"],
+                                        "evidence_mode": item["evidence_mode"],
+                                    }
+                                    for item in authorities
+                                ],
+                            }
+                            if stage3
+                            else {
+                                "status": CORROBORATION_STATUS,
+                                "required": True,
+                                "authority_names": [item["name"] for item in authorities],
+                            }
+                        ),
+                        "producer_mutation": row_mutation_contract(
+                            number, row_id, spec, stage3=stage3
+                        ),
                     }
                 ],
             }
@@ -614,7 +853,7 @@ def build_legacy_manifest() -> dict[str, Any]:
     not_rows = sum(item["disposition"] == "NOT_A_LEGACY_REPRODUCTION_ROW" for item in rows)
     return {
         "manifest_schema_version": "P011_LEGACY_MANIFEST_v1",
-        "gate_version": GATE_VERSION,
+        "gate_version": STAGE3_GATE_VERSION if stage3 else GATE_VERSION,
         "dependency_variant": "DIRECT_BUILD",
         "fixture_suite_commit": "NONE_DIRECT_BUILD",
         "frozen_before_subject_run": True,
@@ -768,7 +1007,115 @@ def build_receipt(
     }
 
 
-def main() -> int:
+def _refuse_protected_publication_target(path: Path) -> None:
+    resolved = path.resolve()
+    protected = {
+        (GATE_DIR / "P011_GATE_RECEIPT.json").resolve(),
+        (GATE_DIR / "p011_legacy_manifest.json").resolve(),
+        V1_ANCHOR_PATH.resolve(),
+        ANCHOR_PATH.resolve(),
+    }
+    if (
+        resolved in protected
+        or "P011-LC-GATE-v1" in resolved.name
+        or "P011-LC-GATE-v2" in resolved.name
+    ):
+        raise SystemExit("STOP_V1_V2_PUBLICATION_TARGET_REFUSED")
+
+
+def _require_stage3_scratch(path: Path) -> Path:
+    resolved = path.resolve()
+    try:
+        resolved.relative_to(STAGE3_SCRATCH_ROOT.resolve())
+    except ValueError as exc:
+        raise SystemExit("STOP_CANDIDATE_PATH_OUTSIDE_STAGE3_SCRATCH") from exc
+    _refuse_protected_publication_target(resolved)
+    return resolved
+
+
+def command_candidate_manifest(args: argparse.Namespace) -> int:
+    output = _require_stage3_scratch(Path(args.out))
+    write_json(output, build_legacy_manifest(stage3=True))
+    print(
+        json.dumps(
+            {
+                "command": "candidate-manifest",
+                "gate_version": STAGE3_GATE_VERSION,
+                "manifest_sha256": sha256_file(output),
+                "outcome": "CANDIDATE_ONLY_NOT_CANONICAL",
+                "path": str(output),
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    return 0
+
+
+def validate_stage3_publication_prerequisites(
+    *,
+    manifest_path: Path,
+    receipt_path: Path,
+    owner_authorization_path: Path,
+    output_path: Path,
+) -> dict[str, Any]:
+    _refuse_protected_publication_target(output_path)
+    if not owner_authorization_path.is_file():
+        raise SystemExit("STOP_V3_ANCHOR_AUTHORITY_ABSENT")
+    if not manifest_path.is_file() or not receipt_path.is_file():
+        raise SystemExit("STOP_V3_PREREQUISITE_FILE_ABSENT")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    manifest_sha256 = sha256_file(manifest_path)
+    receipt_manifest_sha256 = (receipt.get("legacy_manifest") or {}).get("sha256")
+    if manifest.get("gate_version") != STAGE3_GATE_VERSION:
+        raise SystemExit("STOP_V3_MANIFEST_GATE_VERSION_MISMATCH")
+    if receipt.get("gate_version") != STAGE3_GATE_VERSION:
+        raise SystemExit("STOP_V3_RECEIPT_GATE_VERSION_MISMATCH")
+    if receipt_manifest_sha256 != manifest_sha256:
+        raise SystemExit("STOP_V3_MANIFEST_RECEIPT_HASH_MISMATCH")
+    return {
+        "anchor_schema_version": "P011_OWNER_SIGNED_ANCHOR_v1",
+        "gate_version": STAGE3_GATE_VERSION,
+        "legacy_manifest_sha256": manifest_sha256,
+        "receipt_sha256": sha256_file(receipt_path),
+        "signature_basis": {
+            "method": "explicit owner authorization for the v3 prerequisite package",
+            "owner_authorization_path": str(owner_authorization_path.resolve()),
+            "owner_authorization_sha256": sha256_file(owner_authorization_path),
+        },
+        "supersedes_gate_version": GATE_VERSION,
+    }
+
+
+def command_publish_stage3_prerequisite(args: argparse.Namespace) -> int:
+    output = Path(args.out).resolve()
+    anchor = validate_stage3_publication_prerequisites(
+        manifest_path=Path(args.manifest).resolve(),
+        receipt_path=Path(args.receipt).resolve(),
+        owner_authorization_path=Path(args.owner_authorization).resolve(),
+        output_path=output,
+    )
+    write_json(output, anchor)
+    print(
+        json.dumps(
+            {
+                "command": "publish-v3-prerequisite",
+                "gate_version": STAGE3_GATE_VERSION,
+                "outcome": "PUBLISHED_OWNER_AUTHORIZED_V3_PREREQUISITE",
+                "path": str(output),
+                "sha256": sha256_file(output),
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    return 0
+
+
+def _retired_combined_v2_freeze() -> int:
+    raise SystemExit("STOP_RETIRED_COMBINED_GENERATOR_REFUSED")
+    # Retained below only as historical construction context; it is unreachable.
     fixture_meta = verify_fixed_inputs()
     profiles = build_profiles()
     schema_path = GATE_DIR / "P011_OBSERVATION_SCHEMA_v1.json"
@@ -823,6 +1170,26 @@ def main() -> int:
     }
     print(json.dumps(summary, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
     return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    root = argparse.ArgumentParser(description="P0-11 freeze/candidate boundary")
+    sub = root.add_subparsers(dest="command", required=True)
+    candidate = sub.add_parser("candidate-manifest")
+    candidate.add_argument("--out", required=True)
+    candidate.set_defaults(handler=command_candidate_manifest)
+    publish = sub.add_parser("publish-v3-prerequisite")
+    publish.add_argument("--manifest", required=True)
+    publish.add_argument("--receipt", required=True)
+    publish.add_argument("--owner-authorization", required=True)
+    publish.add_argument("--out", required=True)
+    publish.set_defaults(handler=command_publish_stage3_prerequisite)
+    return root
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    return int(args.handler(args))
 
 
 if __name__ == "__main__":
