@@ -17,32 +17,32 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "REPAIR_5_DELTA_AUDIT",
+      "state": "REPAIR_6_IN_PROGRESS_PLUS_V3_DESIGN",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
       "commit": "f8a186b8 (repair-4)",
       "detail": "Repair-4 committed: self-comparing C42 assertion removed, receipt pins reconciled, validator claims narrowed; all 8 deduplicated findings closed; census dual-stated (15 kept / 12 excluded comprehension-bound). Gate remains STOP by design (27/13/2). ROUND-4 VERDICTS: flagship PASS-WITH-NITS, zero fresh instances (all 3 auditors agree) - stopping rule NOT triggered, first clean round. Detection found 1 latent BLOCK-class defect in the untouched finalizer (accepts zero-row matrix, emits PASS); repair 5 closing it now.",
       "owner_gate": false,
-      "next_action": "delta audits (P14 flagship + N39 re-probe) decide closure"
+      "next_action": "repair-6 (N42b) + v3 design revision (W44) converge at stage 4; owner 3x YES recorded"
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
       "title": "v3 publication blockers 10/11/5 (hash form, reproducibility)",
-      "state": "OWNER_QUESTIONS_OPEN",
+      "state": "OWNER_ANSWERED_ALL_YES",
       "branch": "-",
       "commit": "-",
       "detail": "Decision memo delivered and hash-verified (Grok G10: 0 HIGH). Three numbered owner questions at the end of OWNER_DECISION_P011_HASH_FORM.md: 1) blob-OID hash form, 2) machine strings out of hashed baseline, 3) second-actor rebuild before signing. These are separate from the 12 morning asks and remain unanswered.",
-      "owner_gate": true,
-      "next_action": "owner answers questions 1-3 in the memo"
+      "owner_gate": false,
+      "next_action": "W44 folds the three rulings into stage-4 design v2"
     },
     {
       "id": "REGISTRY-GUARD",
       "title": "Registry promotion guard (owner: freeze)",
-      "state": "PR_OPEN_CI",
-      "branch": "feature/registry-promotion-guard-20260829 (PR #140)",
+      "state": "MERGED",
+      "branch": "master (via PR #140)",
       "commit": "1fa12d60",
       "detail": "Built per spec under DEFER: promotion only on all-promoted-ladder tokens, Option-C empty admission set, RESEARCH_ONLY badge for robust_final, regression suite. RED shown against pre-fix writer; GREEN census 0 stored-pair mismatches; 63 producer specs proven byte-identical (SHA-256 manifest). Tier T1.",
       "owner_gate": false,
-      "next_action": "different-model confirm audit -> PR"
+      "next_action": "none - merged d5be879e"
     },
     {
       "id": "RANGEFILTER-DOC",
@@ -57,12 +57,12 @@
     {
       "id": "SCORECARD-HONESTY",
       "title": "Gate scorecards: computed regime flag, honest stamps, queue-readable fields (owner: correct + writer-populates)",
-      "state": "BUILT_AWAITING_AUDIT",
-      "branch": "feature/scorecard-honesty-20260829",
-      "commit": "54989afe",
-      "detail": "Built: regime_breakdown_present computed (coverage > 0) with 4-point RED shown; exactly 41 of 78 stamps neutralised (pattern-pinned census); writer populates the two queue-read numbers with producer-named values, no fabrication on missing computation. Confirm audit N38: NOT CONFIRMED - zero-trade path published fabricated 0.0 into the queue metric + census is 42 not 41 + nine fixtures were one shape. Repair lane W34b running.",
+      "state": "MERGED",
+      "branch": "master (via PR #141)",
+      "commit": "0134fc82",
+      "detail": "Built: regime_breakdown_present computed (coverage > 0) with 4-point RED shown; exactly 41 of 78 stamps neutralised (pattern-pinned census); writer populates the two queue-read numbers with producer-named values, no fabrication on missing computation. Full chain: build -> confirm REJECTED (fabricated 0.0 on admission path) -> repaired 0134fc82 -> re-CONFIRMED by the same auditor -> merged d5be879e. Census 42/78, nine distinct fixtures.",
       "owner_gate": false,
-      "next_action": "different-model confirm audit -> PR"
+      "next_action": "none - merged d5be879e"
     },
     {
       "id": "FLATTEN-MIGRATION-PKG",
