@@ -17,12 +17,12 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "PARKED_BY_STOPPING_RULE",
+      "state": "REPAIR_7_DONE_RESIDUAL_LABEL_QUESTION",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
-      "commit": "37a4c191 (repair-6)",
-      "detail": "Repair-4 committed: self-comparing C42 assertion removed, receipt pins reconciled, validator claims narrowed; all 8 deduplicated findings closed; census dual-stated (15 kept / 12 excluded comprehension-bound). Gate remains STOP by design (27/13/2). PARKED 2026-08-29 afternoon by the pre-written stopping rule: repair-6 flagship PASS, but detection proved the receipt field double_build still names an act the code does not perform (it byte-compares caller-supplied files). Every other probe from six rounds now REFUSED. One field name remains. Owner decision doc: 11_TRIAGE/OWNER_DECISION_P011_FINALIZER_LABEL.md (3 options, recommended: repair 7 label-only).",
+      "commit": "e67d2b84 (repair-7)",
+      "detail": "Repair-4 committed: self-comparing C42 assertion removed, receipt pins reconciled, validator claims narrowed; all 8 deduplicated findings closed; census dual-stated (15 kept / 12 excluded comprehension-bound). Gate remains STOP by design (27/13/2). Repair 7 (owner-approved label-only) committed e67d2b84 and delta-audited: flagship PASS-WITH-NITS, detection 1 HIGH residual - the receipt run_1/run_2 names still assert runs the finalizer does not perform (same class). Next session asks the owner: repair 8 label-only (recommended) or carry to v3. v3 stage-4 design v2b complete and re-pinned. Runbook CONFIRMED FOR OWNER. Bridge fail-closed design COMPLETE.",
       "owner_gate": true,
-      "next_action": "OWNER: pick option 1/2/3 in OWNER_DECISION_P011_FINALIZER_LABEL.md"
+      "next_action": "OWNER (next session): repair 8 label-only vs carry to v3"
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
