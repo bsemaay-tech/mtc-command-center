@@ -1,7 +1,7 @@
 ﻿{
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-29T23:05:00+03:00",
+  "generated": "2026-08-30T01:00:00+03:00",
   "updated_by": "claude-lead-session-2026-08-29-evening",
   "packages": [
     {
@@ -20,7 +20,7 @@
       "state": "STAGE_3_BUILT_AUDITS_RUNNING",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
       "commit": "e1d0ff47 (stage-3)",
-      "detail": "Gate remains STOP by design (copied-pin 27/13/2). Repair 8 (owner-approved label-only) committed b4278c1a: run_* receipt keys and flags renamed to caller_input_*. Delta audits: P22 flagship PASS (no scope-exceed, no new class instance, 3 nits); N50 detection found ONE editable residual - a test identifier still claiming a build act - fresh receipt itself clean. Repair 8b (N52, test-name rename only) running; stage 3 build (N51 spec ready) follows on its closure. v3 stage-4 design v2b complete and re-pinned.",
+      "detail": "Stage 3 IMPLEMENTED at e1d0ff47 (two commits on repair-8b base bfa074df), gate still STOP as designed. Repair chain 1-8b closed clean before the build. FIRST AUDIT SIGNAL: G20 read-only census found 10 findings incl. 2 HIGH - the stage-3 finalizer REPUBLISHES a double_build label (the class the 8 repair rounds killed) and a mislabeled typed-STOP row. Execution audits P25 (flagship) + N58 (second family) relaunch at the 02:50/02:05 resets with G20 as input; a stage-3 repair round is likely. v3 stage-4 design v2b complete and re-pinned.",
       "owner_gate": false,
       "next_action": "P25 flagship + N58 second-family audits on stage 3 (Gemini corroboration tool-blocked, recorded) -> v3 (second actor: Claude Pro per owner ruling)"
     },
@@ -132,7 +132,7 @@
       "commit": "-",
       "detail": "Both papers audited BLOCK by the P19 flagship (16/16 G16 findings reproduced, 0 refuted) and BLOCK+BLOCK by the Gemini corroborator GM2 - including the census defect that the papers claimed the bridge directory and funding surfaces were absent from the checkout. W54 (author family) repaired the three-auditor union into v1.1 of both papers. Delta re-audits P23 (flagship) + N54 (detection) are running. Chain stays serial: 11 -> 12 -> 20 -> 13 -> 31M1 -> 14.",
       "owner_gate": false,
-      "next_action": "Paper 2 at PASS-WITH-NITS; Paper 1 repaired to v1.2 (W59, round 2 of 3) - P26 delta audit running"
+      "next_action": "Paper 2 at PASS-WITH-NITS. Paper 1 v1.2 delivery NOT VERIFIED (W59 report has placeholder sections - lane likely capped mid-run; N59 detection confirms body unrepaired, 8 findings). Round 3 (W60, LAST of cap) auto-dispatches after the P26 flagship delta lands at the 02:50 Claude reset"
     },
     {
       "id": "WP-P0-13",
@@ -142,7 +142,7 @@
       "commit": "-",
       "detail": "Owner-ordered parallel design draft delivered (W51, P013_DESIGN_DRAFT_V1.md), PROVISIONAL-ON-P020 labeled. Early detection audit G18 (Grok) running. BUILD stays gated on WP-P0-20 acceptance per the serial chain.",
       "owner_gate": false,
-      "next_action": "G18 detection -> fold findings when upstream accepts"
+      "next_action": "G18 detection DONE (findings banked); fold when upstream accepts"
     },
     {
       "id": "WP-P0-21",
@@ -152,7 +152,7 @@
       "commit": "-",
       "detail": "Design draft delivered (W52, P021_DESIGN_DRAFT_V1.md), PROVISIONAL-ON-P012 labeled. Early detection audit G19 (Grok) running. BUILD gated on WP-P0-12 acceptance.",
       "owner_gate": false,
-      "next_action": "G19 detection -> fold findings when upstream accepts"
+      "next_action": "G19 detection DONE (findings banked); fold when upstream accepts"
     },
     {
       "id": "WP-P0-22",
@@ -162,7 +162,7 @@
       "commit": "-",
       "detail": "Design draft delivered (W53, P022_DESIGN_DRAFT_V1.md), PROVISIONAL-ON-P013 labeled. Early detection audit P24 (Claude, different instance) running. BUILD gated on WP-P0-13 acceptance.",
       "owner_gate": false,
-      "next_action": "P24 detection -> fold findings when upstream accepts"
+      "next_action": "P24 detection DONE (findings banked); fold when upstream accepts"
     },
     {
       "id": "WP-P0-31-M1",
@@ -172,7 +172,7 @@
       "commit": "-",
       "detail": "Overnight advanced-stage order: W57 (Claude) drafting the M1 design (ledger record contract, single append interface, four writer classes, derived view, Registrar, full falsification designs), PROVISIONAL-ON-P013 labeled. Design only; M1 BUILD waits for WP-P0-13 acceptance + its own milestone-scoped G1-IA.",
       "owner_gate": false,
-      "next_action": "W57 draft -> detection audit -> park until upstream accepts"
+      "next_action": "draft DELIVERED (P031M1_DESIGN_DRAFT_V1.md); detection audit queues after resets; park until upstream accepts"
     },
     {
       "id": "WP-P0-14",
@@ -182,7 +182,7 @@
       "commit": "-",
       "detail": "Overnight advanced-stage order: W58 (Claude) drafting the Phase-0 four-item-minimum explorer design under all plan amendments (chart removed to V3-11, Perspective default, ledger-reader backbone, interim tearsheet with independent validation), PROVISIONAL on P0-13 and P0-31-M1. Design only; BUILD waits for both dependencies + G1-IA.",
       "owner_gate": false,
-      "next_action": "W58 draft -> detection audit -> park until upstream accepts"
+      "next_action": "draft DELIVERED (P014_DESIGN_DRAFT_V1.md); detection audit queues after resets; park until upstream accepts"
     },
     {
       "id": "PROMOTION-DECISION",
