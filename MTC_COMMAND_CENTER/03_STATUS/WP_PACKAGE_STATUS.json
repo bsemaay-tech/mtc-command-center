@@ -1,0 +1,138 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
+  "generated": "2026-08-29T12:05:00+03:00",
+  "updated_by": "claude-lead-session-2026-08-29",
+  "packages": [
+    {
+      "id": "WP-P0-10",
+      "title": "Golden suite verification package",
+      "state": "MERGED_PARKED",
+      "branch": "master",
+      "commit": "7f9ef16a",
+      "detail": "Merged via PR #135 after dual-flagship PASS; parked. No further work authorized.",
+      "owner_gate": false,
+      "next_action": "none"
+    },
+    {
+      "id": "WP-P0-11",
+      "title": "Kernel legacy-compatible gate (direct-build variant)",
+      "state": "REPAIR_ROUND_4_IN_PROGRESS",
+      "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
+      "commit": "fcfa7483 (repair-3, audited BLOCK; repair-4 building)",
+      "detail": "Repair-3 triple-audited (flagship BLOCK + detection 3 MAJOR + third-family 1 MAJOR, all converging on one fresh self-comparison instance). Repair-4 lane N33 running under a pre-written stopping rule: one more fresh instance parks the package to the owner. Gate remains STOP by design (27 GREEN / 13 STOP / 2). Not pushed, not merged; merges as one unit after stage 4.",
+      "owner_gate": false,
+      "next_action": "N33 commit -> dual audit (P11 flagship + N34 detection + G11 supplemental)"
+    },
+    {
+      "id": "WP-P0-11-V3-BLOCKERS",
+      "title": "v3 publication blockers 10/11/5 (hash form, reproducibility)",
+      "state": "OWNER_QUESTIONS_OPEN",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Decision memo delivered and hash-verified (Grok G10: 0 HIGH). Three numbered owner questions at the end of OWNER_DECISION_P011_HASH_FORM.md: 1) blob-OID hash form, 2) machine strings out of hashed baseline, 3) second-actor rebuild before signing. These are separate from the 12 morning asks and remain unanswered.",
+      "owner_gate": true,
+      "next_action": "owner answers questions 1-3 in the memo"
+    },
+    {
+      "id": "REGISTRY-GUARD",
+      "title": "Registry promotion guard (owner: freeze)",
+      "state": "BUILD_IN_PROGRESS",
+      "branch": "feature/registry-promotion-guard-20260829",
+      "commit": "-",
+      "detail": "Owner ask-1 answer 'freeze': rebuilds frozen, 44 mis-labelled files untouched, guard build authorized with DEFER stored-data choice. Lane W1 building per SPEC_READY_REGISTRY_GUARD.md (audited + confirmed).",
+      "owner_gate": false,
+      "next_action": "W1 commit -> audit -> PR"
+    },
+    {
+      "id": "RANGEFILTER-DOC",
+      "title": "Range Filter flat-state asymmetry documented (owner: document)",
+      "state": "BUILD_IN_PROGRESS",
+      "branch": "docs/range-filter-flat-state-limitation-20260829",
+      "commit": "-",
+      "detail": "Owner ask-2 answer 'document' = Option A+B: one test asserting the intended asymmetry on the shipped RangeFilterSignal + one known_limitations entry. Zero behaviour change; range_filter.py untouched. Lane W2.",
+      "owner_gate": false,
+      "next_action": "W2 commit -> audit -> PR"
+    },
+    {
+      "id": "SCORECARD-HONESTY",
+      "title": "Gate scorecards: computed regime flag, honest stamps, queue-readable fields (owner: correct + writer-populates)",
+      "state": "BUILD_IN_PROGRESS",
+      "branch": "feature/scorecard-honesty-20260829",
+      "commit": "-",
+      "detail": "Owner asks 3+4: fix hardcoded regime_breakdown_present (4 Gate-2 points on the admission path), neutralise ~41 existence-stamps (Option B), writer populates the two numbers the forward-paper queue reads. Stored scorecards NOT regenerated (freeze). Lane W34.",
+      "owner_gate": false,
+      "next_action": "W34 commit -> audit -> PR"
+    },
+    {
+      "id": "FLATTEN-MIGRATION-PKG",
+      "title": "Controlled-flatten policy + deliberate migration runbook (owner: policy yes, no arming; deliberate only)",
+      "state": "PREP_IN_PROGRESS",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Owner asks 11+12. Lane W1112 producing OWNER_RUNBOOK_SCHEMA_MIGRATION_AND_FLATTEN.md on top of the audited P5 migration design. Prep only: no migration, no arming, no host contact. Execution needs a future explicit owner go.",
+      "owner_gate": false,
+      "next_action": "W1112 delivery -> audit -> owner review"
+    },
+    {
+      "id": "PINE-GUARD-REQUIRED",
+      "title": "Pine alert guard required on master (owner: required guard)",
+      "state": "DONE",
+      "branch": "-",
+      "commit": "ruleset 21444962",
+      "detail": "Ruleset now requires both 'Bridge suite (Python 3.12)' and 'pine-alert-guard' on master. Done 2026-08-29 morning. Detector hardening (Workstream B) remains NOT authorized.",
+      "owner_gate": false,
+      "next_action": "none"
+    },
+    {
+      "id": "BRIDGE-FAIL-CLOSED",
+      "title": "Bridge refuses unimplemented settings (owner: fail closed)",
+      "state": "QUEUED",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Owner ask-10 answer authorizes the code work: bridge refuses to start on a setting it does not implement. Design-first per DESIGN_DEFECT_PATTERNS. Build+tests+PR only; NO deployment to any host.",
+      "owner_gate": false,
+      "next_action": "next lane wave (W10): design + build"
+    },
+    {
+      "id": "SURVEY-SAFETY-SENTENCE",
+      "title": "Correct mainnet-lock sentence in older survey (owner: correct docs)",
+      "state": "QUEUED",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Owner ask-9: make explicit that protection is hardcoded network=testnet (bridge/app.py:203), not the mainnet triple-lock (never reached). Doc-only lane W9 in next wave.",
+      "owner_gate": false,
+      "next_action": "next lane wave (W9)"
+    },
+    {
+      "id": "STALE-ROOT-RECONCILE",
+      "title": "Main working copy safe-reconcile (owner: safe-reconcile)",
+      "state": "QUEUED_LEAD",
+      "branch": "codex/bridge-help-wiki (270 behind, 1 ahead, dirty)",
+      "commit": "-",
+      "detail": "Owner ask-5: rescue local commit + dirty state to a pushed rescue branch, then bring C:\\LAB\\Tradingview_LAB_CLEAN to current master. Nothing discarded. Lead executes in-session.",
+      "owner_gate": false,
+      "next_action": "Lead in-session"
+    },
+    {
+      "id": "PROMOTION-DECISION",
+      "title": "Promotion pipeline decision package",
+      "state": "OWNER_REVIEW",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Document-only package, audited and corrected (PROMOTION_REPORT_ONLY_DECISION.md). Not covered by the 12 morning answers.",
+      "owner_gate": true,
+      "next_action": "owner reads and rules"
+    },
+    {
+      "id": "FROZEN-PINE-TAG",
+      "title": "Frozen Pine tag alert calls (owner: preserve)",
+      "state": "CLOSED_NO_ACTION",
+      "branch": "-",
+      "commit": "legacy/pine-controller/2026-08-25",
+      "detail": "Owner ask-6 answer 'preserve': tag stays as history with its two alert calls. Recorded.",
+      "owner_gate": false,
+      "next_action": "none"
+    }
+  ]
+}

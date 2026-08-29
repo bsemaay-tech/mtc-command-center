@@ -7,12 +7,14 @@
   "dry_run": true,
   "live_trading_enabled": false,
   "active_writer": null,
-  "phase": "System Test / Fake Money Lab page shipped; branch merged to master",
-  "last_updated": "2026-07-05T00:00:00+03:00",
-  "summary": "Barış approved the audit's System Test Lab proposal (\"onaylıyorum tasarım dokümanı + implementasyon. yap master merge de yap\"). Design doc `11_TRIAGE/SYSTEM_TEST_LAB_PAGE_DESIGN_2026-07-05.md`, then built + merged the whole `feature/mcc-audit-fixes` branch to master.",
+  "phase": "Owner ruled on all 12 morning asks (2026-08-29); parallel build lanes running",
+  "last_updated": "2026-08-29T12:05:00+03:00",
+  "summary": "Owner answered the 12 morning asks: registry freeze + guard build, Range Filter documented, scorecard corrections, writer-populates queue fields, safe-reconcile of the stale root, Pine tag preserved, no blanket Claude Max, pine-alert-guard now a REQUIRED check on master (done, ruleset 21444962), survey safety sentence to be corrected, bridge to fail closed on unimplemented settings, controlled flatten policy without arming, deliberate schema migration only. WP-P0-11 in repair round 4 under a pre-written stopping rule; repair-3 triple-audit converged on one fresh self-comparison instance. Per-package live state: 03_STATUS/WP_PACKAGE_STATUS.json.",
   "critical_warnings": [
     "No live trading allowed",
-    "MTC_v2 core files remain protected"
+    "MTC_v2 core files remain protected",
+    "Bridge kill does not flatten on schema v4; migration only as a deliberate, backed-up, owner-authorized event",
+    "Registry rebuilds are FROZEN by owner decision 2026-08-29 until the guard lands"
   ],
-  "next_recommended_action": "[AI: Claude, optional] Strategy Intelligence per-section \"as of\" chips (Home done; SI still could show evidence date per gate/verdict section)."
+  "next_recommended_action": "[Owner] Answer the 3 numbered questions in OWNER_DECISION_P011_HASH_FORM.md (v3 hash form) and read PROMOTION_REPORT_ONLY_DECISION.md. [Lead] Land lanes W1/W2/W34/W1112, finish WP-P0-11 repair-4 audit round, safe-reconcile the stale root."
 }
