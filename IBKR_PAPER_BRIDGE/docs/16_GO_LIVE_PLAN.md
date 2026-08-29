@@ -6,7 +6,9 @@ yerden, Barış'a soru sormadan devam edebilmelidir. Türkçe gövde + İngilizc
 bilinçlidir; kod/commit İngilizce yazılır.
 
 > **"Canlı" bu planda = Hyperliquid TESTNET üzerinde kesintisiz paper-trading döngüsü (PREREG
-> P2).** MAINNET/GERÇEK PARA BU PLANIN DIŞINDADIR ve üçlü kilit arkasında yasaktır; mainnet için
+> P2).** MAINNET/GERÇEK PARA BU PLANIN DIŞINDADIR. Bugün gerçek parayı durduran şey üçlü kilit
+> değil, `bridge/app.py:203`'te hardcoded `network="testnet"`; kilit
+> (`hyperliquid.py:2165-2169`) ancak o kelime `mainnet` yapılırsa çalışır. Mainnet için
 > Barış'tan AYRI, açık, yazılı onay gerekir. Hiçbir model bu planı mainnet'e genişletemez.
 
 ---
