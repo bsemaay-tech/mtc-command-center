@@ -61,7 +61,7 @@ The prior round recorded outputs at `C:\tmp\p011_gate_v2_run1_20260828` and
 repair round 5. The counts (48,077 observations per profile; 96,154 total) and hashes below are
 therefore historical **ephemeral** claims, not durable acceptance evidence:
 
-| Artifact | Run 1 SHA-256 | Run 2 SHA-256 |
+| Artifact | Caller input 1 SHA-256 | Caller input 2 SHA-256 |
 |---|---|---|
 | `mtc_v2_legacy_sequence.jsonl` | `727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e` | same |
 | `final_states.json` | `045f11c34e5713dcec97987f14f26b8e9a72011d44b91806b382680fbe1e622a` | same |
@@ -116,11 +116,11 @@ The six measured disposition changes are:
 
 The current authority check compares a verifier-declared set with runtime import observations and
 records missing identities (`row_arm.py:179-218`). Current code emits no `CONSERVED` contract ledger and
-makes no terminal-consumption claim. The isolated unit suite uses a per-run temporary directory,
-not a committed absolute scratch pin (`test_scenario_binding.py:31-32`). It runs 21 tests, including
+makes no terminal-consumption claim. The isolated unit suite uses a per-suite-invocation temporary directory,
+not a committed absolute scratch pin (`test_scenario_binding.py:31-32`). It runs 22 tests, including
 the producer spy, exact-key variants, identity-bound C32 control, receipt-pin refusal variants, a
 counts-only receipt probe, and the complete declared-leaf variant matrix
-(`test_scenario_binding.py:151-934`). C42 publishes only the executed producer outputs; the
+(`test_scenario_binding.py:151-987`). C42 publishes only the executed producer outputs; the
 re-keyed duplicate and self-comparison were deleted (`row_arm.py:3238-3253`). No load-bearing claim in
 the repaired disposition or binding sections cites an `N26_VARIANTS` scratch output.
 
@@ -154,8 +154,21 @@ the repaired disposition or binding sections cites an `N26_VARIANTS` scratch out
    shape and cross-source identity and must not issue producer-execution status.
 9. Verify the producer acts behind the renamed `caller_supplied_byte_comparison` field through the
    v3 external-reproduction contract; the finalizer measures only caller-supplied byte identity.
-10. Coordinate honest comparison-only labels across the frozen receipt template, protected receipt,
-    and row-arm verifier during v3; this label-only lane may not edit those surfaces.
+10. Coordinate honest caller-input labels across the frozen receipt template, protected receipt,
+    row-arm verifier, and independent remeasurement script during v3. Replace the comparison-only
+    `double_build`, `run_1`/`run_2`, `run1_sha256`/`run2_sha256`, and matching CLI families with
+    caller-supplied input terminology; this label-only lane may not edit those surfaces
+    (`stage1_freeze.py:723`; `P011_GATE_RECEIPT.json:43-68`; `row_arm.py:3563-3621`;
+    `evidence/remeasure.py:44-51,130-146`).
+
+## Repair-round-8 honest caller-input labels
+
+The editable finalizer and comparison-only command now publish `caller_input_1`,
+`caller_input_2`, `caller_input_1_sha256`, and `caller_input_2_sha256`; both CLI surfaces bind
+the matching `--caller-input-1` and `--caller-input-2` flags
+(`p011_gate.py:1029-1051,1312-1355,1505-1525`). The finalizer still measures only the identity of
+caller-supplied files and performs no producer act. Frozen and non-whitelisted comparison-only
+surfaces remain obligation 10 rather than being hand-edited in this label-only repair.
 
 The observation schema is not a target for the scenario-binding fields: its catalog contains
 observation, signal, event, position, gate-readiness, and account fields, but none of the named

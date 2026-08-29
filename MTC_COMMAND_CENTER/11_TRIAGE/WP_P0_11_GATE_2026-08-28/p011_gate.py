@@ -1027,18 +1027,25 @@ def command_compare(args: argparse.Namespace) -> int:
 
 
 def command_verify_caller_supplied_byte_comparison(args: argparse.Namespace) -> int:
-    run1 = resolve_user_path(args.run1)
-    run2 = resolve_user_path(args.run2)
+    caller_input_1 = resolve_user_path(args.caller_input_1)
+    caller_input_2 = resolve_user_path(args.caller_input_2)
     names = ["mtc_v2_legacy_sequence.jsonl", "final_states.json", "row_corroboration.json", "baseline_manifest.json"]
     comparisons = []
     for name in names:
-        path1 = run1 / name
-        path2 = run2 / name
+        path1 = caller_input_1 / name
+        path2 = caller_input_2 / name
         if not path1.is_file() or not path2.is_file():
             raise GateStop(f"caller-supplied comparison artifact is missing: {name}")
         hash1 = sha256_file(path1)
         hash2 = sha256_file(path2)
-        comparisons.append({"artifact": name, "run1_sha256": hash1, "run2_sha256": hash2, "byte_identical": hash1 == hash2})
+        comparisons.append(
+            {
+                "artifact": name,
+                "caller_input_1_sha256": hash1,
+                "caller_input_2_sha256": hash2,
+                "byte_identical": hash1 == hash2,
+            }
+        )
     if not all(item["byte_identical"] for item in comparisons):
         raise GateFail("caller-supplied artifact copies are not byte-identical")
     print(json.dumps({"outcome": "PASS", "byte_identical": True, "artifacts": comparisons}, sort_keys=True, separators=(",", ":")))
@@ -1303,8 +1310,8 @@ def command_mutation_harness(args: argparse.Namespace) -> int:
 
 
 def command_finalize_candidate(args: argparse.Namespace) -> int:
-    run1 = resolve_user_path(args.run1)
-    run2 = resolve_user_path(args.run2)
+    caller_input_1 = resolve_user_path(args.caller_input_1)
+    caller_input_2 = resolve_user_path(args.caller_input_2)
     mutation_matrix = resolve_user_path(args.mutation_matrix)
     receipt_path = GATE_DIR / "P011_GATE_RECEIPT.json"
     receipt = load_json(receipt_path)
@@ -1316,14 +1323,14 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
     names = ["mtc_v2_legacy_sequence.jsonl", "final_states.json", "row_corroboration.json", "baseline_manifest.json"]
     artifacts: dict[str, str] = {}
     caller_supplied_byte_comparison: dict[str, Any] = {
-        "run_1": str(run1),
-        "run_2": str(run2),
+        "caller_input_1": str(caller_input_1),
+        "caller_input_2": str(caller_input_2),
         "byte_identical": True,
         "artifacts": [],
     }
     for name in names:
-        first = run1 / name
-        second = run2 / name
+        first = caller_input_1 / name
+        second = caller_input_2 / name
         if not first.is_file() or not second.is_file():
             raise GateStop(f"candidate finalization artifact is missing: {name}")
         if first.stat().st_size == 0 or second.stat().st_size == 0:
@@ -1336,7 +1343,11 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
             raise GateFail(f"candidate finalization artifact copies differ: {name}")
         artifacts[name] = first_hash
         caller_supplied_byte_comparison["artifacts"].append(
-            {"artifact": name, "run_1_sha256": first_hash, "run_2_sha256": second_hash}
+            {
+                "artifact": name,
+                "caller_input_1_sha256": first_hash,
+                "caller_input_2_sha256": second_hash,
+            }
         )
     matrix = load_json(mutation_matrix)
     matrix_rows = matrix.get("rows")
@@ -1393,7 +1404,7 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
         raise GateStop("mutation-matrix declared RED return-code count differs from the observation-schema field catalog")
     if matrix.get("restored_green_count") != schema_catalog_count:
         raise GateStop("mutation-matrix declared restoration return-code count differs from the observation-schema field catalog")
-    baseline_manifest = load_json(run1 / "baseline_manifest.json")
+    baseline_manifest = load_json(caller_input_1 / "baseline_manifest.json")
     current_tool_hash = sha256_file(Path(__file__))
     if baseline_manifest.get("adapters", {}).get("observation_adapter", {}).get("sha256") != current_tool_hash:
         raise GateFail("baseline-manifest declared observation-adapter sha256 differs from current gate-tool bytes")
@@ -1492,8 +1503,8 @@ def build_parser() -> argparse.ArgumentParser:
     compare.set_defaults(func=command_compare)
 
     caller_comparison = subparsers.add_parser("verify-caller-supplied-byte-comparison")
-    caller_comparison.add_argument("--run1", required=True)
-    caller_comparison.add_argument("--run2", required=True)
+    caller_comparison.add_argument("--caller-input-1", required=True)
+    caller_comparison.add_argument("--caller-input-2", required=True)
     caller_comparison.set_defaults(func=command_verify_caller_supplied_byte_comparison)
 
     self_test = subparsers.add_parser("self-test-compare")
@@ -1508,8 +1519,8 @@ def build_parser() -> argparse.ArgumentParser:
     mutations.set_defaults(func=command_mutation_harness)
 
     finalize = subparsers.add_parser("finalize-candidate")
-    finalize.add_argument("--run1", required=True)
-    finalize.add_argument("--run2", required=True)
+    finalize.add_argument("--caller-input-1", required=True)
+    finalize.add_argument("--caller-input-2", required=True)
     finalize.add_argument("--mutation-matrix", required=True)
     finalize.set_defaults(func=command_finalize_candidate)
     return parser
