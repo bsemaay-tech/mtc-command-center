@@ -208,6 +208,24 @@ class BuildProfileResultTests(unittest.TestCase):
             doc, _ = bpra.build_document(src, STRATEGY, "SOURCE_NAKED", "run_x", "PASS", None, None, 10)
             self.assertEqual(doc["results"][0]["promotion_status"], "RESEARCH_ONLY")
 
+    def test_robust_final_does_not_mint_candidate_badge(self) -> None:
+        with tempfile.TemporaryDirectory() as t:
+            source = _mega_source()
+            source["results"][0]["robust_final"] = True
+            src = _write_source(Path(t), source)
+            doc, _ = bpra.build_document(src, STRATEGY, "SOURCE_NAKED", "run_x", "PASS", None, None, 10)
+            promotion = doc["results"][0]["promotion_status"]
+            promoted_ladder = {
+                "PROMOTE_TO_SANDBOX",
+                "PROMOTE_TO_FORWARD_PAPER_TRADE",
+                "MTC_ENGINE_VALIDATED",
+                "PROMOTE_TO_PARITY_CANDIDATE",
+                "APPROVED_FOR_MTC_V2_INTEGRATION",
+            }
+            self.assertNotEqual(promotion, "ROBUST_CANDIDATE")
+            self.assertNotIn(promotion, promoted_ladder)
+            self.assertTrue(doc["results"][0]["robustness"]["robust_final"])
+
     def test_reader_discovers_and_populates_official_bucket(self) -> None:
         with tempfile.TemporaryDirectory() as t:
             tmp = Path(t)

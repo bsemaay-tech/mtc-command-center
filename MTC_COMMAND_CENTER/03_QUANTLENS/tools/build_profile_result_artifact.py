@@ -107,7 +107,7 @@ def map_row(raw: dict, strategy_id: str, profile: str, run_id: str, source_rel: 
     classification = raw.get("classification")
     robust_final = bool(raw.get("robust_final"))
     if robust_final:
-        promotion = "ROBUST_CANDIDATE"
+        promotion = "RESEARCH_ONLY"
     elif classification == "PASS":
         promotion = "RESEARCH_ONLY"  # passed gate thresholds but NOT robustness-survivor
     else:

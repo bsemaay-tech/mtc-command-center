@@ -39,6 +39,8 @@ ada_two_candle_sr__chart_screenshot.png
 3. The agent then updates the target strategy's `source_intake/intake_report.md`
    and re-runs `build_strategy_research_registry.py` so the
    **Strategy Research Lab** dashboard tab reflects the new material.
+   The writer treats `promotion_status` as promotion only when every token is a
+   canonical promotion-or-higher ladder value.
 
 ## Routing target
 
