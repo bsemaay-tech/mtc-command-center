@@ -6,6 +6,7 @@ records control if this index is ambiguous.
 
 | Decision | Date | Binding summary | Source |
 |---|---|---|---|
+| OD-20260829-1 | 2026-08-29 | Every T0–T2 Gate 5/Gate 6 model-audit dispatch must include fresh `gemini-3.7-flash-high` parallel corroboration with the same brief and evidence. The Lead compares and reproduces findings; Gemini does not replace exact flagship slots or final acceptance, and T3 remains self-verification-only. | Owner decision, current session |
 | OD-20260826-1 | 2026-08-26 | STOP WP-P0-11's current start gate; only read-only provenance and replacement-gate preparation are authorized before the exact-strategy baseline is independently checked. | [verbatim record](MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md#owner-decisions-2026-08-26--recorded-verbatim) |
 | OD-20260826-2 | 2026-08-26 | WP-P0-10 uses the stricter acceptance bar: independently re-measured claims, independent tamper/mutation, real RED/GREEN proof, and no overclaiming. | [verbatim record](MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md#owner-decisions-2026-08-26--recorded-verbatim) |
 | OD-20260826-3 | 2026-08-26 | Future promotions require genuine DSR, BH-FDR, `robust_final`, and positive-alpha pass/fail gates; implementation waits for the specified decision package and separate approval. | [verbatim record](MTC_COMMAND_CENTER/_AI_MEMORY/history/DECISIONS_FULL_PRE_ROUTER_2026-08-25.md#owner-decisions-2026-08-26--recorded-verbatim) |
