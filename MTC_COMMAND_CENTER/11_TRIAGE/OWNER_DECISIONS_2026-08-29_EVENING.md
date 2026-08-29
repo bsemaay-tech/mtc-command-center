@@ -32,6 +32,17 @@ Additional owner order, same message: **parallel lanes increased to 10.**
 Same message thread also ordered parallel design work on P0-13/21/22 (dispatched as drafts,
 design-only, serial build chain unchanged).
 
+## Addendum 2 — late evening (owner verbatim: "promotion yes / speed up the godd work. ı want real progress until the morning")
+
+4. **PROMOTION REPORT-ONLY DECISION: APPROVED.** The owner approves the report-only rule and
+   vocabulary of `PROMOTION_REPORT_ONLY_DECISION.md`: the four checks (DSR, BH-FDR,
+   `robust_final`, positive raw lockbox excess) may be computed and DISPLAYED as
+   PASS / FAIL / STOP in a separate report artifact only. Nothing that decides promotion,
+   queue placement, or registry status changes. Building the diagnostic display is a separate,
+   separately costed future decision (the document's planning estimate: 18-26 route-hours) and
+   is NOT authorized by this approval.
+5. **Overnight order:** maximum real progress until morning under the standing rules.
+
 ## Interpretation notes (Lead)
 
 - Ruling 1 authorizes exactly the repair-7 pattern: rename the published labels that assert

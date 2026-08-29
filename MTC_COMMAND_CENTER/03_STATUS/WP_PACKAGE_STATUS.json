@@ -137,12 +137,12 @@
     {
       "id": "PROMOTION-DECISION",
       "title": "Promotion pipeline decision package",
-      "state": "OWNER_PARKED",
+      "state": "APPROVED_REPORT_ONLY",
       "branch": "-",
       "commit": "-",
-      "detail": "Document-only package, audited and corrected (PROMOTION_REPORT_ONLY_DECISION.md). Owner (evening, all-defaults) parked it until he has reading time; no lane spends on it.",
-      "owner_gate": true,
-      "next_action": "parked - owner reads when ready"
+      "detail": "Owner APPROVED the report-only rule + vocabulary (late evening, verbatim 'promotion yes'): the four checks (DSR, BH-FDR, robust_final, raw lockbox excess) may be computed and shown PASS/FAIL/STOP in a separate report artifact only; nothing deciding promotion/queue/registry changes. Building the display is a separate future decision (doc estimate 18-26 route-hours), NOT yet authorized.",
+      "owner_gate": false,
+      "next_action": "none until owner separately authorizes building the diagnostic display"
     },
     {
       "id": "FROZEN-PINE-TAG",
