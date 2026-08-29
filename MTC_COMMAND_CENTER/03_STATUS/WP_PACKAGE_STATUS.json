@@ -17,12 +17,12 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "REPAIR_6_IN_PROGRESS_PLUS_V3_DESIGN",
+      "state": "PARKED_BY_STOPPING_RULE",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
-      "commit": "f8a186b8 (repair-4)",
-      "detail": "Repair-4 committed: self-comparing C42 assertion removed, receipt pins reconciled, validator claims narrowed; all 8 deduplicated findings closed; census dual-stated (15 kept / 12 excluded comprehension-bound). Gate remains STOP by design (27/13/2). ROUND-4 VERDICTS: flagship PASS-WITH-NITS, zero fresh instances (all 3 auditors agree) - stopping rule NOT triggered, first clean round. Detection found 1 latent BLOCK-class defect in the untouched finalizer (accepts zero-row matrix, emits PASS); repair 5 closing it now.",
-      "owner_gate": false,
-      "next_action": "repair-6 (N42b) + v3 design revision (W44) converge at stage 4; owner 3x YES recorded"
+      "commit": "37a4c191 (repair-6)",
+      "detail": "Repair-4 committed: self-comparing C42 assertion removed, receipt pins reconciled, validator claims narrowed; all 8 deduplicated findings closed; census dual-stated (15 kept / 12 excluded comprehension-bound). Gate remains STOP by design (27/13/2). PARKED 2026-08-29 afternoon by the pre-written stopping rule: repair-6 flagship PASS, but detection proved the receipt field double_build still names an act the code does not perform (it byte-compares caller-supplied files). Every other probe from six rounds now REFUSED. One field name remains. Owner decision doc: 11_TRIAGE/OWNER_DECISION_P011_FINALIZER_LABEL.md (3 options, recommended: repair 7 label-only).",
+      "owner_gate": true,
+      "next_action": "OWNER: pick option 1/2/3 in OWNER_DECISION_P011_FINALIZER_LABEL.md"
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
