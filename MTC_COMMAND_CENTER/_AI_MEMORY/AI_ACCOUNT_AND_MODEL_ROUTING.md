@@ -400,3 +400,22 @@ no tools.
   output. The single-writer rule is about the **worktree**, checked with `git status --porcelain`.
 - **Claude Max lost two completed lanes to `API Error: Connection lost mid-response`** at the moment
   of writing the report. Specs should require the report to be written incrementally.
+
+---
+
+## 12. Supplemental routes live 2026-08-29 afternoon (supersedes stale availability rows)
+
+This is an operational snapshot, not a stored quota promise. It supersedes the earlier historical
+inventory statement that OpenCode was unvalidated and the earlier historical OpenRouter
+`NOT USABLE` balance record; those dated records remain above for provenance only.
+
+| Route | Live verification | Approved default role | Invocation boundary |
+|---|---|---|---|
+| Gemini 3.7 Flash High | Existing read-only route working | Mandatory parallel corroborating auditor for T0/T1/T2 Gate 5/Gate 6 | `Invoke-GeminiProReadOnly.ps1`; no execution or acceptance authority |
+| OpenCode Go | `opencode-go/deepseek-v4-flash` returned `OPENCODE_GO_READY`; catalog also lists `opencode-go/deepseek-v4-pro` | GLM-5.3-Flash for routine bounded unprotected coding/review; DeepSeek V4 Pro for deep adversarial review before PAYG; Kimi K3 only for difficult/long-context escalation | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-OpenCodeGo.ps1`; OpenCode owns its credential profile |
+| OpenRouter | Signed-in console showed USD 10.56; `openrouter/deepseek/deepseek-v4-flash` returned `OPENROUTER_READY`; catalog lists V4 Pro | DeepSeek V4 Flash for economical high-volume drafts/analysis; V4 Pro only when Go quota/diversity warrants PAYG; Hy3 only as a deliberate different-family counter-review/tie-breaker | Use the already-present environment route without reading, copying, or printing its key |
+
+These roles are binding through OD-20260829-2 but never override the tiered flagship acceptance
+contract. Re-check live quota before dispatch. The source-backed rationale, current model
+availability, dated pricing/revision caveats, and the DeepSeek Flash/Pro distinction are in
+`MTC_COMMAND_CENTER/11_TRIAGE/AI_PROVIDER_ROUTING_RECOMMENDATION_2026-08-29.md`.

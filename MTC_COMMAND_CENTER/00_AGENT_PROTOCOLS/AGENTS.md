@@ -52,6 +52,23 @@ The launcher reads only the canonical checkout: when the audited SHA is in anoth
 Gemini the exact SHA plus literal, safety-redacted diff and relevant file slices in its review
 package; never let it substitute canonical-checkout contents for the audited source.
 T3 remains self-verification-only unless a later owner task explicitly requests a model audit.
+
+**OD-20260829-2 — supplemental-route defaults.** Keep every acceptance slot, tier cap, and
+protected-scope boundary above unchanged. For bounded unprotected work, use
+`opencode-go/glm-5.3-flash` as the routine worker; escalate to `opencode-go/kimi-k3` only for a
+genuinely difficult architecture/long-context question or a stalled first attempt. Use
+`opencode-go/deepseek-v4-pro` as the supplemental deep-adversarial reviewer for evidence-backed
+architecture review, difficult bug analysis, requirements-versus-implementation checks, and
+failure-mode discovery; prefer that included allowance before paid OpenRouter V4 Pro unless Go
+quota or provider diversity specifically requires the PAYG route. Use paid OpenRouter
+`deepseek/deepseek-v4-flash` for economical high-volume mechanical drafts or analysis; use paid
+`tencent/hy3` only as a deliberate different-family counter-review or tie-breaker, never the
+deprecated free alias. These are
+supplemental routes, never silent acceptance-auditor substitutions. Record provider/model, why the
+first route was suitable, why a cheaper route was not used when escalating, fallback, and live
+quota preflight. Treat all OpenRouter prices and revisions as dated snapshots, never fixed policy.
+The research record is
+`MTC_COMMAND_CENTER/11_TRIAGE/AI_PROVIDER_ROUTING_RECOMMENDATION_2026-08-29.md`.
 Verdicts: PASS; PASS-WITH-NITS (optional only); REQUEST_CHANGES; BLOCK.
 After a non-accepting verdict, Lead sends the same implementer a focused repair within the tier cap.
 

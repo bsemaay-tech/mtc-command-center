@@ -176,3 +176,12 @@ frozen permanently).
 ## GLM Supplemental Routing
 
 For Z.AI Coding Plan model selection when sub-delegating, see `AGENTS.md` §GLM SUPPLEMENTAL ROUTING (canonical source; routing table not copied here). GLM never replaces a flagship slot required by the audit tier or the counterpart flagship implementer. GLM fills **only** auditor slots selected by the tier policy (see `AGENTS.md` § AUDIT TIER POLICY — PERMANENT DEFAULT) and never silently adds a round. Every delegated GLM task requires a routing record (classification, protected flag, model+provider, cheaper-model rationale, exact paths, budget, fallback, external API credits).
+
+## Current supplemental route choice
+
+For any Gemini, OpenCode Go, or OpenRouter routing choice, apply
+`AGENTS.md` **OD-20260829-2** and the source-backed recommendation in
+`11_TRIAGE/AI_PROVIDER_ROUTING_RECOMMENDATION_2026-08-29.md`. Gemini High remains the mandatory
+parallel read-only corroborator; the other routes are scoped supplemental workers or independent
+counter-reviews and never alter acceptance, protected-path, credential, or executable-evidence
+rules.
