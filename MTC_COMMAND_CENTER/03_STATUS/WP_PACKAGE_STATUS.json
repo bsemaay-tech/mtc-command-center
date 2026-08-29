@@ -1,7 +1,7 @@
 ﻿{
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-29T21:10:00+03:00",
+  "generated": "2026-08-29T21:25:00+03:00",
   "updated_by": "claude-lead-session-2026-08-29-evening",
   "packages": [
     {
@@ -17,12 +17,12 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "REPAIR_7_DONE_RESIDUAL_LABEL_QUESTION",
+      "state": "REPAIR_8_RUNNING",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
       "commit": "e67d2b84 (repair-7)",
       "detail": "Repair-4 committed: self-comparing C42 assertion removed, receipt pins reconciled, validator claims narrowed; all 8 deduplicated findings closed; census dual-stated (15 kept / 12 excluded comprehension-bound). Gate remains STOP by design (27/13/2). Repair 7 (owner-approved label-only) committed e67d2b84 and delta-audited: flagship PASS-WITH-NITS, detection 1 HIGH residual - the receipt run_1/run_2 names still assert runs the finalizer does not perform (same class). Next session asks the owner: repair 8 label-only (recommended) or carry to v3. v3 stage-4 design v2b complete and re-pinned. Runbook CONFIRMED FOR OWNER. Bridge fail-closed design COMPLETE.",
-      "owner_gate": true,
-      "next_action": "OWNER (next session): repair 8 label-only vs carry to v3"
+      "owner_gate": false,
+      "next_action": "N49 repair 8 (label only, owner-approved evening) -> delta audits -> stage 3 build -> v3 (second actor: Claude Pro per owner ruling)"
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
@@ -87,12 +87,12 @@
     {
       "id": "BRIDGE-FAIL-CLOSED",
       "title": "Bridge refuses unimplemented settings (owner: fail closed)",
-      "state": "DESIGN_COMPLETE_DELTA_RECHECK_RUNNING",
+      "state": "DESIGN_CONFIRMED_CANDIDATE_PREP_RUNNING",
       "branch": "-",
       "commit": "-",
-      "detail": "Design COMPLETE: W10c closed both remaining findings; all findings from both flagships (N43, P15) + path-swap closed. Evening session runs an optional both-auditor delta re-confirm of the W10c edits (P20 flagship + N48 detection + Gemini corroboration). BUILD is gated: the design requires an owner-authorized corrected config candidate (exact bridge.yaml bytes) before implementation. Build+tests+PR only; NO deployment to any host.",
+      "detail": "Design CLOSED with both-auditor delta re-confirm of W10c: P20 flagship CONFIRMED (both findings genuinely closed, no new defects, build gate intact), N48 detection ZERO FINDINGS. Owner (evening, all-defaults) authorized preparing the corrected bridge.yaml candidate: lane W50 produces candidate bytes + per-key rationale. Owner approves the exact bytes separately before any build. NO deployment to any host.",
       "owner_gate": true,
-      "next_action": "OWNER: authorize preparing the corrected bridge.yaml candidate (or supply preferences); then build lane"
+      "next_action": "W50 candidate prep -> owner approves exact bytes -> build lane"
     },
     {
       "id": "SURVEY-SAFETY-SENTENCE",
@@ -120,9 +120,9 @@
       "state": "DESIGN_BLOCKED_SECOND_AUDIT_RUNNING",
       "branch": "-",
       "commit": "-",
-      "detail": "Design P012_BUILD_DESIGN_V1.md (W45) audited BLOCK by N45 (self-checking acceptance gate + 3 open semantics + determinism). Evening session dispatched the second-family design audit (G17 Grok + Gemini corroboration per OD-20260829-1). Next: union of both auditors' findings -> one repair round by the author family -> re-audit. BUILD starts only after P0-11 accepts. Tier T0.",
+      "detail": "Design P012_BUILD_DESIGN_V1.md (W45) audited BLOCK by N45 (self-checking acceptance gate + 3 open semantics + determinism). G17 (Grok) died silently at 21:17 (zero-byte log, no process - 4th recorded silent Grok death, this one on a read-only lane); requeued as OC2 on OpenCode Go Kimi K3. Next: union of both auditors' findings -> one repair round by the author family -> re-audit. BUILD starts only after P0-11 accepts. Tier T0.",
       "owner_gate": false,
-      "next_action": "G17 second-family audit -> union repair -> re-audit"
+      "next_action": "OC2 second-family audit (Kimi K3) -> union repair -> re-audit"
     },
     {
       "id": "WP-P0-20",
@@ -137,12 +137,12 @@
     {
       "id": "PROMOTION-DECISION",
       "title": "Promotion pipeline decision package",
-      "state": "OWNER_REVIEW",
+      "state": "OWNER_PARKED",
       "branch": "-",
       "commit": "-",
-      "detail": "Document-only package, audited and corrected (PROMOTION_REPORT_ONLY_DECISION.md). Not covered by the 12 morning answers.",
+      "detail": "Document-only package, audited and corrected (PROMOTION_REPORT_ONLY_DECISION.md). Owner (evening, all-defaults) parked it until he has reading time; no lane spends on it.",
       "owner_gate": true,
-      "next_action": "owner reads and rules"
+      "next_action": "parked - owner reads when ready"
     },
     {
       "id": "FROZEN-PINE-TAG",
