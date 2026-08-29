@@ -339,3 +339,45 @@ OmniRoute, or any new aggregation router, will **not** be installed:
 2. The only live API providers a router could pool are NVIDIA NIM direct and DeepSeek (approximately $2.90). Two providers do not justify a new always-on, key-holding daemon.
 3. Provider fallback already exists in the repository through `_deepseek_driver/provider.py` (`deepseek` / `grok` / `openrouter` with per-call fallback), Cline profiles, `glm.ps1`, and the allowlisted Codex launcher.
 4. `9router` and `litellm` stay installed but **DORMANT**. They are candidates for a future dedicated setup task only if a concrete gap is demonstrated, such as a NIM-backed worker harness. Reopening this decision requires a flagship-led evaluation; it is not the default.
+
+---
+
+## 11. Route reality measured 2026-08-29 morning (supersedes earlier cap notes)
+
+All figures below are **probe results**, not recollection. Probe used was a single-token reply with
+no tools.
+
+| Route | Result | Note |
+|---|---|---|
+| Codex `third` (ChatGPT Plus) | **OK** | capped 21:39-23:56 during the night, then live again |
+| Codex `free` (ChatGPT Pro) | **OK** | carried the heaviest build lanes |
+| Codex `secondary` | **OK** | **correction: previously recorded as weekly-exhausted until Aug 31. It is live on Aug 29.** |
+| Codex `fourth` | **OK** | **same correction** |
+| Claude Pro | **OK** | capped 21:44-23:50, then live again |
+| Claude Max | **OK** | spent only under a dated one-night owner authorization |
+| Grok 4.6 | **EXHAUSTED** | `API error (status 402 Payment Required): Grok Build usage balance exhausted` after 12 lanes |
+| GLM | DOWN | 429 insufficient balance; owner must recharge |
+
+### Concurrency, measured rather than assumed
+
+- **Grok tolerates concurrent sessions.** Three simultaneous probes all returned; four lanes then ran
+  to completion in ~11 minutes. Previously untested.
+- **Claude Pro ran 5 concurrent lanes** without error.
+- **Codex: one deep lane per account.** Two sessions on one home remains **untested** and was not
+  risked while real work was in flight.
+- Peak achieved: **10 concurrent lanes** across 6 route families.
+
+### Operational traps confirmed this session
+
+- **Never end a turn immediately after dispatching.** A dispatched lane with no waiter loop is a lane
+  whose result nobody reads. This cost four hours of six idle routes on 2026-08-29 (02:35-06:26).
+- **`Start-Job` inside the PowerShell tool does not survive the call** — tool shell state is not
+  persistent. Dispatch through a `.ps1` file run by the harness-tracked background runner.
+- **Never put a non-ASCII path literal in a `.ps1`.** Windows PowerShell 5.1 reads `.ps1` as ANSI
+  without a BOM and mangles it. Build paths from `$env:USERPROFILE`.
+- **`pwsh` is not on PATH from the Bash tool**; use `powershell -ExecutionPolicy Bypass -File`.
+- **Tell every lane that other CLI processes are expected.** One lane read the process table, saw a
+  sibling, assumed a duplicate of itself and stopped without doing any work — 180k tokens for zero
+  output. The single-writer rule is about the **worktree**, checked with `git status --porcelain`.
+- **Claude Max lost two completed lanes to `API Error: Connection lost mid-response`** at the moment
+  of writing the report. Specs should require the report to be written incrementally.
