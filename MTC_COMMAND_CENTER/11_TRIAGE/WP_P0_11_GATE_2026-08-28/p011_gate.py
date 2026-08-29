@@ -628,18 +628,25 @@ def build_row_corroboration(manifest: dict[str, Any]) -> dict[str, Any]:
                     "scenario_ids": [item["scenario_id"] for item in row["scenarios"]],
                 }
             )
+    counts = {
+        "total": len(rows),
+        "green": 0,
+        "stop": sum(item["status"] == "STOP" for item in rows),
+        "not_applicable": sum(item["status"] == "NOT_A_LEGACY_REPRODUCTION_ROW" for item in rows),
+    }
+    policy_row_label = "row" if counts["not_applicable"] == 1 else "rows"
+    total_row_label = "row" if counts["total"] == 1 else "rows"
     return {
         "artifact_schema_version": "P011_ROW_CORROBORATION_v1",
         "gate_version": GATE_VERSION,
         "outcome": "STOP",
-        "reason": "40 direct-build producer adapters and their D026 mutations are frozen but not executed by this sequence builder",
+        "reason": (
+            f"{counts['stop']} direct-build producer adapters and their D026 mutations are frozen "
+            f"but not executed by this sequence builder; {counts['not_applicable']} policy-only "
+            f"{policy_row_label}; {counts['total']} {total_row_label} total"
+        ),
         "rows": rows,
-        "counts": {
-            "total": len(rows),
-            "green": 0,
-            "stop": sum(item["status"] == "STOP" for item in rows),
-            "not_applicable": sum(item["status"] == "NOT_A_LEGACY_REPRODUCTION_ROW" for item in rows),
-        },
+        "counts": counts,
     }
 
 
@@ -1311,6 +1318,10 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
         second = run2 / name
         if not first.is_file() or not second.is_file():
             raise GateStop(f"candidate finalization artifact is missing: {name}")
+        if first.stat().st_size == 0 or second.stat().st_size == 0:
+            raise GateStop(f"candidate finalization artifact is empty: {name}")
+        if name.endswith(".json") and (not load_json(first) or not load_json(second)):
+            raise GateStop(f"candidate finalization artifact is empty: {name}")
         first_hash = sha256_file(first)
         second_hash = sha256_file(second)
         if first_hash != second_hash:
@@ -1318,7 +1329,52 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
         artifacts[name] = first_hash
         double_build["artifacts"].append({"artifact": name, "run_1_sha256": first_hash, "run_2_sha256": second_hash})
     matrix = load_json(mutation_matrix)
-    if matrix.get("outcome") != "PASS" or matrix.get("red_count") != matrix.get("matrix_row_count") or matrix.get("restored_green_count") != matrix.get("matrix_row_count"):
+    matrix_rows = matrix.get("rows")
+    schema = load_json(SCHEMA_PATH)
+    schema_catalog = schema.get("field_catalog")
+    if not isinstance(schema_catalog, list) or not schema_catalog:
+        raise GateStop("observation-schema field catalog is absent")
+    schema_catalog_count = len(schema_catalog)
+    if not isinstance(matrix_rows, list) or not matrix_rows:
+        raise GateStop("mutation-matrix rows are absent; observation-schema field catalog is nonempty")
+    if len(matrix_rows) != schema_catalog_count:
+        raise GateStop("mutation-matrix rows do not cover the observation-schema field catalog")
+    if matrix.get("matrix_row_count") != schema_catalog_count:
+        raise GateStop("mutation-matrix declared row count differs from the observation-schema field catalog")
+    if matrix.get("catalog_field_count") != schema_catalog_count:
+        raise GateStop("mutation-matrix declared catalog count differs from the observation-schema field catalog")
+    matrix_paths = [row.get("stable_field_component_path") for row in matrix_rows]
+    schema_catalog_paths = [item.get("path") for item in schema_catalog]
+    if matrix_paths != schema_catalog_paths:
+        raise GateStop("mutation-matrix row paths differ from the observation-schema field catalog")
+    if matrix.get("schema_sha256") != sha256_file(SCHEMA_PATH):
+        raise GateStop("mutation-matrix schema pin differs from the observation-schema file")
+    matrix_red_evidence_count = sum(
+        row.get("red", {}).get("return_code") == 1 for row in matrix_rows
+    )
+    if matrix_red_evidence_count != schema_catalog_count:
+        raise GateStop("mutation-matrix row RED evidence does not cover the observation-schema field catalog")
+    matrix_restoration_evidence_count = sum(
+        row.get("restoration", {}).get("return_code") == 0 for row in matrix_rows
+    )
+    if matrix_restoration_evidence_count != schema_catalog_count:
+        raise GateStop("mutation-matrix row restoration evidence does not cover the observation-schema field catalog")
+    schema_digest_paths = set(schema.get("digest_catalog", {}).get("state_digest_components", []))
+    matrix_digest_evidence_count = sum(
+        bool(row.get("digest_component")) for row in matrix_rows
+    )
+    if matrix_digest_evidence_count != len(schema_digest_paths):
+        raise GateStop("mutation-matrix row digest components differ from the observation-schema digest catalog")
+    if matrix.get("digest_component_count") != len(schema_digest_paths):
+        raise GateStop("mutation-matrix declared digest-component count differs from the observation-schema digest catalog")
+    schema_event_paths = set(schema.get("digest_catalog", {}).get("event_component_paths", []))
+    if matrix.get("event_component_count") != len(schema_event_paths):
+        raise GateStop("mutation-matrix declared event-component count differs from the observation-schema event catalog")
+    if matrix.get("outcome") != "PASS" or matrix.get("failures") != []:
+        raise GateStop("per-field discrimination matrix is not complete GREEN-after-RED evidence")
+    if matrix.get("red_count") != schema_catalog_count:
+        raise GateStop("mutation-matrix RED count differs from the observation-schema field catalog")
+    if matrix.get("restored_green_count") != schema_catalog_count:
         raise GateStop("per-field discrimination matrix is not complete GREEN-after-RED evidence")
     baseline_manifest = load_json(run1 / "baseline_manifest.json")
     current_tool_hash = sha256_file(Path(__file__))

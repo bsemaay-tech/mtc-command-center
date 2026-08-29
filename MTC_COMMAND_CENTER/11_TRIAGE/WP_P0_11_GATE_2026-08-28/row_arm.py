@@ -2334,9 +2334,15 @@ def validate_frozen_inputs() -> dict[str, Any]:
     receipt = load_json(RECEIPT_PATH)
     if receipt.get("gate_version") != GATE_VERSION:
         raise RowFail("repository receipt is not bound to v2")
-    if receipt["legacy_manifest"]["sha256"] != sha256_file(MANIFEST_PATH):
+    receipt_legacy_manifest = receipt.get("legacy_manifest")
+    if not isinstance(receipt_legacy_manifest, dict):
         raise RowFail("repository receipt legacy-manifest pin differs from current frozen file")
-    if receipt["observation_schema"]["sha256"] != sha256_file(SCHEMA_PATH):
+    if receipt_legacy_manifest.get("sha256") != sha256_file(MANIFEST_PATH):
+        raise RowFail("repository receipt legacy-manifest pin differs from current frozen file")
+    receipt_observation_schema = receipt.get("observation_schema")
+    if not isinstance(receipt_observation_schema, dict):
+        raise RowFail("repository receipt observation-schema pin differs from current frozen file")
+    if receipt_observation_schema.get("sha256") != sha256_file(SCHEMA_PATH):
         raise RowFail("repository receipt observation-schema pin differs from current frozen file")
     if sha256_file(P009_PATH) != P009_SHA256:
         raise RowFail("post-merge P0-09 authority SHA-256 differs")

@@ -1,4 +1,4 @@
-# WP-P0-11 `P011-LC-GATE-v2` repair round 4 report
+# WP-P0-11 `P011-LC-GATE-v2` repair round 5 report
 
 Date: 2026-08-29
 
@@ -15,7 +15,7 @@ audits remain required; the implementer issues no acceptance verdict.
 policy-only rows. Six formerly GREEN rows correctly became STOP when the gate began checking the
 exact declared authority set. This is successful discrimination, not disposition conservation. The
 gate now requires those current counts and rejects the protected stale row evidence
-(`p011_gate.py:1376-1392`). No kernel consolidation, protected implementation edit, subject
+(`p011_gate.py:1432-1448`). No kernel consolidation, protected implementation edit, subject
 comparison, or live/runtime action was performed.
 
 ## Premise 1 - authority diff
@@ -58,7 +58,7 @@ Premise 1 therefore holds; no substantive authority change was absorbed into thi
 
 The prior round recorded outputs at `C:\tmp\p011_gate_v2_run1_20260828` and
 `C:\tmp\p011_gate_v2_run2_20260828`. They are outside the repository and were not regenerated in
-repair round 4. The counts (48,077 observations per profile; 96,154 total) and hashes below are
+repair round 5. The counts (48,077 observations per profile; 96,154 total) and hashes below are
 therefore historical **ephemeral** claims, not durable acceptance evidence:
 
 | Artifact | Run 1 SHA-256 | Run 2 SHA-256 |
@@ -117,10 +117,10 @@ The six measured disposition changes are:
 The current authority check compares a verifier-declared set with runtime import observations and
 records missing identities (`row_arm.py:179-218`). Current code emits no `CONSERVED` contract ledger and
 makes no terminal-consumption claim. The isolated unit suite uses a per-run temporary directory,
-not a committed absolute scratch pin (`test_scenario_binding.py:30-31`). It runs 16 tests, including
+not a committed absolute scratch pin (`test_scenario_binding.py:31-32`). It runs 20 tests, including
 the producer spy, exact-key variants, identity-bound C32 control, receipt-pin refusal variants, a
 counts-only receipt probe, and the complete declared-leaf variant matrix
-(`test_scenario_binding.py:187-578`). C42 publishes only the executed producer outputs; the
+(`test_scenario_binding.py:151-840`). C42 publishes only the executed producer outputs; the
 re-keyed duplicate and self-comparison were deleted (`row_arm.py:3238-3253`). No load-bearing claim in
 the repaired disposition or binding sections cites an `N26_VARIANTS` scratch output.
 
@@ -141,9 +141,9 @@ the repaired disposition or binding sections cites an `N26_VARIANTS` scratch out
    repository artifact.
 5. Reconcile the protected receipt's `legacy_manifest.sha256` and
    `observation_schema.sha256` pins with the current frozen files before an anchor-only repin can
-   authorize the package (`P011_GATE_RECEIPT.json:138-146`; `row_arm.py:2322-2350`).
+   authorize the package (`P011_GATE_RECEIPT.json:138-146`; `row_arm.py:2322-2346`).
 6. State and pin the serialization policy for both normalized/LF repository bytes and CRLF working-
-   tree bytes. The validator currently hashes exact on-disk bytes (`row_arm.py:120-129,2322-2350`);
+   tree bytes. The validator currently hashes exact on-disk bytes (`row_arm.py:120-129,2322-2346`);
    v3 must name the chosen authoritative byte form and publish both identities where both forms are
    retained.
 7. Update every authorized receipt/anchor hash for `row_arm.py`, `scenario_binding.py`,
@@ -153,9 +153,24 @@ The observation schema is not a target for the scenario-binding fields: its cata
 observation, signal, event, position, gate-readiness, and account fields, but none of the named
 scenario-contract fields (`P011_OBSERVATION_SCHEMA_v1.json:165-789`).
 
+## Repair-round-5 evidence closure
+
+The candidate finalizer now refuses any absent, byte-empty, or logically empty required build
+artifact. Its discrimination matrix must carry nonempty rows and bind its declared count, catalog
+count, ordered paths, schema pin, RED count, and restoration count to the independently loaded
+observation-schema field catalog (`p011_gate.py:1302-1381`). The zero-row/empty-artifact modified
+copy is refused, a separately modified 75-row matrix is refused against the schema's 76-row
+universe, and the 76-row/nonempty control remains accepted (`test_scenario_binding.py:187-413`).
+
+Row-corroboration wording now derives its applicable, policy-only, and total counts from the rows
+actually present (`p011_gate.py:601-652`; `test_scenario_binding.py:414-427`). Missing nested
+receipt pins now reach the intended `RowFail` through guarded reads instead of `KeyError`
+(`row_arm.py:2322-2346`; `test_scenario_binding.py:428-451`). These checks change evidence
+admission and reporting only; they do not change the frozen row dispositions or any producer.
+
 ## Scope and audit boundary
 
-This repair writes only `row_arm.py`, `scenario_binding.py`, `p011_gate.py`, `LANE_REPORT.md`, and
+This repair writes only `row_arm.py`, `p011_gate.py`, `LANE_REPORT.md`, and
 `test_scenario_binding.py`. Implementation A/B, Pine, `MTC_V2`, backtest, adapters, kernel, schemas,
 receipts, evidence, anchors, hosts, brokers, venues, credentials, and live/testnet surfaces were not
 edited or invoked. No live dependency was present. The package is committed locally only as an

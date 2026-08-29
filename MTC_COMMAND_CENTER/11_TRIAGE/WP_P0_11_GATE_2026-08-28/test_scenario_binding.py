@@ -184,6 +184,272 @@ class ScenarioBindingModuleTests(unittest.TestCase):
 
 
 class GateVariantTests(unittest.TestCase):
+    def _write_finalizer_run(
+        self,
+        name: str,
+        *,
+        empty_artifact: str | None = None,
+        empty_json_artifact: str | None = None,
+    ) -> Path:
+        run = VARIANT_DIR / name
+        run.mkdir(parents=True, exist_ok=True)
+        baseline = {
+            "adapters": {
+                "observation_adapter": {
+                    "binding": "test fixture",
+                    "sha256": p011_gate.sha256_file(Path(p011_gate.__file__)),
+                }
+            },
+            "conservation": {"total_records": 1},
+            "source": {"resolved_import_bindings": []},
+        }
+        values = {
+            "baseline_manifest.json": p011_gate.canonical_bytes(baseline),
+            "final_states.json": p011_gate.canonical_bytes({"profile": {"state": "present"}}),
+            "mtc_v2_legacy_sequence.jsonl": b"{}\n",
+            "row_corroboration.json": p011_gate.canonical_bytes({"rows": [{"row_id": "C01"}]}),
+        }
+        for artifact, value in values.items():
+            if artifact == empty_artifact:
+                value = b""
+            elif artifact == empty_json_artifact:
+                value = b"{}\n"
+            (run / artifact).write_bytes(value)
+        return run
+
+    def _invoke_finalizer(
+        self,
+        run1: Path,
+        run2: Path,
+        matrix_path: Path,
+        *,
+        schema_path: Path | None = None,
+    ) -> int:
+        anchor = json.loads(p011_gate.ANCHOR_PATH.read_text(encoding="utf-8"))
+        anchor["legacy_manifest_sha256"] = p011_gate.sha256_file(
+            p011_gate.GATE_DIR / "p011_legacy_manifest.json"
+        )
+        anchor_path = _write_n33_json("finalizer/copied_anchor.json", anchor)
+        with (
+            patch.object(p011_gate, "ANCHOR_PATH", anchor_path),
+            patch.object(p011_gate, "SCHEMA_PATH", schema_path or p011_gate.SCHEMA_PATH),
+            patch.object(
+                p011_gate,
+                "row_arm_receipt",
+                return_value={
+                    "counts": {"green": 27, "not_applicable": 2, "stop": 13, "total": 42},
+                    "outcome": "STOP",
+                    "reason": "test fixture",
+                },
+            ),
+            patch.object(p011_gate, "write_json"),
+            redirect_stdout(io.StringIO()),
+        ):
+            return p011_gate.command_finalize_candidate(
+                type(
+                    "Args",
+                    (),
+                    {"run1": str(run1), "run2": str(run2), "mutation_matrix": str(matrix_path)},
+                )()
+            )
+
+    def test_finalize_candidate_refuses_zero_row_and_schema_short_matrix(self) -> None:
+        run1 = self._write_finalizer_run("finalizer/matrix_run1")
+        run2 = self._write_finalizer_run("finalizer/matrix_run2")
+        matrix = json.loads(
+            (
+                p011_gate.GATE_DIR
+                / "evidence"
+                / "discrimination_matrix"
+                / "discrimination_matrix.json"
+            ).read_text(encoding="utf-8")
+        )
+
+        zero_matrix = {
+            "digest_component_count": 0,
+            "event_component_count": 0,
+            "matrix_row_count": 0,
+            "outcome": "PASS",
+            "red_count": 0,
+            "restored_green_count": 0,
+            "rows": [],
+        }
+        zero_path = _write_n33_json("finalizer/zero_matrix.json", zero_matrix)
+        with self.assertRaisesRegex(p011_gate.GateStop, "matrix.*rows"):
+            self._invoke_finalizer(run1, run2, zero_path)
+
+        short_matrix = deepcopy(matrix)
+        short_matrix["catalog_field_count"] -= 1
+        short_matrix["matrix_row_count"] -= 1
+        short_matrix["red_count"] -= 1
+        short_matrix["restored_green_count"] -= 1
+        short_matrix["rows"] = short_matrix["rows"][:-1]
+        short_path = _write_n33_json("finalizer/schema_short_matrix.json", short_matrix)
+        with self.assertRaisesRegex(p011_gate.GateStop, "observation-schema field catalog"):
+            self._invoke_finalizer(run1, run2, short_path)
+
+        empty_catalog_schema = json.loads(p011_gate.SCHEMA_PATH.read_text(encoding="utf-8"))
+        empty_catalog_schema["field_catalog"] = []
+        empty_catalog_schema_path = _write_n33_json(
+            "finalizer/empty_catalog_schema.json", empty_catalog_schema
+        )
+        with self.assertRaisesRegex(p011_gate.GateStop, "schema field catalog is absent"):
+            self._invoke_finalizer(
+                run1,
+                run2,
+                p011_gate.GATE_DIR
+                / "evidence"
+                / "discrimination_matrix"
+                / "discrimination_matrix.json",
+                schema_path=empty_catalog_schema_path,
+            )
+
+        invalid_path_matrix = deepcopy(matrix)
+        invalid_path_matrix["rows"][0]["stable_field_component_path"] = "wrong.path"
+        invalid_path = _write_n33_json(
+            "finalizer/invalid_path_matrix.json", invalid_path_matrix
+        )
+        with self.assertRaisesRegex(p011_gate.GateStop, "row paths differ"):
+            self._invoke_finalizer(run1, run2, invalid_path)
+
+        for section, return_code, reason in (
+            ("red", 0, "row RED evidence"),
+            ("restoration", 1, "row restoration evidence"),
+        ):
+            with self.subTest(section=section):
+                invalid_evidence = deepcopy(matrix)
+                invalid_evidence["rows"][0][section]["return_code"] = return_code
+                invalid_path = _write_n33_json(
+                    f"finalizer/invalid_{section}_matrix.json", invalid_evidence
+                )
+                with self.assertRaisesRegex(p011_gate.GateStop, reason):
+                    self._invoke_finalizer(run1, run2, invalid_path)
+
+        invalid_component_count = deepcopy(matrix)
+        invalid_component_count["digest_component_count"] -= 1
+        invalid_component_path = _write_n33_json(
+            "finalizer/invalid_digest_count_matrix.json", invalid_component_count
+        )
+        with self.assertRaisesRegex(p011_gate.GateStop, "digest-component count"):
+            self._invoke_finalizer(run1, run2, invalid_component_path)
+
+        invalid_digest_row = deepcopy(matrix)
+        digest_row = next(row for row in invalid_digest_row["rows"] if row["digest_component"])
+        digest_row["digest_component"] = False
+        invalid_digest_row_path = _write_n33_json(
+            "finalizer/invalid_digest_row_matrix.json", invalid_digest_row
+        )
+        with self.assertRaisesRegex(p011_gate.GateStop, "row digest components"):
+            self._invoke_finalizer(run1, run2, invalid_digest_row_path)
+
+        scalar_variants = (
+            ("matrix_row_count", matrix["matrix_row_count"] - 1, "declared row count"),
+            ("catalog_field_count", matrix["catalog_field_count"] - 1, "declared catalog count"),
+            ("schema_sha256", "0" * 64, "schema pin differs"),
+            ("event_component_count", matrix["event_component_count"] - 1, "event-component count"),
+            ("red_count", matrix["red_count"] - 1, "RED count differs"),
+            (
+                "restored_green_count",
+                matrix["restored_green_count"] - 1,
+                "GREEN-after-RED evidence",
+            ),
+            ("outcome", "STOP", "GREEN-after-RED evidence"),
+            ("failures", ["FIELD-001"], "GREEN-after-RED evidence"),
+        )
+        for field, value, reason in scalar_variants:
+            with self.subTest(field=field):
+                invalid_matrix = deepcopy(matrix)
+                invalid_matrix[field] = value
+                invalid_path = _write_n33_json(
+                    f"finalizer/invalid_{field}_matrix.json", invalid_matrix
+                )
+                with self.assertRaisesRegex(p011_gate.GateStop, reason):
+                    self._invoke_finalizer(run1, run2, invalid_path)
+
+        green_path = (
+            p011_gate.GATE_DIR
+            / "evidence"
+            / "discrimination_matrix"
+            / "discrimination_matrix.json"
+        )
+        self.assertEqual(0, self._invoke_finalizer(run1, run2, green_path))
+
+    def test_finalize_candidate_refuses_each_empty_build_artifact(self) -> None:
+        matrix_path = (
+            p011_gate.GATE_DIR
+            / "evidence"
+            / "discrimination_matrix"
+            / "discrimination_matrix.json"
+        )
+        artifacts = (
+            "baseline_manifest.json",
+            "final_states.json",
+            "mtc_v2_legacy_sequence.jsonl",
+            "row_corroboration.json",
+        )
+        for index, artifact in enumerate(artifacts):
+            with self.subTest(artifact=artifact):
+                run1 = self._write_finalizer_run(
+                    f"finalizer/empty_{index}_run1", empty_artifact=artifact
+                )
+                run2 = self._write_finalizer_run(
+                    f"finalizer/empty_{index}_run2", empty_artifact=artifact
+                )
+                with self.assertRaisesRegex(p011_gate.GateStop, "artifact is empty"):
+                    self._invoke_finalizer(run1, run2, matrix_path)
+
+        for index, artifact in enumerate(
+            ("baseline_manifest.json", "final_states.json", "row_corroboration.json")
+        ):
+            with self.subTest(logically_empty=artifact):
+                run1 = self._write_finalizer_run(
+                    f"finalizer/logical_empty_{index}_run1", empty_json_artifact=artifact
+                )
+                run2 = self._write_finalizer_run(
+                    f"finalizer/logical_empty_{index}_run2", empty_json_artifact=artifact
+                )
+                with self.assertRaisesRegex(p011_gate.GateStop, "artifact is empty"):
+                    self._invoke_finalizer(run1, run2, matrix_path)
+
+    def test_row_corroboration_reason_uses_present_row_counts(self) -> None:
+        manifest = _load_manifest()
+        policy_row = next(
+            row
+            for row in manifest["rows"]
+            if row["disposition"] == "NOT_A_LEGACY_REPRODUCTION_ROW"
+        )
+        result = p011_gate.build_row_corroboration({"rows": [deepcopy(policy_row)]})
+        self.assertEqual(
+            "0 direct-build producer adapters and their D026 mutations are frozen but not executed "
+            "by this sequence builder; 1 policy-only row; 1 row total",
+            result["reason"],
+        )
+
+    def test_missing_receipt_pin_sha256_is_row_fail(self) -> None:
+        base_receipt = json.loads(row_arm.RECEIPT_PATH.read_text(encoding="utf-8"))
+        cases = (
+            ("legacy_manifest", "receipt legacy-manifest pin differs"),
+            ("observation_schema", "receipt observation-schema pin differs"),
+        )
+        for index, (section, reason) in enumerate(cases):
+            with self.subTest(section=section):
+                receipt = deepcopy(base_receipt)
+                receipt["legacy_manifest"]["sha256"] = row_arm.sha256_file(row_arm.MANIFEST_PATH)
+                receipt["observation_schema"]["sha256"] = row_arm.sha256_file(row_arm.SCHEMA_PATH)
+                receipt[section].pop("sha256")
+                receipt_path = _write_n33_json(f"missing_pin_{index}/receipt.json", receipt)
+
+                anchor = json.loads(row_arm.ANCHOR_PATH.read_text(encoding="utf-8"))
+                anchor["legacy_manifest_sha256"] = row_arm.sha256_file(row_arm.MANIFEST_PATH)
+                anchor["receipt_sha256"] = row_arm.sha256_file(receipt_path)
+                anchor_path = _write_n33_json(f"missing_pin_{index}/anchor.json", anchor)
+                with (
+                    patch.object(row_arm, "ANCHOR_PATH", anchor_path),
+                    patch.object(row_arm, "RECEIPT_PATH", receipt_path),
+                ):
+                    with self.assertRaisesRegex(row_arm.RowFail, reason):
+                        row_arm.validate_frozen_inputs()
+
     def test_copied_anchor_repin_cannot_authorize_receipt_manifest_mismatch(self) -> None:
         anchor = json.loads(row_arm.ANCHOR_PATH.read_text(encoding="utf-8"))
         anchor["legacy_manifest_sha256"] = row_arm.sha256_file(row_arm.MANIFEST_PATH)
