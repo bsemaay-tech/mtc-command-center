@@ -1201,11 +1201,10 @@ def compute_regime_analysis(df, trade_events, lockbox_start, lockbox_end):
         else:
             bucket_returns_pct[bk] = 0.0
 
-    regime_breakdown_present = True  # all four keys present
-
     # Weak regime: bucket with lowest return among buckets with trades
     buckets_with_trades = {k: v for k, v in bucket_returns_pct.items() if bucket_trade_counts[k] > 0}
     regime_coverage_count = len(buckets_with_trades)
+    regime_breakdown_present = regime_coverage_count > 0
 
     if buckets_with_trades:
         weak_regime = min(buckets_with_trades, key=buckets_with_trades.get)

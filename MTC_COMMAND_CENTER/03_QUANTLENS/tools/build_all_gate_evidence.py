@@ -30,10 +30,10 @@ Honesty rules:
   - Do NOT fabricate production readiness.  Gate3 alert_adapter/state_sync/
     fail_safe and most monitoring fields remain N_A or NOT_COMPUTED unless
     directly evidenced.
-  - It IS acceptable to mark coded-backtest/intake feasibility fields OK when
-    supported by the existence of the MEGA coded strategy result, closed-bar/
-    next-open simulator convention, best_params, symbol/timeframe, trade
-    counts, and existing Gate2 metrics.
+  - A MEGA result/config or symbol/timeframe identifies an artifact; its
+    existence alone does not verify a named intake, feasibility, or Gate3
+    rubric property. Such properties remain NOT_COMPUTED unless this writer
+    reads evidence specific to the property.
   - Gate1/Gate1B evidence may be preliminary.
   - Do NOT set hard_flags.repaint_status to VERIFIED.
   - Do NOT alter Gate2 metrics.
@@ -131,64 +131,45 @@ def build_intake(
     if isinstance(trades_env, dict) and trades_env.get("status") == "OK":
         trades_val = trades_env.get("value")
 
-    has_best_params = bool(mega_row and mega_row.get("summary", {}).get("best_params"))
+    best_params = mega_row.get("summary", {}).get("best_params") if mega_row else None
+    has_best_params = isinstance(best_params, dict) and bool(best_params)
     has_mega_result = mega_row is not None
-    has_symbol_tf = bool(symbol and timeframe)
     enough_trades = trades_val is not None and trades_val >= 30
 
     source_mega = "MEGA_walk_forward_results"
     source_eval = "evaluation_artifact_v1"
 
-    # Helper: OK if MEGA coded result exists with best_params
-    def ok_if_coded(notes: str = "") -> dict:
-        if has_mega_result and has_best_params:
-            return OK(True, source_mega, notes or "Evidenced by MEGA coded strategy result with best_params")
-        return NOT_COMPUTED(None, "No MEGA coded result with best_params available")
-
-    def ok_if_symbol_tf(notes: str = "") -> dict:
-        if has_symbol_tf:
-            return OK(True, source_eval, notes or f"Symbol={symbol}, timeframe={timeframe} present in eval artifact")
-        return N_A(None, source_eval, "Symbol/timeframe not available")
-
     intake_block: Dict[str, Any] = {}
 
     # Section 1.1 Rule clarity and determinism
-    intake_block["entry_pseudo_present"] = ok_if_coded("Entry rule is coded in MEGA strategy; pseudo-code derivable")
-    intake_block["exit_pseudo_or_delegated"] = ok_if_coded("Exit modeled via closed-bar/next-open simulator convention")
-    intake_block["direction_defined"] = ok_if_coded("Direction defined by MEGA strategy (long/short)")
-    intake_block["opposite_signal_behavior_present"] = OK(
-        True,
-        source_mega,
-        "Single-position MEGA simulator defines same-bar/overlap behavior for coded signals",
-    ) if has_mega_result else NOT_COMPUTED(None, "Opposite-signal behavior not available")
+    intake_block["entry_pseudo_present"] = NOT_COMPUTED(None, "Entry pseudo-code not verified by MEGA row existence")
+    intake_block["exit_pseudo_or_delegated"] = NOT_COMPUTED(None, "Exit pseudo-code or delegation not verified by MEGA row existence")
+    intake_block["direction_defined"] = NOT_COMPUTED(None, "Direction contract not verified by MEGA row existence")
+    intake_block["opposite_signal_behavior_present"] = NOT_COMPUTED(None, "Opposite-signal behavior not verified by MEGA row existence")
     intake_block["params_enumerated"] = (
         OK(True, source_mega, f"best_params available: {json.dumps(mega_row['summary']['best_params'])}")
         if has_best_params
         else NOT_COMPUTED(None, "No best_params in MEGA row")
     )
-    intake_block["has_deterministic_rules"] = ok_if_coded("MEGA strategy is deterministic (coded rules, no human interpretation)")
+    intake_block["has_deterministic_rules"] = NOT_COMPUTED(None, "Rule determinism not verified by MEGA row existence")
 
     # Section 1.2 Algorithmic codability
-    intake_block["codable"] = ok_if_coded("Strategy is coded in Python MEGA runner")
-    intake_block["not_manual_visual"] = ok_if_coded("MEGA backtest is fully automated, no manual eyeball required")
+    intake_block["codable"] = NOT_COMPUTED(None, "Codability not independently verified by MEGA row existence")
+    intake_block["not_manual_visual"] = NOT_COMPUTED(None, "Absence of manual/visual inputs not verified by MEGA row existence")
     intake_block["inputs_numeric_boolean"] = (
-        OK(True, source_mega, "best_params are numeric; strategy inputs are numeric/boolean")
+        OK(
+            all(isinstance(value, (bool, int, float)) for value in best_params.values()),
+            source_mega,
+            "Checked every saved best_params value for JSON boolean/numeric type",
+        )
         if has_best_params
-        else NOT_COMPUTED(None, "Cannot verify input types without Pine source")
+        else NOT_COMPUTED(None, "Cannot verify input types without saved best_params")
     )
-    intake_block["state_machine_definable"] = ok_if_coded("MEGA strategy uses entry/exit signals; state machine definable")
-    intake_block["not_closed_source"] = (
-        OK(True, source_mega, "Strategy is coded in open Python MEGA runner")
-        if has_mega_result
-        else NOT_COMPUTED(None, "Cannot verify source openness")
-    )
+    intake_block["state_machine_definable"] = NOT_COMPUTED(None, "State-machine definition not verified by MEGA row existence")
+    intake_block["not_closed_source"] = NOT_COMPUTED(None, "Source openness not verified by MEGA row existence")
 
     # Section 1.3 Preliminary repaint/lookahead
-    intake_block["signal_from_closed_bar"] = (
-        OK(True, source_mega, "MEGA simulator uses closed-bar/next-open convention")
-        if has_mega_result
-        else NOT_COMPUTED(None, "Cannot verify bar timing without simulator inspection")
-    )
+    intake_block["signal_from_closed_bar"] = NOT_COMPUTED(None, "Closed-bar signal timing not verified by MEGA row existence")
     intake_block["repaint_class"] = (
         OK("MEDIUM", source_mega, "Preliminary: coded closed-bar/next-open evidence suggests LOW risk, but no Pine parity VERIFIED; set MEDIUM conservatively")
         if has_mega_result
@@ -199,17 +180,9 @@ def build_intake(
     intake_block["htf_lookahead_safe"] = (
         OK(False, source_eval, "HTF-style strategy detected; explicit lookahead proof is not present")
         if has_mega_result and uses_htf
-        else (
-            OK(True, source_eval, "No HTF dependency evidenced in this coded strategy artifact")
-            if has_mega_result
-            else NOT_COMPUTED(None, "Cannot determine HTF safety")
-        )
+        else NOT_COMPUTED(None, "HTF lookahead safety not verified by strategy-name or MEGA row presence")
     )
-    intake_block["no_risky_structure"] = (
-        OK(True, source_mega, "No repaint/peek structure detected in MEGA coded strategy (closed-bar convention)")
-        if has_mega_result
-        else NOT_COMPUTED(None, "Cannot verify structure safety")
-    )
+    intake_block["no_risky_structure"] = NOT_COMPUTED(None, "Absence of risky structure not verified by MEGA row existence")
     intake_block["realtime_eq_backtest"] = (
         OK(False, source_eval, "Realtime-vs-backtest equality not verified; live comparison required")
         if has_mega_result
@@ -217,38 +190,18 @@ def build_intake(
     )
 
     # Section 1.4 Trade lifecycle
-    intake_block["entry_signal_clear"] = ok_if_coded("Entry signal logic is coded in MEGA strategy")
-    intake_block["exit_or_delegated_clear"] = ok_if_coded("Exit is delegated to closed-bar/next-open simulator model")
-    intake_block["opposite_signal_clear"] = OK(
-        True,
-        source_mega,
-        "Opposite/overlap handling is defined by the single-position MEGA simulator",
-    ) if has_mega_result else NOT_COMPUTED(None, "Opposite-signal handling not available")
-    intake_block["reentry_policy_clear"] = OK(
-        True,
-        source_mega,
-        "Re-entry policy follows the next valid coded signal after flat state in MEGA simulator",
-    ) if has_mega_result else NOT_COMPUTED(None, "Re-entry policy not available")
-    intake_block["state_model_clear"] = ok_if_coded("State model (flat/long/short) is implicit in MEGA signal generation")
-    intake_block["backtest_exit_model_chosen"] = (
-        OK(True, source_mega, "MEGA uses closed-bar/next-open exit model with configurable cost_bps")
-        if has_mega_result
-        else NOT_COMPUTED(None, "No backtest exit model identified")
-    )
+    intake_block["entry_signal_clear"] = NOT_COMPUTED(None, "Entry-signal clarity not verified by MEGA row existence")
+    intake_block["exit_or_delegated_clear"] = NOT_COMPUTED(None, "Exit or delegation clarity not verified by MEGA row existence")
+    intake_block["opposite_signal_clear"] = NOT_COMPUTED(None, "Opposite-signal clarity not verified by MEGA row existence")
+    intake_block["reentry_policy_clear"] = NOT_COMPUTED(None, "Re-entry policy not verified by MEGA row existence")
+    intake_block["state_model_clear"] = NOT_COMPUTED(None, "State model not verified by MEGA row existence")
+    intake_block["backtest_exit_model_chosen"] = NOT_COMPUTED(None, "Chosen exit model not verified by MEGA row existence")
 
     # Section 1.5 Data and backtest feasibility
-    intake_block["required_data_available"] = ok_if_symbol_tf("Symbol and timeframe present in eval artifact; data assumed available")
-    intake_block["granularity_available"] = ok_if_symbol_tf(f"Timeframe {timeframe} is standard and available")
-    intake_block["indicators_computable"] = (
-        OK(True, source_mega, "Indicators are computed in MEGA Python runner")
-        if has_mega_result
-        else NOT_COMPUTED(None, "Cannot verify indicator computability")
-    )
-    intake_block["cost_model_addable"] = (
-        OK(True, source_mega, f"Cost model (cost_bps={mega_config.get('cost_bps', 'unknown')}) is configurable in MEGA")
-        if mega_config
-        else NOT_COMPUTED(None, "No cost model info available")
-    )
+    intake_block["required_data_available"] = NOT_COMPUTED(None, "Required-data availability not verified by symbol/timeframe presence")
+    intake_block["granularity_available"] = NOT_COMPUTED(None, "Granularity availability not verified by timeframe presence")
+    intake_block["indicators_computable"] = NOT_COMPUTED(None, "Indicator computability not verified by MEGA row existence")
+    intake_block["cost_model_addable"] = NOT_COMPUTED(None, "Cost-model addability not verified by run-config existence")
     intake_block["enough_trade_potential"] = (
         OK(True, source_eval, f"Trade count={trades_val} >= 30 threshold")
         if enough_trades
@@ -260,43 +213,15 @@ def build_intake(
     )
 
     # Section 1.6 Execution realism
-    intake_block["order_type_clear"] = (
-        OK(True, source_mega, "MEGA uses market orders (closed-bar/next-open convention)")
-        if has_mega_result
-        else NOT_COMPUTED(None, "Order type not determined")
-    )
-    intake_block["entry_timing_clear"] = (
-        OK(True, source_mega, "Entry at next-open after signal bar close")
-        if has_mega_result
-        else NOT_COMPUTED(None, "Entry timing not determined")
-    )
-    intake_block["spread_slippage_estimable"] = (
-        OK(True, source_mega, f"Slippage modeled via net_after_slippage_pct in MEGA; cost_bps={mega_config.get('cost_bps', 'unknown')}")
-        if has_mega_result and mega_config
-        else NOT_COMPUTED(None, "Slippage/spread not estimable from available data")
-    )
-    intake_block["no_anti_liquidity_assumption"] = (
-        OK(True, source_mega, "MEGA backtest uses real OHLCV data; no anti-liquidity assumptions")
-        if has_mega_result
-        else NOT_COMPUTED(None, "Cannot verify liquidity assumptions")
-    )
-    intake_block["intrabar_uncertainty_manageable"] = (
-        OK(True, source_mega, "Closed-bar convention manages intrabar uncertainty")
-        if has_mega_result
-        else NOT_COMPUTED(None, "Cannot assess intrabar uncertainty")
-    )
-    intake_block["no_extreme_latency_dependence"] = (
-        OK(True, source_mega, "Strategy uses higher timeframes (>=15m); no extreme latency dependence")
-        if has_mega_result
-        else NOT_COMPUTED(None, "Cannot verify latency dependence")
-    )
+    intake_block["order_type_clear"] = NOT_COMPUTED(None, "Order type not verified by MEGA row existence")
+    intake_block["entry_timing_clear"] = NOT_COMPUTED(None, "Entry timing not verified by MEGA row existence")
+    intake_block["spread_slippage_estimable"] = NOT_COMPUTED(None, "Spread/slippage estimability not verified by MEGA row/config existence")
+    intake_block["no_anti_liquidity_assumption"] = NOT_COMPUTED(None, "Absence of anti-liquidity assumptions not verified by MEGA row existence")
+    intake_block["intrabar_uncertainty_manageable"] = NOT_COMPUTED(None, "Intrabar uncertainty handling not verified by MEGA row existence")
+    intake_block["no_extreme_latency_dependence"] = NOT_COMPUTED(None, "Latency dependence not verified by MEGA row existence")
 
     # Section 1.7 Edge hypothesis
-    intake_block["strategy_thesis_present"] = (
-        OK(True, source_eval, f"Strategy {ev.get('strategy_id', 'unknown')} has a coded thesis in MEGA runner")
-        if has_mega_result
-        else NOT_COMPUTED(None, "Strategy thesis not documented in artifacts")
-    )
+    intake_block["strategy_thesis_present"] = NOT_COMPUTED(None, "Strategy thesis not verified by strategy identity or MEGA row existence")
     intake_block["expected_regime_present"] = (
         OK(True, source_eval, "Regime analysis present in eval artifact (regime_breakdown_present, weak_regime_identified)")
         if ev.get("regime")
@@ -324,19 +249,11 @@ def build_feasibility(
 
     feas: Dict[str, Any] = {}
 
-    # signal_reducible: MEGA strategy emits long/short signals, reducible
-    feas["signal_reducible"] = (
-        OK(True, source_mega, "MEGA strategy emits directional signals; reducible to long/short/flat")
-        if has_mega
-        else NOT_COMPUTED(None, "Cannot determine signal reducibility")
-    )
+    # A result row does not independently verify the named feasibility property.
+    feas["signal_reducible"] = NOT_COMPUTED(None, "Signal reducibility not verified by MEGA row existence")
 
     # entry_vs_full_clear: entry signal vs full position clear
-    feas["entry_vs_full_clear"] = (
-        OK(True, source_mega, "Entry signal maps to full position entry in MEGA simulator")
-        if has_mega
-        else NOT_COMPUTED(None, "Cannot determine entry vs full clarity")
-    )
+    feas["entry_vs_full_clear"] = NOT_COMPUTED(None, "Entry-versus-full-position semantics not verified by MEGA row existence")
 
     # no_risk_engine_conflict: OK false if custom stop/target/trail not proven MTC-compatible
     # Scorer supports bool false with OK status and awards zero, avoiding INCOMPLETE.
@@ -347,18 +264,10 @@ def build_feasibility(
     )
 
     # alert_convertible: MEGA signals can be converted to alert format
-    feas["alert_convertible"] = (
-        OK(True, source_mega, "MEGA strategy signals are structured and convertible to alert JSON format")
-        if has_mega
-        else NOT_COMPUTED(None, "Cannot determine alert convertibility")
-    )
+    feas["alert_convertible"] = NOT_COMPUTED(None, "Alert convertibility not verified by MEGA row existence")
 
     # state_machine_definable
-    feas["state_machine_definable"] = (
-        OK(True, source_mega, "MEGA strategy state machine (flat/long/short) is definable from signal logic")
-        if has_mega
-        else NOT_COMPUTED(None, "Cannot determine state machine definability")
-    )
+    feas["state_machine_definable"] = NOT_COMPUTED(None, "State-machine definability not verified by MEGA row existence")
 
     # mtc_param_mappable
     feas["mtc_param_mappable"] = (
@@ -380,32 +289,13 @@ def build_signal_contract(
     Most fields remain NOT_COMPUTED because signal contract details are not
     directly evidenced by MEGA artifacts alone.
     """
-    has_mega = mega_row is not None
-    source = "MEGA_walk_forward_results"
-
     sc: Dict[str, Any] = {}
 
-    sc["emits_long_short_close_flat"] = (
-        OK(True, source, "MEGA strategy emits directional signals; long/short/flat derivable")
-        if has_mega
-        else NOT_COMPUTED(None, "Cannot verify signal emission")
-    )
-    sc["signal_timing_defined"] = (
-        OK(True, source, "Signal timing is bar-close evaluation, next-open execution")
-        if has_mega
-        else NOT_COMPUTED(None, "Signal timing not defined")
-    )
+    sc["emits_long_short_close_flat"] = NOT_COMPUTED(None, "Signal emission contract not verified by MEGA row existence")
+    sc["signal_timing_defined"] = NOT_COMPUTED(None, "Signal timing contract not verified by MEGA row existence")
     sc["same_bar_collision_defined"] = NOT_COMPUTED(None, "Same-bar collision handling not evidenced in MEGA artifacts")
-    sc["signal_uniquely_identifiable"] = (
-        OK(True, source, "Each signal is uniquely identified by strategy/symbol/timeframe/bar")
-        if has_mega
-        else NOT_COMPUTED(None, "Cannot verify signal uniqueness")
-    )
-    sc["entry_logical_exit_separable"] = (
-        OK(True, source, "Entry and exit are separable in MEGA signal logic")
-        if has_mega
-        else NOT_COMPUTED(None, "Cannot verify entry/exit separability")
-    )
+    sc["signal_uniquely_identifiable"] = NOT_COMPUTED(None, "Signal identity contract not verified by MEGA row existence")
+    sc["entry_logical_exit_separable"] = NOT_COMPUTED(None, "Entry/exit separability not verified by MEGA row existence")
     sc["metadata_emittable"] = NOT_COMPUTED(None, "Metadata emission not evidenced in MEGA artifacts")
 
     return sc
@@ -476,11 +366,7 @@ def build_risk_engine_compat(
     rec["custom_stop_explicit_if_needed"] = NOT_COMPUTED(None, "Custom stop logic not evidenced in MEGA artifacts")
     rec["reverse_reentry_cooldown_mappable"] = NOT_COMPUTED(None, "Reverse/re-entry/cooldown mapping not evidenced")
     rec["pyramiding_intent_explicit"] = NOT_COMPUTED(None, "Pyramiding intent not evidenced")
-    rec["no_conflicting_order_logic"] = (
-        OK(True, source, "MEGA strategy has single-direction signal logic; no conflicting orders")
-        if has_mega
-        else NOT_COMPUTED(None, "Cannot verify order logic conflicts")
-    )
+    rec["no_conflicting_order_logic"] = NOT_COMPUTED(None, "Absence of conflicting order logic not verified by MEGA row existence")
 
     return rec
 
@@ -504,11 +390,7 @@ def build_monitoring(
     )
     mon["backtest_to_live_matchable"] = N_A(None, "build_all_gate_evidence", "Backtest-to-live matchability not evidenced; would need live trading comparison")
     mon["debug_metadata_sufficient"] = NOT_COMPUTED(None, "Debug metadata sufficiency not evidenced")
-    mon["carries_version"] = (
-        OK(True, "MEGA_walk_forward_results", "MEGA run has generated_utc timestamp for version tracking")
-        if mega_row is not None
-        else NOT_COMPUTED(None, "Version metadata not available")
-    )
+    mon["carries_version"] = NOT_COMPUTED(None, "Version carriage not verified by MEGA row existence")
 
     return mon
 
@@ -551,11 +433,7 @@ def build_reproducibility(
     rep: Dict[str, Any] = {}
 
     # version_pinned: MEGA has generated_utc but no explicit version string
-    rep["version_pinned"] = (
-        OK(True, source, f"MEGA run generated_utc={mega_config.get('generated_utc', 'unknown')} serves as version pin")
-        if has_mega
-        else NOT_COMPUTED(None, "Version not pinned")
-    )
+    rep["version_pinned"] = NOT_COMPUTED(None, "A timestamp or MEGA row does not verify a pinned code/data version")
 
     # param_set_saved
     rep["param_set_saved"] = (
@@ -582,11 +460,7 @@ def build_reproducibility(
     )
 
     # rerun_reproducible
-    rep["rerun_reproducible"] = (
-        OK(True, source, f"Strategy={mega_row.get('strategy')}, symbol={mega_row.get('symbol')}, timeframe={mega_row.get('timeframe')}, params saved; rerun reproducible with same MEGA config")
-        if has_mega and has_best_params
-        else NOT_COMPUTED(None, "Rerun reproducibility not verifiable")
-    )
+    rep["rerun_reproducible"] = NOT_COMPUTED(None, "Rerun reproducibility not verified by MEGA row and best-parameter existence")
 
     return rep
 
