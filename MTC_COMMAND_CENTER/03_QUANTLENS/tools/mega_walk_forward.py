@@ -602,7 +602,7 @@ class SliceStats:
     equity_curve_health: float
     annualized_sharpe: float = 0.0
     annualized_sortino: float = 0.0
-    net_after_slippage_pct: float = 0.0
+    net_after_slippage_pct: float | None = None
 
 
 def _na_slice() -> "SliceStats":
