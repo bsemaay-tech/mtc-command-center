@@ -135,6 +135,56 @@
       "next_action": "P23 + N54 delta audits of v1.1 -> further round if not clean"
     },
     {
+      "id": "WP-P0-13",
+      "title": "TrialRecord contract + trial-catalog writer (design draft)",
+      "state": "DESIGN_DRAFT_V1_DETECT_RUNNING",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Owner-ordered parallel design draft delivered (W51, P013_DESIGN_DRAFT_V1.md), PROVISIONAL-ON-P020 labeled. Early detection audit G18 (Grok) running. BUILD stays gated on WP-P0-20 acceptance per the serial chain.",
+      "owner_gate": false,
+      "next_action": "G18 detection -> fold findings when upstream accepts"
+    },
+    {
+      "id": "WP-P0-21",
+      "title": "Objective eligibility criteria + D026 fixtures (design draft)",
+      "state": "DESIGN_DRAFT_V1_DETECT_RUNNING",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Design draft delivered (W52, P021_DESIGN_DRAFT_V1.md), PROVISIONAL-ON-P012 labeled. Early detection audit G19 (Grok) running. BUILD gated on WP-P0-12 acceptance.",
+      "owner_gate": false,
+      "next_action": "G19 detection -> fold findings when upstream accepts"
+    },
+    {
+      "id": "WP-P0-22",
+      "title": "Family-lineage + observation-leakage control (design draft)",
+      "state": "DESIGN_DRAFT_V1_DETECT_RUNNING",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Design draft delivered (W53, P022_DESIGN_DRAFT_V1.md), PROVISIONAL-ON-P013 labeled. Early detection audit P24 (Claude, different instance) running. BUILD gated on WP-P0-13 acceptance.",
+      "owner_gate": false,
+      "next_action": "P24 detection -> fold findings when upstream accepts"
+    },
+    {
+      "id": "WP-P0-31-M1",
+      "title": "Lifecycle Ledger + Registrar, Milestone 1 (design draft)",
+      "state": "DESIGN_DRAFT_RUNNING",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Overnight advanced-stage order: W57 (Claude) drafting the M1 design (ledger record contract, single append interface, four writer classes, derived view, Registrar, full falsification designs), PROVISIONAL-ON-P013 labeled. Design only; M1 BUILD waits for WP-P0-13 acceptance + its own milestone-scoped G1-IA.",
+      "owner_gate": false,
+      "next_action": "W57 draft -> detection audit -> park until upstream accepts"
+    },
+    {
+      "id": "WP-P0-14",
+      "title": "Minimum Explorer (design draft)",
+      "state": "DESIGN_DRAFT_RUNNING",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Overnight advanced-stage order: W58 (Claude) drafting the Phase-0 four-item-minimum explorer design under all plan amendments (chart removed to V3-11, Perspective default, ledger-reader backbone, interim tearsheet with independent validation), PROVISIONAL on P0-13 and P0-31-M1. Design only; BUILD waits for both dependencies + G1-IA.",
+      "owner_gate": false,
+      "next_action": "W58 draft -> detection audit -> park until upstream accepts"
+    },
+    {
       "id": "PROMOTION-DECISION",
       "title": "Promotion pipeline decision package",
       "state": "APPROVED_REPORT_ONLY",
