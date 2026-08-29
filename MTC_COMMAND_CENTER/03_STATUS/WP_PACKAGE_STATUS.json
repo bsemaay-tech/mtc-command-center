@@ -17,12 +17,12 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "REPAIR_ROUND_4_IN_PROGRESS",
+      "state": "REPAIR_4_AUDIT_ROUND_RUNNING",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
-      "commit": "fcfa7483 (repair-3, audited BLOCK; repair-4 building)",
-      "detail": "Repair-3 triple-audited (flagship BLOCK + detection 3 MAJOR + third-family 1 MAJOR, all converging on one fresh self-comparison instance). Repair-4 lane N33 running under a pre-written stopping rule: one more fresh instance parks the package to the owner. Gate remains STOP by design (27 GREEN / 13 STOP / 2). Not pushed, not merged; merges as one unit after stage 4.",
+      "commit": "f8a186b8 (repair-4)",
+      "detail": "Repair-4 committed: self-comparing C42 assertion removed, receipt pins reconciled, validator claims narrowed; all 8 deduplicated findings closed; census dual-stated (15 kept / 12 excluded comprehension-bound). Gate remains STOP by design (27/13/2). Triple audit running now (P11 flagship Claude Pro + N34 detection Codex + G11 Grok) under the pre-written stopping rule: one fresh self-comparison instance parks the package.",
       "owner_gate": false,
-      "next_action": "N33 commit -> dual audit (P11 flagship + N34 detection + G11 supplemental)"
+      "next_action": "audit verdicts decide: proceed to stage 3/4 design vs park"
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
@@ -50,9 +50,9 @@
       "state": "BUILT_AWAITING_AUDIT",
       "branch": "docs/range-filter-flat-state-limitation-20260829",
       "commit": "2c6be96e",
-      "detail": "Built: shipped-class test (down-flip + up-hold mirror, intended-behaviour docstring) + known_limitations entry. Suite 141 -> 142 passed, no existing test changed, RED shown, range_filter.py untouched, exactly 2 files. Confirm audit P12 running.",
+      "detail": "Built + CONFIRMED (P12, zero findings): shipped-class test, known_limitations entry, suite 141 -> 142, range_filter.py untouched. PR #138 open, CI running (first PRs under the new required pine-alert-guard check).",
       "owner_gate": false,
-      "next_action": "P12 confirm -> PR"
+      "next_action": "merge PR #138 when CI green"
     },
     {
       "id": "SCORECARD-HONESTY",
@@ -70,9 +70,9 @@
       "state": "DELIVERED_AWAITING_AUDIT",
       "branch": "-",
       "commit": "-",
-      "detail": "OWNER_RUNBOOK_SCHEMA_MIGRATION_AND_FLATTEN.md delivered (C:/tmp/LANE_PROMPTS_20260828). Notable find: tools/wal_state_bundle.py is a real WAL-consistent backup+verify tool the P5 design missed. Prep only; execution needs a future explicit owner go. Number-check audit G12 running.",
+      "detail": "Runbook delivered, then detection audit G12 found 3 HIGH + 3 MEDIUM (wrong backup-tool CLI verbs; post-check probes not targeting the migrated DB; a latch probe that cannot fire). Repair lane W1112b running. Do NOT hand to owner until repaired and re-checked.",
       "owner_gate": false,
-      "next_action": "G12 check -> owner review"
+      "next_action": "W1112b repair -> re-check -> owner review"
     },
     {
       "id": "PINE-GUARD-REQUIRED",
@@ -100,9 +100,9 @@
       "state": "BUILT_AWAITING_AUDIT",
       "branch": "docs/survey-mainnet-lock-correction-20260829",
       "commit": "947365ca",
-      "detail": "5 owner-facing lock claims corrected (protection today = hardcoded network=testnet at bridge/app.py:203; the lock at hyperliquid.py:2165-2167 returns unless mainnet). 21 true design statements kept, 6 dated audit records excluded as history. First Grok lane died mid-work; completion lane audited its orphaned edits and committed.",
+      "detail": "5 lock claims corrected + CONFIRMED (P12, zero findings, both code facts re-verified). PR #139 open, CI running.",
       "owner_gate": false,
-      "next_action": "different-model confirm audit -> PR"
+      "next_action": "merge PR #139 when CI green"
     },
     {
       "id": "STALE-ROOT-RECONCILE",
