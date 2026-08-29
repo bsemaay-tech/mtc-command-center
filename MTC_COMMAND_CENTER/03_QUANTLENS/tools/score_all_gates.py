@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import math
 import os
 import re
 import sys
@@ -41,6 +42,26 @@ _G3 = _load('score_gate3')
 # PURE FUNCTION
 # ---------------------------------------------------------------------------
 
+_QUEUE_METRIC_KEYS = ("cpcv_pass_ratio", "net_after_slippage_pct")
+
+
+def _computed_queue_metrics(artifact: dict) -> dict:
+    """Copy only successful numeric computations needed by the queue reader."""
+    source_metrics = artifact.get("metrics") or {}
+    copied = {}
+    for key in _QUEUE_METRIC_KEYS:
+        envelope = source_metrics.get(key)
+        if not isinstance(envelope, dict) or envelope.get("status") != "OK":
+            continue
+        value = envelope.get("value")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        if not math.isfinite(float(value)):
+            continue
+        copied[key] = dict(envelope)
+    return copied
+
+
 def score_all_gates(artifact: dict) -> dict:
     r1 = _G1.score_gate1(artifact)
     r1b = _G1B.score_gate1b(artifact)
@@ -52,8 +73,12 @@ def score_all_gates(artifact: dict) -> dict:
 
     g1 = r1['gate1']
     g1b = r1b['gate1B']
-    g2 = r2['gate2']
+    g2 = dict(r2['gate2'])
     g3 = r3['gate3']
+
+    queue_metrics = _computed_queue_metrics(artifact)
+    if queue_metrics:
+        g2['metrics'] = queue_metrics
 
     statuses = {
         'gate1': g1['status'],
