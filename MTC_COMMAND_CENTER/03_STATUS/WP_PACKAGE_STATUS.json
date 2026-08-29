@@ -17,12 +17,12 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "STAGE_3_BUILD_RUNNING",
+      "state": "STAGE_3_BUILT_AUDITS_RUNNING",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
-      "commit": "bfa074df (repair-8b)",
+      "commit": "e1d0ff47 (stage-3)",
       "detail": "Gate remains STOP by design (copied-pin 27/13/2). Repair 8 (owner-approved label-only) committed b4278c1a: run_* receipt keys and flags renamed to caller_input_*. Delta audits: P22 flagship PASS (no scope-exceed, no new class instance, 3 nits); N50 detection found ONE editable residual - a test identifier still claiming a build act - fresh receipt itself clean. Repair 8b (N52, test-name rename only) running; stage 3 build (N51 spec ready) follows on its closure. v3 stage-4 design v2b complete and re-pinned.",
       "owner_gate": false,
-      "next_action": "N51 stage 3 build running -> stage-3 audits -> v3 (second actor: Claude Pro per owner ruling)"
+      "next_action": "P25 flagship + N58 second-family audits on stage 3 (Gemini corroboration tool-blocked, recorded) -> v3 (second actor: Claude Pro per owner ruling)"
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
@@ -117,12 +117,12 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "DESIGN_BLOCKED_SECOND_AUDIT_RUNNING",
+      "state": "DESIGN_PARKED_ROUND_CAP_OWNER_DECISION",
       "branch": "-",
       "commit": "-",
       "detail": "Design audited BLOCK by N45 (self-checking acceptance gate + 3 open semantics + determinism). G17 (Grok, second family) DELIVERED a full detection report (15 findings: 2 BLOCKER, 7 HIGH, 6 MEDIUM; the Lead's earlier 'silent death' call was wrong - it was a slow start). W55 (author family) repaired the union N45+G17 into design v1.1; re-audit N53 (Codex) is running. BUILD starts only after P0-11 accepts. Tier T0.",
       "owner_gate": false,
-      "next_action": "N53 returned BLOCK on v1.1 (4 findings, 2 BLOCKERs); W56 round-2 repair (of 3-round T0 cap) running -> re-audit"
+      "next_action": "PARKED FOR OWNER: v1.2 still BLOCK at the round-3 cap (N57b: 2 of 4 findings closed, 2 not, plus new defects incl. an owner-gated numeric threshold). Owner decides: authorize an exceptional round 4, or hold until P0-11 v3 lessons fold in"
     },
     {
       "id": "WP-P0-20",
@@ -132,7 +132,7 @@
       "commit": "-",
       "detail": "Both papers audited BLOCK by the P19 flagship (16/16 G16 findings reproduced, 0 refuted) and BLOCK+BLOCK by the Gemini corroborator GM2 - including the census defect that the papers claimed the bridge directory and funding surfaces were absent from the checkout. W54 (author family) repaired the three-auditor union into v1.1 of both papers. Delta re-audits P23 (flagship) + N54 (detection) are running. Chain stays serial: 11 -> 12 -> 20 -> 13 -> 31M1 -> 14.",
       "owner_gate": false,
-      "next_action": "P23 + N54 delta audits of v1.1 -> further round if not clean"
+      "next_action": "Paper 2 at PASS-WITH-NITS; Paper 1 repaired to v1.2 (W59, round 2 of 3) - P26 delta audit running"
     },
     {
       "id": "WP-P0-13",
