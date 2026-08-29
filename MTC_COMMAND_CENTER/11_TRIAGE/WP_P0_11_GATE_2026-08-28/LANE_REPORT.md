@@ -11,11 +11,12 @@ audits remain required; the implementer issues no acceptance verdict.
 
 ## Outcome
 
-**Gate outcome after stage 2: STOP.** The measured copied-pin row arm now reports 27 GREEN,
-13 STOP, and 2 policy-only rows. Six formerly GREEN rows correctly became STOP when the gate began
-checking the exact declared authority set (`C:\tmp\N8_VARIANTS\after_changed_rows.jsonl:1-6`). No
-kernel consolidation, protected implementation edit, subject comparison, or live/runtime action was
-performed.
+**Gate outcome after stage 2: STOP.** The current disposition is 27 GREEN, 13 STOP, and 2
+policy-only rows. Six formerly GREEN rows correctly became STOP when the gate began checking the
+exact declared authority set. This is successful discrimination, not disposition conservation. The
+gate now requires those current counts and rejects the protected stale row evidence
+(`p011_gate.py:1376-1392`). No kernel consolidation, protected implementation edit, subject
+comparison, or live/runtime action was performed.
 
 ## Premise 1 - authority diff
 
@@ -72,18 +73,18 @@ The v2 comparator self-test records 76/76 RED and 76/76 restored GREEN; matrix S
 
 ## Complete C01-C42 re-verification
 
-Comparison against recorded branch SHA `9e8a69b32a3460c9a08e8977db99bd7dfe4e5788` found every row behavior
-and disposition identical: **33 GREEN, 7 STOP, and 2 policy-only (C25/C27)**. Across the GREEN
-rows, manifests declare 128 expected leaves, C41 adds 6 verifier-only expected leaves, and the
-comparator visits 134 expected-leaf paths; there are also **33 mutation REDs and 69 RED mismatches**.
+Comparison against recorded branch SHA `9e8a69b32a3460c9a08e8977db99bd7dfe4e5788` did **not** preserve
+the old disposition. The current result is **27 GREEN, 13 STOP, and 2 policy-only (C25/C27)**.
+All 33 executable producer bindings still produce clean execution plus mutation RED, but six now
+stop because the observed authority set does not equal the declared set. The gate is working by
+refusing those six rows.
 
 - C28-C30 remain STOP because no executable Pine producer was authorized; no Pine was run.
 - C32/C34/C35/C42 remain authority-contradiction STOPs.
-- No STOP row turned GREEN or changed behavior in the other direction.
-- Canonical row hashes: results `1cb5b6ec...7555b`, corroboration `e17f8841...08c8a`, unresolved
-  `a89d46ef...dcd48`, batch `2767f39d...4967e`.
-- Contract mutations remain 3 FAIL + 1 STOP. Structural evidence records 17/17 expected attacks
-  and 17/17 expected restorations, SHA-256 `121a96a0...55a7e`.
+- C03/C04/C26/C38/C39/C41 changed from GREEN to STOP on missing declared authority, as itemized
+  below.
+- The committed row hashes and receipt narrative predate this disposition and are stale v3 pins;
+  this repair does not reuse them as current evidence.
 
 ## Stage-2 executable binding rule
 
@@ -91,14 +92,13 @@ Every applicable manifest scenario is exact-bound to a verifier-owned typed scen
 producer runs. The binding refuses missing, extra, or unequal values. Producer outputs are then
 compared with the bound expected observation and final state.
 
-**Contract conservation is not enforced.** `scenario_binding.require_complete` has no production
-caller; it is exercised only by its unit tests
-(`C:\tmp\N26_VARIANTS\require_complete_census.txt:1-5`). The gate does not require declared
-leaves = bound leaves = consumed leaves, does not require complete production consumption, and does
-not perform a terminal named consumption pass. The generator emits the typed scenario declarations
-(`stage1_freeze.py:526-606`); the baseline gate and row arm exact-bind those declarations
-(`p011_gate.py:576-636`; `row_arm.py:2472-2558`) and the row arm separately checks producer output,
-mutation behavior, and runtime authority observations (`row_arm.py:156-283`; `:2599-2686`).
+**Contract conservation is not enforced or claimed.** The dead named-consumer ledger and its unit
+tests were removed. `BindingLedger` retains declared leaf values and bound paths for exact binding
+and matrix enumeration only (`scenario_binding.py:247-257`, `:335-390`). The generator emits the
+typed scenario declarations (`stage1_freeze.py:551-613`); the baseline gate exact-binds them
+(`p011_gate.py:563-598`) and the row arm exact-binds its verifier contract (`row_arm.py:2379-2437`).
+The row arm separately compares producer output and checks an observed mutation RED path plus
+runtime authority identities (`row_arm.py:154-221`, `:2530-2589`, `:3302-3361`).
 
 The six measured disposition changes are:
 
@@ -111,33 +111,30 @@ The six measured disposition changes are:
 | C39 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | A_CURRENT_MASTER |
 | C41 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | B_BACKTEST_FREEZE |
 
-The measured source for all six rows records the declared set, actual set, and missing identity.
-Current code emits no `CONSERVED` contract ledger and makes no terminal-consumption claim. The
-package-wide removed-behavior grep finds no positive stale claim
-(`C:\tmp\N26_VARIANTS\g802_removed_behavior_grep.txt:1-5`). The complete copied-pin build remains
-STOP while all 33 executable producers still prove clean GREEN and mutation RED;
-the two builds are byte-identical (`C:\tmp\N8_VARIANTS\after_full\batch_manifest.json:1`;
-`C:\tmp\N8_VARIANTS\after_full_2\batch_manifest.json:1`).
-
-The exhaustive copied-manifest matrix covers 1,100 declared leaves with mutate, delete, and unknown-
-sibling variants: 3,300/3,300 were refused before producer execution and every clean restoration
-passed (`C:\tmp\N8_VARIANTS\leaf_variant_matrix.json:1`). Named execution-result probes separately
-refuse both a wrong replacement and a mismatch at the wrong path
-(`C:\tmp\N8_VARIANTS\after_consumer_refusals.json:1-2`). The final isolated suite passes 16 tests,
-including the measured producer spy, ninth required key, identity-bound C32 control, and complete
-matrix (`C:\tmp\N8_VARIANTS\unit_green_final.txt:1-21`).
+The current authority check records the declared set, observed set, and missing identity from
+different producers (`row_arm.py:182-221`). Current code emits no `CONSERVED` contract ledger and
+makes no terminal-consumption claim. The isolated unit suite uses a per-run temporary directory,
+not a committed absolute scratch pin (`test_scenario_binding.py:30-31`). It runs 13 tests, including
+the producer spy, exact-key variants, identity-bound C32 control, measured C42 arithmetic, and the
+complete declared-leaf variant matrix (`test_scenario_binding.py:177-467`). No load-bearing claim in
+the repaired disposition or binding sections cites an `N26_VARIANTS` scratch output.
 
 Stage 2 changes the legacy-manifest identity to
 `29ecc19947bd5400293709cccd7fe0e46aceeb013cc8fb0f2d7965a16c515ed3` and changes the gate,
-row-arm, and generator identities (`C:\tmp\N8_VARIANTS\stage2_current_hashes.json:2-6`). The
-receipt, schema, committed evidence, and v2 external anchor remain intentionally stale/protected;
-stage 4 must repin and regenerate them together. In particular, C41 is now STOP, so its existing F3
-row-record evidence must be regenerated rather than carried forward.
+row-arm, and generator identities. The protected receipt, committed evidence, and v2 external
+anchor remain stale and require a coordinated v3 repin. The receipt's row counts and reason are
+false (`P011_GATE_RECEIPT.json:70-80`), and C41's existing F3 row record must be regenerated rather
+than carried forward. Any load-bearing variant matrix must be published durably in the repository
+or explicitly labeled ephemeral; a scratch path is not evidence. The observation schema is not a
+target for the scenario-binding fields: its catalog contains observation, signal, event, position,
+gate-readiness, and account fields, but none of the named scenario-contract fields
+(`P011_OBSERVATION_SCHEMA_v1.json:165-789`).
 
 ## Scope and audit boundary
 
-Writes are confined to this gate package, the new v2 external anchor, and the Markdown hours
-ledger. Implementation A/B, Pine, `MTC_V2`, backtest, adapters, kernel, schemas, host, broker,
-venue, credentials, and live/testnet surfaces were not edited or invoked. No live dependency was
-present. The package is committed and pushed only as an audit candidate; two independent flagship
-audits decide any later acceptance, and the gate remains **STOP**.
+This repair writes only `row_arm.py`, `scenario_binding.py`, `p011_gate.py`, `LANE_REPORT.md`, and
+`test_scenario_binding.py`. Implementation A/B, Pine, `MTC_V2`, backtest, adapters, kernel, schemas,
+receipts, evidence, anchors, hosts, brokers, venues, credentials, and live/testnet surfaces were not
+edited or invoked. No live dependency was present. The package is committed locally only as an
+audit candidate and is not pushed; two independent flagship audits decide any later acceptance,
+and the gate remains **STOP**.

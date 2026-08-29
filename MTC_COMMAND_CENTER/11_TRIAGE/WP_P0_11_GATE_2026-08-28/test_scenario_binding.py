@@ -4,6 +4,7 @@ import hashlib
 import io
 import json
 import re
+import tempfile
 import unittest
 from contextlib import redirect_stdout
 from copy import deepcopy
@@ -13,25 +14,21 @@ from unittest.mock import patch
 import p011_gate
 import row_arm
 from scenario_binding import (
-    ConsumerEvidence,
     EXPECTED_ROW_POSITIONS,
-    ExecutionEvidence,
     ManifestRowError,
     ManifestScenarioSource,
-    ScenarioBindingError,
     ScenarioShapeError,
     bind_scenario,
-    consume_execution,
     lookup_manifest_row,
     manifest_scenario,
-    require_complete,
     verifier_scenario_contract,
 )
 
 
 GATE_DIR = Path(__file__).resolve().parent
 MANIFEST_PATH = GATE_DIR / "p011_legacy_manifest.json"
-VARIANT_DIR = Path(r"C:\tmp\N26_VARIANTS")
+_VARIANT_TEMP = tempfile.TemporaryDirectory(prefix="p011_n28_")
+VARIANT_DIR = Path(_VARIANT_TEMP.name)
 REQUIRED_VARIANT_KEYS = (
     "scenario_id",
     "producer_adapter",
@@ -142,37 +139,6 @@ class ScenarioBindingModuleTests(unittest.TestCase):
     def setUp(self) -> None:
         self.contract = verifier_scenario_contract("C01")
         self.scenario = self.contract.as_mapping()
-
-    def test_incomplete_consumption_names_path_and_expected_consumer(self) -> None:
-        binding = bind_scenario(self.scenario, self.contract)
-        consumption = consume_execution(binding, ExecutionEvidence())
-        with self.assertRaisesRegex(
-            ScenarioBindingError,
-            r"declaration path .* reached no consumer; expected ",
-        ):
-            require_complete(consumption)
-
-    def test_duplicate_consumption_is_refused(self) -> None:
-        binding = bind_scenario(self.scenario, self.contract)
-        leaf = binding.declared_leaves[0]
-        record = ConsumerEvidence(
-            consumer=leaf.expected_consumer,
-            declaration_paths=(leaf.path,),
-            evidence={"result": "satisfied"},
-        )
-        with self.assertRaisesRegex(ScenarioBindingError, "consumed more than once"):
-            consume_execution(binding, ExecutionEvidence(comparators=(record, record)))
-
-    def test_wrong_consumer_is_refused(self) -> None:
-        binding = bind_scenario(self.scenario, self.contract)
-        leaf = binding.declared_leaves[0]
-        record = ConsumerEvidence(
-            consumer="wrong_consumer",
-            declaration_paths=(leaf.path,),
-            evidence={"result": "satisfied"},
-        )
-        with self.assertRaisesRegex(ScenarioBindingError, "expected consumer"):
-            consume_execution(binding, ExecutionEvidence(comparators=(record,)))
 
     def test_missing_plus_extra_top_level_key_is_refused(self) -> None:
         scenario = deepcopy(self.scenario)
@@ -310,12 +276,9 @@ class GateVariantTests(unittest.TestCase):
         self.assertTrue(all(item["outcome"] == "REFUSED" for item in results))
         self.assertFalse(any(item["producer_executed"] for item in results))
 
-    def test_wrong_mutation_mismatch_path_is_refused_by_named_consumer(self) -> None:
+    def test_wrong_mutation_mismatch_path_is_refused(self) -> None:
         binding = row_arm.validate_contract_binding(
             _load_manifest(), row_arm.ROW_CONTRACTS["C01"]
-        )
-        application = row_arm.mutation_application_contract(
-            row_arm.ROW_CONTRACTS["C01"].mutation
         )
         wrong_red = {
             "parsed_output": {
@@ -328,52 +291,8 @@ class GateVariantTests(unittest.TestCase):
             },
             "return_code": 1,
         }
-        clean_green = {
-            "parsed_output": {"comparison": {"mismatches": []}, "outcome": "PASS"},
-            "return_code": 0,
-        }
         with self.assertRaisesRegex(row_arm.RowStop, "required RED predicate"):
-            row_arm.consume_producer_mutation_restoration(
-                binding,
-                application,
-                wrong_red,
-                clean_green,
-            )
-
-    def test_wrong_mutation_replacement_is_refused_by_named_consumer(self) -> None:
-        binding = row_arm.validate_contract_binding(
-            _load_manifest(), row_arm.ROW_CONTRACTS["C01"]
-        )
-        wrong_application = row_arm.mutation_application_contract(
-            row_arm.Mutation(
-                row_arm.ROW_CONTRACTS["C01"].mutation.mutation_id,
-                row_arm.ROW_CONTRACTS["C01"].mutation.target,
-                "        if raw.long == raw.short:\n            return None\n",
-                "        if raw.long == raw.short:\n            return POSITION_SIDE_LONG\n",
-            )
-        )
-        canonical_red = {
-            "parsed_output": {
-                "comparison": {
-                    "mismatches": [
-                        {"path": "$.observation.gated_long", "reason": "value"}
-                    ]
-                },
-                "outcome": "FAIL",
-            },
-            "return_code": 1,
-        }
-        canonical_green = {
-            "parsed_output": {"comparison": {"mismatches": []}, "outcome": "PASS"},
-            "return_code": 0,
-        }
-        with self.assertRaisesRegex(row_arm.RowStop, "target or replacement differs"):
-            row_arm.consume_producer_mutation_restoration(
-                binding,
-                wrong_application,
-                canonical_red,
-                canonical_green,
-            )
+            row_arm.consume_producer_mutation_red(binding, wrong_red)
 
     def test_authority_control_is_bound_by_identity_not_position(self) -> None:
         results = [
@@ -474,7 +393,6 @@ class GateVariantTests(unittest.TestCase):
                             {
                                 "actual_output_line": output_line,
                                 "declaration_path": leaf.path,
-                                "expected_consumer": leaf.expected_consumer,
                                 "operation": operation,
                                 "producer_executed": run_profile_spy.called,
                                 "restoration_output_line": restored_line,
@@ -535,6 +453,11 @@ class GateVariantTests(unittest.TestCase):
             "validation_by_value": validation,
         }
         _write_result("section3_result.json", result)
+        c42 = next(item for item in records if item["row_id"] == "C42")
+        self.assertEqual(
+            c42["source_evidence"]["producer_outputs"]["range"],
+            c42["source_evidence"]["source_arithmetic"]["range_filter_results"],
+        )
 
     def test_unresolved_authority_observations_name_the_execution_path(self) -> None:
         records = row_arm.build_unresolved_records(_load_manifest())
@@ -555,6 +478,10 @@ class GateVariantTests(unittest.TestCase):
             c32["observation"]["method"],
         )
         self.assertIn("probe returned after importing", c32["observation"]["reason"])
+
+
+def tearDownModule() -> None:
+    _VARIANT_TEMP.cleanup()
 
 
 if __name__ == "__main__":

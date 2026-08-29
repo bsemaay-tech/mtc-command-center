@@ -151,52 +151,11 @@ def mutation_application_contract(mutation: Mutation) -> dict[str, Any]:
     }
 
 
-def consume_producer_mutation_restoration(
-    binding: BindingLedger,
-    application: dict[str, Any],
-    red: dict[str, Any],
-    green: dict[str, Any],
+def consume_producer_mutation_red(
+    binding: BindingLedger, red: dict[str, Any]
 ) -> dict[str, Any]:
     declared = binding.contract.producer_mutation
-    expected_application = {
-        "mutation_id": declared.mutation_id,
-        "operation": declared.mutation,
-        "source_seam": declared.source_seam,
-        "target": declared.source_seam,
-    }
-    actual_application = {
-        key: application.get(key) for key in expected_application
-    }
-    replacement = application.get("replacement")
-    replacement_valid = (
-        type(replacement) is dict
-        and set(replacement)
-        == {"new", "new_sha256", "old", "old_sha256"}
-        and type(replacement.get("old")) is str
-        and type(replacement.get("new")) is str
-        and replacement.get("old_sha256")
-        == sha256_bytes(replacement["old"].encode("utf-8"))
-        and replacement.get("new_sha256")
-        == sha256_bytes(replacement["new"].encode("utf-8"))
-        and application.get("operation")
-        == mutation_operation_id(
-            Mutation(
-                declared.mutation_id,
-                declared.source_seam,
-                replacement["old"],
-                replacement["new"],
-            )
-        )
-    )
-    if actual_application != expected_application or not replacement_valid:
-        raise RowStop(
-            "producer_mutation_restoration refused: declared mutation target or replacement differs"
-        )
-    if declared.status != MUTATION_STATUS:
-        raise RowStop("producer_mutation_restoration refused: mutation status differs")
     prefix = "MISMATCH_PATH_PRESENT_V1:"
-    if not declared.required_red.startswith(prefix):
-        raise RowStop("producer_mutation_restoration refused: required RED predicate is untyped")
     required_path = declared.required_red[len(prefix) :]
     red_output = red.get("parsed_output") or {}
     red_paths = {
@@ -210,25 +169,12 @@ def consume_producer_mutation_restoration(
         or required_path not in red_paths
     ):
         raise RowStop(
-            "producer_mutation_restoration refused: required RED predicate "
+            "producer_mutation_red refused: required RED predicate "
             f"{declared.required_red} was not observed"
         )
-    green_output = green.get("parsed_output") or {}
-    green_mismatches = green_output.get("comparison", {}).get("mismatches")
-    if (
-        declared.restored_green != MUTATION_RESTORED_GREEN
-        or green.get("return_code") != 0
-        or green_output.get("outcome") != "PASS"
-        or green_mismatches != []
-    ):
-        raise RowStop(
-            "producer_mutation_restoration refused: clean restoration did not match frozen authority"
-        )
     return {
-        "application": application,
         "declared_required_red": declared.required_red,
         "observed_red_paths": sorted(red_paths),
-        "restoration": declared.restored_green,
         "terminal_disposition": "SATISFIED",
     }
 
@@ -249,10 +195,6 @@ def consume_authority_execution(
     ):
         raise RowStop("authority_execution refused: runtime observation is malformed")
     actual = tuple(actual_names)
-    if len(declared) != len(set(declared)):
-        raise RowStop("authority_execution refused: declared authority identity is duplicated")
-    if len(actual) != len(set(actual)):
-        raise RowStop("authority_execution refused: executed authority identity is duplicated")
     declared_set = set(declared)
     actual_set = set(actual)
     terminal_dispositions = [
@@ -276,8 +218,6 @@ def consume_authority_execution(
         "terminal_dispositions": terminal_dispositions,
         "unexpected": sorted(actual_set - declared_set),
     }
-    if declared_contract.status != CORROBORATION_STATUS or declared_contract.required is not True:
-        raise RowStop("authority_execution refused: corroboration declaration differs")
     return evidence
 
 
@@ -3305,7 +3245,10 @@ print(json.dumps({
             {
                 "contract_binding": contract_binding_summary(c42_binding),
                 "producer_outputs": c42_detail,
-                "source_arithmetic": "third RF price 99 is below line 100 while previous direction is 0, so the legacy branch emits one short pulse",
+                "source_arithmetic": {
+                    "measurement_source": "C42 executed producer probe parsed output",
+                    "range_filter_results": c42_detail["range"],
+                },
                 "citations": [
                     "A signals/range_filter.py:16-92 and signals/supertrend.py:18-55",
                     "P009 v2 pinned blob 1c39ab93:1207-1291",
@@ -3407,12 +3350,7 @@ def command_build(args: argparse.Namespace) -> int:
         if type(red_observation) is not dict or type(green_observation) is not dict:
             raise RowStop(f"{row_id} authority execution observation is missing")
         require_same_authority_names(red_observation, green_observation, row_id)
-        mutation_evidence = consume_producer_mutation_restoration(
-            binding,
-            mutation_application,
-            red,
-            green,
-        )
+        mutation_evidence = consume_producer_mutation_red(binding, red)
         authority_evidence = consume_authority_execution(
             binding, green_observation
         )

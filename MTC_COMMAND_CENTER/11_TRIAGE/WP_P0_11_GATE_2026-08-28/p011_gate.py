@@ -1378,15 +1378,15 @@ def row_arm_receipt() -> dict[str, Any]:
     if not evidence_path.is_file():
         raise GateStop("v2 row-arm re-verification evidence is absent")
     evidence = load_json(evidence_path)
-    expected_counts = {"green": 33, "not_applicable": 2, "stop": 7, "total": 42}
+    expected_counts = {"green": 27, "not_applicable": 2, "stop": 13, "total": 42}
     if evidence.get("gate_version") != GATE_VERSION:
         raise GateStop("row-arm evidence is not bound to v2")
     if evidence.get("outcome") != "STOP" or evidence.get("counts") != expected_counts:
-        raise GateStop("row-arm evidence did not preserve the 33 GREEN / 7 STOP / 2 policy-only disposition")
+        raise GateStop("row-arm evidence does not carry the current 27 GREEN / 13 STOP / 2 policy-only disposition")
     return {
         "outcome": "STOP",
         "counts": expected_counts,
-        "reason": "7 of 40 applicable rows remain honest STOP after v2 re-verification",
+        "reason": "13 of 40 applicable rows are STOP after authority-set verification",
         "evidence_path": str(evidence_path),
         "evidence_sha256": sha256_file(evidence_path),
     }

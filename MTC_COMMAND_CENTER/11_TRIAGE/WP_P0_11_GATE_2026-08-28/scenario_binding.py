@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Mapping, Sequence
 
@@ -21,19 +21,6 @@ SCENARIO_TOP_LEVEL_KEYS = frozenset(
 )
 
 EXPECTED_ROW_POSITIONS = {f"C{index:02d}": index - 1 for index in range(1, 43)}
-
-_CONSUMER_BY_FIELD = {
-    "scenario_id": "scenario_identity_comparator",
-    "producer_adapter": "scenario_identity_comparator",
-    "complete_inputs": "producer_input_binding",
-    "literal_expected_observation": "recursive_exact_comparator",
-    "literal_expected_final_state": "recursive_exact_comparator",
-    "expectation_derivation": "expectation_provenance_verifier",
-    "comparison_rule": "recursive_exact_comparator",
-    "clean_producer_corroboration": "authority_execution",
-    "producer_mutation": "producer_mutation_restoration",
-}
-
 
 class ScenarioBindingError(RuntimeError):
     pass
@@ -186,9 +173,6 @@ class ScenarioContract:
     comparison_rule: str
     clean_producer_corroboration: ProducerCorroboration
     producer_mutation: MutationCriteria
-    consumer_by_field: Mapping[str, str] = field(
-        default_factory=lambda: dict(_CONSUMER_BY_FIELD), repr=False
-    )
 
     def __post_init__(self) -> None:
         _require_type(self.scenario_id, str, "$.scenario_id")
@@ -201,13 +185,6 @@ class ScenarioContract:
             self.literal_expected_final_state, dict, "$.literal_expected_final_state"
         )
         _require_type(self.comparison_rule, str, "$.comparison_rule")
-        _require_exact_keys(
-            self.consumer_by_field,
-            set(SCENARIO_TOP_LEVEL_KEYS),
-            "ScenarioContract.consumer_by_field",
-        )
-        if any(type(item) is not str for item in self.consumer_by_field.values()):
-            raise ScenarioShapeError("ScenarioContract consumers must be named strings")
 
     @classmethod
     def from_mapping(cls, value: Mapping[str, Any]) -> ScenarioContract:
@@ -270,7 +247,6 @@ class ManifestScenarioSource:
 class DeclaredLeaf:
     path: str
     value: Any
-    expected_consumer: str
 
 
 @dataclass(frozen=True)
@@ -278,36 +254,6 @@ class BindingLedger:
     contract: ScenarioContract
     declared_leaves: tuple[DeclaredLeaf, ...]
     bound_paths: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class ConsumerEvidence:
-    consumer: str
-    declaration_paths: tuple[str, ...]
-    evidence: Mapping[str, Any]
-
-
-@dataclass(frozen=True)
-class ExecutionEvidence:
-    comparators: tuple[ConsumerEvidence, ...] = ()
-    authority_executions: tuple[ConsumerEvidence, ...] = ()
-    mutation_restorations: tuple[ConsumerEvidence, ...] = ()
-
-    def records(self) -> tuple[ConsumerEvidence, ...]:
-        return self.comparators + self.authority_executions + self.mutation_restorations
-
-
-@dataclass(frozen=True)
-class ConsumedLeaf:
-    path: str
-    consumer: str
-    evidence: Mapping[str, Any]
-
-
-@dataclass(frozen=True)
-class ConsumptionLedger:
-    binding: BindingLedger
-    consumed_leaves: tuple[ConsumedLeaf, ...]
 
 
 def lookup_manifest_row(
@@ -436,7 +382,6 @@ def bind_scenario(
         DeclaredLeaf(
             path=path,
             value=deepcopy(value),
-            expected_consumer=contract.consumer_by_field[path.split(".", 2)[1].split("[", 1)[0]],
         )
         for path, value in _leaf_items(expected)
     )
@@ -446,72 +391,6 @@ def bind_scenario(
 
 def manifest_scenario_from_manifest(source: ManifestScenarioSource) -> Mapping[str, Any]:
     return manifest_scenario(source)
-
-
-def consume_execution(
-    binding: BindingLedger, execution: ExecutionEvidence
-) -> ConsumptionLedger:
-    declarations = {item.path: item for item in binding.declared_leaves}
-    consumed: dict[str, ConsumedLeaf] = {}
-    for record in execution.records():
-        if not record.declaration_paths:
-            raise ScenarioBindingError(
-                f"consumer {record.consumer} names no declaration paths"
-            )
-        for path in record.declaration_paths:
-            declaration = declarations.get(path)
-            if declaration is None:
-                raise ScenarioBindingError(
-                    f"consumer {record.consumer} names undeclared path {path}"
-                )
-            if path in consumed:
-                raise ScenarioBindingError(
-                    f"declaration path {path} was consumed more than once: "
-                    f"first={consumed[path].consumer} second={record.consumer}"
-                )
-            if record.consumer != declaration.expected_consumer:
-                raise ScenarioBindingError(
-                    f"declaration path {path} expected consumer "
-                    f"{declaration.expected_consumer}, received {record.consumer}"
-                )
-            consumed[path] = ConsumedLeaf(
-                path=path,
-                consumer=record.consumer,
-                evidence=deepcopy(dict(record.evidence)),
-            )
-    return ConsumptionLedger(
-        binding=binding,
-        consumed_leaves=tuple(consumed[path] for path in sorted(consumed)),
-    )
-
-
-def require_complete(consumption: ConsumptionLedger) -> None:
-    declared = {item.path: item for item in consumption.binding.declared_leaves}
-    bound = set(consumption.binding.bound_paths)
-    consumed = {item.path for item in consumption.consumed_leaves}
-    declared_paths = set(declared)
-    if declared_paths != bound:
-        missing = sorted(declared_paths - bound)
-        extra = sorted(bound - declared_paths)
-        raise ScenarioBindingError(
-            f"binding conservation failed: missing_bound={missing} extra_bound={extra}"
-        )
-    missing_consumers = sorted(declared_paths - consumed)
-    if missing_consumers:
-        path = missing_consumers[0]
-        raise ScenarioBindingError(
-            f"declaration path {path} reached no consumer; expected "
-            f"{declared[path].expected_consumer}"
-        )
-    extra_consumers = sorted(consumed - declared_paths)
-    if extra_consumers:
-        raise ScenarioBindingError(
-            f"consumption conservation failed: undeclared_consumed={extra_consumers}"
-        )
-    if len(declared_paths) != len(consumption.consumed_leaves):
-        raise ScenarioBindingError(
-            "consumption conservation failed: duplicate terminal dispositions"
-        )
 
 
 @lru_cache(maxsize=1)
