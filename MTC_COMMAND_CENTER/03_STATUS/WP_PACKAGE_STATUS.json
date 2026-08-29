@@ -47,12 +47,12 @@
     {
       "id": "RANGEFILTER-DOC",
       "title": "Range Filter flat-state asymmetry documented (owner: document)",
-      "state": "BUILD_IN_PROGRESS",
+      "state": "BUILT_AWAITING_AUDIT",
       "branch": "docs/range-filter-flat-state-limitation-20260829",
-      "commit": "-",
-      "detail": "Owner ask-2 answer 'document' = Option A+B: one test asserting the intended asymmetry on the shipped RangeFilterSignal + one known_limitations entry. Zero behaviour change; range_filter.py untouched. Lane W2.",
+      "commit": "2c6be96e",
+      "detail": "Built: shipped-class test (down-flip + up-hold mirror, intended-behaviour docstring) + known_limitations entry. Suite 141 -> 142 passed, no existing test changed, RED shown, range_filter.py untouched, exactly 2 files. Confirm audit P12 running.",
       "owner_gate": false,
-      "next_action": "W2 commit -> audit -> PR"
+      "next_action": "P12 confirm -> PR"
     },
     {
       "id": "SCORECARD-HONESTY",
@@ -67,12 +67,12 @@
     {
       "id": "FLATTEN-MIGRATION-PKG",
       "title": "Controlled-flatten policy + deliberate migration runbook (owner: policy yes, no arming; deliberate only)",
-      "state": "PREP_IN_PROGRESS",
+      "state": "DELIVERED_AWAITING_AUDIT",
       "branch": "-",
       "commit": "-",
-      "detail": "Owner asks 11+12. Lane W1112 producing OWNER_RUNBOOK_SCHEMA_MIGRATION_AND_FLATTEN.md on top of the audited P5 migration design. Prep only: no migration, no arming, no host contact. Execution needs a future explicit owner go.",
+      "detail": "OWNER_RUNBOOK_SCHEMA_MIGRATION_AND_FLATTEN.md delivered (C:/tmp/LANE_PROMPTS_20260828). Notable find: tools/wal_state_bundle.py is a real WAL-consistent backup+verify tool the P5 design missed. Prep only; execution needs a future explicit owner go. Number-check audit G12 running.",
       "owner_gate": false,
-      "next_action": "W1112 delivery -> audit -> owner review"
+      "next_action": "G12 check -> owner review"
     },
     {
       "id": "PINE-GUARD-REQUIRED",
@@ -97,12 +97,12 @@
     {
       "id": "SURVEY-SAFETY-SENTENCE",
       "title": "Correct mainnet-lock sentence in older survey (owner: correct docs)",
-      "state": "QUEUED",
-      "branch": "-",
-      "commit": "-",
-      "detail": "Owner ask-9: make explicit that protection is hardcoded network=testnet (bridge/app.py:203), not the mainnet triple-lock (never reached). Doc-only lane W9 in next wave.",
+      "state": "BUILT_AWAITING_AUDIT",
+      "branch": "docs/survey-mainnet-lock-correction-20260829",
+      "commit": "947365ca",
+      "detail": "5 owner-facing lock claims corrected (protection today = hardcoded network=testnet at bridge/app.py:203; the lock at hyperliquid.py:2165-2167 returns unless mainnet). 21 true design statements kept, 6 dated audit records excluded as history. First Grok lane died mid-work; completion lane audited its orphaned edits and committed.",
       "owner_gate": false,
-      "next_action": "next lane wave (W9)"
+      "next_action": "different-model confirm audit -> PR"
     },
     {
       "id": "STALE-ROOT-RECONCILE",
