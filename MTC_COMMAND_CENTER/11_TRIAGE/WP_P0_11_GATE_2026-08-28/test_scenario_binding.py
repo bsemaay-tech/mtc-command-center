@@ -41,6 +41,9 @@ REQUIRED_VARIANT_KEYS = (
     "clean_producer_corroboration",
     "producer_mutation",
 )
+NARROWED_FINALIZER_STATUS = (
+    "SHAPE_AND_IDENTITY_ACCEPTED; producer execution NOT verified by this gate"
+)
 
 
 def _load_manifest() -> dict:
@@ -230,6 +233,12 @@ class GateVariantTests(unittest.TestCase):
             p011_gate.GATE_DIR / "p011_legacy_manifest.json"
         )
         anchor_path = _write_n33_json("finalizer/copied_anchor.json", anchor)
+        captured_writes: dict[Path, dict] = {}
+
+        def capture_write(path: Path, value: dict) -> None:
+            captured_writes[path] = deepcopy(value)
+
+        stdout = io.StringIO()
         with (
             patch.object(p011_gate, "ANCHOR_PATH", anchor_path),
             patch.object(p011_gate, "SCHEMA_PATH", schema_path or p011_gate.SCHEMA_PATH),
@@ -242,16 +251,44 @@ class GateVariantTests(unittest.TestCase):
                     "reason": "test fixture",
                 },
             ),
-            patch.object(p011_gate, "write_json"),
-            redirect_stdout(io.StringIO()),
+            patch.object(p011_gate, "write_json", side_effect=capture_write),
+            redirect_stdout(stdout),
         ):
-            return p011_gate.command_finalize_candidate(
+            return_code = p011_gate.command_finalize_candidate(
                 type(
                     "Args",
                     (),
                     {"run1": str(run1), "run2": str(run2), "mutation_matrix": str(matrix_path)},
                 )()
             )
+        self.finalizer_output = json.loads(stdout.getvalue())
+        self.finalizer_writes = captured_writes
+        return return_code
+
+    def _assert_narrowed_finalizer_status(self) -> None:
+        self.assertEqual(NARROWED_FINALIZER_STATUS, self.finalizer_output["outcome"])
+        self.assertEqual("STOP", self.finalizer_output["full_gate_outcome"])
+        receipt = next(
+            value
+            for path, value in self.finalizer_writes.items()
+            if path.name == "P011_GATE_RECEIPT.json"
+        )
+        anchor = next(
+            value
+            for path, value in self.finalizer_writes.items()
+            if path.name == "copied_anchor.json"
+        )
+        self.assertEqual(NARROWED_FINALIZER_STATUS, receipt["receipt_state"])
+        self.assertEqual(
+            NARROWED_FINALIZER_STATUS,
+            receipt["producer_and_adapter_bindings"]["baseline_generator"]["status"],
+        )
+        self.assertEqual(
+            NARROWED_FINALIZER_STATUS,
+            receipt["producer_and_adapter_bindings"]["a_observation_adapter"]["status"],
+        )
+        self.assertEqual(NARROWED_FINALIZER_STATUS, receipt["baseline_outputs"]["status"])
+        self.assertEqual(NARROWED_FINALIZER_STATUS, anchor["freeze_state"])
 
     def test_finalize_candidate_refuses_zero_row_and_schema_short_matrix(self) -> None:
         run1 = self._write_finalizer_run("finalizer/matrix_run1")
@@ -313,8 +350,8 @@ class GateVariantTests(unittest.TestCase):
             self._invoke_finalizer(run1, run2, invalid_path)
 
         for section, return_code, reason in (
-            ("red", 0, "row RED evidence"),
-            ("restoration", 1, "row restoration evidence"),
+            ("red", 0, "RED return-code declarations"),
+            ("restoration", 1, "restoration return-code declarations"),
         ):
             with self.subTest(section=section):
                 invalid_evidence = deepcopy(matrix)
@@ -339,22 +376,39 @@ class GateVariantTests(unittest.TestCase):
         invalid_digest_row_path = _write_n33_json(
             "finalizer/invalid_digest_row_matrix.json", invalid_digest_row
         )
-        with self.assertRaisesRegex(p011_gate.GateStop, "row digest components"):
+        with self.assertRaisesRegex(p011_gate.GateStop, "digest-component path set"):
             self._invoke_finalizer(run1, run2, invalid_digest_row_path)
+
+        moved_digest_row = deepcopy(matrix)
+        digest_row = next(row for row in moved_digest_row["rows"] if row["digest_component"])
+        non_digest_row = next(
+            row for row in moved_digest_row["rows"] if not row["digest_component"]
+        )
+        digest_row["digest_component"] = False
+        non_digest_row["digest_component"] = True
+        moved_digest_row_path = _write_n33_json(
+            "finalizer/moved_digest_row_matrix.json", moved_digest_row
+        )
+        with self.assertRaisesRegex(p011_gate.GateStop, "digest-component path set"):
+            self._invoke_finalizer(run1, run2, moved_digest_row_path)
 
         scalar_variants = (
             ("matrix_row_count", matrix["matrix_row_count"] - 1, "declared row count"),
             ("catalog_field_count", matrix["catalog_field_count"] - 1, "declared catalog count"),
             ("schema_sha256", "0" * 64, "schema pin differs"),
             ("event_component_count", matrix["event_component_count"] - 1, "event-component count"),
-            ("red_count", matrix["red_count"] - 1, "RED count differs"),
+            (
+                "red_count",
+                matrix["red_count"] - 1,
+                "declared RED return-code count",
+            ),
             (
                 "restored_green_count",
                 matrix["restored_green_count"] - 1,
-                "GREEN-after-RED evidence",
+                "declared restoration return-code count",
             ),
-            ("outcome", "STOP", "GREEN-after-RED evidence"),
-            ("failures", ["FIELD-001"], "GREEN-after-RED evidence"),
+            ("outcome", "STOP", "declared outcome/failures"),
+            ("failures", ["FIELD-001"], "declared outcome/failures"),
         )
         for field, value, reason in scalar_variants:
             with self.subTest(field=field):
@@ -373,6 +427,38 @@ class GateVariantTests(unittest.TestCase):
             / "discrimination_matrix.json"
         )
         self.assertEqual(0, self._invoke_finalizer(run1, run2, green_path))
+        self._assert_narrowed_finalizer_status()
+
+    def test_finalize_candidate_narrows_acceptance_without_producer_execution(self) -> None:
+        run1 = self._write_finalizer_run("finalizer/narrowed_run1")
+        run2 = self._write_finalizer_run("finalizer/narrowed_run2")
+        matrix = json.loads(
+            (
+                p011_gate.GATE_DIR
+                / "evidence"
+                / "discrimination_matrix"
+                / "discrimination_matrix.json"
+            ).read_text(encoding="utf-8")
+        )
+        shared_output = {
+            "command_argv": ["test", "no-producer-executed"],
+            "evidence_sha256": "0" * 64,
+            "stderr": "",
+            "stdout": "IDENTICAL_NO_EXECUTION_OUTPUT",
+        }
+        for row in matrix["rows"]:
+            row["matrix_id"] = "FIELD-001"
+            row["owning_record_or_digest"] = "NO_PRODUCER_EXECUTED"
+            row["actual_changed_record_count"] = 0
+            row["expected_changed_record_count"] = 0
+            row["failing_record_keys"] = []
+            row["mutation"]["after"] = row["mutation"]["before"]
+            row["red"] = {**shared_output, "return_code": 1}
+            row["restoration"] = {**shared_output, "return_code": 0}
+        matrix_path = _write_n33_json("finalizer/no_producer_execution.json", matrix)
+
+        self.assertEqual(0, self._invoke_finalizer(run1, run2, matrix_path))
+        self._assert_narrowed_finalizer_status()
 
     def test_finalize_candidate_refuses_each_empty_build_artifact(self) -> None:
         matrix_path = (

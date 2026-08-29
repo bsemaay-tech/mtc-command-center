@@ -1,4 +1,4 @@
-# WP-P0-11 `P011-LC-GATE-v2` repair round 5 report
+# WP-P0-11 `P011-LC-GATE-v2` repair round 6 report
 
 Date: 2026-08-29
 
@@ -15,7 +15,7 @@ audits remain required; the implementer issues no acceptance verdict.
 policy-only rows. Six formerly GREEN rows correctly became STOP when the gate began checking the
 exact declared authority set. This is successful discrimination, not disposition conservation. The
 gate now requires those current counts and rejects the protected stale row evidence
-(`p011_gate.py:1432-1448`). No kernel consolidation, protected implementation edit, subject
+(`p011_gate.py:1442-1458`). No kernel consolidation, protected implementation edit, subject
 comparison, or live/runtime action was performed.
 
 ## Premise 1 - authority diff
@@ -99,7 +99,7 @@ tests were removed. `BindingLedger` retains declared leaf paths and bound paths 
 enumeration and binding summaries only (`scenario_binding.py:246-255`, `:366-385`). Exact binding
 is performed separately by `_bind_exact` (`scenario_binding.py:334-364`). The generator emits the
 typed scenario declarations (`stage1_freeze.py:551-613`); the baseline gate exact-binds them
-(`p011_gate.py:563-598`) and the row arm exact-binds its verifier contract (`row_arm.py:2380-2438`).
+(`p011_gate.py:566-601`) and the row arm exact-binds its verifier contract (`row_arm.py:2380-2438`).
 The row arm separately compares producer output and checks an observed mutation RED path plus
 runtime authority identities (`row_arm.py:155-218`, `:2531-2590`, `:3299-3358`).
 
@@ -117,10 +117,10 @@ The six measured disposition changes are:
 The current authority check compares a verifier-declared set with runtime import observations and
 records missing identities (`row_arm.py:179-218`). Current code emits no `CONSERVED` contract ledger and
 makes no terminal-consumption claim. The isolated unit suite uses a per-run temporary directory,
-not a committed absolute scratch pin (`test_scenario_binding.py:31-32`). It runs 20 tests, including
+not a committed absolute scratch pin (`test_scenario_binding.py:31-32`). It runs 21 tests, including
 the producer spy, exact-key variants, identity-bound C32 control, receipt-pin refusal variants, a
 counts-only receipt probe, and the complete declared-leaf variant matrix
-(`test_scenario_binding.py:151-840`). C42 publishes only the executed producer outputs; the
+(`test_scenario_binding.py:151-934`). C42 publishes only the executed producer outputs; the
 re-keyed duplicate and self-comparison were deleted (`row_arm.py:3238-3253`). No load-bearing claim in
 the repaired disposition or binding sections cites an `N26_VARIANTS` scratch output.
 
@@ -148,31 +148,55 @@ the repaired disposition or binding sections cites an `N26_VARIANTS` scratch out
    retained.
 7. Update every authorized receipt/anchor hash for `row_arm.py`, `scenario_binding.py`,
    `p011_gate.py`, and the test only inside the coordinated v3 package.
+8. Add full discrimination-matrix producer-act verification to the v3 external-reproduction
+   contract. A different actor must execute the producers; this finalizer verifies only matrix
+   shape and cross-source identity and must not issue producer-execution status.
 
 The observation schema is not a target for the scenario-binding fields: its catalog contains
 observation, signal, event, position, gate-readiness, and account fields, but none of the named
 scenario-contract fields (`P011_OBSERVATION_SCHEMA_v1.json:165-789`).
 
-## Repair-round-5 evidence closure
+## Repair-round-5 inherited evidence boundary
 
 The candidate finalizer now refuses any absent, byte-empty, or logically empty required build
 artifact. Its discrimination matrix must carry nonempty rows and bind its declared count, catalog
-count, ordered paths, schema pin, RED count, and restoration count to the independently loaded
-observation-schema field catalog (`p011_gate.py:1302-1381`). The zero-row/empty-artifact modified
+count, ordered paths, schema pin, RED return-code declaration count, and restoration return-code
+declaration count to the independently loaded
+observation-schema field catalog (`p011_gate.py:1305-1392`). The zero-row/empty-artifact modified
 copy is refused, a separately modified 75-row matrix is refused against the schema's 76-row
-universe, and the 76-row/nonempty control remains accepted (`test_scenario_binding.py:187-413`).
+universe, and the 76-row/nonempty control reaches shape-and-identity acceptance without verifying
+producer execution (`test_scenario_binding.py:190-499`).
 
 Row-corroboration wording now derives its applicable, policy-only, and total counts from the rows
-actually present (`p011_gate.py:601-652`; `test_scenario_binding.py:414-427`). Missing nested
+actually present (`p011_gate.py:604-655`; `test_scenario_binding.py:500-513`). Missing nested
 receipt pins now reach the intended `RowFail` through guarded reads instead of `KeyError`
-(`row_arm.py:2322-2346`; `test_scenario_binding.py:428-451`). These checks change evidence
+(`row_arm.py:2322-2346`; `test_scenario_binding.py:514-538`). These checks change evidence
 admission and reporting only; they do not change the frozen row dispositions or any producer.
+
+## Repair-round-6 truthful finalizer closure
+
+The finalizer terminal status is now exactly
+`SHAPE_AND_IDENTITY_ACCEPTED; producer execution NOT verified by this gate`. The command output,
+receipt state, baseline-generator status, observation-adapter status, baseline-output status, and
+anchor freeze state all use that same narrowed wording; the overall gate outcome remains `STOP`
+(`p011_gate.py:35-39,1393-1438`; `test_scenario_binding.py:225-291,423-461`).
+
+Digest membership is verified across independent sources: the set of paths flagged by the
+caller-selected matrix must equal the state-digest path set parsed from the repository observation
+schema. Set equality checks missing and unexpected paths in both directions; the count and declared
+scalar checks remain separate (`p011_gate.py:1365-1380`). A count-preserving moved-flag modified copy
+is refused (`test_scenario_binding.py:377-390`).
+
+The accepted status does not assert matrix producer execution. Finalizer reasons name only checked
+artifact-copy identity, declared return-code counts, declared outcome/failures, schema path-set
+membership, and the baseline-manifest's declared adapter hash (`p011_gate.py:1320-1392`). Full
+producer-act verification remains a cumulative v3 external-reproduction obligation.
 
 ## Scope and audit boundary
 
-This repair writes only `row_arm.py`, `p011_gate.py`, `LANE_REPORT.md`, and
-`test_scenario_binding.py`. Implementation A/B, Pine, `MTC_V2`, backtest, adapters, kernel, schemas,
-receipts, evidence, anchors, hosts, brokers, venues, credentials, and live/testnet surfaces were not
-edited or invoked. No live dependency was present. The package is committed locally only as an
+This repair writes only `p011_gate.py`, `LANE_REPORT.md`, and `test_scenario_binding.py`.
+`row_arm.py`, implementation A/B, Pine, `MTC_V2`, backtest, adapters, kernel, schemas, receipts,
+evidence, and anchors were not edited; no host, broker, venue, credential, or live/testnet surface
+was invoked. No live dependency was present. The package is committed locally only as an
 audit candidate and is not pushed; two independent flagship audits decide any later acceptance,
 and the gate remains **STOP**.

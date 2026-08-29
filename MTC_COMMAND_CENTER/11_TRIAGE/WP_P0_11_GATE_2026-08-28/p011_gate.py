@@ -34,6 +34,9 @@ from scenario_binding import (
 
 GATE_VERSION = "P011-LC-GATE-v2"
 SCHEMA_VERSION = "P011_OBSERVATION_SCHEMA_v1"
+FINALIZER_ACCEPTED_STATUS = (
+    "SHAPE_AND_IDENTITY_ACCEPTED; producer execution NOT verified by this gate"
+)
 SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 A_TREE_OID = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
 FIXTURE_SHA256 = "3a3a4939fc8e1b725112115971e2663ddbcc1ea5981c37aa1d02d8bc3674a7bb"
@@ -1325,7 +1328,7 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
         first_hash = sha256_file(first)
         second_hash = sha256_file(second)
         if first_hash != second_hash:
-            raise GateFail(f"candidate finalization builds differ: {name}")
+            raise GateFail(f"candidate finalization artifact copies differ: {name}")
         artifacts[name] = first_hash
         double_build["artifacts"].append({"artifact": name, "run_1_sha256": first_hash, "run_2_sha256": second_hash})
     matrix = load_json(mutation_matrix)
@@ -1353,49 +1356,56 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
         row.get("red", {}).get("return_code") == 1 for row in matrix_rows
     )
     if matrix_red_evidence_count != schema_catalog_count:
-        raise GateStop("mutation-matrix row RED evidence does not cover the observation-schema field catalog")
+        raise GateStop("mutation-matrix RED return-code declarations do not cover the observation-schema field catalog")
     matrix_restoration_evidence_count = sum(
         row.get("restoration", {}).get("return_code") == 0 for row in matrix_rows
     )
     if matrix_restoration_evidence_count != schema_catalog_count:
-        raise GateStop("mutation-matrix row restoration evidence does not cover the observation-schema field catalog")
+        raise GateStop("mutation-matrix restoration return-code declarations do not cover the observation-schema field catalog")
     schema_digest_paths = set(schema.get("digest_catalog", {}).get("state_digest_components", []))
+    matrix_digest_paths = {
+        row.get("stable_field_component_path")
+        for row in matrix_rows
+        if bool(row.get("digest_component"))
+    }
+    if matrix_digest_paths != schema_digest_paths:
+        raise GateStop("mutation-matrix digest-component path set differs from the observation-schema digest catalog")
     matrix_digest_evidence_count = sum(
         bool(row.get("digest_component")) for row in matrix_rows
     )
     if matrix_digest_evidence_count != len(schema_digest_paths):
-        raise GateStop("mutation-matrix row digest components differ from the observation-schema digest catalog")
+        raise GateStop("mutation-matrix digest-component flag count differs from the observation-schema digest catalog")
     if matrix.get("digest_component_count") != len(schema_digest_paths):
         raise GateStop("mutation-matrix declared digest-component count differs from the observation-schema digest catalog")
     schema_event_paths = set(schema.get("digest_catalog", {}).get("event_component_paths", []))
     if matrix.get("event_component_count") != len(schema_event_paths):
         raise GateStop("mutation-matrix declared event-component count differs from the observation-schema event catalog")
     if matrix.get("outcome") != "PASS" or matrix.get("failures") != []:
-        raise GateStop("per-field discrimination matrix is not complete GREEN-after-RED evidence")
+        raise GateStop("mutation-matrix declared outcome/failures do not match the required shape contract")
     if matrix.get("red_count") != schema_catalog_count:
-        raise GateStop("mutation-matrix RED count differs from the observation-schema field catalog")
+        raise GateStop("mutation-matrix declared RED return-code count differs from the observation-schema field catalog")
     if matrix.get("restored_green_count") != schema_catalog_count:
-        raise GateStop("per-field discrimination matrix is not complete GREEN-after-RED evidence")
+        raise GateStop("mutation-matrix declared restoration return-code count differs from the observation-schema field catalog")
     baseline_manifest = load_json(run1 / "baseline_manifest.json")
     current_tool_hash = sha256_file(Path(__file__))
     if baseline_manifest.get("adapters", {}).get("observation_adapter", {}).get("sha256") != current_tool_hash:
-        raise GateFail("candidate baseline was not built by the current pinned gate tool")
-    receipt["receipt_state"] = "STAGE2_SEQUENCE_CANDIDATE_BUILT_ROW_ARM_STOP_AUDIT_PENDING"
+        raise GateFail("baseline-manifest declared observation-adapter sha256 differs from current gate-tool bytes")
+    receipt["receipt_state"] = FINALIZER_ACCEPTED_STATUS
     receipt["producer_and_adapter_bindings"]["baseline_generator"] = {
         "path": "p011_gate.py",
         "sha256": current_tool_hash,
-        "status": "PASS",
+        "status": FINALIZER_ACCEPTED_STATUS,
     }
     receipt["producer_and_adapter_bindings"]["a_observation_adapter"] = {
         "path": "p011_gate.py",
         "sha256": current_tool_hash,
-        "status": "PASS",
+        "status": FINALIZER_ACCEPTED_STATUS,
         "required_call": "mtc_v2.core.runner.Runner.run once per profile",
         "resolved_import_call_bindings": baseline_manifest["source"]["resolved_import_bindings"],
         "binding": baseline_manifest["adapters"]["observation_adapter"]["binding"],
     }
     receipt["baseline_outputs"] = {
-        "status": "CANDIDATE_SEQUENCE_BUILT_ROW_ARM_STOP_INDEPENDENT_REPRODUCTION_PENDING",
+        "status": FINALIZER_ACCEPTED_STATUS,
         "artifact_sha256": artifacts,
         "double_build": double_build,
         "conservation": baseline_manifest["conservation"],
@@ -1420,12 +1430,12 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
     write_json(receipt_path, receipt)
     final_receipt_hash = sha256_file(receipt_path)
     anchor["receipt_sha256"] = final_receipt_hash
-    anchor["freeze_state"] = "STAGE2_SEQUENCE_CANDIDATE_BUILT_ROW_ARM_STOP_AUDIT_PENDING"
+    anchor["freeze_state"] = FINALIZER_ACCEPTED_STATUS
     anchor["subject_runs_at_signature"] = 0
     anchor["candidate_baseline_artifact_sha256"] = artifacts
     anchor["candidate_discrimination_matrix_sha256"] = sha256_file(mutation_matrix)
     write_json(ANCHOR_PATH, anchor)
-    print(json.dumps({"outcome": "PASS", "receipt_sha256": final_receipt_hash, "legacy_manifest_sha256": anchor["legacy_manifest_sha256"], "artifact_sha256": artifacts, "full_gate_outcome": "STOP"}, sort_keys=True, separators=(",", ":")))
+    print(json.dumps({"outcome": FINALIZER_ACCEPTED_STATUS, "receipt_sha256": final_receipt_hash, "legacy_manifest_sha256": anchor["legacy_manifest_sha256"], "artifact_sha256": artifacts, "full_gate_outcome": "STOP"}, sort_keys=True, separators=(",", ":")))
     return 0
 
 
