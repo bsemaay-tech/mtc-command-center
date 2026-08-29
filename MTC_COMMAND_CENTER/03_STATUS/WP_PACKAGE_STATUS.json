@@ -107,12 +107,12 @@
     {
       "id": "STALE-ROOT-RECONCILE",
       "title": "Main working copy safe-reconcile (owner: safe-reconcile)",
-      "state": "QUEUED_LEAD",
-      "branch": "codex/bridge-help-wiki (270 behind, 1 ahead, dirty)",
-      "commit": "-",
-      "detail": "Owner ask-5: rescue local commit + dirty state to a pushed rescue branch, then bring C:\\LAB\\Tradingview_LAB_CLEAN to current master. Nothing discarded. Lead executes in-session.",
+      "state": "DONE",
+      "branch": "root/current-20260829 (tracks origin/master)",
+      "commit": "62ec0ef6",
+      "detail": "Done 2026-08-29: dirty edits rescue-committed as 1e416b88 on codex/bridge-help-wiki and pushed; root moved to root/current-20260829 at current master content (master itself lives in the WFMERGE54 worktree so the root cannot hold it). Nothing discarded; untracked session artifacts left in place.",
       "owner_gate": false,
-      "next_action": "Lead in-session"
+      "next_action": "none"
     },
     {
       "id": "PROMOTION-DECISION",
