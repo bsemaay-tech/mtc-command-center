@@ -1,7 +1,7 @@
 ﻿{
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-29T21:25:00+03:00",
+  "generated": "2026-08-29T23:05:00+03:00",
   "updated_by": "claude-lead-session-2026-08-29-evening",
   "packages": [
     {
@@ -17,12 +17,12 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "REPAIR_8_COMMITTED_DELTA_AUDITS_RUNNING",
+      "state": "REPAIR_8B_RUNNING_THEN_STAGE3",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
       "commit": "b4278c1a (repair-8)",
-      "detail": "Repair-4 committed: self-comparing C42 assertion removed, receipt pins reconciled, validator claims narrowed; all 8 deduplicated findings closed; census dual-stated (15 kept / 12 excluded comprehension-bound). Gate remains STOP by design (27/13/2). Repair 7 (owner-approved label-only) committed e67d2b84 and delta-audited: flagship PASS-WITH-NITS, detection 1 HIGH residual - the receipt run_1/run_2 names still assert runs the finalizer does not perform (same class). Next session asks the owner: repair 8 label-only (recommended) or carry to v3. v3 stage-4 design v2b complete and re-pinned. Runbook CONFIRMED FOR OWNER. Bridge fail-closed design COMPLETE.",
+      "detail": "Gate remains STOP by design (copied-pin 27/13/2). Repair 8 (owner-approved label-only) committed b4278c1a: run_* receipt keys and flags renamed to caller_input_*. Delta audits: P22 flagship PASS (no scope-exceed, no new class instance, 3 nits); N50 detection found ONE editable residual - a test identifier still claiming a build act - fresh receipt itself clean. Repair 8b (N52, test-name rename only) running; stage 3 build (N51 spec ready) follows on its closure. v3 stage-4 design v2b complete and re-pinned.",
       "owner_gate": false,
-      "next_action": "P22+N50+GM4 delta audits on b4278c1a -> stage 3 build -> v3 (second actor: Claude Pro per owner ruling)"
+      "next_action": "N52 repair 8b (test-name) -> N51 stage 3 build -> v3 (second actor: Claude Pro per owner ruling)"
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
@@ -30,9 +30,9 @@
       "state": "OWNER_ANSWERED_ALL_YES",
       "branch": "-",
       "commit": "-",
-      "detail": "Decision memo delivered and hash-verified (Grok G10: 0 HIGH). Three numbered owner questions at the end of OWNER_DECISION_P011_HASH_FORM.md: 1) blob-OID hash form, 2) machine strings out of hashed baseline, 3) second-actor rebuild before signing. These are separate from the 12 morning asks and remain unanswered.",
+      "detail": "Decision memo delivered and hash-verified (Grok G10: 0 HIGH). The owner answered all three questions YES on 2026-08-29 afternoon (blob-OID hash form; machine strings out of hashed baseline; second-actor rebuild before signing). W44 folded the rulings into stage-4 design v2 and W44b closed all 12 G15 findings, re-pinning v2b.",
       "owner_gate": false,
-      "next_action": "W44 folds the three rulings into stage-4 design v2"
+      "next_action": "rulings folded (v2b re-pinned); v3 execution waits for P0-11 stage 3"
     },
     {
       "id": "REGISTRY-GUARD",
@@ -50,7 +50,7 @@
       "state": "MERGED",
       "branch": "master (via PR #138)",
       "commit": "2c6be96e",
-      "detail": "Built + CONFIRMED (P12, zero findings): shipped-class test, known_limitations entry, suite 141 -> 142, range_filter.py untouched. PR #138 open, CI running (first PRs under the new required pine-alert-guard check).",
+      "detail": "Built + CONFIRMED (P12, zero findings): shipped-class test, known_limitations entry, suite 141 -> 142, range_filter.py untouched.",
       "owner_gate": false,
       "next_action": "none - merged cdd86238"
     },
@@ -60,7 +60,7 @@
       "state": "MERGED",
       "branch": "master (via PR #141)",
       "commit": "0134fc82",
-      "detail": "Built: regime_breakdown_present computed (coverage > 0) with 4-point RED shown; exactly 41 of 78 stamps neutralised (pattern-pinned census); writer populates the two queue-read numbers with producer-named values, no fabrication on missing computation. Full chain: build -> confirm REJECTED (fabricated 0.0 on admission path) -> repaired 0134fc82 -> re-CONFIRMED by the same auditor -> merged d5be879e. Census 42/78, nine distinct fixtures.",
+      "detail": "Built: regime_breakdown_present computed (coverage > 0) with 4-point RED shown; census 42/78 with 41 neutralised and 1 property-specific repair (intake.inputs_numeric_boolean); writer populates the two queue-read numbers with producer-named values, no fabrication on missing computation. Full chain: build -> confirm REJECTED (fabricated 0.0 on admission path) -> repaired 0134fc82 -> re-CONFIRMED by the same auditor -> merged d5be879e. Nine distinct fixtures.",
       "owner_gate": false,
       "next_action": "none - merged d5be879e"
     },
@@ -87,12 +87,12 @@
     {
       "id": "BRIDGE-FAIL-CLOSED",
       "title": "Bridge refuses unimplemented settings (owner: fail closed)",
-      "state": "CANDIDATE_OWNER_APPROVED_PENDING_P21_CONFIRM",
+      "state": "CANDIDATE_V2_REPAIR_RUNNING",
       "branch": "-",
       "commit": "-",
-      "detail": "Design CLOSED with both-auditor delta re-confirm of W10c: P20 flagship CONFIRMED (both findings genuinely closed, no new defects, build gate intact), N48 detection ZERO FINDINGS. Owner (evening, all-defaults) authorized preparing the corrected bridge.yaml candidate: lane W50 produces candidate bytes + per-key rationale. Owner approves the exact bytes separately before any build. NO deployment to any host.",
+      "detail": "Design complete: W10c edits delta-checked - P20 flagship CONFIRMED (edit-set scope), N48 detection zero findings (detection, not acceptance). Candidate V1 was owner-approved conditionally (SHA 58f67c82) but the P21 flagship audit returned NOT-CONFIRMED (inconsistent activeness standard on risk.policy_id; omitted second YAML reader), voiding that approval per its own terms. W50b repair is producing CANDIDATE_V2 (risk.policy_id removed under one uniform standard); V2 bytes will need a fresh owner approval. Build remains STOP until then. NO deployment to any host.",
       "owner_gate": true,
-      "next_action": "owner said BRIDGE YES (SHA 58f67c82); effective when P21 audit CONFIRMS; then build lane authorization"
+      "next_action": "W50b finishes V2 -> P21b re-audit -> owner approves V2 exact bytes -> build lane"
     },
     {
       "id": "SURVEY-SAFETY-SENTENCE",
@@ -100,7 +100,7 @@
       "state": "MERGED",
       "branch": "master (via PR #139)",
       "commit": "947365ca",
-      "detail": "5 lock claims corrected + CONFIRMED (P12, zero findings, both code facts re-verified). PR #139 open, CI running.",
+      "detail": "5 lock claims corrected + CONFIRMED (P12, zero findings, both code facts re-verified).",
       "owner_gate": false,
       "next_action": "none - merged c52352ea"
     },
@@ -120,19 +120,19 @@
       "state": "DESIGN_BLOCKED_SECOND_AUDIT_RUNNING",
       "branch": "-",
       "commit": "-",
-      "detail": "Design P012_BUILD_DESIGN_V1.md (W45) audited BLOCK by N45 (self-checking acceptance gate + 3 open semantics + determinism). G17 (Grok) died silently at 21:17 (zero-byte log, no process - 4th recorded silent Grok death, this one on a read-only lane); requeued as OC2 on OpenCode Go Kimi K3. Next: union of both auditors' findings -> one repair round by the author family -> re-audit. BUILD starts only after P0-11 accepts. Tier T0.",
+      "detail": "Design audited BLOCK by N45 (self-checking acceptance gate + 3 open semantics + determinism). G17 (Grok, second family) DELIVERED a full detection report (15 findings: 2 BLOCKER, 7 HIGH, 6 MEDIUM; the Lead's earlier 'silent death' call was wrong - it was a slow start). W55 (author family) repaired the union N45+G17 into design v1.1; re-audit N53 (Codex) is running. BUILD starts only after P0-11 accepts. Tier T0.",
       "owner_gate": false,
-      "next_action": "OC2 second-family audit (Kimi K3) -> union repair -> re-audit"
+      "next_action": "N53 re-audit of v1.1 -> further round if not clean"
     },
     {
       "id": "WP-P0-20",
       "title": "Control-parity checklist + statistical-battery definition (migration gate papers)",
-      "state": "PAPERS_UNDER_FLAGSHIP_AUDIT",
+      "state": "PAPERS_V11_REAUDIT_RUNNING",
       "branch": "-",
       "commit": "-",
-      "detail": "Both papers delivered (W20P). Grok citation check G16 done: 16 findings (5 HIGH / 6 MEDIUM / 5 LOW), detection only. Evening session dispatched the flagship design audit (P19 Claude Pro + Gemini corroboration) which must reproduce or refute every G16 HIGH/MEDIUM on code facts. Chain stays serial: 11 -> 12 -> 20 -> 13 -> 31M1 -> 14; no downstream build early.",
+      "detail": "Both papers audited BLOCK by the P19 flagship (16/16 G16 findings reproduced, 0 refuted) and BLOCK+BLOCK by the Gemini corroborator GM2 - including the census defect that the papers claimed the bridge directory and funding surfaces were absent from the checkout. W54 (author family) repaired the three-auditor union into v1.1 of both papers. Delta re-audits P23 (flagship) + N54 (detection) are running. Chain stays serial: 11 -> 12 -> 20 -> 13 -> 31M1 -> 14.",
       "owner_gate": false,
-      "next_action": "P19 flagship audit -> repair if needed"
+      "next_action": "P23 + N54 delta audits of v1.1 -> further round if not clean"
     },
     {
       "id": "PROMOTION-DECISION",

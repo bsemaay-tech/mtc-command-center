@@ -12,7 +12,7 @@ The six questions and the defaults the owner thereby adopted:
 | 3 | Migration runbook execution | Owner reads the runbook when he has time; the supervised migration run is **scheduled after P0-11 fully closes**; execution still needs his explicit go |
 | 4 | P0-11 v3 second-actor rebuild | **Claude Pro** performs the clean-checkout rebuild (different model family from all Codex builders) |
 | 5 | Promotion decision package | **Parked** until the owner has reading time; no lane spends on it |
-| 6 | Budget (month ~$5,186 vs ~$800–1,200 ceiling, surfaced again) | **Continue** at current burn; owner explicitly re-confirmed maximum parallel speed |
+| 6 | Budget (CodeBurn banner at evening session start read $5,186.30 month spend vs the ~$800–1,200 owner ceiling; the Lead measures no USD itself) | **Continue** at current burn; owner explicitly re-confirmed maximum parallel speed |
 
 Additional owner order, same message: **parallel lanes increased to 10.**
 
