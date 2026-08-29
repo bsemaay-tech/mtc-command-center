@@ -31,7 +31,9 @@ routing trading-adjacent logic through Cline. Local mock server runs are allowed
 ## 1. Hard rails (unchanged, non-negotiable)
 
 1. NEVER print, log, echo, or persist `HL_API_WALLET_KEY` or any private key. Existence checks only.
-2. NEVER touch Hyperliquid MAINNET. The triple-lock stays engaged (`HL_LIVE_ACK` must stay unset).
+2. NEVER touch Hyperliquid MAINNET. Protection today is the hardcoded `network="testnet"` at
+   construction (`bridge/app.py:203`); `_check_network_lock` (`hyperliquid.py:2165-2167`)
+   never evaluates on that path. Keep `HL_LIVE_ACK` unset.
 3. Testnet orders: ONLY within the P0 smoke scope of §0-B2 (one tiny bracket, then cancel; flatten
    if a partial fill leaves a position). No ARM'd autonomous trading in this build.
 4. Never edit anything under `MTC_COMMAND_CENTER/` (read-only param/data lookup allowed for B3).
