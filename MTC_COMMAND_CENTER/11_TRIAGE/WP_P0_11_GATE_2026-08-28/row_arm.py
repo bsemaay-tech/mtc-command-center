@@ -3195,7 +3195,7 @@ def c42_source_corroboration(pine_path: Path | None = None) -> dict[str, Any]:
             "branch_sequence": a_sequence,
         },
         "pine_source": {
-            "path": pine_rel if clean_pine else str(actual_pine_path),
+            "path": pine_rel if clean_pine else "<MODIFIED_PINE_COPY>",
             "git_blob_oid": pine_blob,
             "worktree_blob_or_modified_sha256": pine_worktree_blob,
             "sha256": sha256_bytes(pine_bytes),

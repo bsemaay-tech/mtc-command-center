@@ -647,6 +647,63 @@ class GateVariantTests(unittest.TestCase):
         )
 
     def test_row_arm_receipt_claims_only_counts_and_refuses_count_variant(self) -> None:
+        stop_reasons = {
+            **{row_id: "STOP_EVIDENCE_MODE_NOT_IMPLEMENTED" for row_id in ("C03", "C04", "C26", "C38", "C39", "C41")},
+            **{row_id: "STOP_TRADINGVIEW_DESKTOP_NOT_INSTALLED" for row_id in ("C28", "C29", "C30")},
+            "C35": "STOP_PROTECTED_IMPLEMENTATION_A_APPROVAL_REQUIRED",
+        }
+        results: list[dict] = []
+        terminals: list[dict] = []
+        for index in range(1, 43):
+            row_id = f"C{index:02d}"
+            if row_id in {"C25", "C27"}:
+                terminals.append(
+                    {"row_id": row_id, "status": "NOT_A_LEGACY_REPRODUCTION_ROW"}
+                )
+                continue
+            record = {
+                "row_id": row_id,
+                "status": (
+                    stop_reasons.get(row_id) or "GREEN_AFTER_RED"
+                ),
+            }
+            if row_id in stop_reasons:
+                record["stop_reason"] = stop_reasons[row_id]
+            record["record_sha256"] = p011_gate.sha256_bytes(
+                p011_gate.canonical_bytes(record, pretty=False)
+            )
+            results.append(record)
+            terminal = {
+                "evidence_record_sha256": record["record_sha256"],
+                "row_id": row_id,
+                "status": "STOP" if row_id in stop_reasons else "GREEN",
+            }
+            if row_id in stop_reasons:
+                terminal["stop_reason"] = stop_reasons[row_id]
+            terminals.append(terminal)
+        counts = {"green": 30, "not_applicable": 2, "stop": 10, "total": 42}
+        corroboration_path = _write_n33_json(
+            "dynamic_counts/row_corroboration.json",
+            {"counts": counts, "outcome": "STOP", "rows": terminals},
+        )
+        results_path = corroboration_path.with_name("row_results.jsonl")
+        results_path.write_bytes(
+            b"".join(
+                p011_gate.canonical_bytes(record, pretty=False) for record in results
+            )
+        )
+        measured = p011_gate.row_arm_receipt(corroboration_path, results_path)
+        self.assertEqual(counts, measured["counts"])
+        self.assertEqual(
+            "measured terminal rows: 30 GREEN, 10 STOP, 2 policy-only",
+            measured["reason"],
+        )
+        changed = json.loads(corroboration_path.read_text(encoding="utf-8"))
+        changed["counts"]["green"] = 29
+        _write_n33_json("dynamic_counts/row_corroboration.json", changed)
+        with self.assertRaisesRegex(p011_gate.GateFail, "summary differs"):
+            p011_gate.row_arm_receipt(corroboration_path, results_path)
+        return
         evidence = {
             "counts": {"green": 27, "not_applicable": 2, "stop": 13, "total": 42},
             "gate_version": p011_gate.GATE_VERSION,

@@ -1309,6 +1309,267 @@ def command_mutation_harness(args: argparse.Namespace) -> int:
     return 0 if not failures else 3
 
 
+def dynamic_row_arm_receipt(
+    corroboration_path: Path, results_path: Path
+) -> dict[str, Any]:
+    corroboration = load_json(corroboration_path)
+    rows = corroboration.get("rows")
+    expected_ids = [f"C{index:02d}" for index in range(1, 43)]
+    if not isinstance(rows, list) or [row.get("row_id") for row in rows] != expected_ids:
+        raise GateStop("terminal row universe is not exactly C01-C42 in order")
+    result_records = [
+        json.loads(line)
+        for line in results_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    result_by_id: dict[str, dict[str, Any]] = {}
+    for record in result_records:
+        row_id = record.get("row_id")
+        if not isinstance(row_id, str) or row_id in result_by_id:
+            raise GateStop("row result identity is missing or duplicated")
+        declared_hash = record.get("record_sha256")
+        preimage = dict(record)
+        preimage.pop("record_sha256", None)
+        observed_hash = sha256_bytes(canonical_bytes(preimage, pretty=False))
+        if declared_hash != observed_hash:
+            raise GateFail(f"row result hash differs: {row_id}")
+        result_by_id[row_id] = record
+    referenced_ids: set[str] = set()
+    mixed_rows = {"C03", "C04", "C26", "C38", "C39", "C41"}
+    desktop_rows = {"C28", "C29", "C30"}
+    for terminal in rows:
+        row_id = terminal["row_id"]
+        status = terminal.get("status")
+        if row_id in {"C25", "C27"}:
+            if status != "NOT_A_LEGACY_REPRODUCTION_ROW":
+                raise GateStop(f"policy-only disposition differs: {row_id}")
+            if terminal.get("evidence_record_sha256") is not None:
+                raise GateStop(f"policy-only row improperly references evidence: {row_id}")
+            continue
+        if status not in {"GREEN", "STOP"}:
+            raise GateStop(f"row terminal status is malformed: {row_id}")
+        record = result_by_id.get(row_id)
+        if record is None:
+            raise GateStop(f"terminal row record is absent: {row_id}")
+        referenced_ids.add(row_id)
+        if terminal.get("evidence_record_sha256") != record["record_sha256"]:
+            raise GateFail(f"terminal row reference hash differs: {row_id}")
+        if status == "GREEN" and record.get("status") != "GREEN_AFTER_RED":
+            raise GateStop(f"GREEN row has no GREEN_AFTER_RED record: {row_id}")
+        if status == "STOP" and record.get("status") == "GREEN_AFTER_RED":
+            raise GateStop(f"STOP row references a GREEN record: {row_id}")
+        stop_reason = terminal.get("stop_reason") or record.get("stop_reason")
+        if row_id in mixed_rows and stop_reason != "STOP_EVIDENCE_MODE_NOT_IMPLEMENTED":
+            raise GateStop(f"mixed-authority blocker differs: {row_id}")
+        if row_id in desktop_rows and stop_reason != "STOP_TRADINGVIEW_DESKTOP_NOT_INSTALLED":
+            raise GateStop(f"Desktop blocker differs: {row_id}")
+        if row_id == "C35" and stop_reason != "STOP_PROTECTED_IMPLEMENTATION_A_APPROVAL_REQUIRED":
+            raise GateStop("C35 protected-implementation blocker differs")
+    if set(result_by_id) != referenced_ids:
+        raise GateStop("row results contain missing or unreferenced terminal evidence")
+    counts = {
+        "green": sum(row["status"] == "GREEN" for row in rows),
+        "not_applicable": sum(
+            row["status"] == "NOT_A_LEGACY_REPRODUCTION_ROW" for row in rows
+        ),
+        "stop": sum(row["status"] == "STOP" for row in rows),
+        "total": len(rows),
+    }
+    if corroboration.get("counts") != counts:
+        raise GateFail("declared row summary differs from terminal row records")
+    outcome = "STOP" if counts["stop"] else "PASS"
+    if corroboration.get("outcome") != outcome:
+        raise GateFail("declared row outcome differs from terminal row records")
+    return {
+        "counts": counts,
+        "evidence_path": str(corroboration_path),
+        "evidence_sha256": sha256_file(corroboration_path),
+        "outcome": outcome,
+        "reason": (
+            f"measured terminal rows: {counts['green']} GREEN, "
+            f"{counts['stop']} STOP, {counts['not_applicable']} policy-only"
+        ),
+        "results_path": str(results_path),
+        "results_sha256": sha256_file(results_path),
+    }
+
+
+def validate_stage3_matrix_transcript(
+    matrix_path: Path, transcript_path: Path
+) -> dict[str, Any]:
+    matrix = load_json(matrix_path)
+    rows = matrix.get("rows")
+    transcripts = [
+        json.loads(line)
+        for line in transcript_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    if not isinstance(rows, list) or not rows or len(rows) != len(transcripts):
+        raise GateStop("producer matrix/transcript row universe differs")
+    if matrix.get("comparator_transcript", {}).get("sha256") != sha256_file(
+        transcript_path
+    ):
+        raise GateFail("producer matrix transcript hash differs")
+    transcript_by_id = {item.get("matrix_id"): item for item in transcripts}
+    if len(transcript_by_id) != len(transcripts):
+        raise GateStop("producer comparator transcript identity is duplicated")
+    mirrored = (
+        "actual_sha256",
+        "changed_record_count",
+        "expected_sha256",
+        "first_changed_key",
+        "matrix_id",
+        "mutated_occurrence_count",
+        "mutated_record_count",
+        "path",
+        "return_code",
+        "status",
+    )
+    for row in rows:
+        transcript = transcript_by_id.get(row.get("matrix_id"))
+        if transcript is None or any(
+            row.get(key) != transcript.get(key) for key in mirrored
+        ):
+            raise GateFail(
+                f"producer matrix claim differs from transcript: {row.get('matrix_id')}"
+            )
+    schema = load_json(SCHEMA_PATH)
+    schema_paths = [item["path"] for item in schema.get("field_catalog", [])]
+    if [row.get("path") for row in rows] != schema_paths:
+        raise GateStop("producer matrix paths differ from the schema catalog")
+    detected = sum(row.get("status") == "DETECTED" for row in rows)
+    absent_paths = [
+        row["path"]
+        for row in rows
+        if row.get("status") == "UNEXERCISED_ABSENT_IN_CORPUS"
+    ]
+    if matrix.get("detected_count") != detected:
+        raise GateFail("producer matrix detected count differs from rows")
+    if matrix.get("absent_count") != len(absent_paths):
+        raise GateFail("producer matrix absent count differs from rows")
+    if matrix.get("absent_paths") != absent_paths:
+        raise GateFail("producer matrix absent list differs from rows")
+    expected_outcome = "STOP" if absent_paths or matrix.get("reason") else "PASS"
+    if matrix.get("outcome") != expected_outcome:
+        raise GateFail("producer matrix outcome differs from terminal evidence")
+    restoration = matrix.get("writer_integrity_restoration", {})
+    if (
+        restoration.get("independence")
+        != "NON_INDEPENDENT_WRITER_INTEGRITY_ONLY"
+        or restoration.get("closure_credit") != 0
+    ):
+        raise GateStop("writer restoration is not labelled zero-credit non-independent")
+    return {
+        "absent_count": len(absent_paths),
+        "detected_count": detected,
+        "matrix_path": str(matrix_path),
+        "matrix_sha256": sha256_file(matrix_path),
+        "outcome": matrix["outcome"],
+        "reason": matrix.get("reason"),
+        "record_count": matrix.get("record_count"),
+        "transcript_path": str(transcript_path),
+        "transcript_sha256": sha256_file(transcript_path),
+    }
+
+
+def command_finalize_stage3_candidate(args: argparse.Namespace) -> int:
+    first = resolve_user_path(args.caller_input_1)
+    second = resolve_user_path(args.caller_input_2)
+    artifact_names = (
+        "batch_manifest.json",
+        "row_corroboration.json",
+        "row_results.jsonl",
+        "unresolved_rows.json",
+    )
+    double_build: list[dict[str, Any]] = []
+    for name in artifact_names:
+        first_path = first / name
+        second_path = second / name
+        if not first_path.is_file() or not second_path.is_file():
+            raise GateStop(f"stage-3 finalization artifact is absent: {name}")
+        first_sha256 = sha256_file(first_path)
+        second_sha256 = sha256_file(second_path)
+        double_build.append(
+            {
+                "artifact": name,
+                "byte_identical": first_sha256 == second_sha256,
+                "caller_input_1_sha256": first_sha256,
+                "caller_input_2_sha256": second_sha256,
+            }
+        )
+    if not all(item["byte_identical"] for item in double_build):
+        raise GateFail("stage-3 candidate double build differs")
+    row_arm = dynamic_row_arm_receipt(
+        first / "row_corroboration.json", first / "row_results.jsonl"
+    )
+    matrix = validate_stage3_matrix_transcript(
+        resolve_user_path(args.mutation_matrix),
+        resolve_user_path(args.comparator_transcript),
+    )
+    manifest_path = resolve_user_path(args.legacy_manifest)
+    manifest = load_json(manifest_path)
+    if manifest.get("gate_version") != "P011-LC-GATE-v3":
+        raise GateStop("stage-3 candidate manifest is not bound to v3")
+    owner_path = Path(args.owner_authorization).resolve()
+    summary = {
+        "artifact_schema_version": "P011_STAGE3_FINALIZATION_CANDIDATE_v1",
+        "double_build": double_build,
+        "gate_version": "P011-LC-GATE-v3",
+        "legacy_manifest": {
+            "path": str(manifest_path),
+            "sha256": sha256_file(manifest_path),
+        },
+        "producer_discrimination_matrix": matrix,
+        "row_arm": row_arm,
+    }
+    if not owner_path.is_file():
+        print(
+            json.dumps(
+                {
+                    **summary,
+                    "outcome": "STOP",
+                    "terminal_reason": "STOP_V3_ANCHOR_AUTHORITY_ABSENT",
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
+        return 3
+    receipt_out = Path(args.receipt_out).resolve() if args.receipt_out else None
+    if receipt_out is None:
+        raise GateStop("owner-authorized v3 receipt output path is absent")
+    protected = {
+        (GATE_DIR / "P011_GATE_RECEIPT.json").resolve(),
+        Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json").resolve(),
+        ANCHOR_PATH.resolve(),
+    }
+    if receipt_out in protected or "P011-LC-GATE-v1" in receipt_out.name or "P011-LC-GATE-v2" in receipt_out.name:
+        raise GateStop("v1/v2 publication target refused")
+    receipt = {
+        **summary,
+        "owner_authorization": {
+            "path": str(owner_path),
+            "sha256": sha256_file(owner_path),
+        },
+        "outcome": "STOP" if row_arm["outcome"] == "STOP" or matrix["outcome"] == "STOP" else "PASS",
+        "receipt_schema_version": "P011_GATE_RECEIPT_v1",
+        "receipt_state": "V3_PREREQUISITE_OWNER_AUTHORIZED",
+    }
+    write_json(receipt_out, receipt)
+    print(
+        json.dumps(
+            {
+                "outcome": receipt["outcome"],
+                "receipt_path": str(receipt_out),
+                "receipt_sha256": sha256_file(receipt_out),
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    return 0 if receipt["outcome"] == "PASS" else 3
+
+
 def command_finalize_candidate(args: argparse.Namespace) -> int:
     caller_input_1 = resolve_user_path(args.caller_input_1)
     caller_input_2 = resolve_user_path(args.caller_input_2)
@@ -1457,23 +1718,14 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
     return 0
 
 
-def row_arm_receipt() -> dict[str, Any]:
-    evidence_path = GATE_DIR / "evidence" / "row_arm" / "row_corroboration.json"
-    if not evidence_path.is_file():
-        raise GateStop("v2 row-arm re-verification evidence is absent")
-    evidence = load_json(evidence_path)
-    expected_counts = {"green": 27, "not_applicable": 2, "stop": 13, "total": 42}
-    if evidence.get("gate_version") != GATE_VERSION:
-        raise GateStop("row-arm evidence is not bound to v2")
-    if evidence.get("outcome") != "STOP" or evidence.get("counts") != expected_counts:
-        raise GateStop("row-arm evidence does not carry the current 27 GREEN / 13 STOP / 2 policy-only disposition")
-    return {
-        "outcome": "STOP",
-        "counts": expected_counts,
-        "reason": "accepted summary counts are 27 GREEN, 13 STOP, 2 policy-only, 42 total",
-        "evidence_path": str(evidence_path),
-        "evidence_sha256": sha256_file(evidence_path),
-    }
+def row_arm_receipt(
+    corroboration_path: Path | None = None, results_path: Path | None = None
+) -> dict[str, Any]:
+    evidence_root = GATE_DIR / "evidence" / "row_arm"
+    return dynamic_row_arm_receipt(
+        corroboration_path or evidence_root / "row_corroboration.json",
+        results_path or evidence_root / "row_results.jsonl",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1523,6 +1775,16 @@ def build_parser() -> argparse.ArgumentParser:
     finalize.add_argument("--caller-input-2", required=True)
     finalize.add_argument("--mutation-matrix", required=True)
     finalize.set_defaults(func=command_finalize_candidate)
+
+    stage3_finalize = subparsers.add_parser("finalize-stage3-candidate")
+    stage3_finalize.add_argument("--caller-input-1", required=True)
+    stage3_finalize.add_argument("--caller-input-2", required=True)
+    stage3_finalize.add_argument("--mutation-matrix", required=True)
+    stage3_finalize.add_argument("--comparator-transcript", required=True)
+    stage3_finalize.add_argument("--legacy-manifest", required=True)
+    stage3_finalize.add_argument("--owner-authorization", required=True)
+    stage3_finalize.add_argument("--receipt-out")
+    stage3_finalize.set_defaults(func=command_finalize_stage3_candidate)
     return parser
 
 
