@@ -1,9 +1,424 @@
 # GLOBAL_HANDOFF
 
+> **Merge note (2026-08-17 night, owner-authorized master merge):** two parallel lanes
+> merged here — the WP-I / bridge lane (first block below) and the housekeeping / phase-watch
+> lane (second block). Dates overlap across the two blocks; each block is newest-first.
+
 > **Rotation policy (2026-08-15):** entries dated before 2026-08-01 are in
 > `archive/GLOBAL_HANDOFF_pre-2026-08-01.md`. Grep the archive before claiming an entry
 > does not exist. When this live file exceeds ~2500 lines, rotate again (move oldest
 > closed entries to a new dated archive file).
+
+## [Claude Opus 5 — Max, coordinator only] 2026-08-25 — session report: 2 merges, 3 packages started, 4 real defects caught by the second flagship
+
+> **AFTERNOON UPDATE (supersedes this entry's morning framing).** Master is **`c053648a`** and
+> **16 Phase-0 packages** are merged — not 17: WP-P0-29 was already among the overnight 15 as drafts,
+> so this session's signature merge changed its *completeness*, not the count. **WP-P0-09 is the only
+> new merged package.** The GLM 16:56 wait was retired at 12:56 when the owner re-logged Claude Pro,
+> which left GLM's weekly quota unspent and — more importantly — gave the dual-flagship rounds a
+> genuinely *different model* on the second half instead of a second Codex account.
+>
+> **That difference paid for itself four times.** Every one of these was passed clean by the first
+> flagship and caught by the second:
+> 1. **WAL** — the `device_change` arm had **zero mutation power over `device`**; its RED came wholly
+>    from the generic half of a compound mutant, and probing the tuple showed `SHM_IDENTITY_FIELDS`
+>    was **entirely mutation-dead** (dropping `device`, `inode`, `mode` or `size_bytes` each left all
+>    58 green). A test that cannot fail is worse than no test.
+> 2. **WP-P0-09** — §4.4 certified GF-06's *withdrawn* `106.6666667` while `:580` withdraws it and
+>    `:252` re-derives `295/3 = 98.3333333`. It survived rounds 2–6 and every prior audit.
+> 3. **WP-P0-23** — the alert guard was **provably fail-open** (a `.PINE` file containing `alert(` was
+>    skipped entirely) and **crashed on non-ASCII repo roots**, which matters because the owner's own
+>    home path is `C:\Users\BarışSemaay`.
+> 4. **WP-P0-05** — three of ~30 sampled rule-mapping rows pointed at homes that do not contain the
+>    rule; one is a **genuinely lost audit-integrity control** (R045/R046: secondary auditors must work
+>    in a dedicated worktree at the frozen SHA and prove `git status --porcelain` empty).
+>
+> **Started this session, all on branches, none merged:** WP-P0-10 (Golden Suite, 23/25 families,
+> 18 and 19 formally blocked because WP-P0-09 decides neither `SNAPSHOT_MISMATCH` nor
+> `REFERENCE_DIVERGENCE` — Lead verified zero occurrences), WP-P0-23 (Pine de-fang, **parked** by the
+> owner pending TradingView render verification), WP-P0-05 (context routing, **98.10%** onboarding cut
+> independently recomputed, in T1 repair, **merges last**).
+>
+> **Owner decisions:** WP-P0-05 authorized; **WP-P0-11 pre-authorized** to start on WP-P0-10
+> acceptance; alert invariant **widened** to `alertcondition(` (amends WP-P0-19 §6.1.3); WP-P0-23
+> parked.
+>
+> **Say it precisely about WP-P0-23:** the last live **order-emitting** path outside the Bridge is
+> removed. Not "all WunderTrading material is gone" — payload builders survive in a Pine library and
+> the original dispatch block is quoted verbatim in two tracked `.md` files, guard-invisible by design.
+>
+> **Dashboards:** `C:\tmp\CODEX_WAYFINDER_DASHBOARD_UPDATE_PROMPT_2026-08-25_AFTERNOON.md`, applied as a
+> delta on top of the morning prompt.
+
+
+
+**Master `0253d014`** — WP-P0-29 (the owner-signed custody set) merged at ~11:40; that package is T2,
+so one accepting verdict was enough. The other three are untouched by design: each needs a second
+*independent* flagship, and none exists before 16:56.
+
+**Owner's standing order for this session:** Claude Max coordinates only; Codex and GLM do all coding
+and auditing. Followed throughout — the only work done on Max was route recon, spec authoring, the
+Lead's non-delegable Gate-5 inspections, and memory upkeep.
+
+**Route recon corrected a wrong premise.** The previous handoff said all paid Codex accounts were
+capped until 31 Aug. That was true of `secondary` and `fourth` only. **`third` (`.codex-plus3`) is at
+100%** and became the implementer route; ChatGPT Pro via `-Account free` (48%) carried the audits.
+Claude Pro's OAuth is still dead (`OAuth session expired and could not be refreshed`) despite the
+dashboard showing session 100%. Full re-measurement is in `AI_ACCOUNT_AND_MODEL_ROUTING.md`.
+
+| Package | Final SHA | 1st flagship | Left |
+|---|---|---|---|
+| **P0-29** owner signature | `e815ba37` | T2 PASS-WITH-NITS | **MERGED `0253d014`** |
+| **P0-09** capability table (Q) | `a750962c` | **PASS, zero findings** | 2nd flagship, merge |
+| **WAL** capture-ordering (W) | `cc7a11a7` | **PASS, zero findings** | 2nd flagship, merge |
+| **P0-23** Pine de-fang (AC) | `80164716` | **PASS, zero findings** | 2nd flagship, merge |
+
+**P0-23 is the headline** — it removes the only live order-emitting path outside the Bridge, under the
+owner's G2 word. Implemented in place per WP-P0-19's design: 8 files = 7 authorized rows + lane report,
+no twelfth. The Lead verified independently before dispatching the audit: **21 `.pine` files, 0
+containing `alert(`**; freeze tag `legacy/pine-controller/2026-08-25` still `77a10e65` on origin and
+untouched, with the original's 2 alert calls still recoverable at lines 2020/2028;
+`strategy("MTC_V2 Parity", ...)` content-identical (line 7 -> 8 only because of the added
+`// VISUALIZATION ONLY — NOT A CONTROLLER` comment); Pine diff vs the freeze tag is exactly 3 hunks,
++1/-35 = comment + 13 input lines + 22 dispatch lines; `tw_*` untouched; the only surviving non-doc
+`wt_` is the new assertion that no `wt_` keys exist. The T0 auditor then repeated all of it
+independently and added a fail-closed proof the guard BLOCKS when the scanner is *renamed away*, a
+path-with-spaces probe, and D026 RED/GREEN. **NOT VERIFIED by anyone: TradingView compile / render
+identity** — no Pine compiler was available and the lane report is honest about that.
+
+**Q's BLOCK was real and worth the round.** The first audit of `12626a04` rejected the Lead's own two
+new citations: they were bare `:224-227` / `:254-309` continuations whose only same-line anchor was a
+bare filename, so the package citation walk (1660 tokens) could not resolve them. One-line repair in
+`a750962c` -> `broken=0`, GF-06/GF-10 confirmed byte-identical.
+
+**W got fresh Linux CI: `2 failed, 1367 passed`** = the 1363 baseline plus exactly the 4 new arms; the
+2 failures are the same pre-existing GC-baseline tests, out of scope. Its LOW nit (an "exact mutation"
+row that omitted the `SHM_IDENTITY_FIELDS` edit) was closed in `cc7a11a7` so both flagships judge one
+SHA. Production guard unmodified across the whole branch.
+
+**Two route repairs made today, both recorded:**
+1. `Invoke-GlmAudit.ps1:90` now passes `--model glm-5.3`. The long-open `glm-5.2[1m]` rejection is the
+   claude-code SDK appending its 1M marker to `bin\glm.ps1`'s `glm-5.2` default — not a bug in any
+   helper. Backup `Invoke-GlmAudit.ps1.bak-20260825`. **Unconfirmed:** the 429 blocked exercising it,
+   so the runner probes before spending an audit.
+2. Two `Invoke-CodexForClaude.ps1` arg traps cost a dispatch each: `-c` prefix-collides with the
+   wrapper's own `-CodexArgs` (use `--config`), and multi-line prompt strings can reach codex
+   word-split (write the spec to a file, pass a one-line "read this file" prompt).
+
+**Armed and waiting:** `C:\tmp\LANE_PROMPTS_20260825\RUN_GLM_SECOND_FLAGSHIP_1656.ps1` sleeps until
+16:57, probes GLM, and only then dispatches the Q / W / P0-23 second-flagship audits sequentially,
+logging to `GLM_RUNNER_STATUS.md`. **Merging is deliberately not automated** — the Lead reads each
+verdict first.
+
+**Independence caveat to carry into the merge decision:** with Claude Pro dead, P0-23's first flagship
+was a second Codex *account* — separate session, no shared context, but the same model. GLM is the
+genuinely independent half. An owner re-login of Claude Pro would add a third opinion.
+
+**AC round 1 self-blocked** with "the mandatory Claude counterpart could not authenticate" — a
+misreading of `AGENTS.md` §TWO-TIER, where **Claude leads and delegates to Codex**. It changed nothing
+and did verify the freeze tag first, which is the right instinct. Re-dispatched with the role spelled
+out. Worth remembering: a dispatched Codex lane may try to launch `claude` and stall on the dead
+OAuth; say up front that it must not.
+
+## [Claude Fable 5] 2026-08-25 (MORNING wrap) — 15 Phase-0 packages MERGED total; Q + W ready for Codex to finish; dashboards handed to owner's Codex
+
+**Master `ef380d1c`.** Continued from the night run. Merged since the night entry below:
+CRLF ledger fix `8b7389b2` (Bridge suite 1382/1382, first full green), pyarrow CVE pin
+`505040aa`, **WP-P0-18** chart POC `ef380d1c` (T1 PASS-W-N; recommends Lightweight Charts 5.2.1).
+Total merged = **15 Phase-0 packages** (01,02,03,04,06,07,08,15,18,19,24,25,26-partial,28,29)
++ infra (pyarrow, CRLF, master-red `6654fa9f`, WAL-test `f4708bfa`, V-Next set `4691a9dd`).
+
+**Two items left, both on branches, both need a 2nd flagship (GLM 16:56 or owner-restored Pro):**
+- **Q (WP-P0-09)** `12626a04` — semantics execution-VERIFIED correct; all findings closed
+  (Lead added clock citations + recast self-closure to PENDING DUAL-FLAGSHIP). Ready for closure.
+- **W (WAL fix)** `f47d36ee` — Linux-PROVEN (1363 pass); needs 4 test-coverage additions +
+  self-contained D026 replay before closure (a coverage gap, not a defect).
+
+**Route contraction:** both paid Codex accounts capped to Aug 31; only free-tier Codex live;
+GLM resets 16:56; Pro OAuth broken. **Codex continues** per owner: full instructions in
+`_AI_MEMORY/HANDOFF_CODEX_CONTINUE_2026-08-25_MORNING.md`. Dashboards: owner runs
+`C:\tmp\CODEX_WAYFINDER_DASHBOARD_UPDATE_PROMPT_2026-08-25.md` in his own Codex. Hours ledger:
+`C:\tmp\LANE_PROMPTS_20260824\HOURS_LEDGER.md`.
+
+## [Claude Fable 5] 2026-08-25 (night, continuous run) — ELEVEN packages MERGED; V-Next set ACCEPTED+MERGED; first-ever CI exposed a Linux WAL product defect
+
+**Owner escalated to continuous operation ("don't stop until I stop you; I authorise all"),
+6–8 lanes.** Everything below is master-merged with tier-required acceptance + Lead
+reproduction unless stated. Master: `8750b253 → 46f5bafb` (all pushed; 180 freeze tags pushed).
+
+**Merged:** V-Next planning set (dual-flagship accepted `3b088fba` after 3 repair rounds +
+3 owner closures; merged `4691a9dd` with the whole G1 lineage) · WP-P0-01 `1ac97649` ·
+WP-P0-06 `1f391db1` (O-13: different implementations, NOT regression) · WP-P0-24 `e1a0c2ed`
+(pyarrow CVE chip) · WP-P0-15 `0aa57ef6` (closure round) · WP-P0-02 `776f0349` (0→180
+annotated freeze tags incl. Bridge V1 `be007fd8`, 174 evidence branches) · WP-P0-07
+`3e0fcdea` (O-14: zero strict survivors ever recorded, kept bounded) · WP-P0-08 `88eab9c9`
+(O-15) · WP-P0-03 `b7f7524c` (2,641-row migration ledger) · WP-P0-04 `fead492b` (contracts
+v0: 4 sizing methods, PAPER_ELIGIBLE, deep immutability, exact pins) · WP-P0-26 tooling
+half `cbe92101` (backup/restore + watchdog; phone drill + G9 host step still gated) ·
+WP-P0-25 `46f5bafb` (broker boundary: REUSE as-is — **inventory corrected to FOUR
+protocols; opus caught the missing `KillRecoveryBroker`**) · master-red fixes `6654fa9f` +
+`f4708bfa` (help-truth needles synced; WAL test to schema-4 truth; Bridge suite 1350/1351,
+sole red = Windows-CRLF ledger-hash, diagnosed, repair named).
+
+**Live now / open:** WP-P0-09 capability table (T0) in repair round 2 — round-3
+dual-flagship is FINAL; **WP-P0-27 CI built+audited, [PR #125](https://github.com/bsemaay-tech/mtc-command-center/pull/125)
+open: the FIRST-EVER CI RUN exposed 25 Linux-only failures — 2 test defects (CPython 3.12
+GC) + 23 cascading from a REAL product defect: WAL state-bundle capture opens its boundary
+before finishing its own SQLite/WAL init and flags its own side effects as source drift —
+on the DEPLOYMENT platform this blocks valid ordered cutovers** (diagnosis
+`WP_P0_27_CI_HOME_2026-08-25/LINUX_RED_DIAGNOSIS.md` on the PR branch; **owner chip
+`task_b34077ec` filed — protected T0 fix, owner word required**). GLM quota-out until
+06:04 (killed two runs; partial preserved as WIP commits); Gemini read-only route BROKEN
+(project-config drift — repair task for morning); Pro capped once (worked around per the
+owner's fallback rule; Max kept orchestrator-only). Hours ledger:
+`C:\tmp\LANE_PROMPTS_20260824\HOURS_LEDGER.md` (~190–211 planned engineering hours landed
+in one night; per-package rounds recorded).
+
+## [Claude Fable 5] 2026-08-24 — overnight G1-IA batch: 3 of 4 packages MERGED; V-Next amendment built, audit cap spent
+
+**Owner ratified the V-Next deferral (Parts 1–3, in full) and granted G1-IA for exactly
+WP-P0-01, WP-P0-15, WP-P0-06, WP-P0-24** ("nothing else starts tonight"). Four Codex
+implementer lanes (gpt-5.6-sol high, isolated worktrees from `fbb05d7f`) + a Lead-owned
+amendment thread ran under the two-tier model. Results:
+
+- **WP-P0-01 (repo inventory) — MERGED** `1ac97649`. T2 single-round GLM-5.3 PASS-WITH-NITS
+  (one cosmetic LEGACY-label nit). 8,120 tracked + 305 untracked inventoried; dirty checkout
+  proven byte-identical before/after (status SHA-256 `72db7bf4…`, Lead-recomputed);
+  `05_PARITY` absent, 732 files only-in-`12_PARITY_PINETS`; 174 evidence-bearing refs.
+- **WP-P0-06 (parity corpus inventory) — MERGED** `1f391db1`. T1 round-1 gpt-5.6-sol PASS,
+  zero findings. **O-13 closed: March (`MTCRunner`/`MT_CORE2`) vs April
+  (`mtc_v2.core.runner`/`MTCV2_1304`) = different implementations, NOT regression evidence;
+  no repository-wide parity number is supportable; Corpus C confirmed absent at git-object
+  level; Corpus D is entry-signal-only (858/858 exact).**
+- **WP-P0-24 (OSS ledger) — MERGED** `e1a0c2ed`. T1: round-1 REQUEST_CHANGES (3 findings,
+  Lead-reproduced) → repair via the ledger's own append-only superseding entries →
+  round-2 claude-opus-5 PASS-WITH-NITS. **Live find: `pyarrow==23.0.0` in the backtest lock
+  is affected by CVE-2026-25087 (fixed 23.0.1) — remediation needs a separately authorized
+  protected change (task chip filed).** Policy text is a PROPOSAL; `AGENTS.md` untouched.
+- **WP-P0-15 (branch-freshness guard) — STOPPED AT CAP, branch pushed NOT merged**
+  (`feature/wp-p0-15-branch-freshness-20260824`, 4 commits). Guard + procedure + D026
+  evidence all work (Lead re-ran RED/GREEN/warn-only live); T1 round 1 found the
+  `-File`-unusable bool param (repaired to a switch), round 2 found ONE residual: the
+  procedure's final step runs the guard without `cd` into the new worktree and loads it
+  from the possibly-old `$Target`. One-line-class fix; cap spent; owner word needed.
+- **V-Next amendment cycle — built and pushed NOT merged**
+  (`feature/vnext-amendments-20260824` @ `d797e9e5`, based on `abd1f6b3` so it carries the
+  `a00446a6` G1 status record). Six commits: Parts 1–4 + two audited repair rounds.
+  **Dual-flagship T0 cap (3 rounds) spent without joint acceptance:** r1 opus
+  PASS-WITH-NITS / codex REQUEST_CHANGES(2) → repaired; r2 opus PASS-WITH-NITS / codex
+  REQUEST_CHANGES(3) → repaired; **r3 opus REQUEST_CHANGES(1: brief §22 item 8 schedules
+  V-NEXT WP-P0-17 untagged) / codex REQUEST_CHANGES(10: PAPER_ELIGIBLE missing from A-18,
+  WP-V2A-10 objective, V3-03 row, owner-doc D-14/admission copies; V-NEXT tags missing from
+  brief body §§ ~2229/2330/2549/2610/2617; mermaid combined-B07 edges).** Diagnosis: the
+  amendment swept the §17 roadmap + admission tables but not the brief's deep body or the
+  two owner-doc copies. All findings are propagation, not design defects; one bounded
+  closure commit + one owner-authorized closure round should land it (the G1-cycle
+  pattern). Paste-ready specs: `C:\tmp\LANE_PROMPTS_20260824\` (see NEXT_STEPS).
+- **Ops notes:** transient DNS outage ~20:28 killed three dispatches (chatgpt.com
+  ENOTFOUND); all three redispatched clean after connectivity probe. All lane prompts,
+  audit prompts and run logs: `C:\tmp\LANE_PROMPTS_20260824\`. Docker and the freqtrade
+  bot untouched. Merge worktree `C:\WFMERGE54` reused (was clean, fast-forwarded);
+  master `8750b253 → e1a0c2ed` pushed.
+
+**Open owner acts:** (1) authorize ONE bounded closure commit + closure round for the
+V-Next amendment branch; (2) authorize the same for Lane B's one-line procedure fix;
+(3) decide merge timing for both branches after acceptance; (4) pyarrow CVE chip;
+(5) next G1-IA batch against the (slimmer) plan once the amended set is accepted.
+
+## [Claude Fable 5] 2026-08-24 — fresh G1 ACCEPTED for the amended Wayfinder planning set (`a00446a6`)
+
+**Headline: the amended five-document planning set passed its fresh T0 G1 architecture acceptance
+on 2026-08-24, for exact candidate `a00446a63c586cf7c55aaf7d59987f9e7ad80500`** — fresh independent
+read-only `claude-opus-5` xhigh **PASS** + fresh independent read-only Codex `gpt-5.6-sol` xhigh
+**PASS**, zero unresolved required findings, Lead reproduced every invariant (60 = 44 OWNER + 16
+DERIVED; 76 WPs; graph acyclic+closed; `OPEN-01` open; clean worktree). **Acceptance authorizes
+nothing: `G1-IA` unsatisfied, every package/milestone/stage NOT STARTED.** Status-only record
+committed as `abd1f6b3` on branch `codex/g1-wayfinder-r1-20260824`, **pushed to origin, NOT merged**.
+
+Session mechanics (continuation from `C:\Users\BarışSemaay\AppData\Local\Temp\WAYFINDER_G1_CLAUDE_CONTINUATION_HANDOFF_2026-08-24.md`):
+- All handoff facts reproduced first (interrupted round-3 logs verdictless; provenance mismatch; clean worktree `C:\G1REPAIR_20260824`).
+- Owner authorized in-session: round-3 rerun; then one closure round; then standing 2 rounds; then a final micro-round (Claude on Max) — and directed Lead to hand-fix small bounded defects itself (no delegate+audit for one-liners) and to route audits to Codex Pro / Claude Pro to preserve Lead credits.
+- Five Lead-authored repair commits, each fixing only Lead-reproduced required findings:
+  `8882af26` provenance wording (2 lines) · `b2850ac4` stale `cancel_all()` clause §10.2a ·
+  `fa4c02e2` WP-V4-01⇐WP-V4-09-M1 dependency edge + F-14/F-15 pointer re-anchors (`db.py:268`, `engine.py:70,133`) ·
+  `e13d008a` closure repairs recorded in §0.8.2/C-32/plan §0/register §1 ·
+  `a00446a6` paraphrased a quoted superseded phrase that tripped the literal closure check.
+- Audit artifacts + dispatch records: `C:\G1_AUDIT_20260824\` (ROUND3R_*, CLOSURE_*, CYCLE2/3/4_*).
+- Route traps paid for: Claude Pro session cap mid-task (resets 14:30; owner routed final Claude run to Max); `Invoke-ClaudeMax.ps1` needs `-ClaudeArguments @(...)` array — bare `-p` binds to `-PipelineVariable` and dies pre-launch.
+- Out-of-scope catch (spawn-task chip filed): `IBKR_PAPER_BRIDGE/bridge/static/help_map.json` still claims kill calls `cancel_all()` (~:379/:1040/:1066) — contradicts source; WP-V2B-10 territory.
+
+**Open owner acts:** name exact package/milestone/stage for `G1-IA` (deliberately deferred); decide merge of the accepted branch; explorer fold acceptance still pending; wayfinder map 8 still queued.
+
+## [Fable Lead] 2026-08-23 — wayfinder macro gap audit of the accepted planning set
+
+Owner dispatched a wayfinder pass: treat the accepted architecture/requirements/work-package
+set as a strong but incomplete hypothesis and hunt for forgotten macro capabilities. Basis:
+the five planning documents at `764da27f` (accepted candidate `c81aacb8` + status record,
+branch `codex/g1-architecture-c2-r1-20260823`) — brief read end-to-end by two independent
+subagent extraction passes plus lead-run synonym greps; plan and register read in full by the
+lead; live repo swept read-only (data bundles, CI, ops tooling, bridge assets, Pine,
+`LIVE_TRADING_GATE.md`).
+
+**Delivered:** `11_TRIAGE/WAYFINDER_MACRO_GAP_AUDIT_2026-08-23.md`, committed `6888b416` on
+`feature/wayfinder-gap-audit-20260823` (worktree `C:\WFGAP_20260823`, guard PASS, pushed; no
+merge performed). Headlines: (1) backup/restore/DR for every evidence store is ABSENT while
+D-15 makes a lost ledger = zero evidence — must close before any forward clock starts;
+(2) run-hosting/watchdog for the 8–16-week soak undecided while the owner's PC has a proven
+sleep-kill history and windows never resume; (3) the only CI in the repo lives inside
+`02_MTC_BACKTEST`, the engine Q5 retires, while the brief mandates guards "run in CI";
+(4) brief §17.2 still depends by name on old-scheme "Package 7 exchange reverification"
+(gates Q6/netting) and "Package 1 §A.2 store decision" — neither exists in the 69-package
+plan; (5) venue-reality cluster: wallet custody thinner than dashboard auth, no treasury/
+venue-risk policy, no Hyperliquid historical data source, bundles 8 weeks stale, delisting
+unhandled; (6) seams: open-position-on-identity-death undefined, allocator/Guardian
+concurrency undesigned, environment identity absent from all hashes, P0-20 throughput vs
+100k-trial workload never checked. Funding hypothesis was checked and **withdrawn** (brief
+§9.2 covers it; only the package carrier is ambiguous). Proposal: Workstreams 8 (ops/evidence
+survivability) + 9 (venue/capital reality), amendments to P0-04/P0-09/P0-20/V2B-01/10/11/V3-05,
+de-fang Pine in wave 1, infra soak early. **No requirement, safeguard, package or count
+changed; nothing authorized; no code touched; no host contacted.** Session-lock note: single
+handoff append to shared memory; no planning document edited; lock rows left UNCLAIMED.
+
+## [Codex Lead] 2026-08-22 — focused D-07 repair complete; fresh T2 REQUEST_CHANGES
+
+Barış authorized one new documentation-only repair/audit cycle and reiterated that every
+completion must end with an exact next step. The counterpart implementer corrected all four
+remaining D-07 ambiguities: symbolic `R_policy` replaces the numerical sizing example; the brief
+and delivery-plan lifecycle nodes now say **maximum allocated capital** plus a separate lower
+stop-risk cap that is **UNSET** and blocks live authorization; and the Owner Master Plan's
+`max 1% capital` shorthand now has the same explicit explanation. Lead verification confirmed
+44 O rows + 12 D rows = 56, 59 unique work-package definitions, every register WP reference
+defined, zero literal `D-13`, unchanged D-02, and no work package started.
+
+The newly authorized single T2 round returned **REQUEST_CHANGES** from a fresh exact
+`gpt-5.6-sol` reviewer at medium effort in a read-only sandbox. GLM failed before model execution
+because its local CredentialManager module is unavailable; Cline was not installed; the approved
+DeepSeek route produced no verdict within a bounded attempt and was terminated cleanly, so the
+flagship fallback filled the one T2 slot under current policy. The reviewer read the full frozen
+five-document snapshot. Source and snapshot SHA-256 values matched before and after.
+
+Two required findings were independently reproduced on the real files: (1) brief §6.2 still
+names `kdef.risk.1pct.v1`, contradicting §5.5's statement that no risk-at-stop number is selected;
+(2) brief §13.2 says the optional `optuna-dashboard` POC "is deleted", contradicting the delivery
+plan's rule that retirement/removal requires separate explicit cleanup authorization after
+evidence preservation. The T2 round cap is exhausted; neither finding was repaired and no further
+audit was started. The brief remains **v2.1 REPAIRED, AUDIT ACCEPTANCE PENDING, IMPLEMENTATION
+AUTHORIZED: NO**. No code, Git mutation, host contact, work package, deployment, testnet, trading
+or live action occurred.
+
+## [Codex Lead] 2026-08-22 — owner safeguards recorded; additional T2 audit BLOCKED
+
+Barış's D-01…D-12 decisions were recorded across the five master-architecture planning
+documents. D-02 now governs new-order sizing without precluding a separately authorized,
+explicit and tested emergency reduction/closure policy for existing exposure. D-07 now defines
+1% as maximum allocated capital for the first `LIMITED_LIVE` strategy; its separate lower
+loss-at-stop cap remains unset and must be evidenced before live authorization. The requirement
+count is unchanged at **56 = 44 OWNER + 12 DERIVED**. The misleading reserved `D-13` wording was
+removed; a new safeguard ID will be assigned only if a safeguard is actually added. Lead checks
+confirmed 44 O rows, 12 D rows, 59 work-package definitions, zero literal `D-13` matches, and
+unchanged frozen SHA-256 values for all five documents.
+
+The one owner-authorized additional T2 documentation audit returned **BLOCK**. The reviewer
+reproduced a required D-07 inconsistency: `SizingIntent {RISK_AT_STOP 1%...}` in the brief and two
+`<=1% account` lifecycle labels still make 1% look like the unset stop-risk limit. It also could
+not execute any SHA-256 command in its managed read-only sandbox, so it could not establish the
+frozen-input identity required by its contract. The Lead independently confirmed the frozen
+hashes are unchanged, but that does not convert the audit verdict into acceptance. The single
+T2 round is exhausted; no repair or further audit was started. The brief remains **v2.1 REPAIRED,
+AUDIT ACCEPTANCE PENDING, IMPLEMENTATION AUTHORIZED: NO**. All five planning documents remain
+untracked. No code, Git mutation, host contact, work package, deployment, testnet, trading or live
+action occurred.
+
+## [Claude Fable Lead] 2026-08-18 morning — handoff durability port: night records committed to master
+
+Found that master's lane-union `GLOBAL_HANDOFF.md`/`NEXT_STEPS.md` were missing ALL THREE
+2026-08-17/18 night entries (backlog acceptance; Packages 7/1/2; Packages 3/4/5a) — they
+existed only as uncommitted working-copy edits in the main checkout on `codex/bridge-help-wiki`.
+This commit ports them insert-only (nothing removed from the union files) and also commits the
+matching uncommitted companions: rotated `START_HERE.md` + its new archive file
+`archive/START_HERE_STALE_BANNER_2026-08-12.md`, the Decision 5 record in
+`11_TRIAGE/OWNER_DECISIONS_BRIDGE_V2_BACKLOG_NIGHT_2026-08-17.md`, and the B8-settled/B9
+renumber in `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md`.
+Docs-only; no package started (all remaining Bridge V2 packages await explicit owner "start");
+no VPS/credential/ARM/trading/Pine/MTC/parity action. Main checkout's historical untracked
+triage files remain untouched (cleanup lane stays owner-gated). **Budget flag for owner:**
+CodeBurn month-to-date reads ~$3.2k vs the 2026-08-16 ceiling "STANDARD $800–1200 as MAXIMUM,
+stop-and-ask at 75%" — needs an owner read on whether CodeBurn's counting of subscription
+routes inflates the figure; flagged in the session report.
+
+## [Claude Fable Lead] 2026-08-18 pre-dawn, part 3 — Packages 3/4/5a BUILT + ACCEPTED + MERGED; master `38a2c0b8`
+
+Owner's "devam, full autonomy until morning" executed to completion. Three T1 packages built in
+isolated worktrees, reviewed, accepted, merged to master and pushed:
+
+- **Package 3** Dashboard V2 read-only fixture prototype (5 views, P1 identity tuple, P2
+  three-layer view, phone layout; zero network/controls) — DeepSeek round 1 found one fixture
+  Guardian-tier mismatch, fixed, round 2 ACCEPT. Merge `303c6d9a`.
+- **Package 4** owner analysis-package generator (bounded redacted Markdown bundle, 11 tests)
+  — GLM authored the generator until the GLM 5-hour quota wall (~04:15, reset 06:14); DeepSeek
+  completed fixtures/tests/README; Lead fixed two real generator bugs (header-size chicken-egg
+  → honest footer; %-format crash on content → concatenation) and wrong test assumptions
+  ('a'-filler is valid hex — the redactor was right), suite 11 passed; DeepSeek review ACCEPT;
+  nits applied (symlink-resolved credential-name check, README known-gap notes). Merge `97b236d5`.
+- **Package 5a** observability toolkit first increment (read-only audit-pack exporter, fixture
+  store builder, 18-item cited readiness checklist, 16-drill chaos DESIGN deferred-by-design,
+  19 tests) — Lead-run pytest 19 passed; DeepSeek ACCEPT zero required findings; nits applied.
+  Merge `bb396162`.
+- **Verification on final master:** full suite **1379 passed, 2 failed = the identical
+  pre-existing baseline pair**. Gemini cross-check of all three packages: CROSSCHECK_CLEAN
+  (one earlier run failed closed when its repo watcher saw the Lead's concurrent merge — guard
+  correct; retried quiet). Acceptance record:
+  `11_TRIAGE/BRIDGE_V2_PACKAGES_345A_T1_ACCEPTANCE_2026-08-18.md`; owner report:
+  `11_TRIAGE/OVERNIGHT_BRIDGE_V2_NIGHT_REPORT_PART3_2026-08-18.md`. Branches
+  `feature/bridge-v2-package3/4/5a` pushed; night worktrees removed.
+- Night totals: backlog + Packages 7/1/2/3/4/5a accepted, master merged twice, Gemini launcher
+  repaired — zero Codex/Pro/MAX spend. Remaining owner gates: 5b classification, Package 6
+  local half, Package 8 work packages, P1 §A.2 store choice, drill implementation, redaction
+  widening.
+
+## [Claude Fable Lead] 2026-08-17 night, part 2 — merge to master DONE; Gemini launcher repaired; Packages 7/1/2 ACCEPTED
+
+Owner Decision 5 (late night, in chat): start Packages 7 and 1+2, repair the Gemini launcher,
+merge `codex/bridge-help-wiki` to master, burn GLM/Gemini/DeepSeek until morning, protect
+Fable/MAX/Pro. All executed:
+
+- **Merge:** `dc720521` on master, pushed. Only the two append-log memory files conflicted;
+  lane-union resolution, nothing dropped. Merged-tree suite: 1349 passed, 2 failed = the exact
+  pre-existing baseline pair (reproduced on the un-merged branch). Zero new failures.
+- **Gemini launcher:** branch pin replaced by `-ExpectedBranch` param (default `master`),
+  fail-closed; new identity `2FE936D2…`; negative+positive live QA green. Records + routing-doc
+  update committed (`b08aab35`).
+- **Packages 7, 1, 2: ALL ACCEPTED** (commit `887ec60f`, master fast-forwarded to `6ddebb4a`,
+  pushed). Authors GLM-5.3; official T2 reviewer DeepSeek v4-pro (three ACCEPT verdicts, zero
+  required findings); Gemini cross-check CROSSCHECK_CLEAN; Lead collected P7 official-docs
+  evidence personally. Acceptance record with pinned hashes:
+  `11_TRIAGE/BRIDGE_V2_PACKAGES_712_T2_ACCEPTANCE_2026-08-17.md`. Key facts now on record:
+  sub-accounts volume-gated ($100k → virtual-book fallback is Package 1's DEFAULT branch);
+  same-symbol hedge mode officially UNKNOWN; IP 1200/min + 10-WS-connection caps are VPS-shared.
+- Packages 3/4/5a/5b/6/8 remain un-started (owner gates). No implementation, host, credential,
+  account, TESTNET/MAINNET, ARM/order, or Pine/MTC/parity action.
+- Owner report: `11_TRIAGE/OVERNIGHT_BRIDGE_V2_NIGHT_REPORT_PART2_2026-08-17.md`.
+
+## [Claude Fable Lead] 2026-08-17 night — Bridge V2 backlog ACCEPTED via owner-authorized T2 round; prep drafts committed
+
+Owner (live in chat, evening) authorized: (1) exactly one fresh T2 review of a corrected
+backlog candidate; (2) Codex routes secondary + fourth-if-live, Pro/`free` and Claude MAX
+protected; (3) full night scope (acceptance + Package 1–8 prep + Hyperliquid public-docs
+research); (4) after live dispatches proved BOTH Codex Plus routes credit-exhausted
+(`secondary` → ~2026-08-22 20:09, `fourth` → ~2026-08-20 10:20), GLM-5.3 as the official
+T2 reviewer (AGENTS.md GLM T2-reviewer slot; docs-only review).
+
+Result: GLM-5.3 authored the repair (all 3 findings + 3 nits), DeepSeek v4-pro pre-review
+PASS, Lead reproduced load-bearing code citations, two trivial wording items fixed, then a
+fresh GLM-5.3 hash-pinned official round returned **ACCEPT** (identity match, 16 citation
+spot-check groups at pinned HEAD `033546fb`, zero new required findings). Commits on
+`codex/bridge-help-wiki`: `4f4a97e2` (accepted backlog + acceptance record + owner
+decisions; candidate blob `f0115b0a` pinned) and `62272948` (unaccepted drafts: Package 1–8
+kickoff prep + Hyperliquid public-docs addendum — sub-account $100k volume gate lead;
+same-symbol netting officially UNKNOWN). Gemini read-only route was UNUSABLE: its accepted
+launcher hard-pins branch `feature/donchian-crypto-ladder` (line 764) — owner-ask recorded.
+No VPS/trading/credential/ARM/Pine/MTC/parity action. Full night report:
+`11_TRIAGE/OVERNIGHT_BRIDGE_V2_BACKLOG_NIGHT_REPORT_2026-08-17.md`.
 
 ## [Codex gpt-5.6-sol] 2026-08-17 — Help/Wiki implemented; T1 cap boundary preserved
 
@@ -458,6 +873,421 @@ Round-1 re-audit split: GLM accepted, Codex found three required defects. Lead r
 superseded normative pins, the wrong GLM+Codex acceptance floor, and missing implementer-executed D026
 evidence; `verify.sh` range is corrected to `155-205`. Full record:
 `11_TRIAGE/WPL_P2_COMMAND_GAP_PROPOSALS_DISPATCH_PACKAGE_POST_ACCEPTANCE_REPAIR_2026-08-09.md`.
+
+## [Claude Fable 5] 2026-08-17 — Housekeeping lane: cleanup, phase watch, notifier T0 prep
+
+Owner-driven housekeeping lane, coordinated alongside (never touching) the KVM2
+deployment-owner session. On master through `33307723` + this commit:
+
+- **Worktree cleanup:** registered worktrees 160 → **149**. Nine removed under
+  owner-approved batches with per-item prechecks (clean tree, remote
+  reachability, live process + scheduled-task cross-checks; no `--force`, no
+  prune). **`C:/P2RT` is permanently ACTIVE / DO NOT TOUCH** — it powers the
+  running `MTC-Bridge-P2` task; it sat wrongly in SAFE-REMOVE until the owner
+  caught it. GA3B zombie-registration diagnosed; husk proven to hold ZERO unique
+  content by dual-form (raw + clean-filtered) hash comparison; owner approved
+  permanent deletion — blocked by a harness path-protection on root-level
+  `Remove-Item`, owner will run the one-liner personally. Three rescue branches
+  (`rescue/local-only-*`) preserve the three local-only commits. Full detail +
+  procedure amendments: `11_TRIAGE/WORKTREE_SPRAWL_INVENTORY_2026-08-16.md`.
+- **Phase watch:** `_AI_MEMORY/PHASE_WATCH.md` + 4-hourly scheduled task
+  `MTC-HermesPhaseWatch` (wrapper `C:\LAB\HERMES_WATCH\phase_watch_check.ps1`,
+  Hermes via `--provider deepseek -m deepseek-chat`). `WATCH_ACTIVE: NO` until
+  the deployment owner confirms a DISARMED start + activation preconditions.
+- **Telegram notifier:** reuses @MTCHyperbot via existing user env vars; one
+  supervised TEST message ever sent (2026-08-16 23:48:18). T0 review PENDING and
+  HOLD until the KVM2 T0 lane clears. Owner repairs done: Hermes child env
+  stripped of TELEGRAM_* (D026 RED/GREEN on file), test mode network-dieted,
+  KVM2-connection claim honesty-corrected. **Owner architecture decision
+  2026-08-17: Option B binding — deterministic allowlisted collector; Hermes
+  never gets SSH.** Package: `11_TRIAGE/PHASE_WATCH_COLLECTOR_B_PACKAGE_2026-08-17.md`
+  (prepared, NOT implemented).
+- **Owner decisions recorded:** wind-down 1=A/2=B/3=A (Audit 2 closed), AI
+  budget = STANDARD ceiling (`11_TRIAGE/OWNER_DECISIONS_2026-08-16_HOUSEKEEPING.md`).
+- **Process incident (owner: record, no rewrite):** commit `33307723` was made
+  directly on master — a PS 5.1 quoting failure aborted the branch commit and
+  left the temp worktree on master; the retry committed there. Content was
+  byte-identical to the guard-passed staged set. Branch pointer aligned
+  afterward; branch/worktree-first sequencing restored from this commit on.
+
+## [Claude Opus 5] 2026-07-30 — 50-Hour Plan documentation repair/audit cycle ACCEPTED
+
+Owner-authorized documentation-only repair + audit cycle on `09_DOCS/ROADMAPS/TRADING_SYSTEM/TRADING SYSTEM — 50-HOUR ACCELERATED IMPLEMENTATION PLAN.md`. **ACCEPTED** — both canonical audits returned PASS-WITH-NITS with zero required repairs. Baseline `87a25792` (owner-supplied hash verified) → **final `a07c90cc49a4f34910f82bd9c94ba4fb71d76b511bc2cabe0bd727faf57fe3ee`** (1879 lines). Roles: Claude `claude-opus-5` Lead/acceptance, Codex CLI `gpt-5.6-sol` sole document implementer, canonical auditors Claude `claude-opus-5` xhigh (fresh) + Codex `gpt-5.6-sol` xhigh (ephemeral read-only), DeepSeek CLI read-only supplemental. Two non-accepting rounds used of three permitted.
+
+Four commissioned repairs all verified fixed: (1) **staging lifecycle** — 5 premature-discard sites removed; single Gate-A-authorized host now retained through WP-L Phase 2 → WP-I staging verification → WP-A, discarded only after WP-A + evidence capture; new canonical `## Staging Host Lifecycle` block in §18. (2) **contingency/audit sequencing** — §34 no longer draws WP-R after the SHA freeze; audits sit at real checkpoints in both §23a and §34; explicit repair→refreeze→re-audit loop in six places; WP-R strictly audit-only; unfunded routes openly BLOCK-routed. (3) **model roles** — prior GLM-5.2 edit marked verbatim a **"docs-only and non-precedential exception"** in §23c and §39-10, denying GLM/DeepSeek/Grok/NVIDIA/Cline any protected Bridge/core-runtime implementation or canonical G5/G6 audit authority. (4) **terminology** — zero bare "Phase 2"; three binding terms in new §6.1.
+
+Two extra defects found mid-cycle and fixed: **Audit-1 double-funding** (§16 budgeted 2h+2h of G5/6 inside WP-S while §20/§34 assigned Audit 1 to WP-R — resolved with no number change: WP-S funds the first pass only, `Gate-5/6`→`Gate-5`, WP-R funds Audit 2/3/Gate-6 + all re-audits); and the **post-discard repair loop being unexecutable/unfunded/unrouted** (a repair at Audit 3/Gate-6 would invalidate WP-A Ubuntu evidence after the only host was gone — resolved by declaring Audit 3/Gate-6 artifact+evidence-level with no Ubuntu execution, then splitting post-discard repairs into Case 1 hostless loop vs Case 2 → BLOCK, with a new Gate-A-class authorization named as outside the budget).
+
+Budget unchanged and independently recomputed by both auditors: 2+12+8+6+3+6+8+5 = **50 h**; WP-S 4/2/4/2 = 12; WP-L (2+3+1)+2 = 8. Safety boundary verified intact: DISARMED endpoint, TESTNET/paper-simulated only, mainnet forbidden, ARM + first paper order + soak outside budget requiring separate owner gates, no invented thresholds/credentials/secrets.
+
+8 optional nits carried forward (none blocking) — see the record. **No Git command was run**; repo state identical to cycle start plus this record (89 porcelain entries). Target file remains untracked, so no committed baseline exists and neither auditor could diff against a prior revision — both recommend committing. Tooling: **Cline CLI is broken** (`Cannot find module .../cline/bin/cline`), affecting the AGENTS.md TOKEN DISCIPLINE first-choice path; DeepSeek CLI used instead.
+
+Full detail: `11_TRIAGE/PLAN50H_REPAIR_AUDIT_CYCLE_2026-07-30.md`. Next: owner decides plan acceptance, whether to commit the roadmap directory, and whether to apply nits. **No WP-0, implementation, VPS, staging, TESTNET, deployment or ARM action has begun or is authorized by this cycle.**
+
+## [Claude Sonnet 4.6] 2026-07-27 — GLM quota-efficient supplemental routing policy
+
+Implemented `AGENTS.md` §GLM SUPPLEMENTAL ROUTING as the canonical single-source Z.AI Coding Plan model-selection policy (facts Lead-verified 2026-07-27, time-sensitive). Four-tier routing table added: cheapest (4.5-Air if route supports) → GLM-4.7 → GLM-5.1 (only if entitlement confirmed) → GLM-5.2 (protected/flagship only, never merely because available). Cheapest-capable decision tree and six examples (simple docs, mechanical test update, ordinary Bridge bug, protected risk/persistence, Gate-5 audit, exact-model request) added. Mandatory context rules (targeted rg, 400–500-line max, fresh session, no blind resume) and per-task routing record format defined. Stale `claude-opus-4-8` corrected to `claude-opus-5` in `SPRINT_WORKFLOW.md`. Cross-references (not table copies) added to: `AI_RULES.md`, `START_HERE.md`, `DEEPSEEK_DISPATCH.md`, `AI_TOOL_INTEGRATION_PLAN.md`, prompt index `00_index.md`, `01_office_hours_scope_review.md`, `03_implementation_task.md`. External helper reconfiguration (currently hard-maps all three tiers to GLM-5.2) is a **separate Barış authorization**; no external config was changed in this session. No commit/push/PR occurred; all changes are in the dirty worktree pending Lead acceptance.
+
+## [Codex GPT-5.6-sol] 2026-07-26 — KVM2 repair cycle 2 authorized; Claude quota blocker after lead validation
+
+Barış explicitly authorized a fresh documentation repair/re-audit cycle. Claude
+Sonnet completed the main R3-01–R3-07/DS-F-01 rewrite of the joint plan. Current
+working hashes (not accepted/frozen for execution):
+
+- master:
+  `3C61B08B17867C2EEB602FD407CF327C95FF7446DB492304DDB6A926A3E8EF3C`
+  (34,879 bytes);
+- execution companion:
+  `CB4C686A161CA8D40DC6C1C235B6371A4ADE1DCDDA23D2535259F39E0177C885`
+  (58,050 bytes; 77 unique task IDs).
+
+Lead validation did not accept Claude's all-green self-report. Seven focused defects
+remain: exact `Evidence:` fields on P0-04A/P5-03A; two stale 71-task references;
+P5-06 must depend on executed ARM P5-05A and P5-05A must verify the P5-03A unit
+hash; P6-03/P6-04/P6-05 prerequisites must be explicit; Phase-9 removal must occur
+after observation without implying a second install; and the exact immutable
+Phase-9 manifest must receive fresh independent Gate 6 acceptance before P9-02A.
+The last finding came from a read-only Cline preflight and was independently
+accepted by the Codex lead; Cline's separate historical-hash objection was rejected
+because the cited hash is explicitly an initial/superseded input and the current
+joint hash contract lives in the audit prompt. The exact focused repair prompt is
+preserved at
+`11_TRIAGE/KVM2_MASTER_PLAN_REPAIR_CYCLE2_ROUND1_PROMPT_2026-07-26.md`.
+
+The same Claude counterpart retry made no edits because the Claude account hit its
+session limit; reported reset: 2026-07-26 10:50 Europe/Chisinau. Repo rules forbid
+silent implementer substitution. A one-time same-thread continuation is active for
+10:51 (`resume-kvm2-plan-repair-after-claude-reset`). Fresh Codex/Opus audits have
+not started. The
+plan remains **PREPARATION ONLY / EXECUTION BLOCKED**. No VPS/runtime, credential,
+network, deploy, TESTNET, ARM, lab, Git, commit, push, or PR action occurred.
+
+## [Codex GPT-5.6-sol] 2026-07-26 — KVM2 master program final audit REQUEST_CHANGES; three-round loop exhausted
+
+Frozen joint program:
+
+- `11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_MASTER_PLAN_2026-07-25.md`
+  (`10C79396D63DE330BD4F920146B8CDB0C39C10C342233AEAE4E1C8B9CCD12F02`)
+- `11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_EXECUTION_TASKS_2026-07-25.md`
+  (`8706621CE52010465B408B265267F7320078E2A79F01533E85513335619615D9`)
+- sanitized consolidated evidence:
+  `11_TRIAGE/KVM2_MASTER_PLAN_MULTI_MODEL_AUDIT_REPORT_2026-07-26.md`
+
+The split is mechanically valid and audit-readable: master 34,300 bytes,
+companion 52,786 bytes, 71/71 unique AI/Evidence/Stop task blocks, phases 0–11,
+and bridge crosswalk items 1–10 exactly once. It is **not accepted as executable**.
+
+Final fresh audit round: exact Codex CLI `gpt-5.6-sol` `xhigh` returned
+`REQUEST_CHANGES` with seven required repairs. Direct `deepseek-v4-pro` returned
+`PASS-WITH-NITS` while also declaring one MEDIUM required repair, so its accepting
+label is invalid under the verdict contract. Grok `grok-4` returned `PASS`.
+Cline metadata `cline-pass/deepseek-v4-pro` returned `PASS-WITH-NITS` but its prose
+identity was inconsistent. Exact `claude-opus-5` `xhigh` remains unrun/deferred
+because credits are unavailable; no fallback is permitted.
+
+Required next repair set: remove the P5-09/P6 kill-test cycle; add post-rollback
+recovery-start and bounded ARM execution; force restart-profile requalification;
+add Phase-9 named service admission; make Option B clean proof equivalent to
+Option A; separate ledger initialization from path freeze; deterministically
+enumerate the source-scenario reconciliation; freeze the P5-10 isolation-design
+filename. The three-round limit is exhausted, so no fourth repair was started.
+
+All older KVM2 plan hashes/task counts in lower handoff sections are superseded.
+The lower-level Bridge VPS Deploy task remains authoritative and BLOCKED. No
+install, deploy, secret, runtime, cutover, TESTNET, ARM, lab, network,
+reprovision, purchase, mainnet, staging, commit, push, or PR action occurred.
+
+## [Codex] 2026-07-25 — KVM2 bridge-first AI-lab master plan prepared; execution remains BLOCKED
+
+Canonical lifecycle plan:
+`11_TRIAGE/KVM2_AI_LAB_AND_BRIDGE_MASTER_PLAN_2026-07-25.md`. It contains 12
+dependency-ordered phases and 55 owner-tagged tasks covering live-state refresh,
+the clean rebuild kit, canonical bridge gates, bounded cutover, bridge-only
+stability, AI-lab admission, low-risk lab rollout, MTC visibility, optional
+services, and the later mainnet host fork. SHA-256:
+`5FD6B6A70EF8A255B569B83E999F1164D3DB38F18278DD46FEECEF22D8BEE637`.
+
+Owner lifecycle decision: KVM2 is bridge-first for TESTNET; after accepted
+bridge-only stability it may host one isolated, individually approved lab workload
+at a time. Mainnet requires either destructive clean reprovision into the
+trading-only profile with full credential rotation and verified-only restore, or a
+separate clean trading VPS. A lab snapshot or agent uninstall is never clean-host
+evidence.
+
+The master plan has received only Codex lead structural/security review, not the
+required fresh cross-model Gate 5/Gate 6 audits. The Claude drafting attempt was
+blocked by session quota and the bounded cheap drafting paths produced no artifact;
+Codex authored the operational specification directly and validated 55/55 task
+blocks for owner, evidence, stop condition, unique ID, secret scan, and 12-phase
+coverage. The existing Bridge VPS task remains authoritative and **BLOCKED**. No
+install, deploy, secret, runtime, cutover, TESTNET, ARM, lab, network, reprovision,
+purchase, or mainnet action occurred or is authorized.
+
+## [Codex GPT-5.6-sol] 2026-07-25 — Bridge VPS Deploy task captured; VPS ready, deploy BLOCKED
+
+Preparation-only task:
+`11_TRIAGE/BRIDGE_VPS_DEPLOY_TASK_LIST_2026-07-25.md`. The hardened Hostinger KVM2
+Ubuntu 24.04 baseline is ready, but there is no canonical clean merged and audited
+deploy SHA. Windows `C:\P2RT` remains the active writer at `008e065e`; PR #25 is
+open/unmerged at `cfb08b81`; local TS-P1-001 remains unpublished and unaccepted.
+
+Independent exact `gpt-5.6-sol` `xhigh` Gate-5/Gate-6 verdict: **BLOCK, zero
+optional nits**. The confirmed Opus 5 attempt hit subscription HTTP 429 before a
+verdict; a fresh exact `claude-opus-5` `xhigh` no-fallback/no-resume audit is
+deferred and the failed attempt is not evidence. No merge, deploy, install, secret
+transfer, runtime/API/scheduler/process, broker/exchange, TESTNET, or ARM action
+occurred or is authorized.
+
+## [Codex] 2026-07-21 — TS-P1-001 second-repair re-audit BLOCK at `a15a6b1f`
+
+Codex independently re-audited clean commit
+`a15a6b1f6648016fe99278fe993daa2c1b49b923`, exact child of `851d88a0`.
+Scope, semantic RED (5 failed/80 passed), 85 focused, both 303-test full-suite CWDs,
+compile, hostile-metaclass closure, GC closure, and the 44/121 oracle reproduced.
+Verdict remains **BLOCK**: `_ImmutableMapping.__slots__ = ("_pairs",)` leaves a
+writable holder; direct `_pairs` assignment replaces the tuple and changes both later
+transition and normalization decisions. F2-R is closed. No audited-tree edit, push,
+PR/merge/deploy, P2RT runtime action, or TS-P1-002 work occurred.
+
+Evidence: `11_TRIAGE/CODEX_TSP1001_REAUDIT2_2026-07-21.md`. The only next prompt is
+`11_TRIAGE/CLAUDE_TSP1001_REPAIR3_PROMPT_2026-07-21.md`, limited to making the holder
+itself immutable and requiring another child commit plus independent re-audit.
+
+## [Codex] 2026-07-20 — TS-P1-001 repair re-audit BLOCK at `851d88a0`
+
+Codex independently re-audited clean repair commit
+`851d88a084875e48b63fba455cb7b27f357c5ac4`, exact child of blocked commit
+`5140e062...`. The repair's semantic RED (5 failed/75 passed on parent), 80 focused
+tests, both 298-test full-suite CWD runs, compile, three-file scope, and document-derived
+121-pair/44-legal oracle all reproduced. Verdict remains **BLOCK**: standard-library
+`gc.get_referents()` exposes each `MappingProxyType` backing dict and mutation changes
+later public decisions; `type(raw).__name__` can execute hostile metaclass code and
+raise `RuntimeError` outside `UnknownRawOrderStatusError`. No audited-tree edit, push,
+PR/merge/deploy, P2RT runtime action, or TS-P1-002 execution occurred.
+
+Evidence: `11_TRIAGE/CODEX_TSP1001_REAUDIT_2026-07-20.md`. The only next prompt is
+`11_TRIAGE/CLAUDE_TSP1001_REPAIR2_PROMPT_2026-07-20.md`, limited to the two reproduced
+residual findings and requiring a new child commit plus another independent re-audit.
+Owner acceptance and TS-P1-002 remain blocked.
+
+## [Codex] 2026-07-20 — TS-P1-001 independent audit BLOCK at `5140e062`
+
+Codex independently audited the clean one-commit `C:\TSP1001` implementation at
+`5140e062b8c1f3fcc78e96c7357060c60a51285d` against exact base `cfb08b81`.
+Scope, semantic parent RED, 74 focused tests, both 292-test full-suite CWD runs,
+compile, status inventory, and an independent 121-pair/44-legal transition oracle
+were verified. Verdict is **BLOCK**: module-visible mutable backing dictionaries can
+alter the exported transition/alias policies after import, and the exception contract
+is not safely reason-coded (`IllegalOrderTransitionError` lacks `reason_code`; hostile
+raw-status `__repr__` can leak or raise outside `UnknownRawOrderStatusError`). No
+audited-tree repair, push, PR mutation, merge, deploy, P2RT runtime action, or
+TS-P1-002 execution occurred.
+
+Evidence: `11_TRIAGE/CODEX_TSP1001_AUDIT_2026-07-20.md`. The only next prompt is
+`11_TRIAGE/CLAUDE_TSP1001_REPAIR_PROMPT_2026-07-20.md`, limited to the reproduced
+findings and requiring a new repair commit plus independent Codex re-audit. Baris must
+accept or reject the PROPOSED invariant contract only after a repair passes re-audit;
+TS-P1-002 remains blocked until then.
+
+## [Codex] 2026-07-20 — 39-task build/audit sequence prepared; TS-P1-001 first
+
+Barış will run separate Claude builder and Codex auditor chats for the remaining full
+backlog. Codex prepared two self-contained prompts. Claude builds TS-P1-001 in isolated
+`C:\TSP1001` from TS-P0 head `cfb08b81`, creates one local commit and builder report,
+with no push/runtime action. Codex then independently audits scope, semantic RED, two-CWD
+suites, an independent transition oracle, and 12 adversarial probes. BLOCK produces a
+Claude repair prompt; PASS produces the TS-P1-002 builder prompt. No task advances,
+publishes, merges, or deploys automatically.
+
+Prompts: `11_TRIAGE/CLAUDE_TSP1001_BUILD_PROMPT_2026-07-20.md` and
+`11_TRIAGE/CODEX_TSP1001_AUDIT_MANAGER_PROMPT_2026-07-20.md`.
+
+## [Codex] 2026-07-20 — TS-P0 docs closed; PR #25 ready at `cfb08b81`
+
+N3/N4/N5 documentation closeout is complete. N3's commit-specific integration
+correction and the three N4 ADR status-rationale corrections were applied to the
+pre-existing untracked main-worktree documents and left uncommitted. In clean
+`C:\TSP0`, N5 plus the D018 hash-scope/release-contract/reset-policy markers formed
+an exact three-document diff. Diff check and repo guard passed; no code/tests/config
+changed. Commit `cfb08b81` was pushed to `feature/ts-p0-baseline`, PR #25 body was
+updated, all available checks passed, and the PR was marked ready for review.
+
+Merge decision: NO-GO without a separate explicit merge sentence. Deploy decision:
+NO-GO while PR is unmerged and Day 1 v2 is active, because runtime replacement would
+interrupt the window. No P2RT/API/scheduler/runtime access in the docs session. Report:
+`11_TRIAGE/CODEX_TSP0_DOC_CLOSEOUT_REPORT_2026-07-20.md`.
+
+## [Codex] 2026-07-20 — TS-P0 published as draft PR #25; Day 1 v2 ARMED
+
+Barış approved the TS-P0 hash scope, release-evidence contract, and sticky reset
+policy with the 300-second tolerance, then authorized publication of exact audited
+commit `44338d61`. Codex pushed `feature/ts-p0-baseline` and opened draft PR #25
+against `master`: https://github.com/bsemaay-tech/mtc-command-center/pull/25. Remote
+head is exactly `44338d61275499f2019011cd06e6f27007f6cbcf`; no new commit, merge, or
+deploy occurred.
+
+The active MONSTER power plan was verified already safe for the window: sleep,
+hibernate, and lid-close action are all zero/disabled for AC and DC. With P2RT clean
+at `008e065e`, API down, and task Ready, Codex made exactly one task-start call at
+09:03:30Z. New run `paper-20260720090332` reconciled clean in paper/testnet with raw
+positions/orders `[]`/`[]`. Exactly one ARM call at 09:05:10Z (`X-Confirm: 2`) returned
+200 and produced one `ARM_REQUEST` plus one `DISARMED->ARMED` transition; state version
+is 4. Task remains Running, reconcile fresh, exposure empty, thresholds unchanged.
+No retry, deploy, threshold/strategy change, or mainnet action. Record:
+`11_TRIAGE/CODEX_TSP0_PUBLICATION_DAY1V2_2026-07-20.md`. Next fresh-session prompt:
+`11_TRIAGE/CODEX_TSP0_REMAINING_DOCS_PROMPT_2026-07-20.md`.
+
+## [Claude Fable 5] 2026-07-20 — TS-P0 repair re-audit PASS + commit `44338d61`; SEPARATE incident: Day 1 v1 window down (sleep)
+
+**Re-audit:** Fable independently audited Codex's uncommitted nine-file BLOCK repair in
+`C:\TSP0`. **PASS, zero new findings**
+(`11_TRIAGE/FABLE_TSP0_BLOCK_REPAIR_AUDIT_2026-07-20.md`). Reproduced: scope exact
+(9 files, HEAD `7777273f`); 218×2 both CWDs; RED **9F/45P** vs HEAD via copy-aside with
+sha256-verified byte-exact restore (no `git restore` on uncommitted work); F1a all four
+meta keys ⇒ DOWN `invalid_meta:<key>`; F1b future liveness ⇒ DOWN `future_liveness`
+(300s boundary still RUNNING); F2 hashes=[]/str/None + scalar/nested types ⇒ structured
+exit 2, no tracebacks; F3 10 dangerous names denied / 9 legitimate names in scope;
+**overbroad-denylist attack: real-tree hashed-file set identical old vs new tool**;
+real-pair exit 2 incl. `repo_dirty`; P2RT clean `008e065e`. Auditor then committed the
+audited state: **`44338d61`** (local, no push) — ends the uncommitted-repair wipe hazard.
+Remaining: docs nits N3/N4/N5; Barış gates (hash scope, DRAFT contract, reset policy,
+push/PR).
+
+**Incident (unrelated to TSP0):** Day 1 v1 bridge window DOWN — system sleep 07:27
+killed task+supervisor (TaskScheduler 201 + Kernel-Power 42); logon restart 08:57:44
+died ~66s later (`0xC000013A`, second standby). Continuous window = 18:52Z→~04:27Z ≈
+**9h35m**, then INTERRUPTED; the 66s zombie does not extend it. No unilateral restart.
+Record + Barış decisions (restart Day 1 v2? sleep policy?):
+`11_TRIAGE/INCIDENT_D1V1_SLEEP_STOP_2026-07-20.md`.
+
+## [Codex] 2026-07-19 — TS-P0 BLOCK repairs built; independent re-audit next
+
+Codex repaired all three authoritative BLOCK findings in `C:\TSP0` as an
+uncommitted nine-file diff: expanded secret filename exclusion + spy test;
+structured manifest type validation; malformed/future window evidence now
+fails DOWN. TDD evidence: pre-fix **6F/37P** for new B/C tests; post-fix focused
+**54P**, full **218P ×2 CWDs**. Direct attacks now pass: five secret edges
+denied; re-signed `hashes=[]` exits 2/no traceback; four malformed meta keys
+and future liveness all DOWN with explicit errors. Read-only real-pair run exit
+2 has four expected reasons including `repo_dirty`; P2RT stayed clean at
+`008e065e`. No commit/push/PR/deploy. Report:
+`11_TRIAGE/CODEX_TSP0_BLOCK_REPAIR_REPORT_2026-07-19.md`. Next prompt:
+`11_TRIAGE/TSP0_BLOCK_REPAIR_REAUDIT_PROMPT_2026-07-19.md`.
+
+## [Claude Fable 5] 2026-07-19 — TS-P0 verification pass: Codex BLOCK CONFIRMED (authoritative)
+
+Orchestrator-Fable ran a third independent pass over `C:\TSP0` HEAD `7777273f`,
+reproducing the load-bearing claims of BOTH prior audits. Build-quality claims
+hold (210×2 both CWDs, RED proof, diff isolation, real-pair exit 2 with the
+correct three reasons, byte-stability, P2RT untouched + window ARMED). **All
+Codex BLOCK findings independently reproduced on real code:** F1a corrupt
+`window_interrupted_ts` ⇒ interruption vanishes ⇒ RUNNING; F1b future
+`last_alive_ts` ⇒ never stale ⇒ RUNNING for a dead bridge; F2 `"hashes": []`
+⇒ TypeError exit 1; F3 `prod.env`/`my.secrets`/`key.txt` opened+hashed. F1a/F1b
+break TS-P0-003's core acceptance property ⇒ **BLOCK outranks the earlier
+PASS-WITH-NITS; repairs required before push/PR** (repair list in NEXT_STEPS
+stands). Lesson recorded: the first audit swept only well-formed parsed
+evidence; attack the storage-encoding layer and clock domain too. Report:
+`11_TRIAGE/FABLE_TSP0_AUDIT_VERIFICATION_2026-07-19.md`. Read-only session;
+TSP0/P2RT clean; no push/deploy/ARM.
+
+## [Codex] 2026-07-19 — TS-P0 audit BLOCK
+
+Codex independently audited `C:\TSP0` HEAD `7777273f` from the self-contained
+prompt and issued **BLOCK**. Verified: exact 3-commit chain/scope, 210/210 both
+CWDs, baseline 164 in removed throwaway worktree, focused 14/11/21, all three
+RED proofs, release re-sign attack, exit matrix, byte stability, ADR closure,
+and P2RT no-mutation. Blocking reproductions: (1) malformed
+`window_interrupted_ts` and future liveness can both produce RUNNING;
+(2) re-signed `"hashes": []` makes `release_evidence validate` exit 1 with a
+traceback; (3) `prod.env`/`my.secrets`/`key.txt` are opened and hashed despite
+the secret-safety boundary. The final-HEAD real-pair integration correctly has
+three reasons including `source_tree_hash_mismatch`; the earlier two-reason
+claim applied only at Task A. Report:
+`11_TRIAGE/CODEX_TSP0_AUDIT_2026-07-19.md`. No push/PR/deploy/commit; TSP0 and
+P2RT clean at their original HEADs.
+
+## [Claude Fable 5] 2026-07-19 — TS-P0 INDEPENDENT AUDIT: **PASS-WITH-NITS**
+
+Fresh Fable session (no builder context) executed the full 12-point adversarial
+checklist from `FABLE_TSP0_AUDIT_HANDOFF_2026-07-19.md` on real code/runs:
+worktree facts exact (`C:\TSP0` HEAD `7777273f` clean), **210/210 both CWDs**,
+all 3 TDD RED proofs reproduced, integration vs real pair exit 2 with P2RT
+porcelain/HEAD untouched, subprocess exit codes 0/2/3 + byte-stable JSON probed,
+tamper+re-sign attack caught by live-state compare, secret spy-hash + no-mutation
+tests verified, window never-false-active property confirmed in code AND sweep,
+no pre-existing test edited, Task D ADR edits verified. **No BLOCK.** 5 nits
+(N1 release_evidence exit-1 crash on re-signed non-dict `hashes` [reproduced];
+N2 `prod.env`/`config.env` denylist gap [reproduced]; N3 handoff §Integration
+expectation stale — 3 drift reasons at HEAD is correct behavior; N4 three
+residual stale "Proposed status" rationale sentences; N5 symlink digest-oracle
+note). Report: `11_TRIAGE/FABLE_TSP0_INDEPENDENT_AUDIT_2026-07-19.md`. Barış
+gate unchanged: hash-scope confirm, release-contract approval, reset-policy
+confirm; push/PR still blocked; optional Codex cross-audit remains available.
+
+## [Claude Fable 5] 2026-07-19 — TS-P0 BUILD CHAIN DONE (001–004) in C:\TSP0; awaiting independent Fable audit
+
+Owner-directed Fable build session executed the full Phase 0 chain in worktree
+**`C:\TSP0`** (branch `feature/ts-p0-baseline`, base `008e065e`; NO push/PR/merge; P2RT
+strictly read-only; window untouched — end proof: HEAD `008e065e` clean, `/api/status`
+ARMED, run `paper-20260719185026`, fresh reconcile 19:37Z). One commit per code task:
+**TS-P0-001 `fa449ce2`** (check_runtime_baseline.py, 14 tests, RUNTIME_BASELINE_CONTRACT;
+integration vs real pair exit 2 with ONLY commit-mismatch reasons; CRLF-normalization
+finding documented), **TS-P0-002 `42d0ca9f`** (release_evidence.py create/validate,
+11 tests, RELEASE_EVIDENCE_CONTRACT **DRAFT pending Barış**), **TS-P0-003 `7777273f`**
+(bridge/engine/window.py honest window state RUNNING/DOWN/INTERRUPTED/RESET, additive
+status()['window'], 21 tests incl. exhaustive never-false-active sweep; reset policy
+**PROPOSED pending Barış**; P2RT NOT redeployed). **TS-P0-004** verify-and-record done:
+all 12 ADRs Accepted per D016 verified; 3 stale "Proposed" wordings fixed (docs-only,
+untracked ADR dir, main worktree); report `11_TRIAGE/FABLE_TSP0004_ADR_CLOSURE_REPORT_2026-07-19.md`.
+Suites: baseline 164 re-verified at `008e065e` → 177 → 189 → **210 passed both CWDs**;
+TDD RED proofs captured per task. Deliverables: `11_TRIAGE/FABLE_TSP0_BUILD_REPORT_2026-07-19.md`
++ `11_TRIAGE/FABLE_TSP0_AUDIT_HANDOFF_2026-07-19.md` (12-point adversarial checklist).
+STOP honored before Phase 1. Open Barış items: hash-scope confirm, release-contract
+approval, reset-policy confirm.
+
+## [Claude Fable 5] 2026-07-19 — DEPLOY GATE SPENT: PR #24 merged, P2RT on `008e065e`, Day 1 v1 window OPEN + ARMED
+
+Barış explicitly approved the deploy gate ("Push/PR of feature/interim-daily-loss-wiring →
+deploy to C:\P2RT → fresh monitoring window"). Executed: branch pushed; **PR #24 merged**
+(merge commit **`008e065e`**, SHAs preserved, `acb83b5b` ancestor of origin/master; repo
+guard PASS pre-merge). **Deployed**: `C:\P2RT` fetched + detached at `008e065e` from clean
+`74e0990b`; delta = exactly the TS-P1-007 files; deploy verification in deployed tree =
+**32 focused + 164 full passed**. **Fresh window Day 1 v1 OPEN**: `MTC-Bridge-P2` started
+2026-07-19T18:50:25Z on AC (StopIfGoingOnBatteries=False, DisallowStartIfOnBatteries=True
+unchanged); run **`paper-20260719185026`**, paper/testnet/hyperliquid, BTC 1h; first
+reconcile clean; `risk_input_error` null; 300s restore fix present; **one ARM**
+~18:52:44Z per Day 0 v5 runbook precedent → state ARMED. Thresholds unchanged (0.02 daily,
+3 streak, 0.005/trade, 1x isolated). This is the FIRST window whose risk-gate enforcement
+evidence may count (deployed runtime now contains audited wiring); categories stay
+separate. Record: `11_TRIAGE/DEPLOY_TSP1007_WINDOW_D1_2026-07-19.md`. Mainnet untouched;
+strategy/schema/config unchanged; mcc_readonly dashboard left running; `C:\P1IF` clean.
+
+## [Claude Fable 5] 2026-07-19 — Interim TS-P1-007 round-4 independent audit: PASS-WITH-NITS
+
+Fable independently audited `acb83b5b` (parent `b11a2e36`, `C:\P1IF`,
+`feature/interim-daily-loss-wiring`). Scope verified: exactly the four claimed files
+(417+/33−), no threshold/strategy/config/schema/protected-path change; `update_trade_exit`
+has zero production callers; engine gate wiring (`engine.py:240-252`) intact. **All builder
+evidence reproduced this session:** focused 32×2 CWDs, full 164×2 CWDs (1 pre-existing
+Starlette warning), parent semantic red **8F/24P with the exact same eight failures**,
+half-exit red **1F vs `066b49cc`** (its correct old-code target — passes vs `b11a2e36` as
+the builder honestly disclosed), clean blob-verified restores after every step. Plus **14
+independent adversarial probes, all pass**: per-order overfill, role conflict, 5×
+fill_id-mutation immutability (fee/ts/qty/funding/px), streak max−1 engine-path boundary,
+CANCELED-remainder close semantics, float-dust close, post-close ENTRY fill immutability,
+exact post-close redelivery no-op, double-close refusal, trade-level dust overfill.
+
+**Verdict: PASS-WITH-NITS.** No path rewrites canonical closed PnL, corrupts a gate input,
+duplicates accounting, or leaves owned exposure foreign-classified. All five round-3 BLOCK
+findings verifiably closed. Six non-blocking nits (untested ORDER_OVERFILL /
+FILL_ROLE_CONFLICT codes, role-conflict evidence-retention asymmetry, narrow
+ENTRY_REMAINDER_LIVE crash window missing only the DISARM, quarantined rows counted in
+totals, one stale test comment) — details + follow-ups in
+`11_TRIAGE/FABLE_INTERIM_TSP1007_ROUND4_AUDIT_2026-07-19.md`. This clears the independent-
+audit gate ONLY: push/PR/merge/deploy/`C:\P2RT`/ARM/monitoring-window remain a separate
+unspent Barış approval. This session: read-only + local tests; `C:\P1IF` left clean at
+`acb83b5b`; no runtime/network/scheduler/credential action.
 
 **PICK UP EXACTLY HERE:** fresh Claude Opus-5 xhigh + Codex xhigh package audits must accept; GLM runs
 fresh detection audit. Only then start a separate fresh Claude implementation session. Proposal remains
@@ -2818,6 +3648,45 @@ stops at the assembled Gate-A checklist until that access exists.
    duplicate xhigh audits).
 7. DeepSeek and Grok CLIs need the prompt as a **flag value**, not stdin, and crashed on memory when
    run concurrently with pytest. Run heavy dispatches sequentially.
+
+## [Codex gpt-5.6-sol] 2026-08-22 — Owner master-plan documentation set
+
+Barış asked for the architecture brief to be checked against the original project objective, its
+internal contradictions repaired, and a shorter owner-facing plan, requirement traceability register,
+parallel work-package plan, and expanded starting-point statement produced.
+
+- **Canonical count:** the original owner outcomes remain **O-01…O-44 (44)**. Architecture review
+  added **D-01…D-12 (12 derived safeguards)** without rewriting or renumbering the owner outcomes.
+  The current tracked total is therefore **56**. The owner acknowledged all twelve on 2026-08-22:
+  D-01, D-03…D-06 and D-08…D-12 as written; D-02 and D-07 with the recorded clarifications. They
+  remain DERIVED and are not presented as original owner instructions.
+- **Documents produced:**
+  `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`,
+  `11_TRIAGE/OWNER_MASTER_PLAN_2026-08-22.md`,
+  `11_TRIAGE/PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md`,
+  `11_TRIAGE/REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, and
+  `11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`.
+- **Final focused repairs:** the reserved `D-13` safeguard wording is gone; D-02 is explicitly about
+  new-order sizing; D-07 separates maximum allocated capital from the lower, still-unset
+  loss-at-stop cap; current-state 0.5%/1.0% observations cannot become vNext defaults; research-risk
+  catalogue IDs are nonnumeric; and every POC is isolated, preserves evidence, and requires a
+  separate owner-authorized cleanup for retirement/removal.
+- **Fresh T2 documentation audit:** exact `gpt-5.6-sol`, medium effort, fresh read-only session,
+  frozen five-file snapshot. Verdict **PASS-WITH-NITS**, zero required findings; checks A–I all
+  passed. Counts independently confirmed: 44 OWNER + 12 DERIVED = 56; 59 unique work packages;
+  every register WP reference resolves; no D-13. The sole optional nit is to label the brief's
+  historical “Packages 1, 2, 3, 4, 5a, 7” reference as pre-plan packages. It was not changed after
+  acceptance. Audit report SHA-256: `C616400664CF83FA046BD21A3177AA402215FCEF907219EFCF8F63C6044C2A77`.
+- **Scope of acceptance:** this verdict accepts the **documentation repair set only**. The governing
+  technical brief still correctly says architecture audit acceptance **PENDING**; a future G1
+  architecture acceptance is a separate gate. No implementation, deployment, schema activation,
+  host contact, credential use, testnet/live trading, destructive Git action, or work package is
+  authorized.
+- **Frozen Git baseline:** owner-authorized documentation-only commit
+  `15788c59b4dffe90d88f5214d40246206647338c` on `codex/bridge-help-wiki` contains exactly the five
+  audited planning files. Post-commit checks found an empty index, clean status for all five paths,
+  and unchanged accepted SHA-256 values. The optional nit was not applied. No push was performed and
+  no work package started.
 
 ### The lesson this task keeps teaching
 

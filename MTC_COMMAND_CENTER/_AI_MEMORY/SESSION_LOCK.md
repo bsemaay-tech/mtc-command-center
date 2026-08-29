@@ -31,10 +31,11 @@ is the mechanism behind `AI_RULES.md` § Autonomous Session Invariants, rule 2.
 | §10.2 prover / SEC102 | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` SEC102*, pathscope* | **Codex Lead `019fe77c`** — final owner-authorized Pathscope cycle | 2026-08-14 10:30 +03 |
 | Successor prereg draft | `11_TRIAGE/WPI_PREREG_DRAFT_ROUND1/` WPI_*PREREG* | **UNCLAIMED** — released 2026-08-12 20:45 | — |
 | Audit-2 readiness package | `11_TRIAGE/AUDIT2_READINESS_PACKAGE/` | **Codex Lead `019fe77c`** — documentation and freeze preparation only | 2026-08-14 10:30 +03 |
-| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released cleanly at Gate 7 | 2026-08-17 03:54 +03 |
+| Shared memory layer | `_AI_MEMORY/` handoffs, rules, routing | **UNCLAIMED** — released 2026-08-22 20:43 +03 | — |
 | Gemini adviser route | `11_TRIAGE/GEMINI_PRO_*` plus external launcher/project config | **UNCLAIMED** — released 2026-08-16 22:19 +03 | — |
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-17 00:54 +03; foreign partial preserved | — |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released cleanly at Gate 7 | 2026-08-17 03:54 +03 |
+| Master architecture planning documents | `11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`, `OWNER_MASTER_PLAN_2026-08-22.md`, `PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md`, `REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`, `MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md` | **UNCLAIMED** — released 2026-08-22 20:43 +03 | — |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The
@@ -42,9 +43,90 @@ next session should claim the rows it intends to write before its first write** 
 tonight's four Claude Pro audit lanes are READ-ONLY on the block workstreams (each writes only
 its own verdict file), so they do not require ownership of RP6/RP7/transport/pathscope.
 
+| WP-P0-01 repo inventory | `11_TRIAGE/WP_P0_01_INVENTORY_2026-08-24/` | **UNCLAIMED** — released 2026-08-24 20:55 +03; MERGED to master `1ac97649` (T2 PASS-WITH-NITS) | — |
+| WP-P0-15 branch-freshness guard | `MTC_COMMAND_CENTER/tools/repo_guard.ps1` + `11_TRIAGE/WP_P0_15_FRESHNESS_2026-08-24/` | **UNCLAIMED** — released 2026-08-24 20:55 +03; T1 cap spent, branch `feature/wp-p0-15-branch-freshness-20260824` pushed NOT merged, ONE residual finding, closure spec ready | — |
+| WP-P0-06 parity corpus inventory | `11_TRIAGE/WP_P0_06_PARITY_CORPUS_2026-08-24/` | **UNCLAIMED** — released 2026-08-24 20:55 +03; MERGED to master `1f391db1` (T1 PASS) | — |
+| WP-P0-24 OSS ledger | `11_TRIAGE/WP_P0_24_OSS_LEDGER_2026-08-24/` | **UNCLAIMED** — released 2026-08-24 20:55 +03; MERGED to master `e1a0c2ed` (T1 PASS-WITH-NITS after 1 repair round) | — |
+| Master architecture planning documents | the five planning docs (branch `feature/vnext-amendments-20260824` @ `d797e9e5`, worktree `C:\VNEXT_20260824`) | **UNCLAIMED** — released 2026-08-24 20:55 +03; owner-ratified amendment built, dual-flagship T0 cap spent 3/3 without joint acceptance, branch pushed NOT merged, closure spec ready | — |
+
 Workstreams not listed: add a row before writing.
 
 ## Log
+
+- **2026-08-24 20:55 +03:** Fable Lead (overnight session) released all five rows at Gate 7.
+  Outcome: WP-P0-01, WP-P0-06, WP-P0-24 merged to master (`1ac97649`, `1f391db1`, `e1a0c2ed`,
+  all pushed) each with tier-required acceptance and Lead reproduction; WP-P0-15 and the
+  V-Next amendment branch stopped at their audit caps per policy, both pushed unmerged with
+  paste-ready closure specs in `C:\tmp\LANE_PROMPTS_20260824\`. No foreign uncommitted edit
+  was found in any owned workstream. The dirty checkout remained untouched throughout
+  (byte-hash verified twice). This release edit, like the claim, is deliberately left
+  uncommitted because the shared memory files carry preserved foreign dirt. Full record:
+  GLOBAL_HANDOFF top entry.
+
+- **2026-08-24 19:38 +03:** Fable Lead (overnight session) claimed the four G1-IA package rows
+  (WP-P0-01, WP-P0-15, WP-P0-06, WP-P0-24 — owner named them exactly tonight) plus the planning-doc
+  row for the owner-ratified V-Next deferral amendment cycle (Parts 1–3 ratified in full).
+  Each lane writes only in its own isolated worktree/branch from `origin/master` (`fbb05d7f`);
+  the amendment branch bases on accepted `a00446a6`. This claim edit is left UNCOMMITTED
+  deliberately: the shared memory files in this checkout carry preserved foreign dirt and
+  committing the claim here would capture it. WP-P0-01 is strictly read-only over this dirty
+  checkout. Merges only after tier-required acceptance; planning branch not merged tonight.
+
+- **2026-08-22 20:43 +03:** Codex Lead `/root` released the planning and shared-memory rows after
+  creating documentation-only commit `15788c59b4dffe90d88f5214d40246206647338c`. The commit has
+  exactly the five audited planning paths; post-commit SHA-256 values remain identical; the optional
+  nit is unchanged; no push, code, host contact, work package, deployment, testnet, trading or live
+  action occurred. Full architecture acceptance remains PENDING.
+
+- **2026-08-22 20:41 +03:** Barış explicitly authorized freezing and committing exactly the five
+  T2-audited planning documents at their accepted hashes, with the optional nit unchanged and no
+  work package started. Codex Lead `/root` claimed the planning and shared-memory rows for that
+  bounded documentation-only Git action and closeout.
+
+- **2026-08-22 20:36 +03:** Codex Lead `/root` released the planning and shared-memory rows.
+  The focused risk-policy and POC-cleanup repairs are Lead-verified. A fresh exact
+  `gpt-5.6-sol`, medium-effort, read-only T2 documentation audit returned
+  `PASS-WITH-NITS` with zero required findings and checks A–I passing. This accepts the
+  documentation repair set only; the governing brief's separate architecture acceptance stays
+  PENDING. No code, Git, host, work package, deployment, testnet, trading or live action started.
+
+- **2026-08-22 20:22 +03:** Barış explicitly authorized the next focused documentation cycle.
+  Codex Lead `/root` claimed the planning and shared-memory rows for only RF-1
+  (`kdef.risk.1pct.v1`) and RF-2 (automatic POC deletion), an expanded five-document pre-audit
+  sweep, Lead verification, and one fresh T2 audit. No code, Git, host, work-package, deployment,
+  testnet, trading or live action is authorized.
+
+- **2026-08-22 20:09 +03:** Codex Lead `/root` released the planning and shared-memory rows.
+  The four D-07 presentation ambiguities are repaired and Lead-verified, but the fresh single T2
+  round returned `REQUEST_CHANGES` on two independently reproduced pre-existing contradictions:
+  `kdef.risk.1pct.v1` versus the unset stop-risk value, and automatic POC deletion versus the
+  separate cleanup-authorization rule. The cap is exhausted. No further repair/audit, code, Git,
+  host, work-package, deployment, testnet, trading or live action was started.
+
+- **2026-08-22 19:45 +03:** Barış explicitly authorized the next focused documentation repair
+  and fresh T2 audit cycle, and reiterated that every completion must state the exact next step.
+  Codex Lead `/root` claimed the planning and shared-memory rows. Scope is limited to correcting
+  the three reproduced D-07 ambiguities, independently verifying the five-document set, and one
+  fresh read-only T2 audit. No code, Git, host, work-package, deployment, testnet, trading or live
+  action is authorized.
+
+- **2026-08-22 19:40 +03:** Codex Lead `/root` released the master-architecture planning and
+  shared-memory rows. The five planning documents record D-01…D-12 and the D-13 correction,
+  but the additional single-round T2 audit returned `BLOCK`: three D-07 examples remain
+  ambiguous and the auditor sandbox could not execute SHA-256. The Lead independently confirmed
+  unchanged hashes; this is not audit acceptance. No further repair/audit round, code, Git, host,
+  work-package, deployment, testnet, trading or live action was started.
+
+- **2026-08-22 19:40 +03:** Codex Lead `/root` claimed the shared-memory row only to record
+  the completed owner decision, the capped T2 `BLOCK`, and the exact next authorization gate.
+  This does not authorize another repair/audit round or any code, Git, host, work-package,
+  deployment, testnet, trading or live action.
+
+- **2026-08-22 18:57 +03:** Codex Lead `/root` claimed the master-architecture planning-document
+  workstream for Barış's explicit instruction to record acknowledgement of D-01…D-12, propagate
+  the D-02/D-07 clarifications, remove the misleading future `D-13` token, and run one additional
+  read-only T2 documentation audit. No code, Git, host, deployment, testnet, trading, credential or
+  work-package action is authorized.
 
 - **2026-08-17 03:54 +03:** Codex Lead `01a00921` completed a clean Gate-7
   release of the Shared memory layer and Bridge Help / System Map rows. The

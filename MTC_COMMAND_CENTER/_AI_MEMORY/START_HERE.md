@@ -1,15 +1,11 @@
 # START_HERE
 
-> **▶▶ LIVE WP-I RUN — 2026-08-12/13. START WITH
-> `..\11_TRIAGE\FRESH_SESSION_HANDOFF_2026-08-13_MORNING.md`.** It is self-contained, its §0 is a
-> **binding operating contract** (never idle · 4–6 parallel lanes · Codex primary · Claude Max is
-> RESERVE with very little credit left · GLM is the second auditor while the Claude Pro window is
-> shut · GLM/Max can NEVER fill a second-flagship slot), and §6 lists what is in flight. The
-> next hard milestone is **23:00 Europe/Chisinau**, when the Claude Pro weekly window reopens and
-> four second-flagship audits run back to back. Their kickoffs are written, preflighted and
-> corrected — dispatch is immediate.
+> **Current state - start here:** read the newest top sections of
+> `GLOBAL_HANDOFF.md` and `NEXT_STEPS.md`; those are the live record. Anything
+> time-sensitive that used to sit in this slot was rotated out on 2026-08-17 and is
+> preserved verbatim in `archive/START_HERE_STALE_BANNER_2026-08-12.md`.
 
-> **▶ CURRENT STATE: read `_AI_MEMORY/GLOBAL_HANDOFF.md` (newest section first) + `NEXT_STEPS.md` for live work.** The older `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md` is historical (most items DONE) — read only for back-context. Everything below is standing reference.
+> **▶ CURRENT STATE (2026-08-25 morning): Codex continues from `_AI_MEMORY/HANDOFF_CODEX_CONTINUE_2026-08-25_MORNING.md`** — exact steps to finish Q (WP-P0-09 `12626a04`) and W (WAL `f47d36ee`), routes, and the filter-safe audit spec. Then read `GLOBAL_HANDOFF.md` (newest section first) + `NEXT_STEPS.md`. The older `_AI_MEMORY/CODEX_PICKUP_2026-06-08.md` is historical. Everything below is standing reference.
 
 Read order: `AGENTS.md`, this file, `LESSONS.md` (capped, 2-min read — durable paid-for rules), `AI_RULES.md`, `PROJECT_MEMORY.md`, `GLOBAL_HANDOFF.md` if needed, `NEXT_STEPS.md`, then project handoff files.
 

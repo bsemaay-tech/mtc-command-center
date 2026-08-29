@@ -46,6 +46,25 @@ preserved in the session task outputs). The owner, asked immediately, chose:
   (fresh isolated sessions), so cross-provider pre-reviews (Gemini 3.7 Flash read-only, DeepSeek)
   plus Lead finding-by-finding verification are added before the official round.
 
+## Decision 5 — Late-night package starts and repairs (owner message, same night)
+
+Owner message (verbatim intent): start Package 7; start Packages 1+2; Gemini launcher repair
+authorized; merge `codex/bridge-help-wiki` to master; continue working until morning using the
+non-Codex routes whose credits would otherwise be wasted (Gemini, GLM, DeepSeek — both Codex
+Plus routes remain exhausted, ChatGPT Pro and Claude MAX remain protected); conserve Claude
+(Fable) credits.
+
+Effect:
+- **Package 7** (official exchange reverification, T2 read-only, public docs only): STARTED.
+- **Package 1** (V2 architecture contract pack, T2; exchange-dependent half conditioned on
+  Package 7's record): STARTED.
+- **Package 2** (MTC integration contract pack, T2, documentation only): STARTED.
+- **Gemini read-only launcher repair** (branch-pin fix): AUTHORIZED — minimal fail-closed
+  change with fresh identity hash and live QA.
+- **Merge to master**: AUTHORIZED for `codex/bridge-help-wiki`.
+- Packages 3, 4, 5a, 5b, 6, 8 remain NOT started. All standing prohibitions below unchanged;
+  the T2 packages produce documentation only.
+
 ## Standing prohibitions unchanged
 
 No Package 1–8 implementation, schema migration, activation, merge of protected surfaces,

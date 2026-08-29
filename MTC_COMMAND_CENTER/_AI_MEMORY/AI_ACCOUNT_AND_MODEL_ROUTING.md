@@ -8,6 +8,34 @@
 
 ---
 
+> **🔄 LIVE RE-MEASUREMENT 2026-08-25 10:40 +03 (supersedes the 2026-08-08 snapshot for these rows).**
+> Owner-reported quota plus a live probe of each route:
+>
+> | Route | Wrapper arg | Home | Measured state 2026-08-25 10:40 |
+> |---|---|---|---|
+> | ChatGPT Plus **third** | `-Account third` | `.codex-plus3` | **100% — the live implementer route.** Probe returned `PROBE_OK`. Resets 1 Sep 08:59 |
+> | ChatGPT Pro | `-Account free` | `.codex_OLD` (legacy alias of the Pro subscription) | 48% left; resets 31 Aug 04:20 |
+> | ChatGPT Plus secondary | `-Account secondary` | `.codex-hesap2` | 0% until 31 Aug 12:39 |
+> | ChatGPT Plus fourth | `-Account fourth` | `.codex-bsemaay` | 0% until 31 Aug 19:42 |
+> | Claude Pro | bare `claude` | `.claude` | **RESTORED 12:56 by owner re-login** (`claude` -> `/login`). Probe `PROBE_OK`, exit 0. Before that it returned `Failed to authenticate: OAuth session expired and could not be refreshed` **while the dashboard showed session 100%** — a dead CLI token, not a quota problem. Worth remembering: the dashboard cannot tell you the CLI can authenticate; probe the route |
+> | Claude Max | `Invoke-ClaudeMax.ps1` | `.claude-max` | Alive (probe `PROBE_OK`). **Coordinator only** per the owner's standing order — never coding, never audits |
+> | GLM 5.3 | `Invoke-GlmAudit.ps1` / `Invoke-GlmTask.ps1` | — | 5-hour window exhausted until **16:56**; confirmed by the API itself (`[1308][Usage limit reached for 5 hour ... reset at 2026-08-25 16:56:11]`), not just the dashboard. **Left unspent** — Claude Pro came back at 12:56 and took the audits instead. `glm` is not on PATH; use the helper scripts |
+> | Gemini | `Invoke-GeminiProReadOnly.ps1` | — | Still broken (Antigravity project-config drift) |
+>
+> **Consequence for the two-tier model:** two Codex accounts are **not** two independent flagships —
+> same model, different session. Closure rounds that require a second *independent* flagship must
+> wait for GLM at 16:56 or an owner re-login of Claude Pro. Implementer lanes and first-flagship
+> halves can run on Codex now.
+>
+> **Two launcher arg traps** (each cost a dispatch on 2026-08-25):
+> 1. `-c` prefix-collides with the wrapper's own `-CodexArgs` parameter → PowerShell fails with
+>    `A positional parameter cannot be found that accepts argument 'exec'`. **Use `--config`.**
+> 2. Passing a multi-line prompt string can reach codex word-split (`error: unexpected argument 'is'
+>    found`). **Write the spec to a file and pass a one-line "read this file" prompt instead** — it
+>    also leaves the spec on disk as the audit record.
+
+---
+
 ## 1. OpenAI Codex — account homes
 
 Account identity is selected **only** by the process-scoped `CODEX_HOME` environment variable, which points at a dedicated home directory whose own `auth.json` carries that account's session.
@@ -220,7 +248,7 @@ Never authenticate Max into the default `.claude` profile, and never log the Pro
 | Account | `bsemaay3@gmail.com` — Google AI Pro, authenticated interactively in Antigravity CLI |
 | CLI | `C:\Users\BarışSemaay\AppData\Local\agy\bin\agy.exe` — verified version 1.1.13 |
 | Mandatory launcher | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1` |
-| Current launcher identity | SHA256 `393964E22D7C94C242720D6FEB452D816B5DBDBAD562FBBF94208807BB0CA18F` |
+| Current launcher identity | SHA256 `DEFD7B5B422CA2E6FAE5A4BF685DE276D50B76C13D84B937E5C161D6FF75EFD4` *(updated 2026-08-25, owner-authorized repair after Antigravity config-schema drift: expected members track the new schema — top-level `updatedAt`, `settings.sandboxMode` pinned `false`, `gitFolder.allowWrite` removed upstream with write-protection still enforced by the unchanged required deny grants; the project config's drifted loose values — fileAccessPolicy ALLOW, autoExecution EAGER, review TURBO — were RESTORED to the strict QA'd values, not accepted. Prior identity `393964E2…` and backups: `C:\tmp\LANE_PROMPTS_20260824\*.bak-20260825*`. Probe note: the tamper-watcher fail-closes on `.git\objects` writes from ANY concurrent session — run this route only in a quiet-repo window.)* |
 | Dedicated project | `4b64b3f9-1bfa-4de1-a9eb-276f2e0489b7` |
 | Default model | `gemini-3.7-flash-high` |
 | Authority | Supplemental read-only inspection only. Never Lead, counterpart flagship, canonical auditor, protected implementer, or acceptance authority. Lead must reproduce every finding. |

@@ -1,5 +1,33 @@
 # ACTIVE_FILES
 
+## 2026-08-22 20:43 +03 Codex Lead — audited planning set frozen; no package active
+
+The same five master-planning documents are now tracked together in documentation-only commit
+`15788c59b4dffe90d88f5214d40246206647338c` on `codex/bridge-help-wiki`. The
+commit contains exactly those five files and records every accepted SHA-256 in its message. The
+owner's D-01…D-12 acknowledgements are recorded; D-02 and D-07 carry the accepted clarifications;
+the risk-policy and POC-cleanup contradictions are repaired. Lead checks confirm 56 requirements
+(44 OWNER + 12 DERIVED), 59 unique work-package definitions, zero unresolved register references
+and no D-13 safeguard. A fresh `gpt-5.6-sol` medium read-only T2 documentation audit returned
+**PASS-WITH-NITS** with zero required findings. This accepts only the documentation repair set;
+the governing brief's separate architecture acceptance remains PENDING. No work package is active
+or authorized. The commit was not pushed. Exact next authorization is in `NEXT_STEPS.md`.
+
+## 2026-08-22 Codex Lead — master architecture planning set; T2 BLOCK
+
+Current five-document planning set (all user-owned untracked files):
+
+- `MTC_COMMAND_CENTER\11_TRIAGE\MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\OWNER_MASTER_PLAN_2026-08-22.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\PROJECT_STARTING_POINT_AND_MAIN_OBJECTIVE_2026-08-22.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\REQUIREMENTS_TRACEABILITY_REGISTER_2026-08-22.md`
+- `MTC_COMMAND_CENTER\11_TRIAGE\MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md`
+
+State: D-01…D-12 owner acknowledgement recorded; D-02/D-07 clarified; misleading future
+`D-13` token removed; 56 requirements and 59 packages retained. Additional T2 audit verdict:
+**BLOCK** — three remaining ambiguous D-07 examples plus auditor inability to execute SHA-256.
+The round cap is exhausted. No work package is active; no implementation or runtime authority.
+
 ## 2026-08-01 Codex GPT-5.6-sol — WP-L/WP-I accepted local evidence; external host blocker
 
 Active record files (this programme):
