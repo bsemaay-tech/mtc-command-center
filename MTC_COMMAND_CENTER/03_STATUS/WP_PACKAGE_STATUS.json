@@ -17,12 +17,12 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "REPAIR_8_RUNNING",
+      "state": "REPAIR_8_COMMITTED_DELTA_AUDITS_RUNNING",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
-      "commit": "e67d2b84 (repair-7)",
+      "commit": "b4278c1a (repair-8)",
       "detail": "Repair-4 committed: self-comparing C42 assertion removed, receipt pins reconciled, validator claims narrowed; all 8 deduplicated findings closed; census dual-stated (15 kept / 12 excluded comprehension-bound). Gate remains STOP by design (27/13/2). Repair 7 (owner-approved label-only) committed e67d2b84 and delta-audited: flagship PASS-WITH-NITS, detection 1 HIGH residual - the receipt run_1/run_2 names still assert runs the finalizer does not perform (same class). Next session asks the owner: repair 8 label-only (recommended) or carry to v3. v3 stage-4 design v2b complete and re-pinned. Runbook CONFIRMED FOR OWNER. Bridge fail-closed design COMPLETE.",
       "owner_gate": false,
-      "next_action": "N49 repair 8 (label only, owner-approved evening) -> delta audits -> stage 3 build -> v3 (second actor: Claude Pro per owner ruling)"
+      "next_action": "P22+N50+GM4 delta audits on b4278c1a -> stage 3 build -> v3 (second actor: Claude Pro per owner ruling)"
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
@@ -87,12 +87,12 @@
     {
       "id": "BRIDGE-FAIL-CLOSED",
       "title": "Bridge refuses unimplemented settings (owner: fail closed)",
-      "state": "DESIGN_CONFIRMED_CANDIDATE_PREP_RUNNING",
+      "state": "CANDIDATE_OWNER_APPROVED_PENDING_P21_CONFIRM",
       "branch": "-",
       "commit": "-",
       "detail": "Design CLOSED with both-auditor delta re-confirm of W10c: P20 flagship CONFIRMED (both findings genuinely closed, no new defects, build gate intact), N48 detection ZERO FINDINGS. Owner (evening, all-defaults) authorized preparing the corrected bridge.yaml candidate: lane W50 produces candidate bytes + per-key rationale. Owner approves the exact bytes separately before any build. NO deployment to any host.",
       "owner_gate": true,
-      "next_action": "W50 candidate prep -> owner approves exact bytes -> build lane"
+      "next_action": "owner said BRIDGE YES (SHA 58f67c82); effective when P21 audit CONFIRMS; then build lane authorization"
     },
     {
       "id": "SURVEY-SAFETY-SENTENCE",

@@ -16,6 +16,22 @@ The six questions and the defaults the owner thereby adopted:
 
 Additional owner order, same message: **parallel lanes increased to 10.**
 
+## Addendum — later the same evening (owner verbatim: "1. Done / 2. bridge yes / 3. ı have red the files.")
+
+1. **Secondary Codex account re-login: DONE** (Lead probe confirmed "Logged in using ChatGPT").
+2. **BRIDGE CONFIG APPROVED:** the owner approves the exact 350-byte
+   `BRIDGE_YAML_CANDIDATE_V1.yaml`, SHA-256
+   `58f67c8233df8eb92f43be81c09ab665cbe0a17e75b43eccc2f67ad90c040629`, for a later separately
+   authorized W10 build targeting schema 4 + paper mode. Per the terms the approval was asked
+   under, it takes effect only when the independent candidate audit (lane P21) returns
+   CONFIRMED; if P21 finds defects, the candidate returns to the owner instead.
+3. **Runbook and promotion package: READ by the owner.** The promotion package still awaits his
+   explicit ruling on its single question (approve the report-only rule + vocabulary for the
+   four checks; builds nothing; building later is a separate ~18-26 route-hour decision).
+
+Same message thread also ordered parallel design work on P0-13/21/22 (dispatched as drafts,
+design-only, serial build chain unchanged).
+
 ## Interpretation notes (Lead)
 
 - Ruling 1 authorizes exactly the repair-7 pattern: rename the published labels that assert
