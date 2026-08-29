@@ -17,12 +17,12 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "REPAIR_5_IN_PROGRESS",
+      "state": "REPAIR_5_DELTA_AUDIT",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
       "commit": "f8a186b8 (repair-4)",
       "detail": "Repair-4 committed: self-comparing C42 assertion removed, receipt pins reconciled, validator claims narrowed; all 8 deduplicated findings closed; census dual-stated (15 kept / 12 excluded comprehension-bound). Gate remains STOP by design (27/13/2). ROUND-4 VERDICTS: flagship PASS-WITH-NITS, zero fresh instances (all 3 auditors agree) - stopping rule NOT triggered, first clean round. Detection found 1 latent BLOCK-class defect in the untouched finalizer (accepts zero-row matrix, emits PASS); repair 5 closing it now.",
       "owner_gate": false,
-      "next_action": "repair 5 -> delta audit -> stage 3/4 design"
+      "next_action": "delta audits (P14 flagship + N39 re-probe) decide closure"
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
@@ -37,8 +37,8 @@
     {
       "id": "REGISTRY-GUARD",
       "title": "Registry promotion guard (owner: freeze)",
-      "state": "BUILT_AWAITING_AUDIT",
-      "branch": "feature/registry-promotion-guard-20260829",
+      "state": "PR_OPEN_CI",
+      "branch": "feature/registry-promotion-guard-20260829 (PR #140)",
       "commit": "1fa12d60",
       "detail": "Built per spec under DEFER: promotion only on all-promoted-ladder tokens, Option-C empty admission set, RESEARCH_ONLY badge for robust_final, regression suite. RED shown against pre-fix writer; GREEN census 0 stored-pair mismatches; 63 producer specs proven byte-identical (SHA-256 manifest). Tier T1.",
       "owner_gate": false,
@@ -60,7 +60,7 @@
       "state": "BUILT_AWAITING_AUDIT",
       "branch": "feature/scorecard-honesty-20260829",
       "commit": "54989afe",
-      "detail": "Built: regime_breakdown_present computed (coverage > 0) with 4-point RED shown; exactly 41 of 78 stamps neutralised (pattern-pinned census); writer populates the two queue-read numbers with producer-named values, no fabrication on missing computation. One extra in-scope dependency found+fixed (evaluation builder erased computed false to N_A). Stored artifacts untouched. Tier T1.",
+      "detail": "Built: regime_breakdown_present computed (coverage > 0) with 4-point RED shown; exactly 41 of 78 stamps neutralised (pattern-pinned census); writer populates the two queue-read numbers with producer-named values, no fabrication on missing computation. Confirm audit N38: NOT CONFIRMED - zero-trade path published fabricated 0.0 into the queue metric + census is 42 not 41 + nine fixtures were one shape. Repair lane W34b running.",
       "owner_gate": false,
       "next_action": "different-model confirm audit -> PR"
     },
