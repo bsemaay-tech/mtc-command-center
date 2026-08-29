@@ -3,8 +3,9 @@
 Tarih: 2026-07-13; KVM2 Linux bölümü 2026-07-26'da güvenli paketle değiştirildi.
 Amaç: Barış'ın planı — gece ev PC (shakedown), gündüz iş PC (~6 gün),
 paralelde VPS kiralanınca kalıcı taşınma. Bu doküman herhangi bir modelin veya Barış'ın tek
-başına uygulayabileceği kadar ayrıntılıdır. **TESTNET-ONLY; mainnet üçlü kilidi her makinede
-geçerli.**
+başına uygulayabileceği kadar ayrıntılıdır. **TESTNET-ONLY.** Bugün gerçek-para koruması
+hardcoded `network="testnet"` (`bridge/app.py:203`); üçlü kilit (`hyperliquid.py:2165-2169`)
+bu yolda değerlendirilmez — o kelime `mainnet` yapılınca devreye girer.
 
 > **KVM2 authority warning:** This document is guidance, not execution
 > authorization. The current lower-level authority is
