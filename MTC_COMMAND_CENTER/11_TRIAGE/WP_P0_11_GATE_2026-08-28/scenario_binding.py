@@ -246,7 +246,6 @@ class ManifestScenarioSource:
 @dataclass(frozen=True)
 class DeclaredLeaf:
     path: str
-    value: Any
 
 
 @dataclass(frozen=True)
@@ -379,11 +378,8 @@ def bind_scenario(
     expected = contract.as_mapping()
     _bind_exact(expected, scenario)
     declared = tuple(
-        DeclaredLeaf(
-            path=path,
-            value=deepcopy(value),
-        )
-        for path, value in _leaf_items(expected)
+        DeclaredLeaf(path=path)
+        for path, _value in _leaf_items(expected)
     )
     paths = tuple(path for path, _value in _leaf_items(scenario))
     return BindingLedger(contract=contract, declared_leaves=declared, bound_paths=paths)

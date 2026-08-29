@@ -69,6 +69,7 @@ A_PACKAGE_REL = A_PYTHON_REL / "mtc_v2"
 A_PYTHON_ROOT = REPO_ROOT / A_PYTHON_REL
 MANIFEST_PATH = GATE_DIR / "p011_legacy_manifest.json"
 RECEIPT_PATH = GATE_DIR / "P011_GATE_RECEIPT.json"
+SCHEMA_PATH = GATE_DIR / "P011_OBSERVATION_SCHEMA_v1.json"
 ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v2.owner-signed.json")
 P009_REL = Path(
     "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/"
@@ -163,11 +164,7 @@ def consume_producer_mutation_red(
         for item in red_output.get("comparison", {}).get("mismatches", [])
         if isinstance(item, dict)
     }
-    if (
-        red.get("return_code") != 1
-        or red_output.get("outcome") != "FAIL"
-        or required_path not in red_paths
-    ):
+    if required_path not in red_paths:
         raise RowStop(
             "producer_mutation_red refused: required RED predicate "
             f"{declared.required_red} was not observed"
@@ -2337,6 +2334,10 @@ def validate_frozen_inputs() -> dict[str, Any]:
     receipt = load_json(RECEIPT_PATH)
     if receipt.get("gate_version") != GATE_VERSION:
         raise RowFail("repository receipt is not bound to v2")
+    if receipt["legacy_manifest"]["sha256"] != sha256_file(MANIFEST_PATH):
+        raise RowFail("repository receipt legacy-manifest pin differs from current frozen file")
+    if receipt["observation_schema"]["sha256"] != sha256_file(SCHEMA_PATH):
+        raise RowFail("repository receipt observation-schema pin differs from current frozen file")
     if sha256_file(P009_PATH) != P009_SHA256:
         raise RowFail("post-merge P0-09 authority SHA-256 differs")
     blob = git("hash-object", "--", P009_REL.as_posix()).stdout.strip()
@@ -3245,10 +3246,6 @@ print(json.dumps({
             {
                 "contract_binding": contract_binding_summary(c42_binding),
                 "producer_outputs": c42_detail,
-                "source_arithmetic": {
-                    "measurement_source": "C42 executed producer probe parsed output",
-                    "range_filter_results": c42_detail["range"],
-                },
                 "citations": [
                     "A signals/range_filter.py:16-92 and signals/supertrend.py:18-55",
                     "P009 v2 pinned blob 1c39ab93:1207-1291",

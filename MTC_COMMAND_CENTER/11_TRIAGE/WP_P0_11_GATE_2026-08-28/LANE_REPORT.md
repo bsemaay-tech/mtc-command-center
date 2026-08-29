@@ -1,6 +1,6 @@
-# WP-P0-11 `P011-LC-GATE-v2` authority re-pin report
+# WP-P0-11 `P011-LC-GATE-v2` repair round 4 report
 
-Date: 2026-08-28
+Date: 2026-08-29
 
 Branch: `feature/wp-p0-11-kernel-legacy-compatible-20260825`
 
@@ -54,11 +54,12 @@ Premise 1 therefore holds; no substantive authority change was absorbed into thi
   `C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json`, SHA-256
   `eb6a600ff9609789465118a217845c7cac6f8b09f7ecaee2a93242f1f16ec15c`.
 
-## Double build
+## Double build - ephemeral historical scratch evidence
 
-Fresh outputs: `C:\tmp\p011_gate_v2_run1_20260828` and
-`C:\tmp\p011_gate_v2_run2_20260828`. Each profile produced 48,077 observations, for 96,154 total.
-All canonical artifacts are byte-identical across the two builds:
+The prior round recorded outputs at `C:\tmp\p011_gate_v2_run1_20260828` and
+`C:\tmp\p011_gate_v2_run2_20260828`. They are outside the repository and were not regenerated in
+repair round 4. The counts (48,077 observations per profile; 96,154 total) and hashes below are
+therefore historical **ephemeral** claims, not durable acceptance evidence:
 
 | Artifact | Run 1 SHA-256 | Run 2 SHA-256 |
 |---|---|---|
@@ -67,8 +68,9 @@ All canonical artifacts are byte-identical across the two builds:
 | `row_corroboration.json` | `9d6abe9265f8b332db429c6bc3f8144545902bb03fc44fd60de3bf970a195f0e` | same |
 | `baseline_manifest.json` | `62d1ef5fc90b36b6c8caec9388a229ec897dca95ca99f2ba9b979f9c20e6cecc` | same |
 
-The unchanged sequence hash is expected: the authority diff changed citations, not rules or data.
-The v2 comparator self-test records 76/76 RED and 76/76 restored GREEN; matrix SHA-256 is
+The prior report characterized the unchanged sequence hash as expected because the authority diff
+changed citations, not rules or data. It also recorded 76/76 comparator RED and 76/76 restored
+GREEN; matrix SHA-256 is
 `1bfa108ed6b547af92af6bf08c70da8a7363598278747f78259f3958c88c3a3d`.
 
 ## Complete C01-C42 re-verification
@@ -93,12 +95,13 @@ producer runs. The binding refuses missing, extra, or unequal values. Producer o
 compared with the bound expected observation and final state.
 
 **Contract conservation is not enforced or claimed.** The dead named-consumer ledger and its unit
-tests were removed. `BindingLedger` retains declared leaf values and bound paths for exact binding
-and matrix enumeration only (`scenario_binding.py:247-257`, `:335-390`). The generator emits the
+tests were removed. `BindingLedger` retains declared leaf paths and bound paths for variant
+enumeration and binding summaries only (`scenario_binding.py:246-255`, `:366-385`). Exact binding
+is performed separately by `_bind_exact` (`scenario_binding.py:334-364`). The generator emits the
 typed scenario declarations (`stage1_freeze.py:551-613`); the baseline gate exact-binds them
-(`p011_gate.py:563-598`) and the row arm exact-binds its verifier contract (`row_arm.py:2379-2437`).
+(`p011_gate.py:563-598`) and the row arm exact-binds its verifier contract (`row_arm.py:2380-2438`).
 The row arm separately compares producer output and checks an observed mutation RED path plus
-runtime authority identities (`row_arm.py:154-221`, `:2530-2589`, `:3302-3361`).
+runtime authority identities (`row_arm.py:155-218`, `:2531-2590`, `:3299-3358`).
 
 The six measured disposition changes are:
 
@@ -111,24 +114,44 @@ The six measured disposition changes are:
 | C39 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | A_CURRENT_MASTER |
 | C41 | GREEN_AFTER_RED | STOP_MISSING_REQUIRED_AUTHORITY | B_BACKTEST_FREEZE |
 
-The current authority check records the declared set, observed set, and missing identity from
-different producers (`row_arm.py:182-221`). Current code emits no `CONSERVED` contract ledger and
+The current authority check compares a verifier-declared set with runtime import observations and
+records missing identities (`row_arm.py:179-218`). Current code emits no `CONSERVED` contract ledger and
 makes no terminal-consumption claim. The isolated unit suite uses a per-run temporary directory,
-not a committed absolute scratch pin (`test_scenario_binding.py:30-31`). It runs 13 tests, including
-the producer spy, exact-key variants, identity-bound C32 control, measured C42 arithmetic, and the
-complete declared-leaf variant matrix (`test_scenario_binding.py:177-467`). No load-bearing claim in
+not a committed absolute scratch pin (`test_scenario_binding.py:30-31`). It runs 16 tests, including
+the producer spy, exact-key variants, identity-bound C32 control, receipt-pin refusal variants, a
+counts-only receipt probe, and the complete declared-leaf variant matrix
+(`test_scenario_binding.py:187-578`). C42 publishes only the executed producer outputs; the
+re-keyed duplicate and self-comparison were deleted (`row_arm.py:3238-3253`). No load-bearing claim in
 the repaired disposition or binding sections cites an `N26_VARIANTS` scratch output.
 
-Stage 2 changes the legacy-manifest identity to
-`29ecc19947bd5400293709cccd7fe0e46aceeb013cc8fb0f2d7965a16c515ed3` and changes the gate,
-row-arm, and generator identities. The protected receipt, committed evidence, and v2 external
-anchor remain stale and require a coordinated v3 repin. The receipt's row counts and reason are
-false (`P011_GATE_RECEIPT.json:70-80`), and C41's existing F3 row record must be regenerated rather
-than carried forward. Any load-bearing variant matrix must be published durably in the repository
-or explicitly labeled ephemeral; a scratch path is not evidence. The observation schema is not a
-target for the scenario-binding fields: its catalog contains observation, signal, event, position,
-gate-readiness, and account fields, but none of the named scenario-contract fields
-(`P011_OBSERVATION_SCHEMA_v1.json:165-789`).
+## Cumulative v3 obligations
+
+1. Repin the protected receipt's truthful row-arm counts/reason, code and evidence identities, and
+   final receipt hash only after authorized evidence regeneration (`P011_GATE_RECEIPT.json:70-80,
+   242-245,312-315`).
+2. Regenerate protected row evidence and C41/F3 rather than hand-editing generated pins; the current
+   terminal disposition is described at `LANE_REPORT.md:76-89,106-115`.
+3. Coordinate the v2 external-anchor repin only after the receipt and protected evidence agree
+   (`LANE_REPORT.md:40-49`).
+4. Extend M3-07's durable-evidence rule to every acceptance-bearing scratch citation. Publish any
+   variant matrix or transcript under an authorized repository evidence path or label it ephemeral.
+   Re-cite the Double-build observation counts and four artifact hashes to durable repository
+   evidence, or retain the explicit ephemeral label in this report (`LANE_REPORT.md:57-72`). The
+   owner-authorization basis at `LANE_REPORT.md:50-52` is also an external `C:\tmp` citation, not a
+   repository artifact.
+5. Reconcile the protected receipt's `legacy_manifest.sha256` and
+   `observation_schema.sha256` pins with the current frozen files before an anchor-only repin can
+   authorize the package (`P011_GATE_RECEIPT.json:138-146`; `row_arm.py:2322-2350`).
+6. State and pin the serialization policy for both normalized/LF repository bytes and CRLF working-
+   tree bytes. The validator currently hashes exact on-disk bytes (`row_arm.py:120-129,2322-2350`);
+   v3 must name the chosen authoritative byte form and publish both identities where both forms are
+   retained.
+7. Update every authorized receipt/anchor hash for `row_arm.py`, `scenario_binding.py`,
+   `p011_gate.py`, and the test only inside the coordinated v3 package.
+
+The observation schema is not a target for the scenario-binding fields: its catalog contains
+observation, signal, event, position, gate-readiness, and account fields, but none of the named
+scenario-contract fields (`P011_OBSERVATION_SCHEMA_v1.json:165-789`).
 
 ## Scope and audit boundary
 

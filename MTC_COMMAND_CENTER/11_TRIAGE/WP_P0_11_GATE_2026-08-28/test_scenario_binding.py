@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import os
 import re
 import tempfile
 import unittest
@@ -62,6 +63,18 @@ def _write_result(name: str, value: dict | list) -> Path:
     path.write_text(
         json.dumps(value, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
+    )
+    return path
+
+
+def _write_n33_json(relative_path: str, value: dict | list) -> Path:
+    variant_root = Path(os.environ.get("P011_N33_VARIANT_DIR", str(VARIANT_DIR)))
+    path = variant_root / relative_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(value, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
     return path
 
@@ -171,6 +184,92 @@ class ScenarioBindingModuleTests(unittest.TestCase):
 
 
 class GateVariantTests(unittest.TestCase):
+    def test_copied_anchor_repin_cannot_authorize_receipt_manifest_mismatch(self) -> None:
+        anchor = json.loads(row_arm.ANCHOR_PATH.read_text(encoding="utf-8"))
+        anchor["legacy_manifest_sha256"] = row_arm.sha256_file(row_arm.MANIFEST_PATH)
+        anchor_path = _write_n33_json("anchor_repin_only.json", anchor)
+
+        with patch.object(row_arm, "ANCHOR_PATH", anchor_path):
+            with self.assertRaisesRegex(
+                row_arm.RowFail, "receipt legacy-manifest pin differs"
+            ) as raised:
+                row_arm.validate_frozen_inputs()
+
+        _write_n33_json(
+            "anchor_repin_only_refusal.json",
+            {
+                "outcome": "REFUSED",
+                "reason": str(raised.exception),
+                "variant": str(anchor_path),
+            },
+        )
+
+    def test_copied_receipt_schema_pin_mismatch_is_refused(self) -> None:
+        receipt = json.loads(row_arm.RECEIPT_PATH.read_text(encoding="utf-8"))
+        receipt["legacy_manifest"]["sha256"] = row_arm.sha256_file(
+            row_arm.MANIFEST_PATH
+        )
+        receipt["observation_schema"]["sha256"] = "0" * 64
+        receipt_path = _write_n33_json("receipt_wrong_schema_pin.json", receipt)
+
+        anchor = json.loads(row_arm.ANCHOR_PATH.read_text(encoding="utf-8"))
+        anchor["legacy_manifest_sha256"] = row_arm.sha256_file(row_arm.MANIFEST_PATH)
+        anchor["receipt_sha256"] = row_arm.sha256_file(receipt_path)
+        anchor_path = _write_n33_json("anchor_for_wrong_schema_receipt.json", anchor)
+
+        with (
+            patch.object(row_arm, "ANCHOR_PATH", anchor_path),
+            patch.object(row_arm, "RECEIPT_PATH", receipt_path),
+        ):
+            with self.assertRaisesRegex(
+                row_arm.RowFail, "receipt observation-schema pin differs"
+            ) as raised:
+                row_arm.validate_frozen_inputs()
+
+        _write_n33_json(
+            "wrong_schema_pin_refusal.json",
+            {
+                "outcome": "REFUSED",
+                "reason": str(raised.exception),
+                "variant": str(receipt_path),
+            },
+        )
+
+    def test_row_arm_receipt_claims_only_counts_and_refuses_count_variant(self) -> None:
+        evidence = {
+            "counts": {"green": 27, "not_applicable": 2, "stop": 13, "total": 42},
+            "gate_version": p011_gate.GATE_VERSION,
+            "outcome": "STOP",
+        }
+        evidence_path = _write_n33_json(
+            "counts_only/evidence/row_arm/row_corroboration.json", evidence
+        )
+        counts_root = evidence_path.parents[2]
+        with patch.object(p011_gate, "GATE_DIR", counts_root):
+            result = p011_gate.row_arm_receipt()
+        self.assertEqual(
+            "accepted summary counts are 27 GREEN, 13 STOP, 2 policy-only, 42 total",
+            result["reason"],
+        )
+
+        evidence["counts"]["green"] = 26
+        _write_n33_json(
+            "counts_only/evidence/row_arm/row_corroboration.json", evidence
+        )
+        with patch.object(p011_gate, "GATE_DIR", counts_root):
+            with self.assertRaisesRegex(
+                p011_gate.GateStop, "does not carry the current"
+            ) as raised:
+                p011_gate.row_arm_receipt()
+        _write_n33_json(
+            "counts_only_refusal.json",
+            {
+                "input": str(evidence_path),
+                "outcome": "REFUSED",
+                "reason": str(raised.exception),
+            },
+        )
+
     def test_compare_exact_reports_actual_expected_leaf_visits(self) -> None:
         visited: list[str] = []
         mismatches = row_arm.compare_exact(
@@ -453,11 +552,6 @@ class GateVariantTests(unittest.TestCase):
             "validation_by_value": validation,
         }
         _write_result("section3_result.json", result)
-        c42 = next(item for item in records if item["row_id"] == "C42")
-        self.assertEqual(
-            c42["source_evidence"]["producer_outputs"]["range"],
-            c42["source_evidence"]["source_arithmetic"]["range_filter_results"],
-        )
 
     def test_unresolved_authority_observations_name_the_execution_path(self) -> None:
         records = row_arm.build_unresolved_records(_load_manifest())

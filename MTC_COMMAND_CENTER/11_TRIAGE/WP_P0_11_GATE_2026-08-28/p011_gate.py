@@ -1386,7 +1386,7 @@ def row_arm_receipt() -> dict[str, Any]:
     return {
         "outcome": "STOP",
         "counts": expected_counts,
-        "reason": "13 of 40 applicable rows are STOP after authority-set verification",
+        "reason": "accepted summary counts are 27 GREEN, 13 STOP, 2 policy-only, 42 total",
         "evidence_path": str(evidence_path),
         "evidence_sha256": sha256_file(evidence_path),
     }
