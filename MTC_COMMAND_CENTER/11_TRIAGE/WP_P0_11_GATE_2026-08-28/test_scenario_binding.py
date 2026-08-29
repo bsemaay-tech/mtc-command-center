@@ -519,7 +519,7 @@ class GateVariantTests(unittest.TestCase):
         )
         self._assert_narrowed_finalizer_status()
 
-    def test_finalize_candidate_refuses_each_empty_build_artifact(self) -> None:
+    def test_finalize_candidate_refuses_each_empty_caller_input_artifact(self) -> None:
         matrix_path = (
             p011_gate.GATE_DIR
             / "evidence"
