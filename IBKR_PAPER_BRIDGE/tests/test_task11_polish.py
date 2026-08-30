@@ -17,6 +17,15 @@ from bridge.store.db import Store
 
 def test_dry_run_app_snapshot_has_bars_and_trade_data(tmp_path):
     fixture = Path(__file__).parent / "fixtures" / "BTC_1h.csv"
+    shipped_config = Path(__file__).parents[1] / "config" / "bridge.yaml"
+    dry_run_config = tmp_path / "dry-run-bridge.yaml"
+    dry_run_config.write_text(
+        shipped_config.read_text(encoding="utf-8").replace(
+            "  max_position_notional_pct: 0.20\n", "", 1
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
     broker = MockBroker.from_csv(fixture, starting_equity=100000)
     broker.streaming = True
     broker.stream_delay_s = 0.001
@@ -25,6 +34,7 @@ def test_dry_run_app_snapshot_has_bars_and_trade_data(tmp_path):
         start_runtime=True,
         store_path=tmp_path / "bridge.db",
         broker=broker,
+        config_path=dry_run_config,
     )
     assert app.state.bridge_engine.reconcile_max_consecutive_failures == 3
     assert app.state.bridge_engine.bar_reconnect_attempts == 9
