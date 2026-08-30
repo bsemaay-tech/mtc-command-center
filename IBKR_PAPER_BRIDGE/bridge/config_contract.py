@@ -27,6 +27,22 @@ T = TypeVar("T")
 _MISSING = object()
 APPROVED_CONFIG_BYTES = 324
 APPROVED_CONFIG_SHA256 = "a96fecd10d6966c3e93a829ec4d75869a0851f0136a06e85ab45c255ee0f5842"
+REQUIRED_V2_EXPLICIT_LEAF_PATHS = frozenset(
+    {
+        "broker.data_restore_timeout_s",
+        "broker.reconnect_attempts",
+        "broker.reconnect_base_delay_s",
+        "risk.max_consecutive_losses",
+        "risk.max_daily_loss_pct",
+        "risk.max_leverage",
+        "risk.max_position_notional_pct",
+        "risk.min_order_usd",
+        "risk.min_stop_distance_pct",
+        "risk.reconcile_max_consecutive_failures",
+        "risk.risk_pct_per_trade",
+    }
+)
+_DRY_RUN_INTERNAL_OVERRIDE_PATHS = frozenset({"risk.max_position_notional_pct"})
 _VALID_KEY = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\Z")
 
 
@@ -720,8 +736,33 @@ def construct_bridge_engine(
 def _capture_capabilities(store: Store) -> CapabilitySnapshot:
     try:
         raw_schema = store.get_meta("schema_version")
-        if raw_schema is None or not raw_schema.isascii() or not raw_schema.isdigit():
-            raise ValueError("schema_not_numeric")
+    except Exception as exc:
+        raise StartupConfigRefusal(
+            [
+                ConfigIssue(
+                    RefusalKind.STOP,
+                    subject="schema_capabilities",
+                    reason="not_evaluated",
+                    action="repair_store_evaluation_and_retry",
+                )
+            ]
+        ) from exc
+    if (
+        not isinstance(raw_schema, str)
+        or not raw_schema.isascii()
+        or not raw_schema.isdigit()
+    ):
+        raise StartupConfigRefusal(
+            [
+                ConfigIssue(
+                    RefusalKind.STOP,
+                    subject="schema_capabilities",
+                    reason="schema_not_numeric",
+                    action="repair_store_evaluation_and_retry",
+                )
+            ]
+        )
+    try:
         schema_version = int(raw_schema)
         durable = bool(store.durable_risk_controls_enabled())
         exposure = bool(store.exposure_controls_enabled())
@@ -848,6 +889,7 @@ def prepare_runtime_settings(
     positive_fraction = lambda value: 0 < value <= 1
     positive = lambda value: value > 0
     at_least_one = lambda value: value >= 1
+    non_blank = lambda value: bool(value.strip())
 
     risk = BoundRiskInputs(
         policy_id=reader.take(
@@ -855,7 +897,7 @@ def prepare_runtime_settings(
             str,
             default="ts-p1-007-v1",
             capability=DURABLE_RISK,
-            validator=bool,
+            validator=non_blank,
         ),
         risk_pct_per_trade=reader.take(
             "risk.risk_pct_per_trade", float, default=0.005, validator=positive_fraction
@@ -915,7 +957,7 @@ def prepare_runtime_settings(
             str,
             default="ts-p1-008-v1",
             capability=EXPOSURE_CONTROLS,
-            validator=bool,
+            validator=non_blank,
         ),
         max_symbol_gross_pct=reader.take(
             "risk.max_symbol_gross_pct",
@@ -982,6 +1024,19 @@ def prepare_runtime_settings(
         raise StartupConfigRefusal(binding_issues)
 
     issues = list(reader.issues)
+    required_explicit_paths = REQUIRED_V2_EXPLICIT_LEAF_PATHS
+    if dry_run:
+        required_explicit_paths -= _DRY_RUN_INTERNAL_OVERRIDE_PATHS
+    for missing_path in sorted(required_explicit_paths - set(leaves)):
+        issues.append(
+            ConfigIssue(
+                RefusalKind.FAIL,
+                classification="MISSING_REQUIRED",
+                setting=missing_path,
+                reason="required_explicit_leaf_absent",
+                action="restore_required_candidate_leaf",
+            )
+        )
     refused_paths = {issue.setting for issue in issues if issue.setting is not None}
     for declared_path in sorted(set(leaves) - set(bound) - refused_paths):
         suggestion = _suggest_path(declared_path, tuple(bound))

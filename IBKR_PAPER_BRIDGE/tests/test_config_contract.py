@@ -46,9 +46,10 @@ def _source(relative: str) -> str:
 
 
 def test_startup_refuses_unknown_leaf_before_app_state_mutation(tmp_path):
+    candidate = SHIPPED_CONFIG.read_text(encoding="utf-8")
     config_path = _write_yaml(
         tmp_path / "bridge.yaml",
-        "risk:\n  max_daily_los_pct: 0.01\n",
+        candidate.replace("risk:\n", "risk:\n  max_daily_los_pct: 0.01\n", 1),
     )
     store_path = tmp_path / "bridge.db"
 
@@ -64,6 +65,33 @@ def test_startup_refuses_unknown_leaf_before_app_state_mutation(tmp_path):
         "STARTUP_FAIL class=UNKNOWN_KEY setting=risk.max_daily_los_pct "
         "reason=no_bound_runtime_field suggestion=risk.max_daily_loss_pct "
         "action=remove_or_implement_under_separate_approval",
+        "STARTUP_FAIL summary refused=1",
+    ]
+    store = Store(store_path)
+    try:
+        assert store.get_meta("app_state") is None
+    finally:
+        store.close()
+
+
+def test_startup_refuses_missing_required_v2_leaf_before_app_state_mutation(tmp_path):
+    candidate = SHIPPED_CONFIG.read_text(encoding="utf-8")
+    without_required_leaf = candidate.replace("  risk_pct_per_trade: 0.005\n", "", 1)
+    assert without_required_leaf != candidate
+    config_path = _write_yaml(tmp_path / "missing-required.yaml", without_required_leaf)
+    store_path = tmp_path / "missing-required.db"
+
+    with pytest.raises(RuntimeError) as caught:
+        create_app(
+            start_runtime=True,
+            config_path=config_path,
+            store_path=store_path,
+            broker=MockBroker(bars=[]),
+        )
+
+    assert str(caught.value).splitlines() == [
+        "STARTUP_FAIL class=MISSING_REQUIRED setting=risk.risk_pct_per_trade "
+        "reason=required_explicit_leaf_absent action=restore_required_candidate_leaf",
         "STARTUP_FAIL summary refused=1",
     ]
     store = Store(store_path)
@@ -146,6 +174,11 @@ def test_shipped_v2_schema4_paper_is_read_once_and_reaches_every_consumer(
         assert app.state.bridge_store.get_meta("app_state") == "DISARMED"
     finally:
         app.state.bridge_store.close()
+
+
+def test_shipped_v2_is_pinned_as_raw_git_bytes():
+    attributes = (Path(__file__).parents[1] / ".gitattributes").read_text(encoding="utf-8")
+    assert "config/bridge.yaml -text" in attributes.splitlines()
 
 
 def test_source_census_independently_matches_bound_fields_to_consumer_gates():
@@ -270,6 +303,38 @@ def test_schema_capability_matrix_refuses_inert_and_accepts_exact_boundaries(tmp
         assert schema7_app.state.bridge_engine.risk_engine.config.equity_floor_usdc == 600.0
     finally:
         schema7_app.state.bridge_store.close()
+
+
+def test_policy_ids_reject_whitespace_before_app_state_mutation(tmp_path):
+    candidate = SHIPPED_CONFIG.read_text(encoding="utf-8").replace(
+        "risk:\n",
+        'risk:\n  policy_id: "   "\n  exposure_policy_id: "   "\n',
+        1,
+    )
+    config_path = _write_yaml(tmp_path / "whitespace-policy-ids.yaml", candidate)
+    store_path = tmp_path / "whitespace-policy-ids.db"
+    _initialize_schema(store_path, 8)
+
+    with pytest.raises(RuntimeError) as caught:
+        create_app(
+            start_runtime=True,
+            config_path=config_path,
+            store_path=store_path,
+            broker=MockBroker(bars=[]),
+        )
+
+    assert str(caught.value).splitlines() == [
+        "STARTUP_FAIL class=INVALID_VALUE setting=risk.exposure_policy_id "
+        "reason=type_or_range action=correct_candidate_and_retry",
+        "STARTUP_FAIL class=INVALID_VALUE setting=risk.policy_id "
+        "reason=type_or_range action=correct_candidate_and_retry",
+        "STARTUP_FAIL summary refused=2",
+    ]
+    store = Store(store_path)
+    try:
+        assert store.get_meta("app_state") is None
+    finally:
+        store.close()
 
 
 def test_broker_network_is_unknown_at_startup_not_restart_only(tmp_path):
@@ -432,6 +497,39 @@ def test_capability_read_failure_is_stop_never_inert_fail(tmp_path, monkeypatch)
         assert store.get_meta("app_state") is None
     finally:
         store.close()
+
+
+def test_non_numeric_schema_snapshot_preserves_typed_stop_reason(tmp_path, monkeypatch):
+    original_initialize = Store.initialize
+    original_get_meta = Store.get_meta
+    initialized_store_ids: set[int] = set()
+
+    def initialize_then_mark(store, *args, **kwargs):
+        result = original_initialize(store, *args, **kwargs)
+        initialized_store_ids.add(id(store))
+        return result
+
+    def non_numeric_after_initialize(store, key):
+        if id(store) in initialized_store_ids and key == "schema_version":
+            return "schema-four"
+        return original_get_meta(store, key)
+
+    monkeypatch.setattr(Store, "initialize", initialize_then_mark)
+    monkeypatch.setattr(Store, "get_meta", non_numeric_after_initialize)
+
+    with pytest.raises(RuntimeError) as caught:
+        create_app(
+            start_runtime=True,
+            config_path=SHIPPED_CONFIG,
+            store_path=tmp_path / "schema-not-numeric.db",
+            broker=MockBroker(bars=[]),
+        )
+
+    assert str(caught.value).splitlines() == [
+        "STARTUP_STOP subject=schema_capabilities reason=schema_not_numeric "
+        "action=repair_store_evaluation_and_retry",
+        "STARTUP_STOP summary refused=1",
+    ]
 
 
 def test_complete_census_detects_duplicate_yaml_and_source_boundary_changes(tmp_path):
