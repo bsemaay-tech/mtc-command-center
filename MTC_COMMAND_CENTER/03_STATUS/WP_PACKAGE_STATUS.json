@@ -1,8 +1,20 @@
 ﻿{
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-30T06:45:00+03:00",
+  "generated": "2026-08-30T10:50:00+03:00",
   "updated_by": "claude-lead-session-2026-08-29-evening",
+  "session_time_report": {
+    "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
+    "session_span": "2026-08-29 21:00 -> 2026-08-30 10:50 (~13.8h continuous)",
+    "per_package_spans": {
+      "WP-P0-11": "~10.5h (repairs 8+8b, stage-3 build+3 audits+repair+micro, freshness merge, v3 re-pin chain v2c->v2f, second-actor rebuild)",
+      "BRIDGE-FAIL-CLOSED": "~6h (delta re-confirm, candidate V1->V2, build across 3 quota deaths, dashboard fix, 4-family audit round, repair round 1 running)",
+      "WP-P0-20": "~7h (3 paper repair rounds + cap park + owner round-4 edit + closure verify + Gemini corroboration)",
+      "WP-P0-12": "~4h (2 repair rounds, round-cap park, owner HOLD)",
+      "DRAFTS-P013-P021-P022-P031M1-P014-V2A01": "~3h (5 drafts + V2A-01, detection audits, 3 folds)",
+      "GOVERNANCE-SELF-AUDITS": "~2h (OD policy PR #142, promotion record, 3 Lead self-audits with 24 accepted findings, route fixes)"
+    }
+  },
   "packages": [
     {
       "id": "WP-P0-10",
@@ -87,12 +99,12 @@
     {
       "id": "BRIDGE-FAIL-CLOSED",
       "title": "Bridge refuses unimplemented settings (owner: fail closed)",
-      "state": "V2_APPROVED_BUILD_RUNNING",
+      "state": "BUILT_AUDITED_REPAIR1_RUNNING",
       "branch": "-",
       "commit": "-",
       "detail": "Design complete: W10c edits delta-checked - P20 flagship CONFIRMED (edit-set scope), N48 detection zero findings (detection, not acceptance). Candidate V1 was owner-approved conditionally (SHA 58f67c82) but the P21 flagship audit returned NOT-CONFIRMED (inconsistent activeness standard on risk.policy_id; omitted second YAML reader), voiding that approval per its own terms. W50b repair is producing CANDIDATE_V2 (risk.policy_id removed under one uniform standard); V2 bytes will need a fresh owner approval. Build remains STOP until then. NO deployment to any host.",
       "owner_gate": true,
-      "next_action": "W62 build lane (fail-closed loader per design + approved V2 bytes + tests, branch feature/bridge-fail-closed-20260830) -> T0 audit round -> PR. NO deployment."
+      "next_action": "Build COMPLETE on feature/bridge-fail-closed-20260830 (loader + V2 bytes + refusal tests + dashboard fix, 6 commits). Audit round 1: P31 flagship PASS-WITH-NITS, N67 detection BLOCK (F1 HIGH: missing required leaf silently defaulted), GM7 AGREE, DS5 (OpenCode, first working audit) 3 observations. W72 union repair running (3 fix commits so far) -> delta re-audit -> PR + CI -> merge. NO deployment."
     },
     {
       "id": "SURVEY-SAFETY-SENTENCE",
