@@ -29,12 +29,12 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "SIGNATURE_PACKET_READY_DESIGN_PARKED_V2F",
+      "state": "MERGED",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
-      "commit": "2eedfb87 (stage-3 repaired)",
+      "commit": "master 1aced5df (PR #143, one unit, final HEAD 775ead42)",
       "detail": "STAGE 3 CLOSED overnight: built (e1d0ff47), audited BLOCK by three auditors converging on the label class (P25 flagship 11 findings, N58 second-family, G20 census - incl. a reintroduced double_build label), repaired in full (all 13 union items, ca103ea5+2eae1a4c) after a guard-freshness unblock (Lead merged master into the branch, 74341288, SHA-preserving), repair audited P28 PASS + N64 detection (receipt census CLEAN, 2 mechanical residuals) and micro-repaired 2eedfb87 (Lead diff-verified; v3 chain re-covers it). Gate remains STOP by design. W61 is re-pinning the stage-4 (v3) design to the post-stage-3 package; then the Claude Pro second-actor rebuild per the owner's ruling.",
       "owner_gate": false,
-      "next_action": "OWNER: signature decision. The rebuild evidence is clean (P29: every measurable identity matched). The design DOCUMENT went v2c->v2f through three verify rounds and PARKED with one residual (one A-N procedure step still not literally executable; parking record AUDIT_N66E_V2F.md). Choose: sign with the residual recorded (recommended - it is document precision, not evidence), or authorize one fresh design round first. After signature: ONE-unit merge same day per addendum 4."
+      "next_action": "none - MERGED 2026-08-30 (owner signed addendum 5; final round P32 PASS-WITH-NITS + N68 zero + DS6 zero + GM8 corroborated). Gate outcome on master: STOP by design. Chain unlock: WP-P0-12 build authorization becomes possible when the owner lifts his HOLD."
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
