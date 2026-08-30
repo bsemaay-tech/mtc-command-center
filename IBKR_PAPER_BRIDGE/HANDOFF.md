@@ -2,27 +2,27 @@
 
 ## Current state — 2026-08-30
 
-- W62 implementation lane: worktree `C:\WBRIDGE_FC`, branch
-  `feature/bridge-fail-closed-20260830`; T0 Lead audit is pending. No push, PR, merge,
-  deployment, host contact, service action, ARM, order, or live action occurred.
-- Write paths: `.gitattributes`, `bridge/config_contract.py`, `bridge/app.py`,
-  `bridge/api/routes.py`, `config/bridge.yaml`, `tests/test_config_contract.py`,
-  `tests/test_api.py`, `tests/test_task11_polish.py`, and this handoff. Live-dependency
-  status: none contacted or changed.
-- The shipped config is the owner-approved 324-byte LF candidate; raw SHA-256 is pinned in
-  `bridge/config_contract.py` and verified through the production caller and package census.
-- The loader refuses every explicit leaf that is unknown or inactive at the captured schema/mode,
-  removes the routes-layer YAML reread, and constructs settings-bearing runtime objects only from
-  the validated bound objects (`bridge/config_contract.py`, `bridge/app.py`,
-  `bridge/api/routes.py`).
-- Self-QA completed locally: the scoped config/API suite passed 25 tests and the routed full Bridge
-  suite passed 1,418 tests; persistent modified copies and the exact predecessor archive are under
-  `C:\tmp\W62C_VARIANTS`. The T0 Lead must independently reproduce acceptance evidence.
-- STOP for Lead/owner scope adjudication: `bridge/static/app.js` and `bridge/static/help_map.json`
-  still assume the retired raw `llm` configuration view. They were not changed because the
-  confirmed design's exact implementation write list omits them. No raw/unbound value was restored
-  to preserve that stale view.
-- The dashboard evidence guard still requires the historical marker
-  `help_map.json retired-KILL-claim correction`; W62 did not alter that correction or its source
-  paths.
-- Durable evidence report: `C:\tmp\LANE_PROMPTS_20260828\W62_BUILD_REPORT.md`.
+- W72 focused repair ran in worktree `C:\WBRIDGE_FC` on branch
+  `feature/bridge-fail-closed-20260830`. Code commits are
+  `2302bb56735f5d2a8578955a376931ac277b6c85` and
+  `bbb13fcb72bf9ea80c8f2942da0e4a974ce6a958`; independent T0 acceptance remains pending.
+- W72 write paths are `.gitattributes`, `bridge/config_contract.py`, `bridge/api/routes.py`,
+  `bridge/static/app.js`, `docs/31_HELP_SYSTEM_MAP_INDEX.md`, `tests/test_config_contract.py`,
+  `tests/test_api.py`, `tests/test_dashboard_static.py`, and this handoff. Live-dependency status:
+  none contacted or changed.
+- Startup now refuses an absent required V2 leaf as `MISSING_REQUIRED` before app-state or engine
+  construction, with only the designed dry-run notional leaf exempted for its internal mode
+  override. Nonnumeric schema state retains its specific STOP reason, and both policy-ID leaves
+  reject whitespace-only explicit values before construction.
+- The dashboard reads the validated risk metadata object's `.value`; absent raw-only coin and
+  leverage leaves render unavailable and disabled. The retired `bridge_config` state alias is
+  removed, and the AI-facing help index describes only `ValidatedRuntimeSettings.effective_view()`.
+- The owner-approved shipped config remains 324 bytes and byte-identical to the approved candidate,
+  SHA-256 `a96fecd10d6966c3e93a829ec4d75869a0851f0136a06e85ab45c255ee0f5842`; the Git path is now
+  marked `-text` and the working/HEAD blob identities agree.
+- Local self-QA passed 77 scoped config/API/dashboard tests and the exact routed full Bridge suite:
+  1,423 passed, one Starlette/httpx deprecation warning, exit 0. Persistent probes are under
+  `C:\tmp\W72_VARIANTS`.
+- No push, PR, merge, deployment, host contact, service action, credential access, TESTNET/mainnet
+  action, ARM, order, broker/exchange endpoint, or live action occurred.
+- Durable repair report: `C:\tmp\LANE_PROMPTS_20260828\W72_REPAIR_REPORT.md`.
