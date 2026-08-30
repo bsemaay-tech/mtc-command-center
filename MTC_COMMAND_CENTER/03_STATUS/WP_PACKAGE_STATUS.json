@@ -17,12 +17,12 @@
     {
       "id": "WP-P0-11",
       "title": "Kernel legacy-compatible gate (direct-build variant)",
-      "state": "STAGE_3_BUILT_AUDITS_RUNNING",
+      "state": "STAGE_3_CLOSED_V3_REPIN_RUNNING",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
-      "commit": "e1d0ff47 (stage-3)",
-      "detail": "Stage 3 IMPLEMENTED at e1d0ff47 (two commits on repair-8b base bfa074df), gate still STOP as designed. Repair chain 1-8b closed clean before the build. FIRST AUDIT SIGNAL: G20 read-only census found 10 findings incl. 2 HIGH - the stage-3 finalizer REPUBLISHES a double_build label (the class the 8 repair rounds killed) and a mislabeled typed-STOP row. Execution audits P25 (flagship) + N58 (second family) relaunch at the 02:50/02:05 resets with G20 as input; a stage-3 repair round is likely. v3 stage-4 design v2b complete and re-pinned.",
+      "commit": "2eedfb87 (stage-3 repaired)",
+      "detail": "STAGE 3 CLOSED overnight: built (e1d0ff47), audited BLOCK by three auditors converging on the label class (P25 flagship 11 findings, N58 second-family, G20 census - incl. a reintroduced double_build label), repaired in full (all 13 union items, ca103ea5+2eae1a4c) after a guard-freshness unblock (Lead merged master into the branch, 74341288, SHA-preserving), repair audited P28 PASS + N64 detection (receipt census CLEAN, 2 mechanical residuals) and micro-repaired 2eedfb87 (Lead diff-verified; v3 chain re-covers it). Gate remains STOP by design. W61 is re-pinning the stage-4 (v3) design to the post-stage-3 package; then the Claude Pro second-actor rebuild per the owner's ruling.",
       "owner_gate": false,
-      "next_action": "P25 flagship + N58 second-family audits on stage 3 (Gemini corroboration tool-blocked, recorded) -> v3 (second actor: Claude Pro per owner ruling)"
+      "next_action": "W61 stage-4 design re-pin (v2c) -> Claude Pro second-actor rebuild -> owner signs (blocker 2, his personal act) -> ONE-unit merge"
     },
     {
       "id": "WP-P0-11-V3-BLOCKERS",
