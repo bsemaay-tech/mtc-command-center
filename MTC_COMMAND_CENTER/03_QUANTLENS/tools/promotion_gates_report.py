@@ -202,7 +202,18 @@ def _binding_is_complete(binding: Any) -> bool:
     costs = binding.get("cost_assumptions")
     if not isinstance(costs, Mapping) or not _is_finite_number(costs.get("cost_bps")):
         return False
-    return isinstance(binding.get("provenance"), str) and bool(binding["provenance"])
+    return True
+
+
+def _binding_identity(binding: Mapping[str, Any]) -> dict[str, Any]:
+    """Return only the four identity dimensions fixed by the authority."""
+
+    return {
+        "symbol": binding["symbol"],
+        "timeframe": binding["timeframe"],
+        "window": dict(binding["window"]),
+        "cost_assumptions": dict(binding["cost_assumptions"]),
+    }
 
 
 def _evaluate_raw_excess(candidate: Mapping[str, Any], evidence_prefix: str) -> dict[str, Any]:
@@ -222,6 +233,8 @@ def _evaluate_raw_excess(candidate: Mapping[str, Any], evidence_prefix: str) -> 
     paths = [
         f"{evidence_prefix}/summary/lockbox_oos/net_return_pct",
         f"{evidence_prefix}/summary/buy_hold_lockbox/buy_hold_return_pct",
+        f"{evidence_prefix}/symbol",
+        f"{evidence_prefix}/timeframe",
         f"{evidence_prefix}/promotion_report_bindings/strategy",
         f"{evidence_prefix}/promotion_report_bindings/buy_and_hold",
     ]
@@ -247,11 +260,40 @@ def _evaluate_raw_excess(candidate: Mapping[str, Any], evidence_prefix: str) -> 
             values,
             paths,
         )
-    if strategy_binding != buy_hold_binding:
+    strategy_identity = _binding_identity(strategy_binding)
+    buy_hold_identity = _binding_identity(buy_hold_binding)
+    if strategy_identity != buy_hold_identity:
         return _verdict(
             "STOP",
             "RAW_EXCESS_BINDING_MISMATCH",
             "strategy and buy-and-hold identity bindings differ",
+            values,
+            paths,
+        )
+
+    candidate_symbol = candidate.get("symbol")
+    candidate_timeframe = candidate.get("timeframe")
+    if (
+        not isinstance(candidate_symbol, str)
+        or not candidate_symbol
+        or not isinstance(candidate_timeframe, str)
+        or not candidate_timeframe
+    ):
+        return _verdict(
+            "STOP",
+            "RAW_EXCESS_CANDIDATE_IDENTITY_MISSING",
+            "candidate symbol or timeframe is missing or invalid",
+            values,
+            paths,
+        )
+    if (
+        strategy_identity["symbol"] != candidate_symbol
+        or strategy_identity["timeframe"] != candidate_timeframe
+    ):
+        return _verdict(
+            "STOP",
+            "RAW_EXCESS_CANDIDATE_IDENTITY_MISMATCH",
+            "raw-return bindings disagree with the candidate symbol or timeframe",
             values,
             paths,
         )

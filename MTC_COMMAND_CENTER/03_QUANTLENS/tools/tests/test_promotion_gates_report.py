@@ -195,6 +195,45 @@ def test_raw_excess_stops_when_identity_bindings_differ(producer: str) -> None:
 
 
 @pytest.mark.parametrize("producer", NAMED_PRODUCERS)
+def test_raw_excess_stops_when_matched_bindings_contradict_candidate_identity(
+    producer: str,
+) -> None:
+    candidate = deepcopy(candidate_fixture(producer))
+    for binding in candidate["promotion_report_bindings"].values():
+        binding["symbol"] = "ETHUSDT"
+        binding["timeframe"] = "4h"
+
+    raw_excess = report.evaluate_candidate(
+        candidate,
+        evidence_prefix=f"fixture:{producer}#/results/0",
+    )["checks"]["positive_raw_lockbox_excess"]
+
+    assert raw_excess["status"] == "STOP"
+    assert raw_excess["reason"]["code"] == "RAW_EXCESS_CANDIDATE_IDENTITY_MISMATCH"
+    assert raw_excess["values"]["raw_excess_pct"] is None
+
+
+@pytest.mark.parametrize("producer", NAMED_PRODUCERS)
+def test_raw_excess_ignores_non_identity_binding_metadata(producer: str) -> None:
+    candidate = deepcopy(candidate_fixture(producer))
+    strategy = candidate["promotion_report_bindings"]["strategy"]
+    buy_and_hold = candidate["promotion_report_bindings"]["buy_and_hold"]
+    del strategy["provenance"]
+    buy_and_hold["provenance"] = "separate-benchmark-result.json"
+    strategy["diagnostic_note"] = "strategy source"
+    buy_and_hold["diagnostic_note"] = "benchmark source"
+
+    raw_excess = report.evaluate_candidate(
+        candidate,
+        evidence_prefix=f"fixture:{producer}#/results/0",
+    )["checks"]["positive_raw_lockbox_excess"]
+
+    assert raw_excess["status"] == "PASS"
+    assert raw_excess["reason"]["code"] == "RAW_EXCESS_STRICTLY_POSITIVE"
+    assert raw_excess["values"]["raw_excess_pct"] == 2.0
+
+
+@pytest.mark.parametrize("producer", NAMED_PRODUCERS)
 def test_raw_excess_strict_positive_and_zero_boundary_are_measured(producer: str) -> None:
     positive = candidate_fixture(producer)
     zero = deepcopy(positive)
