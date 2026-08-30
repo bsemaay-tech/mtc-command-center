@@ -99,12 +99,12 @@
     {
       "id": "BRIDGE-FAIL-CLOSED",
       "title": "Bridge refuses unimplemented settings (owner: fail closed)",
-      "state": "BUILT_AUDITED_REPAIR1_RUNNING",
+      "state": "MERGED",
       "branch": "-",
       "commit": "-",
       "detail": "Design complete: W10c edits delta-checked - P20 flagship CONFIRMED (edit-set scope), N48 detection zero findings (detection, not acceptance). Candidate V1 was owner-approved conditionally (SHA 58f67c82) but the P21 flagship audit returned NOT-CONFIRMED (inconsistent activeness standard on risk.policy_id; omitted second YAML reader), voiding that approval per its own terms. W50b repair is producing CANDIDATE_V2 (risk.policy_id removed under one uniform standard); V2 bytes will need a fresh owner approval. Build remains STOP until then. NO deployment to any host.",
       "owner_gate": true,
-      "next_action": "Build COMPLETE on feature/bridge-fail-closed-20260830 (loader + V2 bytes + refusal tests + dashboard fix, 6 commits). Audit round 1: P31 flagship PASS-WITH-NITS, N67 detection BLOCK (F1 HIGH: missing required leaf silently defaulted), GM7 AGREE, DS5 (OpenCode, first working audit) 3 observations. W72 union repair running (3 fix commits so far) -> delta re-audit -> PR + CI -> merge. NO deployment."
+      "next_action": "none - MERGED 2026-08-30 (PR #144, master c18b6f3e) after repair delta P33 PASS + N69 zero findings. The DEPLOYED bridge on KVM2 is UNTOUCHED and still runs the old config path - rolling this out is a separate owner-gated act (host contact)."
     },
     {
       "id": "SURVEY-SAFETY-SENTENCE",
