@@ -132,7 +132,7 @@
       "commit": "-",
       "detail": "TEN audited rounds (N45..N82): every flagship PASS was countered by real detection findings; standing loop capped at round 8 (P41 vs N78 -> HARD PARK), owner-authorized narrowing round produced v1.8 (P43 PASS-WITH-NITS vs N82 3 HIGH) -> FINAL PARK per the pre-written addendum-11 rule. Nothing was built. Full defect record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md (C:\\tmp\\LANE_PROMPTS_20260828).",
       "owner_gate": false,
-      "next_action": "4-FAMILY AUDIT ROUND COMPLETE on the fresh design (23:16): Claude flagship P44 = REQUEST_CHANGES (1 MEDIUM + 3 LOW, NO BLOCKER; all kernel citations independently verified; the N78 grid-fitting class STRUCTURALLY ABSENT - all four families agree); Gemini GM13 2H/1M/1L; Grok G29 2H; OpenCode DS13 3M/6L. Three reports share one root (DEF-06 RULE-2 vector lacks its execution profile name). Repair round 1 (W105, author family, D028 T0 cap = 3 rounds) RUNNING; then full re-audit; detection-clean -> kernel build under standing approval; cap without clean -> park to owner."
+      "next_action": "Repair round 1 in progress with one quota casualty: W105 (codex secondary) died mid-repair at 23:44 after applying substantial partial edits (design 47.9KB -> 59KB; secondary + fourth accounts capped until 03:11); W105b relaunched on codex third with audit-then-complete instructions. On landing: full multi-family re-audit (Claude flagship + Gemini + Grok + OpenCode; Codex excluded); detection-clean -> kernel build under standing approval; D028 cap of 3 repair rounds -> park to owner."
     },
     {
       "id": "WP-P0-20",
@@ -162,7 +162,7 @@
       "commit": "-",
       "detail": "Draft at v1.1 (G19 detection -> W65 fold), PROVISIONAL-ON-P012 labeled. BUILD gated on WP-P0-12 acceptance - and P0-12's design is FINAL PARKED, so this waits on the owner's P0-12 decision.",
       "owner_gate": false,
-      "next_action": "different-family review DS11 landed tonight (10 findings: 4 MEDIUM, 6 LOW, fail-closed spine held); fold W108 (DS11 -> v1.3) running"
+      "next_action": "fold W108 complete (10/10 DS11 -> v1.3); verify pair: Gemini GM15 = zero findings (all genuinely closed); codex N92 quota-died mid-verify, replacement N92b running on Claude (family swap)."
     },
     {
       "id": "WP-P0-22",
@@ -222,7 +222,7 @@
       "commit": "-",
       "detail": "First V2A-stage artifact: loader design draft v1 (W67) + G22 detection round (findings banked). BUILD gated on Phase-0 acceptance + G1-IA + WP-P0-31 M1.",
       "owner_gate": false,
-      "next_action": "fold complete tonight (interrupted 21:55 pass completed by W97b at 23:09): 2/2 G24 MEDIUMs fixed, 7/7 G22 re-confirmed -> v1.2. Parked warm; independent verify queues behind the P0-12 chain."
+      "next_action": "CONVERGED tonight: fold to v1.2 (W97b) verified by independent Grok census G33 = NOT DETECTED, zero findings. Parked warm at v1.2."
     },
     {
       "id": "WP-V2A-02",
@@ -232,7 +232,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W84) + G25 detection census (10 findings: 5 HIGH, 5 MEDIUM, banked). PROVISIONAL-ON-V2A01 labeled. BUILD gated on the V2A entry gate + V2A-01.",
       "owner_gate": false,
-      "next_action": "fold complete tonight (interrupted 21:55 pass completed by W98b at 23:15): 10/10 G25 findings folded -> v1.1. Verify pair ran: Gemini GM14 found 1 (step-numbering ambiguity, banked); codex N91 verify running."
+      "next_action": "three cycles tonight: v1.1 (W98b, 10/10 G25) -> verify N91+GM14 (7 unique roots) -> fold W110 (v1.2) -> verify N93 (2 MEDIUM residuals: lease-partition gap, append-only label contradiction) -> fold W111 (v1.3) RUNNING; verify after."
     },
     {
       "id": "WP-V2A-03",
@@ -242,7 +242,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W85) + G26 detection census (6 findings: 4 HIGH, 2 MEDIUM, banked; special check clean - no allocator-delivery claim, delivery stays WP-P0-20's). PROVISIONAL-ON-P020/V2A02 labeled. BUILD gated on WP-P0-20 build + V2A-02.",
       "owner_gate": false,
-      "next_action": "fold complete (quota-death restart W99c verified 6/6 G26 already-addressed -> v1.1); independent verify N89 found 2 HIGH + 1 (serialization seam, dependency cycle, unsourced ratified label); fold W107 (N89 -> v1.2) running on Claude."
+      "next_action": "CONVERGED tonight after two cycles: N89 verify (2H+1M) -> fold W107 (v1.2, named single-bucket serial RA batch boundary) -> independent Grok census G34 = NOT DETECTED, zero findings. Parked warm at v1.2."
     },
     {
       "id": "FROZEN-PINE-TAG",
