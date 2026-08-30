@@ -15,9 +15,9 @@ Lead; the only reading taken was the CodeBurn banner at evening session start
 | Bridge fail-closed | design CLOSED (P20+N48); candidate V1 NOT-CONFIRMED -> V2 CONFIRMED (P21, W50b, P21b); owner V2 approval pending | 5 lanes |
 | P0-20 papers | 3 repair rounds + cap fired -> PARKED with one owner question (falsifier #5 oracle defect, Lead-verified) | W54, W59, W60, P23, P26, P27, N54(b), N59, N63, G16, GM2 |
 | P0-12 design | 2 repair rounds -> PARKED at round cap (N57b BLOCK) | N45, G17, W55, N53, W56, N57(b) |
-| Design drafts | P0-13, P0-21, P0-22, P0-31M1, P0-14 drafted + detection-audited | W51/52/53/57/58, G18/G19, P24, N61 |
+| Design drafts | P0-13, P0-21, P0-22, P0-31M1, P0-14 drafted; each has a detection audit (P0-14's landed at dawn, G21); three folds ran at dawn (W64/65/66) | W51/52/53/57/58, G18/G19/G21, P24, N61 |
 | Governance | OD-1+OD-2 merged to master (PR #142); promotion rule approved+recorded; 3 Lead self-audits (DS3, N60, + evening feed repairs) all findings accepted | — |
-| v3 (stage 4) | design re-pin to post-stage-3 package running at dawn (W61) | in flight |
+| v3 (stage 4) | design re-pinned (W61 v2c) -> re-pin audited NOT-CONFIRMED (N66b) -> repaired v2d (W68, 8/8); P29 second-actor rebuild ran: measurable identities all match, remaining steps STOP by design | W61, N66(b), W68, P29 |
 
 ## Route reality measured tonight
 

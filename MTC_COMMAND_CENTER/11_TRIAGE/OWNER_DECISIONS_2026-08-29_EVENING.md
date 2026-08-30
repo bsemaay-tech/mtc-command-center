@@ -49,12 +49,17 @@ design-only, serial build chain unchanged).
    SHA-256 `a96fecd10d6966c3e93a829ec4d75869a0851f0136a06e85ab45c255ee0f5842`, P21b-CONFIRMED.
    With the design CONFIRMED and the bytes approved, the fail-closed BUILD lane is authorized
    under the standing ask-10 terms: build + tests + PR only; NO deployment to any host.
-7. **P0-20 papers: option (a).** Round 4 authorized as ONE narrowing edit — relabel falsifier
-   #5 a unit-level probe with injected `trail_atr`; nothing else.
+7. **P0-20 papers: option (a).** The owner's words were "papers a"; option (a)'s content —
+   ONE narrowing edit, relabel falsifier #5 a unit-level probe with injected `trail_atr`,
+   nothing else — is the Lead's question wording (sourced from N63-F1's minimal correction),
+   which the reply adopted.
 8. **P0-12 design: HOLD** at its round cap until P0-11 v3 lessons fold in.
 9. Ten concurrent lanes remain the standing order.
 
-## Interpretation notes (Lead)
+## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
+above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
+supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the
+build authorized) and answer row 6's budget question for the night.
 
 - Ruling 1 authorizes exactly the repair-7 pattern: rename the published labels that assert
   unperformed acts, sweep the class by shape, rerun the existing probe, full tests green,

@@ -1,7 +1,7 @@
 ﻿{
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-30T01:00:00+03:00",
+  "generated": "2026-08-30T06:45:00+03:00",
   "updated_by": "claude-lead-session-2026-08-29-evening",
   "packages": [
     {

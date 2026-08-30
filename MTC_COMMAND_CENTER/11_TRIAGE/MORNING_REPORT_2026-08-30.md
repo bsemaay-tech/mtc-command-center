@@ -14,10 +14,14 @@ Written by the Lead at ~06:00. Everything below is pushed on the live feed
    of it. Gate remains STOP by design.
 3. Stage-4 (v3) design re-pinned to the real post-stage-3 package (v2c; 2 of 9 blockers
    closed by stage 3 itself).
-4. **The second-actor rebuild YOU required before signing is DONE and CONFIRMS everything:**
-   Claude Pro rebuilt from a clean checkout and matched every pinned identity — 4/4 deciding
-   blob OIDs, 6/6 tool OIDs, 13/13 file hashes, commit and tree. Nothing was signed — that is
-   your personal act.
+4. **The second-actor rebuild YOU required before signing is DONE:** Claude Pro rebuilt from
+   a clean checkout and matched every pinned identity it could measure — 4/4 deciding blob
+   OIDs, 6/6 tool OIDs, 13/13 file hashes, commit and tree; the two runnable generators ran
+   deterministically. The rebuild's remaining steps STOP by design (they need artifacts that
+   only exist after later stages), so this is "the measurable part confirms", not "everything
+   confirms". Nothing was signed — that is your personal act, and it is one of several v3
+   steps still open, not the only one. (Also honest: between the stage-3 PASS and the close,
+   detection found two mechanical residuals; a micro-repair fixed them, Lead-verified.)
 
 ## Your morning decisions (in recommended order)
 
