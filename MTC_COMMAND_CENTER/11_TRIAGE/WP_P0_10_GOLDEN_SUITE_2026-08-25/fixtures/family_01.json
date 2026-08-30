@@ -1,0 +1,499 @@
+{
+  "schema_version": "wp-p0-10-golden-fixture-v1",
+  "family": {
+    "number": 1,
+    "name": "Entry signal",
+    "status": "BUILT"
+  },
+  "fixture_type": "bar-driven",
+  "authority": {
+    "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+    "rows": [
+      "C01",
+      "C42"
+    ],
+    "rule": "Every expected assertion carries its deciding WP-P0-09 row citation; no oracle value was captured from runtime behaviour."
+  },
+  "config": {
+    "signal_mode": "Supertrend",
+    "st_atr_len": 1,
+    "st_factor": "1.0",
+    "st_use_wicks": false,
+    "st_use_ha": false,
+    "signal_event_semantics": "EVENT",
+    "allow_same_close_reversal": true,
+    "use_sl": false,
+    "tp_mode": "None"
+  },
+  "frozen_metadata": {
+    "price_tick": "0.01",
+    "qty_step": "1.0",
+    "contract_multiplier": "1",
+    "fixed_qty": "1",
+    "ohlcv_fields": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume"
+    ]
+  },
+  "normalized_bars": [
+    {
+      "index": 0,
+      "ts": "2026-01-01T00:00:00Z",
+      "ohlcv": [
+        "100",
+        "102",
+        "98",
+        "100",
+        "1"
+      ]
+    },
+    {
+      "index": 1,
+      "ts": "2026-01-01T00:01:00Z",
+      "ohlcv": [
+        "100",
+        "102",
+        "98",
+        "100",
+        "1"
+      ]
+    },
+    {
+      "index": 2,
+      "ts": "2026-01-01T00:02:00Z",
+      "ohlcv": [
+        "100",
+        "102",
+        "90",
+        "95",
+        "1"
+      ]
+    },
+    {
+      "index": 3,
+      "ts": "2026-01-01T00:03:00Z",
+      "ohlcv": [
+        "95",
+        "110",
+        "95",
+        "109",
+        "1"
+      ]
+    },
+    {
+      "index": 4,
+      "ts": "2026-01-01T00:04:00Z",
+      "ohlcv": [
+        "109",
+        "110",
+        "108",
+        "109",
+        "1"
+      ]
+    }
+  ],
+  "expected_output": {
+    "normalization": "UTF-8 JSON object of assertion path -> value; keys sorted; separators comma/colon; one LF terminator",
+    "assertions": [
+      {
+        "path": "producer.bar0.raw",
+        "value": "NONE",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "producer.bar1.raw",
+        "value": "NONE",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "producer.bar2.raw",
+        "value": "SHORT",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "producer.bar3.raw",
+        "value": "LONG",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "producer.bar4.raw",
+        "value": "NONE",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "producer.direction_series",
+        "value": [
+          1,
+          1,
+          -1,
+          1,
+          1
+        ],
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "events",
+        "value": [
+          "ENTER_SHORT:bar2@95.00",
+          "EXIT_SHORT:OPP_SIGNAL:bar3@109.00",
+          "ENTER_LONG:bar3@109.00"
+        ],
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:131-141 (C01/GF-01)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "fills.count",
+        "value": 3,
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.position.side",
+        "value": "LONG",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.position.qty",
+        "value": "1",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.position.entry_price",
+        "value": "109.00",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      },
+      {
+        "path": "state.scope_label",
+        "value": "ENTRY SIGNAL GOLDEN",
+        "citations": [
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:131-141 (C01/GF-01)",
+          "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)"
+        ],
+        "input_paths": [
+          "config.allow_same_close_reversal",
+          "config.signal_event_semantics",
+          "config.signal_mode",
+          "config.st_atr_len",
+          "config.st_factor",
+          "config.st_use_ha",
+          "config.st_use_wicks",
+          "config.tp_mode",
+          "config.use_sl",
+          "frozen_metadata.contract_multiplier",
+          "frozen_metadata.fixed_qty",
+          "frozen_metadata.price_tick",
+          "frozen_metadata.qty_step",
+          "companion_corpus.declared_bar_count",
+          "companion_corpus.declared_signal_count",
+          "companion_corpus.git_blob_oid",
+          "companion_corpus.path",
+          "companion_corpus.path_status",
+          "companion_corpus.role",
+          "companion_corpus.scope_label",
+          "normalized_bars"
+        ]
+      }
+    ],
+    "sha256": "91eef43f7169d2e28d39238181a8248506adbb182d2bc5c9885d5043805ad285",
+    "sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ],
+    "final_state_sha256": "31644d41b662ff0dbe13ebb34dcd12717b93423b18164c4883bbdb8636850591",
+    "final_state_sha256_citations": [
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1278-1282 (cross-cutting rule 1)"
+    ]
+  },
+  "deliberate_mutation": {
+    "target": "producer.bar4.raw",
+    "from": "NONE",
+    "to": "LONG",
+    "citation": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md:1222-1270 (C42/GF-42)",
+    "rationale": "Mutate the hold bar into a level-style repeated LONG event; only the bar-4 raw output changes."
+  },
+  "companion_corpus": {
+    "path": "IBKR_PAPER_BRIDGE/tests/fixtures/golden_signals.json",
+    "path_status": "PRESENT_AT_BRANCH_HEAD_AND_WORKTREE",
+    "git_blob_oid": "31bdafae4d4d94787508043e9681874f9dc43bda",
+    "declared_bar_count": 48077,
+    "declared_signal_count": 858,
+    "role": "existing 858-event companion corpus; referenced, not overwritten",
+    "scope_label": "ENTRY SIGNAL GOLDEN"
+  }
+}

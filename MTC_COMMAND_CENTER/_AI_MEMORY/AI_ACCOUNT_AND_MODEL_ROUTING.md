@@ -233,7 +233,7 @@ Never authenticate Max into the default `.claude` profile, and never log the Pro
 | Branch binding | `-ExpectedBranch <name>` parameter, default `master`; exact case-sensitive match, fail-closed. QA: `MTC_COMMAND_CENTER/11_TRIAGE/GEMINI_LAUNCHER_BRANCH_PIN_REPAIR_2026-08-17.md` |
 | Dedicated project | `4b64b3f9-1bfa-4de1-a9eb-276f2e0489b7` |
 | Default model | `gemini-3.7-flash-high` |
-| Authority | Supplemental read-only inspection only. Never Lead, counterpart flagship, canonical auditor, protected implementer, or acceptance authority. Lead must reproduce every finding. |
+| Authority | Mandatory parallel corroborating auditor for every T0–T2 Gate 5/Gate 6 model-audit dispatch (OD-20260829-1). Never Lead, counterpart flagship, protected implementer, or final acceptance authority. Lead must reproduce every finding. |
 
 Run only from the canonical repository root:
 
@@ -259,6 +259,24 @@ recursive read access to the canonical repository. Do not use bare `agy` for rep
 do not use `--dangerously-skip-permissions`, and do not modify the historical shared grants as
 part of this route.
 
+### Owner-mandated parallel audit use (OD-20260829-1)
+
+For every T0, T1, or T2 Gate 5/Gate 6 dispatch, run a fresh
+`gemini-3.7-flash-high` review through the mandatory read-only launcher in parallel with the
+other required auditors. Give Gemini the same scope, allowed/forbidden paths, actual diff/files,
+test evidence, and repository rules. The Lead must compare common findings, Gemini-only findings,
+and contradictions, then record the independently reproduced disposition of every required
+finding. The route cannot execute the mandated suite: label its report
+`SUPPLEMENTAL_UNEXECUTED`; this alone is not a BLOCK. A missing Gemini run blocks audit completion
+unless Barış waives it. This decision does not replace the exact required flagship slots, alter
+final acceptance, or grant Gemini protected implementation, terminal, Git, deployment, or
+credential authority.
+
+The launcher reads only the canonical checkout. For an audit whose target SHA is in another
+worktree, the Lead supplies the exact SHA plus literal, safety-redacted diff and relevant file
+slices in the Gemini review package; Gemini must not substitute canonical-checkout contents for
+the audited source.
+
 **Live evidence (time-specific, 2026-08-16):** the account banner showed Google AI Pro; the
 model list exposed all three Gemini 3.7 Flash effort variants; an external synthetic completion
 returned the exact marker; the mandatory launcher read the canonical `AGENTS.md` and returned
@@ -277,7 +295,8 @@ verification, exact case-sensitive/duplicate-safe JSON validation, active-branch
 exact `gemini-3.7-flash-high` model binding are repaired and freshly tested. The QA record is the
 single source for earlier launcher identities and the literal repair evidence. Its overlong final
 review was stopped at the owner's direction, so this read-only route is not claimed as canonically
-dual-flagship accepted. It grants no protected implementation authority.
+dual-flagship accepted. OD-20260829-1 nevertheless makes it a mandatory parallel corroborating
+auditor; it grants no protected implementation authority or final acceptance role.
 
 ### Isolated Gemini coder pilot
 
@@ -339,3 +358,64 @@ OmniRoute, or any new aggregation router, will **not** be installed:
 2. The only live API providers a router could pool are NVIDIA NIM direct and DeepSeek (approximately $2.90). Two providers do not justify a new always-on, key-holding daemon.
 3. Provider fallback already exists in the repository through `_deepseek_driver/provider.py` (`deepseek` / `grok` / `openrouter` with per-call fallback), Cline profiles, `glm.ps1`, and the allowlisted Codex launcher.
 4. `9router` and `litellm` stay installed but **DORMANT**. They are candidates for a future dedicated setup task only if a concrete gap is demonstrated, such as a NIM-backed worker harness. Reopening this decision requires a flagship-led evaluation; it is not the default.
+
+---
+
+## 11. Route reality measured 2026-08-29 morning (supersedes earlier cap notes)
+
+All figures below are **probe results**, not recollection. Probe used was a single-token reply with
+no tools.
+
+| Route | Result | Note |
+|---|---|---|
+| Codex `third` (ChatGPT Plus) | **OK** | capped 21:39-23:56 during the night, then live again |
+| Codex `free` (ChatGPT Pro) | **OK** | carried the heaviest build lanes |
+| Codex `secondary` | **OK** | **correction: previously recorded as weekly-exhausted until Aug 31. It is live on Aug 29.** |
+| Codex `fourth` | **OK** | **same correction** |
+| Claude Pro | **OK** | capped 21:44-23:50, then live again |
+| Claude Max | **OK** | spent only under a dated one-night owner authorization |
+| Grok 4.6 | **EXHAUSTED** | `API error (status 402 Payment Required): Grok Build usage balance exhausted` after 12 lanes |
+| GLM | DOWN | 429 insufficient balance; owner must recharge |
+
+### Concurrency, measured rather than assumed
+
+- **Grok tolerates concurrent sessions.** Three simultaneous probes all returned; four lanes then ran
+  to completion in ~11 minutes. Previously untested.
+- **Claude Pro ran 5 concurrent lanes** without error.
+- **Codex: one deep lane per account.** Two sessions on one home remains **untested** and was not
+  risked while real work was in flight.
+- Peak achieved: **10 concurrent lanes** across 6 route families.
+
+### Operational traps confirmed this session
+
+- **Never end a turn immediately after dispatching.** A dispatched lane with no waiter loop is a lane
+  whose result nobody reads. This cost four hours of six idle routes on 2026-08-29 (02:35-06:26).
+- **`Start-Job` inside the PowerShell tool does not survive the call** — tool shell state is not
+  persistent. Dispatch through a `.ps1` file run by the harness-tracked background runner.
+- **Never put a non-ASCII path literal in a `.ps1`.** Windows PowerShell 5.1 reads `.ps1` as ANSI
+  without a BOM and mangles it. Build paths from `$env:USERPROFILE`.
+- **`pwsh` is not on PATH from the Bash tool**; use `powershell -ExecutionPolicy Bypass -File`.
+- **Tell every lane that other CLI processes are expected.** One lane read the process table, saw a
+  sibling, assumed a duplicate of itself and stopped without doing any work — 180k tokens for zero
+  output. The single-writer rule is about the **worktree**, checked with `git status --porcelain`.
+- **Claude Max lost two completed lanes to `API Error: Connection lost mid-response`** at the moment
+  of writing the report. Specs should require the report to be written incrementally.
+
+---
+
+## 12. Supplemental routes live 2026-08-29 afternoon (supersedes stale availability rows)
+
+This is an operational snapshot, not a stored quota promise. It supersedes the earlier historical
+inventory statement that OpenCode was unvalidated and the earlier historical OpenRouter
+`NOT USABLE` balance record; those dated records remain above for provenance only.
+
+| Route | Live verification | Approved default role | Invocation boundary |
+|---|---|---|---|
+| Gemini 3.7 Flash High | Existing read-only route working | Mandatory parallel corroborating auditor for T0/T1/T2 Gate 5/Gate 6 | `Invoke-GeminiProReadOnly.ps1`; no execution or acceptance authority |
+| OpenCode Go | `opencode-go/deepseek-v4-flash` returned `OPENCODE_GO_READY`; catalog also lists `opencode-go/deepseek-v4-pro` | GLM-5.3-Flash for routine bounded unprotected coding/review; DeepSeek V4 Pro for deep adversarial review before PAYG; Kimi K3 only for difficult/long-context escalation | `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-OpenCodeGo.ps1`; OpenCode owns its credential profile |
+| OpenRouter | Signed-in console showed USD 10.56; `openrouter/deepseek/deepseek-v4-flash` returned `OPENROUTER_READY`; catalog lists V4 Pro | DeepSeek V4 Flash for economical high-volume drafts/analysis; V4 Pro only when Go quota/diversity warrants PAYG; Hy3 only as a deliberate different-family counter-review/tie-breaker | Use the already-present environment route without reading, copying, or printing its key |
+
+These roles are binding through OD-20260829-2 but never override the tiered flagship acceptance
+contract. Re-check live quota before dispatch. The source-backed rationale, current model
+availability, dated pricing/revision caveats, and the DeepSeek Flash/Pro distinction are in
+`MTC_COMMAND_CENTER/11_TRIAGE/AI_PROVIDER_ROUTING_RECOMMENDATION_2026-08-29.md`.

@@ -125,6 +125,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\n{unmatched} file(s) need a new candidate (no confident strategy match).")
     print("\nAfter applying: update the target strategy's source_intake/intake_report.md,")
     print("then re-run build_strategy_research_registry.py to refresh the dashboard.")
+    print("The writer treats promotion_status as promotion only when every token is a canonical promotion-or-higher ladder value.")
     return 0
 
 

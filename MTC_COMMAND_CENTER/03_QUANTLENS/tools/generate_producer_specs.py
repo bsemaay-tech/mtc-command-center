@@ -5,7 +5,7 @@ Auto-generates missing producer_spec.json files for STG023-063 strategies.
 
 Rules (HARD):
   - NEVER fabricate metric numbers.
-  - NEVER mark promotion unless MEGA data shows explicit PASS classification.
+  - NEVER mint a promotion-like token; classification stays in metrics_lockbox.
   - Signal definitions extracted verbatim from spec (1-2 lines max).
   - metrics_lockbox = placeholder dict when no MEGA sweep found.
 """
@@ -69,7 +69,7 @@ FOLDER_TO_ENGINE_ID = {
     "STG057_linda_raschke_lbr_toolkit": "QL_LBR_COIL_BREAKOUT_RANGE_EXPANSION",
 }
 
-# Pass classifications that qualify for FORWARD_PAPER_CANDIDATE
+# Pass classifications used to rank MEGA entries; they are not promotion evidence.
 PASS_CLASSIFICATIONS = {"PASS", "STRONG_PASS", "FORWARD_PAPER"}
 
 
@@ -457,7 +457,7 @@ def build_metrics_lockbox(mega_entry: dict | None) -> tuple[dict, bool]:
     """Return (lockbox_dict, is_real).
 
     is_real=True means we have actual MEGA data (even if INSUFFICIENT/SKIPPED).
-    Only set promotion to FORWARD_PAPER_CANDIDATE if classification is PASS-like.
+    Classification stays in this lockbox and never mints a promotion-like token.
     """
     if mega_entry is None:
         return _PLACEHOLDER_METRICS.copy(), False
@@ -498,11 +498,8 @@ def build_metrics_lockbox(mega_entry: dict | None) -> tuple[dict, bool]:
 
 
 def promotion_status(cls: str | None, is_real: bool) -> list[str]:
-    if not is_real:
-        return ["RESEARCH_GRADE"]
-    if cls and cls in PASS_CLASSIFICATIONS:
-        return ["FORWARD_PAPER_CANDIDATE"]
-    return ["RESEARCH_GRADE"]
+    """Return the deferred Option-C empty admission set for every classification."""
+    return []
 
 
 # ── main loop ─────────────────────────────────────────────────────────────────
