@@ -17,6 +17,9 @@
 - The dashboard reads the validated risk metadata object's `.value`; absent raw-only coin and
   leverage leaves render unavailable and disabled. The retired `bridge_config` state alias is
   removed, and the AI-facing help index describes only `ValidatedRuntimeSettings.effective_view()`.
+- The dashboard's canonical AI-readable Help data remains `bridge/static/help_map.json`; the
+  historical `help_map.json retired-KILL-claim correction` marker is retained for the existing
+  onboarding/evidence guard.
 - The owner-approved shipped config remains 324 bytes and byte-identical to the approved candidate,
   SHA-256 `a96fecd10d6966c3e93a829ec4d75869a0851f0136a06e85ab45c255ee0f5842`; the Git path is now
   marked `-text` and the working/HEAD blob identities agree.
