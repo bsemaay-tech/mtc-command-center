@@ -125,6 +125,17 @@ design-only, serial build chain unchanged).
     WP-P0-20 build design, WP-P0-30 design, WP-P0-31 Milestone-2 design, WP-V2A-02 design,
     plus audit/fold rounds on the existing draft fleet.
 
+## Addendum 10 — 2026-08-30 ~17:20 (owner verbatim: "promotion build / P0-16/17 stay parked / out 2 hours, keep lanes busy")
+
+21. **Promotion report-only diagnostic BUILD authorized** — exactly the build the approved
+    decision record defines (`PROMOTION_REPORT_ONLY_DECISION.md` §9): compute DSR, BH-FDR,
+    robust_final and raw lockbox excess per candidate and emit the PASS/FAIL/STOP report
+    artifact. Everything in that decision's untouched column stays untouched (gate scorers,
+    queue, registries, schemas, historical labels); missing inputs produce STOP, never
+    fabricated values. Build + tests + audit round; PR after audit.
+22. **P0-16 / P0-17 remain V-NEXT parked** (owner re-confirmed).
+23. **Autonomous window ~2h** — standing rules apply; owner-gated items park and wait.
+
 ## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
 above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
 supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the
