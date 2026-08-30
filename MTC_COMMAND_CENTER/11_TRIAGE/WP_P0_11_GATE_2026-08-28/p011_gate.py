@@ -1407,7 +1407,9 @@ def _validate_final_authority_dispositions(
         observed = disposition.get("disposition")
         if requirement["evidence_mode"] == EXECUTION_OBSERVATION:
             if observed not in {"EXECUTED", "NOT_EXECUTED"}:
-                raise GateStop(f"authority execution disposition is incompatible: {row_id}")
+                raise GateStop(
+                    f"STOP_AUTHORITY_EXECUTION_DISPOSITION_INCOMPATIBLE: {row_id}"
+                )
             accepted.append(observed == "EXECUTED")
         elif requirement["evidence_mode"] == SOURCE_CORROBORATION:
             if observed not in {"SOURCE_CORROBORATED", "SOURCE_NOT_CORROBORATED"}:

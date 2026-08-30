@@ -230,26 +230,45 @@ class Stage3OracleTests(unittest.TestCase):
         variants = []
         missing = deepcopy(accounting)
         missing["terminal_dispositions"] = missing["terminal_dispositions"][:1]
-        variants.append(missing)
+        variants.append(
+            (
+                "missing",
+                missing,
+                "STOP_AUTHORITY_EVIDENCE_INCOMPLETE: C42",
+            )
+        )
         duplicate = deepcopy(accounting)
         duplicate["terminal_dispositions"].append(
             deepcopy(duplicate["terminal_dispositions"][0])
         )
-        variants.append(duplicate)
+        variants.append(
+            (
+                "duplicate",
+                duplicate,
+                "STOP_AUTHORITY_EVIDENCE_INCOMPLETE: C42",
+            )
+        )
         incompatible = deepcopy(accounting)
         incompatible["terminal_dispositions"][0][
             "disposition"
         ] = "SOURCE_CORROBORATED"
-        variants.append(incompatible)
-        for variant in variants:
-            with self.subTest(variant=variant):
-                with self.assertRaises(p011_gate.GateStop):
+        variants.append(
+            (
+                "incompatible",
+                incompatible,
+                "STOP_AUTHORITY_EXECUTION_DISPOSITION_INCOMPATIBLE: C42",
+            )
+        )
+        for variant_name, variant, expected_reason in variants:
+            with self.subTest(variant=variant_name):
+                with self.assertRaises(p011_gate.GateStop) as raised:
                     p011_gate._validate_final_authority_dispositions(
                         row_id="C42",
                         terminal_status="GREEN",
                         record={"authority_execution": variant},
                         requirements=requirements,
                     )
+                self.assertEqual(expected_reason, str(raised.exception))
 
 
 class Stage3PublicationBoundaryTests(unittest.TestCase):
@@ -263,7 +282,7 @@ class Stage3PublicationBoundaryTests(unittest.TestCase):
             self.assertEqual(0, stage1_freeze.command_candidate_manifest(args))
             self.assertEqual(stage1_freeze.STAGE3_GATE_VERSION, json.loads(output.read_text(encoding="utf-8"))["gate_version"])
 
-    def test_publication_refuses_missing_owner_v1_v2_and_hash_mismatch(self) -> None:
+    def test_publication_refuses_absent_authorization_file_v1_v2_and_hash_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as name:
             root = Path(name)
             manifest = root / "manifest.json"
@@ -280,22 +299,24 @@ class Stage3PublicationBoundaryTests(unittest.TestCase):
                 stage1_freeze.validate_stage3_publication_prerequisites(
                     manifest_path=manifest,
                     receipt_path=receipt,
-                    authorization_file_path=root / "absent-owner.md",
+                    authorization_file_path=root / "absent-authorization-file.md",
                     output_path=root / "v3-anchor.json",
                 )
-            owner = root / "owner.md"
-            owner.write_text("explicit test authority", encoding="utf-8")
+            authorization_file = root / "authorization-file.md"
+            authorization_file.write_text(
+                "authorization file presence fixture", encoding="utf-8"
+            )
             with self.assertRaisesRegex(SystemExit, "STOP_V1_V2_PUBLICATION_TARGET_REFUSED"):
                 stage1_freeze.validate_stage3_publication_prerequisites(
                     manifest_path=manifest,
                     receipt_path=receipt,
-                    authorization_file_path=owner,
+                    authorization_file_path=authorization_file,
                     output_path=stage1_freeze.ANCHOR_PATH,
                 )
             presence = stage1_freeze.validate_stage3_publication_prerequisites(
                 manifest_path=manifest,
                 receipt_path=receipt,
-                authorization_file_path=owner,
+                authorization_file_path=authorization_file,
                 output_path=root / "v3-anchor.json",
             )
             self.assertEqual(
@@ -310,7 +331,7 @@ class Stage3PublicationBoundaryTests(unittest.TestCase):
                 stage1_freeze.validate_stage3_publication_prerequisites(
                     manifest_path=manifest,
                     receipt_path=receipt,
-                    authorization_file_path=owner,
+                    authorization_file_path=authorization_file,
                     output_path=root / "v3-anchor.json",
                 )
 
