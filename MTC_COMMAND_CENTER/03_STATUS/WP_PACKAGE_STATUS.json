@@ -1,18 +1,16 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-30T21:25:00+03:00",
-  "updated_by": "claude-lead-session-2026-08-29-evening",
+  "generated": "2026-08-30T22:15:00+03:00",
+  "updated_by": "claude-fable-lead-session-2026-08-30-night",
   "session_time_report": {
     "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
-    "session_span": "2026-08-29 21:00 -> 2026-08-30 10:50 (~13.8h continuous)",
+    "session_span": "2026-08-30 21:45 -> in progress (overnight run to 07:00; prior-session spans archived in git history of this file and HOURS_AND_COST ledgers)",
     "per_package_spans": {
-      "WP-P0-11": "~10.5h (repairs 8+8b, stage-3 build+3 audits+repair+micro, freshness merge, v3 re-pin chain v2c->v2f, second-actor rebuild)",
-      "BRIDGE-FAIL-CLOSED": "~6h (delta re-confirm, candidate V1->V2, build across 3 quota deaths, dashboard fix, 4-family audit round, repair round 1 running)",
-      "WP-P0-20": "~7h (3 paper repair rounds + cap park + owner round-4 edit + closure verify + Gemini corroboration)",
-      "WP-P0-12": "~4h (2 repair rounds, round-cap park, owner HOLD)",
-      "DRAFTS-P013-P021-P022-P031M1-P014-V2A01": "~3h (5 drafts + V2A-01, detection audits, 3 folds)",
-      "GOVERNANCE-SELF-AUDITS": "~2h (OD policy PR #142, promotion record, 3 Lead self-audits with 24 accepted findings, route fixes)"
+      "WP-P0-12-FRESH": "started 21:55 (W93 fresh-family design, Codex authors per addendum 13)",
+      "FOLD-WAVE": "started 21:55 (6 fold lanes: P0-13, P0-14, P0-30, V2A-01/02/03)",
+      "VERIFY-CENSUS": "started 22:05 (G27+GM11 on P0-31M1 v1.1, G28 on P0-22 v1.2)",
+      "PROMO-DIAG-RUN": "22:05-22:15 (984 stored candidates, display-only reports)"
     }
   },
   "packages": [
@@ -129,12 +127,12 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "FINAL_PARKED_DESIGN_V18",
+      "state": "FRESH_FAMILY_DESIGN_IN_PROGRESS",
       "branch": "-",
       "commit": "-",
       "detail": "TEN audited rounds (N45..N82): every flagship PASS was countered by real detection findings; standing loop capped at round 8 (P41 vs N78 -> HARD PARK), owner-authorized narrowing round produced v1.8 (P43 PASS-WITH-NITS vs N82 3 HIGH) -> FINAL PARK per the pre-written addendum-11 rule. Nothing was built. Full defect record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md (C:\\tmp\\LANE_PROMPTS_20260828).",
       "owner_gate": false,
-      "next_action": "FINAL PARKED per addendum 11's one-shot rule: the narrowing round produced v1.8 (flagship P43 PASS-WITH-NITS under the narrowed claim) but detection N82 still found 3 HIGH (enumeration/identity algorithms not stranger-reproducible; one body paragraph still overclaiming). Nine repair rounds + one narrowing round total. NO further rounds under any standing authorization. The remaining owner option is a FRESH DESIGN by a different model family using the full 10-round record (N45..N82) as its failure-mode specification - a new decision, not a repair; or hold. The Claude family has demonstrably exhausted its ability to write this design cleanly."
+      "next_action": "Owner addendum 13 (2026-08-30 21:30) AUTHORIZED the fresh-family design: Codex (gpt-5.6-sol) is writing a completely fresh CORRECTED_VNEXT design (lane W93, launched 21:55 tonight) using the 10-round defect record N45..N82 as failure-mode specification. Claude v1.8 stays FINAL PARKED as anti-pattern reference. Chain on detection-clean PASS (Codex excluded from auditing its own design): multi-family audit -> kernel build under the standing 2026-08-29 approval -> build audits -> PR -> merge; any BLOCK parks to owner."
     },
     {
       "id": "WP-P0-20",
@@ -154,7 +152,7 @@
       "commit": "-",
       "detail": "Draft hardened to v1.2 through two full audit-fold cycles (G18 -> W64 fold; P34+N70+DS7 -> W77 fold) and verified by N81 (1 MEDIUM fresh drift, banked). PROVISIONAL-ON-P020 labeled. BUILD stays gated on WP-P0-20 acceptance per the serial chain.",
       "owner_gate": false,
-      "next_action": "parked warm; fold N81-F01 when upstream accepts"
+      "next_action": "fold lane W94 (N81 -> v1.3) running since 21:55 tonight; detection verify after"
     },
     {
       "id": "WP-P0-21",
@@ -174,7 +172,7 @@
       "commit": "-",
       "detail": "Draft at v1.2 (P24 -> W66 fold; N74 detection round 2 -> W91 fold, 5 findings dispositioned), PROVISIONAL-ON-P013 labeled. BUILD gated on WP-P0-13 acceptance.",
       "owner_gate": false,
-      "next_action": "parked warm until upstream accepts"
+      "next_action": "verify census G28 (Grok, read-only) on v1.2 running since 22:05 tonight"
     },
     {
       "id": "WP-P0-31-M1",
@@ -184,7 +182,7 @@
       "commit": "-",
       "detail": "M1 draft at v1.1 (N61 + P37 audits -> W90 fold), PROVISIONAL-ON-P013 labeled. Design only; M1 BUILD waits for WP-P0-13 acceptance + its own milestone-scoped G1-IA.",
       "owner_gate": false,
-      "next_action": "parked warm until upstream accepts + G1-IA"
+      "next_action": "verify censuses G27 (Grok) + GM11 (Gemini, different family) on v1.1 running since 22:05 tonight"
     },
     {
       "id": "WP-P0-14",
@@ -194,7 +192,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W58, P014_DESIGN_DRAFT_V1.md) + G21 detection round (6 findings banked, unfolded), PROVISIONAL on P0-13 and P0-31-M1. Design only; BUILD waits for both dependencies + G1-IA.",
       "owner_gate": false,
-      "next_action": "fold G21 findings at next fold pass; parked warm until upstream accepts"
+      "next_action": "fold lane W95 (G23 census + G21 residue -> v1.2) running since 21:55 tonight; detection verify after"
     },
     {
       "id": "PROMOTION-DECISION",
@@ -204,7 +202,7 @@
       "commit": "-",
       "detail": "Owner APPROVED the report-only rule + vocabulary (late evening, verbatim 'promotion yes'): the four checks (DSR, BH-FDR, robust_final, raw lockbox excess) may be computed and shown PASS/FAIL/STOP in a separate report artifact only; nothing deciding promotion/queue/registry changes. Building the display is a separate future decision (doc estimate 18-26 route-hours), NOT yet authorized.",
       "owner_gate": false,
-      "next_action": "none - diagnostic MERGED 2026-08-30 (PR #145, master 108ea066) after CONFIRMED delta; display only, no enforcement; running it against stored candidates is a normal research act"
+      "next_action": "diagnostic RUN tonight (22:05) against 984 stored candidates (donchian ladder n=4, faz3b stage1 pass1 n=420 + pass2 n=560): ZERO full-PASS - DSR FAIL on 906 and STOP on 78; BH-FDR, robust_final and raw-lockbox-excess all STOP on every candidate (missing family manifest / stored bindings - the tool honestly refuses to fabricate). Display only; reports in C:\\tmp\\LANE_PROMPTS_20260828\\PROMO_DIAG_RUNS\\"
     },
     {
       "id": "WP-P0-30",
@@ -214,7 +212,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W82c) + N79 detection round (8 findings: 5 HIGH, 2 MEDIUM, 1 LOW, banked) + DS10 supplemental review (OpenCode, different family). Zero venue contact performed. BUILD gated on WP-P0-21 + WP-P0-26; host steps T0/G9 owner-gated.",
       "owner_gate": false,
-      "next_action": "fold N79 (+DS10) findings at next fold pass; parked warm until dependencies accept"
+      "next_action": "fold lane W96 (N79 + DS10 -> v1.1) running since 21:55 tonight; detection verify after"
     },
     {
       "id": "WP-V2A-01",
@@ -224,7 +222,7 @@
       "commit": "-",
       "detail": "First V2A-stage artifact: loader design draft v1 (W67) + G22 detection round (findings banked). BUILD gated on Phase-0 acceptance + G1-IA + WP-P0-31 M1.",
       "owner_gate": false,
-      "next_action": "fold G22 findings at next fold pass; parked warm until the V2A entry gate opens"
+      "next_action": "fold lane W97 (G24 census + G22 residue -> v1.2) running since 21:55 tonight; detection verify after"
     },
     {
       "id": "WP-V2A-02",
@@ -234,7 +232,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W84) + G25 detection census (10 findings: 5 HIGH, 5 MEDIUM, banked). PROVISIONAL-ON-V2A01 labeled. BUILD gated on the V2A entry gate + V2A-01.",
       "owner_gate": false,
-      "next_action": "fold G25 findings at next fold pass; parked warm"
+      "next_action": "fold lane W98 (G25 -> v1.1) running since 21:55 tonight; detection verify after"
     },
     {
       "id": "WP-V2A-03",
@@ -244,7 +242,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W85) + G26 detection census (6 findings: 4 HIGH, 2 MEDIUM, banked; special check clean - no allocator-delivery claim, delivery stays WP-P0-20's). PROVISIONAL-ON-P020/V2A02 labeled. BUILD gated on WP-P0-20 build + V2A-02.",
       "owner_gate": false,
-      "next_action": "fold G26 findings at next fold pass; parked warm"
+      "next_action": "fold lane W99 (G26 -> v1.1) running since 21:55 tonight; detection verify after"
     },
     {
       "id": "FROZEN-PINE-TAG",
