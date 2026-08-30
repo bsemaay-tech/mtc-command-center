@@ -56,6 +56,19 @@ design-only, serial build chain unchanged).
 8. **P0-12 design: HOLD** at its round cap until P0-11 v3 lessons fold in.
 9. Ten concurrent lanes remain the standing order.
 
+## Addendum 4 — 2026-08-30 morning (owner answered four questions, all recommended defaults)
+
+10. **Dashboard scope EXTENDED:** the bridge build may repair the three dashboard files
+    outside the original design write-set (`bridge/static/app.js`,
+    `bridge/static/help_map.json`, `tests/test_dashboard_static.py`) so the dashboard matches
+    the fail-closed config. Same branch/PR, auditable.
+11. **v3 merge cadence:** after the owner signs, the whole P0-11 package merges to master as
+    ONE unit the same day (signature -> final audit pass -> PR -> merge).
+12. **Gemini launcher fix AUTHORIZED:** one-line ignore-list addition for the `.impeccable`
+    plugin-cache churn in `Invoke-GeminiProReadOnly.ps1`'s integrity check; edit recorded.
+13. **Small items:** papers' three open MEDIUMs stay recorded (folded into P0-20's build
+    phase later); a 30-minute OpenCode auto-approve investigation is authorized.
+
 ## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
 above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
 supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the
