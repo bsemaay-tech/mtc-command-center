@@ -127,12 +127,12 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "DESIGN_ACCEPTED_KERNEL_BUILD_RUNNING",
+      "state": "DESIGN_STRONG_BUILD_BLOCKED_ON_PRECONDITIONS",
       "branch": "-",
       "commit": "-",
       "detail": "HISTORY: the Claude-family design was FINAL PARKED at v1.8 after ten rounds (record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md). CURRENT: owner addendum 13 authorized a fresh design by a different family - Codex delivered P012_FRESH_DESIGN_V1.md tonight (22:38), now at v1.2 after two repair rounds under a pre-written D028 cap of 3. The grid-fitting class that killed the old design is STRUCTURALLY ABSENT per all four audit families, twice.",
       "owner_gate": false,
-      "next_action": "GATE SATISFIED 01:00 after round-3 (terminal under the D028 cap): Claude flagship P46 = PASS-WITH-NITS (one LOW build-lane nit; the round-2 sizing root verified closed line-by-line against position_sizer.py); Grok detection G37 = ZERO findings; Gemini GM17 = ZERO findings; OpenCode DS15 = 1 MEDIUM + 4 LOW (folded into the build as MUST-RESOLVE carry-forwards). The grid-fitting class stayed structurally absent through all three rounds. KERNEL BUILD W113 RUNNING under the standing 2026-08-29 approval + addendum-13 chain: worktree C:\\WP012BUILD, branch feature/wp-p0-12-corrected-vnext-20260831, base 108ea066, repo-guard preflight PASS. LEGACY_COMPATIBLE stays untouched; CORRECTED_VNEXT lands as the new addressable version. Build audits -> PR -> merge follow; any BLOCK parks to owner."
+      "next_action": "HONEST TERMINAL STATE (02:00): round-3 verdicts - Claude flagship P46 PASS-WITH-NITS + Grok G37 zero + Gemini GM17 zero, but 4th-family OpenCode DS15 NOT CLEAN (1 MEDIUM probe/scenario incoherence + 4 LOW), so the design is STRONG, NOT UNANIMOUS. The build lane W113 then BLOCKED itself before writing any line: the design's own FIVE preconditions are unmet (P0-11 legacy subject + baseline bytes never produced; ten OPEN owner values undispositioned; independent expected-author + sealed anchor absent; explicit T0 path approval + Gate-2 plan not in place). Branch feature/wp-p0-12-corrected-vnext-20260831 parked CLEAN, zero commits. Owner decision package (audited v2, A2 9/9 folded): 11_TRIAGE/P012_BUILD_PRECONDITIONS_OWNER_DECISIONS_2026-08-31.md - six numbered questions with defaults and stated dependencies."
     },
     {
       "id": "WP-P0-20",
