@@ -158,6 +158,18 @@ design-only, serial build chain unchanged).
     (N_TIMES.txt + hours file + status-feed session_time_report + Wayfinder hours CSV);
     dashboard files (WP_PACKAGE_STATUS.json + Wayfinder session folder) kept current.
 
+## Addendum 13 — 2026-08-30 ~21:30 (owner verbatim: "P0-12 decision fresh familit")
+
+26. **P0-12 FRESH-FAMILY DESIGN AUTHORIZED.** A model family OTHER than Claude authors a
+    completely fresh CORRECTED_VNEXT design (not a repair of v1.8), using the full 10-round
+    defect record (N45..N82, parking record `DETECT_N82_P012_V18.md`) as its failure-mode
+    specification. Same fail-closed chain terms as addendum 7: design -> full multi-family
+    audit round (author family EXCLUDED from auditing its own design; detection by a
+    different family) -> on detection-clean PASS the kernel build proceeds under the standing
+    2026-08-29 kernel approval -> build audits -> PR -> merge; a BLOCK at any stage parks and
+    returns to the owner. Owner-gated numeric thresholds remain [OPEN], never invented.
+    Executes in the NEXT session (this one is closing).
+
 ## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
 above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
 supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the
