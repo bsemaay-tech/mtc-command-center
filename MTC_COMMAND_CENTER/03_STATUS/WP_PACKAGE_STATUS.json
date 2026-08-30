@@ -132,7 +132,7 @@
       "commit": "-",
       "detail": "TEN audited rounds (N45..N82): every flagship PASS was countered by real detection findings; standing loop capped at round 8 (P41 vs N78 -> HARD PARK), owner-authorized narrowing round produced v1.8 (P43 PASS-WITH-NITS vs N82 3 HIGH) -> FINAL PARK per the pre-written addendum-11 rule. Nothing was built. Full defect record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md (C:\\tmp\\LANE_PROMPTS_20260828).",
       "owner_gate": false,
-      "next_action": "Owner addendum 13 (2026-08-30 21:30) AUTHORIZED the fresh-family design: Codex (gpt-5.6-sol) is writing a completely fresh CORRECTED_VNEXT design (lane W93, launched 21:55 tonight) using the 10-round defect record N45..N82 as failure-mode specification. Claude v1.8 stays FINAL PARKED as anti-pattern reference. Chain on detection-clean PASS (Codex excluded from auditing its own design): multi-family audit -> kernel build under the standing 2026-08-29 approval -> build audits -> PR -> merge; any BLOCK parks to owner."
+      "next_action": "FRESH DESIGN DELIVERED 22:38 (lane W93b, Codex, after one quota-death restart): P012_FRESH_DESIGN_V1.md, 47.9KB - narrowed acceptance claim from birth, honest-limits section, single ExecutionEconomics seam, kernel citations anchored at master 108ea066. Multi-family audit round NOW RUNNING per addendum 13 (author family excluded): G29 Grok census + GM13 Gemini census live, P44 Claude flagship fires at the 23:04 Pro reset, DS13 OpenCode review queued. Detection-clean PASS -> kernel build under standing approval; any BLOCK parks to owner."
     },
     {
       "id": "WP-P0-20",
@@ -172,7 +172,7 @@
       "commit": "-",
       "detail": "Draft at v1.2 (P24 -> W66 fold; N74 detection round 2 -> W91 fold, 5 findings dispositioned), PROVISIONAL-ON-P013 labeled. BUILD gated on WP-P0-13 acceptance.",
       "owner_gate": false,
-      "next_action": "verify censuses landed: Gemini GM12 clean 0 BUT Grok G28 found 1 MEDIUM (fixture b3 still encodes the subtract-the-gap outcome the new whole-window rule forbids - Lead verified three-way incoherence on lines 352/364/514). Fold W101 (G28-F01 -> v1.3) queued for the next free lane."
+      "next_action": "CONVERGED tonight: G28-F01 (Lead-verified three-way incoherence) folded by W101 (v1.3, whole-window fail-closed option, matches plan A-7d) -> verify N86: coherent at all four sites, 1 residual LOW (a RUNNABLE-NOW label overclaim) BANKED for the next cycle. Parked warm at v1.3."
     },
     {
       "id": "WP-P0-31-M1",
@@ -182,7 +182,7 @@
       "commit": "-",
       "detail": "M1 draft at v1.1 (N61 + P37 audits -> W90 fold), PROVISIONAL-ON-P013 labeled. Design only; M1 BUILD waits for WP-P0-13 acceptance + its own milestone-scoped G1-IA.",
       "owner_gate": false,
-      "next_action": "verify censuses landed: Gemini GM11 clean 13/13 BUT Grok G27 found 2 (1 HIGH: the v1.1 typed-record fold contradicts the ordered gate checklist - Lead verified on admission.py field lists; detection's 11th straight win). Fold W100 (G27 -> v1.2) running on codex/third."
+      "next_action": "Two fold-verify cycles tonight: G27 (1H+1L, Lead-verified) -> fold W100 (2/2 FIXED -> v1.2) -> verify pair N85 (4 findings: typed gate still not executable end-to-end) + G31 (1 MEDIUM, overlapping) -> fold W104 (v1.2 -> v1.3) RUNNING. The typed-record surface keeps re-growing promise-shaped defects; W104 instructed to remove unexecutable promises rather than re-promise."
     },
     {
       "id": "WP-P0-14",
@@ -212,7 +212,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W82c) + N79 detection round (8 findings: 5 HIGH, 2 MEDIUM, 1 LOW, banked) + DS10 supplemental review (OpenCode, different family). Zero venue contact performed. BUILD gated on WP-P0-21 + WP-P0-26; host steps T0/G9 owner-gated.",
       "owner_gate": false,
-      "next_action": "fold W96 LANDED 22:06 (14/14 findings dispositioned, v1 -> v1.1); verify pair running: N83 (codex, xhigh) + G30 (grok, different family)"
+      "next_action": "CONVERGED CLEAN tonight: fold W96 (14/14 -> v1.1) -> verify pair N83 (4 findings) + G30 (2 findings) -> fold W102 (all 6 dispositioned -> v1.2) -> verify N87: NOT DETECTED, zero findings. Two full fold-verify cycles; parked warm at v1.2."
     },
     {
       "id": "WP-V2A-01",
