@@ -147,6 +147,17 @@ design-only, serial build chain unchanged).
     pair. Pre-written rule: detection-clean -> the build proceeds under addendum 7;
     otherwise FINAL PARK, no further rounds under any standing authorization.
 
+## Addendum 12 — 2026-08-30 ~21:50 (owner handoff order for the NEXT session)
+
+25. **Standing routing for the next session (refines addendum 6 item 15):** Claude MAX
+    **Fable = orchestration only**; Claude MAX **Opus = audit + coding lanes**; hard guard —
+    the shared 5-hour MAX window must never fill enough to block Fable (orchestrator survival
+    first: pause/decline Opus lanes before Fable risks capping). Routes in play: 4 Codex
+    accounts, Grok, Gemini, OpenCode Go subscriptions; OpenRouter API if needed. Ten
+    parallel lanes standing. Per-package time spent written to the relevant ledgers
+    (N_TIMES.txt + hours file + status-feed session_time_report + Wayfinder hours CSV);
+    dashboard files (WP_PACKAGE_STATUS.json + Wayfinder session folder) kept current.
+
 ## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
 above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
 supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the
