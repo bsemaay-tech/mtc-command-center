@@ -199,12 +199,12 @@
     {
       "id": "PROMOTION-DECISION",
       "title": "Promotion pipeline decision package",
-      "state": "APPROVED_REPORT_ONLY",
+      "state": "DIAGNOSTIC_MERGED",
       "branch": "-",
       "commit": "-",
       "detail": "Owner APPROVED the report-only rule + vocabulary (late evening, verbatim 'promotion yes'): the four checks (DSR, BH-FDR, robust_final, raw lockbox excess) may be computed and shown PASS/FAIL/STOP in a separate report artifact only; nothing deciding promotion/queue/registry changes. Building the display is a separate future decision (doc estimate 18-26 route-hours), NOT yet authorized.",
       "owner_gate": false,
-      "next_action": "none until owner separately authorizes building the diagnostic display"
+      "next_action": "none - diagnostic MERGED 2026-08-30 (PR #145, master 108ea066) after CONFIRMED delta; display only, no enforcement; running it against stored candidates is a normal research act"
     },
     {
       "id": "FROZEN-PINE-TAG",
