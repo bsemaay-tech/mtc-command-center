@@ -41,3 +41,19 @@ Lead; the only reading taken was the CodeBurn banner at evening session start
 4. Two waiters false-resolved on stale/exit-written files (S16, S6 W60 row); waiter logic moved
    to fresh-report keying mid-night.
 5. Time-math slip at 01:41 read as 02:20 (no action taken on it — caught before acting).
+
+## Day-half addendum (11:30 -> ~21:30, same continuous session)
+
+Measured from N_TIMES.txt. Session total ~24.5h continuous orchestration.
+
+- THREE merges today: PR #143 (WP-P0-11, one unit, owner-signed v3), PR #144 (bridge
+  fail-closed, KVM2 untouched), PR #145 (promotion report-only diagnostic). Master ended at
+  108ea066.
+- WP-P0-12: rounds 4-10 (unlock -> loop cap 8 -> owner narrowing round) -> FINAL PARKED at
+  design v1.8; detection never clean; nothing built. ~6h of lane spans in the day-half.
+- Draft fleet: P0-13 v1.2 (verified), P0-21 v1.1, P0-22 v1.2, P0-31M1 v1.1, P0-14 v1 + G21,
+  P0-30 v1 + N79 + DS10, V2A-01/02/03 v1 + G22/G25/G26 censuses. All parked warm.
+- Route caps in day-half: Codex 2 quota deaths (recovered), Claude Pro 1 window (17:33-18:02,
+  bridged). Apostrophe-trap session tally: 6 lanes.
+- CodeBurn banner at wind-down: $544.46 day / $5,850.92 month (banner reading, not a Lead
+  measurement; owner budget flag remains open as fact, answered as question 08-29 ruling 6).

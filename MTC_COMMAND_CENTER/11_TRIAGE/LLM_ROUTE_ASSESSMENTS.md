@@ -6,6 +6,23 @@ session's time log), never vibes. This file accumulates route knowledge across s
 
 ---
 
+## Session 2026-08-29 21:00 → 2026-08-30 ~21:30 — DAY-HALF ADDENDUM (same session, appended at wind-down)
+
+Evidence base: N_TIMES.txt 11:30→21:30 block (~30 further lanes). Grade deltas vs the morning
+entry below; unchanged routes not repeated.
+
+| Route | Delta | Measured evidence |
+|---|---|---|
+| Gemini 3.7 Flash | C+ → B | After the owner-authorized launcher fix: 5 further clean deliveries (GM6 papers-closure corroboration, GM8 v3 corroboration, G25 census 10 findings, G26 census 6 findings incl. a clean special-check, one relaunch after an apostrophe-trap death). Zero tool-losses post-fix. Still corroborator/census only — no runtime detection. |
+| OpenCode Go | B− → B | In-cwd packet pattern held: DS6 (v3 detection, zero findings, legitimate), DS10 (P0-30 supplemental: 6 NEW findings — 2M/4L — with ZERO overlap against Codex N79's 8; different family genuinely widens coverage). New trap measured: plan-agent completes analysis then STOPS at a write-confirmation prompt and exits rc=0 without writing the deliverable — Lead transcribed verbatim with a provenance note. For file-writing deliverables use build-agent or accept log-transcription. |
+| Codex ×4 | A (confirmed) | Carried P0-12 rounds 4-10 detection (N72..N82: detection out-found the flagship in EVERY round — 10+ consecutive detection wins now), promo detection N76, final v3 round N68 zero-findings grade held honest. 2 further quota deaths, both recovered by reset-dispatchers. |
+| Claude Pro | A (confirmed) | Flagship audits P32..P43 + all design/fold/narrow writer lanes; one cap window (17:33-18:02) bridged by the reset-dispatcher. Authorship limit measured: 10 rounds could not write P0-12's design to detection-clean — family exhaustion is real, not a lane failure. |
+
+Dispatch-trap tally for the whole session: apostrophe-in-inline-prompt killed 6 lanes
+(N66c, N68-dispatcher, GM6, P42, G26, DS10-wave15-never-launched). HARD RULE proven again:
+spec-file for EVERY dispatch, zero exceptions — the last three deaths were Lead violations of
+its own ban under time pressure.
+
 ## Session 2026-08-29 21:00 → 2026-08-30 ~11:30 (overnight + morning; Lead: Claude Fable 5 MAX)
 
 Evidence base: `C:\tmp\LANE_PROMPTS_20260828\N_TIMES.txt` (this session's block) and the lane
