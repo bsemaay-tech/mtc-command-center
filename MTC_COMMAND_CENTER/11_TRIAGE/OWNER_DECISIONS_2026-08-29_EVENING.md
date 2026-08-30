@@ -106,6 +106,13 @@ design-only, serial build chain unchanged).
     merge. Fail-closed at every audit: a BLOCK at any stage parks and returns to the owner.
     Owner-gated numeric thresholds remain [OPEN]-marked, never invented.
 
+## Addendum 8 — 2026-08-30 ~14:30 (owner verbatim: "p012 round 5")
+
+18. **P0-12 round 5 authorized:** bounded union repair of exactly the round-4 verification
+    findings (N72's six — 4 BLOCKER, 2 HIGH — plus P35's nits), then re-verification under
+    the same fail-closed clause (clean -> build proceeds under the addendum-7 unlock;
+    not clean -> re-park to owner). Owner-gated thresholds stay [OPEN]; nothing invented.
+
 ## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
 above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
 supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the
