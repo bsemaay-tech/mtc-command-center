@@ -49,7 +49,6 @@ def init_runtime_state(
     }
     app.state.bridge_store = store
     app.state.validated_runtime_settings = validated
-    app.state.bridge_config = validated.effective_view() if validated is not None else None
     app.state.bridge_config_status = (
         "RUNTIME_VALIDATED" if validated is not None else "CONFIG_NOT_RUNTIME_VALIDATED"
     )

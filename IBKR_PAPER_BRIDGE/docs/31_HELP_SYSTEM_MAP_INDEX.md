@@ -166,12 +166,14 @@ passing suite — or this document — as acceptance.
     so change outcomes, but could never originate or enlarge an order.
 13. **Configuration visibility is not activation, and dormant is not silent.**
     The two corollaries a careless edit of rule 12 gets wrong, both checkable
-    against source. First, the `llm:` switches *are* read: `bridge/api/routes.py`
-    loads `config/bridge.yaml` onto `app.state.bridge_config`, serves it from
-    `/api/config` and puts it in the dashboard snapshot, and `app.js` displays
-    `config.llm.veto_enabled`. Never claim those switches are unread; write
-    instead that reading and displaying a switch constructs no gate. Second,
-    the dormant path still writes: `NullLLMGate.check()` returns `SKIPPED` with
+    against source. First, `bridge/config_contract.py` reads the candidate once,
+    validates modeled active leaves, and binds them into
+    `ValidatedRuntimeSettings`. `bridge/api/routes.py` serves only
+    `ValidatedRuntimeSettings.effective_view()` from `/api/config` and places
+    that same view in the dashboard snapshot. The view has no `llm` namespace,
+    so `app.js` displays Veto Mode as `N/A`; this absence does not construct or
+    activate a gate. Second, the dormant path still writes:
+    `NullLLMGate.check()` returns `SKIPPED` with
     reason `llm disabled`, and the engine stores a generic `LLM_SKIPPED`
     decision row for it. What is genuinely absent is narrower — no `directives`
     row and no `llm_calls` row. And `llm_directive_id` is a column on the

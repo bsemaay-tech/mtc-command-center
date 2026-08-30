@@ -85,6 +85,7 @@ def test_runtime_config_view_is_validated_and_restart_only_put_has_no_side_effec
 ):
     client, app = _runtime_api(tmp_path)
     try:
+        assert not hasattr(app.state, "bridge_config")
         before_view = client.get("/api/config")
         assert before_view.status_code == 200
         assert before_view.json()["broker"]["reconnect_attempts"] == {

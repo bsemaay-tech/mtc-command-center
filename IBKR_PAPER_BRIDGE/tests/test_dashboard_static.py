@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from bridge.app import create_app
+from bridge.broker.mock import MockBroker
 
 STATIC_ROOT = Path(__file__).resolve().parents[1] / "bridge" / "static"
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -507,12 +508,20 @@ def test_dashboard_llm_page_matches_validated_snapshot_contract(help_map: dict):
     blob = _blob(gate)
     dashboard_blob = _blob(_component(help_map, "dashboard"))
     raw = HELP_JSON.read_text(encoding="utf-8").lower()
+    help_index = (
+        REPO_ROOT / "IBKR_PAPER_BRIDGE" / "docs" / "31_HELP_SYSTEM_MAP_INDEX.md"
+    ).read_text(encoding="utf-8").lower()
     js = (STATIC_ROOT / "app.js").read_text(encoding="utf-8")
 
     assert "config.llm" not in js
     assert 'setText("vetoMode", "N/A")' in js
     for banned in ("loads config/bridge.yaml", "config.llm.veto_enabled"):
         assert banned not in raw, f"help map still describes retired config access: {banned!r}"
+    for banned in ("app.state.bridge_config", "config.llm.veto_enabled"):
+        assert banned not in help_index, (
+            f"help index still describes retired config access: {banned!r}"
+        )
+    assert "validatedruntimesettings.effective_view()" in help_index
 
     for needle in (
         "fail-closed",
@@ -527,6 +536,34 @@ def test_dashboard_llm_page_matches_validated_snapshot_contract(help_map: dict):
 
     assert "does not activate it today" in blob
     assert "nullllmgate" in blob
+
+
+def test_dashboard_config_page_matches_validated_snapshot_contract(tmp_path):
+    js = (STATIC_ROOT / "app.js").read_text(encoding="utf-8")
+    app = create_app(
+        start_runtime=True,
+        store_path=tmp_path / "dashboard-config.db",
+        broker=MockBroker(bars=[]),
+    )
+    try:
+        view = app.state.validated_runtime_settings.effective_view()
+        assert view["risk"]["risk_pct_per_trade"]["value"] == 0.005
+        assert "coin" not in view["broker"]
+        assert "leverage" not in view["broker"]
+    finally:
+        app.state.bridge_store.close()
+
+    assert "config.risk.risk_pct_per_trade.value" in js
+    for retired_access in (
+        "config.risk.risk_pct_per_trade;",
+        "config.broker.coin",
+        "config.broker.leverage",
+    ):
+        assert retired_access not in js
+    assert 'coinInput.value = "N/A"' in js
+    assert "coinInput.disabled = true" in js
+    assert 'leverageInput.placeholder = "N/A"' in js
+    assert "leverageInput.disabled = true" in js
 
 
 def test_help_knowledge_separates_skipped_decision_from_llm_artifacts(help_map: dict):
