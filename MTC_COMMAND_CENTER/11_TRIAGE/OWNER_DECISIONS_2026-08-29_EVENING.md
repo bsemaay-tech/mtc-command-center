@@ -113,6 +113,18 @@ design-only, serial build chain unchanged).
     the same fail-closed clause (clean -> build proceeds under the addendum-7 unlock;
     not clean -> re-park to owner). Owner-gated thresholds stay [OPEN]; nothing invented.
 
+## Addendum 9 — 2026-08-30 ~17:05 (owner verbatim: "p012 loop to clean, cap 8" + widen to ~10 lanes with more startable packages)
+
+19. **P0-12 repair loop STANDING:** repair->verify rounds run autonomously until the
+    detection auditor finds zero required findings (then the build proceeds under the
+    addendum-7 unlock) or round 8 completes (then hard park regardless). One owner report at
+    the end: clean or parked. All other rules unchanged (no invented values; owner-gated
+    thresholds stay [OPEN]).
+20. **Parallel design-ahead widened:** the owner orders ~10 lanes and authorizes design-stage
+    starts on further packages. Started as DESIGN/DRAFT-ONLY (no build, chain intact):
+    WP-P0-20 build design, WP-P0-30 design, WP-P0-31 Milestone-2 design, WP-V2A-02 design,
+    plus audit/fold rounds on the existing draft fleet.
+
 ## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
 above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
 supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the
