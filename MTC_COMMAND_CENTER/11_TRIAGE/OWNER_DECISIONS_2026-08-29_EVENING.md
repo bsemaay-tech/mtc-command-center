@@ -136,6 +136,17 @@ design-only, serial build chain unchanged).
 22. **P0-16 / P0-17 remain V-NEXT parked** (owner re-confirmed).
 23. **Autonomous window ~2h** — standing rules apply; owner-gated items park and wait.
 
+## Addendum 11 — 2026-08-30 ~19:50 (owner verbatim: "p012 narrow")
+
+24. **P0-12 gate-claim NARROWING authorized:** the design's acceptance gate stops claiming
+    total absence of undocumented behavioural differences (unprovable by finite machinery —
+    the 8-round record is the evidence) and instead claims exactly what the machinery proves:
+    the eight corrections' RULE-2 divergent behaviours, plus equality on the enumerated
+    comparison surfaces, with the enumeration itself published and reproducible. One
+    narrowing round (folding the N78 parking findings under the narrowed claim) + ONE verify
+    pair. Pre-written rule: detection-clean -> the build proceeds under addendum 7;
+    otherwise FINAL PARK, no further rounds under any standing authorization.
+
 ## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
 above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
 supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the
