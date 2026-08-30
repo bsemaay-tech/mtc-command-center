@@ -96,6 +96,16 @@ design-only, serial build chain unchanged).
     `MTC_COMMAND_CENTER/11_TRIAGE/LLM_ROUTE_ASSESSMENTS.md` (append-only, newest first) so
     route knowledge accumulates instead of dying with the session.
 
+## Addendum 7 — 2026-08-30 ~13:15 (owner verbatim: "p012 round 4 fıll unlock")
+
+17. **P0-12 FULL UNLOCK.** The hold is lifted. Authorized as one chain without further owner
+    gates until the merge report: design round 4 (folding the P0-11 stage-3/v3 lessons and
+    the parked N57b findings) -> full 4-family re-audit -> on PASS, the CORRECTED_VNEXT
+    kernel BUILD starts under the owner's standing 2026-08-29 word ("P0-12 kernel approved",
+    build-after-P0-11-accepts — P0-11 merged today as PR #143) -> build audit rounds -> PR ->
+    merge. Fail-closed at every audit: a BLOCK at any stage parks and returns to the owner.
+    Owner-gated numeric thresholds remain [OPEN]-marked, never invented.
+
 ## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
 above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
 supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the

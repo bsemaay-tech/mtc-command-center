@@ -129,12 +129,12 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "DESIGN_PARKED_ROUND_CAP_OWNER_DECISION",
+      "state": "FULL_UNLOCK_ROUND4_RUNNING",
       "branch": "-",
       "commit": "-",
       "detail": "Design audited BLOCK by N45 (self-checking acceptance gate + 3 open semantics + determinism). G17 (Grok, second family) DELIVERED a full detection report (15 findings: 2 BLOCKER, 7 HIGH, 6 MEDIUM; the Lead's earlier 'silent death' call was wrong - it was a slow start). W55 (author family) repaired the union N45+G17 into design v1.1; re-audit N53 (Codex) is running. BUILD starts only after P0-11 accepts. Tier T0.",
       "owner_gate": false,
-      "next_action": "OWNER RULED: HOLD at the round cap until P0-11 v3 lessons fold in. No lane spends on it."
+      "next_action": "OWNER FULL UNLOCK (addendum 7): W74 round-4 design repair (P0-11 lessons folded) -> 4-family re-audit -> on PASS the CORRECTED_VNEXT kernel build starts under the standing kernel approval -> build audits -> PR -> merge report. Fail-closed: any BLOCK re-parks to the owner."
     },
     {
       "id": "WP-P0-20",
