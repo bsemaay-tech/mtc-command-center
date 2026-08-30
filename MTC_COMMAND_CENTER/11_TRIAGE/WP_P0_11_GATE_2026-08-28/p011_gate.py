@@ -1839,13 +1839,7 @@ def command_finalize_candidate(args: argparse.Namespace) -> int:
     }
     write_json(receipt_path, receipt)
     final_receipt_hash = sha256_file(receipt_path)
-    anchor["receipt_sha256"] = final_receipt_hash
-    anchor["freeze_state"] = FINALIZER_ACCEPTED_STATUS
-    anchor["subject_runs_at_signature"] = 0
-    anchor["candidate_baseline_artifact_sha256"] = artifacts
-    anchor["candidate_discrimination_matrix_sha256"] = sha256_file(mutation_matrix)
-    write_json(ANCHOR_PATH, anchor)
-    print(json.dumps({"outcome": FINALIZER_ACCEPTED_STATUS, "receipt_sha256": final_receipt_hash, "legacy_manifest_sha256": anchor["legacy_manifest_sha256"], "artifact_sha256": artifacts, "full_gate_outcome": "STOP"}, sort_keys=True, separators=(",", ":")))
+    print(json.dumps({"outcome": FINALIZER_ACCEPTED_STATUS, "receipt_sha256": final_receipt_hash, "legacy_manifest_sha256": anchor["legacy_manifest_sha256"], "artifact_sha256": artifacts, "anchor_write_performed": False, "full_gate_outcome": "STOP"}, sort_keys=True, separators=(",", ":")))
     return 0
 
 

@@ -1,0 +1,272 @@
+{
+  "receipt_schema_version": "P011_V3_PUBLICATION_RECEIPT_v1",
+  "gate_version": "P011-LC-GATE-v3",
+  "publication_state": "PUBLISHED_REFERENCE_TO_OWNER_SIGNATURE_ACT_WITH_CAVEAT",
+  "gate_outcome": "STOP",
+  "subject_run_count": 0,
+  "signature_act_of_record": {
+    "kind": "REFERENCE_ONLY_NO_CODE_SIGNATURE",
+    "owner_decision_file": "MTC_COMMAND_CENTER/11_TRIAGE/OWNER_DECISIONS_2026-08-29_EVENING.md",
+    "branch": "docs/session-20260829-status",
+    "commit": "3ffff7bc5d05675f6f7ed49449295bfcd99d93a9",
+    "addendum": 5,
+    "recorded_owner_ruling": "Sign with caveat recorded"
+  },
+  "publication_caveat": {
+    "status": "RECORDED_VERBATIM",
+    "verbatim": "stage-4 design v2f's A-N recipe carries one step not yet literally executable by a stranger — wording, not evidence; parking record `AUDIT_N66E_V2F.md`",
+    "parking_record": "C:\\tmp\\LANE_PROMPTS_20260828\\AUDIT_N66E_V2F.md",
+    "parking_record_sha256": "445e3818414b9184e5d38d07fe3255fd682dceb69f62ea2a92d191568e4cc366",
+    "parking_verdict": "NOT-CONFIRMED",
+    "required_finding_count": 1,
+    "required_finding": "N66 F-6 remains open: the A-N procedure is not executable as written by a fresh lane"
+  },
+  "change_log": [
+    {
+      "id": "v3-finalization",
+      "status": "DONE_OWNER_SIGNATURE_REFERENCE_RECORDED",
+      "summary": "Published the measured STOP state at source commit 2eedfb87; no code-generated signature or anchor was created."
+    },
+    {
+      "id": "v3-caveat",
+      "status": "DONE_CAVEAT_CARRIED_INSIDE_RECEIPT",
+      "verbatim": "stage-4 design v2f's A-N recipe carries one step not yet literally executable by a stranger — wording, not evidence; parking record `AUDIT_N66E_V2F.md`"
+    }
+  ],
+  "signed_measurement_scope": {
+    "source_commit": "2eedfb875ee5deb51ce4a9c4f62ec26f6d4e9f37",
+    "source_tree": "4d93b2c1014b71b73eca22fcf74135687daad43d",
+    "status": "DONE_IDENTITY_REBUILD_MATCHED_GATE_STOP",
+    "scope_limits": [
+      "Evidence integrity and measured identities only",
+      "No trading readiness",
+      "No deployment",
+      "No profitability",
+      "No safety claim",
+      "No subject run",
+      "No upgrade of any STOP to PASS"
+    ]
+  },
+  "identity_contract": {
+    "deciding_text_inputs": {
+      "IBKR_PAPER_BRIDGE/tests/fixtures/BTC_1h_real.csv": {
+        "blob_oid": "ac6de7dcc3a25ebe7423e0e53e24ccabc7c1895f",
+        "blob_bytes_sha256_diagnostic": "756fa05944dc0903ea03b1ee0dc0296b84a8cc1dc65acc39ad1e0b4b07de252e",
+        "working_copy_sha256_diagnostic": "3a3a4939fc8e1b725112115971e2663ddbcc1ea5981c37aa1d02d8bc3674a7bb"
+      },
+      "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md": {
+        "blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "blob_bytes_sha256_diagnostic": "331feb1d7578bbf804b527e2a658fecbcbf74d00d1e852312860345029362adc",
+        "working_copy_sha256_diagnostic": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "profiles/mtc_v2_legacy_supertrend_default_v1.json": {
+        "blob_oid": "96d70145eeefd086fc1016229491eb5ca81dd1c7",
+        "blob_bytes_sha256_diagnostic": "c1570317e0dd9ffc2eb9d4ad652891bce65e3ff2007cbbcbba1523ddb33b78f0",
+        "working_copy_sha256_diagnostic": "c1570317e0dd9ffc2eb9d4ad652891bce65e3ff2007cbbcbba1523ddb33b78f0"
+      },
+      "profiles/mtc_v2_legacy_range_filter_default_v1.json": {
+        "blob_oid": "64cd66720217429b7286171f401dd1a770185ca7",
+        "blob_bytes_sha256_diagnostic": "35d40915d9813265d1cc1f4474a770471d3ea443e5a67b12ccb4f9e7270944d8",
+        "working_copy_sha256_diagnostic": "35d40915d9813265d1cc1f4474a770471d3ea443e5a67b12ccb4f9e7270944d8"
+      }
+    },
+    "tool_blob_oids": {
+      "p011_gate.py": "92d3f606e7deca902e47cc139f1ac66c6c45a80c",
+      "row_arm.py": "93b22a8b4bc1c19644d98ce5ad8e12472fa88052",
+      "stage1_freeze.py": "7a996349f58d2b021d7e2794339333315736eab6",
+      "scenario_binding.py": "fdc73f527380a6b2ac2b057d5f1b09c7e0cd96df",
+      "stage3_oracle_contracts.py": "1ef42461e294725034ba9e0f98476bdedac7524b",
+      "test_scenario_binding.py": "371d86c822a19d7788f1906004afc762205faf5f"
+    },
+    "package_file_sha256_at_signed_source": {
+      "stage1_freeze.py": "3f9b6704a6d355f39ad417bd48187ff3b04e5548f12439689f9232f9d06a2dc0",
+      "p011_gate.py": "8e11499927d9fe4b18faf595d30115a55d7b9605d8f2e85dbe8a5ba18fa91865",
+      "row_arm.py": "ff541bb185b4f98af74141159c716edbf7070041216717b7857961c3a922a047",
+      "scenario_binding.py": "5962f692b7fbe926d734d3b192f142f8574897902d0a96049de369fd058d3a85",
+      "test_scenario_binding.py": "d456a63d2efa7a3291671191e9ebd825eb40ccb8d7321ee00efa5b9d16d2222a",
+      "P011_OBSERVATION_SCHEMA_v1.json": "c18fb1622ab38b374d65a1304994f0e9f5d8993f948e75d99694bdfceb5fdb2e",
+      "p011_legacy_manifest.json": "29ecc19947bd5400293709cccd7fe0e46aceeb013cc8fb0f2d7965a16c515ed3",
+      "P011_GATE_RECEIPT.json": "a31128f1e292c6f70c8204847494e40c38edc9af685f72a21486c90027f61bb1",
+      "LANE_REPORT.md": "873537ca8b6745bfaafda6b1a55341b4fe5f2967970e6734576cb8370bd8e268",
+      "stage3_oracle_contracts.py": "3fc3042ee7a652e81a90d83f82c417e731db1bc066a3b64ab344af90be672582",
+      "test_stage3_oracles.py": "401d745ec8fa8d6db6a3eae038ddc0a79023048674b77f28fd24853ae619e16e",
+      "test_producer_discrimination_matrix.py": "f832dcabaa6b3e838e1182c60eca1f4803936bd089422cb7ae75f86b113cc6b2",
+      "evidence/producer_discrimination_matrix.py": "9d87296ee5bf371f7e10f66a9252cdd6ee3ee9d70aa1c34ad351ace93a48db9d"
+    },
+    "hashed_baseline": {
+      "machine_strings": "EXCLUDED",
+      "stable_fields": [
+        "source_commit",
+        "source_tree",
+        "tool_blob_oids",
+        "input_blob_oids",
+        "dependency_lock_digest",
+        "runtime_compatibility_contract"
+      ],
+      "fresh_baseline_status": "STOP_NOT_EXECUTABLE_UNTIL_PUBLICATION_AUTHORIZATION_AND_BASELINE_DIAGNOSTICS_EXIST"
+    }
+  },
+  "independent_reproduction_evidence": {
+    "actor": "Claude Pro (Sonnet-family)",
+    "role": "SECOND_ACTOR_REBUILD_AND_COMPARE_ONLY",
+    "record_path": "C:\\tmp\\LANE_PROMPTS_20260828\\P29_REBUILD_REPORT.md",
+    "record_sha256": "1a19f3f1bc549565bb5fe2c021f74d81019157b988db83faeeb54865a7ad4eb0",
+    "measured_identity_matches": {
+      "deciding_text_input_blob_oids": 4,
+      "tool_blob_oids": 6,
+      "package_file_sha256": 13,
+      "source_commit": 1,
+      "source_tree": 1
+    },
+    "mismatches": 0,
+    "candidate_manifest": {
+      "status": "DONE_DETERMINISTIC_THREE_FRESH_RUNS",
+      "sha256": "fa9912a0265e2bf8c740df45e98cf783117b8d407bb7c819699ab70bd55addea",
+      "canonical": false
+    },
+    "producer_matrix_self_test": {
+      "status": "STOP_HISTORICAL_EXPECTATION_NOT_REPRODUCED",
+      "record_count": 1,
+      "detected_count": 76,
+      "acceptance_credit": 0,
+      "matrix_sha256": "e51dabb9c2cb33382a16f74157ddd1466a5231288dbc647ed0dd324de646272e",
+      "transcript_sha256": "62e47741566ab87e00f8a5dc18a8563df07a770174bea1bf3f88698fa23290c3"
+    },
+    "trust_surface_anchor_files": "STOP_NOT_MEASURED_BY_DESIGN"
+  },
+  "design_step_execution": [
+    {
+      "step": "A",
+      "status": "DONE_CLEAN_CHECKOUT_IDENTITY_MATCHED",
+      "reason": "P29 cloned without hardlinks, checked out 2eedfb87, and measured the clean source commit and tree."
+    },
+    {
+      "step": "B",
+      "status": "DONE_FOUR_DECIDING_BLOB_OIDS_MATCHED",
+      "reason": "P29 matched commit-object and working-tree blob OIDs for all four deciding text inputs."
+    },
+    {
+      "step": "C",
+      "status": "DONE_39_TESTS_OK",
+      "reason": "P29 ran the git-backed package unit suite: 39 tests, OK."
+    },
+    {
+      "step": "D",
+      "status": "DONE_CANDIDATE_MANIFEST_DETERMINISTIC_THREE_RUNS",
+      "reason": "The candidate was byte-identical across three fresh runs and remains non-canonical."
+    },
+    {
+      "step": "E",
+      "status": "STOP_HISTORICAL_EXPECTATION_NOT_REPRODUCED",
+      "reason": "Only the one-record comparator self-test was available; 76 detections carry zero producer-boundary credit."
+    },
+    {
+      "step": "F",
+      "status": "STOP_NOT_EXECUTABLE_UNTIL_PUBLICATION_AUTHORIZATION_AND_BASELINE_DIAGNOSTICS_EXIST",
+      "reason": "build-baseline remains anchor-circular and lacks the required publication-authorization and diagnostics contract."
+    },
+    {
+      "step": "G",
+      "status": "STOP_NOT_EXECUTABLE_UNTIL_A_TREE_ALIGNMENT_AND_PUBLICATION_AUTHORIZATION_EXIST",
+      "reason": "Canonical build refused the stale anchor; candidate build refused A_TREE_OID 7aa6f867 versus HEAD subtree 1644afc0. The pre-sign contract-harness command is also parked as not literally executable."
+    },
+    {
+      "step": "H",
+      "status": "STOP_NOT_EXECUTABLE_UNTIL_SCENARIO_VARIANT_MATRIX_SURFACE_EXISTS",
+      "reason": "evidence/scenario_variant_matrix.py is absent."
+    },
+    {
+      "step": "I",
+      "status": "STOP_NOT_EXECUTABLE_UNTIL_FRESH_INPUTS_AND_V3_TOOL_CONTRACTS_EXIST",
+      "reason": "Five parsers are present but were not executed by P29; the end-to-end verifier is absent; fresh baseline and row-arm inputs do not exist."
+    },
+    {
+      "step": "J",
+      "status": "DONE_SEVEN_REACHABLE_PROBES_MEASURED",
+      "reason": "P29 measured six refused modified inputs and one pristine matrix/transcript accepted with an honest STOP; the promised committed runner remains parked because its verbatim and fail-closed contracts conflict."
+    },
+    {
+      "step": "K",
+      "status": "STOP_AUTHORITY_ACCOUNTING_IS_ABSENT_C01",
+      "reason": "finalize-stage3-candidate stopped before producing a consumable v3 receipt from the historical row-arm artifacts."
+    },
+    {
+      "step": "L",
+      "status": "STOP_V3_ANCHOR_AUTHORITY_ABSENT",
+      "reason": "OWNER_AUTH_P011_GATE_V3.md is absent; publish-v3-prerequisite wrote no output."
+    },
+    {
+      "step": "M",
+      "status": "STOP_NOT_EXECUTABLE_UNTIL_UNSIGNED_RENDERER_AND_FINAL_PUBLICATION_SHA_EXIST",
+      "reason": "The unsigned-anchor renderer is absent and no repository anchor was generated."
+    },
+    {
+      "step": "N",
+      "status": "DONE_OWNER_SIGNATURE_ACT_REFERENCE_RECORDED_WITH_CAVEAT",
+      "reason": "The result-signature act is addendum 5 at commit 3ffff7bc; preparation authorization remains STOP_NOT_ESTABLISHED and no code issued a signature."
+    }
+  ],
+  "typed_gate_stops": {
+    "mixed_authority_rows": {
+      "rows": [
+        "C03",
+        "C04",
+        "C26",
+        "C38",
+        "C39",
+        "C41"
+      ],
+      "status": "STOP_EVIDENCE_MODE_NOT_IMPLEMENTED"
+    },
+    "pine_rows": {
+      "rows": [
+        "C28",
+        "C29",
+        "C30"
+      ],
+      "status": "STOP_UNRESOLVED_PRODUCER_EXECUTION_AND_EXPECTATION_RESTATES_INPUT"
+    },
+    "authority_contradictions": {
+      "rows": [
+        "C32",
+        "C34",
+        "C42"
+      ],
+      "status": "STOP_UNRESOLVED_AUTHORITY_CONTRADICTION"
+    },
+    "protected_implementation": {
+      "rows": [
+        "C35"
+      ],
+      "status": "STOP_PROTECTED_IMPLEMENTATION_A_APPROVAL_REQUIRED"
+    },
+    "declaration_consumer_conservation": "NOT_IMPLEMENTED_NOT_CLAIMED",
+    "producer_boundary": "STOP_HISTORICAL_EXPECTATION_NOT_REPRODUCED"
+  },
+  "retained_history": {
+    "legacy_v2_receipt": {
+      "path": "P011_GATE_RECEIPT.json",
+      "sha256": "a31128f1e292c6f70c8204847494e40c38edc9af685f72a21486c90027f61bb1",
+      "status": "RETAINED_HISTORICAL_EVIDENCE_NOT_V3_PUBLICATION"
+    },
+    "legacy_manifest": {
+      "path": "p011_legacy_manifest.json",
+      "sha256": "29ecc19947bd5400293709cccd7fe0e46aceeb013cc8fb0f2d7965a16c515ed3",
+      "gate_version": "P011-LC-GATE-v2",
+      "status": "STOP_NOT_CANONICAL_V3_MANIFEST"
+    },
+    "observation_schema": {
+      "path": "P011_OBSERVATION_SCHEMA_v1.json",
+      "sha256": "c18fb1622ab38b374d65a1304994f0e9f5d8993f948e75d99694bdfceb5fdb2e",
+      "blob_oid": "ccd93b3af493a041550517d58f7b9d12a62a5ff9",
+      "status": "RETAINED_UNCHANGED"
+    }
+  },
+  "operational_limits": {
+    "merge_authorized_in_this_lane": false,
+    "push_authorized_in_this_lane": false,
+    "deployment_authorized": false,
+    "trading_authorized": false,
+    "protected_implementation_authorized": false
+  }
+}

@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import platform
 import subprocess
 import sys
 from pathlib import Path
@@ -56,6 +55,19 @@ STAGE3_AUTHORIZATION_FILE_PATH = Path(
 )
 STAGE3_ANCHOR_PATH = Path(
     r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v3.owner-signed.json"
+)
+V3_PUBLICATION_RECEIPT_PATH = GATE_DIR / "P011_V3_PUBLICATION_RECEIPT.json"
+V3_SIGNATURE_REFERENCE = {
+    "kind": "REFERENCE_ONLY_NO_CODE_SIGNATURE",
+    "owner_decision_file": "MTC_COMMAND_CENTER/11_TRIAGE/OWNER_DECISIONS_2026-08-29_EVENING.md",
+    "branch": "docs/session-20260829-status",
+    "commit": "3ffff7bc5d05675f6f7ed49449295bfcd99d93a9",
+    "addendum": 5,
+    "recorded_owner_ruling": "Sign with caveat recorded",
+}
+V3_SIGNATURE_CAVEAT = (
+    "stage-4 design v2f's A-N recipe carries one step not yet literally executable by a "
+    "stranger — wording, not evidence; parking record `AUDIT_N66E_V2F.md`"
 )
 
 
@@ -886,125 +898,69 @@ def build_legacy_manifest(*, stage3: bool = False) -> dict[str, Any]:
     }
 
 
-def build_receipt(
-    fixture_meta: dict[str, Any],
-    profiles: list[dict[str, Any]],
-    schema_hash: str,
-    legacy_manifest_hash: str,
+def _contains_exact_key(value: Any, target: str) -> bool:
+    if isinstance(value, dict):
+        return target in value or any(
+            _contains_exact_key(child, target) for child in value.values()
+        )
+    if isinstance(value, list):
+        return any(_contains_exact_key(child, target) for child in value)
+    return False
+
+
+def validate_v3_publication_receipt(
+    path: Path = V3_PUBLICATION_RECEIPT_PATH,
 ) -> dict[str, Any]:
-    a_runner = "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py"
-    return {
-        "receipt_schema_version": "P011_GATE_RECEIPT_v1",
-        "gate_version": GATE_VERSION,
-        "receipt_state": "STAGE1_FROZEN_STAGE2_CANDIDATE_PENDING",
-        "accepted_git_commit": SOURCE_COMMIT,
-        "accepted_git_tree": git("rev-parse", f"{SOURCE_COMMIT}^{{tree}}"),
-        "local_master_observed_at_freeze": git("rev-parse", "master"),
-        "dependency_variant": "DIRECT_BUILD",
-        "fixture_suite_commit": "NONE_DIRECT_BUILD",
-        "source_identities": {
-            "implementation_a": {
-                "commit": SOURCE_COMMIT,
-                "tree_oid": A_TREE_OID,
-                "runner_path": a_runner,
-                "runner_blob_oid": git("rev-parse", f"{SOURCE_COMMIT}:{a_runner}"),
-            },
-            "pine_current": {
-                "commit": SOURCE_COMMIT,
-                "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine",
-                "blob_oid": git("rev-parse", f"{SOURCE_COMMIT}:MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"),
-                "role": "source corroboration only",
-            },
-            "controller_freeze": {"tag": "legacy/pine-controller/2026-08-25", "commit": PINE_FREEZE_COMMIT},
-            "implementation_b_freeze": {"tag": "legacy/02-mtc-backtest/2026-08-25", "commit": B_FREEZE_COMMIT},
-            "p009": {"commit": P009_AUTHORITY_COMMIT, "blob_oid": P009_BLOB_OID, "sha256": P009_SHA256},
-        },
-        "data_identities": {
-            "emitted_fixture": {
-                "path": FIXTURE_PATH.relative_to(REPO_ROOT).as_posix(),
-                "sha256": FIXTURE_SHA256,
-                **fixture_meta,
-                "symbol": "BTCUSD",
-                "timeframe": "1h",
-                "timezone": "UTC",
-                "market_schedule": "24/7",
-            },
-            "upstream": {
-                "bundle": "native_multiasset_alpaca_2026-06-28",
-                "provider": "alpaca_crypto",
-                "source_symbol": "BTC/USD",
-                "classification": "RESEARCH_ONLY_NOT_PROMOTABLE",
-                "ohlcv_validation_status": "PASS",
-                "manifest_sha256": UPSTREAM_MANIFEST_SHA256,
-                "normalized_file_sha256": UPSTREAM_NORMALIZED_SHA256,
-                "serialization_identity_note": "upstream normalized bytes and emitted fixture bytes are intentionally different identities",
-            },
-        },
-        "resolved_profiles": profiles,
-        "observation_schema": {
-            "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/P011_OBSERVATION_SCHEMA_v1.json",
-            "sha256": schema_hash,
-        },
-        "legacy_manifest": {
-            "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_11_GATE_2026-08-28/p011_legacy_manifest.json",
-            "sha256": legacy_manifest_hash,
-            "frozen_before_subject_run": True,
-        },
-        "producer_and_adapter_bindings": {
-            "baseline_generator": {"path": "p011_gate.py", "sha256": None, "status": "PENDING_STAGE2"},
-            "a_observation_adapter": {"path": "p011_gate.py", "sha256": None, "status": "PENDING_STAGE2", "required_call": "mtc_v2.core.runner.Runner.run once per profile"},
-            "subject_adapter": {"path": None, "sha256": None, "resolved_import_call_graph": None, "status": "REQUIRED_BEFORE_COMPARE"},
-        },
-        "baseline_outputs": {
-            "status": "PENDING_STAGE2_CANDIDATE_BUILD",
-            "expected_artifacts": ["mtc_v2_legacy_sequence.jsonl", "baseline_manifest.json", "row_corroboration.json", "final_states.json"],
-            "artifact_sha256": {},
-            "double_build": {"run_1": None, "run_2": None, "byte_identical": None},
-        },
-        "tool_environment": {
-            "python_executable": sys.executable,
-            "python_version": sys.version,
-            "python_implementation": platform.python_implementation(),
-            "platform": platform.platform(),
-            "stage1_generator": {
-                "path": Path(__file__).relative_to(REPO_ROOT).as_posix(),
-                "sha256": sha256_file(Path(__file__)),
-            },
-        },
-        "subject": {
-            "classification": None,
-            "allowed_classifications": ["INDEPENDENT_REIMPLEMENTATION", "WRAP_MOVE_OF_A"],
-            "tree_oid": None,
-            "import_call_graph": None,
-            "status": "NO_SUBJECT_RUN_AUTHORIZED_OR_PERFORMED",
-        },
-        "independent_reproduction_evidence": {
-            "status": "NOT_PERFORMED_IMPLEMENTER_MUST_NOT_SELF_ISSUE",
-            "required_actor": "independent flagship other than builder",
-            "auditor_checkout": None,
-            "commands": [],
-            "artifact_hashes": {},
-        },
-        "external_anchor": {
-            "path": str(ANCHOR_PATH),
-            "required": True,
-            "missing": "STOP",
-            "present_but_mismatched": "FAIL",
-        },
-        "claim_limits": [
-            "baseline remains a candidate until independent flagship reproduction",
-            "no profitability, safety, instrument-faithfulness, live-trading, or unnamed-case claim",
-            "sequence arm has no independent economic credit for WRAP_MOVE_OF_A",
-            "Pine source is corroboration only without an exact separately authorized export",
-            "P0-10 expected values are not used",
-        ],
-        "discrepancies": [
-            "The accepted design names C:\\WFMERGE54; this authorized isolated worktree is C:\\WPP011_20260825 at the same accepted commit.",
-            "P011-LC-GATE-v2 re-pins P0-09 to the current-master citation-resolved blob; no row rule, oracle, or expected value changed from v1.",
-            "The upstream normalized-file SHA-256 differs from the emitted fixture SHA-256; both identities are retained.",
-            "Current master deleted the wt_* surface; C28-C30 use the controller freeze tag, never current master.",
-        ],
-    }
+    receipt = json.loads(path.read_text(encoding="utf-8"))
+    if receipt.get("receipt_schema_version") != "P011_V3_PUBLICATION_RECEIPT_v1":
+        raise SystemExit("STOP_V3_PUBLICATION_RECEIPT_SCHEMA_MISMATCH")
+    if receipt.get("gate_version") != STAGE3_GATE_VERSION:
+        raise SystemExit("STOP_V3_PUBLICATION_RECEIPT_GATE_VERSION_MISMATCH")
+    if receipt.get("gate_outcome") != "STOP":
+        raise SystemExit("STOP_V3_GATE_OUTCOME_NOT_STOP")
+    if _contains_exact_key(receipt, "signature"):
+        raise SystemExit("STOP_V3_CODE_SIGNATURE_FIELD_REFUSED")
+    if receipt.get("signature_act_of_record") != V3_SIGNATURE_REFERENCE:
+        raise SystemExit("STOP_V3_SIGNATURE_REFERENCE_MISMATCH")
+    caveat = receipt.get("publication_caveat") or {}
+    if caveat.get("verbatim") != V3_SIGNATURE_CAVEAT:
+        raise SystemExit("STOP_V3_CAVEAT_MISMATCH")
+    measured = (receipt.get("independent_reproduction_evidence") or {}).get(
+        "measured_identity_matches"
+    )
+    if measured != {
+        "deciding_text_input_blob_oids": 4,
+        "tool_blob_oids": 6,
+        "package_file_sha256": 13,
+        "source_commit": 1,
+        "source_tree": 1,
+    }:
+        raise SystemExit("STOP_V3_SECOND_ACTOR_MEASUREMENTS_MISMATCH")
+    hashed_baseline = (receipt.get("identity_contract") or {}).get(
+        "hashed_baseline", {}
+    )
+    for machine_key in (
+        "platform",
+        "python_executable",
+        "python_implementation",
+        "python_version",
+    ):
+        if machine_key in hashed_baseline:
+            raise SystemExit("STOP_V3_MACHINE_STRING_IN_HASHED_BASELINE")
+    if hashed_baseline.get("machine_strings") != "EXCLUDED":
+        raise SystemExit("STOP_V3_MACHINE_STRING_POLICY_MISMATCH")
+    steps = receipt.get("design_step_execution")
+    if not isinstance(steps, list) or [item.get("step") for item in steps] != list(
+        "ABCDEFGHIJKLMN"
+    ):
+        raise SystemExit("STOP_V3_DESIGN_STEP_MAP_MISMATCH")
+    if any(
+        not isinstance(item.get("status"), str)
+        or not item["status"].startswith(("DONE_", "STOP_"))
+        for item in steps
+    ):
+        raise SystemExit("STOP_V3_UNMEASURED_STEP_LABEL_REFUSED")
+    return receipt
 
 
 def _refuse_protected_publication_target(path: Path) -> None:
@@ -1012,12 +968,18 @@ def _refuse_protected_publication_target(path: Path) -> None:
     protected = {
         (GATE_DIR / "P011_GATE_RECEIPT.json").resolve(),
         (GATE_DIR / "p011_legacy_manifest.json").resolve(),
+        V3_PUBLICATION_RECEIPT_PATH.resolve(),
         V1_ANCHOR_PATH.resolve(),
         ANCHOR_PATH.resolve(),
+        STAGE3_ANCHOR_PATH.resolve(),
     }
+    if resolved in protected and not (
+        "P011-LC-GATE-v1" in resolved.name
+        or "P011-LC-GATE-v2" in resolved.name
+    ):
+        raise SystemExit("STOP_PROTECTED_PUBLICATION_TARGET_REFUSED")
     if (
-        resolved in protected
-        or "P011-LC-GATE-v1" in resolved.name
+        "P011-LC-GATE-v1" in resolved.name
         or "P011-LC-GATE-v2" in resolved.name
     ):
         raise SystemExit("STOP_V1_V2_PUBLICATION_TARGET_REFUSED")
@@ -1115,61 +1077,6 @@ def command_publish_stage3_prerequisite(args: argparse.Namespace) -> int:
 
 def _retired_combined_v2_freeze() -> int:
     raise SystemExit("STOP_RETIRED_COMBINED_GENERATOR_REFUSED")
-    # Retained below only as historical construction context; it is unreachable.
-    fixture_meta = verify_fixed_inputs()
-    profiles = build_profiles()
-    schema_path = GATE_DIR / "P011_OBSERVATION_SCHEMA_v1.json"
-    write_json(schema_path, build_schema())
-    schema_hash = sha256_file(schema_path)
-
-    legacy_path = GATE_DIR / "p011_legacy_manifest.json"
-    write_json(legacy_path, build_legacy_manifest())
-    legacy_hash = sha256_file(legacy_path)
-
-    receipt_path = GATE_DIR / "P011_GATE_RECEIPT.json"
-    receipt = build_receipt(fixture_meta, profiles, schema_hash, legacy_hash)
-    write_json(receipt_path, receipt)
-    receipt_hash = sha256_file(receipt_path)
-
-    ANCHOR_PATH.parent.mkdir(parents=True, exist_ok=True)
-    anchor = {
-        "anchor_schema_version": "P011_OWNER_SIGNED_ANCHOR_v1",
-        "gate_version": GATE_VERSION,
-        "receipt_sha256": receipt_hash,
-        "legacy_manifest_sha256": legacy_hash,
-        "owner_identity": "Barış",
-        "signature_date": "2026-08-28",
-        "signature_basis": {
-            "method": "direct owner authorization for the v2 gate bump",
-            "owner_authorization_path": str(OWNER_AUTHORIZATION_PATH),
-            "owner_authorization_sha256": sha256_file(OWNER_AUTHORIZATION_PATH),
-            "owner_words_verbatim": "Bump to v2 now",
-        },
-        "supersedes_gate_version": "P011-LC-GATE-v1",
-        "retained_v1_anchor": {
-            "path": str(V1_ANCHOR_PATH),
-            "sha256": sha256_file(V1_ANCHOR_PATH),
-            "status": "RETAINED_UNTOUCHED",
-        },
-        "freeze_state": "STAGE1_FROZEN_STAGE2_CANDIDATE_PENDING",
-        "subject_runs_at_signature": 0,
-        "automatic_stop_rule": "Any P0-11 repository commit that touches, creates, deletes, renames, or claims to replace this external anchor is an automatic STOP.",
-        "location_rule": "Only this external path is authoritative; an in-repository copy is not an anchor.",
-    }
-    write_json(ANCHOR_PATH, anchor)
-
-    summary = {
-        "outcome": "PASS",
-        "gate_version": GATE_VERSION,
-        "profiles": profiles,
-        "schema_sha256": schema_hash,
-        "legacy_manifest_sha256": legacy_hash,
-        "receipt_sha256": receipt_hash,
-        "external_anchor": str(ANCHOR_PATH),
-        "subject_runs": 0,
-    }
-    print(json.dumps(summary, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
-    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:

@@ -313,6 +313,20 @@ class Stage3PublicationBoundaryTests(unittest.TestCase):
                     authorization_file_path=authorization_file,
                     output_path=stage1_freeze.ANCHOR_PATH,
                 )
+            for protected_v3_path in (
+                stage1_freeze.V3_PUBLICATION_RECEIPT_PATH,
+                stage1_freeze.STAGE3_ANCHOR_PATH,
+            ):
+                with self.subTest(protected_v3_path=protected_v3_path):
+                    with self.assertRaisesRegex(
+                        SystemExit, "STOP_PROTECTED_PUBLICATION_TARGET_REFUSED"
+                    ):
+                        stage1_freeze.validate_stage3_publication_prerequisites(
+                            manifest_path=manifest,
+                            receipt_path=receipt,
+                            authorization_file_path=authorization_file,
+                            output_path=protected_v3_path,
+                        )
             presence = stage1_freeze.validate_stage3_publication_prerequisites(
                 manifest_path=manifest,
                 receipt_path=receipt,
@@ -334,6 +348,65 @@ class Stage3PublicationBoundaryTests(unittest.TestCase):
                     authorization_file_path=authorization_file,
                     output_path=root / "v3-anchor.json",
                 )
+
+    def test_v3_publication_receipt_carries_only_the_recorded_signature_reference(self) -> None:
+        receipt = stage1_freeze.validate_v3_publication_receipt()
+        self.assertEqual("STOP", receipt["gate_outcome"])
+        self.assertEqual(
+            stage1_freeze.V3_SIGNATURE_REFERENCE,
+            receipt["signature_act_of_record"],
+        )
+        self.assertEqual(
+            stage1_freeze.V3_SIGNATURE_CAVEAT,
+            receipt["publication_caveat"]["verbatim"],
+        )
+
+    def test_v3_publication_receipt_modified_copies_are_refused(self) -> None:
+        pristine = json.loads(
+            stage1_freeze.V3_PUBLICATION_RECEIPT_PATH.read_text(encoding="utf-8")
+        )
+        variants = []
+
+        wrong_outcome = deepcopy(pristine)
+        wrong_outcome["gate_outcome"] = "PASS"
+        variants.append(("outcome", wrong_outcome, "STOP_V3_GATE_OUTCOME_NOT_STOP"))
+
+        code_signature = deepcopy(pristine)
+        code_signature["signature"] = "generated string"
+        variants.append(
+            ("code_signature", code_signature, "STOP_V3_CODE_SIGNATURE_FIELD_REFUSED")
+        )
+
+        changed_reference = deepcopy(pristine)
+        changed_reference["signature_act_of_record"]["commit"] = "0" * 40
+        variants.append(
+            ("signature_reference", changed_reference, "STOP_V3_SIGNATURE_REFERENCE_MISMATCH")
+        )
+
+        changed_caveat = deepcopy(pristine)
+        changed_caveat["publication_caveat"]["verbatim"] = "caveat omitted"
+        variants.append(("caveat", changed_caveat, "STOP_V3_CAVEAT_MISMATCH"))
+
+        machine_string = deepcopy(pristine)
+        machine_string["identity_contract"]["hashed_baseline"]["python_version"] = "host value"
+        variants.append(
+            ("machine_string", machine_string, "STOP_V3_MACHINE_STRING_IN_HASHED_BASELINE")
+        )
+
+        unmeasured_label = deepcopy(pristine)
+        unmeasured_label["design_step_execution"][0]["status"] = "PASS"
+        variants.append(
+            ("step_label", unmeasured_label, "STOP_V3_UNMEASURED_STEP_LABEL_REFUSED")
+        )
+
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            for variant_name, variant, expected_reason in variants:
+                with self.subTest(variant=variant_name):
+                    path = root / f"{variant_name}.json"
+                    stage1_freeze.write_json(path, variant)
+                    with self.assertRaisesRegex(SystemExit, expected_reason):
+                        stage1_freeze.validate_v3_publication_receipt(path)
 
 
 if __name__ == "__main__":

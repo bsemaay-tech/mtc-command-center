@@ -272,15 +272,15 @@ class GateVariantTests(unittest.TestCase):
     def _assert_narrowed_finalizer_status(self) -> None:
         self.assertEqual(NARROWED_FINALIZER_STATUS, self.finalizer_output["outcome"])
         self.assertEqual("STOP", self.finalizer_output["full_gate_outcome"])
+        self.assertFalse(self.finalizer_output["anchor_write_performed"])
         receipt = next(
             value
             for path, value in self.finalizer_writes.items()
             if path.name == "P011_GATE_RECEIPT.json"
         )
-        anchor = next(
-            value
-            for path, value in self.finalizer_writes.items()
-            if path.name == "copied_anchor.json"
+        self.assertEqual(
+            {p011_gate.GATE_DIR / "P011_GATE_RECEIPT.json"},
+            set(self.finalizer_writes),
         )
         self.assertEqual(NARROWED_FINALIZER_STATUS, receipt["receipt_state"])
         self.assertEqual(
@@ -303,7 +303,6 @@ class GateVariantTests(unittest.TestCase):
                 set(artifact),
             )
         self.assertTrue(comparison["byte_identical"])
-        self.assertEqual(NARROWED_FINALIZER_STATUS, anchor["freeze_state"])
 
     def test_caller_input_flags_bind_honest_names_and_legacy_flags_are_absent(self) -> None:
         parser = p011_gate.build_parser()
