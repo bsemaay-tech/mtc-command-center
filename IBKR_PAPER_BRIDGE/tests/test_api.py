@@ -13,6 +13,29 @@ from bridge.engine.types import ActionOutcome
 from bridge.store.db import Store
 
 
+class _BroadcastSpy:
+    def __init__(self):
+        self.messages = []
+
+    async def broadcast(self, topic, data):
+        self.messages.append((topic, data))
+
+
+def _runtime_api(tmp_path, *, schema_version: int = 4):
+    db_path = tmp_path / f"runtime-v{schema_version}.db"
+    if schema_version != 4:
+        store = Store(db_path)
+        store.initialize(target_schema_version=schema_version)
+        store.close()
+    app = create_app(
+        start_runtime=True,
+        store_path=db_path,
+        broker=MockBroker(bars=[]),
+    )
+    app.state.ws_hub = _BroadcastSpy()
+    return TestClient(app), app
+
+
 def test_api_status_config_state_and_snapshot_roundtrip():
     client = TestClient(create_app())
 
@@ -21,8 +44,9 @@ def test_api_status_config_state_and_snapshot_roundtrip():
     assert status["network"] == "testnet"
     state_version = status["state_version"]
 
-    config = client.get("/api/config").json()
-    assert config["broker"]["coin"] == "BTC"
+    config = client.get("/api/config")
+    assert config.status_code == 503
+    assert config.json()["detail"] == "CONFIG_NOT_RUNTIME_VALIDATED"
 
     stale = client.post("/api/arm", headers={"X-Confirm": str(state_version + 1)})
     assert stale.status_code == 409
@@ -41,6 +65,8 @@ def test_api_status_config_state_and_snapshot_roundtrip():
 
     snapshot = client.get("/api/snapshot").json()
     assert snapshot["status"]["state"] == "KILLED"
+    assert snapshot["config"] == {}
+    assert snapshot["config_status"] == "CONFIG_NOT_RUNTIME_VALIDATED"
     assert snapshot["bars"]["bars"] == []
 
 
@@ -52,6 +78,106 @@ def test_ws_pushes_snapshot_on_connect():
 
     assert message["topic"] == "snapshot"
     assert message["data"]["status"]["mode"] == "paper"
+
+
+def test_runtime_config_view_is_validated_and_restart_only_put_has_no_side_effect(
+    tmp_path,
+):
+    client, app = _runtime_api(tmp_path)
+    try:
+        before_view = client.get("/api/config")
+        assert before_view.status_code == 200
+        assert before_view.json()["broker"]["reconnect_attempts"] == {
+            "value": 9,
+            "provenance": "explicit",
+            "apply_mode": "restart_only",
+            "capability": "always",
+        }
+        before_version = client.get("/api/status").json()["state_version"]
+        before_events = app.state.bridge_store.get_events()
+        before_engine_value = app.state.bridge_engine.bar_reconnect_attempts
+
+        refused = client.put(
+            "/api/config",
+            headers={"X-Confirm": str(before_version)},
+            json={"broker": {"reconnect_attempts": 10}},
+        )
+
+        assert refused.status_code == 422
+        assert refused.json()["detail"] == {
+            "errors": [
+                {
+                    "class": "RESTART_ONLY",
+                    "setting": "broker.reconnect_attempts",
+                    "reason": "managed_candidate_restart_required",
+                }
+            ]
+        }
+        assert client.get("/api/config").json() == before_view.json()
+        assert app.state.bridge_engine.bar_reconnect_attempts == before_engine_value
+        assert app.state.bridge_store.get_events() == before_events
+        assert client.get("/api/status").json()["state_version"] == before_version
+        assert app.state.ws_hub.messages == []
+    finally:
+        app.state.bridge_store.close()
+
+
+def test_unknown_and_schema_inert_puts_are_typed_and_side_effect_free(tmp_path):
+    client, app = _runtime_api(tmp_path)
+    try:
+        before_view = client.get("/api/config").json()
+        before_version = client.get("/api/status").json()["state_version"]
+        before_events = app.state.bridge_store.get_events()
+
+        typo = client.put(
+            "/api/config",
+            headers={"X-Confirm": str(before_version)},
+            json={"risk": {"max_daily_los_pct": 0.01}},
+        )
+        network = client.put(
+            "/api/config",
+            headers={"X-Confirm": str(before_version)},
+            json={"broker": {"network": "testnet"}},
+        )
+        inert = client.put(
+            "/api/config",
+            headers={"X-Confirm": str(before_version)},
+            json={"risk": {"max_symbol_gross_pct": 0.2}},
+        )
+
+        assert typo.status_code == 422
+        assert typo.json()["detail"]["errors"] == [
+            {
+                "class": "UNKNOWN_KEY",
+                "setting": "risk.max_daily_los_pct",
+                "reason": "no_bound_runtime_field",
+                "suggestion": "risk.max_daily_loss_pct",
+            }
+        ]
+        assert network.status_code == 422
+        assert network.json()["detail"]["errors"] == [
+            {
+                "class": "UNKNOWN_KEY",
+                "setting": "broker.network",
+                "reason": "no_bound_runtime_field",
+            }
+        ]
+        assert "restart-only" not in network.text
+        assert inert.status_code == 422
+        assert inert.json()["detail"]["errors"] == [
+            {
+                "class": "KNOWN_INERT_SCHEMA",
+                "setting": "risk.max_symbol_gross_pct",
+                "actual_schema": 4,
+                "requires": "schema>=8",
+            }
+        ]
+        assert client.get("/api/config").json() == before_view
+        assert app.state.bridge_store.get_events() == before_events
+        assert client.get("/api/status").json()["state_version"] == before_version
+        assert app.state.ws_hub.messages == []
+    finally:
+        app.state.bridge_store.close()
 
 
 def test_ws_connection_stays_open_for_status_broadcasts():
