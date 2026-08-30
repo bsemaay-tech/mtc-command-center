@@ -195,6 +195,62 @@ class Stage3OracleTests(unittest.TestCase):
             ]
             self.assertEqual(BLOCKED_BY_DESIGN, requirements[0]["evidence_mode"])
 
+    def test_finalizer_authority_disposition_variants_are_refused(self) -> None:
+        requirements = [
+            item.as_mapping()
+            for item in verifier_scenario_contract(
+                "C42", stage3=True
+            ).clean_producer_corroboration.authority_requirements
+        ]
+        accounting = {
+            "complete": True,
+            "exact_set_match": True,
+            "satisfied": True,
+            "terminal_dispositions": [
+                {
+                    "authority_name": "A_CURRENT_MASTER",
+                    "evidence_mode": EXECUTION_OBSERVATION,
+                    "disposition": "EXECUTED",
+                },
+                {
+                    "authority_name": "PINE_CURRENT_MASTER",
+                    "evidence_mode": SOURCE_CORROBORATION,
+                    "disposition": "SOURCE_CORROBORATED",
+                },
+            ],
+        }
+        record = {"authority_execution": accounting}
+        p011_gate = __import__("p011_gate")
+        p011_gate._validate_final_authority_dispositions(
+            row_id="C42",
+            terminal_status="GREEN",
+            record=record,
+            requirements=requirements,
+        )
+        variants = []
+        missing = deepcopy(accounting)
+        missing["terminal_dispositions"] = missing["terminal_dispositions"][:1]
+        variants.append(missing)
+        duplicate = deepcopy(accounting)
+        duplicate["terminal_dispositions"].append(
+            deepcopy(duplicate["terminal_dispositions"][0])
+        )
+        variants.append(duplicate)
+        incompatible = deepcopy(accounting)
+        incompatible["terminal_dispositions"][0][
+            "disposition"
+        ] = "SOURCE_CORROBORATED"
+        variants.append(incompatible)
+        for variant in variants:
+            with self.subTest(variant=variant):
+                with self.assertRaises(p011_gate.GateStop):
+                    p011_gate._validate_final_authority_dispositions(
+                        row_id="C42",
+                        terminal_status="GREEN",
+                        record={"authority_execution": variant},
+                        requirements=requirements,
+                    )
+
 
 class Stage3PublicationBoundaryTests(unittest.TestCase):
     def test_candidate_generation_writes_requested_scratch_manifest(self) -> None:

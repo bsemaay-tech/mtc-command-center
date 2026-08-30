@@ -21,10 +21,14 @@ if str(_MODULE_DIR) not in sys.path:
     sys.path.insert(0, str(_MODULE_DIR))
 
 from scenario_binding import (
+    AUTHORITY_EVIDENCE_MODES,
+    BLOCKED_BY_DESIGN,
+    EXECUTION_OBSERVATION,
     EXPECTED_ROW_POSITIONS,
     ManifestRowError,
     ManifestScenarioSource,
     ScenarioBindingError,
+    SOURCE_CORROBORATION,
     bind_scenario,
     lookup_manifest_row,
     verifier_scenario_contract,
@@ -1309,8 +1313,123 @@ def command_mutation_harness(args: argparse.Namespace) -> int:
     return 0 if not failures else 3
 
 
+def _stage3_authority_requirements(
+    manifest: dict[str, Any], row_id: str
+) -> list[dict[str, str]]:
+    if row_id in {"C32", "C34", "C42"}:
+        binding = bind_scenario(
+            ManifestScenarioSource(
+                manifest=manifest,
+                row_id=row_id,
+                expected_position=EXPECTED_ROW_POSITIONS[row_id],
+            ),
+            verifier_scenario_contract(row_id, stage3=True),
+        )
+        requirements = [
+            item.as_mapping()
+            for item in binding.contract.clean_producer_corroboration.authority_requirements
+        ]
+    else:
+        row = lookup_manifest_row(
+            manifest, row_id, EXPECTED_ROW_POSITIONS[row_id]
+        )
+        scenarios = row.get("scenarios")
+        if type(scenarios) is not list or len(scenarios) != 1:
+            raise GateStop(f"stage-3 authority scenario is malformed: {row_id}")
+        corroboration = scenarios[0].get("clean_producer_corroboration")
+        requirements = (
+            corroboration.get("authority_requirements")
+            if type(corroboration) is dict
+            else None
+        )
+    if type(requirements) is not list or not requirements:
+        raise GateStop(f"stage-3 authority requirements are absent: {row_id}")
+    names: list[str] = []
+    normalized: list[dict[str, str]] = []
+    for item in requirements:
+        if type(item) is not dict or set(item) != {"name", "evidence_mode"}:
+            raise GateStop(f"stage-3 authority requirement is malformed: {row_id}")
+        name = item.get("name")
+        mode = item.get("evidence_mode")
+        if (
+            type(name) is not str
+            or mode not in AUTHORITY_EVIDENCE_MODES
+            or name in names
+        ):
+            raise GateStop(f"stage-3 authority requirement is malformed: {row_id}")
+        names.append(name)
+        normalized.append({"name": name, "evidence_mode": mode})
+    return normalized
+
+
+def _validate_final_authority_dispositions(
+    *,
+    row_id: str,
+    terminal_status: str,
+    record: dict[str, Any],
+    requirements: list[dict[str, str]],
+) -> None:
+    accounting = record.get("authority_execution")
+    if type(accounting) is not dict:
+        raise GateStop(f"authority accounting is absent: {row_id}")
+    blocked_without_observation = (
+        all(item["evidence_mode"] == BLOCKED_BY_DESIGN for item in requirements)
+        or row_id == "C35"
+    )
+    if blocked_without_observation:
+        if (
+            terminal_status != "STOP"
+            or accounting.get("accounting_performed") is not False
+            or accounting.get("complete") is not False
+            or accounting.get("satisfied") is not False
+            or "terminal_dispositions" in accounting
+        ):
+            raise GateStop(f"blocked-row authority accounting is malformed: {row_id}")
+        return
+    dispositions = accounting.get("terminal_dispositions")
+    if type(dispositions) is not list:
+        raise GateStop(f"authority terminal dispositions are absent: {row_id}")
+    by_name: dict[str, list[dict[str, Any]]] = {}
+    for item in dispositions:
+        if type(item) is not dict or type(item.get("authority_name")) is not str:
+            raise GateStop(f"authority terminal disposition is malformed: {row_id}")
+        by_name.setdefault(item["authority_name"], []).append(item)
+    required_names = [item["name"] for item in requirements]
+    if set(by_name) != set(required_names) or any(
+        len(by_name[name]) != 1 for name in by_name
+    ):
+        raise GateStop(f"STOP_AUTHORITY_EVIDENCE_INCOMPLETE: {row_id}")
+    accepted: list[bool] = []
+    for requirement in requirements:
+        disposition = by_name[requirement["name"]][0]
+        if disposition.get("evidence_mode") != requirement["evidence_mode"]:
+            raise GateStop(f"authority evidence mode differs: {row_id}")
+        observed = disposition.get("disposition")
+        if requirement["evidence_mode"] == EXECUTION_OBSERVATION:
+            if observed not in {"EXECUTED", "NOT_EXECUTED"}:
+                raise GateStop(f"authority execution disposition is incompatible: {row_id}")
+            accepted.append(observed == "EXECUTED")
+        elif requirement["evidence_mode"] == SOURCE_CORROBORATION:
+            if observed not in {"SOURCE_CORROBORATED", "SOURCE_NOT_CORROBORATED"}:
+                raise GateStop(f"authority source disposition is incompatible: {row_id}")
+            accepted.append(observed == "SOURCE_CORROBORATED")
+        else:
+            raise GateStop(f"blocked evidence mode reached observation accounting: {row_id}")
+    satisfied = all(accepted)
+    if (
+        accounting.get("complete") is not True
+        or accounting.get("satisfied") is not satisfied
+        or accounting.get("exact_set_match") is not satisfied
+        or (terminal_status == "GREEN") != satisfied
+    ):
+        raise GateStop(f"authority accounting summary differs: {row_id}")
+
+
 def dynamic_row_arm_receipt(
-    corroboration_path: Path, results_path: Path
+    corroboration_path: Path,
+    results_path: Path,
+    *,
+    manifest: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     corroboration = load_json(corroboration_path)
     rows = corroboration.get("rows")
@@ -1358,6 +1477,13 @@ def dynamic_row_arm_receipt(
             raise GateStop(f"GREEN row has no GREEN_AFTER_RED record: {row_id}")
         if status == "STOP" and record.get("status") == "GREEN_AFTER_RED":
             raise GateStop(f"STOP row references a GREEN record: {row_id}")
+        if manifest is not None:
+            _validate_final_authority_dispositions(
+                row_id=row_id,
+                terminal_status=status,
+                record=record,
+                requirements=_stage3_authority_requirements(manifest, row_id),
+            )
         stop_reason = terminal.get("stop_reason") or record.get("stop_reason")
         if row_id in mixed_rows and stop_reason != "STOP_EVIDENCE_MODE_NOT_IMPLEMENTED":
             raise GateStop(f"mixed-authority blocker differs: {row_id}")
@@ -1499,17 +1625,19 @@ def command_finalize_stage3_candidate(args: argparse.Namespace) -> int:
         )
     if not all(item["byte_identical"] for item in caller_supplied_byte_comparison):
         raise GateFail("stage-3 caller-supplied byte comparison differs")
+    manifest_path = resolve_user_path(args.legacy_manifest)
+    manifest = load_json(manifest_path)
+    if manifest.get("gate_version") != "P011-LC-GATE-v3":
+        raise GateStop("stage-3 candidate manifest is not bound to v3")
     row_arm = dynamic_row_arm_receipt(
-        first / "row_corroboration.json", first / "row_results.jsonl"
+        first / "row_corroboration.json",
+        first / "row_results.jsonl",
+        manifest=manifest,
     )
     matrix = validate_stage3_matrix_transcript(
         resolve_user_path(args.mutation_matrix),
         resolve_user_path(args.comparator_transcript),
     )
-    manifest_path = resolve_user_path(args.legacy_manifest)
-    manifest = load_json(manifest_path)
-    if manifest.get("gate_version") != "P011-LC-GATE-v3":
-        raise GateStop("stage-3 candidate manifest is not bound to v3")
     authorization_file_path = Path(args.authorization_file).resolve()
     summary = {
         "artifact_schema_version": "P011_STAGE3_FINALIZATION_CANDIDATE_v1",
