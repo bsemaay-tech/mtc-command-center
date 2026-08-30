@@ -69,6 +69,20 @@ design-only, serial build chain unchanged).
 13. **Small items:** papers' three open MEDIUMs stay recorded (folded into P0-20's build
     phase later); a 30-minute OpenCode auto-approve investigation is authorized.
 
+## Addendum 5 — 2026-08-30 ~10:55: THE v3 SIGNATURE
+
+14. **P0-11 v3 SIGNED — "Sign with caveat recorded".** The owner, shown exactly what the
+    signature attests (evidence integrity of the package at `2eedfb87`: independent
+    second-actor rebuild matched 4/4 deciding blob OIDs, 6/6 tool OIDs, 13/13 file SHA-256,
+    commit and tree; gate honestly STOP; no claim beyond measurement) and what it does NOT
+    attest (no trading readiness, no deployment, no profitability), and shown the one
+    recorded caveat (stage-4 design v2f's A-N recipe carries one step not yet literally
+    executable by a stranger — wording, not evidence; parking record `AUDIT_N66E_V2F.md`),
+    ruled: **sign now, caveat travels inside the signed record.** This addendum row IS the
+    owner's signature act of record; the v3 publication artifacts reference it and no code
+    issues a signature on his behalf. Per addendum 4 item 11, the package merges to master as
+    ONE unit today after the finalization commit passes its final audit.
+
 ## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
 above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
 supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the
