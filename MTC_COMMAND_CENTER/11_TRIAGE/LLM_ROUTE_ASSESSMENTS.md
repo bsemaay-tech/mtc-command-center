@@ -6,6 +6,29 @@ session's time log), never vibes. This file accumulates route knowledge across s
 
 ---
 
+## Session 2026-08-30 21:45 → 2026-08-31 (overnight, Fable orchestrator per addendum 12) — appended ~01:15, W113 kernel build in flight
+
+Evidence base: N_TIMES.txt night block (~45 lanes: W93-W113, N83-N93, G27-G37, GM11-GM17,
+DS11-DS15, P44-P46, A1). Wall-clock, single night.
+
+| Route | Grade | Measured evidence |
+|---|---|---|
+| Codex x4 (gpt-5.6-sol) | A- work / C reliability | Authored the ENTIRE P0-12 fresh design that survived 3 multi-family audit rounds to PASS-WITH-NITS + detection-zero (what 10 Claude rounds could not); folds fast and thorough (W96 14/14, W100, W102...). BUT 5 quota deaths tonight (W93, W99, W105, N92, W112-at-launch), all recovered by probe-then-relaunch; per-account resets stagger (22:08 / 02:52 / 03:11), which is what makes 4 accounts survivable. |
+| Claude Pro (claude -p) | A- | Flagship audits P44/P45/P46 were the deepest of the round (only P45 caught the false kernel-equivalence claim WITH line-verified kernel evidence); folds fast; N92b + A1 clean. Session cap hit at 21:56, reset 23:00 exactly as displayed; lanes launched 1 min before cap died instantly BUT their file edits had already landed (partial-work-then-cap is real: check artifacts before declaring a lane lost). |
+| Claude MAX Fable (Lead) | orchestrator only | Zero lane spends; survived the full night within pool guard. Two self-inflicted lane deaths (apostrophe trap #8, feed-push churn kill of GM13) and 12 self-audit findings (2 HIGH) accepted from A1 - the Lead remains the least-audited failure surface; the A1 lane pattern (Claude audits the Lead's owner-facing docs against the lane log) found real published-number errors and should be standing. |
+| Grok (SuperGrok) | A (detection) | 8/8 census lanes landed, zero deaths, zero false-clean: found the ONLY real findings on two objects Gemini passed (G27-F01 HIGH confirmed on contract field lists, G28-F01 confirmed three-way incoherence - detection wins 11 and 12). G37 terminal zero on P012 v1.2 is credible BECAUSE its record shows it finds things. Slowest starts ~8m; 25m death threshold right. |
+| Gemini (3.7-flash-high) | B- -> B+ with calibrated briefs | Two clean-vs-real misses early (GM11 vs G27, GM12 vs G28 - both missed body-internal contradictions). After briefs were recalibrated to hunt internal contradictions specifically, GM13 found 2 real HIGH on the fresh design and GM16/GM17 zeros matched the other families. Also: 2 launcher deaths (nested-quote trap; Lead feed-push git churn - commit-quiet rule is REAL and now enforced as a standing night rule). Corroborator, never sole verifier. |
+| OpenCode Go (deepseek-v4-flash / glm-5.3-flash) | B+ review / C- launch reliability | DS11 (10 findings, fail-closed spine held), DS13 (9, incl. the shared RULE2-06 root), DS14 (7), DS15 (1M+4L carried into the build) - real different-family signal every time. BUT the DS11/12 first launch silently never started (quoting class, casualty #7); only the DS10-style dedicated-script chain pattern is reliable. plan-agent still cannot write files - Lead transcription with provenance notes is the working pattern. |
+| OpenRouter API | unexercised | No volume-mechanical need arose. |
+
+Cross-route lesson of the night: the fresh-family pattern WORKED - author family excluded
+from auditing, 4-family rounds, pre-written caps and stopping rules. P0-12 went
+design->accepted in ~3h wall-clock after 10 failed same-family rounds across prior sessions;
+P0-31M1 hit its pre-written PARK honestly after 5 cycles. Family diversity is not overhead;
+it is the mechanism.
+
+---
+
 ## Session 2026-08-29 21:00 → 2026-08-30 ~21:30 — DAY-HALF ADDENDUM (same session, appended at wind-down)
 
 Evidence base: N_TIMES.txt 11:30→21:30 block (~30 further lanes). Grade deltas vs the morning
