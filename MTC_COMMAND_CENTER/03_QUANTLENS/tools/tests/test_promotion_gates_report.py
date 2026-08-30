@@ -135,6 +135,7 @@ def test_bh_is_stop_even_when_partial_producer_flag_says_survivor(producer: str)
         },
         "values": {"boot_p_value": 0.01, "bh_fdr_survivor": True},
         "evidence_source_paths": [
+            "PROMOTION_REPORT_ONLY_DECISION.md:134-140",
             f"fixture:{producer}#/results/0/boot_p_value",
             f"fixture:{producer}#/results/0/bh_fdr_survivor",
         ],
@@ -172,6 +173,38 @@ def test_missing_robust_final_is_typed_stop(producer: str) -> None:
     assert robust["status"] == "STOP"
     assert robust["reason"]["code"] == "ROBUST_FINAL_MISSING_OR_INVALID"
     assert robust["values"]["robust_final"] is None
+
+
+@pytest.mark.parametrize(
+    ("classification", "dsr_p_value", "dsr_robust", "stored"),
+    [
+        ("PASS", 0.95, True, True),
+        ("PASS", 0.94, False, False),
+        ("FAIL", 0.94, False, False),
+    ],
+)
+def test_public_seam_never_emits_robust_final_pass_or_fail_while_bh_is_stop(
+    classification: str,
+    dsr_p_value: float,
+    dsr_robust: bool,
+    stored: bool,
+) -> None:
+    candidate = candidate_fixture("mega_walk_forward.py")
+    candidate.update(
+        classification=classification,
+        dsr_p_value=dsr_p_value,
+        dsr_robust=dsr_robust,
+        robust_final=stored,
+    )
+
+    robust = report.evaluate_candidate(
+        candidate,
+        evidence_prefix="fixture:public-seam#/results/0",
+    )["checks"]["robust_final"]
+
+    assert robust["status"] == "STOP"
+    assert robust["reason"]["code"] == "ROBUST_FINAL_DEPENDENCY_STOP"
+    assert robust["values"]["bh_fdr_status"] == "STOP"
 
 
 @pytest.mark.parametrize("producer", NAMED_PRODUCERS)
@@ -298,6 +331,10 @@ def test_report_has_machine_counts_patterns_and_a_human_table() -> None:
     assert "BH_COMPLETE_FAMILY_MANIFEST_MISSING" in built["human_readable_table"]
     assert "raw_excess_pp=2.0" in built["human_readable_table"]
     assert all(row["evidence_source_paths"] for row in built["rows"])
+    assert all(
+        "PROMOTION_REPORT_ONLY_DECISION.md:134-140" in row["evidence_source_paths"]
+        for row in built["rows"]
+    )
     assert {row["measurement_label"] for row in built["rows"]} == {
         "MEASURED_REPORT_ONLY_DIAGNOSTIC"
     }

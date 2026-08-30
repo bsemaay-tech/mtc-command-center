@@ -13,6 +13,7 @@ from typing import Any, Mapping
 
 
 DSR_THRESHOLD = 0.95
+BH_FDR_AUTHORITY_SOURCE = "PROMOTION_REPORT_ONLY_DECISION.md:134-140"
 CHECK_ORDER = (
     "dsr",
     "bh_fdr",
@@ -110,6 +111,7 @@ def _evaluate_bh_fdr(candidate: Mapping[str, Any], evidence_prefix: str) -> dict
             "bh_fdr_survivor": candidate.get("bh_fdr_survivor"),
         },
         [
+            BH_FDR_AUTHORITY_SOURCE,
             f"{evidence_prefix}/boot_p_value",
             f"{evidence_prefix}/bh_fdr_survivor",
         ],
@@ -326,7 +328,10 @@ def _evaluate_raw_excess(candidate: Mapping[str, Any], evidence_prefix: str) -> 
 
 
 def evaluate_candidate(candidate: Mapping[str, Any], evidence_prefix: str) -> dict[str, Any]:
-    """Evaluate one candidate without mutating it or any repository state."""
+    """Evaluate one candidate without mutation.
+
+    Mandatory BH STOP keeps public robust_final at STOP in this report-only build.
+    """
 
     dsr = _evaluate_dsr(candidate, evidence_prefix)
     bh_fdr = _evaluate_bh_fdr(candidate, evidence_prefix)
