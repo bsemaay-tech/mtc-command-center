@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-30T22:15:00+03:00",
+  "generated": "2026-08-31T00:50:00+03:00",
   "updated_by": "claude-fable-lead-session-2026-08-30-night",
   "session_time_report": {
     "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
@@ -10,7 +10,7 @@
       "WP-P0-12-FRESH": "started 21:55 (W93 fresh-family design, Codex authors per addendum 13)",
       "FOLD-WAVE": "started 21:55 (6 fold lanes: P0-13, P0-14, P0-30, V2A-01/02/03)",
       "VERIFY-CENSUS": "started 22:05 (G27+GM11 on P0-31M1 v1.1, G28 on P0-22 v1.2)",
-      "PROMO-DIAG-RUN": "22:05-22:15 (984 stored candidates, display-only reports)"
+      "PROMO-DIAG-RUN": "~21:55-21:58 (984 stored candidates, display-only reports; span corrected per the N_TIMES timebase-correction entry and artifact mtimes)"
     }
   },
   "packages": [
@@ -130,9 +130,9 @@
       "state": "FRESH_FAMILY_DESIGN_IN_PROGRESS",
       "branch": "-",
       "commit": "-",
-      "detail": "TEN audited rounds (N45..N82): every flagship PASS was countered by real detection findings; standing loop capped at round 8 (P41 vs N78 -> HARD PARK), owner-authorized narrowing round produced v1.8 (P43 PASS-WITH-NITS vs N82 3 HIGH) -> FINAL PARK per the pre-written addendum-11 rule. Nothing was built. Full defect record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md (C:\\tmp\\LANE_PROMPTS_20260828).",
+      "detail": "HISTORY: the Claude-family design was FINAL PARKED at v1.8 after ten rounds (record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md). CURRENT: owner addendum 13 authorized a fresh design by a different family - Codex delivered P012_FRESH_DESIGN_V1.md tonight (22:38), now at v1.2 after two repair rounds under a pre-written D028 cap of 3. The grid-fitting class that killed the old design is STRUCTURALLY ABSENT per all four audit families, twice.",
       "owner_gate": false,
-      "next_action": "Round-2 re-audit (00:00-00:10): Claude flagship P45 = REQUEST_CHANGES again but converging hard - 1 MEDIUM only (a kernel-equivalence claim wrong on the non-finite-stop branch inside one repair root), 2 LOW, zero HIGH anywhere, all 19 round-1 findings verified closed, repair completeness confirmed; Gemini GM16 = ZERO findings; OpenCode DS14 = 2 MEDIUM + 5 LOW; Grok G36 in flight. Round-1 had 4 HIGH, round-2 has none. Repair round 2 of 3 next (D028 cap); detection-clean -> kernel build."
+      "next_action": "Round-2 re-audit complete (00:10): Claude flagship P45 = REQUEST_CHANGES with 13 of 14 repair roots fully closed and ONE partial (P45-F01 MEDIUM: the sizing-selector repair claims kernel equivalence that position_sizer.py:35-58 contradicts on the non-finite-stop branch - the exact defect class the P0-12 bar exists to prevent); Grok G36 landed and independently found the SAME root (2-family confirmation); Gemini GM16 = zero findings; OpenCode DS14 = 2 MEDIUM + 5 LOW. Round-1 4 HIGH -> round-2 0 HIGH. Repair round 2 (W112) COMPLETE at v1.2 (all 11 round-2 IDs dispositioned across 10 roots); round-3 audit fires next - the LAST under the D028 cap: detection-clean -> kernel build; else park to owner."
     },
     {
       "id": "WP-P0-20",
@@ -162,7 +162,7 @@
       "commit": "-",
       "detail": "Draft at v1.1 (G19 detection -> W65 fold), PROVISIONAL-ON-P012 labeled. BUILD gated on WP-P0-12 acceptance - and P0-12's design is FINAL PARKED, so this waits on the owner's P0-12 decision.",
       "owner_gate": false,
-      "next_action": "fold W108 complete (10/10 DS11 -> v1.3); verify pair: Gemini GM15 = zero findings (all genuinely closed); codex N92 quota-died mid-verify, replacement N92b running on Claude (family swap)."
+      "next_action": "CONVERGED at v1.3: fold W108 (10/10 DS11); verify pair BOTH clean - Gemini GM15 zero findings + Claude N92b zero findings (replacement after the codex verifier quota-died). Parked warm."
     },
     {
       "id": "WP-P0-22",
@@ -170,19 +170,19 @@
       "state": "DESIGN_DRAFT_V12_PARKED_WARM",
       "branch": "-",
       "commit": "-",
-      "detail": "Draft at v1.2 (P24 -> W66 fold; N74 detection round 2 -> W91 fold, 5 findings dispositioned), PROVISIONAL-ON-P013 labeled. BUILD gated on WP-P0-13 acceptance.",
+      "detail": "Draft at v1.4 after three cycles tonight (G28+GM12 -> W101 fold v1.3 -> N86 verify -> W109 label fold v1.4), PROVISIONAL-ON-P013 labeled. BUILD gated on WP-P0-13 acceptance.",
       "owner_gate": false,
-      "next_action": "CONVERGED tonight: G28-F01 (Lead-verified three-way incoherence) folded by W101 (v1.3, whole-window fail-closed option, matches plan A-7d) -> verify N86: coherent at all four sites, 1 residual LOW (a RUNNABLE-NOW label overclaim) BANKED for the next cycle. Parked warm at v1.3."
+      "next_action": "CONVERGED at v1.4: G28-F01 (Lead-verified three-way incoherence) folded by W101 (whole-window fail-closed option, matches plan A-7d); verify N86 found 1 residual LOW (RUNNABLE-NOW label overclaim); W109 folded it plus one same-shape instance found by sweep (b1 + b4). Parked warm."
     },
     {
       "id": "WP-P0-31-M1",
       "title": "Lifecycle Ledger + Registrar, Milestone 1 (design draft)",
-      "state": "DESIGN_DRAFT_V11_PARKED_WARM",
+      "state": "DESIGN_DRAFT_V14_TERMINAL_PARKED",
       "branch": "-",
       "commit": "-",
-      "detail": "M1 draft at v1.1 (N61 + P37 audits -> W90 fold), PROVISIONAL-ON-P013 labeled. Design only; M1 BUILD waits for WP-P0-13 acceptance + its own milestone-scoped G1-IA.",
-      "owner_gate": false,
-      "next_action": "Four cycles tonight; promise-class defects GREW across cycles (1->2->3 HIGH), so the Lead pre-wrote a stopping rule: W106 SUBTRACTIVE-ONLY fold (remove/narrow/[OPEN] only, no new mechanisms -> v1.4) then ONE terminal verify N90 (running) - CONVERGED or PARK, no further rounds tonight either way."
+      "detail": "M1 draft went through FIVE fold-verify cycles tonight (v1.1 -> v1.4): promise-class defects GREW across cycles (1 -> 2 -> 3 HIGH), so the Lead pre-wrote a stopping rule before the last verdict. W106 SUBTRACTIVE-ONLY fold produced v1.4; terminal verify N90 still found 3 HIGH (unexecutable promises on the one record path the draft labels unblocked) -> TERMINAL VERDICT: PARK, executed exactly as pre-written. DETECT_N90_P031M1_V14.md holds the surviving findings.",
+      "owner_gate": true,
+      "next_action": "PARKED at v1.4 for the owner morning report. The typed-record gate surface kept re-growing unexecutable promises through five cycles - the structural signal mirrors what P0-12 needed (a different decomposition or a different author family). Owner options: fresh-family design for M1, narrow M1's typed-record scope, or hold."
     },
     {
       "id": "WP-P0-14",
@@ -202,7 +202,7 @@
       "commit": "-",
       "detail": "Owner APPROVED the report-only rule + vocabulary (late evening, verbatim 'promotion yes'): the four checks (DSR, BH-FDR, robust_final, raw lockbox excess) may be computed and shown PASS/FAIL/STOP in a separate report artifact only; nothing deciding promotion/queue/registry changes. Building the display is a separate future decision (doc estimate 18-26 route-hours), NOT yet authorized.",
       "owner_gate": false,
-      "next_action": "diagnostic RUN tonight (22:05) against 984 stored candidates (donchian ladder n=4, faz3b stage1 pass1 n=420 + pass2 n=560): ZERO full-PASS - DSR FAIL on 906 and STOP on 78; BH-FDR, robust_final and raw-lockbox-excess all STOP on every candidate (missing family manifest / stored bindings - the tool honestly refuses to fabricate). Display only; reports in C:\\tmp\\LANE_PROMPTS_20260828\\PROMO_DIAG_RUNS\\"
+      "next_action": "diagnostic RUN tonight (~21:55) against 984 stored candidates (donchian ladder n=4, faz3b stage1 pass1 n=420 + pass2 n=560): ZERO full-PASS - DSR FAIL on 910 and STOP on 74 (CORRECTED 00:50 after the Lead self-audit A1-F01: the earlier published 906/78 split dropped the four donchian FAILs and back-computed the STOP figure; 910/74 is read directly from the reports' counts blocks); BH-FDR, robust_final and raw-lockbox-excess all STOP on every candidate (missing family manifest / stored bindings - the tool honestly refuses to fabricate). Display only; reports in C:\\tmp\\LANE_PROMPTS_20260828\\PROMO_DIAG_RUNS\\"
     },
     {
       "id": "WP-P0-30",
