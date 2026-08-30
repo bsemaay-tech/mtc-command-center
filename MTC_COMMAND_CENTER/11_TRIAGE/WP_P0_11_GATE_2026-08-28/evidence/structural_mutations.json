@@ -1,0 +1,830 @@
+{
+  "artifact_schema_version": "P011_STRUCTURAL_MUTATIONS_v1",
+  "evidence_normalization": {
+    "purpose": "remove machine- and run-specific path prefixes from durable command/output evidence",
+    "semantic_values_and_return_codes_unchanged": true,
+    "tokens": [
+      "<PYTHON>",
+      "<REPO_ROOT>",
+      "<SCRATCH>"
+    ]
+  },
+  "expected_results": 17,
+  "explicitly_not_executed": [
+    "7 STOP row-producer mutations (C28-C30, C32, C34, C35, C42)",
+    "independent-subject import/delegation classification mutation",
+    "P0-10 round-4d mutations (NONE_DIRECT_BUILD)",
+    "missing external anchor path mutation (the authoritative anchor was not moved)"
+  ],
+  "failures": [],
+  "gate_version": "P011-LC-GATE-v2",
+  "mutation_count": 17,
+  "mutations": [
+    {
+      "mutation_id": "missing_first_observation",
+      "protected_class": "missing first key is named without cascade",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "19000367373ebebe8c4f0df083990b14f3f6db63c892458e0b0427fd3c8af556",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":1,\"mismatch_count\":1,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"FAIL\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "duplicate_observation_identity",
+      "protected_class": "duplicate key is rejected instead of overwritten",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "69ef21f2d2a6649012583838964ea384d3ee264b1fd1db22daa82b447fed5940",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"duplicate observation identity: ('mtc_v2_legacy_range_filter_default_v1', 0, '2021-01-01T06:00:00+00:00')\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "reordered_observations",
+      "protected_class": "order mismatch is reported",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "19000367373ebebe8c4f0df083990b14f3f6db63c892458e0b0427fd3c8af556",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":1,\"mismatch_count\":1,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"FAIL\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "undeclared_observation_child",
+      "protected_class": "closed schema rejects the child",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "8ad8baecc3915993b31664ac19472e6dd401653448b607fc18b4b8ba83ba21d3",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"observation line 1 closed-schema keys differ: missing=[] unexpected=['undeclared_child']\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "duplicate_event_ordinal",
+      "protected_class": "event shape fails",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "be09e8280f8e0c0f984b97dcf953c1ae0b9c9c35cb5ab3a8cb30aeb79abf9252",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"duplicate/skipped event ordinal at observation line 1\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "deleted_event",
+      "protected_class": "ordered event comparison fails",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "19000367373ebebe8c4f0df083990b14f3f6db63c892458e0b0427fd3c8af556",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":1,\"mismatch_count\":1,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"FAIL\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "unexpected_event",
+      "protected_class": "ordered event comparison fails",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "19000367373ebebe8c4f0df083990b14f3f6db63c892458e0b0427fd3c8af556",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":1,\"mismatch_count\":1,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"FAIL\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "inverted_event_side",
+      "protected_class": "side comparison fails",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "19000367373ebebe8c4f0df083990b14f3f6db63c892458e0b0427fd3c8af556",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":1,\"mismatch_count\":1,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"FAIL\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "changed_first_observation_position_state",
+      "protected_class": "first-observation position projection and digest differ",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "19000367373ebebe8c4f0df083990b14f3f6db63c892458e0b0427fd3c8af556",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":1,\"mismatch_count\":1,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"FAIL\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "event_shifted_to_next_bar",
+      "protected_class": "missing N event and unexpected N+1 event are named",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "9b370c504d7b2444176bdfa5c68c0dae56f319ea138cf41cfb779a2ed1d88522",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":2,\"mismatch_count\":2,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"FAIL\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "changed_ohlcv_value",
+      "protected_class": "input value differs",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "19000367373ebebe8c4f0df083990b14f3f6db63c892458e0b0427fd3c8af556",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":1,\"mismatch_count\":1,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"FAIL\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "parser_failure_before_observation",
+      "protected_class": "invalid JSON is inability to evaluate",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\actual.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "d84cddf3a3bc2c2b5fd6ee3d8809c01be4d8a15d000d851469794e4727873cec",
+        "expected_return_code": 3,
+        "return_code": 3,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"STOP\",\"reason\":\"unreadable JSONL record at line 1: <SCRATCH>\\\\actual.jsonl: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "self-test-compare",
+          "--expected",
+          "<SCRATCH>\\expected.jsonl",
+          "--actual",
+          "<SCRATCH>\\expected.jsonl",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "ae65fbcc17902c41d87fda540a8056b1f1ecd5d32458ecf1605efc7853ce240b",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"changed_record_count\":0,\"mismatch_count\":0,\"mismatch_ledger\":\"<SCRATCH>\\\\ledger.json\",\"outcome\":\"PASS\"}"
+      }
+    },
+    {
+      "mutation_id": "coordinated_local_receipt_rehash",
+      "protected_class": "external receipt pin rejects locally rehashed provenance",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "compare",
+          "--receipt",
+          "<SCRATCH>\\tampered_receipt.json",
+          "--baseline",
+          "C:\\tmp\\p011_gate_v2_run1_20260828",
+          "--subject-mode",
+          "LEGACY_COMPATIBLE",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "e2e7e6ff47b93c75cb8f51e2759a476408fa94b3afa817e9a670a1b5eb69ce44",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"external anchor receipt hash differs\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "compare",
+          "--receipt",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\P011_GATE_RECEIPT.json",
+          "--baseline",
+          "C:\\tmp\\p011_gate_v2_run1_20260828",
+          "--subject-mode",
+          "LEGACY_COMPATIBLE",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "0e4f1669a90200e429c508eaa86f103a36f090ac5b2bd8d77906f53d01a655d0",
+        "expected_return_code": 3,
+        "return_code": 3,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"STOP\",\"reason\":\"row-semantic arm is not evaluable: 40 direct-build producer adapters and their D026 mutations are frozen but not executed by this sequence builder\"}"
+      }
+    },
+    {
+      "mutation_id": "wrong_sequence_producer_identity",
+      "protected_class": "producer provenance differs before comparison",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "compare",
+          "--receipt",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\P011_GATE_RECEIPT.json",
+          "--baseline",
+          "<SCRATCH>\\wrong_producer_baseline",
+          "--subject-mode",
+          "LEGACY_COMPATIBLE",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "372e1949e1802195c93d193fd900e4c58962f410b98093562377ade89d4cae69",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"baseline producer identity differs\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "compare",
+          "--receipt",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\P011_GATE_RECEIPT.json",
+          "--baseline",
+          "C:\\tmp\\p011_gate_v2_run1_20260828",
+          "--subject-mode",
+          "LEGACY_COMPATIBLE",
+          "--mismatch-ledger",
+          "<SCRATCH>\\ledger.json"
+        ],
+        "evidence_sha256": "0e4f1669a90200e429c508eaa86f103a36f090ac5b2bd8d77906f53d01a655d0",
+        "expected_return_code": 3,
+        "return_code": 3,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"STOP\",\"reason\":\"row-semantic arm is not evaluable: 40 direct-build producer adapters and their D026 mutations are frozen but not executed by this sequence builder\"}"
+      }
+    },
+    {
+      "mutation_id": "deleted_applicable_c_row",
+      "protected_class": "external legacy-manifest pin rejects coverage loss",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "build-baseline",
+          "--source-commit",
+          "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "--producer",
+          "A",
+          "--data",
+          "<REPO_ROOT>\\IBKR_PAPER_BRIDGE\\tests\\fixtures\\BTC_1h_real.csv",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_supertrend_default_v1.json",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_range_filter_default_v1.json",
+          "--legacy-manifest",
+          "<SCRATCH>\\tampered_legacy_manifest.json",
+          "--out",
+          "<SCRATCH>\\must_not_be_created_manifest"
+        ],
+        "evidence_sha256": "e095f059633c9ff693134af3be01348680fcef7741b06b64df2e95d362162c09",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"legacy manifest differs from the external pin: 1f5a7dc71a6bbdbec9fad8930b3406d6255d56c22378119fcf20a3d9621cad0e\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "build-baseline",
+          "--source-commit",
+          "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "--producer",
+          "A",
+          "--data",
+          "<REPO_ROOT>\\IBKR_PAPER_BRIDGE\\tests\\fixtures\\BTC_1h_real.csv",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_supertrend_default_v1.json",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_range_filter_default_v1.json",
+          "--legacy-manifest",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_legacy_manifest.json",
+          "--out",
+          "<SCRATCH>\\restored_manifest_build"
+        ],
+        "evidence_sha256": "faf287a04db9ec1b93c18f847a6c080cf2b9155d126077098407a3fb648b824f",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"artifact_status\":\"SEQUENCE_BUILT_ROW_ARM_STOP_INDEPENDENT_REPRODUCTION_PENDING\",\"command\":\"build-baseline\",\"full_gate_outcome\":\"STOP\",\"full_gate_stop_reason\":\"row producer corroboration/mutations and independent reproduction are not earned\",\"outcome\":\"PASS\",\"output_directory\":\"<SCRATCH>\\\\restored_manifest_build\",\"profile_metrics\":[{\"events\":3509,\"final_state_digest\":\"9a7c449c202f3a83b57e7964f4fbe2521f54b5c9ba3fa6cce3617d8fffe8e541\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_range_filter_default_v1\"},{\"events\":1206,\"final_state_digest\":\"8a3eded32dada6d7a164f52b475974a598ed6b5386c2c1aa71c3f730d18c8055\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_supertrend_default_v1\"}],\"sequence_sha256\":\"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e\",\"total_observations\":96154}"
+      }
+    },
+    {
+      "mutation_id": "changed_resolved_config_and_local_hash",
+      "protected_class": "full resolved snapshot differs from frozen resolve_config",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "build-baseline",
+          "--source-commit",
+          "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "--producer",
+          "A",
+          "--data",
+          "<REPO_ROOT>\\IBKR_PAPER_BRIDGE\\tests\\fixtures\\BTC_1h_real.csv",
+          "--profile",
+          "<SCRATCH>\\tampered_profile.json",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_range_filter_default_v1.json",
+          "--legacy-manifest",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_legacy_manifest.json",
+          "--out",
+          "<SCRATCH>\\must_not_be_created_profile"
+        ],
+        "evidence_sha256": "b80c2aa2f947eddeaf6579dc2fcc1eaca0f5c2c109d37ff925ff1c8028a5f0f0",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"profile resolved configuration differs from frozen resolve_config: <SCRATCH>\\\\tampered_profile.json\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "build-baseline",
+          "--source-commit",
+          "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "--producer",
+          "A",
+          "--data",
+          "<REPO_ROOT>\\IBKR_PAPER_BRIDGE\\tests\\fixtures\\BTC_1h_real.csv",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_supertrend_default_v1.json",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_range_filter_default_v1.json",
+          "--legacy-manifest",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_legacy_manifest.json",
+          "--out",
+          "<SCRATCH>\\restored_profile_build"
+        ],
+        "evidence_sha256": "aae78a9893da005799aa9e595e24a7e20f78b914c2d1f9d3a426562d15bcbe3f",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"artifact_status\":\"SEQUENCE_BUILT_ROW_ARM_STOP_INDEPENDENT_REPRODUCTION_PENDING\",\"command\":\"build-baseline\",\"full_gate_outcome\":\"STOP\",\"full_gate_stop_reason\":\"row producer corroboration/mutations and independent reproduction are not earned\",\"outcome\":\"PASS\",\"output_directory\":\"<SCRATCH>\\\\restored_profile_build\",\"profile_metrics\":[{\"events\":3509,\"final_state_digest\":\"9a7c449c202f3a83b57e7964f4fbe2521f54b5c9ba3fa6cce3617d8fffe8e541\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_range_filter_default_v1\"},{\"events\":1206,\"final_state_digest\":\"8a3eded32dada6d7a164f52b475974a598ed6b5386c2c1aa71c3f730d18c8055\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_supertrend_default_v1\"}],\"sequence_sha256\":\"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e\",\"total_observations\":96154}"
+      }
+    },
+    {
+      "mutation_id": "changed_data_byte",
+      "protected_class": "pinned data hash differs before strategy execution",
+      "red": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "build-baseline",
+          "--source-commit",
+          "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "--producer",
+          "A",
+          "--data",
+          "<SCRATCH>\\tampered_data.csv",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_supertrend_default_v1.json",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_range_filter_default_v1.json",
+          "--legacy-manifest",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_legacy_manifest.json",
+          "--out",
+          "<SCRATCH>\\must_not_be_created_data"
+        ],
+        "evidence_sha256": "e1657ae017bf1eec2e63c477a0ad2bedd5717ea5cc45e598b7bcfef41c53060c",
+        "expected_return_code": 1,
+        "return_code": 1,
+        "stderr": "",
+        "stdout": "{\"outcome\":\"FAIL\",\"reason\":\"data SHA-256 mismatch: <SCRATCH>\\\\tampered_data.csv\"}"
+      },
+      "restoration_green": {
+        "as_expected": true,
+        "command_argv": [
+          "<PYTHON>",
+          "-I",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+          "build-baseline",
+          "--source-commit",
+          "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "--producer",
+          "A",
+          "--data",
+          "<REPO_ROOT>\\IBKR_PAPER_BRIDGE\\tests\\fixtures\\BTC_1h_real.csv",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_supertrend_default_v1.json",
+          "--profile",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\profiles\\mtc_v2_legacy_range_filter_default_v1.json",
+          "--legacy-manifest",
+          "<REPO_ROOT>\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_legacy_manifest.json",
+          "--out",
+          "<SCRATCH>\\restored_data_build"
+        ],
+        "evidence_sha256": "f64c7cfa55c11a6781d613e4106248ad8d1c200647bd969372fae8a841fb75d3",
+        "expected_return_code": 0,
+        "return_code": 0,
+        "stderr": "",
+        "stdout": "{\"artifact_status\":\"SEQUENCE_BUILT_ROW_ARM_STOP_INDEPENDENT_REPRODUCTION_PENDING\",\"command\":\"build-baseline\",\"full_gate_outcome\":\"STOP\",\"full_gate_stop_reason\":\"row producer corroboration/mutations and independent reproduction are not earned\",\"outcome\":\"PASS\",\"output_directory\":\"<SCRATCH>\\\\restored_data_build\",\"profile_metrics\":[{\"events\":3509,\"final_state_digest\":\"9a7c449c202f3a83b57e7964f4fbe2521f54b5c9ba3fa6cce3617d8fffe8e541\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_range_filter_default_v1\"},{\"events\":1206,\"final_state_digest\":\"8a3eded32dada6d7a164f52b475974a598ed6b5386c2c1aa71c3f730d18c8055\",\"input_bars\":48077,\"observations\":48077,\"profile_id\":\"mtc_v2_legacy_supertrend_default_v1\"}],\"sequence_sha256\":\"727e438181bf1cd74ae0a90774afddf963ff03a382ee0646eaf2bb6d6010086e\",\"total_observations\":96154}"
+      }
+    }
+  ],
+  "outcome": "PASS",
+  "restored_results": 17
+}

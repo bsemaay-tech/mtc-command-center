@@ -1,0 +1,2857 @@
+{
+  "applicable_to_not_row_change_policy": "automatic STOP; never an in-place gate repair",
+  "counts": {
+    "applicable": 40,
+    "not_a_legacy_reproduction_row": 2,
+    "total": 42
+  },
+  "dependency_variant": "DIRECT_BUILD",
+  "expected_values_change_policy": "new owner decision, new gate version, new baseline and new external signature",
+  "fixture_suite_commit": "NONE_DIRECT_BUILD",
+  "frozen_before_subject_run": true,
+  "gate_version": "P011-LC-GATE-v2",
+  "manifest_schema_version": "P011_LEGACY_MANIFEST_v1",
+  "p009_authority": {
+    "blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+    "citation_refresh_branch_status": "merged on master and owner-authorized as the v2 authority pin",
+    "citation_resolution": "current-master section ranges plus source symbols; rules, oracles, and expected values are unchanged from v1",
+    "commit": "85c3e17f97efa1ba83ef9c679de319a50ad3be04",
+    "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+  },
+  "rows": [
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "131-148",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C01",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "direction": 1,
+            "line": 100.0,
+            "long": true,
+            "reason": "fixture_conflict",
+            "short": true
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "131-148",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "candidate_side": null,
+            "gated_long": false,
+            "gated_short": false,
+            "reason": "signal_conflict"
+          },
+          "producer_adapter": "A.runner_candidate_side",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=ad95a5b021a764a326f74b6db2a5fc5b9f82335d19624e4ddaf853e49a2dad83:new_sha256=b3adfb6bd97664a9c4e7312c206dd1311dae1091c9bd59feac747309754e4053",
+            "mutation_id": "C01-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.gated_long",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C01-LEGACY-001"
+        }
+      ],
+      "title": "Raw signal production, conflict, direction"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "149-166",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C02",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "htf_close": null,
+            "htf_ready": false,
+            "ma_close": 100.0,
+            "ma_line": null
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "149-166",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "gate_evaluation": "legacy_fail_open"
+          },
+          "literal_expected_observation": {
+            "htf_long_ok": true,
+            "htf_short_ok": true,
+            "ma_long_ok": true,
+            "ma_short_ok": true
+          },
+          "producer_adapter": "A.gates_legacy_fail_open",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=c52bba18466bae57fce418e53999b6885e5ea3449db7068a89bb58b87a6fb8f5:new_sha256=6b04be3a27f98fa0653b107803512f7db24b624b54f82f906daa88e44afdd17a",
+            "mutation_id": "C02-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.gate_evaluation",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/gates.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C02-LEGACY-001"
+        }
+      ],
+      "title": "Entry gates, readiness, signal filters"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "executable Python authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "PINE_CURRENT_MASTER",
+          "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine",
+          "role": "equation/source corroboration only; no TradingView execution credit"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "167-203",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C03",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "PINE_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "confirm_bars": 2,
+            "raw_directions": [
+              1,
+              1
+            ],
+            "refresh_on_new_raw": true
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "167-203",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "confirm_direction": 1
+          },
+          "literal_expected_observation": {
+            "confirm_count_after_hold": 1,
+            "confirm_count_after_new_pulse": 0,
+            "fired": false
+          },
+          "producer_adapter": "A.runner_confirmation_refresh",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=a2ecd934e15187cff0bd6b24f702dc07c8731deee8bb1b6bd602a14b47f35ddb:new_sha256=4fbd5a93c017a083a3db00b5244c54110258103e1226e5ae95cfd9cf8d00b6ad",
+            "mutation_id": "C03-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.confirm_direction",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C03-LEGACY-001"
+        }
+      ],
+      "title": "N-bar confirmation transform and refresh"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "executable Python authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "PINE_CURRENT_MASTER",
+          "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine",
+          "role": "equation/source corroboration only; no TradingView execution credit"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "204-226",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C04",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "PINE_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "bar": {
+              "close": 100.05,
+              "high": 100.06,
+              "low": 100.04,
+              "open": 100.05
+            },
+            "break_level": 100.0,
+            "buffer_pct": 0.1
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "204-226",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "waiting": false
+          },
+          "literal_expected_observation": {
+            "close_back_required": false,
+            "distance_pct": 0.05,
+            "retest_fires": true,
+            "touch_or_cross_required": false
+          },
+          "producer_adapter": "A.runner_level_retest",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=0deefc1645c6752e620773ddb71ac3ea49d403b44a922cb13ecd0d513590cb16:new_sha256=9cad46b8e28073b77c04bbafc7707ac1db7ccf6bde21a6d961a939823023b812",
+            "mutation_id": "C04-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.waiting",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C04-LEGACY-001"
+        }
+      ],
+      "title": "Level retest confirmation"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "227-244",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C05",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "allow_flip": false,
+            "initial_side": "long",
+            "opposite_raw_side": "short"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "227-244",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "deferred_side": "short",
+            "ordered_exit_reasons": [
+              "opp_signal"
+            ],
+            "same_bar_short_entry": false
+          },
+          "producer_adapter": "A.runner_opposite_signal",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=9d0946df2923338f6604adfd543c3f302c9319cfc331c49415488dd3c38d879a:new_sha256=a47a40ece28de06a4319b2ffe3968c5ff3b3e66e9605b1355fecc2a12e9db66a",
+            "mutation_id": "C05-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.position_present",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C05-LEGACY-001"
+        }
+      ],
+      "title": "Direction, regime lock, opposite signal, flip"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "245-288",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C06",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "cooldown_bars": 2,
+            "entry_bar_indices": [
+              10,
+              11,
+              12
+            ],
+            "max_entries": 2,
+            "side": "long"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "245-288",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_side": "long"
+          },
+          "literal_expected_observation": {
+            "active_entry_legs": 2,
+            "can_open": [
+              true,
+              false,
+              true
+            ]
+          },
+          "producer_adapter": "A.position_manager_spacing",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=2130c27d24f8292c2ae3fad396ee0d7542f6c797aff4e1d94e3bca84f2f26a1d:new_sha256=58c59acc885ecc277bc0b316fb64e961af07539b91ce499d6880e489f3e7e181",
+            "mutation_id": "C06-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.active_entry_legs",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/position_manager.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C06-LEGACY-001"
+        }
+      ],
+      "title": "Pyramiding, adds, entry spacing, exit cooldown"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "289-323",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C07",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "entry_price": 100.0,
+            "fixed_qty": 1.0,
+            "qty_step": 1.0,
+            "sizing_equity": 1000.0,
+            "stop_price": 90.0
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "289-323",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "sizing_snapshot": 1000.0
+          },
+          "literal_expected_observation": {
+            "owner": "legacy_kernel",
+            "qty": 1.0
+          },
+          "producer_adapter": "A.position_sizer_fixed",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=1ae7dab7b506d611ef802f9652808df9926ab8e862553a348d177931221fd7ad:new_sha256=5d842be7bd1f9425ea820fc5261fedfed31386fe6c0824922fac1059498350b1",
+            "mutation_id": "C07-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.qty.__float_hex__",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/position_sizer.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C07-LEGACY-001"
+        }
+      ],
+      "title": "Sizing request and quantity ownership"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "324-341",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C08",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "contract_multiplier": 2.0,
+            "entry_price": 100.0,
+            "exit_price": 110.0,
+            "qty": 3.0,
+            "side": "long"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "324-341",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "realized_equity_delta": 60.0
+          },
+          "literal_expected_observation": {
+            "realized_pnl": 60.0
+          },
+          "producer_adapter": "A.position_manager_multiplier_pnl",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=3c978f26dfe67a023085e1df7ddafa71edeb3f2db31c1769c199755aff7e230d:new_sha256=fcd61ceb8b4d64e69ac44dec550fc75b53c5d726f91d4ab6b05710af1a0b5eec",
+            "mutation_id": "C08-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.realized_equity_delta.__float_hex__",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/position_manager.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C08-LEGACY-001"
+        }
+      ],
+      "title": "Contract multiplier"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "342-359",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C09",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "long_stop": 99.999,
+            "long_target": 100.005,
+            "price_tick": 0.01,
+            "qty_step": 0.1,
+            "raw_qty": 1.999
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "342-359",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "below_minimum_rejected": true
+          },
+          "literal_expected_observation": {
+            "floored_qty": 1.9,
+            "rounded_long_stop": 99.99,
+            "rounded_long_target": 100.01
+          },
+          "producer_adapter": "A.rounding",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=c027c7be7f21b9ba97bc4dd2c32183dd7b9192d338fc04e54a7498df3cf32a60:new_sha256=45975d63f57f5834bd8876bf235a5e485ec2d32e5bb74964bbf6bf4a9484966b",
+            "mutation_id": "C09-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.below_minimum_rejected",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/rounding.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C09-LEGACY-001"
+        }
+      ],
+      "title": "Tick/quantity rounding and minimums"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "360-410",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C10",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "entry_price": 100.0,
+            "max_leverage_cap": 1.0,
+            "qty": 11.0,
+            "sizing_equity": 1000.0
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "360-410",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "blocked": true,
+            "limit": 1000.0,
+            "notional": 1100.0
+          },
+          "producer_adapter": "A.runner_capital_block",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=013ee9cc28f61de6af47bdad04884c5689f33cd83fef0dffcd0bfab7cd62d4f4:new_sha256=9c05bf2ad8a286947af7222c9f35a923466f07baf3ec8e0b6b24f0c11d1072ba",
+            "mutation_id": "C10-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.blocked",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C10-LEGACY-001"
+        }
+      ],
+      "title": "Leverage and margin/liquidation"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "411-428",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C11",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "active_stop_price": 95.0,
+            "bar": {
+              "close": 92.0,
+              "high": 101.0,
+              "low": 89.0,
+              "open": 90.0
+            },
+            "entry_price": 100.0,
+            "side": "long"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "411-428",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "fill_price": 90.0,
+            "hit": true,
+            "reason": "stop_loss"
+          },
+          "producer_adapter": "A.exits_stop_gap",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=3ea1281688b1c913b26774741a0267586754406cb0a7e15611b8fd34050d6e31:new_sha256=e8b7dab6b105da04f9822825b12aad26f9a0518425e709c387d118dbdc3a3c57",
+            "mutation_id": "C11-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.fill_price.__float_hex__",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/exits.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C11-LEGACY-001"
+        }
+      ],
+      "title": "Fixed/ATR/swing stops"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "429-446",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C12",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "active_tp_price": 105.0,
+            "bar": {
+              "close": 111.0,
+              "high": 112.0,
+              "low": 109.0,
+              "open": 110.0
+            },
+            "entry_price": 100.0,
+            "side": "long"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "429-446",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "fill_price": 110.0,
+            "hit": true,
+            "reason": "take_profit"
+          },
+          "producer_adapter": "A.exits_target_gap",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=a0ddf453f0f127fde3815bfb011d335d5bf7c108dc25e66c16c9dc3812141d83:new_sha256=109bc8c728dd3ef445489722f64d8eb8177f09eeb4c7a6f7ef139d687fd7c448",
+            "mutation_id": "C12-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.fill_price.__float_hex__",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/exits.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C12-LEGACY-001"
+        }
+      ],
+      "title": "Percent/ATR/R targets"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "447-464",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C13",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "bar_high": 111.0,
+            "entry_price": 100.0,
+            "qty": 10.0,
+            "side": "long",
+            "targets": [
+              {
+                "fraction": 0.5,
+                "id": "TP1",
+                "price": 105.0
+              },
+              {
+                "fraction": 1.0,
+                "id": "TP2",
+                "price": 110.0
+              }
+            ]
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "447-464",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false,
+            "realized_equity_delta": 75.0
+          },
+          "literal_expected_observation": {
+            "exit_qtys": [
+              5.0,
+              5.0
+            ],
+            "ordered_exit_ids": [
+              "TP1",
+              "TP2"
+            ],
+            "realized_pnls": [
+              25.0,
+              50.0
+            ]
+          },
+          "producer_adapter": "A.exits_multitp",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=4f6ae95933a45975077819d7a73447685492a68e749a96613bf5ed938b37de6c:new_sha256=14ec1653e8635823c80e5324b3632a53250d99aa395c06450636071b329b9278",
+            "mutation_id": "C13-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.position_present",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/exits.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C13-LEGACY-001"
+        }
+      ],
+      "title": "MultiTP"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "465-482",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C14",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "bar_close": 111.0,
+            "buffer_r": 0.1,
+            "entry_price": 100.0,
+            "initial_stop": 90.0,
+            "side": "long",
+            "trigger_r": 1.0,
+            "tw_mode": "local"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "465-482",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": true
+          },
+          "literal_expected_observation": {
+            "active_stop_owner": "break_even",
+            "active_stop_price": 101.0,
+            "be_active": true
+          },
+          "producer_adapter": "A.exits_break_even_legacy",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=c08a62e4c26d2902b7081f3bcf54855d0da62f124209724bc9c89962f161f522:new_sha256=27227b7b51580513b97a93e82929e65b0b2c1f9f7d75bff9dbfe52442c20c77d",
+            "mutation_id": "C14-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.active_stop_price.__float_hex__",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/exits.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C14-LEGACY-001"
+        }
+      ],
+      "title": "Break-even"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "483-500",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C15",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "bar_close": 110.0,
+            "entry_price": 100.0,
+            "initial_stop": 90.0,
+            "side": "long",
+            "trail_atr": 2.0,
+            "trail_distance_atr_mult": 1.0
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "483-500",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": true
+          },
+          "literal_expected_observation": {
+            "active_stop_owner": "trailing",
+            "trail_active": true,
+            "trail_price": 108.0
+          },
+          "producer_adapter": "A.exits_trailing_legacy",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=e8b8fa8645ef8a6618c105b29921e2f0af5db5d2031f4c4658aa6bdf8c5ad979:new_sha256=42c1bbbcb35e05905f2a28d52abe357b51adf758cf4345a3b6a08510a504e6c2",
+            "mutation_id": "C15-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.trail_price.__float_hex__",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/exits.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C15-LEGACY-001"
+        }
+      ],
+      "title": "Trailing stop"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "501-518",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C16",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "active_stop": 95.0,
+            "bar_low": 94.0,
+            "filter_blocked": true,
+            "position_side": "long",
+            "raw_side": "short"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "501-518",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "filter_exit_count": 0,
+            "first_exit_reason": "stop_loss",
+            "opposite_exit_count": 0
+          },
+          "producer_adapter": "A.runner_exit_order",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=5e8445da1a8f1c6d74eb4266aa446157b9b6f30cd5ae43783b148861c2aaa860:new_sha256=a4a9fb7c943b52adf54e9414151a7592f4c4c17b877a606702316f966ade9b53",
+            "mutation_id": "C16-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.position_present",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C16-LEGACY-001"
+        }
+      ],
+      "title": "Opposite/filter exits"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "519-536",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C17",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "close": 101.0,
+            "current_bar": 2,
+            "entry_bar": 0,
+            "time_stop_bars": 2,
+            "time_stop_condition": "Always"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "519-536",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "exit_price": 101.0,
+            "exit_reason": "time_stop"
+          },
+          "producer_adapter": "A.runner_time_exit",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=002e491ab4e31ed54310a1fa09cff0f15ead17876bb8c272845d78f1d71d78bd:new_sha256=758e73f3abf2788f08513afd2706a0e04fd0d37782cb4b2023519a446dcc0197",
+            "mutation_id": "C17-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.position_present",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C17-LEGACY-001"
+        }
+      ],
+      "title": "Bar/time/PnL exits"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "537-554",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C18",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "candidate_side": "long",
+            "max_trades_per_day": 1,
+            "trades_today": 1,
+            "use_max_trades_per_day": true
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "537-554",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false,
+            "trades_today": 1
+          },
+          "literal_expected_observation": {
+            "entry_opened": false,
+            "guard_blocked": true
+          },
+          "producer_adapter": "A.runner_local_guard",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=74762216379c0f91c7d5ebe2d36545f07ad84eed6ac0979f5d150d0638ea25e5:new_sha256=aa96326b0eb02e78245ca196fd0590ded80e9c6c17b27d937860e632c2543bbe",
+            "mutation_id": "C18-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.position_present",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C18-LEGACY-001"
+        }
+      ],
+      "title": "Session/day limits, guards, recovery"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "555-574",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C19",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "bar": {
+              "close": 101.0,
+              "high": 106.0,
+              "low": 94.0,
+              "open": 100.0
+            },
+            "side": "long",
+            "stop_price": 95.0,
+            "target_price": 105.0
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "555-574",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "exit_reason": "stop_loss",
+            "policy_observed": "STOP_FIRST"
+          },
+          "producer_adapter": "A.exits_collision",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=c891ac7ddd3dbff9427dfeba2beeafc16f1a0687cb460a70c84246245a25f937:new_sha256=8793b52d8994c0e41a7dd32455d9826c4d12640c4e554b2b8e3b401781f852c0",
+            "mutation_id": "C19-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.exit_reason",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/exits.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C19-LEGACY-001"
+        }
+      ],
+      "title": "Same-bar stop/target collision"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "575-605",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C20",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "bar_close": 100.0,
+            "candidate_side": "long",
+            "execution_profile_id": "close_only_deterministic_v2"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "575-605",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_side": "long"
+          },
+          "literal_expected_observation": {
+            "entry_fill_price": 100.0,
+            "fill_policy_id": "decision_bar_close"
+          },
+          "producer_adapter": "A.runner_close_only_fill",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=a60314232b6517679754f2dfd91a0cacf903cf60aa523ad94718c93904503f04:new_sha256=3f8cd407e6e1118a0181f50ef8b630c74ac7593b12b1ac606394e2c903210d41",
+            "mutation_id": "C20-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.entry_fill_price.__float_hex__",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/position_manager.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C20-LEGACY-001"
+        }
+      ],
+      "title": "Fill assumptions and gaps"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "606-623",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C21",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "position_side": "long",
+            "same_bar_candidate": "short",
+            "stop_hit": true,
+            "tw_audit_semantics_mode": "off"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "606-623",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "protective_exit_count": 1,
+            "same_bar_entry_count": 0
+          },
+          "producer_adapter": "A.runner_protective_reentry",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=db570eed9b03719611af710215ad7ed9785374043250bd70106d503ea0a842b4:new_sha256=94e573d42e0043e2e59dae9e9a78502888630ca5b96a05fc2814e07a3258e6fc",
+            "mutation_id": "C21-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.position_present",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C21-LEGACY-001"
+        }
+      ],
+      "title": "Same-bar re-entry after any exit"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "624-641",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C22",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "entry_price": 100.0,
+            "exit_price": 110.0,
+            "fee": 0.0,
+            "funding": 0.0,
+            "qty": 1.0,
+            "side": "long",
+            "slippage": 0.0
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "624-641",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "unmodeled_costs": [
+              "fee",
+              "slippage",
+              "funding"
+            ]
+          },
+          "literal_expected_observation": {
+            "gross_pnl": 10.0,
+            "realized_pnl": 10.0
+          },
+          "producer_adapter": "A.position_manager_legacy_cost_absence",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=3c978f26dfe67a023085e1df7ddafa71edeb3f2db31c1769c199755aff7e230d:new_sha256=27f6e73bbfb1666dc99bf4c12df891eba7f540951f4a5004360758207359da9b",
+            "mutation_id": "C22-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.gross_pnl.__float_hex__",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/position_manager.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C22-LEGACY-001"
+        }
+      ],
+      "title": "Fees, slippage, funding"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "642-659",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C23",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "bars": 20,
+            "signal_mode": "Supertrend",
+            "st_atr_len": 21,
+            "terminal_flatten": false
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "642-659",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_preserved_at_end": true
+          },
+          "literal_expected_observation": {
+            "entries": 0,
+            "implicit_terminal_exit": false,
+            "observations": 20
+          },
+          "producer_adapter": "A.runner_warmup_terminal",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=79b679d9f4ac55863d8c6aad7ba51cecc9081c68a1ad01f341c8fd9cdc850d52:new_sha256=bf6ad2bc42ecaa2f19d743a55e80f125e7daead938798eb4f519011d286ae7d2",
+            "mutation_id": "C23-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.position_preserved_at_end",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C23-LEGACY-001"
+        }
+      ],
+      "title": "Warm-up, evaluation boundary, terminal handling"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "660-677",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C24",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "bar": {
+              "close": "NaN",
+              "high": 101.0,
+              "low": 99.0,
+              "open": 100.0,
+              "volume": 1.0
+            },
+            "side_mirror": [
+              "long",
+              "short"
+            ]
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "660-677",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_present": false
+          },
+          "literal_expected_observation": {
+            "bar_valid": false,
+            "boundary_rule": "legacy_exact_comparisons",
+            "entry_opened": false
+          },
+          "producer_adapter": "A.runner_invalid_bar",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=865c36057f21a770817725961296b5014a5089dd103e7f81c58b7422d50ee010:new_sha256=18a0909bb93e7a9d12517b6e143a077a3e5e20d09f39ef9e42dfcd4143f3539b",
+            "mutation_id": "C24-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.bar_valid",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C24-LEGACY-001"
+        }
+      ],
+      "title": "Invalid values, boundary equality, short symmetry"
+    },
+    {
+      "coverage_credit": "policy consistency only; zero A/B/Pine reproduction credit",
+      "disposition": "NOT_A_LEGACY_REPRODUCTION_ROW",
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "678-695",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "proof": "already-decided venue timestamp policy; no A/B legacy implementation is reproduced",
+      "row_id": "C25",
+      "title": "Timestamp discipline"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy runner duplicate/revision behavior",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "77a10e6573d93f8aaf777010ea507bbec0a7668b",
+          "name": "PINE_CONTROLLER_FREEZE",
+          "ref": "legacy/pine-controller/2026-08-25",
+          "role": "historical L25 dispatch corroboration only"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "696-713",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C26",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "PINE_CONTROLLER_FREEZE"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "bars": [
+              {
+                "bar_index": 7,
+                "timestamp": "2026-01-01T00:00:00+00:00"
+              },
+              {
+                "bar_index": 7,
+                "timestamp": "2026-01-01T00:00:00+00:00"
+              }
+            ]
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "696-713",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "last_current_bar_index": 7
+          },
+          "literal_expected_observation": {
+            "duplicate_rejected_by_legacy_runner": false,
+            "producer_outputs": 2
+          },
+          "producer_adapter": "A.runner_duplicate_bar_legacy",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=323090b1241b3a3c3ca58932ebbd3152b876515a9ef3f76397f019af842fdd6d:new_sha256=b55b612b69d0700fdd746128a32b8993b6e9bdcdf37df8a6c705141fde94c9a2",
+            "mutation_id": "C26-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.duplicate_rejected_by_legacy_runner",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C26-LEGACY-001"
+        }
+      ],
+      "title": "Duplicate/reordered bars, revisions, idempotence"
+    },
+    {
+      "coverage_credit": "policy consistency only; zero A/B/Pine reproduction credit",
+      "disposition": "NOT_A_LEGACY_REPRODUCTION_ROW",
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "714-745",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "proof": "ticket-45 freshness policy and P0-09 bounds; no A/B legacy implementation is reproduced",
+      "row_id": "C27",
+      "title": "Restart and missed-decision recovery"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "77a10e6573d93f8aaf777010ea507bbec0a7668b",
+          "name": "A_PINE_CONTROLLER_FREEZE",
+          "paths": [
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
+          ],
+          "ref": "legacy/pine-controller/2026-08-25",
+          "role": "legacy authority; current master is prohibited for this deleted surface"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "746-765",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C28",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_PINE_CONTROLLER_FREEZE"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "wt_enter_long_code": "EL",
+            "wt_enter_short_code": "ES",
+            "wt_exit_all_code": "XA",
+            "wt_exit_long_code": "XL",
+            "wt_exit_short_code": "XS"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "746-765",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "route_key_count": 5
+          },
+          "literal_expected_observation": {
+            "declared_config_values": [
+              "EL",
+              "XL",
+              "ES",
+              "XS",
+              "XA"
+            ]
+          },
+          "producer_adapter": "A_FREEZE.resolve_config_route_keys",
+          "producer_mutation": {
+            "mutation": "NOT_EXECUTED_UNRESOLVED_ROW_V1",
+            "mutation_id": "C28-GF8-MUT-001",
+            "required_red": "TERMINAL_STOP_REQUIRED_V1",
+            "restored_green": "NOT_ESTABLISHED_V1",
+            "source_seam": "A_FREEZE.resolve_config_route_keys",
+            "status": "UNRESOLVED_EXECUTION"
+          },
+          "scenario_id": "C28-LEGACY-001"
+        }
+      ],
+      "title": "WunderTrading route-code inputs"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "77a10e6573d93f8aaf777010ea507bbec0a7668b",
+          "name": "A_PINE_CONTROLLER_FREEZE",
+          "paths": [
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
+          ],
+          "ref": "legacy/pine-controller/2026-08-25",
+          "role": "legacy authority; current master is prohibited for this deleted surface"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "766-789",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C29",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_PINE_CONTROLLER_FREEZE"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "wt_amount": 2.5,
+            "wt_amount_type": "base",
+            "wt_leverage": 3,
+            "wt_order_type": "limit"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "766-789",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "payload_key_count": 4
+          },
+          "literal_expected_observation": {
+            "amount": 2.5,
+            "amount_type": "base",
+            "leverage": 3,
+            "order_type": "limit"
+          },
+          "producer_adapter": "A_FREEZE.resolve_config_payload_keys",
+          "producer_mutation": {
+            "mutation": "NOT_EXECUTED_UNRESOLVED_ROW_V1",
+            "mutation_id": "C29-GF8-MUT-001",
+            "required_red": "TERMINAL_STOP_REQUIRED_V1",
+            "restored_green": "NOT_ESTABLISHED_V1",
+            "source_seam": "A_FREEZE.resolve_config_payload_keys",
+            "status": "UNRESOLVED_EXECUTION"
+          },
+          "scenario_id": "C29-LEGACY-001"
+        }
+      ],
+      "title": "WunderTrading order-payload inputs"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "77a10e6573d93f8aaf777010ea507bbec0a7668b",
+          "name": "A_PINE_CONTROLLER_FREEZE",
+          "paths": [
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py",
+            "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine"
+          ],
+          "ref": "legacy/pine-controller/2026-08-25",
+          "role": "legacy authority; current master is prohibited for this deleted surface"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "790-809",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C30",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_PINE_CONTROLLER_FREEZE"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "use_sl": true,
+            "use_tp": true,
+            "wt_place_cond_orders": true,
+            "wt_reduce_only": true,
+            "wt_use_sl": true,
+            "wt_use_tp": true
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "790-809",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "cross_validation": "PASS",
+            "protective_key_count": 4
+          },
+          "literal_expected_observation": {
+            "wt_place_cond_orders": true,
+            "wt_reduce_only": true,
+            "wt_use_sl": true,
+            "wt_use_tp": true
+          },
+          "producer_adapter": "A_FREEZE.resolve_config_protective_keys",
+          "producer_mutation": {
+            "mutation": "NOT_EXECUTED_UNRESOLVED_ROW_V1",
+            "mutation_id": "C30-GF8-MUT-001",
+            "required_red": "TERMINAL_STOP_REQUIRED_V1",
+            "restored_green": "NOT_ESTABLISHED_V1",
+            "source_seam": "A_FREEZE.resolve_config_protective_keys",
+            "status": "UNRESOLVED_EXECUTION"
+          },
+          "scenario_id": "C30-LEGACY-001"
+        }
+      ],
+      "title": "WunderTrading protective flags"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "810-829",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C31",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "modes": [
+              "off",
+              "research"
+            ],
+            "protective_exit": true
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "810-829",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "mode_count": 2
+          },
+          "literal_expected_observation": {
+            "off_pending_reentry": null,
+            "research_branch_reachable": true
+          },
+          "producer_adapter": "A.runner_tw_master_switch",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=4b4c086b080974455fd423d6360aa05ad7ee4eca6a8d22529ac134495d8f9227:new_sha256=2b9674feade1b145587d4a309a96219a09419e1cac16bef0ac1a511b007d1c51",
+            "mutation_id": "C31-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.research_branch_reachable",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C31-LEGACY-001"
+        }
+      ],
+      "title": "tw_audit_semantics_mode"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "830-870",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C32",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "accepted_values": [
+              "local",
+              "carry_to_next_bar_after_protective_exit",
+              "next_bar_open",
+              "next_bar_close"
+            ]
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "830-870",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "enum_count": 4
+          },
+          "literal_expected_observation": {
+            "all_values_validate": true
+          },
+          "producer_adapter": "A.resolve_config_reentry_enum",
+          "producer_mutation": {
+            "mutation": "NOT_EXECUTED_UNRESOLVED_ROW_V1",
+            "mutation_id": "C32-GF8-MUT-001",
+            "required_red": "TERMINAL_STOP_REQUIRED_V1",
+            "restored_green": "NOT_ESTABLISHED_V1",
+            "source_seam": "A.resolve_config_reentry_enum",
+            "status": "UNRESOLVED_EXECUTION"
+          },
+          "scenario_id": "C32-LEGACY-001"
+        }
+      ],
+      "title": "tw_reversal_reentry_mode"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "871-893",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C33",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "candidate_bars": [
+              10,
+              11,
+              12
+            ],
+            "delay_bars": 2,
+            "protective_exit_bar": 10
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "871-893",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "first_allowed_bar": 12
+          },
+          "literal_expected_observation": {
+            "reentry_allowed": [
+              false,
+              false,
+              true
+            ]
+          },
+          "producer_adapter": "A.runner_reentry_delay",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=ac9f7cc57e54c82dc623ffd5e1657fba46a2dd6a9eb90df08ed49ac6bd8fadf4:new_sha256=0dac5019f5ece8803bb4f169f714e46e15d844a5cdfce94e0876e554f135a9cb",
+            "mutation_id": "C33-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.first_allowed_bar",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C33-LEGACY-001"
+        }
+      ],
+      "title": "tw_reversal_reentry_delay_bars"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "894-917",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C34",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "entry_price": 100.0,
+            "initial_capital": 1000.0,
+            "margin_long_pct": 100.0,
+            "mark_price": 40.0,
+            "qty": 10.0,
+            "side": "long",
+            "tw_audit_semantics_mode": "research",
+            "tw_margin_call_mode": "tradingview"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "894-917",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "total_exits": 1
+          },
+          "literal_expected_observation": {
+            "exit_reason": "margin_call",
+            "margin_call_branch_reached": true
+          },
+          "producer_adapter": "A.runner_margin_call",
+          "producer_mutation": {
+            "mutation": "NOT_EXECUTED_UNRESOLVED_ROW_V1",
+            "mutation_id": "C34-GF8-MUT-001",
+            "required_red": "TERMINAL_STOP_REQUIRED_V1",
+            "restored_green": "NOT_ESTABLISHED_V1",
+            "source_seam": "A.runner_margin_call",
+            "status": "UNRESOLVED_EXECUTION"
+          },
+          "scenario_id": "C34-LEGACY-001"
+        }
+      ],
+      "title": "tw_margin_call_mode"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "918-937",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C35",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "debug_mode": true,
+            "tw_margin_call_split_entries": true
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "918-937",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "position_change_from_flag_only": false
+          },
+          "literal_expected_observation": {
+            "debug_metadata_value": true,
+            "economic_branch_count": 0
+          },
+          "producer_adapter": "A.runner_split_entries_stamp",
+          "producer_mutation": {
+            "mutation": "NOT_EXECUTED_UNRESOLVED_ROW_V1",
+            "mutation_id": "C35-GF8-MUT-001",
+            "required_red": "TERMINAL_STOP_REQUIRED_V1",
+            "restored_green": "NOT_ESTABLISHED_V1",
+            "source_seam": "A.runner_split_entries_stamp",
+            "status": "UNRESOLVED_EXECUTION"
+          },
+          "scenario_id": "C35-LEGACY-001"
+        }
+      ],
+      "title": "tw_margin_call_split_entries"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "938-971",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C36",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "trigger_reached": true,
+            "tw_audit_semantics_mode": "research",
+            "tw_be_semantics_mode": "tradingview"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "938-971",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "be_active": true
+          },
+          "literal_expected_observation": {
+            "tradingview_be_branch_reached": true
+          },
+          "producer_adapter": "A.runner_be_mode",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=c6a07a9a739340ff30027689aa3e6c5fe4b1484541c60a69e2580c26c0ebed64:new_sha256=e9a86c7cb991f36794b98fbd3bd8bcc7e012ccec2aded82612b044286cd982c8",
+            "mutation_id": "C36-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.be_active",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/exits.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C36-LEGACY-001"
+        }
+      ],
+      "title": "tw_be_semantics_mode"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "972-994",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C37",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "trigger_reached": true,
+            "tw_audit_semantics_mode": "research",
+            "tw_trailing_semantics_mode": "tradingview"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "972-994",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "trail_active": true
+          },
+          "literal_expected_observation": {
+            "tradingview_trailing_branch_reached": true
+          },
+          "producer_adapter": "A.runner_trailing_mode",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=18c81d7380bad828aaf516b37ff8c584d08197028d9457e42e24bdba3025ea73:new_sha256=981922c97e4143e6813b86f595eee4a827c8e66192f1c6bdd8426776a40e8c36",
+            "mutation_id": "C37-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.trail_active",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/exits.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C37-LEGACY-001"
+        }
+      ],
+      "title": "tw_trailing_semantics_mode"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "b5ed1afadcff09b69e36b72affeb23de51d84c14",
+          "name": "B_BACKTEST_FREEZE",
+          "path": "MTC_COMMAND_CENTER/02_MTC_BACKTEST/src/modules/confirmation_layer.py",
+          "ref": "legacy/02-mtc-backtest/2026-08-25",
+          "role": "pivot FSM legacy authority"
+        },
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "inert scaffold preservation only",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "995-1076",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C38",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "B_BACKTEST_FREEZE",
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "bar_index": 1,
+            "break_buffer_ticks": 1,
+            "close": 102.0,
+            "high": 102.0,
+            "long_level": 100.0,
+            "min_wait_bars": 1,
+            "mintick": 1.0,
+            "require_close_beyond": true,
+            "wait_long": true,
+            "wait_long_start_bar": 0
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "995-1076",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "waits_reset": true
+          },
+          "literal_expected_observation": {
+            "long_age_ok": true,
+            "long_break_level": 101.0,
+            "long_pulse": true
+          },
+          "producer_adapter": "B_FREEZE.pivot_fsm",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=d05d808cd34c7befe607d8025b24ad646dcfe700bdcb17c2af6d2b5f2ef59bae:new_sha256=69849df8168bc57ca0d321877b772a98efcaba81029238868db6b9178413726a",
+            "mutation_id": "C38-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.waits_reset",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "src/modules/confirmation_layer.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C38-LEGACY-001"
+        }
+      ],
+      "title": "Swing-break/pivot confirmation state machine"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "A legacy behavior",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "b5ed1afadcff09b69e36b72affeb23de51d84c14",
+          "name": "B_BACKTEST_FREEZE",
+          "ref": "legacy/02-mtc-backtest/2026-08-25",
+          "role": "B corroboration where carried"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "1077-1096",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C39",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "B_BACKTEST_FREEZE"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "entry_modes": [
+              "Edge",
+              "Signal"
+            ],
+            "first_bar_requires_edge": true,
+            "raw_long": [
+              true,
+              true
+            ]
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "1077-1096",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "mode_count": 2
+          },
+          "literal_expected_observation": {
+            "edge_long": [
+              true,
+              false
+            ],
+            "first_eval_bar_blocked_without_edge": true,
+            "signal_long": [
+              true,
+              true
+            ]
+          },
+          "producer_adapter": "B_FREEZE.entry_event_mode",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=6c8c9f966a1ca9fdebbb9b25c3289877218277775cfbc2863890659d66e932e6:new_sha256=2d78292df2d3f886d1c662c527e5d1d4e028e8becca6030c252c517eff09be32",
+            "mutation_id": "C39-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.observation.edge_long[1]",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "src/engine/mtc_runner.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C39-LEGACY-001"
+        }
+      ],
+      "title": "Entry-event mode and first-eval-bar edge requirement"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "legacy executable authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "1097-1146",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C40",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "completed_htf_closes": [
+              {
+                "close": 100.0,
+                "timestamp": "2026-01-01T10:00:00+00:00"
+              },
+              {
+                "close": 200.0,
+                "timestamp": "2026-01-01T11:00:00+00:00"
+              }
+            ],
+            "declared_htf_minutes": 60,
+            "ltf_timestamp": "2026-01-01T10:30:00+00:00"
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "1097-1146",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "selected_timestamp": "2026-01-01T10:00:00+00:00"
+          },
+          "literal_expected_observation": {
+            "future_close_used": false,
+            "selected_close": 100.0
+          },
+          "producer_adapter": "A.htf_prior_closed_lookup",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=b7c15e2847b776e366b698fd9b5500289a619360a29a516e75693f501d5ae35c:new_sha256=05686dd77c4ff7234d391eb6cd7016dca7b4522ef0ff5cca788266bc441d628d",
+            "mutation_id": "C40-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.selected_timestamp",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/htf.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C40-LEGACY-001"
+        }
+      ],
+      "title": "Higher-timeframe series construction and alignment"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "A legacy behavior",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "b5ed1afadcff09b69e36b72affeb23de51d84c14",
+          "name": "B_BACKTEST_FREEZE",
+          "ref": "legacy/02-mtc-backtest/2026-08-25",
+          "role": "B corroboration where carried"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "1147-1206",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C41",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "B_BACKTEST_FREEZE"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "close": 100.0,
+            "htf_close": 101.0,
+            "htf_ma_line": null,
+            "htf_ready": true,
+            "ma_line": null
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "1147-1206",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "legacy_substitution_observed": true
+          },
+          "literal_expected_observation": {
+            "htf_substituted_value": 101.0,
+            "missing_ltf_ma_passes": true
+          },
+          "producer_adapter": "A.gates_readiness_substitution",
+          "producer_mutation": {
+            "mutation": "EXACT_TEXT_REPLACE_ONCE_V1:old_sha256=cc3b3711483c40ed79559f9106060feaaa8028f33997743a9d0a4fe10554db41:new_sha256=11a4ab9b7098939089c202977551ad71582f48ae7300252357ff4a6b610c2c70",
+            "mutation_id": "C41-GF8-MUT-001",
+            "required_red": "MISMATCH_PATH_PRESENT_V1:$.final_state.legacy_substitution_observed",
+            "restored_green": "RECURSIVE_EXACT_IEEE754_HEX_V1_MATCH",
+            "source_seam": "mtc_v2/core/gates.py",
+            "status": "REQUIRED_RED_THEN_GREEN"
+          },
+          "scenario_id": "C41-LEGACY-001"
+        }
+      ],
+      "title": "Indicator readiness substitution and MA/MACD equation authority"
+    },
+    {
+      "disposition": "APPLICABLE",
+      "legacy_authorities": [
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "A_CURRENT_MASTER",
+          "role": "executable Python authority",
+          "tree_oid": "7aa6f867d821df08a00358adf2dd4400b9c719e8"
+        },
+        {
+          "commit": "5c5603065c994d545c0eaa8c137fa9edd5cdfc28",
+          "name": "PINE_CURRENT_MASTER",
+          "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/01_PINE/MTC_V2.pine",
+          "role": "equation/source corroboration only; no TradingView execution credit"
+        }
+      ],
+      "p009_citation": {
+        "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+        "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+        "section_lines_at_pinned_blob": "1207-1291",
+        "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+      },
+      "row_id": "C42",
+      "scenarios": [
+        {
+          "clean_producer_corroboration": {
+            "authority_names": [
+              "A_CURRENT_MASTER",
+              "PINE_CURRENT_MASTER"
+            ],
+            "required": true,
+            "status": "REQUIRED_EXACT_AUTHORITY_SET"
+          },
+          "comparison_rule": "RECURSIVE_EXACT_IEEE754_HEX_V1",
+          "complete_inputs": {
+            "range_filter": {
+              "prices": [
+                100.0,
+                101.0,
+                99.0
+              ],
+              "rf_range": 1000.0
+            },
+            "supertrend": {
+              "bar_count": 3,
+              "st_use_ha": true
+            }
+          },
+          "expectation_derivation": {
+            "method": "P009_LITERAL_SOURCE_ARITHMETIC_V1",
+            "producer_output_may_not_rebless_expected": true,
+            "source": {
+              "git_blob_oid": "1c39ab939dfcf5589e5ec8fba4af8966947a67fc",
+              "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md",
+              "section_lines_at_pinned_blob": "1207-1291",
+              "sha256": "7d48871a3e45dab118e97969d701912edb5d7c16a4d822d816beca1d03a42249"
+            }
+          },
+          "literal_expected_final_state": {
+            "producer_count": 2
+          },
+          "literal_expected_observation": {
+            "range_filter_event_count": 0,
+            "supertrend_signals": [
+              {
+                "long": false,
+                "reason": "st_ha_not_supported",
+                "short": false
+              },
+              {
+                "long": false,
+                "reason": "st_ha_not_supported",
+                "short": false
+              },
+              {
+                "long": false,
+                "reason": "st_ha_not_supported",
+                "short": false
+              }
+            ]
+          },
+          "producer_adapter": "A.signal_producers",
+          "producer_mutation": {
+            "mutation": "NOT_EXECUTED_UNRESOLVED_ROW_V1",
+            "mutation_id": "C42-GF8-MUT-001",
+            "required_red": "TERMINAL_STOP_REQUIRED_V1",
+            "restored_green": "NOT_ESTABLISHED_V1",
+            "source_seam": "A.signal_producers",
+            "status": "UNRESOLVED_EXECUTION"
+          },
+          "scenario_id": "C42-LEGACY-001"
+        }
+      ],
+      "title": "Signal-producer equation authority"
+    }
+  ],
+  "separate_p009_non_decisions": [
+    {
+      "disposition": "OUTSIDE_C01_C42_LEGACY_ROW_UNIVERSE_NO_CREDIT",
+      "family": 18,
+      "name": "snapshot drift / bucket-capital divergence",
+      "relationship_to_c18": "none"
+    },
+    {
+      "disposition": "OUTSIDE_C01_C42_LEGACY_ROW_UNIVERSE_NO_CREDIT",
+      "family": 19,
+      "name": "allocator / Guardian boundary",
+      "relationship_to_c18": "none"
+    }
+  ],
+  "subject_run_count_at_freeze": 0
+}
