@@ -1,4 +1,4 @@
-﻿{
+{
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
   "generated": "2026-08-30T10:50:00+03:00",
@@ -129,7 +129,7 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "ROUND4_VERIFIED_NOT_CLEAN_PARKED",
+      "state": "ROUND5_CONVERGING_3_RESIDUALS_OWNER_LOOP_QUESTION",
       "branch": "-",
       "commit": "-",
       "detail": "Design audited BLOCK by N45 (self-checking acceptance gate + 3 open semantics + determinism). G17 (Grok, second family) DELIVERED a full detection report (15 findings: 2 BLOCKER, 7 HIGH, 6 MEDIUM; the Lead's earlier 'silent death' call was wrong - it was a slow start). W55 (author family) repaired the union N45+G17 into design v1.1; re-audit N53 (Codex) is running. BUILD starts only after P0-11 accepts. Tier T0.",
