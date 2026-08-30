@@ -127,12 +127,12 @@
     {
       "id": "WP-P0-20",
       "title": "Control-parity checklist + statistical-battery definition (migration gate papers)",
-      "state": "PAPERS_V11_REAUDIT_RUNNING",
+      "state": "PAPERS_ROUND_CAP_PARKED_OWNER_QUESTION",
       "branch": "-",
       "commit": "-",
-      "detail": "Both papers audited BLOCK by the P19 flagship (16/16 G16 findings reproduced, 0 refuted) and BLOCK+BLOCK by the Gemini corroborator GM2 - including the census defect that the papers claimed the bridge directory and funding surfaces were absent from the checkout. W54 (author family) repaired the three-auditor union into v1.1 of both papers. Delta re-audits P23 (flagship) + N54 (detection) are running. Chain stays serial: 11 -> 12 -> 20 -> 13 -> 31M1 -> 14.",
-      "owner_gate": false,
-      "next_action": "Paper 2 at PASS-WITH-NITS. Paper 1 v1.2 delivery NOT VERIFIED (W59 report has placeholder sections - lane likely capped mid-run; N59 detection confirms body unrepaired, 8 findings). Round 3 (W60, LAST of cap) auto-dispatches after the P26 flagship delta lands at the 02:50 Claude reset"
+      "detail": "Three repair rounds ran overnight (v1.1 W54, v1.2 W59 incomplete-capped, v1.3 W60). Round-3 verification: flagship P27 = PASS-WITH-NITS on both papers; detection N63 found 4 findings incl. ONE HIGH the Lead verified on code facts (runner.py:444 recomputes trail ATR every bar, so falsifier #5's stated runner-level expected exit 103.0/+3R is wrong; the two arms still genuinely diverge - N63's probe measured 99.0/-1R vs 100.0/0R). T0 round cap (3) exhausted, so the paper PARKS with the defect recorded instead of a round 4. Chain stays serial: 11 -> 12 -> 20 -> 13 -> 31M1 -> 14.",
+      "owner_gate": true,
+      "next_action": "OWNER (morning): (a) authorize round 4 as ONE narrowing edit - relabel falsifier #5 a unit-level probe with injected trail_atr (recommended); (b) accept papers with the defect recorded; (c) hold"
     },
     {
       "id": "WP-P0-13",
