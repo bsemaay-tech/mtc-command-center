@@ -1,0 +1,792 @@
+{
+  "array_contracts": {
+    "completed_exit_ids": "lexicographically sorted",
+    "entry_legs": "producer order",
+    "events": "ordered by event_ordinal; duplicate ordinals are invalid",
+    "gate_results": "gate_name ascending",
+    "working_exits": "producer order"
+  },
+  "closed": true,
+  "csv_binding": {
+    "bar_index_derivation": "zero-based physical data-row ordinal after the header",
+    "exact_header": "ts,open,high,low,close,volume",
+    "numeric_sources": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume"
+    ],
+    "rejects": [
+      "supplied index column",
+      "skipped ordinal",
+      "timestamp/index disagreement",
+      "duplicate observation identity"
+    ],
+    "timestamp_source": "ts"
+  },
+  "digest_catalog": {
+    "canonical_json": "UTF-8, sort_keys=true, separators=(',', ':'), ensure_ascii=false, allow_nan=false",
+    "event_component_paths": [
+      "events[*].event_ordinal",
+      "events[*].event_kind",
+      "events[*].side",
+      "events[*].reason",
+      "events[*].price",
+      "events[*].qty",
+      "events[*].lifecycle_id",
+      "events[*].exit_id",
+      "events[*].realized_pnl",
+      "events[*].was_partial",
+      "events[*].was_pessimistic"
+    ],
+    "state_digest_algorithm": "sha256(canonical_json({events,position,gate_readiness,account}))",
+    "state_digest_components": [
+      "events[*].event_ordinal",
+      "events[*].event_kind",
+      "events[*].side",
+      "events[*].reason",
+      "events[*].price",
+      "events[*].qty",
+      "events[*].lifecycle_id",
+      "events[*].exit_id",
+      "events[*].realized_pnl",
+      "events[*].was_partial",
+      "events[*].was_pessimistic",
+      "position.present",
+      "position.lifecycle_id",
+      "position.side",
+      "position.entry_price",
+      "position.avg_entry_price",
+      "position.qty",
+      "position.entry_bar",
+      "position.initial_qty",
+      "position.active_stop_price",
+      "position.active_tp_price",
+      "position.active_stop_owner",
+      "position.be_active",
+      "position.trail_active",
+      "position.trail_price",
+      "position.initial_risk_per_unit",
+      "position.working_exit_reference_qty",
+      "position.working_exit_book_version",
+      "position.entry_legs[*].entry_price",
+      "position.entry_legs[*].qty",
+      "position.entry_legs[*].entry_bar",
+      "position.working_exits[*].exit_id",
+      "position.working_exits[*].kind",
+      "position.working_exits[*].target_price",
+      "position.working_exits[*].stop_price",
+      "position.working_exits[*].qty_fraction",
+      "position.working_exits[*].book_version",
+      "position.working_exits[*].active",
+      "position.completed_exit_ids[*]",
+      "gate_readiness.warmup_bars",
+      "gate_readiness.block_new_entries_this_bar",
+      "gate_readiness.opened_this_bar_reason",
+      "gate_readiness.closed_this_bar_reason",
+      "gate_readiness.gated_long",
+      "gate_readiness.gated_short",
+      "gate_readiness.gate_results[*].gate_name",
+      "gate_readiness.gate_results[*].long_ok",
+      "gate_readiness.gate_results[*].short_ok",
+      "gate_readiness.gate_results[*].value",
+      "gate_readiness.gate_results[*].category",
+      "account.equity",
+      "account.realized_equity",
+      "account.unrealized_pnl",
+      "account.last_sizing_equity_snapshot",
+      "account.total_entries",
+      "account.total_exits"
+    ]
+  },
+  "excluded_fields": [
+    {
+      "path": "Bar.indicators",
+      "reason": "caller-supplied auxiliary map; not used by the two frozen profiles"
+    },
+    {
+      "path": "Bar.htf",
+      "reason": "legacy compatibility alias map; the frozen profiles do not provide HTF data"
+    },
+    {
+      "path": "PortfolioState.current_bar_index",
+      "reason": "duplicate of observation.bar_index"
+    },
+    {
+      "path": "PortfolioState.last_entry_bar_index",
+      "reason": "derivable lifecycle diagnostic not declared in v1"
+    },
+    {
+      "path": "PortfolioState.last_exit_bar_index",
+      "reason": "derivable from ordered events"
+    },
+    {
+      "path": "PortfolioState.last_exit_price/qty/id/reason flags",
+      "reason": "represented losslessly in ordered events"
+    },
+    {
+      "path": "PortfolioState.initial_capital",
+      "reason": "pinned in the full resolved config snapshot"
+    },
+    {
+      "path": "PortfolioState.execution_profile_id",
+      "reason": "pinned by profile_id and resolved config"
+    },
+    {
+      "path": "PortfolioState.instrument",
+      "reason": "pinned in the full resolved config snapshot"
+    },
+    {
+      "path": "PortfolioState.indicator_snapshot",
+      "reason": "internal calculation state; raw and gated producer outputs are observed instead"
+    },
+    {
+      "path": "PortfolioState.regime_lock_side",
+      "reason": "undeclared internal control state in schema v1"
+    },
+    {
+      "path": "PortfolioState.next_position_lifecycle_id",
+      "reason": "next-id allocator internal; active/event lifecycle IDs are observed"
+    },
+    {
+      "path": "Runner private trackers and histories",
+      "reason": "undeclared implementation internals"
+    },
+    {
+      "path": "Runner debug metadata",
+      "reason": "debug-only and configuration-redundant"
+    },
+    {
+      "path": "arbitrary repr/object address/unordered set iteration",
+      "reason": "non-canonical and forbidden"
+    }
+  ],
+  "field_catalog": [
+    {
+      "encoding": "UTF-8 exact literal P011_OBSERVATION_SCHEMA_v1",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "observation",
+      "path": "schema_version",
+      "type": "string"
+    },
+    {
+      "encoding": "UTF-8 exact",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "observation",
+      "path": "profile_id",
+      "type": "string"
+    },
+    {
+      "encoding": "JSON base-10 integer",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "observation",
+      "path": "bar_index",
+      "type": "integer"
+    },
+    {
+      "encoding": "ISO-8601 with explicit UTC offset",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "observation",
+      "path": "timestamp",
+      "type": "string"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "input",
+      "path": "input.open",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "input",
+      "path": "input.high",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "input",
+      "path": "input.low",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "input",
+      "path": "input.close",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "input",
+      "path": "input.volume",
+      "type": "float"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "raw_signal",
+      "path": "raw_signal.long",
+      "type": "boolean"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "raw_signal",
+      "path": "raw_signal.short",
+      "type": "boolean"
+    },
+    {
+      "encoding": "UTF-8 exact or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "raw_signal",
+      "path": "raw_signal.reason",
+      "type": "string"
+    },
+    {
+      "encoding": "JSON base-10 integer or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "raw_signal",
+      "path": "raw_signal.direction",
+      "type": "integer"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "raw_signal",
+      "path": "raw_signal.line",
+      "type": "float"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "gated_signal",
+      "path": "gated_signal.long",
+      "type": "boolean"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "gated_signal",
+      "path": "gated_signal.short",
+      "type": "boolean"
+    },
+    {
+      "encoding": "UTF-8 exact or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "gated_signal",
+      "path": "gated_signal.reason",
+      "type": "string"
+    },
+    {
+      "encoding": "JSON base-10 integer or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "gated_signal",
+      "path": "gated_signal.direction",
+      "type": "integer"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "gated_signal",
+      "path": "gated_signal.line",
+      "type": "float"
+    },
+    {
+      "encoding": "JSON base-10 integer",
+      "nullable": false,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].event_ordinal",
+      "type": "integer"
+    },
+    {
+      "encoding": "UTF-8 exact ENTRY or EXIT",
+      "nullable": false,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].event_kind",
+      "type": "string"
+    },
+    {
+      "encoding": "UTF-8 exact long or short",
+      "nullable": false,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].side",
+      "type": "string"
+    },
+    {
+      "encoding": "UTF-8 exact or null",
+      "nullable": true,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].reason",
+      "type": "string"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].price",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].qty",
+      "type": "float"
+    },
+    {
+      "encoding": "JSON base-10 integer",
+      "nullable": false,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].lifecycle_id",
+      "type": "integer"
+    },
+    {
+      "encoding": "UTF-8 exact or null",
+      "nullable": true,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].exit_id",
+      "type": "string"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].realized_pnl",
+      "type": "float"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].was_partial",
+      "type": "boolean"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "event_ordinal ascending",
+      "owning_record": "event",
+      "path": "events[*].was_pessimistic",
+      "type": "boolean"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.present",
+      "type": "boolean"
+    },
+    {
+      "encoding": "JSON base-10 integer or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.lifecycle_id",
+      "type": "integer"
+    },
+    {
+      "encoding": "UTF-8 exact or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.side",
+      "type": "string"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.entry_price",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.avg_entry_price",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.qty",
+      "type": "float"
+    },
+    {
+      "encoding": "JSON base-10 integer or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.entry_bar",
+      "type": "integer"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.initial_qty",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.active_stop_price",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.active_tp_price",
+      "type": "float"
+    },
+    {
+      "encoding": "UTF-8 exact or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.active_stop_owner",
+      "type": "string"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.be_active",
+      "type": "boolean"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.trail_active",
+      "type": "boolean"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.trail_price",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.initial_risk_per_unit",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.working_exit_reference_qty",
+      "type": "float"
+    },
+    {
+      "encoding": "JSON base-10 integer or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "position",
+      "path": "position.working_exit_book_version",
+      "type": "integer"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "source list order",
+      "owning_record": "entry_leg",
+      "path": "position.entry_legs[*].entry_price",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "source list order",
+      "owning_record": "entry_leg",
+      "path": "position.entry_legs[*].qty",
+      "type": "float"
+    },
+    {
+      "encoding": "JSON base-10 integer",
+      "nullable": false,
+      "ordering": "source list order",
+      "owning_record": "entry_leg",
+      "path": "position.entry_legs[*].entry_bar",
+      "type": "integer"
+    },
+    {
+      "encoding": "UTF-8 exact",
+      "nullable": false,
+      "ordering": "source list order",
+      "owning_record": "working_exit",
+      "path": "position.working_exits[*].exit_id",
+      "type": "string"
+    },
+    {
+      "encoding": "UTF-8 exact",
+      "nullable": false,
+      "ordering": "source list order",
+      "owning_record": "working_exit",
+      "path": "position.working_exits[*].kind",
+      "type": "string"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "source list order",
+      "owning_record": "working_exit",
+      "path": "position.working_exits[*].target_price",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "source list order",
+      "owning_record": "working_exit",
+      "path": "position.working_exits[*].stop_price",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "source list order",
+      "owning_record": "working_exit",
+      "path": "position.working_exits[*].qty_fraction",
+      "type": "float"
+    },
+    {
+      "encoding": "JSON base-10 integer",
+      "nullable": false,
+      "ordering": "source list order",
+      "owning_record": "working_exit",
+      "path": "position.working_exits[*].book_version",
+      "type": "integer"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "source list order",
+      "owning_record": "working_exit",
+      "path": "position.working_exits[*].active",
+      "type": "boolean"
+    },
+    {
+      "encoding": "UTF-8 exact",
+      "nullable": false,
+      "ordering": "lexicographically sorted",
+      "owning_record": "position",
+      "path": "position.completed_exit_ids[*]",
+      "type": "string"
+    },
+    {
+      "encoding": "JSON base-10 integer",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "gate_readiness",
+      "path": "gate_readiness.warmup_bars",
+      "type": "integer"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "gate_readiness",
+      "path": "gate_readiness.block_new_entries_this_bar",
+      "type": "boolean"
+    },
+    {
+      "encoding": "UTF-8 exact or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "gate_readiness",
+      "path": "gate_readiness.opened_this_bar_reason",
+      "type": "string"
+    },
+    {
+      "encoding": "UTF-8 exact or null",
+      "nullable": true,
+      "ordering": "n/a",
+      "owning_record": "gate_readiness",
+      "path": "gate_readiness.closed_this_bar_reason",
+      "type": "string"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "gate_readiness",
+      "path": "gate_readiness.gated_long",
+      "type": "boolean"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "gate_readiness",
+      "path": "gate_readiness.gated_short",
+      "type": "boolean"
+    },
+    {
+      "encoding": "UTF-8 exact",
+      "nullable": false,
+      "ordering": "gate_name ascending",
+      "owning_record": "gate_result",
+      "path": "gate_readiness.gate_results[*].gate_name",
+      "type": "string"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "gate_name ascending",
+      "owning_record": "gate_result",
+      "path": "gate_readiness.gate_results[*].long_ok",
+      "type": "boolean"
+    },
+    {
+      "encoding": "JSON boolean",
+      "nullable": false,
+      "ordering": "gate_name ascending",
+      "owning_record": "gate_result",
+      "path": "gate_readiness.gate_results[*].short_ok",
+      "type": "boolean"
+    },
+    {
+      "encoding": "Python float.hex() string or null",
+      "nullable": true,
+      "ordering": "gate_name ascending",
+      "owning_record": "gate_result",
+      "path": "gate_readiness.gate_results[*].value",
+      "type": "float"
+    },
+    {
+      "encoding": "UTF-8 exact",
+      "nullable": false,
+      "ordering": "gate_name ascending",
+      "owning_record": "gate_result",
+      "path": "gate_readiness.gate_results[*].category",
+      "type": "string"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "account",
+      "path": "account.equity",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "account",
+      "path": "account.realized_equity",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "account",
+      "path": "account.unrealized_pnl",
+      "type": "float"
+    },
+    {
+      "encoding": "Python float.hex() string",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "account",
+      "path": "account.last_sizing_equity_snapshot",
+      "type": "float"
+    },
+    {
+      "encoding": "JSON base-10 integer",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "account",
+      "path": "account.total_entries",
+      "type": "integer"
+    },
+    {
+      "encoding": "JSON base-10 integer",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "account",
+      "path": "account.total_exits",
+      "type": "integer"
+    },
+    {
+      "encoding": "lowercase SHA-256 hex over the canonical state preimage",
+      "nullable": false,
+      "ordering": "n/a",
+      "owning_record": "observation",
+      "path": "state_digest",
+      "type": "string"
+    }
+  ],
+  "float_contract": "Every IEEE-754 value is encoded with Python float.hex(); comparison is exact and has no tolerance.",
+  "schema_version": "P011_OBSERVATION_SCHEMA_v1",
+  "top_level_paths": [
+    "schema_version",
+    "profile_id",
+    "bar_index",
+    "timestamp",
+    "input",
+    "raw_signal",
+    "gated_signal",
+    "events",
+    "position",
+    "gate_readiness",
+    "account",
+    "state_digest"
+  ],
+  "unknown_field_policy": "STOP"
+}
