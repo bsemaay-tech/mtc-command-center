@@ -127,12 +127,12 @@
     {
       "id": "WP-P0-20",
       "title": "Control-parity checklist + statistical-battery definition (migration gate papers)",
-      "state": "PAPERS_ROUND_CAP_PARKED_OWNER_QUESTION",
+      "state": "PAPERS_CLOSED",
       "branch": "-",
       "commit": "-",
       "detail": "Three repair rounds ran overnight (v1.1 W54, v1.2 W59 incomplete-capped, v1.3 W60). Round-3 verification: flagship P27 = PASS-WITH-NITS on both papers; detection N63 found 4 findings incl. ONE HIGH the Lead verified on code facts (runner.py:444 recomputes trail ATR every bar, so falsifier #5's stated runner-level expected exit 103.0/+3R is wrong; the two arms still genuinely diverge - N63's probe measured 99.0/-1R vs 100.0/0R). T0 round cap (3) exhausted, so the paper PARKS with the defect recorded instead of a round 4. Chain stays serial: 11 -> 12 -> 20 -> 13 -> 31M1 -> 14.",
       "owner_gate": true,
-      "next_action": "OWNER RULED (a): W63 performs the ONE narrowing edit (falsifier #5 -> unit-level probe with injected trail_atr) -> delta verify -> papers gate closes"
+      "next_action": "PAPERS CLOSED (P30 verify: the one edit only, correct against exits.py:278-286; N63-F1 closed; N63-F2/F3/F4 MEDIUMs recorded open per the one-edit authorization). Package's next phase (migration + shared Risk Allocator build) stays gated on WP-P0-12 acceptance - which the owner HOLDS"
     },
     {
       "id": "WP-P0-13",
