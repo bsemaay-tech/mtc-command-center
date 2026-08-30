@@ -43,6 +43,17 @@ design-only, serial build chain unchanged).
    is NOT authorized by this approval.
 5. **Overnight order:** maximum real progress until morning under the standing rules.
 
+## Addendum 3 — 2026-08-30 ~06:00 (owner verbatim: "bridge v2 yes, papers a, p012 hold" / "continue working with 10 lanes. it's not morning yet")
+
+6. **BRIDGE CONFIG V2 APPROVED — exact bytes.** `BRIDGE_YAML_CANDIDATE_V2.yaml`, 324 bytes,
+   SHA-256 `a96fecd10d6966c3e93a829ec4d75869a0851f0136a06e85ab45c255ee0f5842`, P21b-CONFIRMED.
+   With the design CONFIRMED and the bytes approved, the fail-closed BUILD lane is authorized
+   under the standing ask-10 terms: build + tests + PR only; NO deployment to any host.
+7. **P0-20 papers: option (a).** Round 4 authorized as ONE narrowing edit — relabel falsifier
+   #5 a unit-level probe with injected `trail_atr`; nothing else.
+8. **P0-12 design: HOLD** at its round cap until P0-11 v3 lessons fold in.
+9. Ten concurrent lanes remain the standing order.
+
 ## Interpretation notes (Lead)
 
 - Ruling 1 authorizes exactly the repair-7 pattern: rename the published labels that assert
