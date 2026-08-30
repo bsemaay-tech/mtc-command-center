@@ -93,7 +93,6 @@ MANIFEST_PATH = GATE_DIR / "p011_legacy_manifest.json"
 RECEIPT_PATH = GATE_DIR / "P011_GATE_RECEIPT.json"
 SCHEMA_PATH = GATE_DIR / "P011_OBSERVATION_SCHEMA_v1.json"
 ANCHOR_PATH = Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v2.owner-signed.json")
-STAGE3_SCRATCH_ROOT = Path(r"C:\tmp\N51_VARIANTS")
 P009_REL = Path(
     "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_09_CAPABILITY_TABLE_2026-08-25/"
     "CAPABILITY_CANONICALIZATION_TABLE.md"
@@ -2840,10 +2839,12 @@ def validate_frozen_inputs() -> dict[str, Any]:
     return manifest
 
 
-def validate_candidate_inputs(manifest_path: Path) -> dict[str, Any]:
+def validate_candidate_inputs(
+    manifest_path: Path, scratch_root: Path
+) -> dict[str, Any]:
     resolved = manifest_path.resolve()
     try:
-        resolved.relative_to(STAGE3_SCRATCH_ROOT.resolve())
+        resolved.relative_to(scratch_root.resolve())
     except ValueError as exc:
         raise RowStop("candidate manifest must stay inside stage-3 scratch") from exc
     manifest = load_json(resolved)
@@ -3110,7 +3111,7 @@ def _git_blob_bytes(ref: str, path: str) -> bytes:
     return proc.stdout
 
 
-def _range_filter_branch_sequence(source: str, *, language: str) -> dict[str, Any]:
+def _range_filter_pinned_seam_presence(source: str, *, language: str) -> dict[str, Any]:
     source = source.replace("\r\n", "\n")
     canonical = [
         {"condition": "direction<0 and close>line", "actions": ["line=close-range", "direction=1", "long=true", "reason=flip_long"]},
@@ -3140,11 +3141,12 @@ def _range_filter_branch_sequence(source: str, *, language: str) -> dict[str, An
     missing = [index + 1 for index, seam in enumerate(seams) if seam not in source]
     return {
         "language": language,
-        "branch_count": len(canonical) - len(missing),
-        "missing_branch_ordinals": missing,
-        "normalized_branches": [
+        "missing_seam_ordinals": missing,
+        "pinned_canonical_seams": [
             item for index, item in enumerate(canonical, start=1) if index not in missing
         ],
+        "pinned_canonical_seams_present": not missing,
+        "source_sequence_extracted": False,
     }
 
 
@@ -3157,8 +3159,8 @@ def c42_source_corroboration(pine_path: Path | None = None) -> dict[str, Any]:
     pine_bytes = actual_pine_path.read_bytes()
     a_source = a_bytes.decode("utf-8")
     pine_source = pine_bytes.decode("utf-8")
-    a_sequence = _range_filter_branch_sequence(a_source, language="python")
-    pine_sequence = _range_filter_branch_sequence(pine_source, language="pine")
+    a_presence = _range_filter_pinned_seam_presence(a_source, language="python")
+    pine_presence = _range_filter_pinned_seam_presence(pine_source, language="pine")
     a_blob = git("rev-parse", f"HEAD:{a_rel}").stdout.strip()
     a_worktree_blob = git("hash-object", "--", a_rel).stdout.strip()
     clean_pine = actual_pine_path == (REPO_ROOT / pine_rel).resolve()
@@ -3168,10 +3170,9 @@ def c42_source_corroboration(pine_path: Path | None = None) -> dict[str, Any]:
         if clean_pine
         else sha256_bytes(pine_bytes)
     )
-    sequences_equal = (
-        a_sequence["missing_branch_ordinals"] == []
-        and pine_sequence["missing_branch_ordinals"] == []
-        and a_sequence["normalized_branches"] == pine_sequence["normalized_branches"]
+    pinned_seams_present = (
+        a_presence["pinned_canonical_seams_present"]
+        and pine_presence["pinned_canonical_seams_present"]
     )
     identities_match_git = (
         a_blob == a_worktree_blob
@@ -3181,7 +3182,8 @@ def c42_source_corroboration(pine_path: Path | None = None) -> dict[str, Any]:
     return {
         "authority_name": "PINE_CURRENT_MASTER",
         "evidence_mode": SOURCE_CORROBORATION,
-        "corroborated": sequences_equal and identities_match_git,
+        "corroborated": False,
+        "corroboration_reason": "SOURCE_SEQUENCE_EXTRACTION_NOT_IMPLEMENTED",
         "named_producers": [
             "A_CURRENT_MASTER_RANGE_FILTER_SOURCE",
             "PINE_CURRENT_MASTER_RANGE_FILTER_SOURCE",
@@ -3192,7 +3194,7 @@ def c42_source_corroboration(pine_path: Path | None = None) -> dict[str, Any]:
             "worktree_blob_oid": a_worktree_blob,
             "sha256": sha256_bytes(a_bytes),
             "source_range": "42-70",
-            "branch_sequence": a_sequence,
+            "pinned_seam_presence": a_presence,
         },
         "pine_source": {
             "path": pine_rel if clean_pine else "<MODIFIED_PINE_COPY>",
@@ -3200,9 +3202,10 @@ def c42_source_corroboration(pine_path: Path | None = None) -> dict[str, Any]:
             "worktree_blob_or_modified_sha256": pine_worktree_blob,
             "sha256": sha256_bytes(pine_bytes),
             "source_range": "622-645",
-            "branch_sequence": pine_sequence,
+            "pinned_seam_presence": pine_presence,
         },
-        "normalized_branch_sequences_equal": sequences_equal,
+        "pinned_canonical_seams_present": pinned_seams_present,
+        "source_sequence_extracted": False,
         "git_identities_match_worktree": identities_match_git,
         "pine_execution_credit": False,
     }
@@ -3223,9 +3226,9 @@ def c42_source_correspondence_evidence() -> dict[str, Any]:
         )
         modified = c42_source_corroboration(modified_path)
     detected = (
-        modified["corroborated"] is False
+        modified["pinned_canonical_seams_present"] is False
         and 4
-        in modified["pine_source"]["branch_sequence"]["missing_branch_ordinals"]
+        in modified["pine_source"]["pinned_seam_presence"]["missing_seam_ordinals"]
     )
     restored = c42_source_corroboration()
     return {
@@ -3233,11 +3236,14 @@ def c42_source_correspondence_evidence() -> dict[str, Any]:
         "modified_copy": modified,
         "modified_copy_disposition": "DETECTED" if detected else "NOT_DETECTED",
         "restoration": {
-            "corroborated": restored["corroborated"],
+            "pinned_canonical_seams_present": restored[
+                "pinned_canonical_seams_present"
+            ],
+            "source_sequence_extracted": False,
             "independence": "NON_INDEPENDENT_WRITER_INTEGRITY_ONLY",
             "closure_credit": 0,
         },
-        "satisfied": clean["corroborated"] is True and detected,
+        "satisfied": False,
     }
 
 
@@ -3279,9 +3285,11 @@ print(json.dumps(result, sort_keys=True, separators=(",", ":")))
         )
     lines = [line for line in proc.stdout.splitlines() if line.strip()]
     parsed = json.loads(lines[-1]) if proc.returncode == 0 and lines else None
+    boundary_observed = proc.returncode == 0 and type(parsed) is dict
     refused = type(parsed) is dict and parsed.get("refused") is True
     return {
         "authority_name": "B_BACKTEST_FREEZE",
+        "boundary_observed": boundary_observed,
         "boundary": "src.config.defaults.MTCConfig",
         "requested": {"signal_mode": "Range Filter", "rf_range": 10.0},
         "refused": refused,
@@ -3290,7 +3298,11 @@ print(json.dumps(result, sort_keys=True, separators=(",", ":")))
         "stderr": proc.stderr,
         "materialized_file_count": len(files),
         "authority_commit": B_COMMIT,
-        "outcome": "REFUSED" if refused else "NOT_REFUSED",
+        "outcome": (
+            "NOT_OBSERVED"
+            if not boundary_observed
+            else ("REFUSED" if refused else "NOT_REFUSED")
+        ),
     }
 
 
@@ -4003,9 +4015,9 @@ def build_stage3_blocked_records(manifest: dict[str, Any]) -> list[dict[str, Any
         scenario = row.get("scenarios", [{}])[0]
         record = {
             "authority_execution": {
-                "complete": True,
+                "accounting_performed": False,
+                "complete": False,
                 "satisfied": False,
-                "terminal_disposition": status,
             },
             "mutation": "NOT_RUN_BLOCKED_BY_DESIGN",
             "row_id": row_id,
@@ -4026,8 +4038,12 @@ def command_build(args: argparse.Namespace) -> int:
         else MANIFEST_PATH
     )
     candidate_mode = candidate_manifest_arg is not None
+    scratch_root_arg = getattr(args, "scratch_root", None)
+    if candidate_mode and not scratch_root_arg:
+        raise RowStop("candidate build requires an explicit stage-3 scratch root")
+    scratch_root = Path(scratch_root_arg).resolve() if scratch_root_arg else None
     manifest = (
-        validate_candidate_inputs(manifest_path)
+        validate_candidate_inputs(manifest_path, scratch_root)
         if candidate_mode
         else validate_frozen_inputs()
     )
@@ -4041,7 +4057,7 @@ def command_build(args: argparse.Namespace) -> int:
     if not candidate_mode and requested != list(ROW_CONTRACTS)[: len(requested)]:
         raise RowStop("rows must be a manifest-order prefix of implemented adapters")
     output_dir = Path(args.out).resolve()
-    allowed_root = STAGE3_SCRATCH_ROOT if candidate_mode else GATE_DIR
+    allowed_root = scratch_root if candidate_mode else GATE_DIR
     try:
         output_dir.relative_to(allowed_root.resolve())
     except ValueError as exc:
@@ -4125,21 +4141,28 @@ def command_build(args: argparse.Namespace) -> int:
             authority_evidence = consume_authority_execution(
                 binding, green_observation
             )
-        row_status = (
-            "GREEN_AFTER_RED"
-            if authority_evidence["exact_set_match"]
-            and (
-                row_id != "C42"
-                or not candidate_mode
-                or (
-                    source_correspondence is not None
-                    and source_correspondence["satisfied"]
-                    and b_configuration_discriminator is not None
-                    and b_configuration_discriminator["refused"]
-                )
+        stop_reason = None
+        if (
+            row_id == "C42"
+            and candidate_mode
+            and b_configuration_discriminator is not None
+            and not b_configuration_discriminator["boundary_observed"]
+        ):
+            stop_reason = "STOP_B_CONFIGURATION_DISCRIMINATOR_NOT_OBSERVED"
+        elif not authority_evidence["exact_set_match"]:
+            stop_reason = (
+                "STOP_EVIDENCE_MODE_NOT_IMPLEMENTED"
+                if row_id == "C42" and candidate_mode
+                else "STOP_AUTHORITY_EVIDENCE_INCOMPLETE"
             )
-            else "STOP_MISSING_REQUIRED_AUTHORITY"
-        )
+        elif (
+            row_id == "C42"
+            and candidate_mode
+            and b_configuration_discriminator is not None
+            and not b_configuration_discriminator["refused"]
+        ):
+            stop_reason = "STOP_B_CONFIGURATION_DISCRIMINATOR_NOT_REFUSED"
+        row_status = stop_reason or "GREEN_AFTER_RED"
         record = {
             "authority": {
                 "citations": list(contract.citations),
@@ -4167,7 +4190,7 @@ def command_build(args: argparse.Namespace) -> int:
         if b_configuration_discriminator is not None:
             record["b_configuration_discriminator"] = b_configuration_discriminator
         if row_status != "GREEN_AFTER_RED":
-            record["stop_reason"] = "MISSING_REQUIRED_AUTHORITY"
+            record["stop_reason"] = stop_reason
         record["record_sha256"] = result_hash(record)
         records.append(record)
 
@@ -4204,7 +4227,12 @@ def command_build(args: argparse.Namespace) -> int:
                         else (
                             "NOT_RUN_NO_EXECUTABLE_PINE_PRODUCER_IN_AUTHORIZED_LANE"
                             if row_status == "UNRESOLVED_PRODUCER_EXECUTION"
-                            else "STOP_MISSING_REQUIRED_AUTHORITY"
+                            else (
+                                by_row[row_id]["mutation"]
+                                if type(by_row[row_id]["mutation"]) is str
+                                and by_row[row_id]["mutation"].startswith("NOT_RUN")
+                                else "EXECUTED"
+                            )
                         )
                     ),
                     "producer_mutation": by_row[row_id]["mutation"],
@@ -4243,7 +4271,7 @@ def command_build(args: argparse.Namespace) -> int:
         "stop": sum(item["status"] == "STOP" for item in corroboration_rows),
         "total": len(corroboration_rows),
     }
-    outcome = "PASS" if counts == {"green": 40, "not_applicable": 2, "stop": 0, "total": 42} else "STOP"
+    outcome = "STOP" if counts["stop"] else "PASS"
     corroboration = {
         "artifact_schema_version": (
             "P011_ROW_CORROBORATION_v3" if candidate_mode else "P011_ROW_CORROBORATION_v2"
@@ -4251,7 +4279,14 @@ def command_build(args: argparse.Namespace) -> int:
         "counts": counts,
         "gate_version": manifest["gate_version"],
         "outcome": outcome,
-        "reason": None if outcome == "PASS" else f"row arm partial: {counts['green']} of 40 applicable rows GREEN",
+        "reason": (
+            None
+            if outcome == "PASS"
+            else (
+                f"measured terminal rows: {counts['green']} GREEN, "
+                f"{counts['stop']} STOP, {counts['not_applicable']} policy-only"
+            )
+        ),
         "rows": corroboration_rows,
     }
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -4397,8 +4432,9 @@ def parser() -> argparse.ArgumentParser:
     build.add_argument("--rows", nargs="*")
     build.add_argument(
         "--candidate-manifest",
-        help="development-only v3 manifest under C:\\tmp\\N51_VARIANTS",
+        help="development-only v3 manifest under --scratch-root",
     )
+    build.add_argument("--scratch-root")
     build.set_defaults(handler=command_build)
 
     contract = sub.add_parser(

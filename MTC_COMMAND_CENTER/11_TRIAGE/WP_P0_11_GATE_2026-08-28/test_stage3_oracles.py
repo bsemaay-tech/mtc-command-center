@@ -13,6 +13,7 @@ import row_arm
 import stage1_freeze
 from scenario_binding import (
     AuthorityRequirement,
+    BLOCKED_BY_DESIGN,
     EXECUTION_OBSERVATION,
     SOURCE_CORROBORATION,
     ScenarioBindingError,
@@ -47,7 +48,7 @@ class Stage3OracleTests(unittest.TestCase):
         )
         self.assertNotIn("stage1_freeze", source)
 
-    def test_copied_prefixed_contracts_are_detected_before_execution(self) -> None:
+    def test_copied_pre_fix_contracts_are_refused_by_binding(self) -> None:
         legacy = stage1_freeze.build_legacy_manifest(stage3=False)
         by_id = {row["row_id"]: row for row in legacy["rows"]}
         for row_id in ("C32", "C34", "C42"):
@@ -161,26 +162,53 @@ class Stage3OracleTests(unittest.TestCase):
         self.assertEqual(arms["L1"], arms["L3"])
         self.assertNotEqual(arms["L1"]["checkpoints"], arms["L2"]["checkpoints"])
 
-    def test_c42_source_and_b_discriminators_are_observed(self) -> None:
+    def test_c42_pinned_seams_do_not_claim_sequence_extraction(self) -> None:
         source = row_arm.c42_source_correspondence_evidence()
-        self.assertTrue(source["satisfied"])
+        self.assertFalse(source["satisfied"])
+        self.assertTrue(source["clean"]["pinned_canonical_seams_present"])
+        self.assertFalse(source["clean"]["source_sequence_extracted"])
         self.assertEqual("DETECTED", source["modified_copy_disposition"])
         self.assertEqual(0, source["restoration"]["closure_credit"])
         b_boundary = row_arm.c42_b_configuration_discriminator()
+        self.assertTrue(b_boundary["boundary_observed"])
         self.assertTrue(b_boundary["refused"])
         self.assertEqual("REFUSED", b_boundary["outcome"])
 
+    def test_c42_unavailable_b_boundary_is_not_observed(self) -> None:
+        completed = __import__("subprocess").CompletedProcess(
+            args=[], returncode=7, stdout="", stderr="boundary unavailable"
+        )
+        with (
+            patch.object(row_arm, "_materialize_prefix", return_value=[]),
+            patch.object(row_arm.subprocess, "run", return_value=completed),
+        ):
+            result = row_arm.c42_b_configuration_discriminator()
+        self.assertFalse(result["boundary_observed"])
+        self.assertFalse(result["refused"])
+        self.assertEqual("NOT_OBSERVED", result["outcome"])
+
+    def test_desktop_rows_declare_blocked_mode(self) -> None:
+        for row_id in ("C28", "C29", "C30"):
+            scenario = self.rows[row_id]["scenarios"][0]
+            requirements = scenario["clean_producer_corroboration"][
+                "authority_requirements"
+            ]
+            self.assertEqual(BLOCKED_BY_DESIGN, requirements[0]["evidence_mode"])
+
 
 class Stage3PublicationBoundaryTests(unittest.TestCase):
-    def test_candidate_generation_writes_only_explicit_scratch_manifest(self) -> None:
-        with tempfile.TemporaryDirectory(dir=stage1_freeze.STAGE3_SCRATCH_ROOT) as name:
-            output = Path(name) / "candidate.json"
-            args = type("Args", (), {"out": str(output)})()
+    def test_candidate_generation_writes_requested_scratch_manifest(self) -> None:
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            output = root / "candidate.json"
+            args = type(
+                "Args", (), {"out": str(output), "scratch_root": str(root)}
+            )()
             self.assertEqual(0, stage1_freeze.command_candidate_manifest(args))
             self.assertEqual(stage1_freeze.STAGE3_GATE_VERSION, json.loads(output.read_text(encoding="utf-8"))["gate_version"])
 
     def test_publication_refuses_missing_owner_v1_v2_and_hash_mismatch(self) -> None:
-        with tempfile.TemporaryDirectory(dir=stage1_freeze.STAGE3_SCRATCH_ROOT) as name:
+        with tempfile.TemporaryDirectory() as name:
             root = Path(name)
             manifest = root / "manifest.json"
             stage1_freeze.write_json(manifest, stage1_freeze.build_legacy_manifest(stage3=True))
@@ -196,7 +224,7 @@ class Stage3PublicationBoundaryTests(unittest.TestCase):
                 stage1_freeze.validate_stage3_publication_prerequisites(
                     manifest_path=manifest,
                     receipt_path=receipt,
-                    owner_authorization_path=root / "absent-owner.md",
+                    authorization_file_path=root / "absent-owner.md",
                     output_path=root / "v3-anchor.json",
                 )
             owner = root / "owner.md"
@@ -205,9 +233,20 @@ class Stage3PublicationBoundaryTests(unittest.TestCase):
                 stage1_freeze.validate_stage3_publication_prerequisites(
                     manifest_path=manifest,
                     receipt_path=receipt,
-                    owner_authorization_path=owner,
+                    authorization_file_path=owner,
                     output_path=stage1_freeze.ANCHOR_PATH,
                 )
+            presence = stage1_freeze.validate_stage3_publication_prerequisites(
+                manifest_path=manifest,
+                receipt_path=receipt,
+                authorization_file_path=owner,
+                output_path=root / "v3-anchor.json",
+            )
+            self.assertEqual(
+                "P011_V3_PREREQUISITE_FILE_PRESENCE_v1",
+                presence["anchor_schema_version"],
+            )
+            self.assertNotIn("signature_basis", presence)
             wrong = json.loads(receipt.read_text(encoding="utf-8"))
             wrong["legacy_manifest"]["sha256"] = "0" * 64
             stage1_freeze.write_json(receipt, wrong)
@@ -215,7 +254,7 @@ class Stage3PublicationBoundaryTests(unittest.TestCase):
                 stage1_freeze.validate_stage3_publication_prerequisites(
                     manifest_path=manifest,
                     receipt_path=receipt,
-                    owner_authorization_path=owner,
+                    authorization_file_path=owner,
                     output_path=root / "v3-anchor.json",
                 )
 

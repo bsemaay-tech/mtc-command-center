@@ -1481,7 +1481,7 @@ def command_finalize_stage3_candidate(args: argparse.Namespace) -> int:
         "row_results.jsonl",
         "unresolved_rows.json",
     )
-    double_build: list[dict[str, Any]] = []
+    caller_supplied_byte_comparison: list[dict[str, Any]] = []
     for name in artifact_names:
         first_path = first / name
         second_path = second / name
@@ -1489,7 +1489,7 @@ def command_finalize_stage3_candidate(args: argparse.Namespace) -> int:
             raise GateStop(f"stage-3 finalization artifact is absent: {name}")
         first_sha256 = sha256_file(first_path)
         second_sha256 = sha256_file(second_path)
-        double_build.append(
+        caller_supplied_byte_comparison.append(
             {
                 "artifact": name,
                 "byte_identical": first_sha256 == second_sha256,
@@ -1497,8 +1497,8 @@ def command_finalize_stage3_candidate(args: argparse.Namespace) -> int:
                 "caller_input_2_sha256": second_sha256,
             }
         )
-    if not all(item["byte_identical"] for item in double_build):
-        raise GateFail("stage-3 candidate double build differs")
+    if not all(item["byte_identical"] for item in caller_supplied_byte_comparison):
+        raise GateFail("stage-3 caller-supplied byte comparison differs")
     row_arm = dynamic_row_arm_receipt(
         first / "row_corroboration.json", first / "row_results.jsonl"
     )
@@ -1510,10 +1510,10 @@ def command_finalize_stage3_candidate(args: argparse.Namespace) -> int:
     manifest = load_json(manifest_path)
     if manifest.get("gate_version") != "P011-LC-GATE-v3":
         raise GateStop("stage-3 candidate manifest is not bound to v3")
-    owner_path = Path(args.owner_authorization).resolve()
+    authorization_file_path = Path(args.authorization_file).resolve()
     summary = {
         "artifact_schema_version": "P011_STAGE3_FINALIZATION_CANDIDATE_v1",
-        "double_build": double_build,
+        "caller_supplied_byte_comparison": caller_supplied_byte_comparison,
         "gate_version": "P011-LC-GATE-v3",
         "legacy_manifest": {
             "path": str(manifest_path),
@@ -1522,7 +1522,7 @@ def command_finalize_stage3_candidate(args: argparse.Namespace) -> int:
         "producer_discrimination_matrix": matrix,
         "row_arm": row_arm,
     }
-    if not owner_path.is_file():
+    if not authorization_file_path.is_file():
         print(
             json.dumps(
                 {
@@ -1537,7 +1537,7 @@ def command_finalize_stage3_candidate(args: argparse.Namespace) -> int:
         return 3
     receipt_out = Path(args.receipt_out).resolve() if args.receipt_out else None
     if receipt_out is None:
-        raise GateStop("owner-authorized v3 receipt output path is absent")
+        raise GateStop("authorization-file-present v3 receipt output path is absent")
     protected = {
         (GATE_DIR / "P011_GATE_RECEIPT.json").resolve(),
         Path(r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v1.owner-signed.json").resolve(),
@@ -1547,13 +1547,14 @@ def command_finalize_stage3_candidate(args: argparse.Namespace) -> int:
         raise GateStop("v1/v2 publication target refused")
     receipt = {
         **summary,
-        "owner_authorization": {
-            "path": str(owner_path),
-            "sha256": sha256_file(owner_path),
+        "authorization_file_presence": {
+            "method": "FILE_EXISTS_AND_SHA256_ONLY_NO_SIGNATURE_VERIFICATION",
+            "path": str(authorization_file_path),
+            "sha256": sha256_file(authorization_file_path),
         },
         "outcome": "STOP" if row_arm["outcome"] == "STOP" or matrix["outcome"] == "STOP" else "PASS",
         "receipt_schema_version": "P011_GATE_RECEIPT_v1",
-        "receipt_state": "V3_PREREQUISITE_OWNER_AUTHORIZED",
+        "receipt_state": "V3_PREREQUISITE_AUTHORIZATION_FILE_PRESENT",
     }
     write_json(receipt_out, receipt)
     print(
@@ -1782,7 +1783,7 @@ def build_parser() -> argparse.ArgumentParser:
     stage3_finalize.add_argument("--mutation-matrix", required=True)
     stage3_finalize.add_argument("--comparator-transcript", required=True)
     stage3_finalize.add_argument("--legacy-manifest", required=True)
-    stage3_finalize.add_argument("--owner-authorization", required=True)
+    stage3_finalize.add_argument("--authorization-file", required=True)
     stage3_finalize.add_argument("--receipt-out")
     stage3_finalize.set_defaults(func=command_finalize_stage3_candidate)
     return parser

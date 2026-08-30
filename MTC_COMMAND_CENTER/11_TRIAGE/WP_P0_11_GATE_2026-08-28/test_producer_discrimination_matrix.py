@@ -19,9 +19,7 @@ import producer_discrimination_matrix as matrix_tool
 
 class ProducerDiscriminationMatrixTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp = tempfile.TemporaryDirectory(
-            dir=Path(r"C:\tmp\N51_VARIANTS")
-        )
+        self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
         self.expected = self.root / "micro_expected.jsonl"
         representative_path = (
@@ -105,8 +103,39 @@ class ProducerDiscriminationMatrixTests(unittest.TestCase):
             "PASS",
             matrix_tool.validate_matrix_against_transcript(
                 self.matrix_path, self.transcript_path
-            )["outcome"],
+            )["agreement"],
         )
+        self.assertEqual(
+            "STOP",
+            matrix_tool.validate_matrix_against_transcript(
+                self.matrix_path, self.transcript_path
+            )["matrix_outcome"],
+        )
+
+    def test_authenticated_receipt_fields_are_comparison_operands(self) -> None:
+        receipt = self.root / "receipt.json"
+        matrix_tool.write_json(
+            receipt,
+            {
+                "baseline_outputs": {
+                    "conservation": {"total_observations": 7},
+                    "discrimination_matrix": {"matrix_rows": 8},
+                }
+            },
+        )
+        anchor = self.root / "anchor.json"
+        matrix_tool.write_json(
+            anchor, {"receipt_sha256": matrix_tool.sha256_file(receipt)}
+        )
+        with (
+            patch.object(matrix_tool, "V2_RECEIPT_PATH", receipt),
+            patch.object(matrix_tool, "V2_ANCHOR_PATH", anchor),
+        ):
+            prior = matrix_tool._authenticated_historical_prior()
+        self.assertTrue(prior["receipt_anchor_hash_match"])
+        self.assertEqual(7, prior["expected_record_count"])
+        self.assertEqual(8, prior["expected_matrix_rows"])
+        self.assertNotIn("source", prior)
 
     def test_matrix_only_count_tamper_is_detected_against_transcript(self) -> None:
         matrix = matrix_tool.load_json(self.matrix_path)

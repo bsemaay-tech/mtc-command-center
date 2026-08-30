@@ -14,6 +14,7 @@ GATE_VERSION = "P011-LC-GATE-v2"
 STAGE3_GATE_VERSION = "P011-LC-GATE-v3"
 EXECUTION_OBSERVATION = "EXECUTION_OBSERVATION"
 SOURCE_CORROBORATION = "SOURCE_CORROBORATION"
+BLOCKED_BY_DESIGN = "BLOCKED_BY_DESIGN"
 SOURCE_COMMIT = "5c5603065c994d545c0eaa8c137fa9edd5cdfc28"
 A_TREE_OID = "7aa6f867d821df08a00358adf2dd4400b9c719e8"
 PINE_FREEZE_COMMIT = "77a10e6573d93f8aaf777010ea507bbec0a7668b"
@@ -53,7 +54,6 @@ OWNER_AUTHORIZATION_PATH = Path(r"C:\tmp\LANE_PROMPTS_20260828\OWNER_AUTH_P011_G
 STAGE3_OWNER_AUTHORIZATION_PATH = Path(
     r"C:\tmp\LANE_PROMPTS_20260828\OWNER_AUTH_P011_GATE_V3.md"
 )
-STAGE3_SCRATCH_ROOT = Path(r"C:\tmp\N51_VARIANTS")
 STAGE3_ANCHOR_PATH = Path(
     r"C:\LAB\P011_TRUST_ANCHORS\P011-LC-GATE-v3.owner-signed.json"
 )
@@ -696,9 +696,9 @@ def row_authorities(row_number: int, *, stage3: bool = False) -> list[dict[str, 
         3: {"A_CURRENT_MASTER": EXECUTION_OBSERVATION, "PINE_CURRENT_MASTER": SOURCE_CORROBORATION},
         4: {"A_CURRENT_MASTER": EXECUTION_OBSERVATION, "PINE_CURRENT_MASTER": SOURCE_CORROBORATION},
         26: {"A_CURRENT_MASTER": EXECUTION_OBSERVATION, "PINE_CONTROLLER_FREEZE": SOURCE_CORROBORATION},
-        28: {"A_PINE_CONTROLLER_FREEZE": EXECUTION_OBSERVATION},
-        29: {"A_PINE_CONTROLLER_FREEZE": EXECUTION_OBSERVATION},
-        30: {"A_PINE_CONTROLLER_FREEZE": EXECUTION_OBSERVATION},
+        28: {"A_PINE_CONTROLLER_FREEZE": BLOCKED_BY_DESIGN},
+        29: {"A_PINE_CONTROLLER_FREEZE": BLOCKED_BY_DESIGN},
+        30: {"A_PINE_CONTROLLER_FREEZE": BLOCKED_BY_DESIGN},
         38: {"B_BACKTEST_FREEZE": EXECUTION_OBSERVATION, "A_CURRENT_MASTER": SOURCE_CORROBORATION},
         39: {"A_CURRENT_MASTER": SOURCE_CORROBORATION, "B_BACKTEST_FREEZE": EXECUTION_OBSERVATION},
         41: {"A_CURRENT_MASTER": EXECUTION_OBSERVATION, "B_BACKTEST_FREEZE": SOURCE_CORROBORATION},
@@ -1023,10 +1023,10 @@ def _refuse_protected_publication_target(path: Path) -> None:
         raise SystemExit("STOP_V1_V2_PUBLICATION_TARGET_REFUSED")
 
 
-def _require_stage3_scratch(path: Path) -> Path:
+def _require_stage3_scratch(path: Path, scratch_root: Path) -> Path:
     resolved = path.resolve()
     try:
-        resolved.relative_to(STAGE3_SCRATCH_ROOT.resolve())
+        resolved.relative_to(scratch_root.resolve())
     except ValueError as exc:
         raise SystemExit("STOP_CANDIDATE_PATH_OUTSIDE_STAGE3_SCRATCH") from exc
     _refuse_protected_publication_target(resolved)
@@ -1034,7 +1034,7 @@ def _require_stage3_scratch(path: Path) -> Path:
 
 
 def command_candidate_manifest(args: argparse.Namespace) -> int:
-    output = _require_stage3_scratch(Path(args.out))
+    output = _require_stage3_scratch(Path(args.out), Path(args.scratch_root))
     write_json(output, build_legacy_manifest(stage3=True))
     print(
         json.dumps(
@@ -1056,11 +1056,11 @@ def validate_stage3_publication_prerequisites(
     *,
     manifest_path: Path,
     receipt_path: Path,
-    owner_authorization_path: Path,
+    authorization_file_path: Path,
     output_path: Path,
 ) -> dict[str, Any]:
     _refuse_protected_publication_target(output_path)
-    if not owner_authorization_path.is_file():
+    if not authorization_file_path.is_file():
         raise SystemExit("STOP_V3_ANCHOR_AUTHORITY_ABSENT")
     if not manifest_path.is_file() or not receipt_path.is_file():
         raise SystemExit("STOP_V3_PREREQUISITE_FILE_ABSENT")
@@ -1075,16 +1075,16 @@ def validate_stage3_publication_prerequisites(
     if receipt_manifest_sha256 != manifest_sha256:
         raise SystemExit("STOP_V3_MANIFEST_RECEIPT_HASH_MISMATCH")
     return {
-        "anchor_schema_version": "P011_OWNER_SIGNED_ANCHOR_v1",
+        "anchor_schema_version": "P011_V3_PREREQUISITE_FILE_PRESENCE_v1",
         "gate_version": STAGE3_GATE_VERSION,
         "legacy_manifest_sha256": manifest_sha256,
         "receipt_sha256": sha256_file(receipt_path),
-        "signature_basis": {
-            "method": "explicit owner authorization for the v3 prerequisite package",
-            "owner_authorization_path": str(owner_authorization_path.resolve()),
-            "owner_authorization_sha256": sha256_file(owner_authorization_path),
+        "authorization_file_presence": {
+            "method": "FILE_EXISTS_AND_SHA256_ONLY_NO_SIGNATURE_VERIFICATION",
+            "path": str(authorization_file_path.resolve()),
+            "sha256": sha256_file(authorization_file_path),
         },
-        "supersedes_gate_version": GATE_VERSION,
+        "references_gate_version": GATE_VERSION,
     }
 
 
@@ -1093,7 +1093,7 @@ def command_publish_stage3_prerequisite(args: argparse.Namespace) -> int:
     anchor = validate_stage3_publication_prerequisites(
         manifest_path=Path(args.manifest).resolve(),
         receipt_path=Path(args.receipt).resolve(),
-        owner_authorization_path=Path(args.owner_authorization).resolve(),
+        authorization_file_path=Path(args.authorization_file).resolve(),
         output_path=output,
     )
     write_json(output, anchor)
@@ -1102,7 +1102,7 @@ def command_publish_stage3_prerequisite(args: argparse.Namespace) -> int:
             {
                 "command": "publish-v3-prerequisite",
                 "gate_version": STAGE3_GATE_VERSION,
-                "outcome": "PUBLISHED_OWNER_AUTHORIZED_V3_PREREQUISITE",
+                "outcome": "PUBLISHED_V3_PREREQUISITE_FILE_PRESENCE_RECORD",
                 "path": str(output),
                 "sha256": sha256_file(output),
             },
@@ -1177,11 +1177,12 @@ def build_parser() -> argparse.ArgumentParser:
     sub = root.add_subparsers(dest="command", required=True)
     candidate = sub.add_parser("candidate-manifest")
     candidate.add_argument("--out", required=True)
+    candidate.add_argument("--scratch-root", required=True)
     candidate.set_defaults(handler=command_candidate_manifest)
     publish = sub.add_parser("publish-v3-prerequisite")
     publish.add_argument("--manifest", required=True)
     publish.add_argument("--receipt", required=True)
-    publish.add_argument("--owner-authorization", required=True)
+    publish.add_argument("--authorization-file", required=True)
     publish.add_argument("--out", required=True)
     publish.set_defaults(handler=command_publish_stage3_prerequisite)
     return root

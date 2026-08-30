@@ -191,16 +191,27 @@ def _authenticated_historical_prior() -> dict[str, Any]:
             "matrix_rows": (receipt.get("baseline_outputs", {}).get("discrimination_matrix", {})).get("matrix_rows"),
             "record_count": (receipt.get("baseline_outputs", {}).get("conservation", {})).get("total_observations"),
         }
+    receipt_matrix_rows = receipt_values.get("matrix_rows")
+    receipt_record_count = receipt_values.get("record_count")
     return {
-        "authenticated_by_external_v2_anchor": authenticated,
+        "receipt_anchor_hash_match": authenticated,
         "expected_absent_paths": list(HISTORICAL_ABSENT_PATHS),
         "expected_baseline_sha256": HISTORICAL_BASELINE_SHA256,
         "expected_detected_count": HISTORICAL_DETECTED_COUNT,
-        "expected_matrix_rows": HISTORICAL_MATRIX_ROWS,
-        "expected_record_count": HISTORICAL_RECORD_COUNT,
+        "expected_matrix_rows": (
+            receipt_matrix_rows if authenticated and type(receipt_matrix_rows) is int else None
+        ),
+        "expected_record_count": (
+            receipt_record_count if authenticated and type(receipt_record_count) is int else None
+        ),
         "expected_schema_sha256": HISTORICAL_SCHEMA_SHA256,
         "receipt_values": receipt_values,
-        "source": "immutable historical matrix at ee501fe4",
+        "comparison_sources": {
+            "absent_paths": "MODULE_CONSTANT_HISTORICAL_ABSENT_PATHS",
+            "detected_count": "MODULE_CONSTANT_HISTORICAL_DETECTED_COUNT",
+            "matrix_rows": "ANCHOR_HASH_MATCHED_V2_RECEIPT_FIELD",
+            "record_count": "ANCHOR_HASH_MATCHED_V2_RECEIPT_FIELD",
+        },
     }
 
 
@@ -440,8 +451,9 @@ def validate_matrix_against_transcript(
     if matrix.get("outcome") != expected_outcome:
         raise MatrixEvidenceError("matrix outcome differs from terminal evidence")
     return {
+        "agreement": "PASS",
+        "matrix_outcome": matrix["outcome"],
         "matrix_row_count": len(rows),
-        "outcome": "PASS",
         "transcript_sha256": sha256_file(transcript_path),
     }
 
