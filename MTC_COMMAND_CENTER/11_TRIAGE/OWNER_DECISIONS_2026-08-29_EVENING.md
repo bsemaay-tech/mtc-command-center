@@ -83,6 +83,19 @@ design-only, serial build chain unchanged).
     issues a signature on his behalf. Per addendum 4 item 11, the package merges to master as
     ONE unit today after the finalization commit passes its final audit.
 
+## Addendum 6 — 2026-08-30 ~11:25 (two standing rules)
+
+15. **Claude MAX auditor fallback:** MAX may run AUDIT lanes when Claude Pro is capped or
+    resetting, to keep audit rounds moving. Hard guard: orchestrator survival first — MAX
+    lanes share the orchestrator's 5-hour window, so the Lead watches the shared pool and
+    pauses/declines MAX lanes before the orchestrator itself risks capping. This amends the
+    earlier "MAX = orchestrator only" rule to "orchestrator FIRST, auditor fallback under the
+    pool guard."
+16. **Per-session LLM assessment ledger (permanent rule):** every session, the Lead writes
+    its measured route/model performance assessment to
+    `MTC_COMMAND_CENTER/11_TRIAGE/LLM_ROUTE_ASSESSMENTS.md` (append-only, newest first) so
+    route knowledge accumulates instead of dying with the session.
+
 ## Interpretation notes (Lead) — these notes refer to the ORIGINAL six-question table rows
 above (its rows 1, 2 and 6), not to the addendum numbering (6-9); addendum 3's rulings
 supersede row 2's "preparation only" edge for the bridge (the bytes are now approved and the
