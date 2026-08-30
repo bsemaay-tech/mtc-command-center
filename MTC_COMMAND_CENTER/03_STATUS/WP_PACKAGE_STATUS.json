@@ -132,7 +132,7 @@
       "commit": "-",
       "detail": "TEN audited rounds (N45..N82): every flagship PASS was countered by real detection findings; standing loop capped at round 8 (P41 vs N78 -> HARD PARK), owner-authorized narrowing round produced v1.8 (P43 PASS-WITH-NITS vs N82 3 HIGH) -> FINAL PARK per the pre-written addendum-11 rule. Nothing was built. Full defect record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md (C:\\tmp\\LANE_PROMPTS_20260828).",
       "owner_gate": false,
-      "next_action": "Repair round 1 in progress with one quota casualty: W105 (codex secondary) died mid-repair at 23:44 after applying substantial partial edits (design 47.9KB -> 59KB; secondary + fourth accounts capped until 03:11); W105b relaunched on codex third with audit-then-complete instructions. On landing: full multi-family re-audit (Claude flagship + Gemini + Grok + OpenCode; Codex excluded); detection-clean -> kernel build under standing approval; D028 cap of 3 repair rounds -> park to owner."
+      "next_action": "Round-2 re-audit (00:00-00:10): Claude flagship P45 = REQUEST_CHANGES again but converging hard - 1 MEDIUM only (a kernel-equivalence claim wrong on the non-finite-stop branch inside one repair root), 2 LOW, zero HIGH anywhere, all 19 round-1 findings verified closed, repair completeness confirmed; Gemini GM16 = ZERO findings; OpenCode DS14 = 2 MEDIUM + 5 LOW; Grok G36 in flight. Round-1 had 4 HIGH, round-2 has none. Repair round 2 of 3 next (D028 cap); detection-clean -> kernel build."
     },
     {
       "id": "WP-P0-20",
