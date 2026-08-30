@@ -172,7 +172,7 @@
       "commit": "-",
       "detail": "Draft at v1.2 (P24 -> W66 fold; N74 detection round 2 -> W91 fold, 5 findings dispositioned), PROVISIONAL-ON-P013 labeled. BUILD gated on WP-P0-13 acceptance.",
       "owner_gate": false,
-      "next_action": "verify census G28 (Grok, read-only) on v1.2 running since 22:05 tonight"
+      "next_action": "verify censuses landed: Gemini GM12 clean 0 BUT Grok G28 found 1 MEDIUM (fixture b3 still encodes the subtract-the-gap outcome the new whole-window rule forbids - Lead verified three-way incoherence on lines 352/364/514). Fold W101 (G28-F01 -> v1.3) queued for the next free lane."
     },
     {
       "id": "WP-P0-31-M1",
@@ -182,7 +182,7 @@
       "commit": "-",
       "detail": "M1 draft at v1.1 (N61 + P37 audits -> W90 fold), PROVISIONAL-ON-P013 labeled. Design only; M1 BUILD waits for WP-P0-13 acceptance + its own milestone-scoped G1-IA.",
       "owner_gate": false,
-      "next_action": "verify censuses G27 (Grok) + GM11 (Gemini, different family) on v1.1 running since 22:05 tonight"
+      "next_action": "verify censuses landed: Gemini GM11 clean 13/13 BUT Grok G27 found 2 (1 HIGH: the v1.1 typed-record fold contradicts the ordered gate checklist - Lead verified on admission.py field lists; detection's 11th straight win). Fold W100 (G27 -> v1.2) running on codex/third."
     },
     {
       "id": "WP-P0-14",
@@ -192,7 +192,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W58, P014_DESIGN_DRAFT_V1.md) + G21 detection round (6 findings banked, unfolded), PROVISIONAL on P0-13 and P0-31-M1. Design only; BUILD waits for both dependencies + G1-IA.",
       "owner_gate": false,
-      "next_action": "fold lane W95 (G23 census + G21 residue -> v1.2) running since 21:55 tonight; detection verify after"
+      "next_action": "DONE tonight: fold W95 landed 22:01 - G23 census had ZERO findings and all six G21 findings were already folded at v1.1, so v1.2 is a change-log-only census record (no normative change; separate verify skipped with that reason). Parked warm."
     },
     {
       "id": "PROMOTION-DECISION",
@@ -212,7 +212,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W82c) + N79 detection round (8 findings: 5 HIGH, 2 MEDIUM, 1 LOW, banked) + DS10 supplemental review (OpenCode, different family). Zero venue contact performed. BUILD gated on WP-P0-21 + WP-P0-26; host steps T0/G9 owner-gated.",
       "owner_gate": false,
-      "next_action": "fold lane W96 (N79 + DS10 -> v1.1) running since 21:55 tonight; detection verify after"
+      "next_action": "fold W96 LANDED 22:06 (14/14 findings dispositioned, v1 -> v1.1); verify pair running: N83 (codex, xhigh) + G30 (grok, different family)"
     },
     {
       "id": "WP-V2A-01",
