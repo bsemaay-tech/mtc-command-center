@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-30T10:50:00+03:00",
+  "generated": "2026-08-30T21:25:00+03:00",
   "updated_by": "claude-lead-session-2026-08-29-evening",
   "session_time_report": {
     "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
@@ -32,7 +32,7 @@
       "state": "MERGED",
       "branch": "feature/wp-p0-11-kernel-legacy-compatible-20260825",
       "commit": "master 1aced5df (PR #143, one unit, final HEAD 775ead42)",
-      "detail": "STAGE 3 CLOSED overnight: built (e1d0ff47), audited BLOCK by three auditors converging on the label class (P25 flagship 11 findings, N58 second-family, G20 census - incl. a reintroduced double_build label), repaired in full (all 13 union items, ca103ea5+2eae1a4c) after a guard-freshness unblock (Lead merged master into the branch, 74341288, SHA-preserving), repair audited P28 PASS + N64 detection (receipt census CLEAN, 2 mechanical residuals) and micro-repaired 2eedfb87 (Lead diff-verified; v3 chain re-covers it). Gate remains STOP by design. W61 is re-pinning the stage-4 (v3) design to the post-stage-3 package; then the Claude Pro second-actor rebuild per the owner's ruling.",
+      "detail": "CLOSED AND MERGED as one unit (PR #143): repairs 8+8b, full stage-3 build with its own audit-repair cycle (13/13 union), owner-signed v3 receipt (addendum-5 signature act, caveat carried verbatim), independent second-actor rebuild matched 4/4 deciding blob OIDs + 6/6 tool OIDs + 13/13 file SHA-256. Final round: P32 PASS-WITH-NITS, N68 zero, DS6 zero, GM8 corroborated. Gate outcome on master: STOP by design.",
       "owner_gate": false,
       "next_action": "none - MERGED 2026-08-30 (owner signed addendum 5; final round P32 PASS-WITH-NITS + N68 zero + DS6 zero + GM8 corroborated). Gate outcome on master: STOP by design. Chain unlock: WP-P0-12 build authorization becomes possible when the owner lifts his HOLD."
     },
@@ -102,7 +102,7 @@
       "state": "MERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "Design complete: W10c edits delta-checked - P20 flagship CONFIRMED (edit-set scope), N48 detection zero findings (detection, not acceptance). Candidate V1 was owner-approved conditionally (SHA 58f67c82) but the P21 flagship audit returned NOT-CONFIRMED (inconsistent activeness standard on risk.policy_id; omitted second YAML reader), voiding that approval per its own terms. W50b repair is producing CANDIDATE_V2 (risk.policy_id removed under one uniform standard); V2 bytes will need a fresh owner approval. Build remains STOP until then. NO deployment to any host.",
+      "detail": "MERGED (PR #144): fail-closed loader + owner-approved V2 config bytes (SHA a96fecd1...) + refusal tests + dashboard alignment (owner-extended 3-file scope). Audit chain: P31 PASS-WITH-NITS -> N67 BLOCK (missing-required-leaf silent default) -> W72/W72b repair -> P33 PASS + N69 zero; GM7 + DS5 supplemental.",
       "owner_gate": true,
       "next_action": "none - MERGED 2026-08-30 (PR #144, master c18b6f3e) after repair delta P33 PASS + N69 zero findings. The DEPLOYED bridge on KVM2 is UNTOUCHED and still runs the old config path - rolling this out is a separate owner-gated act (host contact)."
     },
@@ -132,7 +132,7 @@
       "state": "FINAL_PARKED_DESIGN_V18",
       "branch": "-",
       "commit": "-",
-      "detail": "Design audited BLOCK by N45 (self-checking acceptance gate + 3 open semantics + determinism). G17 (Grok, second family) DELIVERED a full detection report (15 findings: 2 BLOCKER, 7 HIGH, 6 MEDIUM; the Lead's earlier 'silent death' call was wrong - it was a slow start). W55 (author family) repaired the union N45+G17 into design v1.1; re-audit N53 (Codex) is running. BUILD starts only after P0-11 accepts. Tier T0.",
+      "detail": "TEN audited rounds (N45..N82): every flagship PASS was countered by real detection findings; standing loop capped at round 8 (P41 vs N78 -> HARD PARK), owner-authorized narrowing round produced v1.8 (P43 PASS-WITH-NITS vs N82 3 HIGH) -> FINAL PARK per the pre-written addendum-11 rule. Nothing was built. Full defect record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md (C:\\tmp\\LANE_PROMPTS_20260828).",
       "owner_gate": false,
       "next_action": "FINAL PARKED per addendum 11's one-shot rule: the narrowing round produced v1.8 (flagship P43 PASS-WITH-NITS under the narrowed claim) but detection N82 still found 3 HIGH (enumeration/identity algorithms not stranger-reproducible; one body paragraph still overclaiming). Nine repair rounds + one narrowing round total. NO further rounds under any standing authorization. The remaining owner option is a FRESH DESIGN by a different model family using the full 10-round record (N45..N82) as its failure-mode specification - a new decision, not a repair; or hold. The Claude family has demonstrably exhausted its ability to write this design cleanly."
     },
@@ -144,57 +144,57 @@
       "commit": "-",
       "detail": "Three repair rounds ran overnight (v1.1 W54, v1.2 W59 incomplete-capped, v1.3 W60). Round-3 verification: flagship P27 = PASS-WITH-NITS on both papers; detection N63 found 4 findings incl. ONE HIGH the Lead verified on code facts (runner.py:444 recomputes trail ATR every bar, so falsifier #5's stated runner-level expected exit 103.0/+3R is wrong; the two arms still genuinely diverge - N63's probe measured 99.0/-1R vs 100.0/0R). T0 round cap (3) exhausted, so the paper PARKS with the defect recorded instead of a round 4. Chain stays serial: 11 -> 12 -> 20 -> 13 -> 31M1 -> 14.",
       "owner_gate": true,
-      "next_action": "PAPERS CLOSED (P30 verify: the one edit only, correct against exits.py:278-286; N63-F1 closed; N63-F2/F3/F4 MEDIUMs recorded open per the one-edit authorization). Package's next phase (migration + shared Risk Allocator build) stays gated on WP-P0-12 acceptance - which the owner HOLDS"
+      "next_action": "PAPERS CLOSED (P30 verify: the one edit only, correct against exits.py:278-286; N63-F1 closed; N63-F2/F3/F4 MEDIUMs recorded open per the one-edit authorization). Package's next phase (migration + shared Risk Allocator build) stays gated on WP-P0-12 acceptance - and P0-12's design is now FINAL PARKED, so this build waits on the owner's P0-12 decision"
     },
     {
       "id": "WP-P0-13",
       "title": "TrialRecord contract + trial-catalog writer (design draft)",
-      "state": "DESIGN_DRAFT_V1_DETECT_RUNNING",
+      "state": "DESIGN_DRAFT_V12_PARKED_WARM",
       "branch": "-",
       "commit": "-",
-      "detail": "Owner-ordered parallel design draft delivered (W51, P013_DESIGN_DRAFT_V1.md), PROVISIONAL-ON-P020 labeled. Early detection audit G18 (Grok) running. BUILD stays gated on WP-P0-20 acceptance per the serial chain.",
+      "detail": "Draft hardened to v1.2 through two full audit-fold cycles (G18 -> W64 fold; P34+N70+DS7 -> W77 fold) and verified by N81 (1 MEDIUM fresh drift, banked). PROVISIONAL-ON-P020 labeled. BUILD stays gated on WP-P0-20 acceptance per the serial chain.",
       "owner_gate": false,
-      "next_action": "G18 detection DONE (findings banked); fold when upstream accepts"
+      "next_action": "parked warm; fold N81-F01 when upstream accepts"
     },
     {
       "id": "WP-P0-21",
       "title": "Objective eligibility criteria + D026 fixtures (design draft)",
-      "state": "DESIGN_DRAFT_V1_DETECT_RUNNING",
+      "state": "DESIGN_DRAFT_V11_PARKED_WARM",
       "branch": "-",
       "commit": "-",
-      "detail": "Design draft delivered (W52, P021_DESIGN_DRAFT_V1.md), PROVISIONAL-ON-P012 labeled. Early detection audit G19 (Grok) running. BUILD gated on WP-P0-12 acceptance.",
+      "detail": "Draft at v1.1 (G19 detection -> W65 fold), PROVISIONAL-ON-P012 labeled. BUILD gated on WP-P0-12 acceptance - and P0-12's design is FINAL PARKED, so this waits on the owner's P0-12 decision.",
       "owner_gate": false,
-      "next_action": "G19 detection DONE (findings banked); fold when upstream accepts"
+      "next_action": "parked warm until the P0-12 chain reopens"
     },
     {
       "id": "WP-P0-22",
       "title": "Family-lineage + observation-leakage control (design draft)",
-      "state": "DESIGN_DRAFT_V1_DETECT_RUNNING",
+      "state": "DESIGN_DRAFT_V12_PARKED_WARM",
       "branch": "-",
       "commit": "-",
-      "detail": "Design draft delivered (W53, P022_DESIGN_DRAFT_V1.md), PROVISIONAL-ON-P013 labeled. Early detection audit P24 (Claude, different instance) running. BUILD gated on WP-P0-13 acceptance.",
+      "detail": "Draft at v1.2 (P24 -> W66 fold; N74 detection round 2 -> W91 fold, 5 findings dispositioned), PROVISIONAL-ON-P013 labeled. BUILD gated on WP-P0-13 acceptance.",
       "owner_gate": false,
-      "next_action": "P24 detection DONE (findings banked); fold when upstream accepts"
+      "next_action": "parked warm until upstream accepts"
     },
     {
       "id": "WP-P0-31-M1",
       "title": "Lifecycle Ledger + Registrar, Milestone 1 (design draft)",
-      "state": "DESIGN_DRAFT_RUNNING",
+      "state": "DESIGN_DRAFT_V11_PARKED_WARM",
       "branch": "-",
       "commit": "-",
-      "detail": "Overnight advanced-stage order: W57 (Claude) drafting the M1 design (ledger record contract, single append interface, four writer classes, derived view, Registrar, full falsification designs), PROVISIONAL-ON-P013 labeled. Design only; M1 BUILD waits for WP-P0-13 acceptance + its own milestone-scoped G1-IA.",
+      "detail": "M1 draft at v1.1 (N61 + P37 audits -> W90 fold), PROVISIONAL-ON-P013 labeled. Design only; M1 BUILD waits for WP-P0-13 acceptance + its own milestone-scoped G1-IA.",
       "owner_gate": false,
-      "next_action": "draft DELIVERED (P031M1_DESIGN_DRAFT_V1.md); detection audit queues after resets; park until upstream accepts"
+      "next_action": "parked warm until upstream accepts + G1-IA"
     },
     {
       "id": "WP-P0-14",
       "title": "Minimum Explorer (design draft)",
-      "state": "DESIGN_DRAFT_RUNNING",
+      "state": "DESIGN_DRAFT_V1_PARKED_WARM",
       "branch": "-",
       "commit": "-",
-      "detail": "Overnight advanced-stage order: W58 (Claude) drafting the Phase-0 four-item-minimum explorer design under all plan amendments (chart removed to V3-11, Perspective default, ledger-reader backbone, interim tearsheet with independent validation), PROVISIONAL on P0-13 and P0-31-M1. Design only; BUILD waits for both dependencies + G1-IA.",
+      "detail": "Draft v1 delivered (W58, P014_DESIGN_DRAFT_V1.md) + G21 detection round (6 findings banked, unfolded), PROVISIONAL on P0-13 and P0-31-M1. Design only; BUILD waits for both dependencies + G1-IA.",
       "owner_gate": false,
-      "next_action": "draft DELIVERED (P014_DESIGN_DRAFT_V1.md); detection audit queues after resets; park until upstream accepts"
+      "next_action": "fold G21 findings at next fold pass; parked warm until upstream accepts"
     },
     {
       "id": "PROMOTION-DECISION",
@@ -205,6 +205,46 @@
       "detail": "Owner APPROVED the report-only rule + vocabulary (late evening, verbatim 'promotion yes'): the four checks (DSR, BH-FDR, robust_final, raw lockbox excess) may be computed and shown PASS/FAIL/STOP in a separate report artifact only; nothing deciding promotion/queue/registry changes. Building the display is a separate future decision (doc estimate 18-26 route-hours), NOT yet authorized.",
       "owner_gate": false,
       "next_action": "none - diagnostic MERGED 2026-08-30 (PR #145, master 108ea066) after CONFIRMED delta; display only, no enforcement; running it against stored candidates is a normal research act"
+    },
+    {
+      "id": "WP-P0-30",
+      "title": "Venue market-data collector (design draft)",
+      "state": "DESIGN_DRAFT_V1_PARKED_WARM",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Draft v1 delivered (W82c) + N79 detection round (8 findings: 5 HIGH, 2 MEDIUM, 1 LOW, banked) + DS10 supplemental review (OpenCode, different family). Zero venue contact performed. BUILD gated on WP-P0-21 + WP-P0-26; host steps T0/G9 owner-gated.",
+      "owner_gate": false,
+      "next_action": "fold N79 (+DS10) findings at next fold pass; parked warm until dependencies accept"
+    },
+    {
+      "id": "WP-V2A-01",
+      "title": "V2A loader package (design draft)",
+      "state": "DESIGN_DRAFT_V1_PARKED_WARM",
+      "branch": "-",
+      "commit": "-",
+      "detail": "First V2A-stage artifact: loader design draft v1 (W67) + G22 detection round (findings banked). BUILD gated on Phase-0 acceptance + G1-IA + WP-P0-31 M1.",
+      "owner_gate": false,
+      "next_action": "fold G22 findings at next fold pass; parked warm until the V2A entry gate opens"
+    },
+    {
+      "id": "WP-V2A-02",
+      "title": "Worker identity + per-worker state (design draft)",
+      "state": "DESIGN_DRAFT_V1_PARKED_WARM",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Draft v1 delivered (W84) + G25 detection census (10 findings: 5 HIGH, 5 MEDIUM, banked). PROVISIONAL-ON-V2A01 labeled. BUILD gated on the V2A entry gate + V2A-01.",
+      "owner_gate": false,
+      "next_action": "fold G25 findings at next fold pass; parked warm"
+    },
+    {
+      "id": "WP-V2A-03",
+      "title": "Runtime allocator wiring + Decision Orchestrator (design draft)",
+      "state": "DESIGN_DRAFT_V1_PARKED_WARM",
+      "branch": "-",
+      "commit": "-",
+      "detail": "Draft v1 delivered (W85) + G26 detection census (6 findings: 4 HIGH, 2 MEDIUM, banked; special check clean - no allocator-delivery claim, delivery stays WP-P0-20's). PROVISIONAL-ON-P020/V2A02 labeled. BUILD gated on WP-P0-20 build + V2A-02.",
+      "owner_gate": false,
+      "next_action": "fold G26 findings at next fold pass; parked warm"
     },
     {
       "id": "FROZEN-PINE-TAG",
