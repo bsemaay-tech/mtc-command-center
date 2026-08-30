@@ -127,12 +127,12 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "FRESH_FAMILY_DESIGN_IN_PROGRESS",
+      "state": "DESIGN_ACCEPTED_KERNEL_BUILD_RUNNING",
       "branch": "-",
       "commit": "-",
       "detail": "HISTORY: the Claude-family design was FINAL PARKED at v1.8 after ten rounds (record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md). CURRENT: owner addendum 13 authorized a fresh design by a different family - Codex delivered P012_FRESH_DESIGN_V1.md tonight (22:38), now at v1.2 after two repair rounds under a pre-written D028 cap of 3. The grid-fitting class that killed the old design is STRUCTURALLY ABSENT per all four audit families, twice.",
       "owner_gate": false,
-      "next_action": "Round-2 re-audit complete (00:10): Claude flagship P45 = REQUEST_CHANGES with 13 of 14 repair roots fully closed and ONE partial (P45-F01 MEDIUM: the sizing-selector repair claims kernel equivalence that position_sizer.py:35-58 contradicts on the non-finite-stop branch - the exact defect class the P0-12 bar exists to prevent); Grok G36 landed and independently found the SAME root (2-family confirmation); Gemini GM16 = zero findings; OpenCode DS14 = 2 MEDIUM + 5 LOW. Round-1 4 HIGH -> round-2 0 HIGH. Repair round 2 (W112) COMPLETE at v1.2 (all 11 round-2 IDs dispositioned across 10 roots); round-3 audit fires next - the LAST under the D028 cap: detection-clean -> kernel build; else park to owner."
+      "next_action": "GATE SATISFIED 01:00 after round-3 (terminal under the D028 cap): Claude flagship P46 = PASS-WITH-NITS (one LOW build-lane nit; the round-2 sizing root verified closed line-by-line against position_sizer.py); Grok detection G37 = ZERO findings; Gemini GM17 = ZERO findings; OpenCode DS15 = 1 MEDIUM + 4 LOW (folded into the build as MUST-RESOLVE carry-forwards). The grid-fitting class stayed structurally absent through all three rounds. KERNEL BUILD W113 RUNNING under the standing 2026-08-29 approval + addendum-13 chain: worktree C:\\WP012BUILD, branch feature/wp-p0-12-corrected-vnext-20260831, base 108ea066, repo-guard preflight PASS. LEGACY_COMPATIBLE stays untouched; CORRECTED_VNEXT lands as the new addressable version. Build audits -> PR -> merge follow; any BLOCK parks to owner."
     },
     {
       "id": "WP-P0-20",
