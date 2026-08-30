@@ -116,9 +116,8 @@ function renderDecisionStream() {
 }
 
 function renderLlm() {
-  const config = state.snapshot.config;
   setText("llmRegime", state.status.regime || "BOTH");
-  setText("vetoMode", config.llm.veto_enabled ? "ON" : "OFF");
+  setText("vetoMode", "N/A");
   setText("llmCost", "$0.00");
   renderRows("directivesBody", []);
 }
