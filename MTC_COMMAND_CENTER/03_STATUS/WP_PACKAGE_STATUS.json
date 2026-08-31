@@ -133,7 +133,7 @@
       "commit": "-",
       "detail": "HISTORY: the Claude-family design was FINAL PARKED at v1.8 after ten rounds (record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md). CURRENT: owner addendum 13 authorized a fresh design by a different family - Codex delivered P012_FRESH_DESIGN_V1.md tonight (22:38), now at v1.2 after two repair rounds under a pre-written D028 cap of 3. The grid-fitting class that killed the old design is STRUCTURALLY ABSENT per all four audit families, twice.",
       "owner_gate": false,
-      "next_action": "DAY 08-31: owner ANSWERED Q1-Q5 (all recommended defaults) + Q7/Q8; Q6 (ten OPEN values) one-pager delivered (audited v2, A4 9/9 folded), answers pending. EXECUTING: W120 owner-authorized repair fold r4 (DS15-F01..F05 + Q2a clarification) -> v1.3, then the ONE authorized re-verify round (P47 claude + G46 grok + GM21 gemini + DS18 opencode, pre-staged); W121 drafted the Gate-2 plan + exact T0 path list (A5 audit running) for the owner's 'approved'; W126 drafting the OPEN-06 retained/retired proposal (PROVISIONAL). Then: Claude authors CONTRACT_TABLES (Q3a), ONE legacy baseline run (Q4a), build starts only on owner 'approved' + Q6 answers. Branch still CLEAN, zero commits."
+      "next_action": "DAY 08-31 MIDDAY: owner answered ALL of Q1-Q8 AND the ten OPEN rows (addenda 14+15). EXECUTED: fold r4 -> v1.3; the ONE authorized re-verify round COMPLETE - Claude P47 PASS-WITH-NITS + Gemini GM21 zero + OpenCode DS18 1 LOW + Grok G46 1 MEDIUM (KERNEL-probe file-conservation contradiction, minimal fix stated) -> residual disposition = owner a/b/c ask OUTSTANDING. Gate-2 plan v2 audited CLEAR-FOR-OWNER (A5 5 findings folded, A7 zero) - awaiting owner word 'approved'. OPEN evidence built: venue bytes frozen (4 fetches, digests), BTC InstrumentRecord v1.1 (step 0.00001 derived, tick rule verbatim), fee table v1 (roles honestly SEMANTICS-GAP, W136 drafting proposed mapping), funding rules v1 (oracle price, hourly 1/8, long-pays-positive), OPEN-06 26-row proposal v2 CLEAR (A8 zero), OPEN-07 bridge mapping v1 (2/18 direct, deployed v4 gap honest). CONTRACT_TABLES lane held on the a/b/c answer. Branch still CLEAN, zero commits."
     },
     {
       "id": "WP-P0-20",
@@ -153,7 +153,7 @@
       "commit": "-",
       "detail": "Draft hardened to v1.2 through two full audit-fold cycles (G18 -> W64 fold; P34+N70+DS7 -> W77 fold) and verified by N81 (1 MEDIUM fresh drift, banked). PROVISIONAL-ON-P020 labeled. BUILD stays gated on WP-P0-20 acceptance per the serial chain.",
       "owner_gate": false,
-      "next_action": "DAY 08-31: fresh census G42 found 2 MEDIUM on v1.3 (DuckDB schema-fingerprint check does not name both producers; has_full_artifacts=false has no named producer/failing input) - fold W124 -> v1.4 running, verify after."
+      "next_action": "DAY 08-31: G42 2 MEDIUM -> W124 fold -> v1.4 -> verify pair BOTH ZERO (Grok G47 + Gemini GM23 cross-family). P0-13 RE-CONVERGED at v1.4."
     },
     {
       "id": "WP-P0-21",
@@ -183,7 +183,7 @@
       "commit": "-",
       "detail": "M1 draft went through FIVE fold-verify cycles tonight (v1.1 -> v1.4): promise-class defects GREW across cycles (1 -> 2 -> 3 HIGH), so the Lead pre-wrote a stopping rule before the last verdict. W106 SUBTRACTIVE-ONLY fold produced v1.4; terminal verify N90 still found 3 HIGH (unexecutable promises on the one record path the draft labels unblocked) -> TERMINAL VERDICT: PARK, executed exactly as pre-written. DETECT_N90_P031M1_V14.md holds the surviving findings.",
       "owner_gate": true,
-      "next_action": "OWNER RULED 08-31 morning (7a): M1 STAYS PARKED at v1.4 - no fresh-family redesign, no scope change. SEPARATELY, the Milestone-2 (SEED_IMPORT) design was authored fresh tonight (W83b), went through two full fold-verify cycles (G38+N94 -> W115; N95 -> W116), and the Grok terminal verify G39 returned TERMINAL VERDICT: CONVERGED - M2 parks WARM at v1.2 (PROVISIONAL on the M1 park resolution and P0-13; 13+ OPEN blockers honestly listed)."
+      "next_action": "OWNER RULED 08-31 morning (7a): M1 STAYS PARKED at v1.4 - no fresh-family redesign, no scope change. M2 v1.2 gemini-corroborated CLEAN midday (GM22 zero - third family). SEPARATELY, the Milestone-2 (SEED_IMPORT) design was authored fresh tonight (W83b), went through two full fold-verify cycles (G38+N94 -> W115; N95 -> W116), and the Grok terminal verify G39 returned TERMINAL VERDICT: CONVERGED - M2 parks WARM at v1.2 (PROVISIONAL on the M1 park resolution and P0-13; 13+ OPEN blockers honestly listed)."
     },
     {
       "id": "WP-P0-14",
@@ -193,7 +193,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W58, P014_DESIGN_DRAFT_V1.md) + G21 detection round (6 findings banked, unfolded), PROVISIONAL on P0-13 and P0-31-M1. Design only; BUILD waits for both dependencies + G1-IA.",
       "owner_gate": false,
-      "next_action": "DAY 08-31: fresh census G43 found 2 on v1.2 (test_writer_gate.py cited beyond what it proves; falsification probes a-e have failing input only for rule a) - fold W125 -> v1.3 running, verify after."
+      "next_action": "DAY 08-31: G43 2 findings -> W125b fold -> v1.3 -> verify G48 ZERO. P0-14 RE-CONVERGED at v1.3."
     },
     {
       "id": "PROMOTION-DECISION",
@@ -223,7 +223,7 @@
       "commit": "-",
       "detail": "First V2A-stage artifact: loader design draft v1 (W67) + G22 detection round (findings banked). BUILD gated on Phase-0 acceptance + G1-IA + WP-P0-31 M1.",
       "owner_gate": false,
-      "next_action": "DAY 08-31: fourth-family OpenCode census DS17b running on v1.2 (first attempt died on the known launcher quoting trap; relaunched via dedicated script)."
+      "next_action": "DAY 08-31: fourth-family census DS17 found 4 (3 MEDIUM) -> W128 fold -> v1.3 -> verify G49 ZERO. V2A-01 RE-CONVERGED at v1.3 with all four families having seen it."
     },
     {
       "id": "WP-V2A-02",
@@ -233,7 +233,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W84) + G25 detection census (10 findings: 5 HIGH, 5 MEDIUM, banked). PROVISIONAL-ON-V2A01 labeled. BUILD gated on the V2A entry gate + V2A-01.",
       "owner_gate": false,
-      "next_action": "three cycles tonight: v1.1 (W98b, 10/10 G25) -> verify N91+GM14 (7 unique roots) -> fold W110 (v1.2) -> verify N93 (2 MEDIUM residuals: lease-partition gap, append-only label contradiction) -> fold W111 (v1.3) RUNNING; verify after."
+      "next_action": "DAY 08-31: fourth-family census DS19 found 3 (2 MEDIUM: quick-restart collision contradiction, no ARM-trust path for gap-free worker) -> W131 fold -> v1.4 -> verify G50 ZERO. V2A-02 RE-CONVERGED at v1.4 with all four families having seen it."
     },
     {
       "id": "WP-V2A-03",
