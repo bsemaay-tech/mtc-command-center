@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-31T10:00:00+03:00",
-  "updated_by": "claude-fable-lead-session-2026-08-31-day",
-  "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a ONE bounded design repair fold + ONE re-verify (executing); Q2a P0-11 accepted = owner-signed merged package (clarification folding); Q3a AI lane from non-implementer family (Claude) may author CONTRACT_TABLES, sec-16 human review stays with owner; Q4a ONE bounded legacy-kernel run AFTER Q3 catalog sealed; Q5a path list + Gate-2 plan posted today, owner word 'approved' grants; Q6 OPEN-01..10 one-pager delivered to owner, answers pending. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: subscription usage is to be MAXIMIZED, never throttled for cost; stop time 17:00.",
+  "generated": "2026-08-31T12:00:00+03:00",
+  "updated_by": "claude-fable-lead-session-2026-08-31-day (generated = time of THIS push; W139-F03 fix)",
+  "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a-Q5a answered (recommended defaults; addendum 14). OPEN-01..10: owner gave all ten initial dispositions (addendum 15) - rows 02/08/09/10/04 decision-complete; rows 01/03/05/06/07 are decision-NAMED with evidence packages prepared, each CLOSES only on the owner's later approval of its package. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: maximize subscription usage; stop 17:00. Still owed by owner: 'approved' on the path list, a/b/c on the design residual, OPEN-06 row dispositions, evidence-package approvals.",
   "session_time_report": {
     "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
     "session_span": "2026-08-31 09:00 -> in progress (day session; waves 1-2 = 15 lanes by 10:00; night detail in HOURS_AND_COST_2026-08-30_NIGHT.md)",
@@ -128,11 +128,11 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "DESIGN_STRONG_BUILD_BLOCKED_ON_PRECONDITIONS",
+      "state": "DESIGN_V13_REVERIFIED_AT_OWNER_TRIPLE_GATE",
       "branch": "-",
       "commit": "-",
-      "detail": "HISTORY: the Claude-family design was FINAL PARKED at v1.8 after ten rounds (record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md). CURRENT: owner addendum 13 authorized a fresh design by a different family - Codex delivered P012_FRESH_DESIGN_V1.md tonight (22:38), now at v1.2 after two repair rounds under a pre-written D028 cap of 3. The grid-fitting class that killed the old design is STRUCTURALLY ABSENT per all four audit families, twice.",
-      "owner_gate": false,
+      "detail": "Fresh-family design at v1.3 (fold r4 complete). Re-verify round complete: Claude P47 PASS-WITH-NITS, Gemini GM21 zero, OpenCode DS18 1 LOW, Grok G46 1 MEDIUM (KERNEL-probe conservation; minimal fix stated). Grid-fitting class absent per all four families across every round. Build branch clean, zero commits.",
+      "owner_gate": true,
       "next_action": "DAY 08-31 MIDDAY: owner answered ALL of Q1-Q8 AND the ten OPEN rows (addenda 14+15). EXECUTED: fold r4 -> v1.3; the ONE authorized re-verify round COMPLETE - Claude P47 PASS-WITH-NITS + Gemini GM21 zero + OpenCode DS18 1 LOW + Grok G46 1 MEDIUM (KERNEL-probe file-conservation contradiction, minimal fix stated) -> residual disposition = owner a/b/c ask OUTSTANDING. Gate-2 plan v2 audited CLEAR-FOR-OWNER (A5 5 findings folded, A7 zero) - awaiting owner word 'approved'. OPEN evidence built: venue bytes frozen (4 fetches, digests), BTC InstrumentRecord v1.1 (step 0.00001 derived, tick rule verbatim), fee table v1 (roles honestly SEMANTICS-GAP, W136 drafting proposed mapping), funding rules v1 (oracle price, hourly 1/8, long-pays-positive), OPEN-06 26-row proposal v2 CLEAR (A8 zero), OPEN-07 bridge mapping v1 (2/18 direct, deployed v4 gap honest). CONTRACT_TABLES lane held on the a/b/c answer. Branch still CLEAN, zero commits."
     },
     {
@@ -148,30 +148,30 @@
     {
       "id": "WP-P0-13",
       "title": "TrialRecord contract + trial-catalog writer (design draft)",
-      "state": "DESIGN_DRAFT_V12_PARKED_WARM",
+      "state": "DESIGN_DRAFT_V14_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "Draft hardened to v1.2 through two full audit-fold cycles (G18 -> W64 fold; P34+N70+DS7 -> W77 fold) and verified by N81 (1 MEDIUM fresh drift, banked). PROVISIONAL-ON-P020 labeled. BUILD stays gated on WP-P0-20 acceptance per the serial chain.",
+      "detail": "v1.4 after day fold W124 (G42 2 MEDIUM); verify pair G47 + GM23 both zero (cross-family).",
       "owner_gate": false,
       "next_action": "DAY 08-31: G42 2 MEDIUM -> W124 fold -> v1.4 -> verify pair BOTH ZERO (Grok G47 + Gemini GM23 cross-family). P0-13 RE-CONVERGED at v1.4."
     },
     {
       "id": "WP-P0-21",
       "title": "Objective eligibility criteria + D026 fixtures (design draft)",
-      "state": "DESIGN_DRAFT_V11_PARKED_WARM",
+      "state": "DESIGN_DRAFT_V14_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "Draft at v1.1 (G19 detection -> W65 fold), PROVISIONAL-ON-P012 labeled. BUILD gated on WP-P0-12 acceptance - and P0-12's design is FINAL PARKED, so this waits on the owner's P0-12 decision.",
+      "detail": "v1.4 after day fold W123 (G40 LOW, source-verified narrowing); verify G45 zero.",
       "owner_gate": false,
       "next_action": "DAY 08-31: morning-sweep G40 LOW (current-contract UTC overclaim) folded by W123 -> v1.4 (narrowed to the real timezone-awareness predicate, source-verified vs admission.py/base.py); Grok fold-verify G45 running."
     },
     {
       "id": "WP-P0-22",
       "title": "Family-lineage + observation-leakage control (design draft)",
-      "state": "DESIGN_DRAFT_V12_PARKED_WARM",
+      "state": "DESIGN_DRAFT_V15_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "Draft at v1.4 after three cycles tonight (G28+GM12 -> W101 fold v1.3 -> N86 verify -> W109 label fold v1.4), PROVISIONAL-ON-P013 labeled. BUILD gated on WP-P0-13 acceptance.",
+      "detail": "v1.5 after day fold W122 (N96 LOW, retained-diff evidence); verify G44 zero.",
       "owner_gate": false,
       "next_action": "DAY 08-31: morning-sweep N96 LOW (evidence-completeness) folded by W122 -> v1.5 (minimality statement now cites the retained v1.3->v1.4 diff); Grok fold-verify G44 running."
     },
@@ -188,10 +188,10 @@
     {
       "id": "WP-P0-14",
       "title": "Minimum Explorer (design draft)",
-      "state": "DESIGN_DRAFT_V1_PARKED_WARM",
+      "state": "DESIGN_DRAFT_V13_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "Draft v1 delivered (W58, P014_DESIGN_DRAFT_V1.md) + G21 detection round (6 findings banked, unfolded), PROVISIONAL on P0-13 and P0-31-M1. Design only; BUILD waits for both dependencies + G1-IA.",
+      "detail": "v1.3 after day fold W125b (G43 2); verify G48 zero.",
       "owner_gate": false,
       "next_action": "DAY 08-31: G43 2 findings -> W125b fold -> v1.3 -> verify G48 ZERO. P0-14 RE-CONVERGED at v1.3."
     },
@@ -208,30 +208,30 @@
     {
       "id": "WP-P0-30",
       "title": "Venue market-data collector (design draft)",
-      "state": "DESIGN_DRAFT_V1_PARKED_WARM",
+      "state": "DESIGN_DRAFT_V13_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "Draft v1 delivered (W82c) + N79 detection round (8 findings: 5 HIGH, 2 MEDIUM, 1 LOW, banked) + DS10 supplemental review (OpenCode, different family). Zero venue contact performed. BUILD gated on WP-P0-21 + WP-P0-26; host steps T0/G9 owner-gated.",
+      "detail": "v1.3 after day fold W137 (DS20 6 enumerated findings); verify G52 zero. All four families have seen it.",
       "owner_gate": false,
-      "next_action": "CONVERGED CLEAN tonight: fold W96 (14/14 -> v1.1) -> verify pair N83 (4 findings) + G30 (2 findings) -> fold W102 (all 6 dispositioned -> v1.2) -> verify N87: NOT DETECTED, zero findings. Two full fold-verify cycles; parked warm at v1.2."
+      "next_action": "DAY 08-31: DS20 census (2M+4L enumerated) -> W137 fold -> v1.3 -> G52 ZERO. RE-CONVERGED."
     },
     {
       "id": "WP-V2A-01",
       "title": "V2A loader package (design draft)",
-      "state": "DESIGN_DRAFT_V1_PARKED_WARM",
+      "state": "DESIGN_DRAFT_V13_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "First V2A-stage artifact: loader design draft v1 (W67) + G22 detection round (findings banked). BUILD gated on Phase-0 acceptance + G1-IA + WP-P0-31 M1.",
+      "detail": "v1.3 after day fold W128 (DS17 4 findings, 3 MEDIUM); verify G49 zero. All four families have seen it.",
       "owner_gate": false,
       "next_action": "DAY 08-31: fourth-family census DS17 found 4 (3 MEDIUM) -> W128 fold -> v1.3 -> verify G49 ZERO. V2A-01 RE-CONVERGED at v1.3 with all four families having seen it."
     },
     {
       "id": "WP-V2A-02",
       "title": "Worker identity + per-worker state (design draft)",
-      "state": "DESIGN_DRAFT_V1_PARKED_WARM",
+      "state": "DESIGN_DRAFT_V14_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "Draft v1 delivered (W84) + G25 detection census (10 findings: 5 HIGH, 5 MEDIUM, banked). PROVISIONAL-ON-V2A01 labeled. BUILD gated on the V2A entry gate + V2A-01.",
+      "detail": "v1.4 after day fold W131 (DS19 3 findings, 2 MEDIUM); verify G50 zero. All four families have seen it.",
       "owner_gate": false,
       "next_action": "DAY 08-31: fourth-family census DS19 found 3 (2 MEDIUM: quick-restart collision contradiction, no ARM-trust path for gap-free worker) -> W131 fold -> v1.4 -> verify G50 ZERO. V2A-02 RE-CONVERGED at v1.4 with all four families having seen it."
     },
