@@ -1,0 +1,82 @@
+{
+  "scenario_id": "RULE2-04-GREEN",
+  "owning_def_ids": ["DEF-P012-04"],
+  "role": "GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.5",
+    "design_lines": "265-291; 676-745; 747-839; 857-864, 869",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "4. DEF-P012-04 / RULE2-04-GREEN",
+    "worksheet_section_v15": "v1.5 revision / RULE2-04-GREEN"
+  },
+  "open_item_bindings": [
+    {"open_id": "OPEN-06", "source": "open_item_applicability_DRAFT.json items[OPEN-06] (draft_revision 3)", "owner_disposition": "APPLICABLE - P19 RETIRE, P20 RETAIN", "effect_on_this_scenario": "no value effect: neither the corrected gap-aware predicate nor the legacy close-only predicate fires on this bar, so both versions agree regardless of the disposition."},
+    {"open_id": "OPEN-EMBED-01", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (1a) - omitted initial equity is 1000", "effect_on_this_scenario": "design 22.5:869 inherits the RULE2-04-RED candidate config, whose initial_capital was [OPEN-EMBED-01]. With 1000 bound, the prefix sizes to quantity 1 and the equity nodes become derivable."},
+    {"open_id": "OPEN-EMBED-02", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (2a) - RULE2-04 entry basis and fill are 100 via the design 22.5:857-864 candidate entry/BE path", "effect_on_this_scenario": "the existing long's entry_fill_price is 100 and its active stop is 100 before the evaluation bar; neither predicate fires on open 105 / low 101, so the position survives unchanged."}
+  ],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "PROTECTIVE_STOP_TRIGGER_EVAL", "position_side": "LONG", "stop_price": 100, "bar_open": 105, "bar_high": 106, "bar_low": 101, "bar_close": 104, "predicate": "NO_TOUCH", "reference_source": null}
+    ],
+    "fill_events": [],
+    "cash_events": [],
+    "fee_events": [],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": {"side": "LONG", "quantity": 1, "entry_fill_price": 100},
+    "trades": [],
+    "equity_curve": {"first": 999.955, "last": 999.955},
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-04-GREEN-V1",
+      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-04-GREEN-V1",
+      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-04-GREEN-V1",
+      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+    }
+  },
+  "observation_window": {
+    "start_timestamp": "2000-01-01T00:13:00Z",
+    "end_timestamp": "2000-01-01T00:13:00Z",
+    "inclusivity": "CLOSED",
+    "authority": "P012_FRESH_DESIGN_V1.md:869 - the same evaluation-only observation window as RULE2-04-RED applies, excluding the setup fills."
+  },
+  "cash_ledger_join": "No fill occurs inside the window, so there is no in-window cash row and equity_curve.last equals equity_curve.first. The pre-window entry fill at 2000-01-01T00:11:00Z charged its own ENTRY fee of 0.045 (fee_notional 100 * 1 * 1), so the window opens at 1000 - 0.045 = 999.955. See discrepancy V15-D02 for the window-scoping reading.",
+  "v15_filled_cells": [
+    {"pointer": "/RESULT_SURFACE/final_position/entry_fill_price", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": 100, "authority": "owner addendum 20 item 49 (2a) binds the RULE2-04 entry basis and fill to 100 via the design 22.5:857-864 candidate path."},
+    {"pointer": "/RESULT_SURFACE/equity_curve", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "{first: 999.955, last: 999.955}", "authority": "owner addendum 20 (1a) initial equity 1000 minus the pre-window entry fee 0.045; no in-window cash row. Arithmetic in DERIVATIONS.md, v1.5 revision / RULE2-04-GREEN."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-04-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-COST-RULE2-04-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-04-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."}
+  ],
+  "cross_version_note": "The corrected pre-window entry fee is a version-specific added effect (design 6:181): 1.0.0 has no fee model (design 13:353), so corrected equity 999.955 does not equal legacy equity 1000. The declared RULE2-04-GREEN cross-version projection is exit_events A:0, fill_events A:0 and final_position/quantity 1 (design 10:287), of which equity is not a member. Recorded as discrepancy V15-D03.",
+  "judgement_calls": [
+    {"pointer": "/RESULT_SURFACE/equity_curve/first", "value": 999.955, "basis": "the design fixes no equity_curve scoping rule; the window-scoped reading is the only one that preserves the design 2.1:75 cash-ledger invariant and reproduces every already-sealed first = 1000 elsewhere in this bundle. Recorded as discrepancy V15-D02."}
+  ],
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+  ],
+  "derivable_empty_containers_note": "all five economic containers are derivably empty inside the observation window: design 10:287 states neither version exits on this bar, so there is no in-window fill and therefore no in-window fee cash event (design 3:100), and the row's FundingSchedule contains no in-window event (design 22.3:813-829)."
+}

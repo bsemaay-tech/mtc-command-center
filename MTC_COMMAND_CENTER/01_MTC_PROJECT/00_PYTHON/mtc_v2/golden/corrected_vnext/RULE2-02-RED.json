@@ -1,0 +1,71 @@
+{
+  "scenario_id": "RULE2-02-RED",
+  "owning_def_ids": ["DEF-P012-02"],
+  "role": "RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.5",
+    "design_lines": "222-245; 676-745; 747-839; 852",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "2. DEF-P012-02 / RULE2-02-RED",
+    "worksheet_section_v15": "v1.5 revision / RULE2-02-RED"
+  },
+  "open_item_bindings": [],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "SIZING_MULTIPLIER_IDENTITY", "contract_multiplier": 1},
+      {"sequence": 2, "decision": "SIZING_SELECTOR", "selector": "RISK", "stop_price": 90, "stop_distance": 10, "risk_amount": 10},
+      {"sequence": 3, "decision": "REFUSED_MIN_NOTIONAL", "order_notional": 100, "required_min_notional": 101}
+    ],
+    "fill_events": [],
+    "cash_events": [],
+    "fee_events": [],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": null,
+    "order_notional": 100,
+    "trades": [],
+    "equity_curve": {"first": 1000, "last": 1000},
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [
+      {"code": "REFUSED_MIN_NOTIONAL", "observed_notional": 100, "required_min_notional": 101}
+    ],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-02-RED-V1",
+      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-02-RED-V1",
+      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-02-RED-V1",
+      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+    }
+  },
+  "min_notional_preflight": "Design 8:241 and 22.4:852 - the LEGACY runtime carries instrument_min_notional 0 while the corrected frozen InstrumentRecord carries minimum_notional 101. Order notional 1 * 100 * 1 = 100. Corrected admits iff 100 >= 101, which is false, so the corrected adapter refuses REFUSED_MIN_NOTIONAL and opens no position; the legacy strict comparison 100 < 0 is false, so legacy opens. Both thresholds are now explicit scenario inputs at design 22.4:852 rather than prose-only values.",
+  "v15_filled_cells": [
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-02-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-COST-RULE2-02-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753; design 22.4:852 binds a complete C for this row even though it emits no fill."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-02-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."}
+  ],
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "design 15.3:474 names metrics but fixes no metric node set."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design 8:243 requires the RED artifact to record the instrument digest. Design v1.5 binds every record member value but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer, so the exact record bytes still do not exist; :697-700 keeps digests build artifacts."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+  ],
+  "derivable_empty_containers_note": "fill_events, cash_events, fee_events and exit_events are derivably empty: design 8:241 states the corrected adapter opens no position, and design 8:243 removes entry/position/fill-dependent events, so no fill exists to carry a fee (design 3:100). funding_events is derivably empty: design 22.3:813-829 gives RULE2-01..07 an event-free schedule whose coverage spans the window, and the ordinary bars end before 2000-01-01T01:00:00Z."
+}

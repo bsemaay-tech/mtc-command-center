@@ -1,0 +1,934 @@
+[
+ {
+  "scenario_id": "RULE2-01-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-01"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-01-RED.json",
+   "digest": "ac61cd315d29981a83f0ebcf994e0cbd8d7fcc7ea7e76301ed5f9c7757f0bc36",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-01-RED.json",
+    "digest": "2f51eeb624349302ec022bf51c4c6df8c9d84968e656f43f91a21e5a5d70acef"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-01-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-01-RED.json"
+  },
+  "design_lines": "183-220; 676-745; 747-839; 850"
+ },
+ {
+  "scenario_id": "RULE2-01-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-01"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-01-GREEN.json",
+   "digest": "996cbef54286db4d9bda23af36dad54329073399025355ad6b497fa38deb8107",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
+    "digest": "9e62bfb19396cab3c32f9dc2f8e574aa0b7251ee5429e3467bea9d6aa6d59f71"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-01-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-01-GREEN.json"
+  },
+  "design_lines": "183-220; 676-745; 747-839; 851; 896-916"
+ },
+ {
+  "scenario_id": "RULE2-02-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-02"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-02-RED.json",
+   "digest": "77349d5eed0b241c5489f0ac41e7e3f246c65b072ec7aead314e2bfd6228ee2d",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-02-RED.json",
+    "digest": "78a0548c78006e212583199afe071659f51ddc0727b5e36c81d1b3d12f1760cf"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-02-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-02-RED.json"
+  },
+  "design_lines": "222-245; 676-745; 747-839; 852"
+ },
+ {
+  "scenario_id": "RULE2-02-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-02"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-02-GREEN.json",
+   "digest": "9c9e822dd7c1f5011c0ac7d87e301b2148b0086c8329f8fd6ddb8cd43f36c2af",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-02-GREEN.json",
+    "digest": "6cc43be7a9d6bdb9d688f2f59eb5915a9d114a4f41ba5536adc6aae3fb78f9ab"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-02-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-02-GREEN.json"
+  },
+  "design_lines": "222-245; 676-745; 747-839; 853"
+ },
+ {
+  "scenario_id": "RULE2-03-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-03"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-03-RED.json",
+   "digest": "6d7c760889e772cba939c88935a3dde64e50fdc6018b5894d0c2e24ab58b0f6b",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-03-RED.json",
+    "digest": "16be193e0b80f3c712bfea4662db3c9c909e6909ed933c506384dd801df839f0"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-03-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-03-RED.json"
+  },
+  "design_lines": "247-263; 676-745; 747-839; 854"
+ },
+ {
+  "scenario_id": "RULE2-03-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-03"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-03-GREEN.json",
+   "digest": "484f085f198891debb83192976458258ba797d7742e36cc52af3c4189d60d65f",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-03-GREEN.json",
+    "digest": "56556f1249ac53cc91648276d165051b4b86800903b82700d4b7834a2b81c6c7"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-03-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-03-GREEN.json"
+  },
+  "design_lines": "247-263; 676-745; 747-839; 855"
+ },
+ {
+  "scenario_id": "RULE2-04-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-04"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-04-RED.json",
+   "digest": "49e9837646daab0cf289933a6d80143427f674ca9d17d18cde1c9fa0d40f42b7",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-04-RED.json",
+    "digest": "bdf4ac15118e0235610191d325e31a1eddd2a3698a0faffe5ae28bc2e70cf2ab"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-04-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-04-RED.json"
+  },
+  "design_lines": "265-291; 676-745; 747-839; 857-868"
+ },
+ {
+  "scenario_id": "RULE2-04-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-04"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-04-GREEN.json",
+   "digest": "178a0fe11bf27991a9fbc53bfa3cca339099ea6a8b62d5f6380cd9cc74b27b3a",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-04-GREEN.json",
+    "digest": "c2298b361a05f437a5c4dd94be8f282588bc654311238e45cd886aaba4d6a4c2"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-04-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-04-GREEN.json"
+  },
+  "design_lines": "265-291; 676-745; 747-839; 857-864, 869"
+ },
+ {
+  "scenario_id": "RULE2-05-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-05"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-05-RED.json",
+   "digest": "baa8683a2577a9c53dafffbe16013c23d2e69adb2084ce460db3ab4941c78acd",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-05-RED.json",
+    "digest": "2d080191481faf037f0a02d56c56a2f1147ac2ee45cacf84d31ee103616bef4a"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-05-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-05-RED.json"
+  },
+  "design_lines": "293-319; 676-745; 747-839; 870"
+ },
+ {
+  "scenario_id": "RULE2-05-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-05"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-05-GREEN.json",
+   "digest": "ffa8487767b21c8f973eac93b38af2586448f929edb41bcdd3fe201824a73b13",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-05-GREEN.json",
+    "digest": "fb3bafd0c4b191808e2d30b8cdde46fa5c41d077f3a04a5082ae5bda4cb2ee94"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-05-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-05-GREEN.json"
+  },
+  "design_lines": "293-319; 676-745; 747-839; 871"
+ },
+ {
+  "scenario_id": "RULE2-06-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-06"
+  ],
+  "execution_profile_id": "raw_close_only_v1",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-06-RED.json",
+   "digest": "c946e1a24f3b96ad0886132720a43df92ffb9c1fe2729e0a903940001650b349",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-06-RED.json",
+    "digest": "5f0773df5803f11c7b4d5fb9dae2ef5ee22c1f48c647953bcd05fae09ed0eb3a"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-RED.json"
+  },
+  "design_lines": "321-347; 676-745; 747-839; 872"
+ },
+ {
+  "scenario_id": "RULE2-06-EQUAL-PRICE-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-06"
+  ],
+  "execution_profile_id": "raw_close_only_v1",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-06-EQUAL-PRICE-RED.json",
+   "digest": "5972c66c0fbb5e357f548daaf5fdd2ed0dd42fd948229235260bdbe6c2dee978",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+    "digest": "f6689dc3b97c6bbb02de11b6a05df20b5f0bc717d7b46476a3baea678e764f28"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-EQUAL-PRICE-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-EQUAL-PRICE-RED.json"
+  },
+  "legacy_arm_construction": "Owner addendum 20 item 49 (3a) (C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348): the equal-price target book is constructed by the corrected 2.0.0 target-book test machinery directly; the legacy engine is untouched and this row is recorded honestly as NOT-RUNNABLE-ON-LEGACY for that book, because current Multi-TP validation requires tp2_r_multiple greater than tp1_r_multiple (mtc_v2/core/config.py:540-545). The inherited real prelude still supplies the position on both arms; only the equal-price book is corrected-only. The 1.0.0 expected artifact stays OUT-OF-LANE and the cross-version comparison for the target book has no valid 1.0.0 counterpart.",
+  "design_lines": "343, 454, 645; 676-745; 747-839; 874"
+ },
+ {
+  "scenario_id": "RULE2-06-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-06"
+  ],
+  "execution_profile_id": "raw_close_only_v1",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-06-GREEN.json",
+   "digest": "e4c4f861c48df32447f4dc1d32d65f61fec5c2dc9baf3f563983ed554de68cff",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-06-GREEN.json",
+    "digest": "b2d850d8608be57d3917729bec745175e355bb424696a1c4d32265ec98901bc4"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-GREEN.json"
+  },
+  "design_lines": "321-347; 676-745; 747-839; 873"
+ },
+ {
+  "scenario_id": "RULE2-07-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-07"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-07-RED.json",
+   "digest": "8cd6299bb2322add2d651cc7cfeb404cbc774cd45f8a4426bde0caae17ff182e",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-07-RED.json",
+    "digest": "094b15c3eef68e276388892debabbbe84b9e2c97f927514ee5cf75049d756c4e"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-07-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-07-RED.json"
+  },
+  "design_lines": "349-388; 676-745; 747-839; 886"
+ },
+ {
+  "scenario_id": "RULE2-07-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-07"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-07-GREEN.json",
+   "digest": "be3bb8f1b666a006ff59b8a4c1b7e60764bb9065b8b129a0ea36cbadbd9c81a6",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-07-GREEN.json",
+    "digest": "b77753d27a2d2d1876aa93c48b61bcaf49b2c4d88587809b405e3b58a163bbc3"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-07-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-07-GREEN.json"
+  },
+  "design_lines": "349-388; 676-745; 747-839; 887"
+ },
+ {
+  "scenario_id": "RULE2-08-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-08"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-08-RED.json",
+   "digest": "5136b0ce11f9e7b949e8b5105ce128df65ffcaf3ba0399f27141978ef341b0c1",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-08-RED.json",
+    "digest": "b589eec4ad96ab1ce3bba8f73d59a7904702af457bbd200b14c44c7e13dedb75"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-08-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-08-RED.json"
+  },
+  "design_lines": "390-433; 676-745; 747-839; 888"
+ },
+ {
+  "scenario_id": "RULE2-08-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-08"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-08-GREEN.json",
+   "digest": "3cb3cf0db3ab22134449f07c1c90e738a643736e16f97860889d80a08ebb900d",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
+    "digest": "078295244d769f86613c08b66960200da3d8aa83ad12eda8572779e47c034834"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "design 15.1:443 - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-08-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-08-GREEN.json"
+  },
+  "design_lines": "390-433; 676-745; 747-839; 889"
+ },
+ {
+  "scenario_id": "PROBE-P012-01-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-01-A",
+  "owning_def_ids": [
+   "DEF-P012-01"
+  ],
+  "base_scenario_id": "RULE2-01-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-01-A/kernel/",
+  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-01-A/modification_manifest.json",
+  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+  "note": "Design 7:220 - the variant replaces the corrected multiplier with 1 after record validation; the corrected expected producer remains at quantity 5, so the check must refuse at the quantity node. AMBIGUITY RECORDED (discrepancy D-14): if the variant also rewrites /EVENT_SURFACE/decision_events/1/contract_multiplier, that node precedes fill_events in UTF-8 key order (decision_events < fill_events) and would be the first changed node instead. The design names the quantity node; this catalog records the design's node and flags the ordering risk.",
+  "design_lines": "220"
+ },
+ {
+  "scenario_id": "PROBE-P012-01-B",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-01-B",
+  "owning_def_ids": [
+   "DEF-P012-01"
+  ],
+  "base_scenario_id": "RULE2-01-GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-01-B/kernel/",
+  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-01-B/modification_manifest.json",
+  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+  "note": "Design 7:220 - the variant makes a supplied binary64 NaN stop return zero quantity; RULE2-01-GREEN still expects fallback quantity 1, so the check must refuse at the quantity node (expected 1, variant 0).",
+  "design_lines": "220"
+ },
+ {
+  "scenario_id": "PROBE-P012-02-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-02-A",
+  "owning_def_ids": [
+   "DEF-P012-02"
+  ],
+  "base_scenario_id": "RULE2-02-GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-02-A/kernel/",
+  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-02-A/modification_manifest.json",
+  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "expected_failed_check": "RULE2_GREEN_CROSS_VERSION_EXPECTATION",
+  "expected_first_changed_node": "/RESULT_SURFACE/admitted",
+  "note": "Design 8:245 - the variant changes the corrected comparison to > so equality refuses; the RULE-2-GREEN cross-version check must refuse on the admission/refusal projection for RULE2-02-GREEN. Under the variant the corrected side resolves REFUSAL(REFUSED_MIN_NOTIONAL) while the legacy side resolves PRESENT(B:1) at /RESULT_SURFACE/admitted; design 15.3:510 counts present-versus-refusal as unequal. Scope note: design 15.3:476 makes the cross-version GREEN check compare ONLY the declared shared behavioral projection, so the first changed node is taken within that projection. The variant also changes /EVENT_SURFACE/decision_events/3/decision and empties /EVENT_SURFACE/fill_events, which the separate corrected-expectation check would catch earlier in enumeration order.",
+  "design_lines": "245"
+ },
+ {
+  "scenario_id": "PROBE-P012-03-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-03-A",
+  "owning_def_ids": [
+   "DEF-P012-03"
+  ],
+  "base_scenario_id": "RULE2-03-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "INPUT",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-03-A/record/",
+  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-03-A/modification_manifest.json",
+  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "expected_failed_check": "RECORD_IDENTITY_PREFLIGHT",
+  "expected_first_changed_node": "BLOCKED-MISSING-RECORD-BYTES",
+  "note": "Design 9:263 - mutate one record byte without updating the detached digest; the record-identity preflight must refuse before any scenario output exists. Because the refusal precedes scenario output there is no comparison-surface node to name; the first changed artifact is the frozen record file itself. DESIGN v1.5 UPDATE: design 22.3:751-753 now binds the record id SYNTH-INSTRUMENT-RULE2-03-RED-V1 and :764-794 binds every record member value, but 22.1:697-700 fixes only sorted keys, no BOM, LF, final LF, duplicate-key refusal and finite tokens, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer, so the exact record bytes and their detached .sha256 still do not exist. The node therefore stays BLOCKED-MISSING-RECORD-BYTES (discrepancy D-15, extended by V15-D05). The subject producer is KERNEL_2 because design 15.4 assigns the record-identity preflight to KERNEL_1 and KERNEL_2; this probe binds the corrected subject named by DEF-P012-03.",
+  "design_lines": "263"
+ },
+ {
+  "scenario_id": "PROBE-P012-04-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-04-A",
+  "owning_def_ids": [
+   "DEF-P012-04"
+  ],
+  "base_scenario_id": "RULE2-04-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-04-A/kernel/",
+  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-04-A/modification_manifest.json",
+  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+  "note": "Design 10:291 - the variant returns stop 100 rather than open 90 on RED; the check must refuse at the fill-price node (expected 90, variant 100). AMBIGUITY RECORDED (discrepancy D-14): under this bundle's node layout three other nodes also change and precede final_fill_price in enumeration order - /EVENT_SURFACE/decision_events/1/reference_price and /EVENT_SURFACE/decision_events/1/reference_source (decision_events sorts before fill_events), and /EVENT_SURFACE/fill_events/0/fill_trigger (the key 'fill_trigger' sorts before 'final_fill_price' because byte 3 is 'l' 0x6c versus 'n' 0x6e). This catalog records the design's named node; the layout-dependent earlier nodes are flagged for section-16 review.",
+  "design_lines": "291"
+ },
+ {
+  "scenario_id": "PROBE-P012-05-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-05-A",
+  "owning_def_ids": [
+   "DEF-P012-05"
+  ],
+  "base_scenario_id": "RULE2-05-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-05-A/kernel/",
+  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-05-A/modification_manifest.json",
+  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+  "note": "Design 11:319 - the variant omits the slippage application, so the actual fill is 100 against independent corrected expected 101. Within the fill row, UTF-8 key order puts final_fill_price before slippage_impact/slippage_application_count/unrounded_fill_price, so it is the first changed node.",
+  "design_lines": "319"
+ },
+ {
+  "scenario_id": "PROBE-P012-05-B",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-05-B",
+  "owning_def_ids": [
+   "DEF-P012-05"
+  ],
+  "base_scenario_id": "RULE2-05-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-05-B/kernel/",
+  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-05-B/modification_manifest.json",
+  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+  "note": "Design 11:319 - the variant applies the slippage twice, so the actual fill is 102 against independent corrected expected 101. Design 11:311 also refuses any second application via slippage_application_count; final_fill_price still precedes slippage_application_count in UTF-8 key order.",
+  "design_lines": "319"
+ },
+ {
+  "scenario_id": "PROBE-P012-06-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-06-A",
+  "owning_def_ids": [
+   "DEF-P012-06"
+  ],
+  "base_scenario_id": "RULE2-06-RED",
+  "execution_profile_id": "raw_close_only_v1",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-06-A/kernel/",
+  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-06-A/modification_manifest.json",
+  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0",
+  "note": "Design 12:347 binds this probe exactly once to base_scenario_id RULE2-06-RED, subject_producer_id KERNEL_2 and target kind KERNEL, and states the refusal is at the first changed event sequence node: expected first fill TARGET-NEAR, modified-kernel first fill TARGET-FAR. In this bundle's node layout the reversed order first shows at /EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0 (decision_events precedes fill_events in UTF-8 key order), then at /EVENT_SURFACE/fill_events/0/exit_id. Both are recorded; the design's named node is /EVENT_SURFACE/fill_events/0/exit_id. Discrepancy D-14.",
+  "design_lines": "347"
+ },
+ {
+  "scenario_id": "PROBE-P012-07-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-07-A",
+  "owning_def_ids": [
+   "DEF-P012-07"
+  ],
+  "base_scenario_id": "RULE2-07-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-07-A/kernel/",
+  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-07-A/modification_manifest.json",
+  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/cash_events/1/signed_delta",
+  "note": "Design 13:388 - the variant classifies one declared taker exit as maker; the check must refuse at the event-role/rate/fee nodes even if a coincidental rounded total is equal. The exit fill is fill index 1, so the projected row is fee_events/1. D-16 RESOLVED AT DESIGN v1.5: design 22.3:799 now binds maker_rate 0.00015 on every section-22 CostSchedule, including RULE2-07, so the maker misclassification is fully derivable. Variant fee_notional 100 times 0.00015 equals 0.015 against the expected taker 100 times 0.001 equals 0.1, so fee_amount, fee_cash_delta and the joined cash row all change. Under the design 15.3:508 UTF-8 byte-order walk cash_events sorts before fee_events, so the first changed node is /EVENT_SURFACE/cash_events/1/signed_delta (expected -0.1, variant -0.015); the design-named event-role node /EVENT_SURFACE/fee_events/1/liquidity_role and /EVENT_SURFACE/fee_events/1/fee_amount also change and are recorded here. This matches the treatment already used for PROBE-P012-08-A.",
+  "design_lines": "388"
+ },
+ {
+  "scenario_id": "PROBE-P012-08-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-08-A",
+  "owning_def_ids": [
+   "DEF-P012-08"
+  ],
+  "base_scenario_id": "RULE2-08-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-08-A/kernel/",
+  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-08-A/modification_manifest.json",
+  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design 14:433 - the variant flips the sign for the long positive-rate event; the check must refuse at the cash-delta node because independent expected -0.1 differs from actual +0.1. cash_events precedes funding_events in UTF-8 key order, so the joined cash row's signed_delta is the first changed node; /EVENT_SURFACE/funding_events/0/funding_cash_delta is the typed projection the design names.",
+  "design_lines": "433"
+ }
+]

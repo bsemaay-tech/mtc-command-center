@@ -1,0 +1,99 @@
+{
+  "scenario_id": "RULE2-04-RED",
+  "owning_def_ids": ["DEF-P012-04"],
+  "role": "RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.5",
+    "design_lines": "265-291; 676-745; 747-839; 857-868",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "4. DEF-P012-04 / RULE2-04-RED",
+    "worksheet_section_v15": "v1.5 revision / RULE2-04-RED"
+  },
+  "open_item_bindings": [
+    {"open_id": "OPEN-06", "source": "open_item_applicability_DRAFT.json items[OPEN-06] (draft_revision 3)", "owner_disposition": "APPLICABLE - RETAIN ALL owner-choice rows; forced rows P04 RETIRE, P19 RETIRE, P20 RETAIN, P21 RETIRE-implicitness (addendum 16 row 45)", "effect_on_this_scenario": "design 10:273 and 10:287 make the corrected gap/open projection OPEN-06-contingent. P19 RETIRE retires the close-only close-triggered/close-filled stop and P20 RETAIN retains the gap-aware open/stop reference shape (P012_OPEN06_RETAINED_RETIRED_PROPOSAL_V1.md:61-62), so the corrected reference price 90 stated at design 10:287 is the disposition-consistent value. The value itself is taken from the design, not from the owner answer."},
+    {"open_id": "OPEN-EMBED-01", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (1a) - omitted initial equity is 1000", "effect_on_this_scenario": "design 22.5:868 leaves initial_capital as [OPEN-EMBED-01]. With 1000 bound, the real prefix sizes risk_amount 1000 * 1% = 10 over stop distance 10 to quantity 1, and the equity-curve nodes design 15.6:564 lists as blocked become derivable."},
+    {"open_id": "OPEN-EMBED-02", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (2a) - RULE2-04 entry basis and fill are 100, reached through the design 22.5:857-864 candidate entry/BE path", "effect_on_this_scenario": "the state-building prefix [INIT98, ENTRY100, BE100] is now bound: the entry fills at 100, the percent stop first creates 90, and use_break_even with be_trigger_r 1 and be_buffer_r 0 moves the active stop to 100 on BE100 (high 110 >= 100 + 1R = 110). Gross PnL, the trade row and the equity nodes are therefore derivable; the corrected gap reference and fill stay the design-stated 90."}
+  ],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "PROTECTIVE_STOP_TRIGGER_EVAL", "position_side": "LONG", "stop_price": 100, "bar_open": 90, "bar_high": 95, "bar_low": 85, "bar_close": 92, "predicate": "OPEN_BEYOND_STOP", "reference_source": "BAR_OPEN", "reference_price": 90}
+    ],
+    "fill_events": [
+      {"sequence": 0, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "side": "SELL", "exit_id": "STOP", "fill_trigger": "GAP_OPEN", "reference_price": 90, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "FLOOR", "final_fill_price": 90, "quantity": 1, "liquidity_role": "TAKER"}
+    ],
+    "cash_events": [
+      {"sequence": 0, "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.0405},
+      {"sequence": 1, "cash_event_id": "CE-GROSS-0", "kind": "GROSS_REALIZATION", "fill_id": "F0", "signed_delta": -10}
+    ],
+    "fee_events": [
+      {"sequence": 0, "event_timestamp": "2000-01-01T00:13:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-04-RED-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.00045, "fixed_component": 0, "fee_notional": 90, "fee_amount": 0.0405, "fee_cash_delta": -0.0405, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
+    ],
+    "funding_events": [],
+    "exit_events": [
+      {"sequence": 0, "exit_id": "STOP", "reason": "PROTECTIVE_STOP", "fill_id": "F0", "quantity": 1, "final_fill_price": 90, "fill_trigger": "GAP_OPEN", "gross_realized_pnl": -10}
+    ]
+  },
+  "RESULT_SURFACE": {
+    "final_position": null,
+    "trades": [
+      {"entry_fill_price": 100, "exit_fill_price": 90, "quantity": 1, "gross_realized_pnl": -10, "fee_total": -0.085499999999999993, "funding_total": 0, "net_trade_pnl": -10.0855}
+    ],
+    "equity_curve": {"first": 999.955, "last": 989.91450000000009},
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-04-RED-V1",
+      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-04-RED-V1",
+      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-04-RED-V1",
+      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+    }
+  },
+  "observation_window": {
+    "start_timestamp": "2000-01-01T00:13:00Z",
+    "end_timestamp": "2000-01-01T00:13:00Z",
+    "inclusivity": "CLOSED",
+    "authority": "P012_FRESH_DESIGN_V1.md:868 - the observation window starts and ends at 2000-01-01T00:13:00Z, excluding the setup fills of the [INIT98, ENTRY100, BE100] prefix."
+  },
+  "cash_ledger_join": "Design 2.1:75, 3:100 step 11 and 13:376. The compared window contains exactly the evaluation-bar exit fill F0, so it carries one FEE cash row (-0.0405, joined to fee_events/0) and one GROSS_REALIZATION cash row (-10), in that fill order. Only cash_events are applied to equity. The pre-window entry fill at 2000-01-01T00:11:00Z charges its own ENTRY fee of 0.045 (fee_notional 100 * 1 * 1), which is why equity_curve.first is 1000 - 0.045 = 999.955 rather than 1000; equity_curve.last = 999.955 + (-0.0405) + (-10) = 989.91450000000009. The equity curve is therefore window-scoped and satisfies the invariant last = first + sum(in-window cash signed deltas). net_trade_pnl is lifecycle-scoped per design 13:378 and includes the pre-window entry fee, so fee_total -0.085499999999999993 is NOT the sum of the in-window cash rows. See discrepancy V15-D02.",
+  "v15_filled_cells": [
+    {"pointer": "/EVENT_SURFACE/fill_events/0/liquidity_role", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "TAKER", "authority": "P012_FRESH_DESIGN_V1.md:802-812 and :868 (C maps the protective stop to TAKER at 0.00045)."},
+    {"pointer": "/EVENT_SURFACE/exit_events/0/gross_realized_pnl", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": -10, "authority": "(90 - 100) * 1 * 1 with entry basis 100 from owner addendum 20 (2a) and contract_multiplier 1 explicit at design 22.5:868."},
+    {"pointer": "/EVENT_SURFACE/cash_events", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "FEE -0.0405 then GROSS_REALIZATION -10", "authority": "design 3:100 step 11 plus the bound schedule."},
+    {"pointer": "/EVENT_SURFACE/fee_events", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "one PROTECTIVE_STOP_EXIT fee row, fee_amount 0.0405", "authority": "P012_FRESH_DESIGN_V1.md:796-812; arithmetic in DERIVATIONS.md, v1.5 revision / RULE2-04-RED."},
+    {"pointer": "/RESULT_SURFACE/trades", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "one closed lifecycle row", "authority": "entry basis 100 from owner addendum 20 (2a); net per design 13:378."},
+    {"pointer": "/RESULT_SURFACE/equity_curve", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "{first: 999.955, last: 989.91450000000009}", "authority": "owner addendum 20 (1a) initial equity 1000 and (2a) entry basis 100; arithmetic and binary64 exactness in DERIVATIONS.md, v1.5 revision / RULE2-04-RED."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-04-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-COST-RULE2-04-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-04-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."}
+  ],
+  "judgement_calls": [
+    {"pointer": "/RESULT_SURFACE/final_position", "value": null, "basis": "the evaluation bar closes the whole quantity 1, so no position survives the window."},
+    {"pointer": "/RESULT_SURFACE/equity_curve/first", "value": 999.955, "basis": "the design fixes no equity_curve scoping rule. The window-scoped reading is the only one that preserves the design 2.1:75 invariant that equity equals the first point plus the sum of the compared cash rows, and it reproduces every already-sealed first = 1000 in this bundle (those rows have full-span M-06 windows). Recorded as discrepancy V15-D02."},
+    {"pointer": "/EVENT_SURFACE/fee_events/0/lifecycle_id", "value": 1, "basis": "design 13:366 requires linkage to position_lifecycle_id; P012_FRESH_DESIGN_V1.md:886 binds lifecycle id start 1 and the prefix entry opens the run's first lifecycle."},
+    {"pointer": "/EVENT_SURFACE/fee_events/0/event_timestamp", "value": "2000-01-01T00:13:00Z", "basis": "design 22.5:868 places the evaluation bar at 2000-01-01T00:13:00Z; design 22.2:734 (M-06) sets a corrected event timestamp to the timestamp of the bar that supplies its reference price."}
+  ],
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+  ]
+}

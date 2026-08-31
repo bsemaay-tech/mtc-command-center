@@ -1,0 +1,79 @@
+{
+  "scenario_id": "RULE2-07-GREEN",
+  "owning_def_ids": ["DEF-P012-07"],
+  "role": "GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.5",
+    "design_lines": "349-388; 676-745; 747-839; 887",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "7. DEF-P012-07 / RULE2-07-GREEN",
+    "worksheet_section_v15": "v1.5 revision / RULE2-07-GREEN"
+  },
+  "open_item_bindings": [
+    {"open_id": "OPEN-10", "source": "open_item_applicability_DRAFT.json items[OPEN-10] (draft_revision 3)", "owner_disposition": "APPLICABLE - guards keep GROSS-MINUS-FEES", "effect_on_this_scenario": "no value effect: the fixture has no signal-producing bar, so no closed lifecycle and no fee delta exist under any basis."}
+  ],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "GUARD_BASIS_IDENTITY", "guard_pnl_basis": "GROSS_MINUS_FEES", "authority": "DECISIONS.md:31 (D017)"}
+    ],
+    "fill_events": [],
+    "cash_events": [],
+    "fee_events": [],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": null,
+    "trades": [],
+    "equity_curve": {"first": 1000, "last": 1000},
+    "guards": {
+      "guard_pnl_basis": "GROSS_MINUS_FEES",
+      "consecutive_loss_count": 0,
+      "max_consecutive_losses": 1,
+      "consec_loss_ok": true,
+      "guard_blocked_raw": false
+    },
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-07-GREEN-V1",
+      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-07-GREEN-V1",
+      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-07-GREEN-V1",
+      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+    }
+  },
+  "empty_fill_input_derivation": "Design 13:384 states an empty fill-event input. Design 22.6:887 now supplies the exact non-empty but no-signal LEGACY input that produces it: a single NO_ACTION100 bar at 2000-01-01T00:10:00Z with use_time_stop = false and the exact GUARD07 switch set. Design 22.2:733 and :743-745 establish that a first Range Filter call only initializes its line and cannot emit an entry for any finite constant OHLC, so no fill exists. The driver's non-empty-bar requirement is satisfied without a state-injection field.",
+  "absent_nodes": [
+    {"pointer": "/RESULT_SURFACE/guards/last_closed_guard_pnl", "reason": "ABSENT, not zero: no lifecycle closes in this fixture (design 13:384; design 22.6:887), so there is no last closed guard PnL. Design 15.3:510 counts present-versus-absent as a distinct tagged state; emitting 0 would assert a closed lifecycle that does not exist."}
+  ],
+  "v15_filled_cells": [
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-07-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-COST-RULE2-07-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753; design 22.6:887 retains C unconsumed for this row."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-07-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."}
+  ],
+  "cross_version_note": "This GREEN row has no fill, so the universal section-22.3 CostSchedule creates no fee and no corrected-versus-legacy equity split; equity 1000 is equal on both versions. fee_events and funding_events remain EXCLUDED from the GREEN projection (correction C-02): they do not exist in the legacy shape, so the legacy selector resolves ABSENT and design 15.3:510 would score ABSENT versus A:0 as divergence. They are version-specific added containers under design 6:181.",
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+  ],
+  "derivable_empty_containers_note": "all six economic containers are derivably empty: design 13:384 states an empty fill-event input and design 22.6:887 supplies the exact no-signal bar that realizes it, so there is no fill, no fee (design 3:100 attaches a fee only to a fill), no gross realization and no exit; the row's FundingSchedule declares no in-window event (design 22.3:813-829)."
+}

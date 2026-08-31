@@ -1,0 +1,78 @@
+{
+  "scenario_id": "RULE2-08-GREEN",
+  "owning_def_ids": ["DEF-P012-08"],
+  "role": "GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.5",
+    "design_lines": "390-433; 676-745; 747-839; 889",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "8. DEF-P012-08 / RULE2-08-GREEN",
+    "worksheet_section_v15": "v1.5 revision / RULE2-08-GREEN"
+  },
+  "open_item_bindings": [
+    {"open_id": "OPEN-05", "source": "open_item_applicability_DRAFT.json items[OPEN-05] (draft_revision 3)", "owner_disposition": "APPLICABLE - same-timestamp snapshot eligibility = INCLUDE (addendum 17 row 46)", "effect_on_this_scenario": "no value effect: design 14:429 states the position is closed immediately BEFORE the event timestamp, so it is ineligible under an INCLUDE rule as well as under an EXCLUDE rule. The INCLUDE answer creates a separate build obligation (a fill AT the exact funding timestamp) that this declared vector does not exercise; that obligation is recorded in the applicability draft and is not a CONTRACT_TABLES cell."},
+    {"open_id": "OPEN-EMBED-05", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (5a) - the closed-lifecycle premise is built with ordinary price bars before the observation window, by the real mechanism, with nothing injected", "effect_on_this_scenario": "design 22.6:889 left the LEGACY premise as [OPEN-EMBED-05] and design 15.6:571 blocked the runnable premise and its dependent cells. The owner answer makes the premise reachable: lifecycle 1 opens and closes on ordinary bars before 2000-01-01T00:00:00Z, so at the window start no position is eligible for TEST-FUND-1. Because those fills are outside the observation window they contribute no in-window fill, cash, fee or exit facts, which is exactly the empty-container reading this artifact already sealed; the sealed values are unchanged and are now premise-supported rather than premise-blocked. The owner answer does not name the exact pre-window bars, so no bar-level cell is authored here."}
+  ],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "FUNDING_TICK_SKIPPED", "funding_event_id": "TEST-FUND-1", "event_timestamp": "2000-01-01T00:00:00Z", "eligible": false, "reason": "NO_ELIGIBLE_POSITION", "event_coverage_present": true}
+    ],
+    "fill_events": [],
+    "cash_events": [],
+    "fee_events": [],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": null,
+    "trades": [],
+    "equity_curve": {"first": 1000, "last": 1000},
+    "cumulative_funding": 0,
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-08-GREEN-V1",
+      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "NOT_CONSUMED",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-08-V1",
+      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+    }
+  },
+  "observation_window": {
+    "start_timestamp": "2000-01-01T00:00:00Z",
+    "end_timestamp": "BLOCKED-MISSING-SCENARIO-INPUT",
+    "inclusivity": "CLOSED",
+    "authority": "P012_FRESH_DESIGN_V1.md:889 - the intended window starts at 2000-01-01T00:00:00Z. Owner addendum 20 (5a) closes the state premise but names no closing evaluation bar, and design 22.6:889 does not declare one, so the end timestamp is not derivable."
+  },
+  "version_specific_lineage_nodes": [
+    {"pointer": "/RESULT_SURFACE/cumulative_funding", "reason": "version-specific added node. Design 14:392-394 states PortfolioState carries no funding ledger at 1.0.0, and design 15.3:476 forbids GATE_READER from synthesizing an empty funding container on the legacy surface, so the legacy selector resolves ABSENT. Design 6:181 keeps intentionally added ledger nodes out of the cross-version GREEN equality; the declared GREEN projection is the economic cash/equity value 1000 (design 14:429)."},
+    {"pointer": "/EVENT_SURFACE/funding_events", "reason": "version-specific added container, same reasoning. A:0 here versus ABSENT at 1.0.0 - this is NOT a GREEN projection member."}
+  ],
+  "v15_filled_cells": [
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-08-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-FUNDING-RULE2-08-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-754 - RULE2-08-RED and RULE2-08-GREEN share the exact funding record id, canonical bytes and digests because section 14 requires the same complete schedule."}
+  ],
+  "unchanged_sealed_values": "equity_curve first 1000 / last 1000, cumulative_funding 0, every empty container and the FUNDING_TICK_SKIPPED decision row are byte-identical to the pre-v1.5 seal. Owner addendum 20 (5a) changes their status from premise-blocked to premise-supported without changing a value.",
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "ARTIFACT", "pointer": "/observation_window/end_timestamp", "marker": "BLOCKED-MISSING-SCENARIO-INPUT", "reason": "design 22.6:889 states the intended window starts at 2000-01-01T00:00:00Z but that its closing evaluation bar is not declared; owner addendum 20 (5a) closes the state premise without naming that bar."},
+    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+  ],
+  "derivable_empty_containers_note": "all six economic containers are derivably empty inside the observation window. Design 14:429: the required event coverage is present, no position is eligible, and no funding row is emitted. Owner addendum 20 (5a) places the opening and closing fills of lifecycle 1 on ordinary bars BEFORE the window, so they contribute no in-window fill, cash, fee, gross-realization or exit fact, and no CostSchedule is consumed (design 22.6:889). trades is [] on the same window-scoped reading; the pre-window close mutates no in-window equity and the vector fixes the compared projection at 1000."
+}

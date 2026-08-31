@@ -1,0 +1,85 @@
+{
+  "scenario_id": "RULE2-02-GREEN",
+  "owning_def_ids": ["DEF-P012-02"],
+  "role": "GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.5",
+    "design_lines": "222-245; 676-745; 747-839; 853",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "2. DEF-P012-02 / RULE2-02-GREEN",
+    "worksheet_section_v15": "v1.5 revision / RULE2-02-GREEN"
+  },
+  "open_item_bindings": [],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "SIZING_MULTIPLIER_IDENTITY", "contract_multiplier": 1},
+      {"sequence": 2, "decision": "SIZING_SELECTOR", "selector": "RISK", "stop_price": 90, "stop_distance": 10, "risk_amount": 10},
+      {"sequence": 3, "decision": "ADMIT_MIN_NOTIONAL", "order_notional": 100, "required_min_notional": 100}
+    ],
+    "fill_events": [
+      {"sequence": 0, "fill_id": "F0", "event_class": "ENTRY", "side": "BUY", "reference_price": 100, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "CEIL", "final_fill_price": 100, "quantity": 1, "liquidity_role": "TAKER"}
+    ],
+    "cash_events": [
+      {"sequence": 0, "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.045}
+    ],
+    "fee_events": [
+      {"sequence": 0, "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-02-GREEN-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.00045, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.045, "fee_cash_delta": -0.045, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
+    ],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": {"side": "LONG", "quantity": 1, "entry_fill_price": 100},
+    "order_notional": 100,
+    "admitted": true,
+    "trades": [],
+    "equity_curve": {"first": 1000, "last": 999.955},
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-02-GREEN-V1",
+      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-02-GREEN-V1",
+      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-02-GREEN-V1",
+      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+    }
+  },
+  "cash_ledger_join": "Design 2.1:75 and 13:376 - fee_events/0.fee_cash_delta = -0.045 equals the joined cash_events/0.signed_delta (CE-FEE-0). The M-06 window is the full bar span, so equity_curve.last = 1000 + (-0.045) = 999.955.",
+  "v15_filled_cells": [
+    {"pointer": "/EVENT_SURFACE/fill_events/0/liquidity_role", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "TAKER", "authority": "P012_FRESH_DESIGN_V1.md:802-812."},
+    {"pointer": "/EVENT_SURFACE/fee_events", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "one ENTRY fee row, fee_amount 0.045", "authority": "P012_FRESH_DESIGN_V1.md:796-812; arithmetic in DERIVATIONS.md, v1.5 revision / RULE2-02-GREEN."},
+    {"pointer": "/EVENT_SURFACE/cash_events", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "one FEE cash row, signed_delta -0.045", "authority": "design 3:100 step 11 plus the bound schedule."},
+    {"pointer": "/RESULT_SURFACE/equity_curve/last", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": 999.955, "authority": "1000 + (-0.045); binary64 exactness shown in DERIVATIONS.md, v1.5 revision section R-0."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-02-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-COST-RULE2-02-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-02-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."}
+  ],
+  "cross_version_note": "The corrected fee lineage is a version-specific added effect (design 6:181): 1.0.0 has no fee model (design 13:353), so corrected equity 999.955 does not equal legacy equity 1000. The declared RULE2-02-GREEN cross-version projection is the admission/quantity agreement at design 8:241-245, of which equity is not a member. Recorded as discrepancy V15-D03.",
+  "judgement_calls": [
+    {"pointer": "/EVENT_SURFACE/fee_events/0/lifecycle_id", "value": 1, "basis": "design 13:366 requires linkage to position_lifecycle_id and the RULE2-02 vector states none; P012_FRESH_DESIGN_V1.md:886 binds lifecycle id start 1 and this entry opens the run's first lifecycle."},
+    {"pointer": "/EVENT_SURFACE/fee_events/0/event_timestamp", "value": "2000-01-01T00:11:00Z", "basis": "P012_FRESH_DESIGN_V1.md:732 (M-04) and :734 (M-06)."}
+  ],
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+  ]
+}

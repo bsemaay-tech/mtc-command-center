@@ -1,0 +1,84 @@
+{
+  "scenario_id": "RULE2-05-RED",
+  "owning_def_ids": ["DEF-P012-05"],
+  "role": "RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.5",
+    "design_lines": "293-319; 676-745; 747-839; 870",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "5. DEF-P012-05 / RULE2-05-RED",
+    "worksheet_section_v15": "v1.5 revision / RULE2-05-RED"
+  },
+  "open_item_bindings": [
+    {"open_id": "OPEN-EMBED-01", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (1a) - omitted initial equity is 1000", "effect_on_this_scenario": "design 22.5:870 leaves initial_capital as [OPEN-EMBED-01]. With 1000 bound, the fallback path sizes fallback_notional 1000 * 10% = 100 over reference 100 to requested quantity 1 (the design-stated value), and the absolute equity nodes design 15.6:565 lists as blocked become derivable."}
+  ],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "SLIPPAGE_MODEL_IDENTITY", "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 100, "price_tick": 0.01}
+    ],
+    "fill_events": [
+      {"sequence": 0, "fill_id": "F0", "event_class": "ENTRY", "side": "BUY", "reference_price": 100, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 100, "slippage_impact": 1, "slippage_application_count": 1, "unrounded_fill_price": 101, "price_tick_alignment": "CEIL", "final_fill_price": 101, "quantity": 1, "liquidity_role": "TAKER"}
+    ],
+    "cash_events": [
+      {"sequence": 0, "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.04545}
+    ],
+    "fee_events": [
+      {"sequence": 0, "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-05-RED-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.00045, "fixed_component": 0, "fee_notional": 101, "fee_amount": 0.04545, "fee_cash_delta": -0.04545, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
+    ],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": {"side": "LONG", "quantity": 1, "entry_fill_price": 101},
+    "order_notional": 101,
+    "trades": [],
+    "equity_curve": {"first": 1000, "last": 999.95455},
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-05-RED-V1",
+      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-05-RED-V1",
+      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-05-RED-V1",
+      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+    }
+  },
+  "cash_ledger_join": "Design 2.1:75, 3:100 step 11 and 13:376 - the entry fee is charged on the FINAL fill price per design 13:360 (fee_notional = abs(final_fill_price * fill_qty * contract_multiplier) = abs(101 * 1 * 1) = 101), so fee_events/0.fee_cash_delta = -0.04545 equals the joined cash_events/0.signed_delta (CE-FEE-0). The M-06 window is the full bar span 2000-01-01T00:10:00Z..2000-01-01T00:11:00Z, so equity_curve.last = 1000 + (-0.04545) = 999.95455.",
+  "v15_filled_cells": [
+    {"pointer": "/EVENT_SURFACE/fill_events/0/liquidity_role", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "TAKER", "authority": "P012_FRESH_DESIGN_V1.md:802-812 and :870 (entry TAKER 0.00045)."},
+    {"pointer": "/EVENT_SURFACE/fee_events", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "one ENTRY fee row, fee_amount 0.04545", "authority": "P012_FRESH_DESIGN_V1.md:796-812; arithmetic in DERIVATIONS.md, v1.5 revision / RULE2-05-RED."},
+    {"pointer": "/EVENT_SURFACE/cash_events", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "one FEE cash row, signed_delta -0.04545", "authority": "design 3:100 step 11 plus the bound schedule."},
+    {"pointer": "/RESULT_SURFACE/equity_curve", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "{first: 1000, last: 999.95455}", "authority": "owner addendum 20 (1a) initial equity 1000; binary64 exactness in DERIVATIONS.md, v1.5 revision section R-0."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-05-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-COST-RULE2-05-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-05-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."}
+  ],
+  "judgement_calls": [
+    {"pointer": "/RESULT_SURFACE/order_notional", "value": 101, "basis": "RESOLVED-AT-V1.5. This cell was previously sealed under the shipped cm-default (discrepancy D-06). Design 22.5:870 now makes instrument_contract_multiplier = 1 an explicit scenario input, and design 22.3:786-794 records the same binding for every RULE2-04, RULE2-05 and RULE2-06 row, closing N102-F01 by binding rather than by changing a golden. The value 1 * 101 * 1 = 101 is unchanged and byte-identical."},
+    {"pointer": "/EVENT_SURFACE/fee_events/0/lifecycle_id", "value": 1, "basis": "design 13:366 requires linkage to position_lifecycle_id; P012_FRESH_DESIGN_V1.md:886 binds lifecycle id start 1 and this entry opens the run's first lifecycle."},
+    {"pointer": "/EVENT_SURFACE/fee_events/0/event_timestamp", "value": "2000-01-01T00:11:00Z", "basis": "P012_FRESH_DESIGN_V1.md:732 (M-04) and :734 (M-06)."}
+  ],
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+  ]
+}

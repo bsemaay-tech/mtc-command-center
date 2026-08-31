@@ -1,0 +1,71 @@
+{
+  "scenario_id": "RULE2-03-RED",
+  "owning_def_ids": ["DEF-P012-03"],
+  "role": "RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.5",
+    "design_lines": "247-263; 676-745; 747-839; 854",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "3. DEF-P012-03 / RULE2-03-RED",
+    "worksheet_section_v15": "v1.5 revision / RULE2-03-RED"
+  },
+  "open_item_bindings": [
+    {"open_id": "OPEN-EMBED-01", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (1a) - omitted initial equity is 1000 for the RULE2-03, RULE2-04, RULE2-05 and RULE2-06 families, as a test-only value under design section 5's synthetic-vector rule", "effect_on_this_scenario": "design 22.4:854 leaves initial_capital as [OPEN-EMBED-01] and design 15.6:563 lists this row's equity-curve nodes as blocked pending that answer. With 1000 bound, the account seed is known and no cash event occurs before the pre-evaluation refusal, so equity_curve = {first: 1000, last: 1000} is derivable."}
+  ],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION", "field": "price_tick", "record_value": 0.5, "runtime_value": 0.25}
+    ],
+    "fill_events": [],
+    "cash_events": [],
+    "fee_events": [],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": null,
+    "trades": [],
+    "equity_curve": {"first": 1000, "last": 1000},
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [
+      {"code": "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION", "field": "price_tick", "record_value": 0.5, "runtime_value": 0.25, "stage": "PRE_EVALUATION"}
+    ],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-03-RED-V1",
+      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-03-RED-V1",
+      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-03-RED-V1",
+      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+    }
+  },
+  "tick_identity_derivation": "Design 9:259 and 22.4:854 - the frozen InstrumentRecord overrides the section-22.3 default price_tick 0.01 to 0.5 for this row, while the LEGACY runtime config carries instrument_price_tick 0.25 and every other explicit runtime instrument field equals the record. Design 5.2:145 accepts only the record value, so 0.25 != 0.5 is REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION before the first bar. Both tokens carry a fraction and are therefore binary64 float nodes (design 15.3:480); their exact forms are F:0x1.0000000000000p-1 and F:0x1.0000000000000p-2.",
+  "v15_filled_cells": [
+    {"pointer": "/RESULT_SURFACE/equity_curve", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "{first: 1000, last: 1000}", "authority": "owner addendum 20 item 49 (1a) binds initial_capital 1000; the refusal precedes evaluation so no cash event exists and equity is untouched (design 9:255, 9:261)."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-03-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-COST-RULE2-03-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753; design 22.4:854 binds an identity-only C and F for this row."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-03-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."}
+  ],
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design 9:261 requires record id, exact record digest, source digest and effective interval on every corrected manifest. Design v1.5 binds every record member value but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+  ],
+  "derivable_empty_containers_note": "all five economic containers are derivably empty: design 9:255 and 9:261 make this a typed pre-evaluation refusal, so no scenario output exists (design 9:263 uses the same wording for the record-identity preflight). Design 22.4:854 supplies exactly one NO_ACTION100 bar, which cannot emit an entry in any case (design 22.2:733, :743-745)."
+}

@@ -1,0 +1,269 @@
+{
+ "schema": "P012_CONTRACT_TABLES_MANIFEST_V1",
+ "bundle_id": "P012_CONTRACT_TABLES_W127",
+ "producer_id": "CONTRACT_TABLES",
+ "producer_role_authority": "P012_FRESH_DESIGN_V1.md:444 (section 15.1) - 2.0.0 expected event/result artifacts, hand-derived from sections 7-14 plus frozen records; authored by a person other than the kernel implementer; cannot import mtc_v2.core; cannot read an observed/ path.",
+ "author_identity": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127",
+ "owner_ruling": "Q3a, 2026-08-31 - an AI lane from a non-implementer family may satisfy the design's independence role for CONTRACT_TABLES authorship, named in the ledger. The implementer family is Codex (it authored the design and will build the kernel).",
+ "expected_value_provenance": {
+  "method": "INDEPENDENT_DERIVATION",
+  "not_method": "COPY_OBSERVED",
+  "statement": "Every expected value in this bundle was derived by explicit written arithmetic from the design's stated contract semantics, shown per value in DERIVATIONS.md. No kernel was executed. No observed/ path was read. No corrected-kernel implementation was read or exists; git ls-files over the repository returns no corrected_vnext, economics.py, semantics.py or economic_records path."
+ },
+ "design": {
+  "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+  "version": "v1.5 (input-embedding addendum; sections 1-21 unchanged from v1.4)",
+  "total_lines": 967,
+  "line_span_used": "1-967 (whole file)",
+  "line_spans_by_section": {
+   "2.1 interface and normative cash-ledger rule": "55-77",
+   "3 exact ordering for 2.0.0": "86-106",
+   "5 immutable records and provenance": "122-153",
+   "6 defect record contract": "155-181",
+   "7 DEF-P012-01 contract multiplier": "183-220",
+   "8 DEF-P012-02 minimum notional": "222-245",
+   "9 DEF-P012-03 frozen instrument metadata": "247-263",
+   "10 DEF-P012-04 gap-aware protective stops": "265-291",
+   "11 DEF-P012-05 in-path slippage": "293-319",
+   "12 DEF-P012-06 same-bar collision policy": "321-347",
+   "13 DEF-P012-07 provenanced fee schedule": "349-388",
+   "14 DEF-P012-08 per-interval funding": "390-433",
+   "15.1 producers": "439-448",
+   "15.2 scenario enumeration": "450-467",
+   "15.3 two comparison surfaces and node enumerator": "469-512",
+   "15.4 comparisons and fail inputs": "514-535",
+   "15.5 receipt and exact gate claim": "537-549",
+   "16 mandatory SEMANTIC_COVERAGE_REVIEW": "579-590",
+   "19 consolidated OPEN ledger": "628-643",
+   "v1.4 micro-fold change log": "668-674",
+   "15.6 v1.5 input-embedding computability note": "551-577",
+   "22.1 classification and canonical input envelope": "684-723",
+   "22.2 shared mechanical bindings M-01..M-09": "725-745",
+   "22.3 shared synthetic record bindings": "747-839",
+   "22.4 per-scenario embeddings RULE2-01..03": "840-855",
+   "22.5 per-scenario embeddings RULE2-04..06": "857-880",
+   "22.6 per-scenario embeddings RULE2-07..08": "882-894",
+   "22.7 RULE2-01-GREEN NaN wire contract": "896-916",
+   "22.8 honest OPEN-EMBED refusals": "918-930",
+   "v1.5 change log": "932-966"
+  }
+ },
+ "repository_evidence_identity": {
+  "worktree": "C:\\WFMERGE54",
+  "head_commit": "108ea066a710ff7ef5c09246903fe3d523da1d56",
+  "mtc_v2_core_tree_oid": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
+  "verification": "read-only git rev-parse HEAD and git rev-parse HEAD:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core, run this session; both match the design premise at P012_FRESH_DESIGN_V1.md:5. No git mutation was performed."
+ },
+ "catalog_conservation": {
+  "red_scenarios": 9,
+  "green_scenarios": 8,
+  "probe_rows": 10,
+  "catalog_rows_total": 27,
+  "expected_artifacts_authored": 17,
+  "recount_authority": "re-counted from the v1.4 design itself: sections 7-14 declared RED/GREEN/probe rows, plus P012_FRESH_DESIGN_V1.md:454 (the additional RULE2-06-EQUAL-PRICE-RED row) and :541-:542 (nine RED, eight GREEN)."
+ },
+ "files": [
+  {
+   "path": "DERIVATIONS.md",
+   "sha256": "8affc78608e194437f1338c363d5b188c5394a6dc2015614739e393094440682",
+   "bytes": 104780
+  },
+  {
+   "path": "scenario_catalog.json",
+   "sha256": "32ae4f71e918fa4b3d78f5e9e4b1a33e062967542221db7ed7a1d99725d7e817",
+   "bytes": 40893
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
+   "sha256": "9e62bfb19396cab3c32f9dc2f8e574aa0b7251ee5429e3467bea9d6aa6d59f71",
+   "bytes": 8075
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-01-RED.json",
+   "sha256": "2f51eeb624349302ec022bf51c4c6df8c9d84968e656f43f91a21e5a5d70acef",
+   "bytes": 7953
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-02-GREEN.json",
+   "sha256": "6cc43be7a9d6bdb9d688f2f59eb5915a9d114a4f41ba5536adc6aae3fb78f9ab",
+   "bytes": 7494
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-02-RED.json",
+   "sha256": "78a0548c78006e212583199afe071659f51ddc0727b5e36c81d1b3d12f1760cf",
+   "bytes": 5731
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-03-GREEN.json",
+   "sha256": "56556f1249ac53cc91648276d165051b4b86800903b82700d4b7834a2b81c6c7",
+   "bytes": 6416
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-03-RED.json",
+   "sha256": "16be193e0b80f3c712bfea4662db3c9c909e6909ed933c506384dd801df839f0",
+   "bytes": 6568
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-04-GREEN.json",
+   "sha256": "c2298b361a05f437a5c4dd94be8f282588bc654311238e45cd886aaba4d6a4c2",
+   "bytes": 8147
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-04-RED.json",
+   "sha256": "bdf4ac15118e0235610191d325e31a1eddd2a3698a0faffe5ae28bc2e70cf2ab",
+   "bytes": 11857
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-05-GREEN.json",
+   "sha256": "fb3bafd0c4b191808e2d30b8cdde46fa5c41d077f3a04a5082ae5bda4cb2ee94",
+   "bytes": 7179
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-05-RED.json",
+   "sha256": "2d080191481faf037f0a02d56c56a2f1147ac2ee45cacf84d31ee103616bef4a",
+   "bytes": 8253
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+   "sha256": "f6689dc3b97c6bbb02de11b6a05df20b5f0bc717d7b46476a3baea678e764f28",
+   "bytes": 14486
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-06-GREEN.json",
+   "sha256": "b2d850d8608be57d3917729bec745175e355bb424696a1c4d32265ec98901bc4",
+   "bytes": 11167
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-06-RED.json",
+   "sha256": "5f0773df5803f11c7b4d5fb9dae2ef5ee22c1f48c647953bcd05fae09ed0eb3a",
+   "bytes": 12791
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-07-GREEN.json",
+   "sha256": "b77753d27a2d2d1876aa93c48b61bcaf49b2c4d88587809b405e3b58a163bbc3",
+   "bytes": 6598
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-07-RED.json",
+   "sha256": "094b15c3eef68e276388892debabbbe84b9e2c97f927514ee5cf75049d756c4e",
+   "bytes": 11985
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
+   "sha256": "078295244d769f86613c08b66960200da3d8aa83ad12eda8572779e47c034834",
+   "bytes": 8212
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-08-RED.json",
+   "sha256": "b589eec4ad96ab1ce3bba8f73d59a7904702af457bbd200b14c44c7e13dedb75",
+   "bytes": 10211
+  }
+ ],
+ "byte_discipline": "Every file above is UTF-8 with no BOM, LF line endings and a required final LF, per P012_FRESH_DESIGN_V1.md:480. Every JSON file parses with duplicate-key rejection and contains no non-finite number token. Re-verified by lane W156 over the 18 JSON files it revised or re-read (17 golden artifacts plus scenario_catalog.json): each file was byte-inspected for BOM, CR and final LF, parsed, checked for bare NaN/Infinity/undefined tokens outside string literals, and checked for duplicate keys by comparing the raw key-token count with the parsed property count (equal in every file).",
+ "blocked_cell_markers": {
+  "BLOCKED-ON-OPEN-nn": "ZERO cells. All ten section-19 OPEN rows carry an owner-approved APPLICABLE disposition in C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT.json (draft_revision 3), so no expected value in this bundle is blocked on an owner decision. The five design v1.5 [OPEN-EMBED-01..05] refusals are likewise closed by owner addendum 20; see owner_addendum_20_source.",
+  "BLOCKED-MISSING-SCENARIO-INPUT": "the declared synthetic vector omits an input the cell needs (design gap). After the design v1.5 revision exactly ONE such cell remains in the bundle: RULE2-08-GREEN /observation_window/end_timestamp. Zero remain on either expected surface of any artifact.",
+  "BLOCKED-MISSING-RECORD-BYTES": "the cell is a digest of a synthetic frozen test record whose exact bytes still do not exist. Design v1.5 sections 22.1 and 22.3 (:697-700, :747-839) now bind every record member VALUE and every record id, but they fix only sorted keys, no BOM, LF, final LF, duplicate-key refusal and finite tokens - not the separator or indentation width - and :758-761 expressly refuses to fabricate the provenance captured_at_utc and human_reviewer members. The hashed byte string is therefore still undetermined, and :697-700 keeps digests MECHANICAL build artifacts. P012_FRESH_DESIGN_V1.md:124 additionally forbids substituting the answered production record. See DERIVATIONS.md discrepancy V15-D05.",
+  "BLOCKED-DESIGN-UNENUMERATED": "the design names the member but fixes no node set for it (metrics; the complete decision_events reason vocabulary).",
+  "BLOCKED-BUILD-ARTIFACT": "a path or digest that only exists after the Gate-2 build (serialized scenario-input files, probe kernel-variant trees, KERNEL_FILE_PATCH files, observed outputs)."
+ },
+ "open_item_applicability_source": {
+  "path": "C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT.json",
+  "draft_revision": 3,
+  "status": "DRAFT staged in C:\\tmp; the build lane places it at tests/corrected_vnext/contracts/open_item_applicability.json. Design precondition 21.2 requires the placed, owner-approved file. Rows cited by this bundle are recorded per artifact in open_item_bindings.",
+  "rows_cited": [
+   "OPEN-02",
+   "OPEN-05",
+   "OPEN-06",
+   "OPEN-09",
+   "OPEN-10"
+  ],
+  "unresolved_conflict": "OPEN-02 answers STOP_FIRST as the mandatory same-bar policy, while P012_FRESH_DESIGN_V1.md:343 declares TARGET_FIRST as an explicit input of RULE2-06-RED and RULE2-06-EQUAL-PRICE-RED and :331 forbids OPEN-06 closure from silently rewriting that pair. This bundle seals the design's TARGET_FIRST and referred the conflict to the owner. RESOLVED by owner addendum 18 (C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:329-334, owner verbatim 'RECOMMENDED: keep the two test cases as designed'): D-12 is closed as option (a), the two synthetic RULE2-06 test cases keep their design-declared TARGET_FIRST input, and STOP_FIRST remains mandatory for acceptance-bearing production runs only. No sealed value changed."
+ },
+ "owner_addendum_20_source": {
+  "path": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md",
+  "lines": "337-348",
+  "addendum": 20,
+  "item": 49,
+  "owner_verbatim": "1a 2a 3a 4a 5a",
+  "status": "Owner-approved decision text read this session. It closes the five design v1.5 [OPEN-EMBED] refusals at P012_FRESH_DESIGN_V1.md:918-930. These are test-only values under design section 5's synthetic-vector rule; production records remain governed by addenda 15-17 evidence packages.",
+  "rows_cited": [
+   "OPEN-EMBED-01",
+   "OPEN-EMBED-02",
+   "OPEN-EMBED-03",
+   "OPEN-EMBED-04",
+   "OPEN-EMBED-05"
+  ],
+  "effect": "1a binds omitted initial equity 1000 for RULE2-03/04/05/06; 2a binds RULE2-04 entry basis and fill 100 via the design 22.5 candidate entry/BE path; 3a rules the RULE2-06-EQUAL-PRICE target book corrected-machinery-only and records that row as not runnable on legacy for that book; 4a binds the RULE2-08-RED pre-event entry basis and fill 100; 5a builds the RULE2-08-GREEN closed lifecycle from ordinary pre-window bars. Cells filled per row are listed in each artifact's v15_filled_cells array and derived in DERIVATIONS.md section 'v1.5 revision'."
+ },
+ "revision_history": [
+  {
+   "revision": "W156 design-v1.5 revision, 2026-08-31",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W156_TABLES_REVISION_V15.md",
+   "report": "C:\\tmp\\LANE_PROMPTS_20260828\\W156_TABLES_REVISION_REPORT.md",
+   "files_revised": [
+    "DERIVATIONS.md",
+    "scenario_catalog.json",
+    "all 17 files under golden/corrected_vnext/"
+   ],
+   "manifest_fields_updated_by_this_lane": [
+    "files[].sha256 and files[].bytes for every revised file",
+    "design.version, design.total_lines, design.line_span_used and design.line_spans_by_section (v1.5 spans added; the three stale v1.4 spans for section 16, section 19 and the v1.4 change log corrected by the uniform +28 shift that section 15.6's insertion produced, each re-verified against the v1.5 headings)",
+    "byte_discipline (re-verification statement)",
+    "blocked_cell_markers.BLOCKED-ON-OPEN-nn, .BLOCKED-MISSING-SCENARIO-INPUT and .BLOCKED-MISSING-RECORD-BYTES descriptions",
+    "open_item_applicability_source.unresolved_conflict (D-12 recorded as owner-resolved by addendum 18)",
+    "owner_addendum_20_source (new)",
+    "section_16_review.statement and claim_limits (stale v1.4 line citations corrected to their verified v1.5 lines)",
+    "revision_history (new)"
+   ],
+   "not_touched_by_this_lane": [
+    "seal_state (still carries the pre-revision EXPECTED_SEAL_SHA)",
+    "seal (still carries the pre-revision EXPECTED_SEAL_SHA)",
+    "IMPLEMENTATION_ANCHOR_DRAFT.json",
+    "every catalog input.path and input.digest field",
+    "any repository path, the driver, or W152's directories"
+   ],
+   "seal_notice": "STALE SEAL. seal_state.EXPECTED_SEAL_SHA and seal.EXPECTED_SEAL_SHA still name the pre-revision content and were deliberately left untouched for the Lead to re-seal and re-accept. Do not treat them as covering the revised bytes recorded in files[] above."
+  }
+ ],
+ "seal_state": {
+  "EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+  "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
+  "reason": "Sealed by the Lead. Original W127b seal dd4a0401... covered the catalog with honest BLOCKED-BUILD-ARTIFACT input markers; this re-seal follows the owner-1a addendum-19 chain: design v1.5 embeddings, W156 tables revision (if its deltas appear in reseal_history.disk_deltas), W152B input materialization, Lead digest-pin under two-party agreement, and the version-shaped surface_schema_id completion per design 15.3. All files[] digests re-measured from disk at seal time. W150B discrepancy D-2 (stale reason) cleared."
+ },
+ "section_16_review": {
+  "status": "PENDING",
+  "statement": "The mandatory SEMANTIC_COVERAGE_REVIEW required by P012_FRESH_DESIGN_V1.md:579-590 has NOT been performed and is REQUIRED BEFORE BUILD ACCEPTANCE. It is owner-held human review. This lane neither claims nor performs it, and the claude family is excluded from the section-16 reviewer role because it authored these tables (owner ruling Q3a). BCEG-1 refuses acceptance without a separately authored semantic_coverage_review.json (design :580).",
+  "reviewer_independence_constraint": "The reviewer must be independent from the kernel implementer (Codex family) AND from the CONTRACT_TABLES author (claude family)."
+ },
+ "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
+ "seal": {
+  "EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+  "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
+  "set_by": "Lead re-seal act 2026-08-31T21:09:30+03:00 (see reseal_history); prior seal by Lead anchor-acceptance act 2026-08-31 afternoon"
+ },
+ "reseal_history": [
+  {
+   "at": "2026-08-31T21:09:30+03:00",
+   "actor": "Lead (claude-fable-5)",
+   "old_EXPECTED_SEAL_SHA": "dd4a0401b46c5663ab4a9d0297fe0e1679b0ccfeb72f803234a2cebd123d3115",
+   "new_EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+   "old_catalog_sha256": "2514d9de0acd24a9e1144c75a3abb11702f7a62edb933b34689254427c5462f1",
+   "new_catalog_sha256": "32ae4f71e918fa4b3d78f5e9e4b1a33e062967542221db7ed7a1d99725d7e817",
+   "catalog_changes": [
+    "17x input.digest pinned (two-party agreement with W152B inventory)",
+    "17x surface_schema_id: CORRECTED_V2 -> version-shaped map per design 15.3",
+    "whole-file canonical re-serialization (content preservation parse-verified)"
+   ],
+   "disk_deltas_absorbed": [
+    {
+     "path": "scenario_catalog.json",
+     "old_sha12": "2514d9de0acd",
+     "new_sha12": "32ae4f71e918"
+    }
+   ],
+   "golden_files_changed_measured": 0,
+   "inputs_pinned": 17
+  }
+ ]
+}

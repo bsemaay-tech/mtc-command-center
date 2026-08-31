@@ -1,0 +1,70 @@
+{
+  "scenario_id": "RULE2-03-GREEN",
+  "owning_def_ids": ["DEF-P012-03"],
+  "role": "GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.5",
+    "design_lines": "247-263; 676-745; 747-839; 855",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "3. DEF-P012-03 / RULE2-03-GREEN",
+    "worksheet_section_v15": "v1.5 revision / RULE2-03-GREEN"
+  },
+  "open_item_bindings": [
+    {"open_id": "OPEN-EMBED-01", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (1a) - omitted initial equity is 1000 for the RULE2-03, RULE2-04, RULE2-05 and RULE2-06 families", "effect_on_this_scenario": "design 22.4:855 leaves initial_capital as [OPEN-EMBED-01] and design 15.6:563 lists this row's equity-curve nodes as blocked pending that answer. With 1000 bound, and with one NO_ACTION100 bar that emits no signal and no cash event, equity_curve = {first: 1000, last: 1000} is derivable on both versions."}
+  ],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "INSTRUMENT_RECORD_VALIDATED", "field": "price_tick", "record_value": 0.5, "runtime_value": 0.5}
+    ],
+    "fill_events": [],
+    "cash_events": [],
+    "fee_events": [],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": null,
+    "trades": [],
+    "equity_curve": {"first": 1000, "last": 1000},
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-03-GREEN-V1",
+      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-03-GREEN-V1",
+      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-03-GREEN-V1",
+      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+    }
+  },
+  "tick_identity_derivation": "Design 9:259 and 22.4:855 - the frozen InstrumentRecord overrides the section-22.3 default price_tick 0.01 to 0.5 and the LEGACY runtime carries the same 0.5, with every other runtime instrument field equal to the record. Identity validates and no override refusal is raised. The consumed price_tick 0.5 is a binary64 float node, exact form F:0x1.0000000000000p-1.",
+  "v15_filled_cells": [
+    {"pointer": "/RESULT_SURFACE/equity_curve", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "{first: 1000, last: 1000}", "authority": "owner addendum 20 item 49 (1a) binds initial_capital 1000; design 22.4:855 supplies one NO_ACTION100 bar that emits no raw signal (design 22.2:733, :743-745), so no cash event exists and equity is untouched."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-03-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-COST-RULE2-03-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-03-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."}
+  ],
+  "cross_version_note": "This GREEN row has no fill, so the universal section-22.3 CostSchedule creates no fee and no corrected-versus-legacy equity split. Equity 1000 is equal on both versions; the declared projection remains identity validated, no override refusal, price_tick 0.5 consumed identically (discrepancy D-02, thin GREEN, still stands).",
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
+    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+  ],
+  "derivable_empty_containers_note": "all five economic containers are derivably empty: design 22.4:855 supplies one NO_ACTION100 bar, and design 22.2:733 plus :743-745 state that a first Range Filter call only initializes its line and cannot emit an entry for any finite constant OHLC. No fill therefore exists to carry a fee (design 3:100), and the row's schedule contains no in-window funding event (design 22.3:813-829)."
+}
