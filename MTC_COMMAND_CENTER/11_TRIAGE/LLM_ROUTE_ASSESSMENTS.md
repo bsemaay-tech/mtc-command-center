@@ -4,6 +4,37 @@ Standing owner rule (2026-08-30, addendum 6 item 16): every session appends its 
 route/model assessment here, newest first. Grades are evidence-based (lane outcomes in that
 session's time log), never vibes. This file accumulates route knowledge across sessions.
 
+## 2026-08-31 DAY session (09:00 -> ~18:00, Lead: claude-fable-5) — measured route assessment
+
+- **Codex x4 (gpt-5.6-sol):** workhorse again — ~35 lanes (folds, censuses, Gate-2 plan, drivers,
+  hours tables). NEW failure mode: "Selected model is at capacity" — 6 deaths across all 4 accounts
+  at 5.7K-137K tokens, transient, straight relaunch recovered every time (one salvage check needed:
+  W125b relaunch nearly double-folded; original died pre-edit). Quality high: fresh-eyes censuses
+  N99/N100/N101 found 6/8/8 real findings on drafts other families passed.
+- **Claude Pro (`claude -p`):** carried A4-A9 audits + censuses + W127 tables start, then hit the
+  WEEKLY cap mid-tables (~13:14, resets Sep 2 23:00) — three lanes died (W127 partial salvaged,
+  A10/A11 cancelled). Weekly cap is a NEW planning fact: Pro is not a bottomless audit pool.
+- **Claude MAX Opus (addendum-12 fallback):** ACTIVATED for the first time — completed the sealed
+  CONTRACT_TABLES bundle (audit-partial-then-complete, 20 files) in one lane. Pool guard held;
+  Fable orchestrator unaffected. Launcher trap CONFIRMED: bare `-p` binds to -PipelineVariable;
+  MUST use `-ClaudeArguments @(...)` (was in memory; Lead re-hit it once).
+- **Grok:** 14+ detection/verify lanes, 3-parallel proven, zero deaths today, all landings real.
+  G46 found the ONE real MEDIUM on design v1.3 that Claude/Gemini/OpenCode all missed; G56 found
+  5 (1 HIGH) on the Lead's own decision file. Detection zone confirmed again.
+- **Gemini (flash-high):** 6 clean corroborations (GM21-26), 43s-fast, zero required findings on
+  all six — BUT only inside codex-quiet + git-quiet windows via dedicated scripts; one quoting
+  death (GM21 first attempt). Calibrated-contradiction briefs remain the working recipe.
+- **OpenCode Go:** star find of the day — DS21b (glm-5.3-flash) found 1 HIGH on P0-31M2 that grok+
+  codex+gemini had all passed. deepseek-v4-flash: solid (DS17-DS25 censuses) but 3 death variants
+  (out-of-cwd auto-reject; silent no-output with exit=0; one exit=1). PARALLEL CHAINS PROVEN:
+  DS23||DS24 ran concurrently (different cwds). in-cwd COPIES mandatory; print-required clause
+  added to prompts after the silent death.
+- **Launcher discipline (cost of the day):** 5 silent launch deaths traced to nested
+  Start-Process -Command quoting (gemini, opencode, ClaudeMax, W150b codex). RULE NOW ABSOLUTE:
+  EVERY dispatch goes through a dedicated .ps1 script file; no inline -Command lane launches. The
+  W150b silent death cost ~2h on the critical path because the waiter watched for the deliverable
+  instead of confirming the process/log existed at launch — waiters must verify launch within 60s.
+
 ---
 
 ## Session 2026-08-30 21:45 → 2026-08-31 (overnight, Fable orchestrator per addendum 12) — appended ~01:15, W113 kernel build in flight
