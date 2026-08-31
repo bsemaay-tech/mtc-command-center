@@ -183,3 +183,35 @@ build authorized) and answer row 6's budget question for the night.
   build lane starts only after that approval.
 - Ruling 6 is recorded as the explicit owner answer to the standing budget flag
   (model-routing ceiling); the flag remains open as a fact, closed as a question.
+
+## Addendum 14 — 2026-08-31 ~09:05 (owner verbatim answers to the P0-12 precondition package v2 + session rules)
+
+27. **P0-12 precondition rulings** (answers to
+    `11_TRIAGE/P012_BUILD_PRECONDITIONS_OWNER_DECISIONS_2026-08-31.md`, given as
+    "1a, 2a, 3a, 4a, 5a"):
+    - **Q1a:** ONE bounded design repair fold (DS15-F01 MEDIUM + DS15-F02..F05 as
+      [OPEN]-respecting text) + ONE detection re-verify round, explicitly authorized past the
+      consumed D028 cap.
+    - **Q2a:** "P0-11 accepted" MEANS the owner-signed merged package (PR #143, addendum-5
+      signature). Clarification folds into the design; the runnable legacy subject and sealed
+      baseline bytes remain precondition-3 obligations.
+    - **Q3a:** an AI lane from a non-implementer family (Claude; implementer family is Codex)
+      MAY satisfy the CONTRACT_TABLES "person other than the kernel implementer" independence
+      role, named in the ledger. Section-16 human review stays with the owner.
+    - **Q4a:** ONE bounded legacy-kernel run to freeze BASELINE_BYTES is authorized, ONLY
+      after Q3's sealed scenario catalog exists. Results frozen to files; no other execution.
+    - **Q5a:** the Lead posts the exact protected T0 kernel-path list + the Gate-2 implementer
+      plan in chat; the owner's "approved" on that message is the explicit T0 path grant and
+      Gate-2 acceptance trigger. (Not yet given as of this addendum.)
+    - **Q6:** OPEN-01..10 dispositions PENDING — plain-language one-pager (self-audited, A4
+      9/9 folded) delivered to the owner ~09:40; answers expected same day.
+28. **P0-31M1 (7a):** stays TERMINAL-PARKED at v1.4. No fresh-family redesign, no scope
+    change, no hold-review.
+29. **Wayfinder rev-12 (8a):** the FINAL_CLOSEOUT record is accepted AS RECORDED, including
+    the two stale machine fields A3 found; no rev-13 correction attempt.
+30. **BUDGET RULING (owner verbatim intent):** "subscription budget is not a problem, I pay
+    fixed subscription anyway... my goal is to increase this number not decrease it." High
+    subscription utilization is the GOAL. Never throttle subscription lanes for cost;
+    pay-as-you-go API routes remain cheapest-suitable. Supersedes the standing budget-flag
+    concern for subscription routes; the CodeBurn banner stays report-as-fact.
+31. **Session stop time:** 17:00 with full handoff + report.

@@ -1,11 +1,12 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-31T04:05:00+03:00",
-  "updated_by": "claude-fable-lead-session-2026-08-30-night",
+  "generated": "2026-08-31T10:00:00+03:00",
+  "updated_by": "claude-fable-lead-session-2026-08-31-day",
+  "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a ONE bounded design repair fold + ONE re-verify (executing); Q2a P0-11 accepted = owner-signed merged package (clarification folding); Q3a AI lane from non-implementer family (Claude) may author CONTRACT_TABLES, sec-16 human review stays with owner; Q4a ONE bounded legacy-kernel run AFTER Q3 catalog sealed; Q5a path list + Gate-2 plan posted today, owner word 'approved' grants; Q6 OPEN-01..10 one-pager delivered to owner, answers pending. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: subscription usage is to be MAXIMIZED, never throttled for cost; stop time 17:00.",
   "session_time_report": {
     "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
-    "session_span": "2026-08-30 21:45 -> 2026-08-31 ~04:05 (overnight; ~50 lanes; detailed spans in HOURS_AND_COST_2026-08-30_NIGHT.md)",
+    "session_span": "2026-08-31 09:00 -> in progress (day session; waves 1-2 = 15 lanes by 10:00; night detail in HOURS_AND_COST_2026-08-30_NIGHT.md)",
     "per_package_spans": {
       "WP-P0-12-FRESH-CHAIN": "21:55 -> 01:15 (design W93b -> 3 audit rounds x 4 families -> 2 repair rounds -> build lane honest BLOCK on 5 preconditions)",
       "DRAFT-FLEET": "21:55 -> 04:00 (9 drafts through fold-verify cycles to convergence; P0-31M1 terminal-parked by pre-written rule; P0-31M2 fresh-designed, folded twice, converged)",
@@ -132,7 +133,7 @@
       "commit": "-",
       "detail": "HISTORY: the Claude-family design was FINAL PARKED at v1.8 after ten rounds (record: P012_BUILD_DESIGN_V1.md + DETECT_N82_P012_V18.md). CURRENT: owner addendum 13 authorized a fresh design by a different family - Codex delivered P012_FRESH_DESIGN_V1.md tonight (22:38), now at v1.2 after two repair rounds under a pre-written D028 cap of 3. The grid-fitting class that killed the old design is STRUCTURALLY ABSENT per all four audit families, twice.",
       "owner_gate": false,
-      "next_action": "HONEST TERMINAL STATE (02:00): round-3 verdicts - Claude flagship P46 PASS-WITH-NITS + Grok G37 zero + Gemini GM17 zero, but 4th-family OpenCode DS15 NOT CLEAN (1 MEDIUM probe/scenario incoherence + 4 LOW), so the design is STRONG, NOT UNANIMOUS. The build lane W113 then BLOCKED itself before writing any line: the design's own FIVE preconditions are unmet (P0-11 legacy subject + baseline bytes never produced; ten OPEN owner values undispositioned; independent expected-author + sealed anchor absent; explicit T0 path approval + Gate-2 plan not in place). Branch feature/wp-p0-12-corrected-vnext-20260831 parked CLEAN, zero commits. Owner decision package (audited v2, A2 9/9 folded): 11_TRIAGE/P012_BUILD_PRECONDITIONS_OWNER_DECISIONS_2026-08-31.md - six numbered questions with defaults and stated dependencies."
+      "next_action": "DAY 08-31: owner ANSWERED Q1-Q5 (all recommended defaults) + Q7/Q8; Q6 (ten OPEN values) one-pager delivered (audited v2, A4 9/9 folded), answers pending. EXECUTING: W120 owner-authorized repair fold r4 (DS15-F01..F05 + Q2a clarification) -> v1.3, then the ONE authorized re-verify round (P47 claude + G46 grok + GM21 gemini + DS18 opencode, pre-staged); W121 drafted the Gate-2 plan + exact T0 path list (A5 audit running) for the owner's 'approved'; W126 drafting the OPEN-06 retained/retired proposal (PROVISIONAL). Then: Claude authors CONTRACT_TABLES (Q3a), ONE legacy baseline run (Q4a), build starts only on owner 'approved' + Q6 answers. Branch still CLEAN, zero commits."
     },
     {
       "id": "WP-P0-20",
@@ -152,7 +153,7 @@
       "commit": "-",
       "detail": "Draft hardened to v1.2 through two full audit-fold cycles (G18 -> W64 fold; P34+N70+DS7 -> W77 fold) and verified by N81 (1 MEDIUM fresh drift, banked). PROVISIONAL-ON-P020 labeled. BUILD stays gated on WP-P0-20 acceptance per the serial chain.",
       "owner_gate": false,
-      "next_action": "CONVERGED tonight: N81 fold applied (interrupted 21:55 pass completed by W94b at 23:08 -> v1.3); independent Grok census G32 = NOT DETECTED, zero findings; DS12 different-family review items were against the mid-fold state and closed by the completion. Parked warm at v1.3."
+      "next_action": "DAY 08-31: fresh census G42 found 2 MEDIUM on v1.3 (DuckDB schema-fingerprint check does not name both producers; has_full_artifacts=false has no named producer/failing input) - fold W124 -> v1.4 running, verify after."
     },
     {
       "id": "WP-P0-21",
@@ -162,7 +163,7 @@
       "commit": "-",
       "detail": "Draft at v1.1 (G19 detection -> W65 fold), PROVISIONAL-ON-P012 labeled. BUILD gated on WP-P0-12 acceptance - and P0-12's design is FINAL PARKED, so this waits on the owner's P0-12 decision.",
       "owner_gate": false,
-      "next_action": "CONVERGED at v1.3: fold W108 (10/10 DS11); verify pair BOTH clean - Gemini GM15 zero findings + Claude N92b zero findings (replacement after the codex verifier quota-died). Parked warm."
+      "next_action": "DAY 08-31: morning-sweep G40 LOW (current-contract UTC overclaim) folded by W123 -> v1.4 (narrowed to the real timezone-awareness predicate, source-verified vs admission.py/base.py); Grok fold-verify G45 running."
     },
     {
       "id": "WP-P0-22",
@@ -172,7 +173,7 @@
       "commit": "-",
       "detail": "Draft at v1.4 after three cycles tonight (G28+GM12 -> W101 fold v1.3 -> N86 verify -> W109 label fold v1.4), PROVISIONAL-ON-P013 labeled. BUILD gated on WP-P0-13 acceptance.",
       "owner_gate": false,
-      "next_action": "CONVERGED at v1.4: G28-F01 (Lead-verified three-way incoherence) folded by W101 (whole-window fail-closed option, matches plan A-7d); verify N86 found 1 residual LOW (RUNNABLE-NOW label overclaim); W109 folded it plus one same-shape instance found by sweep (b1 + b4). Parked warm."
+      "next_action": "DAY 08-31: morning-sweep N96 LOW (evidence-completeness) folded by W122 -> v1.5 (minimality statement now cites the retained v1.3->v1.4 diff); Grok fold-verify G44 running."
     },
     {
       "id": "WP-P0-31-M1",
@@ -182,7 +183,7 @@
       "commit": "-",
       "detail": "M1 draft went through FIVE fold-verify cycles tonight (v1.1 -> v1.4): promise-class defects GREW across cycles (1 -> 2 -> 3 HIGH), so the Lead pre-wrote a stopping rule before the last verdict. W106 SUBTRACTIVE-ONLY fold produced v1.4; terminal verify N90 still found 3 HIGH (unexecutable promises on the one record path the draft labels unblocked) -> TERMINAL VERDICT: PARK, executed exactly as pre-written. DETECT_N90_P031M1_V14.md holds the surviving findings.",
       "owner_gate": true,
-      "next_action": "M1 PARKED at v1.4 for the owner morning report (typed-record gate kept re-growing unexecutable promises through five cycles; options: fresh-family design, narrower scope, or hold). SEPARATELY, the Milestone-2 (SEED_IMPORT) design was authored fresh tonight (W83b), went through two full fold-verify cycles (G38+N94 -> W115; N95 -> W116), and the Grok terminal verify G39 returned TERMINAL VERDICT: CONVERGED - M2 parks WARM at v1.2 (PROVISIONAL on the M1 park resolution and P0-13; 13+ OPEN blockers honestly listed)."
+      "next_action": "OWNER RULED 08-31 morning (7a): M1 STAYS PARKED at v1.4 - no fresh-family redesign, no scope change. SEPARATELY, the Milestone-2 (SEED_IMPORT) design was authored fresh tonight (W83b), went through two full fold-verify cycles (G38+N94 -> W115; N95 -> W116), and the Grok terminal verify G39 returned TERMINAL VERDICT: CONVERGED - M2 parks WARM at v1.2 (PROVISIONAL on the M1 park resolution and P0-13; 13+ OPEN blockers honestly listed)."
     },
     {
       "id": "WP-P0-14",
@@ -192,7 +193,7 @@
       "commit": "-",
       "detail": "Draft v1 delivered (W58, P014_DESIGN_DRAFT_V1.md) + G21 detection round (6 findings banked, unfolded), PROVISIONAL on P0-13 and P0-31-M1. Design only; BUILD waits for both dependencies + G1-IA.",
       "owner_gate": false,
-      "next_action": "DONE tonight: fold W95 landed 22:01 - G23 census had ZERO findings and all six G21 findings were already folded at v1.1, so v1.2 is a change-log-only census record (no normative change; separate verify skipped with that reason). Parked warm."
+      "next_action": "DAY 08-31: fresh census G43 found 2 on v1.2 (test_writer_gate.py cited beyond what it proves; falsification probes a-e have failing input only for rule a) - fold W125 -> v1.3 running, verify after."
     },
     {
       "id": "PROMOTION-DECISION",
@@ -222,7 +223,7 @@
       "commit": "-",
       "detail": "First V2A-stage artifact: loader design draft v1 (W67) + G22 detection round (findings banked). BUILD gated on Phase-0 acceptance + G1-IA + WP-P0-31 M1.",
       "owner_gate": false,
-      "next_action": "CONVERGED tonight: fold to v1.2 (W97b) verified by independent Grok census G33 = NOT DETECTED, zero findings. Parked warm at v1.2."
+      "next_action": "DAY 08-31: fourth-family OpenCode census DS17b running on v1.2 (first attempt died on the known launcher quoting trap; relaunched via dedicated script)."
     },
     {
       "id": "WP-V2A-02",
