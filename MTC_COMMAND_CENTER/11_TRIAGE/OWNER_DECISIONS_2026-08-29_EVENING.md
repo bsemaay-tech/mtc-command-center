@@ -299,3 +299,13 @@ Lead act recorded with this addendum: **Gate-2 ACCEPTED by the Lead** (implement
 A5 audit folded + A7 re-check zero findings; acceptance checklist adopted). Chain now:
 micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applicability.json
 + sealed bundle -> ONE legacy baseline run (Q4a) -> kernel build on the granted paths.
+
+## Addendum 17 — 2026-08-31 ~15:05 (owner verbatim: "include")
+
+46. **OPEN-05 same-timestamp snapshot eligibility = INCLUDE.** A position whose fill lands at
+    the exact funding-payment timestamp COUNTS for that payment (`position_snapshot_rule`
+    same-timestamp choice). This closes the one residual the decision-file audit (G56-F02)
+    surfaced: the venue text is silent; this is the owner's economic ruling, distinct from
+    the design's deterministic row-order rule (which orders already-eligible events only).
+    Funding scenarios with a boundary-timestamp fill are now buildable; the RED/GREEN
+    fixture for the boundary case is a build obligation under this rule.
