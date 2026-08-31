@@ -254,3 +254,48 @@ Lead note: rows 32-35 + 38 are decision-complete (evidence = this record; fixtur
 build obligations). Rows 36-37/39-41 are decision-named with evidence packages in
 preparation; each closes only on the owner's later approval of its prepared package. All ten
 transcriptions go verbatim into `open_item_applicability.json` at build start under Gate 2.
+
+## Addendum 16 — 2026-08-31 ~13:05 (owner verbatim: "all approved, fees a, design a, retain all.")
+
+Given in reply to the Lead's consolidated ask (venue bundle post + pending-words list, whose
+stated composite example this reply exactly follows). Interpretations recorded with the ask's
+own definitions:
+
+42. **"all approved"** closes/grants:
+    - **OPEN-01 CLOSED:** InstrumentRecord candidate v1.3 APPROVED (Hyperliquid linear perp
+      BTC; min_notional $10 verbatim; step 0.00001 derived; price rule verbatim; remaining
+      honest opens: minimum_quantity none-published, §16 human review at build acceptance).
+      Evidence: `P012_OPEN01_INSTRUMENT_RECORD_V1.md` v1.3 + candidate JSON + frozen-bytes
+      manifest (5 fetches, digests).
+    - **OPEN-05 CLOSED:** funding rules v1 APPROVED (hourly 1/8 of 8h rate; spot oracle
+      price; snapshot at interval end; positive rate = longs pay shorts).
+    - **OPEN-07 CLOSED:** Bridge v6 funding-ledger mapping v1.1 APPROVED as the field-by-field
+      closure evidence; the 16/18 unmapped fields and the deployed-v4 non-materialization are
+      RECORDED INTEGRATION OBLIGATIONS, not silently waived.
+    - **T0 BUILD-PATH GRANT GIVEN:** the owner's "approved" applies to the posted, A7-cleared
+      Gate-2 plan v2 path list (`P012_GATE2_PLAN_AND_PATHLIST_V1.md` v2): protected T0 write
+      authority for the listed kernel paths only, subject to the remaining preconditions and
+      Lead Gate-2 acceptance; no out-of-list file, no git/merge/deploy/venue/trading authority.
+43. **"fees a" — OPEN-03 CLOSED:** fee table v1.1 APPROVED with option (a): stop-triggered
+    entries use Stop Market semantics (taker). Proposed role mapping adopted: market
+    entries/exits = taker; TP/SL = taker (venue text: automatically market orders); base
+    tier-0 schedule (perps taker 0.045%/maker 0.015%) with tier/staking alternatives
+    transcribed.
+44. **"design a" — residual disposition:** ONE bounded micro-fold authorized, scope EXACTLY
+    G46-F01 (KERNEL-probe conservation, minimal correction as stated in
+    `DETECT_G46_P012_V13.md`) + DS18-F01 (tie-break coverage) + P47-F01 (carry-forward LOW
+    nit), followed by ONE terminal detection pass (Grok + Gemini). No further design work
+    without new owner word.
+45. **"retain all" — OPEN-06 CLOSED (dispositions):** every `[OWNER CHOICE]` row of
+    `P012_OPEN06_RETAINED_RETIRED_PROPOSAL_V1.md` v2 is RETAIN (P01, P02, P03, P05, P06,
+    P07, P08, P09, P10, P11, P12, P13, P14, P15, P16, P17, P18, P24, P25, P26). Mechanically
+    forced rows stand as recorded: P04 RETIRE (pre-final-fill construction), P19 RETIRE
+    (close-triggered stop) under the approved always-active-stop correction, P20 RETAIN
+    (gap/intrabar stop mechanism), P21 RETIRE (implicit collision policy). P22 = explicit
+    STOP_FIRST (owner's OPEN-02 word). P23 recorded not-applicable-under-STOP_FIRST. Every
+    row's migration fixture is a build obligation.
+
+Lead act recorded with this addendum: **Gate-2 ACCEPTED by the Lead** (implementer plan v2,
+A5 audit folded + A7 re-check zero findings; acceptance checklist adopted). Chain now:
+micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applicability.json
++ sealed bundle -> ONE legacy baseline run (Q4a) -> kernel build on the granted paths.
