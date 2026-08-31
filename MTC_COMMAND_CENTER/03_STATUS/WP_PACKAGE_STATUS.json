@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-31T17:35:00+03:00",
-  "updated_by": "claude-fable-lead-session-2026-08-31-day (generated = time of THIS push; W139-F03 fix)",
+  "generated": "2026-08-31T18:25:00+03:00",
+  "updated_by": "claude-fable-lead-session-2026-08-31-evening (generated = time of THIS push)",
   "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a-Q5a answered (recommended defaults; addendum 14). OPEN-01..10: owner gave all ten initial dispositions (addendum 15) - rows 02/08/09/10/04 decision-complete; rows 01/03/05/06/07 are decision-NAMED with evidence packages prepared, each CLOSES only on the owner's later approval of its package. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: maximize subscription usage; stop 17:00. Still owed by owner: 'approved' on the path list, a/b/c on the design residual, OPEN-06 row dispositions, evidence-package approvals. AFTERNOON (addendum 16, verbatim 'all approved, fees a, design a, retain all.'): ALL TEN OPEN rows CLOSED (bundle approvals incl. fees option-a stop-market); T0 BUILD-PATH GRANT GIVEN on Gate-2 plan v2 + Lead Gate-2 acceptance; design micro-fold authorized and EXECUTED -> v1.4 SEALED (terminal pass G55 zero + GM24 zero); OPEN-06 retain-all recorded with fixture obligations. LATE AFTERNOON: addendum 17 (same-timestamp funding = INCLUDE) + addendum 18 (D-12: keep the two TARGET_FIRST test cases as designed; STOP_FIRST stays the production rule). Session extended past 17:00 by owner word to finish the baseline seal + close-out.",
   "session_time_report": {
     "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
@@ -128,12 +128,12 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "BUILD_PRECONDITIONS_4_OF_5_DONE_BASELINE_SEALING",
-      "branch": "-",
-      "commit": "-",
-      "detail": "Design v1.4 sealed (terminal dual-zero). CONTRACT_TABLES COMPLETE + SEALED (Opus W127b: catalog + 17 golden + derivations + manifest, 19 digests independently re-verified; D-12 resolved by owner addendum 18). Lead anchor act done: EXPECTED_SEAL_SHA dd4a0401..., IMPLEMENTATION_BASE_SHA 108ea066, authorized-path list recorded. All ten OPEN rows closed (applicability draft rev-3, G56-audited, 5/5 folded). Gate-2 accepted; T0 grant given.",
+      "state": "BUILD_PHASE_1_RUNNING",
+      "branch": "feature/wp-p0-12-corrected-vnext-20260831",
+      "commit": "108ea066 (base; zero build commits yet)",
+      "detail": "Owner word 'start the build' 18:04. W152 (codex xhigh) materializing the 17 serialized scenario-input files from design v1.4 prose onto catalog-bound evidence paths. Lead found and staged repairs for FOUR sealed-catalog/driver incompatibilities (W150B F-1 digests + F-2 legacy schema binding + version-key spelling + OUT-OF-LANE duplicate-path trip): catalog gets only digest-pin + version-shaped schema map; driver (unsealed harness) learned the catalog's honest markers (3 bounded edits, compiles, new sha 29bb82ea...). Re-seal script staged. Baseline run budget still UNCONSUMED.",
       "owner_gate": false,
-      "next_action": "W150b - THE owner-authorized baseline run - executing (prior lane fail-closed correctly on the unset seal identities; two silent launcher deaths cost ~2h, recorded). On seal: build is 100% staged for next session start."
+      "next_action": "W152 lands -> Lead digest-pin + re-seal + anchor re-acceptance -> dry-run -> W153 THE ONE authorized baseline run (Q4a) -> kernel edits (Codex implementer family) per Gate-2 interaction plan -> 4-family build audits -> PR. Owner act remaining: sec-16 human review at build acceptance."
     },
     {
       "id": "WP-P0-20",
