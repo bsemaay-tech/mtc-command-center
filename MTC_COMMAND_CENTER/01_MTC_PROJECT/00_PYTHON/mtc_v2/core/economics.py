@@ -78,6 +78,7 @@ class EconomicIntent:
     requested_quantity: float | None = None
     stop_price: float | None = None
     stop_percent: float | None = None
+    stop_distance: float | None = None
     risk_pct: float = 0.0
     fallback_size_pct: float = 0.0
     max_leverage_cap: float = 1.0
@@ -110,6 +111,12 @@ class EconomicState:
     equity: float = 0.0
     cumulative_funding: float = 0.0
     applied_funding_event_ids: frozenset[str] = frozenset()
+    next_lifecycle_id: int = 1
+    next_decision_sequence: int = 0
+    next_fill_sequence: int = 0
+    next_cash_sequence: int = 0
+    next_fee_sequence: int = 0
+    next_funding_sequence: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -498,6 +505,20 @@ def _entry_stop(
 ) -> float | None:
     if intent.stop_price is not None:
         return intent.stop_price
+    if intent.stop_distance is not None:
+        distance = float(intent.stop_distance)
+        if not math.isfinite(distance) or distance <= 0.0:
+            raise EconomicsRefusal(
+                REFUSED_ECONOMIC_INPUT,
+                "stop_distance must be positive and finite",
+            )
+        if intent.position_side == "LONG":
+            return instrument.floor_price(entry_fill - distance)
+        if intent.position_side == "SHORT":
+            return instrument.ceil_price(entry_fill + distance)
+        raise EconomicsRefusal(
+            REFUSED_ECONOMIC_INPUT, "entry stop requires position side"
+        )
     if intent.stop_percent is None:
         return None
     percent = float(intent.stop_percent)
@@ -575,7 +596,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             market_event.timestamp, records.runtime_instrument_config or {}
         )
         validated = DecisionEvent(
-            sequence=0,
+            sequence=state.next_decision_sequence,
             event_timestamp=market_event.timestamp,
             decision="SEMANTICS_VALIDATED",
             lifecycle_id=state.lifecycle_id,
@@ -600,7 +621,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             raise EconomicsRefusal(REFUSED_MISSING_COST_SCHEDULE, "OPEN")
         reference = market.close if intent.reference_price is None else float(intent.reference_price)
         action_side = intent.action_side or "BUY"
-        final_fill, bps, impact, _alignment = _fill_price(
+        final_fill, bps, impact, alignment = _fill_price(
             reference=reference,
             action_side=action_side,
             instrument=instrument,
@@ -623,7 +644,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         )
         selector = "FALLBACK" if resolved_stop is None or not math.isfinite(resolved_stop) else "RISK"
         sizing = DecisionEvent(
-            sequence=1,
+            sequence=state.next_decision_sequence + 1,
             event_timestamp=market.timestamp,
             decision="SIZING_RESOLVED" if quantity > 0.0 else "REFUSED_MINIMUM_ORDER",
             lifecycle_id=state.lifecycle_id,
@@ -637,13 +658,14 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 records=records,
                 decisions=(validated, sizing),
             )
-        lifecycle_id = state.lifecycle_id or 1
+        lifecycle_id = state.lifecycle_id or state.next_lifecycle_id
         event_class = intent.event_class or "ENTRY"
+        fill_sequence = state.next_fill_sequence
         fill = FillDecision(
-            sequence=0,
+            sequence=fill_sequence,
             event_timestamp=market.timestamp,
             lifecycle_id=lifecycle_id,
-            fill_id="F0",
+            fill_id=f"F{fill_sequence}",
             event_class=event_class,
             side=action_side,
             reference_price=reference,
@@ -654,6 +676,10 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             final_fill_price=final_fill,
             quantity=quantity,
             liquidity_role=str(records.cost["liquidity_roles"][event_class]),
+            price_tick_alignment=alignment,
+            unrounded_fill_price=(
+                reference + impact if action_side == "BUY" else reference - impact
+            ),
         )
         fee_cash, fee = _fee_rows(
             records=records,
@@ -664,8 +690,8 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             fill_price=final_fill,
             quantity=quantity,
             contract_multiplier=instrument.contract_multiplier,
-            cash_sequence=0,
-            fee_sequence=0,
+            cash_sequence=state.next_cash_sequence,
+            fee_sequence=state.next_fee_sequence,
         )
         return EconomicTransition(
             semantics_id=self.semantics_id,
@@ -704,6 +730,10 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 records=records,
                 decisions=(validated,),
             )
+        if intent.kind is IntentKind.MARKET_EXIT:
+            return self._resolve_market_exit(
+                state, intent, market, records, instrument, validated
+            )
         policy = intent.same_bar_collision_policy_id
         if policy not in {"STOP_FIRST", "TARGET_FIRST", "SUBBAR_UNKNOWN"}:
             raise EconomicsRefusal(REFUSED_UNSUPPORTED_COLLISION_POLICY, str(policy))
@@ -739,7 +769,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 decisions=(validated,),
             )
         decision = DecisionEvent(
-            sequence=1,
+            sequence=state.next_decision_sequence + 1,
             event_timestamp=market.timestamp,
             decision="SAME_BAR_COLLISION" if collision else "SOLE_EXIT_CLASS",
             lifecycle_id=state.lifecycle_id,
@@ -762,16 +792,17 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             action_side = "SELL" if state.position_side == "LONG" else "BUY"
             if records.cost is None:
                 raise EconomicsRefusal(REFUSED_MISSING_COST_SCHEDULE, event_class)
-            final_fill, bps, impact, _alignment = _fill_price(
+            final_fill, bps, impact, alignment = _fill_price(
                 reference=reference,
                 action_side=action_side,
                 instrument=instrument,
                 cost=records.cost,
             )
-            fill_id = f"F{index}"
+            fill_sequence = state.next_fill_sequence + index
+            fill_id = f"F{fill_sequence}"
             fills.append(
                 FillDecision(
-                    sequence=index,
+                    sequence=fill_sequence,
                     event_timestamp=market.timestamp,
                     lifecycle_id=state.lifecycle_id,
                     fill_id=fill_id,
@@ -785,6 +816,10 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                     final_fill_price=final_fill,
                     quantity=quantity,
                     liquidity_role=str(records.cost["liquidity_roles"][event_class]),
+                    price_tick_alignment=alignment,
+                    unrounded_fill_price=(
+                        reference + impact if action_side == "BUY" else reference - impact
+                    ),
                 )
             )
             fee_cash, fee = _fee_rows(
@@ -796,16 +831,16 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 fill_price=final_fill,
                 quantity=quantity,
                 contract_multiplier=instrument.contract_multiplier,
-                cash_sequence=len(cash),
-                fee_sequence=len(fees),
+                cash_sequence=state.next_cash_sequence + len(cash),
+                fee_sequence=state.next_fee_sequence + len(fees),
             )
             cash.append(fee_cash)
             fees.append(fee)
             gross = _gross_delta(state, final_fill, quantity, instrument.contract_multiplier)
             cash.append(
                 CashEvent(
-                    sequence=len(cash),
-                    cash_event_id=f"CE-GROSS-{index}",
+                    sequence=state.next_cash_sequence + len(cash),
+                    cash_event_id=f"CE-GROSS-{fill_sequence}",
                     event_timestamp=market.timestamp,
                     lifecycle_id=state.lifecycle_id,
                     kind=CashEventKind.GROSS_REALIZATION,
@@ -840,6 +875,127 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             fee_events=tuple(fees),
         )
 
+    def _resolve_market_exit(
+        self,
+        state: EconomicState,
+        intent: EconomicIntent,
+        market: MarketEvent,
+        records: EconomicRecords,
+        instrument: InstrumentMetadata,
+        validated: DecisionEvent,
+    ) -> EconomicTransition:
+        if records.cost is None:
+            raise EconomicsRefusal(REFUSED_MISSING_COST_SCHEDULE, "MARKET_EXIT")
+        requested = state.quantity if intent.requested_quantity is None else float(
+            intent.requested_quantity
+        )
+        quantity = min(state.quantity, max(0.0, requested))
+        if quantity <= 0.0:
+            return _empty_transition(
+                semantics_id=self.semantics_id,
+                state=state,
+                records=records,
+                decisions=(validated,),
+            )
+        reference = market.close if intent.reference_price is None else float(
+            intent.reference_price
+        )
+        action_side = "SELL" if state.position_side == "LONG" else "BUY"
+        final_fill, bps, impact, alignment = _fill_price(
+            reference=reference,
+            action_side=action_side,
+            instrument=instrument,
+            cost=records.cost,
+        )
+        event_class = intent.event_class or "MARKET_EXIT"
+        fill_sequence = state.next_fill_sequence
+        fill = FillDecision(
+            sequence=fill_sequence,
+            event_timestamp=market.timestamp,
+            lifecycle_id=int(state.lifecycle_id),
+            fill_id=f"F{fill_sequence}",
+            event_class=event_class,
+            side=action_side,
+            reference_price=reference,
+            slippage_model_id=str(records.cost["slippage_model_id"]),
+            slippage_bps=bps,
+            slippage_impact=impact,
+            slippage_application_count=1,
+            final_fill_price=final_fill,
+            quantity=quantity,
+            liquidity_role=str(records.cost["liquidity_roles"][event_class]),
+            exit_id=intent.exit_id,
+            price_tick_alignment=alignment,
+            unrounded_fill_price=(
+                reference + impact if action_side == "BUY" else reference - impact
+            ),
+        )
+        fee_cash, fee = _fee_rows(
+            records=records,
+            event_timestamp=market.timestamp,
+            lifecycle_id=int(state.lifecycle_id),
+            fill_id=fill.fill_id,
+            event_class=event_class,
+            fill_price=final_fill,
+            quantity=quantity,
+            contract_multiplier=instrument.contract_multiplier,
+            cash_sequence=state.next_cash_sequence,
+            fee_sequence=state.next_fee_sequence,
+        )
+        gross = CashEvent(
+            sequence=state.next_cash_sequence + 1,
+            cash_event_id=f"CE-GROSS-{fill_sequence}",
+            event_timestamp=market.timestamp,
+            lifecycle_id=int(state.lifecycle_id),
+            kind=CashEventKind.GROSS_REALIZATION,
+            signed_delta=_gross_delta(
+                state, final_fill, quantity, instrument.contract_multiplier
+            ),
+            settlement_currency=str(records.instrument.settlement_currency),
+            fill_id=fill.fill_id,
+        )
+        remainder = state.quantity - quantity
+        next_facts = (
+            _position_facts(
+                lifecycle_id=None,
+                side=None,
+                quantity=0.0,
+                entry_fill_price=None,
+            )
+            if remainder <= 1e-12
+            else _position_facts(
+                lifecycle_id=state.lifecycle_id,
+                side=state.position_side,
+                quantity=remainder,
+                entry_fill_price=state.entry_fill_price,
+            )
+        )
+        selected = DecisionEvent(
+            sequence=state.next_decision_sequence + 1,
+            event_timestamp=market.timestamp,
+            decision="MARKET_EXIT_SELECTED",
+            lifecycle_id=state.lifecycle_id,
+            details=_details(
+                reason=intent.reason,
+                exit_id=intent.exit_id,
+                reference_price=reference,
+            ),
+        )
+        return EconomicTransition(
+            semantics_id=self.semantics_id,
+            instrument_record_id=records.instrument.record_id,
+            instrument_record_digest=records.instrument.digest,
+            cost_schedule_id=records.cost_schedule_id,
+            cost_schedule_digest=records.cost_digest,
+            funding_schedule_id=records.funding_schedule_id,
+            funding_schedule_digest=records.funding_digest,
+            next_position_facts=next_facts,
+            decision_events=(validated, selected),
+            fill_decisions=(fill,),
+            cash_events=(fee_cash, gross),
+            fee_events=(fee,),
+        )
+
     def _resolve_funding(
         self,
         state: EconomicState,
@@ -859,7 +1015,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             raise EconomicsRefusal(REFUSED_DUPLICATE_FUNDING_EVENT, str(event_id))
         eligible = state.lifecycle_id is not None and state.quantity > 0.0
         decision = DecisionEvent(
-            sequence=1,
+            sequence=state.next_decision_sequence + 1,
             event_timestamp=market.timestamp,
             decision="FUNDING_ELIGIBILITY",
             lifecycle_id=state.lifecycle_id,
@@ -886,9 +1042,10 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         notional = abs(mark_price * state.quantity * multiplier)
         signed = notional * long_rate * side_factor
         cumulative = state.cumulative_funding + signed
-        cash_event_id = "CE-FUND-0"
+        funding_sequence = state.next_funding_sequence
+        cash_event_id = f"CE-FUND-{funding_sequence}"
         cash = CashEvent(
-            sequence=0,
+            sequence=state.next_cash_sequence,
             cash_event_id=cash_event_id,
             event_timestamp=market.timestamp,
             lifecycle_id=int(state.lifecycle_id),
@@ -898,7 +1055,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             funding_event_id=str(event_id),
         )
         funding = FundingEvent(
-            sequence=0,
+            sequence=funding_sequence,
             funding_event_id=str(event_id),
             event_timestamp=market.timestamp,
             lifecycle_id=int(state.lifecycle_id),

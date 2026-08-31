@@ -60,6 +60,7 @@ class FillDecision:
     reference_quantity: float | None = None
     price_tick_alignment: str | None = None
     fill_trigger: str | None = None
+    unrounded_fill_price: float | None = None
 
 
 # The transition owns one fill fact; result serialization projects it as a fill event.
@@ -134,7 +135,14 @@ def _same_binary64(left: float, right: float) -> bool:
 
 
 def _require_contiguous_sequences(label: str, rows: tuple[object, ...]) -> None:
-    for expected, row in enumerate(rows):
+    if not rows:
+        return
+    first = getattr(rows[0], "sequence", None)
+    if not isinstance(first, int) or isinstance(first, bool) or first < 0:
+        raise EconomicTransitionError(
+            f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: {label} sequence must be a non-negative integer"
+        )
+    for expected, row in enumerate(rows, start=first):
         if getattr(row, "sequence", None) != expected:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: {label} sequence must be contiguous"

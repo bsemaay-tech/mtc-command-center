@@ -416,7 +416,7 @@ def resolve_corrected_price_exits(
         if position.active_stop_price is not None and math.isfinite(position.active_stop_price):
             candidates.append(
                 ExitCandidate(
-                    str(position.active_stop_owner or STOP_OWNER_INITIAL),
+                    "STOP",
                     IntentKind.PROTECTIVE_STOP,
                     float(position.active_stop_price),
                 )

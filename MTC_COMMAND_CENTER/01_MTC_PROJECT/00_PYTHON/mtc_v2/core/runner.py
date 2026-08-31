@@ -1,8 +1,10 @@
 ﻿from __future__ import annotations
-from __future__ import annotations
 
 from collections import deque
+from dataclasses import replace
+from datetime import datetime
 import math
+from pathlib import Path
 from typing import Iterable
 
 from mtc_v2.core.config import SIGNAL_MODE_RANGE_FILTER, SIGNAL_MODE_SUPERTREND, resolve_config
@@ -22,6 +24,17 @@ from mtc_v2.core.exits import (
     find_swing_reference,
     sync_working_exit_stops,
     update_protective_stop_owner,
+    resolve_corrected_price_exits,
+)
+from mtc_v2.core.economics import (
+    CorrectedEconomicsAdapter,
+    EconomicIntent,
+    EconomicRecords,
+    EconomicState,
+    EconomicsRefusal,
+    IntentKind,
+    MarketEvent,
+    REFUSED_ECONOMIC_INPUT,
 )
 from mtc_v2.core.gates import (
     GATE_MA_FILTER,
@@ -73,7 +86,15 @@ from mtc_v2.core.ma import (
 )
 from mtc_v2.core.position_manager import POSITION_SIDE_LONG, POSITION_SIDE_SHORT, PositionManager
 from mtc_v2.core.position_sizer import PositionSizer
-from mtc_v2.core.types import Bar, EntryDecision, GateResult, HtfSnapshot, PortfolioState, RawSignal
+from mtc_v2.core.types import (
+    Bar,
+    EntryDecision,
+    GateResult,
+    HtfSnapshot,
+    PortfolioState,
+    PositionFacts,
+    RawSignal,
+)
 from mtc_v2.signals.range_filter import RangeFilterSignal
 from mtc_v2.signals.supertrend import SupertrendSignal
 
@@ -109,7 +130,17 @@ class Runner:
     """Parity-first MTC_V2 runner, extended through the L18 confirm transform."""
 
     def __init__(self, config: dict[str, object]) -> None:
+        self._source_config = dict(config)
         self.config = resolve_config(config)
+        self.kernel_semantics_version = str(
+            config.get("kernel_semantics_version", "1.0.0")
+        )
+        self._corrected_semantics = self.kernel_semantics_version == "2.0.0"
+        self._allow_corrected_test_policy = False
+        self._corrected_records: EconomicRecords | None = None
+        self._corrected_instrument_bound = False
+        if self._corrected_semantics:
+            self._corrected_records = self._load_corrected_records()
         self.execution_profile_id = str(self.config["execution_profile_id"])
         self.fill_policy_id = FILL_POLICY_DECISION_BAR_CLOSE
         self.exit_before_entry_policy = EXIT_BEFORE_ENTRY_PLACEHOLDER
@@ -133,7 +164,20 @@ class Runner:
         self.tw_margin_call_split_entries = bool(self.config.get("tw_margin_call_split_entries", False))
         self.tw_be_semantics_mode = str(self.config.get("tw_be_semantics_mode", "local"))
         self.tw_trailing_semantics_mode = str(self.config.get("tw_trailing_semantics_mode", "local"))
-        self.instrument = InstrumentMetadata.from_config(self.config)
+        instrument_keys = {
+            "instrument_symbol",
+            "instrument_point_value",
+            "instrument_price_tick",
+            "instrument_qty_step",
+            "instrument_min_qty",
+            "instrument_min_notional",
+            "instrument_contract_multiplier",
+        }
+        self.instrument = (
+            InstrumentMetadata.from_config(self.config)
+            if instrument_keys <= set(self.config)
+            else InstrumentMetadata()
+        )
         self.state = PortfolioState(
             initial_capital=self.initial_capital,
             equity=self.initial_capital,
@@ -246,6 +290,14 @@ class Runner:
             maxlen=max(int(self.config.get("candle_pattern_lookback", 5)) + 1, 2)
         )
         self._prev_bar: Bar | None = None
+        self.corrected_guard_snapshot: dict[str, object] = {
+            "guard_pnl_basis": "GROSS_MINUS_FEES",
+            "funding_included_in_guard_basis": False,
+            "last_closed_guard_pnl": 0.0,
+            "consecutive_loss_count": 0,
+            "guard_blocked_raw": False,
+        }
+        self.corrected_equity_curve: list[float] = []
 
         # L14-L18 state
         self._l15_bars_since_entry: int = 0
@@ -311,6 +363,292 @@ class Runner:
             int(self.config["sl_swing_lookback"]) if bool(self.config["use_sl"] and self.config["use_sl_swing_atr"]) else 0,
         )
 
+    @classmethod
+    def for_corrected_contract(cls, config: dict[str, object]) -> "Runner":
+        """Create the non-production runner used by declared migration fixtures."""
+
+        runner = cls(config)
+        if not runner._corrected_semantics:
+            raise EconomicsRefusal(
+                REFUSED_ECONOMIC_INPUT,
+                "corrected contract runner requires semantics 2.0.0",
+            )
+        runner._allow_corrected_test_policy = True
+        return runner
+
+    def _load_corrected_records(self) -> EconomicRecords:
+        root = Path(__file__).resolve().parent / "economic_records"
+        instrument_id = str(self.config["instrument_record_id"])
+        funding_id = str(self.config["funding_schedule_id"])
+        cost_id_raw = self.config["cost_schedule_id"]
+        cost_id = None if cost_id_raw is None else str(cost_id_raw)
+        runtime_keys = {
+            "instrument_symbol",
+            "instrument_point_value",
+            "instrument_price_tick",
+            "instrument_qty_step",
+            "instrument_min_qty",
+            "instrument_min_notional",
+            "instrument_contract_multiplier",
+        }
+        runtime = {
+            key: self._source_config[key]
+            for key in runtime_keys
+            if key in self._source_config
+        }
+        records = EconomicRecords.from_record_paths(
+            instrument_path=root / "instruments" / f"{instrument_id}.json",
+            cost_path=(
+                None if cost_id is None else root / "costs" / f"{cost_id}.json"
+            ),
+            funding_path=root / "funding" / f"{funding_id}.json",
+            runtime_instrument_config=runtime,
+        )
+        expected = (
+            (records.instrument.record_id, instrument_id, "instrument_record_id"),
+            (records.instrument.digest, self.config["instrument_record_sha256"], "instrument_record_sha256"),
+            (records.funding_schedule_id, funding_id, "funding_schedule_id"),
+            (records.funding_digest, self.config["funding_schedule_sha256"], "funding_schedule_sha256"),
+            (records.cost_schedule_id, cost_id, "cost_schedule_id"),
+            (records.cost_digest, self.config["cost_schedule_sha256"], "cost_schedule_sha256"),
+        )
+        for actual, configured, field in expected:
+            if actual != configured:
+                raise EconomicsRefusal(
+                    REFUSED_ECONOMIC_INPUT,
+                    f"{field} differs from verified record bytes",
+                )
+        return records
+
+    def _bind_corrected_instrument(self, evaluation_time: datetime) -> None:
+        if not self._corrected_semantics or self._corrected_instrument_bound:
+            return
+        assert self._corrected_records is not None
+        self.instrument = self._corrected_records.instrument.for_evaluation(
+            evaluation_time,
+            self._corrected_records.runtime_instrument_config or {},
+        )
+        self.state.instrument = self.instrument
+        self.position_manager.contract_multiplier = self.instrument.contract_multiplier
+        self.position_manager.qty_step = self.instrument.qty_step
+        self._corrected_instrument_bound = True
+
+    def _economic_state(self, *, sizing_equity: float = 0.0) -> EconomicState:
+        position = self.state.position
+        return EconomicState(
+            lifecycle_id=None if position is None else position.lifecycle_id,
+            position_side=None if position is None else position.side.upper(),
+            quantity=0.0 if position is None else position.qty,
+            entry_fill_price=None if position is None else position.avg_entry_price,
+            sizing_equity=sizing_equity,
+            equity=self.state.equity,
+            cumulative_funding=self.state.cumulative_funding,
+            applied_funding_event_ids=frozenset(
+                self.state.applied_funding_event_ids
+            ),
+            next_lifecycle_id=self.state.next_position_lifecycle_id,
+            next_decision_sequence=len(self.state.decision_events),
+            next_fill_sequence=len(self.state.fill_events),
+            next_cash_sequence=len(self.state.cash_events),
+            next_fee_sequence=len(self.state.fee_events),
+            next_funding_sequence=len(self.state.funding_events),
+        )
+
+    def _market_event(self, bar: Bar, *, timestamp: datetime | None = None) -> MarketEvent:
+        return MarketEvent(
+            timestamp=bar.timestamp if timestamp is None else timestamp,
+            bar_index=bar.bar_index,
+            open=bar.open,
+            high=bar.high,
+            low=bar.low,
+            close=bar.close,
+            execution_profile_id=self.execution_profile_id,
+        )
+
+    def _apply_corrected_entry(
+        self,
+        *,
+        bar: Bar,
+        reference_price: float,
+        side: str,
+        reason: str | None,
+        sizing_equity: float,
+    ) -> bool:
+        assert self._corrected_records is not None
+        is_long = side == POSITION_SIDE_LONG
+        stop_price: float | None = None
+        stop_percent: float | None = None
+        stop_distance: float | None = None
+        if bool(self.config["use_sl"]):
+            if bool(self.config["use_sl_percent"]):
+                stop_percent = float(self.config["sl_percent"])
+            else:
+                provisional = self._entry_stop_price(
+                    bar=bar,
+                    entry_price=reference_price,
+                    is_long=is_long,
+                )
+                if provisional is not None and bool(self.config["use_sl_atr"]):
+                    stop_distance = abs(reference_price - provisional)
+                else:
+                    stop_price = provisional
+        transition = CorrectedEconomicsAdapter().resolve(
+            self._economic_state(sizing_equity=sizing_equity),
+            EconomicIntent(
+                kind=IntentKind.OPEN,
+                action_side="BUY" if is_long else "SELL",
+                position_side=side.upper(),
+                reference_price=reference_price,
+                stop_price=stop_price,
+                stop_percent=stop_percent,
+                stop_distance=stop_distance,
+                risk_pct=float(
+                    self.config[
+                        "risk_per_long_pct" if is_long else "risk_per_short_pct"
+                    ]
+                ),
+                fallback_size_pct=float(self.config["fallback_size_pct"]),
+                max_leverage_cap=self.max_leverage_cap,
+                event_class="ENTRY",
+                reason=reason,
+            ),
+            self._market_event(bar),
+            self._corrected_records,
+        )
+        if not transition.fill_decisions:
+            self.position_manager.apply_transition(
+                bar=bar,
+                state=self.state,
+                transition=transition,
+                reason=reason,
+            )
+            return False
+        fill = transition.fill_decisions[0]
+        existing = self.state.position
+        if existing is not None:
+            transition = replace(
+                transition,
+                next_position_facts=PositionFacts(
+                    lifecycle_id=existing.lifecycle_id,
+                    side=existing.side.upper(),
+                    quantity=existing.qty + fill.quantity,
+                    entry_fill_price=fill.final_fill_price,
+                    active_stop_price=transition.next_position_facts.active_stop_price,
+                ),
+            )
+        facts = transition.next_position_facts
+        initial_risk = self._initial_risk_for_entry(
+            entry_price=fill.final_fill_price,
+            stop_price=facts.active_stop_price,
+        )
+        next_book_version = 1
+        completed_exit_ids: set[str] = set()
+        if existing is not None and existing.side == side:
+            next_book_version = existing.working_exit_book_version + 1
+            completed_exit_ids = set(existing.completed_exit_ids)
+        _active_tp, working_exits = build_working_exit_book(
+            self.config,
+            entry_price=fill.final_fill_price,
+            is_long=is_long,
+            price_tick=self.instrument.price_tick,
+            atr_value=self.tp_atr_tracker.atr,
+            initial_risk_per_unit=initial_risk,
+            book_version=next_book_version,
+            completed_exit_ids=completed_exit_ids,
+        )
+        self.position_manager.apply_transition(
+            bar=bar,
+            state=self.state,
+            transition=transition,
+            reason=reason,
+            working_exits=working_exits,
+        )
+        return True
+
+    @staticmethod
+    def _corrected_exit_id(reason: str) -> str:
+        return {
+            REASON_EXIT_OPP_SIGNAL: "OPP_SIGNAL",
+            REASON_EXIT_FILTER_BLOCK: "FILTER_BLOCK",
+            REASON_EXIT_TIME_STOP: "TIME_STOP",
+            REASON_EXIT_EOD: "EOD",
+            REASON_EXIT_EOW: "EOW",
+            REASON_EXIT_MARGIN_CALL: "MARGIN_CALL",
+        }.get(reason, reason.upper())
+
+    def _apply_corrected_market_exit(
+        self,
+        *,
+        bar: Bar,
+        reference_price: float,
+        reason: str,
+        quantity: float | None = None,
+    ) -> bool:
+        if self.state.position is None:
+            return False
+        assert self._corrected_records is not None
+        transition = CorrectedEconomicsAdapter().resolve(
+            self._economic_state(),
+            EconomicIntent(
+                kind=IntentKind.MARKET_EXIT,
+                action_side=(
+                    "SELL"
+                    if self.state.position.side == POSITION_SIDE_LONG
+                    else "BUY"
+                ),
+                position_side=self.state.position.side.upper(),
+                reference_price=reference_price,
+                requested_quantity=quantity,
+                event_class="MARKET_EXIT",
+                reason=reason,
+                exit_id=self._corrected_exit_id(reason),
+                same_bar_collision_policy_id="STOP_FIRST",
+            ),
+            self._market_event(bar),
+            self._corrected_records,
+        )
+        self.position_manager.apply_transition(
+            bar=bar,
+            state=self.state,
+            transition=transition,
+            reason=reason,
+        )
+        return bool(transition.fill_decisions)
+
+    @staticmethod
+    def _record_timestamp(value: object) -> datetime:
+        if not isinstance(value, str) or not value.endswith("Z"):
+            raise EconomicsRefusal(
+                REFUSED_ECONOMIC_INPUT, "funding event timestamp is not explicit UTC"
+            )
+        return datetime.fromisoformat(value[:-1] + "+00:00")
+
+    def _apply_corrected_funding_between(self, previous: Bar, current: Bar) -> None:
+        assert self._corrected_records is not None
+        events = self._corrected_records.funding.get("events", ())
+        for event in events:
+            event_time = self._record_timestamp(event.get("event_timestamp"))
+            if not (previous.timestamp < event_time <= current.timestamp):
+                continue
+            event_id = str(event["funding_event_id"])
+            if event_id in self.state.applied_funding_event_ids:
+                continue
+            transition = CorrectedEconomicsAdapter().resolve(
+                self._economic_state(),
+                EconomicIntent(
+                    kind=IntentKind.FUNDING_TICK,
+                    funding_event_id=event_id,
+                ),
+                self._market_event(current, timestamp=event_time),
+                self._corrected_records,
+            )
+            self.position_manager.apply_transition(
+                bar=current,
+                state=self.state,
+                transition=transition,
+                reason="funding_tick",
+            )
+
     def run(
         self,
         bars: Iterable[Bar],
@@ -336,6 +674,10 @@ class Runner:
         for bar in bars:
             if _first_bar is None:
                 _first_bar = bar
+            if self._corrected_semantics:
+                self._bind_corrected_instrument(bar.timestamp)
+                if self._prev_bar is not None:
+                    self._apply_corrected_funding_between(self._prev_bar, bar)
             self.state.current_bar_index = bar.bar_index
             self.state.block_new_entries_this_bar = False
             self.state.opened_this_bar_reason = None
@@ -559,35 +901,67 @@ class Runner:
                 sync_working_exit_stops(self.state.position)
 
                 price_exit_blocked_entry = False
-                continue_price_loop = True
                 if self.tw_audit_semantics_mode == "research" and self.tw_margin_call_mode == "tradingview":
                     self._apply_tw_margin_call_semantics(bar=bar)
-                while self.state.position is not None and continue_price_loop:
-                    continue_price_loop = False
-                    price_exit = evaluate_price_exit(self.config, bar=bar, position=self.state.position)
-                    if price_exit.hit and price_exit.fill_price is not None and price_exit.reason is not None:
-                        self.position_manager.close_position(
-                            bar=bar,
-                            exit_price=price_exit.fill_price,
-                            reason=price_exit.reason,
-                            state=self.state,
-                            exit_pct=price_exit.exit_pct,
-                            exit_id=price_exit.exit_id,
-                            is_pessimistic=price_exit.is_pessimistic,
+                if self._corrected_semantics and self.state.position is not None:
+                    assert self._corrected_records is not None
+                    transition = resolve_corrected_price_exits(
+                        bar=bar,
+                        position=self.state.position,
+                        records=self._corrected_records,
+                        same_bar_collision_policy_id=str(
+                            self.config.get(
+                                "same_bar_collision_policy_id", "STOP_FIRST"
+                            )
+                        ),
+                        allow_test_policy=self._allow_corrected_test_policy,
+                    )
+                    if transition.fill_decisions:
+                        exit_reason = (
+                            "PROTECTIVE_STOP"
+                            if transition.fill_decisions[0].event_class
+                            == "PROTECTIVE_STOP_EXIT"
+                            else "TARGET"
                         )
-                        if (
-                            self.state.position is not None
-                            and bool(getattr(price_exit, "cancel_remaining_targets_after_fill", False))
-                        ):
-                            disable_active_target_exits(self.state.position)
-                        # Future TW execution parity work will branch from this owner
-                        # to model margin-call splitting and protective-exit reentry delay.
-                        self._remember_tw_protective_exit(bar=bar, reason=price_exit.reason)
+                        self.position_manager.apply_transition(
+                            bar=bar,
+                            state=self.state,
+                            transition=transition,
+                            reason=exit_reason,
+                        )
+                        self._remember_tw_protective_exit(
+                            bar=bar, reason=exit_reason
+                        )
                         price_exit_blocked_entry = True
                         entry_blocked_by_exit = True
-                        continue_price_loop = (
-                            self.state.position is not None and price_exit.continue_evaluation_this_bar
-                        )
+                else:
+                    continue_price_loop = True
+                    while self.state.position is not None and continue_price_loop:
+                        continue_price_loop = False
+                        price_exit = evaluate_price_exit(self.config, bar=bar, position=self.state.position)
+                        if price_exit.hit and price_exit.fill_price is not None and price_exit.reason is not None:
+                            self.position_manager.close_position(
+                                bar=bar,
+                                exit_price=price_exit.fill_price,
+                                reason=price_exit.reason,
+                                state=self.state,
+                                exit_pct=price_exit.exit_pct,
+                                exit_id=price_exit.exit_id,
+                                is_pessimistic=price_exit.is_pessimistic,
+                            )
+                            if (
+                                self.state.position is not None
+                                and bool(getattr(price_exit, "cancel_remaining_targets_after_fill", False))
+                            ):
+                                disable_active_target_exits(self.state.position)
+                            # Future TW execution parity work will branch from this owner
+                            # to model margin-call splitting and protective-exit reentry delay.
+                            self._remember_tw_protective_exit(bar=bar, reason=price_exit.reason)
+                            price_exit_blocked_entry = True
+                            entry_blocked_by_exit = True
+                            continue_price_loop = (
+                                self.state.position is not None and price_exit.continue_evaluation_this_bar
+                            )
 
                 if (
                     bool(self.config["exit_on_opposite_signal"])
@@ -595,12 +969,19 @@ class Runner:
                     and candidate_side is not None
                     and candidate_side != self.state.position.side
                 ):
-                    self.position_manager.close_position(
-                        bar=bar,
-                        exit_price=bar.close,
-                        reason=REASON_EXIT_OPP_SIGNAL,
-                        state=self.state,
-                    )
+                    if self._corrected_semantics:
+                        self._apply_corrected_market_exit(
+                            bar=bar,
+                            reference_price=bar.close,
+                            reason=REASON_EXIT_OPP_SIGNAL,
+                        )
+                    else:
+                        self.position_manager.close_position(
+                            bar=bar,
+                            exit_price=bar.close,
+                            reason=REASON_EXIT_OPP_SIGNAL,
+                            state=self.state,
+                        )
                     entry_blocked_by_exit = not self.allow_flip
                     self._remember_tw_protective_exit(bar=bar, reason=REASON_EXIT_OPP_SIGNAL)
                 elif price_exit_blocked_entry:
@@ -655,12 +1036,19 @@ class Runner:
                         if not ok:
                             filter_blocked = True
                     if filter_blocked:
-                        self.position_manager.close_position(
-                            bar=bar,
-                            exit_price=bar.close,
-                            reason=REASON_EXIT_FILTER_BLOCK,
-                            state=self.state,
-                        )
+                        if self._corrected_semantics:
+                            self._apply_corrected_market_exit(
+                                bar=bar,
+                                reference_price=bar.close,
+                                reason=REASON_EXIT_FILTER_BLOCK,
+                            )
+                        else:
+                            self.position_manager.close_position(
+                                bar=bar,
+                                exit_price=bar.close,
+                                reason=REASON_EXIT_FILTER_BLOCK,
+                                state=self.state,
+                            )
                         self._remember_tw_protective_exit(bar=bar, reason=REASON_EXIT_FILTER_BLOCK)
                         entry_blocked_by_exit = True
 
@@ -694,12 +1082,19 @@ class Runner:
                         if bar.timestamp.weekday() == 4 and bar.timestamp.hour >= 21:
                             time_exit_reason = REASON_EXIT_EOW
                     if time_exit_reason is not None:
-                        self.position_manager.close_position(
-                            bar=bar,
-                            exit_price=bar.close,
-                            reason=time_exit_reason,
-                            state=self.state,
-                        )
+                        if self._corrected_semantics:
+                            self._apply_corrected_market_exit(
+                                bar=bar,
+                                reference_price=bar.close,
+                                reason=time_exit_reason,
+                            )
+                        else:
+                            self.position_manager.close_position(
+                                bar=bar,
+                                exit_price=bar.close,
+                                reason=time_exit_reason,
+                                state=self.state,
+                            )
                         self._remember_tw_protective_exit(bar=bar, reason=time_exit_reason)
                         entry_blocked_by_exit = True
                 else:
@@ -707,7 +1102,11 @@ class Runner:
 
             # --- L16: GUARDS ---
             if not warmup_blocks_entry:
-                realized_equity = self.state.initial_capital + self.state.realized_equity
+                realized_equity = self.state.initial_capital + (
+                    self.state.guard_realized_equity
+                    if self._corrected_semantics
+                    else self.state.realized_equity
+                )
                 day_str = bar.timestamp.strftime("%Y%m%d")
 
                 # MAE tracking: update running MAE for open position BEFORE exits are evaluated
@@ -792,6 +1191,14 @@ class Runner:
                 )
                 guard_blocked_raw = not (daily_loss_ok and max_trades_ok and max_dd_ok
                                          and consec_loss_ok and ec_ok and mae_ok)
+                if self._corrected_semantics:
+                    self.corrected_guard_snapshot = {
+                        "guard_pnl_basis": "GROSS_MINUS_FEES",
+                        "funding_included_in_guard_basis": False,
+                        "last_closed_guard_pnl": self.state.last_closed_guard_pnl,
+                        "consecutive_loss_count": self._l16_consec_loss_count,
+                        "guard_blocked_raw": guard_blocked_raw,
+                    }
 
                 # Guard Recovery (SAP-02)
                 if bool(self.config["use_guard_recovery"]):
@@ -947,7 +1354,11 @@ class Runner:
                 if gated.long or gated.short:
                     self._l16_guard_recovery_signals_rem = max(0, self._l16_guard_recovery_signals_rem - 1)
                 if self._l16_guard_recovery_signals_rem <= 0:
-                    _realized_eq = self.state.initial_capital + self.state.realized_equity
+                    _realized_eq = self.state.initial_capital + (
+                        self.state.guard_realized_equity
+                        if self._corrected_semantics
+                        else self.state.realized_equity
+                    )
                     self._force_reset_guard_state(_realized_eq)
                     self._l16_guard_recovery_active = False
                     guard_blocked = False
@@ -985,52 +1396,65 @@ class Runner:
                 decision = EntryDecision(False)
             entry_blocked_by_capital = False
             if decision.can_open and decision.side is not None:
-                is_long = decision.side == POSITION_SIDE_LONG
-                entry_stop_price = self._entry_stop_price(bar=bar, entry_price=bar.close, is_long=is_long)
-                entry_qty = self.position_sizer.calc_qty(
-                    bar.close,
-                    entry_stop_price,
-                    sizing_equity_snapshot,
-                    is_long,
-                    self.instrument,
-                    existing_position=self.state.position,
-                )
-                entry_blocked_by_capital = entry_qty > 0.0 and self._entry_blocked_by_capital(
-                    entry_price=bar.close,
-                    side=decision.side,
-                    qty=entry_qty,
-                    sizing_equity=sizing_equity_snapshot,
-                )
-                if entry_qty > 0.0 and not entry_blocked_by_capital:
-                    initial_risk = self._initial_risk_for_entry(entry_price=bar.close, stop_price=entry_stop_price)
-                    next_book_version = 1
-                    completed_exit_ids: set[str] = set()
-                    if self.state.position is not None and self.state.position.side == decision.side:
-                        next_book_version = self.state.position.working_exit_book_version + 1
-                        completed_exit_ids = set(self.state.position.completed_exit_ids)
-                    active_tp_price, working_exits = build_working_exit_book(
-                        self.config,
-                        entry_price=bar.close,
-                        is_long=is_long,
-                        price_tick=self.instrument.price_tick,
-                        atr_value=self.tp_atr_tracker.atr,
-                        initial_risk_per_unit=initial_risk,
-                        book_version=next_book_version,
-                        completed_exit_ids=completed_exit_ids,
-                    )
-                    self.position_manager.open_position(
+                if self._corrected_semantics:
+                    opened = self._apply_corrected_entry(
                         bar=bar,
+                        reference_price=bar.close,
                         side=decision.side,
-                        qty=entry_qty,
-                        state=self.state,
                         reason=decision.reason,
-                        active_stop_price=entry_stop_price,
-                        active_tp_price=active_tp_price,
-                        working_exits=working_exits,
+                        sizing_equity=sizing_equity_snapshot,
                     )
-                    if self._tw_pending_reentry_side == decision.side:
+                    entry_blocked_by_capital = not opened
+                    if opened and self._tw_pending_reentry_side == decision.side:
                         self._tw_pending_reentry_side = None
                         self._tw_pending_reentry_reason = None
+                else:
+                    is_long = decision.side == POSITION_SIDE_LONG
+                    entry_stop_price = self._entry_stop_price(bar=bar, entry_price=bar.close, is_long=is_long)
+                    entry_qty = self.position_sizer.calc_qty(
+                        bar.close,
+                        entry_stop_price,
+                        sizing_equity_snapshot,
+                        is_long,
+                        self.instrument,
+                        existing_position=self.state.position,
+                    )
+                    entry_blocked_by_capital = entry_qty > 0.0 and self._entry_blocked_by_capital(
+                        entry_price=bar.close,
+                        side=decision.side,
+                        qty=entry_qty,
+                        sizing_equity=sizing_equity_snapshot,
+                    )
+                    if entry_qty > 0.0 and not entry_blocked_by_capital:
+                        initial_risk = self._initial_risk_for_entry(entry_price=bar.close, stop_price=entry_stop_price)
+                        next_book_version = 1
+                        completed_exit_ids: set[str] = set()
+                        if self.state.position is not None and self.state.position.side == decision.side:
+                            next_book_version = self.state.position.working_exit_book_version + 1
+                            completed_exit_ids = set(self.state.position.completed_exit_ids)
+                        active_tp_price, working_exits = build_working_exit_book(
+                            self.config,
+                            entry_price=bar.close,
+                            is_long=is_long,
+                            price_tick=self.instrument.price_tick,
+                            atr_value=self.tp_atr_tracker.atr,
+                            initial_risk_per_unit=initial_risk,
+                            book_version=next_book_version,
+                            completed_exit_ids=completed_exit_ids,
+                        )
+                        self.position_manager.open_position(
+                            bar=bar,
+                            side=decision.side,
+                            qty=entry_qty,
+                            state=self.state,
+                            reason=decision.reason,
+                            active_stop_price=entry_stop_price,
+                            active_tp_price=active_tp_price,
+                            working_exits=working_exits,
+                        )
+                        if self._tw_pending_reentry_side == decision.side:
+                            self._tw_pending_reentry_side = None
+                            self._tw_pending_reentry_reason = None
 
             self.state.block_new_entries_this_bar = (
                 warmup_blocks_entry
@@ -1046,6 +1470,8 @@ class Runner:
             self._prev_bar = bar
             self._l18_prev_raw_long = raw.long
             self._l18_prev_raw_short = raw.short
+            if self._corrected_semantics:
+                self.corrected_equity_curve.append(self.state.equity)
         # --- L24: DEBUG METADATA ---
         if bool(self.config.get("debug_mode", False)):
             self._debug_metadata = {
@@ -1348,6 +1774,15 @@ class Runner:
 
         is_long = pending_side == POSITION_SIDE_LONG
         entry_price = float(bar.open)
+        if self._corrected_semantics:
+            self._apply_corrected_entry(
+                bar=bar,
+                reference_price=entry_price,
+                side=pending_side,
+                reason=pending_reason,
+                sizing_equity=sizing_equity_snapshot,
+            )
+            return
         entry_stop_price = self._entry_stop_price(bar=bar, entry_price=entry_price, is_long=is_long)
         entry_qty = self.position_sizer.calc_qty(
             entry_price,
@@ -1418,14 +1853,29 @@ class Runner:
             exit_pct = self._tw_margin_call_exit_pct(mark_price=checkpoint_price)
             if exit_pct <= 0.0:
                 continue
-            self.position_manager.close_position(
-                bar=bar,
-                exit_price=checkpoint_price,
-                reason=REASON_EXIT_MARGIN_CALL,
-                state=self.state,
-                exit_pct=exit_pct,
-                exit_id=REASON_EXIT_MARGIN_CALL,
-            )
+            if self._corrected_semantics:
+                reference_qty = (
+                    self.state.position.working_exit_reference_qty
+                    if self.state.position.working_exit_reference_qty > 0.0
+                    else self.state.position.qty
+                )
+                self._apply_corrected_market_exit(
+                    bar=bar,
+                    reference_price=checkpoint_price,
+                    reason=REASON_EXIT_MARGIN_CALL,
+                    quantity=min(
+                        self.state.position.qty, reference_qty * exit_pct
+                    ),
+                )
+            else:
+                self.position_manager.close_position(
+                    bar=bar,
+                    exit_price=checkpoint_price,
+                    reason=REASON_EXIT_MARGIN_CALL,
+                    state=self.state,
+                    exit_pct=exit_pct,
+                    exit_id=REASON_EXIT_MARGIN_CALL,
+                )
 
     def _tw_margin_call_checkpoints(self, *, bar: Bar) -> list[float]:
         position = self.state.position

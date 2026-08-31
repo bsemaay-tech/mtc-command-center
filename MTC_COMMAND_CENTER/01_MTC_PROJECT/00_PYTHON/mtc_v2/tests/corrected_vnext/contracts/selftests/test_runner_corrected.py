@@ -1,0 +1,310 @@
+from __future__ import annotations
+
+import json
+from dataclasses import replace
+from datetime import datetime
+from pathlib import Path
+
+import pytest
+
+from mtc_v2.core.economics import EconomicsRefusal
+from mtc_v2.core.runner import Runner
+from mtc_v2.core.types import Bar, EntryLeg, Position
+
+
+MTC_V2_ROOT = Path(__file__).resolve().parents[4]
+INPUT_ROOT = MTC_V2_ROOT / "tests" / "corrected_vnext" / "contracts" / "inputs"
+
+
+def _scenario(scenario_id: str) -> tuple[dict[str, object], list[Bar]]:
+    document = json.loads((INPUT_ROOT / f"{scenario_id}.json").read_text(encoding="utf-8"))
+    legacy = document["legacy_arm"]
+    corrected = document["corrected_only"]
+    economic = corrected["economic_inputs"]
+    config = {
+        **legacy["config"],
+        **corrected["records"],
+        "kernel_semantics_version": "2.0.0",
+        "same_bar_collision_policy_id": economic.get(
+            "same_bar_collision_policy_id", "STOP_FIRST"
+        ),
+        "slippage_model_id": "BPS_OF_REFERENCE_V1",
+    }
+    bars = [
+        Bar(
+            timestamp=datetime.fromisoformat(row["timestamp"].replace("Z", "+00:00")),
+            open=float(row["open"]),
+            high=float(row["high"]),
+            low=float(row["low"]),
+            close=float(row["close"]),
+            volume=float(row["volume"]),
+            bar_index=int(row["bar_index"]),
+        )
+        for row in legacy["bars"]
+    ]
+    return config, bars
+
+
+def _open_long(*, entry_bar: int = 1) -> Position:
+    return Position(
+        side="long",
+        entry_price=100.0,
+        avg_entry_price=100.0,
+        qty=1.0,
+        entry_bar=entry_bar,
+        initial_qty=1.0,
+        entry_legs=[EntryLeg(100.0, 1.0, entry_bar)],
+        lifecycle_id=1,
+        working_exit_reference_qty=1.0,
+    )
+
+
+def test_main_runner_entry_path_uses_corrected_final_fill_and_fee_transition() -> None:
+    config, bars = _scenario("RULE2-05-RED")
+    # Keep this runner-path fixture independently executable: the sealed
+    # RULE2-05 input omits its design-stated requested_quantity=1 and would
+    # correctly floor 100 * 10% / final_fill(101) to zero.
+    config["fallback_size_pct"] = 20.0
+    runner = Runner(config)
+
+    runner.run(bars)
+
+    assert runner.state.position is not None
+    assert runner.state.position.entry_price == 101.0
+    assert [row.final_fill_price for row in runner.state.fill_events] == [101.0]
+    assert runner.state.cumulative_fee == 0.04545
+    assert runner.state.equity == pytest.approx(999.95455)
+
+
+def test_main_runner_round_trip_uses_gross_minus_fees_for_all_open10_guards() -> None:
+    config, bars = _scenario("RULE2-07-RED")
+    runner = Runner(config)
+
+    runner.run(bars)
+
+    assert runner.state.position is None
+    assert len(runner.state.fill_events) == 2
+    assert runner.state.last_gross_realized_pnl == 0.0
+    assert runner.state.last_closed_guard_pnl == -0.2
+    assert runner.state.equity == 999.8
+    assert runner._l16_consec_loss_count == 1
+    assert runner.corrected_guard_snapshot == {
+        "guard_pnl_basis": "GROSS_MINUS_FEES",
+        "funding_included_in_guard_basis": False,
+        "last_closed_guard_pnl": -0.2,
+        "consecutive_loss_count": 1,
+        "guard_blocked_raw": True,
+    }
+
+
+@pytest.mark.parametrize(
+    ("max_daily_loss_pct", "guard_blocked"),
+    [(0.005, True), (1.0, False)],
+)
+def test_open10_daily_loss_red_green_use_gross_minus_fees(
+    max_daily_loss_pct: float, guard_blocked: bool
+) -> None:
+    config, bars = _scenario("RULE2-07-RED")
+    config.update(
+        use_consecutive_loss_halt=False,
+        use_daily_loss_limit=True,
+        use_time_stop=False,
+        max_daily_loss_pct=max_daily_loss_pct,
+    )
+    runner = Runner(config)
+
+    runner.run(bars[:1])
+    runner._l16_last_trade_day = "20000101"
+    runner._l16_day_open_equity = 1000.0
+    runner.run(bars[1:])
+
+    assert runner.state.guard_realized_equity == -0.1
+    assert runner.corrected_guard_snapshot["guard_blocked_raw"] is guard_blocked
+
+
+def test_open10_daily_loss_excludes_funding_cash() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    config.update(use_daily_loss_limit=True, max_daily_loss_pct=0.005)
+    runner = Runner(config)
+    runner.state.position = _open_long()
+    runner._l16_last_trade_day = "20000101"
+    runner._l16_day_open_equity = 1000.0
+
+    runner.run(bars[1:])
+
+    assert runner.state.cumulative_funding == -0.1
+    assert runner.state.guard_realized_equity == 0.0
+    assert runner.corrected_guard_snapshot["guard_blocked_raw"] is False
+
+
+@pytest.mark.parametrize(
+    ("condition", "closed"),
+    [("Loss Only", True), ("Profit Only", False)],
+)
+def test_open10_time_stop_red_green_classify_last_closed_gross_minus_fees(
+    condition: str, closed: bool
+) -> None:
+    config, bars = _scenario("RULE2-07-RED")
+    config.update(
+        use_consecutive_loss_halt=False,
+        time_stop_condition=condition,
+        time_stop_bars=1,
+    )
+    runner = Runner(config)
+    runner.run(bars[:1])
+    runner.state.position = _open_long(entry_bar=0)
+    runner.state.last_realized_pnl = -0.2
+
+    runner.run(bars[1:2])
+
+    assert (runner.state.position is None) is closed
+
+
+def test_corrected_runner_normalizes_dynamic_stop_owner_to_stop_exit_id() -> None:
+    config, bars = _scenario("RULE2-04-RED")
+    runner = Runner(config)
+
+    runner.run(bars)
+
+    stop_fill = [row for row in runner.state.fill_events if row.event_class == "PROTECTIVE_STOP_EXIT"]
+    assert len(stop_fill) == 1
+    assert stop_fill[0].exit_id == "STOP"
+    assert stop_fill[0].fill_trigger == "GAP_OPEN"
+
+
+def test_target_first_is_test_only_and_production_runner_refuses_it() -> None:
+    config, bars = _scenario("RULE2-06-RED")
+
+    with pytest.raises(EconomicsRefusal, match="acceptance-bearing"):
+        Runner(config).run(bars)
+
+
+def test_contract_test_runner_can_exercise_target_first_atomic_fill_order() -> None:
+    config, bars = _scenario("RULE2-06-RED")
+    runner = Runner.for_corrected_contract(config)
+
+    runner.run(bars)
+
+    exits = [row for row in runner.state.fill_events if row.event_class.endswith("EXIT")]
+    assert [row.exit_id for row in exits] == ["TP1", "TP2"]
+    assert [row.quantity for row in exits] == [1.0, 1.0]
+    assert runner.state.position is None
+
+
+def test_funding_boundary_is_applied_before_same_timestamp_bar_evaluation() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    runner._bind_corrected_instrument(bars[0].timestamp)
+    runner.state.position = Position(
+        side="long",
+        entry_price=100.0,
+        avg_entry_price=100.0,
+        qty=1.0,
+        entry_bar=1,
+        initial_qty=1.0,
+        entry_legs=[EntryLeg(100.0, 1.0, 1)],
+        lifecycle_id=1,
+        working_exit_reference_qty=1.0,
+    )
+    event_time = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
+    previous = Bar(
+        datetime.fromisoformat("1999-12-31T23:59:00+00:00"),
+        100.0,
+        100.0,
+        100.0,
+        100.0,
+        0.0,
+        1,
+    )
+    current = Bar(event_time, 100.0, 100.0, 100.0, 100.0, 0.0, 2)
+
+    runner._apply_corrected_funding_between(previous, current)
+
+    assert runner.state.cumulative_funding == -0.1
+    assert runner.state.funding_events[0].event_timestamp == event_time
+    assert runner.state.equity == 999.9
+
+
+def test_record_runtime_override_refuses_before_first_economic_intent() -> None:
+    config, bars = _scenario("RULE2-03-RED")
+    runner = Runner(config)
+
+    with pytest.raises(ValueError, match="REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION"):
+        runner.run(bars)
+
+
+@pytest.mark.parametrize(
+    "profile_id", ["raw_close_only_v1", "close_only_deterministic_v2"]
+)
+def test_p02_corrected_profiles_share_the_same_entry_economics(profile_id: str) -> None:
+    config, bars = _scenario("RULE2-05-GREEN")
+    config["execution_profile_id"] = profile_id
+    runner = Runner(config)
+
+    runner.run(bars)
+
+    assert len(runner.state.fill_events) == 1
+    assert runner.state.fill_events[0].reference_price == 100.0
+    assert runner.state.fill_events[0].final_fill_price == 100.0
+
+
+def test_p03_corrected_entry_keeps_decision_close_distinct_from_open() -> None:
+    config, bars = _scenario("RULE2-05-GREEN")
+    bars[1] = replace(bars[1], open=99.0, low=99.0)
+    runner = Runner(config)
+
+    runner.run(bars)
+
+    assert runner.state.fill_events[0].reference_price == 100.0
+    assert runner.state.fill_events[0].final_fill_price == 100.0
+
+
+def test_p05_new_position_is_immune_to_its_opening_bar_extremes() -> None:
+    config, bars = _scenario("RULE2-04-RED")
+    opening_bar = replace(bars[1], high=115.0, low=85.0)
+    runner = Runner(config)
+
+    runner.run([bars[0], opening_bar])
+
+    assert runner.state.position is not None
+    assert runner.state.position.active_stop_price == 90.0
+    assert not [row for row in runner.state.fill_events if row.event_class.endswith("EXIT")]
+
+
+def test_p06_existing_stop_wins_and_blocks_same_bar_entry_signal() -> None:
+    config, bars = _scenario("RULE2-04-RED")
+    collision_bar = replace(bars[2], open=100.0, high=110.0, low=85.0, close=105.0)
+    runner = Runner(config)
+
+    runner.run([bars[0], bars[1], collision_bar])
+
+    assert runner.state.position is None
+    assert runner.state.fill_events[-1].event_class == "PROTECTIVE_STOP_EXIT"
+    assert runner.state.block_new_entries_this_bar is True
+
+
+def test_p08_same_side_add_rebooks_from_the_final_fill() -> None:
+    config, bars = _scenario("RULE2-05-GREEN")
+    config["max_entries"] = 2
+    runner = Runner(config)
+    runner._bind_corrected_instrument(bars[0].timestamp)
+
+    assert runner._apply_corrected_entry(
+        bar=bars[1],
+        reference_price=100.0,
+        side="long",
+        reason="p08_first",
+        sizing_equity=1000.0,
+    )
+    assert runner._apply_corrected_entry(
+        bar=replace(bars[1], bar_index=2),
+        reference_price=100.0,
+        side="long",
+        reason="p08_add",
+        sizing_equity=1000.0,
+    )
+
+    assert runner.state.position is not None
+    assert runner.state.position.qty == 2.0
+    assert runner.state.position.avg_entry_price == 100.0
+    assert runner.state.position.working_exit_book_version == 2
