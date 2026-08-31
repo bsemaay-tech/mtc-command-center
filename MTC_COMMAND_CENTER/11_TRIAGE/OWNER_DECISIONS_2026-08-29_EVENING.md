@@ -317,10 +317,10 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     policy). OPEN-02's `STOP_FIRST` remains the mandatory policy for all acceptance-bearing
     2.0.0 production runs. No table or design change needed; the sealed bundle stands.
 
-## Addendum 19 — 2026-08-31 ~18:45 (owner verbatim: "1a")
+## Addendum 19 - 2026-08-31 ~18:45 (owner verbatim: "1a")
 
 48. **P0-12 INPUT-EMBEDDING ADDENDUM AUTHORIZED (option 1a).** Context: W152 input
-    materialization honestly blocked 0/17 — design v1.4 states every economic vector value
+    materialization honestly blocked 0/17 - design v1.4 states every economic vector value
     but not the mechanical embeddings a runnable input file needs (complete Bar arrays,
     existing-position/target-book premise seeds, the RULE2-01-GREEN NaN wire encoding,
     synthetic test-only CostSchedule values for fill-bearing scenarios). Same gap classes
@@ -331,16 +331,16 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     additions only where design/owner-approved sources exist, otherwise honest [OPEN-EMBED]
     rows), followed by a detection pass, a CONTRACT_TABLES revision + re-seal by the tables
     family, input materialization, digest-pin, dry-run, THE ONE baseline run (Q4a
-    unchanged), then the kernel build — continuing tonight without further owner gates
+    unchanged), then the kernel build - continuing tonight without further owner gates
     except the standing sec-16 human review at build acceptance.
 
-## Addendum 20 — 2026-08-31 ~20:55 (owner verbatim: "1a 2a 3a 4a 5a")
+## Addendum 20 - 2026-08-31 ~20:55 (owner verbatim: "1a 2a 3a 4a 5a")
 
 49. **OPEN-EMBED-01..05 CLOSED** (the five embedding questions design v1.5 honestly
     refused): (1a) omitted initial equity = 1000 for RULE2-03/04/05/06 families;
     (2a) RULE2-04 entry basis/fill = 100 via the candidate entry/BE path;
     (3a) RULE2-06-EQUAL-PRICE equal-target book is constructed by the corrected (2.0.0)
-    target-book test machinery directly — legacy engine untouched, scenario recorded
+    target-book test machinery directly - legacy engine untouched, scenario recorded
     honestly as not-runnable-on-legacy for that book; (4a) RULE2-08-RED pre-event entry
     basis/fill = 100; (5a) RULE2-08-GREEN closed-lifecycle premise built with ordinary
     price bars before the observation window (real mechanism, nothing injected).
