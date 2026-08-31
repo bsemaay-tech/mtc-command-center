@@ -75,17 +75,23 @@ class _StaticSignals:
 
 def test_main_runner_entry_path_uses_corrected_final_fill_and_fee_transition() -> None:
     config, bars = _scenario("RULE2-05-RED")
-    # Keep this runner-path fixture independently executable: the sealed
-    # RULE2-05 input omits its design-stated requested_quantity=1 and would
-    # correctly floor 100 * 10% / final_fill(101) to zero.
-    config["fallback_size_pct"] = 20.0
-    runner = Runner(config)
+    runner = Runner.for_corrected_contract(
+        config,
+        requested_quantity_override=1.0,
+    )
 
     runner.run(bars)
 
     assert runner.state.position is not None
     assert runner.state.position.entry_price == 101.0
-    assert [row.final_fill_price for row in runner.state.fill_events] == [101.0]
+    assert [
+        (row.final_fill_price, row.quantity)
+        for row in runner.state.fill_events
+    ] == [(101.0, 1.0)]
+    assert [
+        (row.kind, row.signed_delta)
+        for row in runner.state.cash_events
+    ] == [("FEE", -0.04545)]
     assert runner.state.cumulative_fee == 0.04545
     assert runner.state.equity == pytest.approx(999.95455)
 
@@ -107,8 +113,18 @@ def test_main_runner_round_trip_uses_gross_minus_fees_for_all_open10_guards() ->
         "funding_included_in_guard_basis": False,
         "last_closed_guard_pnl": -0.2,
         "consecutive_loss_count": 1,
+        "consec_loss_ok": False,
         "guard_blocked_raw": True,
     }
+
+
+def test_corrected_green_guard_surface_emits_consecutive_loss_outcome() -> None:
+    config, bars = _scenario("RULE2-07-GREEN")
+    runner = Runner(config)
+
+    runner.run(bars)
+
+    assert runner.corrected_guard_snapshot["consec_loss_ok"] is True
 
 
 @pytest.mark.parametrize(

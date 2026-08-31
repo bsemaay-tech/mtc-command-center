@@ -138,6 +138,7 @@ class Runner:
         self._corrected_semantics = self.kernel_semantics_version == "2.0.0"
         self._allow_corrected_test_policy = False
         self._corrected_selector_stop_override: float | None = None
+        self._corrected_requested_quantity_override: float | None = None
         self._corrected_test_target_book: dict[str, tuple[str, float, float]] = {}
         self._corrected_records: EconomicRecords | None = None
         self._corrected_instrument_bound = False
@@ -297,6 +298,7 @@ class Runner:
             "funding_included_in_guard_basis": False,
             "last_closed_guard_pnl": 0.0,
             "consecutive_loss_count": 0,
+            "consec_loss_ok": True,
             "guard_blocked_raw": False,
         }
         self.corrected_equity_curve: list[float] = []
@@ -371,6 +373,7 @@ class Runner:
         config: dict[str, object],
         *,
         selector_stop_override: float | None = None,
+        requested_quantity_override: float | None = None,
         target_book_overrides: Mapping[str, tuple[str, float, float]] | None = None,
     ) -> "Runner":
         """Create the non-production runner used by declared migration fixtures."""
@@ -383,6 +386,7 @@ class Runner:
             )
         runner._allow_corrected_test_policy = True
         runner._corrected_selector_stop_override = selector_stop_override
+        runner._corrected_requested_quantity_override = requested_quantity_override
         runner._corrected_test_target_book = dict(target_book_overrides or {})
         return runner
 
@@ -523,6 +527,7 @@ class Runner:
                 ),
                 fallback_size_pct=float(self.config["fallback_size_pct"]),
                 max_leverage_cap=self.max_leverage_cap,
+                requested_quantity=self._corrected_requested_quantity_override,
                 event_class="ENTRY",
                 reason=reason,
             ),
@@ -1223,6 +1228,7 @@ class Runner:
                         "funding_included_in_guard_basis": False,
                         "last_closed_guard_pnl": self.state.last_closed_guard_pnl,
                         "consecutive_loss_count": self._l16_consec_loss_count,
+                        "consec_loss_ok": consec_loss_ok,
                         "guard_blocked_raw": guard_blocked_raw,
                     }
 

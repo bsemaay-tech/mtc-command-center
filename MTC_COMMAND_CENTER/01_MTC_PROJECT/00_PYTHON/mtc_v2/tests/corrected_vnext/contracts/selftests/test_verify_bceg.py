@@ -7,7 +7,9 @@ import pytest
 
 from mtc_v2.tests.corrected_vnext.verify_bceg import (
     GateRefusal,
+    build_projection_results,
     compare_documents,
+    compare_scoped_expected,
     decode_stop_price_f64,
     execute_corrected_scenario,
     load_json_exact,
@@ -40,6 +42,27 @@ def test_one_node_difference_is_predetected_exactly() -> None:
     difference = compare_documents(left, right)
     assert difference is not None
     assert difference[0] == "/a/1"
+
+
+def test_corrected_expectation_compares_only_the_two_design_surfaces() -> None:
+    expected = {
+        "EVENT_SURFACE": {"events": []},
+        "RESULT_SURFACE": {"value": 1},
+        "provenance": {"author": "tables"},
+        "blocked_cells": ["authoring-only"],
+    }
+    observed = {
+        "EVENT_SURFACE": {"events": []},
+        "RESULT_SURFACE": {"value": 1},
+        "provenance": {"author": "kernel"},
+    }
+
+    assert compare_scoped_expected(expected, observed) is None
+
+    observed["RESULT_SURFACE"]["value"] = 2
+    difference = compare_scoped_expected(expected, observed)
+    assert difference is not None
+    assert difference[0] == "/RESULT_SURFACE/value"
 
 
 @pytest.mark.parametrize(
@@ -133,6 +156,81 @@ def test_corrected_scenario_executes_real_seam_and_emits_six_containers() -> Non
         "exit_events",
     ]
     assert observed["RESULT_SURFACE"]["run_manifest"]["kernel_semantics_version"] == "2.0.0"
+
+
+def test_rule2_05_red_honors_explicit_quantity_after_slippage() -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-05-RED")
+
+    observed = execute_corrected_scenario(MTC_V2_ROOT, row)
+
+    assert [
+        (member["final_fill_price"], member["quantity"])
+        for member in observed["EVENT_SURFACE"]["fill_events"]
+    ] == [(101, 1)]
+    assert [
+        (member["kind"], member["signed_delta"])
+        for member in observed["EVENT_SURFACE"]["cash_events"]
+    ] == [("FEE", -0.04545)]
+    assert observed["EVENT_SURFACE"]["fee_events"][0]["fee_cash_delta"] == -0.04545
+
+
+@pytest.mark.parametrize(
+    ("scenario_id", "expected_cash", "expected_cumulative"),
+    [
+        ("RULE2-08-RED", [("FUNDING", -0.1)], -0.1),
+        ("RULE2-08-GREEN", [], 0),
+    ],
+)
+def test_rule2_08_null_cost_is_not_consumed_and_funding_is_projected(
+    scenario_id: str,
+    expected_cash: list[tuple[str, float]],
+    expected_cumulative: float,
+) -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+
+    observed = execute_corrected_scenario(MTC_V2_ROOT, row)
+
+    result = observed["RESULT_SURFACE"]
+    event = observed["EVENT_SURFACE"]
+    assert result["refusals"] == []
+    assert result["run_manifest"]["cost_schedule_id"] == "NOT_CONSUMED"
+    assert [(member["kind"], member["signed_delta"]) for member in event["cash_events"]] == expected_cash
+    assert [member["funding_cash_delta"] for member in event["funding_events"]] == [
+        delta for _kind, delta in expected_cash
+    ]
+    assert result["cumulative_funding"] == expected_cumulative
+
+
+@pytest.mark.parametrize(
+    ("scenario_id", "selector"),
+    [
+        ("RULE2-02-RED", "/EVENT_SURFACE/decision_events/3/decision"),
+        ("RULE2-03-RED", "/EVENT_SURFACE/decision_events/1/decision"),
+        ("RULE2-03-GREEN", "consumed price_tick"),
+    ],
+)
+def test_missing_decision_projection_resolves_absent(
+    scenario_id: str, selector: str
+) -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+    input_document = load_json_exact(MTC_V2_ROOT / row["input"]["path"])
+    legacy = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/observed/1.0.0" / f"{scenario_id}.json"
+    )
+    corrected = execute_corrected_scenario(MTC_V2_ROOT, row)
+
+    projections = build_projection_results(
+        scenario_id,
+        input_document,
+        legacy["RESULT_SURFACE"],
+        corrected,
+    )
+
+    selected = next(member for member in projections if member["selector"] == selector)
+    assert selected["corrected"] == {"tag": "ABSENT"}
 
 
 def test_all_cataloged_corrected_scenarios_are_executable() -> None:

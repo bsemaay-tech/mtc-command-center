@@ -18,6 +18,7 @@ import math
 import re
 import struct
 import sys
+from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path, PurePosixPath
@@ -496,6 +497,35 @@ def _target_book_overrides(
     }
 
 
+def _prepare_rule2_08_observation(
+    runner: Runner,
+    *,
+    scenario_id: str,
+    legacy: dict[str, Any],
+    corrected: dict[str, Any],
+    bars: list[Bar],
+) -> list[Bar]:
+    """Build the pre-window premise without consuming a corrected CostSchedule."""
+
+    window_start = _timestamp(corrected["observation_window"]["start_timestamp"])
+    setup_bars = [bar for bar in bars if bar.timestamp < window_start]
+    if not setup_bars:
+        raise GateRefusal("RULE2_08_SETUP_INVALID", "missing pre-window bars")
+    setup = Runner(dict(legacy["config"]))
+    setup.run(setup_bars)
+    expected_open = scenario_id == "RULE2-08-RED"
+    if (setup.state.position is not None) is not expected_open:
+        raise GateRefusal("RULE2_08_SETUP_INVALID", scenario_id)
+
+    # Design v1.5 line 429 makes both RULE2-08 rows funding-only inside the
+    # observation window; lines 888-889 make CostSchedule absent/NOT_CONSUMED.
+    runner.state.position = deepcopy(setup.state.position)
+    runner.state.equity = setup.state.equity
+    runner.state.realized_equity = setup.state.realized_equity
+    runner.state.next_position_lifecycle_id = setup.state.next_position_lifecycle_id
+    return [setup_bars[-1], *[bar for bar in bars if bar.timestamp >= window_start]]
+
+
 def _refusal_surfaces(
     *,
     config: dict[str, Any],
@@ -577,17 +607,30 @@ def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any
         config.pop("instrument_min_notional", None)
     bars = _bars(document)
     selector_stop = decode_stop_price_f64(document, scenario_id=scenario_id)
+    # Design v1.5 lines 315 and 870 bind RULE2-05's requested quantity to 1;
+    # slippage changes its fill price, not the already-requested quantity.
+    requested_quantity = 1.0 if scenario_id.startswith("RULE2-05-") else None
     target_book = _target_book_overrides(scenario_id, document, bars)
-    if selector_stop is not None or target_book:
+    if selector_stop is not None or requested_quantity is not None or target_book:
         runner = Runner.for_corrected_contract(
             config,
             selector_stop_override=selector_stop,
+            requested_quantity_override=requested_quantity,
             target_book_overrides=target_book,
         )
     else:
         runner = Runner(config)
+    execution_bars = bars
+    if scenario_id.startswith("RULE2-08-"):
+        execution_bars = _prepare_rule2_08_observation(
+            runner,
+            scenario_id=scenario_id,
+            legacy=legacy,
+            corrected=corrected,
+            bars=bars,
+        )
     try:
-        runner.run(bars)
+        runner.run(execution_bars)
     except (EconomicsRefusal, InstrumentRecordRefusal) as exc:
         surfaces = _refusal_surfaces(config=config, records=records, refusal=exc)
     else:
@@ -650,7 +693,27 @@ def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any
 def compare_scoped_expected(
     expected: Any, observed: Any, pointer: str = ""
 ) -> tuple[str, str | None, str | None] | None:
-    """Compare concrete sealed nodes while excluding literal BLOCKED marker cells."""
+    """Compare design section 15.3 surfaces, excluding literal BLOCKED cells."""
+
+    if pointer == "":
+        if type(expected) is not dict or type(observed) is not dict:
+            return pointer, canonical_node(observed), canonical_node(expected)
+        # Design v1.5 section 15.3 (lines 469-476) defines exactly these two
+        # comparison surfaces. Golden authoring metadata is outside the gate.
+        for surface in ("EVENT_SURFACE", "RESULT_SURFACE"):
+            child = f"/{surface}"
+            if surface not in expected or surface not in observed:
+                return (
+                    child,
+                    None if surface not in observed else canonical_node(observed[surface]),
+                    None if surface not in expected else canonical_node(expected[surface]),
+                )
+            difference = compare_scoped_expected(
+                expected[surface], observed[surface], child
+            )
+            if difference is not None:
+                return difference
+        return None
 
     if type(expected) is str and expected.startswith("BLOCKED-"):
         return None
@@ -758,17 +821,7 @@ def materialize_observed_artifacts(root: Path, baseline_root: Path) -> dict[str,
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(canonical_json_bytes(document))
         golden = load_json_exact(root / row["expected_artifacts"]["2.0.0"]["path"])
-        event_difference = compare_scoped_expected(
-            golden["EVENT_SURFACE"],
-            corrected["EVENT_SURFACE"],
-            "/EVENT_SURFACE",
-        )
-        result_difference = compare_scoped_expected(
-            golden["RESULT_SURFACE"],
-            corrected["RESULT_SURFACE"],
-            "/RESULT_SURFACE",
-        )
-        corrected_difference = event_difference or result_difference
+        corrected_difference = compare_scoped_expected(golden, corrected)
         projection_error: str | None = None
         try:
             projections = build_projection_results(
@@ -1053,6 +1106,24 @@ def _refusal(code: str) -> dict[str, str]:
     return {"tag": "REFUSAL", "refusal_code": code}
 
 
+def _projection_value(
+    root: Any, *path: str | int, kind: str | None = None
+) -> dict[str, Any]:
+    """Resolve a version-local selector to PRESENT or ABSENT without indexing errors."""
+
+    value = root
+    for token in path:
+        if type(token) is str and type(value) is dict and token in value:
+            value = value[token]
+        elif type(token) is int and type(value) is list and 0 <= token < len(value):
+            value = value[token]
+        else:
+            # Design v1.5 line 510 distinguishes an absent version-local node
+            # from a selector execution failure.
+            return _absent()
+    return _present(value, kind)
+
+
 def _legacy_event(result: dict[str, Any], index: int) -> dict[str, Any]:
     return result["events"][index]
 
@@ -1094,7 +1165,7 @@ def build_projection_results(
             pair("/RESULT_SURFACE/refusals/0/code", _absent(), _present(corrected_refusals[0]["code"]))
             pair("/EVENT_SURFACE/fill_events", _present([None] * len(legacy_events)), _present(event["fill_events"]))
             pair("/RESULT_SURFACE/final_position", _present({"side": "LONG", "quantity": 1}), _present(result["final_position"]))
-            pair("/EVENT_SURFACE/decision_events/3/decision", _absent(), _present(event["decision_events"][3]["decision"]))
+            pair("/EVENT_SURFACE/decision_events/3/decision", _absent(), _projection_value(event, "decision_events", 3, "decision"))
         else:
             pair("/RESULT_SURFACE/admitted", _present(position["present"]), _present(result["final_position"] is not None))
             pair("/EVENT_SURFACE/fill_events/0/quantity", _present(_decode_legacy_number(legacy_events[0]["qty"]), "I"), _present(event["fill_events"][0]["quantity"], "I"))
@@ -1103,13 +1174,12 @@ def build_projection_results(
         runtime_tick = input_document["legacy_arm"]["config"]["instrument_price_tick"]
         if scenario_id.endswith("RED"):
             pair("/RESULT_SURFACE/refusals/0/code", _absent(), _present(result["refusals"][0]["code"]))
-            pair("/EVENT_SURFACE/decision_events/1/decision", _absent(), _present(event["decision_events"][1]["decision"]))
+            pair("/EVENT_SURFACE/decision_events/1/decision", _absent(), _projection_value(event, "decision_events", 1, "decision"))
             pair("/EVENT_SURFACE/fill_events", _present([None] * len(legacy_events)), _refusal(result["refusals"][0]["code"]))
             pair("consumed price_tick", _present(runtime_tick, "F"), _refusal(result["refusals"][0]["code"]))
         else:
-            record_tick = event["decision_events"][1]["record_value"]
             pair("/RESULT_SURFACE/refusals", _present([]), _present(result["refusals"]))
-            pair("consumed price_tick", _present(runtime_tick, "F"), _present(record_tick, "F"))
+            pair("consumed price_tick", _present(runtime_tick, "F"), _projection_value(event, "decision_events", 1, "record_value", kind="F"))
             pair("/RESULT_SURFACE/final_position", _present(None), _present(result["final_position"]))
     elif scenario_id.startswith("RULE2-04-"):
         if scenario_id.endswith("RED"):
