@@ -2,7 +2,21 @@ from __future__ import annotations
 
 from mtc_v2.core.exits import STOP_OWNER_INITIAL
 from mtc_v2.core.rounding import floor_qty_to_step
-from mtc_v2.core.types import Bar, EntryDecision, EntryLeg, ExitEvent, PortfolioState, Position, RawSignal, WorkingExit
+from mtc_v2.core.types import (
+    Bar,
+    CashEventKind,
+    EconomicTransition,
+    EconomicTransitionError,
+    EntryDecision,
+    EntryLeg,
+    ExitEvent,
+    FillDecision,
+    PortfolioState,
+    Position,
+    RawSignal,
+    REFUSED_INVALID_CASH_LEDGER_JOIN,
+    WorkingExit,
+)
 
 
 POSITION_SIDE_LONG = "long"
@@ -97,6 +111,368 @@ class PositionManager:
         self.cooldown_bars = int(cooldown_bars)
         self.contract_multiplier = float(contract_multiplier)
         self.qty_step = float(qty_step)
+
+    @staticmethod
+    def _transition_key(transition: EconomicTransition) -> tuple[object, ...]:
+        return (
+            transition.semantics_id,
+            transition.instrument_record_digest,
+            transition.cost_schedule_digest,
+            transition.funding_schedule_digest,
+            tuple(
+                (
+                    row.event_timestamp,
+                    row.lifecycle_id,
+                    row.cash_event_id,
+                    row.kind.value,
+                    row.signed_delta,
+                )
+                for row in transition.cash_events
+            ),
+            tuple(
+                (row.event_timestamp, row.lifecycle_id, row.fill_id, row.event_class)
+                for row in transition.fill_decisions
+            ),
+            tuple(
+                (row.event_timestamp, row.lifecycle_id, row.sequence, row.decision)
+                for row in transition.decision_events
+            ),
+        )
+
+    @staticmethod
+    def _cash_key(row: object) -> tuple[object, ...]:
+        return (
+            getattr(row, "event_timestamp"),
+            getattr(row, "lifecycle_id"),
+            getattr(row, "cash_event_id"),
+        )
+
+    @staticmethod
+    def _position_after_exit(
+        position: Position,
+        fills: tuple[FillDecision, ...],
+        *,
+        next_quantity: float,
+        qty_step: float,
+    ) -> Position | None:
+        exited = sum(row.quantity for row in fills)
+        calculated_remainder = max(0.0, position.qty - exited)
+        if abs(calculated_remainder - next_quantity) > 1e-12:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: next position quantity mismatch"
+            )
+        if next_quantity <= 1e-12:
+            return None
+
+        legs = list(position.entry_legs)
+        completed = set(position.completed_exit_ids)
+        working = list(position.working_exits)
+        for fill in fills:
+            legs = _deplete_entry_legs(legs, exit_qty=fill.quantity, qty_step=qty_step)
+            if fill.exit_id is None:
+                continue
+            completed.add(fill.exit_id)
+            working = [
+                WorkingExit(
+                    exit_id=row.exit_id,
+                    kind=row.kind,
+                    target_price=row.target_price,
+                    stop_price=row.stop_price,
+                    qty_fraction=row.qty_fraction,
+                    book_version=row.book_version,
+                    active=row.active and row.exit_id != fill.exit_id,
+                )
+                for row in working
+            ]
+
+        return Position(
+            side=position.side,
+            entry_price=position.entry_price,
+            avg_entry_price=calc_avg_entry_price(legs),
+            qty=next_quantity,
+            entry_bar=position.entry_bar,
+            initial_qty=position.initial_qty,
+            active_stop_price=position.active_stop_price,
+            active_tp_price=_first_active_tp_price(working),
+            entry_legs=legs,
+            lifecycle_id=position.lifecycle_id,
+            working_exit_reference_qty=position.working_exit_reference_qty,
+            working_exit_book_version=position.working_exit_book_version,
+            active_stop_owner=position.active_stop_owner,
+            working_exits=working,
+            completed_exit_ids=completed,
+            be_active=position.be_active,
+            trail_active=position.trail_active,
+            trail_price=position.trail_price,
+            initial_risk_per_unit=position.initial_risk_per_unit,
+        )
+
+    def _position_after_open(
+        self,
+        state: PortfolioState,
+        transition: EconomicTransition,
+        *,
+        bar: Bar,
+        working_exits: list[WorkingExit] | None,
+    ) -> Position:
+        facts = transition.next_position_facts
+        fills = transition.fill_decisions
+        if len(fills) != 1 or facts.lifecycle_id is None or facts.side is None:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: invalid open transition shape"
+            )
+        fill = fills[0]
+        side = facts.side.lower()
+        exits = list(working_exits or [])
+        if state.position is None:
+            if abs(facts.quantity - fill.quantity) > 1e-12:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: open quantity mismatch"
+                )
+            return Position(
+                side=side,
+                entry_price=fill.final_fill_price,
+                avg_entry_price=fill.final_fill_price,
+                qty=facts.quantity,
+                entry_bar=bar.bar_index,
+                initial_qty=facts.quantity,
+                active_stop_price=facts.active_stop_price,
+                active_tp_price=_first_active_tp_price(exits),
+                entry_legs=[EntryLeg(fill.final_fill_price, fill.quantity, bar.bar_index)],
+                lifecycle_id=facts.lifecycle_id,
+                working_exit_reference_qty=facts.quantity,
+                working_exit_book_version=1,
+                active_stop_owner=(
+                    STOP_OWNER_INITIAL if facts.active_stop_price is not None else None
+                ),
+                working_exits=exits,
+                initial_risk_per_unit=(
+                    abs(fill.final_fill_price - facts.active_stop_price)
+                    if facts.active_stop_price is not None
+                    else None
+                ),
+            )
+
+        current = state.position
+        expected_quantity = current.qty + fill.quantity
+        if (
+            current.side != side
+            or current.lifecycle_id != facts.lifecycle_id
+            or abs(facts.quantity - expected_quantity) > 1e-12
+        ):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: add transition position mismatch"
+            )
+        legs = [*current.entry_legs, EntryLeg(fill.final_fill_price, fill.quantity, bar.bar_index)]
+        merged_stop = merge_pyramid_stop(
+            current.active_stop_price,
+            facts.active_stop_price,
+            is_long=side == POSITION_SIDE_LONG,
+        )
+        next_exits = exits if working_exits is not None else list(current.working_exits)
+        return Position(
+            side=current.side,
+            entry_price=current.entry_price,
+            avg_entry_price=calc_avg_entry_price(legs),
+            qty=facts.quantity,
+            entry_bar=current.entry_bar,
+            initial_qty=current.initial_qty + fill.quantity,
+            active_stop_price=merged_stop,
+            active_tp_price=_first_active_tp_price(next_exits),
+            entry_legs=legs,
+            lifecycle_id=current.lifecycle_id,
+            working_exit_reference_qty=facts.quantity,
+            working_exit_book_version=current.working_exit_book_version + 1,
+            active_stop_owner=current.active_stop_owner or STOP_OWNER_INITIAL,
+            working_exits=next_exits,
+            completed_exit_ids=set(current.completed_exit_ids),
+            be_active=current.be_active,
+            trail_active=current.trail_active,
+            trail_price=current.trail_price,
+            initial_risk_per_unit=current.initial_risk_per_unit,
+        )
+
+    def apply_transition(
+        self,
+        *,
+        bar: Bar,
+        state: PortfolioState,
+        transition: EconomicTransition,
+        reason: str | None = None,
+        working_exits: list[WorkingExit] | None = None,
+    ) -> None:
+        """Commit one already-resolved corrected economic transition atomically.
+
+        The manager applies only ``cash_events`` to equity. Fill prices, gross
+        realization, fees, and funding are facts supplied by the transition and
+        are never recalculated here.
+        """
+
+        if transition.semantics_id != "2.0.0":
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: corrected manager requires 2.0.0"
+            )
+        transition_key = self._transition_key(transition)
+        if transition_key in state.applied_transition_keys:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: transition already applied"
+            )
+        cash_keys = {
+            self._cash_key(row) for row in transition.cash_events
+        }
+        if cash_keys & state.applied_cash_event_keys:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: cash event already applied"
+            )
+        funding_ids = {row.funding_event_id for row in transition.funding_events}
+        if funding_ids & state.applied_funding_event_ids:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding event already applied"
+            )
+
+        facts = transition.next_position_facts
+        fills = transition.fill_decisions
+        entry_fills = tuple(row for row in fills if row.event_class.endswith("ENTRY"))
+        exit_fills = tuple(row for row in fills if not row.event_class.endswith("ENTRY"))
+        if entry_fills and exit_fills:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: mixed entry and exit transition"
+            )
+
+        next_position = state.position
+        exit_events: list[ExitEvent] = []
+        if entry_fills:
+            next_position = self._position_after_open(
+                state, transition, bar=bar, working_exits=working_exits
+            )
+        elif exit_fills:
+            if state.position is None:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: exit without position"
+                )
+            gross_by_fill = {
+                row.fill_id: row.signed_delta
+                for row in transition.cash_events
+                if row.kind is CashEventKind.GROSS_REALIZATION and row.fill_id is not None
+            }
+            if set(gross_by_fill) != {row.fill_id for row in exit_fills}:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: exit gross-cash join mismatch"
+                )
+            next_position = self._position_after_exit(
+                state.position,
+                exit_fills,
+                next_quantity=facts.quantity,
+                qty_step=self.qty_step,
+            )
+            collision = any(
+                dict(row.details).get("collision") == "True"
+                for row in transition.decision_events
+            )
+            for fill in exit_fills:
+                exit_events.append(
+                    ExitEvent(
+                        bar_index=bar.bar_index,
+                        exit_price=fill.final_fill_price,
+                        exit_qty=fill.quantity,
+                        exit_reason=reason or fill.event_class,
+                        realized_pnl=gross_by_fill[fill.fill_id],
+                        exit_id=fill.exit_id,
+                        was_pessimistic=(
+                            collision and fill.event_class == "PROTECTIVE_STOP_EXIT"
+                        ),
+                        was_partial=next_position is not None,
+                        fill_id=fill.fill_id,
+                        event_class=fill.event_class,
+                        fill_trigger=fill.fill_trigger,
+                    )
+                )
+        elif state.position is not None:
+            if (
+                facts.lifecycle_id != state.position.lifecycle_id
+                or facts.side is None
+                or facts.side.lower() != state.position.side
+                or abs(facts.quantity - state.position.qty) > 1e-12
+            ):
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: non-fill position mismatch"
+                )
+
+        funding_cash = sum(
+            row.signed_delta
+            for row in transition.cash_events
+            if row.kind is CashEventKind.FUNDING
+        )
+        if transition.funding_events:
+            expected_cumulative = state.cumulative_funding + funding_cash
+            if abs(transition.funding_events[-1].cumulative_funding - expected_cumulative) > 1e-12:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding cumulative mismatch"
+                )
+
+        cash_delta = sum(row.signed_delta for row in transition.cash_events)
+        guard_delta = sum(
+            row.signed_delta
+            for row in transition.cash_events
+            if row.kind in (CashEventKind.GROSS_REALIZATION, CashEventKind.FEE)
+        )
+        gross_delta = sum(
+            row.signed_delta
+            for row in transition.cash_events
+            if row.kind is CashEventKind.GROSS_REALIZATION
+        )
+
+        state.position = next_position
+        state.realized_equity += cash_delta
+        state.equity = state.initial_capital + state.realized_equity
+        state.guard_realized_equity += guard_delta
+        state.cumulative_fee += sum(row.fee_amount for row in transition.fee_events)
+        state.cumulative_funding += funding_cash
+        state.decision_events.extend(transition.decision_events)
+        state.fill_events.extend(transition.fill_decisions)
+        state.cash_events.extend(transition.cash_events)
+        state.fee_events.extend(transition.fee_events)
+        state.funding_events.extend(transition.funding_events)
+        state.applied_transition_keys.add(transition_key)
+        state.applied_cash_event_keys.update(cash_keys)
+        state.applied_funding_event_ids.update(funding_ids)
+
+        for row in transition.cash_events:
+            if row.kind is CashEventKind.GROSS_REALIZATION:
+                ledger = state.lifecycle_gross_pnl
+            elif row.kind is CashEventKind.FEE:
+                ledger = state.lifecycle_fee_cash
+            else:
+                ledger = state.lifecycle_funding_cash
+            ledger[row.lifecycle_id] = ledger.get(row.lifecycle_id, 0.0) + row.signed_delta
+
+        if entry_fills:
+            state.total_entries += len(entry_fills)
+            state.opened_this_bar_reason = reason
+            state.last_entry_bar_index = bar.bar_index
+            state.regime_lock_side = next_position.side if next_position is not None else None
+            state.next_position_lifecycle_id = max(
+                state.next_position_lifecycle_id, facts.lifecycle_id + 1
+            )
+        if exit_events:
+            state.exit_events_this_bar.extend(exit_events)
+            state.total_exits += len(exit_events)
+            state.last_exit_bar_index = bar.bar_index
+            state.closed_this_bar_reason = reason or exit_events[-1].exit_reason
+            last = exit_events[-1]
+            state.last_exit_price = last.exit_price
+            state.last_exit_qty = sum(row.exit_qty for row in exit_events)
+            state.last_exit_id = last.exit_id
+            state.last_exit_was_pessimistic = last.was_pessimistic
+            state.last_exit_was_partial = next_position is not None
+            state.last_gross_realized_pnl = gross_delta
+            if next_position is None:
+                lifecycle_id = transition.cash_events[0].lifecycle_id
+                lifecycle_gross = state.lifecycle_gross_pnl.get(lifecycle_id, 0.0)
+                lifecycle_fees = state.lifecycle_fee_cash.get(lifecycle_id, 0.0)
+                state.last_closed_guard_pnl = lifecycle_gross + lifecycle_fees
+                state.last_realized_pnl = state.last_closed_guard_pnl
+                state.unrealized_pnl = 0.0
 
     def can_open_raw_signal(
         self,

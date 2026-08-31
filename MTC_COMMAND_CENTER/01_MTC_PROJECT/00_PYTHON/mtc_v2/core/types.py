@@ -345,6 +345,9 @@ class ExitEvent:
     exit_id: str | None = None
     was_pessimistic: bool = False
     was_partial: bool = False
+    fill_id: str | None = None
+    event_class: str | None = None
+    fill_trigger: str | None = None
 
 
 @dataclass
@@ -412,3 +415,19 @@ class PortfolioState:
     gate_results: dict[str, GateResult] = field(default_factory=dict)
     instrument: InstrumentMetadata = field(default_factory=InstrumentMetadata)
     indicator_snapshot: IndicatorSnapshot = field(default_factory=IndicatorSnapshot)
+    decision_events: list[DecisionEvent] = field(default_factory=list)
+    fill_events: list[FillEvent] = field(default_factory=list)
+    cash_events: list[CashEvent] = field(default_factory=list)
+    fee_events: list[FeeEvent] = field(default_factory=list)
+    funding_events: list[FundingEvent] = field(default_factory=list)
+    applied_transition_keys: set[tuple[object, ...]] = field(default_factory=set)
+    applied_cash_event_keys: set[tuple[datetime, int, str]] = field(default_factory=set)
+    applied_funding_event_ids: set[str] = field(default_factory=set)
+    cumulative_fee: float = 0.0
+    cumulative_funding: float = 0.0
+    guard_realized_equity: float = 0.0
+    last_gross_realized_pnl: float = 0.0
+    last_closed_guard_pnl: float = 0.0
+    lifecycle_gross_pnl: dict[int, float] = field(default_factory=dict)
+    lifecycle_fee_cash: dict[int, float] = field(default_factory=dict)
+    lifecycle_funding_cash: dict[int, float] = field(default_factory=dict)
