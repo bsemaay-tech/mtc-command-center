@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import math
+import re
 from typing import Any
+
+from mtc_v2.core.semantics import resolve_semantics_id
 
 
 SIGNAL_MODE_SUPERTREND = "Supertrend"
@@ -14,6 +17,36 @@ SUPPORTED_EXECUTION_PROFILES = {
     EXECUTION_PROFILE_CLOSE_ONLY_DETERMINISTIC,
 }
 SUPPORTED_MA_TYPES = {"EMA", "SMA", "WMA", "RMA"}
+
+CORRECTED_VNEXT_CONFIG_KEYS = frozenset(
+    {
+        "kernel_semantics_version",
+        "instrument_record_id",
+        "instrument_record_sha256",
+        "cost_schedule_id",
+        "cost_schedule_sha256",
+        "funding_schedule_id",
+        "funding_schedule_sha256",
+        "same_bar_collision_policy_id",
+        "slippage_model_id",
+    }
+)
+INSTRUMENT_RUNTIME_CONFIG_KEYS = frozenset(
+    {
+        "instrument_symbol",
+        "instrument_point_value",
+        "instrument_price_tick",
+        "instrument_qty_step",
+        "instrument_min_qty",
+        "instrument_min_notional",
+        "instrument_contract_multiplier",
+    }
+)
+SUPPORTED_COLLISION_POLICY_IDS = frozenset(
+    {"STOP_FIRST", "TARGET_FIRST", "SUBBAR_UNKNOWN"}
+)
+SUPPORTED_SLIPPAGE_MODEL_IDS = frozenset({"BPS_OF_REFERENCE_V1"})
+_LOWER_SHA256 = re.compile(r"[0-9a-f]{64}")
 
 TP_MODE_NONE = "None"
 TP_MODE_ATR = "ATR"
@@ -233,10 +266,13 @@ DEFAULT_CONFIG: dict[str, object] = {
 
 
 def validate_config(config: dict[str, object]) -> None:
-    required_keys = set(DEFAULT_CONFIG.keys())
+    required_keys = set(DEFAULT_CONFIG.keys()) | set(CORRECTED_VNEXT_CONFIG_KEYS)
     unknown = set(config.keys()) - required_keys
     if unknown:
         raise ValueError(f"Unknown config keys: {sorted(unknown)}")
+
+    semantics_version = _validate_semantics_and_record_config(config)
+    corrected_v2 = semantics_version == "2.0.0"
 
     merged = resolve_config(config, validate=False)
 
@@ -254,13 +290,20 @@ def validate_config(config: dict[str, object]) -> None:
     _require_bool(merged, "st_use_wicks")
     _require_bool(merged, "st_use_ha")
     _require_number(merged, "rf_range", greater_than=0.0)
-    _require_str(merged, "instrument_symbol")
-    _require_number(merged, "instrument_point_value", greater_than=0.0)
-    _require_number(merged, "instrument_price_tick", greater_than=0.0)
-    _require_number(merged, "instrument_qty_step", greater_than=0.0)
-    _require_number(merged, "instrument_min_qty", minimum=0.0)
-    _require_number(merged, "instrument_min_notional", minimum=0.0)
-    _require_number(merged, "instrument_contract_multiplier", greater_than=0.0)
+    if not corrected_v2 or "instrument_symbol" in merged:
+        _require_str(merged, "instrument_symbol")
+    if not corrected_v2 or "instrument_point_value" in merged:
+        _require_number(merged, "instrument_point_value", greater_than=0.0)
+    if not corrected_v2 or "instrument_price_tick" in merged:
+        _require_number(merged, "instrument_price_tick", greater_than=0.0)
+    if not corrected_v2 or "instrument_qty_step" in merged:
+        _require_number(merged, "instrument_qty_step", greater_than=0.0)
+    if not corrected_v2 or "instrument_min_qty" in merged:
+        _require_number(merged, "instrument_min_qty", minimum=0.0)
+    if not corrected_v2 or "instrument_min_notional" in merged:
+        _require_number(merged, "instrument_min_notional", minimum=0.0)
+    if not corrected_v2 or "instrument_contract_multiplier" in merged:
+        _require_number(merged, "instrument_contract_multiplier", greater_than=0.0)
     _require_number(merged, "initial_capital", greater_than=0.0)
     _require_number(merged, "margin_long_pct", greater_than=0.0)
     _require_number(merged, "margin_short_pct", greater_than=0.0)
@@ -580,6 +623,9 @@ def resolve_config(config: dict[str, object], *, validate: bool = True) -> dict[
     merged = dict(DEFAULT_CONFIG)
     merged.update(config)
     explicit_keys = set(config.keys())
+    if config.get("kernel_semantics_version") == "2.0.0":
+        for key in INSTRUMENT_RUNTIME_CONFIG_KEYS - explicit_keys:
+            merged.pop(key, None)
     # Deprecated sizing policy surface: runtime is fixed to realized snapshots.
     merged["equity_source"] = "Realized"
     # Deprecated redundant safety surface: leverage-cap sizing already constrains
@@ -608,6 +654,63 @@ def resolve_config(config: dict[str, object], *, validate: bool = True) -> dict[
         validate_config(config)
 
     return merged
+
+
+def _validate_semantics_and_record_config(config: dict[str, object]) -> str | None:
+    supplied_corrected_keys = set(config) & (CORRECTED_VNEXT_CONFIG_KEYS - {"kernel_semantics_version"})
+    if "kernel_semantics_version" not in config:
+        if supplied_corrected_keys:
+            resolve_semantics_id(None)
+        return None
+
+    semantics_version = str(resolve_semantics_id(config["kernel_semantics_version"]))
+    if semantics_version == "1.0.0":
+        if supplied_corrected_keys:
+            raise ValueError("corrected-only config keys are forbidden under semantics 1.0.0")
+        return semantics_version
+
+    record_keys = {
+        "instrument_record_id",
+        "instrument_record_sha256",
+        "cost_schedule_id",
+        "cost_schedule_sha256",
+        "funding_schedule_id",
+        "funding_schedule_sha256",
+    }
+    missing = record_keys - set(config)
+    if missing:
+        raise ValueError(f"2.0.0 requires explicit record identities: {sorted(missing)}")
+
+    for prefix in ("instrument_record", "funding_schedule"):
+        identity = config[f"{prefix}_id"]
+        digest = config[f"{prefix}_sha256"]
+        if not isinstance(identity, str) or not identity.strip():
+            raise ValueError(f"{prefix}_id must be a non-empty string")
+        if not isinstance(digest, str) or _LOWER_SHA256.fullmatch(digest) is None:
+            raise ValueError(f"{prefix}_sha256 must be lower-case SHA-256")
+
+    cost_id = config["cost_schedule_id"]
+    cost_digest = config["cost_schedule_sha256"]
+    if (cost_id is None) != (cost_digest is None):
+        raise ValueError("cost schedule id and digest must both be null or both be present")
+    if cost_id is not None:
+        if not isinstance(cost_id, str) or not cost_id.strip():
+            raise ValueError("cost_schedule_id must be a non-empty string or null")
+        if not isinstance(cost_digest, str) or _LOWER_SHA256.fullmatch(cost_digest) is None:
+            raise ValueError("cost_schedule_sha256 must be lower-case SHA-256 or null")
+
+    policy_id = config.get("same_bar_collision_policy_id")
+    if policy_id is not None and policy_id not in SUPPORTED_COLLISION_POLICY_IDS:
+        raise ValueError(
+            "same_bar_collision_policy_id must be one of: "
+            f"{sorted(SUPPORTED_COLLISION_POLICY_IDS)}"
+        )
+    model_id = config.get("slippage_model_id")
+    if model_id is not None and model_id not in SUPPORTED_SLIPPAGE_MODEL_IDS:
+        raise ValueError(
+            f"slippage_model_id must be one of: {sorted(SUPPORTED_SLIPPAGE_MODEL_IDS)}"
+        )
+    return semantics_version
 
 
 def _require_bool(config: dict[str, object], key: str) -> None:

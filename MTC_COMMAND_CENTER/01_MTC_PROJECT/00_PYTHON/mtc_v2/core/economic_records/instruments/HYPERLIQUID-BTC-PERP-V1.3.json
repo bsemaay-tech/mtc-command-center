@@ -1,0 +1,238 @@
+{
+  "status": "PROVISIONAL v1.3 — awaiting owner one-word approval (addendum 15 row 36)",
+  "record_type": "InstrumentRecord",
+  "venue": "HYPERLIQUID",
+  "product_type": "LINEAR_PERPETUAL",
+  "symbol": "BTC",
+  "settlement_currency": "USDC",
+  "point_value": 1,
+  "price_tick": null,
+  "quantity_step": 0.00001,
+  "minimum_quantity": null,
+  "minimum_notional": 10,
+  "contract_multiplier": 1,
+  "field_basis": {
+    "quantity_step": "DERIVED — rule quoted, derivation shown. tick-and-lot-size-api.html: \"Sizes are rounded to the szDecimals of that asset. For example, if szDecimals = 3 then 1.001 is a valid size but 1.0001 is not.\" BTC szDecimals=5 (frozen api-info-meta.json). A size is valid iff it has at most szDecimals decimal places, so the smallest positive increment between two valid sizes is 10^-szDecimals = 10^-5 = 0.00001 BTC.",
+    "price_tick": "RULE-DERIVED, NON-SCALAR — no single tick value is printed for BTC. tick-and-lot-size-api.html: \"Prices can have up to 5 significant figures, but no more than MAX_DECIMALS - szDecimals decimal places where MAX_DECIMALS is 6 for perps and 8 for spot. Integer prices are always allowed, regardless of the number of significant figures.\" BTC szDecimals=5, perp MAX_DECIMALS=6 => at most 6-5=1 decimal place, i.e. price granularity floor 10^-1 = 0.1. The 5-significant-figure cap makes the effective increment coarser at BTC price magnitudes: a price in [100000, 999990] has 5 significant figures at a 10 increment; a price in [10000, 99999] resolves to integer (1) since 12345.6 already exceeds 5 significant figures. Because the venue defines price validity by a rule (sig figs + decimal bound + integers-always-allowed) rather than a published per-asset scalar, price_tick remains null and the rule is carried verbatim in additional_venue_metadata.price_rule.",
+    "minimum_quantity": "GAP — not literally stated in the frozen sources. The frozen minimums are notional, not quantity: order-types.html \"$100 minimum total order size\" (TWAP only) and error-responses.html \"Order must have minimum value of $10.\" (MinTradeNtl). A notional minimum is not a quantity minimum and is not converted to BTC here. Lower bound only: the smallest representable non-zero BTC size equals quantity_step = 0.00001 BTC; no minimum quantity is inferred.",
+    "minimum_notional": "FILLED v1.3 — QUOTED, with source-context caveat. error-responses.html (fifth fetch) is the venue's batched order/cancel error catalogue; the row Error source = \"Order\", Error type = \"MinTradeNtl\", Error string = \"Order must have minimum value of $10.\" gives the perp minimum order notional. Recorded as 10 (venue prints \"$10\"; the instrument settles in USDC and the contract-spec page applies no USDC/USDT conversion). SOURCE CONTEXT: this is an API error-response document (\"Below is a list of possible batched error responses\"), NOT a contract-specification table — it is the reject threshold the matching engine enforces, not a figure published in a spec table. The separate row \"MinTradeSpotNtl\" (\"Order must have minimum value of 10 {quote_token}.\") is the spot-market variant and does not apply to this LINEAR_PERPETUAL record. The earlier TWAP-only \"$100 minimum total order size\" from order-types.html is unchanged and stays in additional_venue_metadata.twap_minimum_total_order_size.",
+    "point_value": "FILLED v1.2 — DERIVED definitional identity. contract-specifications.html states \"Instrument type\" = \"Linear perpetual\", \"Contract\" = \"1 unit of underlying spot asset\", and \"USDT pnl is denominated in USDC\" with no USDC/USDT conversion applied. For one contract, a 1.0 price-unit move therefore changes numerical PnL by 1.0 USDC: point_value = 1 USDC per 1.0 price unit per contract."
+  },
+  "effective_interval": {
+    "start_utc": "2026-08-31T07:00:53Z",
+    "end_utc": null,
+    "basis": "From the fetched document set onward, as ruled by the owner."
+  },
+  "additional_venue_metadata": {
+    "size_decimals": 5,
+    "max_leverage": 40,
+    "margin_table_id": 56,
+    "margin_table": {
+      "description": "tiered 40x",
+      "tiers": [
+        {
+          "lower_bound": "0.0",
+          "max_leverage": 40
+        },
+        {
+          "lower_bound": "150000000.0",
+          "max_leverage": 20
+        }
+      ]
+    },
+    "size_rule": {
+      "quoted_text": "Sizes are rounded to the szDecimals of that asset. For example, if szDecimals = 3 then 1.001 is a valid size but 1.0001 is not. szDecimals for an asset is found in the meta response to the info endpoint",
+      "source_file": "C:\\tmp\\VENUE_FETCH_HL_20260831\\tick-and-lot-size-api.html",
+      "source_sha256": "81a865c35bcb77338cb94bf0a09e6294bb772a4d7ddd24af28636c273655d3e4"
+    },
+    "price_rule": {
+      "quoted_text": "Prices can have up to 5 significant figures, but no more than MAX_DECIMALS - szDecimals decimal places where MAX_DECIMALS is 6 for perps and 8 for spot. Integer prices are always allowed, regardless of the number of significant figures. E.g. 123456 is a valid price even though 12345.6 is not.",
+      "perp_price_examples_quoted": "1234.5 is valid but 1234.56 is not (too many significant figures). 0.001234 is valid, but 0.0012345 is not (more than 6 decimal places). If szDecimals = 1 , 0.01234 is valid but 0.012345 is not (more than 6 - szDecimals decimal places)",
+      "source_file": "C:\\tmp\\VENUE_FETCH_HL_20260831\\tick-and-lot-size-api.html",
+      "source_sha256": "81a865c35bcb77338cb94bf0a09e6294bb772a4d7ddd24af28636c273655d3e4"
+    },
+    "point_value_definition": {
+      "value": 1,
+      "unit": "USDC per 1.0 price unit per contract",
+      "status": "DERIVED — definitional identity",
+      "quoted_text": [
+        "Linear perpetual",
+        "1 unit of underlying spot asset",
+        "Note that no conversions with the USDC/USDT exchange rate are applied, so these contracts are technically quanto contracts where USDT pnl is denominated in USDC."
+      ],
+      "source_file": "C:\\tmp\\VENUE_FETCH_HL_20260831\\contract-specifications.html",
+      "source_sha256": "3be3f419b268e9aeac2d85c0a9611eddfd486c510e59b62f44e5547aa5253737"
+    },
+    "twap_minimum_total_order_size": {
+      "value_displayed": "$100",
+      "applicability": "TWAP only; not promoted to instrument-wide minimum_notional",
+      "quoted_text": "Running time can be set from 5 minutes to 7 days, with a $100 minimum total order size.",
+      "source_file": "C:\\tmp\\VENUE_FETCH_HL_20260831\\order-types.html",
+      "source_sha256": "8c65a45d63a554ae54568378ba7e29e505aee6a3f9758b0cdcd298ab95992640"
+    },
+    "min_trade_ntl": {
+      "value": 10,
+      "value_displayed": "$10",
+      "applicability": "LINEAR_PERPETUAL order minimum notional (this is the source of the record's minimum_notional field)",
+      "source_context": "API error-response catalogue, not a contract-specification table. Page intro: \"Order and cancel errors are usually returned as a vector with same length as the batched request. Below is a list of possible batched error responses:\"",
+      "quoted_row": "Error source = Order; Error type = MinTradeNtl; Error string = Order must have minimum value of $10.",
+      "quoted_text": "Order must have minimum value of $10.",
+      "spot_variant_not_applied": {
+        "error_type": "MinTradeSpotNtl",
+        "quoted_text": "Order must have minimum value of 10 {quote_token}.",
+        "reason": "spot-market variant; not applicable to a LINEAR_PERPETUAL record"
+      },
+      "source_file": "C:\\tmp\\VENUE_FETCH_HL_20260831\\error-responses.html",
+      "source_sha256": "a320fd41ad7d9e3ee88a9ae501ba5126dadcd7c63b410629c87a2a874bb43727"
+    }
+  },
+  "provenance": {
+    "captured_at_utc": "2026-08-31T07:00:53Z",
+    "effective_interval": {
+      "start_utc": "2026-08-31T07:00:53Z",
+      "end_utc": null
+    },
+    "extraction_method": "Manual exact-text extraction from locally frozen bytes; SHA-256 remeasured with Get-FileHash; no network access. v1.1 added tick-and-lot-size-api.html; v1.2 added order-types.html; v1.3 adds error-responses.html. quantity_step and point_value are DERIVED from quoted frozen rules/definitions. minimum_notional = 10 is the quoted MinTradeNtl reject threshold from the API error-response catalogue (not a contract-spec table). minimum_quantity stays null: a notional minimum is not a quantity minimum and no frozen source literally states a quantity minimum.",
+    "human_reviewer": null,
+    "owner_decision_reference": "Owner 2026-08-31, addendum 15 row 36: HYPERLIQUID PERPETUAL BTC; effective from the fetched document set onward.",
+    "sources": [
+      {
+        "source_locator": "POST https://api.hyperliquid.xyz/info {\"type\":\"meta\"}",
+        "source_title": "Hyperliquid public info meta response",
+        "frozen_file": "C:\\tmp\\VENUE_FETCH_HL_20260831\\api-info-meta.json",
+        "sha256": "2bbe9a105808b910a62813b1c3f30ca3149241ab4625a01a825d0165455039c9"
+      },
+      {
+        "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/contract-specifications",
+        "source_title": "Contract specifications | Hyperliquid Docs",
+        "frozen_file": "C:\\tmp\\VENUE_FETCH_HL_20260831\\contract-specifications.html",
+        "sha256": "3be3f419b268e9aeac2d85c0a9611eddfd486c510e59b62f44e5547aa5253737"
+      },
+      {
+        "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/tick-and-lot-size",
+        "source_title": "Tick and lot size | Hyperliquid Docs",
+        "frozen_file": "C:\\tmp\\VENUE_FETCH_HL_20260831\\tick-and-lot-size-api.html",
+        "sha256": "81a865c35bcb77338cb94bf0a09e6294bb772a4d7ddd24af28636c273655d3e4"
+      },
+      {
+        "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/order-types",
+        "source_title": "Order types | Hyperliquid Docs",
+        "frozen_file": "C:\\tmp\\VENUE_FETCH_HL_20260831\\order-types.html",
+        "sha256": "8c65a45d63a554ae54568378ba7e29e505aee6a3f9758b0cdcd298ab95992640"
+      },
+      {
+        "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/error-responses",
+        "source_title": "Error responses | Hyperliquid Docs",
+        "frozen_file": "C:\\tmp\\VENUE_FETCH_HL_20260831\\error-responses.html",
+        "sha256": "a320fd41ad7d9e3ee88a9ae501ba5126dadcd7c63b410629c87a2a874bb43727"
+      }
+    ],
+    "frozen_source_verification": [
+      {
+        "file": "contract-specifications.html",
+        "manifest_sha256": "3be3f419b268e9aeac2d85c0a9611eddfd486c510e59b62f44e5547aa5253737",
+        "remeasured_sha256": "3be3f419b268e9aeac2d85c0a9611eddfd486c510e59b62f44e5547aa5253737",
+        "bytes": 494655,
+        "result": "MATCH"
+      },
+      {
+        "file": "fees.html",
+        "manifest_sha256": "3c49f9030a427df06f70943f53517204e4bd804bb205dcd05b2d27a75f51ce8b",
+        "remeasured_sha256": "3c49f9030a427df06f70943f53517204e4bd804bb205dcd05b2d27a75f51ce8b",
+        "bytes": 1034779,
+        "result": "MATCH"
+      },
+      {
+        "file": "funding.html",
+        "manifest_sha256": "4cceb61ea2bc7755457bbdb360a18aa595d39a916f6dd5d0124512cb2918a716",
+        "remeasured_sha256": "4cceb61ea2bc7755457bbdb360a18aa595d39a916f6dd5d0124512cb2918a716",
+        "bytes": 448063,
+        "result": "MATCH"
+      },
+      {
+        "file": "api-info-meta.json",
+        "manifest_sha256": "2bbe9a105808b910a62813b1c3f30ca3149241ab4625a01a825d0165455039c9",
+        "remeasured_sha256": "2bbe9a105808b910a62813b1c3f30ca3149241ab4625a01a825d0165455039c9",
+        "bytes": 17560,
+        "result": "MATCH"
+      },
+      {
+        "file": "tick-and-lot-size-api.html",
+        "manifest_sha256": "81a865c35bcb77338cb94bf0a09e6294bb772a4d7ddd24af28636c273655d3e4",
+        "remeasured_sha256": "81a865c35bcb77338cb94bf0a09e6294bb772a4d7ddd24af28636c273655d3e4",
+        "bytes": 422509,
+        "result": "MATCH"
+      },
+      {
+        "file": "order-types.html",
+        "manifest_sha256": "8c65a45d63a554ae54568378ba7e29e505aee6a3f9758b0cdcd298ab95992640",
+        "remeasured_sha256": "8c65a45d63a554ae54568378ba7e29e505aee6a3f9758b0cdcd298ab95992640",
+        "bytes": 450440,
+        "result": "MATCH"
+      },
+      {
+        "file": "error-responses.html",
+        "manifest_sha256": "a320fd41ad7d9e3ee88a9ae501ba5126dadcd7c63b410629c87a2a874bb43727",
+        "remeasured_sha256": "a320fd41ad7d9e3ee88a9ae501ba5126dadcd7c63b410629c87a2a874bb43727",
+        "bytes": 499251,
+        "result": "MATCH"
+      }
+    ]
+  },
+  "gaps": [
+    {
+      "field": "point_value",
+      "status": "FILLED v1.2 — DERIVED (definitional identity; quoted basis)",
+      "note": "1 USDC per 1.0 price unit per contract. Linear perp; Contract = \"1 unit of underlying spot asset\"; no USDC/USDT conversion; \"USDT pnl is denominated in USDC\"."
+    },
+    {
+      "field": "price_tick",
+      "status": "RULE-DERIVED, NON-SCALAR — see field_basis.price_tick",
+      "note": "Venue defines price validity by rule (<=5 significant figures AND <= MAX_DECIMALS - szDecimals decimal places; integers always allowed). BTC: MAX_DECIMALS 6 - szDecimals 5 = 1 decimal place, granularity floor 0.1; effective increment coarser at BTC magnitudes. No published per-asset scalar; field stays null with the rule carried verbatim."
+    },
+    {
+      "field": "quantity_step",
+      "status": "FILLED v1.1 — DERIVED (rule quoted, derivation shown)",
+      "note": "0.00001 BTC = 10^-szDecimals with szDecimals=5. See field_basis.quantity_step and additional_venue_metadata.size_rule."
+    },
+    {
+      "field": "minimum_quantity",
+      "status": "GAP — NOT IN FROZEN SOURCES",
+      "note": "No frozen source literally states a minimum quantity. Both frozen minimums are notional: order-types.html's $100 TWAP minimum and error-responses.html's $10 MinTradeNtl minimum. A notional minimum is not a quantity minimum. Lower bound = quantity_step = 0.00001 BTC; no minimum quantity inferred."
+    },
+    {
+      "field": "minimum_notional",
+      "status": "FILLED v1.3 — QUOTED from API error catalogue (source-context caveat)",
+      "note": "error-responses.html row Error type = MinTradeNtl, Error string = \"Order must have minimum value of $10.\" => minimum_notional = 10 (USDC-settled; venue prints \"$10\"). SOURCE CONTEXT: an API error-response document (\"Below is a list of possible batched error responses\"), NOT a contract-spec table. Spot-only MinTradeSpotNtl (\"10 {quote_token}\") not applied. TWAP-only \"$100 minimum total order size\" is unchanged in additional_venue_metadata.twap_minimum_total_order_size."
+    },
+    {
+      "field": "provenance.human_reviewer",
+      "status": "GAP — NOT IN FROZEN SOURCES",
+      "note": "Owner §16 role; pending the owner's one-word approval/review."
+    }
+  ],
+  "v1_1_change_log": [
+    "Verified tick-and-lot-size-api.html SHA-256 = 81a865c35bcb77338cb94bf0a09e6294bb772a4d7ddd24af28636c273655d3e4 (422509 bytes) against FETCH_MANIFEST.md:14 — MATCH. Did NOT read the SUPERSEDED bad-slug file tick-and-lot-size.html (FETCH_MANIFEST.md:15).",
+    "quantity_step: null -> 0.00001 (DERIVED; rule quoted from the new file, derivation shown from frozen szDecimals=5).",
+    "price_tick: stays null; rule captured verbatim in additional_venue_metadata.price_rule; field_basis.price_tick shows why no scalar exists for BTC.",
+    "minimum_quantity / minimum_notional / point_value: gap rows retained with the page that would settle each; nothing fetched, nothing inferred.",
+    "Added tick-and-lot-size-api.html to provenance.sources and provenance.frozen_source_verification (MATCH).",
+    "Added additional_venue_metadata.size_rule and .price_rule with exact quoted text and source SHA-256.",
+    "human_reviewer gap stays OPEN (owner §16 role)."
+  ],
+  "v1_2_change_log": [
+    "Verified order-types.html SHA-256 = 8c65a45d63a554ae54568378ba7e29e505aee6a3f9758b0cdcd298ab95992640 (450440 bytes) against FETCH_MANIFEST.md — MATCH; no network access.",
+    "point_value: null -> 1 (DERIVED definitional identity). Quoted basis: Linear perpetual; Contract = 1 unit of underlying spot asset; no USDC/USDT conversion; USDT pnl is denominated in USDC.",
+    "minimum_notional stays null. The only minimum-value sentence in order-types.html is TWAP-specific ($100 minimum total order size), so it is preserved under additional_venue_metadata.twap_minimum_total_order_size and not generalized to all perp orders.",
+    "minimum_quantity stays null because no frozen source literally states one; the TWAP dollar-value minimum is not conflated with a quantity.",
+    "Added order-types.html to provenance.sources and provenance.frozen_source_verification (MATCH); human_reviewer stays OPEN."
+  ],
+  "v1_3_change_log": [
+    "Verified error-responses.html SHA-256 = a320fd41ad7d9e3ee88a9ae501ba5126dadcd7c63b410629c87a2a874bb43727 (499251 bytes) against FETCH_MANIFEST.md:17 — MATCH; no fetch, no network access.",
+    "minimum_notional: null -> 10. Quoted from the venue's API error-response catalogue: row Error source = Order, Error type = MinTradeNtl, Error string = \"Order must have minimum value of $10.\" SOURCE CONTEXT recorded honestly: this is an API error-response document, not a contract-specification table.",
+    "Spot-only row MinTradeSpotNtl (\"Order must have minimum value of 10 {quote_token}.\") recorded as not-applied for a LINEAR_PERPETUAL record.",
+    "minimum_quantity stays null: a notional minimum is not a quantity minimum, and no frozen source literally states a quantity minimum.",
+    "Added additional_venue_metadata.min_trade_ntl (value, displayed text, source context, quoted row, spot variant, source SHA-256).",
+    "Added error-responses.html to provenance.sources and provenance.frozen_source_verification (MATCH); extraction_method updated; human_reviewer stays OPEN."
+  ]
+}
