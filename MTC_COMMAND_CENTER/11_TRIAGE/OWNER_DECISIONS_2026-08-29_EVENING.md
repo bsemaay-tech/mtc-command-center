@@ -309,3 +309,10 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     the design's deterministic row-order rule (which orders already-eligible events only).
     Funding scenarios with a boundary-timestamp fill are now buildable; the RED/GREEN
     fixture for the boundary case is a build obligation under this rule.
+
+## Addendum 18 — 2026-08-31 ~17:20 (owner verbatim: "RECOMMENDED: keep the two test cases as designed")
+
+47. **D-12 RESOLVED = (a):** the two synthetic RULE2-06 test cases keep their design-declared
+    `TARGET_FIRST` input (their purpose is to prove the machinery + tie-break for that
+    policy). OPEN-02's `STOP_FIRST` remains the mandatory policy for all acceptance-bearing
+    2.0.0 production runs. No table or design change needed; the sealed bundle stands.
