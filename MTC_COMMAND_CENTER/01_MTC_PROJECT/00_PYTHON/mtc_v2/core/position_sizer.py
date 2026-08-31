@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import math
 
+from mtc_v2.core.economics import _size_quantity
 from mtc_v2.core.instrument import InstrumentMetadata
+from mtc_v2.core.semantics import resolve_semantics_id
 from mtc_v2.core.types import Position
 
 
@@ -29,8 +31,25 @@ class PositionSizer:
         is_long: bool,
         instrument: InstrumentMetadata,
         existing_position: Position | None = None,
+        *,
+        semantics_id: str | None = None,
     ) -> float:
         del existing_position  # Basket state is owned by PositionManager in L6a.
+
+        if semantics_id is not None:
+            resolved_semantics = str(resolve_semantics_id(semantics_id))
+            if resolved_semantics == "2.0.0":
+                risk_pct = self.risk_per_long_pct if is_long else self.risk_per_short_pct
+                return _size_quantity(
+                    corrected=True,
+                    entry=entry,
+                    stop=sl,
+                    equity=equity,
+                    risk_pct=risk_pct,
+                    fallback_size_pct=self.fallback_size_pct,
+                    max_leverage_cap=self.max_leverage_cap,
+                    instrument=instrument,
+                )
 
         if not math.isfinite(entry) or entry <= 0.0:
             return 0.0
