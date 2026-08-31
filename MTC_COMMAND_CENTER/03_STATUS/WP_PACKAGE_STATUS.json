@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-31T15:25:00+03:00",
+  "generated": "2026-08-31T17:35:00+03:00",
   "updated_by": "claude-fable-lead-session-2026-08-31-day (generated = time of THIS push; W139-F03 fix)",
-  "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a-Q5a answered (recommended defaults; addendum 14). OPEN-01..10: owner gave all ten initial dispositions (addendum 15) - rows 02/08/09/10/04 decision-complete; rows 01/03/05/06/07 are decision-NAMED with evidence packages prepared, each CLOSES only on the owner's later approval of its package. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: maximize subscription usage; stop 17:00. Still owed by owner: 'approved' on the path list, a/b/c on the design residual, OPEN-06 row dispositions, evidence-package approvals. AFTERNOON (addendum 16, verbatim 'all approved, fees a, design a, retain all.'): ALL TEN OPEN rows CLOSED (bundle approvals incl. fees option-a stop-market); T0 BUILD-PATH GRANT GIVEN on Gate-2 plan v2 + Lead Gate-2 acceptance; design micro-fold authorized and EXECUTED -> v1.4 SEALED (terminal pass G55 zero + GM24 zero); OPEN-06 retain-all recorded with fixture obligations.",
+  "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a-Q5a answered (recommended defaults; addendum 14). OPEN-01..10: owner gave all ten initial dispositions (addendum 15) - rows 02/08/09/10/04 decision-complete; rows 01/03/05/06/07 are decision-NAMED with evidence packages prepared, each CLOSES only on the owner's later approval of its package. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: maximize subscription usage; stop 17:00. Still owed by owner: 'approved' on the path list, a/b/c on the design residual, OPEN-06 row dispositions, evidence-package approvals. AFTERNOON (addendum 16, verbatim 'all approved, fees a, design a, retain all.'): ALL TEN OPEN rows CLOSED (bundle approvals incl. fees option-a stop-market); T0 BUILD-PATH GRANT GIVEN on Gate-2 plan v2 + Lead Gate-2 acceptance; design micro-fold authorized and EXECUTED -> v1.4 SEALED (terminal pass G55 zero + GM24 zero); OPEN-06 retain-all recorded with fixture obligations. LATE AFTERNOON: addendum 17 (same-timestamp funding = INCLUDE) + addendum 18 (D-12: keep the two TARGET_FIRST test cases as designed; STOP_FIRST stays the production rule). Session extended past 17:00 by owner word to finish the baseline seal + close-out.",
   "session_time_report": {
     "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
     "session_span": "2026-08-31 09:00 -> in progress (day session; waves 1-2 = 15 lanes by 10:00; night detail in HOURS_AND_COST_2026-08-30_NIGHT.md)",
@@ -128,12 +128,12 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "DESIGN_V14_SEALED_BUILD_CHAIN_RUNNING",
+      "state": "BUILD_PRECONDITIONS_4_OF_5_DONE_BASELINE_SEALING",
       "branch": "-",
       "commit": "-",
-      "detail": "Design v1.4 SEALED: micro-fold (G46-F01 conservation fix, new RULE2-06-EQUAL-PRICE-RED scenario, P47-F01 carry-forward) + terminal pass G55 zero + GM24 zero. ALL TEN OPEN rows closed by owner words (addenda 15+16); open_item_applicability draft authored+validated; T0 path grant given; Gate-2 accepted. Grid-fitting class absent across every round and family.",
+      "detail": "Design v1.4 sealed (terminal dual-zero). CONTRACT_TABLES COMPLETE + SEALED (Opus W127b: catalog + 17 golden + derivations + manifest, 19 digests independently re-verified; D-12 resolved by owner addendum 18). Lead anchor act done: EXPECTED_SEAL_SHA dd4a0401..., IMPLEMENTATION_BASE_SHA 108ea066, authorized-path list recorded. All ten OPEN rows closed (applicability draft rev-3, G56-audited, 5/5 folded). Gate-2 accepted; T0 grant given.",
       "owner_gate": false,
-      "next_action": "CHAIN: all owner decisions complete incl. addendum-17 same-timestamp INCLUDE; applicability draft rev-3; W127d CONTRACT_TABLES running on MAX Opus (Pro weekly-capped; two launcher traps cost ~45min, fixed + recorded); baseline driver written (W145, execution held for the ONE Q4a run); build starts or queues with clean handoff by 17:00."
+      "next_action": "W150b - THE owner-authorized baseline run - executing (prior lane fail-closed correctly on the unset seal identities; two silent launcher deaths cost ~2h, recorded). On seal: build is 100% staged for next session start."
     },
     {
       "id": "WP-P0-20",
