@@ -9,7 +9,7 @@ import pytest
 
 from mtc_v2.core.economics import EconomicsRefusal
 from mtc_v2.core.runner import Runner
-from mtc_v2.core.types import Bar, EntryLeg, Position
+from mtc_v2.core.types import Bar, EntryLeg, Position, RawSignal
 
 
 MTC_V2_ROOT = Path(__file__).resolve().parents[4]
@@ -57,6 +57,20 @@ def _open_long(*, entry_bar: int = 1) -> Position:
         lifecycle_id=1,
         working_exit_reference_qty=1.0,
     )
+
+
+class _StaticSignals:
+    warmup_bars_required = 0
+
+    def __init__(self, outputs: list[RawSignal]) -> None:
+        self._outputs = iter(outputs)
+
+    def calculate(self, _bar: Bar) -> RawSignal:
+        return next(self._outputs)
+
+    @staticmethod
+    def indicator_snapshot() -> dict[str, float | int]:
+        return {"filter_line": 1.0, "direction": 1}
 
 
 def test_main_runner_entry_path_uses_corrected_final_fill_and_fee_transition() -> None:
@@ -281,6 +295,80 @@ def test_p06_existing_stop_wins_and_blocks_same_bar_entry_signal() -> None:
     assert runner.state.position is None
     assert runner.state.fill_events[-1].event_class == "PROTECTIVE_STOP_EXIT"
     assert runner.state.block_new_entries_this_bar is True
+
+
+def test_p07_research_queue_reenters_from_next_decision_close_final_fill() -> None:
+    config, _ = _scenario("RULE2-05-RED")
+    config.update(
+        allow_flip=True,
+        enable_short=True,
+        exit_on_opposite_signal=True,
+        fallback_size_pct=20.0,
+        use_sl=True,
+        use_sl_atr=False,
+        use_sl_percent=True,
+        use_sl_swing_atr=False,
+        sl_percent=1.0,
+        tw_audit_semantics_mode="research",
+        tw_reversal_reentry_mode="carry_to_next_bar_after_protective_exit",
+        tw_reversal_reentry_delay_bars=1,
+    )
+    bars = [
+        Bar(datetime.fromisoformat("2000-01-01T00:10:00+00:00"), 100, 100, 100, 100, 0, 0),
+        Bar(datetime.fromisoformat("2000-01-01T00:11:00+00:00"), 98, 98, 95, 96, 0, 1),
+        Bar(datetime.fromisoformat("2000-01-01T00:12:00+00:00"), 90, 93, 89, 92, 0, 2),
+    ]
+    runner = Runner(config)
+    runner.signal_producer = _StaticSignals(
+        [
+            RawSignal(True, False, "long", direction=1, line=100.0),
+            RawSignal(False, True, "queued_short", direction=-1, line=96.0),
+            RawSignal(False, False, "none", direction=0, line=92.0),
+        ]
+    )
+    runner.state.warmup_bars = 0
+
+    runner.run(bars)
+
+    assert runner.state.position is not None
+    assert runner.state.position.side == "short"
+    assert runner.state.position.entry_bar == 2
+    assert runner.state.position.entry_price == 91.08
+    assert runner.state.position.active_stop_price == 92.0
+
+
+def test_p07_nonresearch_green_does_not_queue_protective_exit_signal() -> None:
+    config, _ = _scenario("RULE2-05-RED")
+    config.update(
+        allow_flip=True,
+        enable_short=True,
+        exit_on_opposite_signal=True,
+        fallback_size_pct=20.0,
+        use_sl=True,
+        use_sl_atr=False,
+        use_sl_percent=True,
+        use_sl_swing_atr=False,
+        sl_percent=1.0,
+    )
+    bars = [
+        Bar(datetime.fromisoformat("2000-01-01T00:10:00+00:00"), 100, 100, 100, 100, 0, 0),
+        Bar(datetime.fromisoformat("2000-01-01T00:11:00+00:00"), 98, 98, 95, 96, 0, 1),
+        Bar(datetime.fromisoformat("2000-01-01T00:12:00+00:00"), 90, 93, 89, 92, 0, 2),
+    ]
+    runner = Runner(config)
+    runner.signal_producer = _StaticSignals(
+        [
+            RawSignal(True, False, "long", direction=1, line=100.0),
+            RawSignal(False, True, "unqueued_short", direction=-1, line=96.0),
+            RawSignal(False, False, "none", direction=0, line=92.0),
+        ]
+    )
+    runner.state.warmup_bars = 0
+
+    runner.run(bars)
+
+    assert runner.state.position is None
+    assert runner.state.total_entries == 1
 
 
 def test_p08_same_side_add_rebooks_from_the_final_fill() -> None:

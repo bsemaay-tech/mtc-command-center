@@ -9,7 +9,7 @@ position facts.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import Enum
 import math
@@ -628,7 +628,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             cost=records.cost,
         )
         resolved_stop = _entry_stop(intent, final_fill, instrument)
-        quantity = (
+        candidate_quantity = (
             float(intent.requested_quantity)
             if intent.requested_quantity is not None
             else _size_quantity(
@@ -639,17 +639,34 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 risk_pct=intent.risk_pct,
                 fallback_size_pct=intent.fallback_size_pct,
                 max_leverage_cap=intent.max_leverage_cap,
-                instrument=instrument,
+                instrument=replace(instrument, min_notional=0.0),
             )
         )
+        order_notional = (
+            candidate_quantity * final_fill * instrument.contract_multiplier
+        )
+        refused_min_notional = (
+            candidate_quantity > 0.0
+            and order_notional < instrument.min_notional
+        )
+        quantity = 0.0 if refused_min_notional else candidate_quantity
         selector = "FALLBACK" if resolved_stop is None or not math.isfinite(resolved_stop) else "RISK"
         sizing = DecisionEvent(
             sequence=state.next_decision_sequence + 1,
             event_timestamp=market.timestamp,
-            decision="SIZING_RESOLVED" if quantity > 0.0 else "REFUSED_MINIMUM_ORDER",
+            decision=(
+                "REFUSED_MIN_NOTIONAL"
+                if refused_min_notional
+                else "SIZING_RESOLVED"
+            ),
             lifecycle_id=state.lifecycle_id,
-            refusal_code=None if quantity > 0.0 else "REFUSED_MIN_NOTIONAL",
-            details=_details(selector=selector, contract_multiplier=instrument.contract_multiplier),
+            refusal_code="REFUSED_MIN_NOTIONAL" if refused_min_notional else None,
+            details=_details(
+                selector=selector,
+                contract_multiplier=instrument.contract_multiplier,
+                order_notional=order_notional,
+                required_min_notional=instrument.min_notional,
+            ),
         )
         if quantity <= 0.0:
             return _empty_transition(
