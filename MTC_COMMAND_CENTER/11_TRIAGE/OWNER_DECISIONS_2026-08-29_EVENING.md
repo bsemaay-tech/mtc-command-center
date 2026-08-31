@@ -333,3 +333,16 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     family, input materialization, digest-pin, dry-run, THE ONE baseline run (Q4a
     unchanged), then the kernel build — continuing tonight without further owner gates
     except the standing sec-16 human review at build acceptance.
+
+## Addendum 20 — 2026-08-31 ~20:55 (owner verbatim: "1a 2a 3a 4a 5a")
+
+49. **OPEN-EMBED-01..05 CLOSED** (the five embedding questions design v1.5 honestly
+    refused): (1a) omitted initial equity = 1000 for RULE2-03/04/05/06 families;
+    (2a) RULE2-04 entry basis/fill = 100 via the candidate entry/BE path;
+    (3a) RULE2-06-EQUAL-PRICE equal-target book is constructed by the corrected (2.0.0)
+    target-book test machinery directly — legacy engine untouched, scenario recorded
+    honestly as not-runnable-on-legacy for that book; (4a) RULE2-08-RED pre-event entry
+    basis/fill = 100; (5a) RULE2-08-GREEN closed-lifecycle premise built with ordinary
+    price bars before the observation window (real mechanism, nothing injected).
+    These are test-only values under design section 5's synthetic-vector rule; production
+    records remain governed by addenda 15-17 evidence packages.
