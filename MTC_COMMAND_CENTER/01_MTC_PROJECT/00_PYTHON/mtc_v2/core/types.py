@@ -2,10 +2,249 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from enum import Enum
+import struct
+from typing import Optional, TypeAlias
 
 from mtc_v2.core.indicators import IndicatorSnapshot
 from mtc_v2.core.instrument import InstrumentMetadata
+
+
+LifecycleId: TypeAlias = int
+FillId: TypeAlias = str
+CashEventId: TypeAlias = str
+
+REFUSED_INVALID_CASH_LEDGER_JOIN = "REFUSED_INVALID_CASH_LEDGER_JOIN"
+
+
+class EconomicTransitionError(ValueError):
+    """Raised when an atomic transition violates its immutable ledger contract."""
+
+    refusal_code = REFUSED_INVALID_CASH_LEDGER_JOIN
+
+
+class CashEventKind(str, Enum):
+    GROSS_REALIZATION = "GROSS_REALIZATION"
+    FEE = "FEE"
+    FUNDING = "FUNDING"
+
+
+@dataclass(slots=True, frozen=True)
+class DecisionEvent:
+    sequence: int
+    event_timestamp: datetime
+    decision: str
+    lifecycle_id: LifecycleId | None = None
+    refusal_code: str | None = None
+    details: tuple[tuple[str, str], ...] = ()
+
+
+@dataclass(slots=True, frozen=True)
+class FillDecision:
+    sequence: int
+    event_timestamp: datetime
+    lifecycle_id: LifecycleId
+    fill_id: FillId
+    event_class: str
+    side: str
+    reference_price: float
+    slippage_model_id: str
+    slippage_bps: float
+    slippage_impact: float
+    slippage_application_count: int
+    final_fill_price: float
+    quantity: float
+    liquidity_role: str
+
+
+# The transition owns one fill fact; result serialization projects it as a fill event.
+FillEvent = FillDecision
+
+
+@dataclass(slots=True, frozen=True)
+class CashEvent:
+    sequence: int
+    cash_event_id: CashEventId
+    event_timestamp: datetime
+    lifecycle_id: LifecycleId
+    kind: CashEventKind
+    signed_delta: float
+    settlement_currency: str
+    fill_id: FillId | None = None
+    funding_event_id: str | None = None
+
+
+@dataclass(slots=True, frozen=True)
+class FeeEvent:
+    sequence: int
+    event_timestamp: datetime
+    lifecycle_id: LifecycleId
+    fill_id: FillId
+    event_class: str
+    liquidity_role: str
+    schedule_id: str
+    schedule_digest: str
+    rate: float
+    fixed_component: float
+    fee_notional: float
+    fee_amount: float
+    fee_cash_delta: float
+    settlement_currency: str
+    cash_event_id: CashEventId
+
+
+@dataclass(slots=True, frozen=True)
+class FundingEvent:
+    sequence: int
+    funding_event_id: str
+    event_timestamp: datetime
+    lifecycle_id: LifecycleId
+    position_side: str
+    open_qty: float
+    contract_multiplier: float
+    mark_price: float
+    raw_rate: float
+    positive_rate_payer: str
+    long_cashflow_rate: float
+    notional: float
+    funding_cash_delta: float
+    cumulative_funding: float
+    schedule_id: str
+    schedule_digest: str
+    source_event_digest: str
+    cash_event_id: CashEventId
+
+
+@dataclass(slots=True, frozen=True)
+class PositionFacts:
+    lifecycle_id: LifecycleId | None
+    side: str | None
+    quantity: float
+    entry_fill_price: float | None = None
+    active_stop_price: float | None = None
+
+
+def _same_binary64(left: float, right: float) -> bool:
+    return struct.pack(">d", float(left)) == struct.pack(">d", float(right))
+
+
+def _require_contiguous_sequences(label: str, rows: tuple[object, ...]) -> None:
+    for expected, row in enumerate(rows):
+        if getattr(row, "sequence", None) != expected:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: {label} sequence must be contiguous"
+            )
+
+
+@dataclass(slots=True, frozen=True)
+class EconomicTransition:
+    """One immutable economic transition applied exactly once by its caller.
+
+    ``cash_events`` is the sole equity-mutation ledger. Fee and funding rows are
+    equality-checked typed projections joined one-to-one by ``cash_event_id``.
+    """
+
+    semantics_id: str
+    instrument_record_id: str
+    instrument_record_digest: str
+    funding_schedule_id: str
+    funding_schedule_digest: str
+    next_position_facts: PositionFacts
+    cost_schedule_id: str | None = None
+    cost_schedule_digest: str | None = None
+    decision_events: tuple[DecisionEvent, ...] = ()
+    fill_decisions: tuple[FillDecision, ...] = ()
+    cash_events: tuple[CashEvent, ...] = ()
+    fee_events: tuple[FeeEvent, ...] = ()
+    funding_events: tuple[FundingEvent, ...] = ()
+
+    def __post_init__(self) -> None:
+        _require_contiguous_sequences("decision_events", self.decision_events)
+        _require_contiguous_sequences("fill_decisions", self.fill_decisions)
+        _require_contiguous_sequences("cash_events", self.cash_events)
+        _require_contiguous_sequences("fee_events", self.fee_events)
+        _require_contiguous_sequences("funding_events", self.funding_events)
+
+        cash_by_id: dict[CashEventId, CashEvent] = {}
+        for row in self.cash_events:
+            if row.cash_event_id in cash_by_id:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: duplicate cash_event_id"
+                )
+            cash_by_id[row.cash_event_id] = row
+
+        projected_ids: set[CashEventId] = set()
+        for row in self.fee_events:
+            self._validate_projection(
+                row.cash_event_id,
+                row.fee_cash_delta,
+                CashEventKind.FEE,
+                row.schedule_id,
+                row.schedule_digest,
+                projected_ids,
+            )
+        for row in self.funding_events:
+            self._validate_projection(
+                row.cash_event_id,
+                row.funding_cash_delta,
+                CashEventKind.FUNDING,
+                row.schedule_id,
+                row.schedule_digest,
+                projected_ids,
+            )
+
+        required_projection_ids = {
+            row.cash_event_id
+            for row in self.cash_events
+            if row.kind in (CashEventKind.FEE, CashEventKind.FUNDING)
+        }
+        if projected_ids != required_projection_ids:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: missing or extra typed projection"
+            )
+
+    def _validate_projection(
+        self,
+        cash_event_id: CashEventId,
+        signed_delta: float,
+        expected_kind: CashEventKind,
+        schedule_id: str,
+        schedule_digest: str,
+        projected_ids: set[CashEventId],
+    ) -> None:
+        if cash_event_id in projected_ids:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: multiply linked typed projection"
+            )
+        cash_row = next(
+            (row for row in self.cash_events if row.cash_event_id == cash_event_id),
+            None,
+        )
+        if cash_row is None or cash_row.kind is not expected_kind:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: projection kind or join mismatch"
+            )
+        if not _same_binary64(cash_row.signed_delta, signed_delta):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: projection delta mismatch"
+            )
+        if expected_kind is CashEventKind.FEE:
+            if (
+                self.cost_schedule_id is None
+                or schedule_id != self.cost_schedule_id
+                or schedule_digest != self.cost_schedule_digest
+            ):
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: cost schedule identity mismatch"
+                )
+        elif (
+            schedule_id != self.funding_schedule_id
+            or schedule_digest != self.funding_schedule_digest
+        ):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding schedule identity mismatch"
+            )
+        projected_ids.add(cash_event_id)
 
 
 @dataclass(slots=True)
