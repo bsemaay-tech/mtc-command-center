@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-31T12:00:00+03:00",
+  "generated": "2026-08-31T13:50:00+03:00",
   "updated_by": "claude-fable-lead-session-2026-08-31-day (generated = time of THIS push; W139-F03 fix)",
-  "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a-Q5a answered (recommended defaults; addendum 14). OPEN-01..10: owner gave all ten initial dispositions (addendum 15) - rows 02/08/09/10/04 decision-complete; rows 01/03/05/06/07 are decision-NAMED with evidence packages prepared, each CLOSES only on the owner's later approval of its package. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: maximize subscription usage; stop 17:00. Still owed by owner: 'approved' on the path list, a/b/c on the design residual, OPEN-06 row dispositions, evidence-package approvals.",
+  "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a-Q5a answered (recommended defaults; addendum 14). OPEN-01..10: owner gave all ten initial dispositions (addendum 15) - rows 02/08/09/10/04 decision-complete; rows 01/03/05/06/07 are decision-NAMED with evidence packages prepared, each CLOSES only on the owner's later approval of its package. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: maximize subscription usage; stop 17:00. Still owed by owner: 'approved' on the path list, a/b/c on the design residual, OPEN-06 row dispositions, evidence-package approvals. AFTERNOON (addendum 16, verbatim 'all approved, fees a, design a, retain all.'): ALL TEN OPEN rows CLOSED (bundle approvals incl. fees option-a stop-market); T0 BUILD-PATH GRANT GIVEN on Gate-2 plan v2 + Lead Gate-2 acceptance; design micro-fold authorized and EXECUTED -> v1.4 SEALED (terminal pass G55 zero + GM24 zero); OPEN-06 retain-all recorded with fixture obligations.",
   "session_time_report": {
     "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
     "session_span": "2026-08-31 09:00 -> in progress (day session; waves 1-2 = 15 lanes by 10:00; night detail in HOURS_AND_COST_2026-08-30_NIGHT.md)",
@@ -128,12 +128,12 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "DESIGN_V13_REVERIFIED_AT_OWNER_TRIPLE_GATE",
+      "state": "DESIGN_V14_SEALED_BUILD_CHAIN_RUNNING",
       "branch": "-",
       "commit": "-",
-      "detail": "Fresh-family design at v1.3 (fold r4 complete). Re-verify round complete: Claude P47 PASS-WITH-NITS, Gemini GM21 zero, OpenCode DS18 1 LOW, Grok G46 1 MEDIUM (KERNEL-probe conservation; minimal fix stated). Grid-fitting class absent per all four families across every round. Build branch clean, zero commits.",
-      "owner_gate": true,
-      "next_action": "DAY 08-31 MIDDAY: owner answered ALL of Q1-Q8 AND the ten OPEN rows (addenda 14+15). EXECUTED: fold r4 -> v1.3; the ONE authorized re-verify round COMPLETE - Claude P47 PASS-WITH-NITS + Gemini GM21 zero + OpenCode DS18 1 LOW + Grok G46 1 MEDIUM (KERNEL-probe file-conservation contradiction, minimal fix stated) -> residual disposition = owner a/b/c ask OUTSTANDING. Gate-2 plan v2 audited CLEAR-FOR-OWNER (A5 5 findings folded, A7 zero) - awaiting owner word 'approved'. OPEN evidence built: venue bytes frozen (4 fetches, digests), BTC InstrumentRecord v1.1 (step 0.00001 derived, tick rule verbatim), fee table v1 (roles honestly SEMANTICS-GAP, W136 drafting proposed mapping), funding rules v1 (oracle price, hourly 1/8, long-pays-positive), OPEN-06 26-row proposal v2 CLEAR (A8 zero), OPEN-07 bridge mapping v1 (2/18 direct, deployed v4 gap honest). CONTRACT_TABLES lane held on the a/b/c answer. Branch still CLEAN, zero commits."
+      "detail": "Design v1.4 SEALED: micro-fold (G46-F01 conservation fix, new RULE2-06-EQUAL-PRICE-RED scenario, P47-F01 carry-forward) + terminal pass G55 zero + GM24 zero. ALL TEN OPEN rows closed by owner words (addenda 15+16); open_item_applicability draft authored+validated; T0 path grant given; Gate-2 accepted. Grid-fitting class absent across every round and family.",
+      "owner_gate": false,
+      "next_action": "CHAIN RUNNING: W127 CONTRACT_TABLES (Claude, Q3a independent author) authoring; W145 baseline-run driver pre-writing (execution separately under Q4a after tables seal); then the kernel build on the granted paths. Owner's remaining act: sec-16 human review at build acceptance."
     },
     {
       "id": "WP-P0-20",
