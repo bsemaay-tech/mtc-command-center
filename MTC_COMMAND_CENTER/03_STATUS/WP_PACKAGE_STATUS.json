@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-31T13:50:00+03:00",
+  "generated": "2026-08-31T15:25:00+03:00",
   "updated_by": "claude-fable-lead-session-2026-08-31-day (generated = time of THIS push; W139-F03 fix)",
   "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a-Q5a answered (recommended defaults; addendum 14). OPEN-01..10: owner gave all ten initial dispositions (addendum 15) - rows 02/08/09/10/04 decision-complete; rows 01/03/05/06/07 are decision-NAMED with evidence packages prepared, each CLOSES only on the owner's later approval of its package. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: maximize subscription usage; stop 17:00. Still owed by owner: 'approved' on the path list, a/b/c on the design residual, OPEN-06 row dispositions, evidence-package approvals. AFTERNOON (addendum 16, verbatim 'all approved, fees a, design a, retain all.'): ALL TEN OPEN rows CLOSED (bundle approvals incl. fees option-a stop-market); T0 BUILD-PATH GRANT GIVEN on Gate-2 plan v2 + Lead Gate-2 acceptance; design micro-fold authorized and EXECUTED -> v1.4 SEALED (terminal pass G55 zero + GM24 zero); OPEN-06 retain-all recorded with fixture obligations.",
   "session_time_report": {
@@ -133,7 +133,7 @@
       "commit": "-",
       "detail": "Design v1.4 SEALED: micro-fold (G46-F01 conservation fix, new RULE2-06-EQUAL-PRICE-RED scenario, P47-F01 carry-forward) + terminal pass G55 zero + GM24 zero. ALL TEN OPEN rows closed by owner words (addenda 15+16); open_item_applicability draft authored+validated; T0 path grant given; Gate-2 accepted. Grid-fitting class absent across every round and family.",
       "owner_gate": false,
-      "next_action": "CHAIN RUNNING: W127 CONTRACT_TABLES (Claude, Q3a independent author) authoring; W145 baseline-run driver pre-writing (execution separately under Q4a after tables seal); then the kernel build on the granted paths. Owner's remaining act: sec-16 human review at build acceptance."
+      "next_action": "CHAIN: all owner decisions complete incl. addendum-17 same-timestamp INCLUDE; applicability draft rev-3; W127d CONTRACT_TABLES running on MAX Opus (Pro weekly-capped; two launcher traps cost ~45min, fixed + recorded); baseline driver written (W145, execution held for the ONE Q4a run); build starts or queues with clean handoff by 17:00."
     },
     {
       "id": "WP-P0-20",
@@ -158,20 +158,20 @@
     {
       "id": "WP-P0-21",
       "title": "Objective eligibility criteria + D026 fixtures (design draft)",
-      "state": "DESIGN_DRAFT_V14_RECONVERGED",
+      "state": "DESIGN_DRAFT_V15_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "v1.4 after day fold W123 (G40 LOW, source-verified narrowing); verify G45 zero.",
+      "detail": "v1.5 after DS23 census (3) -> W149 fold -> DS25 verify zero.",
       "owner_gate": false,
       "next_action": "DAY 08-31: morning-sweep G40 LOW (current-contract UTC overclaim) folded by W123 -> v1.4 (narrowed to the real timezone-awareness predicate, source-verified vs admission.py/base.py); Grok fold-verify G45 running."
     },
     {
       "id": "WP-P0-22",
       "title": "Family-lineage + observation-leakage control (design draft)",
-      "state": "DESIGN_DRAFT_V15_RECONVERGED",
+      "state": "DESIGN_DRAFT_V16_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "v1.5 after day fold W122 (N96 LOW, retained-diff evidence); verify G44 zero.",
+      "detail": "v1.6 after N99 fresh census (5 MEDIUM 1 LOW) -> W147 fold -> G58 verify zero.",
       "owner_gate": false,
       "next_action": "DAY 08-31: morning-sweep N96 LOW (evidence-completeness) folded by W122 -> v1.5 (minimality statement now cites the retained v1.3->v1.4 diff); Grok fold-verify G44 running."
     },
@@ -208,20 +208,20 @@
     {
       "id": "WP-P0-30",
       "title": "Venue market-data collector (design draft)",
-      "state": "DESIGN_DRAFT_V13_RECONVERGED",
+      "state": "DESIGN_DRAFT_V14_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "v1.3 after day fold W137 (DS20 6 enumerated findings); verify G52 zero. All four families have seen it.",
+      "detail": "v1.4 after N101 fresh census (8, REQUEST_CHANGES class) -> W148 fold -> G59 verify zero.",
       "owner_gate": false,
       "next_action": "DAY 08-31: DS20 census (2M+4L enumerated) -> W137 fold -> v1.3 -> G52 ZERO. RE-CONVERGED."
     },
     {
       "id": "WP-V2A-01",
       "title": "V2A loader package (design draft)",
-      "state": "DESIGN_DRAFT_V13_RECONVERGED",
+      "state": "DESIGN_DRAFT_V14_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "v1.3 after day fold W128 (DS17 4 findings, 3 MEDIUM); verify G49 zero. All four families have seen it.",
+      "detail": "v1.4 after N100 fresh census (5 HIGH 3 MEDIUM incl. tamper-gate field binding) -> W146 fold -> G57 verify zero.",
       "owner_gate": false,
       "next_action": "DAY 08-31: fourth-family census DS17 found 4 (3 MEDIUM) -> W128 fold -> v1.3 -> verify G49 ZERO. V2A-01 RE-CONVERGED at v1.3 with all four families having seen it."
     },
@@ -231,7 +231,7 @@
       "state": "DESIGN_DRAFT_V14_RECONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "v1.4 after day fold W131 (DS19 3 findings, 2 MEDIUM); verify G50 zero. All four families have seen it.",
+      "detail": "v1.4 after day fold W131 (DS19 3 findings, 2 MEDIUM); verify G50 zero. All four families have seen it. GM25 gemini corroboration zero on v1.4.",
       "owner_gate": false,
       "next_action": "DAY 08-31: fourth-family census DS19 found 3 (2 MEDIUM: quick-restart collision contradiction, no ARM-trust path for gap-free worker) -> W131 fold -> v1.4 -> verify G50 ZERO. V2A-02 RE-CONVERGED at v1.4 with all four families having seen it."
     },
