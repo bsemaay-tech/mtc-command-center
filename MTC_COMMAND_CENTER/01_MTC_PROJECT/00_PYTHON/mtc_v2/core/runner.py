@@ -5,7 +5,7 @@ from dataclasses import replace
 from datetime import datetime
 import math
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Mapping
 
 from mtc_v2.core.config import SIGNAL_MODE_RANGE_FILTER, SIGNAL_MODE_SUPERTREND, resolve_config
 from mtc_v2.core.confirmation import (
@@ -137,6 +137,8 @@ class Runner:
         )
         self._corrected_semantics = self.kernel_semantics_version == "2.0.0"
         self._allow_corrected_test_policy = False
+        self._corrected_selector_stop_override: float | None = None
+        self._corrected_test_target_book: dict[str, tuple[str, float, float]] = {}
         self._corrected_records: EconomicRecords | None = None
         self._corrected_instrument_bound = False
         if self._corrected_semantics:
@@ -364,7 +366,13 @@ class Runner:
         )
 
     @classmethod
-    def for_corrected_contract(cls, config: dict[str, object]) -> "Runner":
+    def for_corrected_contract(
+        cls,
+        config: dict[str, object],
+        *,
+        selector_stop_override: float | None = None,
+        target_book_overrides: Mapping[str, tuple[str, float, float]] | None = None,
+    ) -> "Runner":
         """Create the non-production runner used by declared migration fixtures."""
 
         runner = cls(config)
@@ -374,6 +382,8 @@ class Runner:
                 "corrected contract runner requires semantics 2.0.0",
             )
         runner._allow_corrected_test_policy = True
+        runner._corrected_selector_stop_override = selector_stop_override
+        runner._corrected_test_target_book = dict(target_book_overrides or {})
         return runner
 
     def _load_corrected_records(self) -> EconomicRecords:
@@ -492,6 +502,10 @@ class Runner:
                     stop_distance = abs(reference_price - provisional)
                 else:
                     stop_price = provisional
+        if self._corrected_selector_stop_override is not None:
+            stop_price = self._corrected_selector_stop_override
+            stop_percent = None
+            stop_distance = None
         transition = CorrectedEconomicsAdapter().resolve(
             self._economic_state(sizing_equity=sizing_equity),
             EconomicIntent(
@@ -556,6 +570,18 @@ class Runner:
             book_version=next_book_version,
             completed_exit_ids=completed_exit_ids,
         )
+        if self._corrected_test_target_book:
+            working_exits = [
+                replace(
+                    member,
+                    exit_id=self._corrected_test_target_book[member.exit_id][0],
+                    target_price=self._corrected_test_target_book[member.exit_id][1],
+                    qty_fraction=self._corrected_test_target_book[member.exit_id][2],
+                )
+                if member.exit_id in self._corrected_test_target_book
+                else member
+                for member in working_exits
+            ]
         self.position_manager.apply_transition(
             bar=bar,
             state=self.state,

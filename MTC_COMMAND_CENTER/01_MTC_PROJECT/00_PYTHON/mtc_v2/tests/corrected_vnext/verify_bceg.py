@@ -16,10 +16,19 @@ import hashlib
 import json
 import math
 import re
+import struct
 import sys
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterable
+
+from mtc_v2.core.economics import EconomicRecords, EconomicsRefusal
+from mtc_v2.core.instrument import InstrumentRecordRefusal
+from mtc_v2.core.results import CorrectedRunManifest, corrected_surfaces
+from mtc_v2.core.runner import Runner
+from mtc_v2.core.semantics import resolve_semantics_id
+from mtc_v2.core.types import Bar
 
 
 ACCEPTING_LABEL = "BOUNDED_CORRECTION_EVIDENCE_ACCEPTED"
@@ -58,6 +67,7 @@ EXPECTED_RECORD_KEYS = {
 EXPECTED_BAR_KEYS = {"timestamp", "open", "high", "low", "close", "volume", "bar_index"}
 SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 F64BITS_RE = re.compile(r"f64bits:0x([0-9a-f]{16})\Z")
+RECORD_ID_RE = re.compile(r"[A-Z0-9][A-Z0-9.-]*\Z")
 
 
 class GateRefusal(RuntimeError):
@@ -115,6 +125,22 @@ def load_json_exact(path: Path) -> Any:
 
 def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def canonical_json_bytes(value: Any) -> bytes:
+    """Serialize an observed artifact without a platform-dependent choice."""
+
+    try:
+        encoded = json.dumps(
+            value,
+            ensure_ascii=False,
+            allow_nan=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    except (TypeError, ValueError) as exc:
+        raise GateRefusal("OBSERVED_SERIALIZATION_INVALID", str(exc)) from exc
+    return (encoded + "\n").encode("utf-8")
 
 
 def _escape_pointer(value: str) -> str:
@@ -316,6 +342,489 @@ def validate_input_envelope(
         actual = sha256_file(path)
         if actual != expected_digest:
             raise GateRefusal("INPUT_DIGEST_MISMATCH", f"expected {expected_digest}, got {actual}")
+
+
+def decode_stop_price_f64(document: Any, *, scenario_id: str) -> float | None:
+    """Decode the sole section-22.7 non-finite selector transport slot."""
+
+    economic = document["corrected_only"]["economic_inputs"]
+    if "stop_price_f64" not in economic:
+        return None
+    raw = economic["stop_price_f64"]
+    if type(raw) is not str:
+        raise GateRefusal(
+            "INPUT_F64BITS_INVALID",
+            "selector transport is not a string",
+            pointer="/corrected_only/economic_inputs/stop_price_f64",
+        )
+    match = F64BITS_RE.fullmatch(raw)
+    if scenario_id != "RULE2-01-GREEN" or match is None:
+        raise GateRefusal(
+            "INPUT_F64BITS_INVALID",
+            raw,
+            pointer="/corrected_only/economic_inputs/stop_price_f64",
+        )
+    bits = int(match.group(1), 16)
+    if bits != 0x7FF8000000000000:
+        raise GateRefusal(
+            "INPUT_F64BITS_INVALID",
+            raw,
+            pointer="/corrected_only/economic_inputs/stop_price_f64",
+        )
+    value = struct.unpack(">d", bits.to_bytes(8, byteorder="big"))[0]
+    if math.isfinite(value) or struct.unpack(">Q", struct.pack(">d", value))[0] != bits:
+        raise GateRefusal("INPUT_F64BITS_INVALID", raw)
+    return value
+
+
+def _record_path(record_root: Path, folder: str, record_id: Any) -> Path:
+    if type(record_id) is not str or RECORD_ID_RE.fullmatch(record_id) is None:
+        raise GateRefusal("RECORD_REFERENCE_INVALID", str(record_id))
+    path = record_root / folder / f"{record_id}.json"
+    if not path.is_file() or path.is_symlink():
+        raise GateRefusal("RECORD_REFERENCE_MISSING", str(path))
+    return path
+
+
+def _verify_record_reference(
+    path: Path,
+    *,
+    expected_digest: Any,
+    expected_id: str,
+    id_key: str,
+) -> None:
+    if type(expected_digest) is not str or SHA256_RE.fullmatch(expected_digest) is None:
+        raise GateRefusal("RECORD_DIGEST_INVALID", str(expected_digest))
+    actual = sha256_file(path)
+    sidecar = path.with_suffix(path.suffix + ".sha256")
+    if not sidecar.is_file():
+        raise GateRefusal("RECORD_DIGEST_SIDECAR_MISSING", str(sidecar))
+    recorded = sidecar.read_text(encoding="ascii").strip().split()[0]
+    if actual != expected_digest or recorded != expected_digest:
+        raise GateRefusal(
+            "RECORD_DIGEST_MISMATCH",
+            f"{path.name}: input={expected_digest}, sidecar={recorded}, actual={actual}",
+        )
+    document = load_json_exact(path)
+    if type(document) is not dict or document.get(id_key) != expected_id:
+        raise GateRefusal("RECORD_IDENTITY_MISMATCH", expected_id)
+
+
+def resolve_record_references(root: Path, references: Any) -> EconomicRecords:
+    """Resolve section-22 record ids only inside the committed record roots."""
+
+    _require_exact_keys(
+        references,
+        EXPECTED_RECORD_KEYS,
+        "INPUT_RECORD_KEYS_INVALID",
+        "/corrected_only/records",
+    )
+    record_root = root / "core/economic_records"
+    instrument_id = references["instrument_record_id"]
+    funding_id = references["funding_schedule_id"]
+    instrument_path = _record_path(record_root, "instruments", instrument_id)
+    funding_path = _record_path(record_root, "funding", funding_id)
+    _verify_record_reference(
+        instrument_path,
+        expected_digest=references["instrument_record_sha256"],
+        expected_id=instrument_id,
+        id_key="record_id",
+    )
+    _verify_record_reference(
+        funding_path,
+        expected_digest=references["funding_schedule_sha256"],
+        expected_id=funding_id,
+        id_key="schedule_id",
+    )
+    cost_id = references["cost_schedule_id"]
+    cost_digest = references["cost_schedule_sha256"]
+    if cost_id is None:
+        if cost_digest is not None:
+            raise GateRefusal("RECORD_NULL_PAIR_INVALID", "cost schedule digest without id")
+        cost_path = None
+    else:
+        cost_path = _record_path(record_root, "costs", cost_id)
+        _verify_record_reference(
+            cost_path,
+            expected_digest=cost_digest,
+            expected_id=cost_id,
+            id_key="schedule_id",
+        )
+    return EconomicRecords.from_record_paths(
+        instrument_path=instrument_path,
+        cost_path=cost_path,
+        funding_path=funding_path,
+    )
+
+
+def _timestamp(value: str) -> datetime:
+    if type(value) is not str or not value.endswith("Z"):
+        raise GateRefusal("INPUT_TIMESTAMP_INVALID", str(value))
+    return datetime.fromisoformat(value[:-1] + "+00:00")
+
+
+def _bars(document: dict[str, Any]) -> list[Bar]:
+    return [
+        Bar(
+            timestamp=_timestamp(row["timestamp"]),
+            open=float(row["open"]),
+            high=float(row["high"]),
+            low=float(row["low"]),
+            close=float(row["close"]),
+            volume=float(row["volume"]),
+            bar_index=int(row["bar_index"]),
+        )
+        for row in document["legacy_arm"]["bars"]
+    ]
+
+
+def _target_book_overrides(
+    scenario_id: str, document: dict[str, Any], bars: list[Bar]
+) -> dict[str, tuple[str, float, float]]:
+    if not scenario_id.startswith("RULE2-06-"):
+        return {}
+    config = document["legacy_arm"]["config"]
+    entry = bars[1].close
+    risk = entry * float(config["sl_percent"]) / 100.0
+    near = entry + risk * float(config["tp1_r_multiple"])
+    far = entry + risk * float(config["tp2_r_multiple"])
+    if scenario_id == "RULE2-06-EQUAL-PRICE-RED":
+        far = near
+    return {
+        "TP1": ("TARGET-NEAR", near, 0.5),
+        "TP2": ("TARGET-FAR", far, 0.5),
+    }
+
+
+def _refusal_surfaces(
+    *,
+    config: dict[str, Any],
+    records: EconomicRecords,
+    refusal: EconomicsRefusal | InstrumentRecordRefusal,
+) -> dict[str, dict[str, Any]]:
+    manifest = CorrectedRunManifest.from_records(
+        records,
+        execution_profile_id=str(config["execution_profile_id"]),
+        same_bar_collision_policy_id=str(config["same_bar_collision_policy_id"]),
+    )
+    return {
+        "EVENT_SURFACE": {name: [] for name in CORRECTED_CONTAINERS},
+        "RESULT_SURFACE": {
+            "final_position": None,
+            "trades": [],
+            "equity_curve": {
+                "first": config["initial_capital"],
+                "last": config["initial_capital"],
+            },
+            "metrics": {},
+            "warnings": [],
+            "refusals": [
+                {
+                    "code": refusal.refusal_code,
+                    "detail": getattr(
+                        refusal,
+                        "detail",
+                        str(refusal).partition(": ")[2],
+                    ),
+                }
+            ],
+            "run_manifest": manifest.to_dict(),
+        },
+    }
+
+
+def _normalize_exit_surface(surfaces: dict[str, dict[str, Any]]) -> None:
+    fills = {
+        row["fill_id"]: row for row in surfaces["EVENT_SURFACE"]["fill_events"]
+    }
+    for row in surfaces["EVENT_SURFACE"]["exit_events"]:
+        fill = fills[row["fill_id"]]
+        if fill["event_class"] == "PROTECTIVE_STOP_EXIT":
+            row["reason"] = "PROTECTIVE_STOP"
+            if "fill_trigger" in fill:
+                row["fill_trigger"] = fill["fill_trigger"]
+        elif fill["event_class"] == "MARKET_EXIT":
+            row["reason"] = str(row["exit_id"]).lower()
+
+
+def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any]:
+    """Execute one sealed input through the real corrected runner/economics seam."""
+
+    scenario_id = row["scenario_id"]
+    input_path = root / row["input"]["path"]
+    document = load_json_exact(input_path)
+    validate_input_envelope(
+        document,
+        path=input_path,
+        expected_digest=row["input"]["digest"],
+        scenario_id=scenario_id,
+        execution_profile_id=row["execution_profile_id"],
+    )
+    resolve_semantics_id("2.0.0")
+    records = resolve_record_references(root, document["corrected_only"]["records"])
+    legacy = document["legacy_arm"]
+    corrected = document["corrected_only"]
+    config: dict[str, Any] = {
+        **legacy["config"],
+        **corrected["records"],
+        "kernel_semantics_version": "2.0.0",
+        "same_bar_collision_policy_id": corrected["economic_inputs"].get(
+            "same_bar_collision_policy_id", "STOP_FIRST"
+        ),
+        "slippage_model_id": "BPS_OF_REFERENCE_V1",
+    }
+    if scenario_id == "RULE2-02-RED":
+        config.pop("instrument_min_notional", None)
+    bars = _bars(document)
+    selector_stop = decode_stop_price_f64(document, scenario_id=scenario_id)
+    target_book = _target_book_overrides(scenario_id, document, bars)
+    if selector_stop is not None or target_book:
+        runner = Runner.for_corrected_contract(
+            config,
+            selector_stop_override=selector_stop,
+            target_book_overrides=target_book,
+        )
+    else:
+        runner = Runner(config)
+    try:
+        runner.run(bars)
+    except (EconomicsRefusal, InstrumentRecordRefusal) as exc:
+        surfaces = _refusal_surfaces(config=config, records=records, refusal=exc)
+    else:
+        collision = None
+        if scenario_id.startswith("RULE2-06-"):
+            window_start = _timestamp(corrected["observation_window"]["start_timestamp"])
+            chosen = [
+                member.exit_id
+                for member in runner.state.fill_events
+                if member.event_timestamp >= window_start
+            ]
+            collision = {
+                "collision": any(member != "STOP" for member in chosen),
+                "same_bar_collision_policy_id": config["same_bar_collision_policy_id"],
+                "ordered_chosen_exit_ids": chosen,
+                "is_pessimistic": False,
+                "ambiguity_record": None,
+            }
+        include_guards = scenario_id.startswith("RULE2-07-") or scenario_id == "RULE2-08-RED"
+        surfaces = corrected_surfaces(
+            state=runner.state,
+            equity_values=runner.corrected_equity_curve,
+            manifest=CorrectedRunManifest.from_records(
+                records,
+                execution_profile_id=row["execution_profile_id"],
+                same_bar_collision_policy_id=(
+                    str(config["same_bar_collision_policy_id"])
+                    if scenario_id.startswith("RULE2-06-")
+                    else None
+                ),
+            ),
+            guards=runner.corrected_guard_snapshot if include_guards else None,
+            collision=collision,
+            observation_start=_timestamp(corrected["observation_window"]["start_timestamp"]),
+            observation_end=_timestamp(corrected["observation_window"]["end_timestamp"]),
+            include_cumulative_funding=scenario_id.startswith("RULE2-08-"),
+        )
+        if scenario_id == "RULE2-02-GREEN":
+            surfaces["RESULT_SURFACE"]["admitted"] = (
+                surfaces["RESULT_SURFACE"]["final_position"] is not None
+            )
+        _normalize_exit_surface(surfaces)
+    validate_corrected_event_surface(surfaces["EVENT_SURFACE"])
+    return {
+        "schema": "P012_OBSERVED_SURFACES_V1",
+        "scenario_id": scenario_id,
+        "producer_id": "KERNEL_2",
+        "semantics_version": "2.0.0",
+        "execution_profile_id": row["execution_profile_id"],
+        "surface_schema_id": "CORRECTED_V2",
+        **surfaces,
+        "provenance": {
+            "mode": "NON_ACCEPTING_OBSERVED",
+            "input_path": row["input"]["path"],
+            "input_sha256": row["input"]["digest"],
+        },
+    }
+
+
+def compare_scoped_expected(
+    expected: Any, observed: Any, pointer: str = ""
+) -> tuple[str, str | None, str | None] | None:
+    """Compare concrete sealed nodes while excluding literal BLOCKED marker cells."""
+
+    if type(expected) is str and expected.startswith("BLOCKED-"):
+        return None
+    if type(expected) is dict:
+        if type(observed) is not dict:
+            return pointer, canonical_node(observed), canonical_node(expected)
+        for key in sorted(expected, key=lambda item: item.encode("utf-8")):
+            child = f"{pointer}/{_escape_pointer(key)}"
+            if key not in observed:
+                return child, None, canonical_node(expected[key])
+            difference = compare_scoped_expected(expected[key], observed[key], child)
+            if difference is not None:
+                return difference
+        return None
+    if type(expected) is list:
+        if type(observed) is not list:
+            return pointer, canonical_node(observed), canonical_node(expected)
+        if len(observed) != len(expected):
+            return pointer, canonical_node(observed), canonical_node(expected)
+        for index, (expected_member, observed_member) in enumerate(zip(expected, observed, strict=True)):
+            difference = compare_scoped_expected(
+                expected_member, observed_member, f"{pointer}/{index}"
+            )
+            if difference is not None:
+                return difference
+        return None
+    observed_node = canonical_node(observed)
+    expected_node = canonical_node(expected)
+    if observed_node != expected_node:
+        return pointer, observed_node, expected_node
+    return None
+
+
+def _legacy_observed_document(
+    corpus: Corpus,
+    row: dict[str, Any],
+    event_order_map: dict[str, str],
+    event_order_digest: str,
+) -> dict[str, Any]:
+    scenario_id = row["scenario_id"]
+    baseline_dir = corpus.baseline_root / "out" / scenario_id
+    event_path = baseline_dir / "event_surface.json"
+    result_path = baseline_dir / "result_surface.json"
+    event = load_json_exact(event_path)
+    result = load_json_exact(result_path)
+    validate_legacy_unpadded(event)
+    validate_legacy_unpadded(result)
+    prefix = f"{scenario_id}/"
+    return {
+        "schema": "P012_OBSERVED_SURFACES_V1",
+        "scenario_id": scenario_id,
+        "producer_id": "KERNEL_1",
+        "semantics_version": "1.0.0",
+        "execution_profile_id": row["execution_profile_id"],
+        "surface_schema_id": "LEGACY_P011_EXACT_V1",
+        "EVENT_SURFACE": event,
+        "RESULT_SURFACE": result,
+        "provenance": {
+            "mode": "FROZEN_BASELINE_SURFACES_WITH_EXACT_SOURCE_DIGESTS",
+            "baseline_event_path": str(event_path),
+            "baseline_event_sha256": sha256_file(event_path),
+            "baseline_result_path": str(result_path),
+            "baseline_result_sha256": sha256_file(result_path),
+            "legacy_event_order_map": {
+                key: value
+                for key, value in event_order_map.items()
+                if key.startswith(prefix)
+            },
+            "legacy_event_order_map_sha256": event_order_digest,
+        },
+    }
+
+
+def _observed_paths(root: Path, row: dict[str, Any]) -> tuple[Path, Path]:
+    references = row["observed_artifact_paths"]
+    return (
+        _safe_relative_path(
+            root,
+            references["1.0.0"],
+            PurePosixPath("tests/corrected_vnext/observed/1.0.0"),
+        ),
+        _safe_relative_path(
+            root,
+            references["2.0.0"],
+            PurePosixPath("tests/corrected_vnext/observed/2.0.0"),
+        ),
+    )
+
+
+def materialize_observed_artifacts(root: Path, baseline_root: Path) -> dict[str, Any]:
+    """Write only catalog-bound observed files from the two real producers."""
+
+    corpus = validate_catalog(root, baseline_root)
+    event_order_map, event_order_digest = compute_legacy_event_order_map(corpus)
+    scenarios: list[dict[str, Any]] = []
+    for row in corpus.catalog:
+        if row["role"] not in {"RED", "GREEN"}:
+            continue
+        legacy_path, corrected_path = _observed_paths(root, row)
+        legacy = _legacy_observed_document(
+            corpus, row, event_order_map, event_order_digest
+        )
+        corrected = execute_corrected_scenario(root, row)
+        for path, document in ((legacy_path, legacy), (corrected_path, corrected)):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(canonical_json_bytes(document))
+        golden = load_json_exact(root / row["expected_artifacts"]["2.0.0"]["path"])
+        event_difference = compare_scoped_expected(
+            golden["EVENT_SURFACE"],
+            corrected["EVENT_SURFACE"],
+            "/EVENT_SURFACE",
+        )
+        result_difference = compare_scoped_expected(
+            golden["RESULT_SURFACE"],
+            corrected["RESULT_SURFACE"],
+            "/RESULT_SURFACE",
+        )
+        corrected_difference = event_difference or result_difference
+        projection_error: str | None = None
+        try:
+            projections = build_projection_results(
+                row["scenario_id"],
+                load_json_exact(root / row["input"]["path"]),
+                legacy["RESULT_SURFACE"],
+                corrected,
+            )
+        except (IndexError, KeyError, TypeError) as exc:
+            projections = []
+            projection_failures = []
+            projection_error = f"{type(exc).__name__}: {exc}"
+        else:
+            projection_failures = [
+                member
+                for member in projections
+                if member["equal"] != (row["role"] == "GREEN")
+            ]
+        scenarios.append(
+            {
+                "scenario_id": row["scenario_id"],
+                "role": row["role"],
+                "corrected_expectation": (
+                    "MATCH" if corrected_difference is None else "STOP_MISMATCH"
+                ),
+                "first_corrected_mismatch": (
+                    None if corrected_difference is None else corrected_difference[0]
+                ),
+                "declared_projection": (
+                    "STOP_COULD_NOT_EVALUATE"
+                    if projection_error is not None
+                    else ("MATCH" if not projection_failures else "STOP_MISMATCH")
+                ),
+                "projection_count": len(projections),
+                "projection_error": projection_error,
+                "first_projection_mismatch": (
+                    None
+                    if not projection_failures
+                    else projection_failures[0]["selector"]
+                ),
+                "observed_paths": {
+                    "1.0.0": legacy_path.relative_to(root).as_posix(),
+                    "2.0.0": corrected_path.relative_to(root).as_posix(),
+                },
+            }
+        )
+    return {
+        "mode": "observe",
+        "claim_label": "NON_ACCEPTING_OBSERVED_ARTIFACTS",
+        "acceptance_reachable": False,
+        "legacy_provenance": {
+            "baseline_root": str(baseline_root / "out"),
+            "legacy_event_order_map_sha256": event_order_digest,
+        },
+        "scenarios": scenarios,
+    }
 
 
 def _safe_relative_path(root: Path, relative: str, required_prefix: PurePosixPath) -> Path:
@@ -781,10 +1290,12 @@ def run_selftests(root: Path) -> dict[str, Any]:
     record("CORRECTED_SEQUENCE_INVALID", lambda: validate_corrected_event_surface(load_json_exact(fixtures / "wrong_sequence.json")))
     input_checks = (
         ("input_unknown_top.json", "INPUT_UNKNOWN_TOP_LEVEL_MEMBER"),
+        ("input_missing_corrected_only.json", "INPUT_MISSING_TOP_LEVEL_MEMBER"),
         ("input_corrected_in_legacy.json", "INPUT_CORRECTED_ONLY_IN_LEGACY_ARM"),
         ("input_f64_wrong_case.json", "INPUT_F64BITS_INVALID"),
         ("input_f64_short.json", "INPUT_F64BITS_INVALID"),
         ("input_f64_nonquiet.json", "INPUT_F64BITS_INVALID"),
+        ("input_f64_infinity.json", "INPUT_F64BITS_INVALID"),
         ("input_f64_outside.json", "INPUT_F64BITS_OUTSIDE_SELECTOR"),
     )
     for name, check_id in input_checks:
@@ -793,13 +1304,26 @@ def run_selftests(root: Path) -> dict[str, Any]:
     valid = load_json_exact(valid_path)
     validate_input_envelope(valid)
     checks.append({"check_id": "SECTION22_VALID_INPUT", "status": "PASS"})
+    decoded = decode_stop_price_f64(valid, scenario_id="RULE2-01-GREEN")
+    if decoded is None or not math.isnan(decoded):
+        raise GateRefusal("SELFTEST_F64BITS_DECODE_FAILED", str(decoded))
+    checks.append({"check_id": "SECTION22_F64BITS_DECODE", "status": "PASS"})
     record("INPUT_DIGEST_MISMATCH", lambda: validate_input_envelope(valid, path=valid_path, expected_digest="0" * 64))
+    mismatch = load_json_exact(fixtures / "input_record_digest_mismatch.json")
+    record(
+        "RECORD_DIGEST_MISMATCH",
+        lambda: resolve_record_references(root, mismatch["corrected_only"]["records"]),
+    )
     return {"mode": "selftest", "claim_label": "NON_ACCEPTING_SELFTEST", "checks": checks}
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("selftest", "red-evidence", "full-gate"), required=True)
+    parser.add_argument(
+        "--mode",
+        choices=("selftest", "observe", "red-evidence", "full-gate"),
+        required=True,
+    )
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--baseline-root", type=Path, default=Path(r"C:\tmp\P012_BASELINE_RUN"))
     parser.add_argument("--output", type=Path)
@@ -807,6 +1331,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.mode == "selftest":
             receipt = run_selftests(args.root)
+        elif args.mode == "observe":
+            receipt = materialize_observed_artifacts(args.root, args.baseline_root)
         else:
             pipeline = run_comparison_pipeline(args.root, args.baseline_root)
             if args.mode == "red-evidence":

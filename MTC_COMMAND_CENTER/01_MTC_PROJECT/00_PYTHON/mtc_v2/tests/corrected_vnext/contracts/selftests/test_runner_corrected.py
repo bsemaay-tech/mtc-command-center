@@ -205,6 +205,24 @@ def test_contract_test_runner_can_exercise_target_first_atomic_fill_order() -> N
     assert runner.state.position is None
 
 
+def test_contract_constructor_builds_equal_price_book_without_production_policy_change() -> None:
+    config, bars = _scenario("RULE2-06-EQUAL-PRICE-RED")
+    runner = Runner.for_corrected_contract(
+        config,
+        target_book_overrides={
+            "TP1": ("TARGET-NEAR", 105.0, 0.5),
+            "TP2": ("TARGET-FAR", 105.0, 0.5),
+        },
+    )
+
+    runner.run(bars)
+
+    exits = [row for row in runner.state.fill_events if row.event_class.endswith("EXIT")]
+    assert [row.exit_id for row in exits] == ["TARGET-FAR", "TARGET-NEAR"]
+    assert [row.final_fill_price for row in exits] == [105.0, 105.0]
+    assert runner.state.position is None
+
+
 def test_funding_boundary_is_applied_before_same_timestamp_bar_evaluation() -> None:
     config, bars = _scenario("RULE2-08-RED")
     runner = Runner(config)

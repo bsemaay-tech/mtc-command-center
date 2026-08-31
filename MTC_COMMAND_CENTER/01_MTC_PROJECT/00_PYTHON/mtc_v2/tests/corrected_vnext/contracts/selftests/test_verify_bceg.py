@@ -8,7 +8,10 @@ import pytest
 from mtc_v2.tests.corrected_vnext.verify_bceg import (
     GateRefusal,
     compare_documents,
+    decode_stop_price_f64,
+    execute_corrected_scenario,
     load_json_exact,
+    resolve_record_references,
     validate_corrected_event_surface,
     validate_input_envelope,
     validate_legacy_unpadded,
@@ -16,6 +19,7 @@ from mtc_v2.tests.corrected_vnext.verify_bceg import (
 
 
 FIXTURES = Path(__file__).parent
+MTC_V2_ROOT = FIXTURES.parents[3]
 
 
 def refusal(check_id: str, action) -> None:
@@ -57,10 +61,12 @@ def test_version_shaped_surface_refusals() -> None:
     ("fixture", "check_id"),
     [
         ("input_unknown_top.json", "INPUT_UNKNOWN_TOP_LEVEL_MEMBER"),
+        ("input_missing_corrected_only.json", "INPUT_MISSING_TOP_LEVEL_MEMBER"),
         ("input_corrected_in_legacy.json", "INPUT_CORRECTED_ONLY_IN_LEGACY_ARM"),
         ("input_f64_wrong_case.json", "INPUT_F64BITS_INVALID"),
         ("input_f64_short.json", "INPUT_F64BITS_INVALID"),
         ("input_f64_nonquiet.json", "INPUT_F64BITS_INVALID"),
+        ("input_f64_infinity.json", "INPUT_F64BITS_INVALID"),
         ("input_f64_outside.json", "INPUT_F64BITS_OUTSIDE_SELECTOR"),
     ],
 )
@@ -88,3 +94,57 @@ def test_valid_section_22_input() -> None:
         path=path,
         expected_digest=hashlib.sha256(path.read_bytes()).hexdigest(),
     )
+
+
+def test_section_22_nan_decoder_preserves_the_exact_quiet_nan_bits() -> None:
+    document = load_json_exact(FIXTURES / "input_valid.json")
+
+    value = decode_stop_price_f64(document, scenario_id="RULE2-01-GREEN")
+
+    assert value is not None
+    assert value != value
+
+
+def test_record_reference_digest_mismatch_refuses_before_execution() -> None:
+    document = load_json_exact(FIXTURES / "input_record_digest_mismatch.json")
+
+    refusal(
+        "RECORD_DIGEST_MISMATCH",
+        lambda: resolve_record_references(
+            MTC_V2_ROOT, document["corrected_only"]["records"]
+        ),
+    )
+
+
+def test_corrected_scenario_executes_real_seam_and_emits_six_containers() -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-01-RED")
+
+    observed = execute_corrected_scenario(MTC_V2_ROOT, row)
+
+    assert observed["producer_id"] == "KERNEL_2"
+    assert observed["semantics_version"] == "2.0.0"
+    assert list(observed["EVENT_SURFACE"]) == [
+        "decision_events",
+        "fill_events",
+        "cash_events",
+        "fee_events",
+        "funding_events",
+        "exit_events",
+    ]
+    assert observed["RESULT_SURFACE"]["run_manifest"]["kernel_semantics_version"] == "2.0.0"
+
+
+def test_all_cataloged_corrected_scenarios_are_executable() -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+
+    observed = [
+        execute_corrected_scenario(MTC_V2_ROOT, row)
+        for row in catalog
+        if row["role"] in {"RED", "GREEN"}
+    ]
+
+    assert [member["scenario_id"] for member in observed] == [
+        row["scenario_id"] for row in catalog if row["role"] in {"RED", "GREEN"}
+    ]
+    assert all(member["semantics_version"] == "2.0.0" for member in observed)

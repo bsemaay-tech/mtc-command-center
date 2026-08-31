@@ -1,0 +1,1 @@
+{"legacy_arm":{"bars":[{"bar_index":0,"close":100,"high":100,"low":100,"open":100,"timestamp":"2000-01-01T00:00:00Z","volume":0}],"config":{"execution_profile_id":"close_only_deterministic_v2"},"gate_overrides":{},"htf_data":{},"profile_id":"close_only_deterministic_v2","scenario_id":"RULE2-01-GREEN"}}
