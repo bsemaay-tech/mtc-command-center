@@ -215,3 +215,42 @@ build authorized) and answer row 6's budget question for the night.
     pay-as-you-go API routes remain cheapest-suitable. Supersedes the standing budget-flag
     concern for subscription routes; the CodeBurn banner stays report-as-fact.
 31. **Session stop time:** 17:00 with full handoff + report.
+
+## Addendum 15 — 2026-08-31 ~10:00 (owner verbatim: OPEN-01..10 dispositions via audited one-pager v2)
+
+Owner's verbatim reply (one-pager numbering, mapped to design rows):
+"1 STOP_FIRST, 2 no additional bounds, 3 schema approved, 4 a, 5 Hyperliquid perp BTC from
+current doc + venue fetch approved, 6 draft it, 7 i, 8 draft it, 9 draft it, 10 read approved"
+
+32. **OPEN-02** = `STOP_FIRST` is the mandatory same-bar policy for acceptance-bearing 2.0.0 runs.
+33. **OPEN-08** = "no additional bounds" — explicit no-additional-bound decision per the design's
+    closure column.
+34. **OPEN-09** = protected-scope approval GRANTED for the additive result/event schema
+    (sections 13-15, gross/net PnL + lifecycle linkage). The separate build authorization
+    remains the Q5a "approved"-on-path-list act (addendum 14, not yet given).
+35. **OPEN-10** = (a): guards keep GROSS-MINUS-FEES (D017 extended to 2.0.0) for daily-loss,
+    consecutive-loss, and time-stop; no per-control divergence requested. RED/GREEN guard
+    fixtures per control are a build obligation under this rule.
+36. **OPEN-01** = first production instrument is HYPERLIQUID PERPETUAL BTC, effective window
+    from the current venue document onward. **VENUE FETCH APPROVED** (verbatim): read-only
+    retrieval of the venue's public documents, frozen with digests, nothing else. Record +
+    digest package returns for a later one-word owner approval.
+37. **OPEN-03** = "draft it": complete event-role fee table (maker/taker per fill-event class,
+    exact venue schedule/rounding/minimum) drafted from the fetched venue schedule for later
+    owner approval.
+38. **OPEN-04** = (i): explicit ZERO-SLIPPAGE base (the design-sanctioned option). No invented
+    non-zero parameter; a measured model remains possible later by separate decision.
+39. **OPEN-05** = "draft it": funding mechanics (position-snapshot rule, same-timestamp
+    ordering, mark-price source, positive-rate payer) drafted from fetched venue
+    documentation/history for later owner approval.
+40. **OPEN-06** = "draft it": the retained/retired execution-behavior proposal (already
+    drafted PROVISIONAL as W126, under audit A6) goes to the owner to confirm or amend;
+    owner's later naming closes the row with its migration fixtures.
+41. **OPEN-07** = "read approved": READ-ONLY schema read of the Bridge v6 funding ledger is
+    authorized for the field-by-field mapping draft; no Bridge write, no deploy, no runtime
+    contact. Mapping returns for owner approval.
+
+Lead note: rows 32-35 + 38 are decision-complete (evidence = this record; fixtures/JSON are
+build obligations). Rows 36-37/39-41 are decision-named with evidence packages in
+preparation; each closes only on the owner's later approval of its prepared package. All ten
+transcriptions go verbatim into `open_item_applicability.json` at build start under Gate 2.
