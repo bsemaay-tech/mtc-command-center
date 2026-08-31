@@ -98,3 +98,31 @@ default. (2) Every route caps under max-parallel — timed reset-dispatchers wit
 launch recovered every window. (3) PS5.1 dispatch traps (unquoted Start-Process args; nested
 -Command quoting; apostrophes in inline prompts; stderr-wrap under *> with EAP=Stop) killed
 5 lanes; dedicated launch-script files are the only safe pattern.
+
+## Session 2026-08-31 evening -> 2026-09-01 (P0-12 build night, Lead: claude-fable-5)
+
+- **codex gpt-5.6-sol (4 accts):** carried the whole build chain (W152B inputs 17/17, W153
+  THE RUN PASS, W154B kernel phase A 4 commits w/ 196/196 + red-evidence, W155 v1.5
+  addendum, W157/158/159/160C/161/162 folds, N102-107 detections). xhigh reliable on
+  precision lanes. CAP REALITY: per-account windows burn fast under xhigh (three caps
+  tonight: fourth 22:21, secondary 22:21, third 23:29 after W152B); resets stagger ~1h;
+  timed dispatchers + partial-work-audit recipe recovered every death. W152B completed ALL
+  deliverables then capped at the final message (complete-work-then-cap variant).
+- **MAX Opus (claude-opus-5):** W156 tables revision REVISED-COMPLETE-FOR-V1.5 - deep,
+  honest, arithmetic shown; buffer-at-exit log (pid-check needed for liveness). 2 Opus
+  dispatches tonight, pool guard held, Fable orchestrator unaffected.
+- **grok:** 10 detection/verify lanes (G60-G75 range), ALL landed w/ reports; 3-parallel
+  stable; slow-start + buffer-at-exit (process-check for liveness). G60 (11 on Lead
+  tooling) + A15 (12 on Lead records) = the self-audit backbone.
+- **gemini-3.7-flash-high:** GM27 corroboration ZERO on v1.5 - 197k tokens in 143s, deep
+  cross-artifact check; packet-copy pattern (cwd sandbox) worked first try in a
+  codex-BUSY window (no git churn from C:\tmp-only codex lanes - the git-quiet rule is
+  about repo-worktree git activity, confirmed).
+- **opencode-go deepseek-v4-flash:** DS26/28/29/30/31/33/34 landed w/ printed reports;
+  in-cwd fence ABSOLUTE (DS26a died on out-of-cwd read); content-size limit ~76KB+ kills
+  reads mid-file (P022 draft killed BOTH ds+glm at same offset - route ceiling, not
+  model); glm-5.3-flash died silently twice (DS24 yesterday, DS27a) - deepseek now the
+  default, glm only when diversity demands.
+- **Fable (Lead):** orchestration + seal acts + micro-folds only; two self-inflicted
+  incidents both self-caught (wayfinder rev-6 double-save; W153 spec encoding botch) and
+  A15/G72 found 17 more Lead defects - the audit-the-Lead practice is non-negotiable.
