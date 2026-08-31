@@ -1,16 +1,16 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-31T00:50:00+03:00",
+  "generated": "2026-08-31T04:05:00+03:00",
   "updated_by": "claude-fable-lead-session-2026-08-30-night",
   "session_time_report": {
     "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
-    "session_span": "2026-08-30 21:45 -> in progress (overnight run to 07:00; prior-session spans archived in git history of this file and HOURS_AND_COST ledgers)",
+    "session_span": "2026-08-30 21:45 -> 2026-08-31 ~04:05 (overnight; ~50 lanes; detailed spans in HOURS_AND_COST_2026-08-30_NIGHT.md)",
     "per_package_spans": {
-      "WP-P0-12-FRESH": "started 21:55 (W93 fresh-family design, Codex authors per addendum 13)",
-      "FOLD-WAVE": "started 21:55 (6 fold lanes: P0-13, P0-14, P0-30, V2A-01/02/03)",
-      "VERIFY-CENSUS": "started 22:05 (G27+GM11 on P0-31M1 v1.1, G28 on P0-22 v1.2)",
-      "PROMO-DIAG-RUN": "~21:55-21:58 (984 stored candidates, display-only reports; span corrected per the N_TIMES timebase-correction entry and artifact mtimes)"
+      "WP-P0-12-FRESH-CHAIN": "21:55 -> 01:15 (design W93b -> 3 audit rounds x 4 families -> 2 repair rounds -> build lane honest BLOCK on 5 preconditions)",
+      "DRAFT-FLEET": "21:55 -> 04:00 (9 drafts through fold-verify cycles to convergence; P0-31M1 terminal-parked by pre-written rule; P0-31M2 fresh-designed, folded twice, converged)",
+      "LEAD-SELF-AUDITS": "00:20 -> 02:00 (A1 12 findings + A2 9 findings, all accepted and folded)",
+      "PROMO-DIAG-RUN": "~21:55-21:58 (984 stored candidates; DSR FAIL 910 / STOP 74 corrected split)"
     }
   },
   "packages": [
@@ -182,7 +182,7 @@
       "commit": "-",
       "detail": "M1 draft went through FIVE fold-verify cycles tonight (v1.1 -> v1.4): promise-class defects GREW across cycles (1 -> 2 -> 3 HIGH), so the Lead pre-wrote a stopping rule before the last verdict. W106 SUBTRACTIVE-ONLY fold produced v1.4; terminal verify N90 still found 3 HIGH (unexecutable promises on the one record path the draft labels unblocked) -> TERMINAL VERDICT: PARK, executed exactly as pre-written. DETECT_N90_P031M1_V14.md holds the surviving findings.",
       "owner_gate": true,
-      "next_action": "PARKED at v1.4 for the owner morning report. The typed-record gate surface kept re-growing unexecutable promises through five cycles - the structural signal mirrors what P0-12 needed (a different decomposition or a different author family). Owner options: fresh-family design for M1, narrow M1's typed-record scope, or hold."
+      "next_action": "M1 PARKED at v1.4 for the owner morning report (typed-record gate kept re-growing unexecutable promises through five cycles; options: fresh-family design, narrower scope, or hold). SEPARATELY, the Milestone-2 (SEED_IMPORT) design was authored fresh tonight (W83b), went through two full fold-verify cycles (G38+N94 -> W115; N95 -> W116), and the Grok terminal verify G39 returned TERMINAL VERDICT: CONVERGED - M2 parks WARM at v1.2 (PROVISIONAL on the M1 park resolution and P0-13; 13+ OPEN blockers honestly listed)."
     },
     {
       "id": "WP-P0-14",
