@@ -55,6 +55,11 @@ class FillDecision:
     final_fill_price: float
     quantity: float
     liquidity_role: str
+    exit_id: str | None = None
+    target_fraction: float | None = None
+    reference_quantity: float | None = None
+    price_tick_alignment: str | None = None
+    fill_trigger: str | None = None
 
 
 # The transition owns one fill fact; result serialization projects it as a fill event.

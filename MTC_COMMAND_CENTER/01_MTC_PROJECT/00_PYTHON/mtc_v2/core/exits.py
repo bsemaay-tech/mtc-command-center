@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 from typing import Deque, Iterable
 
@@ -14,8 +14,19 @@ from mtc_v2.core.config import (
     TP_MODE_R,
 )
 from mtc_v2.core.indicators import AtrStopIndicatorSnapshot, AtrTakeProfitIndicatorSnapshot
+from mtc_v2.core.economics import (
+    CorrectedEconomicsAdapter,
+    EconomicIntent,
+    EconomicRecords,
+    EconomicState,
+    EconomicsRefusal,
+    ExitCandidate,
+    IntentKind,
+    MarketEvent,
+    REFUSED_UNSUPPORTED_COLLISION_POLICY,
+)
 from mtc_v2.core.rounding import ceil_to_grid, floor_to_grid, round_half_up_to_grid
-from mtc_v2.core.types import Bar, Position, WorkingExit
+from mtc_v2.core.types import Bar, EconomicTransition, Position, WorkingExit
 
 
 REASON_EXIT_SL_ATR = "sl_atr_hit"
@@ -377,6 +388,107 @@ def evaluate_price_exit(
     if target_hit.hit:
         return target_hit
     return PriceExitHit()
+
+
+def resolve_corrected_price_exits(
+    *,
+    bar: Bar,
+    position: Position,
+    records: EconomicRecords,
+    same_bar_collision_policy_id: str = "STOP_FIRST",
+    allow_test_policy: bool = False,
+) -> EconomicTransition:
+    """Resolve the complete corrected stop/target candidate set atomically.
+
+    Acceptance-bearing production calls are structurally fixed to
+    ``STOP_FIRST``.  The other design policies remain reachable only when a
+    test explicitly opts into the migration-fixture machinery.
+    """
+
+    if same_bar_collision_policy_id != "STOP_FIRST" and not allow_test_policy:
+        raise EconomicsRefusal(
+            REFUSED_UNSUPPORTED_COLLISION_POLICY,
+            "acceptance-bearing corrected exits require STOP_FIRST",
+        )
+
+    candidates: list[ExitCandidate] = []
+    if is_valid_bar(bar):
+        if position.active_stop_price is not None and math.isfinite(position.active_stop_price):
+            candidates.append(
+                ExitCandidate(
+                    str(position.active_stop_owner or STOP_OWNER_INITIAL),
+                    IntentKind.PROTECTIVE_STOP,
+                    float(position.active_stop_price),
+                )
+            )
+        candidates.extend(
+            ExitCandidate(
+                working_exit.exit_id,
+                IntentKind.TARGET,
+                float(working_exit.target_price),
+                float(working_exit.qty_fraction),
+            )
+            for working_exit in position.working_exits
+            if working_exit.active
+            and working_exit.target_price is not None
+            and math.isfinite(working_exit.target_price)
+        )
+
+    state = EconomicState(
+        lifecycle_id=position.lifecycle_id,
+        position_side=position.side.upper(),
+        quantity=position.qty,
+        entry_fill_price=position.avg_entry_price,
+    )
+    transition = CorrectedEconomicsAdapter().resolve(
+        state,
+        EconomicIntent(
+            kind=IntentKind.PROTECTIVE_STOP,
+            exit_candidates=tuple(candidates),
+            same_bar_collision_policy_id=same_bar_collision_policy_id,
+        ),
+        MarketEvent(
+            timestamp=bar.timestamp,
+            bar_index=bar.bar_index,
+            open=bar.open,
+            high=bar.high,
+            low=bar.low,
+            close=bar.close,
+        ),
+        records,
+    )
+
+    if not transition.fill_decisions:
+        return transition
+    decision_details = dict(transition.decision_events[-1].details)
+    chosen_ids = decision_details.get("ordered_chosen_exit_ids", "").split(",")
+    candidate_by_id = {candidate.exit_id: candidate for candidate in candidates}
+    annotated = []
+    for index, fill in enumerate(transition.fill_decisions):
+        exit_id = chosen_ids[index]
+        candidate = candidate_by_id[exit_id]
+        if candidate.kind is IntentKind.PROTECTIVE_STOP:
+            gap = (
+                position.side == POSITION_SIDE_LONG and bar.open <= candidate.price
+            ) or (
+                position.side == POSITION_SIDE_SHORT and bar.open >= candidate.price
+            )
+            trigger = "GAP_OPEN" if gap else "INTRABAR_TOUCH"
+            fraction = None
+        else:
+            trigger = "TARGET_TOUCH"
+            fraction = candidate.quantity_fraction
+        annotated.append(
+            replace(
+                fill,
+                exit_id=exit_id,
+                target_fraction=fraction,
+                reference_quantity=position.qty,
+                price_tick_alignment="FLOOR" if fill.side == "SELL" else "CEIL",
+                fill_trigger=trigger,
+            )
+        )
+    return replace(transition, fill_decisions=tuple(annotated))
 
 
 def _evaluate_close_only_price_exit(
