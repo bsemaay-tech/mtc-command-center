@@ -316,3 +316,20 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     `TARGET_FIRST` input (their purpose is to prove the machinery + tie-break for that
     policy). OPEN-02's `STOP_FIRST` remains the mandatory policy for all acceptance-bearing
     2.0.0 production runs. No table or design change needed; the sealed bundle stands.
+
+## Addendum 19 — 2026-08-31 ~18:45 (owner verbatim: "1a")
+
+48. **P0-12 INPUT-EMBEDDING ADDENDUM AUTHORIZED (option 1a).** Context: W152 input
+    materialization honestly blocked 0/17 — design v1.4 states every economic vector value
+    but not the mechanical embeddings a runnable input file needs (complete Bar arrays,
+    existing-position/target-book premise seeds, the RULE2-01-GREEN NaN wire encoding,
+    synthetic test-only CostSchedule values for fill-bearing scenarios). Same gap classes
+    the sealed CONTRACT_TABLES recorded as blocked cells (DERIVATIONS D-01..D-05); third
+    independent fail-closed stop; the one authorized baseline run remains unconsumed.
+    The owner's "1a" authorizes: ONE bounded design addendum (v1.4 -> v1.5) binding ONLY
+    the missing mechanical embeddings (no approved economic value changes; economic-bearing
+    additions only where design/owner-approved sources exist, otherwise honest [OPEN-EMBED]
+    rows), followed by a detection pass, a CONTRACT_TABLES revision + re-seal by the tables
+    family, input materialization, digest-pin, dry-run, THE ONE baseline run (Q4a
+    unchanged), then the kernel build — continuing tonight without further owner gates
+    except the standing sec-16 human review at build acceptance.
