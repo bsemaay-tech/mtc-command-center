@@ -477,15 +477,17 @@ def resolve_corrected_price_exits(
             )
             trigger = "GAP_OPEN" if gap else "INTRABAR_TOUCH"
             fraction = None
+            reference_quantity = None
         else:
-            trigger = "TARGET_TOUCH"
+            trigger = None
             fraction = candidate.quantity_fraction
+            reference_quantity = position.qty
         annotated.append(
             replace(
                 fill,
                 exit_id=exit_id,
                 target_fraction=fraction,
-                reference_quantity=position.qty,
+                reference_quantity=reference_quantity,
                 price_tick_alignment="FLOOR" if fill.side == "SELL" else "CEIL",
                 fill_trigger=trigger,
             )

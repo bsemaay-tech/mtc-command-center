@@ -257,6 +257,66 @@ def test_section_23_equity_endpoints_are_window_scoped_realized_equity(
     assert equity_curve == pytest.approx(expected_equity_curve)
 
 
+@pytest.mark.parametrize(
+    "scenario_id",
+    [
+        "RULE2-04-RED",
+        "RULE2-04-GREEN",
+        "RULE2-06-RED",
+        "RULE2-06-EQUAL-PRICE-RED",
+        "RULE2-06-GREEN",
+    ],
+)
+def test_section_23_fill_and_exit_conditionals_are_closed(
+    scenario_id: str,
+) -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+    events = execute_corrected_scenario(MTC_V2_ROOT, row)["EVENT_SURFACE"]
+    common_fill = {
+        "sequence",
+        "kernel_semantics_version",
+        "fill_id",
+        "event_class",
+        "side",
+        "reference_price",
+        "slippage_model_id",
+        "slippage_bps",
+        "slippage_impact",
+        "slippage_application_count",
+        "price_tick_alignment",
+        "final_fill_price",
+        "quantity",
+        "liquidity_role",
+    }
+    common_exit = {
+        "sequence",
+        "kernel_semantics_version",
+        "exit_id",
+        "reason",
+        "fill_id",
+        "quantity",
+        "final_fill_price",
+        "gross_realized_pnl",
+    }
+    fill_by_id = {member["fill_id"]: member for member in events["fill_events"]}
+
+    for fill in events["fill_events"]:
+        expected = set(common_fill)
+        if fill["event_class"].endswith("EXIT"):
+            expected.add("exit_id")
+        if fill["event_class"] == "PROTECTIVE_STOP_EXIT":
+            expected.add("fill_trigger")
+        if fill["event_class"] == "TARGET_EXIT":
+            expected.update({"target_fraction", "reference_quantity"})
+        assert set(fill) == expected
+    for exit_event in events["exit_events"]:
+        expected = set(common_exit)
+        if fill_by_id[exit_event["fill_id"]]["event_class"] == "PROTECTIVE_STOP_EXIT":
+            expected.add("fill_trigger")
+        assert set(exit_event) == expected
+
+
 def test_rule2_05_red_honors_explicit_quantity_after_slippage() -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == "RULE2-05-RED")

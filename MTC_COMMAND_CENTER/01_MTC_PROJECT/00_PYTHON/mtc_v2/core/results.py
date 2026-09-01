@@ -480,35 +480,52 @@ def _fill_surface(
 ) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     for sequence, row in enumerate(rows):
+        event_class = getattr(row, "event_class")
+        price_tick_alignment = getattr(row, "price_tick_alignment")
+        exit_id = getattr(row, "exit_id")
+        fill_trigger = getattr(row, "fill_trigger")
+        target_fraction = getattr(row, "target_fraction")
+        reference_quantity = getattr(row, "reference_quantity")
+        is_exit = event_class.endswith("EXIT")
+        is_stop = event_class == "PROTECTIVE_STOP_EXIT"
+        is_target = event_class == "TARGET_EXIT"
+        if price_tick_alignment is None:
+            raise ValueError("corrected fill requires price_tick_alignment")
+        if is_exit != (exit_id is not None):
+            raise ValueError("corrected exit-class fill requires only exit_id")
+        if is_stop != (fill_trigger is not None):
+            raise ValueError("corrected protective-stop fill requires only fill_trigger")
+        if is_target != (
+            target_fraction is not None and reference_quantity is not None
+        ):
+            raise ValueError("corrected target fill requires only target members")
+        if not is_target and (
+            target_fraction is not None or reference_quantity is not None
+        ):
+            raise ValueError("corrected non-target fill has target members")
         item: dict[str, Any] = {
             "sequence": sequence,
             "kernel_semantics_version": kernel_semantics_version,
             "fill_id": getattr(row, "fill_id"),
-            "event_class": getattr(row, "event_class"),
+            "event_class": event_class,
             "side": getattr(row, "side"),
             "reference_price": _json_number(getattr(row, "reference_price")),
             "slippage_model_id": getattr(row, "slippage_model_id"),
             "slippage_bps": _json_number(getattr(row, "slippage_bps")),
             "slippage_impact": _json_number(getattr(row, "slippage_impact")),
             "slippage_application_count": getattr(row, "slippage_application_count"),
+            "price_tick_alignment": price_tick_alignment,
             "final_fill_price": _json_number(getattr(row, "final_fill_price")),
             "quantity": _json_number(getattr(row, "quantity")),
             "liquidity_role": getattr(row, "liquidity_role"),
         }
-        for name in (
-            "exit_id",
-            "target_fraction",
-            "reference_quantity",
-            "price_tick_alignment",
-            "fill_trigger",
-        ):
-            value = getattr(row, name)
-            if value is not None:
-                item[name] = (
-                    _json_number(value)
-                    if name in {"target_fraction", "reference_quantity"}
-                    else value
-                )
+        if is_exit:
+            item["exit_id"] = exit_id
+        if is_stop:
+            item["fill_trigger"] = fill_trigger
+        if is_target:
+            item["target_fraction"] = _json_number(target_fraction)
+            item["reference_quantity"] = _json_number(reference_quantity)
         result.append(item)
     return result
 
@@ -651,6 +668,11 @@ def _exit_surface(
             "final_fill_price": _json_number(getattr(row, "final_fill_price")),
             "gross_realized_pnl": _json_number(gross_by_fill[fill_id]),
         }
+        if event_class == "PROTECTIVE_STOP_EXIT":
+            fill_trigger = getattr(row, "fill_trigger")
+            if fill_trigger is None:
+                raise ValueError("corrected protective-stop exit requires fill_trigger")
+            item["fill_trigger"] = fill_trigger
         result.append(item)
     return result
 
