@@ -413,3 +413,41 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     name a record type and writer for eight inputs that have no current producer, must be
     reshaped into a yes/no per input rather than an authoring task. The brief authorizes no
     adoption, no draft edit, and no repository write.
+
+## Addendum 24 - 2026-09-01 ~11:30 (owner answers to the four [OPEN-XV] rows)
+
+54. **[OPEN-XV-05] CLOSED - option A** (owner: "No - it must prove it, so define the owner
+    now"). The runtime-wiring package may NOT be called finished without proving that two
+    strategies cannot double-spend one bucket. A dedicated cross-worker headroom owner is
+    therefore authorized to be DESIGNED: principal identity, process cardinality, lease or
+    claim rule, durable store, restart rule, and recovery source. None of those exist today,
+    so this word authorizes the design act, not an invented mechanism folded in passing; the
+    per-worker lease may never be promoted to cross-worker authority.
+
+55. **[OPEN-XV-06] CLOSED - option A** (owner: "The lifecycle ledger's view"). The lifecycle
+    ledger's reducer is the single writer of evidence-window truth including the retired
+    identity mark; the loader reads only that view at load time; per-worker rows remain local
+    projections and are never load-time truth. Honest consequence recorded: the loader's
+    revoke branch stays a non-emitted placeholder until the M1 ledger package is un-parked -
+    this decision unblocks the DESIGN of that branch, not its probes. It does not close the
+    separate out-of-scope row for who marks the old worker file.
+
+56. **[OPEN-XV-07] CLOSED - option A** (owner: "Keep failing closed for now"). The loader keeps
+    its fail-closed hold: no version, range, compatibility rule, or fingerprint preimage is
+    invented now. Recorded consequences: the ledger-view fingerprint may not be recorded as a
+    canonical success value, and the later ledger-growth package stays unconsumable by this
+    loader until the owner separately authorizes the round that writes the compatibility rule
+    and a fingerprint not poisoned by the rebuild clock.
+
+57. **[OPEN-XV-12] CLOSED - option A** (owner: "amend the official plan to add the
+    dependency"). "The same implementation demonstrably runs in backtest and runtime" is
+    ruled to mean a worker from the worker-identity package. The canonical delivery plan is
+    therefore to be AMENDED so the runtime-wiring package's dependency list carries the
+    worker package, rather than the design silently adding the edge. The plan is a repository
+    file: the amendment is prepared as an exact quoted before/after edit and applied by the
+    Lead on a branch under the repo guard, never by a lane.
+
+    Consistency check performed before recording: 54 and 57 reinforce each other (the
+    two-worker fixture stays in the wiring package and that package now honestly waits for
+    the worker package); 55 and 56 reinforce each other (trust the ledger view, refuse
+    whenever its shape cannot be verified). No contradiction found among the four.
