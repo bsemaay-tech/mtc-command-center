@@ -346,3 +346,19 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     price bars before the observation window (real mechanism, nothing injected).
     These are test-only values under design section 5's synthetic-vector rule; production
     records remain governed by addenda 15-17 evidence packages.
+
+## Addendum 21 - 2026-09-01 morning (owner verbatim: "amendment approved")
+
+50. **P0-12 GATE-GAP AMENDMENT AUTHORIZED.** Context: the kernel build (14 commits)
+    reached its authority boundary - the corrected-vs-golden gate stopped on design-gap
+    classes the independent G76 adjudication enumerated. The owner's word authorizes ONE
+    bounded design amendment (v1.5 -> v1.6) binding EXACTLY: the decision_events
+    vocabulary and container shape (D-11/G76-09); the equity-curve window scoping rule
+    (V15-D02/G76-04); the fill/exit/result/refusal member sets (D-13/G76-06/07/08); the
+    funding-in-guard member disposition (G76-05c) - PLUS one detection pass, the tables
+    family's re-derivation of exactly the affected golden classes (including removal of
+    the adjudicated GOLDEN-OVER member max_consecutive_losses, G76-05b), and the Lead's
+    re-seal of the revised goldens and the 10 probe-row digests. No other design section,
+    no approved economic value, and no kernel behavior outside the already-adjudicated
+    classes may change. Chain then: probes DETECTED -> terminal receipt (sec-16-only
+    refusal) -> 4-family T0 audits -> PR. Sec-16 human review remains the owner's act.
