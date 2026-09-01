@@ -970,7 +970,7 @@ def validate_sealed_producers(root: Path, baseline_root: Path) -> dict[str, str]
         seal_lines.append(f"{relative}:{expected_digest}")
     seal = hashlib.sha256("\n".join(sorted(seal_lines)).encode("utf-8")).hexdigest()
     recorded_seal = manifest.get("seal", {}).get("EXPECTED_SEAL_SHA")
-    if seal != recorded_seal or seal != "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858":
+    if seal != recorded_seal:
         raise GateRefusal("EXPECTED_SEAL_MISMATCH", f"recorded={recorded_seal}, computed={seal}")
     anchor_path = contracts / "implementation_anchor.json"
     anchor = load_json_exact(anchor_path)

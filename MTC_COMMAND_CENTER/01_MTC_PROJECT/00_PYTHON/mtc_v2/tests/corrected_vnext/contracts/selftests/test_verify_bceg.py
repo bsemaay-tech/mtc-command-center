@@ -32,6 +32,133 @@ def refusal(check_id: str, action) -> None:
     assert caught.value.check_id == check_id
 
 
+def sealed_producer_fixture(
+    tmp_path: Path,
+) -> tuple[Path, Path, str, Path]:
+    root = tmp_path / "root"
+    contracts = root / "tests" / "corrected_vnext" / "contracts"
+    baseline_root = tmp_path / "baseline"
+    contract_paths = [contracts / "scenario_catalog.json"] + [
+        contracts / f"member-{index:02d}.json" for index in range(1, 19)
+    ]
+    manifest_members: list[dict[str, object]] = []
+    for index, path in enumerate(contract_paths):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(verify_bceg.canonical_json_bytes({"member": index}))
+        manifest_members.append(
+            {
+                "path": path.relative_to(contracts).as_posix(),
+                "sha256": verify_bceg.sha256_file(path),
+                "bytes": path.stat().st_size,
+            }
+        )
+    seal_lines = [
+        f"{member['path']}:{member['sha256']}" for member in manifest_members
+    ]
+    seal = hashlib.sha256(
+        "\n".join(sorted(seal_lines)).encode("utf-8")
+    ).hexdigest()
+    (contracts / "CONTRACT_TABLES_MANIFEST.json").write_bytes(
+        verify_bceg.canonical_json_bytes(
+            {
+                "schema": "P012_CONTRACT_TABLES_MANIFEST_V1",
+                "files": manifest_members,
+                "seal": {"EXPECTED_SEAL_SHA": seal},
+            }
+        )
+    )
+    anchor_path = contracts / "implementation_anchor.json"
+    anchor_path.write_bytes(
+        verify_bceg.canonical_json_bytes({"EXPECTED_SEAL_SHA": seal})
+    )
+    (contracts / "implementation_anchor.json.sha256").write_text(
+        f"{verify_bceg.sha256_file(anchor_path)}  implementation_anchor.json\n",
+        encoding="ascii",
+        newline="\n",
+    )
+
+    driver_path = baseline_root / "driver.py"
+    driver_path.parent.mkdir(parents=True, exist_ok=True)
+    driver_path.write_bytes(b"synthetic driver\n")
+    baseline_members: list[dict[str, str]] = []
+    for index in range(36):
+        relative = f"scenario/member-{index:02d}.json"
+        path = baseline_root / "out" / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(verify_bceg.canonical_json_bytes({"member": index}))
+        baseline_members.append(
+            {"path": relative, "sha256": verify_bceg.sha256_file(path)}
+        )
+    (baseline_root / "BASELINE_BYTES_MANIFEST.json").write_bytes(
+        verify_bceg.canonical_json_bytes(
+            {
+                "schema": "P012_BASELINE_BYTES_MANIFEST_V1",
+                "EXPECTED_SEAL_SHA_consumed": seal,
+                "catalog": {
+                    "sha256": verify_bceg.sha256_file(
+                        contracts / "scenario_catalog.json"
+                    )
+                },
+                "driver": {
+                    "path": str(driver_path),
+                    "sha256": verify_bceg.sha256_file(driver_path),
+                },
+                "files": baseline_members,
+                "run_summary": {
+                    "scenarios": 17,
+                    "red": 9,
+                    "green": 8,
+                    "completed": 17,
+                    "blocked": 0,
+                    "output_files": 36,
+                },
+            }
+        )
+    )
+    return root, baseline_root, seal, contract_paths[1]
+
+
+def test_sealed_producer_validation_accepts_manifest_recorded_current_seal(
+    tmp_path: Path,
+) -> None:
+    root, baseline_root, current_seal, _member_path = sealed_producer_fixture(
+        tmp_path
+    )
+
+    assert current_seal != (
+        "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858"
+    )
+    identities = verify_bceg.validate_sealed_producers(root, baseline_root)
+    assert identities["expected_seal_sha256"] == current_seal
+
+
+def test_sealed_producer_validation_refuses_modified_copy_with_stale_recorded_seal(
+    tmp_path: Path,
+) -> None:
+    root, baseline_root, _current_seal, member_path = sealed_producer_fixture(
+        tmp_path
+    )
+    contracts = root / "tests" / "corrected_vnext" / "contracts"
+    manifest_path = contracts / "CONTRACT_TABLES_MANIFEST.json"
+    member_path.write_bytes(
+        verify_bceg.canonical_json_bytes({"member": "modified-copy"})
+    )
+    manifest = verify_bceg.load_json_exact(manifest_path)
+    member = next(
+        item
+        for item in manifest["files"]
+        if item["path"] == member_path.relative_to(contracts).as_posix()
+    )
+    member["sha256"] = verify_bceg.sha256_file(member_path)
+    member["bytes"] = member_path.stat().st_size
+    manifest_path.write_bytes(verify_bceg.canonical_json_bytes(manifest))
+
+    refusal(
+        "EXPECTED_SEAL_MISMATCH",
+        lambda: verify_bceg.validate_sealed_producers(root, baseline_root),
+    )
+
+
 def test_identical_pair_compares_equal_on_every_node() -> None:
     left = load_json_exact(FIXTURES / "node_equal_left.json")
     right = load_json_exact(FIXTURES / "node_equal_right.json")
