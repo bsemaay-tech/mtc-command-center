@@ -2,23 +2,24 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from pathlib import Path
+from datetime import datetime
 from typing import Any
 
-import yaml
 from fastapi import FastAPI, Header, HTTPException, Request
 
+from bridge.config_contract import (
+    ValidatedRuntimeSettings,
+    classify_runtime_update,
+)
 from bridge.engine.window import DEFAULT_STALE_AFTER_S, window_status
 from bridge.store.db import Store
 
 
-def load_config() -> dict[str, Any]:
-    path = Path(__file__).resolve().parents[2] / "config" / "bridge.yaml"
-    return yaml.safe_load(path.read_text(encoding="utf-8"))
-
-
-def init_runtime_state(app: FastAPI, store: Store | None = None) -> None:
+def init_runtime_state(
+    app: FastAPI,
+    store: Store | None = None,
+    validated: ValidatedRuntimeSettings | None = None,
+) -> None:
     if store is not None and store.get_meta("app_state") is None:
         store.set_meta("app_state", "DISARMED")
     app_state = (store.get_meta("app_state") if store is not None else None) or "DISARMED"
@@ -47,7 +48,10 @@ def init_runtime_state(app: FastAPI, store: Store | None = None) -> None:
         ),
     }
     app.state.bridge_store = store
-    app.state.bridge_config = load_config()
+    app.state.validated_runtime_settings = validated
+    app.state.bridge_config_status = (
+        "RUNTIME_VALIDATED" if validated is not None else "CONFIG_NOT_RUNTIME_VALIDATED"
+    )
     app.state.bridge_bars = {"bars": []}
     app.state.bridge_data = {
         "positions": [],
@@ -68,21 +72,25 @@ def install_routes(app: FastAPI) -> None:
 
     @app.get("/api/config")
     async def get_config(request: Request) -> dict[str, Any]:
-        return dict(request.app.state.bridge_config)
+        validated = _validated(request)
+        if validated is None:
+            raise HTTPException(status_code=503, detail="CONFIG_NOT_RUNTIME_VALIDATED")
+        return validated.effective_view()
 
     @app.put("/api/config")
-    async def put_config(request: Request, x_confirm: int | None = Header(default=None)) -> dict[str, Any]:
+    async def put_config(
+        request: Request, x_confirm: int | None = Header(default=None)
+    ) -> dict[str, Any]:
         _require_confirm(request, x_confirm)
         payload = await request.json()
-        if "broker" in payload and "network" in payload["broker"]:
-            raise HTTPException(status_code=422, detail="broker.network is restart-only")
-        before = dict(request.app.state.bridge_config)
-        request.app.state.bridge_config.update(payload)
-        store = _store(request)
-        if store is not None:
-            store.insert_event("runtime", datetime.now(UTC), "INFO", "CONFIG_CHANGED", f"before={before}; after={payload}")
-        await _bump_and_broadcast(request, "status", dict(request.app.state.bridge_status))
-        return dict(request.app.state.bridge_config)
+        validated = _validated(request)
+        if validated is None:
+            raise HTTPException(status_code=503, detail="CONFIG_NOT_RUNTIME_VALIDATED")
+        decision = classify_runtime_update(validated, payload)
+        raise HTTPException(
+            status_code=422,
+            detail={"errors": [refusal.as_detail() for refusal in decision.refusals]},
+        )
 
     @app.post("/api/arm")
     async def arm(request: Request, x_confirm: int | None = Header(default=None)) -> dict[str, Any]:
@@ -204,7 +212,12 @@ async def make_snapshot(app: FastAPI) -> dict[str, Any]:
     bars = [_chart_bar(row) for row in store.get_bars(300)] if store is not None else []
     return {
         "status": dict(app.state.bridge_status),
-        "config": dict(app.state.bridge_config),
+        "config": (
+            app.state.validated_runtime_settings.effective_view()
+            if app.state.validated_runtime_settings is not None
+            else {}
+        ),
+        "config_status": app.state.bridge_config_status,
         "positions": positions,
         "orders": orders,
         "trades": store.get_trades(50) if store is not None else [],
@@ -222,6 +235,10 @@ def _engine(request: Request):
 
 def _store(request: Request) -> Store | None:
     return getattr(request.app.state, "bridge_store", None)
+
+
+def _validated(request: Request) -> ValidatedRuntimeSettings | None:
+    return getattr(request.app.state, "validated_runtime_settings", None)
 
 
 def _require_confirm(request: Request, x_confirm: int | None) -> None:

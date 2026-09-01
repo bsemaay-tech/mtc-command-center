@@ -25,9 +25,9 @@ Prompt templates live in `MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/`.
 
 | Tier | Surface | Required review | Effort / cap |
 |---|---|---|---|
-| T0 | Economic, host, deploy, secret, broker/exchange, teardown, security | `claude-opus-5` + `gpt-5.6-sol` | xhigh / 3 |
-| T1 | Non-economic product code/scripts | one alternating flagship; GLM-5.2 only after findings or diff >~300 lines | high / 2 |
-| T2 | Docs/evidence | GLM-5.2 preferred, DeepSeek acceptable, otherwise one flagship | medium / 1 |
+| T0 | Economic, host, deploy, secret, broker/exchange, teardown, security | `claude-opus-5` + `gpt-5.6-sol`, plus mandatory Gemini parallel corroboration | xhigh / 3 |
+| T1 | Non-economic product code/scripts | one alternating flagship; GLM-5.2 only after findings or diff >~300 lines; plus mandatory Gemini parallel corroboration | high / 2 |
+| T2 | Docs/evidence | GLM-5.2 preferred, DeepSeek acceptable, otherwise one flagship; plus mandatory Gemini parallel corroboration | medium / 1 |
 | T3 | Index/status/process artifacts | implementer self-verification only | — / 0 |
 
 Highest overlap wins. T2 deployed-identity findings alone escalate to one T1 flagship check.
@@ -35,10 +35,47 @@ Invoked Claude is exact `claude-opus-5`; invoked Codex exact `gpt-5.6-sol`; no a
 Unavailable exact model/effort is BLOCK unless owner-waived. Each audit is fresh, receives only
 scope, plan, diff/files, evidence, and repo rules, and is never resumed/continued. Codex audits are
 ephemeral and read-only.
+
+**OD-20260829-1 — mandatory Gemini parallel corroboration.** Every T0, T1, or T2 Gate 5/Gate 6
+audit that dispatches one or more model auditors must also dispatch a fresh
+`gemini-3.7-flash-high` review through
+`C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1`. Gemini receives the same
+scope, allowed/forbidden paths, actual diff/files, test evidence, and repository rules as every
+other auditor. The Lead records a comparison: common findings, Gemini-only findings,
+contradictions, and the independently reproduced disposition of every required finding. Gemini is
+a required parallel dispatch; an unavailable Gemini route blocks audit completion unless Barış
+waives it. It does not replace an exact flagship slot, Lead/counterpart role, acceptance authority,
+protected implementation boundary, or the existing tier/repair-cap rules. Gemini's isolated
+read-only route cannot execute the mandated suite; label that report `SUPPLEMENTAL_UNEXECUTED`.
+That non-execution alone is not a BLOCK, but no Gemini finding binds until the Lead reproduces it.
+The launcher reads only the canonical checkout: when the audited SHA is in another worktree, give
+Gemini the exact SHA plus literal, safety-redacted diff and relevant file slices in its review
+package; never let it substitute canonical-checkout contents for the audited source.
+T3 remains self-verification-only unless a later owner task explicitly requests a model audit.
+
+**OD-20260829-2 — supplemental-route defaults.** Keep every acceptance slot, tier cap, and
+protected-scope boundary above unchanged. For bounded unprotected work, use
+`opencode-go/glm-5.3-flash` as the routine worker; escalate to `opencode-go/kimi-k3` only for a
+genuinely difficult architecture/long-context question or a stalled first attempt. Use
+`opencode-go/deepseek-v4-pro` as the supplemental deep-adversarial reviewer for evidence-backed
+architecture review, difficult bug analysis, requirements-versus-implementation checks, and
+failure-mode discovery; prefer that included allowance before paid OpenRouter V4 Pro unless Go
+quota or provider diversity specifically requires the PAYG route. Use paid OpenRouter
+`deepseek/deepseek-v4-flash` for economical high-volume mechanical drafts or analysis; use paid
+`tencent/hy3` only as a deliberate different-family counter-review or tie-breaker, never the
+deprecated free alias. These are
+supplemental routes, never silent acceptance-auditor substitutions. Record provider/model, why the
+first route was suitable, why a cheaper route was not used when escalating, fallback, and live
+quota preflight. Treat all OpenRouter prices and revisions as dated snapshots, never fixed policy.
+The research record is
+`MTC_COMMAND_CENTER/11_TRIAGE/AI_PROVIDER_ROUTING_RECOMMENDATION_2026-08-29.md`.
 Verdicts: PASS; PASS-WITH-NITS (optional only); REQUEST_CHANGES; BLOCK.
 After a non-accepting verdict, Lead sends the same implementer a focused repair within the tier cap.
 
-An auditor unable to run the mandated suite returns BLOCK; a source-only view is supplemental.
+An acceptance auditor unable to run the mandated suite returns BLOCK; a source-only view is
+supplemental. The owner-mandated Gemini parallel route is the explicit exception: it is dispatched
+and compared on every T0–T2 model audit, but its known suite non-execution is
+`SUPPLEMENTAL_UNEXECUTED`, not a standalone BLOCK.
 In an explicitly owner-designated four-auditor review, both flagships must accept and no reproduced
 required finding from DeepSeek V4 Flash or GLM-5.2 may remain. Secondary auditors gain no protected
 implementation authority.

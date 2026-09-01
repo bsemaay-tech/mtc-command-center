@@ -450,32 +450,32 @@
       "plane": "execution",
       "name": "LLM gate (regime and veto) — dormant scaffolding",
       "status": "planned_v2",
-      "status_detail": "Dormant, unwired scaffolding whose configuration is nonetheless visible. The LLMGate class exists in bridge/engine/llm_gate.py and has its own unit tests, but no runtime path constructs it: bridge/app.py builds the engine without an llm_gate, so bridge/engine/engine.py installs NullLLMGate, whose check always returns SKIPPED with the reason 'llm disabled'. The llm: block of config/bridge.yaml is read: bridge/api/routes.py loads that file into app.state.bridge_config, serves it from /api/config, and includes it in the dashboard snapshot, and bridge/static/app.js reads state.snapshot.config and displays config.llm.veto_enabled as the LLM page's veto mode. Configuration visibility is not activation — changing regime_enabled or veto_enabled changes what that page shows, and constructs no LLMGate, so it does not activate it today.",
-      "one_liner": "Scaffolding for an optional AI layer that could only ever narrow what the system is allowed to do — configured and displayed today, but never constructed.",
+      "status_detail": "Dormant, unwired scaffolding. The LLMGate class exists in bridge/engine/llm_gate.py and has its own unit tests, but no runtime path constructs it: bridge/app.py builds the engine without an llm_gate, so bridge/engine/engine.py installs NullLLMGate, whose check always returns SKIPPED with the reason 'llm disabled'. The fail-closed loader in bridge/config_contract.py accepts only modeled, active leaves, and bridge/api/routes.py publishes validated.effective_view() through /api/config and the dashboard snapshot. That validated view does not expose the retired llm namespace, so bridge/static/app.js sets the Veto Mode card to N/A instead of dereferencing config.llm. The absence of this namespace does not activate it today.",
+      "one_liner": "Scaffolding for an optional AI layer that could only ever narrow what the system is allowed to do — unavailable in the validated snapshot and never constructed.",
       "purpose": "To hold the shape of a future capability: letting a market-sentiment view restrict trading direction, or letting a checklist model veto a specific order, without ever giving a model the ability to create or enlarge a trade. None of that runs today.",
       "does": [
         "Exists as source only: the LLMGate class in bridge/engine/llm_gate.py, exercised by tests/test_llm_gate.py. No runtime path constructs it.",
         "Nothing at runtime beyond a null placeholder. The engine holds a NullLLMGate whose check always returns SKIPPED with the reason 'llm disabled'.",
-        "Has its configuration read, served and displayed. bridge/api/routes.py loads config/bridge.yaml into app.state.bridge_config, exposes it at /api/config and includes it in the dashboard snapshot; app.js reads state.snapshot.config and shows config.llm.veto_enabled as the LLM page's Veto Mode card.",
+        "Has no exposed configuration in the validated public view. bridge/api/routes.py serves validated.effective_view() at /api/config and includes that view in the dashboard snapshot; because it contains no llm namespace, app.js shows N/A in the LLM page's Veto Mode card.",
         "Leaves a generic decision behind on every permitted signal. After risk passes, BridgeEngine maps the SKIPPED verdict to stage LLM_SKIPPED and calls store.insert_decision(...) with that reason, so the decision trail records that the stage was passed over.",
         "Describes the shape a wired version would take: a periodic direction directive restricting trading to long-only, short-only or no-trade, and a per-order veto under a hard deadline."
       ],
       "does_not": [
-        "Is not running today, and is not activated by configuration. The runtime constructs NullLLMGate unconditionally, so changing regime_enabled or veto_enabled in config/bridge.yaml only changes what the dashboard displays — it wires and constructs no LLMGate, and does not activate it today.",
+        "Is not running today and cannot be activated through the retired regime_enabled or veto_enabled leaves. The fail-closed loader does not admit those leaves, and the runtime constructs NullLLMGate unconditionally, so no configuration change wires or constructs LLMGate.",
         "Does not write a directive record or a model-call record. The directives and llm_calls tables exist in the store schema, and the current null-gate path writes no directive row and no model-call row. That absence is narrower than it looks: the generic LLM_SKIPPED decision row is still written on every RISK_PASS. Separately, llm_directive_id is a column on the trades row, not on the decisions row, and order and trade persistence currently passes llm_directive_id=None.",
         "Cannot widen permission, in the wired design or in any other form. A directive could only narrow what the configuration already allows.",
         "Cannot originate or enlarge an order. There is no code path from the gate to quantity, price, leverage or any new-order field, and that boundary is enforced in code rather than by prompt wording.",
         "Does not mean 'harmless once enabled'. Narrowing still changes outcomes: LONG_ONLY, SHORT_ONLY and a per-order veto would suppress or select otherwise permitted trades."
       ],
       "boundaries": [
-        "Scaffolding is not a feature. Source code existing, owning a block in config/bridge.yaml, and passing its own unit tests is not the same as being constructed and reachable at runtime. Check the constructor, not the class.",
+        "Scaffolding is not a feature. Source code existing and passing its own unit tests is not the same as being constructed and reachable at runtime. Check the constructor, not the class.",
         "A generic skipped decision is not an LLM artifact. The LLM_SKIPPED decision row records only that the stage was passed over with the reason 'llm disabled'; it is not a directive record, and it is not a model-call record.",
         "The wired design would be advisory and restrictive only. The RiskEngine would remain the authority on whether an order is allowed.",
         "Restrictive is not the same as economically neutral. If the gate were ever wired and enabled, LONG_ONLY, SHORT_ONLY and the per-order veto would suppress or select trades the RiskEngine would otherwise have permitted, so an enabled gate would change which trades happen and therefore change economic outcomes. It could still never originate or enlarge an order; it could only decide that a permitted one does not happen.",
         "Do not confuse this with the Dashboard AI assistant — that is a separate, read-only explanation layer in the Control plane."
       ],
       "safety": [
-        "Both roles are OFF in the current configuration — regime_enabled false and veto_enabled false — and, more fundamentally, no runtime path constructs LLMGate at all. The runtime installs NullLLMGate, so neither the direction directive nor the per-order veto exists as a running code path today. The dashboard's Veto Mode card reports the configured value; it is not evidence of a running gate.",
+        "Both roles are unavailable in the current validated configuration: the retired regime_enabled and veto_enabled leaves are absent, and no runtime path constructs LLMGate at all. The runtime installs NullLLMGate, so neither the direction directive nor the per-order veto exists as a running code path today. The dashboard's Veto Mode card reports N/A; it is not evidence of a running gate.",
         "Wiring this gate would change the decision path and needs its own review and owner decision. Until then, describing it as a switchable V1 feature overstates what exists.",
         "The prompt-injection defences in the class — truncation, stripping, labelled source blocks, and storing only the source-text hash rather than the raw retrieved text — are properties of code that never executes in the running system today.",
         "In a wired version the worst case from a successful prompt injection is a forced no-trade. That is a denial rather than an ability to create or enlarge a trade — but a denial is not costless, because suppressing a trade is itself an economic outcome."
@@ -483,7 +483,7 @@
       "connections": [
         { "to": "risk_engine", "label": "would narrow if it were ever wired", "kind": "planned" },
         { "to": "store_wal", "label": "would log directive and model-call rows to — none of either written today", "kind": "planned" },
-        { "to": "dashboard", "label": "would populate the Directive History table of — empty today, while that page's Veto Mode card already shows the configured veto_enabled value", "kind": "planned" }
+        { "to": "dashboard", "label": "would populate the Directive History table of — empty today, while that page's Veto Mode card reports N/A", "kind": "planned" }
       ],
       "sources": [
         "IBKR_PAPER_BRIDGE/bridge/engine/llm_gate.py",
@@ -493,13 +493,12 @@
         "IBKR_PAPER_BRIDGE/bridge/static/app.js",
         "IBKR_PAPER_BRIDGE/bridge/store/db.py",
         "IBKR_PAPER_BRIDGE/bridge/engine/orders.py",
-        "IBKR_PAPER_BRIDGE/tests/test_llm_gate.py",
-        "IBKR_PAPER_BRIDGE/config/bridge.yaml"
+        "IBKR_PAPER_BRIDGE/tests/test_llm_gate.py"
       ],
       "technical": [
         "engine.py sets self.llm_gate = self.llm_gate or NullLLMGate(), and app.py's BridgeEngine(...) construction passes no llm_gate, so the running process always holds the null gate. Only tests inject a real LLMGate.",
         "Role A would be a periodic regime directive and Role B a per-order veto. Role A has no caller at all: LLMGate.refresh_regime and LLMGate.effective_directions are never invoked anywhere under bridge/. Role B's entry point is called — engine.py awaits self.llm_gate.check(risk.plan) after every RISK_PASS — but the object answering is NullLLMGate, so the verdict is always SKIPPED.",
-        "Configuration path: routes.py loads config/bridge.yaml, install_routes keeps it on app.state.bridge_config, GET /api/config returns it, and the snapshot payload carries it under the config key; app.js renderLlm() sets the Veto Mode card from config.llm.veto_enabled. None of that constructs a gate.",
+        "Configuration path: config_contract.py validates and binds modeled, active leaves; routes.py returns validated.effective_view() from GET /api/config and carries the same view under the snapshot config key. That view does not expose the retired llm namespace, so app.js renderLlm() sets the Veto Mode card to N/A without dereferencing config.llm. None of that constructs a gate.",
         "Persistence path: engine.py maps the SKIPPED verdict to stage LLM_SKIPPED and calls store.insert_decision(...) with the reason 'llm disabled'. db.py declares llm_directive_id inside CREATE TABLE trades — it is a trades column, not a decisions column — and orders.py passes llm_directive_id=None when persisting.",
         "The directive TTL clamp, the twice-TTL expiry rule that never silently converts NO_TRADE into BOTH, and the source-text hashing are implemented in the class but unreachable from the running system."
       ]
@@ -974,7 +973,7 @@
       "plane": "control",
       "name": "Dashboard V1 (six original pages plus Help)",
       "status": "current_v1",
-      "status_detail": "Seven pages today: the six original pages — Overview, Trading, Strategy & Risk, Journal, LLM and System — plus this Help page. Observation data and live WebSocket updates work. The Strategy & Risk form is not a finished save workflow, and the LLM page is a placeholder: its Regime, Veto Mode and Cost cards render from status and configuration — Veto Mode from config.llm.veto_enabled — while its Directive History table is always empty.",
+      "status_detail": "Seven pages today: the six original pages — Overview, Trading, Strategy & Risk, Journal, LLM and System — plus this Help page. Observation data and live WebSocket updates work. The Strategy & Risk form is not a finished save workflow, and the LLM page is a placeholder: its Regime card renders from status, its Veto Mode card reports N/A because the validated snapshot exposes no llm namespace, its Cost card is hard-coded, and its Directive History table is always empty.",
       "one_liner": "The window into the system: what it sees, what it decided, and what it is doing right now.",
       "purpose": "To make an automated system legible. A system you cannot see is a system you cannot supervise.",
       "does": [
@@ -988,7 +987,7 @@
         "Does not count down to the next bar. The Next Bar card shows the next bar's UTC time — it is a time, not a live countdown.",
         "Does not reconnect the WebSocket automatically. The client registers only a message listener, with no close or error handler, so a dropped socket silently stops live updates until the page is reloaded by hand.",
         "Does not have a working save workflow on the Strategy & Risk form today.",
-        "Does not have a real LLM page today. Its Directive History table renders from an empty list and no gate output reaches the page at all; the Veto Mode card only mirrors the configured veto_enabled value, and the LLM gate behind it is dormant, unwired scaffolding.",
+        "Does not have a real LLM page today. Its Directive History table renders from an empty list and no gate output reaches the page at all; the Veto Mode card reports N/A because the validated snapshot has no llm namespace, and the LLM gate behind it is dormant, unwired scaffolding.",
         "Is not a public website and is not mobile-polished."
       ],
       "boundaries": [

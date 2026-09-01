@@ -1,53 +1,13 @@
-mode: paper
 broker:
-  network: testnet
-  coin: BTC
-  leverage: 1
-  margin_mode: isolated
-  recover_orders_after_reconnect: true
   reconnect_attempts: 9
   reconnect_base_delay_s: 5.0
   data_restore_timeout_s: 300
-strategy_file: strategies/keltner_trail_ema8.yaml
 risk:
-  policy_id: ts-p1-007-v1
   risk_pct_per_trade: 0.005
   max_daily_loss_pct: 0.02
-  max_intraday_drawdown_pct: 0.05
-  equity_floor_usdc: 500.0
   max_position_notional_pct: 0.20
   min_stop_distance_pct: 0.001
   min_order_usd: 10
   max_leverage: 1
-  exposure_policy_id: ts-p1-008-v1
-  max_symbol_gross_pct: 0.20
-  max_portfolio_gross_pct: 0.40
-  max_wallet_margin_util_pct: 0.25
-  max_effective_leverage: 1.0
-  min_liquidation_distance_pct: 0.15
   max_consecutive_losses: 3
   reconcile_max_consecutive_failures: 3
-  on_consecutive_loss: pause_auto_rearm
-  max_auto_rearms_per_day: 2
-  cooldown_minutes_after_loss: 120
-  max_open_order_age_s: 600
-  tp_mode: none
-  rr_ratio: 2.0
-notify:
-  telegram_enabled: true
-  heartbeat_hours: 6
-llm:
-  regime_enabled: false   # C3 P2 profile (2026-07-13): OFF for the whole P2 window - single-variable run; do NOT flip mid-P2
-  regime_refresh_minutes: 240
-  min_confidence: 0.6
-  ttl_clamp_minutes: [15, 1440]
-  veto_enabled: false
-  veto_deadline_s: 5
-  max_vetos_per_day: 20
-  max_daily_llm_cost_usd: 5
-  fail_policy: open
-  regime_model: grok-4
-  veto_model: claude-sonnet-5
-server:
-  host: 127.0.0.1
-  port: 8790

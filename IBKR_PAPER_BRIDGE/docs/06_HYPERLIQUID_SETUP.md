@@ -14,7 +14,7 @@ socket-client toggles) — setup is much shorter than IBKR.
 | | Testnet (paper) | Mainnet (real money) |
 |---|---|---|
 | Money | Fake (faucet USDC) | Real |
-| Bridge default | `network: testnet` | refused unless triple-lock |
+| Bridge default | hardcoded `network="testnet"` (`bridge/app.py:203`) | triple-lock (`hyperliquid.py:2165-2169`) never evaluates unless that word is first changed to `mainnet` |
 | URL | `app.hyperliquid-testnet.xyz` | `app.hyperliquid.xyz` |
 | Use for | ALL of v1 (P0-P3) | never in v1 |
 

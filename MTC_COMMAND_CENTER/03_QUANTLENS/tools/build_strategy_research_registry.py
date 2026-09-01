@@ -546,6 +546,35 @@ def _detect_indicators(signal_text: str) -> list[str]:
     return found
 
 
+_LADDER_PROMOTED = frozenset(
+    {
+        "PROMOTE_TO_SANDBOX",
+        "PROMOTE_TO_FORWARD_PAPER_TRADE",
+        "MTC_ENGINE_VALIDATED",
+        "PROMOTE_TO_PARITY_CANDIDATE",
+        "APPROVED_FOR_MTC_V2_INTEGRATION",
+    }
+)
+_LADDER_NON_PROMOTED = frozenset({"REJECTED", "KEEP_AS_RESEARCH_NOTE"})
+_UNEVALUATED_KNOWN = frozenset(
+    {"FORWARD_PAPER_CANDIDATE", "RESEARCH_GRADE", "ROBUST_CANDIDATE"}
+)
+
+
+def _normalize_promotion_tokens(raw: Any) -> list[str]:
+    if raw is None:
+        return []
+    values = raw if isinstance(raw, list) else [raw]
+    return [token for value in values if (token := str(value).strip())]
+
+
+def _promotion_maturity(tokens: list[str]) -> tuple[str | None, str | None]:
+    """Return promoted maturity only for an all-promoted-ladder token list."""
+    if tokens and all(token in _LADDER_PROMOTED for token in tokens):
+        return "promoted_candidate", "|".join(tokens)
+    return None, None
+
+
 def build_strategy_entry(folder: Path) -> dict[str, Any]:
     name = folder.name
     tokens = _slug_tokens(name)
@@ -593,13 +622,10 @@ def build_strategy_entry(folder: Path) -> dict[str, Any]:
     regimes = _method_to_regime(methods)
 
     # Status / maturity from available evidence.
-    if spec.get("promotion_status"):
-        maturity = "promoted_candidate"
-        status = (
-            "|".join(spec["promotion_status"])
-            if isinstance(spec["promotion_status"], list)
-            else str(spec["promotion_status"])
-        )
+    promotion_tokens = _normalize_promotion_tokens(spec.get("promotion_status"))
+    granted_maturity, granted_status = _promotion_maturity(promotion_tokens)
+    if granted_maturity is not None:
+        maturity, status = granted_maturity, granted_status
     elif meta:
         maturity = "triaged_candidate"
         status = str(
@@ -608,6 +634,9 @@ def build_strategy_entry(folder: Path) -> dict[str, Any]:
     else:
         maturity = "research_batch_only"
         status = "RESEARCH_BATCH"
+    if promotion_tokens and granted_maturity is None:
+        strategy_id = name.split("_", 1)[0]
+        print(f"REFUSED promotion for {strategy_id}: tokens={promotion_tokens}")
 
     tags = sorted(
         set(

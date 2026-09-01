@@ -96,3 +96,27 @@ one-line lookup the owner can do, and it is the only honest source.
 | Defects found in owner-facing docs | 25 + 21 + 12 + 13 + 8 across five audits |
 | Lead errors caught and corrected | **19** |
 | Safety claims corrected before reaching the owner | **3** |
+
+
+---
+
+## Addendum 2026-08-29 09:00 - morning batch and final package state
+
+Ten lanes ran in parallel after the owner asked for maximum throughput. Added time:
+
+| Package | Additional wall clock | What |
+|---|---:|---|
+| WP-P0-11 | **~2 h 15 min** | repair round 3 (`fcfa7483`, ten findings closed), stage-4 design audit, two repair audits |
+| Verification of prior claims | **~1 h 30 min** | QuantLens census, dashboard census, P0-10 merged state, migration design |
+| Censuses | **~1 h** | `07_ADAPTERS` + contracts, `01_MTC_PROJECT` parity oracles |
+
+**Revised package totals:** WP-P0-10 ~65 min (unchanged, closed); WP-P0-11 **~8 h 55 min**;
+promotion ~42 min; investigations and verification **~4 h 45 min**.
+
+**Why the verification time was worth its cost:** both censuses were **inflated** and neither had
+reached the owner. QuantLens claimed 13 DECISION findings - verified 9, with 3 re-banded and 1
+refuted. The dashboard claimed 6 - **1 survived**. Relaying either unverified would have handed the
+owner 19 overstated claims, which is exactly how Lead error 17 happened.
+
+**A census is a hypothesis until a second party re-bands it.** Severity inflates more quietly than
+counts do.

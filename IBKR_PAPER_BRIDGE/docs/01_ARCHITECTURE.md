@@ -751,7 +751,11 @@ server: { host: 127.0.0.1, port: 8790 }   # CORS restricted to 127.0.0.1 origins
 ## 11. Safety rails summary (enforced in code)
 
 1. **Default-DENY network lock:** `network: testnet` (paper) is the default and only unlocked target.
-   `network: mainnet` (real money) requires the triple-lock: `--enable-live` CLI flag +
+   On the shipped path that default is hardcoded at construction (`bridge/app.py:203`
+   `network="testnet"`). `_check_network_lock` (`bridge/broker/hyperliquid.py:2165-2167`)
+   returns immediately unless the network is mainnet, so the three-part lock never
+   evaluates today. A hardcoded word is easier to change by accident than a three-part
+   gate. `network: mainnet` (real money) requires the triple-lock: `--enable-live` CLI flag +
    `HL_LIVE_ACK=I_UNDERSTAND_THIS_IS_REAL_MONEY` env + strategy `live_allowed: true`. `broker.network`
    is NOT runtime-editable via PUT /api/config (yaml-only, restart required).
 2. **API wallet cannot withdraw** — use a Hyperliquid agent/API wallet, never the main key. Even a

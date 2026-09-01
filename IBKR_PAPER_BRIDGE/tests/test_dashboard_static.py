@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from bridge.app import create_app
+from bridge.broker.mock import MockBroker
 
 STATIC_ROOT = Path(__file__).resolve().parents[1] / "bridge" / "static"
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -273,7 +274,7 @@ def _blob(component: dict) -> str:
                 "not running today",
                 "cannot originate or enlarge an order",
                 "suppress or select otherwise permitted trades",
-                "both roles are off in the current configuration",
+                "both roles are unavailable in the current validated configuration",
             ],
         ),
         # Owner-operated control is not the only path to DISARMED.
@@ -448,9 +449,9 @@ def test_help_knowledge_marks_llm_gate_as_dormant_unwired_scaffolding(help_map: 
     ``LLMGate.effective_directions`` have no caller anywhere under ``bridge/``.
     Describing the gate as a CURRENT V1 feature that is merely "switched off"
     tells the reader that flipping a YAML switch would turn it on. It would
-    not. The converse half of that truth — the ``llm:`` block *is* read, served
-    and displayed — is pinned by
-    ``test_help_knowledge_separates_llm_config_visibility_from_activation``.
+    not. The current fail-closed snapshot also excludes the retired ``llm``
+    block, and the dashboard reports that absence explicitly; that contract is
+    pinned by ``test_dashboard_llm_page_matches_validated_snapshot_contract``.
     """
     gate = _component(help_map, "llm_gate")
     blob = _blob(gate)
@@ -493,55 +494,76 @@ def test_help_knowledge_marks_llm_gate_as_dormant_unwired_scaffolding(help_map: 
     )
 
 
-def test_help_knowledge_separates_llm_config_visibility_from_activation(help_map: dict):
-    """Reading, serving and displaying the ``llm:`` block is not activation.
+def test_dashboard_llm_page_matches_validated_snapshot_contract(help_map: dict):
+    """The fail-closed public view does not expose the retired ``llm`` namespace.
 
-    ``bridge/api/routes.py`` loads ``config/bridge.yaml``, keeps it on
-    ``app.state.bridge_config``, serves it from ``/api/config`` and includes it
-    in the dashboard snapshot; ``bridge/static/app.js`` reads
-    ``state.snapshot.config`` and renders ``config.llm.veto_enabled`` as the LLM
-    page's veto mode. Runtime code therefore demonstrably *does* read the
-    ``llm:`` switches. What no runtime path does is construct ``LLMGate``:
-    ``bridge/app.py`` builds ``BridgeEngine(...)`` with no ``llm_gate``, so
-    ``bridge/engine/engine.py`` installs ``NullLLMGate``. The map must carry
-    both halves — visibility and non-activation — without contradiction.
+    ``ValidatedRuntimeSettings.effective_view()`` constructs the public view
+    only from validated bound settings. ``bridge/api/routes.py`` publishes
+    that view through ``/api/config`` and the dashboard snapshot, so the
+    dashboard must not dereference ``config.llm`` and the help map must not
+    describe the retired raw-YAML reader. The Veto Mode card reports that the
+    setting is unavailable while the dormant gate remains explicit.
     """
     gate = _component(help_map, "llm_gate")
     blob = _blob(gate)
+    dashboard_blob = _blob(_component(help_map, "dashboard"))
     raw = HELP_JSON.read_text(encoding="utf-8").lower()
+    help_index = (
+        REPO_ROOT / "IBKR_PAPER_BRIDGE" / "docs" / "31_HELP_SYSTEM_MAP_INDEX.md"
+    ).read_text(encoding="utf-8").lower()
+    js = (STATIC_ROOT / "app.js").read_text(encoding="utf-8")
 
-    # The inherited overbroad denials are false against source, anywhere in the
-    # map — not merely in the first paragraph that mentions the gate. Checked
-    # first so that a run against the inherited wording fails on the defect
-    # itself rather than on a missing replacement sentence.
-    for banned in (
-        "nothing in the running code reads",
-        "no code reads those switches",
-        "nothing reads those switches",
-    ):
-        assert banned not in raw, (
-            f"{banned!r} is false: bridge/api/routes.py serves config/bridge.yaml "
-            "and bridge/static/app.js displays config.llm.veto_enabled"
+    assert "config.llm" not in js
+    assert 'setText("vetoMode", "N/A")' in js
+    for banned in ("loads config/bridge.yaml", "config.llm.veto_enabled"):
+        assert banned not in raw, f"help map still describes retired config access: {banned!r}"
+    for banned in ("app.state.bridge_config", "config.llm.veto_enabled"):
+        assert banned not in help_index, (
+            f"help index still describes retired config access: {banned!r}"
         )
+    assert "validatedruntimesettings.effective_view()" in help_index
 
-    # Half one: the read / serve / display path is real and must be stated.
     for needle in (
-        "app.state.bridge_config",
-        "/api/config",
-        "dashboard snapshot",
-        "veto_enabled",
+        "fail-closed",
+        "validated.effective_view()",
+        "does not expose the retired llm namespace",
+        "veto mode card to n/a",
     ):
-        assert needle in blob, (
-            f"llm_gate: configuration visibility not stated ({needle!r}); "
-            "routes.py serves the llm: block and app.js displays it"
-        )
+        assert needle in blob, f"llm_gate: validated snapshot truth missing {needle!r}"
 
-    # Half two: visibility is not activation, and the null gate is what runs.
+    assert "veto mode" in dashboard_blob
+    assert "n/a" in dashboard_blob
+
     assert "does not activate it today" in blob
     assert "nullllmgate" in blob
-    assert "configuration visibility is not activation" in blob, (
-        "llm_gate: the distinction must be explicit, not implied"
+
+
+def test_dashboard_config_page_matches_validated_snapshot_contract(tmp_path):
+    js = (STATIC_ROOT / "app.js").read_text(encoding="utf-8")
+    app = create_app(
+        start_runtime=True,
+        store_path=tmp_path / "dashboard-config.db",
+        broker=MockBroker(bars=[]),
     )
+    try:
+        view = app.state.validated_runtime_settings.effective_view()
+        assert view["risk"]["risk_pct_per_trade"]["value"] == 0.005
+        assert "coin" not in view["broker"]
+        assert "leverage" not in view["broker"]
+    finally:
+        app.state.bridge_store.close()
+
+    assert "config.risk.risk_pct_per_trade.value" in js
+    for retired_access in (
+        "config.risk.risk_pct_per_trade;",
+        "config.broker.coin",
+        "config.broker.leverage",
+    ):
+        assert retired_access not in js
+    assert 'coinInput.value = "N/A"' in js
+    assert "coinInput.disabled = true" in js
+    assert 'leverageInput.placeholder = "N/A"' in js
+    assert "leverageInput.disabled = true" in js
 
 
 def test_help_knowledge_separates_skipped_decision_from_llm_artifacts(help_map: dict):
@@ -618,27 +640,25 @@ def test_help_knowledge_store_holds_the_skipped_decision_without_llm_artifacts(
     )
 
 
-def test_help_knowledge_describes_the_llm_page_as_partly_config_driven(help_map: dict):
-    """The LLM page is not wholly empty: one card is configuration-derived.
+def test_help_knowledge_describes_the_llm_page_as_explicitly_unavailable(help_map: dict):
+    """The LLM page reports the absent namespace instead of dereferencing it.
 
     ``renderLlm()`` in ``app.js`` fills the Regime card from
-    ``state.status.regime``, the Veto Mode card from
-    ``config.llm.veto_enabled``, and a hard-coded Cost card, then renders the
-    Directive History table from a literal empty list. Calling the whole page
-    empty overstates the gap.
+    ``state.status.regime``, sets the Veto Mode card to ``N/A``, fills a
+    hard-coded Cost card, and renders the Directive History table from a
+    literal empty list. The help text must distinguish those placeholders.
     """
     blob = _blob(_component(help_map, "dashboard"))
 
-    assert "veto_enabled" in blob, (
-        "the Veto Mode card is rendered from configuration, not from a gate"
-    )
+    assert "veto_enabled" not in blob
+    assert "veto mode card reports n/a" in blob
+    assert "validated snapshot" in blob
     assert "directive history" in blob, (
         "name the table that is actually empty rather than the whole page"
     )
     for banned in ("renders empty tables", "renders empty placeholder tables"):
         assert banned not in blob, (
-            f"{banned!r} overstates the gap: the page already displays "
-            "configuration-derived veto state"
+            f"{banned!r} overstates the gap: the page has explicit placeholders"
         )
 
 
@@ -725,25 +745,13 @@ def test_ai_facing_index_points_at_the_json_without_duplicating_it():
         assert component["one_liner"] not in doc
 
 
-def test_ai_facing_index_maintenance_rule_matches_the_repaired_truth():
-    """The index's editing rule must not re-teach the claims we just removed.
-
-    Rule 12 tells a future editor to check the constructor rather than the
-    class. That is right, but it must not carry the false corollary that
-    nothing reads the switches, nor imply that a dormant gate logs nothing.
-    """
+def test_ai_facing_index_maintenance_rule_preserves_skipped_decision_truth():
+    """The index must preserve the real ``LLM_SKIPPED`` persistence path."""
     doc = (REPO_ROOT / "IBKR_PAPER_BRIDGE" / "docs" / "31_HELP_SYSTEM_MAP_INDEX.md").read_text(
         encoding="utf-8"
     )
     lowered = doc.lower()
 
-    assert "nothing reads" not in lowered, (
-        "routes.py serves config/bridge.yaml and app.js displays "
-        "config.llm.veto_enabled; the rule must not say nothing reads them"
-    )
-    assert "/api/config" in lowered, (
-        "the rule must state that the configuration is read, served and shown"
-    )
     assert "llm_skipped" in lowered, (
         "the rule must not leave a future editor free to write that the "
         "dormant gate logs nothing"

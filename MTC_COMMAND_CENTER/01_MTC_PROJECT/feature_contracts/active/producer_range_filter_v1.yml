@@ -98,6 +98,14 @@ safety:
     - Selectable draft only; TradingView final audit not run.
   known_limitations:
     - Uses fixed absolute range size for draft.
+    - >-
+      From a fresh start, and only until the first flip, the two directions are gated differently:
+      a downward flip needs the price to cross the filter line, while an upward flip needs it to
+      clear the line plus the full range width. On a fresh start the first signal is therefore
+      easier to trigger short than long, by the range width. After the first flip the two directions
+      are symmetric. This matches the Pine controller and the independent reference oracle and is
+      intended; it is not a parity defect. If Range Filter is ever promoted to a live producer,
+      re-decide it at that gate.
   not_comparable_conditions:
     - feature exporter unavailable
     - timestamp or candle source policy mismatch

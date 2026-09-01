@@ -20,11 +20,15 @@ from bridge.api.routes import init_runtime_state, install_routes
 from bridge.api.ws import install_ws
 from bridge.broker.hyperliquid import HyperliquidBroker
 from bridge.broker.mock import MockBroker
-from bridge.engine.engine import BridgeEngine
-from bridge.engine.risk import RiskConfig, RiskEngine
+from bridge.config_contract import (
+    ConfigIssue,
+    RefusalKind,
+    StartupConfigRefusal,
+    construct_bridge_engine,
+    prepare_runtime_settings,
+)
 from bridge.engine.strategies.keltner_trail_ema8 import KeltnerTrailEma8
 from bridge.store.db import Store
-from bridge.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +92,7 @@ def create_app(
     store_path: str | Path | None = None,
     start_runtime: bool = False,
     broker=None,
+    config_path: str | Path | None = None,
 ) -> FastAPI:
     """Build an import-safe FastAPI app without exchange or LLM calls."""
     app = FastAPI(
@@ -102,15 +107,58 @@ def create_app(
         allow_headers=["X-Confirm", "Content-Type"],
     )
     root = Path(__file__).resolve().parents[1]
+    resolved_config_path = (
+        Path(config_path)
+        if config_path is not None
+        else root / "config" / "bridge.yaml"
+    )
     store = None
+    validated_runtime_settings = None
     if store_path is not None or start_runtime:
-        store = Store(store_path or root / "data" / "bridge.db")
-        store.initialize()
+        try:
+            store = Store(store_path or root / "data" / "bridge.db")
+            store.initialize()
+        except StartupConfigRefusal:
+            if store is not None:
+                store.close()
+            raise
+        except Exception as exc:
+            if store is not None:
+                store.close()
+            raise StartupConfigRefusal(
+                [
+                    ConfigIssue(
+                        RefusalKind.STOP,
+                        subject="schema_capabilities",
+                        reason="store_initialize_failed",
+                        action="repair_store_evaluation_and_retry",
+                    )
+                ]
+            ) from exc
+        if start_runtime:
+            try:
+                validated_runtime_settings = prepare_runtime_settings(
+                    resolved_config_path, store, dry_run=dry_run
+                )
+            except StartupConfigRefusal:
+                store.close()
+                raise
         if store.get_meta("app_state") != "KILLED":
             store.set_meta("app_state", "DISARMED")
-    init_runtime_state(app, store=store)
+    init_runtime_state(app, store=store, validated=validated_runtime_settings)
     app.state.bridge_engine = None
     if start_runtime:
+        if validated_runtime_settings is None or store is None:
+            raise StartupConfigRefusal(
+                [
+                    ConfigIssue(
+                        RefusalKind.STOP,
+                        subject="config_binding",
+                        reason="validated_settings_missing",
+                        action="repair_startup_order_and_retry",
+                    )
+                ]
+            )
         runtime_broker = broker or _build_broker(root, dry_run)
         run_id = f"{'dryrun' if dry_run else 'paper'}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
@@ -123,54 +171,18 @@ def create_app(
             if hub is not None:
                 await hub.broadcast(topic, data)
 
-        # C3/C4: engine risk limits come from config/bridge.yaml (frozen P2
-        # profile), not hardcoded literals. Dry-run keeps the wider notional
-        # so the fixture replay still trades.
-        import yaml as _yaml
-
-        bridge_cfg_raw = _yaml.safe_load((root / "config" / "bridge.yaml").read_text(encoding="utf-8"))
-        risk_cfg_raw = bridge_cfg_raw.get("risk", {})
-        broker_cfg_raw = bridge_cfg_raw.get("broker", {})
-        risk_config = RiskConfig(
-            policy_id=str(risk_cfg_raw.get("policy_id", "ts-p1-007-v1")),
-            risk_pct_per_trade=float(risk_cfg_raw.get("risk_pct_per_trade", 0.005)),
-            max_daily_loss_pct=float(risk_cfg_raw.get("max_daily_loss_pct", 0.02)),
-            max_intraday_drawdown_pct=float(
-                risk_cfg_raw.get("max_intraday_drawdown_pct", 0.05)
-            ),
-            equity_floor_usdc=float(
-                risk_cfg_raw.get("equity_floor_usdc", 500.0)
-            ),
-            max_position_notional_pct=0.5 if dry_run else float(risk_cfg_raw.get("max_position_notional_pct", 0.20)),
-            min_stop_distance_pct=float(risk_cfg_raw.get("min_stop_distance_pct", 0.001)),
-            min_order_usd=float(risk_cfg_raw.get("min_order_usd", 10)),
-            max_leverage=int(risk_cfg_raw.get("max_leverage", 1)),
-            max_consecutive_losses=int(risk_cfg_raw.get("max_consecutive_losses", 3)),
-            exposure_policy_id=str(risk_cfg_raw.get("exposure_policy_id", "ts-p1-008-v1")),
-            max_symbol_gross_pct=float(risk_cfg_raw.get("max_symbol_gross_pct", 0.20)),
-            max_portfolio_gross_pct=float(risk_cfg_raw.get("max_portfolio_gross_pct", 0.40)),
-            max_wallet_margin_util_pct=float(risk_cfg_raw.get("max_wallet_margin_util_pct", 0.25)),
-            max_effective_leverage=float(risk_cfg_raw.get("max_effective_leverage", 1.0)),
-            min_liquidation_distance_pct=float(risk_cfg_raw.get("min_liquidation_distance_pct", 0.15)),
-        )
         from bridge.engine.notify import build_notifier
 
-        engine = BridgeEngine(
+        engine = construct_bridge_engine(
+            validated_runtime_settings,
             run_id=run_id,
             broker=runtime_broker,
             store=store,
             strategy=KeltnerTrailEma8(),
-            risk_engine=RiskEngine(risk_config),
             notifier=build_notifier(),
-            state="DISARMED",
+            state=store.get_meta("app_state") or "DISARMED",
             mode="dry_run" if dry_run else "paper",
             on_update=publish,
-            reconcile_max_consecutive_failures=int(
-                risk_cfg_raw.get("reconcile_max_consecutive_failures", 3)
-            ),
-            bar_reconnect_attempts=int(broker_cfg_raw.get("reconnect_attempts", 9)),
-            bar_reconnect_base_delay_s=float(broker_cfg_raw.get("reconnect_base_delay_s", 5.0)),
-            bar_data_restore_timeout_s=float(broker_cfg_raw.get("data_restore_timeout_s", 300.0)),
         )
         app.state.bridge_engine = engine
         app.state.bridge_status["mode"] = "dry_run" if dry_run else "paper"

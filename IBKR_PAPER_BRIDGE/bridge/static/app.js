@@ -64,9 +64,22 @@ function renderStatus() {
 function renderConfig() {
   const config = state.snapshot ? state.snapshot.config : null;
   if (!config) return;
-  byId("coinInput").value = config.broker.coin;
-  byId("riskInput").value = config.risk.risk_pct_per_trade;
-  byId("leverageInput").value = config.broker.leverage;
+  const coinInput = byId("coinInput");
+  const riskInput = byId("riskInput");
+  const leverageInput = byId("leverageInput");
+  coinInput.value = "N/A";
+  coinInput.disabled = true;
+  if (config.risk && config.risk.risk_pct_per_trade) {
+    riskInput.value = config.risk.risk_pct_per_trade.value;
+    riskInput.disabled = false;
+  } else {
+    riskInput.value = "";
+    riskInput.placeholder = "N/A";
+    riskInput.disabled = true;
+  }
+  leverageInput.value = "";
+  leverageInput.placeholder = "N/A";
+  leverageInput.disabled = true;
 }
 
 function renderGates() {
@@ -116,9 +129,8 @@ function renderDecisionStream() {
 }
 
 function renderLlm() {
-  const config = state.snapshot.config;
   setText("llmRegime", state.status.regime || "BOTH");
-  setText("vetoMode", config.llm.veto_enabled ? "ON" : "OFF");
+  setText("vetoMode", "N/A");
   setText("llmCost", "$0.00");
   renderRows("directivesBody", []);
 }
