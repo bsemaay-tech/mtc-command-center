@@ -73,12 +73,12 @@
  "files": [
   {
    "path": "DERIVATIONS.md",
-   "sha256": "ac12f8a24c9b45da879046b35e2b4f7399c04d447d8de1324c99e1515ef679b4",
-   "bytes": 184429
+   "sha256": "b0fa1e4136eda00b82bfacfe0c2dee67f928f3dcbcdb3a5e383c958129f41218",
+   "bytes": 199980
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "795891500bb93763fe91dde7cfcc11687e414b9118d301b3f422789f02eb9da2",
+   "sha256": "5e8f1ce4c1e9a148b21ed3a5f76bb0a076947013feeb182a684fe0971e461570",
    "bytes": 40893
   },
   {
@@ -148,13 +148,13 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-07-GREEN.json",
-   "sha256": "a7e6a59a4040d6eee8be42c24d28f46a5c9f4af2bd131c19bf6e768f9819ee48",
-   "bytes": 9112
+   "sha256": "1acd5a74f98d22165971486d6a2ede029f58bf984f85181617055ca473644a4a",
+   "bytes": 11327
   },
   {
    "path": "golden/corrected_vnext/RULE2-07-RED.json",
-   "sha256": "88b446ad3a5d7974616ba1253c345f7a8f321fc60b5a5a55f70c57ebf74bf4ef",
-   "bytes": 19340
+   "sha256": "0634a43fa242351072de26e027584105dae81426a5ac622219f3a6ccac706da0",
+   "bytes": 21362
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
@@ -163,14 +163,14 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-RED.json",
-   "sha256": "926a3318123e1b5380b152cb08dd2b07bebbf18894b15771b20126cc916a8809",
-   "bytes": 17852
+   "sha256": "6e76d54f82a5486d0500a9a8c2e0792e186db3a5d1f8ec8d18eff8eee27e4b17",
+   "bytes": 20820
   }
  ],
  "byte_discipline": "Every file above is UTF-8 with no BOM, LF line endings and a required final LF, per P012_FRESH_DESIGN_V1.md:480. Every JSON file parses with duplicate-key rejection and contains no non-finite number token. Re-verified by lane W156 over the 18 JSON files it revised or re-read (17 golden artifacts plus scenario_catalog.json): each file was byte-inspected for BOM, CR and final LF, parsed, checked for bare NaN/Infinity/undefined tokens outside string literals, and checked for duplicate keys by comparing the raw key-token count with the parsed property count (equal in every file).",
  "blocked_cell_markers": {
   "BLOCKED-ON-OPEN-nn": "ZERO cells. All ten section-19 OPEN rows carry an owner-approved APPLICABLE disposition in C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT.json (draft_revision 3), so no expected value in this bundle is blocked on an owner decision. The five design v1.5 [OPEN-EMBED-01..05] refusals are likewise closed by owner addendum 20; see owner_addendum_20_source.",
-  "BLOCKED-MISSING-SCENARIO-INPUT": "the declared synthetic vector omits an input the cell needs (design gap). After the design v1.8 revision THREE such cells remain in the bundle: RULE2-08-GREEN /observation_window/end_timestamp (an authoring member outside both surfaces, unchanged), and two NEW surface cells created by design 23.4's newly closed guards member set - RULE2-08-RED /RESULT_SURFACE/guards/consec_loss_ok and /RESULT_SURFACE/guards/guard_blocked_raw. Design 23.4:1139-1143 requires those two members while design 22.6:888 binds no guard switch and no max_consecutive_losses for either RULE2-08 row, and design 22.8:923 forbids borrowing another scenario's value. See DERIVATIONS.md discrepancy W167-D01.",
+  "BLOCKED-MISSING-SCENARIO-INPUT": "the declared synthetic vector omits an input the cell needs (design gap). After the W200 v1.9 GOLDEN-OVER repair exactly ONE such cell remains in the bundle: RULE2-08-GREEN /observation_window/end_timestamp (an authoring member outside both surfaces, unchanged). The two surface cells that design 23.4's closed guards member set had forced onto RULE2-08-RED - /RESULT_SURFACE/guards/consec_loss_ok and /RESULT_SURFACE/guards/guard_blocked_raw - no longer exist, because design v1.9 :1232-1233 directs removal of that row's whole guards object unless a separate owner-approved scenario-input amendment binds its threshold, none exists, and lane W200 removed the object. The underlying gap is unchanged: design 22.6:894 (v1.9 numbering; :888 in v1.8) still binds no guard switch and no max_consecutive_losses for either RULE2-08 row, and design 22.8 still forbids borrowing another scenario's value. The gap is now expressed by the absence of the object rather than by two marked cells. See DERIVATIONS.md discrepancy W167-D01 and the W200 section, which records the relocation as W200-D04.",
   "BLOCKED-MISSING-RECORD-BYTES": "the cell is a digest of a synthetic frozen test record whose exact bytes still do not exist. Design v1.5 sections 22.1 and 22.3 (:697-700, :747-839) now bind every record member VALUE and every record id, but they fix only sorted keys, no BOM, LF, final LF, duplicate-key refusal and finite tokens - not the separator or indentation width - and :758-761 expressly refuses to fabricate the provenance captured_at_utc and human_reviewer members. The hashed byte string is therefore still undetermined, and :697-700 keeps digests MECHANICAL build artifacts. P012_FRESH_DESIGN_V1.md:124 additionally forbids substituting the answered production record. See DERIVATIONS.md discrepancy V15-D05.",
   "BLOCKED-DESIGN-UNENUMERATED": "the design names the member but fixes no node set for it. After design v1.8 this is metrics ONLY (17 cells, one per artifact): design 23.1:987-1053 now enumerates the nine closed decision_events reasons with exact per-reason member sets, so the decision_events-vocabulary block is CLOSED and was removed from all 17 blocked_cells lists. Design :1271-1273 states that the amendment does not un-block design-unenumerated metrics.",
   "BLOCKED-BUILD-ARTIFACT": "a path or digest that only exists after the Gate-2 build (serialized scenario-input files, probe kernel-variant trees, KERNEL_FILE_PATCH files, observed outputs)."
@@ -326,12 +326,58 @@
    "authority": "Owner addendum 28 decision 68 resolved the section 7 versus section 11 quantity contradiction in favour of section 7: the flooring rule governs, quantity zero. W167-D05 had withheld the affected row rather than choose.",
    "effect": "FOUR ECONOMIC VALUES MOVED - the first revision in this sequence to move any. The previously withheld SIZING_COMPUTED row became derivable under the ruling and was filled. No other scenario was touched.",
    "independent_verdict": "C:\\tmp\\LANE_PROMPTS_20260828\\DETECT_G94_ECONOMIC.md - SAFE TO SEAL: YES. All four figures independently re-derived; each entailed by the ruling rather than by a further unstated choice; the withheld row genuinely derivable; no ripple detected."
+  },
+  {
+   "revision": "W200 v1.9 GOLDEN-OVER repair of the three design-directed rows, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W200_GOLDEN_OVER_REPAIR.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W200_GOLDEN_OVER_REPORT.md",
+   "authority": "Design v1.9 itself, not a new owner word. Section 23.5 tables-revision item 9 at P012_FRESH_DESIGN_V1.md:1228-1234 directs the tables family to change the inconsistent guard-basis values to section 23.4's hyphenated GROSS-MINUS-FEES (:1164-1167) and to remove the RULE2-08-RED guards object unless a separate owner-approved scenario-input amendment binds its threshold. No such amendment exists. Owner addendum 28 decision 67 approved v1.9 as drafted (C:\\tmp\\LANE_PROMPTS_20260828\\N_TIMES.txt:571).",
+   "files_revised": [
+    "golden/corrected_vnext/RULE2-07-RED.json",
+    "golden/corrected_vnext/RULE2-07-GREEN.json",
+    "golden/corrected_vnext/RULE2-08-RED.json",
+    "DERIVATIONS.md"
+   ],
+   "files_NOT_touched": [
+    "the other 14 files under golden/corrected_vnext/, digest-verified byte-identical to the sealed bytes before and after",
+    "the three DESIGN-GAP rows RULE2-04-RED, RULE2-06-RED and RULE2-06-EQUAL-PRICE-RED specifically - not opened for writing; the design does not settle them and they are going to the owner",
+    "scenario_catalog.json",
+    "IMPLEMENTATION_ANCHOR_DRAFT.json",
+    "every catalog row, input path and input digest",
+    "tests/corrected_vnext/contracts/inputs/** (not opened as a derivation authority)",
+    "the W167, W172 and W186 reports (dated records of prior lanes, left as written)"
+   ],
+   "manifest_fields_updated_by_this_lane": [
+    "files[].sha256 and files[].bytes for the four files this lane actually revised, and ONLY those",
+    "blocked_cell_markers.BLOCKED-MISSING-SCENARIO-INPUT - the count THREE became ONE because this lane's own directed removal deleted the two RULE2-08-RED guard cells the sentence named; leaving it would have been a live false census",
+    "this revision_history entry"
+   ],
+   "not_touched_by_this_lane": [
+    "seal_state (still carries the pre-repair EXPECTED_SEAL_SHA)",
+    "seal (still carries the pre-repair EXPECTED_SEAL_SHA)",
+    "reseal_history",
+    "design.version, design.total_lines and design.line_spans_by_section (still describe v1.8 and 1273 lines while the design read is v1.9 with 1317 lines - recorded as W200-D05, a bundle-wide act for the Lead)",
+    "section_16_review, claim_limits, catalog_conservation, byte_discipline"
+   ],
+   "value_impact": "ZERO economic values moved. No fee, funding delta, gross or net PnL, equity token, fill price, quantity, rate, notional, record identity or refusal value changed on any row. Two guard basis TOKENS were re-spelled from GROSS_MINUS_FEES to the design's own GROSS-MINUS-FEES, and one RULE2-08-RED guards object - one token, one derived integer 0 and two already-blocked cells, no money figure - was removed. Contrast the W186 entry above, which did move four economic values.",
+   "cascade_statement": "The directed removal did not cascade into any value. It had four bookkeeping consequences inside RULE2-08-RED alone, each a record ABOUT the removed object rather than a value on either comparison surface, and each reported rather than absorbed: blocked_cells lost its two /guards rows (8 to 6); authored_value_tokens lost its /guards/guard_pnl_basis row (4 to 3); open_item_bindings[0].effect_on_this_scenario was rewritten because it asserted that guard_pnl_basis stays GROSS_MINUS_FEES, a live fact about a deleted node, exactly as lane W172 rewrote the same sentence under G83-F04; and the unchanged_sealed_values clause 'and every guard node are byte-identical' was struck because no guard node remains. See W200_GOLDEN_OVER_REPORT.md and DERIVATIONS.md section W-4.",
+   "seal_consequence": "STALE SEAL. seal_state.EXPECTED_SEAL_SHA and seal.EXPECTED_SEAL_SHA still name 1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47, the pre-repair content, and were deliberately left untouched for the Lead to re-seal. They do not cover the revised bytes recorded in files[] above.",
+   "catalog_consequence": "STALE CATALOG DIGESTS, three of them. scenario_catalog.json pins expected_artifacts['2.0.0'].digest for RULE2-07-RED at 88b446ad3a5d7974616ba1253c345f7a8f321fc60b5a5a55f70c57ebf74bf4ef, RULE2-07-GREEN at a7e6a59a4040d6eee8be42c24d28f46a5c9f4af2bd131c19bf6e768f9819ee48 and RULE2-08-RED at 926a3318123e1b5380b152cb08dd2b07bebbf18894b15771b20126cc916a8809 - all three now the pre-repair bytes. The lane spec keeps the catalog untouched; re-pinning is the Lead's act at re-seal, as at re-seals #2, #3 and #4. The other 14 pins were verified against disk and still match.",
+   "effect": "Three goldens repaired under the design's own direction, one worksheet section added. Five discrepancies recorded and NOT resolved: W200-D01 (design :437 calls DEF-P012-08 guard outcomes explicit comparison nodes while item 9 directs removing this row's guards object - the one place a reader could reach the opposite conclusion), W200-D02 (item 9 says three guard-basis values but the removal deletes the third rather than re-spelling it, so only two were changed), W200-D03 (v1.8 versus v1.9 line drift in every artifact citation and in provenance.design_version), W200-D04 (W167-D01 is relocated into the absent object, not closed), W200-D05 (the manifest still describes v1.8)."
+  },
+  {
+   "revision": "W200 GOLDEN-OVER repair of RULE2-07-RED, RULE2-07-GREEN, RULE2-08-RED, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W200_GOLDEN_OVER_REPAIR.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W200_GOLDEN_OVER_REPORT.md",
+   "authority": "Design v1.9 itself, under owner addendum 28 decision 67. The item at :1164-1167 requires the hyphenated GROSS-MINUS-FEES; item 9 at :1228-1234 directs removal of the RULE2-08-RED guards object absent a threshold amendment, and no such amendment exists.",
+   "effect": "Three goldens revised. NO ECONOMIC VALUE MOVED - verified by a non-authoring family on both comparison surfaces. The three DESIGN-GAP rows were not touched; they carry two genuine open questions for the owner and editing one would corrupt the gate.",
+   "independent_verdict": "C:\\tmp\\LANE_PROMPTS_20260828\\DETECT_G103_W200_GOLDEN.md - SAFE TO SEAL: YES. Two findings, neither HIGH: G103-F01 MEDIUM dangling DERIVATIONS pointers to the removed guards object; G103-F02 LOW stale underscore token at DERIVATIONS.md:748. It also resolved W200-D01 on the design's own terms: item 9 is the later row-specific owner-approved instruction, and design :437 is unamended family-level text that still collides with it - wording residue that belongs with the owner questions."
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
+  "EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "reason": "Sealed by the Lead at re-seal #4, after the independent G94 SAFE-TO-SEAL verdict. Covers everything in re-seal #3 plus the W186 re-derivation of RULE2-05-RED under owner addendum 28 decision 68. This is the first seal in the sequence to cover MOVED ECONOMIC VALUES: four money figures changed, each independently re-derived by a non-authoring family and each entailed by the ruling rather than by a further unstated choice. The design is now v1.9 (owner addendum 28 decision 67). Every files[] digest was re-measured from disk at seal time. The ten PROBE rows remain honestly BLOCKED-BUILD-ARTIFACT."
+  "reason": "Sealed by the Lead at re-seal #5, after the independent G103 SAFE-TO-SEAL verdict on the W200 repair of the three GOLDEN-OVER rows directed by design v1.9. The three DESIGN-GAP goldens were re-verified byte-identical at seal time by this act itself, not only by the verifier: RULE2-04-RED, RULE2-06-RED and RULE2-06-EQUAL-PRICE-RED are unchanged, and the act aborts if any of them moves. No money figure, quantity, price or size moved. Two open documentation findings are sealed over deliberately and named in reseal_history: G103-F01 (dangling DERIVATIONS pointers to the removed RULE2-08-RED guards object) and G103-F02 (stale underscore token at DERIVATIONS.md:748). Neither moves a value; both are scheduled for a tables-family repair and re-seal #6. The ten PROBE rows remain honestly BLOCKED-BUILD-ARTIFACT."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -340,9 +386,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
+  "EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "set_by": "Lead re-seal act #4 2026-09-01T23:11:48+03:00 (see reseal_history); prior seal by Lead re-seal #3 2026-09-01 evening"
+  "set_by": "Lead re-seal act #5 2026-09-02T01:03:08+03:00 (see reseal_history); prior seal by Lead re-seal #4 2026-09-01 night"
  },
  "reseal_history": [
   {
@@ -411,6 +457,49 @@
     }
    ],
    "economic_values_moved": "four, in RULE2-05-RED only, under owner addendum 28 decision 68",
+   "input_digests_touched": "none - the 17 input pins stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066, the commit the kernel branch is cut from"
+  },
+  {
+   "at": "2026-09-02T01:03:08+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #5",
+   "trigger": "G103 SAFE TO SEAL verdict on the W200 GOLDEN-OVER repair",
+   "old_EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
+   "new_EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
+   "old_catalog_sha256": "795891500bb93763fe91dde7cfcc11687e414b9118d301b3f422789f02eb9da2",
+   "new_catalog_sha256": "5e8f1ce4c1e9a148b21ed3a5f76bb0a076947013feeb182a684fe0971e461570",
+   "design_gap_rows_reverified_byte_identical": [
+    {
+     "path": "golden/corrected_vnext/RULE2-04-RED.json",
+     "sha12": "9f7a541c08bb"
+    },
+    {
+     "path": "golden/corrected_vnext/RULE2-06-RED.json",
+     "sha12": "25c747ac5311"
+    },
+    {
+     "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+     "sha12": "102aa04e93df"
+    }
+   ],
+   "catalog_changes": [
+    "3x expected_artifacts['2.0.0'].digest re-pinned from disk",
+    "14x already matched disk and were left untouched",
+    "20x PROBE digests deliberately left BLOCKED-BUILD-ARTIFACT"
+   ],
+   "disk_deltas_absorbed": [
+    {
+     "path": "scenario_catalog.json",
+     "old_sha12": "795891500bb9",
+     "new_sha12": "5e8f1ce4c1e9"
+    }
+   ],
+   "economic_values_moved": "none - independently verified on both comparison surfaces by G103",
+   "open_findings_sealed_over": [
+    "G103-F01 MEDIUM - DERIVATIONS.md:846-849, :1877-1885, :1978 still name the removed RULE2-08-RED guards object as a derived expected 2.0.0 node, with no superseded marker at the site. Documentation residue; no value moves. Scheduled for re-seal #6.",
+    "G103-F02 LOW - DERIVATIONS.md:748 still lists GROSS_MINUS_FEES as the 2.0.0 expected value for RULE2-07. Same append-only residue. Scheduled for re-seal #6."
+   ],
+   "why_sealed_anyway": "The gate reads goldens and the catalog, not worksheet prose. Holding the seal for a prose repair would delay the kernel measurement and buy nothing.",
    "input_digests_touched": "none - the 17 input pins stand unchanged",
    "implementation_base_sha_touched": "no - stays 108ea066, the commit the kernel branch is cut from"
   }

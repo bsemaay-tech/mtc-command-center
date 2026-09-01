@@ -1,7 +1,7 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
+ "EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
  "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
  "core_tree_oid_at_base": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
@@ -30,7 +30,7 @@
  "lead_acceptance": {
   "accepted_by": "Lead (claude-fable-5), 2026-08-31 ~15:55 local",
   "basis": "Gate-2 plan v2 (A7-cleared) owner-approved addendum 16; tables bundle W127b sealed, all 19 file digests re-verified by W150; owner rulings addenda 14-17 complete; design v1.4 terminal dual-zero",
-  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #4 seal 1beaca483f0c... on 2026-09-01T23:11:48+03:00; design v1.9; four economic values moved under owner ruling and independently verified before sealing."
+  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #5 seal d642252ed2e1... on 2026-09-02T01:03:08+03:00; design v1.9; three GOLDEN-OVER rows repaired under the design's own direction; no economic value moved; three DESIGN-GAP rows untouched and still open to the owner."
  },
  "reseal_history": [
   {
@@ -50,6 +50,12 @@
    "old_EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
    "new_EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
    "reason": "Re-seal #4: design now v1.9 under owner addendum 28 decision 67; W186 re-derived RULE2-05-RED under decision 68, moving four economic values; independently cleared SAFE TO SEAL by G94."
+  },
+  {
+   "at": "2026-09-02T01:03:08+03:00",
+   "old_EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
+   "new_EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
+   "reason": "Re-seal #5: W200 repaired the three GOLDEN-OVER rows design v1.9 directs; no economic value moved; the three DESIGN-GAP goldens re-verified byte-identical by this act; independently cleared SAFE TO SEAL by G103 with two documentation findings named."
   }
  ]
 }

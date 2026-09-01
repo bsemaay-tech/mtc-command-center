@@ -2739,3 +2739,230 @@ execution, re-seal, deployment or trading authority. Re-sealing, and refreshing 
 digest under W186-D04, remain the Lead's acts under design `:1171-1172`. The §16
 `SEMANTIC_COVERAGE_REVIEW` remains owner-held and PENDING, and the claude family remains excluded
 from that reviewer role because it authored these tables.
+
+## W200 v1.9 `GOLDEN-OVER` repair — `RULE2-07-RED`, `RULE2-07-GREEN`, `RULE2-08-RED`
+
+### W-0 What this lane is, and what it is not
+
+Design **v1.9** is the authority for this section. The design file read for it is
+`C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md`, whose title line reads
+`# WP-P0-12 CORRECTED_VNEXT Fresh-Family Design v1.9` (`:1`) and which is **1317 lines** long. Owner
+addendum 28 decision 67 approved that text as drafted — verbatim at
+`C:\tmp\LANE_PROMPTS_20260828\N_TIMES.txt:571`: *"(67) v1.9 TOKEN AMENDMENT APPROVED as drafted"*.
+
+Section 23.5's tables-revision **item 9** at `:1228-1234` is therefore a direction already written
+into an approved design. This lane **implements two clauses of that item and decides nothing**. It
+adds no design name, chooses no value, and resolves no OPEN row.
+
+Independence, stated as a fact rather than a promise: no `mtc_v2.core` import; no `observed/` path
+read; no implementer-authored input file consumed as a derivation authority — the
+`tests/corrected_vnext/contracts/inputs/**` bytes were not opened for any value here; no kernel,
+driver, verifier, gate, generator, backtest or baseline exists or was executed. Local SHA-256, a
+structural JSON parse with duplicate-key checking, a byte check for BOM/CR/final-LF, and literal
+reconciliation against the design text are the whole of the computation performed.
+
+### W-1 The two design passages, quoted from the file this lane read
+
+**`:1163-1167`** (section 23.4, the guard-basis token):
+
+```
+`last_closed_guard_pnl` is additionally required exactly when a lifecycle closed and produced that
+fact; it is absent, not zero or null, otherwise. `max_consecutive_losses` is an M-09 configuration
+input, not a RESULT member, and is forbidden. Owner addendum 15 item 35 fixes the `2.0.0` basis for
+daily-loss, consecutive-loss, and time-stop guards as `GROSS-MINUS-FEES`, with no per-control
+divergence
+```
+
+The token the design fixes is **hyphenated**: `GROSS-MINUS-FEES`. The lane spec's summary of
+`:1164-1167` is accurate; the sentence begins on `:1164` and the citation closes on `:1167`.
+
+**`:1228-1234`** (section 23.5, tables-revision item 9):
+
+```
+9. **v1.9 design housekeeping for the four rejected table defects:** change the three inconsistent
+   guard-basis values to section 23.4's `GROSS-MINUS-FEES`; use `null` for unavailable metrics in all
+   17 goldens unless the owner separately chooses the `[]` alternative permitted by section 23.4;
+   replace missing-record/source-byte digest placeholders with the actual lower-case SHA-256 values
+   after canonical bytes exist; and remove the RULE2-08-RED `guards` object unless a separate
+   owner-approved scenario-input amendment binds its threshold and requires re-derivation. Re-seal
+   only in the later tables lane. These are housekeeping dispositions, not additional design names
+```
+
+Both directions the lane spec claims are present, in the exact words it claims. Item 9's other two
+clauses — the `metrics` `null` change and the digest placeholders — are **out of this lane's scope**
+and were not performed; they touch all 17 goldens and are named here only so their omission is a
+recorded choice rather than an oversight.
+
+`V19_TOKEN_AMENDMENT_PROPOSAL.md:373` and `:376`, the source item 9 cites at `:1235`, carry the same
+two dispositions and name the exact byte positions:
+`RULE2-07-GREEN.json:37`, `RULE2-07-RED.json:53`, `RULE2-08-RED.json:45` for the token, and
+`RULE2-08-RED.json:47-48` for the removal.
+
+### W-2 `RULE2-07-RED` and `RULE2-07-GREEN` — the guard-basis token
+
+Reconciliation, not arithmetic: the design fixes a **token**, and the golden carried a different
+serialization of the same token.
+
+```
+design text at :1165        GROSS-MINUS-FEES      (hyphen, hyphen)
+golden bytes before         GROSS_MINUS_FEES      (underscore, underscore)
+golden bytes after          GROSS-MINUS-FEES      identical to the design token
+```
+
+The underscore form was never design-forced. Lane W172 had already labeled it as such under G83-F06:
+each artifact's `authored_value_tokens` carried the statement *"the underscore spelling
+GROSS_MINUS_FEES is this family's serialization of the design's hyphenated GROSS-MINUS-FEES"*, and
+the W172 census at `DERIVATIONS.md:2316-2321` counted `GROSS-MINUS-FEES` as **DESIGN-NAMED** with 3
+grep hits while listing `GROSS_MINUS_FEES (underscore form)` among the **TABLES-AUTHORED** tokens
+with 0 hits. v1.9 item 9 now directs the family to stop serializing it differently. That labeled
+entry has therefore been **removed** from `authored_value_tokens` on both rows: the value is now the
+design's own token, so keeping it on a census of tables-authored spellings would assert the opposite
+of the truth. `RULE2-07-GREEN`'s ledger held only that entry and is now the empty array `[]`; the key
+is retained because design 15.3 `:510` counts missing, null and empty as three different states, and
+an empty census is the true statement that the artifact carries no tables-authored token.
+
+**No economic value moved on either row.** The basis names the same economic rule under either
+spelling; owner addendum 15 item 35 fixes the rule, not the punctuation. Restated node by node:
+
+```
+RULE2-07-RED    last_closed_guard_pnl  -0.2      unchanged
+                consecutive_loss_count  1        unchanged
+                consec_loss_ok          false    unchanged
+                guard_blocked_raw       true     unchanged
+                fee_amount per fill     0.1      unchanged   fee_total -0.2, net -0.2
+                gross_realized_pnl      0        unchanged   equity 1000 / 999.8
+RULE2-07-GREEN  consecutive_loss_count  0        unchanged
+                consec_loss_ok          true     unchanged
+                guard_blocked_raw       false    unchanged
+                last_closed_guard_pnl   ABSENT   unchanged   equity 1000 / 1000
+```
+
+The guard predicate itself is untouched: design `:390` states that `RULE2-07-RED` enables only the
+consecutive-loss guard with test-only `max_consecutive_losses=1`, that corrected
+`last_closed_guard_pnl=-0.2` under the gross-minus-fees basis, that the count becomes `1`, that
+`count < max_consecutive_losses` is false, and that `guard_blocked_raw` is true. Every one of those
+five facts is what the artifact still carries.
+
+### W-3 `RULE2-08-RED` — the directed removal of the `guards` object
+
+Item 9 makes the removal conditional: *"unless a separate owner-approved scenario-input amendment
+binds its threshold and requires re-derivation"*. The condition is checked, not assumed:
+
+1. `:894` is the **only** scenario-input row for `RULE2-08-RED` (section 22.6, `:888-895`). It binds
+   the state-building prefix, the after-event bar, `initial_capital=1000`, fallback `10%`,
+   `max_leverage_cap=10`, tick/step/minima `.01/1/0/0`, multiplier `1`, and no SL/TP. It binds **no
+   guard switch and no `max_consecutive_losses`**.
+2. `M-09` at `:743` defines `GUARD07` — including `use_consecutive_loss_halt=true` and
+   `max_consecutive_losses=1` — and section 22.6 attaches `GUARD07` to `RULE2-07-RED` (`:892`) and
+   `RULE2-07-GREEN` (`:893`) **only**. Neither `RULE2-08` row carries it.
+3. A search of every `.md` and `.txt` file under `C:\tmp\LANE_PROMPTS_20260828\` for the phrases
+   *"scenario-input amendment"*, *"scenario_input amendment"* and *"threshold amendment"* returns
+   four hits and **not one of them is an amendment**: this lane's own spec
+   (`LANE_W200_GOLDEN_OVER_REPAIR.md:23`), the design sentence itself (`:1233`), the proposal that
+   asks for the removal (`V19_TOKEN_AMENDMENT_PROPOSAL.md:376`), and the Lead's own log line
+   recording that no such amendment exists (`N_TIMES.txt:653`). **No such amendment exists.**
+
+The condition is therefore unmet and removal is what the design directs. Section 23.4 `:1147` agrees
+independently: the conditional member `guards` is *"Required exactly when a declared guard projection
+is evaluated"*, and no guard projection is declared for this vector, so the object was not admissible
+in the first place. After the removal, `RULE2-08-RED`'s `RESULT_SURFACE` carries exactly the seven
+base members of `:1133` plus the one conditional member `cumulative_funding` that `:1148` requires on
+every `DEF-P012-08` result — eight keys, no more:
+
+```
+final_position, trades, equity_curve, cumulative_funding, metrics, warnings, refusals, run_manifest
+```
+
+**No economic value moved.** The removed object contained one token and one derived integer
+(`consecutive_loss_count 0`) plus two cells that were already `BLOCKED-MISSING-SCENARIO-INPUT`; no
+money figure, rate, quantity, price or equity token was inside it, and nothing outside it was derived
+from it. Byte-identical after the removal: `notional 100`, `raw_rate 0.001`,
+`long_cashflow_rate -0.001`, `funding_cash_delta -0.1`, `cumulative_funding -0.1`, `mark_price 100`,
+`final_position` `LONG` / `1` / `100`, and `equity_curve` `1000` / `999.9`.
+
+### W-4 The cascade, stated in full rather than absorbed
+
+The lane spec requires that a directed removal must not cascade silently. It did not cascade into any
+value. It did have four bookkeeping consequences **inside the same artifact**, each of which is a
+record *about* the removed object rather than a value on either comparison surface, and each of which
+would have been a live false statement if left standing:
+
+| Consequence | Why leaving it was not an option |
+|---|---|
+| `blocked_cells` lost its two `/guards/...` rows (8 → 6) | The ledger is the census of this artifact's marked cells. Rows naming pointers that no longer exist are the same census-versus-artifact mismatch lane W172 repaired under G83-F01, in the opposite direction. |
+| `authored_value_tokens` lost its `/guards/guard_pnl_basis` row (4 → 3) | The pointer no longer exists. |
+| `open_item_bindings[0].effect_on_this_scenario` rewritten | It asserted *"so `guard_pnl_basis` stays `GROSS_MINUS_FEES`"* — a live fact about a node this lane deleted. It now records the removal instead, exactly as lane W172 rewrote the same sentence under G83-F04 when item 4 removed `funding_included_in_guard_basis`. |
+| `unchanged_sealed_values` clause struck | It claimed *"and every guard node are byte-identical to the pre-v1.5 seal"*. There is no guard node. Every other value it names is still byte-identical and still claimed. |
+
+Nothing else in the bundle changed as a consequence. In particular the `RULE2-08-GREEN` artifact
+already carried **no** `guards` object (its `RESULT_SURFACE` keys are `final_position`, `trades`,
+`equity_curve`, `cumulative_funding`, `metrics`, `warnings`, `refusals`, `run_manifest`), so the two
+`DEF-P012-08` rows are now consistent with each other for the first time.
+
+### W-5 The three `DESIGN-GAP` rows were not opened for writing
+
+`RULE2-04-RED`, `RULE2-06-RED` and `RULE2-06-EQUAL-PRICE-RED` are going to the owner because the
+design does not settle them. They were not edited, and their SHA-256 digests are unchanged from the
+values `CONTRACT_TABLES_MANIFEST.json` recorded under seal `1beaca483f0c...`:
+
+```
+RULE2-04-RED.json              9f7a541c08bb477b...   unchanged
+RULE2-06-RED.json              25c747ac53111c51...   unchanged
+RULE2-06-EQUAL-PRICE-RED.json  102aa04e93dfa9c5...   unchanged
+```
+
+So are the other eleven artifacts this lane did not name. Fourteen of seventeen goldens are
+byte-identical to the sealed bytes; three changed.
+
+### W-6 Discrepancies — recorded, not resolved
+
+**W200-D01 — section 14 says `DEF-P012-08` guard outcomes ARE comparison nodes.** Design `:437`
+reads *"Guard outcomes follow the sourced OPEN-10 decision and are explicit comparison nodes"*, and
+`:1147` cites *"section 14's OPEN-10-controlled explicit comparison nodes"* as forcing text for the
+conditional `guards` member. Item 9 at `:1232-1233` nevertheless directs removal of this row's guards
+object. This lane resolved the tension in favour of removal on three grounds — item 9 is the newer,
+row-specific, owner-approved direction; `:1147` conditions the member on a **declared guard
+projection being evaluated**, and `:894` declares none; and `:437`'s sentence is an
+expected-golden-changes statement for the section as a whole, whose antecedent (a captured funding
+decision feeding a guard basis) has no evaluable guard on this vector. **The design's direction here
+is less clear than the lane spec's summary claims, and this is the one place a reader could reach the
+opposite reading.** Not silently absorbed.
+
+**W200-D02 — item 9 says "the three inconsistent guard-basis values"; only two were re-spelled.**
+`V19_TOKEN_AMENDMENT_PROPOSAL.md:373` names all three byte positions including `RULE2-08-RED.json:45`.
+But item 9's own later clause, and `V19:376`, direct removal of the object that contains that third
+value. Removal subsumes re-spelling: the third value no longer exists to be re-spelled. A reader
+counting three changed tokens will find two. Recorded rather than reconciled by inventing a third.
+
+**W200-D03 — line drift between v1.8 and v1.9 citations.** The guard-basis sentence is at `:1147-1150`
+in v1.8 and `:1164-1167` in v1.9; the `RULE2-08-RED` scenario-input row is at `:888` in v1.8 and
+`:894` in v1.9; the closed guards member set is at `:1139-1143` in v1.8 and `:1156-1160` in v1.9. The
+pre-existing citations inside all 17 goldens, and `provenance.design_version`, still read **v1.8**.
+This lane did not renumber outside the nodes it revised; doing so on three rows would have left a
+bundle whose 17 artifacts disagree about which design they cite. The renumber is a bundle-wide act.
+
+**W200-D04 — W167-D01 is relocated, not closed.** The missing scenario input that forced
+`consec_loss_ok` and `guard_blocked_raw` to be marked is unchanged: `:894` still binds no guard
+threshold for either `RULE2-08` row. The removal changes how that gap is expressed — an absent object
+instead of two marked cells — and nothing about the gap itself. If the owner later binds a `RULE2-08`
+guard threshold, the object must be reinstated and genuinely re-derived, which is exactly what item 9's
+`unless` clause anticipates.
+
+**W200-D05 — the manifest still describes v1.8.** `CONTRACT_TABLES_MANIFEST.json` records
+`design.version` as v1.8, `design.total_lines` as 1273 and 38 v1.8 `line_spans_by_section` entries,
+while the design this lane read is v1.9 with 1317 lines. This lane confined its manifest edits to
+`files[]` for the files it actually revised, the one census field its own removal falsified, and its
+`revision_history` entry. Re-describing the design is a bundle-wide act for the Lead.
+
+### W-7 Honest limits of this repair
+
+Two clauses of one design item, applied to three rows. This lane closes no OPEN row, un-blocks no
+`BLOCKED-MISSING-RECORD-BYTES` digest, does not touch the design-unenumerated `metrics` marker on any
+of the 17 artifacts, and grants no build, execution, re-seal, deployment or trading authority. It did
+not touch the three `DESIGN-GAP` rows, the catalog, `IMPLEMENTATION_ANCHOR_DRAFT.json`, any catalog
+row/input path/input digest, `seal_state`, `seal`, `reseal_history`, or anything under
+`tests/corrected_vnext/`. The recorded `EXPECTED_SEAL_SHA` `1beaca483f0c...` **no longer covers these
+bytes**, and three `scenario_catalog.json` `expected_artifacts['2.0.0'].digest` pins are now stale;
+re-sealing and re-pinning are the Lead's acts under design `:1171-1172`. The §16
+`SEMANTIC_COVERAGE_REVIEW` remains owner-held and PENDING, and the claude family remains excluded from
+that reviewer role because it authored these tables.

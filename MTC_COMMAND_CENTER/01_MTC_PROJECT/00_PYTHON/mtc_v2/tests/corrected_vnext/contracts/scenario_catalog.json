@@ -587,7 +587,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-07-RED.json",
-    "digest": "88b446ad3a5d7974616ba1253c345f7a8f321fc60b5a5a55f70c57ebf74bf4ef"
+    "digest": "0634a43fa242351072de26e027584105dae81426a5ac622219f3a6ccac706da0"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -630,7 +630,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-07-GREEN.json",
-    "digest": "a7e6a59a4040d6eee8be42c24d28f46a5c9f4af2bd131c19bf6e768f9819ee48"
+    "digest": "1acd5a74f98d22165971486d6a2ede029f58bf984f85181617055ca473644a4a"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -673,7 +673,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-08-RED.json",
-    "digest": "926a3318123e1b5380b152cb08dd2b07bebbf18894b15771b20126cc916a8809"
+    "digest": "6e76d54f82a5486d0500a9a8c2e0792e186db3a5d1f8ec8d18eff8eee27e4b17"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
