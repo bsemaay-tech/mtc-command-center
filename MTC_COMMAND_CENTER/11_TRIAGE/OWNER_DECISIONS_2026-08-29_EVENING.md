@@ -488,3 +488,38 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     distinction that matters: these are now OWNER-SEEN AND DEFERRED, not unnoticed gaps. The
     reconciliation's existing wording already carries them honestly and no document change is
     required; the P0-20 build inherits both as declared undecided boundaries.
+
+## Addendum 26 - 2026-09-01 ~17:30 (owner verbatim: "Every decision actually made")
+
+61. **W167-D04 CLOSED - READING Y.** Context: the v1.8 tables re-derivation surfaced two live
+    readings of the design giving materially different `decision_events` arrays on eight of
+    seventeen golden rows. The tables family executed the narrow reading (the work instruction
+    addressed to it at design `:1178-1181`) and RECORDED the alternative rather than guessing.
+    The independent family (G83) opened both cited spans, ruled the design does not settle it -
+    **GENUINELY AMBIGUOUS - OWNER MUST DECIDE** - returned **NOT SAFE TO SEAL**, and explicitly
+    warned against defaulting to the narrow reading to keep the chain moving. The owner's word
+    selects the broad reading: a `decision_events` row is required for every closed reason whose
+    named decision is **actually evaluated** on that scenario, even where the prior tables
+    artifact never carried that reason (design `:1033-1034` applies to the tables family on its
+    own terms). The anti-padding clause continues to bind - a reason is emitted because its
+    named decision was evaluated, never to equalize row counts.
+
+    Consequences recorded before the work: eight goldens are re-derived
+    (RULE2-01-RED/GREEN, 05-RED/GREEN, 06-RED/GREEN, 06-EQUAL-PRICE-RED, 07-RED); the kernel
+    delta `:1211-1212` already tells the kernel to emit on occurrence, so this reading makes the
+    two families agree rather than requiring a kernel-instruction amendment; two named exceptions
+    survive (RULE2-05-RED takes `MIN_NOTIONAL_ADMITTED` but not `SIZING_COMPUTED` because
+    W167-D05 is real on that row; RULE2-05-GREEN may take `SIZING_COMPUTED`). No economic value
+    moves; if any Reading Y addition appeared to require moving a sealed economic value, the lane
+    is instructed to STOP that row and report rather than proceed.
+
+62. **RECORDED, NOT YET A DECISION - the frozen-package composer has no owner.** The B1
+    decisions 4+5 the owner confirmed in addendum 25 require the party that PREPARES the package
+    description to be different from the party that CONFIRMS it. The lookup lane returned
+    **NO EXISTING PACKAGE OWNS THIS**, quoting the proposal's own admission that no current
+    package is assigned that writer. This is an honest gap, not an oversight to be filled by
+    nominating a plausible package; it becomes an owner decision when B1 moves to adoption.
+
+63. **PR #146 MERGED** - the addendum 24 [OPEN-XV-12] plan amendment is now on `master`. The
+    repo guard blocked the first branch as stale and was not overridden; a fresh branch off
+    `master` was used instead and passed.
