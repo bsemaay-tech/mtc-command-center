@@ -9,7 +9,7 @@ GOLDEN-OVER assertions are gone, but `RULE2-07-RED` now exposes a later, previou
 trade-row member mismatch. No behavior or sealed artifact was authored to force the predicted
 count.
 
-Finding count: **4 remaining gate mismatches, all DESIGN-GAP; 3 discrepancies recorded.**
+Finding count: **4 remaining gate mismatches, all DESIGN-GAP; 4 discrepancies recorded.**
 
 This was a **T2 evidence rerun** on branch
 `feature/wp-p0-12-corrected-vnext-20260831` in `C:\WP012BUILD`, the exact branch/worktree fixed by
@@ -33,7 +33,9 @@ Of the same 38 source-to-repository mappings W188 compared, 31 were already byte
 seven differed. Only the seven differing source members were copied, byte-for-byte. The anchor
 sidecar was then updated to the copied anchor's exact SHA-256, the procedure W188 recorded
 (`W188_KERNEL_RESUME_REPORT.md:20-29`). SHA-256 values below are measured file digests; every
-copied member's after digest equals its source digest.
+copied member's after digest equaled its source digest at copy time and equals the seal-#5 manifest
+pin. A later external-source change discovered at final reconciliation is recorded under
+Discrepancy 4.
 
 | Repository member | Before SHA-256 | After/source SHA-256 | Action |
 |---|---|---|---|
@@ -168,13 +170,22 @@ The built-in selftest is explicitly non-accepting and returns its check receipt 
    pins changed `DERIVATIONS.md` bytes (`C:\tmp\P012_CONTRACT_TABLES_W127\CONTRACT_TABLES_MANIFEST.json:75-78`).
    Following W188's actual refresh method and the repository seal required copying that differing
    member too; omitting it would make the repository bytes disagree with the sealed manifest.
+4. During final post-commit reconciliation, the external staging copy
+   `C:\tmp\P012_CONTRACT_TABLES_W127\DERIVATIONS.md` had moved again, from the copied and
+   manifest-pinned `b0fa1e4136eda00b82bfacfe0c2dee67f928f3dcbcdb3a5e383c958129f41218` to
+   `c2468b06e837d346084b378424c9e9ee075643b3d3266fa9cd83cd1aa2a0c453`. Its new text identifies
+   itself as lane W205 residue markers (`C:\tmp\P012_CONTRACT_TABLES_W127\DERIVATIONS.md:740-747`,
+   `:766-782`, `:876-894`, `:2052-2067`), while the still-current seal-#5 manifest continues to pin
+   the copied `b0fa1e41...` bytes (`C:\tmp\P012_CONTRACT_TABLES_W127\CONTRACT_TABLES_MANIFEST.json:75-78`).
+   The worktree deliberately retains the internally valid seal-#5 bytes. The later unsealed scratch
+   edit was not recopied, and no external file was touched by this lane.
 
 ## Explicit scope statement
 
-- **No golden, catalog, manifest, seal, input, sidecar, or baseline file was hand-edited.** The
-  only sealed-member changes were the seven mandated exact byte copies listed in the digest table;
-  the anchor sidecar was updated only to the copied anchor's exact SHA-256. No input or baseline
-  byte changed, and no sealed content was authored or transformed by this lane.
+- **No golden, catalog, manifest, seal, input, or baseline file received any lane-authored edit.**
+  The only sealed-member changes were the seven mandated exact byte copies listed in the digest
+  table. The anchor sidecar was mechanically updated only to the copied anchor's exact SHA-256.
+  No input or baseline byte changed, and no sealed content was authored or transformed by this lane.
 - No DESIGN-GAP behavior was implemented. In particular, no trade-row member set and no
   `touched_exit_ids` ordering rule was invented.
 - No baseline run, observed-artifact generation, backtest, optimization, server, launcher, broker,
