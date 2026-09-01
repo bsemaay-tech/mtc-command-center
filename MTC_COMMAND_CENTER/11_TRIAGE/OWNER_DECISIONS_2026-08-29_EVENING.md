@@ -553,3 +553,40 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     makes the owner's own un-delegable review performable, the B1 proposal fold, and this
     targeted P0-20 repair. Honest limit recorded: the kernel work is a chain (design seals ->
     answers derive -> re-seal -> code runs), so lanes added to it do not shorten it.
+
+## Addendum 28 - 2026-09-01 ~21:25 (four decisions taken to unblock the night shift)
+
+67. **v1.9 TOKEN AMENDMENT APPROVED** (owner: "Approve - add the names to the design"). Context:
+    the sealed goldens assert sixteen tokens, spellings and fixed strings the design never names;
+    the kernel is forbidden to invent them, so zero of seventeen gate rows could reach MATCH. The
+    alternative - stripping them from the goldens - was costed by the tables' own family and then
+    INDEPENDENTLY RE-DERIVED by a second family which confirmed every stuck item and found no
+    self-interested misread. The amendment proposal was checked by a third family that authored
+    neither the tables nor the proposal and returned SOUND AS DRAFTED. The owner's word authorises
+    design v1.8 -> v1.9 naming exactly those tokens, with the eight SEMANTIC ADDITIONS recorded as
+    such rather than as clerical spellings, and the four DO-NOT-NAME recommendations honoured.
+    Consequence recorded: the tokens already committed by the capped kernel lane become
+    LEGITIMATE rather than requiring revert - the G90 revert instruction is superseded by this
+    word, not overruled by the Lead.
+
+68. **RULE2-05-RED: THE ROUNDING RULE GOVERNS - QUANTITY ZERO** (owner: "The rounding rule -
+    quantity zero"). Two design sections disagreed: section 7 floors the calculation to zero while
+    section 11 and the 22.5 scenario binding declare requested quantity 1. The golden deliberately
+    withheld the value rather than guess (W167-D05). The owner rules section 7 controls.
+    Consequence: the sealed golden for that row currently carries the section-11 outcome and must
+    be re-derived by the tables family, followed by a Lead re-seal - this is a golden change and
+    only the tables family under this owner word may make it.
+
+69. **SECTION-16: THE UNCERTIFIABLE ITEM IS AN ACCEPTED RESIDUAL RISK** (owner: "Accept as a
+    documented known risk"). Whether the engine handles fees, funding and a same-bar stop/target
+    collision together cannot be certified by human code review by anyone, because no test covers
+    that case. It is STRUCK from the owner's code-correctness list and recorded openly as an
+    accepted residual risk; the owner signs the remainder honestly. The gap is written down, not
+    hidden, and the review document must say so in terms.
+
+70. **P0-31 MILESTONE 1 UNPARKED FOR REPAIR** (owner: "Yes - authorize the repair round"). Two
+    independent passes agree all three terminal HIGH findings are DOCUMENT defects, not design
+    defects - the design already contains the answers and the text fails to state them. This
+    authorises a bounded fold round on those three findings only. It does not authorise a fresh
+    design act, does not accept the milestone, and does not unblock the packages behind it, which
+    still require M1 to be accepted.
