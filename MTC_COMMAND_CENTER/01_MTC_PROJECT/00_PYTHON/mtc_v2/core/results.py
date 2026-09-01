@@ -475,11 +475,14 @@ def _decision_surface(
     return result
 
 
-def _fill_surface(rows: list[object]) -> list[dict[str, Any]]:
+def _fill_surface(
+    rows: list[object], *, kernel_semantics_version: str
+) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     for sequence, row in enumerate(rows):
         item: dict[str, Any] = {
             "sequence": sequence,
+            "kernel_semantics_version": kernel_semantics_version,
             "fill_id": getattr(row, "fill_id"),
             "event_class": getattr(row, "event_class"),
             "side": getattr(row, "side"),
@@ -510,11 +513,14 @@ def _fill_surface(rows: list[object]) -> list[dict[str, Any]]:
     return result
 
 
-def _cash_surface(rows: list[object]) -> list[dict[str, Any]]:
+def _cash_surface(
+    rows: list[object], *, kernel_semantics_version: str
+) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     for sequence, row in enumerate(rows):
         item: dict[str, Any] = {
             "sequence": sequence,
+            "kernel_semantics_version": kernel_semantics_version,
             "cash_event_id": getattr(row, "cash_event_id"),
             "kind": getattr(row, "kind").value,
             "signed_delta": _json_number(getattr(row, "signed_delta")),
@@ -529,7 +535,9 @@ def _cash_surface(rows: list[object]) -> list[dict[str, Any]]:
     return result
 
 
-def _fee_surface(rows: list[object]) -> list[dict[str, Any]]:
+def _fee_surface(
+    rows: list[object], *, kernel_semantics_version: str
+) -> list[dict[str, Any]]:
     numeric = {
         "rate",
         "fixed_component",
@@ -556,6 +564,7 @@ def _fee_surface(rows: list[object]) -> list[dict[str, Any]]:
     for sequence, row in enumerate(rows):
         item: dict[str, Any] = {
             "sequence": sequence,
+            "kernel_semantics_version": kernel_semantics_version,
             "event_timestamp": _timestamp(getattr(row, "event_timestamp")),
         }
         for name in fields:
@@ -565,7 +574,9 @@ def _fee_surface(rows: list[object]) -> list[dict[str, Any]]:
     return result
 
 
-def _funding_surface(rows: list[object]) -> list[dict[str, Any]]:
+def _funding_surface(
+    rows: list[object], *, kernel_semantics_version: str
+) -> list[dict[str, Any]]:
     numeric = {
         "open_qty",
         "contract_multiplier",
@@ -598,6 +609,7 @@ def _funding_surface(rows: list[object]) -> list[dict[str, Any]]:
     for sequence, row in enumerate(rows):
         item: dict[str, Any] = {
             "sequence": sequence,
+            "kernel_semantics_version": kernel_semantics_version,
             "event_timestamp": _timestamp(getattr(row, "event_timestamp")),
         }
         for name in fields:
@@ -608,7 +620,10 @@ def _funding_surface(rows: list[object]) -> list[dict[str, Any]]:
 
 
 def _exit_surface(
-    fills: list[object], cash_rows: Iterable[object]
+    fills: list[object],
+    cash_rows: Iterable[object],
+    *,
+    kernel_semantics_version: str,
 ) -> list[dict[str, Any]]:
     gross_by_fill = {
         getattr(row, "fill_id"): getattr(row, "signed_delta")
@@ -628,6 +643,7 @@ def _exit_surface(
         event_class = getattr(row, "event_class")
         item = {
             "sequence": len(result),
+            "kernel_semantics_version": kernel_semantics_version,
             "exit_id": getattr(row, "exit_id") or event_class,
             "reason": reason_by_class.get(event_class, event_class),
             "fill_id": fill_id,
@@ -783,11 +799,27 @@ def corrected_surfaces(
             decision_rows,
             kernel_semantics_version=manifest.kernel_semantics_version,
         ),
-        "fill_events": _fill_surface(fill_rows),
-        "cash_events": _cash_surface(cash_rows),
-        "fee_events": _fee_surface(fee_rows),
-        "funding_events": _funding_surface(funding_rows),
-        "exit_events": _exit_surface(fill_rows, cash_rows),
+        "fill_events": _fill_surface(
+            fill_rows,
+            kernel_semantics_version=manifest.kernel_semantics_version,
+        ),
+        "cash_events": _cash_surface(
+            cash_rows,
+            kernel_semantics_version=manifest.kernel_semantics_version,
+        ),
+        "fee_events": _fee_surface(
+            fee_rows,
+            kernel_semantics_version=manifest.kernel_semantics_version,
+        ),
+        "funding_events": _funding_surface(
+            funding_rows,
+            kernel_semantics_version=manifest.kernel_semantics_version,
+        ),
+        "exit_events": _exit_surface(
+            fill_rows,
+            cash_rows,
+            kernel_semantics_version=manifest.kernel_semantics_version,
+        ),
     }
 
     trades = _closed_lifecycle_trades(state)

@@ -197,6 +197,43 @@ def test_section_23_decision_trail_contains_each_evaluated_closed_reason(
     assert "event_timestamp" not in decisions[0]
 
 
+@pytest.mark.parametrize(
+    "scenario_id",
+    [
+        "RULE2-01-RED",
+        "RULE2-01-GREEN",
+        "RULE2-02-RED",
+        "RULE2-02-GREEN",
+        "RULE2-03-RED",
+        "RULE2-03-GREEN",
+        "RULE2-04-RED",
+        "RULE2-04-GREEN",
+        "RULE2-05-RED",
+        "RULE2-05-GREEN",
+        "RULE2-06-RED",
+        "RULE2-06-EQUAL-PRICE-RED",
+        "RULE2-06-GREEN",
+        "RULE2-07-RED",
+        "RULE2-07-GREEN",
+        "RULE2-08-RED",
+        "RULE2-08-GREEN",
+    ],
+)
+def test_section_23_every_emitted_event_carries_kernel_identity(
+    scenario_id: str,
+) -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+
+    event_surface = execute_corrected_scenario(MTC_V2_ROOT, row)["EVENT_SURFACE"]
+
+    assert all(
+        member["kernel_semantics_version"] == "2.0.0"
+        for events in event_surface.values()
+        for member in events
+    )
+
+
 def test_rule2_05_red_honors_explicit_quantity_after_slippage() -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == "RULE2-05-RED")
