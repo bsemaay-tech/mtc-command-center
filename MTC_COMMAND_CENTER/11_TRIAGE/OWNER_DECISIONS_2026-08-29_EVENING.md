@@ -451,3 +451,40 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     two-worker fixture stays in the wiring package and that package now honestly waits for
     the worker package); 55 and 56 reinforce each other (trust the ledger view, refuse
     whenever its shape cannot be verified). No contradiction found among the four.
+
+## Addendum 25 - 2026-09-01 ~13:00 (owner answers on B1 and the two P0-20 rows)
+
+58. **B1 - SEVEN DECISIONS CONFIRMED AS A BLOCK** (owner: "Confirm all seven as recommended").
+    Each of the seven follows a rule already ratified in the repository, and the brief quoted
+    the controlling text for every one: (1) the shared deployment-identity definitions belong
+    to the contracts package, not to a downstream consumer; (2) the three existing shapes are
+    accepted as shapes, with construction staying blocked until each has a named writer,
+    because a schema-only home is not an operational producer; (3) the eight missing facts are
+    dispositioned as four routed to obvious owners and four honestly acknowledged as having no
+    current single writer and therefore staying blocked - approving this is accepting that
+    split, not inventing four names; (4+5, merged) the preparer and the confirmer must be two
+    different parties or the independent check is one source in two files, with the admission
+    authority as the confirmation writer; (7) a broken package description gets its own refusal
+    label rather than borrowing the identity-mismatch label, which would be false while the
+    twelve identity inputs are unchanged; (8) the environment-impact declaration belongs to the
+    component's own schema per the canonical brief; (10) ship as a NEW contracts version
+    co-deployed with v0.1.0 under the already-ratified refuse-mismatch rule, with the exact
+    version number deliberately NOT chosen yet. Two loose ends remain open by design: which
+    existing research package owns final frozen-package assembly (a fact to be found, not
+    decided), and the version number, which the final change set fixes.
+
+59. **B1 #9 - NO SIGNATURE REQUIRED** (owner: "No - outside the threat model"). A compromised
+    ledger store, or a compromised operator of it, is ruled OUTSIDE the threat model the loader
+    must detect. The accepted trust boundary is therefore two separate writers plus append-only
+    history. Recorded consequence: the project may never later claim that the loader
+    independently verifies the ledger against a key or an external trust root. Reversing this
+    would require designing key ownership, issuance, rotation, revocation, verification and
+    failure handling - none of which exists in any document read.
+
+60. **[OPEN-P020-1] and [OPEN-P020-2] - DELIBERATELY HELD** (owner: "Hold - decide when P0-20
+    is actually built", both). How the P0-20 allocator requirements enter the single economics
+    seam (new seam version versus separately approved adapter), and whether P0-20 retains any
+    non-authoritative registry or index responsibility, both stay open rows. Recorded
+    distinction that matters: these are now OWNER-SEEN AND DEFERRED, not unnoticed gaps. The
+    reconciliation's existing wording already carries them honestly and no document change is
+    required; the P0-20 build inherits both as declared undecided boundaries.
