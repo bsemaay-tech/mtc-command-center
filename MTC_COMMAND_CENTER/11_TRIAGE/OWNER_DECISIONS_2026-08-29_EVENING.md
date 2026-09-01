@@ -385,3 +385,31 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     the four repaired rows AND zero new findings of the canonization class, or the residue
     parks again unrepaired for the owner. The two residuals G79 recorded as
     harmless/out-of-union are deliberately left untouched and named as such.
+
+## Addendum 23 - 2026-09-01 ~11:10 (owner verbatim: "Authorize now, run in parallel" / "Prepare a plain-language brief now")
+
+52. **P0-20 RECONCILIATION ROUND AUTHORIZED, PARALLEL.** Context: the three P0-20 documents
+    were authored before the fresh P0-12 design was sealed, so N107-F02 (the allocator vs
+    ExecutionEconomics seam) and N107-F03 (cost-registry byte-incompatibility, JCS/second-root
+    and pending-slippage mechanics) describe superseded mechanisms. W161 folded 12 of the 14
+    N107 findings and left exactly these two as DISPUTED-NEEDS-DECISION; W162 repaired the
+    three G74 fold-residuals; the final zero-pass was deferred to this round by budget
+    discipline. The owner's word authorizes one reconciliation round, running in parallel with
+    the P0-12 chain, binding EXACTLY those two disputes and their consequences across the
+    build design, the control-parity checklist, and the statistical battery definition. The
+    method is retain-and-tag, not delete-and-rewrite (the G74 over-fold lesson), every banner
+    re-pointed post-fold, and any passage whose reconciliation would require a mechanism the
+    P0-12 design does not state becomes an honest `[OPEN-P020-n] NEEDS OWNER DECISION` row
+    rather than an invented reconciliation. No repository byte, code, run or acceptance.
+
+53. **V2A-01 B1 PROPOSAL: OWNER BRIEF AUTHORIZED, NOT ADOPTION.** Probed, not recalled: the
+    proposal ends with TEN owner questions and states that until they are answered it is a
+    design proposal and not an adopted schema - so "adopt or reject" was not an available
+    shape. The owner's word authorizes one lane that converts those ten into a plain-language
+    decision brief (question in one sentence, why it is asked, two or three options with what
+    each makes impossible later, cost expressed only as revision rounds and re-opened
+    artifacts with NOT MEASURABLE where unmeasurable, a labeled recommendation, and an
+    explicit deferrable-or-blocking verdict per question). Question 3, which asks the owner to
+    name a record type and writer for eight inputs that have no current producer, must be
+    reshaped into a yes/no per input rather than an authoring task. The brief authorizes no
+    adoption, no draft edit, and no repository write.
