@@ -366,6 +366,40 @@ def test_section_23_result_top_level_conditionals_are_closed(
     assert set(result) == expected
 
 
+@pytest.mark.parametrize(
+    ("scenario_id", "expected_refusal"),
+    [
+        (
+            "RULE2-02-RED",
+            {
+                "code": "REFUSED_MIN_NOTIONAL",
+                "order_notional": 100,
+                "required_min_notional": 101,
+            },
+        ),
+        (
+            "RULE2-03-RED",
+            {
+                "code": "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION",
+                "field": "price_tick",
+                "record_value": 0.5,
+                "runtime_value": 0.25,
+                "stage": "PRE_EVALUATION",
+            },
+        ),
+    ],
+)
+def test_section_23_refusals_are_closed_tagged_objects(
+    scenario_id: str, expected_refusal: dict[str, object]
+) -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+
+    refusals = execute_corrected_scenario(MTC_V2_ROOT, row)["RESULT_SURFACE"]["refusals"]
+
+    assert refusals == [expected_refusal]
+
+
 def test_rule2_05_red_honors_explicit_quantity_after_slippage() -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == "RULE2-05-RED")

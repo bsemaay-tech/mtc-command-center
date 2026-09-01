@@ -532,6 +532,11 @@ def _refusal_surfaces(
     records: EconomicRecords,
     refusal: EconomicsRefusal | InstrumentRecordRefusal,
 ) -> dict[str, dict[str, Any]]:
+    if refusal.refusal_code != "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION":
+        raise GateRefusal(
+            "CORRECTED_REFUSAL_SCHEMA_UNDECLARED",
+            refusal.refusal_code,
+        )
     manifest = CorrectedRunManifest.from_records(
         records,
         execution_profile_id=str(config["execution_profile_id"]),
@@ -551,11 +556,10 @@ def _refusal_surfaces(
             "refusals": [
                 {
                     "code": refusal.refusal_code,
-                    "detail": getattr(
-                        refusal,
-                        "detail",
-                        str(refusal).partition(": ")[2],
-                    ),
+                    "field": "price_tick",
+                    "record_value": records.instrument.price_tick,
+                    "runtime_value": config["instrument_price_tick"],
+                    "stage": "PRE_EVALUATION",
                 }
             ],
             "run_manifest": manifest.to_dict(),
@@ -656,7 +660,10 @@ def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any
                 refusals=[
                     {
                         "code": exc.refusal_code,
-                        "detail": str(exc).partition(": ")[2],
+                        "field": "price_tick",
+                        "record_value": records.instrument.price_tick,
+                        "runtime_value": config["instrument_price_tick"],
+                        "stage": "PRE_EVALUATION",
                     }
                 ],
                 observation_start=_timestamp(

@@ -760,7 +760,7 @@ def _state_refusals(state: PortfolioState) -> list[dict[str, Any]]:
         details = dict(row.details)
         refusal: dict[str, Any] = {"code": row.refusal_code}
         if "order_notional" in details:
-            refusal["observed_notional"] = _detail_number(
+            refusal["order_notional"] = _detail_number(
                 details["order_notional"]
             )
         if "required_min_notional" in details:

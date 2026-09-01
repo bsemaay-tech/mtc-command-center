@@ -144,7 +144,7 @@ def test_corrected_min_notional_refusal_retains_nonblocked_result_facts() -> Non
     assert result["refusals"] == [
         {
             "code": "REFUSED_MIN_NOTIONAL",
-            "observed_notional": 100,
+            "order_notional": 100,
             "required_min_notional": 101,
         }
     ]
