@@ -475,7 +475,7 @@ def resolve_corrected_price_exits(
             ) or (
                 position.side == POSITION_SIDE_SHORT and bar.open >= candidate.price
             )
-            trigger = "GAP_OPEN" if gap else "INTRABAR_TOUCH"
+            trigger = "GAP_OPEN" if gap else "STOP_TOUCH"
             fraction = None
             reference_quantity = None
         else:

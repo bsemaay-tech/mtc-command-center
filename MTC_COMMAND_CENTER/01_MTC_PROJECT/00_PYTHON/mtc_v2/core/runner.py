@@ -73,7 +73,7 @@ from mtc_v2.core.gates import (
     evaluate_session_filter,
 )
 from mtc_v2.core.indicators import IndicatorSnapshot, SupertrendIndicatorSnapshot
-from mtc_v2.core.instrument import InstrumentMetadata
+from mtc_v2.core.instrument import InstrumentMetadata, InstrumentRecordRefusal
 from mtc_v2.core.ma import (
     HtfMovingAverageTracker,
     McGinleyTracker,
@@ -141,6 +141,7 @@ class Runner:
         self._corrected_selector_stop_override: float | None = None
         self._corrected_requested_quantity_override: float | None = None
         self._corrected_test_target_book: dict[str, tuple[str, float, float]] = {}
+        self._corrected_instrument_validation_field: str | None = None
         self._corrected_records: EconomicRecords | None = None
         self._corrected_instrument_bound = False
         if self._corrected_semantics:
@@ -295,7 +296,7 @@ class Runner:
         )
         self._prev_bar: Bar | None = None
         self.corrected_guard_snapshot: dict[str, object] = {
-            "guard_pnl_basis": "GROSS_MINUS_FEES",
+            "guard_pnl_basis": "GROSS-MINUS-FEES",
             "consecutive_loss_count": 0,
             "consec_loss_ok": True,
             "guard_blocked_raw": False,
@@ -374,6 +375,7 @@ class Runner:
         selector_stop_override: float | None = None,
         requested_quantity_override: float | None = None,
         target_book_overrides: Mapping[str, tuple[str, float, float]] | None = None,
+        instrument_validation_field: str | None = None,
     ) -> "Runner":
         """Create the non-production runner used by declared migration fixtures."""
 
@@ -387,6 +389,12 @@ class Runner:
         runner._corrected_selector_stop_override = selector_stop_override
         runner._corrected_requested_quantity_override = requested_quantity_override
         runner._corrected_test_target_book = dict(target_book_overrides or {})
+        if instrument_validation_field not in {None, "price_tick"}:
+            raise EconomicsRefusal(
+                REFUSED_ECONOMIC_INPUT,
+                f"unsupported instrument validation field {instrument_validation_field!r}",
+            )
+        runner._corrected_instrument_validation_field = instrument_validation_field
         return runner
 
     def _load_corrected_records(self) -> EconomicRecords:
@@ -448,10 +456,46 @@ class Runner:
                     decision="SEMANTICS_VALIDATED",
                 )
             )
-        self.instrument = self._corrected_records.instrument.for_evaluation(
-            evaluation_time,
-            self._corrected_records.runtime_instrument_config or {},
-        )
+        validation_field = self._corrected_instrument_validation_field
+        record_value = None
+        runtime_value = None
+        if validation_field == "price_tick":
+            record_value = self._corrected_records.instrument.price_tick
+            runtime_value = self._source_config.get("instrument_price_tick")
+        try:
+            self.instrument = self._corrected_records.instrument.for_evaluation(
+                evaluation_time,
+                self._corrected_records.runtime_instrument_config or {},
+            )
+        except InstrumentRecordRefusal as exc:
+            if validation_field is not None:
+                self.state.decision_events.append(
+                    DecisionEvent(
+                        sequence=len(self.state.decision_events),
+                        event_timestamp=evaluation_time,
+                        decision=exc.refusal_code,
+                        refusal_code=exc.refusal_code,
+                        details=(
+                            ("field", validation_field),
+                            ("record_value", record_value),
+                            ("runtime_value", runtime_value),
+                        ),
+                    )
+                )
+            raise
+        if validation_field is not None:
+            self.state.decision_events.append(
+                DecisionEvent(
+                    sequence=len(self.state.decision_events),
+                    event_timestamp=evaluation_time,
+                    decision="INSTRUMENT_RECORD_VALIDATED",
+                    details=(
+                        ("field", validation_field),
+                        ("record_value", record_value),
+                        ("runtime_value", runtime_value),
+                    ),
+                )
+            )
         self.state.instrument = self.instrument
         self.position_manager.contract_multiplier = self.instrument.contract_multiplier
         self.position_manager.qty_step = self.instrument.qty_step
@@ -1241,7 +1285,7 @@ class Runner:
                                          and consec_loss_ok and ec_ok and mae_ok)
                 if self._corrected_semantics:
                     self.corrected_guard_snapshot = {
-                        "guard_pnl_basis": "GROSS_MINUS_FEES",
+                        "guard_pnl_basis": "GROSS-MINUS-FEES",
                         "consecutive_loss_count": self._l16_consec_loss_count,
                         "consec_loss_ok": consec_loss_ok,
                         "guard_blocked_raw": guard_blocked_raw,

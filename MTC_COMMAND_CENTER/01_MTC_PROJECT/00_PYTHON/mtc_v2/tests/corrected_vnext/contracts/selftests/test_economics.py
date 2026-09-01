@@ -149,6 +149,29 @@ def test_equal_price_target_first_orders_by_exit_id_utf8_bytes() -> None:
     assert chosen == ["TARGET-FAR", "TARGET-NEAR"]
 
 
+def test_finite_corrected_exit_vocabulary_omits_unmapped_short_tokens() -> None:
+    state = _open_long_state()
+    state = EconomicState(
+        lifecycle_id=state.lifecycle_id,
+        position_side="SHORT",
+        quantity=state.quantity,
+        entry_fill_price=state.entry_fill_price,
+        sizing_equity=state.sizing_equity,
+        equity=state.equity,
+    )
+
+    transition = CorrectedEconomicsAdapter().resolve(
+        state,
+        _collision_intent("STOP_FIRST"),
+        _collision_market(),
+        _records("RULE2-06-RED"),
+    )
+
+    assert transition.fill_decisions
+    assert "HIGH_TOUCH" not in repr(transition.decision_events)
+    assert "SHORT_DESCENDING_TARGET_PRICE" not in repr(transition.decision_events)
+
+
 @pytest.mark.parametrize(
     ("policy", "code"),
     [
@@ -174,6 +197,8 @@ def test_slippage_is_adverse_tick_aligned_and_applied_once() -> None:
             position_side="LONG",
             reference_price=100.0,
             requested_quantity=1.0,
+            fallback_size_pct=10.0,
+            max_leverage_cap=10.0,
         ),
         MarketEvent(
             timestamp=datetime(2000, 1, 1, 0, 11, tzinfo=timezone.utc),

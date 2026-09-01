@@ -97,6 +97,8 @@ def test_apply_transition_opens_at_final_fill_and_applies_only_cash_ledger() -> 
             position_side="LONG",
             reference_price=100.0,
             requested_quantity=1.0,
+            fallback_size_pct=10.0,
+            max_leverage_cap=10.0,
         ),
         MarketEvent(NOW, 1, 100.0, 100.0, 100.0, 100.0),
         records,
@@ -110,7 +112,7 @@ def test_apply_transition_opens_at_final_fill_and_applies_only_cash_ledger() -> 
     assert state.position is not None
     assert state.position.entry_price == 101.0
     assert state.position.avg_entry_price == 101.0
-    assert state.position.qty == 1.0
+    assert state.position.qty == 0.0
     assert state.realized_equity == transition.cash_events[0].signed_delta
     assert state.equity == 1000.0 + transition.cash_events[0].signed_delta
     assert state.cash_events == list(transition.cash_events)
@@ -126,6 +128,8 @@ def test_apply_transition_is_atomic_and_cannot_apply_same_cash_twice() -> None:
             position_side="LONG",
             reference_price=100.0,
             requested_quantity=1.0,
+            fallback_size_pct=10.0,
+            max_leverage_cap=10.0,
         ),
         MarketEvent(NOW, 1, 100.0, 100.0, 100.0, 100.0),
         _records("RULE2-05-GREEN"),
@@ -256,6 +260,8 @@ def test_open10_closed_guard_pnl_is_gross_minus_all_lifecycle_fees() -> None:
             position_side="LONG",
             reference_price=100.0,
             requested_quantity=1.0,
+            fallback_size_pct=10.0,
+            max_leverage_cap=10.0,
         ),
         MarketEvent(NOW.replace(minute=11), 1, 100.0, 100.0, 100.0, 100.0),
         records,

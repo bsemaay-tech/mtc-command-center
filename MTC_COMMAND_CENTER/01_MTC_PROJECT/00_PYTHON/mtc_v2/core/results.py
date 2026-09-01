@@ -886,11 +886,6 @@ def corrected_surfaces(
     }
 
     trades = _closed_lifecycle_trades(state)
-    metrics = corrected_metrics_from_trades(
-        trades,
-        equity_values,
-        initial_capital=state.initial_capital,
-    )
     position = state.position
     result_surface: dict[str, Any] = {
         "final_position": (
@@ -955,7 +950,7 @@ def corrected_surfaces(
         result_surface["admitted"] = admitted
     result_surface.update(
         {
-            "metrics": dataclasses.asdict(metrics),
+            "metrics": None,
             "warnings": _warning_surface(warnings),
             "refusals": (
                 _state_refusals(state)

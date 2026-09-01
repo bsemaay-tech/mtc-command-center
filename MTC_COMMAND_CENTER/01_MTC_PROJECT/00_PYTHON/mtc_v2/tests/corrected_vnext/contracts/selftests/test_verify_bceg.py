@@ -383,8 +383,8 @@ def test_corrected_scenario_executes_real_seam_and_emits_six_containers() -> Non
         ("RULE2-03-GREEN", ["SEMANTICS_VALIDATED", "INSTRUMENT_RECORD_VALIDATED"]),
         ("RULE2-04-RED", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED"]),
         ("RULE2-04-GREEN", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED"]),
-        ("RULE2-05-RED", ["SEMANTICS_VALIDATED", "MIN_NOTIONAL_ADMITTED"]),
-        ("RULE2-05-GREEN", ["SEMANTICS_VALIDATED", "MIN_NOTIONAL_ADMITTED"]),
+        ("RULE2-05-RED", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
+        ("RULE2-05-GREEN", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
         ("RULE2-06-RED", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
         ("RULE2-06-EQUAL-PRICE-RED", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
         ("RULE2-06-GREEN", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
@@ -572,12 +572,13 @@ def test_section_23_result_top_level_conditionals_are_closed(
         expected.add("order_notional")
     if scenario_id == "RULE2-02-GREEN":
         expected.add("admitted")
-    if scenario_id.startswith("RULE2-07-") or scenario_id == "RULE2-08-RED":
+    if scenario_id.startswith("RULE2-07-"):
         expected.add("guards")
     if scenario_id.startswith("RULE2-08-"):
         expected.add("cumulative_funding")
 
     assert set(result) == expected
+    assert result["metrics"] is None
 
 
 @pytest.mark.parametrize(
@@ -619,7 +620,6 @@ def test_section_23_refusals_are_closed_tagged_objects(
     [
         ("RULE2-07-RED", True),
         ("RULE2-07-GREEN", False),
-        ("RULE2-08-RED", False),
     ],
 )
 def test_section_23_guard_projection_has_closed_members(
@@ -639,12 +639,12 @@ def test_section_23_guard_projection_has_closed_members(
         expected.add("last_closed_guard_pnl")
 
     assert set(guards) == expected
-    assert guards["guard_pnl_basis"] == "GROSS_MINUS_FEES"
+    assert guards["guard_pnl_basis"] == "GROSS-MINUS-FEES"
     assert type(guards["consec_loss_ok"]) is bool
     assert type(guards["guard_blocked_raw"]) is bool
 
 
-def test_rule2_05_red_honors_explicit_quantity_after_slippage() -> None:
+def test_rule2_05_red_sizes_from_final_fill_and_preserves_zero_economics() -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == "RULE2-05-RED")
 
@@ -653,12 +653,29 @@ def test_rule2_05_red_honors_explicit_quantity_after_slippage() -> None:
     assert [
         (member["final_fill_price"], member["quantity"])
         for member in observed["EVENT_SURFACE"]["fill_events"]
-    ] == [(101, 1)]
+    ] == [(101, 0)]
     assert [
         (member["kind"], member["signed_delta"])
         for member in observed["EVENT_SURFACE"]["cash_events"]
-    ] == [("FEE", -0.04545)]
-    assert observed["EVENT_SURFACE"]["fee_events"][0]["fee_cash_delta"] == -0.04545
+    ] == [("FEE", 0)]
+    assert type(observed["EVENT_SURFACE"]["cash_events"][0]["signed_delta"]) is int
+    assert observed["EVENT_SURFACE"]["fee_events"][0]["fee_cash_delta"] == 0
+    assert observed["RESULT_SURFACE"]["final_position"] == {
+        "side": "LONG",
+        "quantity": 0,
+        "entry_fill_price": 101,
+    }
+    assert observed["RESULT_SURFACE"]["order_notional"] == 0
+
+
+def test_rule2_06_green_uses_the_closed_stop_touch_token() -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-06-GREEN")
+
+    observed = execute_corrected_scenario(MTC_V2_ROOT, row)
+
+    assert observed["EVENT_SURFACE"]["fill_events"][0]["fill_trigger"] == "STOP_TOUCH"
+    assert observed["EVENT_SURFACE"]["exit_events"][0]["fill_trigger"] == "STOP_TOUCH"
 
 
 @pytest.mark.parametrize(

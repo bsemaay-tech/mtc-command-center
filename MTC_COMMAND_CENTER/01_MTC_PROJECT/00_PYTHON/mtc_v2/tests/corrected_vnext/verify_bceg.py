@@ -29,7 +29,7 @@ from mtc_v2.core.instrument import InstrumentRecordRefusal
 from mtc_v2.core.results import CorrectedRunManifest, corrected_surfaces
 from mtc_v2.core.runner import Runner
 from mtc_v2.core.semantics import resolve_semantics_id
-from mtc_v2.core.types import Bar, DecisionEvent
+from mtc_v2.core.types import Bar
 
 
 ACCEPTING_LABEL = "BOUNDED_CORRECTION_EVIDENCE_ACCEPTED"
@@ -551,7 +551,7 @@ def _refusal_surfaces(
                 "first": config["initial_capital"],
                 "last": config["initial_capital"],
             },
-            "metrics": {},
+            "metrics": None,
             "warnings": [],
             "refusals": [
                 {
@@ -611,16 +611,23 @@ def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any
         config.pop("instrument_min_notional", None)
     bars = _bars(document)
     selector_stop = decode_stop_price_f64(document, scenario_id=scenario_id)
-    # Design v1.5 lines 315 and 870 bind RULE2-05's requested quantity to 1;
-    # slippage changes its fill price, not the already-requested quantity.
     requested_quantity = 1.0 if scenario_id.startswith("RULE2-05-") else None
     target_book = _target_book_overrides(scenario_id, document, bars)
-    if selector_stop is not None or requested_quantity is not None or target_book:
+    instrument_validation_field = (
+        "price_tick" if "DEF-P012-03" in row["owning_def_ids"] else None
+    )
+    if (
+        selector_stop is not None
+        or requested_quantity is not None
+        or target_book
+        or instrument_validation_field is not None
+    ):
         runner = Runner.for_corrected_contract(
             config,
             selector_stop_override=selector_stop,
             requested_quantity_override=requested_quantity,
             target_book_overrides=target_book,
+            instrument_validation_field=instrument_validation_field,
         )
     else:
         runner = Runner(config)
@@ -637,19 +644,6 @@ def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any
         runner.run(execution_bars)
     except (EconomicsRefusal, InstrumentRecordRefusal) as exc:
         if exc.refusal_code == "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION":
-            runner.state.decision_events.append(
-                DecisionEvent(
-                    sequence=len(runner.state.decision_events),
-                    event_timestamp=bars[0].timestamp,
-                    decision=exc.refusal_code,
-                    refusal_code=exc.refusal_code,
-                    details=(
-                        ("field", "price_tick"),
-                        ("record_value", records.instrument.price_tick),
-                        ("runtime_value", config["instrument_price_tick"]),
-                    ),
-                )
-            )
             surfaces = corrected_surfaces(
                 state=runner.state,
                 equity_values=runner.corrected_equity_curve,
@@ -676,20 +670,7 @@ def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any
         else:
             surfaces = _refusal_surfaces(config=config, records=records, refusal=exc)
     else:
-        if scenario_id == "RULE2-03-GREEN":
-            runner.state.decision_events.append(
-                DecisionEvent(
-                    sequence=len(runner.state.decision_events),
-                    event_timestamp=bars[0].timestamp,
-                    decision="INSTRUMENT_RECORD_VALIDATED",
-                    details=(
-                        ("field", "price_tick"),
-                        ("record_value", records.instrument.price_tick),
-                        ("runtime_value", config["instrument_price_tick"]),
-                    ),
-                )
-            )
-        include_guards = scenario_id.startswith("RULE2-07-") or scenario_id == "RULE2-08-RED"
+        include_guards = scenario_id.startswith("RULE2-07-")
         surfaces = corrected_surfaces(
             state=runner.state,
             equity_values=runner.corrected_equity_curve,

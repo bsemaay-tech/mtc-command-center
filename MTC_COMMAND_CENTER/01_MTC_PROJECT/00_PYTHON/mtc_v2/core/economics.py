@@ -307,7 +307,7 @@ def _fee_rows(
         raise EconomicsRefusal(REFUSED_ECONOMIC_INPUT, "fee rounding rule is not executable")
     notional = abs(fill_price * quantity * contract_multiplier)
     amount = max(notional * rate + fixed, minimum)
-    signed = -amount
+    signed = 0.0 if amount == 0.0 else -amount
     cash_event_id = f"CE-FEE-{fee_sequence}"
     cash = CashEvent(
         sequence=cash_sequence,
@@ -630,45 +630,37 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             cost=records.cost,
         )
         resolved_stop = _entry_stop(intent, final_fill, instrument)
-        candidate_quantity = (
-            float(intent.requested_quantity)
-            if intent.requested_quantity is not None
-            else _size_quantity(
-                corrected=True,
-                entry=final_fill,
-                stop=resolved_stop,
-                equity=state.sizing_equity,
-                risk_pct=intent.risk_pct,
-                fallback_size_pct=intent.fallback_size_pct,
-                max_leverage_cap=intent.max_leverage_cap,
-                instrument=replace(instrument, min_notional=0.0),
-            )
+        candidate_quantity = _size_quantity(
+            corrected=True,
+            entry=final_fill,
+            stop=resolved_stop,
+            equity=state.sizing_equity,
+            risk_pct=intent.risk_pct,
+            fallback_size_pct=intent.fallback_size_pct,
+            max_leverage_cap=intent.max_leverage_cap,
+            instrument=replace(instrument, min_notional=0.0),
         )
         order_notional = (
             candidate_quantity * final_fill * instrument.contract_multiplier
         )
-        refused_min_notional = (
-            candidate_quantity > 0.0
-            and order_notional < instrument.min_notional
-        )
+        refused_min_notional = order_notional < instrument.min_notional
         quantity = 0.0 if refused_min_notional else candidate_quantity
         selector = "FALLBACK" if resolved_stop is None or not math.isfinite(resolved_stop) else "RISK"
         decisions = list(prefix)
         next_sequence = state.next_decision_sequence + len(decisions)
-        if intent.requested_quantity is None:
-            decisions.append(
-                DecisionEvent(
-                    sequence=next_sequence,
-                    event_timestamp=market.timestamp,
-                    decision="SIZING_COMPUTED",
-                    details=_details(
-                        selector=selector,
-                        contract_multiplier=instrument.contract_multiplier,
-                        order_notional=order_notional,
-                    ),
-                )
+        decisions.append(
+            DecisionEvent(
+                sequence=next_sequence,
+                event_timestamp=market.timestamp,
+                decision="SIZING_COMPUTED",
+                details=_details(
+                    selector=selector,
+                    contract_multiplier=instrument.contract_multiplier,
+                    order_notional=order_notional,
+                ),
             )
-            next_sequence += 1
+        )
+        next_sequence += 1
         decisions.append(
             DecisionEvent(
                 sequence=next_sequence,
@@ -687,7 +679,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 ),
             )
         )
-        if quantity <= 0.0:
+        if refused_min_notional:
             return _empty_transition(
                 semantics_id=self.semantics_id,
                 state=state,
@@ -791,9 +783,13 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             chosen = [(stops[0][0], stops[0][1], state.quantity)]
         else:
             if state.position_side == "LONG":
-                targets.sort(key=lambda item: (item[0].price, item[0].exit_id.encode("utf-8")))
+                targets.sort(
+                    key=lambda item: (item[0].price, item[0].exit_id.encode("utf-8"))
+                )
             else:
-                targets.sort(key=lambda item: (-item[0].price, item[0].exit_id.encode("utf-8")))
+                targets.sort(
+                    key=lambda item: (-item[0].price, item[0].exit_id.encode("utf-8"))
+                )
             chosen: list[tuple[ExitCandidate, float, float]] = []
             remainder = state.quantity
             for candidate, reference in targets:
@@ -807,21 +803,13 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 chosen = [(stops[0][0], stops[0][1], state.quantity)]
         decisions = list(prefix)
         next_sequence = state.next_decision_sequence + len(decisions)
-        if stop_candidate is not None:
-            if state.position_side == "LONG" and market.open <= stop_candidate.price:
+        if stop_candidate is not None and state.position_side == "LONG":
+            if market.open <= stop_candidate.price:
                 predicate = "OPEN_BEYOND_STOP"
                 reference_source = "BAR_OPEN"
                 reference_price = market.open
-            elif state.position_side == "SHORT" and market.open >= stop_candidate.price:
-                predicate = "OPEN_BEYOND_STOP"
-                reference_source = "BAR_OPEN"
-                reference_price = market.open
-            elif state.position_side == "LONG" and market.low <= stop_candidate.price:
+            elif market.low <= stop_candidate.price:
                 predicate = "LOW_TOUCH"
-                reference_source = "STOP_LEVEL"
-                reference_price = stop_candidate.price
-            elif state.position_side == "SHORT" and market.high >= stop_candidate.price:
-                predicate = "HIGH_TOUCH"
                 reference_source = "STOP_LEVEL"
                 reference_price = stop_candidate.price
             else:
@@ -862,7 +850,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 records=records,
                 decisions=tuple(decisions),
             )
-        if any(
+        if state.position_side == "LONG" and any(
             candidate.kind is IntentKind.TARGET
             for candidate in intent.exit_candidates
         ):
@@ -881,11 +869,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 ),
             }
             if targets:
-                collision_details["target_ordering_rule"] = (
-                    "LONG_ASCENDING_TARGET_PRICE"
-                    if state.position_side == "LONG"
-                    else "SHORT_DESCENDING_TARGET_PRICE"
-                ) + (
+                collision_details["target_ordering_rule"] = "LONG_ASCENDING_TARGET_PRICE" + (
                     "_THEN_EXIT_ID_UTF8_BYTE_ORDER" if equal_price_tie else ""
                 )
             if equal_price_tie:

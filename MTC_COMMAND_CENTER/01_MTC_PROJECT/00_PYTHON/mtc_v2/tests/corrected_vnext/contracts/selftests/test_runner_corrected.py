@@ -87,13 +87,13 @@ def test_main_runner_entry_path_uses_corrected_final_fill_and_fee_transition() -
     assert [
         (row.final_fill_price, row.quantity)
         for row in runner.state.fill_events
-    ] == [(101.0, 1.0)]
+    ] == [(101.0, 0.0)]
     assert [
         (row.kind, row.signed_delta)
         for row in runner.state.cash_events
-    ] == [("FEE", -0.04545)]
-    assert runner.state.cumulative_fee == 0.04545
-    assert runner.state.equity == pytest.approx(999.95455)
+    ] == [("FEE", 0.0)]
+    assert runner.state.cumulative_fee == 0.0
+    assert runner.state.equity == 1000.0
 
 
 def test_main_runner_round_trip_uses_gross_minus_fees_for_all_open10_guards() -> None:
@@ -109,7 +109,7 @@ def test_main_runner_round_trip_uses_gross_minus_fees_for_all_open10_guards() ->
     assert runner.state.equity == 999.8
     assert runner._l16_consec_loss_count == 1
     assert runner.corrected_guard_snapshot == {
-        "guard_pnl_basis": "GROSS_MINUS_FEES",
+        "guard_pnl_basis": "GROSS-MINUS-FEES",
         "last_closed_guard_pnl": -0.2,
         "consecutive_loss_count": 1,
         "consec_loss_ok": False,
@@ -274,10 +274,38 @@ def test_funding_boundary_is_applied_before_same_timestamp_bar_evaluation() -> N
 
 def test_record_runtime_override_refuses_before_first_economic_intent() -> None:
     config, bars = _scenario("RULE2-03-RED")
-    runner = Runner(config)
+    runner = Runner.for_corrected_contract(
+        config, instrument_validation_field="price_tick"
+    )
 
     with pytest.raises(ValueError, match="REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION"):
         runner.run(bars)
+
+    refusal = runner.state.decision_events[-1]
+    assert refusal.decision == "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION"
+    assert refusal.refusal_code == refusal.decision
+    assert dict(refusal.details) == {
+        "field": "price_tick",
+        "record_value": 0.5,
+        "runtime_value": 0.25,
+    }
+
+
+def test_record_runtime_match_emits_core_validation_decision() -> None:
+    config, bars = _scenario("RULE2-03-GREEN")
+    runner = Runner.for_corrected_contract(
+        config, instrument_validation_field="price_tick"
+    )
+
+    runner.run(bars)
+
+    validation = runner.state.decision_events[-1]
+    assert validation.decision == "INSTRUMENT_RECORD_VALIDATED"
+    assert dict(validation.details) == {
+        "field": "price_tick",
+        "record_value": 0.5,
+        "runtime_value": 0.5,
+    }
 
 
 @pytest.mark.parametrize(

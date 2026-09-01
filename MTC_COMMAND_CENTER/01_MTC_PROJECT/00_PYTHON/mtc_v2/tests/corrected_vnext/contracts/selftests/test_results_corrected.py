@@ -5,8 +5,6 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-import pytest
-
 from mtc_v2.core.economics import EconomicRecords
 from mtc_v2.core.results import (
     CorrectedRunManifest,
@@ -86,6 +84,24 @@ def test_corrected_result_is_version_shaped_and_net_cash_based() -> None:
     for rows in event.values():
         assert [row["sequence"] for row in rows] == list(range(len(rows)))
     assert len(event["fee_events"]) == 2
+    assert set(event["fee_events"][0]) == {
+        "sequence",
+        "kernel_semantics_version",
+        "event_timestamp",
+        "lifecycle_id",
+        "fill_id",
+        "event_class",
+        "liquidity_role",
+        "schedule_id",
+        "schedule_digest",
+        "rate",
+        "fixed_component",
+        "fee_notional",
+        "fee_amount",
+        "fee_cash_delta",
+        "settlement_currency",
+        "cash_event_id",
+    }
     cash_by_id = {row["cash_event_id"]: row for row in event["cash_events"]}
     for fee in event["fee_events"]:
         assert fee["fee_cash_delta"] == cash_by_id[fee["cash_event_id"]]["signed_delta"]
@@ -104,10 +120,21 @@ def test_corrected_result_is_version_shaped_and_net_cash_based() -> None:
         }
     ]
     assert result["equity_curve"] == {"first": 1000.0, "last": 999.8}
-    assert result["metrics"]["net_profit"] == pytest.approx(-0.2)
-    assert result["metrics"]["gross_loss"] == 0.2
+    assert result["metrics"] is None
     assert result["run_manifest"]["kernel_semantics_version"] == "2.0.0"
     assert result["run_manifest"]["instrument_record_digest"] == records.instrument.digest
+    assert set(result["run_manifest"]) == {
+        "kernel_semantics_version",
+        "execution_profile_id",
+        "instrument_record_id",
+        "instrument_record_digest",
+        "instrument_source_document_digest",
+        "instrument_effective_interval",
+        "cost_schedule_id",
+        "cost_schedule_digest",
+        "funding_schedule_id",
+        "funding_schedule_digest",
+    }
 
 
 def test_corrected_manifest_marks_an_unconsumed_cost_schedule_without_padding_digest() -> None:
