@@ -1335,12 +1335,23 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
     corpus = validate_catalog(root, baseline_root)
     event_order_map, event_order_digest = compute_legacy_event_order_map(corpus)
     scenarios: list[dict[str, Any]] = []
+    corrected_blockers: list[dict[str, Any]] = []
     for row in corpus.catalog:
         if row["role"] not in {"RED", "GREEN"}:
             continue
         scenario_id = row["scenario_id"]
         input_document = load_json_exact(root / row["input"]["path"])
-        corrected = load_json_exact(root / row["expected_artifacts"]["2.0.0"]["path"])
+        golden = load_json_exact(root / row["expected_artifacts"]["2.0.0"]["path"])
+        corrected = execute_corrected_scenario(root, row)
+        corrected_difference = compare_scoped_expected(golden, corrected)
+        if corrected_difference is not None:
+            corrected_blockers.append(
+                {
+                    "check_id": "CORRECTED_EXPECTATION_MISMATCH",
+                    "scenario_id": scenario_id,
+                    "pointer": corrected_difference[0],
+                }
+            )
         legacy_result = load_json_exact(baseline_root / "out" / scenario_id / "result_surface.json")
         projections = build_projection_results(scenario_id, input_document, legacy_result, corrected)
         if row["role"] == "RED":
@@ -1360,6 +1371,12 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
             "role": row["role"],
             "status": status,
             "first_changed_node": first,
+            "corrected_expectation": (
+                "MATCH" if corrected_difference is None else "STOP_MISMATCH"
+            ),
+            "first_corrected_mismatch": (
+                None if corrected_difference is None else corrected_difference[0]
+            ),
             "projections": projections,
         })
     return {
@@ -1370,6 +1387,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
         "acceptance_blockers": [
             {"check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISSING", "detail": "no seal-pinned map/digest exists in the supplied bundle"},
             *corpus.blockers,
+            *corrected_blockers,
         ],
         "scenarios": scenarios,
     }

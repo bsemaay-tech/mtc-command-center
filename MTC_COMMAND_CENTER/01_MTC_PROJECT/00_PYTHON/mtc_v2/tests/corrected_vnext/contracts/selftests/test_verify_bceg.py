@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
 
+from mtc_v2.tests.corrected_vnext import verify_bceg
 from mtc_v2.tests.corrected_vnext.verify_bceg import (
     GateRefusal,
     build_projection_results,
@@ -63,6 +65,91 @@ def test_corrected_expectation_compares_only_the_two_design_surfaces() -> None:
     difference = compare_scoped_expected(expected, observed)
     assert difference is not None
     assert difference[0] == "/RESULT_SURFACE/value"
+
+
+def test_comparison_pipeline_measures_executed_output_once_per_row(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    scenario_id = "RULE2-05-RED"
+    root = tmp_path / "root"
+    baseline_root = tmp_path / "baseline"
+    input_path = root / "inputs" / f"{scenario_id}.json"
+    golden_path = root / "golden" / f"{scenario_id}.json"
+    baseline_path = baseline_root / "out" / scenario_id / "result_surface.json"
+    for path in (input_path, golden_path, baseline_path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+    golden = {
+        "EVENT_SURFACE": {
+            "fill_events": [
+                {
+                    "reference_price": 100,
+                    "slippage_impact": 1,
+                    "final_fill_price": 101,
+                    "slippage_application_count": 1,
+                }
+            ]
+        },
+        "RESULT_SURFACE": {"final_position": {"quantity": 1}},
+    }
+    input_path.write_bytes(verify_bceg.canonical_json_bytes({}))
+    golden_path.write_bytes(verify_bceg.canonical_json_bytes(golden))
+    baseline_path.write_bytes(
+        verify_bceg.canonical_json_bytes(
+            {"events": [{"price": 100}], "position": {}}
+        )
+    )
+    row = {
+        "scenario_id": scenario_id,
+        "role": "RED",
+        "input": {"path": input_path.relative_to(root).as_posix()},
+        "expected_artifacts": {
+            "2.0.0": {"path": golden_path.relative_to(root).as_posix()}
+        },
+    }
+    corpus = verify_bceg.Corpus(
+        root=root,
+        baseline_root=baseline_root,
+        catalog=[row],
+        blockers=(),
+        identities={},
+    )
+    monkeypatch.setattr(
+        verify_bceg, "validate_catalog", lambda _root, _baseline_root: corpus
+    )
+    monkeypatch.setattr(
+        verify_bceg,
+        "compute_legacy_event_order_map",
+        lambda _corpus: ({}, "0" * 64),
+    )
+    executed: list[str] = []
+
+    def execute_modified_copy(
+        _root: Path, candidate: dict[str, object]
+    ) -> dict[str, object]:
+        executed.append(str(candidate["scenario_id"]))
+        observed = deepcopy(golden)
+        observed["RESULT_SURFACE"]["final_position"]["quantity"] = 2
+        return observed
+
+    monkeypatch.setattr(
+        verify_bceg, "execute_corrected_scenario", execute_modified_copy
+    )
+
+    receipt = verify_bceg.run_comparison_pipeline(root, baseline_root)
+
+    assert executed == [scenario_id]
+    assert receipt["scenarios"][0]["corrected_expectation"] == "STOP_MISMATCH"
+    assert (
+        receipt["scenarios"][0]["first_corrected_mismatch"]
+        == "/RESULT_SURFACE/final_position/quantity"
+    )
+    assert any(
+        blocker.get("check_id") == "CORRECTED_EXPECTATION_MISMATCH"
+        and blocker.get("scenario_id") == scenario_id
+        and blocker.get("pointer") == "/RESULT_SURFACE/final_position/quantity"
+        for blocker in receipt["acceptance_blockers"]
+    )
 
 
 @pytest.mark.parametrize(
