@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-08-31T22:45:00+03:00",
+  "generated": "2026-09-01T03:25:00+03:00",
   "updated_by": "claude-fable-lead-session-2026-08-31-evening (generated = time of THIS push)",
   "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a-Q5a answered (recommended defaults; addendum 14). OPEN-01..10: owner gave all ten initial dispositions (addendum 15) - rows 02/08/09/10/04 decision-complete; rows 01/03/05/06/07 are decision-NAMED with evidence packages prepared, each CLOSES only on the owner's later approval of its package. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: maximize subscription usage; stop 17:00. Still owed by owner: 'approved' on the path list, a/b/c on the design residual, OPEN-06 row dispositions, evidence-package approvals. AFTERNOON (addendum 16, verbatim 'all approved, fees a, design a, retain all.'): ALL TEN OPEN rows CLOSED (bundle approvals incl. fees option-a stop-market); T0 BUILD-PATH GRANT GIVEN on Gate-2 plan v2 + Lead Gate-2 acceptance; design micro-fold authorized and EXECUTED -> v1.4 SEALED (terminal pass G55 zero + GM24 zero); OPEN-06 retain-all recorded with fixture obligations. LATE AFTERNOON: addendum 17 (same-timestamp funding = INCLUDE) + addendum 18 (D-12: keep the two TARGET_FIRST test cases as designed; STOP_FIRST stays the production rule). Session extended past 17:00 by owner word to finish the baseline seal + close-out.",
   "session_time_report": {
@@ -128,12 +128,12 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "BASELINE_RUN_PASS_KERNEL_PHASE_A_RUNNING",
+      "state": "KERNEL_BUILT_14_COMMITS_OWNER_GATE_MORNING",
       "branch": "feature/wp-p0-12-corrected-vnext-20260831",
-      "commit": "108ea066 (base; zero build commits yet)",
-      "detail": "THE ONE owner-authorized baseline run (Q4a) COMPLETED PASS: W153 ran 17/17 RED/GREEN scenarios, 0 blocked, accepting=true, after independently re-measuring all eight step-0 preconditions. BASELINE_BYTES_MANIFEST.json sealed (driver b7648f71, catalog 32ae4f71, bundle seal 02b47a8e, kernel tree c7f4aa1b at base 108ea066). Budget spent successfully on attempt 4 - the three prior honest refusals protected it. All five design section-21 preconditions CLOSED. Kernel build phase A (W154B, codex) NOW RUNNING in C:\\WP012BUILD: sealed-bundle placement, semantics/types, immutable records, BCEG gate reader + RED-pre-fix evidence - the first kernel-chain commits of P0-12.",
-      "owner_gate": false,
-      "next_action": "W154B lands -> Lead inspects diffs vs anchor manifest -> phases B (seam + module rewires) and C (observed artifacts + probes + receipt) -> 4-family T0 audits -> PR -> serial merge. Morning owner queue: sec-16 human review at acceptance; cross-V2A [OPEN-XV] decisions; P0-20 reconciliation round; V2A-01 B1 manifest proposal."
+      "commit": "fc2874d0 (branch head, 14 commits above base 108ea066; NOT pushed)",
+      "detail": "OVERNIGHT: kernel phases A+B+C built (semantics, types, records, ExecutionEconomics seam, sizer/exits/position_manager/runner/results rewires, KERNEL_2 execution in the gate, 34 observed files) + G76 adjudicated fixes. 293/293 tests; LEGACY REPRODUCTION EXACT (17/17 scenarios, 34/34 surfaces) after every phase; repo guard PASS throughout; nothing pushed. The corrected-vs-golden gate STOPPED honestly on known design-gap classes (decision_events vocabulary, equity-window rule, unfixed member sets, one golden over-reach) - independently adjudicated by a third family (G76, 12 classes); all kernel-side fixables already fixed (W165). Baseline run Q4a: SPENT SUCCESSFULLY (W153 PASS 17/17, BASELINE_BYTES sealed).",
+      "owner_gate": true,
+      "next_action": "OWNER MORNING WORDS: (1) ONE bounded design amendment (D-11 vocabulary + V15-D02 equity window + D-13 member sets) + golden re-derivation + Lead re-seal authorization; (2) sec-16 human review; (3) [OPEN-XV] x4 cross-V2A; (4) P0-20 reconciliation round; (5) V2A-01 B1 proposal. Then: tables re-derivation -> re-seal -> probes -> terminal receipt -> 4-family T0 audits -> PR -> serial merge."
     },
     {
       "id": "WP-P0-20",
