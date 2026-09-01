@@ -523,3 +523,33 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
 63. **PR #146 MERGED** - the addendum 24 [OPEN-XV-12] plan amendment is now on `master`. The
     repo guard blocked the first branch as stale and was not overridden; a fresh branch off
     `master` was used instead and passed.
+
+## Addendum 27 - 2026-09-01 ~17:55 (owner verbatim: "Treat as leftover - authorize one targeted fix")
+
+64. **G84-F01 - ONE TARGETED FIX AUTHORIZED.** Context: G84 verified the W171 one-fold and
+    returned the P0-20 checklist (v1.8) and battery (v1.5) CONVERGED, with the build design
+    (v1.4) NOT CONVERGED on a single remaining HIGH. The untagged section-5.1 R-2
+    acceptance-evidence row still keys evidence on registry membership and ends "Unregistered
+    cost model -> BLOCKED evidence, not a number", which reads as a second record-identity gate
+    that P0-12 v1.8 supersedes (record identity is the exact file bytes with a detached digest).
+    W171 had tagged the sites G82 named but not the neighbouring table. Under W171's pre-written
+    stopping rule the round PARKED rather than folding a third time. The owner ruled it a
+    leftover and authorized ONE targeted repair: retain the wording verbatim, tag it superseded
+    in the same form used on the neighbouring sites, and state the controlling P0-12 rule beside
+    it. Explicitly not authorized: any second sweep, any other passage, and any closure of
+    `[OPEN-P020-1]` or `[OPEN-P020-2]`, which remain owner-held per addendum 25.
+
+65. **PER-LANE HOURS RECORDING ADOPTED** (owner: "start recording per-lane hours"). Attribution
+    is declared at dispatch in a lane registry; timing is measured from each lane's own
+    artifacts; a running lane reports a blank duration rather than an estimate. Today's backfill
+    from real timestamps: 13 completed lanes, 175.4 lane-minutes (2.92 lane-hours), attributed
+    WP-P0-12 60.5, WP-P0-20 60.0, cross-V2A 31.1, WP-V2A-01 23.8. The standing rule is
+    unchanged and now enforced in the tool itself: where nothing was measured the dashboard
+    keeps printing NOT RECORDED, and that is never to be "fixed" by supplying a number.
+
+66. **LANE PARALLELISM RAISED ON OWNER WORD** (owner: "can you increase the number of parallel
+    lanes now?"). Raised from 2 to 5 with work genuinely off the serial kernel chain: the
+    owner-authorized XV-05 shared-headroom design act, the section-16 human review aid that
+    makes the owner's own un-delegable review performable, the B1 proposal fold, and this
+    targeted P0-20 repair. Honest limit recorded: the kernel work is a chain (design seals ->
+    answers derive -> re-seal -> code runs), so lanes added to it do not shorten it.
