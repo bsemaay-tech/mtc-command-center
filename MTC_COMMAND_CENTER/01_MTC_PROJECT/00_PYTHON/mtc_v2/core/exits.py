@@ -397,6 +397,7 @@ def resolve_corrected_price_exits(
     records: EconomicRecords,
     same_bar_collision_policy_id: str = "STOP_FIRST",
     allow_test_policy: bool = False,
+    next_decision_sequence: int = 0,
 ) -> EconomicTransition:
     """Resolve the complete corrected stop/target candidate set atomically.
 
@@ -439,6 +440,7 @@ def resolve_corrected_price_exits(
         position_side=position.side.upper(),
         quantity=position.qty,
         entry_fill_price=position.avg_entry_price,
+        next_decision_sequence=next_decision_sequence,
     )
     transition = CorrectedEconomicsAdapter().resolve(
         state,
@@ -460,12 +462,12 @@ def resolve_corrected_price_exits(
 
     if not transition.fill_decisions:
         return transition
-    decision_details = dict(transition.decision_events[-1].details)
-    chosen_ids = decision_details.get("ordered_chosen_exit_ids", "").split(",")
+    chosen_ids = [fill.exit_id for fill in transition.fill_decisions]
     candidate_by_id = {candidate.exit_id: candidate for candidate in candidates}
     annotated = []
     for index, fill in enumerate(transition.fill_decisions):
         exit_id = chosen_ids[index]
+        assert exit_id is not None
         candidate = candidate_by_id[exit_id]
         if candidate.kind is IntentKind.PROTECTIVE_STOP:
             gap = (

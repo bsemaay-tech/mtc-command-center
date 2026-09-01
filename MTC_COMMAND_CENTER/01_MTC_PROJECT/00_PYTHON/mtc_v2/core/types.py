@@ -36,7 +36,7 @@ class DecisionEvent:
     decision: str
     lifecycle_id: LifecycleId | None = None
     refusal_code: str | None = None
-    details: tuple[tuple[str, str], ...] = ()
+    details: tuple[tuple[str, object], ...] = ()
 
 
 @dataclass(slots=True, frozen=True)

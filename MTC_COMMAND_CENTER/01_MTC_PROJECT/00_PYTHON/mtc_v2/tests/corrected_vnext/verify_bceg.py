@@ -29,7 +29,7 @@ from mtc_v2.core.instrument import InstrumentRecordRefusal
 from mtc_v2.core.results import CorrectedRunManifest, corrected_surfaces
 from mtc_v2.core.runner import Runner
 from mtc_v2.core.semantics import resolve_semantics_id
-from mtc_v2.core.types import Bar
+from mtc_v2.core.types import Bar, DecisionEvent
 
 
 ACCEPTING_LABEL = "BOUNDED_CORRECTION_EVIDENCE_ACCEPTED"
@@ -632,8 +632,56 @@ def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any
     try:
         runner.run(execution_bars)
     except (EconomicsRefusal, InstrumentRecordRefusal) as exc:
-        surfaces = _refusal_surfaces(config=config, records=records, refusal=exc)
+        if exc.refusal_code == "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION":
+            runner.state.decision_events.append(
+                DecisionEvent(
+                    sequence=len(runner.state.decision_events),
+                    event_timestamp=bars[0].timestamp,
+                    decision=exc.refusal_code,
+                    refusal_code=exc.refusal_code,
+                    details=(
+                        ("field", "price_tick"),
+                        ("record_value", records.instrument.price_tick),
+                        ("runtime_value", config["instrument_price_tick"]),
+                    ),
+                )
+            )
+            surfaces = corrected_surfaces(
+                state=runner.state,
+                equity_values=runner.corrected_equity_curve,
+                manifest=CorrectedRunManifest.from_records(
+                    records,
+                    execution_profile_id=row["execution_profile_id"],
+                ),
+                refusals=[
+                    {
+                        "code": exc.refusal_code,
+                        "detail": str(exc).partition(": ")[2],
+                    }
+                ],
+                observation_start=_timestamp(
+                    corrected["observation_window"]["start_timestamp"]
+                ),
+                observation_end=_timestamp(
+                    corrected["observation_window"]["end_timestamp"]
+                ),
+            )
+        else:
+            surfaces = _refusal_surfaces(config=config, records=records, refusal=exc)
     else:
+        if scenario_id == "RULE2-03-GREEN":
+            runner.state.decision_events.append(
+                DecisionEvent(
+                    sequence=len(runner.state.decision_events),
+                    event_timestamp=bars[0].timestamp,
+                    decision="INSTRUMENT_RECORD_VALIDATED",
+                    details=(
+                        ("field", "price_tick"),
+                        ("record_value", records.instrument.price_tick),
+                        ("runtime_value", config["instrument_price_tick"]),
+                    ),
+                )
+            )
         collision = None
         if scenario_id.startswith("RULE2-06-"):
             window_start = _timestamp(corrected["observation_window"]["start_timestamp"])

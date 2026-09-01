@@ -366,7 +366,7 @@ class PositionManager:
                 qty_step=self.qty_step,
             )
             collision = any(
-                dict(row.details).get("collision") == "True"
+                dict(row.details).get("collision") is True
                 for row in transition.decision_events
             )
             for fill in exit_fills:

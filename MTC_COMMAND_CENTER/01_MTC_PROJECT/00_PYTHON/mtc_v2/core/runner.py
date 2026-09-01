@@ -88,6 +88,7 @@ from mtc_v2.core.position_manager import POSITION_SIDE_LONG, POSITION_SIDE_SHORT
 from mtc_v2.core.position_sizer import PositionSizer
 from mtc_v2.core.types import (
     Bar,
+    DecisionEvent,
     EntryDecision,
     GateResult,
     HtfSnapshot,
@@ -438,6 +439,17 @@ class Runner:
         if not self._corrected_semantics or self._corrected_instrument_bound:
             return
         assert self._corrected_records is not None
+        if not any(
+            row.decision == "SEMANTICS_VALIDATED"
+            for row in self.state.decision_events
+        ):
+            self.state.decision_events.append(
+                DecisionEvent(
+                    sequence=len(self.state.decision_events),
+                    event_timestamp=evaluation_time,
+                    decision="SEMANTICS_VALIDATED",
+                )
+            )
         self.instrument = self._corrected_records.instrument.for_evaluation(
             evaluation_time,
             self._corrected_records.runtime_instrument_config or {},
@@ -946,7 +958,14 @@ class Runner:
                             )
                         ),
                         allow_test_policy=self._allow_corrected_test_policy,
+                        next_decision_sequence=len(self.state.decision_events),
                     )
+                    if transition.decision_events and not transition.fill_decisions:
+                        self.position_manager.apply_transition(
+                            bar=bar,
+                            state=self.state,
+                            transition=transition,
+                        )
                     if transition.fill_decisions:
                         exit_reason = (
                             "PROTECTIVE_STOP"

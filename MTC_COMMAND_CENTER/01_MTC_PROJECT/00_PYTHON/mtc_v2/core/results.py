@@ -385,23 +385,92 @@ def _event_rows(
     ]
 
 
-def _decision_surface(rows: list[object]) -> list[dict[str, Any]]:
+_REMOVED_DECISIONS = {
+    "SLIPPAGE_RESOLVED",
+    "FEE_SCHEDULE_RESOLVED",
+    "GUARD_BASIS_RESOLVED",
+    "MARKET_EXIT_SELECTED",
+}
+
+_DECISION_MEMBERS = {
+    "SEMANTICS_VALIDATED": (set(), set()),
+    "SIZING_COMPUTED": ({"selector", "contract_multiplier", "order_notional"}, set()),
+    "MIN_NOTIONAL_ADMITTED": ({"order_notional", "required_min_notional"}, set()),
+    "REFUSED_MIN_NOTIONAL": ({"order_notional", "required_min_notional"}, set()),
+    "INSTRUMENT_RECORD_VALIDATED": ({"field", "record_value", "runtime_value"}, set()),
+    "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION": ({"field", "record_value", "runtime_value"}, set()),
+    "PROTECTIVE_STOP_EVALUATED": (
+        {"position_side", "stop_price", "predicate"},
+        {"reference_source", "reference_price"},
+    ),
+    "COLLISION_RESOLVED": (
+        {
+            "collision",
+            "same_bar_collision_policy_id",
+            "touched_exit_ids",
+            "ordered_chosen_exit_ids",
+            "reference_quantity",
+            "stop_remainder_quantity",
+        },
+        {"target_ordering_rule", "tie_break_applied"},
+    ),
+    "FUNDING_ELIGIBILITY": (
+        {"funding_event_id", "eligible", "position_snapshot_rule"}, set()
+    ),
+}
+
+_DECISION_TIMESTAMP_REQUIRED = {
+    "SIZING_COMPUTED",
+    "MIN_NOTIONAL_ADMITTED",
+    "REFUSED_MIN_NOTIONAL",
+    "PROTECTIVE_STOP_EVALUATED",
+    "COLLISION_RESOLVED",
+    "FUNDING_ELIGIBILITY",
+}
+
+
+def _decision_value(value: object) -> Any:
+    if type(value) in (int, float):
+        return _json_number(value)
+    if type(value) is tuple:
+        return [_decision_value(member) for member in value]
+    if type(value) is list:
+        return [_decision_value(member) for member in value]
+    return value
+
+
+def _decision_surface(
+    rows: list[object], *, kernel_semantics_version: str
+) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
-    for sequence, row in enumerate(rows):
-        item: dict[str, Any] = {
-            "sequence": sequence,
-            "event_timestamp": _timestamp(getattr(row, "event_timestamp")),
-            "decision": getattr(row, "decision"),
-        }
-        lifecycle_id = getattr(row, "lifecycle_id")
-        if lifecycle_id is not None:
-            item["lifecycle_id"] = lifecycle_id
-        refusal_code = getattr(row, "refusal_code")
-        if refusal_code is not None:
-            item["refusal_code"] = refusal_code
+    semantics_emitted = False
+    for row in rows:
+        decision = getattr(row, "decision")
+        if decision in _REMOVED_DECISIONS:
+            continue
+        if decision == "SEMANTICS_VALIDATED":
+            if semantics_emitted:
+                continue
+            semantics_emitted = True
+        if decision not in _DECISION_MEMBERS:
+            raise ValueError(f"unknown corrected decision reason: {decision}")
         details = dict(getattr(row, "details"))
-        if details:
-            item["details"] = details
+        required, optional = _DECISION_MEMBERS[decision]
+        if required - set(details) or set(details) - required - optional:
+            raise ValueError(f"invalid corrected decision members: {decision}")
+        if decision == "PROTECTIVE_STOP_EVALUATED" and (
+            ("reference_source" in details) != ("reference_price" in details)
+        ):
+            raise ValueError("protective-stop reference members must occur together")
+        item: dict[str, Any] = {
+            "sequence": len(result),
+            "decision": decision,
+            "kernel_semantics_version": kernel_semantics_version,
+        }
+        if decision in _DECISION_TIMESTAMP_REQUIRED:
+            item["event_timestamp"] = _timestamp(getattr(row, "event_timestamp"))
+        for name, value in details.items():
+            item[name] = _decision_value(value)
         result.append(item)
     return result
 
@@ -633,7 +702,11 @@ def _warning_surface(
     return result
 
 
-def _detail_number(value: str) -> float | int | str:
+def _detail_number(value: object) -> float | int | str:
+    if type(value) in (int, float):
+        return _json_number(value)
+    if not isinstance(value, str):
+        return str(value)
     try:
         number = float(value)
     except ValueError:
@@ -675,8 +748,23 @@ def corrected_surfaces(
 ) -> dict[str, dict[str, Any]]:
     """Project corrected state into exact version-shaped event/result surfaces."""
 
-    decision_rows = _event_rows(
-        state.decision_events, start=observation_start, end=observation_end
+    semantic_validation = next(
+        (
+            row
+            for row in state.decision_events
+            if row.decision == "SEMANTICS_VALIDATED"
+        ),
+        None,
+    )
+    decision_rows = (
+        ([] if semantic_validation is None else [semantic_validation])
+        + [
+            row
+            for row in _event_rows(
+                state.decision_events, start=observation_start, end=observation_end
+            )
+            if row.decision != "SEMANTICS_VALIDATED"
+        ]
     )
     fill_rows = _event_rows(
         state.fill_events, start=observation_start, end=observation_end
@@ -691,7 +779,10 @@ def corrected_surfaces(
         state.funding_events, start=observation_start, end=observation_end
     )
     event_surface = {
-        "decision_events": _decision_surface(decision_rows),
+        "decision_events": _decision_surface(
+            decision_rows,
+            kernel_semantics_version=manifest.kernel_semantics_version,
+        ),
         "fill_events": _fill_surface(fill_rows),
         "cash_events": _cash_surface(cash_rows),
         "fee_events": _fee_surface(fee_rows),

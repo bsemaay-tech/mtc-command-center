@@ -140,8 +140,13 @@ def test_equal_price_target_first_orders_by_exit_id_utf8_bytes() -> None:
         _records("RULE2-06-EQUAL-PRICE-RED"),
     )
 
-    chosen = dict(transition.decision_events[1].details)["ordered_chosen_exit_ids"]
-    assert chosen == "TARGET-FAR,TARGET-NEAR"
+    collision = next(
+        row
+        for row in transition.decision_events
+        if row.decision == "COLLISION_RESOLVED"
+    )
+    chosen = dict(collision.details)["ordered_chosen_exit_ids"]
+    assert chosen == ["TARGET-FAR", "TARGET-NEAR"]
 
 
 @pytest.mark.parametrize(

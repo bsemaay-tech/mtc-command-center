@@ -176,8 +176,8 @@ class ExecutionEconomics(ABC):
         """Resolve one intent without mutating any argument."""
 
 
-def _details(**values: object) -> tuple[tuple[str, str], ...]:
-    return tuple((key, str(value)) for key, value in values.items())
+def _details(**values: object) -> tuple[tuple[str, object], ...]:
+    return tuple(values.items())
 
 
 def _position_facts(
@@ -595,18 +595,20 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         instrument = records.instrument.for_evaluation(
             market_event.timestamp, records.runtime_instrument_config or {}
         )
-        validated = DecisionEvent(
-            sequence=state.next_decision_sequence,
-            event_timestamp=market_event.timestamp,
-            decision="SEMANTICS_VALIDATED",
-            lifecycle_id=state.lifecycle_id,
-            details=_details(kernel_semantics_version=self.semantics_id),
-        )
+        prefix = ()
+        if state.next_decision_sequence == 0:
+            prefix = (
+                DecisionEvent(
+                    sequence=0,
+                    event_timestamp=market_event.timestamp,
+                    decision="SEMANTICS_VALIDATED",
+                ),
+            )
         if intent.kind is IntentKind.FUNDING_TICK:
-            return self._resolve_funding(state, intent, market_event, records, validated)
+            return self._resolve_funding(state, intent, market_event, records, prefix)
         if intent.kind is IntentKind.OPEN:
-            return self._resolve_open(state, intent, market_event, records, instrument, validated)
-        return self._resolve_exit(state, intent, market_event, records, instrument, validated)
+            return self._resolve_open(state, intent, market_event, records, instrument, prefix)
+        return self._resolve_exit(state, intent, market_event, records, instrument, prefix)
 
     def _resolve_open(
         self,
@@ -615,7 +617,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         market: MarketEvent,
         records: EconomicRecords,
         instrument: InstrumentMetadata,
-        validated: DecisionEvent,
+        prefix: tuple[DecisionEvent, ...],
     ) -> EconomicTransition:
         if records.cost is None:
             raise EconomicsRefusal(REFUSED_MISSING_COST_SCHEDULE, "OPEN")
@@ -651,29 +653,46 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         )
         quantity = 0.0 if refused_min_notional else candidate_quantity
         selector = "FALLBACK" if resolved_stop is None or not math.isfinite(resolved_stop) else "RISK"
-        sizing = DecisionEvent(
-            sequence=state.next_decision_sequence + 1,
-            event_timestamp=market.timestamp,
-            decision=(
-                "REFUSED_MIN_NOTIONAL"
-                if refused_min_notional
-                else "SIZING_RESOLVED"
-            ),
-            lifecycle_id=state.lifecycle_id,
-            refusal_code="REFUSED_MIN_NOTIONAL" if refused_min_notional else None,
-            details=_details(
-                selector=selector,
-                contract_multiplier=instrument.contract_multiplier,
-                order_notional=order_notional,
-                required_min_notional=instrument.min_notional,
-            ),
+        decisions = list(prefix)
+        next_sequence = state.next_decision_sequence + len(decisions)
+        if intent.requested_quantity is None:
+            decisions.append(
+                DecisionEvent(
+                    sequence=next_sequence,
+                    event_timestamp=market.timestamp,
+                    decision="SIZING_COMPUTED",
+                    details=_details(
+                        selector=selector,
+                        contract_multiplier=instrument.contract_multiplier,
+                        order_notional=order_notional,
+                    ),
+                )
+            )
+            next_sequence += 1
+        decisions.append(
+            DecisionEvent(
+                sequence=next_sequence,
+                event_timestamp=market.timestamp,
+                decision=(
+                    "REFUSED_MIN_NOTIONAL"
+                    if refused_min_notional
+                    else "MIN_NOTIONAL_ADMITTED"
+                ),
+                refusal_code=(
+                    "REFUSED_MIN_NOTIONAL" if refused_min_notional else None
+                ),
+                details=_details(
+                    order_notional=order_notional,
+                    required_min_notional=instrument.min_notional,
+                ),
+            )
         )
         if quantity <= 0.0:
             return _empty_transition(
                 semantics_id=self.semantics_id,
                 state=state,
                 records=records,
-                decisions=(validated, sizing),
+                decisions=tuple(decisions),
             )
         lifecycle_id = state.lifecycle_id or state.next_lifecycle_id
         event_class = intent.event_class or "ENTRY"
@@ -725,7 +744,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 entry_fill_price=final_fill,
                 active_stop_price=resolved_stop,
             ),
-            decision_events=(validated, sizing),
+            decision_events=tuple(decisions),
             fill_decisions=(fill,),
             cash_events=(fee_cash,),
             fee_events=(fee,),
@@ -738,18 +757,18 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         market: MarketEvent,
         records: EconomicRecords,
         instrument: InstrumentMetadata,
-        validated: DecisionEvent,
+        prefix: tuple[DecisionEvent, ...],
     ) -> EconomicTransition:
         if state.lifecycle_id is None or state.quantity <= 0.0:
             return _empty_transition(
                 semantics_id=self.semantics_id,
                 state=state,
                 records=records,
-                decisions=(validated,),
+                decisions=prefix,
             )
         if intent.kind is IntentKind.MARKET_EXIT:
             return self._resolve_market_exit(
-                state, intent, market, records, instrument, validated
+                state, intent, market, records, instrument, prefix
             )
         policy = intent.same_bar_collision_policy_id
         if policy not in {"STOP_FIRST", "TARGET_FIRST", "SUBBAR_UNKNOWN"}:
@@ -757,6 +776,14 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         touched = _touched_candidates(state, intent, market)
         stops = [item for item in touched if item[0].kind is IntentKind.PROTECTIVE_STOP]
         targets = [item for item in touched if item[0].kind is IntentKind.TARGET]
+        stop_candidate = next(
+            (
+                candidate
+                for candidate in intent.exit_candidates
+                if candidate.kind is IntentKind.PROTECTIVE_STOP
+            ),
+            None,
+        )
         collision = bool(stops and targets)
         if collision and policy == "SUBBAR_UNKNOWN":
             raise EconomicsRefusal(REFUSED_AMBIGUOUS_SAME_BAR, "stop and target touched")
@@ -778,24 +805,99 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 chosen.append((stops[0][0], stops[0][1], remainder))
             if not targets and stops:
                 chosen = [(stops[0][0], stops[0][1], state.quantity)]
+        decisions = list(prefix)
+        next_sequence = state.next_decision_sequence + len(decisions)
+        if stop_candidate is not None:
+            if state.position_side == "LONG" and market.open <= stop_candidate.price:
+                predicate = "OPEN_BEYOND_STOP"
+                reference_source = "BAR_OPEN"
+                reference_price = market.open
+            elif state.position_side == "SHORT" and market.open >= stop_candidate.price:
+                predicate = "OPEN_BEYOND_STOP"
+                reference_source = "BAR_OPEN"
+                reference_price = market.open
+            elif state.position_side == "LONG" and market.low <= stop_candidate.price:
+                predicate = "LOW_TOUCH"
+                reference_source = "STOP_LEVEL"
+                reference_price = stop_candidate.price
+            elif state.position_side == "SHORT" and market.high >= stop_candidate.price:
+                predicate = "HIGH_TOUCH"
+                reference_source = "STOP_LEVEL"
+                reference_price = stop_candidate.price
+            else:
+                predicate = "NO_TOUCH"
+                reference_source = None
+                reference_price = None
+            selected_stop = next(
+                (
+                    (candidate, reference, quantity)
+                    for candidate, reference, quantity in chosen
+                    if candidate.kind is IntentKind.PROTECTIVE_STOP
+                ),
+                None,
+            )
+            stop_details: dict[str, object] = {
+                "position_side": state.position_side,
+                "stop_price": stop_candidate.price,
+                "predicate": predicate,
+            }
+            if selected_stop is not None:
+                stop_details.update(
+                    reference_source=reference_source,
+                    reference_price=reference_price,
+                )
+            decisions.append(
+                DecisionEvent(
+                    sequence=next_sequence,
+                    event_timestamp=market.timestamp,
+                    decision="PROTECTIVE_STOP_EVALUATED",
+                    details=_details(**stop_details),
+                )
+            )
+            next_sequence += 1
         if not chosen:
             return _empty_transition(
                 semantics_id=self.semantics_id,
                 state=state,
                 records=records,
-                decisions=(validated,),
+                decisions=tuple(decisions),
             )
-        decision = DecisionEvent(
-            sequence=state.next_decision_sequence + 1,
-            event_timestamp=market.timestamp,
-            decision="SAME_BAR_COLLISION" if collision else "SOLE_EXIT_CLASS",
-            lifecycle_id=state.lifecycle_id,
-            details=_details(
-                collision=collision,
-                same_bar_collision_policy_id=policy,
-                ordered_chosen_exit_ids=",".join(item[0].exit_id for item in chosen),
-            ),
-        )
+        if any(
+            candidate.kind is IntentKind.TARGET
+            for candidate in intent.exit_candidates
+        ):
+            touched_target_prices = [candidate.price for candidate, _reference in targets]
+            equal_price_tie = len(touched_target_prices) != len(set(touched_target_prices))
+            collision_details: dict[str, object] = {
+                "collision": collision,
+                "same_bar_collision_policy_id": policy,
+                "touched_exit_ids": [candidate.exit_id for candidate, _reference in touched],
+                "ordered_chosen_exit_ids": [candidate.exit_id for candidate, _reference, _quantity in chosen],
+                "reference_quantity": state.quantity,
+                "stop_remainder_quantity": sum(
+                    quantity
+                    for candidate, _reference, quantity in chosen
+                    if candidate.kind is IntentKind.PROTECTIVE_STOP
+                ),
+            }
+            if targets:
+                collision_details["target_ordering_rule"] = (
+                    "LONG_ASCENDING_TARGET_PRICE"
+                    if state.position_side == "LONG"
+                    else "SHORT_DESCENDING_TARGET_PRICE"
+                ) + (
+                    "_THEN_EXIT_ID_UTF8_BYTE_ORDER" if equal_price_tie else ""
+                )
+            if equal_price_tie:
+                collision_details["tie_break_applied"] = True
+            decisions.append(
+                DecisionEvent(
+                    sequence=next_sequence,
+                    event_timestamp=market.timestamp,
+                    decision="COLLISION_RESOLVED",
+                    details=_details(**collision_details),
+                )
+            )
         fills: list[FillDecision] = []
         cash: list[CashEvent] = []
         fees: list[FeeEvent] = []
@@ -833,6 +935,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                     final_fill_price=final_fill,
                     quantity=quantity,
                     liquidity_role=str(records.cost["liquidity_roles"][event_class]),
+                    exit_id=candidate.exit_id,
                     price_tick_alignment=alignment,
                     unrounded_fill_price=(
                         reference + impact if action_side == "BUY" else reference - impact
@@ -886,7 +989,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             funding_schedule_id=records.funding_schedule_id,
             funding_schedule_digest=records.funding_digest,
             next_position_facts=next_facts,
-            decision_events=(validated, decision),
+            decision_events=tuple(decisions),
             fill_decisions=tuple(fills),
             cash_events=tuple(cash),
             fee_events=tuple(fees),
@@ -899,7 +1002,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         market: MarketEvent,
         records: EconomicRecords,
         instrument: InstrumentMetadata,
-        validated: DecisionEvent,
+        prefix: tuple[DecisionEvent, ...],
     ) -> EconomicTransition:
         if records.cost is None:
             raise EconomicsRefusal(REFUSED_MISSING_COST_SCHEDULE, "MARKET_EXIT")
@@ -912,7 +1015,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 semantics_id=self.semantics_id,
                 state=state,
                 records=records,
-                decisions=(validated,),
+                decisions=prefix,
             )
         reference = market.close if intent.reference_price is None else float(
             intent.reference_price
@@ -987,17 +1090,6 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 entry_fill_price=state.entry_fill_price,
             )
         )
-        selected = DecisionEvent(
-            sequence=state.next_decision_sequence + 1,
-            event_timestamp=market.timestamp,
-            decision="MARKET_EXIT_SELECTED",
-            lifecycle_id=state.lifecycle_id,
-            details=_details(
-                reason=intent.reason,
-                exit_id=intent.exit_id,
-                reference_price=reference,
-            ),
-        )
         return EconomicTransition(
             semantics_id=self.semantics_id,
             instrument_record_id=records.instrument.record_id,
@@ -1007,7 +1099,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             funding_schedule_id=records.funding_schedule_id,
             funding_schedule_digest=records.funding_digest,
             next_position_facts=next_facts,
-            decision_events=(validated, selected),
+            decision_events=prefix,
             fill_decisions=(fill,),
             cash_events=(fee_cash, gross),
             fee_events=(fee,),
@@ -1019,7 +1111,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         intent: EconomicIntent,
         market: MarketEvent,
         records: EconomicRecords,
-        validated: DecisionEvent,
+        prefix: tuple[DecisionEvent, ...],
     ) -> EconomicTransition:
         event_id = intent.funding_event_id
         events = records.funding.get("events")
@@ -1032,10 +1124,9 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             raise EconomicsRefusal(REFUSED_DUPLICATE_FUNDING_EVENT, str(event_id))
         eligible = state.lifecycle_id is not None and state.quantity > 0.0
         decision = DecisionEvent(
-            sequence=state.next_decision_sequence + 1,
+            sequence=state.next_decision_sequence + len(prefix),
             event_timestamp=market.timestamp,
             decision="FUNDING_ELIGIBILITY",
-            lifecycle_id=state.lifecycle_id,
             details=_details(
                 funding_event_id=event_id,
                 eligible=eligible,
@@ -1047,7 +1138,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 semantics_id=self.semantics_id,
                 state=state,
                 records=records,
-                decisions=(validated, decision),
+                decisions=(*prefix, decision),
             )
         event = matching[0]
         multiplier = float(records.instrument.contract_multiplier)
@@ -1105,7 +1196,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 quantity=state.quantity,
                 entry_fill_price=state.entry_fill_price,
             ),
-            decision_events=(validated, decision),
+            decision_events=(*prefix, decision),
             cash_events=(cash,),
             funding_events=(funding,),
         )

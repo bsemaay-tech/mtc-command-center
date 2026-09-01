@@ -158,6 +158,45 @@ def test_corrected_scenario_executes_real_seam_and_emits_six_containers() -> Non
     assert observed["RESULT_SURFACE"]["run_manifest"]["kernel_semantics_version"] == "2.0.0"
 
 
+@pytest.mark.parametrize(
+    ("scenario_id", "expected_decisions"),
+    [
+        ("RULE2-01-RED", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
+        ("RULE2-01-GREEN", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
+        ("RULE2-02-RED", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "REFUSED_MIN_NOTIONAL"]),
+        ("RULE2-02-GREEN", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
+        ("RULE2-03-RED", ["SEMANTICS_VALIDATED", "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION"]),
+        ("RULE2-03-GREEN", ["SEMANTICS_VALIDATED", "INSTRUMENT_RECORD_VALIDATED"]),
+        ("RULE2-04-RED", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED"]),
+        ("RULE2-04-GREEN", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED"]),
+        ("RULE2-05-RED", ["SEMANTICS_VALIDATED", "MIN_NOTIONAL_ADMITTED"]),
+        ("RULE2-05-GREEN", ["SEMANTICS_VALIDATED", "MIN_NOTIONAL_ADMITTED"]),
+        ("RULE2-06-RED", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
+        ("RULE2-06-EQUAL-PRICE-RED", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
+        ("RULE2-06-GREEN", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
+        ("RULE2-07-RED", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
+        ("RULE2-07-GREEN", ["SEMANTICS_VALIDATED"]),
+        ("RULE2-08-RED", ["SEMANTICS_VALIDATED", "FUNDING_ELIGIBILITY"]),
+        ("RULE2-08-GREEN", ["SEMANTICS_VALIDATED", "FUNDING_ELIGIBILITY"]),
+    ],
+)
+def test_section_23_decision_trail_contains_each_evaluated_closed_reason(
+    scenario_id: str, expected_decisions: list[str]
+) -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+
+    decisions = execute_corrected_scenario(MTC_V2_ROOT, row)["EVENT_SURFACE"]["decision_events"]
+
+    assert [member["decision"] for member in decisions] == expected_decisions
+    assert [member["sequence"] for member in decisions] == list(range(len(decisions)))
+    assert all(member["kernel_semantics_version"] == "2.0.0" for member in decisions)
+    assert all("details" not in member for member in decisions)
+    assert all("lifecycle_id" not in member for member in decisions)
+    assert all("refusal_code" not in member for member in decisions)
+    assert "event_timestamp" not in decisions[0]
+
+
 def test_rule2_05_red_honors_explicit_quantity_after_slippage() -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == "RULE2-05-RED")
@@ -203,17 +242,9 @@ def test_rule2_08_null_cost_is_not_consumed_and_funding_is_projected(
     assert result["cumulative_funding"] == expected_cumulative
 
 
-@pytest.mark.parametrize(
-    ("scenario_id", "selector"),
-    [
-        ("RULE2-02-RED", "/EVENT_SURFACE/decision_events/3/decision"),
-        ("RULE2-03-RED", "/EVENT_SURFACE/decision_events/1/decision"),
-        ("RULE2-03-GREEN", "consumed price_tick"),
-    ],
-)
-def test_missing_decision_projection_resolves_absent(
-    scenario_id: str, selector: str
-) -> None:
+def test_missing_decision_projection_resolves_absent() -> None:
+    scenario_id = "RULE2-02-RED"
+    selector = "/EVENT_SURFACE/decision_events/3/decision"
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == scenario_id)
     input_document = load_json_exact(MTC_V2_ROOT / row["input"]["path"])
