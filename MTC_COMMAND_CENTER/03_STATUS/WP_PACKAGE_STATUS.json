@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "purpose": "Live work-package status for the dashboard. Updated by the Lead each time a lane starts or lands. Dashboard readers: treat 'state' + 'next_action' as the display pair; 'owner_gate' true means the package waits on Baris.",
-  "generated": "2026-09-01T03:25:00+03:00",
-  "updated_by": "claude-fable-lead-session-2026-08-31-evening (generated = time of THIS push)",
+  "generated": "2026-09-01T18:50:00+03:00",
+  "updated_by": "claude-opus-lead-session-2026-09-01 (generated = time of THIS push)",
   "owner_decisions_2026_08_31_morning": "P0-12 preconditions: Q1a-Q5a answered (recommended defaults; addendum 14). OPEN-01..10: owner gave all ten initial dispositions (addendum 15) - rows 02/08/09/10/04 decision-complete; rows 01/03/05/06/07 are decision-NAMED with evidence packages prepared, each CLOSES only on the owner's later approval of its package. Also: 7a P0-31M1 stays parked; 8a wayfinder rev-12 accepted as recorded; BUDGET RULING: maximize subscription usage; stop 17:00. Still owed by owner: 'approved' on the path list, a/b/c on the design residual, OPEN-06 row dispositions, evidence-package approvals. AFTERNOON (addendum 16, verbatim 'all approved, fees a, design a, retain all.'): ALL TEN OPEN rows CLOSED (bundle approvals incl. fees option-a stop-market); T0 BUILD-PATH GRANT GIVEN on Gate-2 plan v2 + Lead Gate-2 acceptance; design micro-fold authorized and EXECUTED -> v1.4 SEALED (terminal pass G55 zero + GM24 zero); OPEN-06 retain-all recorded with fixture obligations. LATE AFTERNOON: addendum 17 (same-timestamp funding = INCLUDE) + addendum 18 (D-12: keep the two TARGET_FIRST test cases as designed; STOP_FIRST stays the production rule). Session extended past 17:00 by owner word to finish the baseline seal + close-out.",
   "session_time_report": {
     "method": "wall-clock spans of each package's lane dispatch/landing stamps in N_TIMES.txt; lanes overlap heavily, so spans are NOT summable effort and NOT owner-billable hours; USD not measured by the Lead",
@@ -128,22 +128,22 @@
     {
       "id": "WP-P0-12",
       "title": "Kernel corrected-vnext build design (owner: kernel approved; build after P0-11 accepts)",
-      "state": "KERNEL_BUILT_14_COMMITS_OWNER_GATE_MORNING",
+      "state": "DESIGN_V18_SEALED_TABLES_REDERIVED_SEAL_GATE_RUNNING",
       "branch": "feature/wp-p0-12-corrected-vnext-20260831",
       "commit": "fc2874d0 (branch head, 14 commits above base 108ea066; NOT pushed)",
-      "detail": "OVERNIGHT: kernel phases A+B+C built (semantics, types, records, ExecutionEconomics seam, sizer/exits/position_manager/runner/results rewires, KERNEL_2 execution in the gate, 34 observed files) + G76 adjudicated fixes. 293/293 tests; LEGACY REPRODUCTION EXACT (17/17 scenarios, 34/34 surfaces) after every phase; repo guard PASS throughout; nothing pushed. The corrected-vs-golden gate STOPPED honestly on known design-gap classes (decision_events vocabulary, equity-window rule, unfixed member sets, one golden over-reach) - independently adjudicated by a third family (G76, 12 classes); all kernel-side fixables already fixed (W165). Baseline run Q4a: SPENT SUCCESSFULLY (W153 PASS 17/17, BASELINE_BYTES sealed).",
+      "detail": "Design v1.8 SEALED by dual-zero terminal re-check (G81 grok full-design arm + DS36 opencode). Owner addendum 22 authorized one micro-fold (4/4 closed); addendum 26 ruled READING Y on the W167-D04 fork after the independent family called it genuinely ambiguous. Tables re-derived twice (W167, W172): ten decision rows added across 8 of 17 scenarios, one deliberately withheld with its record, ZERO economic values moved, catalog digest 32ae4f71 unchanged. Bundle NOT sealed yet - G85 seal gate running. Build branch 14 commits, clean, NEVER pushed.",
       "owner_gate": true,
-      "next_action": "OWNER MORNING WORDS: (1) ONE bounded design amendment (D-11 vocabulary + V15-D02 equity window + D-13 member sets) + golden re-derivation + Lead re-seal authorization; (2) sec-16 human review; (3) [OPEN-XV] x4 cross-V2A; (4) P0-20 reconciliation round; (5) V2A-01 B1 proposal. Then: tables re-derivation -> re-seal -> probes -> terminal receipt -> 4-family T0 audits -> PR -> serial merge."
+      "next_action": "Lead re-seal #3 on a SAFE-TO-SEAL verdict, then probes -> terminal receipt -> 4-family T0 audits -> PR"
     },
     {
       "id": "WP-P0-20",
       "title": "Control-parity checklist + statistical-battery definition (migration gate papers)",
-      "state": "PAPERS_CLOSED",
+      "state": "RECONCILED_TO_V18_TWO_OF_THREE_CONVERGED",
       "branch": "-",
       "commit": "-",
-      "detail": "Three repair rounds ran overnight (v1.1 W54, v1.2 W59 incomplete-capped, v1.3 W60). Round-3 verification: flagship P27 = PASS-WITH-NITS on both papers; detection N63 found 4 findings incl. ONE HIGH the Lead verified on code facts (runner.py:444 recomputes trail ATR every bar, so falsifier #5's stated runner-level expected exit 103.0/+3R is wrong; the two arms still genuinely diverge - N63's probe measured 99.0/-1R vs 100.0/0R). T0 round cap (3) exhausted, so the paper PARKS with the defect recorded instead of a round 4. Chain stays serial: 11 -> 12 -> 20 -> 13 -> 31M1 -> 14.",
+      "detail": "Owner addendum 23 authorized the reconciliation round; W169 reconciled all three documents to sealed P0-12 v1.8 and opened [OPEN-P020-1/2]. G82 verify returned NOT CONVERGED (4 findings), W171 folded 4/4, G84 verify returned checklist v1.8 + battery v1.5 CONVERGED and build NOT CONVERGED on one HIGH, which PARKED per the pre-written rule. Owner addendum 27 authorized one targeted repair; W176 completed it, build design now v1.5.",
       "owner_gate": true,
-      "next_action": "PAPERS CLOSED (P30 verify: the one edit only, correct against exits.py:278-286; N63-F1 closed; N63-F2/F3/F4 MEDIUMs recorded open per the one-edit authorization). Package's next phase (migration + shared Risk Allocator build) stays gated on WP-P0-12 acceptance - and P0-12's design is now FINAL PARKED, so this build waits on the owner's P0-12 decision"
+      "next_action": "final zero-pass on build v1.5; [OPEN-P020-1/2] are owner-seen and deliberately held until P0-20 is built"
     },
     {
       "id": "WP-P0-13",
@@ -218,12 +218,12 @@
     {
       "id": "WP-V2A-01",
       "title": "V2A loader package (design draft)",
-      "state": "DESIGN_DRAFT_V14_RECONVERGED",
+      "state": "B1_PROPOSAL_V11_OWNER_DECIDED_BASIS",
       "branch": "-",
       "commit": "-",
-      "detail": "v1.4 after N100 fresh census (5 HIGH 3 MEDIUM incl. tamper-gate field binding) -> W146 fold -> G57 verify zero.",
+      "detail": "Owner addendum 25 confirmed seven B1 decisions as a block and ruled #9 NO SIGNATURE (compromised ledger store/operator outside the threat model). W175 folded them: the proposal is now v1.1, an owner-decided design basis with open blockers, explicitly NOT an adopted schema, and its stale citations were repaired by re-reading each. N109 established that NO EXISTING PACKAGE owns final frozen-package assembly - an honest gap, deliberately not filled by nominating a package.",
       "owner_gate": false,
-      "next_action": "DAY 08-31: fourth-family census DS17 found 4 (3 MEDIUM) -> W128 fold -> v1.3 -> verify G49 ZERO. V2A-01 RE-CONVERGED at v1.3 with all four families having seen it."
+      "next_action": "owner decision on the composer gap; the candidate-free lookup key remains an open row"
     },
     {
       "id": "WP-V2A-02",
@@ -238,12 +238,12 @@
     {
       "id": "WP-V2A-03",
       "title": "Runtime allocator wiring + Decision Orchestrator (design draft)",
-      "state": "DESIGN_DRAFT_V1_PARKED_WARM",
+      "state": "XV05_SHARED_HEADROOM_DESIGN_V1_PROVISIONAL",
       "branch": "-",
       "commit": "-",
-      "detail": "Draft v1 delivered (W85) + G26 detection census (6 findings: 4 HIGH, 2 MEDIUM, banked; special check clean - no allocator-delivery claim, delivery stays WP-P0-20's). PROVISIONAL-ON-P020/V2A02 labeled. BUILD gated on WP-P0-20 build + V2A-02.",
+      "detail": "Owner addendum 24 closed [OPEN-XV-05] option A, authorizing the shared cross-worker headroom owner to be DESIGNED. W173 produced it; GM31 (gemini, fresh family) returned ZERO findings across all six hunted defect classes with all six required outputs PRESENT-AND-SPECIFIC, and honestly classified the three acceptance properties as one provable-but-unexecuted and two not-yet-provable with named blockers.",
       "owner_gate": false,
-      "next_action": "CONVERGED tonight after two cycles: N89 verify (2H+1M) -> fold W107 (v1.2, named single-bucket serial RA batch boundary) -> independent Grok census G34 = NOT DETECTED, zero findings. Parked warm at v1.2."
+      "next_action": "owner decisions on 2 rows (headroom domain producer, cardinality layout) plus 8 open technical contracts before any build"
     },
     {
       "id": "FROZEN-PINE-TAG",
@@ -252,6 +252,16 @@
       "branch": "-",
       "commit": "legacy/pine-controller/2026-08-25",
       "detail": "Owner ask-6 answer 'preserve': tag stays as history with its two alert calls. Recorded.",
+      "owner_gate": false,
+      "next_action": "none"
+    },
+    {
+      "id": "PLAN-AMENDMENT-XV12",
+      "title": "Canonical plan: WP-V2A-02 added as an accepted-first dependency of WP-V2A-03",
+      "state": "MERGED",
+      "branch": "master",
+      "commit": "4ca0e5e8",
+      "detail": "Owner addendum 24 ruled [OPEN-XV-12] option A. The design draft could not add the dependency edge itself, so the fold prepared a quoted patch and the Lead applied it on a fresh branch under the repo guard (the first branch was BLOCKED as 65 commits stale and was not overridden). Merged as PR #146.",
       "owner_gate": false,
       "next_action": "none"
     }
