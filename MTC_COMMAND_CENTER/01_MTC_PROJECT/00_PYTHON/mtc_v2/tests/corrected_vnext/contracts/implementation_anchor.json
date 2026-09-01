@@ -1,7 +1,7 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+ "EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
  "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
  "core_tree_oid_at_base": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
@@ -30,7 +30,7 @@
  "lead_acceptance": {
   "accepted_by": "Lead (claude-fable-5), 2026-08-31 ~15:55 local",
   "basis": "Gate-2 plan v2 (A7-cleared) owner-approved addendum 16; tables bundle W127b sealed, all 19 file digests re-verified by W150; owner rulings addenda 14-17 complete; design v1.4 terminal dual-zero",
-  "statement": "Exact-digest IMPLEMENTATION_ANCHOR accepted; re-accepted at the post-digest-pin seal 02b47a8e5c4a... on 2026-08-31T21:09:30+03:00; first kernel edit may follow the remaining gate steps."
+  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #3 seal c9fef155ef86... on 2026-09-01T19:48:00+03:00; the probes lane and terminal receipt may follow."
  },
  "reseal_history": [
   {
@@ -38,6 +38,12 @@
    "old_EXPECTED_SEAL_SHA": "dd4a0401b46c5663ab4a9d0297fe0e1679b0ccfeb72f803234a2cebd123d3115",
    "new_EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
    "reason": "addendum-19 chain: v1.5 embeddings + tables revision + input digest-pin (two-party) + version-shaped schema binding; re-accepted by the Lead before any kernel edit"
+  },
+  {
+   "at": "2026-09-01T19:48:00+03:00",
+   "old_EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+   "new_EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
+   "reason": "Re-seal #3: design v1.8 sealed by dual-zero terminal re-check; W167 v1.8 tables revision; W172 Reading Y revision under owner addendum 26; independently cleared SAFE TO SEAL by G85."
   }
  ]
 }

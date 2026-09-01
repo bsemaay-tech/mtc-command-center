@@ -27,7 +27,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-01-RED.json",
-    "digest": "2f51eeb624349302ec022bf51c4c6df8c9d84968e656f43f91a21e5a5d70acef"
+    "digest": "74f6f80cd44f7f980c3f0b332681bcc34e0a4f5a21bf567c84a17b14aacc38fa"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -70,7 +70,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
-    "digest": "9e62bfb19396cab3c32f9dc2f8e574aa0b7251ee5429e3467bea9d6aa6d59f71"
+    "digest": "38b79ef1cd114724c63e665f3f0e18a478e0693b79ee49356426561a6aaa597a"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -113,7 +113,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-02-RED.json",
-    "digest": "78a0548c78006e212583199afe071659f51ddc0727b5e36c81d1b3d12f1760cf"
+    "digest": "b6b4e4bfb21c162cdee84e49762357f543afc6bf72320765748d70bdc030388d"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -156,7 +156,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-02-GREEN.json",
-    "digest": "6cc43be7a9d6bdb9d688f2f59eb5915a9d114a4f41ba5536adc6aae3fb78f9ab"
+    "digest": "aefa016537dd342e307a974c97b513fcbd1c9ef140ef7bfaee5a62b648b6a146"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -199,7 +199,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-03-RED.json",
-    "digest": "16be193e0b80f3c712bfea4662db3c9c909e6909ed933c506384dd801df839f0"
+    "digest": "e04ddf0cdd14c68076ddd1b081467ee21fafb836d7a51751990bfb361b1bb724"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -242,7 +242,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-03-GREEN.json",
-    "digest": "56556f1249ac53cc91648276d165051b4b86800903b82700d4b7834a2b81c6c7"
+    "digest": "c10b5e71d7c84ccdc8668cb081ba5b394d3fbeba2119a0a53eeb96c9f4fea880"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -285,7 +285,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-04-RED.json",
-    "digest": "bdf4ac15118e0235610191d325e31a1eddd2a3698a0faffe5ae28bc2e70cf2ab"
+    "digest": "9f7a541c08bb477b0f0a68708f01ff5eff39bc736120ad8122f77293f6bd02d1"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -328,7 +328,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-04-GREEN.json",
-    "digest": "c2298b361a05f437a5c4dd94be8f282588bc654311238e45cd886aaba4d6a4c2"
+    "digest": "7309d4cbe1445cea9d8ccb4ca44bc91e81e45fd8c157fa3daed3b295561ba7f7"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -371,7 +371,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-05-RED.json",
-    "digest": "2d080191481faf037f0a02d56c56a2f1147ac2ee45cacf84d31ee103616bef4a"
+    "digest": "a5962ccfed7b893d41ea2b2d43c1b2532328a9fb1eaea07b11f605a82c6cd7f9"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -414,7 +414,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-05-GREEN.json",
-    "digest": "fb3bafd0c4b191808e2d30b8cdde46fa5c41d077f3a04a5082ae5bda4cb2ee94"
+    "digest": "26bbb48caf2fb2c5f9f13f08f23664ede89f31c9bfa337d9b878ab68ffa19798"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -457,7 +457,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-06-RED.json",
-    "digest": "5f0773df5803f11c7b4d5fb9dae2ef5ee22c1f48c647953bcd05fae09ed0eb3a"
+    "digest": "25c747ac53111c5106fd9bf393f4aced9d5ebe1b3467ad9fd6b33a3fc4605613"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -500,7 +500,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
-    "digest": "f6689dc3b97c6bbb02de11b6a05df20b5f0bc717d7b46476a3baea678e764f28"
+    "digest": "102aa04e93dfa9c56cebc5932b3e330773370fa3f0de82770b776c7e55e661f3"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -544,7 +544,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-06-GREEN.json",
-    "digest": "b2d850d8608be57d3917729bec745175e355bb424696a1c4d32265ec98901bc4"
+    "digest": "45f10ddb072e19b2dae4473e09c6af74268bef11bb64247eea94dc8d0538cda2"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -587,7 +587,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-07-RED.json",
-    "digest": "094b15c3eef68e276388892debabbbe84b9e2c97f927514ee5cf75049d756c4e"
+    "digest": "88b446ad3a5d7974616ba1253c345f7a8f321fc60b5a5a55f70c57ebf74bf4ef"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -630,7 +630,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-07-GREEN.json",
-    "digest": "b77753d27a2d2d1876aa93c48b61bcaf49b2c4d88587809b405e3b58a163bbc3"
+    "digest": "a7e6a59a4040d6eee8be42c24d28f46a5c9f4af2bd131c19bf6e768f9819ee48"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -673,7 +673,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-08-RED.json",
-    "digest": "b589eec4ad96ab1ce3bba8f73d59a7904702af457bbd200b14c44c7e13dedb75"
+    "digest": "926a3318123e1b5380b152cb08dd2b07bebbf18894b15771b20126cc916a8809"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -716,7 +716,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
-    "digest": "078295244d769f86613c08b66960200da3d8aa83ad12eda8572779e47c034834"
+    "digest": "6ad9432df9bcc1ef8d7f5ec31fcb2a5c7b30a7c80c56095c74aaeb6a24e91b97"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",

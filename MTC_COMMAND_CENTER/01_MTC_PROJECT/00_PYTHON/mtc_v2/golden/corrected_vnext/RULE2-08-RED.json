@@ -7,31 +7,32 @@
   "expected_semantics_version": "2.0.0",
   "provenance": {
     "method": "INDEPENDENT_DERIVATION",
-    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; owner Reading Y (owner addendum 26, 2026-09-01) applied by lane W172",
     "design_file": "P012_FRESH_DESIGN_V1.md",
-    "design_version": "v1.5",
-    "design_lines": "390-433; 676-745; 747-839; 888",
+    "design_version": "v1.8",
+    "design_lines": "390-433; 676-745; 747-839; 888; 969-1273 (section 23 v1.8 terminal micro-fold)",
     "worksheet": "DERIVATIONS.md",
     "worksheet_section": "8. DEF-P012-08 / RULE2-08-RED",
+    "worksheet_section_v18": "v1.8 revision / RULE2-08-RED",
     "worksheet_section_v15": "v1.5 revision / RULE2-08-RED"
   },
   "open_item_bindings": [
-    {"open_id": "OPEN-10", "source": "open_item_applicability_DRAFT.json items[OPEN-10] (draft_revision 3)", "owner_disposition": "APPLICABLE - option (a): guards keep GROSS-MINUS-FEES; funding is NOT admitted into the guard basis; no per-control divergence (addendum 15 row 35)", "effect_on_this_scenario": "design 14:431 makes guard outcomes follow the sourced OPEN-10 decision. Under the owner answer the captured funding delta -0.1 does NOT enter the guard basis, so guard_pnl_basis stays GROSS_MINUS_FEES and funding_included_in_guard_basis is false."},
+    {"open_id": "OPEN-10", "source": "open_item_applicability_DRAFT.json items[OPEN-10] (draft_revision 3)", "owner_disposition": "APPLICABLE - option (a): guards keep GROSS-MINUS-FEES; funding is NOT admitted into the guard basis; no per-control divergence (addendum 15 row 35)", "effect_on_this_scenario": "design 14:431 makes guard outcomes follow the sourced OPEN-10 decision. Under the owner answer the captured funding delta -0.1 does NOT enter the guard basis, so guard_pnl_basis stays GROSS_MINUS_FEES. CORRECTED BY LANE W172 (G83-F04): the sentence formerly ended by asserting funding_included_in_guard_basis is false. That member was removed from this artifact by design 23.4:1152-1155 and tables-revision item 4 at :1189-1192, so it is not a node of this surface and no live fact may be stated about it here; the compared basis and guard outcomes carry the rule."},
     {"open_id": "OPEN-05", "source": "open_item_applicability_DRAFT.json items[OPEN-05] (draft_revision 3)", "owner_disposition": "APPLICABLE - funding rules APPROVED; same-timestamp snapshot eligibility = INCLUDE (addendum 17 row 46)", "effect_on_this_scenario": "no value effect: design 14:429 states the position is open immediately before AND after the event timestamp, so it is eligible under an INCLUDE or an EXCLUDE same-timestamp rule alike. Design 22.3:827 now names the exact rule id END_OF_INTERVAL_INCLUDE_SAME_TIMESTAMP_V1 that the vector's snapshot rule resolves to."},
     {"open_id": "OPEN-EMBED-04", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (4a) - the RULE2-08-RED pre-event entry basis and fill are 100", "effect_on_this_scenario": "design 22.6:888 leaves the state-building prefix as [OPEN-EMBED-04] and offers the candidate prefix [(1999-12-31T23:58:00Z,0,98,98,98,98,0),(1999-12-31T23:59:00Z,1,100,100,100,100,0)] with initial_capital 1000, fallback 10% and multiplier 1. With entry basis 100 bound, the fallback path sizes fallback_notional 1000 * 10% = 100 over reference 100 to quantity 1 (the design-stated open quantity), and final_position.entry_fill_price is 100. The prefix fill is outside the observation window, so no fill event enters the compared surface and equity_curve.first stays 1000."}
   ],
   "EVENT_SURFACE": {
     "decision_events": [
       {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
-      {"sequence": 1, "decision": "FUNDING_ELIGIBILITY", "funding_event_id": "TEST-FUND-1", "event_timestamp": "2000-01-01T00:00:00Z", "lifecycle_id": 1, "eligible": true, "position_snapshot_rule": "END_OF_INTERVAL_INCLUDE_SAME_TIMESTAMP_V1"}
+      {"sequence": 1, "decision": "FUNDING_ELIGIBILITY", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:00:00Z", "funding_event_id": "TEST-FUND-1", "eligible": true, "position_snapshot_rule": "END_OF_INTERVAL_INCLUDE_SAME_TIMESTAMP_V1"}
     ],
     "fill_events": [],
     "cash_events": [
-      {"sequence": 0, "cash_event_id": "CE-FUND-0", "kind": "FUNDING", "lifecycle_id": 1, "signed_delta": -0.1}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FUND-0", "kind": "FUNDING", "lifecycle_id": 1, "signed_delta": -0.1}
     ],
     "fee_events": [],
     "funding_events": [
-      {"sequence": 0, "funding_event_id": "TEST-FUND-1", "event_timestamp": "2000-01-01T00:00:00Z", "lifecycle_id": 1, "position_side": "LONG", "open_qty": 1, "contract_multiplier": 1, "mark_price": 100, "raw_rate": 0.001, "positive_rate_payer": "LONG", "long_cashflow_rate": -0.001, "notional": 100, "funding_cash_delta": -0.1, "cumulative_funding": -0.1, "schedule_id": "SYNTH-FUNDING-RULE2-08-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "source_event_digest": "BLOCKED-MISSING-RECORD-BYTES", "cash_event_id": "CE-FUND-0"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "funding_event_id": "TEST-FUND-1", "event_timestamp": "2000-01-01T00:00:00Z", "lifecycle_id": 1, "position_side": "LONG", "open_qty": 1, "contract_multiplier": 1, "mark_price": 100, "raw_rate": 0.001, "positive_rate_payer": "LONG", "long_cashflow_rate": -0.001, "notional": 100, "funding_cash_delta": -0.1, "cumulative_funding": -0.1, "schedule_id": "SYNTH-FUNDING-RULE2-08-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "source_event_digest": "BLOCKED-MISSING-RECORD-BYTES", "cash_event_id": "CE-FUND-0"}
     ],
     "exit_events": []
   },
@@ -42,8 +43,9 @@
     "cumulative_funding": -0.1,
     "guards": {
       "guard_pnl_basis": "GROSS_MINUS_FEES",
-      "funding_included_in_guard_basis": false,
-      "consecutive_loss_count": 0
+      "consecutive_loss_count": 0,
+      "consec_loss_ok": "BLOCKED-MISSING-SCENARIO-INPUT",
+      "guard_blocked_raw": "BLOCKED-MISSING-SCENARIO-INPUT"
     },
     "metrics": "BLOCKED-DESIGN-UNENUMERATED",
     "warnings": [],
@@ -78,6 +80,26 @@
     {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-FUNDING-RULE2-08-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-754."}
   ],
   "unchanged_sealed_values": "notional 100, long_cashflow_rate -0.001, funding_cash_delta -0.1, cumulative_funding -0.1, equity_curve first 1000 / last 999.9, and every guard node are byte-identical to the pre-v1.5 seal.",
+  "v18_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "RE-DERIVED under the design 23.1 closed shape: flat members sequence/decision/kernel_semantics_version, per-reason event_timestamp presence, no lifecycle_id, exact per-reason payloads, section-3 order.", "authority": "P012_FRESH_DESIGN_V1.md:987-1053 (table :1016-1024) and the tables-revision item 1 at :1175-1181."},
+    {"pointer": "/EVENT_SURFACE/*/*/kernel_semantics_version", "change": "ADDED to every member of all six corrected event containers.", "authority": "P012_FRESH_DESIGN_V1.md:998-1002 (section-4 identity / GM28-F03) and tables-revision item 2 at :1182-1185."},
+    {"pointer": "/EVENT_SURFACE/decision_events/1", "change": "FUNDING_ELIGIBILITY kept as the one terminal eligibility reason and reduced to the closed triple {funding_event_id, eligible, position_snapshot_rule} plus the required event_timestamp; lifecycle_id is REMOVED because it is not a decision_events member. The design labels the FUNDING_ELIGIBILITY spelling an explicit AMENDMENT-CHOICE, not a forced identity.", "authority": "P012_FRESH_DESIGN_V1.md:1024, :1007-1009, :1052; change-log row :1233."},
+    {"pointer": "/RESULT_SURFACE/guards/funding_included_in_guard_basis", "change": "REMOVED. The design disposes G76-05c as not a comparison node: the compared basis and guard outcomes already carry the rule, so the second boolean adds no independent fact.", "authority": "P012_FRESH_DESIGN_V1.md:1152-1155; tables-revision item 4 at :1189-1192."},
+    {"pointer": "/RESULT_SURFACE/guards/consec_loss_ok and /RESULT_SURFACE/guards/guard_blocked_raw", "change": "ADDED as required members of the closed guards object, both marked BLOCKED-MISSING-SCENARIO-INPUT. consecutive_loss_count 0 is derivable (no lifecycle closes in or before the window) but the guard predicate is count < max_consecutive_losses and section 22.6 binds no guard switch or maximum for either RULE2-08 row. Borrowing M-09 GUARD07 from RULE2-07 is refused - the design states that another scenario is not authority. Recorded as discrepancy W167-D01.", "authority": "P012_FRESH_DESIGN_V1.md:1139-1143 (closed guards set), design 13:384 (the predicate), 22.6:888 (no guard binding), 22.8:923 (no cross-scenario authority)."},
+    {"pointer": "/RESULT_SURFACE/cumulative_funding", "change": "RE-CONFIRMED PRESENT and unchanged at -0.1; the micro-fold makes the member unconditional on every DEF-P012-08 RESULT. The design labels that unconditional presence an AMENDMENT-CHOICE (minimal fixed shape), not a forced identity.", "authority": "P012_FRESH_DESIGN_V1.md:1131, :1196-1200; change-log row :1236."}
+  ],
+  "w172_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "NO ROW ADDED under owner Reading Y. The pre-event entry is on the [OPEN-EMBED-04] state-building prefix, and design 22.6:888 sets the observation window to [2000-01-01T00:00:00Z, 2000-01-01T00:01:00Z], excluding the candidate setup fill; sizing and admission are therefore not evaluated inside the compared window, as the empty fill_events and fee_events containers already show. The guard projection is evaluated but section 23.1 admits no guard reason. Re-checked this session.", "authority": "P012_FRESH_DESIGN_V1.md:888, :1026-1028, :1033-1034."},
+    {"pointer": "/open_item_bindings/0/effect_on_this_scenario", "change": "CORRECTED under G83-F01's sibling finding G83-F04: the OPEN-10 binding still asserted funding_included_in_guard_basis as a live false fact after item 4 removed that member from this artifact. The sentence now records the removal instead of re-asserting a forbidden member.", "authority": "P012_FRESH_DESIGN_V1.md:1152-1155, :1189-1192; G83-F04."},
+    {"pointer": "/blocked_cells", "change": "TWO ENTRIES ADDED under G83-F01: /guards/consec_loss_ok and /guards/guard_blocked_raw were created as marked JSON values by lane W167 but were never entered on this artifact's blocked_cells ledger, so a reader trusting the ledger as the census would have missed both. The ledger now has eight entries and matches the artifact's marked cells. No value changed and no marker changed.", "authority": "G83-F01; DERIVATIONS.md W167-D01."},
+    {"pointer": "/EVENT_SURFACE and /RESULT_SURFACE value tokens", "change": "LABELING PASS under G83-F06. Every tables-authored value token on the two comparison surfaces of this artifact is now named in authored_value_tokens with the design text that forces the fact and the statement that the spelling is tables-authored. Adds no node and moves no value.", "authority": "G83-F06; DERIVATIONS.md discrepancy W167-D02 (D-13 class)."}
+  ],
+  "authored_value_tokens": [
+    {"pointer": "/EVENT_SURFACE/funding_events/0/position_side", "value": "LONG", "design_fact": "P012_FRESH_DESIGN_V1.md:406 (side_factor +1 for long) and :417 (the position_side field).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/cash_events/0/kind", "value": "FUNDING", "design_fact": "P012_FRESH_DESIGN_V1.md:71 (section 2.1 cash-event kinds).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/RESULT_SURFACE/final_position/side", "value": "LONG", "design_fact": "P012_FRESH_DESIGN_V1.md:275-280 (section 10 table rows name the Long position) and :406 (side_factor +1 for long).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/RESULT_SURFACE/guards/guard_pnl_basis", "value": "GROSS_MINUS_FEES", "design_fact": "P012_FRESH_DESIGN_V1.md:1147-1150 and :378-380 fix the basis, spelled GROSS-MINUS-FEES in the design text.", "spelling": "TABLES-AUTHORED: the underscore spelling GROSS_MINUS_FEES is this family's serialization of the design's hyphenated GROSS-MINUS-FEES. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
+  ],
   "blocked_cells": [
     {"surface": "EVENT_SURFACE", "pointer": "/funding_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds every FundingSchedule member value but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer, so the exact record bytes still do not exist; :697-700 keeps digests build artifacts."},
     {"surface": "EVENT_SURFACE", "pointer": "/funding_events/0/source_event_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design 22.3:833-838 names the six exact source-event members, but 22.1:697-700 fixes only sorted keys, no BOM, LF, final LF, duplicate-key refusal and finite tokens; it does not fix the separator or indentation width, so the exact byte string that the SHA-256 hashes is still not determined. Recorded as discrepancy V15-D05."},
@@ -85,6 +107,7 @@
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as for the funding schedule digest."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+    {"surface": "RESULT_SURFACE", "pointer": "/guards/consec_loss_ok", "marker": "BLOCKED-MISSING-SCENARIO-INPUT", "reason": "ADDED BY LANE W172 (G83-F01): the cell was created as a marked JSON value by lane W167 but was never entered on this ledger, so the ledger under-counted the artifact by two cells. Design 23.4:1139-1143 requires consec_loss_ok on a present guards object and tables-revision item 4 at :1189-1192 names RULE2-08-RED for guard re-derivation, but the guard predicate is count < max_consecutive_losses (design 13:384) and design 22.6:888 binds no guard switch and no max_consecutive_losses for either RULE2-08 row; M-09 :737 binds GUARD07 only for RULE2-07. Recorded as W167-D01."},
+    {"surface": "RESULT_SURFACE", "pointer": "/guards/guard_blocked_raw", "marker": "BLOCKED-MISSING-SCENARIO-INPUT", "reason": "ADDED BY LANE W172 (G83-F01): as for /guards/consec_loss_ok. Same missing scenario input, same W167-D01 disposition; the value was marked in the artifact but absent from this ledger."}
   ]
 }

@@ -15,6 +15,26 @@
   historical record; the `## v1.5 revision` section at the end of this file re-derives every cell
   those two sources make computable, keeps every other sealed value byte-identical, and states what
   stays blocked. Where the two disagree, the `## v1.5 revision` section governs.
+- **Design revision applied (lane W167, 2026-09-01):** the bundle now derives from design **v1.8**
+  (same file, 1273 lines; sole normative change is §23 lines 969-1273, which supersedes the v1.7
+  §23 text). Sections 1-22 are unchanged from v1.5 and their line numbers were re-verified by
+  heading position this session, so every v1.5 citation in this worksheet and in all 17 artifacts
+  remains exact. Owner addendum 22 authorised the single micro-fold closing G79-F01/DS35-F01 and
+  DS35-F02..F04 (design `:1231-1237`); addenda 19, 20 and 21 apply unchanged. The
+  `## v1.8 revision` section at the end of this file re-derives exactly the seven golden-node
+  classes enumerated by the design's own tables-revision scope list (`:1175-1202`) and states what
+  §23 forces versus what it labels an `AMENDMENT-CHOICE`. Where it disagrees with any earlier
+  section of this file, the `## v1.8 revision` section governs.
+- **Owner Reading Y applied (lane W172, 2026-09-01):** owner addendum 26 answered **W167-D04**. The
+  owner chose **Reading Y**: a `decision_events` row is required for every closed §23.1 reason whose
+  named decision is **actually evaluated** on that scenario, even where the prior tables artifact
+  never carried that reason, so §23.1 `:1033-1034` applies to the tables family on its own terms. The
+  anti-padding half of the same sentence still binds: a reason is emitted because its named decision
+  was evaluated, never to equalize row counts. The `## W172 Reading Y revision` section at the end of
+  this file records the ten added rows on eight scenarios, their derived payloads, the two rows
+  deliberately withheld, and the disposition of findings G83-F01..F06. Where it disagrees with any
+  earlier section of this file, including `## v1.8 revision`, the `## W172 Reading Y revision`
+  section governs.
 - **Repository evidence identity:** `C:\WFMERGE54` HEAD `108ea066a710ff7ef5c09246903fe3d523da1d56`;
   `mtc_v2/core` tree OID `c7f4aa1b46792c67c171237cea62c06497aa35ea`. Both re-verified this session
   with `git rev-parse HEAD` and `git rev-parse HEAD:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core`;
@@ -1591,6 +1611,19 @@ Recorded per clause C-2; none is absorbed.
   touching that file, so it was left exactly as found and is **not** listed in the manifest's
   `files` array, which means the manifest's `byte_discipline` sentence remains true as written.
   Raised for the Lead, who owns that file.
+  **RE-MEASURED AND CORRECTED BY LANE W172 under G83-F05.** The 2827-byte / 34-CR / no-final-LF
+  measurement above describes the file as it stood at lane W156; it is **false against the file on
+  disk now**. Measured this session by byte inspection of
+  `C:\tmp\P012_CONTRACT_TABLES_W127\IMPLEMENTATION_ANCHOR_DRAFT.json`: SHA-256
+  `97a3c196323c08e2cf796f31569b396a5b8f886d0b347e3855984b8b9baab0f4`, **3268 bytes, 0 CR bytes, no
+  BOM, final LF present**. The file therefore now CONFORMS to design `:480`, and V15-D07 as a
+  current-disk claim is **CLOSED by re-measurement**, not by any act of this lane - the file was not
+  touched by W172 and remains outside `files[]`. The size grew and the CRLF endings disappeared
+  between W156 and now; the Lead's reseal_history block is inside the file at `:35-41`. Which act
+  rewrote those bytes is **NOT VERIFIED** - no pre-W167 copy of the file was found. W167's report
+  (`W167_TABLES_V18_REPORT.md:74-75,232`) repeats the stale claim that V15-D07 "still stands"; that
+  report is outside this lane's write scope and the correction is recorded here and in
+  `W172_READING_Y_REPORT.md` instead.
 
 ### R-21 Honest limits of this revision
 
@@ -1602,3 +1635,778 @@ binary64 result above is reproducible by hand from the integer method in R-0.3. 
 `SEMANTIC_COVERAGE_REVIEW` remains owner-held and PENDING, and the claude family remains excluded
 from that reviewer role because it authored these tables. Seal state and the two commit identities
 remain the Lead's act; this lane did not touch them.
+
+---
+
+## v1.8 revision
+
+**Lane:** W167 (`C:\tmp\LANE_PROMPTS_20260828\LANE_W167_TABLES_V18.md`). Same author family and the
+same independence fence as the rest of this worksheet: no `mtc_v2.core` import, no `observed/` path,
+no implementer-authored input file, no kernel executed. Every value below is obtained by written
+arithmetic or by literal member-set reconciliation from the design text and the owner decision file
+alone. Where the two disagree with an earlier section of this worksheet, this section governs.
+
+**Design under revision:** `C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md`, version **v1.8**
+(title line 1; v1.8 change log `:1229-1251`). File length **1273 lines**, final LF present.
+
+### W-0 Line-number verification and the revision fence
+
+The v1.8 file appends **§23** and changes nothing before it. Verified by re-reading the heading line
+numbers rather than trusting the change log: `## 22.` is still at `:676`, `### 22.8` at `:918`, the
+v1.5 change log at `:932`, and `## 23.` begins at `:969` and runs to EOF at `:1273`. Every v1.5
+citation used by the `## v1.5 revision` section above and by all 17 sealed artifacts is therefore
+**still exact**; no citation in this bundle needed re-mapping. The §23 subsection spans are:
+
+| §23 subsection | Lines |
+|---|---|
+| 23 preamble (supersedes the v1.7 §23 text; sole v1.8 normative change) | 969-985 |
+| 23.1 `decision_events` closed shape and reason vocabulary | 987-1053 |
+| 23.2 equity-curve observation-window rule | 1055-1072 |
+| 23.3 closed `fill_events` / `exit_events` member sets | 1074-1109 |
+| 23.4 closed `RESULT_SURFACE`, guards and refusal objects | 1111-1168 |
+| 23.5 TABLES REVISION SCOPE and expected KERNEL DELTA | 1170-1227 |
+| 23.6 v1.8 change log | 1229-1251 |
+| 23.7 v1.8 closed enumeration summary | 1253-1273 |
+
+**Scope fence.** Design `:1171-1172` limits the tables family to seven numbered golden-node classes
+and then re-seal by the Lead. This lane changed only those classes. It did **not** touch
+`scenario_catalog.json`, any catalog `input.digest`, `IMPLEMENTATION_ANCHOR_DRAFT.json`, or the
+manifest's `seal` / `seal_state` blocks. `CONTRACT_TABLES_MANIFEST.json` was edited in exactly two
+respects, both stated in `revision_history`: the `files[]` `sha256`/`bytes` entries of the files this
+lane actually revised, and the `design` version/line-span block. Design `:1204-1227` is the KERNEL delta
+list and is **not** authority for this lane to edit code; nothing outside this bundle was written.
+
+**Owner authority.** Addendum 22 authorised exactly one micro-fold closing four findings
+(`:1231-1237`): `FUNDING_ELIGIBILITY` labelled `AMENDMENT-CHOICE` at all three enumeration sites,
+`COLLISION_RESOLVED.collision` closed as a JSON boolean with domain `{false,true}` present on the
+sole-class receipt, tables-revision item 1 re-pointed at the nine-closed-reason mapping, and
+`cumulative_funding` made unconditional on every DEF-P012-08 RESULT. Addenda 19, 20 and 21 apply
+unchanged; nothing in this revision re-opens or re-reads them.
+
+### W-1 What §23 forces and what it labels a choice
+
+The lane requires this split to be stated rather than presented as forced. Read off the design's own
+labels:
+
+| Class revised here | Disposition in v1.8 | Cite |
+|---|---|---|
+| `kernel_semantics_version` on every member of all six containers | **FORCED** by §4's every-event identity rule | `:998-1002`, `:1257` |
+| No `lifecycle_id` on a `decision_events` member | **FORCED** — lifecycle joins live on the typed economic/position projections | `:1007-1009` |
+| `MIN_NOTIONAL_ADMITTED` / `REFUSED_MIN_NOTIONAL` payload `{order_notional, required_min_notional}` | **FORCED** by §8's `admit iff order_notional >= min_notional` | `:1018-1019` |
+| `INSTRUMENT_RECORD_VALIDATED` / `REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION` payload `{field, record_value, runtime_value}` | **FORCED** by §§5.2 and 9 | `:1020-1021` |
+| Fill common 14-member set; exit common 8-member set; conditional `exit_id` / `fill_trigger` / `target_fraction` / `reference_quantity`; `unrounded_fill_price` FORBIDDEN | **FORCED** (CLOSED) by §§2.1, 3, 4, 10-13 | `:1076-1109`, `:1262-1264` |
+| `max_consecutive_losses` forbidden on RESULT | **FORCED** — it is an M-09 configuration input | `:1145-1147` |
+| Guard basis `GROSS-MINUS-FEES` on all three named controls | **FORCED** by owner addendum 15 item 35 | `:1147-1150` |
+| Refusal `order_notional` replacing `observed_notional` | **FORCED** — §8 names `order_notional` | `:1165-1166` |
+| Flat decision rows, no `details` wrapper | `AMENDMENT-CHOICE` | `:1258` |
+| `SIZING_COMPUTED` spelling and its one-row fold | `AMENDMENT-CHOICE` (third form; §§3 and 7 force the facts, not the spelling) | `:1017`, `:1044`, `:1243` |
+| `MIN_NOTIONAL_ADMITTED` completed-state spelling | `AMENDMENT-CHOICE` | `:1018` |
+| `PROTECTIVE_STOP_EVALUATED` spelling and the omission of bar OHLC | `AMENDMENT-CHOICE` | `:1022` |
+| One `COLLISION_RESOLVED` spelling; `collision` present on the sole-class receipt rather than varying the closed member set | `AMENDMENT-CHOICE` (the boolean **domain** and content rule are forced by §12) | `:1023`, `:1234` |
+| **`FUNDING_ELIGIBILITY` as the reason spelling, one reason for eligible and skipped alike** | `AMENDMENT-CHOICE` — §14 forces event-time eligibility and its boolean terminal disposition, **not** this name | `:1024`, `:1052`, `:1233`, `:1260` |
+| Omitting `SLIPPAGE_RESOLVED`, `FEE_SCHEDULE_RESOLVED`, `GUARD_BASIS_RESOLVED`, `MARKET_EXIT_SELECTED` | `AMENDMENT-CHOICE` | `:1026-1031` |
+| Window-scoped `equity_curve.first`/`last`; run-scoped endpoints ABSENT | `AMENDMENT-CHOICE` — §§2.1, 15.3 and M-06 force neither reading | `:1066-1072`, `:1261` |
+| `price_tick_alignment` spelling | `AMENDMENT-CHOICE` | `:1092-1093` |
+| RESULT base spellings `trades` / `warnings` / `refusals` etc. | `AMENDMENT-CHOICE` where §15.3 states only the category | `:1119-1120`, `:1265` |
+| Positive `admitted` boolean retained | `AMENDMENT-CHOICE` | `:1129` |
+| **`cumulative_funding` unconditional on both DEF-P012-08 RESULT rows** | `AMENDMENT-CHOICE` — §14 names cumulative funding but is silent on member presence when nothing is eligible | `:1131`, `:1236`, `:1266` |
+| Top-level `collision` object forbidden; the decision row is the single receipt | `AMENDMENT-CHOICE` | `:1135-1137`, `:1251` |
+| `funding_included_in_guard_basis` forbidden | `AMENDMENT-CHOICE` (disposes G76-05c as *not a comparison node*) | `:1152-1155` |
+
+No value in this bundle is presented as design-forced where the design labels it a choice.
+
+### W-2 Item 1 — `decision_events` on all 17 scenarios
+
+**The mapping actually executed.** Design `:1175-1181` (the DS35-F03 repair) tells the tables family
+to reconcile *its own* prior reasons through the §23.1 independence table `:1042-1053`, removing only
+the names mapped to no separate reason and folding or renaming the others exactly as that table
+states, and says the kernel-only four-name removal set does **not** apply here. Executed literally:
+
+| Prior tables reason | v1.8 disposition | Rows affected |
+|---|---|---|
+| `SIZING_MULTIPLIER_IDENTITY` + `SIZING_SELECTOR` | FOLD to one `SIZING_COMPUTED` | 01-RED, 01-GREEN, 02-RED, 02-GREEN |
+| `ADMIT_MIN_NOTIONAL` | RENAME `MIN_NOTIONAL_ADMITTED` | 02-GREEN |
+| `REFUSED_MIN_NOTIONAL` | keep, flat, add required timestamp | 02-RED |
+| `REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION` | keep, flat, timestamp FORBIDDEN | 03-RED |
+| `INSTRUMENT_RECORD_VALIDATED` | keep, timestamp FORBIDDEN | 03-GREEN |
+| `PROTECTIVE_STOP_TRIGGER_EVAL` | RENAME `PROTECTIVE_STOP_EVALUATED`, drop the four `bar_*` members | 04-RED, 04-GREEN |
+| `SLIPPAGE_MODEL_IDENTITY` | REMOVE (mapped to no separate reason) | 05-RED, 05-GREEN |
+| `COLLISION_POLICY_IDENTITY` + `SAME_BAR_COLLISION` | FOLD to one `COLLISION_RESOLVED` | 06-RED, 06-GREEN, 06-EQUAL-PRICE-RED |
+| `FEE_SCHEDULE_IDENTITY` | REMOVE (mapped to no separate reason) | 07-RED |
+| `GUARD_BASIS_IDENTITY` | REMOVE (mapped to no separate reason) | 07-RED, 07-GREEN |
+| `FUNDING_ELIGIBILITY` | keep, reduce to the closed triple, drop `lifecycle_id` | 08-RED |
+| `FUNDING_TICK_SKIPPED` | RENAME `FUNDING_ELIGIBILITY`, `eligible=false` carries the skip | 08-GREEN |
+| `SEMANTICS_VALIDATED` | keep at sequence 0 on all 17 | all |
+
+`SEMANTICS_VALIDATED` stays on 03-RED: `:1034-1036` excepts only a *preflight*-refused scenario, and
+`:1035-1036` states that a pre-evaluation refusal still produces its typed refusal reason. 03-RED produces
+a scenario output carrying that refusal, so it is not preflight-refused; the design's own preflight
+case is `PROBE-P012-03-A`, which refuses before any scenario output exists (design `:263`).
+
+**Per-reason timestamps.** `:1004-1006`: `REQUIRED` means the timestamp of the `MarketEvent` or
+funding event being evaluated under M-06; `FORBIDDEN` means absent, not null. The evaluated event per
+row is fixed by §22:
+
+```
+01-*, 02-*, 05-*, 07-RED entry decisions -> ENTRY100  = 2000-01-01T00:11:00Z   [:732 M-04]
+04-RED / 04-GREEN stop evaluation        -> eval bar  = 2000-01-01T00:13:00Z   [:868-869]
+06-RED / 06-GREEN / 06-EQUAL collision   -> eval bar  = 2000-01-01T00:12:00Z   [:872-874]
+08-RED / 08-GREEN funding eligibility    -> TEST-FUND-1 = 2000-01-01T00:00:00Z [:888-889, :833-838]
+03-RED / 03-GREEN record decisions       -> FORBIDDEN (performed before event evaluation) [:1020-1021]
+```
+
+**Payload arithmetic that was re-derived rather than copied.** The only new numbers the closed sets
+require are the `SIZING_COMPUTED` `order_notional` values, and each is the section-7 product
+`qty * final_entry_fill * contract_multiplier` already sealed on `/RESULT_SURFACE/order_notional`:
+
+```
+01-RED    5 * 100 * 2 = 1000      (selector RISK;     risk_amount 100 / (stop distance 10 * cm 2) = 5)
+01-GREEN  1 * 100 * 1 = 100       (selector FALLBACK; fallback_notional 100 / (100 * 1) = 1)
+02-RED    1 * 100 * 1 = 100       (selector RISK;     risk_amount 10 / (10 * 1) = 1)
+02-GREEN  1 * 100 * 1 = 100       (selector RISK;     identical inputs to 02-RED)
+```
+
+All four equal the already-sealed `order_notional` node byte for byte; no equity, fee, funding, PnL
+or fill value changed anywhere in this item.
+
+**Members dropped because they are outside a closed set** (not because they were wrong): the sizing
+rows' `stop_price` / `stop_distance` / `risk_amount` / `reason` / `fallback_notional`; the stop rows'
+`bar_open` / `bar_high` / `bar_low` / `bar_close`; 04-GREEN's `"reference_source": null`; the
+collision rows' folded `same_bar_collision_policy_id` duplicate; 07-RED's fee/guard identity
+payloads; 08-RED's decision `lifecycle_id`; 08-GREEN's `reason` and `event_coverage_present`. The
+`event_coverage_present` fact survives in that artifact's `derivable_empty_containers_note`, which
+design `:429` still requires to be true.
+
+**04-GREEN's null.** `:1022` closes GM28-F05: `reference_source` and `reference_price` are both
+present **iff** a fill reference was selected, and both absent if neither predicate triggers. The
+sealed `"reference_source": null` was therefore a wrong tagged state under `:508` (null and absent
+are different nodes) and is removed, not re-valued. This is the only sealed *node kind* this item
+corrected.
+
+**Row-set reading.** See discrepancy **W167-D04**: §23.1 `:1033-1034` also carries a general
+occurrence rule, which read on its own would add further rows. This lane executed item 1's
+reconciliation mapping, which is the tables-family instruction, and recorded the alternative.
+
+### W-3 Item 2 — section-4 identity on every event member
+
+`:998-1002` and `:1182-1185`: every member of `decision_events`, `fill_events`, `cash_events`,
+`fee_events`, `funding_events` and `exit_events` requires `kernel_semantics_version`, with no
+container exception, explicitly including the §13 fee rows and §14 funding rows. Added mechanically
+with the constant `"2.0.0"` — the value is the artifact's own
+`expected_semantics_version` and `run_manifest.kernel_semantics_version`, so no new fact is asserted.
+Members added per artifact:
+
+```
+01-RED 5   01-GREEN 5   02-RED 3   02-GREEN 6   03-RED 2   03-GREEN 2
+04-RED 7   04-GREEN 2   05-RED 4   05-GREEN 4
+06-RED 12  06-GREEN 7   06-EQUAL 12
+07-RED 9   07-GREEN 1   08-RED 4   08-GREEN 2      total 87
+```
+
+(the count is every member of all six containers in that artifact, including the re-authored
+`decision_events` rows; each carries the field exactly once). Verified mechanically afterwards: every
+member of all six containers in all 17 artifacts carries the field, and every `sequence` still equals
+its array index under `SEQUENCE_FIELD_V1` (`:512`).
+
+### W-4 Item 3 — `equity_curve` under the §23.2 window rule
+
+`:1057-1064` now fixes the rule the `## v1.5 revision` section had to record as missing (**V15-D02**):
+`first` is realized equity at `observation_window.start_timestamp` after every **earlier** cash event
+but **before** any cash event at the inclusive start timestamp; `last` is `first` plus, in
+section-3/array order, every `cash_events.signed_delta` whose event timestamp lies in the closed
+window; with no in-window cash event `last == first`; pre-window fees, funding and gross realizations
+affect `first`; unrealized position value never does. `:1066-1072` labels the window scope an
+`AMENDMENT-CHOICE` and states that run-scoped endpoints are **not** `CORRECTED_V2` comparison nodes.
+
+Re-derived for the five rows item 3 names. Every window here starts and ends on the evaluation bar,
+so every in-window cash row carries exactly the start timestamp and is therefore excluded from
+`first` and included in `last`:
+
+```
+04-RED    window [00:13:00Z, 00:13:00Z]
+          earlier cash: pre-window ENTRY fee only, fee_notional 100*1*1 -> -fl(0.045)
+          first = 1000 - fl(0.045)                       = 999.955            0x408f3fa3d70a3d71
+          in-window: FEE -fl(0.0405) then GROSS -10
+          last  = 999.955 - fl(0.0405) - 10              = 989.91450000000009 0x408eef50e560418a
+04-GREEN  same window; no in-window cash row
+          first = last = 999.955
+06-RED    window [00:12:00Z, 00:12:00Z]
+          earlier cash: pre-window ENTRY fee, fee_notional 100*2*1 -> -fl(0.09)
+          first = 1000 - fl(0.09)                        = 999.91             0x408f3f47ae147ae1
+          in-window: -fl(0.04725), +5, -fl(0.0495-), +10
+          last                                           = 1014.81325         0x408fb68189374bc7
+06-GREEN  first = 999.91 ; in-window -fl(0.081), -20
+          last                                           = 979.829            0x408e9ea1cac08312
+06-EQUAL  first = 999.91 ; in-window -fl(0.04725), +5, -fl(0.04725), +5
+          last                                           = 1009.8155          0x408f8e8624dd2f1b
+```
+
+`fl(0.0495-)` is the one-ULP-low `0.049499999999999995` derived in R-0.3; the intermediate binary64
+steps and raw bits are unchanged from R-0.4 and were re-checked against it rather than re-asserted.
+**All ten tokens are byte-identical to the v1.5 seal.** Design `:1188` warns that prior authorship is
+not proof; these five rows survive because the §23.2 rule reproduces them, not because they were
+already written.
+
+The rule was also applied to the twelve rows item 3 does not name, as a consistency check: each takes
+the M-06 default first-through-last-bar window (`:734`), has no cash event before or at its start
+timestamp, and therefore keeps `first` = the account seed `1000`, with `last` the same accumulation
+already sealed. No token moved. `08-GREEN` is the one row where the new "pre-window gross
+realizations affect `first`" clause bites — recorded as **W167-D03**.
+
+### W-5 Item 4 — guards
+
+`:1142-1147`: a present `guards` object admits exactly `guard_pnl_basis`,
+`consecutive_loss_count`, `consec_loss_ok`, `guard_blocked_raw`, plus `last_closed_guard_pnl`
+required exactly when a lifecycle closed and produced that fact; `max_consecutive_losses` and
+`funding_included_in_guard_basis` are forbidden.
+
+```
+07-RED    remove max_consecutive_losses (M-09 input, not a RESULT member)
+          remaining: guard_pnl_basis GROSS_MINUS_FEES  [owner addendum 15 item 35, :1147-1150]
+                     last_closed_guard_pnl -0.2        [required: lifecycle 1 closed, gross 0 + two
+                                                        fee deltas of -fl(0.1) = fl(-0.2)]
+                     consecutive_loss_count 1          [design 13:384: the closed lifecycle is a loss
+                                                        on the gross-minus-fees basis]
+                     consec_loss_ok false, guard_blocked_raw true
+                                                       [design 13:384: count < max is 1 < 1 = false]
+          every remaining value byte-identical.
+07-GREEN  remove max_consecutive_losses
+          remaining: GROSS_MINUS_FEES, count 0, consec_loss_ok true, guard_blocked_raw false
+          last_closed_guard_pnl stays ABSENT - no lifecycle closes (design 13:384, 22.6:887) and
+          :1145 requires absent, not zero or null. Values byte-identical.
+08-RED    remove funding_included_in_guard_basis   [:1152-1155 disposes G76-05c as NOT a
+                                                    comparison node]
+          guard_pnl_basis GROSS_MINUS_FEES         [addendum 15 item 35; funding stays out of the
+                                                    basis, which is exactly why the extra boolean
+                                                    carries no independent fact]
+          consecutive_loss_count 0                 [derived: the candidate prefix only opens, the
+                                                    position is LONG at and after the funding event
+                                                    and final_position is LONG, so no lifecycle has
+                                                    closed at any point]
+          last_closed_guard_pnl ABSENT             [same reason]
+          consec_loss_ok / guard_blocked_raw       BLOCKED-MISSING-SCENARIO-INPUT - see W167-D01
+```
+
+### W-6 Item 5 — conditional fill and exit members
+
+`:1090-1099` and `:1106-1107`. Applied to RULE2-04 and the RULE2-06 family and re-verified on all 17:
+
+```
+unrounded_fill_price REMOVED   05-RED (101) and 05-GREEN (100). :1097-1099 makes unrounded_fill a
+                               section-11 formula intermediate, not a member; the final tick-aligned
+                               price and the three slippage facts already carry the section-11 facts.
+exit_id                        present on every exit-class fill, absent on every entry fill: verified
+                               on every fill row in the bundle.
+                               [CENSUS CORRECTED BY LANE W172 under G83-F02: this line originally
+                               read "on all 22 fill rows in the bundle". The measured container
+                               lengths are 13 fill_events members and 7 exit_events members across
+                               the 17 goldens (01-RED 1, 01-GREEN 1, 02-GREEN 1, 04-RED 1, 05-RED 1,
+                               05-GREEN 1, 06-RED 2, 06-GREEN 1, 06-EQUAL 2, 07-RED 2 = 13 fills;
+                               04-RED 1, 06-RED 2, 06-GREEN 1, 06-EQUAL 2, 07-RED 1 = 7 exits).
+                               W167's report additionally said "all 6 exit rows" at
+                               W167_TABLES_V18_REPORT.md:33; W-6's own prose below already
+                               enumerates seven exits. The conditional rules themselves were
+                               re-verified on the 13 and 7 rows that exist and still hold, so NO
+                               GOLDEN VALUE CHANGES from this correction - only the count sentence
+                               was wrong.]
+fill_trigger                   required only on PROTECTIVE_STOP_EXIT. Present and correct on 04-RED
+                               (GAP_OPEN, design-named at :289). ADDED to 06-GREEN's stop fill and to
+                               its exit row, where it was missing. Absent on every entry, target and
+                               market-exit fill (07-RED's MARKET_EXIT row checked explicitly).
+target_fraction /              required only on TARGET_EXIT: present on the four target fills of
+reference_quantity             06-RED and 06-EQUAL, absent on every stop, entry and market-exit fill.
+exit_events.fill_trigger       re-derived: required on 04-RED (GAP_OPEN) and on 06-GREEN's
+                               PROTECTIVE_STOP exit; absent on the four TARGET exits and on 07-RED's
+                               time-stop market exit.
+```
+
+06-GREEN's added value is derived from the section-10 table (`:277-281`): long, `open 100 <= stop 90`
+is false, `low 85 <= stop 90` is true, so the trigger is the stop-level touch and the reference is
+the stop level `90` — which is exactly the reference the artifact already sealed. The design names
+only the `GAP_OPEN` token, so the non-gap spelling `STOP_TOUCH` is tables-authored; recorded as
+**W167-D02**.
+
+### W-7 Item 6 — the top-level RESULT member set
+
+`:1116` fixes the seven base members and `:1128-1131` the four conditionals; `:1133-1137` forbids
+everything else and the top-level `collision` object. Re-derived on all 17:
+
+| Row | Base 7 | `order_notional` | `admitted` | `guards` | `cumulative_funding` | change |
+|---|---|---|---|---|---|---|
+| 01-RED / 01-GREEN | yes | 1000 / 100 | - | - | - | none |
+| 02-RED | yes | 100 | - (refused, not admitted) | - | - | none |
+| 02-GREEN | yes | 100 | `true` | - | - | none |
+| 03-RED / 03-GREEN | yes | - | - | - | - | none |
+| 04-RED / 04-GREEN | yes | - | - | - | - | none |
+| 05-RED / 05-GREEN | yes | 101 / 100 | - | - | - | none |
+| 06-RED / 06-GREEN / 06-EQUAL | yes | - | - | - | - | **top-level `collision` REMOVED** |
+| 07-RED / 07-GREEN | yes | - | - | yes | - | see W-5 |
+| 08-RED | yes | - | - | yes | `-0.1` | see W-5 |
+| 08-GREEN | yes | - | - | - | `0` | none |
+
+`order_notional` is retained on exactly DEF-P012-01, DEF-P012-02 and DEF-P012-05 and is absent from
+RULE2-04/06/07/08, as `:1128` requires — note that 07-RED's entry *does* have a notional of
+`1 * 100 * 1 = 100`, and `:1133-1135` expressly refuses to make a generic kernel-computed
+`order_notional` a node of a scenario whose design projection does not name it.
+
+`cumulative_funding` is now **unconditional** on both DEF-P012-08 rows (`:1131`, `:1196-1200`). Both
+were already present — `-0.1` on 08-RED and `0` on 08-GREEN — so the micro-fold confirms them rather
+than changing them, and the tables list and the kernel list now agree. The design labels the
+unconditional presence an `AMENDMENT-CHOICE`, not a forced identity (`:1131`, `:1236`).
+
+The three removed `collision` objects carried `is_pessimistic` and `ambiguity_record` members that
+§12 never enumerated; `:1135-1137` makes the closed `COLLISION_RESOLVED` decision the single receipt.
+Nothing those objects carried is lost: `collision`, `same_bar_collision_policy_id` and
+`ordered_chosen_exit_ids` are all members of the decision row, and the policy id is additionally on
+`run_manifest`, whose internal members §23 does not close.
+
+### W-8 Item 7 — refusal objects
+
+`:1162-1166`. `RULE2-02-RED`'s refusal member `observed_notional` is **renamed** `order_notional`,
+giving the closed triple `{code, order_notional, required_min_notional}` = `{REFUSED_MIN_NOTIONAL,
+100, 101}`; the design says the prior spelling is replaced rather than canonized because §8 names
+`order_notional`. `RULE2-03-RED`'s refusal was re-checked against the five-member tagged object
+`{code, field, record_value, runtime_value, stage="PRE_EVALUATION"}` and already conformed exactly,
+with no free-form `detail`; **no byte of it changed**. No other artifact has a `refusals[]` member.
+
+### W-9 What is still blocked after v1.8
+
+| Marker | Count over the two surfaces | Where | Why v1.8 does not close it |
+|---|---|---|---|
+| `BLOCKED-MISSING-RECORD-BYTES` | 81 | every `*_record_digest`, `*_schedule_digest`, `instrument_source_document_digest`, `source_event_digest` | unchanged: `:697-700` keeps digests `MECHANICAL` build artifacts, `:759-761` refuses to fabricate `captured_at_utc` / `human_reviewer`, and the canonical-JSON rule still fixes no separator or indentation width (**V15-D05**) |
+| `BLOCKED-DESIGN-UNENUMERATED` | 17 | one `/RESULT_SURFACE/metrics` per artifact | `:1271` states in terms that this amendment "does not un-block design-unenumerated metrics" |
+| `BLOCKED-MISSING-SCENARIO-INPUT` | 2 | `RULE2-08-RED` `/RESULT_SURFACE/guards/consec_loss_ok` and `/guard_blocked_raw` | **new**: §23.4 newly requires four guard members while §22.6 binds no guard configuration for RULE2-08 (**W167-D01**) |
+| `BLOCKED-BUILD-ARTIFACT` | 0 on these surfaces | catalog `input.digest`, probe copies | untouched by this lane |
+
+**The `decision_events` vocabulary block is CLOSED.** All 17 artifacts previously carried a
+`blocked_cells` entry reading "the design fixes no complete `decision_events` reason vocabulary";
+§23.1 now enumerates nine closed reasons with exact per-reason member sets, so that entry is removed
+from all 17. That is the only entry removed. Design `:1271-1273` confirms the amendment closes the
+named schema classes and nothing else, and no other blocked cell was shrunk. Measured
+mechanically over the two surfaces of all 17 artifacts after the revision, with a structural walk
+that counts leaf string values equal to a marker: `BLOCKED-MISSING-RECORD-BYTES` 81,
+`BLOCKED-DESIGN-UNENUMERATED` 17, `BLOCKED-MISSING-SCENARIO-INPUT` 2, `BLOCKED-BUILD-ARTIFACT` 0,
+`BLOCKED-ON-OPEN-nn` 0. The bundle's one non-surface `BLOCKED-MISSING-SCENARIO-INPUT`
+(`RULE2-08-GREEN` `/observation_window/end_timestamp`) is unchanged.
+
+**V15-D02 is CLOSED** by §23.2, as a labelled choice rather than a forced identity. Every artifact
+sentence that recorded it as an open scoping question has been rewritten to cite `:1057-1072` and to
+say so.
+
+### W-10 Discrepancies raised by this revision
+
+Recorded per clause C-2; none is absorbed into a derived value.
+
+- **W167-D01** — §23.4 requires four guard members; §22.6 binds no guard configuration for RULE2-08.
+  `:1139-1143` makes `consec_loss_ok` and `guard_blocked_raw` required members of a present `guards`
+  object, and `:1189-1192` names `RULE2-08-RED` for guard re-derivation. The guard predicate is
+  `count < max_consecutive_losses` (design `:384`). `consecutive_loss_count = 0` is derivable, but
+  §22.6 `:888` binds no guard switch and no maximum for either RULE2-08 row, and only RULE2-07 binds
+  `GUARD07` / `max_consecutive_losses = 1` (M-09 `:737`). Design `:923` states that another
+  scenario's value is not authority, so this lane refused to borrow RULE2-07's maximum and marked
+  both cells `BLOCKED-MISSING-SCENARIO-INPUT`. Under any `max_consecutive_losses >= 1` the values
+  would be `true` and `false`; the design binds no such value here. **Owner or §16 resolution
+  requested**, or an input-embedding binding for RULE2-08's guard switches.
+- **W167-D02** — closed member presence, open value domain. §23.3 makes `fill_trigger` REQUIRED on
+  every `PROTECTIVE_STOP_EXIT` fill and its exit row, but the design names only the `GAP_OPEN` token
+  (`:289`); it enumerates no token for section 10's other long branch (`low <= stop`, reference =
+  `stop`). The same holds for `PROTECTIVE_STOP_EVALUATED`'s `predicate` and `reference_source` values
+  and for the `selector`, `target_ordering_rule` and `price_tick_alignment` values. This lane
+  authored `STOP_TOUCH` for the non-gap trigger and kept the pre-existing `OPEN_BEYOND_STOP`,
+  `NO_TOUCH`, `BAR_OPEN`, `RISK`, `FALLBACK`, `LONG_ASCENDING_TARGET_PRICE`,
+  `LONG_ASCENDING_TARGET_PRICE_THEN_EXIT_ID_UTF8_BYTE_ORDER`, `CEIL` and `FLOOR` spellings. These are
+  tables-authored strings in the sense of **D-13**, and every "first changed node" whose value they
+  are depends on them. v1.8 closed the member sets but not these domains.
+- **W167-D03** — §23.2 versus `RULE2-08-GREEN`'s unnamed pre-window bars. `:1063` makes pre-window
+  gross realizations affect `equity_curve.first`. Owner addendum 20 (5a) places lifecycle 1 opening
+  and closing on ordinary bars before the window but names none of them, and §22.6 `:889` declares
+  no closing evaluation bar. `first = 1000` is derivable only under the premise that the pre-window
+  round trip realizes zero gross PnL and consumes no cost schedule — which is the only reading
+  consistent with design `:429` fixing that row's compared cash/equity projection at `1000` and with
+  `:888-889` binding `C` as absent / `NOT_CONSUMED`. The premise is stated in the artifact and the
+  token is unchanged; the design does not state it directly.
+- **W167-D04** — two readings of which rows carry which reason. §23.1 `:1033-1034` states a general
+  occurrence rule ("emitted ... when their named decision is actually evaluated"), while §23.5 item 1
+  `:1175-1181` instructs the tables family to reconcile *its prior reasons* through the independence
+  table, and the occurrence sentence recurs only in the **KERNEL** delta list (`:1211`, "emit a
+  non-empty reason trail where a listed decision occurs"). Read on its own, the occurrence rule would
+  additionally place `MIN_NOTIONAL_ADMITTED` on 01-RED, 01-GREEN, 05-RED, 05-GREEN and 07-RED (every
+  admitted in-window entry evaluates section 3 step 8 against `minimum_notional = 0`),
+  `SIZING_COMPUTED` on 07-RED, and `PROTECTIVE_STOP_EVALUATED` on the three RULE2-06 rows (their stop
+  candidate is evaluated through the section-10 table). This lane executed item 1's mapping, because
+  it is the instruction addressed to this family and because the alternative would require authoring
+  a further predicate token (W167-D02). **Owner or §16 resolution requested** — the two readings give
+  materially different `decision_events` arrays on eight of the seventeen rows.
+- **W167-D05** — §7's sizing formula versus §11 / §22.5's declared quantity on `RULE2-05`. Section 3
+  steps 7-8 and §7 size from the **final** entry fill: for 05-RED that is
+  `fallback_notional 100 / (final fill 101 * cm 1) = 0.990099`, and `qty_step = 1` (`:870`) floors it
+  to `0`. §11 `:315` and §22.5 `:870` instead declare requested quantity `1`, which is what the
+  bundle seals, together with `order_notional 101`. The two cannot both hold. This is why no
+  `SIZING_COMPUTED` row was authored for either RULE2-05 row even under the W167-D04 alternative
+  reading: the row's `selector` and `order_notional` members cannot be filled without choosing
+  between §7 and §11. Recorded, not resolved; no sealed value was changed.
+  **NARROWED BY LANE W172 under G83-F03: W167-D05 is real on `RULE2-05-RED` ONLY.** The sentence
+  above over-extended it to `RULE2-05-GREEN`. On GREEN the reference and final entry fill are both
+  `100` (`slippage_bps = 0`, design `:315`, `:871`), so §7's fallback path gives
+  `100 / (100 * 1) = 1`, `qty_step = 1` floors it to `1`, and `order_notional = 1 * 100 * 1 = 100` -
+  which agrees with §11 `:315`'s declared requested quantity `1` and with the sealed
+  `/RESULT_SURFACE/order_notional 100`. There is no §7-versus-§11 conflict on GREEN, so
+  `SIZING_COMPUTED` **is** derivable there and lane W172 authored it under Reading Y. D05 continues
+  to block `SIZING_COMPUTED` on `RULE2-05-RED` alone, where the final fill is `101` and the two
+  sections give `0` and `1`.
+- **W167-D06** — the manifest `seal` / `seal_state` blocks are now stale by construction. This lane
+  revised 18 files and updated their `files[]` digests as the lane spec directs, but `EXPECTED_SEAL_SHA`
+  is the Lead's act and was deliberately left untouched, so it no longer covers the current bytes.
+  Design `:1171-1172` puts the re-seal with the Lead. Flagged so no reader mistakes the recorded seal
+  for a seal of these bytes.
+
+### W-11 Honest limits of this revision
+
+This revision makes the seven §23.5 golden-node classes conform to design v1.8 plus owner addendum 22
+(with addenda 19-21 unchanged). It verifies no implementation: no kernel, driver, backtest, verifier,
+generator or baseline was executed, no `observed/` path was read, no implementer input file was
+opened, and no corrected-kernel source exists. Local SHA-256, structural JSON walks and IEEE-754
+checks over this bundle's own files are the only computation performed, and every binary64 result
+cited here is the one already derived by hand in R-0.2 to R-0.4. No economic vector value, fee,
+funding delta, PnL, equity token, fill price, quantity or record identity changed: the item-3
+re-derivation reproduced all ten named equity tokens exactly, and the remaining six items are
+member-set, spelling and node-kind repairs plus two newly required guard members that could not be
+derived. The §16 `SEMANTIC_COVERAGE_REVIEW` remains owner-held and PENDING, and the claude family
+remains excluded from that reviewer role because it authored these tables. Design `:1271-1273` still
+governs the claim: this amendment makes the named schema classes design-computable; it does not claim
+the present goldens or kernel conform, does not un-block design-unenumerated metrics, does not change
+any economic vector, and grants no build, execution, re-seal, deployment or trading authority.
+
+---
+
+## W172 Reading Y revision
+
+**Lane:** W172 (`C:\tmp\LANE_PROMPTS_20260828\LANE_W172_TABLES_READING_Y.md`). Standing clauses
+`N_COMMON_CLAUSES.md` C-1..C-7 read in full first. Same author family and the same independence
+fence as the rest of this worksheet: no `mtc_v2.core` import, no `observed/` path, no
+implementer-authored scenario-input file, no kernel, driver, verifier, generator or baseline
+executed. Every value below is obtained by written arithmetic from the design text alone. Where this
+section disagrees with any earlier section of this worksheet, including `## v1.8 revision`, this
+section governs.
+
+**Authority.** Owner addendum 26, 2026-09-01, answering **W167-D04**: **READING Y**. A
+`decision_events` row is required for every closed reason whose named decision is *actually
+evaluated* on that scenario, even where the prior tables artifact never carried it, so design
+`:1033-1034` applies to the tables family on its own terms. The anti-padding half of that sentence
+still binds. The independent family (G83, `DETECT_G83_TABLES_V18.md`) had ruled W167-D04
+`GENUINELY AMBIGUOUS - OWNER MUST DECIDE` and put the question to the owner; its per-row table was
+read as evidence and **re-verified against the design row by row here**, not copied.
+
+**Design under derivation:** unchanged - `P012_FRESH_DESIGN_V1.md` v1.8, 1273 lines. No design line
+was re-numbered and no §23 span moved.
+
+### Y-0 Occurrence test actually applied
+
+For each of the 17 scenarios and each of the nine closed reasons in the `:1016-1024` table, the
+question asked was: *is that reason's named decision evaluated inside this artifact's compared
+observation window?* Two fences did most of the work and are stated here because they are what keeps
+Reading Y from becoming padding:
+
+1. **Window fence.** The `EVENT_SURFACE` of every artifact is scoped to its declared
+   `observation_window` - that is already why `RULE2-04-RED`'s setup fills, the `RULE2-06` family's
+   prelude entry and `RULE2-08-RED`'s pre-event entry are absent from their fill, cash and fee
+   containers (design `:868`, `:872-874`, `:888`). A sizing or admission predicate evaluated on an
+   excluded prefix bar is therefore **not** an in-window evaluation and gets no row. This is why
+   `SIZING_COMPUTED` and `MIN_NOTIONAL_ADMITTED` are added to `RULE2-07-RED` (full-span window
+   `00:10:00Z..00:12:00Z`, entry inside) but **not** to `RULE2-04`, the `RULE2-06` family or
+   `RULE2-08`.
+2. **Terminal-reason fence.** Where a predicate terminates in a refusal, the refusal reason is the
+   row (`:1035`); the admitted spelling is not also emitted. `RULE2-02-RED` therefore keeps
+   `REFUSED_MIN_NOTIONAL` and gains nothing.
+
+Result: **eight of seventeen** scenarios grow, by **ten rows** in total. The other nine do not. That
+matches G83's measured table; it was reached independently here and each addition is derived below.
+
+### Y-1 `MIN_NOTIONAL_ADMITTED` additions
+
+Design `:97` (section 3 step 8) applies the `min_notional` check to every fill-producing entry;
+design `:230-235` (section 8) makes it `admit iff order_notional >= min_notional`, with `:237`
+stating that equality passes because the legacy comparison is strict `<`. Members are fixed at
+`:1018`: `event_timestamp` REQUIRED, plus `order_notional` and `required_min_notional`. Placement is
+after `SIZING_COMPUTED` where that row exists, because section 3 orders sizing at step 7 and
+admission at step 8 and the independence row `:1045` states that section 8 makes admission a
+separate predicate after sizing.
+
+```
+row            order_notional   required_min_notional   ts                     sequence
+RULE2-01-RED   1000  = 5*100*2  0   (:216, :850)        2000-01-01T00:11:00Z   2
+RULE2-01-GREEN  100  = 1*100*1  0   (:216, :851)        2000-01-01T00:11:00Z   2
+RULE2-05-RED    101  = 1*101*1  0   (:870, minima .01/1/0/0)                   1
+RULE2-05-GREEN  100  = 1*100*1  0   (:870-871)          2000-01-01T00:11:00Z   2
+RULE2-07-RED    100  = 1*100*1  0   (:886, minima 1/1/0/0)                     2
+```
+
+Every `order_notional` above equals that artifact's already-sealed value byte for byte: `1000`
+(`RULE2-01-RED.json` `/RESULT_SURFACE/order_notional`), `100`, `101`, `100`, and - for
+`RULE2-07-RED`, which has no RESULT `order_notional` - the product of its own sealed quantity `1`,
+sealed final entry fill `100` and design-bound `contract_multiplier 1`. Every
+`required_min_notional` is `0`, read off the row's own `tick/step/minima` shorthand under M-08
+`:736`, which design `:844-846` states replaces the same member of the InstrumentRecord. Every
+comparison admits. **No economic value moved.**
+
+`RULE2-01-RED` sizing check (already in W-2, repeated because Y-1 depends on it): risk_amount
+`1000 * 10% = 100`; stop distance `|100 - 90| = 10`; `risk_raw_qty = 100 / (10 * 2) = 5`;
+`leverage_cap_qty = (1000 * 10) / (100 * 2) = 50`; `min(5, 50) = 5`; `qty_step 1` floors to `5`;
+`order_notional = 5 * 100 * 2 = 1000`.
+
+`/RESULT_SURFACE/admitted` was **not** added anywhere. Design `:1129` scopes that RESULT member to
+the DEF-P012-02 minimum-notional predicate, so it stays on `RULE2-02-GREEN` alone. The decision row
+and the RESULT boolean are different nodes with different conditions.
+
+### Y-2 `SIZING_COMPUTED` additions
+
+Members at `:1017`: `event_timestamp` REQUIRED, `selector`, `contract_multiplier`,
+`order_notional`. Section 7 `:194-209` supplies the arithmetic; section 3 steps 7-8 `:96-97` supply
+the placement.
+
+**`RULE2-05-GREEN`** - design `:871` inherits the RED config with `slippage_bps = 0`, so the final
+entry fill is the reference `100` (`:315`). `initial_capital = 1000` (OPEN-EMBED-01, owner addendum
+20 item 49 `1a`); `fallback_size_pct = 10`:
+
+```
+fallback_notional  = 1000 * 10% = 100                      (:195)
+fallback_raw_qty   = 100 / (100 * 1) = 1                   (:196)
+leverage_cap_qty   = (1000 * 10) / (100 * 1) = 100         (:206)
+raw_qty            = min(1, 100) = 1                       (:207)
+qty                = floor_to_qty_step(1) = 1              (:208, qty_step 1 at :870-871)
+order_notional     = 1 * 100 * 1 = 100                     (:209)
+selector           = FALLBACK                              (:197-198; no SL/TP at :870-871 sets
+                                                            use_sl false under M-08 :736)
+contract_multiplier= 1                                     (:871, :788-789)
+event_timestamp    = 2000-01-01T00:11:00Z                  (M-04 :732, M-06 :734)
+```
+
+`qty 1` and `order_notional 100` are the sealed values. The §7 result agrees with §11 `:315`, so
+**W167-D05 does not arise on GREEN** (G83-F03, folded at the W167-D05 entry above).
+
+**`RULE2-07-RED`** - design `:886` binds `initial_capital = 1000`, fallback `10%`,
+`max_leverage_cap = 10`, `tick/step/minima 1/1/0/0`, `multiplier 1`, no SL/TP; design `:384` states
+entry final fill `100` with `slippage_bps = 0`:
+
+```
+fallback_notional  = 1000 * 10% = 100                      (:195)
+fallback_raw_qty   = 100 / (100 * 1) = 1                   (:196)
+leverage_cap_qty   = (1000 * 10) / (100 * 1) = 100         (:206)
+raw_qty            = min(1, 100) = 1                       (:207)
+qty                = floor_to_qty_step(1) = 1              (:208) - the sealed quantity
+order_notional     = 1 * 100 * 1 = 100                     (:209)
+selector           = FALLBACK                              (:197-198; "no SL/TP" at :886 / M-08 :736)
+contract_multiplier= 1                                     (:384, :886)
+event_timestamp    = 2000-01-01T00:11:00Z                  (M-04 :732, M-06 :734; the entry bar is
+                                                            inside this row's full-span window)
+```
+
+The `FALLBACK` token is **design-named** at `:911` ("Expected/observed JSON records only the
+`FALLBACK` decision"). Only `RISK` is a tables-authored spelling; see Y-5. G83-F06's table lists
+`RISK / FALLBACK` together as authored - verified this session, that half of its row is wrong.
+
+**`RULE2-05-RED` - `SIZING_COMPUTED` DELIBERATELY WITHHELD.** W167-D05 is real on this row: §7
+sizes from the **final** fill `101`, giving `100 / (101 * 1) = 0.990099...` which `qty_step 1`
+floors to `0`, against §11 `:315` and `:870` declaring requested quantity `1` and the sealed
+`order_notional 101`. The row's `selector` and `order_notional` members cannot both be filled
+without choosing between the two sections, so no row was authored and the omission is recorded on
+the artifact in `w172_revised_nodes`. This is the lane spec's binding exception and G83's finding
+alike. The `MIN_NOTIONAL_ADMITTED` row that WAS added there restates the artifact's own
+already-sealed `order_notional 101` - the whole artifact is already derived on the §11 branch
+(final_position quantity `1`, fill quantity `1`) - and does **not** resolve D05.
+
+### Y-3 `PROTECTIVE_STOP_EVALUATED` additions on the three RULE2-06 rows
+
+Members at `:1022`: `event_timestamp` REQUIRED, `position_side`, `stop_price`, `predicate`; plus
+`reference_source` and `reference_price` **iff a fill reference was selected**.
+
+*Why the decision is evaluated.* Section 3 step 2 `:91` says that for exits the adapter records
+which stop and targets touched, before choosing any winner or reference. Design `:343` states in
+terms that on `RULE2-06-RED` "the two targets and stop all touch", on `RULE2-06-GREEN` "only the
+stop touches", and on `RULE2-06-EQUAL-PRICE-RED` "both equal-price targets and the stop touch". The
+independence row `:1046` states that sections 3, 10 and 12 **separate stop evaluation from same-bar
+policy resolution**, and maps the prior kernel name `SOLE_EXIT_CLASS` onto
+`PROTECTIVE_STOP_EVALUATED` - which is exactly the sole-touched-class shape of `RULE2-06-GREEN`.
+The stop evaluation and the policy resolution are therefore two distinct closed reasons on a
+DEF-P012-06 row. `:1023`'s restriction is on `COLLISION_RESOLVED` (DEF-P012-06 only, never RULE2-04
+close-only selection); it says nothing that would suppress the stop reason here.
+
+*Order.* Step 2 precedes step 3, so the stop evaluation is sequence 1 and `COLLISION_RESOLVED` moves
+from sequence 1 to sequence 2 on all three rows. `sequence` remains the contiguous array identity
+(`:997`).
+
+*Predicate.* Section 10's table `:277-281`, long rows:
+
+```
+row            evaluation OHLC (o/h/l/c)   open <= stop 90   otherwise low <= stop 90   branch
+06-RED         100/115/85/105              100 <= 90 FALSE   85 <= 90 TRUE              row 2
+06-GREEN       100/104/85/95               100 <= 90 FALSE   85 <= 90 TRUE              row 2
+06-EQUAL       100/115/85/105              100 <= 90 FALSE   85 <= 90 TRUE              row 2
+```
+
+Bars from design `:343` and `:872-874`. `stop_price 90` is the stated scenario input (`:343`;
+`:872` reaches it through `sl_percent 10` on entry `100`). `position_side` is `LONG` (`:343`).
+`event_timestamp` is the evaluation bar `2000-01-01T00:12:00Z` (`:872-874`, M-06 `:734`).
+
+*Reference members.*
+
+- `06-GREEN`: **present**. The stop is the sole touched class, `:343` states both versions fill the
+  full quantity at stop `90`, and section 10 row 2 makes the stop level the reference, so a fill
+  reference was selected. `reference_source = STOP_LEVEL`, `reference_price = 90` - the value the
+  artifact already seals on its stop fill.
+- `06-RED` and `06-EQUAL`: **absent**. Under `TARGET_FIRST` (`:336`, `:872`, `:874`) the touched
+  targets consume the reference quantity `2`, `stop_remainder_quantity` is `0` (already sealed on
+  the collision row), so no stop fill intent was chosen at step 3 and no stop reference was selected
+  at step 4 (`:92-93`). `:1022`'s `iff` therefore keeps both members off.
+
+**No economic value moved:** `stop_price 90` and `reference_price 90` restate stated scenario
+inputs and already-sealed nodes; no fill, cash, fee, PnL, equity or metrics node was touched on any
+of the three rows.
+
+### Y-4 The nine rows that do NOT grow, and why
+
+```
+02-RED    predicate terminates in refusal -> REFUSED_MIN_NOTIONAL is the row (:1019, :1035)
+02-GREEN  already carries all three reasons its evaluation produces
+03-RED    pre-evaluation refusal; nothing after it is evaluated (:1035-1036)
+03-GREEN  no intent, no fill, no funding event in window (:855)
+04-RED    entry sizing/admission are on the excluded prefix; window is the evaluation bar (:868)
+04-GREEN  same window fence (:869)
+07-GREEN  NO_ACTION100, no intent or fill (:887); guards evaluated but no guard reason exists
+          (:1026-1028 removes GUARD_BASIS_RESOLVED)
+08-RED    entry on the [OPEN-EMBED-04] prefix, window [00:00:00Z, 00:01:00Z] (:888); guards as above
+08-GREEN  no fill, no eligible position; FUNDING_ELIGIBILITY eligible=false already carries the
+          skipped tick (:1024, :1052)
+```
+
+**Candidate considered and declined: `INSTRUMENT_RECORD_VALIDATED` on rows other than 03-GREEN.**
+Section 3 step 1 `:90` validates immutable-record identities on every run, and `:846` states that
+every other LEGACY runtime instrument field is explicit and exactly equal to the record. Read at its
+widest, Reading Y might place this reason on all 17. It was **not** added, for a payload reason
+rather than an occurrence reason: `:1020` fixes the members as the single triple
+`{field, record_value, runtime_value}`, and the design names a compared field for exactly one
+correction - DEF-P012-03's `price_tick` (`:259`, `:854-855`). For any other row the design neither
+names which of the twelve instrument fields the row would carry nor states that one row is emitted
+per field, so **no member value is derivable and no row count is derivable**. Authoring either would
+be an invented payload. Recorded as **W172-D03**; not absorbed.
+
+### Y-5 G83-F06 - labeling every tables-authored value token
+
+Method: the exact string of every leaf value on the two comparison surfaces of all 17 artifacts was
+inventoried this session and grepped against the whole design file. A token whose exact string does
+not occur in the design is tables-authored (the **D-13** / **W167-D02** class). Each such token is
+now named in a new per-artifact `authored_value_tokens` array carrying the pointer, the value, the
+design text that forces the **fact**, and the statement that the **spelling** is tables-authored -
+the same treatment W167 gave `STOP_TOUCH` and no less.
+
+```
+token                                                     grep hits in design   disposition
+FALLBACK                                                  1  (:911)             DESIGN-NAMED
+GAP_OPEN                                                  1  (:289)             DESIGN-NAMED
+GROSS-MINUS-FEES                                          3  (:1148 etc)        DESIGN-NAMED
+RISK, OPEN_BEYOND_STOP, NO_TOUCH, BAR_OPEN, CEIL, FLOOR,   0 each               TABLES-AUTHORED
+BUY, SELL, LONG, FEE(kind), GROSS_REALIZATION,
+FUNDING(kind), GROSS_MINUS_FEES(underscore form),
+LONG_ASCENDING_TARGET_PRICE,
+LONG_ASCENDING_TARGET_PRICE_THEN_EXIT_ID_UTF8_BYTE_ORDER,
+STOP_TOUCH
+LOW_TOUCH, STOP_LEVEL                                     0 each               TABLES-AUTHORED,
+                                                                               NEW IN W172
+```
+
+Fourteen artifacts gained the ledger; `RULE2-03-RED`, `RULE2-03-GREEN` and `RULE2-08-GREEN` carry no
+authored token on either surface and were not touched. **Two corrections to G83's own table**, made
+because it is evidence and not authority: (a) `FALLBACK` is design-named at `:911`, so only `RISK`
+of that pair is authored; (b) G83's table stops at seven token families, while the inventory also
+finds `BUY` / `SELL`, `LONG`, the three `cash_events.kind` tokens and the underscore form of
+`GROSS_MINUS_FEES` - all now labeled, so the fix does not leave a residue of the same class.
+
+**Deliberately NOT labeled, and why, so the omission is recorded rather than absorbed:** the
+identity strings `F0` / `F1`, `CE-FEE-0` / `CE-FEE-1` / `CE-GROSS-0` / `CE-GROSS-1` / `CE-FUND-0`,
+and the `SYNTH-...-V1` record ids. Those are `MECHANICAL` identity strings under §22.1 `:695-708`
+and §22.3 `:751-753`, not value-domain spellings of an economic fact; §22.3 `:751-753` fixes the
+`SYNTH-` form outright. They are a different class from D-13 and are named here so that a later
+reader does not read their absence from `authored_value_tokens` as a claim that they are
+design-forced.
+
+### Y-6 G83 findings - disposition
+
+```
+G83-F01  MEDIUM  FOLDED. RULE2-08-RED's blocked_cells gained /guards/consec_loss_ok and
+                 /guards/guard_blocked_raw. Post-fix cross-check this session: for all 17 artifacts
+                 the set of ledger pointers is exactly the set of marked leaf values - 101 cells
+                 (100 on the two surfaces, plus RULE2-08-GREEN's off-surface
+                 /observation_window/end_timestamp), zero ledger-only and zero value-only entries.
+G83-F02  LOW     FOLDED. W-6 census corrected in place: 13 fills / 7 exits measured. No golden value
+                 changes; the conditional rules hold on the rows that exist.
+G83-F03  LOW     FOLDED. W167-D05 narrowed to RULE2-05-RED at its own entry above, and
+                 SIZING_COMPUTED authored on RULE2-05-GREEN in Y-2.
+G83-F04  LOW     FOLDED. RULE2-08-RED's OPEN-10 binding no longer asserts
+                 funding_included_in_guard_basis as a live false fact; design :1152-1155 and
+                 :1189-1192 removed that member from the artifact.
+G83-F05  LOW     FOLDED. V15-D07 re-measured and corrected at its own entry above: 3268 bytes, 0 CR,
+                 final LF present, so the current-disk claim is closed by measurement. Which act
+                 rewrote the bytes is NOT VERIFIED.
+G83-F06  LOW     FOLDED, with two corrections to G83's table. See Y-5.
+```
+
+No G83 finding is disputed.
+
+### Y-7 Discrepancies raised by this revision
+
+Recorded per clause C-2; none absorbed into a derived value.
+
+- **W172-D01 - a computed notional is now a decision node on a scenario whose RESULT deliberately
+  omits it.** Reading Y places `SIZING_COMPUTED` on `RULE2-07-RED` with `order_notional 100`, while
+  design `:1128` keeps the RESULT member `order_notional` on DEF-P012-01/02/05 only and `:1133-1135`
+  expressly refuses to make "a generic kernel-computed `order_notional` a node of a scenario whose
+  design projection does not name it". The two are different member sets in different subsections
+  and do not contradict each other, but the design does show §23.4 declining to serialize a
+  computed-but-undeclared fact in the very case Reading Y now serializes in §23.1. Flagged so the
+  Lead and §16 see the consequence rather than discovering it at the gate. No value moved either
+  way.
+- **W172-D02 - Reading Y required two more tables-authored value tokens.** `LOW_TOUCH` (the
+  `predicate` for section 10's second long branch) and `STOP_LEVEL` (the `reference_source` for that
+  branch's stop-level reference) are authored spellings. The design enumerates both the branch
+  (`:277-281`) and the reference-source domain (`:93` - "entry reference, gap/open stop reference,
+  stop level, target level, or market-exit close"), so the **facts** are design-forced and closed;
+  only the strings are this family's. This is the same gap W167 recorded as W167-D02 when it
+  authored `STOP_TOUCH` for the identical branch, and it is the reason W167 gave for not executing
+  Reading Y. The tokens are labeled on their artifacts under Y-5. An owner or §16 ruling that
+  authored value spellings must be design-enumerated before seal would reopen every "first changed
+  node" whose value they are, `GAP_OPEN` excepted.
+- **W172-D03 - `INSTRUMENT_RECORD_VALIDATED` occurrence is undecidable under Reading Y.** See Y-4.
+  Section 3 step 1 validates record identities on every run, but `:1020`'s closed triple names one
+  compared field and the design names a compared field only for DEF-P012-03. Neither the field nor
+  the row count is derivable for the other sixteen rows, so no row was authored. Owner or §16
+  resolution requested if Reading Y is meant to reach this reason.
+- **W172-D04 - the manifest carries no `revision_history` entry for this lane.** The lane spec
+  authorises manifest edits to `files[]` rows for files actually revised, and nothing else. The
+  `files[]` digests and byte counts were therefore updated for the 16 revised files and no
+  `revision_history` entry, `design` block change or `blocked_cell_markers` change was written. The
+  bundle's own convention is that each revision records itself in `revision_history`; that entry is
+  outstanding and is the Lead's to add. `seal`, `seal_state` and `reseal_history` were not touched
+  and **W167-D06 still stands**: `EXPECTED_SEAL_SHA` `02b47a8e...` does not cover these bytes.
+- **W172-D05 - `W167_TABLES_V18_REPORT.md` still carries two claims this lane has disproved.**
+  `:33` says the fill/exit conditionals were re-verified "on all 22 fill rows and all 6 exit rows"
+  (measured: 13 and 7), and `:74-75` / `:232` say V15-D07 about the anchor's CRLF bytes "still
+  stands" (measured: 0 CR, final LF present). That report is outside this lane's write scope, so
+  both corrections are recorded here and in `W172_READING_Y_REPORT.md` and the report file was left
+  byte-identical.
+
+### Y-8 Honest limits of this revision
+
+This revision applies one owner ruling and folds one detection report. It verifies no
+implementation: no kernel, adapter, driver, gate, backtest, verifier, generator or baseline exists
+or was executed, no `observed/` path was read, no implementer-authored input file was opened. Local
+SHA-256, structural JSON walks and written arithmetic over this bundle's own files are the only
+computation performed. **No economic value moved:** a structural comparison of the pre-revision and
+post-revision bytes this session shows zero differences in `RESULT_SURFACE` and in the
+`fill_events`, `cash_events`, `fee_events`, `funding_events` and `exit_events` containers of all 17
+artifacts, and every pre-existing `decision_events` member survives unchanged except for the
+sequence renumbering on the three RULE2-06 rows. Reading Y is an owner ruling on a schema question;
+it does not make the goldens conform to a kernel that does not exist, does not un-block
+design-unenumerated metrics, does not close W167-D01/D02/D03/D05/D06, and grants no build,
+execution, re-seal, deployment or trading authority. The §16 `SEMANTIC_COVERAGE_REVIEW` remains
+owner-held and PENDING, and the claude family remains excluded from that reviewer role because it
+authored these tables.

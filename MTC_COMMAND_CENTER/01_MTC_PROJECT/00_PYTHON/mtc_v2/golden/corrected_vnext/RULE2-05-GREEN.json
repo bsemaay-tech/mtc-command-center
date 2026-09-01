@@ -7,12 +7,13 @@
   "expected_semantics_version": "2.0.0",
   "provenance": {
     "method": "INDEPENDENT_DERIVATION",
-    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; owner Reading Y (owner addendum 26, 2026-09-01) applied by lane W172",
     "design_file": "P012_FRESH_DESIGN_V1.md",
-    "design_version": "v1.5",
-    "design_lines": "293-319; 676-745; 747-839; 871",
+    "design_version": "v1.8",
+    "design_lines": "293-319; 676-745; 747-839; 871; 969-1273 (section 23 v1.8 terminal micro-fold)",
     "worksheet": "DERIVATIONS.md",
     "worksheet_section": "5. DEF-P012-05 / RULE2-05-GREEN",
+    "worksheet_section_v18": "v1.8 revision / RULE2-05-GREEN",
     "worksheet_section_v15": "v1.5 revision / RULE2-05-GREEN"
   },
   "open_item_bindings": [
@@ -21,16 +22,17 @@
   "EVENT_SURFACE": {
     "decision_events": [
       {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
-      {"sequence": 1, "decision": "SLIPPAGE_MODEL_IDENTITY", "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "price_tick": 0.01}
+      {"sequence": 1, "decision": "SIZING_COMPUTED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "selector": "FALLBACK", "contract_multiplier": 1, "order_notional": 100},
+      {"sequence": 2, "decision": "MIN_NOTIONAL_ADMITTED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "order_notional": 100, "required_min_notional": 0}
     ],
     "fill_events": [
-      {"sequence": 0, "fill_id": "F0", "event_class": "ENTRY", "side": "BUY", "reference_price": 100, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "unrounded_fill_price": 100, "price_tick_alignment": "CEIL", "final_fill_price": 100, "quantity": 1, "liquidity_role": "TAKER"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "fill_id": "F0", "event_class": "ENTRY", "side": "BUY", "reference_price": 100, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "CEIL", "final_fill_price": 100, "quantity": 1, "liquidity_role": "TAKER"}
     ],
     "cash_events": [
-      {"sequence": 0, "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.045}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.045}
     ],
     "fee_events": [
-      {"sequence": 0, "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-05-GREEN-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.00045, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.045, "fee_cash_delta": -0.045, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-05-GREEN-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.00045, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.045, "fee_cash_delta": -0.045, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
     ],
     "funding_events": [],
     "exit_events": []
@@ -71,13 +73,29 @@
     {"pointer": "/EVENT_SURFACE/fee_events/0/lifecycle_id", "value": 1, "basis": "design 13:366 requires linkage to position_lifecycle_id; P012_FRESH_DESIGN_V1.md:886 binds lifecycle id start 1."},
     {"pointer": "/EVENT_SURFACE/fee_events/0/event_timestamp", "value": "2000-01-01T00:11:00Z", "basis": "P012_FRESH_DESIGN_V1.md:732 (M-04) and :734 (M-06)."}
   ],
+  "v18_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "RE-DERIVED under the design 23.1 closed shape: flat members sequence/decision/kernel_semantics_version, per-reason event_timestamp presence, no lifecycle_id, exact per-reason payloads, section-3 order.", "authority": "P012_FRESH_DESIGN_V1.md:987-1053 (table :1016-1024) and the tables-revision item 1 at :1175-1181."},
+    {"pointer": "/EVENT_SURFACE/*/*/kernel_semantics_version", "change": "ADDED to every member of all six corrected event containers.", "authority": "P012_FRESH_DESIGN_V1.md:998-1002 (section-4 identity / GM28-F03) and tables-revision item 2 at :1182-1185."},
+    {"pointer": "/EVENT_SURFACE/decision_events/1", "change": "SLIPPAGE_MODEL_IDENTITY REMOVED (mapped to no separate reason).", "authority": "P012_FRESH_DESIGN_V1.md:1047."},
+    {"pointer": "/EVENT_SURFACE/fill_events/0/unrounded_fill_price", "change": "REMOVED; not a member of the closed fill set.", "authority": "P012_FRESH_DESIGN_V1.md:1097-1099, :1193-1195."}
+  ],
+  "w172_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events/1", "change": "ADDED SIZING_COMPUTED under owner Reading Y. G83-F03 established that W167-D05 does not extend to this row and this lane re-derived it: design 22.5:871 inherits the RULE2-05-RED config with slippage_bps 0, so the final entry fill is the reference 100 (design 11:315). With initial_capital 1000 (OPEN-EMBED-01, owner addendum 20 item 49 '1a') and fallback_size_pct 10, fallback_notional = 100 (design 7:195); fallback_raw_qty = 100 / (100 * 1) = 1 (:196); leverage_cap_qty = (1000 * 10) / (100 * 1) = 100 (:206); raw_qty = min(1, 100) = 1 (:207); qty_step 1 floors it to 1 (:208, :871); order_notional = 1 * 100 * 1 = 100 (:209). That agrees with section 11:315's declared requested quantity 1, so no section-7-versus-section-11 conflict arises here. selector = FALLBACK because design 22.5:870-871 binds no SL/TP, so under M-08 :736 use_sl is false and the stop is absent, which design 7:197-198 routes to the fallback branch; the FALLBACK token itself is design-named at 22.7:911. contract_multiplier 1 is the explicit scenario input at 22.5:871 and 22.3:788-789. event_timestamp 2000-01-01T00:11:00Z (M-04 :732, M-06 :734). NO ECONOMIC VALUE MOVED: 100 equals the already-sealed /RESULT_SURFACE/order_notional byte for byte.", "authority": "P012_FRESH_DESIGN_V1.md:1033-1034 (a reason is emitted when its named decision is actually evaluated, never to equalize row counts), applied to the tables family by the owner's Reading Y ruling on W167-D04 (owner addendum 26, 2026-09-01). Section 23.1's table at :1016-1024 fixes the member set; section 3 :88-102 fixes the order."},
+    {"pointer": "/EVENT_SURFACE/decision_events/2", "change": "ADDED MIN_NOTIONAL_ADMITTED under owner Reading Y. Section 3 step 8 :97 and section 8 :230-235. order_notional 100 as derived above; required_min_notional 0 from design 22.5:870-871 (minima .01/1/0/0 under M-08 :736). 100 >= 0 admits. Placed after SIZING_COMPUTED per section 3 steps 7-8 and the independence row :1045. NO ECONOMIC VALUE MOVED.", "authority": "P012_FRESH_DESIGN_V1.md:1033-1034 (a reason is emitted when its named decision is actually evaluated, never to equalize row counts), applied to the tables family by the owner's Reading Y ruling on W167-D04 (owner addendum 26, 2026-09-01). Section 23.1's table at :1016-1024 fixes the member set; section 3 :88-102 fixes the order."},
+    {"pointer": "/EVENT_SURFACE and /RESULT_SURFACE value tokens", "change": "LABELING PASS under G83-F06. Every tables-authored value token on the two comparison surfaces of this artifact is now named in authored_value_tokens with the design text that forces the fact and the statement that the spelling is tables-authored. Adds no node and moves no value.", "authority": "G83-F06; DERIVATIONS.md discrepancy W167-D02 (D-13 class)."}
+  ],
+  "authored_value_tokens": [
+    {"pointer": "/EVENT_SURFACE/fill_events/0/price_tick_alignment", "value": "CEIL", "design_fact": "P012_FRESH_DESIGN_V1.md:95 (section 3 step 6, buys use ceiling) and :307 (ceil_to_price_tick for a buy).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/fill_events/0/side", "value": "BUY", "design_fact": "P012_FRESH_DESIGN_V1.md:94 (section 3 step 5 names the buy action in lower case prose).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/cash_events/0/kind", "value": "FEE", "design_fact": "P012_FRESH_DESIGN_V1.md:71 (section 2.1: cash_events contains gross-realization, fee and funding deltas).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/RESULT_SURFACE/final_position/side", "value": "LONG", "design_fact": "P012_FRESH_DESIGN_V1.md:275-280 (section 10 table rows name the Long position) and :406 (side_factor +1 for long).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
+  ],
   "blocked_cells": [
     {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
   ]
 }

@@ -7,12 +7,13 @@
   "expected_semantics_version": "2.0.0",
   "provenance": {
     "method": "INDEPENDENT_DERIVATION",
-    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; owner Reading Y (owner addendum 26, 2026-09-01) applied by lane W172",
     "design_file": "P012_FRESH_DESIGN_V1.md",
-    "design_version": "v1.5",
-    "design_lines": "349-388; 676-745; 747-839; 886",
+    "design_version": "v1.8",
+    "design_lines": "349-388; 676-745; 747-839; 886; 969-1273 (section 23 v1.8 terminal micro-fold)",
     "worksheet": "DERIVATIONS.md",
     "worksheet_section": "7. DEF-P012-07 / RULE2-07-RED",
+    "worksheet_section_v18": "v1.8 revision / RULE2-07-RED",
     "worksheet_section_v15": "v1.5 revision / RULE2-07-RED"
   },
   "open_item_bindings": [
@@ -21,25 +22,25 @@
   "EVENT_SURFACE": {
     "decision_events": [
       {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
-      {"sequence": 1, "decision": "FEE_SCHEDULE_IDENTITY", "rate": 0.001, "fixed_component": 0, "minimum_fee": 0, "fee_rounding_rule": "EXACT_IDENTITY_V1", "entry_liquidity_role": "TAKER", "exit_liquidity_role": "TAKER"},
-      {"sequence": 2, "decision": "GUARD_BASIS_IDENTITY", "guard_pnl_basis": "GROSS_MINUS_FEES", "authority": "DECISIONS.md:31 (D017)"}
+      {"sequence": 1, "decision": "SIZING_COMPUTED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "selector": "FALLBACK", "contract_multiplier": 1, "order_notional": 100},
+      {"sequence": 2, "decision": "MIN_NOTIONAL_ADMITTED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "order_notional": 100, "required_min_notional": 0}
     ],
     "fill_events": [
-      {"sequence": 0, "fill_id": "F0", "event_class": "ENTRY", "side": "BUY", "reference_price": 100, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "CEIL", "final_fill_price": 100, "quantity": 1, "liquidity_role": "TAKER"},
-      {"sequence": 1, "fill_id": "F1", "event_class": "MARKET_EXIT", "side": "SELL", "exit_id": "TIME_STOP", "reference_price": 100, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "FLOOR", "final_fill_price": 100, "quantity": 1, "liquidity_role": "TAKER"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "fill_id": "F0", "event_class": "ENTRY", "side": "BUY", "reference_price": 100, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "CEIL", "final_fill_price": 100, "quantity": 1, "liquidity_role": "TAKER"},
+      {"sequence": 1, "kernel_semantics_version": "2.0.0", "fill_id": "F1", "event_class": "MARKET_EXIT", "side": "SELL", "exit_id": "TIME_STOP", "reference_price": 100, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "FLOOR", "final_fill_price": 100, "quantity": 1, "liquidity_role": "TAKER"}
     ],
     "cash_events": [
-      {"sequence": 0, "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.1},
-      {"sequence": 1, "cash_event_id": "CE-FEE-1", "kind": "FEE", "fill_id": "F1", "signed_delta": -0.1},
-      {"sequence": 2, "cash_event_id": "CE-GROSS-1", "kind": "GROSS_REALIZATION", "fill_id": "F1", "signed_delta": 0}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.1},
+      {"sequence": 1, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-1", "kind": "FEE", "fill_id": "F1", "signed_delta": -0.1},
+      {"sequence": 2, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-GROSS-1", "kind": "GROSS_REALIZATION", "fill_id": "F1", "signed_delta": 0}
     ],
     "fee_events": [
-      {"sequence": 0, "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-07-RED-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.001, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.1, "fee_cash_delta": -0.1, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"},
-      {"sequence": 1, "event_timestamp": "2000-01-01T00:12:00Z", "lifecycle_id": 1, "fill_id": "F1", "event_class": "MARKET_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-07-RED-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.001, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.1, "fee_cash_delta": -0.1, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-1"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-07-RED-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.001, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.1, "fee_cash_delta": -0.1, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"},
+      {"sequence": 1, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "lifecycle_id": 1, "fill_id": "F1", "event_class": "MARKET_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-07-RED-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.001, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.1, "fee_cash_delta": -0.1, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-1"}
     ],
     "funding_events": [],
     "exit_events": [
-      {"sequence": 0, "exit_id": "TIME_STOP", "reason": "time_stop", "fill_id": "F1", "quantity": 1, "final_fill_price": 100, "gross_realized_pnl": 0}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "exit_id": "TIME_STOP", "reason": "time_stop", "fill_id": "F1", "quantity": 1, "final_fill_price": 100, "gross_realized_pnl": 0}
     ]
   },
   "RESULT_SURFACE": {
@@ -52,7 +53,6 @@
       "guard_pnl_basis": "GROSS_MINUS_FEES",
       "last_closed_guard_pnl": -0.2,
       "consecutive_loss_count": 1,
-      "max_consecutive_losses": 1,
       "consec_loss_ok": false,
       "guard_blocked_raw": true
     },
@@ -94,6 +94,26 @@
     {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-07-RED-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753; design 22.6:886 binds an event-free F for this row."}
   ],
   "unchanged_sealed_values": "rate 0.001, fixed_component 0, minimum_fee 0, fee_notional 100 per fill, fee_amount 0.1, fee_cash_delta -0.1, gross_realized_pnl 0, fee_total -0.2, net_trade_pnl -0.2, equity_curve first 1000 / last 999.8, and every guard node are byte-identical to the pre-v1.5 seal. Design 22.3:802 expressly keeps RULE2-07's stated taker rate 0.001 rather than the 0.00045 base tier.",
+  "v18_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "RE-DERIVED under the design 23.1 closed shape: flat members sequence/decision/kernel_semantics_version, per-reason event_timestamp presence, no lifecycle_id, exact per-reason payloads, section-3 order.", "authority": "P012_FRESH_DESIGN_V1.md:987-1053 (table :1016-1024) and the tables-revision item 1 at :1175-1181."},
+    {"pointer": "/EVENT_SURFACE/*/*/kernel_semantics_version", "change": "ADDED to every member of all six corrected event containers.", "authority": "P012_FRESH_DESIGN_V1.md:998-1002 (section-4 identity / GM28-F03) and tables-revision item 2 at :1182-1185."},
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "FEE_SCHEDULE_IDENTITY and GUARD_BASIS_IDENTITY REMOVED - the independence table maps both to no separate reason because the typed fee row and the guards result already carry those facts. MARKET_EXIT_SELECTED is not admitted, so no row replaces them; the trail is the single SEMANTICS_VALIDATED row.", "authority": "P012_FRESH_DESIGN_V1.md:1026-1031, independence rows :1049, :1051."},
+    {"pointer": "/RESULT_SURFACE/guards/max_consecutive_losses", "change": "REMOVED. It is an M-09 configuration input, not a RESULT member, and is forbidden. The remaining four guard members plus last_closed_guard_pnl (required, a lifecycle closed) are re-derived unchanged on the owner-fixed GROSS-MINUS-FEES basis.", "authority": "P012_FRESH_DESIGN_V1.md:1145-1150; tables-revision item 4 at :1189-1192."}
+  ],
+  "w172_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events/1", "change": "ADDED SIZING_COMPUTED under owner Reading Y. This row's observation window is the full bar span 2000-01-01T00:10:00Z..2000-01-01T00:12:00Z, so its ENTRY100 fill is inside the compared surface and section 3 steps 7-8 are evaluated on it. Design 22.6:886 binds initial_capital 1000, fallback 10 per cent, max_leverage_cap 10, tick/step/minima 1/1/0/0, multiplier 1 and no SL/TP; design 13:384 states entry final fill 100 with slippage_bps 0. Therefore fallback_notional = 1000 * 10 per cent = 100 (design 7:195); fallback_raw_qty = 100 / (100 * 1) = 1 (:196); leverage_cap_qty = (1000 * 10) / (100 * 1) = 100 (:206); raw_qty = min(1, 100) = 1 (:207); qty_step 1 floors it to 1 (:208), which is the quantity this artifact already seals; order_notional = 1 * 100 * 1 = 100 (:209). selector = FALLBACK because 'no SL/TP' at 22.6:886 sets use_sl false under M-08 :736 and design 7:197-198 routes an absent stop to the fallback branch; the FALLBACK token is design-named at 22.7:911. event_timestamp 2000-01-01T00:11:00Z (M-04 :732, M-06 :734). NO ECONOMIC VALUE MOVED: quantity 1 and fill 100 are the sealed values and no new cash, fee, PnL or equity node is created. NOTE: /RESULT_SURFACE/order_notional stays ABSENT on this row because design 23.4:1128 and :1133-1135 confine that RESULT member to DEF-P012-01/02/05; the decision member is a different node under the section-23.1 closed set. Recorded as W172-D01.", "authority": "P012_FRESH_DESIGN_V1.md:1033-1034 (a reason is emitted when its named decision is actually evaluated, never to equalize row counts), applied to the tables family by the owner's Reading Y ruling on W167-D04 (owner addendum 26, 2026-09-01). Section 23.1's table at :1016-1024 fixes the member set; section 3 :88-102 fixes the order."},
+    {"pointer": "/EVENT_SURFACE/decision_events/2", "change": "ADDED MIN_NOTIONAL_ADMITTED under owner Reading Y. Section 3 step 8 :97 and section 8 :230-235 run on the same admitted entry. order_notional 100 as derived above; required_min_notional 0 from design 22.6:886 (tick/step/minima 1/1/0/0 under M-08 :736). 100 >= 0 admits. Placed after SIZING_COMPUTED per section 3 steps 7-8 and the independence row :1045. NO ECONOMIC VALUE MOVED.", "authority": "P012_FRESH_DESIGN_V1.md:1033-1034 (a reason is emitted when its named decision is actually evaluated, never to equalize row counts), applied to the tables family by the owner's Reading Y ruling on W167-D04 (owner addendum 26, 2026-09-01). Section 23.1's table at :1016-1024 fixes the member set; section 3 :88-102 fixes the order."},
+    {"pointer": "/EVENT_SURFACE and /RESULT_SURFACE value tokens", "change": "LABELING PASS under G83-F06. Every tables-authored value token on the two comparison surfaces of this artifact is now named in authored_value_tokens with the design text that forces the fact and the statement that the spelling is tables-authored. Adds no node and moves no value.", "authority": "G83-F06; DERIVATIONS.md discrepancy W167-D02 (D-13 class)."}
+  ],
+  "authored_value_tokens": [
+    {"pointer": "/EVENT_SURFACE/fill_events/0/price_tick_alignment", "value": "CEIL", "design_fact": "P012_FRESH_DESIGN_V1.md:95 (section 3 step 6, buys use ceiling) and :307 (ceil_to_price_tick for a buy).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/fill_events/1/price_tick_alignment", "value": "FLOOR", "design_fact": "P012_FRESH_DESIGN_V1.md:95 and :308 - sells use floor.", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/fill_events/0/side", "value": "BUY", "design_fact": "P012_FRESH_DESIGN_V1.md:94 (section 3 step 5 names the buy action in lower case prose).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/fill_events/1/side", "value": "SELL", "design_fact": "P012_FRESH_DESIGN_V1.md:94 - the sell action.", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/cash_events/*/kind", "value": "FEE", "design_fact": "P012_FRESH_DESIGN_V1.md:71 (section 2.1 cash-event kinds).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/cash_events/*/kind", "value": "GROSS_REALIZATION", "design_fact": "P012_FRESH_DESIGN_V1.md:71 and :100 (section 3 step 11 appends gross realized PnL as a cash event).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/RESULT_SURFACE/guards/guard_pnl_basis", "value": "GROSS_MINUS_FEES", "design_fact": "P012_FRESH_DESIGN_V1.md:1147-1150 and :378-380 fix the basis, spelled GROSS-MINUS-FEES in the design text.", "spelling": "TABLES-AUTHORED: the underscore spelling GROSS_MINUS_FEES is this family's serialization of the design's hyphenated GROSS-MINUS-FEES. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
+  ],
   "blocked_cells": [
     {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "design 13:386 requires fee-adjusted metrics but fixes no metric node set."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
@@ -101,7 +121,6 @@
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
     {"surface": "EVENT_SURFACE", "pointer": "/fee_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/1/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/1/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
   ]
 }

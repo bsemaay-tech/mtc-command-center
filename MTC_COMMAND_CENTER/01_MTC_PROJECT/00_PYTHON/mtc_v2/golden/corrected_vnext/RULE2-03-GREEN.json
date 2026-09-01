@@ -7,12 +7,13 @@
   "expected_semantics_version": "2.0.0",
   "provenance": {
     "method": "INDEPENDENT_DERIVATION",
-    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167",
     "design_file": "P012_FRESH_DESIGN_V1.md",
-    "design_version": "v1.5",
-    "design_lines": "247-263; 676-745; 747-839; 855",
+    "design_version": "v1.8",
+    "design_lines": "247-263; 676-745; 747-839; 855; 969-1273 (section 23 v1.8 terminal micro-fold)",
     "worksheet": "DERIVATIONS.md",
     "worksheet_section": "3. DEF-P012-03 / RULE2-03-GREEN",
+    "worksheet_section_v18": "v1.8 revision / RULE2-03-GREEN",
     "worksheet_section_v15": "v1.5 revision / RULE2-03-GREEN"
   },
   "open_item_bindings": [
@@ -21,7 +22,7 @@
   "EVENT_SURFACE": {
     "decision_events": [
       {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
-      {"sequence": 1, "decision": "INSTRUMENT_RECORD_VALIDATED", "field": "price_tick", "record_value": 0.5, "runtime_value": 0.5}
+      {"sequence": 1, "decision": "INSTRUMENT_RECORD_VALIDATED", "kernel_semantics_version": "2.0.0", "field": "price_tick", "record_value": 0.5, "runtime_value": 0.5}
     ],
     "fill_events": [],
     "cash_events": [],
@@ -58,13 +59,17 @@
     {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-SCENARIO-INPUT", "new_value": "SYNTH-FUNDING-RULE2-03-GREEN-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-753."}
   ],
   "cross_version_note": "This GREEN row has no fill, so the universal section-22.3 CostSchedule creates no fee and no corrected-versus-legacy equity split. Equity 1000 is equal on both versions; the declared projection remains identity validated, no override refusal, price_tick 0.5 consumed identically (discrepancy D-02, thin GREEN, still stands).",
+  "v18_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "RE-DERIVED under the design 23.1 closed shape: flat members sequence/decision/kernel_semantics_version, per-reason event_timestamp presence, no lifecycle_id, exact per-reason payloads, section-3 order.", "authority": "P012_FRESH_DESIGN_V1.md:987-1053 (table :1016-1024) and the tables-revision item 1 at :1175-1181."},
+    {"pointer": "/EVENT_SURFACE/*/*/kernel_semantics_version", "change": "ADDED to every member of all six corrected event containers.", "authority": "P012_FRESH_DESIGN_V1.md:998-1002 (section-4 identity / GM28-F03) and tables-revision item 2 at :1182-1185."},
+    {"pointer": "/EVENT_SURFACE/decision_events/1", "change": "INSTRUMENT_RECORD_VALIDATED kept with the closed triple {field, record_value, runtime_value}; event_timestamp FORBIDDEN.", "authority": "P012_FRESH_DESIGN_V1.md:1020."}
+  ],
   "blocked_cells": [
     {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
     {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/decision_events", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no complete decision_events vocabulary in the design."}
+    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
   ],
   "derivable_empty_containers_note": "all five economic containers are derivably empty: design 22.4:855 supplies one NO_ACTION100 bar, and design 22.2:733 plus :743-745 state that a first Range Filter call only initializes its line and cannot emit an entry for any finite constant OHLC. No fill therefore exists to carry a fee (design 3:100), and the row's schedule contains no in-window funding event (design 22.3:813-829)."
 }

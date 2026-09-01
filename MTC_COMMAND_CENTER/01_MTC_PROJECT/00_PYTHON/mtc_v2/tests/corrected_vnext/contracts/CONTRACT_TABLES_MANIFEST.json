@@ -12,9 +12,9 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.5 (input-embedding addendum; sections 1-21 unchanged from v1.4)",
-  "total_lines": 967,
-  "line_span_used": "1-967 (whole file)",
+  "version": "v1.8 (terminal micro-fold, section 23; sections 1-22 unchanged from v1.5, re-verified by heading line numbers this session)",
+  "total_lines": 1273,
+  "line_span_used": "1-1273 (whole file)",
   "line_spans_by_section": {
    "2.1 interface and normative cash-ledger rule": "55-77",
    "3 exact ordering for 2.0.0": "86-106",
@@ -45,7 +45,15 @@
    "22.6 per-scenario embeddings RULE2-07..08": "882-894",
    "22.7 RULE2-01-GREEN NaN wire contract": "896-916",
    "22.8 honest OPEN-EMBED refusals": "918-930",
-   "v1.5 change log": "932-966"
+   "v1.5 change log": "932-966",
+   "23 preamble (sole v1.8 normative change)": "969-985",
+   "23.1 decision_events closed shape and reason vocabulary": "987-1053",
+   "23.2 equity-curve observation-window rule": "1055-1072",
+   "23.3 closed fill_events and exit_events member sets": "1074-1109",
+   "23.4 closed RESULT_SURFACE, guards and refusal objects": "1111-1168",
+   "23.5 TABLES REVISION SCOPE and expected KERNEL DELTA": "1170-1227",
+   "23.6 v1.8 change log": "1229-1251",
+   "23.7 v1.8 closed enumeration summary": "1253-1273"
   }
  },
  "repository_evidence_identity": {
@@ -65,106 +73,106 @@
  "files": [
   {
    "path": "DERIVATIONS.md",
-   "sha256": "8affc78608e194437f1338c363d5b188c5394a6dc2015614739e393094440682",
-   "bytes": 104780
+   "sha256": "40bf2214e774514f3271499c5037106ae54bdc8b9f3c47a99133ef697e397f89",
+   "bytes": 163605
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "32ae4f71e918fa4b3d78f5e9e4b1a33e062967542221db7ed7a1d99725d7e817",
+   "sha256": "36c38286ef7dcc483939b24f387f773b33650b3b5d59a3d6eaa9893cb74a366e",
    "bytes": 40893
   },
   {
    "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
-   "sha256": "9e62bfb19396cab3c32f9dc2f8e574aa0b7251ee5429e3467bea9d6aa6d59f71",
-   "bytes": 8075
+   "sha256": "38b79ef1cd114724c63e665f3f0e18a478e0693b79ee49356426561a6aaa597a",
+   "bytes": 12778
   },
   {
    "path": "golden/corrected_vnext/RULE2-01-RED.json",
-   "sha256": "2f51eeb624349302ec022bf51c4c6df8c9d84968e656f43f91a21e5a5d70acef",
-   "bytes": 7953
+   "sha256": "74f6f80cd44f7f980c3f0b332681bcc34e0a4f5a21bf567c84a17b14aacc38fa",
+   "bytes": 13204
   },
   {
    "path": "golden/corrected_vnext/RULE2-02-GREEN.json",
-   "sha256": "6cc43be7a9d6bdb9d688f2f59eb5915a9d114a4f41ba5536adc6aae3fb78f9ab",
-   "bytes": 7494
+   "sha256": "aefa016537dd342e307a974c97b513fcbd1c9ef140ef7bfaee5a62b648b6a146",
+   "bytes": 11310
   },
   {
    "path": "golden/corrected_vnext/RULE2-02-RED.json",
-   "sha256": "78a0548c78006e212583199afe071659f51ddc0727b5e36c81d1b3d12f1760cf",
-   "bytes": 5731
+   "sha256": "b6b4e4bfb21c162cdee84e49762357f543afc6bf72320765748d70bdc030388d",
+   "bytes": 8450
   },
   {
    "path": "golden/corrected_vnext/RULE2-03-GREEN.json",
-   "sha256": "56556f1249ac53cc91648276d165051b4b86800903b82700d4b7834a2b81c6c7",
-   "bytes": 6416
+   "sha256": "c10b5e71d7c84ccdc8668cb081ba5b394d3fbeba2119a0a53eeb96c9f4fea880",
+   "bytes": 7332
   },
   {
    "path": "golden/corrected_vnext/RULE2-03-RED.json",
-   "sha256": "16be193e0b80f3c712bfea4662db3c9c909e6909ed933c506384dd801df839f0",
-   "bytes": 6568
+   "sha256": "e04ddf0cdd14c68076ddd1b081467ee21fafb836d7a51751990bfb361b1bb724",
+   "bytes": 7907
   },
   {
    "path": "golden/corrected_vnext/RULE2-04-GREEN.json",
-   "sha256": "c2298b361a05f437a5c4dd94be8f282588bc654311238e45cd886aaba4d6a4c2",
-   "bytes": 8147
+   "sha256": "7309d4cbe1445cea9d8ccb4ca44bc91e81e45fd8c157fa3daed3b295561ba7f7",
+   "bytes": 11688
   },
   {
    "path": "golden/corrected_vnext/RULE2-04-RED.json",
-   "sha256": "bdf4ac15118e0235610191d325e31a1eddd2a3698a0faffe5ae28bc2e70cf2ab",
-   "bytes": 11857
+   "sha256": "9f7a541c08bb477b0f0a68708f01ff5eff39bc736120ad8122f77293f6bd02d1",
+   "bytes": 17701
   },
   {
    "path": "golden/corrected_vnext/RULE2-05-GREEN.json",
-   "sha256": "fb3bafd0c4b191808e2d30b8cdde46fa5c41d077f3a04a5082ae5bda4cb2ee94",
-   "bytes": 7179
+   "sha256": "26bbb48caf2fb2c5f9f13f08f23664ede89f31c9bfa337d9b878ab68ffa19798",
+   "bytes": 12893
   },
   {
    "path": "golden/corrected_vnext/RULE2-05-RED.json",
-   "sha256": "2d080191481faf037f0a02d56c56a2f1147ac2ee45cacf84d31ee103616bef4a",
-   "bytes": 8253
+   "sha256": "a5962ccfed7b893d41ea2b2d43c1b2532328a9fb1eaea07b11f605a82c6cd7f9",
+   "bytes": 13579
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
-   "sha256": "f6689dc3b97c6bbb02de11b6a05df20b5f0bc717d7b46476a3baea678e764f28",
-   "bytes": 14486
+   "sha256": "102aa04e93dfa9c56cebc5932b3e330773370fa3f0de82770b776c7e55e661f3",
+   "bytes": 21745
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-GREEN.json",
-   "sha256": "b2d850d8608be57d3917729bec745175e355bb424696a1c4d32265ec98901bc4",
-   "bytes": 11167
+   "sha256": "45f10ddb072e19b2dae4473e09c6af74268bef11bb64247eea94dc8d0538cda2",
+   "bytes": 20072
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-RED.json",
-   "sha256": "5f0773df5803f11c7b4d5fb9dae2ef5ee22c1f48c647953bcd05fae09ed0eb3a",
-   "bytes": 12791
+   "sha256": "25c747ac53111c5106fd9bf393f4aced9d5ebe1b3467ad9fd6b33a3fc4605613",
+   "bytes": 20782
   },
   {
    "path": "golden/corrected_vnext/RULE2-07-GREEN.json",
-   "sha256": "b77753d27a2d2d1876aa93c48b61bcaf49b2c4d88587809b405e3b58a163bbc3",
-   "bytes": 6598
+   "sha256": "a7e6a59a4040d6eee8be42c24d28f46a5c9f4af2bd131c19bf6e768f9819ee48",
+   "bytes": 9112
   },
   {
    "path": "golden/corrected_vnext/RULE2-07-RED.json",
-   "sha256": "094b15c3eef68e276388892debabbbe84b9e2c97f927514ee5cf75049d756c4e",
-   "bytes": 11985
+   "sha256": "88b446ad3a5d7974616ba1253c345f7a8f321fc60b5a5a55f70c57ebf74bf4ef",
+   "bytes": 19340
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
-   "sha256": "078295244d769f86613c08b66960200da3d8aa83ad12eda8572779e47c034834",
-   "bytes": 8212
+   "sha256": "6ad9432df9bcc1ef8d7f5ec31fcb2a5c7b30a7c80c56095c74aaeb6a24e91b97",
+   "bytes": 10200
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-RED.json",
-   "sha256": "b589eec4ad96ab1ce3bba8f73d59a7904702af457bbd200b14c44c7e13dedb75",
-   "bytes": 10211
+   "sha256": "926a3318123e1b5380b152cb08dd2b07bebbf18894b15771b20126cc916a8809",
+   "bytes": 17852
   }
  ],
  "byte_discipline": "Every file above is UTF-8 with no BOM, LF line endings and a required final LF, per P012_FRESH_DESIGN_V1.md:480. Every JSON file parses with duplicate-key rejection and contains no non-finite number token. Re-verified by lane W156 over the 18 JSON files it revised or re-read (17 golden artifacts plus scenario_catalog.json): each file was byte-inspected for BOM, CR and final LF, parsed, checked for bare NaN/Infinity/undefined tokens outside string literals, and checked for duplicate keys by comparing the raw key-token count with the parsed property count (equal in every file).",
  "blocked_cell_markers": {
   "BLOCKED-ON-OPEN-nn": "ZERO cells. All ten section-19 OPEN rows carry an owner-approved APPLICABLE disposition in C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT.json (draft_revision 3), so no expected value in this bundle is blocked on an owner decision. The five design v1.5 [OPEN-EMBED-01..05] refusals are likewise closed by owner addendum 20; see owner_addendum_20_source.",
-  "BLOCKED-MISSING-SCENARIO-INPUT": "the declared synthetic vector omits an input the cell needs (design gap). After the design v1.5 revision exactly ONE such cell remains in the bundle: RULE2-08-GREEN /observation_window/end_timestamp. Zero remain on either expected surface of any artifact.",
+  "BLOCKED-MISSING-SCENARIO-INPUT": "the declared synthetic vector omits an input the cell needs (design gap). After the design v1.8 revision THREE such cells remain in the bundle: RULE2-08-GREEN /observation_window/end_timestamp (an authoring member outside both surfaces, unchanged), and two NEW surface cells created by design 23.4's newly closed guards member set - RULE2-08-RED /RESULT_SURFACE/guards/consec_loss_ok and /RESULT_SURFACE/guards/guard_blocked_raw. Design 23.4:1139-1143 requires those two members while design 22.6:888 binds no guard switch and no max_consecutive_losses for either RULE2-08 row, and design 22.8:923 forbids borrowing another scenario's value. See DERIVATIONS.md discrepancy W167-D01.",
   "BLOCKED-MISSING-RECORD-BYTES": "the cell is a digest of a synthetic frozen test record whose exact bytes still do not exist. Design v1.5 sections 22.1 and 22.3 (:697-700, :747-839) now bind every record member VALUE and every record id, but they fix only sorted keys, no BOM, LF, final LF, duplicate-key refusal and finite tokens - not the separator or indentation width - and :758-761 expressly refuses to fabricate the provenance captured_at_utc and human_reviewer members. The hashed byte string is therefore still undetermined, and :697-700 keeps digests MECHANICAL build artifacts. P012_FRESH_DESIGN_V1.md:124 additionally forbids substituting the answered production record. See DERIVATIONS.md discrepancy V15-D05.",
-  "BLOCKED-DESIGN-UNENUMERATED": "the design names the member but fixes no node set for it (metrics; the complete decision_events reason vocabulary).",
+  "BLOCKED-DESIGN-UNENUMERATED": "the design names the member but fixes no node set for it. After design v1.8 this is metrics ONLY (17 cells, one per artifact): design 23.1:987-1053 now enumerates the nine closed decision_events reasons with exact per-reason member sets, so the decision_events-vocabulary block is CLOSED and was removed from all 17 blocked_cells lists. Design :1271-1273 states that the amendment does not un-block design-unenumerated metrics.",
   "BLOCKED-BUILD-ARTIFACT": "a path or digest that only exists after the Gate-2 build (serialized scenario-input files, probe kernel-variant trees, KERNEL_FILE_PATCH files, observed outputs)."
  },
  "open_item_applicability_source": {
@@ -224,12 +232,57 @@
     "any repository path, the driver, or W152's directories"
    ],
    "seal_notice": "STALE SEAL. seal_state.EXPECTED_SEAL_SHA and seal.EXPECTED_SEAL_SHA still name the pre-revision content and were deliberately left untouched for the Lead to re-seal and re-accept. Do not treat them as covering the revised bytes recorded in files[] above."
+  },
+  {
+   "revision": "W167 design-v1.8 revision, 2026-09-01",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W167_TABLES_V18.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W167_TABLES_V18_REPORT.md",
+   "authority": "Design P012_FRESH_DESIGN_V1.md v1.8, section 23.5 TABLES REVISION SCOPE items 1-7 (:1175-1202). Owner addendum 22 authorised the single micro-fold closing G79-F01/DS35-F01 and DS35-F02..F04 (:1231-1237); owner addenda 19, 20 and 21 apply unchanged. Design v1.8 is DUAL-ZERO cleared.",
+   "files_revised": [
+    "DERIVATIONS.md",
+    "all 17 files under golden/corrected_vnext/"
+   ],
+   "files_NOT_touched": [
+    "scenario_catalog.json (byte-identical; digest re-verified against this manifest before and after)",
+    "IMPLEMENTATION_ANCHOR_DRAFT.json",
+    "every catalog row, input path and input digest"
+   ],
+   "manifest_fields_updated_by_this_lane": [
+    "files[].sha256 and files[].bytes for the 18 files this lane actually revised, and ONLY those; scenario_catalog.json's recorded digest was re-verified as still correct and left unchanged",
+    "design.version, design.total_lines, design.line_span_used and the eight new section-23 entries in design.line_spans_by_section",
+    "blocked_cell_markers.BLOCKED-MISSING-SCENARIO-INPUT and blocked_cell_markers.BLOCKED-DESIGN-UNENUMERATED marker descriptions",
+    "this revision_history entry"
+   ],
+   "manifest_fields_NOT_touched": [
+    "seal",
+    "seal_state",
+    "reseal_history",
+    "catalog_conservation",
+    "expected_value_provenance",
+    "author_identity",
+    "owner_ruling",
+    "byte_discipline",
+    "open_item_applicability_source",
+    "owner_addendum_20_source",
+    "section_16_review",
+    "claim_limits"
+   ],
+   "seal_consequence": "The recorded EXPECTED_SEAL_SHA no longer covers these bytes. Re-sealing is the Lead's act under design :1171-1172 and was deliberately not performed here. Recorded as DERIVATIONS.md discrepancy W167-D06.",
+   "value_impact": "ZERO economic values changed. No fee, funding delta, gross or net PnL, equity token, fill price, quantity, rate, record identity or refusal value moved. The five equity_curve pairs named by item 3 were re-derived under design 23.2 and reproduce their sealed tokens exactly. The changes are member-set, spelling and node-kind repairs, plus two newly required guard members that could not be derived and are marked."
+  },
+  {
+   "revision": "W172 Reading Y revision, 2026-09-01",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W172_TABLES_READING_Y.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W172_READING_Y_REPORT.md",
+   "authority": "Owner addendum 26 answered W167-D04 with READING Y: a decision_events row is required for every closed reason whose named decision is actually evaluated on that scenario, even where the prior tables artifact never carried it. The independent family (G83) had ruled the two readings GENUINELY AMBIGUOUS and returned NOT SAFE TO SEAL rather than choosing.",
+   "effect": "Ten decision rows added across eight of seventeen scenarios; one row (RULE2-05-RED SIZING_COMPUTED) deliberately withheld with its record because its payload is not derivable (W167-D05); zero economic values moved; all six G83 findings folded, including two corrections to G83's own evidence tables.",
+   "independent_verdict": "C:\\tmp\\LANE_PROMPTS_20260828\\DETECT_G85_READING_Y.md - SAFE TO SEAL, no second fork found."
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+  "EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "reason": "Sealed by the Lead. Original W127b seal dd4a0401... covered the catalog with honest BLOCKED-BUILD-ARTIFACT input markers; this re-seal follows the owner-1a addendum-19 chain: design v1.5 embeddings, W156 tables revision (if its deltas appear in reseal_history.disk_deltas), W152B input materialization, Lead digest-pin under two-party agreement, and the version-shaped surface_schema_id completion per design 15.3. All files[] digests re-measured from disk at seal time. W150B discrepancy D-2 (stale reason) cleared."
+  "reason": "Sealed by the Lead at re-seal #3, after the independent G85 SAFE-TO-SEAL verdict on the Reading Y revision. Covers: design v1.8 (dual-zero terminal re-check), the W167 v1.8 tables revision, and the W172 Reading Y revision under owner addendum 26. Every files[] digest re-measured from disk at seal time; the catalog's 2.0.0 expected digests re-pinned from the revised goldens. The ten PROBE rows remain honestly BLOCKED-BUILD-ARTIFACT because their variant trees are not built yet."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -238,9 +291,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+  "EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "set_by": "Lead re-seal act 2026-08-31T21:09:30+03:00 (see reseal_history); prior seal by Lead anchor-acceptance act 2026-08-31 afternoon"
+  "set_by": "Lead re-seal act #3 2026-09-01T19:48:00+03:00 (see reseal_history); prior seal by Lead re-seal #2 2026-08-31 night"
  },
  "reseal_history": [
   {
@@ -264,6 +317,29 @@
    ],
    "golden_files_changed_measured": 0,
    "inputs_pinned": 17
+  },
+  {
+   "at": "2026-09-01T19:48:00+03:00",
+   "actor": "Lead (claude-opus-5)",
+   "trigger": "G85 SAFE TO SEAL verdict on the W172 Reading Y revision",
+   "old_EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+   "new_EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
+   "old_catalog_sha256": "32ae4f71e918fa4b3d78f5e9e4b1a33e062967542221db7ed7a1d99725d7e817",
+   "new_catalog_sha256": "36c38286ef7dcc483939b24f387f773b33650b3b5d59a3d6eaa9893cb74a366e",
+   "catalog_changes": [
+    "17x expected_artifacts['2.0.0'].digest re-pinned from the revised goldens",
+    "0x already matched disk and were left untouched",
+    "20x PROBE digests deliberately left BLOCKED-BUILD-ARTIFACT (variant trees not built yet; pinning them would invent a value)"
+   ],
+   "disk_deltas_absorbed": [
+    {
+     "path": "scenario_catalog.json",
+     "old_sha12": "32ae4f71e918",
+     "new_sha12": "36c38286ef7d"
+    }
+   ],
+   "input_digests_touched": "none - the 17 input pins from re-seal #2 stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066, the commit the kernel branch is cut from"
   }
  ]
 }
