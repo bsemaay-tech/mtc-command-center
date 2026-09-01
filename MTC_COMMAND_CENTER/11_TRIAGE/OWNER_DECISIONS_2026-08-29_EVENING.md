@@ -362,3 +362,26 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     no approved economic value, and no kernel behavior outside the already-adjudicated
     classes may change. Chain then: probes DETECTED -> terminal receipt (sec-16-only
     refusal) -> 4-family T0 audits -> PR. Sec-16 human review remains the owner's act.
+
+## Addendum 22 - 2026-09-01 ~10:00 (owner verbatim: "Fix all four, then re-check")
+
+51. **P0-12 TERMINAL MICRO-FOLD AUTHORIZED - SCOPE EXACTLY FOUR FINDINGS.** Context: the
+    v1.6 -> v1.7 amendment fold (W166B) repaired 12 canonization-bias findings from the
+    G78 + GM28 union, but the terminal pass did not come back clean. G79 (grok) verified
+    all 12 repairs and raised one new HIGH of the same class; the planned second arm
+    (GM29, gemini) failed twice at invocation with zero output - route down, recorded as
+    an honest absence, NOT as a pass - and a third family (DS35, opencode/deepseek, on a
+    section-23 extract) was substituted. DS35 confirmed the HIGH at three sites, found no
+    new sibling of that class, and raised three further findings. The repair budget
+    written before the W166B round was spent, so nothing was repaired without this word.
+    The owner's word authorizes ONE further micro-fold (v1.7 -> v1.8) binding EXACTLY:
+    G79-F01 = DS35-F01 (FUNDING_ELIGIBILITY unlabeled canonization row, three sites);
+    DS35-F02 (unenumerated `collision` receipt inside the closed COLLISION_RESOLVED
+    decision); DS35-F03 (tables-revision item 1 names a kernel-family removal set the
+    tables family cannot satisfy); DS35-F04 (cumulative_funding presence condition
+    unstated-as-rule and in tension with tables item 6) - followed by an independent
+    re-check. No other design row, no repo/golden/kernel/catalog/seal byte, and no third
+    repair round: the pre-written stopping rule is that the re-check must return zero on
+    the four repaired rows AND zero new findings of the canonization class, or the residue
+    parks again unrepaired for the owner. The two residuals G79 recorded as
+    harmless/out-of-union are deliberately left untouched and named as such.
