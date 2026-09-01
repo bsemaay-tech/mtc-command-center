@@ -2054,6 +2054,10 @@ Recorded per clause C-2; none is absorbed into a derived value.
   `SIZING_COMPUTED` **is** derivable there and lane W172 authored it under Reading Y. D05 continues
   to block `SIZING_COMPUTED` on `RULE2-05-RED` alone, where the final fill is `101` and the two
   sections give `0` and `1`.
+  **RESOLVED by owner addendum 28 decision 68, 2026-09-01 (`C:\tmp\LANE_PROMPTS_20260828\N_TIMES.txt:571`):
+  SECTION 7 GOVERNS, quantity ZERO.** Lane W186 re-derived `RULE2-05-RED` under that word, authored
+  the withheld `SIZING_COMPUTED` row, and moved four economic values. See section
+  "W186 owner addendum 28 decision 68 re-derivation — `RULE2-05-RED`" below. W167-D05 is closed.
 - **W167-D06** — the manifest `seal` / `seal_state` blocks are now stale by construction. This lane
   revised 18 files and updated their `files[]` digests as the lane spec directs, but `EXPECTED_SEAL_SHA`
   is the Lead's act and was deliberately left untouched, so it no longer covers the current bytes.
@@ -2214,6 +2218,12 @@ the artifact in `w172_revised_nodes`. This is the lane spec's binding exception 
 alike. The `MIN_NOTIONAL_ADMITTED` row that WAS added there restates the artifact's own
 already-sealed `order_notional 101` - the whole artifact is already derived on the §11 branch
 (final_position quantity `1`, fill quantity `1`) - and does **not** resolve D05.
+
+**SUPERSEDED by lane W186 under owner addendum 28 decision 68:** section 7 governs and the quantity
+is zero, so `SIZING_COMPUTED` is derivable on `RULE2-05-RED` after all and was authored with
+`selector FALLBACK`, `contract_multiplier 1`, `order_notional 0`. `MIN_NOTIONAL_ADMITTED` moved to
+sequence `2` and its `order_notional` to `0`. The Y-1 table line
+`RULE2-05-RED 101 = 1*101*1` and this paragraph both describe the pre-ruling artifact.
 
 ### Y-3 `PROTECTIVE_STOP_EVALUATED` additions on the three RULE2-06 rows
 
@@ -2410,3 +2420,322 @@ design-unenumerated metrics, does not close W167-D01/D02/D03/D05/D06, and grants
 execution, re-seal, deployment or trading authority. The §16 `SEMANTIC_COVERAGE_REVIEW` remains
 owner-held and PENDING, and the claude family remains excluded from that reviewer role because it
 authored these tables.
+
+## W186 owner addendum 28 decision 68 re-derivation — `RULE2-05-RED`
+
+### Z-0 The ruling and its exact scope
+
+Owner addendum 28, decision 68, 2026-09-01, verbatim in the repository at
+`C:\tmp\LANE_PROMPTS_20260828\N_TIMES.txt:571`:
+
+> "(68) RULE2-05-RED: SECTION 7 GOVERNS, quantity ZERO - the sealed golden currently carries the
+> section-11 outcome and must be re-derived by the tables family under this word, the only authority
+> that may change a sealed golden."
+
+That resolves discrepancy **W167-D05** (`DERIVATIONS.md:2040-2056`), which recorded that design
+section 7 `:196-208` sizes `RULE2-05-RED` from the **final** entry fill `101` and floors to `0`,
+while design section 11 `:315` and section 22.5 `:870` declare requested quantity `1`. Lane W172
+withheld `SIZING_COMPUTED` on this row rather than choose (`DERIVATIONS.md:2208-2216`). The owner has
+now chosen. The ruling names one row and one branch; sections 11 and 22.5 keep every other value they
+supply to this scenario (reference `100`, `slippage_bps 100`, impact `1`, final fill `101`, tick
+`0.01`, `contract_multiplier 1`, fee rate `0.00045`), and this lane changed nothing outside
+`RULE2-05-RED`.
+
+### Z-1 The governing arithmetic, written out
+
+Inputs, each with the design line that supplies it:
+
+```
+sizing_equity        = 1000        OPEN-EMBED-01 closed 1a by owner addendum 20 item 49; the
+                                   binding is recorded on this artifact's open_item_bindings
+                                   and design 22.5 :870 leaves initial_capital as [OPEN-EMBED-01]
+fallback_size_pct    = 10          :870  ("fallback_size_pct=10")
+max_leverage_cap     = 10          :870
+qty_step             = 1           :870 tick/step/minima .01/1/0/0 under M-08 :736
+min_qty              = 0           :870 under M-08 :736
+min_notional         = 0           :870 under M-08 :736
+cm                   = 1           :870 ("instrument_contract_multiplier=1"); also :788-789
+stop_price           = absent      :870 ("no SL/TP") means use_sl=false under M-08 :736
+reference_price      = 100         :315, supplied by the ENTRY100 bar close at M-04 :732
+slippage_bps         = 100         :315, :870
+price_tick           = 0.01        :315, :870
+```
+
+Section 11 `:304-307` first fixes the final entry fill; that value is unchanged by the ruling and is
+restated here because section 7 `:196` divides by it:
+
+```
+impact         = abs(100) * 100 / 10_000 = 1                         (:304)
+unrounded_fill = 100 + 1 = 101              (buy)                    (:305)
+final_fill     = ceil_to_price_tick(101) = 101   (tick 0.01)         (:307)
+```
+
+Section 3 `:96-97` places sizing after the final fill is known: "For an entry, construct any
+entry-relative stop from the final fill, then size from final fill and final stop" / "Floor quantity
+to `qty_step`". Section 7 `:194-209` then gives, term by term:
+
+```
+fallback_notional = sizing_equity * (fallback_size_pct / 100)
+                  = 1000 * (10 / 100) = 100                          (:195)
+
+selector          = FALLBACK
+                    stop_price is absent, and :197-198 select fallback_raw_qty on that branch;
+                    :212 restates it ("An absent or supplied non-finite stop selects fallback
+                    sizing"). The token FALLBACK is design-named at :911.
+
+fallback_raw_qty  = fallback_notional / (final_entry_fill * cm)
+                  = 100 / (101 * 1)
+                  = 100 / 101
+                  = 0.990099009900990099...                          (:196)
+
+selected_raw_qty  = fallback_raw_qty = 0.990099...                   (:198)
+
+leverage_cap_qty  = (sizing_equity * max_leverage_cap) / (final_entry_fill * cm)
+                  = (1000 * 10) / (101 * 1)
+                  = 10000 / 101
+                  = 99.009900990099...                               (:206)
+
+raw_qty           = min(0.990099..., 99.009900...) = 0.990099...     (:207)
+
+qty               = floor_to_qty_step(0.990099..., step 1) = 0       (:208)
+
+order_notional    = qty * final_entry_fill * cm = 0 * 101 * 1 = 0    (:209)
+```
+
+The floor is exact and needs no binary64 case analysis: `100 / 101` is strictly greater than `0` and
+strictly less than `1`, so flooring to a step of `1` gives `0` under any rounding of the quotient.
+`10000 / 101` is greater than `1`, so the leverage cap is not binding and does not change the result.
+
+This is the same arithmetic the withheld-row record already carried at `DERIVATIONS.md:2208-2211`;
+the ruling changes which of the two sections the artifact seals, not the computation.
+
+### Z-2 Section 8 admission still holds
+
+Design `:97` applies the `min_notional` check to the fill-producing entry, and `:233-234` gives
+`order_notional = floored_qty * final_entry_fill * contract_multiplier` and
+`admit iff order_notional >= min_notional`:
+
+```
+order_notional        = 0 * 101 * 1 = 0                              (:233)
+required_min_notional = 0                                            (:870 under M-08 :736)
+admit iff 0 >= 0  ->  TRUE                                           (:234)
+```
+
+`:237` states that equality passes "because the legacy comparison is strict `<`". So
+`MIN_NOTIONAL_ADMITTED` survives on this row; only its `order_notional` member moves, from `101` to
+`0`, and its `sequence` moves from `1` to `2` because a `SIZING_COMPUTED` row now precedes it
+(`:1033` section-3 order; `:1045` "section 8 makes admission a separate predicate after sizing").
+
+### Z-3 The withheld row CAN now be filled
+
+**Yes.** `SIZING_COMPUTED` is added at sequence `1`. Its member set is closed at `:1017`:
+`event_timestamp` REQUIRED, plus `selector`, `contract_multiplier`, `order_notional`, on top of the
+common `sequence`, `decision`, `kernel_semantics_version` at `:994`.
+
+```
+sequence                 = 1                       (:1033 section-3 order: step 1 validation,
+                                                    then steps 7-8 sizing, then step 8 admission)
+decision                 = SIZING_COMPUTED         (:1017)
+kernel_semantics_version = "2.0.0"                 (:998-1002, :113)
+event_timestamp          = 2000-01-01T00:11:00Z    (M-04 :732 gives ENTRY100's timestamp;
+                                                    M-06 :734 puts the corrected event at the bar
+                                                    that supplies its reference price)
+selector                 = FALLBACK                (:197-198, :212; token design-named at :911)
+contract_multiplier      = 1                       (:870, :788-789)
+order_notional           = 0                       (:209, Z-1 above)
+```
+
+Every member of the payload is now derivable, and each is derived above from a quoted design line.
+Exactly what blocked the row — the choice between `selector`/`order_notional` under section 7 and
+under section 11 — is what the owner ruled. Nothing else about the row was blocked, so nothing else
+holds it back.
+
+One naming limit, carried forward unchanged from lane W172 rather than newly incurred here: the
+`FALLBACK` token is design-named at `:911`, but that sentence sits inside section 22.7, whose subject
+is the `RULE2-01-GREEN` NaN wire. It is the design's only spelling of the section-7 fallback branch,
+and lane W172 used it on `RULE2-05-GREEN` and `RULE2-07-RED` on that basis (`DERIVATIONS.md:2204-2206`).
+This lane uses it identically. Recorded as **W186-D03**.
+
+### Z-4 Values downstream of the quantity
+
+Each node below is changed only where a quoted design line determines it from `qty = 0`.
+
+**Fee, design section 13.** The row's `CostSchedule` members come from `:800` (`fixed_component=0`,
+`minimum_fee=0`, `fee_rounding_rule="EXACT_IDENTITY_V1"`) and `:802` (`taker_rate=0.00045`, ENTRY maps
+to TAKER); `:384` defines the test rule as `round_and_apply_minimum(x)=x`.
+
+```
+fee_notional   = abs(final_fill_price * fill_qty * contract_multiplier)
+               = abs(101 * 0 * 1) = 0                                (:360)
+raw_fee        = fee_notional * selected_liquidity_rate + fixed_component
+               = 0 * 0.00045 + 0 = 0                                 (:361)
+fee_amount     = round_and_apply_minimum(0) = 0                      (:362, :800, :384)
+fee_cash_delta = -fee_amount = 0                                     (:363)
+```
+
+`rate 0.00045`, `fixed_component 0`, `liquidity_role TAKER`, `settlement_currency TEST-USD`,
+`schedule_id`, `lifecycle_id 1`, `fill_id F0`, `event_class ENTRY` and `event_timestamp` are
+unchanged: none of them is a function of quantity.
+
+**Cash ledger, design section 2.1.** `:75` requires the typed fee projection and its joined cash row
+to carry equal signed deltas, and `:376` repeats the equality check, so
+`cash_events/0/signed_delta = 0`.
+
+**Equity curve, design section 23.2.** `:1060-1061`: `last` is `first` plus every in-window
+`cash_events` `signed_delta` in section-3/array order. The M-06 `:734` window for this row is the full
+bar span `2000-01-01T00:10:00Z .. 2000-01-01T00:11:00Z`, so the single fee cash row is in window:
+
+```
+equity_curve.first = 1000                                (window start is the account seed, R-0.4)
+equity_curve.last  = 1000 + 0 = 1000                     (:1060-1061)
+```
+
+This endpoint is robust to the one open question in Z-6: if the design instead emitted no fill and
+therefore no fee or cash row, `:1061` says "With no in-window cash event, `last == first`", which is
+`1000` as well. `last = 1000` holds on both readings.
+
+**Position quantity, design section 7.** `:216` names the projection set for a changed section-7
+quantity: "Required changed projection: quantity, order notional, later position quantity, and any
+quantity-derived cash event." `final_position.quantity` therefore follows the floored `0`.
+`final_position.side LONG` and `final_position.entry_fill_price 101` are not quantity-derived —
+`:275-280` / `:406` fix the long side and `:315` / `:307` fix the fill price — and are unchanged.
+
+**RESULT `order_notional`.** `:209` and `:233` both give `0 * 101 * 1 = 0`. The member stays present:
+`:1128` requires it exactly when DEF-P012-01/02/05 declares the entry-sizing/notional projection, and
+this row owns DEF-P012-05.
+
+### Z-5 Before/after, one line per changed node
+
+```
+pointer                                        before      after   forcing design line
+/EVENT_SURFACE/decision_events/1               (absent)    row     :1017 SIZING_COMPUTED payload
+/EVENT_SURFACE/decision_events/2.sequence      1           2       :1033, :1045
+/EVENT_SURFACE/decision_events/2.order_notional 101        0       :233-234
+/EVENT_SURFACE/fill_events/0/quantity          1           0       :208
+/EVENT_SURFACE/cash_events/0/signed_delta      -0.04545    0       :75, :376
+/EVENT_SURFACE/fee_events/0/fee_notional       101         0       :360
+/EVENT_SURFACE/fee_events/0/fee_amount         0.04545     0       :361-362
+/EVENT_SURFACE/fee_events/0/fee_cash_delta     -0.04545    0       :363
+/RESULT_SURFACE/final_position/quantity        1           0       :216
+/RESULT_SURFACE/order_notional                 101         0       :209, :233
+/RESULT_SURFACE/equity_curve/last              999.95455   1000    :1060-1061
+```
+
+`equity_curve.first`, every `run_manifest` member, every `blocked_cells` marker, `metrics`,
+`trades`, `warnings`, `refusals`, the `EVENT_SURFACE` container set and every fill member other than
+`quantity` are unchanged. `funding_events` and `exit_events` stay empty.
+
+**FOUR ECONOMIC VALUES MOVED**, in contrast to the W167 and W172 revisions, which moved none:
+`order_notional 101 -> 0`, `fee_amount 0.04545 -> 0` with its two joined deltas
+`-0.04545 -> 0`, `equity_curve.last 999.95455 -> 1000`, and the quantity nodes
+`1 -> 0`. Superseded binary64 token: R-0.4 `:1182` records `RULE2-05-RED 1000 - fl(0.04545) =
+999.95455` at bits `0x408f3fa2eb1c432d`; under this ruling the accumulation is `1000 - 0 = 1000` and
+that line no longer describes this row. R-9 `:1369-1380` is likewise superseded for its
+`fee_notional`, `fee_amount`, delta and `equity_curve` values; its fill price `101` and impact `1`
+stand.
+
+### Z-6 What the ruling does NOT determine — recorded, not filled
+
+**W186-D01 — whether a zero-quantity entry still emits a fill, a fee row and a position.**
+The ruling fixes the quantity. It does not say whether the corrected adapter emits
+`fill_events/0`, `cash_events/0`, `fee_events/0` and a `final_position` at all once the floored
+quantity is `0`. The design does not settle this either:
+
+- `:97` (step 8) names a `min_qty` check but states **no predicate** for it. This row's `min_qty` is
+  `0` (`:870` under M-08 `:736`), so a `qty >= min_qty` reading admits and a `qty > min_qty` reading
+  refuses. The design gives neither.
+- `:99-100` (steps 10-11) append the fill decision, its fill event and its fee cash event
+  unconditionally once the step-8 checks pass.
+- `:357` charges a fee "For every executed entry or exit fill" without defining whether a
+  zero-quantity fill is executed.
+- `:212` states the conditions that "return zero quantity" without stating what the transition then
+  emits.
+- The closed reason table `:1014-1024` contains no minimum-quantity or zero-quantity reason, and
+  `:1037` says a reason not in that table requires a later schema amendment. The closed refusal-code
+  table `:1157-1163` likewise enumerates only `REFUSED_MIN_NOTIONAL` and
+  `REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION`. Under the current closed schema nothing can refuse
+  this row.
+
+This lane therefore kept the container shape the artifact already sealed — one fill, one cash row,
+one fee row, one `final_position` — and re-derived their values, because that is the reading the
+closed schema can express and because deleting three containers would be a change made by inference,
+which this lane is fenced from. The alternative reading (no fill, empty
+`fill_events`/`cash_events`/`fee_events`, and some other `final_position`) is recorded here, not
+chosen. `equity_curve.last = 1000` is identical under both readings; `final_position` is the one node
+where they differ. **Owner or §16 resolution requested.**
+
+**W186-D02 — signed zero on `fee_cash_delta`.**
+`:363` gives `fee_cash_delta = -fee_amount`. With `fee_amount = 0` the mathematical result is `0` and
+the IEEE-754 binary64 result of negating `+0.0` is `-0.0`, a distinct bit pattern
+(`0x8000000000000000` versus `0x0000000000000000`). The design fixes no signed-zero serialization
+rule, and `:1157`-class node comparison under `:480` compares tokens. This lane writes `0`, matching
+`cash_events/0/signed_delta` so the `:75` equality join holds token for token. The `-0` alternative
+is recorded, not adopted.
+
+**W186-D04 — the catalog's recorded expected-artifact digest is now stale.**
+`scenario_catalog.json` pins `expected_artifacts["2.0.0"].digest` for `RULE2-05-RED` at
+`a5962ccfed7b893d41ea2b2d43c1b2532328a9fb1eaea07b11f605a82c6cd7f9`, the pre-revision bytes. The lane
+spec keeps the catalog untouched and puts re-sealing with the Lead, so this lane did **not** edit it.
+Flagged so no reader mistakes the catalog row for a digest of the current bytes; the Lead must
+refresh it with the new digest recorded in the W186 report. This is the same class as W167-D06 and
+does not affect any expected value.
+
+**W186-D05 — the prompt's premise, checked against the repository.**
+The lane spec says the golden "withheld the affected value rather than guess". Verified and true for
+`SIZING_COMPUTED` (`RULE2-05-RED.json` `w172_revised_nodes`, entry 2), but the artifact did **not**
+withhold the quantity itself: it sealed the section-11 outcome (`quantity 1`, `order_notional 101`,
+`fee 0.04545`, `equity 999.95455`) throughout, which is exactly what the owner's own wording at
+`N_TIMES.txt:571` says ("the sealed golden currently carries the section-11 outcome"). The
+repository and the owner agree; the lane spec's one-clause summary understated the reach. Recorded
+under C-2 because it changed the size of the edit: this is a value re-derivation, not only the
+filling of one withheld row.
+
+### Z-7 The ruling does not spread — every other row re-checked
+
+Item 4 of the lane spec requires that a change implied elsewhere be reported, not made. Nothing is
+implied elsewhere. `RULE2-05-RED` is the **only** row in the corpus whose corrected final entry fill
+differs from its reference price, because it is the only row with a non-zero `slippage_bps`
+(`:315`, `:870`). Every other row that sizes an entry binds `slippage_bps=0` explicitly:
+`RULE2-01-RED/GREEN` at `:216` and `:850-851`, `RULE2-02-RED/GREEN` at `:241` and `:852-853`,
+`RULE2-03` at `:259` and `:854`, `RULE2-04-RED/GREEN` at `:287` and `:868-869`, `RULE2-05-GREEN` at
+`:315` and `:871`, the `RULE2-06` family at `:872-874`, `RULE2-07-RED` at `:384` and `:886`; and
+`RULE2-08-RED`'s `CostSchedule` is absent/`NOT_CONSUMED` at `:888`, with its entry basis and fill
+bound to `100` by owner addendum 20 item 49 (4a). Sizing over a final fill above the reference is
+precisely what pushes `fallback_notional / final_fill` below one step. Every other fill-producing
+row, re-checked by hand this session against its own `:850-888` bindings:
+
+```
+row                    path      arithmetic                                    qty  sealed  moves?
+RULE2-01-RED           risk      100 / (|100-90| * 2) = 5;  cap 50             5    5       no  (:216)
+RULE2-01-GREEN         fallback  100 / (100 * 1) = 1;       cap 100            1    1       no  (:216)
+RULE2-02-RED           risk      10 / (10 * 1) = 1;         cap 100            1    1       no  (:241)
+RULE2-02-GREEN         risk      10 / (10 * 1) = 1;         cap 100            1    1       no  (:241)
+RULE2-04-RED/GREEN     risk      10 / (|100-90| * 1) = 1;   cap 100            1    1       no  (:868)
+RULE2-05-GREEN         fallback  100 / (100 * 1) = 1;       cap 100            1    1       no  (:871, Y-2)
+RULE2-06-*             risk      20 / (|100-90| * 1) = 2;   cap 100            2    2       no  (:872-874)
+RULE2-07-RED           fallback  100 / (100 * 1) = 1;       cap 100            1    1       no  (:886, Y-2)
+RULE2-08-RED           fallback  100 / (100 * 1) = 1;       cap 100            1    1       no  (:888)
+RULE2-03-RED/GREEN     none      NO_ACTION100; no intent, no fill              -    -       no  (:854-855)
+RULE2-07-GREEN         none      no intent, no fill                            -    -       no  (:887)
+RULE2-08-GREEN         none      premise blocked on OPEN-EMBED-05              -    -       no  (:889)
+```
+
+Every quotient above is an exact integer or larger than its step, so no floor moves. W172 had already
+narrowed W167-D05 to `RULE2-05-RED` alone on the same ground (`DERIVATIONS.md:2048-2056`); this
+session re-derived all twelve rows independently rather than inheriting that conclusion. **No other
+scenario file was opened for writing and none was changed.**
+
+### Z-8 Honest limits of this re-derivation
+
+One owner ruling applied to one row. No kernel, adapter, driver, gate, backtest, verifier, generator
+or baseline exists or was executed; no `observed/` path was read; no implementer-authored input file
+was consumed as an authority — every input value above is quoted from the design text, and the
+`tests/.../inputs/RULE2-05-RED.json` bytes were not used to derive any value. Local SHA-256, a
+structural JSON parse for byte discipline and duplicate-key equality, and written arithmetic over
+this bundle's own files are the only computation performed. The ruling closes W167-D05 and opens
+W186-D01 through W186-D05; it does not close W167-D01/D02/D03/D06, does not un-block
+design-unenumerated metrics or the `BLOCKED-MISSING-RECORD-BYTES` digests, and grants no build,
+execution, re-seal, deployment or trading authority. Re-sealing, and refreshing the stale catalog
+digest under W186-D04, remain the Lead's acts under design `:1171-1172`. The §16
+`SEMANTIC_COVERAGE_REVIEW` remains owner-held and PENDING, and the claude family remains excluded
+from that reviewer role because it authored these tables.

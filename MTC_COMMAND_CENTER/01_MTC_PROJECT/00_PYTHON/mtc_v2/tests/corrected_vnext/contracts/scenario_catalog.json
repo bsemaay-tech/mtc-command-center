@@ -371,7 +371,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-05-RED.json",
-    "digest": "a5962ccfed7b893d41ea2b2d43c1b2532328a9fb1eaea07b11f605a82c6cd7f9"
+    "digest": "88197710a9a767a130d794dbbebe56a81fe9ef990081d3c15171b574e25dbc9a"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",

@@ -73,12 +73,12 @@
  "files": [
   {
    "path": "DERIVATIONS.md",
-   "sha256": "40bf2214e774514f3271499c5037106ae54bdc8b9f3c47a99133ef697e397f89",
-   "bytes": 163605
+   "sha256": "ac12f8a24c9b45da879046b35e2b4f7399c04d447d8de1324c99e1515ef679b4",
+   "bytes": 184429
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "36c38286ef7dcc483939b24f387f773b33650b3b5d59a3d6eaa9893cb74a366e",
+   "sha256": "795891500bb93763fe91dde7cfcc11687e414b9118d301b3f422789f02eb9da2",
    "bytes": 40893
   },
   {
@@ -128,8 +128,8 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-05-RED.json",
-   "sha256": "a5962ccfed7b893d41ea2b2d43c1b2532328a9fb1eaea07b11f605a82c6cd7f9",
-   "bytes": 13579
+   "sha256": "88197710a9a767a130d794dbbebe56a81fe9ef990081d3c15171b574e25dbc9a",
+   "bytes": 21008
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
@@ -277,12 +277,61 @@
    "authority": "Owner addendum 26 answered W167-D04 with READING Y: a decision_events row is required for every closed reason whose named decision is actually evaluated on that scenario, even where the prior tables artifact never carried it. The independent family (G83) had ruled the two readings GENUINELY AMBIGUOUS and returned NOT SAFE TO SEAL rather than choosing.",
    "effect": "Ten decision rows added across eight of seventeen scenarios; one row (RULE2-05-RED SIZING_COMPUTED) deliberately withheld with its record because its payload is not derivable (W167-D05); zero economic values moved; all six G83 findings folded, including two corrections to G83's own evidence tables.",
    "independent_verdict": "C:\\tmp\\LANE_PROMPTS_20260828\\DETECT_G85_READING_Y.md - SAFE TO SEAL, no second fork found."
+  },
+  {
+   "revision": "W186 RULE2-05-RED re-derivation under owner addendum 28 decision 68, 2026-09-01",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W186_RULE205RED_REDERIVE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W186_RULE205RED_REPORT.md",
+   "authority": "Owner addendum 28 decision 68, 2026-09-01, verbatim at C:\\tmp\\LANE_PROMPTS_20260828\\N_TIMES.txt:571 - 'RULE2-05-RED: SECTION 7 GOVERNS, quantity ZERO - the sealed golden currently carries the section-11 outcome and must be re-derived by the tables family under this word, the only authority that may change a sealed golden.' This resolves discrepancy W167-D05, on which design section 7 :196-208 (floored quantity 0) and design section 11 :315 with section 22.5 :870 (declared quantity 1) disagreed.",
+   "files_revised": [
+    "golden/corrected_vnext/RULE2-05-RED.json",
+    "DERIVATIONS.md"
+   ],
+   "files_NOT_touched": [
+    "the other 16 files under golden/corrected_vnext/ (re-checked by written arithmetic, none affected; see DERIVATIONS.md section Z-7)",
+    "scenario_catalog.json",
+    "IMPLEMENTATION_ANCHOR_DRAFT.json",
+    "every catalog row, input path and input digest",
+    "tests/corrected_vnext/contracts/inputs/** (not opened as a derivation authority)"
+   ],
+   "manifest_fields_updated_by_this_lane": [
+    "files[].sha256 and files[].bytes for the two files this lane actually revised, and ONLY those",
+    "this revision_history entry"
+   ],
+   "manifest_fields_NOT_touched": [
+    "seal",
+    "seal_state",
+    "reseal_history",
+    "catalog_conservation",
+    "expected_value_provenance",
+    "author_identity",
+    "owner_ruling",
+    "byte_discipline",
+    "design",
+    "blocked_cell_markers",
+    "open_item_applicability_source",
+    "owner_addendum_20_source",
+    "section_16_review",
+    "claim_limits"
+   ],
+   "seal_consequence": "The recorded EXPECTED_SEAL_SHA no longer covers these bytes. Re-sealing is the Lead's act under design :1171-1172 and was deliberately not performed here; W167-D06 stands.",
+   "catalog_consequence": "STALE CATALOG DIGEST. scenario_catalog.json pins expected_artifacts['2.0.0'].digest for RULE2-05-RED at a5962ccfed7b893d41ea2b2d43c1b2532328a9fb1eaea07b11f605a82c6cd7f9, the pre-revision bytes. The lane spec keeps the catalog untouched, so this lane did not edit it; the Lead must refresh that one field to 88197710a9a767a130d794dbbebe56a81fe9ef990081d3c15171b574e25dbc9a at re-seal. Recorded as DERIVATIONS.md discrepancy W186-D04.",
+   "value_impact": "FOUR ECONOMIC VALUES MOVED on RULE2-05-RED, unlike the W167 and W172 revisions which moved none. /EVENT_SURFACE/fill_events/0/quantity and /RESULT_SURFACE/final_position/quantity 1 -> 0; /RESULT_SURFACE/order_notional 101 -> 0; fee_notional 101 -> 0 with fee_amount 0.04545 -> 0 and both joined deltas -0.04545 -> 0; /RESULT_SURFACE/equity_curve/last 999.95455 -> 1000. The withheld /EVENT_SURFACE/decision_events SIZING_COMPUTED row IS now derivable and was authored (selector FALLBACK, contract_multiplier 1, order_notional 0). No other scenario moved by any value.",
+   "effect": "One golden re-derived, one worksheet section added. W167-D05 closed. Five new discrepancies recorded and NOT resolved: W186-D01 (the design fixes no rule for whether a zero-quantity entry still emits a fill, fee, cash row and position; container shape kept as sealed, alternative recorded), W186-D02 (signed-zero serialization of fee_cash_delta), W186-D03 (the FALLBACK selector token is design-named only inside section 22.7), W186-D04 (stale catalog digest above), W186-D05 (the lane spec understated the reach: the artifact sealed the section-11 outcome throughout rather than withholding only one row)."
+  },
+  {
+   "revision": "W186 RULE2-05-RED re-derivation, 2026-09-01",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W186_RULE205RED_REDERIVE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W186_RULE205RED_REPORT.md",
+   "authority": "Owner addendum 28 decision 68 resolved the section 7 versus section 11 quantity contradiction in favour of section 7: the flooring rule governs, quantity zero. W167-D05 had withheld the affected row rather than choose.",
+   "effect": "FOUR ECONOMIC VALUES MOVED - the first revision in this sequence to move any. The previously withheld SIZING_COMPUTED row became derivable under the ruling and was filled. No other scenario was touched.",
+   "independent_verdict": "C:\\tmp\\LANE_PROMPTS_20260828\\DETECT_G94_ECONOMIC.md - SAFE TO SEAL: YES. All four figures independently re-derived; each entailed by the ruling rather than by a further unstated choice; the withheld row genuinely derivable; no ripple detected."
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
+  "EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "reason": "Sealed by the Lead at re-seal #3, after the independent G85 SAFE-TO-SEAL verdict on the Reading Y revision. Covers: design v1.8 (dual-zero terminal re-check), the W167 v1.8 tables revision, and the W172 Reading Y revision under owner addendum 26. Every files[] digest re-measured from disk at seal time; the catalog's 2.0.0 expected digests re-pinned from the revised goldens. The ten PROBE rows remain honestly BLOCKED-BUILD-ARTIFACT because their variant trees are not built yet."
+  "reason": "Sealed by the Lead at re-seal #4, after the independent G94 SAFE-TO-SEAL verdict. Covers everything in re-seal #3 plus the W186 re-derivation of RULE2-05-RED under owner addendum 28 decision 68. This is the first seal in the sequence to cover MOVED ECONOMIC VALUES: four money figures changed, each independently re-derived by a non-authoring family and each entailed by the ruling rather than by a further unstated choice. The design is now v1.9 (owner addendum 28 decision 67). Every files[] digest was re-measured from disk at seal time. The ten PROBE rows remain honestly BLOCKED-BUILD-ARTIFACT."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -291,9 +340,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
+  "EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "set_by": "Lead re-seal act #3 2026-09-01T19:48:00+03:00 (see reseal_history); prior seal by Lead re-seal #2 2026-08-31 night"
+  "set_by": "Lead re-seal act #4 2026-09-01T23:11:48+03:00 (see reseal_history); prior seal by Lead re-seal #3 2026-09-01 evening"
  },
  "reseal_history": [
   {
@@ -339,6 +388,30 @@
     }
    ],
    "input_digests_touched": "none - the 17 input pins from re-seal #2 stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066, the commit the kernel branch is cut from"
+  },
+  {
+   "at": "2026-09-01T23:11:48+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #4",
+   "trigger": "G94 SAFE TO SEAL verdict on the W186 economic re-derivation",
+   "old_EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
+   "new_EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
+   "old_catalog_sha256": "36c38286ef7dcc483939b24f387f773b33650b3b5d59a3d6eaa9893cb74a366e",
+   "new_catalog_sha256": "795891500bb93763fe91dde7cfcc11687e414b9118d301b3f422789f02eb9da2",
+   "catalog_changes": [
+    "1x expected_artifacts['2.0.0'].digest re-pinned from disk",
+    "16x already matched disk and were left untouched",
+    "20x PROBE digests deliberately left BLOCKED-BUILD-ARTIFACT"
+   ],
+   "disk_deltas_absorbed": [
+    {
+     "path": "scenario_catalog.json",
+     "old_sha12": "36c38286ef7d",
+     "new_sha12": "795891500bb9"
+    }
+   ],
+   "economic_values_moved": "four, in RULE2-05-RED only, under owner addendum 28 decision 68",
+   "input_digests_touched": "none - the 17 input pins stand unchanged",
    "implementation_base_sha_touched": "no - stays 108ea066, the commit the kernel branch is cut from"
   }
  ]
