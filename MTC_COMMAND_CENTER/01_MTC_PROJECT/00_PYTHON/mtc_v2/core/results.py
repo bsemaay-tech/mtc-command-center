@@ -771,6 +771,22 @@ def _state_refusals(state: PortfolioState) -> list[dict[str, Any]]:
     return refusals
 
 
+def _guard_surface(guards: Mapping[str, Any]) -> dict[str, Any]:
+    required = {
+        "guard_pnl_basis",
+        "consecutive_loss_count",
+        "consec_loss_ok",
+        "guard_blocked_raw",
+    }
+    optional = {"last_closed_guard_pnl"}
+    names = set(guards)
+    if required - names or names - required - optional:
+        raise ValueError("invalid corrected guard members")
+    if "last_closed_guard_pnl" in guards and guards["last_closed_guard_pnl"] is None:
+        raise ValueError("last_closed_guard_pnl must be absent instead of null")
+    return dict(guards)
+
+
 def _realized_equity_window(
     state: PortfolioState,
     *,
@@ -934,7 +950,7 @@ def corrected_surfaces(
             state.cumulative_funding
         )
     if guards is not None:
-        result_surface["guards"] = dict(guards)
+        result_surface["guards"] = _guard_surface(guards)
     if admitted is not None:
         result_surface["admitted"] = admitted
     result_surface.update(

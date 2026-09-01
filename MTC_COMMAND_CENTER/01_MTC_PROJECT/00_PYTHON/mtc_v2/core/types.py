@@ -435,7 +435,7 @@ class PortfolioState:
     cumulative_funding: float = 0.0
     guard_realized_equity: float = 0.0
     last_gross_realized_pnl: float = 0.0
-    last_closed_guard_pnl: float = 0.0
+    last_closed_guard_pnl: float | None = None
     lifecycle_gross_pnl: dict[int, float] = field(default_factory=dict)
     lifecycle_fee_cash: dict[int, float] = field(default_factory=dict)
     lifecycle_funding_cash: dict[int, float] = field(default_factory=dict)

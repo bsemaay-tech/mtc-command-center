@@ -400,6 +400,36 @@ def test_section_23_refusals_are_closed_tagged_objects(
     assert refusals == [expected_refusal]
 
 
+@pytest.mark.parametrize(
+    ("scenario_id", "lifecycle_closed"),
+    [
+        ("RULE2-07-RED", True),
+        ("RULE2-07-GREEN", False),
+        ("RULE2-08-RED", False),
+    ],
+)
+def test_section_23_guard_projection_has_closed_members(
+    scenario_id: str, lifecycle_closed: bool
+) -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+
+    guards = execute_corrected_scenario(MTC_V2_ROOT, row)["RESULT_SURFACE"]["guards"]
+    expected = {
+        "guard_pnl_basis",
+        "consecutive_loss_count",
+        "consec_loss_ok",
+        "guard_blocked_raw",
+    }
+    if lifecycle_closed:
+        expected.add("last_closed_guard_pnl")
+
+    assert set(guards) == expected
+    assert guards["guard_pnl_basis"] == "GROSS_MINUS_FEES"
+    assert type(guards["consec_loss_ok"]) is bool
+    assert type(guards["guard_blocked_raw"]) is bool
+
+
 def test_rule2_05_red_honors_explicit_quantity_after_slippage() -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == "RULE2-05-RED")

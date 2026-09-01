@@ -110,7 +110,6 @@ def test_main_runner_round_trip_uses_gross_minus_fees_for_all_open10_guards() ->
     assert runner._l16_consec_loss_count == 1
     assert runner.corrected_guard_snapshot == {
         "guard_pnl_basis": "GROSS_MINUS_FEES",
-        "funding_included_in_guard_basis": False,
         "last_closed_guard_pnl": -0.2,
         "consecutive_loss_count": 1,
         "consec_loss_ok": False,

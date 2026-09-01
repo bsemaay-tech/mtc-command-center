@@ -296,8 +296,6 @@ class Runner:
         self._prev_bar: Bar | None = None
         self.corrected_guard_snapshot: dict[str, object] = {
             "guard_pnl_basis": "GROSS_MINUS_FEES",
-            "funding_included_in_guard_basis": False,
-            "last_closed_guard_pnl": 0.0,
             "consecutive_loss_count": 0,
             "consec_loss_ok": True,
             "guard_blocked_raw": False,
@@ -1244,12 +1242,14 @@ class Runner:
                 if self._corrected_semantics:
                     self.corrected_guard_snapshot = {
                         "guard_pnl_basis": "GROSS_MINUS_FEES",
-                        "funding_included_in_guard_basis": False,
-                        "last_closed_guard_pnl": self.state.last_closed_guard_pnl,
                         "consecutive_loss_count": self._l16_consec_loss_count,
                         "consec_loss_ok": consec_loss_ok,
                         "guard_blocked_raw": guard_blocked_raw,
                     }
+                    if self.state.last_closed_guard_pnl is not None:
+                        self.corrected_guard_snapshot["last_closed_guard_pnl"] = (
+                            self.state.last_closed_guard_pnl
+                        )
 
                 # Guard Recovery (SAP-02)
                 if bool(self.config["use_guard_recovery"]):
