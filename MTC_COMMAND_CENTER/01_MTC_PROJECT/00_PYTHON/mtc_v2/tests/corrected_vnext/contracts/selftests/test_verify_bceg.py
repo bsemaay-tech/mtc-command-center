@@ -234,6 +234,29 @@ def test_section_23_every_emitted_event_carries_kernel_identity(
     )
 
 
+@pytest.mark.parametrize(
+    ("scenario_id", "expected_equity_curve"),
+    [
+        ("RULE2-04-RED", {"first": 999.955, "last": 989.9145}),
+        ("RULE2-04-GREEN", {"first": 999.955, "last": 999.955}),
+        ("RULE2-06-RED", {"first": 999.91, "last": 1014.81325}),
+        ("RULE2-06-EQUAL-PRICE-RED", {"first": 999.91, "last": 1009.8155}),
+        ("RULE2-06-GREEN", {"first": 999.91, "last": 979.829}),
+    ],
+)
+def test_section_23_equity_endpoints_are_window_scoped_realized_equity(
+    scenario_id: str, expected_equity_curve: dict[str, float]
+) -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+
+    equity_curve = execute_corrected_scenario(MTC_V2_ROOT, row)["RESULT_SURFACE"][
+        "equity_curve"
+    ]
+
+    assert equity_curve == pytest.approx(expected_equity_curve)
+
+
 def test_rule2_05_red_honors_explicit_quantity_after_slippage() -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == "RULE2-05-RED")

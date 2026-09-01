@@ -749,6 +749,30 @@ def _state_refusals(state: PortfolioState) -> list[dict[str, Any]]:
     return refusals
 
 
+def _realized_equity_window(
+    state: PortfolioState,
+    *,
+    observation_start: datetime | None,
+    observation_end: datetime | None,
+) -> tuple[float, float] | None:
+    if observation_start is None:
+        return None
+    first = state.initial_capital + sum(
+        float(row.signed_delta)
+        for row in state.cash_events
+        if row.event_timestamp < observation_start
+    )
+    last = first + sum(
+        float(row.signed_delta)
+        for row in _event_rows(
+            state.cash_events,
+            start=observation_start,
+            end=observation_end,
+        )
+    )
+    return first, last
+
+
 def corrected_surfaces(
     *,
     state: PortfolioState,
@@ -860,16 +884,22 @@ def corrected_surfaces(
                 break
     if collision is not None:
         result_surface["collision"] = dict(collision)
+    realized_equity_window = _realized_equity_window(
+        state,
+        observation_start=observation_start,
+        observation_end=observation_end,
+    )
+    if realized_equity_window is None:
+        equity_first = equity_values[0] if equity_values else state.initial_capital
+        equity_last = equity_values[-1] if equity_values else state.equity
+    else:
+        equity_first, equity_last = realized_equity_window
     result_surface.update(
         {
             "trades": _trade_surface(trades),
             "equity_curve": {
-                "first": _json_number(
-                    equity_values[0] if equity_values else state.initial_capital
-                ),
-                "last": _json_number(
-                    equity_values[-1] if equity_values else state.equity
-                ),
+                "first": _json_number(equity_first),
+                "last": _json_number(equity_last),
             },
         }
     )
