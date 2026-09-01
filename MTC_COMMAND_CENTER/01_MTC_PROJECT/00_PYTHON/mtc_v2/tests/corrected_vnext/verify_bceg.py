@@ -682,21 +682,6 @@ def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any
                     ),
                 )
             )
-        collision = None
-        if scenario_id.startswith("RULE2-06-"):
-            window_start = _timestamp(corrected["observation_window"]["start_timestamp"])
-            chosen = [
-                member.exit_id
-                for member in runner.state.fill_events
-                if member.event_timestamp >= window_start
-            ]
-            collision = {
-                "collision": any(member != "STOP" for member in chosen),
-                "same_bar_collision_policy_id": config["same_bar_collision_policy_id"],
-                "ordered_chosen_exit_ids": chosen,
-                "is_pessimistic": False,
-                "ambiguity_record": None,
-            }
         include_guards = scenario_id.startswith("RULE2-07-") or scenario_id == "RULE2-08-RED"
         surfaces = corrected_surfaces(
             state=runner.state,
@@ -711,15 +696,18 @@ def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any
                 ),
             ),
             guards=runner.corrected_guard_snapshot if include_guards else None,
-            collision=collision,
+            include_order_notional=scenario_id.startswith(
+                ("RULE2-01-", "RULE2-02-", "RULE2-05-")
+            ),
+            admitted=(
+                runner.state.position is not None
+                if scenario_id == "RULE2-02-GREEN"
+                else None
+            ),
             observation_start=_timestamp(corrected["observation_window"]["start_timestamp"]),
             observation_end=_timestamp(corrected["observation_window"]["end_timestamp"]),
             include_cumulative_funding=scenario_id.startswith("RULE2-08-"),
         )
-        if scenario_id == "RULE2-02-GREEN":
-            surfaces["RESULT_SURFACE"]["admitted"] = (
-                surfaces["RESULT_SURFACE"]["final_position"] is not None
-            )
         _normalize_exit_surface(surfaces)
     validate_corrected_event_surface(surfaces["EVENT_SURFACE"])
     return {

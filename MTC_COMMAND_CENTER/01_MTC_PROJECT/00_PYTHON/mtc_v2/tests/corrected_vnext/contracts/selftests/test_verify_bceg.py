@@ -317,6 +317,55 @@ def test_section_23_fill_and_exit_conditionals_are_closed(
         assert set(exit_event) == expected
 
 
+@pytest.mark.parametrize(
+    "scenario_id",
+    [
+        "RULE2-01-RED",
+        "RULE2-01-GREEN",
+        "RULE2-02-RED",
+        "RULE2-02-GREEN",
+        "RULE2-03-RED",
+        "RULE2-03-GREEN",
+        "RULE2-04-RED",
+        "RULE2-04-GREEN",
+        "RULE2-05-RED",
+        "RULE2-05-GREEN",
+        "RULE2-06-RED",
+        "RULE2-06-EQUAL-PRICE-RED",
+        "RULE2-06-GREEN",
+        "RULE2-07-RED",
+        "RULE2-07-GREEN",
+        "RULE2-08-RED",
+        "RULE2-08-GREEN",
+    ],
+)
+def test_section_23_result_top_level_conditionals_are_closed(
+    scenario_id: str,
+) -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+    result = execute_corrected_scenario(MTC_V2_ROOT, row)["RESULT_SURFACE"]
+    expected = {
+        "final_position",
+        "trades",
+        "equity_curve",
+        "metrics",
+        "warnings",
+        "refusals",
+        "run_manifest",
+    }
+    if scenario_id.startswith(("RULE2-01-", "RULE2-02-", "RULE2-05-")):
+        expected.add("order_notional")
+    if scenario_id == "RULE2-02-GREEN":
+        expected.add("admitted")
+    if scenario_id.startswith("RULE2-07-") or scenario_id == "RULE2-08-RED":
+        expected.add("guards")
+    if scenario_id.startswith("RULE2-08-"):
+        expected.add("cumulative_funding")
+
+    assert set(result) == expected
+
+
 def test_rule2_05_red_honors_explicit_quantity_after_slippage() -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == "RULE2-05-RED")

@@ -803,7 +803,8 @@ def corrected_surfaces(
     warnings: Iterable[RunnerWarning | Mapping[str, Any]] = (),
     refusals: Iterable[Mapping[str, Any]] | None = None,
     guards: Mapping[str, Any] | None = None,
-    collision: Mapping[str, Any] | None = None,
+    include_order_notional: bool = False,
+    admitted: bool | None = None,
     observation_start: datetime | None = None,
     observation_end: datetime | None = None,
     include_cumulative_funding: bool | None = None,
@@ -886,26 +887,27 @@ def corrected_surfaces(
             }
         )
     }
-    entry_fills = [row for row in state.fill_events if row.event_class.endswith("ENTRY")]
-    if entry_fills:
-        last_entry = entry_fills[-1]
-        result_surface["order_notional"] = _json_number(
-            abs(
-                last_entry.final_fill_price
-                * last_entry.quantity
-                * state.instrument.contract_multiplier
-            )
-        )
-    else:
-        for decision in reversed(state.decision_events):
-            details = dict(decision.details)
-            if "order_notional" in details:
-                result_surface["order_notional"] = _detail_number(
-                    details["order_notional"]
+    if include_order_notional:
+        entry_fills = [
+            row for row in state.fill_events if row.event_class.endswith("ENTRY")
+        ]
+        if entry_fills:
+            last_entry = entry_fills[-1]
+            result_surface["order_notional"] = _json_number(
+                abs(
+                    last_entry.final_fill_price
+                    * last_entry.quantity
+                    * state.instrument.contract_multiplier
                 )
-                break
-    if collision is not None:
-        result_surface["collision"] = dict(collision)
+            )
+        else:
+            for decision in reversed(state.decision_events):
+                details = dict(decision.details)
+                if "order_notional" in details:
+                    result_surface["order_notional"] = _detail_number(
+                        details["order_notional"]
+                    )
+                    break
     realized_equity_window = _realized_equity_window(
         state,
         observation_start=observation_start,
@@ -933,6 +935,8 @@ def corrected_surfaces(
         )
     if guards is not None:
         result_surface["guards"] = dict(guards)
+    if admitted is not None:
+        result_surface["admitted"] = admitted
     result_surface.update(
         {
             "metrics": dataclasses.asdict(metrics),
