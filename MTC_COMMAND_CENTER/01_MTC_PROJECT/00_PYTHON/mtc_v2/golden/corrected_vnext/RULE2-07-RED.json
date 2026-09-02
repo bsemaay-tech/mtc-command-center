@@ -47,7 +47,7 @@
   "RESULT_SURFACE": {
     "final_position": null,
     "trades": [
-      {"entry_fill_price": 100, "exit_fill_price": 100, "quantity": 1, "gross_realized_pnl": 0, "fee_total": -0.2, "funding_total": 0, "net_trade_pnl": -0.2}
+      {"entry_fill_price": 100, "quantity": 1, "exit_ids": ["TIME_STOP"], "gross_realized_pnl": 0, "fee_total": -0.2, "funding_total": 0, "net_trade_pnl": -0.2}
     ],
     "equity_curve": {"first": 1000, "last": 999.8},
     "guards": {

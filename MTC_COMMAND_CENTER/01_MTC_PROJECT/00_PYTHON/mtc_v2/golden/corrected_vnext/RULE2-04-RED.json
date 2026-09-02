@@ -44,7 +44,7 @@
   "RESULT_SURFACE": {
     "final_position": null,
     "trades": [
-      {"entry_fill_price": 100, "exit_fill_price": 90, "quantity": 1, "gross_realized_pnl": -10, "fee_total": -0.085499999999999993, "funding_total": 0, "net_trade_pnl": -10.0855}
+      {"entry_fill_price": 100, "quantity": 1, "exit_ids": ["STOP"], "gross_realized_pnl": -10, "fee_total": -0.085499999999999993, "funding_total": 0, "net_trade_pnl": -10.0855}
     ],
     "equity_curve": {"first": 999.955, "last": 989.91450000000009},
     "metrics": "BLOCKED-DESIGN-UNENUMERATED",

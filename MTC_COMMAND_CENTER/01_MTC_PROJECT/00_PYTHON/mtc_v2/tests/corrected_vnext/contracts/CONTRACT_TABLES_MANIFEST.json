@@ -12,49 +12,119 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.8 (terminal micro-fold, section 23; sections 1-22 unchanged from v1.5, re-verified by heading line numbers this session)",
-  "total_lines": 1273,
-  "line_span_used": "1-1273 (whole file)",
-  "line_spans_by_section": {
-   "2.1 interface and normative cash-ledger rule": "55-77",
-   "3 exact ordering for 2.0.0": "86-106",
-   "5 immutable records and provenance": "122-153",
-   "6 defect record contract": "155-181",
-   "7 DEF-P012-01 contract multiplier": "183-220",
-   "8 DEF-P012-02 minimum notional": "222-245",
-   "9 DEF-P012-03 frozen instrument metadata": "247-263",
-   "10 DEF-P012-04 gap-aware protective stops": "265-291",
-   "11 DEF-P012-05 in-path slippage": "293-319",
-   "12 DEF-P012-06 same-bar collision policy": "321-347",
-   "13 DEF-P012-07 provenanced fee schedule": "349-388",
-   "14 DEF-P012-08 per-interval funding": "390-433",
-   "15.1 producers": "439-448",
-   "15.2 scenario enumeration": "450-467",
-   "15.3 two comparison surfaces and node enumerator": "469-512",
-   "15.4 comparisons and fail inputs": "514-535",
-   "15.5 receipt and exact gate claim": "537-549",
-   "16 mandatory SEMANTIC_COVERAGE_REVIEW": "579-590",
-   "19 consolidated OPEN ledger": "628-643",
-   "v1.4 micro-fold change log": "668-674",
-   "15.6 v1.5 input-embedding computability note": "551-577",
-   "22.1 classification and canonical input envelope": "684-723",
-   "22.2 shared mechanical bindings M-01..M-09": "725-745",
-   "22.3 shared synthetic record bindings": "747-839",
-   "22.4 per-scenario embeddings RULE2-01..03": "840-855",
-   "22.5 per-scenario embeddings RULE2-04..06": "857-880",
-   "22.6 per-scenario embeddings RULE2-07..08": "882-894",
-   "22.7 RULE2-01-GREEN NaN wire contract": "896-916",
-   "22.8 honest OPEN-EMBED refusals": "918-930",
-   "v1.5 change log": "932-966",
-   "23 preamble (sole v1.8 normative change)": "969-985",
-   "23.1 decision_events closed shape and reason vocabulary": "987-1053",
-   "23.2 equity-curve observation-window rule": "1055-1072",
-   "23.3 closed fill_events and exit_events member sets": "1074-1109",
-   "23.4 closed RESULT_SURFACE, guards and refusal objects": "1111-1168",
-   "23.5 TABLES REVISION SCOPE and expected KERNEL DELTA": "1170-1227",
-   "23.6 v1.8 change log": "1229-1251",
-   "23.7 v1.8 closed enumeration summary": "1253-1273"
-  }
+  "version": "v1.10 (owner addendum 29 decisions 71-72 applied by W243; measured by re-seal #8)",
+  "sha256": "8086c2c66f2af8f0df7074105f476e9754a72e966353ee2a2ccc734d7651879c",
+  "total_lines": 1352,
+  "line_span_used": "whole file",
+  "heading_line_map_measured_at_reseal8": {
+   "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
+   "Prior versions": 18,
+   "1. Authority, claim, and design posture": 24,
+   "2. Deep module and seam": 35,
+   "2.1 Interface": 55,
+   "2.2 Two real adapters": 85,
+   "3. Exact ordering for `2.0.0`": 92,
+   "4. Versioning and addressability": 115,
+   "5. Immutable economic records and provenance": 129,
+   "5.1 Record byte identity": 133,
+   "5.2 `InstrumentRecord`": 148,
+   "5.3 `CostSchedule`": 154,
+   "5.4 `FundingSchedule`": 158,
+   "6. Defect record contract": 162,
+   "7. DEF-P012-01 - contract multiplier in sizing": 190,
+   "Legacy behavior": 400,
+   "Corrected semantic": 404,
+   "RULE 2 and expected delta": 435,
+   "8. DEF-P012-02 - real minimum-notional admission": 229,
+   "9. DEF-P012-03 - frozen instrument metadata": 254,
+   "10. DEF-P012-04 - gap-aware protective stops; continuous activation owner-gated": 272,
+   "11. DEF-P012-05 - in-path slippage, applied exactly once": 300,
+   "12. DEF-P012-06 - named same-bar collision policy": 328,
+   "Corrected semantic and tie-break table": 334,
+   "13. DEF-P012-07 - provenanced real fee schedule": 357,
+   "14. DEF-P012-08 - per-interval funding and `funding_events`": 398,
+   "15. Bounded Correction Evidence Gate (`BCEG-1`)": 443,
+   "15.1 Producers": 447,
+   "15.2 Scenario enumeration": 458,
+   "15.3 Two comparison surfaces": 477,
+   "15.4 Comparisons and inputs that make them fail": 523,
+   "15.5 Receipt and exact gate claim": 546,
+   "15.6 v1.5 input-embedding computability note": 560,
+   "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 588,
+   "17. Honest limits": 601,
+   "18. Build-lane work breakdown and shape census": 614,
+   "19. Single consolidated `[OPEN — owner-gated]` ledger": 637,
+   "20. Defect-class prevention table": 654,
+   "21. Required build preconditions and non-goals": 665,
+   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 677,
+   "22. v1.5 input-embedding addendum": 685,
+   "22.1 Classification and canonical input envelope": 693,
+   "22.2 Shared mechanical bindings": 734,
+   "22.3 Shared synthetic record bindings": 756,
+   "22.4 Per-scenario LEGACY embeddings: RULE2-01 through RULE2-03": 849,
+   "22.5 Per-scenario LEGACY embeddings: RULE2-04 through RULE2-06": 866,
+   "22.6 Per-scenario LEGACY embeddings: RULE2-07 and RULE2-08": 891,
+   "22.7 RULE2-01-GREEN NaN wire contract": 905,
+   "22.8 Honest `[OPEN-EMBED]` refusals": 927,
+   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 941,
+   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 978,
+   "23.1 `decision_events` closed shape and reason vocabulary (G76-09 / D-11)": 1002,
+   "23.2 Equity-curve observation-window rule (G76-04 / V15-D02)": 1070,
+   "23.3 Closed `fill_events` and `exit_events` member sets (G76-06 / D-13)": 1089,
+   "23.4 Closed `RESULT_SURFACE`, guards, and refusal objects (G76-05c/07/08 / D-13)": 1131,
+   "23.5 TABLES REVISION SCOPE and expected KERNEL DELTA": 1202,
+   "23.6 v1.8 change log — terminal micro-fold": 1288,
+   "23.7 v1.8 closed enumeration summary": 1312,
+   "23.8 v1.9 change log - owner addendum 28, decision 67": 1334,
+   "23.9 v1.10 change log - owner addendum 29, decisions 71-72": 1340
+  },
+  "superseded_pin_recorded_at_v1_8": {
+   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+   "version": "v1.8 (terminal micro-fold, section 23; sections 1-22 unchanged from v1.5, re-verified by heading line numbers this session)",
+   "total_lines": 1273,
+   "line_span_used": "1-1273 (whole file)",
+   "line_spans_by_section": {
+    "2.1 interface and normative cash-ledger rule": "55-77",
+    "3 exact ordering for 2.0.0": "86-106",
+    "5 immutable records and provenance": "122-153",
+    "6 defect record contract": "155-181",
+    "7 DEF-P012-01 contract multiplier": "183-220",
+    "8 DEF-P012-02 minimum notional": "222-245",
+    "9 DEF-P012-03 frozen instrument metadata": "247-263",
+    "10 DEF-P012-04 gap-aware protective stops": "265-291",
+    "11 DEF-P012-05 in-path slippage": "293-319",
+    "12 DEF-P012-06 same-bar collision policy": "321-347",
+    "13 DEF-P012-07 provenanced fee schedule": "349-388",
+    "14 DEF-P012-08 per-interval funding": "390-433",
+    "15.1 producers": "439-448",
+    "15.2 scenario enumeration": "450-467",
+    "15.3 two comparison surfaces and node enumerator": "469-512",
+    "15.4 comparisons and fail inputs": "514-535",
+    "15.5 receipt and exact gate claim": "537-549",
+    "16 mandatory SEMANTIC_COVERAGE_REVIEW": "579-590",
+    "19 consolidated OPEN ledger": "628-643",
+    "v1.4 micro-fold change log": "668-674",
+    "15.6 v1.5 input-embedding computability note": "551-577",
+    "22.1 classification and canonical input envelope": "684-723",
+    "22.2 shared mechanical bindings M-01..M-09": "725-745",
+    "22.3 shared synthetic record bindings": "747-839",
+    "22.4 per-scenario embeddings RULE2-01..03": "840-855",
+    "22.5 per-scenario embeddings RULE2-04..06": "857-880",
+    "22.6 per-scenario embeddings RULE2-07..08": "882-894",
+    "22.7 RULE2-01-GREEN NaN wire contract": "896-916",
+    "22.8 honest OPEN-EMBED refusals": "918-930",
+    "v1.5 change log": "932-966",
+    "23 preamble (sole v1.8 normative change)": "969-985",
+    "23.1 decision_events closed shape and reason vocabulary": "987-1053",
+    "23.2 equity-curve observation-window rule": "1055-1072",
+    "23.3 closed fill_events and exit_events member sets": "1074-1109",
+    "23.4 closed RESULT_SURFACE, guards and refusal objects": "1111-1168",
+    "23.5 TABLES REVISION SCOPE and expected KERNEL DELTA": "1170-1227",
+    "23.6 v1.8 change log": "1229-1251",
+    "23.7 v1.8 closed enumeration summary": "1253-1273"
+   }
+  },
+  "note": "The previous pin was recorded at v1.8 (1273 lines) and was never re-measured at re-seals #5, #6 or #7 although the design moved to v1.9 (W185). Its line_spans_by_section were already wrong at v1.9. Kept verbatim under superseded_pin_recorded_at_v1_8; the measured heading map above is the current reference."
  },
  "repository_evidence_identity": {
   "worktree": "C:\\WFMERGE54",
@@ -73,12 +143,12 @@
  "files": [
   {
    "path": "DERIVATIONS.md",
-   "sha256": "b0fa1e4136eda00b82bfacfe0c2dee67f928f3dcbcdb3a5e383c958129f41218",
-   "bytes": 199980
+   "sha256": "a8440a1250fed65e77ed760a0ab16db889592e737a731d12aa823f65fcc4ad50",
+   "bytes": 260783
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "5e8f1ce4c1e9a148b21ed3a5f76bb0a076947013feeb182a684fe0971e461570",
+   "sha256": "f8e788d808f26c427eaefdd3f521998b0fdcea57a469792792abab260efea603",
    "bytes": 40893
   },
   {
@@ -118,8 +188,8 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-04-RED.json",
-   "sha256": "9f7a541c08bb477b0f0a68708f01ff5eff39bc736120ad8122f77293f6bd02d1",
-   "bytes": 17701
+   "sha256": "50a990c2005ade1fa5db41cdd00f7bd194e0e89db1f3cd1b24d3d71e693aa85c",
+   "bytes": 17700
   },
   {
    "path": "golden/corrected_vnext/RULE2-05-GREEN.json",
@@ -133,7 +203,7 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
-   "sha256": "102aa04e93dfa9c56cebc5932b3e330773370fa3f0de82770b776c7e55e661f3",
+   "sha256": "c05a51eb1e03b8864c495a3d48d3ccd722a2d598489038f055d755f32cb31de0",
    "bytes": 21745
   },
   {
@@ -143,7 +213,7 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-RED.json",
-   "sha256": "25c747ac53111c5106fd9bf393f4aced9d5ebe1b3467ad9fd6b33a3fc4605613",
+   "sha256": "9d9d3a9748571d63c8790d9b7ef5df398ed945f75c59b7148975debfe167a581",
    "bytes": 20782
   },
   {
@@ -153,8 +223,8 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-07-RED.json",
-   "sha256": "0634a43fa242351072de26e027584105dae81426a5ac622219f3a6ccac706da0",
-   "bytes": 21362
+   "sha256": "e4d966eee8587ca3d645e3abd9a98847daf8f41a3743250563624975f926435b",
+   "bytes": 21365
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
@@ -372,12 +442,107 @@
    "authority": "Design v1.9 itself, under owner addendum 28 decision 67. The item at :1164-1167 requires the hyphenated GROSS-MINUS-FEES; item 9 at :1228-1234 directs removal of the RULE2-08-RED guards object absent a threshold amendment, and no such amendment exists.",
    "effect": "Three goldens revised. NO ECONOMIC VALUE MOVED - verified by a non-authoring family on both comparison surfaces. The three DESIGN-GAP rows were not touched; they carry two genuine open questions for the owner and editing one would corrupt the gate.",
    "independent_verdict": "C:\\tmp\\LANE_PROMPTS_20260828\\DETECT_G103_W200_GOLDEN.md - SAFE TO SEAL: YES. Two findings, neither HIGH: G103-F01 MEDIUM dangling DERIVATIONS pointers to the removed guards object; G103-F02 LOW stale underscore token at DERIVATIONS.md:748. It also resolved W200-D01 on the design's own terms: item 9 is the later row-specific owner-approved instruction, and design :437 is unamended family-level text that still collides with it - wording residue that belongs with the owner questions."
+  },
+  {
+   "revision": "W205 superseded-marker pass over the two DERIVATIONS residues, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W205_DERIVATIONS_RESIDUE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W205_DERIVATIONS_RESIDUE_REPORT.md",
+   "authority": "G103-F01 and G103-F02, the two findings named in the re-seal #5 record as deliberately sealed over and scheduled for repair.",
+   "effect": "DERIVATIONS.md only, +16,104 bytes. No golden, catalog, anchor or input changed - measured by this act, not taken from the report. NO ECONOMIC VALUE MOVED. History was marked, not rewritten: the worksheet is append-only and the original text at each site stays readable.",
+   "lane_reported_diff": "insertion-only: 208 added, 0 changed, 0 deleted (see limitation below)",
+   "limitation_of_this_seal": "The '0 deleted' half of that claim is UNVERIFIED. The pre-W205 bytes of DERIVATIONS.md were not preserved, so an equal-length substitution would be indistinguishable to the digest and size checks this act performed. Recorded rather than implied.",
+   "also_found_by_the_lane": "W205-D02: G103's site list for F02 was incomplete; the lane marked the sites the verifier missed. A verifier's enumeration is not itself a census."
+  },
+  {
+   "revision": "W205 superseded-marker pass over the two DERIVATIONS residues, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W205_DERIVATIONS_RESIDUE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W205_DERIVATIONS_RESIDUE_REPORT.md",
+   "authority": "G103-F01 and G103-F02, the two findings named in the re-seal #5 record as deliberately sealed over and scheduled for repair.",
+   "effect": "DERIVATIONS.md only, +16,104 bytes. No golden, catalog, anchor or input changed - measured by this act, not taken from the report. NO ECONOMIC VALUE MOVED. History was marked, not rewritten: the worksheet is append-only and the original text at each site stays readable.",
+   "lane_reported_diff": "insertion-only: 208 added, 0 changed, 0 deleted (see limitation below)",
+   "limitation_of_this_seal": "The '0 deleted' half of that claim is UNVERIFIED. The pre-W205 bytes of DERIVATIONS.md were not preserved, so an equal-length substitution would be indistinguishable to the digest and size checks this act performed. Recorded rather than implied.",
+   "also_found_by_the_lane": "W205-D02: G103's site list for F02 was incomplete; the lane marked the sites the verifier missed. A verifier's enumeration is not itself a census."
+  },
+  {
+   "revision": "W244 four-golden re-derivation under owner addendum 29 decisions 71-72, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W244_GOLDEN_SHAPE_REDERIVE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W244_GOLDEN_SHAPE_REPORT.md",
+   "design_amendment": {
+    "lane": "W243",
+    "report": "C:\\tmp\\LANE_PROMPTS_20260828\\W243_V110_APPLY_REPORT.md",
+    "design_version": "v1.10"
+   },
+   "authority": "Owner addendum 29, decisions 71, 72, 73 - C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md",
+   "effect": {
+    "golden/corrected_vnext/RULE2-04-RED.json": [
+     {
+      "pointer": "/RESULT_SURFACE/trades/0/exit_fill_price",
+      "before": 90,
+      "after": "<absent>"
+     },
+     {
+      "pointer": "/RESULT_SURFACE/trades/0/exit_ids/0",
+      "before": "<absent>",
+      "after": "STOP"
+     }
+    ],
+    "golden/corrected_vnext/RULE2-07-RED.json": [
+     {
+      "pointer": "/RESULT_SURFACE/trades/0/exit_fill_price",
+      "before": 100,
+      "after": "<absent>"
+     },
+     {
+      "pointer": "/RESULT_SURFACE/trades/0/exit_ids/0",
+      "before": "<absent>",
+      "after": "TIME_STOP"
+     }
+    ],
+    "golden/corrected_vnext/RULE2-06-RED.json": [
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/0",
+      "before": "TARGET-NEAR",
+      "after": "STOP"
+     },
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/1",
+      "before": "TARGET-FAR",
+      "after": "TARGET-NEAR"
+     },
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/2",
+      "before": "STOP",
+      "after": "TARGET-FAR"
+     }
+    ],
+    "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json": [
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/0",
+      "before": "TARGET-NEAR",
+      "after": "STOP"
+     },
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/1",
+      "before": "TARGET-FAR",
+      "after": "TARGET-NEAR"
+     },
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/2",
+      "before": "STOP",
+      "after": "TARGET-FAR"
+     }
+    ]
+   },
+   "derivations_delta_bytes": 11678,
+   "derivations_prior_bytes_preserved_as_prefix": false,
+   "economic_values_moved": "none - measured leaf-by-leaf against the 10:09 snapshot by this act",
+   "independently_verified": "GM75 (Gemini, third family, read-only packet) - C:/tmp/LANE_PROMPTS_20260828/DETECT_GM75_ADDENDUM29.md - 'Verdict A (design): CLEAN / Verdict B (goldens): CLEAN'; measured 1 differing line per golden, 0 numeric leaves changed value on those lines, 0 deleted lines in DERIVATIONS diff, 2 changed + 37 added lines in the design diff; it did NOT measure the full-tree leaf count - this act does."
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
+  "EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "reason": "Sealed by the Lead at re-seal #5, after the independent G103 SAFE-TO-SEAL verdict on the W200 repair of the three GOLDEN-OVER rows directed by design v1.9. The three DESIGN-GAP goldens were re-verified byte-identical at seal time by this act itself, not only by the verifier: RULE2-04-RED, RULE2-06-RED and RULE2-06-EQUAL-PRICE-RED are unchanged, and the act aborts if any of them moves. No money figure, quantity, price or size moved. Two open documentation findings are sealed over deliberately and named in reseal_history: G103-F01 (dangling DERIVATIONS pointers to the removed RULE2-08-RED guards object) and G103-F02 (stale underscore token at DERIVATIONS.md:748). Neither moves a value; both are scheduled for a tables-family repair and re-seal #6. The ten PROBE rows remain honestly BLOCKED-BUILD-ARTIFACT."
+  "reason": "Sealed by the Lead at re-seal #8 after owner addendum 29 (2026-09-02): decision 71 closes the lifecycle trade-row member set (exit_ids list, no exit_fill_price), decision 72 orders the all-touched exit receipt stop-first then declared targets, decision 73 authorises the four golden re-derivations, design v1.10, this seal and one gate rerun. This act measured that exactly RULE2-04-RED, RULE2-07-RED, RULE2-06-RED, RULE2-06-EQUAL-PRICE-RED and DERIVATIONS.md moved, that no numeric leaf moved in any of the four, that every trade row in the bundle now has the seven ruled members, that every receipt is stop-first, and that the catalog, anchor inputs and the other thirteen goldens are byte-identical to seal #7; the catalog moved only at the four ruled digest pins. The design pin is re-measured at v1.10. The canonical gate's BASELINE_SEAL_IDENTITY_MISMATCH refusal remains the owner's Q3 and is not cleared by this act."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -386,9 +551,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
+  "EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "set_by": "Lead re-seal act #5 2026-09-02T01:03:08+03:00 (see reseal_history); prior seal by Lead re-seal #4 2026-09-01 night"
+  "set_by": "Lead re-seal act #8 2026-09-02T10:44:21+03:00 (see reseal_history); prior seal by Lead re-seal #7"
  },
  "reseal_history": [
   {
@@ -502,6 +667,114 @@
    "why_sealed_anyway": "The gate reads goldens and the catalog, not worksheet prose. Holding the seal for a prose repair would delay the kernel measurement and buy nothing.",
    "input_digests_touched": "none - the 17 input pins stand unchanged",
    "implementation_base_sha_touched": "no - stays 108ea066, the commit the kernel branch is cut from"
+  },
+  {
+   "at": "2026-09-02T01:30:14+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #6",
+   "trigger": "W205 closed the two documentation findings re-seal #5 named as outstanding",
+   "old_EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
+   "new_EXPECTED_SEAL_SHA": "df561e7993df37e473c39b1fe174289d244d0b9b16cea9ab6aed72c11b91a964",
+   "catalog_sha256": "5e8f1ce4c1e9a148b21ed3a5f76bb0a076947013feeb182a684fe0971e461570",
+   "catalog_touched": "no - byte-identical to seal #5",
+   "only_file_changed": {
+    "path": "DERIVATIONS.md",
+    "old_sha12": "b0fa1e4136ed",
+    "new_sha12": "669567296f86",
+    "old_bytes": 199980,
+    "new_bytes": 216084,
+    "delta_bytes": 16104
+   },
+   "everything_else_verified_byte_identical": true,
+   "design_gap_goldens_verified_unchanged": [
+    "RULE2-04-RED",
+    "RULE2-06-RED",
+    "RULE2-06-EQUAL-PRICE-RED"
+   ],
+   "economic_values_moved": "none - no golden or catalog byte changed in this act",
+   "findings_closed": [
+    "G103-F01 MEDIUM - superseded markers appended at the dangling guards-object sites",
+    "G103-F02 LOW - superseded marker appended at the stale underscore-token site, plus the sites G103's own list had missed"
+   ],
+   "unverified_claim_carried_forward": "W205's 'insertion-only, 0 deleted'. Digest and size are consistent with it; neither proves it. Bundle snapshots now exist so the next act of this kind is checkable.",
+   "input_digests_touched": "none - the 17 input pins stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066"
+  },
+  {
+   "at": "2026-09-02T04:36:31+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #7",
+   "trigger": "W205 closed the two documentation findings re-seal #5 named as outstanding",
+   "old_EXPECTED_SEAL_SHA": "df561e7993df37e473c39b1fe174289d244d0b9b16cea9ab6aed72c11b91a964",
+   "new_EXPECTED_SEAL_SHA": "1d0623e44c060a7ea59d4df1a3789d76ec07d8f996fa1f6e85554439f9191008",
+   "catalog_sha256": "5e8f1ce4c1e9a148b21ed3a5f76bb0a076947013feeb182a684fe0971e461570",
+   "catalog_touched": "no - byte-identical to seal #5",
+   "only_file_changed": {
+    "path": "DERIVATIONS.md",
+    "old_sha12": "669567296f86",
+    "new_sha12": "64d1fad1c229",
+    "old_bytes": 216084,
+    "new_bytes": 249105,
+    "delta_bytes": 33021
+   },
+   "everything_else_verified_byte_identical": true,
+   "design_gap_goldens_verified_unchanged": [
+    "RULE2-04-RED",
+    "RULE2-06-RED",
+    "RULE2-06-EQUAL-PRICE-RED"
+   ],
+   "economic_values_moved": "none - no golden or catalog byte changed in this act",
+   "findings_closed": [
+    "G103-F01 MEDIUM - superseded markers appended at the dangling guards-object sites",
+    "G103-F02 LOW - superseded marker appended at the stale underscore-token site, plus the sites G103's own list had missed"
+   ],
+   "independently_verified": "GM67 held the pre-marking bytes from the 01:29 bundle snapshot and returned CLEAN MARKING PASS: insertion-only, every named site marked in place, ZERO values moved, and the three forbidden findings untouched with no silent closures. Unlike re-seal #6, this seal carries no unverified insertion-only claim.",
+   "input_digests_touched": "none - the 17 input pins stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066"
+  },
+  {
+   "at": "2026-09-02T10:44:21+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #8",
+   "trigger": "owner addendum 29 closed the two DESIGN-GAP questions; W244 applied, W243 amended the design",
+   "old_EXPECTED_SEAL_SHA": "1d0623e44c060a7ea59d4df1a3789d76ec07d8f996fa1f6e85554439f9191008",
+   "new_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "old_catalog_sha256": "5e8f1ce4c1e9a148b21ed3a5f76bb0a076947013feeb182a684fe0971e461570",
+   "new_catalog_sha256": "f8e788d808f26c427eaefdd3f521998b0fdcea57a469792792abab260efea603",
+   "catalog_touched": "yes - exactly the four ruled 2.0.0 expected-artifact digests re-pinned from disk (re-seal #5 recipe); no other catalog byte",
+   "catalog_repins": [
+    {
+     "scenario_id": "RULE2-04-RED",
+     "old_sha12": "9f7a541c08bb",
+     "new_sha12": "50a990c2005a"
+    },
+    {
+     "scenario_id": "RULE2-06-RED",
+     "old_sha12": "25c747ac5311",
+     "new_sha12": "9d9d3a974857"
+    },
+    {
+     "scenario_id": "RULE2-06-EQUAL-PRICE-RED",
+     "old_sha12": "102aa04e93df",
+     "new_sha12": "c05a51eb1e03"
+    },
+    {
+     "scenario_id": "RULE2-07-RED",
+     "old_sha12": "0634a43fa242",
+     "new_sha12": "e4d966eee858"
+    }
+   ],
+   "probe_markers_left_blocked": 20,
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-04-RED.json",
+    "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+    "golden/corrected_vnext/RULE2-06-RED.json",
+    "golden/corrected_vnext/RULE2-07-RED.json",
+    "scenario_catalog.json"
+   ],
+   "everything_else_verified_byte_identical": true,
+   "design_pin": "re-measured at v1.10; stale v1.8 pin kept under superseded key",
+   "input_digests_touched": "none - the 17 input pins stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066",
+   "baseline_refusal": "BASELINE_SEAL_IDENTITY_MISMATCH still expected - owner Q3, not cleared"
   }
  ]
 }

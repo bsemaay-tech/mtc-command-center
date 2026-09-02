@@ -514,6 +514,19 @@ buy -> unrounded_fill = 100 + 1               = 101                         [:30
 final_fill      = ceil_to_price_tick(101, 0.01) = 101                       [:307]  (already aligned)
 slippage_application_count = 1                                              [:311]
 order_notional  = 1 * 101 * 1                 = 101                         (cm-default)
+[VALUE SUPERSEDED BY LANE W186 under owner addendum 28 decision 68; marker added by lane W224
+ under GM62-F04: the order_notional line above reads 1 * 101 * 1 = 101. Owner addendum 28
+ decision 68 ruled that design section 7 governs this row and its quantity is ZERO, so
+ order_notional = 0 * 101 * 1 = 0. The current sealed byte is "order_notional": 0
+ (RULE2-05-RED.json:43) and the golden's own before/after record is RULE2-05-RED.json:91.
+ The four lines above it - impact 1, unrounded_fill 101, final_fill 101 and
+ slippage_application_count 1 - are UNCHANGED and still current, and so is the
+ divergent-projection table below, whose four rows name reference price, impact, final fill
+ price and application count only; W186 Z-5 says in terms that "its fill price 101 and impact 1
+ stand". NO VALUE MOVED HERE - the superseded product above is left exactly as written. The
+ re-derivation is W186 Z-5, in the section "W186 owner addendum 28 decision 68 re-derivation -
+ RULE2-05-RED" below. GM62-F04 named R-0.4, R-9 and the Y-1 table; this line is the same residue
+ in the same class and is marked here rather than left.]
 ```
 
 Legacy passes the reference price through with no cost adjustment (design `:297`), so the legacy fill
@@ -606,6 +619,26 @@ Design `:345` names "chosen exit id/reason, price, pessimistic/ambiguity fields,
 metrics" plus "policy id and collision decision events" — the rows above cover every one that this
 vector supplies inputs for.
 
+**ROWS SUPERSEDED BY LANE W167 under design v1.9 `:1151-1152`; marker added by lane W224 under
+GM62-F05.** The table above lists two `/RESULT_SURFACE/collision/*` members -
+`ordered_chosen_exit_ids` and `is_pessimistic` - as live divergent `2.0.0` nodes, and the paragraph
+above states that the rows cover every selector design `:345` names. **That object no longer exists
+on any row.** Design **v1.9** `:1151-1152` states in terms that "A top-level `collision` object is
+forbidden", and `:1152-1154` makes the closed `COLLISION_RESOLVED` decision the single receipt; lane
+W167 removed the object from all three RULE2-06 artifacts under item 6 - see W167 W-7, the section
+"W-7 Item 6 - the top-level RESULT member set" below. `RULE2-06-RED`'s `RESULT_SURFACE` now carries
+exactly the seven base members - `final_position`, `trades`, `equity_curve`, `metrics`, `warnings`,
+`refusals`, `run_manifest` (`RULE2-06-RED.json:49-71`) - and **no `collision` node of any kind**;
+`is_pessimistic` occurs nowhere in that artifact, measured this session. Where the current state
+lives: the ordered ids are `["TARGET-NEAR","TARGET-FAR"]` on the `COLLISION_RESOLVED` decision row
+(`RULE2-06-RED.json:27`), and the removal record is on the artifact itself
+(`RULE2-06-RED.json:101`). **The divergence the two rows assert is unchanged** - the legacy OHLC
+dispatcher still returns `is_pessimistic=True` at `exits.py:370` and the corrected run still chooses
+both targets - it is now carried by the decision row rather than by a second RESULT object, so the
+rows describe the pre-W167 serialization and were correct when written. **NO VALUE MOVED** - neither
+row names a money figure, rate, quantity or price, and the lifecycle gross `-20` / `15` row and the
+absolute-equity row below them are untouched.
+
 ### RULE2-06-EQUAL-PRICE-RED — `raw_close_only_v1` (v1.4 micro-fold, design `:343`, `:454`, `:645`)
 
 Inputs: the exact `RULE2-06-RED` inputs **except that `TARGET-FAR` is also at `105`** (design `:343`).
@@ -643,6 +676,18 @@ at `90`, gross `-20`, `is_pessimistic=True`.
 
 Design `:343` states the declared divergent projection for this scenario is "the ordered chosen exit
 ids and fill-event sequence", which the first five rows carry.
+
+**ROW SUPERSEDED BY LANE W167 under design v1.9 `:1151-1152`; marker added by lane W224 under
+GM62-F05.** The table above lists `/RESULT_SURFACE/collision/ordered_chosen_exit_ids` as a live
+divergent `2.0.0` node on `RULE2-06-EQUAL-PRICE-RED`, and the paragraph above counts it among "the
+first five rows". **The top-level `collision` object no longer exists on this row either**, for the
+reason set out in full at the identical marker on `RULE2-06-RED` above. This artifact's
+`RESULT_SURFACE` carries the seven base members and no `collision` node
+(`RULE2-06-EQUAL-PRICE-RED.json:50-72`); the ordered ids `["TARGET-FAR","TARGET-NEAR"]`, the
+equal-price `target_ordering_rule` and `tie_break_applied: true` are on the `COLLISION_RESOLVED`
+decision row (`RULE2-06-EQUAL-PRICE-RED.json:28`), and the removal record is at
+`RULE2-06-EQUAL-PRICE-RED.json:105`. The `0x46 < 0x4e` byte-order derivation above is **unchanged
+and still current** - it now fixes the order of that decision row's member. **NO VALUE MOVED.**
 
 ### RULE2-06-GREEN — `raw_close_only_v1`
 
@@ -737,6 +782,14 @@ corrected: guard_pnl_basis = GROSS_MINUS_FEES ; last_closed_guard_pnl = -0.2
            (-0.2 < 0.0) is true -> count = 1
            predicate (1 < 1) is false -> consec_loss_ok = false -> guard_blocked_raw = true
 this no-funding fixture does not decide OPEN-10                              [:384]
+[TOKEN SUPERSEDED BY LANE W200 under design v1.9 item 9; marker added by lane W205 under
+ G103-F02: the "corrected:" line above spells the basis GROSS_MINUS_FEES. Design v1.9 :1165
+ fixes the 2.0.0 basis for daily-loss, consecutive-loss and time-stop guards as the hyphenated
+ GROSS-MINUS-FEES, and design v1.9 section 23.5 item 9 (:1228-1229) directed the change; lane
+ W200 made it. The current byte is "guard_pnl_basis": "GROSS-MINUS-FEES" (RULE2-07-RED.json:54).
+ SPELLING ONLY - last_closed_guard_pnl -0.2, count 1, the false predicate and guard_blocked_raw
+ true on the lines above and below are unchanged and still current. NO VALUE MOVED; the node-by-
+ node restatement is W200 W-2 (DERIVATIONS.md:2911-2925).]
 ```
 
 Declared `rule2_divergent_projection` (design `:386`):
@@ -754,6 +807,23 @@ Declared `rule2_divergent_projection` (design `:386`):
 `gross_realized_pnl` is `0` on both versions and is therefore **not** a divergent member (correction
 C-07). `0.001`, `0.1`, `-0.1`, `-0.2` and `999.8` are float nodes; `100`, `0`, `1` and `1000` are
 integer nodes.
+
+**TOKEN SUPERSEDED BY LANE W200 under design v1.9 item 9; marker added by lane W205 under
+G103-F02.** The `2.0.0` cell of the `/RESULT_SURFACE/guards/guard_pnl_basis` row above
+(`DERIVATIONS.md:756`) reads `PRESENT(S:"GROSS_MINUS_FEES")`, and the guard-derivation fence
+(`DERIVATIONS.md:736`) spells the same token with underscores. Design **v1.9** `:1165` fixes the
+`2.0.0` basis for daily-loss, consecutive-loss and time-stop guards as the hyphenated
+`GROSS-MINUS-FEES`, and design v1.9 section 23.5 item 9 (`:1228-1229`) directed the family to change
+the inconsistent values; lane W200 did so - see W200 W-2 (`DERIVATIONS.md:2888-2931`). The
+current byte is `"guard_pnl_basis": "GROSS-MINUS-FEES"` (`RULE2-07-RED.json:54`;
+`RULE2-07-GREEN.json:38`). Both sites above describe the pre-W200 serialization and were correct
+when written. **Spelling only:** the row's `1.0.0` `ABSENT`, its presence on `2.0.0` and its
+`Differs? yes` all still hold, every other row of this table is unchanged, and the `guards` object
+itself still exists on both RULE2-07 rows. **NO VALUE MOVED** - the basis names the same economic
+rule under either spelling, and the node-by-node restatement is W200 W-2
+(`DERIVATIONS.md:2911-2925`). (G103-F02 named the table row only; the fence line is the same
+residue in the same derivation and is marked here rather than left. Recorded in
+`W205_DERIVATIONS_RESIDUE_REPORT.md`.)
 
 Blocked cells: the exit intent is unnamed, so `fill_events/1/event_class`,
 `fee_events/1/event_class`, `exit_events/0/exit_id` and `exit_events/0/reason` are
@@ -847,6 +917,26 @@ Guard outcome (design `:431` "Guard outcomes follow the sourced OPEN-10 decision
 comparison nodes"): under the owner's OPEN-10 answer the guard basis stays gross-minus-fees and the
 captured funding delta does **not** enter it, so `guard_pnl_basis = "GROSS_MINUS_FEES"`,
 `funding_included_in_guard_basis = false`, `consecutive_loss_count = 0` (no lifecycle closes).
+
+**SUPERSEDED BY LANE W200 under design v1.9 item 9; marker added by lane W205 under G103-F01.**
+The paragraph above derives a `guards` object for `RULE2-08-RED` and names three of its members as
+expected `2.0.0` comparison nodes. **That object no longer exists on this row.**
+`funding_included_in_guard_basis` went first, removed by lane W167 item 4 under design `:1152-1155`
+(W167 W-5, `DERIVATIONS.md:1922-1930`). Design **v1.9** section 23.5 item 9 (`:1228-1234`) then
+directed removal of the **whole** `guards` object on `RULE2-08-RED` unless a separate owner-approved
+scenario-input amendment binds its threshold and requires re-derivation; no such amendment exists,
+and lane W200 removed the object - see W200 W-3 (`DERIVATIONS.md:2933-2968`). `RULE2-08-RED`'s
+`RESULT_SURFACE` now carries exactly eight keys - `final_position`, `trades`, `equity_curve`,
+`cumulative_funding`, `metrics`, `warnings`, `refusals`, `run_manifest`
+(`RULE2-08-RED.json:40-59`) - and **no guard node of any kind**. Where the current state lives: the
+removal record on the artifact itself (`RULE2-08-RED.json:93`, `w200_revised_nodes`) and W200 W-3.
+Design v1.9 `:1147` admits a `guards` member exactly when a declared guard projection is evaluated,
+and none is declared for this vector. The OPEN-10 disposition the paragraph above reads is
+**unchanged and still binds the family**; it simply has no node on this row
+(`RULE2-08-RED.json:21`). **NO VALUE MOVED** - none of the removed members is a money figure, rate,
+quantity or price, and `notional 100`, `long_cashflow_rate -0.001`, `funding_cash_delta -0.1`,
+`cumulative_funding -0.1` and `equity_curve` `1000` / `999.9` are byte-identical (W200 W-3,
+`DERIVATIONS.md:2963-2968`).
 
 ### RULE2-08-GREEN — `close_only_deterministic_v2`
 
@@ -1151,6 +1241,22 @@ Raw bits for the sealed fee tokens (all verified to round-trip):
 0.049499999999999995  0x3fa95810624dd2f1      0.081   0x3fb4bc6a7ef9db23
 ```
 
+**TOKEN SUPERSEDED BY LANE W186 under owner addendum 28 decision 68; marker added by lane W224
+under GM62-F04.** The `n = 101` row of the table above and the `0.04545  0x3fa74538ef34d6a1` entry
+of the raw-bits fence above both label `0.04545` a **sealed** token. `101` was `RULE2-05-RED`'s
+`fee_notional` and no other row in this bundle uses it; under owner addendum 28 decision 68 that
+row's quantity is ZERO, so `fee_notional = abs(101 * 0 * 1) = 0`, `fee_amount = 0` and
+`fee_cash_delta = 0` (`RULE2-05-RED.json:36`, before/after at `RULE2-05-RED.json:94-96`). **No
+artifact in this bundle seals `0.04545` on any node any more** - measured this session over all 17
+goldens under `golden/corrected_vnext/`, the only remaining occurrences of that token are inside
+`RULE2-05-RED.json`'s own dated records, `v15_filled_cells` (`:65-66`) and the `before:` values of
+`w186_revised_nodes` (`:94-96`). **The arithmetic itself is unchanged and still correct**:
+`fl(0.04545)` really is significand `6550035298047649` at bits `0x3fa74538ef34d6a1`, the row was
+correct when written, and every other row of the table and every other line of the fence names a
+token this bundle still seals. Only the word "sealed" stopped applying to this one row. **NO VALUE
+MOVED.** The re-derivation is W186 Z-5. GM62-F04 named R-0.4, R-9 and the Y-1 table; this row is the
+same residue in the same class and is marked here rather than left.
+
 The maker rate is needed only by `PROBE-P012-07-A` (R-19): `100 * fl(0.00015)` rounds to
 `fl(0.015) = 0x3f8eb851eb851eb8`, token `0.015`.
 
@@ -1183,6 +1289,17 @@ RULE2-05-RED    1000 - fl(0.04545)  = 999.95455             0x408f3fa2eb1c432d
 RULE2-05-GREEN  1000 - fl(0.045)    = 999.955               0x408f3fa3d70a3d71
 RULE2-04-*      1000 - fl(0.045)    = 999.955               (window start; pre-window entry fee)
 RULE2-06-*      1000 - fl(0.09)     = 999.91                0x408f3f47ae147ae1  (window start)
+[VALUE SUPERSEDED BY LANE W186 under owner addendum 28 decision 68; marker added by lane W224
+ under GM62-F04: the RULE2-05-RED line above reads 1000 - fl(0.04545) = 999.95455 at bits
+ 0x408f3fa2eb1c432d. Owner addendum 28 decision 68 ruled that design section 7 governs that row
+ and its quantity is ZERO, so the fee is 0, the joined cash delta is 0, and the accumulation is
+ 1000 - 0 = 1000. The current sealed bytes are "equity_curve": {"first": 1000, "last": 1000}
+ (RULE2-05-RED.json:45), with the golden's own before/after record at RULE2-05-RED.json:97.
+ equity_curve.first 1000 is UNCHANGED; only last moved. Every other line of this fence, and the
+ whole window-scoping derivation above it, is unchanged and still current. NO VALUE MOVED HERE -
+ the superseded accumulation above is left exactly as written. W186 Z-5 already named this line,
+ by its pre-W205 number :1182; that pointer is itself stale and is corrected under GM62-F07 in
+ the W224 section below.]
 
 RULE2-04-RED    999.955 - fl(0.0405)              = 999.91450000000009   0x408f3f50e560418a
                 999.91450000000009 + (-10)        = 989.91450000000009   0x408eef50e560418a
@@ -1378,6 +1495,24 @@ equity_curve = { first 1000, last 999.95455 }
 
 `D-06` is closed for this row: `order_notional 101` was sealed under the shipped cm-default and is
 now an explicit design input (`:786-794`, `:870`); the value is byte-identical.
+
+**VALUES SUPERSEDED BY LANE W186 under owner addendum 28 decision 68; marker added by lane W224
+under GM62-F04.** Section R-9 above derives `fee_notional = abs(101 * 1 * 1) = 101`,
+`fee_amount 0.04545`, `delta -0.04545` and `equity_curve = { first 1000, last 999.95455 }`, and the
+`D-06` paragraph immediately above records `order_notional 101` as sealed and byte-identical.
+**Four of those figures moved.** Owner addendum 28 decision 68 - recorded at the **W167-D05**
+resolution below, citing `N_TIMES.txt:571` - ruled that design section 7 governs this row and the
+quantity is ZERO. The current sealed bytes are `quantity 0` (`RULE2-05-RED.json:30`),
+`fee_notional 0`, `fee_amount 0`, `fee_cash_delta 0` (`RULE2-05-RED.json:36`), `order_notional 0`
+(`RULE2-05-RED.json:43`) and `equity_curve {"first": 1000, "last": 1000}`
+(`RULE2-05-RED.json:45`); the golden's own before/after ledger is `RULE2-05-RED.json:90-97`. **What
+still stands on this row:** `equity_curve.first 1000`, the fill price `101`, the impact `1`, the
+explicit `cm = 1` input and the `:360` final-fill fee basis - W186 Z-5 says in terms "its fill price
+101 and impact 1 stand". **D-06 itself remains closed** for this row; only the value the paragraph
+calls byte-identical moved. **NO VALUE MOVED BY THIS MARKER** - the superseded arithmetic above is
+left exactly as written. The re-derivation is W186 Z-5, which already named this section by its
+pre-W205 number `:1369-1380`; that pointer is itself stale and is corrected under GM62-F07 in the
+W224 section below.
 
 ### R-10 RULE2-05-GREEN
 
@@ -1885,6 +2020,32 @@ required exactly when a lifecycle closed and produced that fact; `max_consecutiv
                                                     closed at any point]
           last_closed_guard_pnl ABSENT             [same reason]
           consec_loss_ok / guard_blocked_raw       BLOCKED-MISSING-SCENARIO-INPUT - see W167-D01
+          [GUARD CENSUS SUPERSEDED BY LANE W200 under design v1.9 item 9; marker added by lane
+           W205 under G103-F01 and G103-F02. Two things in the block above stopped being current.
+           (a) TOKEN, on the two RULE2-07 lines: "guard_pnl_basis GROSS_MINUS_FEES" (07-RED) and
+               "remaining: GROSS_MINUS_FEES" (07-GREEN) spell the basis with underscores. Design
+               v1.9 :1165 fixes the hyphenated GROSS-MINUS-FEES and design v1.9 section 23.5
+               item 9 (:1228-1229) directed the change; lane W200 made it. Both goldens now read
+               "GROSS-MINUS-FEES" (RULE2-07-RED.json:54, RULE2-07-GREEN.json:38). SPELLING ONLY -
+               every RULE2-07 guard fact listed above (last_closed_guard_pnl -0.2, count 1,
+               consec_loss_ok false, guard_blocked_raw true on RED; count 0, true, false and
+               last_closed_guard_pnl ABSENT on GREEN) is unchanged and still current.
+           (b) OBJECT, the whole 08-RED sub-block: design v1.9 section 23.5 item 9 (:1228-1234)
+               directed removal of the RULE2-08-RED guards object unless a separate owner-approved
+               scenario-input amendment binds its threshold and requires re-derivation. No such
+               amendment exists and lane W200 removed the object. RULE2-08-RED now carries no
+               guards member of any kind - its RESULT_SURFACE keys are final_position, trades,
+               equity_curve, cumulative_funding, metrics, warnings, refusals, run_manifest
+               (RULE2-08-RED.json:40-59). The 08-RED lines above naming guard_pnl_basis,
+               consecutive_loss_count, last_closed_guard_pnl and the two
+               BLOCKED-MISSING-SCENARIO-INPUT cells describe the pre-W200 artifact and were
+               correct when written. Current state: RULE2-08-RED.json:93 (the removal record) and
+               W200 W-3 (DERIVATIONS.md:2933-2968). W167-D01, named on the last line above,
+               is NOT closed by the removal; it is relocated into the absence of the object.
+           NO VALUE MOVED by either change - W200 W-2 (DERIVATIONS.md:2911-2925) and W-3
+           (DERIVATIONS.md:2963-2968).
+           G103-F02 named the 08-RED lines only; the two RULE2-07 token lines above are the same
+           residue in the same block and are marked here rather than left.]
 ```
 
 ### W-6 Item 5 — conditional fill and exit members
@@ -1944,6 +2105,29 @@ everything else and the top-level `collision` object. Re-derived on all 17:
 | 08-RED | yes | - | - | yes | `-0.1` | see W-5 |
 | 08-GREEN | yes | - | - | - | `0` | none |
 
+**ROW SUPERSEDED BY LANE W200 under design v1.9 item 9; marker added by lane W224 under
+GM62-F06.** The `08-RED` row of the table above still reads `guards` **`yes`**. Design **v1.9**
+section 23.5 item 9 (`:1232-1233`) directs removal of the `RULE2-08-RED` `guards` object "unless a
+separate owner-approved scenario-input amendment binds its threshold and requires re-derivation";
+no such amendment exists and lane W200 removed the object - see W200 W-3, the section
+"W-3 `RULE2-08-RED` - the directed removal of the `guards` object" below. That row's
+`RESULT_SURFACE` now carries exactly eight keys - `final_position`, `trades`, `equity_curve`,
+`cumulative_funding`, `metrics`, `warnings`, `refusals`, `run_manifest` (`RULE2-08-RED.json:40-59`)
+- and **no guard node of any kind**; the removal record is at `RULE2-08-RED.json:93`. The
+`07-RED / 07-GREEN` row's `guards` **`yes`** immediately above it is **unchanged and still
+current**, as is `08-RED`'s `cumulative_funding` **`-0.1`** in the same row. Lane W205 marked the
+three other sites G103-F01 named; this table is the site it missed, and GM62-F06 named it. **NO
+VALUE MOVED.**
+
+**ROW SUPERSEDED BY LANE W186 under owner addendum 28 decision 68; marker added by lane W224 under
+GM62-F04.** The `05-RED / 05-GREEN` row of the same table reads `order_notional` **`101 / 100`**.
+`RULE2-05-RED`'s `order_notional` is now `0` (`RULE2-05-RED.json:43`, before/after at
+`RULE2-05-RED.json:91`) under owner addendum 28 decision 68; `RULE2-05-GREEN`'s `100` is unchanged.
+The finding the row carries - that `order_notional` is **retained** as a top-level member on
+DEF-P012-05 - is unchanged and still current, and so is the paragraph below the table; only the
+`101` half of that one value cell is superseded. GM62-F04 named R-0.4, R-9 and the Y-1 table; this
+cell is the same residue in the same class and is marked here rather than left. **NO VALUE MOVED.**
+
 `order_notional` is retained on exactly DEF-P012-01, DEF-P012-02 and DEF-P012-05 and is absent from
 RULE2-04/06/07/08, as `:1128` requires — note that 07-RED's entry *does* have a notional of
 `1 * 100 * 1 = 100`, and `:1133-1135` expressly refuses to make a generic kernel-computed
@@ -1977,6 +2161,22 @@ with no free-form `detail`; **no byte of it changed**. No other artifact has a `
 | `BLOCKED-DESIGN-UNENUMERATED` | 17 | one `/RESULT_SURFACE/metrics` per artifact | `:1271` states in terms that this amendment "does not un-block design-unenumerated metrics" |
 | `BLOCKED-MISSING-SCENARIO-INPUT` | 2 | `RULE2-08-RED` `/RESULT_SURFACE/guards/consec_loss_ok` and `/guard_blocked_raw` | **new**: §23.4 newly requires four guard members while §22.6 binds no guard configuration for RULE2-08 (**W167-D01**) |
 | `BLOCKED-BUILD-ARTIFACT` | 0 on these surfaces | catalog `input.digest`, probe copies | untouched by this lane |
+
+**ROW SUPERSEDED BY LANE W200 under design v1.9 item 9; marker added by lane W205 under G103-F01.**
+The `BLOCKED-MISSING-SCENARIO-INPUT` row of the table above (`DERIVATIONS.md:2049`) locates its
+two cells at `RULE2-08-RED` `/RESULT_SURFACE/guards/consec_loss_ok` and `/guard_blocked_raw`.
+**Those two pointers no longer exist.** Design **v1.9** section 23.5 item 9 (`:1228-1234`) directed
+removal of the whole `RULE2-08-RED` `guards` object and lane W200 removed it (W-3,
+`DERIVATIONS.md:2933-2968`); the artifact's own `blocked_cells` ledger lost the two matching
+rows in the same act, eight entries down to six (`RULE2-08-RED.json:94`; the six that remain are at
+`RULE2-08-RED.json:104-109`). The count `2` in the row above, and the same v1.8 counts restated at
+`DERIVATIONS.md:2074-2076`, are the census **as measured for v1.8** and are left exactly as
+measured. This lane measured no replacement count and states none: a surface-restricted structural
+walk over all 17 artifacts is a re-measurement act, not a residue marker, and no number in this
+worksheet was moved to place this marker. **W167-D01**, the design gap that forced the two markers
+in the first place, is **not closed** by the removal - it is relocated into the absence of the
+object (`RULE2-08-RED.json:93`). The other three rows of the table, and the `RULE2-08-GREEN`
+`/observation_window/end_timestamp` sentence below, are untouched by W200. **NO VALUE MOVED.**
 
 **The `decision_events` vocabulary block is CLOSED.** All 17 artifacts previously carried a
 `blocked_cells` entry reading "the design fixes no complete `decision_events` reason vocabulary";
@@ -2152,6 +2352,23 @@ sealed final entry fill `100` and design-bound `contract_multiplier 1`. Every
 `required_min_notional` is `0`, read off the row's own `tick/step/minima` shorthand under M-08
 `:736`, which design `:844-846` states replaces the same member of the InstrumentRecord. Every
 comparison admits. **No economic value moved.**
+
+**VALUES SUPERSEDED BY LANE W186 under owner addendum 28 decision 68; marker added by lane W224
+under GM62-F04.** The `RULE2-05-RED` line of the Y-1 fence above reads `101  = 1*101*1` with
+sequence `1`, and the paragraph above restates that `101` as the artifact's "already-sealed value
+byte for byte" - the third of the four figures it lists. **That value moved, and so did the
+sequence.** Owner addendum 28 decision 68 ruled that design section 7 governs `RULE2-05-RED` and
+its quantity is ZERO, so `order_notional = 0 * 101 * 1 = 0`; lane W186 additionally authored the
+`SIZING_COMPUTED` row lane W172 had withheld, which pushed `MIN_NOTIONAL_ADMITTED` from sequence
+`1` to sequence `2`. The current bytes are `{"sequence": 2, "decision": "MIN_NOTIONAL_ADMITTED",
+... "order_notional": 0, "required_min_notional": 0}` (`RULE2-05-RED.json:27`), with the golden's
+own before/after record at `RULE2-05-RED.json:99`. **What still stands:** `required_min_notional 0`,
+the admitting comparison - which now reads `0 >= 0` and still admits - and every other line of the
+fence: `RULE2-01-RED 1000`, `RULE2-01-GREEN 100`, `RULE2-05-GREEN 100` and `RULE2-07-RED 100` are
+unchanged and still current, as are the `1000`, `100` and `100` the paragraph lists beside the
+`101`. W186 already recorded this at Y-2 below - "The Y-1 table line `RULE2-05-RED 101 = 1*101*1`
+and this paragraph both describe the pre-ruling artifact" - but placed no marker at the site;
+GM62-F04 named the site and this marker closes it. **NO VALUE MOVED.**
 
 `RULE2-01-RED` sizing check (already in W-2, repeated because Y-1 depends on it): risk_amount
 `1000 * 10% = 100`; stop distance `|100 - 90| = 10`; `risk_raw_qty = 100 / (10 * 2) = 5`;
@@ -2441,6 +2658,18 @@ supply to this scenario (reference `100`, `slippage_bps 100`, impact `1`, final 
 `0.01`, `contract_multiplier 1`, fee rate `0.00045`), and this lane changed nothing outside
 `RULE2-05-RED`.
 
+**POINTERS SUPERSEDED BY LANE W205's line insertions; markers added by lane W224 under GM62-F07.**
+Both citations in the paragraph above are pre-W205 numbering and are **left intact**. Measured this
+session against the current bytes: `DERIVATIONS.md:2040-2056` (the **W167-D05** record) is now
+`DERIVATIONS.md:2240-2256`, and `DERIVATIONS.md:2208-2216` (lane W172's withheld-`SIZING_COMPUTED`
+record) is now `DERIVATIONS.md:2429-2437`. The second is **not** the `:2295-2303` that W205's V-3
+table computed for it: that column applied V-3's uniform `+87` shift to W186's own number, and
+W186's number was already four lines low, so the mechanical result lands on the `FALLBACK`
+paragraph rather than on the withheld-row record. Both records still exist, unmoved and unedited;
+only the numbers naming them changed. Neither citation was rewritten - this worksheet is
+append-only and one lane does not edit another lane's record to match a later state. **NO VALUE
+MOVED.** Full index in section U-2 below.
+
 ### Z-1 The governing arithmetic, written out
 
 Inputs, each with the design line that supplies it:
@@ -2509,6 +2738,12 @@ strictly less than `1`, so flooring to a step of `1` gives `0` under any roundin
 This is the same arithmetic the withheld-row record already carried at `DERIVATIONS.md:2208-2211`;
 the ruling changes which of the two sections the artifact seals, not the computation.
 
+**POINTER SUPERSEDED BY LANE W205's line insertions; marker added by lane W224 under GM62-F07.**
+The citation above is pre-W205 numbering and is **left intact**. `DERIVATIONS.md:2208-2211` - the
+arithmetic the withheld-row record carried - is now `DERIVATIONS.md:2429-2432`, measured this
+session. W205's V-3 table computed `:2295-2298` for it by applying a uniform `+87` shift to W186's
+own number, which was already four lines low; see the marker in Z-0 above. **NO VALUE MOVED.**
+
 ### Z-2 Section 8 admission still holds
 
 Design `:97` applies the `min_notional` check to the fill-producing entry, and `:233-234` gives
@@ -2555,6 +2790,14 @@ One naming limit, carried forward unchanged from lane W172 rather than newly inc
 is the `RULE2-01-GREEN` NaN wire. It is the design's only spelling of the section-7 fallback branch,
 and lane W172 used it on `RULE2-05-GREEN` and `RULE2-07-RED` on that basis (`DERIVATIONS.md:2204-2206`).
 This lane uses it identically. Recorded as **W186-D03**.
+
+**POINTER SUPERSEDED BY LANE W205's line insertions; marker added by lane W224 under GM62-F07.**
+The citation above is pre-W205 numbering and is **left intact**. `DERIVATIONS.md:2204-2206` - lane
+W172's paragraph recording that the `FALLBACK` token is design-named at `:911` and used on
+`RULE2-05-GREEN` and `RULE2-07-RED` on that basis - is now `DERIVATIONS.md:2425-2427`, measured
+this session. W205's V-3 table computed `:2291-2293` for it, four lines low for the reason given in
+the Z-0 marker above; that span is the tail of the preceding fence, not the paragraph W186 meant.
+**W186-D03 is unaffected and remains open. NO VALUE MOVED.**
 
 ### Z-4 Values downstream of the quantity
 
@@ -2633,6 +2876,15 @@ pointer                                        before      after   forcing desig
 that line no longer describes this row. R-9 `:1369-1380` is likewise superseded for its
 `fee_notional`, `fee_amount`, delta and `equity_curve` values; its fill price `101` and impact `1`
 stand.
+
+**POINTERS SUPERSEDED BY LANE W205's line insertions; markers added by lane W224 under GM62-F07.**
+The two internal pointers in the paragraph above are pre-W205 numbering and are **left intact**.
+Measured this session: R-0.4's superseded accumulation line, cited as `:1182`, is now
+`DERIVATIONS.md:1288`; section R-9, cited as `:1369-1380`, is now `DERIVATIONS.md:1486-1497`. Both
+were accurate when W186 wrote them and both now carry an in-place W224 marker at the site. **W205's
+V-3 census of "six pre-existing citations inside this file" did not count these two** - the true
+count is eight, and V-3's own "Now at" column is superseded by measurement; see section U-2 below.
+**NO VALUE MOVED.**
 
 ### Z-6 What the ruling does NOT determine — recorded, not filled
 
@@ -2724,6 +2976,13 @@ Every quotient above is an exact integer or larger than its step, so no floor mo
 narrowed W167-D05 to `RULE2-05-RED` alone on the same ground (`DERIVATIONS.md:2048-2056`); this
 session re-derived all twelve rows independently rather than inheriting that conclusion. **No other
 scenario file was opened for writing and none was changed.**
+
+**POINTER SUPERSEDED BY LANE W205's line insertions; marker added by lane W224 under GM62-F07.**
+The citation above is pre-W205 numbering and is **left intact**. `DERIVATIONS.md:2048-2056` - lane
+W172's **NARROWED BY LANE W172 under G83-F03** paragraph inside the W167-D05 record - is now
+`DERIVATIONS.md:2248-2256`, measured this session. W205's V-3 table computed `:2135-2143` for it
+and that mapping was correct in the pre-W224 bytes; the further shift is this lane's own
+insertions, accounted for in section U-2 below. **NO VALUE MOVED.**
 
 ### Z-8 Honest limits of this re-derivation
 
@@ -2820,6 +3079,15 @@ design's own token, so keeping it on a census of tables-authored spellings would
 of the truth. `RULE2-07-GREEN`'s ledger held only that entry and is now the empty array `[]`; the key
 is retained because design 15.3 `:510` counts missing, null and empty as three different states, and
 an empty census is the true statement that the artifact carries no tables-authored token.
+
+**POINTER SUPERSEDED BY LANE W205's line insertions; marker added by lane W224 under GM62-F07.**
+The citation above is pre-W205 numbering and is **left intact**. `DERIVATIONS.md:2316-2321` - the
+Y-5 token census rows that count `GROSS-MINUS-FEES` as DESIGN-NAMED and list
+`GROSS_MINUS_FEES (underscore form)` as TABLES-AUTHORED - is now `DERIVATIONS.md:2533-2538`,
+measured this session. W205's V-3 table computed `:2403-2408` for it and that mapping was correct
+in the pre-W224 bytes; the further shift is this lane's own insertions, accounted for in section
+U-2 below. The same span is cited from outside this file at `W200_GOLDEN_OVER_REPORT.md:69`, which
+is a dated lane report and outside this lane's write scope. **NO VALUE MOVED.**
 
 **No economic value moved on either row.** The basis names the same economic rule under either
 spelling; owner addendum 15 item 35 fixes the rule, not the punctuation. Restated node by node:
@@ -2966,3 +3234,540 @@ bytes**, and three `scenario_catalog.json` `expected_artifacts['2.0.0'].digest` 
 re-sealing and re-pinning are the Lead's acts under design `:1171-1172`. The §16
 `SEMANTIC_COVERAGE_REVIEW` remains owner-held and PENDING, and the claude family remains excluded from
 that reviewer role because it authored these tables.
+
+## W205 residue-marker pass — the two G103 findings, marked and not rewritten
+
+### V-0 What this pass is, and what it is not
+
+Lane `C:\tmp\LANE_PROMPTS_20260828\LANE_W205_DERIVATIONS_RESIDUE.md`, standing clauses
+`N_COMMON_CLAUSES.md` C-1..C-7 read in full first. Family: the tables family, which authored these
+bytes. This pass **adds markers and changes nothing else**. It authors no value, moves no value,
+resolves no OPEN row, closes no discrepancy, and touches no golden, catalog, manifest, anchor, seal
+field or `files[]` entry — the only bundle file written is this one, alongside the lane report
+`W205_DERIVATIONS_RESIDUE_REPORT.md`. Re-seal #6 is the Lead's act.
+
+Independence, stated as a fact rather than a promise: no `mtc_v2.core` import; no `observed/` path
+read; no `tests/corrected_vnext/contracts/inputs/**` byte opened; no kernel, driver, verifier, gate,
+generator, backtest or baseline exists or was executed. Local SHA-256, byte counts, and reading the
+design file, the three affected goldens and this worksheet are the whole of the computation done.
+
+The two findings are `DETECT_G103_W200_GOLDEN.md` **G103-F01** (MEDIUM) and **G103-F02** (LOW), both
+deliberately sealed over at Lead re-seal #5 and named in `CONTRACT_TABLES_MANIFEST.json:374,380` and
+`:499-500`.
+
+### V-1 The five markers placed
+
+Each marker follows this worksheet's own convention and **leaves the original text intact and
+readable**: a bold `<VERB> BY LANE <lane> under <finding>` lead-in immediately after the superseded
+prose — the form used at `:2309` (W186), `:2135` and `:1659` (W172) — or a bracketed in-fence note in
+the form used at `:1971` for W172's census correction.
+
+| # | Site (this file, current numbering) | What was stale there | Finding | Marker |
+|---|---|---|---|---|
+| 1 | `:736` (guard-derivation fence, `RULE2-07-RED`) | basis spelled `GROSS_MINUS_FEES` | G103-F02 class, site not named by G103 | in-fence bracket `:740-747` |
+| 2 | `:756` (`rule2_divergent_projection` table row) | `2.0.0` cell reads `PRESENT(S:"GROSS_MINUS_FEES")` | **G103-F02, the named site** | paragraph `:766-781` |
+| 3 | `:871-874` (`RULE2-08-RED` guard-outcome paragraph) | derives a `guards` object and names three of its members as expected `2.0.0` nodes | **G103-F01, named site** | paragraph `:876-894` |
+| 4 | `:1910`, `:1919`, `:1922-1930` (W167 W-5 fence) | the `07-RED` and `07-GREEN` token lines; the whole `08-RED` sub-block | **G103-F01 named the `08-RED` lines**; the two token lines are the same residue | in-fence bracket `:1933-1958` |
+| 5 | `:2049` (W-9 blocked-cell census row) | locates two cells at `/guards/consec_loss_ok` and `/guard_blocked_raw` | **G103-F01, named site** | paragraph `:2052-2066` |
+
+All four sites G103 named are marked. Three further sites of the identical residue class — `:736`,
+`:1910`, `:1919` — sit inside the same two blocks and are covered by the same markers rather than
+left, because a reader landing on them takes the same superseded spelling as current. That G103-F02
+named only the table row is recorded as a discrepancy in the lane report.
+
+**NO VALUE MOVED.** Not one digit, token, marker or table cell of the original text was altered: the
+diff against the pre-pass bytes is **87 inserted lines, zero changed lines, zero deleted lines**. The
+pre-pass file measured `b0fa1e4136eda00b82bfacfe0c2dee67f928f3dcbcdb3a5e383c958129f41218` / 199980
+bytes, which is what `CONTRACT_TABLES_MANIFEST.json:76-77` still pins.
+
+### V-2 Sites examined and deliberately left, so the omission is recorded rather than absorbed
+
+- **Y-5's token census at `:2399-2412`, restated at `:2419`.** It lists
+  `GROSS_MINUS_FEES (underscore form)` among the TABLES-AUTHORED tokens. It is a dated census of the
+  ledgers **as lane W172 wrote them**, not a statement of a required expected `2.0.0` node, and W200
+  W-2 at `:2902` already names its exact lines and states the current disposition — that the labeled
+  entry was removed from `authored_value_tokens` on both `RULE2-07` rows. A marker there would add
+  nothing a reader does not already reach.
+- **W200's own section, `:2830-3055`.** Its `GROSS_MINUS_FEES` occurrences are `before:` values in a
+  changelog of the very act that superseded them, and its `guards` references describe the object it
+  removed. Correct as written.
+- **`W167_TABLES_V18_REPORT.md:66,183` and `W172_READING_Y_REPORT.md:192`**, which G103 noted carry
+  the same pre-removal census. They are dated prior-lane reports, not live ledgers, and are outside
+  this lane's write scope. Editing a dated report to match a later state destroys the record of what
+  was believed when.
+- **`RULE2-04-RED`, `RULE2-06-RED` and `RULE2-06-EQUAL-PRICE-RED`** — nothing concerning those three
+  rows was read for a value or touched. They carry the two open owner questions.
+- **The design citation `:431` at `:871`.** The OPEN-10 sentence it quotes sits at `:437` in design
+  v1.9. That is the citation drift **W200-D03** already records as a bundle-wide act, not a residue
+  of the removed object; renumbering one citation in isolation would leave this worksheet
+  disagreeing with itself about which design revision it cites.
+
+### V-3 What placing the markers cost — line numbers, stated rather than absorbed
+
+Inserting 87 lines moves every later line of this file. The shift, applied to the pre-pass numbering:
+
+```
+original lines    1 - 739    unchanged
+                740 - 756    +8
+                757 - 849    +25
+                850 - 1887   +45
+               1888 - 1979   +71
+               1980 - 2968   +87
+```
+
+Six pre-existing citations **inside this file** now name the wrong line and were **not** rewritten:
+they are other lanes' records in an append-only worksheet, and this pass does not edit history to
+match a later state. Their corrected targets, measured this session:
+
+| Citation at | Reads | Now at |
+|---|---|---|
+| `:2522` (W186 Z-0) | `DERIVATIONS.md:2040-2056` | `:2127-2143` |
+| `:2525` (W186 Z-0) | `DERIVATIONS.md:2208-2216` | `:2295-2303` |
+| `:2596` (W186 Z-1) | `DERIVATIONS.md:2208-2211` | `:2295-2298` |
+| `:2643` (W186 Z-3) | `DERIVATIONS.md:2204-2206` | `:2291-2293` |
+| `:2811` (W186 Z-7) | `DERIVATIONS.md:2048-2056` | `:2135-2143` |
+| `:2902` (W200 W-2) | `DERIVATIONS.md:2316-2321` | `:2403-2408` |
+
+**TABLE SUPERSEDED BY LANE W224 under GM62-F07; marker added by lane W224.** The `Now at` column of
+the table above is superseded in two independent ways, and the table itself is **left intact**.
+(a) **Three of its six rows never landed on the record they name.** V-3 computed the column by
+applying its uniform `+87` shift to the citing lane's own numbers rather than by measuring the
+target text. For `:2525`, `:2596` and `:2643` the citing numbers - all three written by lane W186
+into the same block - were already four lines low, so `+87` reproduced the error: `:2295-2303`
+lands on the `FALLBACK` paragraph and the first five lines of the withheld-row record rather than
+on that record, and `:2291-2293` lands on the tail of the preceding fence. The other three rows,
+`:2522`, `:2811` and `:2902`, were correct in the pre-W224 bytes. (b) **Every row's `Citation at`
+and `Now at` value has since shifted again**, because lane W224 inserted its own markers into this
+file. (c) **The census of "six" is incomplete:** W186 Z-5 carries two further internal pointers,
+`:1182` and `:1369-1380`, which V-3 did not count; the true count is **eight**. Section U-2 below
+gives all eight, measured against the current bytes rather than computed, together with this lane's
+own shift table. The paragraph above is otherwise correct and its reasoning is adopted unchanged:
+these are other lanes' records in an append-only worksheet and none of them was rewritten. **NO
+VALUE MOVED.**
+
+Eleven citation occurrences reach this file from outside it and are equally shifted. All are outside
+this lane's write scope and none was touched: `CONTRACT_TABLES_MANIFEST.json:374,380,500`
+(`DERIVATIONS.md:748` → `:756`) and `:499` (`:846-849` → `:871-874`, `:1877-1885` → `:1922-1930`,
+`:1978` → `:2049`); `W200_GOLDEN_OVER_REPORT.md:69` (`:2316-2321` → `:2403-2408`); and
+`W186_RULE205RED_REPORT.md:33,36,42,116,193,238` (`:2040-2056` → `:2127-2143`, `:2208-2216` →
+`:2295-2303`, `:2419` → `:2506`, `:2204-2206` → `:2291-2293`, `:2048-2056` → `:2135-2143`, `:2054` →
+`:2141`). The two dated lane reports are left untouched by fence; the manifest is the Lead's at
+re-seal #6. **Whether to renumber any of them is a bundle-wide act of the same class as W200-D03 and
+W200-D05. Recorded as W205-D01.**
+
+### V-4 Honest limits of this pass
+
+- **W205-D01** — the line-number consequence in V-3. Six internal and eleven external citation
+  occurrences now name the wrong line. None of them names a value; every one of them names a
+  location. Recorded, not repaired, because repairing them is a bundle-wide renumber.
+- This pass did **not** re-measure the `BLOCKED-*` census of W-9 (`:2045-2050`, restated at
+  `:2074-2076`). It is the v1.8 census, it is now marked as such, and **no replacement count is
+  stated anywhere in this pass**. A surface-restricted structural walk over all 17 artifacts is a
+  re-measurement act, not a residue marker.
+- **W167-D01**, **W200-D01** and the owner questions on `RULE2-04-RED`, `RULE2-06-RED` and
+  `RULE2-06-EQUAL-PRICE-RED` are untouched and remain open. The W200 removal relocated W167-D01 into
+  the absence of the object; it did not close it, and this pass closes nothing.
+- The recorded `EXPECTED_SEAL_SHA` `d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438`
+  (`CONTRACT_TABLES_MANIFEST.json:378,389`, Lead re-seal #5) **no longer covers these bytes**, and
+  `files[]` at `:75-77` still pins the pre-pass digest and byte count. Re-sealing and re-pinning are
+  the Lead's acts under design `:1171-1172`; this pass deliberately performed neither, and updated no
+  `files[]` entry and no seal field.
+
+## W224 supersession-marker pass — the GM62 live-but-superseded sites, marked and not rewritten
+
+### U-0 What this pass is, and what it is not
+
+Lane `C:\tmp\LANE_PROMPTS_20260828\LANE_W224_DERIVATIONS_SUPERSEDE.md`, standing clauses
+`N_COMMON_CLAUSES.md` C-1..C-7 read in full first, census
+`C:\tmp\LANE_PROMPTS_20260828\DETECT_GM62_DERIVATIONS.md` read in full first. Family: the tables
+family, which authored these bytes. This pass **adds markers and changes nothing else**. It authors
+no value, moves no value, derives nothing new, resolves no OPEN row, closes no discrepancy, and
+touches no golden, catalog, manifest, anchor, seal field or `files[]` entry — the only bundle file
+written is this one, alongside the lane report `W224_DERIVATIONS_SUPERSEDE_REPORT.md`. Re-seal #7 is
+the Lead's act.
+
+Independence, stated as a fact rather than a promise: no `mtc_v2.core` import; no `observed/` path
+read; no `tests/corrected_vnext/contracts/inputs/**` byte opened; no implementer-authored input file
+consumed; no kernel, driver, verifier, gate, generator, backtest or baseline exists or was executed.
+Local SHA-256, byte and line counts, and reading the design file, the seventeen goldens under
+`golden/corrected_vnext/`, the prior lane reports and this worksheet are the whole of the
+computation done.
+
+The census findings acted on are `DETECT_GM62_DERIVATIONS.md` **GM62-F04** (MEDIUM), **GM62-F05**
+(MEDIUM), **GM62-F06** (MEDIUM) and **GM62-F07** (LOW). **GM62-F01**, **GM62-F02** and **GM62-F03**
+are not this family's to close and were not touched — see U-4. **GM62-F08** is recorded as an open
+item and was deliberately **not** derived — see U-5.
+
+### U-1 The nine supersession markers placed
+
+Each marker follows this worksheet's own convention and **leaves the original text intact and
+readable**: a bold `<VERB> SUPERSEDED BY LANE <lane> under <basis>; marker added by lane <lane>
+under <finding>` lead-in immediately after the superseded block — the form standing at `:921` and
+`:2165` before this pass — or a bracketed in-fence note in the form standing at `:785`. Both were
+read at those sites before the first marker below was written.
+
+| # | Site (this file, current numbering) | What was stale there | Finding | Marker |
+|---|---|---|---|---|
+| 1 | `:516` (§5 `RULE2-05-RED` sizing fence) | `order_notional = 1 * 101 * 1 = 101` | GM62-F04 class, site **not named** by GM62 | in-fence bracket `:517-529` |
+| 2 | `:613-614` (§6 `RULE2-06-RED` divergent table) | two `/RESULT_SURFACE/collision/*` rows read live | **GM62-F05, named site** | paragraph `:622-640` |
+| 3 | `:674` (§6 `RULE2-06-EQUAL-PRICE-RED` divergent table) | `/RESULT_SURFACE/collision/ordered_chosen_exit_ids` reads live | **GM62-F05, named site** | paragraph `:680-690` |
+| 4 | `:1220`, `:1239` (R-0.3 fee table and raw-bits fence) | `0.04545` labelled a **sealed** token; no artifact seals it now | GM62-F04 class, site **not named** by GM62 | paragraph `:1244-1258` |
+| 5 | `:1288` (R-0.4 accumulation fence) | `RULE2-05-RED 1000 - fl(0.04545) = 999.95455` | **GM62-F04, named site** | in-fence bracket `:1292-1302` |
+| 6 | `:1486-1497` (R-9) | `fee_notional 101`, `fee_amount 0.04545`, its delta, `equity_curve.last 999.95455`, and D-06's `order_notional 101` | **GM62-F04, named site** | paragraph `:1499-1515` |
+| 7 | `:2105` (W167 W-7 member-set table) | the `08-RED` row reads `guards` `yes` | **GM62-F06, named site** | paragraph `:2108-2120` |
+| 8 | `:2102` (same table) | the `05-RED / 05-GREEN` row reads `order_notional` `101 / 100` | GM62-F04 class, site **not named** by GM62 | paragraph `:2122-2129` |
+| 9 | `:2343`, `:2348-2350` (W172 Y-1 fence and its prose) | `RULE2-05-RED 101 = 1*101*1` at sequence `1`, restated as "already-sealed value byte for byte" | **GM62-F04, named site** | paragraph `:2356-2371` |
+
+All six sites the census named are marked. Three further sites of the identical residue class —
+`:516`, `:1220`/`:1239` and `:2102` — were found by reading and are marked rather than left, on the
+same ground lane W205 gave at V-1: a reader landing on them takes a superseded value as current.
+That the census did not name them is recorded as **W224-D02** below.
+
+**Every current value asserted in those nine markers was measured this session** against the
+seventeen goldens under `golden/corrected_vnext/`, not taken from a prior report. The markers that
+carry the `RULE2-05-RED` re-derivation rest on `RULE2-05-RED.json:27,30,36,43,45` (the current
+bytes) and `RULE2-05-RED.json:90-99` (the artifact's own before/after ledger). Those that carry the
+collision removal rest on `RULE2-06-RED.json:27,49-71,101` and
+`RULE2-06-EQUAL-PRICE-RED.json:28,50-72,105`. The one that carries the guards removal rests on
+`RULE2-08-RED.json:40-59,93`.
+
+**NO VALUE MOVED.** Not one digit, token, marker or table cell of the original text was altered: the
+diff against the pre-pass bytes is **422 inserted lines, zero changed lines, zero deleted
+lines** — 198 of them inserted into the body, the rest this appended section, which shifts nothing.
+The pre-pass file measured `669567296f868186eb0ff227af3f251b6cc59fc4a9f8d6d0c054001b5b32aefc` /
+216084 bytes, which is what `CONTRACT_TABLES_MANIFEST.json:74-78` still pins. Unlike the W205 pass,
+the "zero deleted" half of that claim **is** verifiable here, because the pre-pass bytes were
+preserved before this pass began, in the bundle snapshot
+`C:\tmp\P012_LEAD_RESEAL\bundle_snapshots\20260902_0129\DERIVATIONS.md`, and the diff above was
+taken against them line by line.
+
+### U-2 The stale internal pointers — measured, not computed
+
+GM62-F07 names six broken internal citations, taking them from lane W205's V-3 table. **The true
+count is eight, and three of V-3's six rows do not land on the record they name.** V-3 built its
+`Now at` column by applying a uniform `+87` line shift to each citing lane's own number instead of
+measuring the target text; where the citing number was already wrong, the shift reproduced the
+error. Every row below was found by **reading the target text in the current bytes**.
+
+| Citation at (now) | Reads | V-3 said | Measured now | Target |
+|---|---|---|---|---|
+| `:2652` (W186 Z-0) | `DERIVATIONS.md:2040-2056` | `:2127-2143` | `:2240-2256` | the **W167-D05** record |
+| `:2655` (W186 Z-0) | `DERIVATIONS.md:2208-2216` | `:2295-2303` **wrong** | `:2429-2437` | W172's withheld-`SIZING_COMPUTED` record |
+| `:2738` (W186 Z-1) | `DERIVATIONS.md:2208-2211` | `:2295-2298` **wrong** | `:2429-2432` | the arithmetic inside that record |
+| `:2791` (W186 Z-3) | `DERIVATIONS.md:2204-2206` | `:2291-2293` **wrong** | `:2425-2427` | W172's `FALLBACK`-token paragraph |
+| `:2874` (W186 Z-5) | `R-0.4 :1182` | **not counted** | `:1288` | the superseded accumulation line |
+| `:2876` (W186 Z-5) | `R-9 :1369-1380` | **not counted** | `:1486-1497` | section R-9 |
+| `:2976` (W186 Z-7) | `DERIVATIONS.md:2048-2056` | `:2135-2143` | `:2248-2256` | W172's **NARROWED** paragraph |
+| `:3074` (W200 W-2) | `DERIVATIONS.md:2316-2321` | `:2403-2408` | `:2533-2538` | the Y-5 token-census rows |
+
+The three wrong rows share one cause: lane W186 wrote `:2204-2206`, `:2208-2211` and `:2208-2216`
+into the same block, each **four lines low** in the numbering of its own day, and V-3 carried the
+error forward mechanically. The other five rows were correct at their time and are restated above
+only because this pass shifted them again.
+
+**Not one citation was rewritten.** Each of the eight now carries an in-place bracket or paragraph
+naming the measured target and leaving the original number readable, and V-3's own table carries a
+marker at `:3331-3346`. Rewriting another lane's record to match a later state is what an
+append-only worksheet forbids; that reasoning is W205's at V-3 and is adopted here unchanged.
+
+**This pass's own line shift.** Inserting 198 lines into the body moves every later line of this
+file. Applied to the pre-pass (post-W205) numbering:
+
+```
+pre-pass lines    1 - 516     unchanged
+                517 - 607     +13
+                608 - 645     +33
+                646 - 1197    +45
+               1198 - 1230    +61
+               1231 - 1425    +72
+               1426 - 2016    +90
+               2017 - 2241   +113
+               2242 - 2529   +130
+               2530 - 2597   +142
+               2598 - 2644   +148
+               2645 - 2722   +156
+               2723 - 2813   +165
+               2814 - 2909   +172
+               2910 - 3148   +181
+               3149 - 3176   +198
+```
+
+Citation occurrences that reach this file **from outside it** are equally shifted and none was
+touched: they are the Lead's at re-seal, or dated lane reports that a later state may not edit.
+Their targets, re-measured here from the pre-pass numbers lane W205 recorded at V-3:
+
+| External citation | Named target | Now at |
+|---|---|---|
+| `CONTRACT_TABLES_MANIFEST.json:374,380,500` | `DERIVATIONS.md:756` | `:801` |
+| `CONTRACT_TABLES_MANIFEST.json:499` | `:871-874`, `:1922-1930`, `:2049` | `:916-919`, `:2012-2020`, `:2162` |
+| `W200_GOLDEN_OVER_REPORT.md:69` | `:2403-2408` | `:2533-2538` |
+| `W186_RULE205RED_REPORT.md:33` | `:2040-2056` | `:2240-2256` |
+| `W186_RULE205RED_REPORT.md:36` | `:2208-2216` (four lines low) | `:2429-2437` |
+| `W186_RULE205RED_REPORT.md:42` | the W186 section header | `:2641` |
+| `W186_RULE205RED_REPORT.md:116` | `:2204-2206` (four lines low) | `:2425-2427` |
+| `W186_RULE205RED_REPORT.md:193` | `:2048-2056` | `:2248-2256` |
+| `W186_RULE205RED_REPORT.md:238` | the W167-D05 closure annotation | `:2257-2260` |
+
+Two of those rows correct V-3 as well: V-3 mapped the W186 section header to `:2506`, where it in
+fact stood at `:2511` before this pass, and mapped the closure annotation to `:2141`, where the
+annotation itself is the **RESOLVED** block and `:2141` sat inside the **NARROWED** paragraph.
+**Whether to renumber any external citation remains a bundle-wide act of the same class as
+W200-D03, W200-D05 and W205-D01. Recorded as W224-D01, not repaired here.**
+
+### U-3 Sites examined and deliberately left, so the omission is recorded rather than absorbed
+
+- **§0.3 correction row C-04 at `:93`.** It records that the W127 partial's
+  `RESULT_SURFACE/collision` = `{B:1, chosen="TARGETS"}` was replaced at v1.4 by
+  `ordered_chosen_exit_ids` plus the pessimistic-field divergence. That replacement is itself
+  superseded by the W167 removal marked at `:622-640`. It is left because §0.3 is a dated ledger of
+  what the partial said and how it was corrected **then**, in the same class as the `before:` values
+  of a changelog, which V-2 already ruled correct as written. A reader reaches the current state
+  through the §6 markers.
+- **W172 Y-4's `08-RED` line at `:2504`**, which reads "guards as above". Its subject is why that row
+  gains no `decision_events` row — a conclusion the guards-object removal does not disturb — not the
+  presence of a RESULT `guards` member. Left.
+- **The W167-D01 record at `:2200-2209` and the G83-F01 disposition at `:2562`.** Both are
+  discrepancy and finding ledgers, and the marker lane W205 placed at `:2165-2179` already states
+  that W167-D01 is relocated into the absence of the object rather than closed. Left.
+- **W186's own section `:2641-3001` and W200's own section `:3002-3236`.** Their `101`, `0.04545`,
+  `999.95455` and `guards` occurrences are `before:` values in the changelogs of the very acts that
+  superseded them. Correct as written; V-2 ruled the same way for W200.
+- **Y-5's token census at `:2530-2541`, restated at `:2549`.** Left for the reason V-2 gave, which
+  this pass re-read and did not disturb.
+- **`W167_TABLES_V18_REPORT.md`, `W172_READING_Y_REPORT.md`, `W186_RULE205RED_REPORT.md` and
+  `W200_GOLDEN_OVER_REPORT.md`.** Dated prior-lane reports, outside this lane's write scope. Editing
+  a dated report to match a later state destroys the record of what was believed when.
+- **`RULE2-04-RED`, `RULE2-06-RED` and `RULE2-06-EQUAL-PRICE-RED` as *values*.** Their goldens were
+  read for the collision-object markers and for nothing else; no value on any of the three was
+  touched, and the two open owner questions on them are untouched.
+
+### U-4 GM62-F01, F02 and F03 — left to the Lead, deliberately
+
+The three say that sealed values rest on requirements the design never closes:
+`COLLISION_RESOLVED.touched_exit_ids` ordering (**GM62-F01**), the `RESULT_SURFACE.trades[]` member
+schema (**GM62-F02**) and the `cash_events[]` container schema (**GM62-F03**). **Closing any of them
+is a design act, and two of the three are already owner questions.** This lane read them, wrote
+nothing at their sites, and changed no value they name. They are not marked either, because a
+supersession marker asserts that a later ruling exists and no later ruling exists for any of the
+three. The Lead is routing them.
+
+**FINDING SUPERSEDED BY OWNER ADDENDUM 29 DECISIONS 71 AND 72; marker added by lane W244 under
+addendum 29 decision 73.** The paragraph above says that no later ruling exists for any of the
+three and that they are therefore left unmarked. **That is no longer true for two of the three.**
+The owner closed **GM62-F01** and **GM62-F02** on 2026-09-02: decision 71 closes the
+`RESULT_SURFACE.trades[]` member set
+(`MTC_COMMAND_CENTER/11_TRIAGE/OWNER_DECISIONS_2026-08-29_EVENING.md:596-610`) and decision 72
+fixes the `COLLISION_RESOLVED.touched_exit_ids` receipt order (same file, `:612-623`). Decision 73
+(same file, `:631-635`) authorises this family to re-derive the four goldens they name.
+**GM62-F03** - the `cash_events[]` container schema - is untouched by addendum 29 and stands open
+exactly as written. **NO VALUE MOVED BY THIS MARKER** - the paragraph above is left exactly as
+lane W224 wrote it, and the re-derivation it now points at is recorded in the W244 section below.
+
+### U-5 GM62-F08 — recorded as an open item, not derived
+
+**GM62-F08** says the `RULE2-05-RED` zero-quantity container shape — one `fill_events` row, one
+`cash_events` row, one `fee_events` row and a `final_position`, all with zero values — is asserted
+because the closed schema can express it rather than derived from a design line that governs a
+zero-quantity order transition.
+
+**That is already recorded in this worksheet, in the words of the lane that made the choice.**
+**W186-D01** at `:2891-2917` states the gap, quotes the five design lines that fail to settle it
+(`:97`, `:99-100`, `:212`, `:357`, and `:1014-1024` with `:1037` and `:1157-1163`), records the
+alternative reading as considered and not chosen, and ends **"Owner or §16 resolution requested."**
+The finding and the discrepancy are the same fact.
+
+This pass **did not derive the missing reasoning and states none**. Inventing a derivation after the
+value was sealed would be authoring a design fact by inference, which this family is fenced from,
+and it would turn an honestly recorded open question into a false closure. GM62-F08 therefore stands
+**open, pointing at W186-D01 (`:2891-2917`)**, and belongs in the owner queue rather than in this
+pass's work.
+
+### U-6 Honest limits of this pass
+
+- **W224-D01** — the line-number consequence in U-2. Nine external citation occurrences and every
+  internal citation named above now sit at different numbers. None of them names a value; every one
+  of them names a location. Recorded, not repaired, because repairing them is a bundle-wide
+  renumber.
+- **W224-D02** — the GM62 census named six of the nine live-but-superseded sites this pass found.
+  `:516`, `:1220`/`:1239` and `:2102` are the same residue class and are marked rather than left.
+  Recorded so the census's coverage claim is not taken as exhaustive.
+- **W224-D03** — three of the six rows of W205's V-3 `Now at` column never landed on the record they
+  name, and V-3's count of "six pre-existing citations" omitted the two W186 Z-5 pointers. Both are
+  corrected by measurement in U-2 and marked at `:3331-3346`; V-3's own text is left intact.
+- This pass **re-measured no census and states no replacement count**. The `BLOCKED-*` counts of W-9,
+  and every scenario, catalog and container count in this worksheet, are exactly as their lanes
+  measured them.
+- **GM62-F01, F02, F03** are open design questions, **GM62-F08** is an open item pointing at
+  **W186-D01**, and **W167-D01**, **W200-D01**, **W205-D01**, **W186-D02**, **W186-D03** and the
+  owner questions on `RULE2-04-RED`, `RULE2-06-RED` and `RULE2-06-EQUAL-PRICE-RED` are untouched and
+  remain open. This pass closes nothing.
+
+  **CLAUSE SUPERSEDED BY OWNER ADDENDUM 29 DECISIONS 71 AND 72; marker added by lane W244 under
+  addendum 29 decision 73.** **GM62-F01** and **GM62-F02** are no longer open design questions.
+  The owner closed them at
+  `MTC_COMMAND_CENTER/11_TRIAGE/OWNER_DECISIONS_2026-08-29_EVENING.md:596-610` and `:612-623`, and
+  the open owner questions on `RULE2-04-RED`, `RULE2-06-RED` and `RULE2-06-EQUAL-PRICE-RED` named
+  in the bullet above are answered for exactly those two subjects - trade-row member set and
+  receipt order - and for nothing else. **GM62-F03**, **GM62-F08**, **W167-D01**, **W200-D01**,
+  **W205-D01**, **W186-D01**, **W186-D02** and **W186-D03** are untouched by lane W244 and remain
+  open. **NO VALUE MOVED BY THIS MARKER** - the bullet above is left exactly as lane W224 wrote it.
+- The recorded `EXPECTED_SEAL_SHA` `df561e7993df37e473c39b1fe174289d244d0b9b16cea9ab6aed72c11b91a964`
+  (`CONTRACT_TABLES_MANIFEST.json:388,399`, Lead re-seal #6) **no longer covers these bytes**, and
+  `files[]` at `:74-78` still pins the pre-pass digest
+  `669567296f868186eb0ff227af3f251b6cc59fc4a9f8d6d0c054001b5b32aefc` and 216084 bytes. Re-sealing and
+  re-pinning are the Lead's acts under design `:1171-1172`; this pass deliberately performed neither,
+  and updated no `files[]` entry and no seal field. The stale `scenario_catalog.json` digest pins
+  recorded at W186-D04 and by W200 are equally untouched.
+
+---
+
+## W244 re-derivation under owner addendum 29 decisions 71 and 72 - four goldens, shape and order only
+
+This section is written by the tables family under **owner addendum 29 decision 73**, the only
+authority under which a sealed golden may change. The three ruling texts are quoted at their
+ledger lines below, then every node this lane moved is listed with its before and after value.
+**No economic value moved anywhere in this pass**: not one price, quantity, fee, funding amount,
+PnL, equity figure or metric differs from the pre-pass bytes in any of the four files.
+
+### W244-1 The authority, quoted
+
+**Decision 71** (`MTC_COMMAND_CENTER/11_TRIAGE/OWNER_DECISIONS_2026-08-29_EVENING.md:596-610`),
+quoted at `:602-606`:
+
+> The owner rules that every completed trade row has exactly: `entry_fill_price` (quantity-weighted
+> over entry fills), `quantity`, `exit_ids` (in exit-event sequence order), `gross_realized_pnl`,
+> `fee_total`, `funding_total`, `net_trade_pnl`. No `exit_fill_price` member; per-piece exit prices
+> live only in the closed `exit_events[]` schema. A trade that exits in several pieces is ONE row
+> whose `exit_ids` lists every piece in sequence order.
+
+**Decision 72** (same file, `:612-623`), quoted at `:616-619`:
+
+> The owner rules the receipt order is the scenario's declared exit-candidate order, stop first,
+> then targets in declaration order. This never changes which exits execute, their prices, or PnL.
+
+and at `:620-621`:
+
+> `touched_exit_ids` becomes `["STOP","TARGET-NEAR","TARGET-FAR"]` in both
+
+**Decision 73** (same file, `:631-635`), quoted at `:631-634`:
+
+> Authorises, in the build worktree only: design v1.9 -> v1.10 amendment closing the trade-row
+> member set and the receipt order; the tables family re-deriving the four goldens named in 71 and
+> 72 under protected scope `MTC_V2`; Lead re-seal #8; and one gate rerun after that seal.
+
+### W244-2 Decision 71 - `RULE2-04-RED` and `RULE2-07-RED` trade rows
+
+The ruling closes the member set at exactly seven members and orders `exit_ids` by `exit_events[]`
+sequence order. The member spelling and key order taken here are the ones the three RULE2-06
+sheets already carry (`golden/corrected_vnext/RULE2-06-GREEN.json:47`,
+`golden/corrected_vnext/RULE2-06-RED.json:52`,
+`golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json:53`): `entry_fill_price`, `quantity`,
+`exit_ids`, `gross_realized_pnl`, `fee_total`, `funding_total`, `net_trade_pnl`.
+
+`exit_ids` is derived from each file's own `exit_events[]` container and from nothing else.
+
+| Golden | `exit_events[]` read | Derived `exit_ids` |
+|---|---|---|
+| `RULE2-04-RED` | one member, `sequence` 0, `exit_id` `STOP` (`golden/corrected_vnext/RULE2-04-RED.json:41`) | `["STOP"]` |
+| `RULE2-07-RED` | one member, `sequence` 0, `exit_id` `TIME_STOP` (`golden/corrected_vnext/RULE2-07-RED.json:44`) | `["TIME_STOP"]` |
+
+Per-node before/after, one node removed and one node added per file:
+
+| Pointer | Before | After |
+|---|---|---|
+| `RULE2-04-RED` `/RESULT_SURFACE/trades/0/exit_fill_price` | `90` | member removed (decision 71) |
+| `RULE2-04-RED` `/RESULT_SURFACE/trades/0/exit_ids` | absent | `["STOP"]` |
+| `RULE2-07-RED` `/RESULT_SURFACE/trades/0/exit_fill_price` | `100` | member removed (decision 71) |
+| `RULE2-07-RED` `/RESULT_SURFACE/trades/0/exit_ids` | absent | `["TIME_STOP"]` |
+
+The two removed per-piece exit prices are not lost: decision 71 says they "live only in the closed
+`exit_events[]` schema", and both are still on disk unchanged at
+`golden/corrected_vnext/RULE2-04-RED.json:41` (`final_fill_price` `90`) and
+`golden/corrected_vnext/RULE2-07-RED.json:44` (`final_fill_price` `100`).
+
+Every other member of both trade rows, and every other node of both files, is byte-identical to the
+pre-pass bytes: `entry_fill_price` `100` / `quantity` `1` / `gross_realized_pnl` `-10` /
+`fee_total` `-0.085499999999999993` / `funding_total` `0` / `net_trade_pnl` `-10.0855` on
+`RULE2-04-RED`, and `entry_fill_price` `100` / `quantity` `1` / `gross_realized_pnl` `0` /
+`fee_total` `-0.2` / `funding_total` `0` / `net_trade_pnl` `-0.2` on `RULE2-07-RED`.
+
+### W244-3 Decision 72 - `RULE2-06-RED` and `RULE2-06-EQUAL-PRICE-RED` receipt order
+
+The declared exit-candidate order comes from the RULE 2 scenario binding in the DEF-P012-06 text,
+`P012_FRESH_DESIGN_V1.md:349` (inside the `:339-353` block the ruling cites), which declares the
+candidates in this order:
+
+> `RULE2-06-RED` is a synthetic long under `execution_profile_id=raw_close_only_v1` with entry fill
+> `100`, reference quantity `2`, `qty_step=1`, stop `90`, target `TARGET-NEAR` at `105` with target
+> fraction `0.5`, target `TARGET-FAR` at `110` with target fraction `0.5`
+
+Declaration order is therefore stop `90`, then `TARGET-NEAR`, then `TARGET-FAR`. The same line
+binds `RULE2-06-EQUAL-PRICE-RED` as using "the exact `RULE2-06-RED` inputs except that `TARGET-FAR`
+is also at `105`", so its declared candidate order is identical. Under decision 72 the receipt is
+stop first, then targets in that declaration order: `["STOP", "TARGET-NEAR", "TARGET-FAR"]` in
+both, which is exactly the value the ruling names at `:620-621`.
+
+| Pointer | Before | After |
+|---|---|---|
+| `RULE2-06-RED` `/EVENT_SURFACE/decision_events/2/touched_exit_ids` | `["TARGET-NEAR", "TARGET-FAR", "STOP"]` | `["STOP", "TARGET-NEAR", "TARGET-FAR"]` |
+| `RULE2-06-EQUAL-PRICE-RED` `/EVENT_SURFACE/decision_events/2/touched_exit_ids` | `["TARGET-NEAR", "TARGET-FAR", "STOP"]` | `["STOP", "TARGET-NEAR", "TARGET-FAR"]` |
+
+`ordered_chosen_exit_ids` is untouched on both, as the ruling requires: it stays
+`["TARGET-NEAR", "TARGET-FAR"]` on `RULE2-06-RED` (long ascending target price) and
+`["TARGET-FAR", "TARGET-NEAR"]` on `RULE2-06-EQUAL-PRICE-RED` (equal prices, `exit_id` UTF-8
+byte-order tie-break). `collision`, `same_bar_collision_policy_id`, `reference_quantity`,
+`stop_remainder_quantity`, `target_ordering_rule` and `tie_break_applied` are untouched, as are
+every `fill_events`, `cash_events`, `fee_events`, `funding_events` and `exit_events` member and the
+whole `RESULT_SURFACE` of both files. `RULE2-06-GREEN` already carries `touched_exit_ids` `["STOP"]`
+(`golden/corrected_vnext/RULE2-06-GREEN.json:27`), which is already stop-first and needs no move;
+it was read and not written.
+
+### W244-4 The economic-value proof
+
+Each of the four files was compared node by node against the pre-pass snapshot at
+`C:/tmp/SNAPSHOTS/20260902_1009/P012_CONTRACT_TABLES_W127/golden/corrected_vnext/`. Every JSON leaf
+was addressed by pointer on both sides and the two leaf maps compared:
+
+| File | Leaves before | Leaves after | Numeric leaves changed in place | Changed pointers | Removed | Added |
+|---|---|---|---|---|---|---|
+| `RULE2-04-RED` | 244 | 244 | 0 | 0 | 1 (`/RESULT_SURFACE/trades/0/exit_fill_price`) | 1 (`/RESULT_SURFACE/trades/0/exit_ids/0`) |
+| `RULE2-07-RED` | 305 | 305 | 0 | 0 | 1 (`/RESULT_SURFACE/trades/0/exit_fill_price`) | 1 (`/RESULT_SURFACE/trades/0/exit_ids/0`) |
+| `RULE2-06-RED` | 316 | 316 | 0 | 3 (the three `touched_exit_ids` slots) | 0 | 0 |
+| `RULE2-06-EQUAL-PRICE-RED` | 326 | 326 | 0 | 3 (the three `touched_exit_ids` slots) | 0 | 0 |
+
+Not one numeric leaf differs in value on either side of the pass in any of the four files. The only
+numeric leaves that exist on one side and not the other are the two `exit_fill_price` members that
+decision 71 removes by name, and both survive unchanged as `final_fill_price` in `exit_events[]`.
+The six changed pointers are all string slots inside `touched_exit_ids`, and the multiset of the
+three strings is identical before and after in both files - a permutation, which is exactly what
+decision 72 orders.
+
+### W244-5 Class sweep
+
+`exit_fill_price` and `touched_exit_ids` were swept across the whole bundle - every golden, this
+worksheet, every report file, `scenario_catalog.json`, `CONTRACT_TABLES_MANIFEST.json`,
+`IMPLEMENTATION_ANCHOR_DRAFT.json` and `tests/corrected_vnext/contracts/inputs/`. Seven sites exist.
+Four are the goldens re-derived above; `RULE2-06-GREEN.json:27` already satisfies decision 72 and
+was not written; this worksheet's U-4 paragraph and its U-6 bullet carry the markers placed by this
+lane; and `W224_DERIVATIONS_SUPERSEDE_REPORT.md:192` is a dated prior-lane report, left untouched on
+this worksheet's own standing ground at `:3537-3539` - "Editing a dated report to match a later
+state destroys the record of what was believed when." No fifth golden needs to move.
+
+### W244-6 What this lane did not do
+
+- No `CONTRACT_TABLES_MANIFEST.json`, `scenario_catalog.json` or `IMPLEMENTATION_ANCHOR_DRAFT.json`
+  edit. The four goldens and this worksheet now differ from every digest pinned for them; re-seal #8
+  and every re-measurement are the Lead's acts under design `:1171-1172`, and decision 73 names that
+  re-seal as a separate authorised step.
+- No design edit. Decision 73 authorises the v1.9 -> v1.10 amendment, but a parallel lane owns it;
+  this lane derived from the ledger text, which decision 73 makes the standing authority.
+- No kernel read or run, no `observed/` read, no verifier or baseline executed. Decisions 71 and 72
+  both say "Kernel unchanged by this decision".
+- **W244-D01** - the line-number consequence, measured from the diff against the pre-pass snapshot.
+  This pass is insertion-only: **0 lines were deleted or rewritten**. It inserted a 12-line marker
+  block after pre-pass line `:3553` (diff hunk `3553a3554,3565`), a 10-line marker block after
+  pre-pass line `:3591` (hunk `3591a3604,3613`), and appended this whole section after the pre-pass
+  last line `:3598`. Every citation into this worksheet at a pre-pass line at or above `:3553` still
+  lands where it did; a citation in `:3554-:3591` now sits 12 lines lower, and one at `:3592` or
+  below sits 22 lines lower. This is the same class W224 recorded as W224-D01 and is recorded, not
+  repaired.

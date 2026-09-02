@@ -25,7 +25,7 @@
     "decision_events": [
       {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
       {"sequence": 1, "decision": "PROTECTIVE_STOP_EVALUATED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "position_side": "LONG", "stop_price": 90, "predicate": "LOW_TOUCH"},
-      {"sequence": 2, "decision": "COLLISION_RESOLVED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "collision": true, "same_bar_collision_policy_id": "TARGET_FIRST", "touched_exit_ids": ["TARGET-NEAR", "TARGET-FAR", "STOP"], "ordered_chosen_exit_ids": ["TARGET-FAR", "TARGET-NEAR"], "reference_quantity": 2, "stop_remainder_quantity": 0, "target_ordering_rule": "LONG_ASCENDING_TARGET_PRICE_THEN_EXIT_ID_UTF8_BYTE_ORDER", "tie_break_applied": true}
+      {"sequence": 2, "decision": "COLLISION_RESOLVED", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "collision": true, "same_bar_collision_policy_id": "TARGET_FIRST", "touched_exit_ids": ["STOP", "TARGET-NEAR", "TARGET-FAR"], "ordered_chosen_exit_ids": ["TARGET-FAR", "TARGET-NEAR"], "reference_quantity": 2, "stop_remainder_quantity": 0, "target_ordering_rule": "LONG_ASCENDING_TARGET_PRICE_THEN_EXIT_ID_UTF8_BYTE_ORDER", "tie_break_applied": true}
     ],
     "fill_events": [
       {"sequence": 0, "kernel_semantics_version": "2.0.0", "fill_id": "F0", "event_class": "TARGET_EXIT", "side": "SELL", "exit_id": "TARGET-FAR", "target_fraction": 0.5, "reference_quantity": 2, "reference_price": 105, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "FLOOR", "final_fill_price": 105, "quantity": 1, "liquidity_role": "TAKER"},
