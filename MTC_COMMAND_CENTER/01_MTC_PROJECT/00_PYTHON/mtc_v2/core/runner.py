@@ -728,7 +728,7 @@ class Runner:
         assert self._corrected_records is not None
         if previous is None and current is None:
             return
-        events = self._corrected_records.funding.get("events", ())
+        events = self._corrected_records.funding.get("events")
         if not isinstance(events, (tuple, list)):
             raise EconomicsRefusal(
                 REFUSED_MISSING_FUNDING_EVENT,

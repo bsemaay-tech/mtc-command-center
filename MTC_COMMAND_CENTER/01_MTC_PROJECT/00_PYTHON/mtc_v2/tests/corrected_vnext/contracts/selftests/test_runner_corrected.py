@@ -463,6 +463,26 @@ def test_v283b_f7_missing_events_precede_schedule_rule_refusals() -> None:
     assert exc_info.value.refusal_code == "REFUSED_MISSING_FUNDING_EVENT"
 
 
+def test_v283b_f1_absent_events_member_is_typed_refusal() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    assert runner._corrected_records is not None
+    funding_without_events = {
+        key: value
+        for key, value in runner._corrected_records.funding.items()
+        if key != "events"
+    }
+    runner._corrected_records = replace(
+        runner._corrected_records,
+        funding=funding_without_events,
+    )
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        runner._apply_corrected_funding_between(bars[1], bars[2])
+
+    assert exc_info.value.refusal_code == "REFUSED_MISSING_FUNDING_EVENT"
+
+
 def test_record_runtime_override_refuses_before_first_economic_intent() -> None:
     config, bars = _scenario("RULE2-03-RED")
     runner = Runner.for_corrected_contract(
