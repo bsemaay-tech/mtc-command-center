@@ -1419,6 +1419,11 @@ def execute_corrected_scenario(
         manifest=CorrectedRunManifest.from_records(
             records,
             execution_profile_id=row["execution_profile_id"],
+            same_bar_collision_policy_id=(
+                str(runner.config["same_bar_collision_policy_id"])
+                if "DEF-P012-06" in row["owning_def_ids"]
+                else None
+            ),
         ),
         observation_start=_timestamp(corrected["observation_window"]["start_timestamp"]),
         observation_end=_timestamp(corrected["observation_window"]["end_timestamp"]),

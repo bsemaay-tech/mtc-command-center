@@ -1230,6 +1230,23 @@ def test_w304_row5_serializes_the_bound_time_stop_reason() -> None:
     assert observed["EVENT_SURFACE"]["exit_events"][0]["reason"] == "time_stop"
 
 
+@pytest.mark.parametrize(
+    "scenario_id",
+    ["RULE2-06-RED", "RULE2-06-EQUAL-PRICE-RED", "RULE2-06-GREEN"],
+)
+def test_w304_row6_manifest_passes_the_runners_actual_collision_policy(
+    scenario_id: str,
+) -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+
+    result = execute_corrected_scenario(MTC_V2_ROOT, row)["RESULT_SURFACE"]
+
+    assert result["run_manifest"]["same_bar_collision_policy_id"] == "TARGET_FIRST"
+
+
 def test_observed_path_has_no_legacy_state_seed_or_literal_surface_builder() -> None:
     assert not hasattr(verify_bceg, "_prepare_rule2_08_observation")
     assert not hasattr(verify_bceg, "_refusal_surfaces")
