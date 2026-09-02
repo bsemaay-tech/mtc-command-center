@@ -47,14 +47,19 @@ SEMANTIC_COVERAGE_REVIEW_KEYS = (
     "owner_ratification",
     "signed_at",
 )
-SEMANTIC_COVERAGE_REVIEW_IDENTITY_KEYS = (
-    "worktree_head_commit",
+SEMANTIC_COVERAGE_REVIEW_CONTENT_IDENTITY_KEYS = (
     "core_tree_oid",
     "expected_seal_sha",
     "implementation_anchor_sha256",
     "baseline_manifest_sha256",
     "design_file_sha256",
     "design_version",
+    "harness_sha256",
+    "catalog_sha256",
+)
+SEMANTIC_COVERAGE_REVIEW_IDENTITY_KEYS = (
+    "worktree_head_commit",
+    *SEMANTIC_COVERAGE_REVIEW_CONTENT_IDENTITY_KEYS,
 )
 SEMANTIC_COVERAGE_REVIEW_DISPOSITIONS = {
     "ACCEPTED",
@@ -207,6 +212,8 @@ def measure_semantic_review_identities(
 
     contracts = root / "tests/corrected_vnext/contracts"
     anchor_path = contracts / "implementation_anchor.json"
+    catalog_path = contracts / "scenario_catalog.json"
+    harness_path = root / "tests/corrected_vnext/verify_bceg.py"
     baseline_manifest_path = baseline_root / "BASELINE_BYTES_MANIFEST.json"
     manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
     design = manifest.get("design")
@@ -234,7 +241,34 @@ def measure_semantic_review_identities(
         "baseline_manifest_sha256": sha256_file(baseline_manifest_path),
         "design_file_sha256": sha256_file(design_path),
         "design_version": version_match.group(1),
+        "harness_sha256": sha256_file(harness_path),
+        "catalog_sha256": sha256_file(catalog_path),
     }
+
+
+def semantic_review_commit_is_ancestor(
+    root: Path, reviewed_commit: str, head_commit: str
+) -> bool:
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "merge-base",
+                "--is-ancestor",
+                reviewed_commit,
+                head_commit,
+            ],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError as exc:
+        _semantic_review_invalid(
+            "reviewed_identities.worktree_head_commit", str(exc)
+        )
+    return result.returncode == 0
 
 
 def validate_semantic_coverage_review(
@@ -291,6 +325,8 @@ def validate_semantic_coverage_review(
         "implementation_anchor_sha256",
         "baseline_manifest_sha256",
         "design_file_sha256",
+        "harness_sha256",
+        "catalog_sha256",
     ):
         if type(reviewed_identities[member]) is not str or not SHA256_RE.fullmatch(
             reviewed_identities[member]
@@ -299,7 +335,16 @@ def validate_semantic_coverage_review(
     _require_nonempty_line(
         reviewed_identities["design_version"], "reviewed_identities.design_version"
     )
-    for member in SEMANTIC_COVERAGE_REVIEW_IDENTITY_KEYS:
+    if not semantic_review_commit_is_ancestor(
+        root,
+        reviewed_identities["worktree_head_commit"],
+        measured_identities["worktree_head_commit"],
+    ):
+        _semantic_review_invalid(
+            "reviewed_identities.worktree_head_commit",
+            "not an ancestor of measured HEAD",
+        )
+    for member in SEMANTIC_COVERAGE_REVIEW_CONTENT_IDENTITY_KEYS:
         if reviewed_identities[member] != measured_identities.get(member):
             _semantic_review_invalid(
                 f"reviewed_identities.{member}", "does not match measured identity"

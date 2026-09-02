@@ -27,14 +27,19 @@ disposition or note, a missing item, or a non-empty `unresolved_items` list refu
 `CONTRACT_TABLES_AUTHOR`, each with a non-empty one-line basis. A Codex- or Claude-family reviewer
 is invalid because those are the kernel-implementer and tables-author families for this package.
 
-The gate compares every `reviewed_identities` value with a fresh measurement from that run:
+The signature covers the engine, the answer sheets, the reference and the design as they were;
+adding the signature file itself, or a report, does not void it; changing any of those five does.
+`worktree_head_commit` is required information that records when the review happened. It must be a
+Git OID and an ancestor of the current `HEAD`, but it does not have to equal the current `HEAD`.
+The gate compares the content identities with fresh measurements from the run:
 
-- worktree `HEAD` commit;
 - `mtc_v2/core` tree OID at `HEAD`;
 - computed bundle `EXPECTED_SEAL_SHA`;
 - `implementation_anchor.json` SHA-256;
 - baseline `BASELINE_BYTES_MANIFEST.json` SHA-256;
 - live design-file SHA-256 and the version parsed from its heading.
+- `verify_bceg.py` harness SHA-256;
+- `scenario_catalog.json` SHA-256.
 
 `owner_ratification.chain` is exactly `#5` through `#9`, `ratified` must be true, and `signed_at`
 must be a timezone-qualified date-time.

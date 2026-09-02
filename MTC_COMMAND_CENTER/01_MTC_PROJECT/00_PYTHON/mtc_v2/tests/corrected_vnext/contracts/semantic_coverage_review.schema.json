@@ -57,7 +57,9 @@
         "implementation_anchor_sha256",
         "baseline_manifest_sha256",
         "design_file_sha256",
-        "design_version"
+        "design_version",
+        "harness_sha256",
+        "catalog_sha256"
       ],
       "properties": {
         "worktree_head_commit": {
@@ -81,6 +83,12 @@
         "design_version": {
           "type": "string",
           "pattern": "^v[0-9]+\\.[0-9]+$"
+        },
+        "harness_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "catalog_sha256": {
+          "$ref": "#/$defs/sha256"
         }
       }
     },

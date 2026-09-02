@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+import subprocess
 from copy import deepcopy
 from pathlib import Path
 
@@ -35,6 +36,8 @@ SYNTHETIC_REVIEW_IDENTITIES = {
     "baseline_manifest_sha256": "5" * 64,
     "design_file_sha256": "6" * 64,
     "design_version": "v1.11",
+    "harness_sha256": "7" * 64,
+    "catalog_sha256": "8" * 64,
 }
 
 
@@ -89,7 +92,10 @@ def run_synthetic_full_gate(
     root: Path,
     baseline_root: Path,
     monkeypatch: pytest.MonkeyPatch,
+    measured_identities: dict[str, str] | None = None,
+    use_real_git: bool = False,
 ) -> int:
+    measured = measured_identities or SYNTHETIC_REVIEW_IDENTITIES
     monkeypatch.setattr(
         verify_bceg,
         "run_comparison_pipeline",
@@ -101,10 +107,15 @@ def run_synthetic_full_gate(
     monkeypatch.setattr(
         verify_bceg,
         "measure_semantic_review_identities",
-        lambda _root, _baseline_root, _sealed_identities: dict(
-            SYNTHETIC_REVIEW_IDENTITIES
-        ),
+        lambda _root, _baseline_root, _sealed_identities: dict(measured),
     )
+    if not use_real_git:
+        monkeypatch.setattr(
+            verify_bceg,
+            "semantic_review_commit_is_ancestor",
+            lambda _root, reviewed_commit, head_commit: reviewed_commit
+            == head_commit,
+        )
     return verify_bceg.main(
         [
             "--mode",
@@ -117,10 +128,64 @@ def run_synthetic_full_gate(
     )
 
 
-def assert_invalid_semantic_review(capsys: pytest.CaptureFixture[str]) -> None:
+def assert_invalid_semantic_review(
+    capsys: pytest.CaptureFixture[str], expected_detail: str | None = None
+) -> None:
     receipt = json.loads(capsys.readouterr().out)
     assert receipt["claim_label"] == "BOUNDED_CORRECTION_EVIDENCE_REFUSED"
     assert receipt["refusals"][0]["check_id"] == "SEMANTIC_COVERAGE_REVIEW_INVALID"
+    if expected_detail is not None:
+        assert receipt["refusals"][0]["detail"] == expected_detail
+
+
+def two_commit_repository(root: Path) -> tuple[str, str]:
+    root.mkdir(parents=True, exist_ok=True)
+    commands = (
+        ("init",),
+        ("config", "user.email", "w280@example.invalid"),
+        ("config", "user.name", "W280 selftest"),
+    )
+    for command in commands:
+        subprocess.run(
+            ["git", "-C", str(root), *command],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    marker = root / "commit-marker.txt"
+    marker.write_text("reviewed\n", encoding="utf-8", newline="\n")
+    subprocess.run(
+        ["git", "-C", str(root), "add", "commit-marker.txt"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(root), "commit", "-m", "reviewed content"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    reviewed_commit = subprocess.check_output(
+        ["git", "-C", str(root), "rev-parse", "HEAD"], text=True
+    ).strip()
+    marker.write_text("reviewed\nreceipt added\n", encoding="utf-8", newline="\n")
+    subprocess.run(
+        ["git", "-C", str(root), "add", "commit-marker.txt"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(root), "commit", "-m", "add receipt"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    head_commit = subprocess.check_output(
+        ["git", "-C", str(root), "rev-parse", "HEAD"], text=True
+    ).strip()
+    return reviewed_commit, head_commit
 
 
 def test_semantic_coverage_review_empty_file_is_invalid(
@@ -183,6 +248,90 @@ def test_semantic_coverage_review_stale_head_is_invalid(
 
     assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
     assert_invalid_semantic_review(capsys)
+
+
+def test_w280_reviewed_ancestor_with_matching_content_clears_blocker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    reviewed_commit, head_commit = two_commit_repository(root)
+    measured = dict(SYNTHETIC_REVIEW_IDENTITIES)
+    measured["worktree_head_commit"] = head_commit
+    receipt["reviewed_identities"]["worktree_head_commit"] = reviewed_commit
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(
+        root, tmp_path / "baseline", monkeypatch, measured, use_real_git=True
+    ) == 0
+    gate_receipt = json.loads(capsys.readouterr().out)
+    assert gate_receipt["claim_label"] == verify_bceg.ACCEPTING_LABEL
+
+
+def test_w280_reviewed_commit_that_is_not_an_ancestor_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    _reviewed_commit, head_commit = two_commit_repository(root)
+    measured = dict(SYNTHETIC_REVIEW_IDENTITIES)
+    measured["worktree_head_commit"] = head_commit
+    receipt["reviewed_identities"]["worktree_head_commit"] = "0" * 40
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(
+        root, tmp_path / "baseline", monkeypatch, measured, use_real_git=True
+    ) == 2
+    assert_invalid_semantic_review(
+        capsys,
+        "reviewed_identities.worktree_head_commit: not an ancestor of measured HEAD",
+    )
+
+
+def test_w280_matching_head_with_changed_core_tree_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    receipt["reviewed_identities"]["core_tree_oid"] = "9" * 40
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(
+        capsys,
+        "reviewed_identities.core_tree_oid: does not match measured identity",
+    )
+
+
+def test_w280_harness_sha_mismatch_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    receipt["reviewed_identities"]["harness_sha256"] = "9" * 64
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(
+        capsys,
+        "reviewed_identities.harness_sha256: does not match measured identity",
+    )
 
 
 def test_semantic_coverage_review_fully_valid_synthetic_receipt_clears_blocker(
