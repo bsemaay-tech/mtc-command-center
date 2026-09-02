@@ -12,11 +12,11 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.10 (owner addendum 29 decisions 71-72 applied by W243; measured by re-seal #8)",
-  "sha256": "8086c2c66f2af8f0df7074105f476e9754a72e966353ee2a2ccc734d7651879c",
-  "total_lines": 1352,
+  "version": "v1.11 (W261 amendment-choice: probe first-changed-node rule; measured by re-seal #10)",
+  "sha256": "2d8d0e38c5c9b426abfab50ca647a58fd4312d1cae7864aa9cb991d269bda99a",
+  "total_lines": 1404,
   "line_span_used": "whole file",
-  "heading_line_map_measured_at_reseal8": {
+  "heading_line_map_measured_at_reseal10": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
    "Prior versions": 18,
    "1. Authority, claim, and design posture": 24,
@@ -32,51 +32,122 @@
    "5.4 `FundingSchedule`": 158,
    "6. Defect record contract": 162,
    "7. DEF-P012-01 - contract multiplier in sizing": 190,
-   "Legacy behavior": 400,
-   "Corrected semantic": 404,
-   "RULE 2 and expected delta": 435,
+   "Legacy behavior": 406,
+   "Corrected semantic": 410,
+   "RULE 2 and expected delta": 441,
    "8. DEF-P012-02 - real minimum-notional admission": 229,
    "9. DEF-P012-03 - frozen instrument metadata": 254,
-   "10. DEF-P012-04 - gap-aware protective stops; continuous activation owner-gated": 272,
-   "11. DEF-P012-05 - in-path slippage, applied exactly once": 300,
-   "12. DEF-P012-06 - named same-bar collision policy": 328,
-   "Corrected semantic and tie-break table": 334,
-   "13. DEF-P012-07 - provenanced real fee schedule": 357,
-   "14. DEF-P012-08 - per-interval funding and `funding_events`": 398,
-   "15. Bounded Correction Evidence Gate (`BCEG-1`)": 443,
-   "15.1 Producers": 447,
-   "15.2 Scenario enumeration": 458,
-   "15.3 Two comparison surfaces": 477,
-   "15.4 Comparisons and inputs that make them fail": 523,
-   "15.5 Receipt and exact gate claim": 546,
-   "15.6 v1.5 input-embedding computability note": 560,
-   "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 588,
-   "17. Honest limits": 601,
-   "18. Build-lane work breakdown and shape census": 614,
-   "19. Single consolidated `[OPEN — owner-gated]` ledger": 637,
-   "20. Defect-class prevention table": 654,
-   "21. Required build preconditions and non-goals": 665,
-   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 677,
-   "22. v1.5 input-embedding addendum": 685,
-   "22.1 Classification and canonical input envelope": 693,
-   "22.2 Shared mechanical bindings": 734,
-   "22.3 Shared synthetic record bindings": 756,
-   "22.4 Per-scenario LEGACY embeddings: RULE2-01 through RULE2-03": 849,
-   "22.5 Per-scenario LEGACY embeddings: RULE2-04 through RULE2-06": 866,
-   "22.6 Per-scenario LEGACY embeddings: RULE2-07 and RULE2-08": 891,
-   "22.7 RULE2-01-GREEN NaN wire contract": 905,
-   "22.8 Honest `[OPEN-EMBED]` refusals": 927,
-   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 941,
-   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 978,
-   "23.1 `decision_events` closed shape and reason vocabulary (G76-09 / D-11)": 1002,
-   "23.2 Equity-curve observation-window rule (G76-04 / V15-D02)": 1070,
-   "23.3 Closed `fill_events` and `exit_events` member sets (G76-06 / D-13)": 1089,
-   "23.4 Closed `RESULT_SURFACE`, guards, and refusal objects (G76-05c/07/08 / D-13)": 1131,
-   "23.5 TABLES REVISION SCOPE and expected KERNEL DELTA": 1202,
-   "23.6 v1.8 change log — terminal micro-fold": 1288,
-   "23.7 v1.8 closed enumeration summary": 1312,
-   "23.8 v1.9 change log - owner addendum 28, decision 67": 1334,
-   "23.9 v1.10 change log - owner addendum 29, decisions 71-72": 1340
+   "10. DEF-P012-04 - gap-aware protective stops; continuous activation owner-gated": 278,
+   "11. DEF-P012-05 - in-path slippage, applied exactly once": 306,
+   "12. DEF-P012-06 - named same-bar collision policy": 334,
+   "Corrected semantic and tie-break table": 340,
+   "13. DEF-P012-07 - provenanced real fee schedule": 363,
+   "14. DEF-P012-08 - per-interval funding and `funding_events`": 404,
+   "15. Bounded Correction Evidence Gate (`BCEG-1`)": 449,
+   "15.1 Producers": 453,
+   "15.2 Scenario enumeration": 464,
+   "15.3 Two comparison surfaces": 501,
+   "15.4 Comparisons and inputs that make them fail": 547,
+   "15.5 Receipt and exact gate claim": 575,
+   "15.6 v1.5 input-embedding computability note": 592,
+   "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 620,
+   "17. Honest limits": 633,
+   "18. Build-lane work breakdown and shape census": 646,
+   "19. Single consolidated `[OPEN — owner-gated]` ledger": 669,
+   "20. Defect-class prevention table": 686,
+   "21. Required build preconditions and non-goals": 697,
+   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 709,
+   "22. v1.5 input-embedding addendum": 717,
+   "22.1 Classification and canonical input envelope": 725,
+   "22.2 Shared mechanical bindings": 766,
+   "22.3 Shared synthetic record bindings": 788,
+   "22.4 Per-scenario LEGACY embeddings: RULE2-01 through RULE2-03": 881,
+   "22.5 Per-scenario LEGACY embeddings: RULE2-04 through RULE2-06": 898,
+   "22.6 Per-scenario LEGACY embeddings: RULE2-07 and RULE2-08": 923,
+   "22.7 RULE2-01-GREEN NaN wire contract": 937,
+   "22.8 Honest `[OPEN-EMBED]` refusals": 959,
+   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 973,
+   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1010,
+   "23.1 `decision_events` closed shape and reason vocabulary (G76-09 / D-11)": 1034,
+   "23.2 Equity-curve observation-window rule (G76-04 / V15-D02)": 1102,
+   "23.3 Closed `fill_events` and `exit_events` member sets (G76-06 / D-13)": 1121,
+   "23.4 Closed `RESULT_SURFACE`, guards, and refusal objects (G76-05c/07/08 / D-13)": 1163,
+   "23.5 TABLES REVISION SCOPE and expected KERNEL DELTA": 1234,
+   "23.6 v1.8 change log — terminal micro-fold": 1328,
+   "23.7 v1.8 closed enumeration summary": 1352,
+   "23.8 v1.9 change log - owner addendum 28, decision 67": 1374,
+   "23.9 v1.10 change log - owner addendum 29, decisions 71-72": 1380,
+   "23.10 v1.11 change log - probe first-changed-node rule (AMENDMENT-CHOICE, W261)": 1394
+  },
+  "superseded_pin_v1_10_at_reseal8": {
+   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+   "version": "v1.10 (owner addendum 29 decisions 71-72 applied by W243; measured by re-seal #8)",
+   "sha256": "8086c2c66f2af8f0df7074105f476e9754a72e966353ee2a2ccc734d7651879c",
+   "total_lines": 1352,
+   "line_span_used": "whole file",
+   "heading_line_map_measured_at_reseal8": {
+    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
+    "Prior versions": 18,
+    "1. Authority, claim, and design posture": 24,
+    "2. Deep module and seam": 35,
+    "2.1 Interface": 55,
+    "2.2 Two real adapters": 85,
+    "3. Exact ordering for `2.0.0`": 92,
+    "4. Versioning and addressability": 115,
+    "5. Immutable economic records and provenance": 129,
+    "5.1 Record byte identity": 133,
+    "5.2 `InstrumentRecord`": 148,
+    "5.3 `CostSchedule`": 154,
+    "5.4 `FundingSchedule`": 158,
+    "6. Defect record contract": 162,
+    "7. DEF-P012-01 - contract multiplier in sizing": 190,
+    "Legacy behavior": 400,
+    "Corrected semantic": 404,
+    "RULE 2 and expected delta": 435,
+    "8. DEF-P012-02 - real minimum-notional admission": 229,
+    "9. DEF-P012-03 - frozen instrument metadata": 254,
+    "10. DEF-P012-04 - gap-aware protective stops; continuous activation owner-gated": 272,
+    "11. DEF-P012-05 - in-path slippage, applied exactly once": 300,
+    "12. DEF-P012-06 - named same-bar collision policy": 328,
+    "Corrected semantic and tie-break table": 334,
+    "13. DEF-P012-07 - provenanced real fee schedule": 357,
+    "14. DEF-P012-08 - per-interval funding and `funding_events`": 398,
+    "15. Bounded Correction Evidence Gate (`BCEG-1`)": 443,
+    "15.1 Producers": 447,
+    "15.2 Scenario enumeration": 458,
+    "15.3 Two comparison surfaces": 477,
+    "15.4 Comparisons and inputs that make them fail": 523,
+    "15.5 Receipt and exact gate claim": 546,
+    "15.6 v1.5 input-embedding computability note": 560,
+    "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 588,
+    "17. Honest limits": 601,
+    "18. Build-lane work breakdown and shape census": 614,
+    "19. Single consolidated `[OPEN — owner-gated]` ledger": 637,
+    "20. Defect-class prevention table": 654,
+    "21. Required build preconditions and non-goals": 665,
+    "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 677,
+    "22. v1.5 input-embedding addendum": 685,
+    "22.1 Classification and canonical input envelope": 693,
+    "22.2 Shared mechanical bindings": 734,
+    "22.3 Shared synthetic record bindings": 756,
+    "22.4 Per-scenario LEGACY embeddings: RULE2-01 through RULE2-03": 849,
+    "22.5 Per-scenario LEGACY embeddings: RULE2-04 through RULE2-06": 866,
+    "22.6 Per-scenario LEGACY embeddings: RULE2-07 and RULE2-08": 891,
+    "22.7 RULE2-01-GREEN NaN wire contract": 905,
+    "22.8 Honest `[OPEN-EMBED]` refusals": 927,
+    "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 941,
+    "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 978,
+    "23.1 `decision_events` closed shape and reason vocabulary (G76-09 / D-11)": 1002,
+    "23.2 Equity-curve observation-window rule (G76-04 / V15-D02)": 1070,
+    "23.3 Closed `fill_events` and `exit_events` member sets (G76-06 / D-13)": 1089,
+    "23.4 Closed `RESULT_SURFACE`, guards, and refusal objects (G76-05c/07/08 / D-13)": 1131,
+    "23.5 TABLES REVISION SCOPE and expected KERNEL DELTA": 1202,
+    "23.6 v1.8 change log — terminal micro-fold": 1288,
+    "23.7 v1.8 closed enumeration summary": 1312,
+    "23.8 v1.9 change log - owner addendum 28, decision 67": 1334,
+    "23.9 v1.10 change log - owner addendum 29, decisions 71-72": 1340
+   },
+   "note": "The previous pin was recorded at v1.8 (1273 lines) and was never re-measured at re-seals #5, #6 or #7 although the design moved to v1.9 (W185). Its line_spans_by_section were already wrong at v1.9. Kept verbatim under superseded_pin_recorded_at_v1_8; the measured heading map above is the current reference."
   },
   "superseded_pin_recorded_at_v1_8": {
    "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
@@ -123,8 +194,7 @@
     "23.6 v1.8 change log": "1229-1251",
     "23.7 v1.8 closed enumeration summary": "1253-1273"
    }
-  },
-  "note": "The previous pin was recorded at v1.8 (1273 lines) and was never re-measured at re-seals #5, #6 or #7 although the design moved to v1.9 (W185). Its line_spans_by_section were already wrong at v1.9. Kept verbatim under superseded_pin_recorded_at_v1_8; the measured heading map above is the current reference."
+  }
  },
  "repository_evidence_identity": {
   "worktree": "C:\\WFMERGE54",
@@ -143,13 +213,13 @@
  "files": [
   {
    "path": "DERIVATIONS.md",
-   "sha256": "a8440a1250fed65e77ed760a0ab16db889592e737a731d12aa823f65fcc4ad50",
-   "bytes": 260783
+   "sha256": "73bce8e91a8c0a2b44dbc8bf6b766882f56d635d6f083826e74b37a7715897f3",
+   "bytes": 277385
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "f8e788d808f26c427eaefdd3f521998b0fdcea57a469792792abab260efea603",
-   "bytes": 40893
+   "sha256": "941da56a0377c77bd10d03f5ecba899714e36fdef6c1e97e68bd240519ea6de9",
+   "bytes": 46256
   },
   {
    "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
@@ -537,12 +607,74 @@
    "derivations_prior_bytes_preserved_as_prefix": false,
    "economic_values_moved": "none - measured leaf-by-leaf against the 10:09 snapshot by this act",
    "independently_verified": "GM75 (Gemini, third family, read-only packet) - C:/tmp/LANE_PROMPTS_20260828/DETECT_GM75_ADDENDUM29.md - 'Verdict A (design): CLEAN / Verdict B (goldens): CLEAN'; measured 1 differing line per golden, 0 numeric leaves changed value on those lines, 0 deleted lines in DERIVATIONS diff, 2 changed + 37 added lines in the design diff; it did NOT measure the full-tree leaf count - this act does."
+  },
+  {
+   "revision": "W262 PROBE rows under v1.11 + Lead probe digest pins, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W262_PROBE_ROWS_REDERIVE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W262_PROBE_ROWS_REPORT.md",
+   "design_amendment": {
+    "lane": "W261",
+    "version": "v1.11"
+   },
+   "probe_digest_pins": {
+    "PROBE-P012-01-A": {
+     "modified_copy_digest": "0f956819c8b5d2a3a9c1776420f117b050b662fb1ff0aa1f63d819a382b84aca",
+     "modification_manifest_digest": "50fc3ce1da1ca51feafc44dcd3c537e31d5547eec8c6f854f7260f80f8b8c4c8",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-01-B": {
+     "modified_copy_digest": "e5fc81ec6bac4b93e490ffc538586a253423003f2cd3930331b67e61a5d82f08",
+     "modification_manifest_digest": "8686e9c8f5a8af557f9ecae1b0cf6ba81e6b0af9ee50af303f5ea48c4efef07a",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-02-A": {
+     "modified_copy_digest": "34e963a8b75209f7a8ab77aeb3d3834251f1bc6847cc2875ec6ba36275e3df25",
+     "modification_manifest_digest": "80a66bec7ea77b64897820c4a429e687a2c20e2b90c4860c34ac01ad98de5d5e",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-03-A": {
+     "modified_copy_digest": "35193efcfc568ec582e430b0acdc35fa4bcc3e7866313ad9f4798fd2e4e0d304",
+     "modification_manifest_digest": "d2ec9000ed503947e4b86893b2a9b0cc258c765cecfb5b638a99840cb9dd1ebe",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-04-A": {
+     "modified_copy_digest": "d6082460482da78706d50b3c52176f0bba8fadbc1492456b721178daa84196f8",
+     "modification_manifest_digest": "e2c09190b4e32c0f9605d5cc54ad26957b5292e9e8cef49d097070e85892b5dc",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-05-A": {
+     "modified_copy_digest": "1336f129f33de9ea1c4866fce91077e8a55e03e30266e56e9ca20dc5b178ed54",
+     "modification_manifest_digest": "7862007188811445a3a7df11063e36dd5048f924c1af9259e246afd0256ae494",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-05-B": {
+     "modified_copy_digest": "b06895e2543d4f768563d618fe99669f788a1fbaddf317d81d5553c84f71900b",
+     "modification_manifest_digest": "4bd13c499516a61c12313da4fdaba2c122b37782911893f0a81fcb0ee794d67e",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-06-A": {
+     "modified_copy_digest": "ad1ec938b0654ba58bc8bc90e9fad1a9781a2070b7f3951794181deb7fb6450c",
+     "modification_manifest_digest": "427b29ce60b21ce0a261f35c468392b050d38366b3c986c676adeea43f8e13d7",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-07-A": {
+     "modified_copy_digest": "dbef7fad26afb8c40beb049770bf867f4a492cb10025a629341eb3fef1b1b1bb",
+     "modification_manifest_digest": "f9897b826a9657e3937bcb794a0d59df0c6021a4e729edad3e3608f6f7c34914",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-08-A": {
+     "modified_copy_digest": "f97ce0655b57fee069a161b6584534e299d19253eac4c56aa5da0197f03a62c6",
+     "modification_manifest_digest": "e466e79458bcc5368b2f9c2ecb0b314bc0825f71638d39327a1842031f446a9f",
+     "method": "recomputed == W256"
+    }
+   },
+   "independently_verified": "design v1.11: DS93 (OpenCode) CLEAN, ENGINEERING classification CONFIRMED, rule strictly superset on the node dimension - C:/tmp/LANE_PROMPTS_20260828/DETECT_DS93_V111.md; W262 probe rows: GM77 (Gemini) CLEAN, 31 changed pointers all inside the ten PROBE rows, RED/GREEN rows byte-identical, DERIVATIONS insertion-only - C:/tmp/LANE_PROMPTS_20260828/DETECT_GM77_W262.md; probe digests: Lead recomputation from worktree bytes == W256 table == committed modified_tree_manifest.json, 10/10"
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+  "EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "reason": "Sealed by the Lead at re-seal #8 after owner addendum 29 (2026-09-02): decision 71 closes the lifecycle trade-row member set (exit_ids list, no exit_fill_price), decision 72 orders the all-touched exit receipt stop-first then declared targets, decision 73 authorises the four golden re-derivations, design v1.10, this seal and one gate rerun. This act measured that exactly RULE2-04-RED, RULE2-07-RED, RULE2-06-RED, RULE2-06-EQUAL-PRICE-RED and DERIVATIONS.md moved, that no numeric leaf moved in any of the four, that every trade row in the bundle now has the seven ruled members, that every receipt is stop-first, and that the catalog, anchor inputs and the other thirteen goldens are byte-identical to seal #7; the catalog moved only at the four ruled digest pins. The design pin is re-measured at v1.10. The canonical gate's BASELINE_SEAL_IDENTITY_MISMATCH refusal remains the owner's Q3 and is not cleared by this act."
+  "reason": "Sealed by the Lead at re-seal #10: ten PROBE rows re-derived by the tables family under design v1.11 (W262) and the ten probe artifact digest pairs pinned two-party (W256 table == Lead recomputation from worktree bytes). Catalog and DERIVATIONS.md are the only files[] members that moved; all 17 goldens and inputs byte-identical to seal #8. Design pin re-measured at v1.11. Verified: design v1.11: DS93 (OpenCode) CLEAN, ENGINEERING classification CONFIRMED, rule strictly superset on the node dimension - C:/tmp/LANE_PROMPTS_20260828/DETECT_DS93_V111.md; W262 probe rows: GM77 (Gemini) CLEAN, 31 changed pointers all inside the ten PROBE rows, RED/GREEN rows byte-identical, DERIVATIONS insertion-only - C:/tmp/LANE_PROMPTS_20260828/DETECT_GM77_W262.md; probe digests: Lead recomputation from worktree bytes == W256 table == committed modified_tree_manifest.json, 10/10"
  },
  "section_16_review": {
   "status": "PENDING",
@@ -551,9 +683,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+  "EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "set_by": "Lead re-seal act #9 2026-09-02T12:37:46+03:00 (pin only; files[] and EXPECTED_SEAL_SHA unchanged from re-seal #8)"
+  "set_by": "Lead re-seal act #10 2026-09-02T14:13:22+03:00"
  },
  "reseal_history": [
   {
@@ -785,6 +917,30 @@
    "files_changed": [],
    "manifest_member_added": "legacy_event_order_map_pin",
    "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+   "everything_else_verified_byte_identical": true
+  },
+  {
+   "at": "2026-09-02T14:13:22+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #10",
+   "old_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "new_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "scenario_catalog.json"
+   ],
+   "probe_rows_pinned": [
+    "PROBE-P012-01-A",
+    "PROBE-P012-01-B",
+    "PROBE-P012-02-A",
+    "PROBE-P012-03-A",
+    "PROBE-P012-04-A",
+    "PROBE-P012-05-A",
+    "PROBE-P012-05-B",
+    "PROBE-P012-06-A",
+    "PROBE-P012-07-A",
+    "PROBE-P012-08-A"
+   ],
+   "design_pin": "v1.11",
    "everything_else_verified_byte_identical": true
   }
  ],

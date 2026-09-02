@@ -1024,6 +1024,19 @@ UTF-8-byte-order object walk, that is recorded rather than silently substituted 
 | PROBE-P012-07-A | RULE2-07-RED | KERNEL | corrected expectation | `/EVENT_SURFACE/fee_events/1/liquidity_role` | the vector states no maker rate, so whether `fee_amount`/`fee_cash_delta`/`cash_events/1/signed_delta` also change is underivable; if they do, `cash_events` sorts before `fee_events` (**D-16**) |
 | PROBE-P012-08-A | RULE2-08-RED | KERNEL | corrected expectation | `/EVENT_SURFACE/funding_events/0/funding_cash_delta` | expected −0.1 vs variant +0.1; `cash_events/0/signed_delta` carries the same flip and sorts earlier, so the catalog records it as the first changed node |
 
+**PREAMBLE AND TABLE SUPERSEDED BY LANE W262 under design v1.11 `:481-493` (amendment-choice W261);
+marker added by lane W262 under W262-R01.** The preamble above says a *different* earlier-enumerated
+node "is recorded rather than silently substituted (**D-14**)", and for `PROBE-P012-06-A`,
+`PROBE-P012-07-A` and `PROBE-P012-08-A` the catalog carried that earlier node instead of the
+Design-named node this table lists. Design v1.11 `:481-493` supersedes the strict first-node equality:
+the catalog's `expected_first_changed_node` is now the design-named target node, which need only be a
+member of the complete changed-node set, and the comparator's traversal-order first node is recorded
+separately as `comparator_first_differing_node`. `PROBE-P012-03-A`'s `BLOCKED-MISSING-RECORD-BYTES`
+cell is superseded by design v1.11 `:272-276`, which names the mutated record path. The per-row
+before/after values, the rule quoted in full and the measured comparator nodes are in the W262 section
+appended at the end of this worksheet. **NO ECONOMIC VALUE MOVED BY THIS MARKER** - the preamble and
+table above are left exactly as their lanes wrote them.
+
 Modified-copy trees, modification manifests, their digests, and every serialized scenario-input digest
 are `BLOCKED-BUILD-ARTIFACT` (**D-10**): design `:459-465` requires a complete kernel variant tree
 plus a `KERNEL_FILE_PATCH` with before/after file digests, and no corrected kernel source exists
@@ -1087,10 +1100,26 @@ not silently resolved (clause C-2; lane W127 line 54).
   and therefore every "first changed node" — depend on them.
 - **D-14** Consequence of D-13: for four probes the design's named refusal node is not necessarily the
   first node the enumerator reaches. Recorded per probe in §10 and in each catalog row's `note`.
+
+  **DISCREPANCY CLOSED BY LANE W262 under design v1.11 `:481-493` (amendment-choice W261); marker
+  added by lane W262 under W262-R01.** The design no longer requires the named node to be the first
+  node the enumerator reaches: it must only be a member of the complete changed-node set, and the
+  comparator's traversal-order first node is recorded beside it in each catalog row as
+  `comparator_first_differing_node`. **D-14** is therefore closed as a derivation ambiguity. The
+  bullet above is left exactly as lane W127b wrote it.
 - **D-15** `PROBE-P012-03-A` refuses before any scenario output exists, so it has no
   comparison-surface node to name. Its `expected_first_changed_node` is recorded as
   `BLOCKED-MISSING-RECORD-BYTES` — the changed artifact is the frozen record file, whose bytes and
   detached `.sha256` the design never lists.
+
+  **DISCREPANCY CLOSED BY LANE W262 under design v1.11 `:272-276` (amendment-choice W261); marker
+  added by lane W262 under W262-R01.** The record bytes now exist, and design v1.11 `:272-276` names
+  this probe's node as the mutated record path
+  `core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json`, "not a placeholder";
+  design v1.11 `:485-486` makes that mutated record path the path member of the difference set for a
+  record-identity refusal before scenario output. The catalog field no longer reads
+  `BLOCKED-MISSING-RECORD-BYTES`. **D-15** is closed for that field; the bullet above is left exactly
+  as lane W127b wrote it.
 - **D-16** `PROBE-P012-07-A` reclassifies a taker exit as maker, but the RULE2-07 vector states no
   maker rate, so whether the fee amount and the joined cash delta also change is underivable. Only
   the role node is certain to differ.
@@ -3771,3 +3800,173 @@ state destroys the record of what was believed when." No fifth golden needs to m
   lands where it did; a citation in `:3554-:3591` now sits 12 lines lower, and one at `:3592` or
   below sits 22 lines lower. This is the same class W224 recorded as W224-D01 and is recorded, not
   repaired.
+
+## W262 re-derivation of the ten PROBE rows under design v1.11 (amendment-choice W261)
+
+This section is written by the tables family under design **v1.11** section 23.5 item 12
+(`C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md:1287-1294`), which assigns exactly these ten
+rows to this family, and under the amendment-choice recorded by lane W261
+(`C:\tmp\LANE_PROMPTS_20260828\W261_PROBE_NODE_RULE_REPORT.md:1-16`). The lane is
+`C:\tmp\LANE_PROMPTS_20260828\LANE_W262_PROBE_ROWS_REDERIVE.md`, standing clauses C-1..C-7
+(`C:\tmp\LANE_PROMPTS_20260828\N_COMMON_CLAUSES.md`).
+
+**No economic value moved anywhere in this pass**: no price, quantity, fee, funding amount, PnL,
+equity figure, digest or metric differs from the pre-pass bytes. Two files changed:
+`scenario_catalog.json` (the ten `role: PROBE` rows only) and this worksheet (insertion-only).
+
+### W262-1 The rule, quoted
+
+Design v1.11 `:481-493`, inserted by lane W261 into section 15.2 step 6, quoted in full:
+
+> **AMENDMENT-CHOICE (W261):** In step 6, the prior equality phrase is superseded by this exact rule.
+> A probe is `DETECTED` only when the real top-level gate refuses before an accepting receipt, the
+> observed failed check id equals the row's `expected_failed_check`, and the row's
+> `expected_first_changed_node` is in the complete set of nodes/paths at which the corrected output
+> differs from the sealed expected artifact. For a record-identity refusal before scenario output, the
+> mutated record path is the path member of that difference set. The receipt records the catalog
+> target as `expected_first_changed_node` and, beside it, the comparator's own first differing node as
+> `comparator_first_differing_node`. The latter is the first unequal node emitted by the section-15.3
+> recursive walk: emit the current node first, then visit object children by UTF-8 byte-sorted key and
+> array children by ascending index, applying the same order recursively. These two nodes may differ.
+> The design names the node a modification targets; the comparator's traversal order is an
+> implementation fact the design did not state. Requiring the targeted node to be a changed node
+> preserves the design's intent and the exact-match discipline without binding it to key order.
+
+Three consequences are taken from that text and nothing else is read into it.
+
+1. `expected_first_changed_node` is **the catalog target — the node the design names a modification
+   targets** — and it must be a member of the complete changed-node/path set. It is no longer
+   required to be the enumerator's first node.
+2. The comparator's traversal-order first node is a **separate** recorded identity whose exact member
+   name the design gives as `comparator_first_differing_node` (`:487-488`).
+3. For `PROBE-P012-03-A`, a record-identity refusal before scenario output, **the mutated record path
+   is the path member of the difference set** (`:485-486`).
+
+Design v1.11 `:272-276` names that path for `PROBE-P012-03-A`:
+
+> Now that the record bytes exist, this probe's `expected_first_changed_node` is the record path whose
+> bytes were mutated, `core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json`, not
+> a placeholder.
+
+Design v1.11 `:470-472` authorises the `design_lines` refresh performed in W262-4:
+
+> `design_lines` in a catalog row is a convenience locator only. The authority is the probe id's
+> normative sentence found by text in this design, so the tables family may refresh stale line numbers
+> without a design change.
+
+The comparator values below are **not** derived by this family; they are read as evidence of what the
+comparator does from lane W256's measured ten-probe table
+(`C:\WP012BUILD\W256_PROBES_REPORT.md:171-182`). No kernel, driver, verifier or baseline was executed
+by this lane, no `observed/` path was read, and `mtc_v2.core` was not imported (design `:456`).
+
+### W262-2 `expected_first_changed_node` — per-row before and after
+
+The "design-named node" column of §10 (`:1016-1025`) and each probe's normative design sentence are
+the authority for the *after* value; the W256 column is the authority for the comparator value.
+
+| Probe | Before | After | Why | Design cite (v1.11) |
+|---|---|---|---|---|
+| `PROBE-P012-01-A` | `/EVENT_SURFACE/fill_events/0/quantity` | `/EVENT_SURFACE/fill_events/0/quantity` — unchanged | already the design-named target; `:481-493` only removes the first-node requirement | `:227` ("must refuse at the quantity node") |
+| `PROBE-P012-01-B` | `/EVENT_SURFACE/fill_events/0/quantity` | `/EVENT_SURFACE/fill_events/0/quantity` — unchanged | already the design-named target | `:227` |
+| `PROBE-P012-02-A` | `/RESULT_SURFACE/admitted` | `/RESULT_SURFACE/admitted` — unchanged | already the design-named target, and the measured comparator node is the same | `:252` ("the admission/refusal projection") |
+| `PROBE-P012-03-A` | `BLOCKED-MISSING-RECORD-BYTES` | `core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json` | the record bytes exist; the mutated record path is the path member of the difference set | `:270` + `:272-276` + `:485-486` |
+| `PROBE-P012-04-A` | `/EVENT_SURFACE/fill_events/0/final_fill_price` | `/EVENT_SURFACE/fill_events/0/final_fill_price` — unchanged | already the design-named target; the three earlier-sorting nodes no longer compete for the field | `:304` ("must refuse at the fill-price node") |
+| `PROBE-P012-05-A` | `/EVENT_SURFACE/fill_events/0/final_fill_price` | `/EVENT_SURFACE/fill_events/0/final_fill_price` — unchanged | already the design-named target | `:332` |
+| `PROBE-P012-05-B` | `/EVENT_SURFACE/fill_events/0/final_fill_price` | `/EVENT_SURFACE/fill_events/0/final_fill_price` — unchanged | already the design-named target, and the measured comparator node is the same | `:332` |
+| `PROBE-P012-06-A` | `/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0` | `/EVENT_SURFACE/fill_events/0/exit_id` | the row carried the earlier-sorting node under D-14; the design names the first *fill* (`TARGET-NEAR` vs `TARGET-FAR`), and §10 `:1023` records `/EVENT_SURFACE/fill_events/0/exit_id` as the design-named node. It is a changed node: the reversal changes it | `:361` + `:481-493` |
+| `PROBE-P012-07-A` | `/EVENT_SURFACE/cash_events/1/signed_delta` | `/EVENT_SURFACE/fee_events/1/liquidity_role` | same class as 06-A: §10 `:1024` records the event-role node as the design-named node, and the catalog row's own note says so. It is a changed node: taker becomes maker | `:402` ("the event-role/rate/fee nodes") + `:481-493` |
+| `PROBE-P012-08-A` | `/EVENT_SURFACE/cash_events/0/signed_delta` | `/EVENT_SURFACE/funding_events/0/funding_cash_delta` | same class: §10 `:1025` and the catalog row's own note record the typed funding projection as the node the design names. It is a changed node: the sign flip changes it | `:447` ("the cash-delta node") + `:481-493` |
+
+Seven of the ten `expected_first_changed_node` values are unchanged. Three moved from an
+enumeration-order node back to the design-named target node the same rows already identified in
+prose, because v1.11 gives the enumeration-order node its own field. One placeholder was replaced.
+
+### W262-3 `comparator_first_differing_node` — the member added, with its measured value
+
+Each value below is the "Measured node" cell of the W256 ten-probe run at the cited line. This family
+measured nothing; it copied the measurement and cites it.
+
+| Probe | `comparator_first_differing_node` (new member) | W256 cite | W256 status |
+|---|---|---|---|
+| `PROBE-P012-01-A` | `/EVENT_SURFACE/cash_events/0/signed_delta` | `C:\WP012BUILD\W256_PROBES_REPORT.md:173` | NOT_DETECTED under the superseded v1.10 rule |
+| `PROBE-P012-01-B` | `/EVENT_SURFACE/cash_events/0/signed_delta` | `C:\WP012BUILD\W256_PROBES_REPORT.md:174` | NOT_DETECTED under the superseded v1.10 rule |
+| `PROBE-P012-02-A` | `/RESULT_SURFACE/admitted` | `C:\WP012BUILD\W256_PROBES_REPORT.md:175` | DETECTED |
+| `PROBE-P012-03-A` | `core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json` | `C:\WP012BUILD\W256_PROBES_REPORT.md:176` | NOT_DETECTED under the superseded v1.10 rule |
+| `PROBE-P012-04-A` | `/EVENT_SURFACE/cash_events/0/signed_delta` | `C:\WP012BUILD\W256_PROBES_REPORT.md:177` | NOT_DETECTED under the superseded v1.10 rule |
+| `PROBE-P012-05-A` | `/EVENT_SURFACE/cash_events/0/signed_delta` | `C:\WP012BUILD\W256_PROBES_REPORT.md:178` | NOT_DETECTED under the superseded v1.10 rule |
+| `PROBE-P012-05-B` | `/EVENT_SURFACE/fill_events/0/final_fill_price` | `C:\WP012BUILD\W256_PROBES_REPORT.md:179` | DETECTED |
+| `PROBE-P012-06-A` | `/EVENT_SURFACE/cash_events/0/signed_delta` | `C:\WP012BUILD\W256_PROBES_REPORT.md:180` | NOT_DETECTED under the superseded v1.10 rule |
+| `PROBE-P012-07-A` | `/EVENT_SURFACE/cash_events/1/signed_delta` | `C:\WP012BUILD\W256_PROBES_REPORT.md:181` | DETECTED |
+| `PROBE-P012-08-A` | `/EVENT_SURFACE/cash_events/0/signed_delta` | `C:\WP012BUILD\W256_PROBES_REPORT.md:182` | DETECTED |
+
+W256 also records why five of these are `cash_events/0/signed_delta`: the comparison walks object keys
+in UTF-8 order, so `cash_events` precedes `decision_events`, `fee_events`, `fill_events` and
+`funding_events` (`C:\WP012BUILD\W256_PROBES_REPORT.md:184`). That is exactly the traversal order
+design `:487-490` now states.
+
+### W262-4 `design_lines` — per-row before and after, re-measured against v1.11
+
+Each probe's normative sentence was found **by text** in v1.11 and its current line written, as
+`:470-472` permits. The sentences are the eight `Fail probe`/`Fail probes` sentences of sections 7-14
+(`C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md:227,252,270,304,332,361,402,447`).
+
+| Probe | Before | After | Sentence found by text at |
+|---|---|---|---|
+| `PROBE-P012-01-A` | `220` | `227` | "`PROBE-P012-01-A` replaces the corrected multiplier with `1` …" |
+| `PROBE-P012-01-B` | `220` | `227` | "`PROBE-P012-01-B` changes the corrected selector …" (same sentence line) |
+| `PROBE-P012-02-A` | `245` | `252` | "Fail probe `PROBE-P012-02-A`: change the corrected comparison to `>` …" |
+| `PROBE-P012-03-A` | `263` | `270` | "Fail probe `PROBE-P012-03-A`: mutate one record byte …" |
+| `PROBE-P012-04-A` | `291` | `304` | "Fail probe `PROBE-P012-04-A`: return stop `100` rather than open `90` …" |
+| `PROBE-P012-05-A` | `319` | `332` | "Fail probes: `PROBE-P012-05-A` omits the application …" |
+| `PROBE-P012-05-B` | `319` | `332` | "… and `PROBE-P012-05-B` applies it twice …" (same sentence line) |
+| `PROBE-P012-06-A` | `347` | `361` | "Fail probe `PROBE-P012-06-A` binds exactly once …" |
+| `PROBE-P012-07-A` | `388` | `402` | "Fail probe `PROBE-P012-07-A`: classify one declared taker exit as maker." |
+| `PROBE-P012-08-A` | `433` | `447` | "Fail probe `PROBE-P012-08-A`: flip the sign for the long positive-rate event." |
+
+The v1.10 sentence lines W256 recorded
+(`C:\WP012BUILD\W256_PROBES_REPORT.md:251`) were `227,252,270,298,326,355,396,441`; W261's
+insertion at design `:272-276` moved every sentence after section 9 down by six lines, which is
+exactly the difference between those and the values written here.
+
+### W262-5 Notes — what was appended and what was retained
+
+Every original `note` string is retained verbatim; text was only appended to the end of it.
+
+- `PROBE-P012-01-A`, `PROBE-P012-04-A`, `PROBE-P012-06-A` — the three notes that recorded the **D-14**
+  ordering ambiguity. Each gains one sentence saying v1.11 closed it and how: `:481-493` requires only
+  membership in the changed-node set and records the comparator node separately.
+- `PROBE-P012-03-A` — one sentence recording that the record bytes now exist, that `:272-276` names
+  the real record path, and that **D-15** is closed for that field.
+- `PROBE-P012-07-A`, `PROBE-P012-08-A` — one sentence each recording the re-derivation of the field to
+  the design-named node and the comparator node beside it.
+- `PROBE-P012-05-A` — one sentence. Its note claimed `final_fill_price` "is the first changed node";
+  that is true only within the fill row, and W256 measured `cash_events/0/signed_delta` first. The
+  claim is superseded, not deleted.
+- `PROBE-P012-01-B`, `PROBE-P012-02-A`, `PROBE-P012-05-B` — notes untouched. They record no ordering
+  claim that v1.11 changes.
+
+### W262-6 What this lane did not do
+
+- No `modified_copy_digest` or `modification_manifest_digest` was touched. All twenty remain
+  `BLOCKED-BUILD-ARTIFACT`, the honest marker. W256 measured the real digest pairs
+  (`C:\WP012BUILD\W256_PROBES_REPORT.md:110-120`); pinning them is the Lead's two-party act at
+  re-seal #10.
+- No `RED`/`GREEN` catalog row, no golden artifact, no `CONTRACT_TABLES_MANIFEST.json`, no
+  `IMPLEMENTATION_ANCHOR_DRAFT.json` and no numeric content anywhere in this worksheet was edited.
+- **STALE PINS, two of them.** `CONTRACT_TABLES_MANIFEST.json:150-152` pins `scenario_catalog.json` at
+  `f8e788d808f26c42…` / 40893 bytes and `:145-147` pins `DERIVATIONS.md` at `a8440a1250fed65e…` /
+  260783 bytes. Both files now differ. Re-pinning and re-seal #10 are the Lead's acts under design
+  `:1171-1172`, as at re-seals #2, #3, #4, #8 and #9.
+- No kernel read or run, no `observed/` read, no verifier, driver or baseline executed, no
+  `mtc_v2.core` import, no repository write outside this bundle. The measured probe nodes were read
+  from lane W256's committed report only.
+- No design edit. v1.11 is W261's act; this lane derived from its text.
+- **W262-D01** — the line-number consequence, measured by diff against
+  `C:\tmp\SNAPSHOTS\20260902_1400_preW262\DERIVATIONS.md`. This pass is insertion-only: **0 lines
+  deleted or rewritten**. It inserted a 13-line marker block after pre-pass line `:1026`
+  (hunk `1026a1027,1039`), a 7-line marker block after `:1089` (hunk `1089a1103,1109`), a 9-line
+  marker block after `:1093` (hunk `1093a1114,1122`), and appended this section after the pre-pass
+  last line `:3773`. A citation into this worksheet at or above `:1026` still lands where it did; one
+  in `:1027-1089` sits 13 lines lower; one in `:1090-1093` sits 20 lines lower; one at `:1094` or
+  below sits 29 lines lower. This is the class W224 recorded as W224-D01 and W244 as W244-D01, and is
+  recorded, not repaired.

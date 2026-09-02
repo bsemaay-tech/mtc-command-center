@@ -743,13 +743,14 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-01-A/kernel/",
-  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modified_copy_digest": "0f956819c8b5d2a3a9c1776420f117b050b662fb1ff0aa1f63d819a382b84aca",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-01-A/modification_manifest.json",
-  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_digest": "50fc3ce1da1ca51feafc44dcd3c537e31d5547eec8c6f854f7260f80f8b8c4c8",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
-  "note": "Design 7:220 - the variant replaces the corrected multiplier with 1 after record validation; the corrected expected producer remains at quantity 5, so the check must refuse at the quantity node. AMBIGUITY RECORDED (discrepancy D-14): if the variant also rewrites /EVENT_SURFACE/decision_events/1/contract_multiplier, that node precedes fill_events in UTF-8 key order (decision_events < fill_events) and would be the first changed node instead. The design names the quantity node; this catalog records the design's node and flags the ordering risk.",
-  "design_lines": "220"
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design 7:220 - the variant replaces the corrected multiplier with 1 after record validation; the corrected expected producer remains at quantity 5, so the check must refuse at the quantity node. AMBIGUITY RECORDED (discrepancy D-14): if the variant also rewrites /EVENT_SURFACE/decision_events/1/contract_multiplier, that node precedes fill_events in UTF-8 key order (decision_events < fill_events) and would be the first changed node instead. The design names the quantity node; this catalog records the design's node and flags the ordering risk. D-14 CLOSED AT DESIGN v1.11 (amendment-choice W261): design 15.2:481-493 supersedes strict first-node equality and requires only that expected_first_changed_node be a member of the complete changed-node set while the comparator's traversal-order first node is recorded separately, so an earlier-sorting node no longer competes for this field; W256 measured that comparator node as /EVENT_SURFACE/cash_events/0/signed_delta (W256_PROBES_REPORT.md:173) and it is recorded above as comparator_first_differing_node.",
+  "design_lines": "227"
  },
  {
   "scenario_id": "PROBE-P012-01-B",
@@ -763,13 +764,14 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-01-B/kernel/",
-  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modified_copy_digest": "e5fc81ec6bac4b93e490ffc538586a253423003f2cd3930331b67e61a5d82f08",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-01-B/modification_manifest.json",
-  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_digest": "8686e9c8f5a8af557f9ecae1b0cf6ba81e6b0af9ee50af303f5ea48c4efef07a",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
   "note": "Design 7:220 - the variant makes a supplied binary64 NaN stop return zero quantity; RULE2-01-GREEN still expects fallback quantity 1, so the check must refuse at the quantity node (expected 1, variant 0).",
-  "design_lines": "220"
+  "design_lines": "227"
  },
  {
   "scenario_id": "PROBE-P012-02-A",
@@ -783,13 +785,14 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-02-A/kernel/",
-  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modified_copy_digest": "34e963a8b75209f7a8ab77aeb3d3834251f1bc6847cc2875ec6ba36275e3df25",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-02-A/modification_manifest.json",
-  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_digest": "80a66bec7ea77b64897820c4a429e687a2c20e2b90c4860c34ac01ad98de5d5e",
   "expected_failed_check": "RULE2_GREEN_CROSS_VERSION_EXPECTATION",
   "expected_first_changed_node": "/RESULT_SURFACE/admitted",
+  "comparator_first_differing_node": "/RESULT_SURFACE/admitted",
   "note": "Design 8:245 - the variant changes the corrected comparison to > so equality refuses; the RULE-2-GREEN cross-version check must refuse on the admission/refusal projection for RULE2-02-GREEN. Under the variant the corrected side resolves REFUSAL(REFUSED_MIN_NOTIONAL) while the legacy side resolves PRESENT(B:1) at /RESULT_SURFACE/admitted; design 15.3:510 counts present-versus-refusal as unequal. Scope note: design 15.3:476 makes the cross-version GREEN check compare ONLY the declared shared behavioral projection, so the first changed node is taken within that projection. The variant also changes /EVENT_SURFACE/decision_events/3/decision and empties /EVENT_SURFACE/fill_events, which the separate corrected-expectation check would catch earlier in enumeration order.",
-  "design_lines": "245"
+  "design_lines": "252"
  },
  {
   "scenario_id": "PROBE-P012-03-A",
@@ -803,13 +806,14 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "INPUT",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-03-A/record/",
-  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modified_copy_digest": "35193efcfc568ec582e430b0acdc35fa4bcc3e7866313ad9f4798fd2e4e0d304",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-03-A/modification_manifest.json",
-  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_digest": "d2ec9000ed503947e4b86893b2a9b0cc258c765cecfb5b638a99840cb9dd1ebe",
   "expected_failed_check": "RECORD_IDENTITY_PREFLIGHT",
-  "expected_first_changed_node": "BLOCKED-MISSING-RECORD-BYTES",
-  "note": "Design 9:263 - mutate one record byte without updating the detached digest; the record-identity preflight must refuse before any scenario output exists. Because the refusal precedes scenario output there is no comparison-surface node to name; the first changed artifact is the frozen record file itself. DESIGN v1.5 UPDATE: design 22.3:751-753 now binds the record id SYNTH-INSTRUMENT-RULE2-03-RED-V1 and :764-794 binds every record member value, but 22.1:697-700 fixes only sorted keys, no BOM, LF, final LF, duplicate-key refusal and finite tokens, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer, so the exact record bytes and their detached .sha256 still do not exist. The node therefore stays BLOCKED-MISSING-RECORD-BYTES (discrepancy D-15, extended by V15-D05). The subject producer is KERNEL_2 because design 15.4 assigns the record-identity preflight to KERNEL_1 and KERNEL_2; this probe binds the corrected subject named by DEF-P012-03.",
-  "design_lines": "263"
+  "expected_first_changed_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+  "comparator_first_differing_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+  "note": "Design 9:263 - mutate one record byte without updating the detached digest; the record-identity preflight must refuse before any scenario output exists. Because the refusal precedes scenario output there is no comparison-surface node to name; the first changed artifact is the frozen record file itself. DESIGN v1.5 UPDATE: design 22.3:751-753 now binds the record id SYNTH-INSTRUMENT-RULE2-03-RED-V1 and :764-794 binds every record member value, but 22.1:697-700 fixes only sorted keys, no BOM, LF, final LF, duplicate-key refusal and finite tokens, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer, so the exact record bytes and their detached .sha256 still do not exist. The node therefore stays BLOCKED-MISSING-RECORD-BYTES (discrepancy D-15, extended by V15-D05). The subject producer is KERNEL_2 because design 15.4 assigns the record-identity preflight to KERNEL_1 and KERNEL_2; this probe binds the corrected subject named by DEF-P012-03. RE-DERIVED AT DESIGN v1.11 (amendment-choice W261): design 9:272-276 states that the record bytes now exist and names this probe's expected_first_changed_node as the mutated record path core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json rather than a placeholder, and design 15.2:481-493 makes that mutated record path the path member of the difference set for a record-identity refusal before scenario output; W256 measured the same path (W256_PROBES_REPORT.md:176), so BLOCKED-MISSING-RECORD-BYTES is replaced here and D-15 is closed for this field while the note above is retained as written.",
+  "design_lines": "270"
  },
  {
   "scenario_id": "PROBE-P012-04-A",
@@ -823,13 +827,14 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-04-A/kernel/",
-  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modified_copy_digest": "d6082460482da78706d50b3c52176f0bba8fadbc1492456b721178daa84196f8",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-04-A/modification_manifest.json",
-  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_digest": "e2c09190b4e32c0f9605d5cc54ad26957b5292e9e8cef49d097070e85892b5dc",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
-  "note": "Design 10:291 - the variant returns stop 100 rather than open 90 on RED; the check must refuse at the fill-price node (expected 90, variant 100). AMBIGUITY RECORDED (discrepancy D-14): under this bundle's node layout three other nodes also change and precede final_fill_price in enumeration order - /EVENT_SURFACE/decision_events/1/reference_price and /EVENT_SURFACE/decision_events/1/reference_source (decision_events sorts before fill_events), and /EVENT_SURFACE/fill_events/0/fill_trigger (the key 'fill_trigger' sorts before 'final_fill_price' because byte 3 is 'l' 0x6c versus 'n' 0x6e). This catalog records the design's named node; the layout-dependent earlier nodes are flagged for section-16 review.",
-  "design_lines": "291"
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design 10:291 - the variant returns stop 100 rather than open 90 on RED; the check must refuse at the fill-price node (expected 90, variant 100). AMBIGUITY RECORDED (discrepancy D-14): under this bundle's node layout three other nodes also change and precede final_fill_price in enumeration order - /EVENT_SURFACE/decision_events/1/reference_price and /EVENT_SURFACE/decision_events/1/reference_source (decision_events sorts before fill_events), and /EVENT_SURFACE/fill_events/0/fill_trigger (the key 'fill_trigger' sorts before 'final_fill_price' because byte 3 is 'l' 0x6c versus 'n' 0x6e). This catalog records the design's named node; the layout-dependent earlier nodes are flagged for section-16 review. D-14 CLOSED AT DESIGN v1.11 (amendment-choice W261): design 15.2:481-493 supersedes strict first-node equality and requires only that expected_first_changed_node be a member of the complete changed-node set while the comparator's traversal-order first node is recorded separately, so the three earlier-sorting nodes no longer compete for this field; W256 measured that comparator node as /EVENT_SURFACE/cash_events/0/signed_delta (W256_PROBES_REPORT.md:177) and it is recorded above as comparator_first_differing_node.",
+  "design_lines": "304"
  },
  {
   "scenario_id": "PROBE-P012-05-A",
@@ -843,13 +848,14 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-05-A/kernel/",
-  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modified_copy_digest": "1336f129f33de9ea1c4866fce91077e8a55e03e30266e56e9ca20dc5b178ed54",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-05-A/modification_manifest.json",
-  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_digest": "7862007188811445a3a7df11063e36dd5048f924c1af9259e246afd0256ae494",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
-  "note": "Design 11:319 - the variant omits the slippage application, so the actual fill is 100 against independent corrected expected 101. Within the fill row, UTF-8 key order puts final_fill_price before slippage_impact/slippage_application_count/unrounded_fill_price, so it is the first changed node.",
-  "design_lines": "319"
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design 11:319 - the variant omits the slippage application, so the actual fill is 100 against independent corrected expected 101. Within the fill row, UTF-8 key order puts final_fill_price before slippage_impact/slippage_application_count/unrounded_fill_price, so it is the first changed node. ORDERING CLAIM SUPERSEDED AT DESIGN v1.11 (amendment-choice W261): that sentence is true only within the fill row, and design 15.2:481-493 now records the comparator's traversal-order first node separately; W256 measured it as /EVENT_SURFACE/cash_events/0/signed_delta (W256_PROBES_REPORT.md:178), so final_fill_price is retained here as the design-named target node that is a member of the complete changed-node set.",
+  "design_lines": "332"
  },
  {
   "scenario_id": "PROBE-P012-05-B",
@@ -863,13 +869,14 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-05-B/kernel/",
-  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modified_copy_digest": "b06895e2543d4f768563d618fe99669f788a1fbaddf317d81d5553c84f71900b",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-05-B/modification_manifest.json",
-  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_digest": "4bd13c499516a61c12313da4fdaba2c122b37782911893f0a81fcb0ee794d67e",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+  "comparator_first_differing_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
   "note": "Design 11:319 - the variant applies the slippage twice, so the actual fill is 102 against independent corrected expected 101. Design 11:311 also refuses any second application via slippage_application_count; final_fill_price still precedes slippage_application_count in UTF-8 key order.",
-  "design_lines": "319"
+  "design_lines": "332"
  },
  {
   "scenario_id": "PROBE-P012-06-A",
@@ -883,13 +890,14 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-06-A/kernel/",
-  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modified_copy_digest": "ad1ec938b0654ba58bc8bc90e9fad1a9781a2070b7f3951794181deb7fb6450c",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-06-A/modification_manifest.json",
-  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_digest": "427b29ce60b21ce0a261f35c468392b050d38366b3c986c676adeea43f8e13d7",
   "expected_failed_check": "CORRECTED_EXPECTATION",
-  "expected_first_changed_node": "/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0",
-  "note": "Design 12:347 binds this probe exactly once to base_scenario_id RULE2-06-RED, subject_producer_id KERNEL_2 and target kind KERNEL, and states the refusal is at the first changed event sequence node: expected first fill TARGET-NEAR, modified-kernel first fill TARGET-FAR. In this bundle's node layout the reversed order first shows at /EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0 (decision_events precedes fill_events in UTF-8 key order), then at /EVENT_SURFACE/fill_events/0/exit_id. Both are recorded; the design's named node is /EVENT_SURFACE/fill_events/0/exit_id. Discrepancy D-14.",
-  "design_lines": "347"
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/exit_id",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design 12:347 binds this probe exactly once to base_scenario_id RULE2-06-RED, subject_producer_id KERNEL_2 and target kind KERNEL, and states the refusal is at the first changed event sequence node: expected first fill TARGET-NEAR, modified-kernel first fill TARGET-FAR. In this bundle's node layout the reversed order first shows at /EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0 (decision_events precedes fill_events in UTF-8 key order), then at /EVENT_SURFACE/fill_events/0/exit_id. Both are recorded; the design's named node is /EVENT_SURFACE/fill_events/0/exit_id. Discrepancy D-14. D-14 CLOSED AT DESIGN v1.11 (amendment-choice W261): design 15.2:481-493 supersedes strict first-node equality, so this row now carries the design-named node /EVENT_SURFACE/fill_events/0/exit_id as expected_first_changed_node - a member of the complete changed-node set - while the comparator's traversal-order first node, measured by W256 as /EVENT_SURFACE/cash_events/0/signed_delta (W256_PROBES_REPORT.md:180), is recorded above as comparator_first_differing_node; /EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0, which this row previously carried, remains a changed node and is retained in this note.",
+  "design_lines": "361"
  },
  {
   "scenario_id": "PROBE-P012-07-A",
@@ -903,13 +911,14 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-07-A/kernel/",
-  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modified_copy_digest": "dbef7fad26afb8c40beb049770bf867f4a492cb10025a629341eb3fef1b1b1bb",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-07-A/modification_manifest.json",
-  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_digest": "f9897b826a9657e3937bcb794a0d59df0c6021a4e729edad3e3608f6f7c34914",
   "expected_failed_check": "CORRECTED_EXPECTATION",
-  "expected_first_changed_node": "/EVENT_SURFACE/cash_events/1/signed_delta",
-  "note": "Design 13:388 - the variant classifies one declared taker exit as maker; the check must refuse at the event-role/rate/fee nodes even if a coincidental rounded total is equal. The exit fill is fill index 1, so the projected row is fee_events/1. D-16 RESOLVED AT DESIGN v1.5: design 22.3:799 now binds maker_rate 0.00015 on every section-22 CostSchedule, including RULE2-07, so the maker misclassification is fully derivable. Variant fee_notional 100 times 0.00015 equals 0.015 against the expected taker 100 times 0.001 equals 0.1, so fee_amount, fee_cash_delta and the joined cash row all change. Under the design 15.3:508 UTF-8 byte-order walk cash_events sorts before fee_events, so the first changed node is /EVENT_SURFACE/cash_events/1/signed_delta (expected -0.1, variant -0.015); the design-named event-role node /EVENT_SURFACE/fee_events/1/liquidity_role and /EVENT_SURFACE/fee_events/1/fee_amount also change and are recorded here. This matches the treatment already used for PROBE-P012-08-A.",
-  "design_lines": "388"
+  "expected_first_changed_node": "/EVENT_SURFACE/fee_events/1/liquidity_role",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/1/signed_delta",
+  "note": "Design 13:388 - the variant classifies one declared taker exit as maker; the check must refuse at the event-role/rate/fee nodes even if a coincidental rounded total is equal. The exit fill is fill index 1, so the projected row is fee_events/1. D-16 RESOLVED AT DESIGN v1.5: design 22.3:799 now binds maker_rate 0.00015 on every section-22 CostSchedule, including RULE2-07, so the maker misclassification is fully derivable. Variant fee_notional 100 times 0.00015 equals 0.015 against the expected taker 100 times 0.001 equals 0.1, so fee_amount, fee_cash_delta and the joined cash row all change. Under the design 15.3:508 UTF-8 byte-order walk cash_events sorts before fee_events, so the first changed node is /EVENT_SURFACE/cash_events/1/signed_delta (expected -0.1, variant -0.015); the design-named event-role node /EVENT_SURFACE/fee_events/1/liquidity_role and /EVENT_SURFACE/fee_events/1/fee_amount also change and are recorded here. This matches the treatment already used for PROBE-P012-08-A. RE-DERIVED AT DESIGN v1.11 (amendment-choice W261): design 15.2:481-493 separates the design-named target node from the comparator's traversal-order first node, so expected_first_changed_node now carries the design-named event-role node /EVENT_SURFACE/fee_events/1/liquidity_role, which is a member of the complete changed-node set, and /EVENT_SURFACE/cash_events/1/signed_delta - measured by W256 (W256_PROBES_REPORT.md:181) - is recorded above as comparator_first_differing_node.",
+  "design_lines": "402"
  },
  {
   "scenario_id": "PROBE-P012-08-A",
@@ -923,12 +932,13 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-08-A/kernel/",
-  "modified_copy_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modified_copy_digest": "f97ce0655b57fee069a161b6584534e299d19253eac4c56aa5da0197f03a62c6",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-08-A/modification_manifest.json",
-  "modification_manifest_digest": "BLOCKED-BUILD-ARTIFACT",
+  "modification_manifest_digest": "e466e79458bcc5368b2f9c2ecb0b314bc0825f71638d39327a1842031f446a9f",
   "expected_failed_check": "CORRECTED_EXPECTATION",
-  "expected_first_changed_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
-  "note": "Design 14:433 - the variant flips the sign for the long positive-rate event; the check must refuse at the cash-delta node because independent expected -0.1 differs from actual +0.1. cash_events precedes funding_events in UTF-8 key order, so the joined cash row's signed_delta is the first changed node; /EVENT_SURFACE/funding_events/0/funding_cash_delta is the typed projection the design names.",
-  "design_lines": "433"
+  "expected_first_changed_node": "/EVENT_SURFACE/funding_events/0/funding_cash_delta",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design 14:433 - the variant flips the sign for the long positive-rate event; the check must refuse at the cash-delta node because independent expected -0.1 differs from actual +0.1. cash_events precedes funding_events in UTF-8 key order, so the joined cash row's signed_delta is the first changed node; /EVENT_SURFACE/funding_events/0/funding_cash_delta is the typed projection the design names. RE-DERIVED AT DESIGN v1.11 (amendment-choice W261): design 15.2:481-493 separates the design-named target node from the comparator's traversal-order first node, so expected_first_changed_node now carries the design-named typed projection /EVENT_SURFACE/funding_events/0/funding_cash_delta, which is a member of the complete changed-node set, and /EVENT_SURFACE/cash_events/0/signed_delta - measured by W256 (W256_PROBES_REPORT.md:182) - is recorded above as comparator_first_differing_node.",
+  "design_lines": "447"
  }
 ]
