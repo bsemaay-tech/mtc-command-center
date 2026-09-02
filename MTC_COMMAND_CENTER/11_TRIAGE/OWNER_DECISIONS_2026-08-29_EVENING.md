@@ -662,3 +662,14 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     LEGACY kernel from the master worktree (`C:\WFMERGE54`, core tree `c7f4aa1b`), which the build
     worktree's fix does not touch, so the regeneration is independent of the engine fix and runs in
     parallel. The owner's word stands as given: regenerate against seal #8, one run.
+
+77. **ONE MORE REFERENCE REGENERATION, AGAINST SEAL #10** (owner: "Yes, regenerate against seal
+    #10"). Context: re-seal #10 pinned the ten probe artifact digests and the v1.11 design into the
+    contract tables (only the catalog's PROBE rows and the derivations worksheet moved; every golden
+    and input is byte-identical to seal #8), which moves `EXPECTED_SEAL_SHA` to `d763f62f9a42...`.
+    The reference regenerated under decision 76 consumed seal #8, so the canonical gate refuses on
+    identity again. The Lead did not foresee this when the probe rows were re-derived; recorded as
+    the Lead's miss. The owner authorises ONE run of the legacy baseline driver against seal #10,
+    same inputs and same master-branch legacy kernel as decision 76; the run must prove every
+    scenario surface byte-identical to the seal-#8 archive and may differ only in recorded identity.
+    No skip flag, no manifest hand-edit.
