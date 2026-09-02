@@ -831,3 +831,95 @@ number; row 30's "decision 14" means row 14 (the checklist v1), not ledger decis
 ratifies the family rule already binding (design 15.1, Q3a); row 21 requires an explicit cost line
 with a source, no estimate without one.
 
+## Addendum 32 - 2026-09-02 ~19:5x-20:0x REAL (owner amendment replacing rows 1, 6, 9, 13 of addendum 31; owner verbatim "1. confirm 2. launch original")
+
+The owner sent the amendment below at ~19:5x with the rule "Record these as proposed owner
+amendments. Do not change code, start a build, run tests, commit, push, trade, or treat this as
+live-trading permission. Leave every other owner decision unchanged." The Lead recorded it verbatim
+outside the ledger (`C:\tmp\LANE_PROMPTS_20260828\OWNER_AMENDMENT_ROWS_1_6_9_13_2026-09-02.md`),
+restated its reading, and the owner answered "1. confirm" (this entry) and "2. launch original"
+(the fold lanes for P0-20 and P0-21 run first on the addendum-31 text of rows 1, 9, 13, exactly as
+the P0-13 lane already running on row 6; a second fold then layers this amendment on each,
+retain-and-tag, nothing deleted). Decisions 82, 87, 90 and 94 are SUPERSEDED by 127-130 below;
+their text stays in addendum 31 for the record. No other decision changes. Nothing here authorizes
+live trading, a build, or a kernel change.
+
+### Owner's amendment, verbatim
+
+> OWNER DECISION ADDENDUM — replaces only decisions 1, 6, 9, and 13
+>
+> Record these as proposed owner amendments. Do not change code, start a build, run tests, commit, push, trade, or treat this as live-trading permission. Leave every other owner decision unchanged.
+>
+> 1. Risk and leverage
+>
+> Risk per trade and leverage must be adjustable, versioned policy settings.
+>
+> Keep the current settings only as initial research defaults; they are not permanent limits. I may raise or lower risk later through a recorded policy version and a new evidence run.
+>
+> Leverage is permitted only when a strategy explicitly declares its approved maximum leverage. There must be no unrestricted global leverage. The exact leverage cap may differ by strategy type and instrument, but it must be recorded before that strategy can use it.
+>
+> Keep the stop-loss ceiling as a separate decision. Do not automatically derive it from the risk-per-trade percentage.
+>
+> Each strategy sets its own data-freshness limit, no longer than its trading interval.
+>
+> Any change to risk, leverage, or stop-loss settings creates a new policy version and requires fresh relevant evidence. This does not authorize live trading.
+>
+> 6. Selecting and retaining winners
+>
+> Do not choose winners using one score alone. Require all safety and quality checks first, then rank by overall robustness.
+>
+> Keep the best 20 candidates separately for each strategy type—for example, day trading, swing trading, and position trading—so one type does not crowd out another.
+>
+> Keep any tied candidates at the cut-off as well.
+>
+> 9. Minimum trade evidence
+>
+> Do not require the same 30-trade minimum for every strategy type.
+>
+> Keep 30 trades as the starting rule for day-trading strategies. For swing-trading and position-trading strategies, prepare separate minimum-evidence rules that reflect their slower trade frequency.
+>
+> For slower strategies, backtest evidence may carry more weight, but it must pass the full quality, robustness, and data checks. Forward or testnet evidence confirms operational behaviour; it does not need to produce 30 trades before the strategy can be evaluated.
+>
+> Do not label a strategy live-ready from backtest evidence alone. Record each strategy-type rule as a versioned policy and apply it consistently.
+>
+> 13. Forward and testnet evidence
+>
+> Rework the forward-evidence rule by strategy type. Do not require every strategy to wait 8–16 weeks.
+>
+> For day-trading strategies, use a shorter forward-testing period because they generate evidence faster. Require a meaningful number of real forward trades, no unexplained reconciliation problems, and evidence across more than one normal market condition.
+>
+> For swing-trading and position-trading strategies, allow a longer calendar period and place more weight on robust backtest evidence because trades happen less often.
+>
+> Keep internal paper testing and separate exchange-testnet proof as two different requirements; neither replaces the other.
+>
+> No strategy becomes live-ready from a short forward test alone. The final time and trade requirements must be written as separate, versioned rules for day, swing, and position strategies.
+
+### Decisions 127-130 (each = the owner's numbered section above, verbatim authority)
+
+127. **ROW 1 SUPERSEDED (was decision 82): risk and leverage are adjustable, versioned policy
+    settings.** Current 1 % risk / leverage 1.0 = initial research defaults, not permanent limits;
+    leverage only where a strategy explicitly declares a recorded approved maximum (no unrestricted
+    global leverage; cap may differ by strategy type and instrument, recorded before use); stop-loss
+    ceiling stays a SEPARATE decision (still open, decision 82's note stands), never derived from
+    risk-per-trade; per-strategy data-freshness limit no longer than its trading interval
+    (unchanged); any change = new policy version + fresh relevant evidence; not live-trading
+    permission.
+128. **ROW 6 SUPERSEDED (was decision 87): winners are not chosen by one score.** All safety and
+    quality checks first, then rank by overall robustness; keep the best 20 separately per strategy
+    TYPE (e.g. day, swing, position) so no type crowds another out; keep ties at the cut-off.
+129. **ROW 9 SUPERSEDED (was decision 90): minimum trade evidence differs by strategy type.** 30
+    trades stays the starting rule for day-trading strategies; swing and position strategies get
+    separate minimum-evidence rules reflecting slower trade frequency (values not given: folds write
+    OWNER-ANSWERED-SHAPE, VALUE PENDING); for slower strategies backtest evidence may carry more
+    weight but must pass the full quality, robustness and data checks; forward/testnet evidence
+    confirms operational behaviour and need not produce 30 trades before evaluation; no strategy is
+    labelled live-ready from backtest alone; each strategy-type rule is a versioned policy applied
+    consistently.
+130. **ROW 13 SUPERSEDED (was decision 94): forward and testnet evidence rules are per strategy
+    type.** Not every strategy waits 8-16 weeks; day-trading: shorter forward period, a meaningful
+    number of real forward trades, no unexplained reconciliation problems, evidence across more than
+    one normal market condition; swing/position: longer calendar period, more weight on robust
+    backtest evidence; internal paper testing and separate exchange-testnet proof remain two
+    different requirements, neither replaces the other; no strategy becomes live-ready from a short
+    forward test alone; final time and trade requirements are separate versioned rules for day,
+    swing and position (values not given: VALUE PENDING).
