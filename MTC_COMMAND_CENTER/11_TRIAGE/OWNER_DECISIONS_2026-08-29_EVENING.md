@@ -973,3 +973,27 @@ live trading, a build, or a kernel change.
     exception; no golden byte changes now. The recording mechanism (a provenance exception record
     the gate reads) is harness work for the next harness lane; until then the record stays as an
     expected refusal. The owner may reverse on waking.
+
+## Addendum 36 - 2026-09-03 01:1x REAL (Lead record for the morning; no new owner decision)
+
+- **W304 (decision 133) landed rows 1-6** (order_notional, admitted, guards, PROTECTIVE_STOP, time_stop,
+  collision-policy pass-through; 292 tests; legacy replay 34/34). **Row 7 STOPPED honestly:** the sealed
+  RULE2-08 inputs bind `cost_schedule_id`/`cost_schedule_sha256` to null while ordinary bars build
+  lifecycle state; the kernel refuses the state-building OPEN without a cost record (economics.py:616-626),
+  so no funding cash/decision rows can arise; adding a seed is forbidden by the owner binding that GREEN
+  lifecycle state is built by ordinary bars with nothing injected. **OWNER ITEM M1** (morning).
+- **Design items for the morning (M2):** W279-F18 (numeric node kind value-dependent, design 15.3 binds
+  it); W304-D3 (conditional result members need a sealed declaration of the evaluated projection - the
+  harness transports `owning_def_ids` today); baseline binding to a content digest (decision 132 left it
+  open); V283a discrepancy 1 (no literal runtime-equity accumulation line; derived from :75 + :1107-1108).
+- **Second baseline regeneration under decision 132:** the first probe re-pin (W299) patched the old
+  variant trees instead of fresh copies of the repaired kernel (gate: PROBE_KERNEL_DIFF_INVALID x9); W299B
+  rebuilds them on the final kernel; the seal therefore moves to #13 and the baseline regenerates once
+  more in the same shape. The Lead records this here as within decision 132's authorization (same act,
+  same shape); the owner may object on waking.
+- **Fold verify dispute:** DS111 (DeepSeek flash) claimed two HIGHs on the P0-20 amendment fold (a
+  deleted decision-82 row); measurement shows zero deleted lines and the row byte-identical; the fold
+  stands. Lead sweep: nine owner-quote tags across the drafts changed from curly to the ledger's straight
+  quotation marks (character-exact rule).
+- Routes 01:1x: Codex fourth + secondary capped until 05:43; Codex free live; Claude Pro resets 02:41;
+  MAX unused since 20:1x (decision 131).
