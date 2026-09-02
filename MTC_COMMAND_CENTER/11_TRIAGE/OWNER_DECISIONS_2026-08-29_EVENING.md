@@ -1019,3 +1019,19 @@ live trading, a build, or a kernel change.
 - Kernel and harness work of the night, all with red-then-green, legacy replay 34/34 byte-exact, and a
   non-author-family verification: W283 (7), W283R (5+1 refuted+1 cleared), W283R2 (9+1+1), W283R3 (1 refuted),
   W285 (6 + item 8; F06 moved to W284, F18 design-bound), W284 (6 + F06), W304 (6; row 7 = M1). Tests 292.
+
+## Addendum 38 - 2026-09-03 02:5x REAL (Lead record: detection re-run GM83B and its triage; no new owner decision)
+
+- **GM83B (Gemini, third family, packet at HEAD `8ca003e4`): 8 findings, no BLOCK.** Triage T83B (DeepSeek
+  V4 Pro): F02 REAL MEDIUM (the comparator iterates expected keys only, so an extra observed member escapes
+  outside the closed-set validator's scope), F03 REAL MEDIUM (catalog conservation scans only the expected
+  root, not OBSERVED_ROOT / PROBE_ROOT; design line 478), F04 REAL LOW (dead `LegacyEconomicsAdapter` seam,
+  never invoked), F08 LOW (negative-zero preservation unspecified by the design); F01 already dispositioned
+  (W284 item 2: bounded skip with receipt accounting), F05 = W279-F18 (design-bound, M2), F06 = W304-D3
+  (declaration transport, M2), F07 = W279-F21 fallback (design-bound, M2). Report
+  `C:/tmp/LANE_PROMPTS_20260828/DETECT_GM83B_BRANCH.md`; triage `_packets_T83B/T83B_REPORT.md`.
+- **Disposition:** F02 + F03 + the decision-134 provenance-exception mechanism go to one harness lane
+  (W305, standing build authorization) on the first Codex slot after flagship 1b; F04/F08 record-and-carry
+  into M2. None is a kernel edit.
+- Flagship 2b (W279B, Claude Pro) running since 02:41; flagship 1b (W276B) waits for the Codex reset at
+  05:43 (all three Codex accounts capped at 02:42).
