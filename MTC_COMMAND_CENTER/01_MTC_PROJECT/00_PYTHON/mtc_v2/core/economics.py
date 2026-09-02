@@ -804,13 +804,21 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 chosen = [(stops[0][0], stops[0][1], state.quantity)]
         decisions = list(prefix)
         next_sequence = state.next_decision_sequence + len(decisions)
-        if stop_candidate is not None and state.position_side == "LONG":
-            if market.open <= stop_candidate.price:
+        if stop_candidate is not None:
+            if state.position_side == "LONG":
+                open_beyond_stop = market.open <= stop_candidate.price
+                intrabar_touch = market.low <= stop_candidate.price
+                touch_predicate = "LOW_TOUCH"
+            else:
+                open_beyond_stop = market.open >= stop_candidate.price
+                intrabar_touch = market.high >= stop_candidate.price
+                touch_predicate = "HIGH_TOUCH"
+            if open_beyond_stop:
                 predicate = "OPEN_BEYOND_STOP"
                 reference_source = "BAR_OPEN"
                 reference_price = market.open
-            elif market.low <= stop_candidate.price:
-                predicate = "LOW_TOUCH"
+            elif intrabar_touch:
+                predicate = touch_predicate
                 reference_source = "STOP_LEVEL"
                 reference_price = stop_candidate.price
             else:
@@ -851,7 +859,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 records=records,
                 decisions=tuple(decisions),
             )
-        if state.position_side == "LONG" and any(
+        if any(
             candidate.kind is IntentKind.TARGET
             for candidate in intent.exit_candidates
         ):
@@ -860,7 +868,16 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             collision_details: dict[str, object] = {
                 "collision": collision,
                 "same_bar_collision_policy_id": policy,
-                "touched_exit_ids": [candidate.exit_id for candidate, _reference in touched],
+                "touched_exit_ids": [
+                    candidate.exit_id
+                    for candidate, _reference in touched
+                    if candidate.kind is IntentKind.PROTECTIVE_STOP
+                ]
+                + [
+                    candidate.exit_id
+                    for candidate, _reference in touched
+                    if candidate.kind is IntentKind.TARGET
+                ],
                 "ordered_chosen_exit_ids": [candidate.exit_id for candidate, _reference, _quantity in chosen],
                 "reference_quantity": state.quantity,
                 "stop_remainder_quantity": sum(
@@ -870,7 +887,12 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 ),
             }
             if targets:
-                collision_details["target_ordering_rule"] = "LONG_ASCENDING_TARGET_PRICE" + (
+                ordering_rule = (
+                    "LONG_ASCENDING_TARGET_PRICE"
+                    if state.position_side == "LONG"
+                    else "SHORT_DESCENDING_TARGET_PRICE"
+                )
+                collision_details["target_ordering_rule"] = ordering_rule + (
                     "_THEN_EXIT_ID_UTF8_BYTE_ORDER" if equal_price_tie else ""
                 )
             if equal_price_tie:

@@ -149,7 +149,7 @@ def test_equal_price_target_first_orders_by_exit_id_utf8_bytes() -> None:
     assert chosen == ["TARGET-FAR", "TARGET-NEAR"]
 
 
-def test_finite_corrected_exit_vocabulary_omits_unmapped_short_tokens() -> None:
+def test_w279_f12_short_stop_and_collision_receipts_are_emitted_stop_first() -> None:
     state = _open_long_state()
     state = EconomicState(
         lifecycle_id=state.lifecycle_id,
@@ -162,14 +162,34 @@ def test_finite_corrected_exit_vocabulary_omits_unmapped_short_tokens() -> None:
 
     transition = CorrectedEconomicsAdapter().resolve(
         state,
-        _collision_intent("STOP_FIRST"),
+        EconomicIntent(
+            kind=IntentKind.PROTECTIVE_STOP,
+            exit_candidates=(
+                ExitCandidate("TARGET-NEAR", IntentKind.TARGET, 95.0, 0.5),
+                ExitCandidate("TARGET-FAR", IntentKind.TARGET, 90.0, 0.5),
+                ExitCandidate("STOP", IntentKind.PROTECTIVE_STOP, 110.0),
+            ),
+            same_bar_collision_policy_id="TARGET_FIRST",
+        ),
         _collision_market(),
         _records("RULE2-06-RED"),
     )
 
-    assert transition.fill_decisions
-    assert "HIGH_TOUCH" not in repr(transition.decision_events)
-    assert "SHORT_DESCENDING_TARGET_PRICE" not in repr(transition.decision_events)
+    stop = next(
+        row
+        for row in transition.decision_events
+        if row.decision == "PROTECTIVE_STOP_EVALUATED"
+    )
+    collision = next(
+        row for row in transition.decision_events if row.decision == "COLLISION_RESOLVED"
+    )
+    assert dict(stop.details)["predicate"] == "HIGH_TOUCH"
+    assert dict(collision.details)["target_ordering_rule"] == "SHORT_DESCENDING_TARGET_PRICE"
+    assert dict(collision.details)["touched_exit_ids"] == [
+        "STOP",
+        "TARGET-NEAR",
+        "TARGET-FAR",
+    ]
 
 
 @pytest.mark.parametrize(
