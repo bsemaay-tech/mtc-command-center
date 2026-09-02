@@ -1186,10 +1186,11 @@ def build_projection_results(
     elif scenario_id.startswith("RULE2-02-"):
         corrected_refusals = result["refusals"]
         if scenario_id.endswith("RED"):
+            # Design v1.8 line 248 declares refusal/no position; Reading Y
+            # (owner addendum 26) and the golden w172 note forbid a padded fourth decision row.
             pair("/RESULT_SURFACE/refusals/0/code", _absent(), _present(corrected_refusals[0]["code"]))
             pair("/EVENT_SURFACE/fill_events", _present([None] * len(legacy_events)), _present(event["fill_events"]))
             pair("/RESULT_SURFACE/final_position", _present({"side": "LONG", "quantity": 1}), _present(result["final_position"]))
-            pair("/EVENT_SURFACE/decision_events/3/decision", _absent(), _projection_value(event, "decision_events", 3, "decision"))
         else:
             pair("/RESULT_SURFACE/admitted", _present(position["present"]), _present(result["final_position"] is not None))
             pair("/EVENT_SURFACE/fill_events/0/quantity", _present(_decode_legacy_number(legacy_events[0]["qty"]), "I"), _present(event["fill_events"][0]["quantity"], "I"))
@@ -1242,9 +1243,9 @@ def build_projection_results(
             pair("/EVENT_SURFACE/fill_events/0/final_fill_price", _present(_decode_legacy_number(legacy_fill["price"]), "I"), _present(corrected_fills[0]["final_fill_price"], "I"))
             if len(corrected_fills) > 1:
                 pair("/EVENT_SURFACE/fill_events/1/final_fill_price", _absent(), _present(corrected_fills[1]["final_fill_price"], "I"))
-            pair("/RESULT_SURFACE/collision/ordered_chosen_exit_ids", _absent(), _present(result["collision"]["ordered_chosen_exit_ids"]))
-            if scenario_id == "RULE2-06-RED":
-                pair("/RESULT_SURFACE/collision/is_pessimistic", _present(True), _present(result["collision"]["is_pessimistic"]))
+            # Design v1.9 lines 1038 and 1133-1156 put the sole collision receipt
+            # on decision_events; both sealed v18 goldens record removal of RESULT collision.
+            pair("/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids", _absent(), _projection_value(event, "decision_events", 2, "ordered_chosen_exit_ids"))
             pair("lifecycle gross realized PnL", _present(_decode_legacy_number(legacy_fill["realized_pnl"]), "I"), _present(corrected_gross, "I"))
     elif scenario_id.startswith("RULE2-07-"):
         legacy_equity = _decode_legacy_number(legacy_result["account"]["equity"])

@@ -706,26 +706,60 @@ def test_rule2_08_null_cost_is_not_consumed_and_funding_is_projected(
     assert result["cumulative_funding"] == expected_cumulative
 
 
-def test_missing_decision_projection_resolves_absent() -> None:
+def test_rule2_02_red_projection_matches_design_and_all_pairs_diverge() -> None:
     scenario_id = "RULE2-02-RED"
-    selector = "/EVENT_SURFACE/decision_events/3/decision"
+    expected_selectors = [
+        "/RESULT_SURFACE/refusals/0/code",
+        "/EVENT_SURFACE/fill_events",
+        "/RESULT_SURFACE/final_position",
+    ]
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == scenario_id)
     input_document = load_json_exact(MTC_V2_ROOT / row["input"]["path"])
     legacy = load_json_exact(
-        MTC_V2_ROOT / "tests/corrected_vnext/observed/1.0.0" / f"{scenario_id}.json"
+        Path(r"C:\tmp\P012_BASELINE_RUN")
+        / "out"
+        / scenario_id
+        / "result_surface.json"
     )
-    corrected = execute_corrected_scenario(MTC_V2_ROOT, row)
+    corrected = load_json_exact(
+        MTC_V2_ROOT / row["expected_artifacts"]["2.0.0"]["path"]
+    )
 
     projections = build_projection_results(
         scenario_id,
         input_document,
-        legacy["RESULT_SURFACE"],
+        legacy,
         corrected,
     )
 
-    selected = next(member for member in projections if member["selector"] == selector)
-    assert selected["corrected"] == {"tag": "ABSENT"}
+    assert [member["selector"] for member in projections] == expected_selectors
+    assert [member["equal"] for member in projections] == [False] * len(
+        expected_selectors
+    )
+
+
+def test_all_red_projection_pairs_resolve_on_sealed_goldens_and_diverge() -> None:
+    baseline_root = Path(r"C:\tmp\P012_BASELINE_RUN")
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+
+    for row in catalog:
+        if row["role"] != "RED":
+            continue
+        scenario_id = row["scenario_id"]
+        projections = build_projection_results(
+            scenario_id,
+            load_json_exact(MTC_V2_ROOT / row["input"]["path"]),
+            load_json_exact(
+                baseline_root / "out" / scenario_id / "result_surface.json"
+            ),
+            load_json_exact(
+                MTC_V2_ROOT / row["expected_artifacts"]["2.0.0"]["path"]
+            ),
+        )
+
+        assert all(member["corrected"]["tag"] != "ABSENT" for member in projections)
+        assert all(not member["equal"] for member in projections)
 
 
 def test_all_cataloged_corrected_scenarios_are_executable() -> None:
