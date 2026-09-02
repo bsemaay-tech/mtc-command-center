@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import shutil
 from copy import deepcopy
 from pathlib import Path
@@ -26,11 +27,178 @@ from mtc_v2.tests.corrected_vnext.verify_bceg import (
 FIXTURES = Path(__file__).parent
 MTC_V2_ROOT = FIXTURES.parents[3]
 
+SYNTHETIC_REVIEW_IDENTITIES = {
+    "worktree_head_commit": "1" * 40,
+    "core_tree_oid": "2" * 40,
+    "expected_seal_sha": "3" * 64,
+    "implementation_anchor_sha256": "4" * 64,
+    "baseline_manifest_sha256": "5" * 64,
+    "design_file_sha256": "6" * 64,
+    "design_version": "v1.11",
+}
+
 
 def refusal(check_id: str, action) -> None:
     with pytest.raises(GateRefusal) as caught:
         action()
     assert caught.value.check_id == check_id
+
+
+def semantic_review_fixture(root: Path) -> dict[str, object]:
+    evidence_paths: list[str] = []
+    for item in range(1, 7):
+        path = root / "review-evidence" / f"item-{item}.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"item {item} evidence\n", encoding="utf-8", newline="\n")
+        evidence_paths.append(path.relative_to(root).as_posix())
+    return {
+        "schema": "P012_SEMANTIC_COVERAGE_REVIEW_V1",
+        "reviewer": {
+            "identity": "synthetic independent reviewer",
+            "family": "Gemini",
+            "independent_of": [
+                {
+                    "role": "KERNEL_IMPLEMENTER",
+                    "basis": "Gemini family is distinct from the Codex-family kernel implementer.",
+                },
+                {
+                    "role": "CONTRACT_TABLES_AUTHOR",
+                    "basis": "Gemini family is distinct from the Claude-family tables author.",
+                },
+            ],
+        },
+        "reviewed_identities": dict(SYNTHETIC_REVIEW_IDENTITIES),
+        "items": {
+            str(item): {
+                "disposition": "ACCEPTED",
+                "evidence_paths": [evidence_paths[item - 1]],
+                "notes": "Reviewed against the synthetic fixture.",
+            }
+            for item in range(1, 7)
+        },
+        "unresolved_items": [],
+        "owner_ratification": {
+            "chain": ["#5", "#6", "#7", "#8", "#9"],
+            "ratified": True,
+        },
+        "signed_at": "2026-09-02T12:00:00+03:00",
+    }
+
+
+def run_synthetic_full_gate(
+    root: Path,
+    baseline_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> int:
+    monkeypatch.setattr(
+        verify_bceg,
+        "run_comparison_pipeline",
+        lambda _root, _baseline_root: {
+            "acceptance_blockers": [],
+            "sealed_producer_identities": dict(SYNTHETIC_REVIEW_IDENTITIES),
+        },
+    )
+    monkeypatch.setattr(
+        verify_bceg,
+        "measure_semantic_review_identities",
+        lambda _root, _baseline_root, _sealed_identities: dict(
+            SYNTHETIC_REVIEW_IDENTITIES
+        ),
+    )
+    return verify_bceg.main(
+        [
+            "--mode",
+            "full-gate",
+            "--root",
+            str(root),
+            "--baseline-root",
+            str(baseline_root),
+        ]
+    )
+
+
+def assert_invalid_semantic_review(capsys: pytest.CaptureFixture[str]) -> None:
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["claim_label"] == "BOUNDED_CORRECTION_EVIDENCE_REFUSED"
+    assert receipt["refusals"][0]["check_id"] == "SEMANTIC_COVERAGE_REVIEW_INVALID"
+
+
+def test_semantic_coverage_review_empty_file_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True)
+    review.write_bytes(b"")
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(capsys)
+
+
+def test_semantic_coverage_review_missing_item_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    del receipt["items"]["4"]
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(capsys)
+
+
+def test_semantic_coverage_review_refused_item_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    receipt["items"]["2"]["disposition"] = "REFUSED"
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(capsys)
+
+
+def test_semantic_coverage_review_stale_head_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    receipt["reviewed_identities"]["worktree_head_commit"] = "0" * 40
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(capsys)
+
+
+def test_semantic_coverage_review_fully_valid_synthetic_receipt_clears_blocker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 0
+    gate_receipt = json.loads(capsys.readouterr().out)
+    assert gate_receipt["claim_label"] == verify_bceg.ACCEPTING_LABEL
 
 
 def sealed_producer_fixture(

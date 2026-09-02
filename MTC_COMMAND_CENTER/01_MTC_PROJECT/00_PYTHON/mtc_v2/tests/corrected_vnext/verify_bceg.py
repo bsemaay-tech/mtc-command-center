@@ -37,6 +37,31 @@ from mtc_v2.core.types import Bar
 
 
 ACCEPTING_LABEL = "BOUNDED_CORRECTION_EVIDENCE_ACCEPTED"
+SEMANTIC_COVERAGE_REVIEW_SCHEMA = "P012_SEMANTIC_COVERAGE_REVIEW_V1"
+SEMANTIC_COVERAGE_REVIEW_KEYS = (
+    "schema",
+    "reviewer",
+    "reviewed_identities",
+    "items",
+    "unresolved_items",
+    "owner_ratification",
+    "signed_at",
+)
+SEMANTIC_COVERAGE_REVIEW_IDENTITY_KEYS = (
+    "worktree_head_commit",
+    "core_tree_oid",
+    "expected_seal_sha",
+    "implementation_anchor_sha256",
+    "baseline_manifest_sha256",
+    "design_file_sha256",
+    "design_version",
+)
+SEMANTIC_COVERAGE_REVIEW_DISPOSITIONS = {
+    "ACCEPTED",
+    "ACCEPTED_WITH_RESIDUAL_RISK",
+    "REFUSED",
+}
+SEMANTIC_COVERAGE_REVIEW_CHAIN = ("#5", "#6", "#7", "#8", "#9")
 CORRECTED_CONTAINERS = (
     "decision_events",
     "fill_events",
@@ -71,6 +96,7 @@ EXPECTED_RECORD_KEYS = {
 }
 EXPECTED_BAR_KEYS = {"timestamp", "open", "high", "low", "close", "volume", "bar_index"}
 SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
+GIT_OID_RE = re.compile(r"[0-9a-f]{40}\Z")
 F64BITS_RE = re.compile(r"f64bits:0x([0-9a-f]{16})\Z")
 RECORD_ID_RE = re.compile(r"[A-Z0-9][A-Z0-9.-]*\Z")
 
@@ -130,6 +156,223 @@ def load_json_exact(path: Path) -> Any:
 
 def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _semantic_review_invalid(member: str, detail: str | None = None) -> None:
+    message = member if detail is None else f"{member}: {detail}"
+    raise GateRefusal("SEMANTIC_COVERAGE_REVIEW_INVALID", message)
+
+
+def _require_exact_members(value: Any, expected: tuple[str, ...], member: str) -> dict[str, Any]:
+    if type(value) is not dict:
+        _semantic_review_invalid(member, "expected object")
+    for name in expected:
+        if name not in value:
+            _semantic_review_invalid(f"{member}.{name}", "missing")
+    unknown = sorted(set(value) - set(expected))
+    if unknown:
+        _semantic_review_invalid(f"{member}.{unknown[0]}", "unknown member")
+    return value
+
+
+def _require_nonempty_line(value: Any, member: str) -> str:
+    if type(value) is not str or not value.strip() or "\n" in value or "\r" in value:
+        _semantic_review_invalid(member, "expected non-empty single line")
+    return value
+
+
+def measure_semantic_review_identities(
+    root: Path,
+    baseline_root: Path,
+    sealed_identities: dict[str, str],
+) -> dict[str, str]:
+    try:
+        prefix = subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", "--show-prefix"],
+            text=True,
+            stderr=subprocess.STDOUT,
+        ).strip().replace("\\", "/")
+        head = subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            text=True,
+            stderr=subprocess.STDOUT,
+        ).strip()
+        core_tree = subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", f"HEAD:{prefix}core"],
+            text=True,
+            stderr=subprocess.STDOUT,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise GateRefusal("SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE", str(exc)) from exc
+
+    contracts = root / "tests/corrected_vnext/contracts"
+    anchor_path = contracts / "implementation_anchor.json"
+    baseline_manifest_path = baseline_root / "BASELINE_BYTES_MANIFEST.json"
+    manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
+    design = manifest.get("design")
+    if type(design) is not dict or type(design.get("file")) is not str:
+        raise GateRefusal("SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE", "manifest.design.file")
+    design_path = Path(design["file"])
+    if not design_path.is_file():
+        raise GateRefusal("SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE", str(design_path))
+    try:
+        first_line = design_path.read_text(encoding="utf-8").splitlines()[0]
+    except (OSError, UnicodeError, IndexError) as exc:
+        raise GateRefusal("SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE", str(design_path)) from exc
+    version_match = re.search(r"\bDesign (v[0-9]+\.[0-9]+)\s*$", first_line)
+    if version_match is None:
+        raise GateRefusal("SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE", "design_version")
+
+    expected_seal = sealed_identities.get("expected_seal_sha256")
+    if type(expected_seal) is not str or not SHA256_RE.fullmatch(expected_seal):
+        raise GateRefusal("SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE", "expected_seal_sha")
+    return {
+        "worktree_head_commit": head,
+        "core_tree_oid": core_tree,
+        "expected_seal_sha": expected_seal,
+        "implementation_anchor_sha256": sha256_file(anchor_path),
+        "baseline_manifest_sha256": sha256_file(baseline_manifest_path),
+        "design_file_sha256": sha256_file(design_path),
+        "design_version": version_match.group(1),
+    }
+
+
+def validate_semantic_coverage_review(
+    review_path: Path,
+    root: Path,
+    measured_identities: dict[str, str],
+) -> None:
+    try:
+        document = load_json_exact(review_path)
+    except (OSError, GateRefusal) as exc:
+        _semantic_review_invalid("receipt", str(exc))
+    receipt = _require_exact_members(
+        document, SEMANTIC_COVERAGE_REVIEW_KEYS, "receipt"
+    )
+    if receipt["schema"] != SEMANTIC_COVERAGE_REVIEW_SCHEMA:
+        _semantic_review_invalid("schema", "mismatch")
+
+    reviewer = _require_exact_members(
+        receipt["reviewer"], ("identity", "family", "independent_of"), "reviewer"
+    )
+    _require_nonempty_line(reviewer["identity"], "reviewer.identity")
+    family = _require_nonempty_line(reviewer["family"], "reviewer.family")
+    if "codex" in family.casefold() or "claude" in family.casefold():
+        _semantic_review_invalid("reviewer.family", "not independent")
+    independent_of = reviewer["independent_of"]
+    if type(independent_of) is not list or len(independent_of) != 2:
+        _semantic_review_invalid("reviewer.independent_of", "expected two roles")
+    for index, expected_role in enumerate(
+        ("KERNEL_IMPLEMENTER", "CONTRACT_TABLES_AUTHOR")
+    ):
+        independence = _require_exact_members(
+            independent_of[index], ("role", "basis"), f"reviewer.independent_of.{index}"
+        )
+        if independence["role"] != expected_role:
+            _semantic_review_invalid(
+                f"reviewer.independent_of.{index}.role", f"expected {expected_role}"
+            )
+        _require_nonempty_line(
+            independence["basis"], f"reviewer.independent_of.{index}.basis"
+        )
+
+    reviewed_identities = _require_exact_members(
+        receipt["reviewed_identities"],
+        SEMANTIC_COVERAGE_REVIEW_IDENTITY_KEYS,
+        "reviewed_identities",
+    )
+    for member in ("worktree_head_commit", "core_tree_oid"):
+        if type(reviewed_identities[member]) is not str or not GIT_OID_RE.fullmatch(
+            reviewed_identities[member]
+        ):
+            _semantic_review_invalid(f"reviewed_identities.{member}", "invalid git oid")
+    for member in (
+        "expected_seal_sha",
+        "implementation_anchor_sha256",
+        "baseline_manifest_sha256",
+        "design_file_sha256",
+    ):
+        if type(reviewed_identities[member]) is not str or not SHA256_RE.fullmatch(
+            reviewed_identities[member]
+        ):
+            _semantic_review_invalid(f"reviewed_identities.{member}", "invalid sha256")
+    _require_nonempty_line(
+        reviewed_identities["design_version"], "reviewed_identities.design_version"
+    )
+    for member in SEMANTIC_COVERAGE_REVIEW_IDENTITY_KEYS:
+        if reviewed_identities[member] != measured_identities.get(member):
+            _semantic_review_invalid(
+                f"reviewed_identities.{member}", "does not match measured identity"
+            )
+
+    items = _require_exact_members(
+        receipt["items"], tuple(str(item) for item in range(1, 7)), "items"
+    )
+    for item_number in range(1, 7):
+        item_key = str(item_number)
+        item = _require_exact_members(
+            items[item_key],
+            ("disposition", "evidence_paths", "notes"),
+            f"items.{item_key}",
+        )
+        disposition = item["disposition"]
+        if (
+            type(disposition) is not str
+            or disposition not in SEMANTIC_COVERAGE_REVIEW_DISPOSITIONS
+        ):
+            _semantic_review_invalid(
+                f"items.{item_key}.disposition", "outside closed domain"
+            )
+        notes = item["notes"]
+        if type(notes) is not str:
+            _semantic_review_invalid(f"items.{item_key}.notes", "expected string")
+        if "NOT_VERIFIED" in disposition or "NOT_VERIFIED" in notes:
+            _semantic_review_invalid(f"items.{item_key}", "contains NOT_VERIFIED")
+        if disposition == "REFUSED":
+            _semantic_review_invalid(f"items.{item_key}.disposition", "REFUSED")
+        evidence_paths = item["evidence_paths"]
+        if type(evidence_paths) is not list or not evidence_paths:
+            _semantic_review_invalid(
+                f"items.{item_key}.evidence_paths", "expected non-empty list"
+            )
+        for evidence_index, evidence_path in enumerate(evidence_paths):
+            member = f"items.{item_key}.evidence_paths.{evidence_index}"
+            if type(evidence_path) is not str or not evidence_path:
+                _semantic_review_invalid(member, "expected path string")
+            path = Path(evidence_path)
+            candidate = (
+                path
+                if path.is_absolute()
+                else root.joinpath(*PurePosixPath(evidence_path).parts)
+            )
+            if not candidate.exists():
+                _semantic_review_invalid(member, f"missing {evidence_path}")
+
+    unresolved_items = receipt["unresolved_items"]
+    if type(unresolved_items) is not list:
+        _semantic_review_invalid("unresolved_items", "expected list")
+    if unresolved_items:
+        _semantic_review_invalid("unresolved_items", "must be empty")
+
+    ratification = _require_exact_members(
+        receipt["owner_ratification"], ("chain", "ratified"), "owner_ratification"
+    )
+    if ratification["chain"] != list(SEMANTIC_COVERAGE_REVIEW_CHAIN):
+        _semantic_review_invalid(
+            "owner_ratification.chain", "expected seal ids #5 through #9"
+        )
+    if ratification["ratified"] is not True:
+        _semantic_review_invalid("owner_ratification.ratified", "must be true")
+
+    signed_at = receipt["signed_at"]
+    if type(signed_at) is not str:
+        _semantic_review_invalid("signed_at", "expected date-time string")
+    try:
+        signed = datetime.fromisoformat(signed_at.replace("Z", "+00:00"))
+    except ValueError as exc:
+        _semantic_review_invalid("signed_at", str(exc))
+    if signed.tzinfo is None:
+        _semantic_review_invalid("signed_at", "timezone required")
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -2378,6 +2621,25 @@ def main(argv: list[str] | None = None) -> int:
                 blockers = list(pipeline["acceptance_blockers"])
                 if not review.is_file():
                     blockers.insert(0, {"check_id": "SEMANTIC_COVERAGE_REVIEW_MISSING", "detail": str(review)})
+                else:
+                    try:
+                        measured_identities = measure_semantic_review_identities(
+                            args.root,
+                            args.baseline_root,
+                            pipeline["sealed_producer_identities"],
+                        )
+                        validate_semantic_coverage_review(
+                            review, args.root, measured_identities
+                        )
+                    except GateRefusal as exc:
+                        if exc.check_id == "SEMANTIC_COVERAGE_REVIEW_INVALID":
+                            invalid = exc
+                        else:
+                            invalid = GateRefusal(
+                                "SEMANTIC_COVERAGE_REVIEW_INVALID",
+                                f"reviewed_identities: {exc.check_id}: {exc.detail}",
+                            )
+                        blockers.insert(0, invalid.as_dict())
                 if blockers:
                     receipt = {
                         "mode": "full-gate",

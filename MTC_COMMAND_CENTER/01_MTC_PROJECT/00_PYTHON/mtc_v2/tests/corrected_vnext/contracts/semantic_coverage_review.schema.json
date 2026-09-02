@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:mtc:p012:semantic-coverage-review:v1",
+  "title": "P012 semantic coverage review receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "reviewer",
+    "reviewed_identities",
+    "items",
+    "unresolved_items",
+    "owner_ratification",
+    "signed_at"
+  ],
+  "properties": {
+    "schema": {
+      "const": "P012_SEMANTIC_COVERAGE_REVIEW_V1"
+    },
+    "reviewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "family", "independent_of"],
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/nonemptyLine"
+        },
+        "family": {
+          "allOf": [
+            {"$ref": "#/$defs/nonemptyLine"},
+            {"pattern": "^(?!.*[Cc][Oo][Dd][Ee][Xx])(?!.*[Cc][Ll][Aa][Uu][Dd][Ee]).+$"}
+          ]
+        },
+        "independent_of": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/kernelIndependence"
+            },
+            {
+              "$ref": "#/$defs/tablesIndependence"
+            }
+          ],
+          "items": false
+        }
+      }
+    },
+    "reviewed_identities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "worktree_head_commit",
+        "core_tree_oid",
+        "expected_seal_sha",
+        "implementation_anchor_sha256",
+        "baseline_manifest_sha256",
+        "design_file_sha256",
+        "design_version"
+      ],
+      "properties": {
+        "worktree_head_commit": {
+          "$ref": "#/$defs/gitOid"
+        },
+        "core_tree_oid": {
+          "$ref": "#/$defs/gitOid"
+        },
+        "expected_seal_sha": {
+          "$ref": "#/$defs/sha256"
+        },
+        "implementation_anchor_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "baseline_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "design_file_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "design_version": {
+          "type": "string",
+          "pattern": "^v[0-9]+\\.[0-9]+$"
+        }
+      }
+    },
+    "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["1", "2", "3", "4", "5", "6"],
+      "properties": {
+        "1": {"$ref": "#/$defs/reviewItem"},
+        "2": {"$ref": "#/$defs/reviewItem"},
+        "3": {"$ref": "#/$defs/reviewItem"},
+        "4": {"$ref": "#/$defs/reviewItem"},
+        "5": {"$ref": "#/$defs/reviewItem"},
+        "6": {"$ref": "#/$defs/reviewItem"}
+      }
+    },
+    "unresolved_items": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "owner_ratification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chain", "ratified"],
+      "properties": {
+        "chain": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "prefixItems": [
+            {"const": "#5"},
+            {"const": "#6"},
+            {"const": "#7"},
+            {"const": "#8"},
+            {"const": "#9"}
+          ],
+          "items": false
+        },
+        "ratified": {
+          "const": true
+        }
+      }
+    },
+    "signed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "nonemptyLine": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\r\\n]*\\S[^\\r\\n]*$"
+    },
+    "gitOid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "kernelIndependence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "basis"],
+      "properties": {
+        "role": {"const": "KERNEL_IMPLEMENTER"},
+        "basis": {"$ref": "#/$defs/nonemptyLine"}
+      }
+    },
+    "tablesIndependence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "basis"],
+      "properties": {
+        "role": {"const": "CONTRACT_TABLES_AUTHOR"},
+        "basis": {"$ref": "#/$defs/nonemptyLine"}
+      }
+    },
+    "reviewItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["disposition", "evidence_paths", "notes"],
+      "properties": {
+        "disposition": {
+          "enum": [
+            "ACCEPTED",
+            "ACCEPTED_WITH_RESIDUAL_RISK",
+            "REFUSED"
+          ]
+        },
+        "evidence_paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "notes": {
+          "type": "string",
+          "pattern": "^(?![\\s\\S]*NOT_VERIFIED)[\\s\\S]*$"
+        }
+      }
+    }
+  }
+}
