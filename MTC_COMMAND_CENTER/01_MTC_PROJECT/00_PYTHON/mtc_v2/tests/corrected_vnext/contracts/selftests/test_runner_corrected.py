@@ -312,15 +312,16 @@ def test_funding_boundary_is_applied_before_same_timestamp_bar_evaluation() -> N
     assert runner.state.equity == 999.9
 
 
-def test_w283r_r4_runner_skips_ineligible_same_funding_pair() -> None:
+def test_w283r_r4_runner_refuses_ineligible_same_funding_pair() -> None:
     config, bars = _scenario("RULE2-08-RED")
     runner = Runner(config)
     runner.state.position = replace(_open_long(), qty=0.0)
     runner.state.applied_funding_event_keys.add(("TEST-FUND-1", 1))
 
-    runner._apply_corrected_funding_between(bars[1], bars[2])
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        runner._apply_corrected_funding_between(bars[1], bars[2])
 
-    assert runner._evaluated_funding_event_ids == {"TEST-FUND-1"}
+    assert exc_info.value.refusal_code == "REFUSED_DUPLICATE_FUNDING_EVENT"
     assert runner.state.decision_events == []
     assert runner.state.funding_events == []
 
@@ -338,6 +339,22 @@ def test_w276_f02_runner_allows_same_funding_id_for_distinct_lifecycle() -> None
         ("TEST-FUND-1", 2),
     }
     assert [row.lifecycle_id for row in runner.state.funding_events] == [2]
+
+
+def test_v283b_f2_runner_does_not_memoize_funding_id_across_lifecycles() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    runner.state.position = _open_long()
+
+    runner._apply_corrected_funding_between(bars[1], bars[2])
+    runner.state.position = replace(_open_long(), lifecycle_id=2)
+    runner._apply_corrected_funding_between(bars[1], bars[2])
+
+    assert runner.state.applied_funding_event_keys == {
+        ("TEST-FUND-1", 1),
+        ("TEST-FUND-1", 2),
+    }
+    assert [row.lifecycle_id for row in runner.state.funding_events] == [1, 2]
 
 
 @pytest.mark.parametrize("bars_selector", [slice(2, None), slice(None, 2)])

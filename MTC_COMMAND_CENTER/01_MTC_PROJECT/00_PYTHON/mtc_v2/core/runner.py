@@ -145,7 +145,6 @@ class Runner:
         self._corrected_requested_quantity_override: float | None = None
         self._corrected_test_target_book: dict[str, tuple[str, float, float]] = {}
         self._corrected_instrument_validation_field: str | None = None
-        self._evaluated_funding_event_ids: set[str] = set()
         self._corrected_records: EconomicRecords | None = None
         self._corrected_instrument_bound = False
         if self._corrected_semantics:
@@ -766,7 +765,8 @@ class Runner:
             if previous is None:
                 in_window = current is not None and (
                     event_time < current.timestamp
-                    or (upper_inclusive and event_time == current.timestamp)
+                    if include_current is False
+                    else event_time == current.timestamp
                 )
             elif current is None:
                 in_window = previous.timestamp < event_time
@@ -778,17 +778,6 @@ class Runner:
             if not in_window:
                 continue
             event_id = str(event["funding_event_id"])
-            if event_id in self._evaluated_funding_event_ids:
-                continue
-            lifecycle_id = (
-                None if self.state.position is None else self.state.position.lifecycle_id
-            )
-            if (
-                lifecycle_id is not None
-                and (event_id, lifecycle_id) in self.state.applied_funding_event_keys
-            ):
-                self._evaluated_funding_event_ids.add(event_id)
-                continue
             bar_context = current if current is not None else previous
             assert bar_context is not None
             transition = CorrectedEconomicsAdapter().resolve(
@@ -806,7 +795,6 @@ class Runner:
                 transition=transition,
                 reason="funding_tick",
             )
-            self._evaluated_funding_event_ids.add(event_id)
 
     def run(
         self,
