@@ -728,6 +728,12 @@ class Runner:
         assert self._corrected_records is not None
         if previous is None and current is None:
             return
+        events = self._corrected_records.funding.get("events", ())
+        if not isinstance(events, (tuple, list)):
+            raise EconomicsRefusal(
+                REFUSED_MISSING_FUNDING_EVENT,
+                "funding schedule has no admitted event collection",
+            )
         position_snapshot_rule = self._corrected_records.funding.get(
             "position_snapshot_rule"
         )
@@ -749,12 +755,6 @@ class Runner:
             if include_current is None
             else include_current
         )
-        events = self._corrected_records.funding.get("events", ())
-        if not isinstance(events, (tuple, list)):
-            raise EconomicsRefusal(
-                REFUSED_MISSING_FUNDING_EVENT,
-                "funding schedule has no admitted event collection",
-            )
         for event in events:
             event_time = self._record_timestamp(event.get("event_timestamp"))
             if any((event_time.minute, event_time.second, event_time.microsecond)):
