@@ -1026,6 +1026,52 @@ def test_corrected_scenario_executes_real_seam_and_emits_six_containers() -> Non
     assert observed["RESULT_SURFACE"]["run_manifest"]["kernel_semantics_version"] == "2.0.0"
 
 
+def test_corrected_closed_set_refuses_observed_only_member(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-01-RED")
+    original = verify_bceg.corrected_surfaces
+
+    def with_observed_only_member(**kwargs):
+        surfaces = original(**kwargs)
+        surfaces["EVENT_SURFACE"]["fill_events"][0]["observed_only"] = True
+        return surfaces
+
+    monkeypatch.setattr(
+        verify_bceg, "corrected_surfaces", with_observed_only_member
+    )
+
+    with pytest.raises(GateRefusal) as caught:
+        execute_corrected_scenario(MTC_V2_ROOT, row)
+    assert caught.value.check_id == "CLOSED_SET_VIOLATION"
+    assert caught.value.pointer == "/EVENT_SURFACE/fill_events/0/observed_only"
+
+
+def test_corrected_closed_set_refuses_missing_member(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-01-RED")
+    original = verify_bceg.corrected_surfaces
+
+    def without_required_member(**kwargs):
+        surfaces = original(**kwargs)
+        del surfaces["RESULT_SURFACE"]["warnings"]
+        return surfaces
+
+    monkeypatch.setattr(verify_bceg, "corrected_surfaces", without_required_member)
+
+    with pytest.raises(GateRefusal) as caught:
+        execute_corrected_scenario(MTC_V2_ROOT, row)
+    assert caught.value.check_id == "CLOSED_SET_VIOLATION"
+    assert caught.value.pointer == "/RESULT_SURFACE/warnings"
+
+
 @pytest.mark.parametrize(
     ("scenario_id", "expected_decisions"),
     [

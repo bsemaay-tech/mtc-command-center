@@ -592,6 +592,348 @@ def validate_corrected_event_surface(surface: Any) -> None:
                 )
 
 
+def _require_closed_member_set(value: Any, expected: set[str], pointer: str) -> None:
+    if type(value) is not dict:
+        raise GateRefusal(
+            "CLOSED_SET_VIOLATION", "expected object", pointer=pointer
+        )
+    extra = set(value) - expected
+    if extra:
+        member = sorted(extra, key=lambda item: item.encode("utf-8"))[0]
+        raise GateRefusal(
+            "CLOSED_SET_VIOLATION",
+            f"extra member {member}",
+            pointer=f"{pointer}/{_escape_pointer(member)}",
+        )
+    missing = expected - set(value)
+    if missing:
+        member = sorted(missing, key=lambda item: item.encode("utf-8"))[0]
+        raise GateRefusal(
+            "CLOSED_SET_VIOLATION",
+            f"missing member {member}",
+            pointer=f"{pointer}/{_escape_pointer(member)}",
+        )
+
+
+def _closed_discriminator(
+    value: Any, member: str, allowed: set[str], pointer: str
+) -> str:
+    if type(value) is not dict or value.get(member) not in allowed:
+        raise GateRefusal(
+            "CLOSED_SET_VIOLATION",
+            f"unknown {member} {value.get(member)!r}" if type(value) is dict else "expected object",
+            pointer=f"{pointer}/{_escape_pointer(member)}",
+        )
+    return value[member]
+
+
+def validate_corrected_closed_sets(
+    scenario_id: str, surfaces: dict[str, Any]
+) -> None:
+    """Enforce the finite CORRECTED_V2 member sets from design sections 23.1-23.4."""
+
+    _require_closed_member_set(
+        surfaces, {"EVENT_SURFACE", "RESULT_SURFACE"}, ""
+    )
+    event_surface = surfaces["EVENT_SURFACE"]
+    _require_closed_member_set(event_surface, set(CORRECTED_CONTAINERS), "/EVENT_SURFACE")
+    for container in CORRECTED_CONTAINERS:
+        if type(event_surface[container]) is not list:
+            raise GateRefusal(
+                "CLOSED_SET_VIOLATION",
+                "expected array",
+                pointer=f"/EVENT_SURFACE/{container}",
+            )
+
+    decision_common = {"sequence", "decision", "kernel_semantics_version"}
+    decision_additions = {
+        "SEMANTICS_VALIDATED": set(),
+        "SIZING_COMPUTED": {
+            "event_timestamp",
+            "selector",
+            "contract_multiplier",
+            "order_notional",
+        },
+        "MIN_NOTIONAL_ADMITTED": {
+            "event_timestamp",
+            "order_notional",
+            "required_min_notional",
+        },
+        "REFUSED_MIN_NOTIONAL": {
+            "event_timestamp",
+            "order_notional",
+            "required_min_notional",
+        },
+        "INSTRUMENT_RECORD_VALIDATED": {"field", "record_value", "runtime_value"},
+        "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION": {
+            "field",
+            "record_value",
+            "runtime_value",
+        },
+        "PROTECTIVE_STOP_EVALUATED": {
+            "event_timestamp",
+            "position_side",
+            "stop_price",
+            "predicate",
+        },
+        "COLLISION_RESOLVED": {
+            "event_timestamp",
+            "collision",
+            "same_bar_collision_policy_id",
+            "touched_exit_ids",
+            "ordered_chosen_exit_ids",
+            "reference_quantity",
+            "stop_remainder_quantity",
+        },
+        "FUNDING_ELIGIBILITY": {
+            "event_timestamp",
+            "funding_event_id",
+            "eligible",
+            "position_snapshot_rule",
+        },
+    }
+    decisions = event_surface["decision_events"]
+    if type(decisions) is not list:
+        raise GateRefusal(
+            "CLOSED_SET_VIOLATION", "expected array", pointer="/EVENT_SURFACE/decision_events"
+        )
+    stop_fill_selected = any(
+        type(fill) is dict and fill.get("event_class") == "PROTECTIVE_STOP_EXIT"
+        for fill in event_surface["fill_events"]
+    )
+    for index, event in enumerate(decisions):
+        pointer = f"/EVENT_SURFACE/decision_events/{index}"
+        decision = _closed_discriminator(
+            event, "decision", set(decision_additions), pointer
+        )
+        expected = decision_common | decision_additions[decision]
+        if decision == "PROTECTIVE_STOP_EVALUATED" and stop_fill_selected:
+            expected |= {"reference_source", "reference_price"}
+        if decision == "COLLISION_RESOLVED":
+            if scenario_id in {"RULE2-06-RED", "RULE2-06-EQUAL-PRICE-RED"}:
+                expected.add("target_ordering_rule")
+            if scenario_id == "RULE2-06-EQUAL-PRICE-RED":
+                expected.add("tie_break_applied")
+        _require_closed_member_set(event, expected, pointer)
+
+    fill_common = {
+        "sequence",
+        "kernel_semantics_version",
+        "fill_id",
+        "event_class",
+        "side",
+        "reference_price",
+        "slippage_model_id",
+        "slippage_bps",
+        "slippage_impact",
+        "slippage_application_count",
+        "price_tick_alignment",
+        "final_fill_price",
+        "quantity",
+        "liquidity_role",
+    }
+    fills = event_surface["fill_events"]
+    if type(fills) is not list:
+        raise GateRefusal(
+            "CLOSED_SET_VIOLATION", "expected array", pointer="/EVENT_SURFACE/fill_events"
+        )
+    for index, event in enumerate(fills):
+        pointer = f"/EVENT_SURFACE/fill_events/{index}"
+        event_class = _closed_discriminator(
+            event,
+            "event_class",
+            {"ENTRY", "PROTECTIVE_STOP_EXIT", "TARGET_EXIT", "MARKET_EXIT"},
+            pointer,
+        )
+        expected = set(fill_common)
+        if event_class != "ENTRY":
+            expected.add("exit_id")
+        if event_class == "PROTECTIVE_STOP_EXIT":
+            expected.add("fill_trigger")
+        if event_class == "TARGET_EXIT":
+            expected |= {"target_fraction", "reference_quantity"}
+        _require_closed_member_set(event, expected, pointer)
+
+    cash_common = {
+        "sequence",
+        "kernel_semantics_version",
+        "cash_event_id",
+        "kind",
+        "signed_delta",
+    }
+    cash_events = event_surface["cash_events"]
+    if type(cash_events) is not list:
+        raise GateRefusal(
+            "CLOSED_SET_VIOLATION", "expected array", pointer="/EVENT_SURFACE/cash_events"
+        )
+    for index, event in enumerate(cash_events):
+        pointer = f"/EVENT_SURFACE/cash_events/{index}"
+        kind = _closed_discriminator(
+            event, "kind", {"FEE", "GROSS_REALIZATION", "FUNDING"}, pointer
+        )
+        expected = cash_common | (
+            {"funding_event_id", "lifecycle_id"}
+            if kind == "FUNDING"
+            else {"fill_id"}
+        )
+        _require_closed_member_set(event, expected, pointer)
+
+    fee_keys = {
+        "sequence",
+        "kernel_semantics_version",
+        "event_timestamp",
+        "lifecycle_id",
+        "fill_id",
+        "event_class",
+        "liquidity_role",
+        "schedule_id",
+        "schedule_digest",
+        "rate",
+        "fixed_component",
+        "fee_notional",
+        "fee_amount",
+        "fee_cash_delta",
+        "settlement_currency",
+        "cash_event_id",
+    }
+    funding_keys = {
+        "sequence",
+        "kernel_semantics_version",
+        "funding_event_id",
+        "event_timestamp",
+        "lifecycle_id",
+        "position_side",
+        "open_qty",
+        "contract_multiplier",
+        "mark_price",
+        "raw_rate",
+        "positive_rate_payer",
+        "long_cashflow_rate",
+        "notional",
+        "funding_cash_delta",
+        "cumulative_funding",
+        "schedule_id",
+        "schedule_digest",
+        "source_event_digest",
+        "cash_event_id",
+    }
+    for container, expected in (("fee_events", fee_keys), ("funding_events", funding_keys)):
+        events = event_surface[container]
+        if type(events) is not list:
+            raise GateRefusal(
+                "CLOSED_SET_VIOLATION",
+                "expected array",
+                pointer=f"/EVENT_SURFACE/{container}",
+            )
+        for index, event in enumerate(events):
+            _require_closed_member_set(
+                event, expected, f"/EVENT_SURFACE/{container}/{index}"
+            )
+
+    exit_common = {
+        "sequence",
+        "kernel_semantics_version",
+        "exit_id",
+        "reason",
+        "fill_id",
+        "quantity",
+        "final_fill_price",
+        "gross_realized_pnl",
+    }
+    exits = event_surface["exit_events"]
+    if type(exits) is not list:
+        raise GateRefusal(
+            "CLOSED_SET_VIOLATION", "expected array", pointer="/EVENT_SURFACE/exit_events"
+        )
+    for index, event in enumerate(exits):
+        pointer = f"/EVENT_SURFACE/exit_events/{index}"
+        reason = _closed_discriminator(
+            event, "reason", {"PROTECTIVE_STOP", "TARGET", "time_stop"}, pointer
+        )
+        expected = exit_common | ({"fill_trigger"} if reason == "PROTECTIVE_STOP" else set())
+        _require_closed_member_set(event, expected, pointer)
+
+    result = surfaces["RESULT_SURFACE"]
+    result_keys = {
+        "final_position",
+        "trades",
+        "equity_curve",
+        "metrics",
+        "warnings",
+        "refusals",
+        "run_manifest",
+    }
+    rule_number = scenario_id[6:8]
+    if rule_number in {"01", "02", "05"}:
+        result_keys.add("order_notional")
+    if scenario_id == "RULE2-02-GREEN":
+        result_keys.add("admitted")
+    if rule_number == "07":
+        result_keys.add("guards")
+    if rule_number == "08":
+        result_keys.add("cumulative_funding")
+    _require_closed_member_set(result, result_keys, "/RESULT_SURFACE")
+    _require_closed_member_set(
+        result["equity_curve"], {"first", "last"}, "/RESULT_SURFACE/equity_curve"
+    )
+
+    trades = result["trades"]
+    if type(trades) is not list:
+        raise GateRefusal(
+            "CLOSED_SET_VIOLATION", "expected array", pointer="/RESULT_SURFACE/trades"
+        )
+    trade_keys = {
+        "entry_fill_price",
+        "quantity",
+        "exit_ids",
+        "gross_realized_pnl",
+        "fee_total",
+        "funding_total",
+        "net_trade_pnl",
+    }
+    for index, trade in enumerate(trades):
+        _require_closed_member_set(
+            trade, trade_keys, f"/RESULT_SURFACE/trades/{index}"
+        )
+
+    if "guards" in result:
+        guard_keys = {
+            "guard_pnl_basis",
+            "consecutive_loss_count",
+            "consec_loss_ok",
+            "guard_blocked_raw",
+        }
+        if scenario_id == "RULE2-07-RED":
+            guard_keys.add("last_closed_guard_pnl")
+        _require_closed_member_set(result["guards"], guard_keys, "/RESULT_SURFACE/guards")
+
+    refusal_keys = {
+        "REFUSED_MIN_NOTIONAL": {"code", "order_notional", "required_min_notional"},
+        "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION": {
+            "code",
+            "field",
+            "record_value",
+            "runtime_value",
+            "stage",
+        },
+    }
+    refusals = result["refusals"]
+    if type(refusals) is not list:
+        raise GateRefusal(
+            "CLOSED_SET_VIOLATION", "expected array", pointer="/RESULT_SURFACE/refusals"
+        )
+    for index, refusal in enumerate(refusals):
+        pointer = f"/RESULT_SURFACE/refusals/{index}"
+        code = _closed_discriminator(refusal, "code", set(refusal_keys), pointer)
+        _require_closed_member_set(refusal, refusal_keys[code], pointer)
+        if code == "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION" and refusal["stage"] != "PRE_EVALUATION":
+            raise GateRefusal(
+                "CLOSED_SET_VIOLATION",
+                f"invalid stage {refusal['stage']!r}",
+                pointer=f"{pointer}/stage",
+            )
+
+
 def _walk_strings(value: Any, pointer: str = "") -> Iterable[tuple[str, str]]:
     if type(value) is str:
         yield pointer, value
@@ -1204,6 +1546,7 @@ def execute_corrected_scenario(
             include_cumulative_funding=scenario_id.startswith("RULE2-08-"),
         )
         _normalize_exit_surface(surfaces)
+    validate_corrected_closed_sets(scenario_id, surfaces)
     validate_corrected_event_surface(surfaces["EVENT_SURFACE"])
     return {
         "schema": "P012_OBSERVED_SURFACES_V1",
