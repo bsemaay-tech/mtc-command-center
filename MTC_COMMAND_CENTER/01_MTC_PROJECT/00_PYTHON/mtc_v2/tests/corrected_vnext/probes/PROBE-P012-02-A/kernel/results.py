@@ -658,7 +658,7 @@ def _exit_surface(
     kernel_semantics_version: str,
 ) -> list[dict[str, Any]]:
     reason_by_class = {
-        "PROTECTIVE_STOP_EXIT": "STOP",
+        "PROTECTIVE_STOP_EXIT": "PROTECTIVE_STOP",
         "TARGET_EXIT": "TARGET",
         "MARKET_EXIT": "MARKET_EXIT",
     }
@@ -666,11 +666,15 @@ def _exit_surface(
     for row, gross_realized_pnl in exit_rows:
         fill_id = getattr(row, "fill_id")
         event_class = getattr(row, "event_class")
+        exit_id = getattr(row, "exit_id") or event_class
+        reason = reason_by_class.get(event_class, event_class)
+        if event_class == "MARKET_EXIT" and exit_id == "TIME_STOP":
+            reason = "time_stop"
         item = {
             "sequence": len(result),
             "kernel_semantics_version": kernel_semantics_version,
-            "exit_id": getattr(row, "exit_id") or event_class,
-            "reason": reason_by_class.get(event_class, event_class),
+            "exit_id": exit_id,
+            "reason": reason,
             "fill_id": fill_id,
             "quantity": _json_number(getattr(row, "quantity")),
             "final_fill_price": _json_number(getattr(row, "final_fill_price")),
@@ -841,9 +845,8 @@ def corrected_surfaces(
     manifest: CorrectedRunManifest,
     warnings: Iterable[RunnerWarning | Mapping[str, Any]] = (),
     refusals: Iterable[Mapping[str, Any]] | None = None,
-    guards: Mapping[str, Any] | None = None,
-    include_order_notional: bool = False,
-    admitted: bool | None = None,
+    computed_guard_snapshot: Mapping[str, Any] | None = None,
+    declared_def_ids: Iterable[str] = (),
     observation_start: datetime | None = None,
     observation_end: datetime | None = None,
     include_cumulative_funding: bool | None = None,
@@ -921,7 +924,8 @@ def corrected_surfaces(
             }
         )
     }
-    if include_order_notional:
+    declared_defs = frozenset(declared_def_ids)
+    if declared_defs.intersection({"DEF-P012-01", "DEF-P012-02", "DEF-P012-05"}):
         entry_fills = [
             row for row in state.fill_events if row.event_class.endswith("ENTRY")
         ]
@@ -967,10 +971,14 @@ def corrected_surfaces(
         result_surface["cumulative_funding"] = _json_number(
             state.cumulative_funding
         )
-    if guards is not None:
-        result_surface["guards"] = _guard_surface(guards)
-    if admitted is not None:
-        result_surface["admitted"] = admitted
+    if "DEF-P012-07" in declared_defs:
+        if computed_guard_snapshot is None:
+            raise ValueError("declared guard projection requires a computed guard snapshot")
+        result_surface["guards"] = _guard_surface(computed_guard_snapshot)
+    if "DEF-P012-02" in declared_defs and any(
+        row.decision == "MIN_NOTIONAL_ADMITTED" for row in state.decision_events
+    ):
+        result_surface["admitted"] = True
     result_surface.update(
         {
             "metrics": None,
