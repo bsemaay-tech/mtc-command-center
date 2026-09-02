@@ -378,6 +378,39 @@ def test_w276_f02_funding_duplicate_identity_includes_lifecycle_id() -> None:
     assert transition.funding_events[0].lifecycle_id == 2
 
 
+def test_w283r_r3_ineligible_same_funding_pair_is_refused() -> None:
+    records = EconomicRecords.from_record_paths(
+        instrument_path=(
+            RECORD_ROOT / "instruments" / "SYNTH-INSTRUMENT-RULE2-08-RED-V1.json"
+        ),
+        funding_path=RECORD_ROOT / "funding" / "SYNTH-FUNDING-RULE2-08-V1.json",
+    )
+    state = EconomicState(
+        lifecycle_id=1,
+        position_side="LONG",
+        quantity=0.0,
+        entry_fill_price=100.0,
+        applied_funding_event_keys=frozenset({("TEST-FUND-1", 1)}),
+    )
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        CorrectedEconomicsAdapter().resolve(
+            state,
+            EconomicIntent(kind=IntentKind.FUNDING_TICK, funding_event_id="TEST-FUND-1"),
+            MarketEvent(
+                timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
+                bar_index=2,
+                open=100.0,
+                high=100.0,
+                low=100.0,
+                close=100.0,
+            ),
+            records,
+        )
+
+    assert exc_info.value.refusal_code == REFUSED_DUPLICATE_FUNDING_EVENT
+
+
 def test_fill_without_cost_schedule_is_refused() -> None:
     records = EconomicRecords.from_record_paths(
         instrument_path=(

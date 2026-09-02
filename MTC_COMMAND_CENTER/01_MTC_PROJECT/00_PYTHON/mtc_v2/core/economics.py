@@ -1128,7 +1128,10 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         if len(matching) != 1:
             raise EconomicsRefusal(REFUSED_MISSING_FUNDING_EVENT, str(event_id))
         eligible = state.lifecycle_id is not None and state.quantity > 0.0
-        if eligible and (str(event_id), int(state.lifecycle_id)) in state.applied_funding_event_keys:
+        if (
+            state.lifecycle_id is not None
+            and (str(event_id), int(state.lifecycle_id)) in state.applied_funding_event_keys
+        ):
             raise EconomicsRefusal(REFUSED_DUPLICATE_FUNDING_EVENT, str(event_id))
         decision = DecisionEvent(
             sequence=state.next_decision_sequence + len(prefix),
