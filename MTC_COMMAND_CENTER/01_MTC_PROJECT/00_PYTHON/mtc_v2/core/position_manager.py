@@ -16,6 +16,7 @@ from mtc_v2.core.types import (
     RawSignal,
     REFUSED_INVALID_CASH_LEDGER_JOIN,
     WorkingExit,
+    _same_binary64,
 )
 
 
@@ -157,11 +158,11 @@ class PositionManager:
     ) -> Position | None:
         exited = sum(row.quantity for row in fills)
         calculated_remainder = max(0.0, position.qty - exited)
-        if abs(calculated_remainder - next_quantity) > 1e-12:
+        if not _same_binary64(calculated_remainder, next_quantity):
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: next position quantity mismatch"
             )
-        if next_quantity <= 1e-12:
+        if next_quantity <= 0.0:
             return None
 
         legs = list(position.entry_legs)
@@ -225,7 +226,7 @@ class PositionManager:
         side = facts.side.lower()
         exits = list(working_exits or [])
         if state.position is None:
-            if abs(facts.quantity - fill.quantity) > 1e-12:
+            if not _same_binary64(facts.quantity, fill.quantity):
                 raise EconomicTransitionError(
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: open quantity mismatch"
                 )
@@ -258,7 +259,7 @@ class PositionManager:
         if (
             current.side != side
             or current.lifecycle_id != facts.lifecycle_id
-            or abs(facts.quantity - expected_quantity) > 1e-12
+            or not _same_binary64(facts.quantity, expected_quantity)
         ):
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: add transition position mismatch"
@@ -394,7 +395,7 @@ class PositionManager:
                 facts.lifecycle_id != state.position.lifecycle_id
                 or facts.side is None
                 or facts.side.lower() != state.position.side
-                or abs(facts.quantity - state.position.qty) > 1e-12
+                or not _same_binary64(facts.quantity, state.position.qty)
             ):
                 raise EconomicTransitionError(
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: non-fill position mismatch"
@@ -407,7 +408,10 @@ class PositionManager:
         )
         if transition.funding_events:
             expected_cumulative = state.cumulative_funding + funding_cash
-            if abs(transition.funding_events[-1].cumulative_funding - expected_cumulative) > 1e-12:
+            if not _same_binary64(
+                transition.funding_events[-1].cumulative_funding,
+                expected_cumulative,
+            ):
                 raise EconomicTransitionError(
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding cumulative mismatch"
                 )

@@ -691,7 +691,7 @@ def _closed_lifecycle_trades(state: PortfolioState) -> list[CorrectedTradeRecord
         exit_rows = exits.get(lifecycle_id, [])
         entry_qty = sum(float(row.quantity) for row in entry_rows)
         exit_qty = sum(float(row.quantity) for row in exit_rows)
-        if not exit_rows or exit_qty + 1e-12 < entry_qty:
+        if not exit_rows or exit_qty < entry_qty:
             continue
         entry_fill_price = sum(
             float(row.final_fill_price) * float(row.quantity) for row in entry_rows

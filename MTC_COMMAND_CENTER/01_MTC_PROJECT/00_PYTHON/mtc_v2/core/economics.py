@@ -980,7 +980,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             remaining -= quantity
         next_facts = (
             _position_facts(lifecycle_id=None, side=None, quantity=0.0, entry_fill_price=None)
-            if remaining <= 1e-12
+            if remaining <= 0.0
             else _position_facts(
                 lifecycle_id=state.lifecycle_id,
                 side=state.position_side,
@@ -1090,7 +1090,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 quantity=0.0,
                 entry_fill_price=None,
             )
-            if remainder <= 1e-12
+            if remainder <= 0.0
             else _position_facts(
                 lifecycle_id=state.lifecycle_id,
                 side=state.position_side,
