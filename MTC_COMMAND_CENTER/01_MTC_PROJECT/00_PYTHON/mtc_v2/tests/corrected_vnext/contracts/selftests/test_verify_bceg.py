@@ -1201,20 +1201,21 @@ def test_observed_projection_passes_no_authoring_or_membership_overrides(
     )
 
 
-def test_observed_exit_reason_is_not_rewritten(
-    monkeypatch: pytest.MonkeyPatch,
+@pytest.mark.parametrize("scenario_id", ["RULE2-04-RED", "RULE2-06-GREEN"])
+def test_w304_row4_serializes_the_protective_stop_reason(
+    scenario_id: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     catalog = load_json_exact(
         MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
     )
-    row = next(member for member in catalog if member["scenario_id"] == "RULE2-04-RED")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
     monkeypatch.setattr(
         verify_bceg, "validate_corrected_closed_sets", lambda *_args: None
     )
 
     observed = execute_corrected_scenario(MTC_V2_ROOT, row)
 
-    assert observed["EVENT_SURFACE"]["exit_events"][0]["reason"] == "STOP"
+    assert observed["EVENT_SURFACE"]["exit_events"][0]["reason"] == "PROTECTIVE_STOP"
 
 
 def test_observed_path_has_no_legacy_state_seed_or_literal_surface_builder() -> None:

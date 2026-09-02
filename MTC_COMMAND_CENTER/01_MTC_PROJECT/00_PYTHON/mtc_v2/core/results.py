@@ -658,7 +658,7 @@ def _exit_surface(
     kernel_semantics_version: str,
 ) -> list[dict[str, Any]]:
     reason_by_class = {
-        "PROTECTIVE_STOP_EXIT": "STOP",
+        "PROTECTIVE_STOP_EXIT": "PROTECTIVE_STOP",
         "TARGET_EXIT": "TARGET",
         "MARKET_EXIT": "MARKET_EXIT",
     }
