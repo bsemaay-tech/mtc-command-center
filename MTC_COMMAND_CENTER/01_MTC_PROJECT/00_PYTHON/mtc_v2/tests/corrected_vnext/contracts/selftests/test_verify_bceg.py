@@ -1218,6 +1218,18 @@ def test_w304_row4_serializes_the_protective_stop_reason(
     assert observed["EVENT_SURFACE"]["exit_events"][0]["reason"] == "PROTECTIVE_STOP"
 
 
+def test_w304_row5_serializes_the_bound_time_stop_reason() -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-07-RED")
+
+    observed = execute_corrected_scenario(MTC_V2_ROOT, row)
+
+    assert observed["EVENT_SURFACE"]["exit_events"][0]["exit_id"] == "TIME_STOP"
+    assert observed["EVENT_SURFACE"]["exit_events"][0]["reason"] == "time_stop"
+
+
 def test_observed_path_has_no_legacy_state_seed_or_literal_surface_builder() -> None:
     assert not hasattr(verify_bceg, "_prepare_rule2_08_observation")
     assert not hasattr(verify_bceg, "_refusal_surfaces")

@@ -666,11 +666,15 @@ def _exit_surface(
     for row, gross_realized_pnl in exit_rows:
         fill_id = getattr(row, "fill_id")
         event_class = getattr(row, "event_class")
+        exit_id = getattr(row, "exit_id") or event_class
+        reason = reason_by_class.get(event_class, event_class)
+        if event_class == "MARKET_EXIT" and exit_id == "TIME_STOP":
+            reason = "time_stop"
         item = {
             "sequence": len(result),
             "kernel_semantics_version": kernel_semantics_version,
-            "exit_id": getattr(row, "exit_id") or event_class,
-            "reason": reason_by_class.get(event_class, event_class),
+            "exit_id": exit_id,
+            "reason": reason,
             "fill_id": fill_id,
             "quantity": _json_number(getattr(row, "quantity")),
             "final_fill_price": _json_number(getattr(row, "final_fill_price")),
