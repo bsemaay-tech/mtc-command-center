@@ -15,6 +15,7 @@ import base64
 import hashlib
 import importlib
 import importlib.util
+import inspect
 import json
 import math
 import os
@@ -1399,6 +1400,16 @@ def execute_corrected_scenario(
             runner.run(bars)
     except (EconomicsRefusal, InstrumentRecordRefusal):
         pass
+    projection_parameters = inspect.signature(corrected_surfaces).parameters.values()
+    accepts_declared_defs = "declared_def_ids" in {
+        parameter.name for parameter in projection_parameters
+    } or any(
+        parameter.kind is inspect.Parameter.VAR_KEYWORD
+        for parameter in projection_parameters
+    )
+    projection_contract = (
+        {"declared_def_ids": row["owning_def_ids"]} if accepts_declared_defs else {}
+    )
     surfaces = corrected_surfaces(
         state=runner.state,
         equity_values=runner.corrected_equity_curve,
@@ -1408,6 +1419,7 @@ def execute_corrected_scenario(
         ),
         observation_start=_timestamp(corrected["observation_window"]["start_timestamp"]),
         observation_end=_timestamp(corrected["observation_window"]["end_timestamp"]),
+        **projection_contract,
     )
     validate_corrected_event_surface(surfaces["EVENT_SURFACE"])
     return {

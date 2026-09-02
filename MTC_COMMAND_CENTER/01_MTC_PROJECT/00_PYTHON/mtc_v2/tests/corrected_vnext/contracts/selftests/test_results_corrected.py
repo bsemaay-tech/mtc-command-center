@@ -200,7 +200,7 @@ def test_corrected_min_notional_refusal_retains_nonblocked_result_facts() -> Non
         manifest=CorrectedRunManifest.from_records(
             _records(config), execution_profile_id=str(config["execution_profile_id"])
         ),
-        include_order_notional=True,
+        declared_def_ids=("DEF-P012-02",),
     )["RESULT_SURFACE"]
 
     assert result["final_position"] is None

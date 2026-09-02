@@ -1188,6 +1188,7 @@ def test_observed_projection_passes_no_authoring_or_membership_overrides(
     execute_corrected_scenario(MTC_V2_ROOT, row)
 
     assert len(calls) == 1
+    assert "declared_def_ids" in calls[0]
     assert calls[0].isdisjoint(
         {
             "refusals",
@@ -1402,7 +1403,7 @@ def test_section_23_fill_and_exit_conditionals_are_closed(
         "RULE2-08-GREEN",
     ],
 )
-def test_raw_kernel_result_membership_is_not_harness_shaped(
+def test_raw_kernel_result_membership_follows_declared_contract(
     scenario_id: str,
 ) -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
@@ -1417,6 +1418,8 @@ def test_raw_kernel_result_membership_is_not_harness_shaped(
         "refusals",
         "run_manifest",
     }
+    if row["owning_def_ids"][0] in {"DEF-P012-01", "DEF-P012-02", "DEF-P012-05"}:
+        expected.add("order_notional")
     assert set(result) == expected
     assert result["metrics"] is None
 
@@ -1488,7 +1491,28 @@ def test_rule2_05_red_sizes_from_final_fill_and_preserves_zero_economics() -> No
         "quantity": 0,
         "entry_fill_price": 101,
     }
-    assert "order_notional" not in observed["RESULT_SURFACE"]
+    assert observed["RESULT_SURFACE"]["order_notional"] == 0
+
+
+@pytest.mark.parametrize(
+    ("scenario_id", "expected_notional"),
+    [
+        ("RULE2-01-RED", 1000),
+        ("RULE2-01-GREEN", 100),
+        ("RULE2-02-RED", 100),
+        ("RULE2-05-RED", 0),
+        ("RULE2-05-GREEN", 100),
+    ],
+)
+def test_w304_row1_serializes_kernel_computed_order_notional(
+    scenario_id: str, expected_notional: int
+) -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+
+    result = execute_corrected_scenario(MTC_V2_ROOT, row)["RESULT_SURFACE"]
+
+    assert result["order_notional"] == expected_notional
 
 
 def test_rule2_06_green_uses_the_closed_stop_touch_token() -> None:

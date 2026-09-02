@@ -842,7 +842,7 @@ def corrected_surfaces(
     warnings: Iterable[RunnerWarning | Mapping[str, Any]] = (),
     refusals: Iterable[Mapping[str, Any]] | None = None,
     guards: Mapping[str, Any] | None = None,
-    include_order_notional: bool = False,
+    declared_def_ids: Iterable[str] = (),
     admitted: bool | None = None,
     observation_start: datetime | None = None,
     observation_end: datetime | None = None,
@@ -921,7 +921,8 @@ def corrected_surfaces(
             }
         )
     }
-    if include_order_notional:
+    declared_defs = frozenset(declared_def_ids)
+    if declared_defs.intersection({"DEF-P012-01", "DEF-P012-02", "DEF-P012-05"}):
         entry_fills = [
             row for row in state.fill_events if row.event_class.endswith("ENTRY")
         ]
