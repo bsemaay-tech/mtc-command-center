@@ -705,7 +705,7 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
 
 81. **KERNEL FIX AUTHORIZATION EXTENDED TO FLAGSHIP-2'S FOUR ENGINE DEFECTS** (owner: "Yes, all
     seven in one authorized lane set", 2026-09-02 ~17:5x). Flagship audit 2 (Claude Pro, W279)
-    returned NOT READY with twelve findings; four are engine defects of the same class as decision
+    returned NOT READY with twelve findings [CORRECTED addendum 31: 22 findings, F01-F22]; four are engine defects of the same class as decision
     80's: W279-F09 (funding events outside the strictly-between-bars window silently dropped, no
     eligibility row, no refusal), W279-F08 (`position_snapshot_rule` echoed but never implemented;
     `interval_boundary_convention` never read), W279-F11 (corrected entry path does not apply the
@@ -716,3 +716,107 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     detection lane re-run on the result before any pull-request question. Harness findings
     (W279-F01, F03, F04, F05, F07; F02 = the receipt binding already under repair) proceed under the
     standing build authorization and need no further word.
+
+## Addendum 31 - 2026-09-02 19:2x REAL (owner: 41 Phase-0 answers, verbatim; GO to the overnight prompt with all defaults)
+
+Source: the owner's answers message of 2026-09-02 ~19:0x (recorded verbatim in
+`C:\tmp\LANE_PROMPTS_20260828\OWNER_ANSWERS_41_2026-09-02.md`) and his `GO` of 19:2x REAL to
+`PROMPT_OVERNIGHT_2026-09-02.md`. His rule on the answers message, applied: the V1.2 recommended
+answers were proposals only; each row below records the basis kind of the recommendation it
+rests on (DOCUMENT / CURRENT-SYSTEM / PRECEDENT / JUDGEMENT); nothing was implemented, built,
+committed or pushed from that message; this entry and the fold lanes start on the GO. Rows map
+1:1 to `OWNER_PHASE0_DECISIONS_V1.md` V1.1 (row N = decision 81+N). An owner answer needs no
+basis kind: it IS the authority; the basis kind describes the recommendation, not the decision.
+
+**Correction to decision 81:** it says flagship 2 (W279) returned "twelve findings"; the report
+enumerates 22 (F01-F22: 7 HIGH / 9 MEDIUM / 6 LOW). The four engine items named there (F08, F09,
+F11, F12) and "F10 duplicates W276-F02" are correct; only the total was wrong (found by DS102).
+
+### The 41 answers (decisions 82-122)
+
+_Answer first: 1-7 (P0-20 rows 1-5; P0-13 rows 6-7)_
+
+82. **Row 1** (owner verbatim): "Use 1% risk per trade and no leverage. Let each strategy set its own data-freshness limit, no longer than its trading interval. Do not invent the separate stop-loss ceiling: bring that back to me as a separate decision." - recommendation basis: CURRENT-SYSTEM (1 % risk, leverage cap 1.0 from `config.py`); loss-at-stop left OPEN by the owner - **new owner decision to be scheduled**.
+83. **Row 2** (owner verbatim): "Ratify the existing exam settings: DSR 0.95, BH-FDR 0.10, at least 30 trades, final 25% held back, with at least 1,500 bars. Call this exam version 1. Leave CPCV and PBO limits open for now, and measure skew and kurtosis properly." - recommendation basis: CURRENT-SYSTEM (values in `mega_walk_forward.py`); CPCV/PBO stay OPEN.
+84. **Row 3** (owner verbatim): "Retire and freeze the two old simulators. Do not rebuild them." - recommendation basis: DOCUMENT.
+85. **Row 4** (owner verbatim): "Put the portfolio simulator inside P0-20, but keep it research-only." - recommendation basis: JUDGEMENT (gates P0-20 acceptance per `P020_BUILD_DESIGN_V1.md:956`).
+86. **Row 5** (owner verbatim): "Use my normal PC as the reference machine. A 100,000-trial run may take one overnight period. Measure the whole chosen grid and report the middle result and the slower-end result." - recommendation basis: JUDGEMENT.
+87. **Row 6** (owner verbatim): "Use a combined quality rule, not one score. Keep the top 20 per strategy, market, and timeframe; also keep the best risk-versus-return group, promoted items, robust items, and anything I pin." - recommendation basis: DOCUMENT.
+88. **Row 7** (owner verbatim): "Keep settings for every saved trial." - recommendation basis: DOCUMENT.
+
+_P0-21 (rows 8-14)_
+
+89. **Row 8** (owner verbatim): "Decide the formula for measuring data gaps before choosing a gap limit. Use the first real scan to propose the number, and use a 24/7 calendar for BTC perpetual data." - recommendation basis: JUDGEMENT.
+90. **Row 9** (owner verbatim): "Require at least 30 trades for every strategy and timeframe." - recommendation basis: CURRENT-SYSTEM (`MIN_TRADES_FOR_PASS = 30`).
+91. **Row 10** (owner verbatim): "Initially allow no trade to lose more than its declared stop-loss risk. Revisit this after real gap data is measured." - recommendation basis: JUDGEMENT.
+92. **Row 11** (owner verbatim): "Do not set a backtest-versus-live drift limit yet. First publish the measured drift from the first shadow period." - recommendation basis: JUDGEMENT.
+93. **Row 12** (owner verbatim): "A missing required safety control may allow shadow testing only; it blocks all higher stages. Informational controls are allowed only when listed openly." - recommendation basis: DOCUMENT.
+94. **Row 13** (owner verbatim): "Require both: an internal paper period of 8-16 weeks, at least 30 new trades, and no unexplained breaks; plus separate exchange-testnet proof. Neither replaces the other." - recommendation basis: DOCUMENT (`brief:725,1366,1369`).
+95. **Row 14** (owner verbatim): "Adopt the written eligibility checklist as version 1." - recommendation basis: DOCUMENT.
+
+_P0-14 (rows 15-16)_
+
+96. **Row 15** (owner verbatim): "Keep all dashboard colours grey for now." - recommendation basis: DOCUMENT.
+97. **Row 16** (owner verbatim): "Show incomplete screening results, but label every tile SCREEN ONLY and hide the detailed report." - recommendation basis: DOCUMENT.
+
+_P0-22 (rows 17-22)_
+
+98. **Row 17** (owner verbatim): "Treat every trial from one approved search-space version, for one strategy, as one family. Do not invent arbitrary parameter buckets." - recommendation basis: JUDGEMENT.
+99. **Row 18** (owner verbatim): "Accept conservative over-marking for now. Do not add new record-keeping machinery yet." - recommendation basis: JUDGEMENT.
+100. **Row 19** (owner verbatim): "Use one shared UTC clock; allow no hidden clock difference." - recommendation basis: JUDGEMENT.
+101. **Row 20** (owner verbatim): "Require an independent clock for access logs." - recommendation basis: JUDGEMENT.
+102. **Row 21** (owner verbatim): "Prevent unlogged copying or reading of results by building a proper boundary. This is costly, so record that cost openly." - recommendation basis: JUDGEMENT.
+103. **Row 22** (owner verbatim): "Bind the screen's displayed result window directly to its recorded window." - recommendation basis: JUDGEMENT.
+
+_P0-30 (rows 23-28)_
+
+104. **Row 23** (owner verbatim): "Use "bar interval plus 15 seconds" for aging and "bar interval plus 45 seconds" for stale data. Do not set a recovery limit yet. Mark these as a judgement based on illustrative values, not measured proof." - recommendation basis: JUDGEMENT (owner marks it so himself).
+105. **Row 24** (owner verbatim): "If data falls back to slow polling and the strategy gives no instruction, stop." - recommendation basis: DOCUMENT.
+106. **Row 25** (owner verbatim): "Create one shared rate-limit coordinator. Until it exists, run the collector as one process only." - recommendation basis: PRECEDENT (decision 54 shape).
+107. **Row 26** (owner verbatim): "Store market data by month." - recommendation basis: JUDGEMENT.
+108. **Row 27** (owner verbatim): "For 15-minute data, warn when only 40 days of venue history remain. Measure the other timeframes before setting their limits." - recommendation basis: JUDGEMENT (illustrative 40-day figure; `P030_DESIGN_DRAFT_V1.md:120-124`).
+109. **Row 28** (owner verbatim): "Start only with Hyperliquid BTC perpetual on 15m, 1h, 4h, and 1d intervals." - recommendation basis: PRECEDENT.
+
+_P0-31 Milestone 1 (rows 29-33)_
+
+110. **Row 29** (owner verbatim): "Commission the ledger's own registrar to issue its writer credentials. Keep the authority small and inside the accepted trust boundary." - recommendation basis: JUDGEMENT.
+111. **Row 30** (owner verbatim): "Accept milestone 1's refusal proof now, but record that a successful path still must be demonstrated after decision 14." - recommendation basis: JUDGEMENT.
+112. **Row 31** (owner verbatim): "Add real tests for simultaneous writing and backup recovery." - recommendation basis: JUDGEMENT.
+113. **Row 32** (owner verbatim): "Include a read-only ledger view in milestone 1." - recommendation basis: DOCUMENT (`plan:425`).
+114. **Row 33** (owner verbatim): "Use an independent reviewer from a model family that did not author or build the item being reviewed." - recommendation basis: PRECEDENT (design 15.1 / owner Q3a).
+
+_P0-31 Milestone 2 (rows 34-41)_
+
+115. **Row 34** (owner verbatim): "Map the four old unknown labels to CAPTURED, while keeping each original label as a visible tag." - recommendation basis: JUDGEMENT.
+116. **Row 35** (owner verbatim): "For composite old statuses, use the highest-ranked status under the written ladder." - recommendation basis: DOCUMENT.
+117. **Row 36** (owner verbatim): "For an array of labels, use the lowest-ranked label; keep every label as a tag. Missing labels stay CAPTURED and are marked missing." - recommendation basis: JUDGEMENT.
+118. **Row 37** (owner verbatim): "Import all old triage-registry entries as CAPTURED, with a tag that they may be reviewed again later." - recommendation basis: JUDGEMENT.
+119. **Row 38** (owner verbatim): "When two sources disagree, mark the record migrated-conflict, keep both values, and let neither win silently." - recommendation basis: DOCUMENT.
+120. **Row 39** (owner verbatim): "Do not grandfather old status. No imported record may automatically become higher than CANDIDATE." - recommendation basis: DOCUMENT.
+121. **Row 40** (owner verbatim): "Add the small independent refusal test rather than claiming an unproven refusal." - recommendation basis: JUDGEMENT.
+122. **Row 41** (owner verbatim): "Do not import scorecards as lifecycle records. Leave them readable as evidence where they are." - recommendation basis: DOCUMENT.
+
+### GO answers to the overnight prompt (decisions 123-125)
+
+123. **KERNEL SCOPE = ALL 14** (owner: "GO", item A default). The seven kernel defects not covered by
+    decisions 80-81 are authorized under the same conditions: W279-F06 (HIGH, test constructor with
+    override fields inside `mtc_v2/core`), W279-F13 (nine `1e-12` tolerances vs exact-binary64),
+    W279-F16 (fee `cash_event_id` from the fee counter), W279-F18, F19, F20, F21 (LOW), plus the
+    kernel half of W279-F17. Conditions: failing-then-passing test per item, legacy replay
+    byte-exact, different-family verification, both flagships and the detection lane re-run on
+    the result before any pull-request question. Lane W285 after W283.
+124. **PROBE-COPY WHITESPACE STAYS** (owner: "GO", item B default). The whitespace diagnostics inside
+    the ten pinned probe copies (W276-F06 = W279-F22) are immutable evidence: left untouched,
+    recorded as known and excluded from the hygiene check. The ordinary self-test blank line
+    (`test_corrected_config.py:87`) is repaired regardless.
+125. **SECTION-16 SIGNATURE AFTER THE RE-AUDITS** (owner: "GO", item C default). The owner's
+    section-16 review is not spent tonight; it follows the kernel and harness fixes and the
+    re-run of both flagships plus detection on the fixed branch.
+
+Notes carried from the answers file: row 1 opens a NEW owner decision (the separate loss-at-stop
+ceiling, `brief:1334`, `[OPEN]`) - scheduled, not set; rows 2, 8, 11, 23, 27 deliberately leave a
+value open or defer it to a measurement - folds write `OWNER-DEFERRED-TO-MEASUREMENT`, never a
+number; row 30's "decision 14" means row 14 (the checklist v1), not ledger decision 14; row 33
+ratifies the family rule already binding (design 15.1, Q3a); row 21 requires an explicit cost line
+with a source, no estimate without one.
+
