@@ -118,6 +118,34 @@ def test_main_runner_round_trip_uses_gross_minus_fees_for_all_open10_guards() ->
     }
 
 
+def test_w276_f01_runner_applies_exit_cash_events_in_order() -> None:
+    config, bars = _scenario("RULE2-05-GREEN")
+    config["initial_capital"] = 1e16
+    runner = Runner(config)
+    runner._bind_corrected_instrument(bars[0].timestamp)
+    assert runner._corrected_records is not None
+    assert runner._corrected_records.cost is not None
+    runner._corrected_records = replace(
+        runner._corrected_records,
+        cost={
+            **runner._corrected_records.cost,
+            "taker_rate": 0.0,
+            "fixed_component": 1e16,
+            "minimum_fee": 0.0,
+        },
+    )
+    runner.state.position = _open_long()
+
+    assert runner._apply_corrected_market_exit(
+        bar=bars[1],
+        reference_price=101.0,
+        reason="ordered_cash_probe",
+    )
+
+    assert [row.signed_delta for row in runner.state.cash_events] == [-1e16, 1.0]
+    assert runner.state.equity == 1.0
+
+
 def test_corrected_green_guard_surface_emits_consecutive_loss_outcome() -> None:
     config, bars = _scenario("RULE2-07-GREEN")
     runner = Runner(config)

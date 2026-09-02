@@ -150,10 +150,15 @@ def test_w276_f01_runtime_equity_applies_cash_events_in_order() -> None:
             ),
         ),
     )
-    state = PortfolioState(initial_capital=1e16, equity=1e16)
+    state = PortfolioState(
+        initial_capital=0.0,
+        equity=1e16,
+        realized_equity=1e16,
+    )
 
     _manager().apply_transition(bar=_bar(), state=state, transition=transition)
 
+    assert state.realized_equity == 1.0
     assert state.equity == 1.0
 
 
