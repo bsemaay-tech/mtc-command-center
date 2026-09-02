@@ -843,7 +843,6 @@ def corrected_surfaces(
     refusals: Iterable[Mapping[str, Any]] | None = None,
     guards: Mapping[str, Any] | None = None,
     declared_def_ids: Iterable[str] = (),
-    admitted: bool | None = None,
     observation_start: datetime | None = None,
     observation_end: datetime | None = None,
     include_cumulative_funding: bool | None = None,
@@ -970,8 +969,10 @@ def corrected_surfaces(
         )
     if guards is not None:
         result_surface["guards"] = _guard_surface(guards)
-    if admitted is not None:
-        result_surface["admitted"] = admitted
+    if "DEF-P012-02" in declared_defs and any(
+        row.decision == "MIN_NOTIONAL_ADMITTED" for row in state.decision_events
+    ):
+        result_surface["admitted"] = True
     result_surface.update(
         {
             "metrics": None,

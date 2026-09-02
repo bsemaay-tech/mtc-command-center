@@ -1420,6 +1420,8 @@ def test_raw_kernel_result_membership_follows_declared_contract(
     }
     if row["owning_def_ids"][0] in {"DEF-P012-01", "DEF-P012-02", "DEF-P012-05"}:
         expected.add("order_notional")
+    if scenario_id == "RULE2-02-GREEN":
+        expected.add("admitted")
     assert set(result) == expected
     assert result["metrics"] is None
 
@@ -1513,6 +1515,21 @@ def test_w304_row1_serializes_kernel_computed_order_notional(
     result = execute_corrected_scenario(MTC_V2_ROOT, row)["RESULT_SURFACE"]
 
     assert result["order_notional"] == expected_notional
+
+
+def test_w304_row2_serializes_the_kernel_admission_outcome() -> None:
+    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
+    rows = {
+        member["scenario_id"]: member
+        for member in catalog
+        if member.get("scenario_id") in {"RULE2-02-RED", "RULE2-02-GREEN"}
+    }
+
+    red = execute_corrected_scenario(MTC_V2_ROOT, rows["RULE2-02-RED"])["RESULT_SURFACE"]
+    green = execute_corrected_scenario(MTC_V2_ROOT, rows["RULE2-02-GREEN"])["RESULT_SURFACE"]
+
+    assert "admitted" not in red
+    assert green["admitted"] is True
 
 
 def test_rule2_06_green_uses_the_closed_stop_touch_token() -> None:
