@@ -656,3 +656,9 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     after the two engine fixes land and are verified, followed by the canonical gate. No skip flag,
     no manifest hand-edit: the refusal clears only because the reference and the seal agree. This
     is a decision to execute a run and is recorded as the owner's.
+
+    *Lead correction to the decision-76 consequence note, same day:* the sequencing "after the two
+    engine fixes land" was the Lead's inference, not the owner's word. The baseline driver runs the
+    LEGACY kernel from the master worktree (`C:\WFMERGE54`, core tree `c7f4aa1b`), which the build
+    worktree's fix does not touch, so the regeneration is independent of the engine fix and runs in
+    parallel. The owner's word stands as given: regenerate against seal #8, one run.
