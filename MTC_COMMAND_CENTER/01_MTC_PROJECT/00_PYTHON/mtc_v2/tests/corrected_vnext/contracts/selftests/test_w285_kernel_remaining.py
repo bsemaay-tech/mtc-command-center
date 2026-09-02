@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,6 +19,7 @@ from mtc_v2.core.economics import (
     REFUSED_ECONOMIC_INPUT,
 )
 from mtc_v2.core.position_manager import PositionManager
+from mtc_v2.core.runner import Runner
 from mtc_v2.core.results import (
     CorrectedRunManifest,
     _closed_lifecycle_trades,
@@ -386,4 +388,71 @@ def test_w279_f17_state_writer_emits_closed_override_refusal_members() -> None:
             "runtime_value": 0.25,
             "stage": "PRE_EVALUATION",
         }
+    ]
+
+
+def test_v283r2_d1_first_bar_default_funding_window_does_not_repeat_strictly_earlier() -> None:
+    document = json.loads(
+        (
+            MTC_V2_ROOT
+            / "tests/corrected_vnext/contracts/inputs/RULE2-08-RED.json"
+        ).read_text(encoding="utf-8")
+    )
+    legacy = document["legacy_arm"]
+    corrected = document["corrected_only"]
+    config = {
+        **legacy["config"],
+        **corrected["records"],
+        "kernel_semantics_version": "2.0.0",
+        "same_bar_collision_policy_id": "STOP_FIRST",
+        "slippage_model_id": "BPS_OF_REFERENCE_V1",
+    }
+    runner = Runner(config)
+    runner.state.position = Position(
+        side="long",
+        entry_price=100.0,
+        avg_entry_price=100.0,
+        qty=1.0,
+        entry_bar=0,
+        initial_qty=1.0,
+        entry_legs=[EntryLeg(100.0, 1.0, 0)],
+        lifecycle_id=1,
+    )
+    assert runner._corrected_records is not None
+    template = dict(runner._corrected_records.funding["events"][0])
+    strictly_earlier = {
+        **template,
+        "funding_event_id": "STRICTLY-EARLIER",
+        "event_timestamp": "1999-12-31T23:59:00Z",
+    }
+    same_timestamp = {
+        **template,
+        "funding_event_id": "SAME-TIMESTAMP",
+        "event_timestamp": "2000-01-01T00:00:00Z",
+    }
+    runner._corrected_records = replace(
+        runner._corrected_records,
+        funding={
+            **runner._corrected_records.funding,
+            "events": (strictly_earlier, same_timestamp),
+        },
+    )
+    first_bar = Bar(NOW, 100.0, 100.0, 100.0, 100.0, 0.0, 0)
+
+    runner.run([first_bar])
+
+    funding_decisions = [
+        row
+        for row in runner.state.decision_events
+        if row.decision == "FUNDING_ELIGIBILITY"
+    ]
+    assert [
+        (
+            dict(row.details)["funding_event_id"],
+            dict(row.details)["eligible"],
+        )
+        for row in funding_decisions
+    ] == [("STRICTLY-EARLIER", False), ("SAME-TIMESTAMP", True)]
+    assert [row.funding_event_id for row in runner.state.funding_events] == [
+        "SAME-TIMESTAMP"
     ]
