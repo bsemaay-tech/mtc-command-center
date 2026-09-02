@@ -284,12 +284,12 @@
  "files": [
   {
    "path": "DERIVATIONS.md",
-   "sha256": "73bce8e91a8c0a2b44dbc8bf6b766882f56d635d6f083826e74b37a7715897f3",
+   "sha256": "fe385afbc8edd15696ad6288836a2eac33d44e4316d5f7e465ff80f63d59c135",
    "bytes": 277385
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "941da56a0377c77bd10d03f5ecba899714e36fdef6c1e97e68bd240519ea6de9",
+   "sha256": "2e10819f45648653f3f43655c9ba26556472d782da9c95923af7fac96a6e1000",
    "bytes": 46256
   },
   {
@@ -747,10 +747,17 @@
    "report": "C:\\tmp\\LANE_PROMPTS_20260828\\W266_TRADE_QUANTITY_REPORT.md",
    "effect": "design pin only; no golden, catalog, input or derivation byte moved; no economic value moved",
    "independently_verified": "DS95 (OpenCode, different family): Verdict CLEAN (0 findings), Classification ENGINEERING CONFIRMED - C:/tmp/LANE_PROMPTS_20260828/DETECT_DS95_V112.md"
+  },
+  {
+   "revision": "re-seal #12: nine KERNEL PROBE rows re-derived over the repaired core tree (W299)",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W299_PROBE_REPIN.md",
+   "report": "C:\\WP012BUILD\\W299_PROBE_REPIN_REPORT.md",
+   "effect": "probe digest rows only; no golden, input, RED/GREEN row, or economic value moved",
+   "independently_verified": "V299 (DeepSeek V4 Pro via OpenRouter, different family): CLEAN, 9/9 probes base oid ok / patch unchanged / expectations unchanged / digests consistent / one probe-level change; D-1 diffstat framing, D-2 extract offset - C:/tmp/LANE_PROMPTS_20260828/_packets_V299/V299_REPORT.md; Lead two-party recomputation from committed bytes 9/9 = catalog (LEAD_REPIN12_DIGESTS.json)"
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+  "EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
   "reason": "Sealed by the Lead at re-seal #10: ten PROBE rows re-derived by the tables family under design v1.11 (W262) and the ten probe artifact digest pairs pinned two-party (W256 table == Lead recomputation from worktree bytes). Catalog and DERIVATIONS.md are the only files[] members that moved; all 17 goldens and inputs byte-identical to seal #8. Design pin re-measured at v1.11. Verified: design v1.11: DS93 (OpenCode) CLEAN, ENGINEERING classification CONFIRMED, rule strictly superset on the node dimension - C:/tmp/LANE_PROMPTS_20260828/DETECT_DS93_V111.md; W262 probe rows: GM77 (Gemini) CLEAN, 31 changed pointers all inside the ten PROBE rows, RED/GREEN rows byte-identical, DERIVATIONS insertion-only - C:/tmp/LANE_PROMPTS_20260828/DETECT_GM77_W262.md; probe digests: Lead recomputation from worktree bytes == W256 table == committed modified_tree_manifest.json, 10/10"
  },
@@ -761,9 +768,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+  "EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "set_by": "Lead re-seal act #11 2026-09-02T14:43:01+03:00 (design pin only; files[] and EXPECTED_SEAL_SHA unchanged from re-seal #10)"
+  "set_by": "Lead re-seal act #12 2026-09-02T23:40:31+03:00 (nine kernel probe digests re-pinned two-party after the authorized kernel repairs; owner decision 132)"
  },
  "reseal_history": [
   {
@@ -1029,6 +1036,27 @@
    "files_changed": [],
    "design_pin": "v1.12",
    "everything_else_verified_byte_identical": true
+  },
+  {
+   "at": "2026-09-02T23:40:31+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #12",
+   "old_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "new_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "scenario_catalog.json"
+   ],
+   "probe_rows_repinned": [
+    "PROBE-P012-01-A",
+    "PROBE-P012-01-B",
+    "PROBE-P012-02-A",
+    "PROBE-P012-04-A",
+    "PROBE-P012-05-A",
+    "PROBE-P012-05-B",
+    "PROBE-P012-06-A",
+    "PROBE-P012-07-A",
+    "PROBE-P012-08-A"
+   ]
   }
  ],
  "legacy_event_order_map_pin": {

@@ -3970,3 +3970,20 @@ Every original `note` string is retained verbatim; text was only appended to the
   in `:1027-1089` sits 13 lines lower; one in `:1090-1093` sits 20 lines lower; one at `:1094` or
   below sits 29 lines lower. This is the class W224 recorded as W224-D01 and W244 as W244-D01, and is
   recorded, not repaired.
+
+
+## Re-seal #12 - nine KERNEL probe digests re-pinned (2026-09-02 23:3x, Lead act under owner decision 132)
+
+The authorized kernel repairs (W283..W285, W284 item 0) changed `mtc_v2/core`; the nine KERNEL probes pinned the pre-fix tree `2c749345ed9be5186659369f091ce77a2e42d61a`. W299 re-derived each variant over the repaired tree `e8e250589d6b5a887e6f1a77874405836772d4bd` by applying the unchanged `modification.patch` (patch bytes, expected check and expected first-changed node unchanged; one base-relative change `economics.py` per variant). The Lead recomputed both digests per probe from the committed bytes (two-party pin) and wrote them into the PROBE rows; no RED/GREEN row, golden, input or derivation value moved.
+
+| probe | modification_manifest_digest | modified_copy_digest |
+|---|---|---|
+| PROBE-P012-01-A | `a2329ab11a87751862453cad8942332b3b54108c9f294656635a7eb9f849c87e` | `7b93a0dd06421ae979d0dc6736402d778cada45d2fc7aba4767ebb029093d12a` |
+| PROBE-P012-01-B | `cab810b62324678258bea30250788bb8f4c6097d75d50bdf3ad075664beff762` | `d8eae81dbcc4648a1a8dafa65c890e713eed965129002118c14330abb6c9aad6` |
+| PROBE-P012-02-A | `eebbcde982c72aec02584714cfbba0bf10468249576411649a2bbb0617d1240f` | `ff4592347f00b7187513665a07c02d4d7108909de9796cb6fd7527da2d4d941f` |
+| PROBE-P012-04-A | `9f44a7cd0ed4b6984232455bfe118904d05eefa7976f96127caf67a4cdc64102` | `dc313ee4328eecaad6ef34408cd4ab4838254589e213e4448c3540f71cf5ba92` |
+| PROBE-P012-05-A | `684637b72cf10ceaf740452b46878427bce8dd33855c64ec23670e9e5b9cc81c` | `216152ca35050558068fc24e1d64df7473296a6b7048c1b3515720dbf8f8d294` |
+| PROBE-P012-05-B | `ecb0bc2559c65ed920128adb085ff1c97726f7595ca002748e5c70563c7824da` | `009890b989aeba839d40585a6b1a489a1e26ae0928d543fbba56a7b449ac1b79` |
+| PROBE-P012-06-A | `f54132eda453169414d4e7c16e70edfe257f55ccb3f1ec1c7bfc2f1e59610902` | `fa51d604ef31863ae91f932ef32e95b2a9d72a0a924acdb0406fcadc4f371841` |
+| PROBE-P012-07-A | `c9f81cec21a789f4131f333a501b8260ef8ca3ede884df6b197eef3ab9a6a1e5` | `ea91b62f48edbb9ff15072a763f7255daf88c067bcab9645e7d3b4fc5b63e4da` |
+| PROBE-P012-08-A | `d976769490645ea5fefefbe7e44b0921807bdc561b3f9e77293601f8068823c9` | `48e63ab55bbd160d0d5f2b50747aac65674af91893dc35ce796d6bd1cfc8b95a` |
