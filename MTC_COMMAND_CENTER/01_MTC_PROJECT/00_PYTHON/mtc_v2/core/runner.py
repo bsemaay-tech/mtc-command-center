@@ -757,11 +757,6 @@ class Runner:
         )
         for event in events:
             event_time = self._record_timestamp(event.get("event_timestamp"))
-            if any((event_time.minute, event_time.second, event_time.microsecond)):
-                raise EconomicsRefusal(
-                    REFUSED_ECONOMIC_INPUT,
-                    "funding event does not satisfy HOURLY_INTERVAL_END_V1",
-                )
             if previous is None:
                 in_window = current is not None and (
                     event_time < current.timestamp

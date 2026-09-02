@@ -438,6 +438,30 @@ def test_w279_f08_position_snapshot_and_interval_boundary_are_applied() -> None:
         invalid_boundary_runner._apply_corrected_funding_between(bars[1], event_bar)
 
 
+def test_v283b_f9_boundary_label_does_not_invent_timestamp_alignment() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    assert runner._corrected_records is not None
+    event_time = datetime.fromisoformat("2000-01-01T00:00:30+00:00")
+    event = {
+        **runner._corrected_records.funding["events"][0],
+        "event_timestamp": "2000-01-01T00:00:30Z",
+    }
+    runner._corrected_records = replace(
+        runner._corrected_records,
+        funding={
+            **runner._corrected_records.funding,
+            "events": (event,),
+        },
+    )
+    runner.state.position = _open_long()
+
+    runner.run(bars[1:])
+
+    assert runner.state.funding_events[0].event_timestamp == event_time
+    assert runner.state.applied_funding_event_keys == {("TEST-FUND-1", 1)}
+
+
 def test_w276_f03_missing_production_funding_events_are_typed_refusal() -> None:
     config, bars = _scenario("RULE2-08-RED")
     record_path = (
