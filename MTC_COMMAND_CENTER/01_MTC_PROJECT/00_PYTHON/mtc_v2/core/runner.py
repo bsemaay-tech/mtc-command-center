@@ -785,6 +785,9 @@ class Runner:
                 EconomicIntent(
                     kind=IntentKind.FUNDING_TICK,
                     funding_event_id=event_id,
+                    funding_event_in_window=not (
+                        previous is None and include_current is False
+                    ),
                 ),
                 self._market_event(bar_context, timestamp=event_time),
                 self._corrected_records,

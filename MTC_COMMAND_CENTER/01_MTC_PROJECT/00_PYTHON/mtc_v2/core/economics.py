@@ -89,6 +89,7 @@ class EconomicIntent:
     exit_candidates: tuple[ExitCandidate, ...] = ()
     same_bar_collision_policy_id: str | None = "STOP_FIRST"
     funding_event_id: str | None = None
+    funding_event_in_window: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -1127,7 +1128,11 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         matching = [event for event in events if event.get("funding_event_id") == event_id]
         if len(matching) != 1:
             raise EconomicsRefusal(REFUSED_MISSING_FUNDING_EVENT, str(event_id))
-        eligible = state.lifecycle_id is not None and state.quantity > 0.0
+        eligible = (
+            intent.funding_event_in_window
+            and state.lifecycle_id is not None
+            and state.quantity > 0.0
+        )
         if (
             state.lifecycle_id is not None
             and (str(event_id), int(state.lifecycle_id)) in state.applied_funding_event_keys

@@ -357,15 +357,30 @@ def test_v283b_f2_runner_does_not_memoize_funding_id_across_lifecycles() -> None
     assert [row.lifecycle_id for row in runner.state.funding_events] == [1, 2]
 
 
-@pytest.mark.parametrize("bars_selector", [slice(2, None), slice(None, 2)])
-def test_w279_f09_unbracketed_funding_event_gets_eligibility_disposition(
-    bars_selector: slice,
-) -> None:
+def test_v283b_f3_pre_window_funding_is_dispositioned_without_equity_effect() -> None:
     config, bars = _scenario("RULE2-08-RED")
     runner = Runner(config)
     runner.state.position = _open_long()
 
-    runner.run(bars[bars_selector])
+    runner.run(bars[2:])
+
+    funding_decisions = [
+        row for row in runner.state.decision_events if row.decision == "FUNDING_ELIGIBILITY"
+    ]
+    assert len(funding_decisions) == 1
+    assert dict(funding_decisions[0].details)["eligible"] is False
+    assert runner.state.funding_events == []
+    assert runner.state.cash_events == []
+    assert runner.state.equity == 1000.0
+    assert runner.corrected_equity_curve == [1000.0]
+
+
+def test_w279_f09_tail_funding_event_gets_eligibility_disposition() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    runner.state.position = _open_long()
+
+    runner.run(bars[:2])
 
     funding_decisions = [
         row for row in runner.state.decision_events if row.decision == "FUNDING_ELIGIBILITY"
