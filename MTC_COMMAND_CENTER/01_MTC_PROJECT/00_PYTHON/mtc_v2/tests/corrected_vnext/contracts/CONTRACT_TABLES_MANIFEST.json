@@ -553,7 +553,7 @@
  "seal": {
   "EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "set_by": "Lead re-seal act #8 2026-09-02T10:44:21+03:00 (see reseal_history); prior seal by Lead re-seal #7"
+  "set_by": "Lead re-seal act #9 2026-09-02T12:37:46+03:00 (pin only; files[] and EXPECTED_SEAL_SHA unchanged from re-seal #8)"
  },
  "reseal_history": [
   {
@@ -775,6 +775,98 @@
    "input_digests_touched": "none - the 17 input pins stand unchanged",
    "implementation_base_sha_touched": "no - stays 108ea066",
    "baseline_refusal": "BASELINE_SEAL_IDENTITY_MISMATCH still expected - owner Q3, not cleared"
+  },
+  {
+   "at": "2026-09-02T12:37:46+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #9",
+   "trigger": "canonical gate reached the package-blocker stage; the design-mandated seal-time legacy_event_order_map pin had never been written",
+   "old_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "new_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "files_changed": [],
+   "manifest_member_added": "legacy_event_order_map_pin",
+   "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+   "everything_else_verified_byte_identical": true
   }
- ]
+ ],
+ "legacy_event_order_map_pin": {
+  "schema": "P012_LEGACY_EVENT_ORDER_MAP_PIN_V1",
+  "surface_schema_id": "LEGACY_P011_EXACT_V1",
+  "design_authority": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md:484-486 (LEGACY_EVENT_SHAPE_CHECK at expected-bundle seal time)",
+  "baseline_manifest": {
+   "path": "C:\\tmp\\P012_BASELINE_RUN\\BASELINE_BYTES_MANIFEST.json",
+   "sha256": "4996067da2f063f579f4f5ca6eb6a57fc7159d9ea0fd44fcf536342166d760dd",
+   "authorization": "ONE run performed under owner decision 76 (2026-09-02).",
+   "EXPECTED_SEAL_SHA_consumed": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461"
+  },
+  "legacy_event_order_map": {
+   "RULE2-01-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-01-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-01-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-01-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-01-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-01-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-03-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-03-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-03-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-03-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-GREEN/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-RED/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-EQUAL-PRICE-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-EQUAL-PRICE-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-EQUAL-PRICE-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-EQUAL-PRICE-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-GREEN/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1"
+  },
+  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+  "digest_method": "sha256 over json.dumps(map, ensure_ascii=False, sort_keys=True, separators=(',',':')) + LF, exactly verify_bceg.compute_legacy_event_order_map",
+  "independently_computed_by": [
+   "W255 canonical gate run (codex), computed_legacy_event_order_map_digest in the receipt",
+   "Lead re-run of compute_legacy_event_order_map() from the worktree module against the same baseline, 2026-09-02"
+  ],
+  "pinned_at": "2026-09-02T12:37:46+03:00",
+  "pinned_by": "Lead re-seal act #9 (claude-fable-5-1)",
+  "harness_consumer": "NOT YET - verify_bceg.py:1370 still inserts LEGACY_EVENT_ORDER_MAP_PIN_MISSING unconditionally; lane W258 makes it conditional on this member. Until then the refusal stands honestly."
+ }
 }

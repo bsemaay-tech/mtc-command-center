@@ -30,7 +30,7 @@
  "lead_acceptance": {
   "accepted_by": "Lead (claude-fable-5), 2026-08-31 ~15:55 local",
   "basis": "Gate-2 plan v2 (A7-cleared) owner-approved addendum 16; tables bundle W127b sealed, all 19 file digests re-verified by W150; owner rulings addenda 14-17 complete; design v1.4 terminal dual-zero",
-  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #8 seal 4ebcdfc5ad42... on 2026-09-02T10:44:21+03:00; design v1.10; the two DESIGN-GAP questions closed by owner addendum 29; four goldens re-derived, no numeric leaf moved; catalog and inputs unchanged."
+  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #8 seal 4ebcdfc5ad42... on 2026-09-02T10:44:21+03:00; design v1.10; the two DESIGN-GAP questions closed by owner addendum 29; four goldens re-derived, no numeric leaf moved; catalog and inputs unchanged. Re-seal #9 2026-09-02T12:37:46+03:00: legacy_event_order_map pinned, digest 0c8a04ddd671...; seal digest unchanged."
  },
  "reseal_history": [
   {
@@ -74,6 +74,13 @@
    "old_EXPECTED_SEAL_SHA": "1d0623e44c060a7ea59d4df1a3789d76ec07d8f996fa1f6e85554439f9191008",
    "new_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
    "reason": "Re-seal #8: owner addendum 29 decisions 71-72 applied to four goldens and DERIVATIONS.md; design v1.10; no economic value moved (measured)."
+  },
+  {
+   "at": "2026-09-02T12:37:46+03:00",
+   "old_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "new_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "reason": "Re-seal #9: legacy_event_order_map pinned into the bundle manifest (design :484-486); no golden, catalog, input or derivation byte moved; seal digest unchanged."
   }
- ]
+ ],
+ "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862"
 }
