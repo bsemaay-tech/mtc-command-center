@@ -23,12 +23,24 @@ import subprocess
 import sys
 import tempfile
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path, PurePosixPath
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Mapping
 
-from mtc_v2.core.economics import EconomicRecords, EconomicsRefusal
+from mtc_v2.core.economics import (
+    CorrectedEconomicsAdapter,
+    EconomicIntent,
+    EconomicRecords,
+    EconomicsRefusal,
+    IntentKind,
+)
+from mtc_v2.core.exits import (
+    build_working_exit_book,
+    resolve_corrected_price_exits,
+    sync_working_exit_stops,
+    update_protective_stop_owner,
+)
 from mtc_v2.core.instrument import InstrumentRecordRefusal
 from mtc_v2.core.results import CorrectedRunManifest, corrected_surfaces
 from mtc_v2.core.runner import Runner
@@ -100,6 +112,15 @@ EXPECTED_RECORD_KEYS = {
     "instrument_record_sha256",
 }
 EXPECTED_BAR_KEYS = {"timestamp", "open", "high", "low", "close", "volume", "bar_index"}
+RUNTIME_INSTRUMENT_KEYS = {
+    "instrument_symbol",
+    "instrument_point_value",
+    "instrument_price_tick",
+    "instrument_qty_step",
+    "instrument_min_qty",
+    "instrument_min_notional",
+    "instrument_contract_multiplier",
+}
 SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 GIT_OID_RE = re.compile(r"[0-9a-f]{40}\Z")
 F64BITS_RE = re.compile(r"f64bits:0x([0-9a-f]{16})\Z")
@@ -811,6 +832,183 @@ def _target_book_overrides(
     }
 
 
+def corrected_contract_config(
+    document: Mapping[str, Any], *, validate_price_tick: bool = False
+) -> dict[str, Any]:
+    legacy = document["legacy_arm"]
+    corrected = document["corrected_only"]
+    economic = corrected["economic_inputs"]
+    config = {
+        key: value
+        for key, value in legacy["config"].items()
+        if key not in RUNTIME_INSTRUMENT_KEYS
+    }
+    config.update(
+        corrected["records"],
+        kernel_semantics_version="2.0.0",
+        same_bar_collision_policy_id=economic.get(
+            "same_bar_collision_policy_id", "STOP_FIRST"
+        ),
+        slippage_model_id="BPS_OF_REFERENCE_V1",
+    )
+    if validate_price_tick:
+        config["instrument_price_tick"] = legacy["config"]["instrument_price_tick"]
+    return config
+
+
+def apply_contract_entry(
+    runner: Runner,
+    *,
+    bar: Bar,
+    stop_price: float | None = None,
+    requested_quantity: float | None = None,
+    reason: str | None = None,
+    sizing_equity: float | None = None,
+) -> bool:
+    runner._bind_corrected_instrument(bar.timestamp)
+    assert runner._corrected_records is not None
+    if sizing_equity is None:
+        sizing_equity = runner.state.equity
+    transition = CorrectedEconomicsAdapter().resolve(
+        runner._economic_state(sizing_equity=sizing_equity),
+        EconomicIntent(
+            kind=IntentKind.OPEN,
+            action_side="BUY",
+            position_side="LONG",
+            reference_price=bar.close,
+            stop_price=stop_price,
+            risk_pct=float(runner.config["risk_per_long_pct"]),
+            fallback_size_pct=float(runner.config["fallback_size_pct"]),
+            max_leverage_cap=runner.max_leverage_cap,
+            requested_quantity=requested_quantity,
+            event_class="ENTRY",
+            reason=reason,
+        ),
+        runner._market_event(bar),
+        runner._corrected_records,
+    )
+    if not transition.fill_decisions:
+        runner.position_manager.apply_transition(
+            bar=bar,
+            state=runner.state,
+            transition=transition,
+            reason=reason,
+        )
+        runner.corrected_equity_curve.append(runner.state.equity)
+        return False
+    fill = transition.fill_decisions[0]
+    if runner._entry_blocked_by_capital(
+        entry_price=fill.final_fill_price,
+        side="long",
+        qty=fill.quantity,
+        sizing_equity=sizing_equity,
+    ):
+        runner.corrected_equity_curve.append(runner.state.equity)
+        return False
+    facts = transition.next_position_facts
+    initial_risk = runner._initial_risk_for_entry(
+        entry_price=fill.final_fill_price,
+        stop_price=facts.active_stop_price,
+    )
+    _active_tp, working_exits = build_working_exit_book(
+        runner.config,
+        entry_price=fill.final_fill_price,
+        is_long=True,
+        price_tick=runner.instrument.price_tick,
+        atr_value=runner.tp_atr_tracker.atr,
+        initial_risk_per_unit=initial_risk,
+        book_version=1,
+        completed_exit_ids=set(),
+    )
+    runner.position_manager.apply_transition(
+        bar=bar,
+        state=runner.state,
+        transition=transition,
+        reason=reason,
+        working_exits=working_exits,
+    )
+    runner.corrected_equity_curve.append(runner.state.equity)
+    return True
+
+
+def run_contract_entry_scenario(
+    runner: Runner,
+    bars: list[Bar],
+    *,
+    stop_price: float | None = None,
+    requested_quantity: float | None = None,
+) -> None:
+    runner.run(bars[:-1])
+    apply_contract_entry(
+        runner,
+        bar=bars[-1],
+        stop_price=stop_price,
+        requested_quantity=requested_quantity,
+    )
+
+
+def run_contract_target_scenario(
+    runner: Runner,
+    bars: list[Bar],
+    target_book: Mapping[str, tuple[str, float, float]],
+) -> None:
+    runner.run(bars[:-1])
+    position = runner.state.position
+    if position is None:
+        raise ValueError("contract target scenario did not establish a position")
+    position.working_exits = [
+        replace(
+            member,
+            exit_id=target_book[member.exit_id][0],
+            target_price=target_book[member.exit_id][1],
+            qty_fraction=target_book[member.exit_id][2],
+        )
+        if member.exit_id in target_book
+        else member
+        for member in position.working_exits
+    ]
+    bar = bars[-1]
+    update_protective_stop_owner(
+        runner.config,
+        position=position,
+        bar=bar,
+        prev_bar=runner._prev_bar,
+        price_tick=runner.instrument.price_tick,
+        trail_atr=runner.trail_atr_tracker.atr,
+    )
+    sync_working_exit_stops(position)
+    assert runner._corrected_records is not None
+    transition = resolve_corrected_price_exits(
+        bar=bar,
+        position=position,
+        records=runner._corrected_records,
+        same_bar_collision_policy_id=str(
+            runner.config["same_bar_collision_policy_id"]
+        ),
+        allow_test_policy=True,
+        next_decision_sequence=len(runner.state.decision_events),
+    )
+    if transition.decision_events and not transition.fill_decisions:
+        runner.position_manager.apply_transition(
+            bar=bar,
+            state=runner.state,
+            transition=transition,
+        )
+    if transition.fill_decisions:
+        exit_reason = (
+            "PROTECTIVE_STOP"
+            if transition.fill_decisions[0].event_class == "PROTECTIVE_STOP_EXIT"
+            else "TARGET"
+        )
+        runner.position_manager.apply_transition(
+            bar=bar,
+            state=runner.state,
+            transition=transition,
+            reason=exit_reason,
+        )
+    runner.corrected_equity_curve.append(runner.state.equity)
+
+
 def _prepare_rule2_08_observation(
     runner: Runner,
     *,
@@ -920,39 +1118,14 @@ def execute_corrected_scenario(
     )
     legacy = document["legacy_arm"]
     corrected = document["corrected_only"]
-    config: dict[str, Any] = {
-        **legacy["config"],
-        **corrected["records"],
-        "kernel_semantics_version": "2.0.0",
-        "same_bar_collision_policy_id": corrected["economic_inputs"].get(
-            "same_bar_collision_policy_id", "STOP_FIRST"
-        ),
-        "slippage_model_id": "BPS_OF_REFERENCE_V1",
-    }
-    if scenario_id == "RULE2-02-RED":
-        config.pop("instrument_min_notional", None)
+    config = corrected_contract_config(
+        document,
+        validate_price_tick="DEF-P012-03" in row["owning_def_ids"],
+    )
     bars = _bars(document)
     selector_stop = decode_stop_price_f64(document, scenario_id=scenario_id)
-    requested_quantity = 1.0 if scenario_id.startswith("RULE2-05-") else None
     target_book = _target_book_overrides(scenario_id, document, bars)
-    instrument_validation_field = (
-        "price_tick" if "DEF-P012-03" in row["owning_def_ids"] else None
-    )
-    if (
-        selector_stop is not None
-        or requested_quantity is not None
-        or target_book
-        or instrument_validation_field is not None
-    ):
-        runner = Runner.for_corrected_contract(
-            config,
-            selector_stop_override=selector_stop,
-            requested_quantity_override=requested_quantity,
-            target_book_overrides=target_book,
-            instrument_validation_field=instrument_validation_field,
-        )
-    else:
-        runner = Runner(config)
+    runner = Runner(config)
     execution_bars = bars
     if scenario_id.startswith("RULE2-08-"):
         execution_bars = _prepare_rule2_08_observation(
@@ -963,7 +1136,16 @@ def execute_corrected_scenario(
             bars=bars,
         )
     try:
-        runner.run(execution_bars)
+        if selector_stop is not None:
+            run_contract_entry_scenario(
+                runner,
+                execution_bars,
+                stop_price=selector_stop,
+            )
+        elif target_book:
+            run_contract_target_scenario(runner, execution_bars, target_book)
+        else:
+            runner.run(execution_bars)
     except (EconomicsRefusal, InstrumentRecordRefusal) as exc:
         if exc.refusal_code == "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION":
             surfaces = corrected_surfaces(

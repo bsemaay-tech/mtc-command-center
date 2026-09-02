@@ -5,7 +5,7 @@ from dataclasses import replace
 from datetime import datetime
 import math
 from pathlib import Path
-from typing import Iterable, Mapping
+from typing import Iterable
 
 from mtc_v2.core.config import SIGNAL_MODE_RANGE_FILTER, SIGNAL_MODE_SUPERTREND, resolve_config
 from mtc_v2.core.confirmation import (
@@ -140,11 +140,6 @@ class Runner:
             config.get("kernel_semantics_version", "1.0.0")
         )
         self._corrected_semantics = self.kernel_semantics_version == "2.0.0"
-        self._allow_corrected_test_policy = False
-        self._corrected_selector_stop_override: float | None = None
-        self._corrected_requested_quantity_override: float | None = None
-        self._corrected_test_target_book: dict[str, tuple[str, float, float]] = {}
-        self._corrected_instrument_validation_field: str | None = None
         self._corrected_records: EconomicRecords | None = None
         self._corrected_instrument_bound = False
         if self._corrected_semantics:
@@ -370,36 +365,6 @@ class Runner:
             int(self.config["sl_swing_lookback"]) if bool(self.config["use_sl"] and self.config["use_sl_swing_atr"]) else 0,
         )
 
-    @classmethod
-    def for_corrected_contract(
-        cls,
-        config: dict[str, object],
-        *,
-        selector_stop_override: float | None = None,
-        requested_quantity_override: float | None = None,
-        target_book_overrides: Mapping[str, tuple[str, float, float]] | None = None,
-        instrument_validation_field: str | None = None,
-    ) -> "Runner":
-        """Create the non-production runner used by declared migration fixtures."""
-
-        runner = cls(config)
-        if not runner._corrected_semantics:
-            raise EconomicsRefusal(
-                REFUSED_ECONOMIC_INPUT,
-                "corrected contract runner requires semantics 2.0.0",
-            )
-        runner._allow_corrected_test_policy = True
-        runner._corrected_selector_stop_override = selector_stop_override
-        runner._corrected_requested_quantity_override = requested_quantity_override
-        runner._corrected_test_target_book = dict(target_book_overrides or {})
-        if instrument_validation_field not in {None, "price_tick"}:
-            raise EconomicsRefusal(
-                REFUSED_ECONOMIC_INPUT,
-                f"unsupported instrument validation field {instrument_validation_field!r}",
-            )
-        runner._corrected_instrument_validation_field = instrument_validation_field
-        return runner
-
     def _load_corrected_records(self) -> EconomicRecords:
         root = Path(__file__).resolve().parent / "economic_records"
         instrument_id = str(self.config["instrument_record_id"])
@@ -459,12 +424,14 @@ class Runner:
                     decision="SEMANTICS_VALIDATED",
                 )
             )
-        validation_field = self._corrected_instrument_validation_field
+        runtime_config = self._corrected_records.runtime_instrument_config or {}
+        validation_field = None
         record_value = None
         runtime_value = None
-        if validation_field == "price_tick":
+        if "instrument_price_tick" in runtime_config:
+            validation_field = "price_tick"
             record_value = self._corrected_records.instrument.price_tick
-            runtime_value = self._source_config.get("instrument_price_tick")
+            runtime_value = runtime_config["instrument_price_tick"]
         try:
             self.instrument = self._corrected_records.instrument.for_evaluation(
                 evaluation_time,
@@ -563,10 +530,6 @@ class Runner:
                     stop_distance = abs(reference_price - provisional)
                 else:
                     stop_price = provisional
-        if self._corrected_selector_stop_override is not None:
-            stop_price = self._corrected_selector_stop_override
-            stop_percent = None
-            stop_distance = None
         transition = CorrectedEconomicsAdapter().resolve(
             self._economic_state(sizing_equity=sizing_equity),
             EconomicIntent(
@@ -584,7 +547,6 @@ class Runner:
                 ),
                 fallback_size_pct=float(self.config["fallback_size_pct"]),
                 max_leverage_cap=self.max_leverage_cap,
-                requested_quantity=self._corrected_requested_quantity_override,
                 event_class="ENTRY",
                 reason=reason,
             ),
@@ -639,18 +601,6 @@ class Runner:
             book_version=next_book_version,
             completed_exit_ids=completed_exit_ids,
         )
-        if self._corrected_test_target_book:
-            working_exits = [
-                replace(
-                    member,
-                    exit_id=self._corrected_test_target_book[member.exit_id][0],
-                    target_price=self._corrected_test_target_book[member.exit_id][1],
-                    qty_fraction=self._corrected_test_target_book[member.exit_id][2],
-                )
-                if member.exit_id in self._corrected_test_target_book
-                else member
-                for member in working_exits
-            ]
         self.position_manager.apply_transition(
             bar=bar,
             state=self.state,
@@ -1061,7 +1011,6 @@ class Runner:
                                 "same_bar_collision_policy_id", "STOP_FIRST"
                             )
                         ),
-                        allow_test_policy=self._allow_corrected_test_policy,
                         next_decision_sequence=len(self.state.decision_events),
                     )
                     if transition.decision_events and not transition.fill_decisions:

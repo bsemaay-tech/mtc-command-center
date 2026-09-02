@@ -11,26 +11,25 @@ import pytest
 from mtc_v2.core.economics import EconomicsRefusal
 from mtc_v2.core.runner import Runner
 from mtc_v2.core.types import Bar, EntryLeg, Position, RawSignal
+from mtc_v2.tests.corrected_vnext.verify_bceg import (
+    corrected_contract_config,
+    run_contract_target_scenario,
+)
 
 
 MTC_V2_ROOT = Path(__file__).resolve().parents[4]
 INPUT_ROOT = MTC_V2_ROOT / "tests" / "corrected_vnext" / "contracts" / "inputs"
 
 
-def _scenario(scenario_id: str) -> tuple[dict[str, object], list[Bar]]:
+def _scenario(
+    scenario_id: str, *, validate_price_tick: bool = False
+) -> tuple[dict[str, object], list[Bar]]:
     document = json.loads((INPUT_ROOT / f"{scenario_id}.json").read_text(encoding="utf-8"))
     legacy = document["legacy_arm"]
-    corrected = document["corrected_only"]
-    economic = corrected["economic_inputs"]
-    config = {
-        **legacy["config"],
-        **corrected["records"],
-        "kernel_semantics_version": "2.0.0",
-        "same_bar_collision_policy_id": economic.get(
-            "same_bar_collision_policy_id", "STOP_FIRST"
-        ),
-        "slippage_model_id": "BPS_OF_REFERENCE_V1",
-    }
+    config = corrected_contract_config(
+        document,
+        validate_price_tick=validate_price_tick,
+    )
     bars = [
         Bar(
             timestamp=datetime.fromisoformat(row["timestamp"].replace("Z", "+00:00")),
@@ -74,12 +73,13 @@ class _StaticSignals:
         return {"filter_line": 1.0, "direction": 1}
 
 
+def test_runner_exposes_no_economic_input_bearing_constructor() -> None:
+    assert not hasattr(Runner, "for_corrected_contract")
+
+
 def test_main_runner_entry_path_uses_corrected_final_fill_and_fee_transition() -> None:
     config, bars = _scenario("RULE2-05-RED")
-    runner = Runner.for_corrected_contract(
-        config,
-        requested_quantity_override=1.0,
-    )
+    runner = Runner(config)
 
     runner.run(bars)
 
@@ -250,9 +250,9 @@ def test_target_first_is_test_only_and_production_runner_refuses_it() -> None:
 
 def test_contract_test_runner_can_exercise_target_first_atomic_fill_order() -> None:
     config, bars = _scenario("RULE2-06-RED")
-    runner = Runner.for_corrected_contract(config)
+    runner = Runner(config)
 
-    runner.run(bars)
+    run_contract_target_scenario(runner, bars, {})
 
     exits = [row for row in runner.state.fill_events if row.event_class.endswith("EXIT")]
     assert [row.exit_id for row in exits] == ["TP1", "TP2"]
@@ -260,17 +260,18 @@ def test_contract_test_runner_can_exercise_target_first_atomic_fill_order() -> N
     assert runner.state.position is None
 
 
-def test_contract_constructor_builds_equal_price_book_without_production_policy_change() -> None:
+def test_contract_input_builds_equal_price_book_without_production_policy_change() -> None:
     config, bars = _scenario("RULE2-06-EQUAL-PRICE-RED")
-    runner = Runner.for_corrected_contract(
-        config,
-        target_book_overrides={
+    runner = Runner(config)
+
+    run_contract_target_scenario(
+        runner,
+        bars,
+        {
             "TP1": ("TARGET-NEAR", 105.0, 0.5),
             "TP2": ("TARGET-FAR", 105.0, 0.5),
         },
     )
-
-    runner.run(bars)
 
     exits = [row for row in runner.state.fill_events if row.event_class.endswith("EXIT")]
     assert [row.exit_id for row in exits] == ["TARGET-FAR", "TARGET-NEAR"]
@@ -551,10 +552,8 @@ def test_v283b_f1_absent_events_member_is_typed_refusal() -> None:
 
 
 def test_record_runtime_override_refuses_before_first_economic_intent() -> None:
-    config, bars = _scenario("RULE2-03-RED")
-    runner = Runner.for_corrected_contract(
-        config, instrument_validation_field="price_tick"
-    )
+    config, bars = _scenario("RULE2-03-RED", validate_price_tick=True)
+    runner = Runner(config)
 
     with pytest.raises(ValueError, match="REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION"):
         runner.run(bars)
@@ -570,10 +569,8 @@ def test_record_runtime_override_refuses_before_first_economic_intent() -> None:
 
 
 def test_record_runtime_match_emits_core_validation_decision() -> None:
-    config, bars = _scenario("RULE2-03-GREEN")
-    runner = Runner.for_corrected_contract(
-        config, instrument_validation_field="price_tick"
-    )
+    config, bars = _scenario("RULE2-03-GREEN", validate_price_tick=True)
+    runner = Runner(config)
 
     runner.run(bars)
 
@@ -739,11 +736,13 @@ def test_p08_same_side_add_rebooks_from_the_final_fill() -> None:
 
 def test_w279_f11_corrected_entry_applies_total_margin_admission() -> None:
     config, bars = _scenario("RULE2-05-GREEN")
-    config.update(max_entries=2, max_leverage_cap=1.0, margin_long_pct=100.0)
-    runner = Runner.for_corrected_contract(
-        config,
-        requested_quantity_override=5.0,
+    config.update(
+        max_entries=2,
+        max_leverage_cap=1.0,
+        margin_long_pct=100.0,
+        fallback_size_pct=50.0,
     )
+    runner = Runner(config)
     runner._bind_corrected_instrument(bars[0].timestamp)
     runner.state.position = replace(
         _open_long(),
@@ -771,13 +770,11 @@ def test_v283b_f10_pending_open_uses_corrected_margin_admission() -> None:
     config.update(
         max_leverage_cap=1.0,
         margin_long_pct=2000.0,
+        fallback_size_pct=50.0,
         tw_audit_semantics_mode="research",
         tw_reversal_reentry_mode="next_bar_open_after_protective_exit_signal",
     )
-    runner = Runner.for_corrected_contract(
-        config,
-        requested_quantity_override=5.0,
-    )
+    runner = Runner(config)
     runner._tw_pending_open_side = "long"
     runner._tw_pending_open_reason = "pending_margin_probe"
 
