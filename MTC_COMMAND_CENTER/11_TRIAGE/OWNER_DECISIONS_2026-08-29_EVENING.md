@@ -590,3 +590,40 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     authorises a bounded fold round on those three findings only. It does not authorise a fresh
     design act, does not accept the milestone, and does not unblock the packages behind it, which
     still require M1 to be accepted.
+
+## Addendum 29 - 2026-09-02 morning (owner answers Q1 and Q2 of the P0-12 gate; Q3 deliberately held)
+
+71. **LIFECYCLE TRADE ROW: EXIT ID LIST ONLY** (owner: "A. Exit ID list only"). Context: the P0-12
+    gate stands at 13/17 with four DESIGN-GAP rows; design v1.9 requires `RESULT_SURFACE.trades[]`
+    but never closes the member set (`P012_FRESH_DESIGN_V1.md:480`, `:1130-1139`). The sealed
+    answer sheets disagree with each other: RULE2-04-RED and RULE2-07-RED carry a single
+    `exit_fill_price`, while RULE2-06-RED, RULE2-06-EQUAL-PRICE-RED and RULE2-06-GREEN carry an
+    `exit_ids` list, which is also what the kernel emits (`core/results.py:702-728`). The owner rules
+    that every completed trade row has exactly: `entry_fill_price` (quantity-weighted over entry
+    fills), `quantity`, `exit_ids` (in exit-event sequence order), `gross_realized_pnl`,
+    `fee_total`, `funding_total`, `net_trade_pnl`. No `exit_fill_price` member; per-piece exit prices
+    live only in the closed `exit_events[]` schema. A trade that exits in several pieces is ONE row
+    whose `exit_ids` lists every piece in sequence order. Consequence: RULE2-04-RED and
+    RULE2-07-RED goldens must be re-derived by the tables family to this shape, design v1.9 must be
+    amended to close the member set, then a Lead re-seal (#8). Kernel unchanged by this decision.
+    Rejected: B (add a quantity-weighted average exit price, engine change plus all five sheets),
+    C (one row per exit piece, changes trade meaning and profit aggregation).
+
+72. **ALL-TOUCHED EXIT RECEIPT ORDER: STOP FIRST, THEN TARGETS AS DECLARED** (owner: "A. Stop
+    first, then targets as declared"). Context: `COLLISION_RESOLVED.touched_exit_ids` is a receipt
+    of every stop/target touched in the bar; the design fixes the CHOSEN execution order
+    (`P012_FRESH_DESIGN_V1.md:339-353`) but gives no order for the receipt (`:1035`). The kernel
+    lists candidates in declared order with the stop first; the two RULE2-06 RED sheets list targets
+    first and the stop last. The owner rules the receipt order is the scenario's declared
+    exit-candidate order, stop first, then targets in declaration order. This never changes which
+    exits execute, their prices, or PnL. Consequence: RULE2-06-RED and RULE2-06-EQUAL-PRICE-RED
+    goldens must be re-derived by the tables family (`touched_exit_ids` becomes
+    `["STOP","TARGET-NEAR","TARGET-FAR"]` in both), design amended to state the rule, then Lead
+    re-seal (#8). Kernel unchanged by this decision. Rejected: B (targets first, stop last),
+    C (UTF-8 byte order of `exit_id`), D (price order along the bar).
+
+    **Q3 deliberately held.** The canonical gate refuses with `BASELINE_SEAL_IDENTITY_MISMATCH`
+    because the frozen reference results predate the re-sealings. Decisions 71 and 72 change the
+    sheets again, so the owner is asked once, after re-seal #8, whether to re-generate the reference
+    results or let the frozen ones stand. That is a decision to execute a run and is his alone.
+    Until then the refusal stands: no skip flag, no manifest edit, no baseline clearing.
