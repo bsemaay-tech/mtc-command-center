@@ -291,6 +291,41 @@ def test_w279_f09_unbracketed_funding_event_gets_eligibility_disposition(
     assert len(runner.state.funding_events) == 1
 
 
+def test_w279_f08_position_snapshot_and_interval_boundary_are_applied() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    cost_config, _ = _scenario("RULE2-05-GREEN")
+    for field in ("cost_schedule_id", "cost_schedule_sha256"):
+        config[field] = cost_config[field]
+    event_time = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
+    event_bar = replace(bars[2], timestamp=event_time)
+    runner = Runner(config)
+    runner.signal_producer = _StaticSignals(
+        [
+            RawSignal(False, False, "none", direction=0, line=100.0),
+            RawSignal(True, False, "same_timestamp_entry", direction=1, line=100.0),
+        ]
+    )
+    runner.state.warmup_bars = 0
+
+    runner.run([bars[1], event_bar])
+
+    assert runner.state.position is not None
+    assert runner.state.funding_events[0].lifecycle_id == runner.state.position.lifecycle_id
+
+    invalid_boundary_runner = Runner(config)
+    assert invalid_boundary_runner._corrected_records is not None
+    invalid_boundary_runner._corrected_records = replace(
+        invalid_boundary_runner._corrected_records,
+        funding={
+            **invalid_boundary_runner._corrected_records.funding,
+            "interval_boundary_convention": "UNSUPPORTED_BOUNDARY",
+        },
+    )
+    invalid_boundary_runner.state.position = _open_long()
+    with pytest.raises(EconomicsRefusal, match="interval_boundary_convention"):
+        invalid_boundary_runner._apply_corrected_funding_between(bars[1], event_bar)
+
+
 def test_w276_f03_missing_production_funding_events_are_typed_refusal() -> None:
     config, bars = _scenario("RULE2-08-RED")
     record_path = (

@@ -126,6 +126,8 @@ FILL_POLICY_DECISION_BAR_CLOSE = "decision_bar_close"
 EXIT_BEFORE_ENTRY_PLACEHOLDER = "future_position_manager_exit_before_entry"
 SAME_BAR_REENTRY_OWNER = "future_position_manager_same_bar_reentry"
 REASON_EXIT_MARGIN_CALL = "margin_call"
+FUNDING_POSITION_SNAPSHOT_RULE = "END_OF_INTERVAL_INCLUDE_SAME_TIMESTAMP_V1"
+FUNDING_INTERVAL_BOUNDARY_CONVENTION = "HOURLY_INTERVAL_END_V1"
 
 
 class Runner:
@@ -711,11 +713,36 @@ class Runner:
         return datetime.fromisoformat(value[:-1] + "+00:00")
 
     def _apply_corrected_funding_between(
-        self, previous: Bar | None, current: Bar | None
+        self,
+        previous: Bar | None,
+        current: Bar | None,
+        *,
+        include_current: bool | None = None,
     ) -> None:
         assert self._corrected_records is not None
         if previous is None and current is None:
             return
+        position_snapshot_rule = self._corrected_records.funding.get(
+            "position_snapshot_rule"
+        )
+        if position_snapshot_rule != FUNDING_POSITION_SNAPSHOT_RULE:
+            raise EconomicsRefusal(
+                REFUSED_ECONOMIC_INPUT,
+                f"unsupported position_snapshot_rule {position_snapshot_rule!r}",
+            )
+        interval_boundary_convention = self._corrected_records.funding.get(
+            "interval_boundary_convention"
+        )
+        if interval_boundary_convention != FUNDING_INTERVAL_BOUNDARY_CONVENTION:
+            raise EconomicsRefusal(
+                REFUSED_ECONOMIC_INPUT,
+                f"unsupported interval_boundary_convention {interval_boundary_convention!r}",
+            )
+        upper_inclusive = (
+            position_snapshot_rule == FUNDING_POSITION_SNAPSHOT_RULE
+            if include_current is None
+            else include_current
+        )
         events = self._corrected_records.funding.get("events", ())
         if not isinstance(events, (tuple, list)):
             raise EconomicsRefusal(
@@ -724,12 +751,23 @@ class Runner:
             )
         for event in events:
             event_time = self._record_timestamp(event.get("event_timestamp"))
+            if any((event_time.minute, event_time.second, event_time.microsecond)):
+                raise EconomicsRefusal(
+                    REFUSED_ECONOMIC_INPUT,
+                    "funding event does not satisfy HOURLY_INTERVAL_END_V1",
+                )
             if previous is None:
-                in_window = current is not None and event_time <= current.timestamp
+                in_window = current is not None and (
+                    event_time < current.timestamp
+                    or (upper_inclusive and event_time == current.timestamp)
+                )
             elif current is None:
                 in_window = previous.timestamp < event_time
             else:
-                in_window = previous.timestamp < event_time <= current.timestamp
+                in_window = previous.timestamp < event_time and (
+                    event_time < current.timestamp
+                    or (upper_inclusive and event_time == current.timestamp)
+                )
             if not in_window:
                 continue
             event_id = str(event["funding_event_id"])
@@ -790,7 +828,9 @@ class Runner:
                 _first_bar = bar
             if self._corrected_semantics:
                 self._bind_corrected_instrument(bar.timestamp)
-                self._apply_corrected_funding_between(self._prev_bar, bar)
+                self._apply_corrected_funding_between(
+                    self._prev_bar, bar, include_current=False
+                )
             self.state.current_bar_index = bar.bar_index
             self.state.block_new_entries_this_bar = False
             self.state.opened_this_bar_reason = None
@@ -1594,6 +1634,7 @@ class Runner:
             self._l18_prev_raw_long = raw.long
             self._l18_prev_raw_short = raw.short
             if self._corrected_semantics:
+                self._apply_corrected_funding_between(None, bar)
                 self.corrected_equity_curve.append(self.state.equity)
         if self._corrected_semantics and self._prev_bar is not None:
             self._apply_corrected_funding_between(self._prev_bar, None)
