@@ -134,7 +134,7 @@ def assert_invalid_semantic_review(
     capsys: pytest.CaptureFixture[str], expected_detail: str | None = None
 ) -> None:
     receipt = json.loads(capsys.readouterr().out)
-    assert receipt["claim_label"] == "BOUNDED_CORRECTION_EVIDENCE_REFUSED"
+    assert receipt["claim_label"] == verify_bceg.REFUSAL_LABEL
     assert receipt["refusals"][0]["check_id"] == "SEMANTIC_COVERAGE_REVIEW_INVALID"
     if expected_detail is not None:
         assert receipt["refusals"][0]["detail"] == expected_detail
@@ -816,6 +816,36 @@ def test_legacy_reproduction_refuses_one_ulp_actual(
         "scenario_id": "RULE2-01-RED",
         "pointer": "/RESULT_SURFACE/account/equity",
     }
+
+
+def test_receipt_accounts_for_every_blocked_expected_node(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        verify_bceg,
+        "run_probe_suite",
+        lambda _corpus: {"probes": [], "probe_blockers": []},
+    )
+
+    receipt = verify_bceg.run_comparison_pipeline(MTC_V2_ROOT, BASELINE_ROOT)
+
+    accounting = receipt["blocked_node_skips"]
+    assert accounting["count"] == len(accounting["nodes"])
+    assert accounting["count"] > 0
+    assert {
+        "scenario_id": "RULE2-01-RED",
+        "pointer": "/RESULT_SURFACE/metrics",
+        "expected_marker": "BLOCKED-DESIGN-UNENUMERATED",
+    } in accounting["nodes"]
+    assert all(
+        set(node) == {"scenario_id", "pointer", "expected_marker"}
+        for node in accounting["nodes"]
+    )
+    assert receipt["comparison_claim_scope"] == "ALL_NON_BLOCKED_EXPECTED_NODES"
+    assert (
+        verify_bceg.ACCEPTING_LABEL
+        == "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_ACCEPTED"
+    )
 
 
 def test_probe_driver_rejects_identity_copy_and_detects_modified_copy(

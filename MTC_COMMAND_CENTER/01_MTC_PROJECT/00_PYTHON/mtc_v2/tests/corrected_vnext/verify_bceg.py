@@ -50,7 +50,8 @@ from mtc_v2.core.semantics import resolve_semantics_id
 from mtc_v2.core.types import Bar
 
 
-ACCEPTING_LABEL = "BOUNDED_CORRECTION_EVIDENCE_ACCEPTED"
+ACCEPTING_LABEL = "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_ACCEPTED"
+REFUSAL_LABEL = "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_REFUSED"
 SEMANTIC_COVERAGE_REVIEW_SCHEMA = "P012_SEMANTIC_COVERAGE_REVIEW_V1"
 SEMANTIC_COVERAGE_REVIEW_KEYS = (
     "schema",
@@ -1221,7 +1222,11 @@ def execute_corrected_scenario(
 
 
 def compare_scoped_expected_nodes(
-    expected: Any, observed: Any, pointer: str = ""
+    expected: Any,
+    observed: Any,
+    pointer: str = "",
+    *,
+    blocked_nodes: list[dict[str, str]] | None = None,
 ) -> list[tuple[str, str | None, str | None]]:
     """Return every changed section-15.3 node in traversal order."""
 
@@ -1243,11 +1248,20 @@ def compare_scoped_expected_nodes(
                 )
                 continue
             differences.extend(
-                compare_scoped_expected_nodes(expected[surface], observed[surface], child)
+                compare_scoped_expected_nodes(
+                    expected[surface],
+                    observed[surface],
+                    child,
+                    blocked_nodes=blocked_nodes,
+                )
             )
         return differences
 
     if type(expected) is str and expected.startswith("BLOCKED-"):
+        if blocked_nodes is not None:
+            blocked_nodes.append(
+                {"pointer": pointer, "expected_marker": expected}
+            )
         return []
     if type(expected) is dict:
         if type(observed) is not dict:
@@ -1259,7 +1273,12 @@ def compare_scoped_expected_nodes(
                 differences.append((child, None, canonical_node(expected[key])))
                 continue
             differences.extend(
-                compare_scoped_expected_nodes(expected[key], observed[key], child)
+                compare_scoped_expected_nodes(
+                    expected[key],
+                    observed[key],
+                    child,
+                    blocked_nodes=blocked_nodes,
+                )
             )
         return differences
     if type(expected) is list:
@@ -1271,7 +1290,10 @@ def compare_scoped_expected_nodes(
         for index, (expected_member, observed_member) in enumerate(zip(expected, observed, strict=True)):
             differences.extend(
                 compare_scoped_expected_nodes(
-                    expected_member, observed_member, f"{pointer}/{index}"
+                    expected_member,
+                    observed_member,
+                    f"{pointer}/{index}",
+                    blocked_nodes=blocked_nodes,
                 )
             )
         return differences
@@ -1283,9 +1305,15 @@ def compare_scoped_expected_nodes(
 
 
 def compare_scoped_expected(
-    expected: Any, observed: Any, pointer: str = ""
+    expected: Any,
+    observed: Any,
+    pointer: str = "",
+    *,
+    blocked_nodes: list[dict[str, str]] | None = None,
 ) -> tuple[str, str | None, str | None] | None:
-    differences = compare_scoped_expected_nodes(expected, observed, pointer)
+    differences = compare_scoped_expected_nodes(
+        expected, observed, pointer, blocked_nodes=blocked_nodes
+    )
     return differences[0] if differences else None
 
 
@@ -1469,6 +1497,7 @@ def materialize_observed_artifacts(root: Path, baseline_root: Path) -> dict[str,
     if value_rows:
         driver, modules = _load_legacy_executor(root, baseline_root)
     scenarios: list[dict[str, Any]] = []
+    blocked_node_skips: list[dict[str, str]] = []
     for row in value_rows:
         legacy_path, corrected_path = _observed_paths(root, row)
         legacy = _legacy_observed_document(
@@ -1484,7 +1513,14 @@ def materialize_observed_artifacts(root: Path, baseline_root: Path) -> dict[str,
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(canonical_json_bytes(document))
         golden = load_json_exact(root / row["expected_artifacts"]["2.0.0"]["path"])
-        corrected_difference = compare_scoped_expected(golden, corrected)
+        scenario_blocked_nodes: list[dict[str, str]] = []
+        corrected_difference = compare_scoped_expected(
+            golden, corrected, blocked_nodes=scenario_blocked_nodes
+        )
+        blocked_node_skips.extend(
+            {"scenario_id": row["scenario_id"], **node}
+            for node in scenario_blocked_nodes
+        )
         projection_error: str | None = None
         try:
             projections = build_projection_results(
@@ -1535,6 +1571,11 @@ def materialize_observed_artifacts(root: Path, baseline_root: Path) -> dict[str,
         "mode": "observe",
         "claim_label": "NON_ACCEPTING_OBSERVED_ARTIFACTS",
         "acceptance_reachable": False,
+        "comparison_claim_scope": "ALL_NON_BLOCKED_EXPECTED_NODES",
+        "blocked_node_skips": {
+            "count": len(blocked_node_skips),
+            "nodes": blocked_node_skips,
+        },
         "legacy_provenance": {
             "baseline_root": str(baseline_root / "out"),
             "legacy_event_order_map_sha256": event_order_digest,
@@ -2840,6 +2881,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
     legacy_blockers: list[dict[str, Any]] = []
     legacy_surface_count = 0
     corrected_blockers: list[dict[str, Any]] = []
+    blocked_node_skips: list[dict[str, str]] = []
     for row in value_rows:
         scenario_id = row["scenario_id"]
         input_document = load_json_exact(root / row["input"]["path"])
@@ -2859,7 +2901,14 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
             legacy_blockers.append(legacy_blocker)
         golden = load_json_exact(root / row["expected_artifacts"]["2.0.0"]["path"])
         corrected = execute_corrected_scenario(root, row)
-        corrected_difference = compare_scoped_expected(golden, corrected)
+        scenario_blocked_nodes: list[dict[str, str]] = []
+        corrected_difference = compare_scoped_expected(
+            golden, corrected, blocked_nodes=scenario_blocked_nodes
+        )
+        blocked_node_skips.extend(
+            {"scenario_id": scenario_id, **node}
+            for node in scenario_blocked_nodes
+        )
         if corrected_difference is not None:
             corrected_blockers.append(
                 {
@@ -2908,6 +2957,11 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
             "status": "MATCH" if not legacy_blockers else "MISMATCH",
             "scenario_count": len(scenarios),
             "surface_count": legacy_surface_count,
+        },
+        "comparison_claim_scope": "ALL_NON_BLOCKED_EXPECTED_NODES",
+        "blocked_node_skips": {
+            "count": len(blocked_node_skips),
+            "nodes": blocked_node_skips,
         },
         "acceptance_blockers": [
             *legacy_blockers,
@@ -3054,7 +3108,7 @@ def main(argv: list[str] | None = None) -> int:
                 if blockers:
                     receipt = {
                         "mode": "full-gate",
-                        "claim_label": "BOUNDED_CORRECTION_EVIDENCE_REFUSED",
+                        "claim_label": REFUSAL_LABEL,
                         "acceptance_reachable": True,
                         "refusals": blockers,
                         **pipeline,
@@ -3077,7 +3131,7 @@ def main(argv: list[str] | None = None) -> int:
     except GateRefusal as exc:
         receipt = {
             "mode": args.mode,
-            "claim_label": "BOUNDED_CORRECTION_EVIDENCE_REFUSED",
+            "claim_label": REFUSAL_LABEL,
             "refusal": exc.as_dict(),
         }
         sys.stdout.write(json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
