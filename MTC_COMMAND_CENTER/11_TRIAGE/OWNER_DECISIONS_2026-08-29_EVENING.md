@@ -997,3 +997,25 @@ live trading, a build, or a kernel change.
   quotation marks (character-exact rule).
 - Routes 01:1x: Codex fourth + secondary capped until 05:43; Codex free live; Claude Pro resets 02:41;
   MAX unused since 20:1x (decision 131).
+
+## Addendum 37 - 2026-09-03 02:0x REAL (Lead record: the engine branch reached its honest final state; re-audits started)
+
+- **Chain closed at re-seal #13** (`EXPECTED_SEAL_SHA e4ffde6a...`): W299C rebuilt the nine kernel probe
+  variants from a fresh copy of the final core (offset-applied unchanged patches; Lead one-file
+  measurement 9/9), catalog re-pinned two-party, baseline regenerated (W300B PASS, 34/34 identical to the
+  seal-12 run), all five in-repo bundle copies refreshed (W303D, `a854ab4d`, `8ca003e4`).
+- **Canonical gate at HEAD `8ca003e4` (W303D receipt): 9 refusal records, 8/10 probes DETECTED.** Every
+  refusal traces to an owner item: (1) `SEMANTIC_COVERAGE_REVIEW_MISSING` = the owner's section-16 review;
+  (2) `EXPECTED_PATH_CHANGED_AFTER_BASE` RULE2-01-GREEN = decision 134's exception, mechanism pending in
+  the harness; (3-7) the RULE2-08 cluster (missing `cumulative_funding`, cash/decision rows) = morning
+  item M1 (sealed input without a cost schedule); (8-9) two probes NOT DETECTED: PROBE-P012-02-A now
+  fails first at `/RESULT_SURFACE/admitted` (closed-set check precedes its declared cross-version check
+  after W304 made `admitted` a kernel member) and PROBE-P012-08-A collides with M1. **OWNER ITEM M4:**
+  the two probe rows' `expected_failed_check` / first-changed-node predictions need re-derivation by the
+  tables family (a design-directed re-authoring, owner-visible), or the probes are recorded as
+  conditional on M1.
+- **Re-audits of the fixed branch started 01:59:** detection GM83B (Gemini, packet at HEAD `8ca003e4`),
+  then flagship 1b (Codex) and flagship 2b (Claude Pro) once the worktree is quiet for Gemini.
+- Kernel and harness work of the night, all with red-then-green, legacy replay 34/34 byte-exact, and a
+  non-author-family verification: W283 (7), W283R (5+1 refuted+1 cleared), W283R2 (9+1+1), W283R3 (1 refuted),
+  W285 (6 + item 8; F06 moved to W284, F18 design-bound), W284 (6 + F06), W304 (6; row 7 = M1). Tests 292.
