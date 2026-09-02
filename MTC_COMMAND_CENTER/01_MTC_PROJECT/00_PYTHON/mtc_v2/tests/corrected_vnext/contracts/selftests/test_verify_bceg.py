@@ -481,6 +481,11 @@ def legacy_event_order_pin_fixture(
         "compute_legacy_event_order_map",
         lambda _corpus: (mapping, digest),
     )
+    monkeypatch.setattr(
+        verify_bceg,
+        "validate_expected_source_provenance",
+        lambda *_args: {"status": "MATCH"},
+    )
     return root, baseline_root, mapping, digest, manifest_path, anchor_path
 
 
@@ -522,6 +527,49 @@ def test_sealed_producer_validation_refuses_modified_copy_with_stale_recorded_se
     refusal(
         "EXPECTED_SEAL_MISMATCH",
         lambda: verify_bceg.validate_sealed_producers(root, baseline_root),
+    )
+
+
+def test_expected_source_provenance_refuses_copy_observed_method() -> None:
+    contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
+    manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
+    anchor = load_json_exact(contracts / "implementation_anchor.json")
+    manifest["expected_value_provenance"]["method"] = "COPY_OBSERVED"
+
+    refusal(
+        "EXPECTED_PROVENANCE_METHOD_INVALID",
+        lambda: verify_bceg.validate_expected_source_provenance(
+            MTC_V2_ROOT, manifest, anchor
+        ),
+    )
+
+
+def test_expected_source_provenance_refuses_non_ancestor_base() -> None:
+    contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
+    manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
+    anchor = load_json_exact(contracts / "implementation_anchor.json")
+    nonexistent_commit = "f" * 40
+    manifest["seal"]["IMPLEMENTATION_BASE_SHA"] = nonexistent_commit
+    anchor["IMPLEMENTATION_BASE_SHA"] = nonexistent_commit
+
+    refusal(
+        "IMPLEMENTATION_BASE_ANCESTRY_MISMATCH",
+        lambda: verify_bceg.validate_expected_source_provenance(
+            MTC_V2_ROOT, manifest, anchor
+        ),
+    )
+
+
+def test_expected_source_provenance_refuses_expected_path_changed_after_base() -> None:
+    contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
+    manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
+    anchor = load_json_exact(contracts / "implementation_anchor.json")
+
+    refusal(
+        "EXPECTED_PATH_CHANGED_AFTER_BASE",
+        lambda: verify_bceg.validate_expected_source_provenance(
+            MTC_V2_ROOT, manifest, anchor
+        ),
     )
 
 

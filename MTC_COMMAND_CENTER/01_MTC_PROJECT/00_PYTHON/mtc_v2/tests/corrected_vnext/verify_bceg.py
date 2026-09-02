@@ -1953,6 +1953,121 @@ class Corpus:
     identities: dict[str, str]
 
 
+def validate_expected_source_provenance(
+    root: Path, manifest: dict[str, Any], anchor: dict[str, Any]
+) -> dict[str, Any]:
+    provenance = manifest.get("expected_value_provenance")
+    if (
+        type(provenance) is not dict
+        or provenance.get("method") != "INDEPENDENT_DERIVATION"
+        or provenance.get("not_method") != "COPY_OBSERVED"
+    ):
+        raise GateRefusal(
+            "EXPECTED_PROVENANCE_METHOD_INVALID",
+            str(provenance.get("method") if type(provenance) is dict else provenance),
+        )
+
+    manifest_base = manifest.get("seal", {}).get("IMPLEMENTATION_BASE_SHA")
+    anchor_base = anchor.get("IMPLEMENTATION_BASE_SHA")
+    if (
+        type(manifest_base) is not str
+        or not GIT_OID_RE.fullmatch(manifest_base)
+        or manifest_base != anchor_base
+    ):
+        raise GateRefusal(
+            "IMPLEMENTATION_BASE_ANCESTRY_MISMATCH",
+            f"manifest={manifest_base} anchor={anchor_base}",
+        )
+
+    try:
+        git_root = Path(
+            subprocess.check_output(
+                ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+                text=True,
+                stderr=subprocess.STDOUT,
+            ).strip()
+        ).resolve()
+        observed_build_sha = subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", "HEAD"],
+            text=True,
+            stderr=subprocess.STDOUT,
+        ).strip()
+        ancestry = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "merge-base",
+                "--is-ancestor",
+                manifest_base,
+                observed_build_sha,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise GateRefusal(
+            "IMPLEMENTATION_BASE_ANCESTRY_MISMATCH", str(exc)
+        ) from exc
+    if ancestry.returncode != 0:
+        detail = ancestry.stderr.strip() or (
+            f"base={manifest_base} observed_build={observed_build_sha}"
+        )
+        raise GateRefusal("IMPLEMENTATION_BASE_ANCESTRY_MISMATCH", detail)
+
+    contracts = root / "tests/corrected_vnext/contracts"
+    expected_paths: list[str] = []
+    for member in manifest.get("files", []):
+        relative = member.get("path") if type(member) is dict else None
+        if type(relative) is not str:
+            raise GateRefusal(
+                "EXPECTED_PATH_CHANGED_AFTER_BASE", str(relative)
+            )
+        member_path = root / relative if relative.startswith("golden/") else contracts / relative
+        try:
+            expected_paths.append(
+                f":(top){member_path.resolve().relative_to(git_root).as_posix()}"
+            )
+        except ValueError as exc:
+            raise GateRefusal(
+                "EXPECTED_PATH_CHANGED_AFTER_BASE", str(member_path)
+            ) from exc
+    try:
+        changed = subprocess.check_output(
+            [
+                "git",
+                "-C",
+                str(root),
+                "diff",
+                "--name-only",
+                "-z",
+                f"{manifest_base}..{observed_build_sha}",
+                "--",
+                *expected_paths,
+            ],
+            stderr=subprocess.STDOUT,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise GateRefusal("EXPECTED_PATH_CHANGED_AFTER_BASE", str(exc)) from exc
+    changed_paths = [
+        item.decode("utf-8") for item in changed.split(b"\0") if item
+    ]
+    if changed_paths:
+        raise GateRefusal(
+            "EXPECTED_PATH_CHANGED_AFTER_BASE",
+            changed_paths[0],
+            pointer=changed_paths[0],
+        )
+    return {
+        "status": "MATCH",
+        "method": provenance["method"],
+        "implementation_base_sha": manifest_base,
+        "observed_build_sha": observed_build_sha,
+        "expected_path_change_count": 0,
+    }
+
+
 def validate_sealed_producers(root: Path, baseline_root: Path) -> dict[str, str]:
     contracts = root / "tests/corrected_vnext/contracts"
     manifest_path = contracts / "CONTRACT_TABLES_MANIFEST.json"
@@ -3215,6 +3330,26 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
     event_order_pin, event_order_pin_blockers = consume_legacy_event_order_map_pin(
         root, event_order_map, event_order_digest
     )
+    contracts = root / "tests/corrected_vnext/contracts"
+    expected_source_blockers: list[dict[str, Any]] = []
+    try:
+        expected_source_provenance = validate_expected_source_provenance(
+            root,
+            load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json"),
+            load_json_exact(contracts / "implementation_anchor.json"),
+        )
+    except GateRefusal as exc:
+        if exc.check_id not in {
+            "EXPECTED_PROVENANCE_METHOD_INVALID",
+            "IMPLEMENTATION_BASE_ANCESTRY_MISMATCH",
+            "EXPECTED_PATH_CHANGED_AFTER_BASE",
+        }:
+            raise
+        expected_source_provenance = {
+            "status": "MISMATCH",
+            "check_id": exc.check_id,
+        }
+        expected_source_blockers.append(exc.as_dict())
     value_rows = [row for row in corpus.catalog if row["role"] in {"RED", "GREEN"}]
     driver: Any | None = None
     modules: dict[str, Any] | None = None
@@ -3295,6 +3430,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
         "legacy_event_order_map": event_order_map,
         "computed_legacy_event_order_map_digest": event_order_digest,
         "legacy_event_order_map_pin": event_order_pin,
+        "expected_source_provenance": expected_source_provenance,
         "legacy_reproduction": {
             "producer_id": "KERNEL_1",
             "status": "MATCH" if not legacy_blockers else "MISMATCH",
@@ -3309,6 +3445,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
         "acceptance_blockers": [
             *legacy_blockers,
             *event_order_pin_blockers,
+            *expected_source_blockers,
             *corpus.blockers,
             *probe_suite["probe_blockers"],
             *corrected_blockers,
