@@ -273,6 +273,24 @@ def test_funding_boundary_is_applied_before_same_timestamp_bar_evaluation() -> N
     assert runner.state.equity == 999.9
 
 
+@pytest.mark.parametrize("bars_selector", [slice(2, None), slice(None, 2)])
+def test_w279_f09_unbracketed_funding_event_gets_eligibility_disposition(
+    bars_selector: slice,
+) -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    runner.state.position = _open_long()
+
+    runner.run(bars[bars_selector])
+
+    funding_decisions = [
+        row for row in runner.state.decision_events if row.decision == "FUNDING_ELIGIBILITY"
+    ]
+    assert len(funding_decisions) == 1
+    assert dict(funding_decisions[0].details)["eligible"] is True
+    assert len(runner.state.funding_events) == 1
+
+
 def test_w276_f03_missing_production_funding_events_are_typed_refusal() -> None:
     config, bars = _scenario("RULE2-08-RED")
     record_path = (

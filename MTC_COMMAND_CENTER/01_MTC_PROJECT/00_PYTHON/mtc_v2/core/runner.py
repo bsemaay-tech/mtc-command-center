@@ -143,6 +143,7 @@ class Runner:
         self._corrected_requested_quantity_override: float | None = None
         self._corrected_test_target_book: dict[str, tuple[str, float, float]] = {}
         self._corrected_instrument_validation_field: str | None = None
+        self._evaluated_funding_event_ids: set[str] = set()
         self._corrected_records: EconomicRecords | None = None
         self._corrected_instrument_bound = False
         if self._corrected_semantics:
@@ -709,8 +710,12 @@ class Runner:
             )
         return datetime.fromisoformat(value[:-1] + "+00:00")
 
-    def _apply_corrected_funding_between(self, previous: Bar, current: Bar) -> None:
+    def _apply_corrected_funding_between(
+        self, previous: Bar | None, current: Bar | None
+    ) -> None:
         assert self._corrected_records is not None
+        if previous is None and current is None:
+            return
         events = self._corrected_records.funding.get("events", ())
         if not isinstance(events, (tuple, list)):
             raise EconomicsRefusal(
@@ -719,9 +724,17 @@ class Runner:
             )
         for event in events:
             event_time = self._record_timestamp(event.get("event_timestamp"))
-            if not (previous.timestamp < event_time <= current.timestamp):
+            if previous is None:
+                in_window = current is not None and event_time <= current.timestamp
+            elif current is None:
+                in_window = previous.timestamp < event_time
+            else:
+                in_window = previous.timestamp < event_time <= current.timestamp
+            if not in_window:
                 continue
             event_id = str(event["funding_event_id"])
+            if event_id in self._evaluated_funding_event_ids:
+                continue
             lifecycle_id = (
                 None if self.state.position is None else self.state.position.lifecycle_id
             )
@@ -729,22 +742,26 @@ class Runner:
                 lifecycle_id is not None
                 and (event_id, lifecycle_id) in self.state.applied_funding_event_keys
             ):
+                self._evaluated_funding_event_ids.add(event_id)
                 continue
+            bar_context = current if current is not None else previous
+            assert bar_context is not None
             transition = CorrectedEconomicsAdapter().resolve(
                 self._economic_state(),
                 EconomicIntent(
                     kind=IntentKind.FUNDING_TICK,
                     funding_event_id=event_id,
                 ),
-                self._market_event(current, timestamp=event_time),
+                self._market_event(bar_context, timestamp=event_time),
                 self._corrected_records,
             )
             self.position_manager.apply_transition(
-                bar=current,
+                bar=bar_context,
                 state=self.state,
                 transition=transition,
                 reason="funding_tick",
             )
+            self._evaluated_funding_event_ids.add(event_id)
 
     def run(
         self,
@@ -773,8 +790,7 @@ class Runner:
                 _first_bar = bar
             if self._corrected_semantics:
                 self._bind_corrected_instrument(bar.timestamp)
-                if self._prev_bar is not None:
-                    self._apply_corrected_funding_between(self._prev_bar, bar)
+                self._apply_corrected_funding_between(self._prev_bar, bar)
             self.state.current_bar_index = bar.bar_index
             self.state.block_new_entries_this_bar = False
             self.state.opened_this_bar_reason = None
@@ -1579,6 +1595,8 @@ class Runner:
             self._l18_prev_raw_short = raw.short
             if self._corrected_semantics:
                 self.corrected_equity_curve.append(self.state.equity)
+        if self._corrected_semantics and self._prev_bar is not None:
+            self._apply_corrected_funding_between(self._prev_bar, None)
         # --- L24: DEBUG METADATA ---
         if bool(self.config.get("debug_mode", False)):
             self._debug_metadata = {
