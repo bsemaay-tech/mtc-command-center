@@ -811,7 +811,10 @@ _P0-31 Milestone 2 (rows 34-41)_
 124. **PROBE-COPY WHITESPACE STAYS** (owner: "GO", item B default). The whitespace diagnostics inside
     the ten pinned probe copies (W276-F06 = W279-F22) are immutable evidence: left untouched,
     recorded as known and excluded from the hygiene check. The ordinary self-test blank line
-    (`test_corrected_config.py:87`) is repaired regardless.
+    (`test_corrected_config.py:87`) is repaired regardless. [Note 20:4x: this
+    sentence was in the Lead's restatement of item B that the owner answered "GO" to, not in the
+    prompt text itself; DS103 (second-family check) flagged the difference. The DS102 merged ledger
+    recommended it; owner-visible, no value moves.]
 125. **SECTION-16 SIGNATURE AFTER THE RE-AUDITS** (owner: "GO", item C default). The owner's
     section-16 review is not spent tonight; it follows the kernel and harness fixes and the
     re-run of both flagships plus detection on the fixed branch.
