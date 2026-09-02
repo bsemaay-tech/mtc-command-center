@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -7,11 +8,13 @@ import pytest
 
 from mtc_v2.core.economics import (
     CorrectedEconomicsAdapter,
+    EconomicsRefusal,
     EconomicIntent,
     EconomicRecords,
     EconomicState,
     IntentKind,
     MarketEvent,
+    REFUSED_DUPLICATE_FUNDING_EVENT,
 )
 from mtc_v2.core.exits import resolve_corrected_price_exits
 from mtc_v2.core.position_manager import PositionManager
@@ -425,6 +428,57 @@ def test_funding_transition_updates_signed_total_and_exact_event_identity() -> N
     assert state.cumulative_funding == -0.2
     assert state.funding_events == list(transition.funding_events)
     assert state.applied_funding_event_keys == {("TEST-FUND-1", 1)}
+
+
+def test_w283r_r5_funding_key_set_distinguishes_lifecycle_and_refuses_same_pair() -> None:
+    records = EconomicRecords.from_record_paths(
+        instrument_path=(
+            RECORD_ROOT / "instruments" / "SYNTH-INSTRUMENT-RULE2-08-RED-V1.json"
+        ),
+        funding_path=RECORD_ROOT / "funding" / "SYNTH-FUNDING-RULE2-08-V1.json",
+    )
+    prior_keys = {("TEST-FUND-1", 1)}
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        position=replace(_open_position(), lifecycle_id=2),
+        applied_funding_event_keys=set(prior_keys),
+    )
+    economic_state = EconomicState(
+        lifecycle_id=2,
+        position_side="LONG",
+        quantity=2.0,
+        entry_fill_price=100.0,
+        equity=1000.0,
+        applied_funding_event_keys=frozenset(prior_keys),
+    )
+    intent = EconomicIntent(kind=IntentKind.FUNDING_TICK, funding_event_id="TEST-FUND-1")
+    market = MarketEvent(NOW, 1, 100.0, 100.0, 100.0, 100.0)
+
+    transition = CorrectedEconomicsAdapter().resolve(
+        economic_state,
+        intent,
+        market,
+        records,
+    )
+    _manager().apply_transition(bar=_bar(), state=state, transition=transition)
+
+    assert state.applied_funding_event_keys == {
+        ("TEST-FUND-1", 1),
+        ("TEST-FUND-1", 2),
+    }
+    same_pair_state = replace(
+        economic_state,
+        applied_funding_event_keys=frozenset(state.applied_funding_event_keys),
+    )
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        CorrectedEconomicsAdapter().resolve(
+            same_pair_state,
+            intent,
+            market,
+            records,
+        )
+    assert exc_info.value.refusal_code == REFUSED_DUPLICATE_FUNDING_EVENT
 
 
 def test_p08_same_side_add_retains_book_history_and_final_entry_facts() -> None:
