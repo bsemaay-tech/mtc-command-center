@@ -634,3 +634,15 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     72 under protected scope `MTC_V2`; Lead re-seal #8; and one gate rerun after that seal. It does
     not authorise a kernel edit, a repository master change, clearing the canonical gate's baseline
     refusal, or regenerating the frozen reference results (Q3, still held).
+
+74. **GROK NOT TOPPED UP FOR NOW** (owner: "Not now"). The grok route stays out of balance (402
+    Payment Required since 2026-09-02 02:41). The review pool is three families - Codex, Claude,
+    Gemini/OpenCode. Recorded as a spend decision; it costs independence on four-way checks, not
+    speed. Revisit when a fourth opinion is needed.
+
+75. **REGISTER GAINS A FIFTH STATE: "in repair"** (owner: "Add 'in repair'"). Context: the
+    dashboard labels ten packages "design converged" although they were re-examined overnight and
+    are now under repair; the register's four states have no word for that. The owner adds one
+    state word. Consequence: a small change to the register and its dashboard reader, with the
+    reader checked to render the new value rather than blank; the ten affected rows move to the
+    new state only after that check. Nothing else in the register changes under this word.
