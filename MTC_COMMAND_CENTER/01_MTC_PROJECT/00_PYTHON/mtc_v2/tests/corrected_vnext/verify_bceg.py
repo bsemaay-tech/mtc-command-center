@@ -1400,16 +1400,19 @@ def execute_corrected_scenario(
             runner.run(bars)
     except (EconomicsRefusal, InstrumentRecordRefusal):
         pass
-    projection_parameters = inspect.signature(corrected_surfaces).parameters.values()
-    accepts_declared_defs = "declared_def_ids" in {
+    projection_parameters = tuple(inspect.signature(corrected_surfaces).parameters.values())
+    projection_parameter_names = {
         parameter.name for parameter in projection_parameters
-    } or any(
+    }
+    accepts_projection_contract = "declared_def_ids" in projection_parameter_names or any(
         parameter.kind is inspect.Parameter.VAR_KEYWORD
         for parameter in projection_parameters
     )
-    projection_contract = (
-        {"declared_def_ids": row["owning_def_ids"]} if accepts_declared_defs else {}
-    )
+    projection_contract: dict[str, Any] = {}
+    if accepts_projection_contract:
+        projection_contract["declared_def_ids"] = row["owning_def_ids"]
+        if "DEF-P012-07" in row["owning_def_ids"]:
+            projection_contract["computed_guard_snapshot"] = runner.corrected_guard_snapshot
     surfaces = corrected_surfaces(
         state=runner.state,
         equity_values=runner.corrected_equity_curve,

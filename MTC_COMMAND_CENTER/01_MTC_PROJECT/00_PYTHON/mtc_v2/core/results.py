@@ -841,7 +841,7 @@ def corrected_surfaces(
     manifest: CorrectedRunManifest,
     warnings: Iterable[RunnerWarning | Mapping[str, Any]] = (),
     refusals: Iterable[Mapping[str, Any]] | None = None,
-    guards: Mapping[str, Any] | None = None,
+    computed_guard_snapshot: Mapping[str, Any] | None = None,
     declared_def_ids: Iterable[str] = (),
     observation_start: datetime | None = None,
     observation_end: datetime | None = None,
@@ -967,8 +967,10 @@ def corrected_surfaces(
         result_surface["cumulative_funding"] = _json_number(
             state.cumulative_funding
         )
-    if guards is not None:
-        result_surface["guards"] = _guard_surface(guards)
+    if "DEF-P012-07" in declared_defs:
+        if computed_guard_snapshot is None:
+            raise ValueError("declared guard projection requires a computed guard snapshot")
+        result_surface["guards"] = _guard_surface(computed_guard_snapshot)
     if "DEF-P012-02" in declared_defs and any(
         row.decision == "MIN_NOTIONAL_ADMITTED" for row in state.decision_events
     ):

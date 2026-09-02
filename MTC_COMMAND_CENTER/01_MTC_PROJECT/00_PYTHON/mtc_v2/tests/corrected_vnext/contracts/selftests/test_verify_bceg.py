@@ -1189,6 +1189,7 @@ def test_observed_projection_passes_no_authoring_or_membership_overrides(
 
     assert len(calls) == 1
     assert "declared_def_ids" in calls[0]
+    assert ("computed_guard_snapshot" in calls[0]) is (scenario_id == "RULE2-07-RED")
     assert calls[0].isdisjoint(
         {
             "refusals",
@@ -1422,6 +1423,8 @@ def test_raw_kernel_result_membership_follows_declared_contract(
         expected.add("order_notional")
     if scenario_id == "RULE2-02-GREEN":
         expected.add("admitted")
+    if row["owning_def_ids"][0] == "DEF-P012-07":
+        expected.add("guards")
     assert set(result) == expected
     assert result["metrics"] is None
 
@@ -1460,16 +1463,39 @@ def test_section_23_refusals_are_closed_tagged_objects(
     assert refusals == [expected_refusal]
 
 
-@pytest.mark.parametrize("scenario_id", ["RULE2-07-RED", "RULE2-07-GREEN"])
-def test_raw_kernel_projection_does_not_inject_guard_snapshot(
-    scenario_id: str,
+@pytest.mark.parametrize(
+    ("scenario_id", "expected"),
+    [
+        (
+            "RULE2-07-RED",
+            {
+                "guard_pnl_basis": "GROSS-MINUS-FEES",
+                "last_closed_guard_pnl": -0.2,
+                "consecutive_loss_count": 1,
+                "consec_loss_ok": False,
+                "guard_blocked_raw": True,
+            },
+        ),
+        (
+            "RULE2-07-GREEN",
+            {
+                "guard_pnl_basis": "GROSS-MINUS-FEES",
+                "consecutive_loss_count": 0,
+                "consec_loss_ok": True,
+                "guard_blocked_raw": False,
+            },
+        ),
+    ],
+)
+def test_w304_row3_serializes_the_computed_guard_snapshot(
+    scenario_id: str, expected: dict[str, object]
 ) -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == scenario_id)
 
     result = execute_corrected_scenario(MTC_V2_ROOT, row)["RESULT_SURFACE"]
 
-    assert "guards" not in result
+    assert result["guards"] == expected
 
 
 def test_rule2_05_red_sizes_from_final_fill_and_preserves_zero_economics() -> None:

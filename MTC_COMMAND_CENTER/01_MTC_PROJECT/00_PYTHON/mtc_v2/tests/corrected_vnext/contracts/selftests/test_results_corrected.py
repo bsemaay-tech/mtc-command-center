@@ -70,7 +70,8 @@ def test_corrected_result_is_version_shaped_and_net_cash_based() -> None:
         manifest=CorrectedRunManifest.from_records(
             records, execution_profile_id=str(config["execution_profile_id"])
         ),
-        guards=runner.corrected_guard_snapshot,
+        computed_guard_snapshot=runner.corrected_guard_snapshot,
+        declared_def_ids=("DEF-P012-07",),
     )
 
     event = surfaces["EVENT_SURFACE"]
@@ -122,6 +123,13 @@ def test_corrected_result_is_version_shaped_and_net_cash_based() -> None:
     ]
     assert result["equity_curve"] == {"first": 1000.0, "last": 999.8}
     assert result["metrics"] is None
+    assert result["guards"] == {
+        "guard_pnl_basis": "GROSS-MINUS-FEES",
+        "last_closed_guard_pnl": -0.2,
+        "consecutive_loss_count": 1,
+        "consec_loss_ok": False,
+        "guard_blocked_raw": True,
+    }
     assert result["run_manifest"]["kernel_semantics_version"] == "2.0.0"
     assert result["run_manifest"]["instrument_record_digest"] == records.instrument.digest
     assert set(result["run_manifest"]) == {
