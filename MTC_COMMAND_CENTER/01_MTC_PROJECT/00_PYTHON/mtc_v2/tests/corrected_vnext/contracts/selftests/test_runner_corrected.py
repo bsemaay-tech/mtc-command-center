@@ -146,6 +146,17 @@ def test_w276_f01_runner_applies_exit_cash_events_in_order() -> None:
     assert runner.state.equity == 1.0
 
 
+def test_w283r_r2_runner_seeds_equity_from_initial_capital() -> None:
+    config, _bars = _scenario("RULE2-05-GREEN")
+    config["initial_capital"] = 1234.5
+
+    runner = Runner(config)
+
+    assert runner.state.initial_capital == 1234.5
+    assert runner.state.realized_equity == 0.0
+    assert runner.state.equity == runner.state.initial_capital + runner.state.realized_equity
+
+
 def test_corrected_green_guard_surface_emits_consecutive_loss_outcome() -> None:
     config, bars = _scenario("RULE2-07-GREEN")
     runner = Runner(config)
