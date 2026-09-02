@@ -115,6 +115,20 @@ class PositionManager:
 
     @staticmethod
     def _transition_key(transition: EconomicTransition) -> tuple[object, ...]:
+        if not (
+            transition.decision_events
+            or transition.fill_decisions
+            or transition.cash_events
+            or transition.fee_events
+            or transition.funding_events
+        ):
+            return (
+                transition.semantics_id,
+                transition.instrument_record_digest,
+                transition.cost_schedule_digest,
+                transition.funding_schedule_digest,
+                transition._application_identity,
+            )
         return (
             transition.semantics_id,
             transition.instrument_record_digest,

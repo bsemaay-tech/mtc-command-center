@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pytest
+
 from mtc_v2.core.economics import (
     CorrectedEconomicsAdapter,
     EconomicIntent,
@@ -14,7 +16,14 @@ from mtc_v2.core.economics import (
 )
 from mtc_v2.core.position_manager import PositionManager
 from mtc_v2.core.results import _closed_lifecycle_trades
-from mtc_v2.core.types import EntryLeg, FillDecision, PortfolioState, Position
+from mtc_v2.core.types import (
+    Bar,
+    EconomicTransitionError,
+    EntryLeg,
+    FillDecision,
+    PortfolioState,
+    Position,
+)
 
 
 MTC_V2_ROOT = Path(__file__).resolve().parents[4]
@@ -56,6 +65,22 @@ def _fill(*, event_class: str, quantity: float, exit_id: str | None = None) -> F
         liquidity_role="TAKER",
         exit_id=exit_id,
     )
+
+
+def _manager() -> PositionManager:
+    return PositionManager(
+        enable_long=True,
+        enable_short=True,
+        regime_lock=False,
+        max_entries=1,
+        cooldown_bars=0,
+        contract_multiplier=1.0,
+        qty_step=1e-15,
+    )
+
+
+def _bar() -> Bar:
+    return Bar(NOW, 100.0, 100.0, 100.0, 100.0, 1.0, 1)
 
 
 def test_w279_f13_price_exit_preserves_a_positive_binary64_remainder() -> None:
@@ -182,3 +207,44 @@ def test_w279_f16_fee_cash_event_id_uses_the_fill_sequence() -> None:
     assert transition.fee_events[0].sequence == 2
     assert transition.cash_events[0].cash_event_id == "CE-FEE-7"
     assert transition.fee_events[0].cash_event_id == "CE-FEE-7"
+
+
+def test_w279_f19_distinct_empty_transitions_have_distinct_apply_identities() -> None:
+    economic_state = EconomicState(
+        lifecycle_id=1,
+        position_side="LONG",
+        quantity=1.0,
+        entry_fill_price=100.0,
+        next_decision_sequence=1,
+    )
+    intent = EconomicIntent(
+        kind=IntentKind.MARKET_EXIT,
+        requested_quantity=0.0,
+        event_class="MARKET_EXIT",
+        exit_id="NO-OP",
+    )
+    market = MarketEvent(NOW, 1, 100.0, 100.0, 100.0, 100.0)
+    records = _records("RULE2-07-RED")
+    first = CorrectedEconomicsAdapter().resolve(economic_state, intent, market, records)
+    second = CorrectedEconomicsAdapter().resolve(economic_state, intent, market, records)
+    assert not first.decision_events and not first.fill_decisions and not first.cash_events
+    assert not second.decision_events and not second.fill_decisions and not second.cash_events
+
+    position = Position(
+        side="long",
+        entry_price=100.0,
+        avg_entry_price=100.0,
+        qty=1.0,
+        entry_bar=0,
+        initial_qty=1.0,
+        entry_legs=[EntryLeg(100.0, 1.0, 0)],
+        lifecycle_id=1,
+    )
+    state = PortfolioState(position=position)
+    manager = _manager()
+
+    manager.apply_transition(bar=_bar(), state=state, transition=first)
+    manager.apply_transition(bar=_bar(), state=state, transition=second)
+    assert len(state.applied_transition_keys) == 2
+    with pytest.raises(EconomicTransitionError, match="transition already applied"):
+        manager.apply_transition(bar=_bar(), state=state, transition=first)
