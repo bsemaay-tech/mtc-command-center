@@ -673,3 +673,21 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     same inputs and same master-branch legacy kernel as decision 76; the run must prove every
     scenario surface byte-identical to the seal-#8 archive and may differ only in recorded identity.
     No skip flag, no manifest hand-edit.
+
+## Addendum 30 - 2026-09-02 ~17:1x (owner arbitration and standing order for the next 16 hours)
+
+78. **THIS SESSION CONTINUES; THE FORK IS RELEASED** (owner: "1. This session"). Two interactive
+    Lead sessions were live on one bundle; the fork (`tradingview-lab-clean-50`) froze on request
+    and rewrote the next-session handoff on the owner's /handoff order. The owner keeps the day
+    session (`tradingview-lab-clean-21`) as Lead. The fork writes nothing further.
+
+79. **STANDING ORDER ADOPTED** (owner: "2. yes", confirming the order first given to the fork):
+    (a) the owner will hand over answers to all 41 Phase-0 decisions; use them to close every ready
+    package and start as many packages in parallel as they unlock; (b) run the maximum number of
+    parallel lanes, an idle route needs a reason; (c) routing: Claude MAX Fable = orchestration
+    only; Opus on MAX may audit but must never fill the shared 5-hour window enough to lock the
+    orchestrator; **Claude Pro first** for audit and coding lanes; the Codex accounts, Grok,
+    OpenCode Go and Gemini as auditors AND coders; (d) a 16-hour work plan with goals at session
+    start, updated every 2 hours. Grok's balance is still 402 as last probed; using it requires the
+    owner's top-up (decision 74 said not now; this order lists it - the Lead probes before use and
+    does not spend on it without a live balance).
