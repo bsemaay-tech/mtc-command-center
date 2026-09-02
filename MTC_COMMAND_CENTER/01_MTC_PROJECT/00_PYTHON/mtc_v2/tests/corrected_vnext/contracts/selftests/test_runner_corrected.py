@@ -320,6 +320,33 @@ def test_w283r_r4_runner_refuses_ineligible_same_funding_pair() -> None:
     assert runner.state.funding_events == []
 
 
+def test_w283r3_r4_runner_dispositions_duplicate_funding_without_position() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    runner.state.position = None
+    runner.state.applied_funding_event_keys.add(("TEST-FUND-1", 1))
+    equity_before = runner.state.equity
+
+    runner._apply_corrected_funding_between(bars[1], bars[2])
+
+    funding_decisions = [
+        row
+        for row in runner.state.decision_events
+        if row.decision == "FUNDING_ELIGIBILITY"
+    ]
+    assert len(funding_decisions) == 1
+    assert dict(funding_decisions[0].details) == {
+        "eligible": False,
+        "funding_event_id": "TEST-FUND-1",
+        "position_snapshot_rule": "END_OF_INTERVAL_INCLUDE_SAME_TIMESTAMP_V1",
+    }
+    assert runner.state.position is None
+    assert runner.state.equity == equity_before
+    assert runner.state.cash_events == []
+    assert runner.state.funding_events == []
+    assert runner.state.applied_funding_event_keys == {("TEST-FUND-1", 1)}
+
+
 def test_w276_f02_runner_allows_same_funding_id_for_distinct_lifecycle() -> None:
     config, bars = _scenario("RULE2-08-RED")
     runner = Runner(config)
