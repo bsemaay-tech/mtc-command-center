@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import shutil
 import subprocess
 from copy import deepcopy
@@ -27,6 +28,7 @@ from mtc_v2.tests.corrected_vnext.verify_bceg import (
 
 FIXTURES = Path(__file__).parent
 MTC_V2_ROOT = FIXTURES.parents[3]
+BASELINE_ROOT = Path(r"C:\tmp\P012_BASELINE_RUN")
 
 SYNTHETIC_REVIEW_IDENTITIES = {
     "worktree_head_commit": "1" * 40,
@@ -728,6 +730,34 @@ def test_comparison_pipeline_measures_executed_output_once_per_row(
         "compute_legacy_event_order_map",
         lambda _corpus: ({}, "0" * 64),
     )
+    monkeypatch.setattr(
+        verify_bceg,
+        "_load_legacy_executor",
+        lambda _root, _baseline_root: (object(), {}),
+    )
+    monkeypatch.setattr(
+        verify_bceg,
+        "_legacy_observed_document",
+        lambda *_args, **_kwargs: {
+            "EVENT_SURFACE": [],
+            "RESULT_SURFACE": load_json_exact(baseline_path),
+        },
+    )
+    monkeypatch.setattr(
+        verify_bceg,
+        "_compare_legacy_reproduction",
+        lambda *_args, **_kwargs: (
+            {
+                "producer_id": "KERNEL_1",
+                "status": "MATCH",
+                "surfaces": [
+                    {"surface_id": "EVENT_SURFACE", "status": "MATCH"},
+                    {"surface_id": "RESULT_SURFACE", "status": "MATCH"},
+                ],
+            },
+            None,
+        ),
+    )
     executed: list[str] = []
 
     def execute_modified_copy(
@@ -756,6 +786,36 @@ def test_comparison_pipeline_measures_executed_output_once_per_row(
         and blocker.get("pointer") == "/RESULT_SURFACE/final_position/quantity"
         for blocker in receipt["acceptance_blockers"]
     )
+
+
+def test_legacy_reproduction_refuses_one_ulp_actual(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original = verify_bceg._legacy_observed_document
+
+    def one_ulp_actual(*args, **kwargs):
+        observed = original(*args, **kwargs)
+        if observed["scenario_id"] == "RULE2-01-RED":
+            equity = float.fromhex(observed["RESULT_SURFACE"]["account"]["equity"])
+            observed["RESULT_SURFACE"]["account"]["equity"] = math.nextafter(
+                equity, math.inf
+            ).hex()
+        return observed
+
+    monkeypatch.setattr(verify_bceg, "_legacy_observed_document", one_ulp_actual)
+    monkeypatch.setattr(
+        verify_bceg,
+        "run_probe_suite",
+        lambda _corpus: {"probes": [], "probe_blockers": []},
+    )
+
+    receipt = verify_bceg.run_comparison_pipeline(MTC_V2_ROOT, BASELINE_ROOT)
+
+    assert receipt["acceptance_blockers"][0] == {
+        "check_id": "LEGACY_REPRODUCTION_MISMATCH",
+        "scenario_id": "RULE2-01-RED",
+        "pointer": "/RESULT_SURFACE/account/equity",
+    }
 
 
 def test_probe_driver_rejects_identity_copy_and_detects_modified_copy(

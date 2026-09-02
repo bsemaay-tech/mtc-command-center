@@ -13,6 +13,8 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
+import importlib
+import importlib.util
 import json
 import math
 import os
@@ -1292,15 +1294,32 @@ def _legacy_observed_document(
     row: dict[str, Any],
     event_order_map: dict[str, str],
     event_order_digest: str,
+    *,
+    driver: Any | None = None,
+    modules: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     scenario_id = row["scenario_id"]
-    baseline_dir = corpus.baseline_root / "out" / scenario_id
-    event_path = baseline_dir / "event_surface.json"
-    result_path = baseline_dir / "result_surface.json"
-    event = load_json_exact(event_path)
-    result = load_json_exact(result_path)
+    if driver is None or modules is None:
+        driver, modules = _load_legacy_executor(corpus.root, corpus.baseline_root)
+    try:
+        prepared = driver.prepare_scenario(row, corpus.root, modules)
+        event, result, _resolved_config = driver.run_legacy(
+            modules["runner"].Runner,
+            prepared["config"],
+            prepared["bars"],
+            prepared["htf_data"],
+            prepared["gate_overrides"],
+            prepared["profile_id"],
+        )
+    except Exception as exc:
+        raise GateRefusal(
+            "LEGACY_REPRODUCTION_COULD_NOT_EVALUATE",
+            f"{scenario_id}: {type(exc).__name__}: {exc}",
+        ) from exc
     validate_legacy_unpadded(event)
     validate_legacy_unpadded(result)
+    event = deepcopy(event)
+    result = deepcopy(result)
     prefix = f"{scenario_id}/"
     return {
         "schema": "P012_OBSERVED_SURFACES_V1",
@@ -1312,11 +1331,9 @@ def _legacy_observed_document(
         "EVENT_SURFACE": event,
         "RESULT_SURFACE": result,
         "provenance": {
-            "mode": "FROZEN_BASELINE_SURFACES_WITH_EXACT_SOURCE_DIGESTS",
-            "baseline_event_path": str(event_path),
-            "baseline_event_sha256": sha256_file(event_path),
-            "baseline_result_path": str(result_path),
-            "baseline_result_sha256": sha256_file(result_path),
+            "mode": "EXECUTED_KERNEL_1",
+            "input_path": row["input"]["path"],
+            "input_sha256": row["input"]["digest"],
             "legacy_event_order_map": {
                 key: value
                 for key, value in event_order_map.items()
@@ -1325,6 +1342,104 @@ def _legacy_observed_document(
             "legacy_event_order_map_sha256": event_order_digest,
         },
     }
+
+
+def _load_legacy_executor(root: Path, baseline_root: Path) -> tuple[Any, dict[str, Any]]:
+    baseline_manifest = load_json_exact(
+        baseline_root / "BASELINE_BYTES_MANIFEST.json"
+    )
+    driver_binding = baseline_manifest.get("driver")
+    if type(driver_binding) is not dict:
+        raise GateRefusal(
+            "LEGACY_REPRODUCTION_COULD_NOT_EVALUATE", "baseline driver binding missing"
+        )
+    driver_path = Path(str(driver_binding.get("path", "")))
+    if not driver_path.is_absolute():
+        driver_path = baseline_root / driver_path
+    try:
+        driver_path = driver_path.resolve(strict=True)
+    except OSError as exc:
+        raise GateRefusal(
+            "LEGACY_REPRODUCTION_COULD_NOT_EVALUATE", str(exc)
+        ) from exc
+    expected_digest = driver_binding.get("sha256")
+    actual_digest = sha256_file(driver_path)
+    if expected_digest != actual_digest:
+        raise GateRefusal(
+            "LEGACY_REPRODUCTION_COULD_NOT_EVALUATE",
+            f"driver digest expected={expected_digest} actual={actual_digest}",
+        )
+    spec = importlib.util.spec_from_file_location(
+        "p012_frozen_baseline_driver", driver_path
+    )
+    if spec is None or spec.loader is None:
+        raise GateRefusal(
+            "LEGACY_REPRODUCTION_COULD_NOT_EVALUATE", str(driver_path)
+        )
+    driver = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(driver)
+    modules = {
+        "config": importlib.import_module("mtc_v2.core.config"),
+        "runner": importlib.import_module("mtc_v2.core.runner"),
+        "types": importlib.import_module("mtc_v2.core.types"),
+    }
+    if not root.is_dir():
+        raise GateRefusal(
+            "LEGACY_REPRODUCTION_COULD_NOT_EVALUATE", str(root)
+        )
+    return driver, modules
+
+
+def _compare_legacy_reproduction(
+    corpus: Corpus,
+    row: dict[str, Any],
+    observed: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    scenario_id = row["scenario_id"]
+    surface_records: list[dict[str, Any]] = []
+    for surface_id, file_name in (
+        ("EVENT_SURFACE", "event_surface.json"),
+        ("RESULT_SURFACE", "result_surface.json"),
+    ):
+        expected_path = corpus.baseline_root / "out" / scenario_id / file_name
+        expected_bytes = expected_path.read_bytes()
+        observed_bytes = canonical_json_bytes(observed[surface_id])
+        expected = load_json_exact(expected_path)
+        surface_records.append(
+            {
+                "surface_id": surface_id,
+                "status": "MATCH" if observed_bytes == expected_bytes else "MISMATCH",
+                "kernel_1_sha256": hashlib.sha256(observed_bytes).hexdigest(),
+                "baseline_bytes_sha256": hashlib.sha256(expected_bytes).hexdigest(),
+            }
+        )
+        if observed_bytes != expected_bytes:
+            differences = compare_scoped_expected_nodes(
+                expected,
+                observed[surface_id],
+                f"/{surface_id}",
+            )
+            pointer = differences[0][0] if differences else f"/{surface_id}"
+            return (
+                {
+                    "producer_id": "KERNEL_1",
+                    "status": "MISMATCH",
+                    "surfaces": surface_records,
+                },
+                {
+                    "check_id": "LEGACY_REPRODUCTION_MISMATCH",
+                    "scenario_id": scenario_id,
+                    "pointer": pointer,
+                },
+            )
+    return (
+        {
+            "producer_id": "KERNEL_1",
+            "status": "MATCH",
+            "surfaces": surface_records,
+        },
+        None,
+    )
 
 
 def _observed_paths(root: Path, row: dict[str, Any]) -> tuple[Path, Path]:
@@ -1348,13 +1463,21 @@ def materialize_observed_artifacts(root: Path, baseline_root: Path) -> dict[str,
 
     corpus = validate_catalog(root, baseline_root)
     event_order_map, event_order_digest = compute_legacy_event_order_map(corpus)
+    value_rows = [row for row in corpus.catalog if row["role"] in {"RED", "GREEN"}]
+    driver: Any | None = None
+    modules: dict[str, Any] | None = None
+    if value_rows:
+        driver, modules = _load_legacy_executor(root, baseline_root)
     scenarios: list[dict[str, Any]] = []
-    for row in corpus.catalog:
-        if row["role"] not in {"RED", "GREEN"}:
-            continue
+    for row in value_rows:
         legacy_path, corrected_path = _observed_paths(root, row)
         legacy = _legacy_observed_document(
-            corpus, row, event_order_map, event_order_digest
+            corpus,
+            row,
+            event_order_map,
+            event_order_digest,
+            driver=driver,
+            modules=modules,
         )
         corrected = execute_corrected_scenario(root, row)
         for path, document in ((legacy_path, legacy), (corrected_path, corrected)):
@@ -2708,13 +2831,32 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
     event_order_pin, event_order_pin_blockers = consume_legacy_event_order_map_pin(
         root, event_order_map, event_order_digest
     )
+    value_rows = [row for row in corpus.catalog if row["role"] in {"RED", "GREEN"}]
+    driver: Any | None = None
+    modules: dict[str, Any] | None = None
+    if value_rows:
+        driver, modules = _load_legacy_executor(root, baseline_root)
     scenarios: list[dict[str, Any]] = []
+    legacy_blockers: list[dict[str, Any]] = []
+    legacy_surface_count = 0
     corrected_blockers: list[dict[str, Any]] = []
-    for row in corpus.catalog:
-        if row["role"] not in {"RED", "GREEN"}:
-            continue
+    for row in value_rows:
         scenario_id = row["scenario_id"]
         input_document = load_json_exact(root / row["input"]["path"])
+        legacy_observed = _legacy_observed_document(
+            corpus,
+            row,
+            event_order_map,
+            event_order_digest,
+            driver=driver,
+            modules=modules,
+        )
+        legacy_reproduction, legacy_blocker = _compare_legacy_reproduction(
+            corpus, row, legacy_observed
+        )
+        legacy_surface_count += len(legacy_reproduction["surfaces"])
+        if legacy_blocker is not None and not legacy_blockers:
+            legacy_blockers.append(legacy_blocker)
         golden = load_json_exact(root / row["expected_artifacts"]["2.0.0"]["path"])
         corrected = execute_corrected_scenario(root, row)
         corrected_difference = compare_scoped_expected(golden, corrected)
@@ -2745,6 +2887,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
             "role": row["role"],
             "status": status,
             "first_changed_node": first,
+            "legacy_reproduction": legacy_reproduction,
             "corrected_expectation": (
                 "MATCH" if corrected_difference is None else "STOP_MISMATCH"
             ),
@@ -2760,7 +2903,14 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
         "legacy_event_order_map": event_order_map,
         "computed_legacy_event_order_map_digest": event_order_digest,
         "legacy_event_order_map_pin": event_order_pin,
+        "legacy_reproduction": {
+            "producer_id": "KERNEL_1",
+            "status": "MATCH" if not legacy_blockers else "MISMATCH",
+            "scenario_count": len(scenarios),
+            "surface_count": legacy_surface_count,
+        },
         "acceptance_blockers": [
+            *legacy_blockers,
             *event_order_pin_blockers,
             *corpus.blockers,
             *probe_suite["probe_blockers"],
