@@ -636,7 +636,8 @@ def test_probe_driver_rejects_identity_copy_and_detects_modified_copy(
 
     assert identity_receipt["status"] == "NOT_DETECTED"
     assert identity_receipt["measured_failed_check"] is None
-    assert identity_receipt["measured_first_changed_node"] is None
+    assert identity_receipt["comparator_first_differing_node"] is None
+    assert identity_receipt["expected_node_changed"] is False
 
     modified = MTC_V2_ROOT / probe["modified_copy_path"]
     modified_manifest = load_json_exact(
@@ -654,9 +655,43 @@ def test_probe_driver_rejects_identity_copy_and_detects_modified_copy(
     assert detected_receipt["status"] == "DETECTED"
     assert detected_receipt["measured_failed_check"] == "CORRECTED_EXPECTATION"
     assert (
-        detected_receipt["measured_first_changed_node"]
+        detected_receipt["comparator_first_differing_node"]
         == "/EVENT_SURFACE/cash_events/0/signed_delta"
     )
+    assert detected_receipt["expected_node_changed"] is True
+
+
+def test_probe_detection_uses_target_membership_not_first_node(
+    tmp_path: Path,
+) -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    probe = next(
+        row for row in catalog if row.get("probe_id") == "PROBE-P012-08-A"
+    )
+    expected_node = "/EVENT_SURFACE/funding_events/0/funding_cash_delta"
+    comparator_first_node = "/EVENT_SURFACE/cash_events/0/signed_delta"
+    assert probe["expected_first_changed_node"] == expected_node
+    assert probe["comparator_first_differing_node"] == comparator_first_node
+    assert expected_node != comparator_first_node
+
+    modified = MTC_V2_ROOT / probe["modified_copy_path"]
+    modified_manifest = load_json_exact(
+        MTC_V2_ROOT
+        / "tests/corrected_vnext/probes/PROBE-P012-08-A/modified_tree_manifest.json"
+    )
+    receipt = verify_bceg.drive_probe_variant_process(
+        MTC_V2_ROOT,
+        tmp_path / "unused-baseline",
+        probe,
+        modified,
+        modified_manifest,
+    )
+
+    assert receipt["status"] == "DETECTED"
+    assert receipt["expected_first_changed_node"] == expected_node
+    assert receipt["comparator_first_differing_node"] == comparator_first_node
 
 
 @pytest.mark.parametrize(

@@ -991,61 +991,73 @@ def execute_corrected_scenario(
     }
 
 
-def compare_scoped_expected(
+def compare_scoped_expected_nodes(
     expected: Any, observed: Any, pointer: str = ""
-) -> tuple[str, str | None, str | None] | None:
-    """Compare design section 15.3 surfaces, excluding literal BLOCKED cells."""
+) -> list[tuple[str, str | None, str | None]]:
+    """Return every changed section-15.3 node in traversal order."""
 
     if pointer == "":
         if type(expected) is not dict or type(observed) is not dict:
-            return pointer, canonical_node(observed), canonical_node(expected)
+            return [(pointer, canonical_node(observed), canonical_node(expected))]
         # Design v1.5 section 15.3 (lines 469-476) defines exactly these two
         # comparison surfaces. Golden authoring metadata is outside the gate.
+        differences: list[tuple[str, str | None, str | None]] = []
         for surface in ("EVENT_SURFACE", "RESULT_SURFACE"):
             child = f"/{surface}"
             if surface not in expected or surface not in observed:
-                return (
-                    child,
-                    None if surface not in observed else canonical_node(observed[surface]),
-                    None if surface not in expected else canonical_node(expected[surface]),
+                differences.append(
+                    (
+                        child,
+                        None if surface not in observed else canonical_node(observed[surface]),
+                        None if surface not in expected else canonical_node(expected[surface]),
+                    )
                 )
-            difference = compare_scoped_expected(
-                expected[surface], observed[surface], child
+                continue
+            differences.extend(
+                compare_scoped_expected_nodes(expected[surface], observed[surface], child)
             )
-            if difference is not None:
-                return difference
-        return None
+        return differences
 
     if type(expected) is str and expected.startswith("BLOCKED-"):
-        return None
+        return []
     if type(expected) is dict:
         if type(observed) is not dict:
-            return pointer, canonical_node(observed), canonical_node(expected)
+            return [(pointer, canonical_node(observed), canonical_node(expected))]
+        differences = []
         for key in sorted(expected, key=lambda item: item.encode("utf-8")):
             child = f"{pointer}/{_escape_pointer(key)}"
             if key not in observed:
-                return child, None, canonical_node(expected[key])
-            difference = compare_scoped_expected(expected[key], observed[key], child)
-            if difference is not None:
-                return difference
-        return None
+                differences.append((child, None, canonical_node(expected[key])))
+                continue
+            differences.extend(
+                compare_scoped_expected_nodes(expected[key], observed[key], child)
+            )
+        return differences
     if type(expected) is list:
         if type(observed) is not list:
-            return pointer, canonical_node(observed), canonical_node(expected)
+            return [(pointer, canonical_node(observed), canonical_node(expected))]
         if len(observed) != len(expected):
-            return pointer, canonical_node(observed), canonical_node(expected)
+            return [(pointer, canonical_node(observed), canonical_node(expected))]
+        differences = []
         for index, (expected_member, observed_member) in enumerate(zip(expected, observed, strict=True)):
-            difference = compare_scoped_expected(
-                expected_member, observed_member, f"{pointer}/{index}"
+            differences.extend(
+                compare_scoped_expected_nodes(
+                    expected_member, observed_member, f"{pointer}/{index}"
+                )
             )
-            if difference is not None:
-                return difference
-        return None
+        return differences
     observed_node = canonical_node(observed)
     expected_node = canonical_node(expected)
     if observed_node != expected_node:
-        return pointer, observed_node, expected_node
-    return None
+        return [(pointer, observed_node, expected_node)]
+    return []
+
+
+def compare_scoped_expected(
+    expected: Any, observed: Any, pointer: str = ""
+) -> tuple[str, str | None, str | None] | None:
+    differences = compare_scoped_expected_nodes(expected, observed, pointer)
+    return differences[0] if differences else None
 
 
 def _legacy_observed_document(
@@ -1353,7 +1365,8 @@ def validate_catalog(root: Path, baseline_root: Path) -> Corpus:
                 "probe_id", "base_scenario_id", "subject_producer_id", "target_kind",
                 "modified_copy_path", "modified_copy_digest", "modification_manifest_path",
                 "modification_manifest_digest", "expected_failed_check",
-                "expected_first_changed_node", "design_lines",
+                "expected_first_changed_node", "comparator_first_differing_node",
+                "design_lines",
             }
             if required_probe - set(row):
                 raise GateRefusal("CATALOG_PROBE_BINDING_INVALID", scenario_id)
@@ -1515,8 +1528,6 @@ def _validate_probe_artifact(
         or manifest["target_kind"] != row["target_kind"]
         or manifest["modified_copy_path"] != row["modified_copy_path"]
         or manifest["expected_failed_check"] != row["expected_failed_check"]
-        or manifest["expected_first_changed_node"]
-        != row["expected_first_changed_node"]
         or type(manifest["modifications"]) is not list
         or len(manifest["modifications"]) != 1
     ):
@@ -1800,42 +1811,48 @@ def _probe_failure_receipt(
     check_id: str,
     pointer: str | None,
     *,
+    changed_nodes: list[str] | None = None,
     refusal: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    nodes = ([pointer] if pointer is not None else []) if changed_nodes is None else changed_nodes
     receipt: dict[str, Any] = {
         "mode": "probe-child",
         "probe_id": probe_id,
         "claim_label": "PROBE_BASE_SCENARIO_REFUSED",
         "failed_check": check_id,
-        "first_changed_node": pointer,
+        "changed_nodes": nodes,
+        "comparator_first_differing_node": nodes[0] if nodes else None,
     }
     if refusal is not None:
         receipt["gate_refusal"] = refusal
     return receipt
 
 
-def _green_projection_difference(
+def _green_projection_differences(
     baseline_root: Path,
     base_row: dict[str, Any],
     input_document: dict[str, Any],
     observed: dict[str, Any],
-) -> str | None:
+) -> list[str]:
     scenario_id = base_row["scenario_id"]
     legacy_result = load_json_exact(
         baseline_root / "out" / scenario_id / "result_surface.json"
     )
+    differences: list[str] = []
     if scenario_id == "RULE2-02-GREEN":
         legacy_admitted = _present(_legacy_position(legacy_result)["present"])
         corrected_admitted = _present(
             observed["RESULT_SURFACE"]["final_position"] is not None
         )
         if legacy_admitted != corrected_admitted:
-            return "/RESULT_SURFACE/admitted"
+            return ["/RESULT_SURFACE/admitted"]
     projections = build_projection_results(
         scenario_id, input_document, legacy_result, observed
     )
-    bad = [projection for projection in projections if not projection["equal"]]
-    return None if not bad else bad[0]["selector"]
+    differences.extend(
+        projection["selector"] for projection in projections if not projection["equal"]
+    )
+    return list(dict.fromkeys(differences))
 
 
 def _run_probe_child(
@@ -1893,18 +1910,24 @@ def _run_probe_child(
         golden = load_json_exact(
             root / base_row["expected_artifacts"]["2.0.0"]["path"]
         )
-        difference = compare_scoped_expected(golden, observed)
-        if difference is not None:
+        differences = compare_scoped_expected_nodes(golden, observed)
+        if differences:
             return _probe_failure_receipt(
-                probe_id, "CORRECTED_EXPECTATION", difference[0]
+                probe_id,
+                "CORRECTED_EXPECTATION",
+                differences[0][0],
+                changed_nodes=[difference[0] for difference in differences],
             )
     elif expected_check == "RULE2_GREEN_CROSS_VERSION_EXPECTATION":
-        difference = _green_projection_difference(
+        differences = _green_projection_differences(
             baseline_root, base_row, input_document, observed
         )
-        if difference is not None:
+        if differences:
             return _probe_failure_receipt(
-                probe_id, "RULE2_GREEN_CROSS_VERSION_EXPECTATION", difference
+                probe_id,
+                "RULE2_GREEN_CROSS_VERSION_EXPECTATION",
+                differences[0],
+                changed_nodes=differences,
             )
     elif expected_check != "RECORD_IDENTITY_PREFLIGHT":
         raise GateRefusal("PROBE_EXPECTED_CHECK_UNSUPPORTED", str(expected_check))
@@ -1914,7 +1937,8 @@ def _run_probe_child(
         "probe_id": probe_id,
         "claim_label": "PROBE_BASE_SCENARIO_ACCEPTED",
         "failed_check": None,
-        "first_changed_node": None,
+        "changed_nodes": [],
+        "comparator_first_differing_node": None,
     }
 
 
@@ -2013,12 +2037,21 @@ def drive_probe_variant_process(
             "PROBE_CHILD_RECEIPT_INVALID", f"{probe_id}:exit={completed.returncode}"
         )
     measured_check = child.get("failed_check")
-    measured_node = child.get("first_changed_node")
+    changed_nodes = child.get("changed_nodes")
+    comparator_first_node = child.get("comparator_first_differing_node")
+    if (
+        type(changed_nodes) is not list
+        or any(type(node) is not str for node in changed_nodes)
+        or len(changed_nodes) != len(set(changed_nodes))
+        or comparator_first_node != (changed_nodes[0] if changed_nodes else None)
+    ):
+        raise GateRefusal("PROBE_CHILD_RECEIPT_INVALID", f"{probe_id}:changed-nodes")
+    expected_node_changed = probe_row["expected_first_changed_node"] in changed_nodes
     detected = (
         completed.returncode == 2
         and child.get("claim_label") == "PROBE_BASE_SCENARIO_REFUSED"
         and measured_check == probe_row["expected_failed_check"]
-        and measured_node == probe_row["expected_first_changed_node"]
+        and expected_node_changed
     )
     return {
         "probe_id": probe_id,
@@ -2027,7 +2060,8 @@ def drive_probe_variant_process(
         "expected_failed_check": probe_row["expected_failed_check"],
         "expected_first_changed_node": probe_row["expected_first_changed_node"],
         "measured_failed_check": measured_check,
-        "measured_first_changed_node": measured_node,
+        "comparator_first_differing_node": comparator_first_node,
+        "expected_node_changed": expected_node_changed,
         "measured_matches_expected": detected,
         "status": "DETECTED" if detected else "NOT_DETECTED",
         "child_returncode": completed.returncode,
@@ -2129,8 +2163,8 @@ def run_probe_suite(corpus: Corpus, probe_id: str | None = None) -> dict[str, An
                     "check_id": "PROBE_NOT_DETECTED",
                     "scenario_id": current_probe_id,
                     "measured_failed_check": receipt["measured_failed_check"],
-                    "measured_first_changed_node": receipt[
-                        "measured_first_changed_node"
+                    "comparator_first_differing_node": receipt[
+                        "comparator_first_differing_node"
                     ],
                 }
             )
