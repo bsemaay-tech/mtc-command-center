@@ -18,9 +18,15 @@ from mtc_v2.core.economics import (
     REFUSED_ECONOMIC_INPUT,
 )
 from mtc_v2.core.position_manager import PositionManager
-from mtc_v2.core.results import _closed_lifecycle_trades
+from mtc_v2.core.results import (
+    CorrectedRunManifest,
+    _closed_lifecycle_trades,
+    corrected_surfaces,
+)
 from mtc_v2.core.types import (
     Bar,
+    CashEvent,
+    CashEventKind,
     EconomicTransitionError,
     EntryLeg,
     FillDecision,
@@ -50,12 +56,19 @@ def _records(scenario_id: str) -> EconomicRecords:
     )
 
 
-def _fill(*, event_class: str, quantity: float, exit_id: str | None = None) -> FillDecision:
+def _fill(
+    *,
+    event_class: str,
+    quantity: float,
+    exit_id: str | None = None,
+    sequence: int = 0,
+    fill_id: str = "F0",
+) -> FillDecision:
     return FillDecision(
-        sequence=0,
+        sequence=sequence,
         event_timestamp=NOW,
         lifecycle_id=1,
-        fill_id="F0",
+        fill_id=fill_id,
         event_class=event_class,
         side="BUY" if event_class == "ENTRY" else "SELL",
         reference_price=100.0,
@@ -67,6 +80,7 @@ def _fill(*, event_class: str, quantity: float, exit_id: str | None = None) -> F
         quantity=quantity,
         liquidity_role="TAKER",
         exit_id=exit_id,
+        price_tick_alignment="CEIL" if event_class == "ENTRY" else "FLOOR",
     )
 
 
@@ -169,8 +183,22 @@ def test_w279_f13_trade_requires_exactly_complete_exit_quantity() -> None:
                 event_class="MARKET_EXIT",
                 quantity=0.9999999999995,
                 exit_id="ALMOST-ALL",
+                sequence=1,
+                fill_id="F1",
             ),
-        ]
+        ],
+        cash_events=[
+            CashEvent(
+                sequence=0,
+                cash_event_id="CE-GROSS-1",
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                kind=CashEventKind.GROSS_REALIZATION,
+                signed_delta=0.0,
+                settlement_currency="TEST-USD",
+                fill_id="F1",
+            )
+        ],
     )
 
     assert _closed_lifecycle_trades(state) == []
@@ -288,3 +316,33 @@ def test_w279_f20_unknown_positive_rate_payer_is_a_typed_refusal() -> None:
 
     assert exc_info.value.refusal_code == REFUSED_ECONOMIC_INPUT
     assert "positive_rate_payer" in str(exc_info.value)
+
+
+def test_w279_f21_trade_exit_ids_use_the_exit_surface_source_set() -> None:
+    records = _records("RULE2-07-RED")
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        fill_events=[
+            _fill(event_class="ENTRY", quantity=1.0),
+            _fill(
+                event_class="MARKET_EXIT",
+                quantity=1.0,
+                exit_id="UNJOINED-EXIT",
+                sequence=1,
+                fill_id="F1",
+            ),
+        ],
+    )
+
+    surfaces = corrected_surfaces(
+        state=state,
+        equity_values=[],
+        manifest=CorrectedRunManifest.from_records(
+            records,
+            execution_profile_id="close_only_deterministic_v2",
+        ),
+    )
+
+    assert surfaces["EVENT_SURFACE"]["exit_events"] == []
+    assert surfaces["RESULT_SURFACE"]["trades"] == []

@@ -636,27 +636,35 @@ def _funding_surface(
     return result
 
 
-def _exit_surface(
+def _joined_exit_fills(
     fills: list[object],
     cash_rows: Iterable[object],
-    *,
-    kernel_semantics_version: str,
-) -> list[dict[str, Any]]:
+) -> list[tuple[object, float]]:
     gross_by_fill = {
         getattr(row, "fill_id"): getattr(row, "signed_delta")
         for row in cash_rows
         if getattr(row, "kind") is CashEventKind.GROSS_REALIZATION
     }
+    return [
+        (row, gross_by_fill[getattr(row, "fill_id")])
+        for row in fills
+        if getattr(row, "fill_id") in gross_by_fill
+    ]
+
+
+def _exit_surface(
+    exit_rows: list[tuple[object, float]],
+    *,
+    kernel_semantics_version: str,
+) -> list[dict[str, Any]]:
     reason_by_class = {
         "PROTECTIVE_STOP_EXIT": "STOP",
         "TARGET_EXIT": "TARGET",
         "MARKET_EXIT": "MARKET_EXIT",
     }
     result: list[dict[str, Any]] = []
-    for row in fills:
+    for row, gross_realized_pnl in exit_rows:
         fill_id = getattr(row, "fill_id")
-        if fill_id not in gross_by_fill:
-            continue
         event_class = getattr(row, "event_class")
         item = {
             "sequence": len(result),
@@ -666,7 +674,7 @@ def _exit_surface(
             "fill_id": fill_id,
             "quantity": _json_number(getattr(row, "quantity")),
             "final_fill_price": _json_number(getattr(row, "final_fill_price")),
-            "gross_realized_pnl": _json_number(gross_by_fill[fill_id]),
+            "gross_realized_pnl": _json_number(gross_realized_pnl),
         }
         if event_class == "PROTECTIVE_STOP_EXIT":
             fill_trigger = getattr(row, "fill_trigger")
@@ -677,12 +685,19 @@ def _exit_surface(
     return result
 
 
-def _closed_lifecycle_trades(state: PortfolioState) -> list[CorrectedTradeRecord]:
+def _closed_lifecycle_trades(
+    state: PortfolioState,
+    exit_rows: list[tuple[object, float]] | None = None,
+) -> list[CorrectedTradeRecord]:
     entries: dict[int, list[object]] = {}
     exits: dict[int, list[object]] = {}
     for row in state.fill_events:
-        target = entries if row.event_class.endswith("ENTRY") else exits
-        target.setdefault(row.lifecycle_id, []).append(row)
+        if row.event_class.endswith("ENTRY"):
+            entries.setdefault(row.lifecycle_id, []).append(row)
+    if exit_rows is None:
+        exit_rows = _joined_exit_fills(state.fill_events, state.cash_events)
+    for row, _gross_realized_pnl in exit_rows:
+        exits.setdefault(row.lifecycle_id, []).append(row)
     active_lifecycle = None if state.position is None else state.position.lifecycle_id
     trades: list[CorrectedTradeRecord] = []
     for lifecycle_id, entry_rows in entries.items():
@@ -855,6 +870,7 @@ def corrected_surfaces(
     funding_rows = _event_rows(
         state.funding_events, start=observation_start, end=observation_end
     )
+    exit_rows = _joined_exit_fills(fill_rows, cash_rows)
     event_surface = {
         "decision_events": _decision_surface(
             decision_rows,
@@ -877,13 +893,12 @@ def corrected_surfaces(
             kernel_semantics_version=manifest.kernel_semantics_version,
         ),
         "exit_events": _exit_surface(
-            fill_rows,
-            cash_rows,
+            exit_rows,
             kernel_semantics_version=manifest.kernel_semantics_version,
         ),
     }
 
-    trades = _closed_lifecycle_trades(state)
+    trades = _closed_lifecycle_trades(state, exit_rows)
     position = state.position
     result_surface: dict[str, Any] = {
         "final_position": (
