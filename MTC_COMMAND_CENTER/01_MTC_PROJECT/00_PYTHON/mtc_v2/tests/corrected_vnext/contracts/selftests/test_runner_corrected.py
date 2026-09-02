@@ -532,3 +532,32 @@ def test_p08_same_side_add_rebooks_from_the_final_fill() -> None:
     assert runner.state.position.qty == 2.0
     assert runner.state.position.avg_entry_price == 100.0
     assert runner.state.position.working_exit_book_version == 2
+
+
+def test_w279_f11_corrected_entry_applies_total_margin_admission() -> None:
+    config, bars = _scenario("RULE2-05-GREEN")
+    config.update(max_entries=2, max_leverage_cap=1.0, margin_long_pct=100.0)
+    runner = Runner.for_corrected_contract(
+        config,
+        requested_quantity_override=5.0,
+    )
+    runner._bind_corrected_instrument(bars[0].timestamp)
+    runner.state.position = replace(
+        _open_long(),
+        qty=10.0,
+        initial_qty=10.0,
+        entry_legs=[EntryLeg(100.0, 10.0, 1)],
+        working_exit_reference_qty=10.0,
+    )
+
+    opened = runner._apply_corrected_entry(
+        bar=bars[1],
+        reference_price=100.0,
+        side="long",
+        reason="margin_probe",
+        sizing_equity=1000.0,
+    )
+
+    assert opened is False
+    assert runner.state.position.qty == 10.0
+    assert runner.state.fill_events == []

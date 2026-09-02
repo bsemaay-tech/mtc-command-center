@@ -601,6 +601,13 @@ class Runner:
             )
             return False
         fill = transition.fill_decisions[0]
+        if self._entry_blocked_by_capital(
+            entry_price=fill.final_fill_price,
+            side=side,
+            qty=fill.quantity,
+            sizing_equity=sizing_equity,
+        ):
+            return False
         existing = self.state.position
         if existing is not None:
             transition = replace(
