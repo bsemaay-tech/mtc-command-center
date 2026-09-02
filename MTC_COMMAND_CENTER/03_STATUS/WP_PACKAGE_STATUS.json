@@ -148,12 +148,12 @@
     {
       "id": "WP-P0-13",
       "title": "TrialRecord contract + trial-catalog writer (design draft)",
-      "state": "DESIGN_DRAFT_V14_RECONVERGED",
+      "state": "DESIGN_IN_REPAIR_V20",
       "branch": "-",
       "commit": "-",
-      "detail": "v1.4 after day fold W124 (G42 2 MEDIUM); verify pair G47 + GM23 both zero (cross-family).",
-      "owner_gate": false,
-      "next_action": "DAY 08-31: G42 2 MEDIUM -> W124 fold -> v1.4 -> verify pair BOTH ZERO (Grok G47 + Gemini GM23 cross-family). P0-13 RE-CONVERGED at v1.4."
+      "detail": "v2.0 after night census GM66 -> W241 partial apply (F02/F03/F04 applied, F01 honestly STOPPED) -> DS84 verify genuine (0 deletions, 14 open items reproduced). Register: DESIGN_IN_REPAIR (owner decision 75, 2026-09-02). Not buildable before WP-P0-20 accepts (W268 readiness brief).",
+      "owner_gate": true,
+      "next_action": "OWNER: answer B-12's owner half (keep every trial's settings for complete proof vs selected only for lower storage) - on the Phase-0 decisions page. Then engineering closes B-07/B-15/B-17 and the B-12 preimage (P0-04-owned). Build only after WP-P0-20 accepts."
     },
     {
       "id": "WP-P0-21",
