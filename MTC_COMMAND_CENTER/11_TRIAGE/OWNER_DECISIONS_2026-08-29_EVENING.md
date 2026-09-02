@@ -938,3 +938,15 @@ live trading, a build, or a kernel change.
     per OD-20260829-2. Claude Pro (separate subscription) remains a coding/audit route under
     decision 79. The V283b lane on MAX Opus was stopped at 20:1x; its report had already landed
     and is used.
+
+## Addendum 34 - 2026-09-02 ~22:0x REAL (owner verbatim: "q1 yes")
+
+132. **BASELINE REGENERATION AFTER THE PROBE RE-PIN AUTHORIZED** (owner: "q1 yes", answering plan
+    rev 6 Q1). The nine KERNEL probes pin the pre-fix `mtc_v2/core` tree OID; after the authorized
+    kernel repairs the gate refuses them with `PROBE_COULD_NOT_EVALUATE / PROBE_BASE_TREE_OID_MISMATCH`.
+    Lane W299 re-derives the nine variants mechanically (all nine `modification.patch` files apply to
+    the repaired tree with no fuzz, Lead dry-check 20:10), the catalog PROBE rows are re-pinned
+    two-party, the bundle is re-sealed (#12), and the baseline `C:\tmp\P012_BASELINE_RUN` is
+    regenerated against seal #12 exactly as decision 77 did for seal #10 (W265 method): no sealed
+    VALUE moves, only the nine probe digest rows. The design item "bind the baseline to the
+    RED/GREEN content digest rather than the whole-bundle seal" stays OPEN for the morning.
