@@ -119,6 +119,44 @@ def test_apply_transition_opens_at_final_fill_and_applies_only_cash_ledger() -> 
     assert state.fee_events == list(transition.fee_events)
 
 
+def test_w276_f01_runtime_equity_applies_cash_events_in_order() -> None:
+    transition = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="I",
+        instrument_record_digest="0" * 64,
+        funding_schedule_id="F",
+        funding_schedule_digest="1" * 64,
+        next_position_facts=PositionFacts(None, None, 0.0),
+        cash_events=(
+            CashEvent(
+                sequence=0,
+                cash_event_id="CE-GROSS-0",
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                kind=CashEventKind.GROSS_REALIZATION,
+                signed_delta=-1e16,
+                settlement_currency="TEST-USD",
+                fill_id="F0",
+            ),
+            CashEvent(
+                sequence=1,
+                cash_event_id="CE-GROSS-1",
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                kind=CashEventKind.GROSS_REALIZATION,
+                signed_delta=1.0,
+                settlement_currency="TEST-USD",
+                fill_id="F1",
+            ),
+        ),
+    )
+    state = PortfolioState(initial_capital=1e16, equity=1e16)
+
+    _manager().apply_transition(bar=_bar(), state=state, transition=transition)
+
+    assert state.equity == 1.0
+
+
 def test_apply_transition_is_atomic_and_cannot_apply_same_cash_twice() -> None:
     transition = CorrectedEconomicsAdapter().resolve(
         EconomicState(sizing_equity=1000.0),

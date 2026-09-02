@@ -410,7 +410,6 @@ class PositionManager:
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding cumulative mismatch"
                 )
 
-        cash_delta = sum(row.signed_delta for row in transition.cash_events)
         guard_delta = sum(
             row.signed_delta
             for row in transition.cash_events
@@ -423,8 +422,9 @@ class PositionManager:
         )
 
         state.position = next_position
-        state.realized_equity += cash_delta
-        state.equity = state.initial_capital + state.realized_equity
+        for row in transition.cash_events:
+            state.realized_equity += row.signed_delta
+            state.equity += row.signed_delta
         state.guard_realized_equity += guard_delta
         state.cumulative_fee += sum(row.fee_amount for row in transition.fee_events)
         state.cumulative_funding += funding_cash
