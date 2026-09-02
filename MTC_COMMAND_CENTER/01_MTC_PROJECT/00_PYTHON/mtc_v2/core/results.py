@@ -782,6 +782,16 @@ def _state_refusals(state: PortfolioState) -> list[dict[str, Any]]:
             refusal["required_min_notional"] = _detail_number(
                 details["required_min_notional"]
             )
+        if row.refusal_code == "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION":
+            required = {"field", "record_value", "runtime_value"}
+            if required - set(details):
+                raise ValueError("corrected override refusal requires closed detail members")
+            refusal.update(
+                field=str(details["field"]),
+                record_value=_detail_number(details["record_value"]),
+                runtime_value=_detail_number(details["runtime_value"]),
+                stage="PRE_EVALUATION",
+            )
         refusals.append(refusal)
     return refusals
 

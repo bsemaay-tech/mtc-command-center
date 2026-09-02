@@ -27,6 +27,7 @@ from mtc_v2.core.types import (
     Bar,
     CashEvent,
     CashEventKind,
+    DecisionEvent,
     EconomicTransitionError,
     EntryLeg,
     FillDecision,
@@ -346,3 +347,43 @@ def test_w279_f21_trade_exit_ids_use_the_exit_surface_source_set() -> None:
 
     assert surfaces["EVENT_SURFACE"]["exit_events"] == []
     assert surfaces["RESULT_SURFACE"]["trades"] == []
+
+
+def test_w279_f17_state_writer_emits_closed_override_refusal_members() -> None:
+    records = _records("RULE2-03-RED")
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        decision_events=[
+            DecisionEvent(
+                sequence=0,
+                event_timestamp=NOW,
+                decision="REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION",
+                refusal_code="REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION",
+                details=(
+                    ("field", "price_tick"),
+                    ("record_value", 0.5),
+                    ("runtime_value", 0.25),
+                ),
+            )
+        ],
+    )
+
+    refusal = corrected_surfaces(
+        state=state,
+        equity_values=[],
+        manifest=CorrectedRunManifest.from_records(
+            records,
+            execution_profile_id="close_only_deterministic_v2",
+        ),
+    )["RESULT_SURFACE"]["refusals"]
+
+    assert refusal == [
+        {
+            "code": "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION",
+            "field": "price_tick",
+            "record_value": 0.5,
+            "runtime_value": 0.25,
+            "stage": "PRE_EVALUATION",
+        }
+    ]
