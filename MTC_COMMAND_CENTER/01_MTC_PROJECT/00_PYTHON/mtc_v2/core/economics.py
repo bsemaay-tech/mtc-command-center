@@ -1132,6 +1132,13 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         matching = [event for event in events if event.get("funding_event_id") == event_id]
         if len(matching) != 1:
             raise EconomicsRefusal(REFUSED_MISSING_FUNDING_EVENT, str(event_id))
+        event = matching[0]
+        payer = event.get("positive_rate_payer")
+        if not isinstance(payer, str) or payer not in {"LONG", "SHORT"}:
+            raise EconomicsRefusal(
+                REFUSED_ECONOMIC_INPUT,
+                f"positive_rate_payer must be LONG or SHORT, got {payer!r}",
+            )
         eligible = (
             intent.funding_event_in_window
             and state.lifecycle_id is not None
@@ -1159,11 +1166,9 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 records=records,
                 decisions=(*prefix, decision),
             )
-        event = matching[0]
         multiplier = float(records.instrument.contract_multiplier)
         mark_price = float(event["mark_price"])
         raw_rate = float(event["raw_rate"])
-        payer = str(event["positive_rate_payer"])
         long_rate = -raw_rate if payer == "LONG" else raw_rate
         side_factor = 1.0 if state.position_side == "LONG" else -1.0
         notional = abs(mark_price * state.quantity * multiplier)

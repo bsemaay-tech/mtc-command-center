@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -7,12 +8,14 @@ import pytest
 
 from mtc_v2.core.economics import (
     CorrectedEconomicsAdapter,
+    EconomicsRefusal,
     EconomicIntent,
     EconomicRecords,
     EconomicState,
     ExitCandidate,
     IntentKind,
     MarketEvent,
+    REFUSED_ECONOMIC_INPUT,
 )
 from mtc_v2.core.position_manager import PositionManager
 from mtc_v2.core.results import _closed_lifecycle_trades
@@ -248,3 +251,40 @@ def test_w279_f19_distinct_empty_transitions_have_distinct_apply_identities() ->
     assert len(state.applied_transition_keys) == 2
     with pytest.raises(EconomicTransitionError, match="transition already applied"):
         manager.apply_transition(bar=_bar(), state=state, transition=first)
+
+
+def test_w279_f20_unknown_positive_rate_payer_is_a_typed_refusal() -> None:
+    records = EconomicRecords.from_record_paths(
+        instrument_path=(
+            RECORD_ROOT
+            / "instruments"
+            / "SYNTH-INSTRUMENT-RULE2-08-RED-V1.json"
+        ),
+        funding_path=(
+            RECORD_ROOT / "funding" / "SYNTH-FUNDING-RULE2-08-V1.json"
+        ),
+    )
+    funding_event = dict(records.funding["events"][0])
+    funding_event["positive_rate_payer"] = "TYPO"
+    funding = dict(records.funding)
+    funding["events"] = (funding_event,)
+    modified_records = replace(records, funding=funding)
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        CorrectedEconomicsAdapter().resolve(
+            EconomicState(
+                lifecycle_id=1,
+                position_side="LONG",
+                quantity=1.0,
+                entry_fill_price=100.0,
+            ),
+            EconomicIntent(
+                kind=IntentKind.FUNDING_TICK,
+                funding_event_id="TEST-FUND-1",
+            ),
+            MarketEvent(NOW, 1, 100.0, 100.0, 100.0, 100.0),
+            modified_records,
+        )
+
+    assert exc_info.value.refusal_code == REFUSED_ECONOMIC_INPUT
+    assert "positive_rate_payer" in str(exc_info.value)
