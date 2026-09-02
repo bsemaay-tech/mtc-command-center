@@ -691,3 +691,14 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     start, updated every 2 hours. Grok's balance is still 402 as last probed; using it requires the
     owner's top-up (decision 74 said not now; this order lists it - the Lead probes before use and
     does not spend on it without a live balance).
+
+80. **KERNEL FIX AUTHORIZED FOR THE THREE FLAGSHIP-1 DEFECTS** (owner: "Yes, fix the three",
+    2026-09-02 ~17:4x). Flagship audit 1 (Codex, W276) of the P0-12 engine branch returned BLOCK
+    with W276-F01 HIGH (runtime equity state accumulates cash with a different association than
+    the design's ordered rule; the serializer's ordered recomputation masks it), W276-F02 MEDIUM
+    (DEF-P012-08 funding dedupe keyed by event id instead of `(funding_event_id, lifecycle_id)`),
+    W276-F03 MEDIUM (missing production funding events raise `TypeError` before the typed refusal
+    `REFUSED_MISSING_FUNDING_EVENT`). The owner authorises one bounded kernel lane in the build
+    worktree for exactly those three, each with a failing-then-passing test, legacy replay
+    byte-exact, verified by a different family; flagship 2 (W279) and the Gemini detection lane
+    then judge the result; the pull-request question follows only after that.
