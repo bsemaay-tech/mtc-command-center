@@ -325,6 +325,21 @@ def test_w283r_r4_runner_skips_ineligible_same_funding_pair() -> None:
     assert runner.state.funding_events == []
 
 
+def test_w276_f02_runner_allows_same_funding_id_for_distinct_lifecycle() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    runner.state.position = replace(_open_long(), lifecycle_id=2)
+    runner.state.applied_funding_event_keys.add(("TEST-FUND-1", 1))
+
+    runner._apply_corrected_funding_between(bars[1], bars[2])
+
+    assert runner.state.applied_funding_event_keys == {
+        ("TEST-FUND-1", 1),
+        ("TEST-FUND-1", 2),
+    }
+    assert [row.lifecycle_id for row in runner.state.funding_events] == [2]
+
+
 @pytest.mark.parametrize("bars_selector", [slice(2, None), slice(None, 2)])
 def test_w279_f09_unbracketed_funding_event_gets_eligibility_disposition(
     bars_selector: slice,
