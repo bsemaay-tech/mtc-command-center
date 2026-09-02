@@ -285,12 +285,12 @@
   {
    "path": "DERIVATIONS.md",
    "sha256": "fe385afbc8edd15696ad6288836a2eac33d44e4316d5f7e465ff80f63d59c135",
-   "bytes": 277385
+   "bytes": 279613
   },
   {
    "path": "scenario_catalog.json",
    "sha256": "2e10819f45648653f3f43655c9ba26556472d782da9c95923af7fac96a6e1000",
-   "bytes": 46256
+   "bytes": 47759
   },
   {
    "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
@@ -759,7 +759,7 @@
  "seal_state": {
   "EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "reason": "Sealed by the Lead at re-seal #10: ten PROBE rows re-derived by the tables family under design v1.11 (W262) and the ten probe artifact digest pairs pinned two-party (W256 table == Lead recomputation from worktree bytes). Catalog and DERIVATIONS.md are the only files[] members that moved; all 17 goldens and inputs byte-identical to seal #8. Design pin re-measured at v1.11. Verified: design v1.11: DS93 (OpenCode) CLEAN, ENGINEERING classification CONFIRMED, rule strictly superset on the node dimension - C:/tmp/LANE_PROMPTS_20260828/DETECT_DS93_V111.md; W262 probe rows: GM77 (Gemini) CLEAN, 31 changed pointers all inside the ten PROBE rows, RED/GREEN rows byte-identical, DERIVATIONS insertion-only - C:/tmp/LANE_PROMPTS_20260828/DETECT_GM77_W262.md; probe digests: Lead recomputation from worktree bytes == W256 table == committed modified_tree_manifest.json, 10/10"
+  "reason": "Sealed by the Lead at re-seal #12 (2026-09-02 23:40): nine KERNEL probe digests re-pinned over the repaired core tree (W299, V299 CLEAN, owner decision 132); member byte sizes corrected 2026-09-03 00:1x (W303 F-01/F-02); EXPECTED_SEAL_SHA unchanged by the size fix."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -1057,6 +1057,14 @@
     "PROBE-P012-07-A",
     "PROBE-P012-08-A"
    ]
+  },
+  {
+   "at": "2026-09-03T00:17:06+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #12b (metadata only)",
+   "old_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
+   "new_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
+   "files_changed": [],
+   "note": "files[].bytes corrected for DERIVATIONS.md, scenario_catalog.json; seal_state.reason text updated; no member byte moved (W303 findings F-01, F-02, F-04)"
   }
  ],
  "legacy_event_order_map_pin": {
