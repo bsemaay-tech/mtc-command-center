@@ -4,8 +4,10 @@
 
 All seven V283a findings have a bounded disposition: R1, R2, R3, R5, and R6 are repaired with
 focused regression evidence; R4 is refuted by a runner probe; R7 is cleared by a full-tree grep and
-the frozen legacy replay. Final package self-tests and the one authorized canonical gate are still
-pending at this report revision.
+the frozen legacy replay. Package verification is green at **249 contract tests**, **18/18 verifier
+self-check dispositions**, and **142 legacy tests**. The one canonical gate correctly remained
+non-accepting: it refused on the missing semantic review plus nine immutable-probe tree-identity
+mismatches. The complete ten-item refusal list is recorded below.
 
 This work ran in `C:\WP012BUILD` on
 `feature/wp-p0-12-corrected-vnext-20260831`. Before the first edit,
@@ -151,10 +153,11 @@ The required full-tree command was:
 rg -n --no-heading "applied_funding_event_ids" .
 ```
 
-Measured result: **72 lines in 36 files**, all under nine immutable kernel-copy probe directories.
-Each of `PROBE-P012-01-A`, `01-B`, `02-A`, `04-A`, `05-A`, `05-B`, `06-A`, `07-A`, and `08-A`
-contains 8 lines across `economics.py`, `position_manager.py`, `runner.py`, and `types.py`.
-`PROBE-P012-03-A` is the tenth probe directory but is a record-only variant and has no kernel copy.
+The pre-report measurement found **72 lines in 36 files**, all under nine immutable kernel-copy
+probe directories. Each of `PROBE-P012-01-A`, `01-B`, `02-A`, `04-A`, `05-A`, `05-B`, `06-A`,
+`07-A`, and `08-A` contains 8 lines across `economics.py`, `position_manager.py`, `runner.py`, and
+`types.py`. `PROBE-P012-03-A` is the tenth probe directory but is a record-only variant and has no
+kernel copy.
 
 The exclusion probe quoted exactly:
 
@@ -165,9 +168,11 @@ core/results.py: NO_MATCHES
 contract selftests: NO_MATCHES
 ```
 
-Thus no active core reader, `core/results.py`, artifact/report writer, ordinary self-test, or other
-non-probe repository path retains the old member. The remaining hits are frozen probe bytes and are
-outside the authorized write fence. The current shared field is pair-shaped at
+After this report quoted the identifier and grep command, a final full-tree check measured **74
+lines in 37 files**: the original 72 frozen-probe lines plus these two report lines. Its active-code
+exclusion still quoted `NO_ACTIVE_PYTHON_MATCHES`. Thus no active core reader, `core/results.py`,
+artifact writer, ordinary self-test, or other active Python path retains the old member. The current
+shared field is pair-shaped at
 `MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/types.py:395-434`.
 
 The W249 replay method loads the frozen driver, imports the current branch's real kernel modules,
@@ -187,12 +192,62 @@ LEGACY SUMMARY scenarios=17/17 surfaces=34/34 exact
 | R3 + R4 | `1a88695c` | `LEGACY SUMMARY scenarios=17/17 surfaces=34/34 exact` |
 | R5 | `1f3f71b7` | `LEGACY SUMMARY scenarios=17/17 surfaces=34/34 exact` |
 | R6 | `f7ca0243` | `LEGACY SUMMARY scenarios=17/17 surfaces=34/34 exact` |
-| R7 evidence | pending report commit | `LEGACY SUMMARY scenarios=17/17 surfaces=34/34 exact` before commit |
+| R7 evidence | `b3a7478a` | `LEGACY SUMMARY scenarios=17/17 surfaces=34/34 exact` after commit |
 
 ## Final verification
 
-Pending at this report revision. The repair prompt permits the canonical gate exactly once at the
-end (`C:\tmp\LANE_PROMPTS_20260828\LANE_W283R_REPAIR_ROUND1.md:40-45`).
+Commands ran from `MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON` unless stated otherwise.
+
+| Command | Exit | Measured result |
+|---|---:|---|
+| `python -m pytest mtc_v2/tests/corrected_vnext/contracts/selftests -q` | 0 | **249 passed in 5.66s** |
+| `python -m mtc_v2.tests.corrected_vnext.verify_bceg --mode selftest` | 0 | **18/18 declared dispositions**: 3 `PASS`, 14 `DETECTED`, 1 `DETECTED:/a/1`; `NON_ACCEPTING_SELFTEST` |
+| `$env:PYTHONPATH='00_PYTHON'; python -m pytest 00_PYTHON/mtc_v2/tests --ignore=00_PYTHON/mtc_v2/tests/corrected_vnext -q` from the stage root | 0 | **142 passed in 1.33s** |
+| `git diff --check beed7e4f..HEAD` | 0 | clean |
+
+The repair diff from the prior W283 report commit `beed7e4f` contains exactly one active kernel
+file, three contract self-test files, and this report:
+
+```text
+MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economics.py
+MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_economics.py
+MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_position_manager_corrected.py
+MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_runner_corrected.py
+W283R_REPAIR_ROUND1_REPORT.md
+```
+
+### Canonical gate - run exactly once
+
+The repair prompt requires one final invocation and the complete refusal list
+(`C:\tmp\LANE_PROMPTS_20260828\LANE_W283R_REPAIR_ROUND1.md:30-33`). It ran once at clean HEAD
+`b3a7478a936b9d75eae70ccda42cdab4260221aa`:
+
+```text
+python -m mtc_v2.tests.corrected_vnext.verify_bceg --mode full-gate --baseline-root C:\tmp\P012_BASELINE_RUN
+exit=2
+claim_label=BOUNDED_CORRECTION_EVIDENCE_REFUSED
+acceptance_reachable=true
+catalog_counts: RED=9 GREEN=8 PROBE=10
+acceptance_blockers=9
+refusal_count=10
+```
+
+Complete refusal list:
+
+1. `SEMANTIC_COVERAGE_REVIEW_MISSING` - `mtc_v2/tests/corrected_vnext/contracts/semantic_coverage_review.json`.
+2. `PROBE_COULD_NOT_EVALUATE` - `PROBE-P012-01-A`; inner `PROBE_BASE_TREE_OID_MISMATCH`.
+3. `PROBE_COULD_NOT_EVALUATE` - `PROBE-P012-01-B`; inner `PROBE_BASE_TREE_OID_MISMATCH`.
+4. `PROBE_COULD_NOT_EVALUATE` - `PROBE-P012-02-A`; inner `PROBE_BASE_TREE_OID_MISMATCH`.
+5. `PROBE_COULD_NOT_EVALUATE` - `PROBE-P012-04-A`; inner `PROBE_BASE_TREE_OID_MISMATCH`.
+6. `PROBE_COULD_NOT_EVALUATE` - `PROBE-P012-05-A`; inner `PROBE_BASE_TREE_OID_MISMATCH`.
+7. `PROBE_COULD_NOT_EVALUATE` - `PROBE-P012-05-B`; inner `PROBE_BASE_TREE_OID_MISMATCH`.
+8. `PROBE_COULD_NOT_EVALUATE` - `PROBE-P012-06-A`; inner `PROBE_BASE_TREE_OID_MISMATCH`.
+9. `PROBE_COULD_NOT_EVALUATE` - `PROBE-P012-07-A`; inner `PROBE_BASE_TREE_OID_MISMATCH`.
+10. `PROBE_COULD_NOT_EVALUATE` - `PROBE-P012-08-A`; inner `PROBE_BASE_TREE_OID_MISMATCH`.
+
+The nine probe blockers are preflight identity refusals, not failed economic comparisons. The probe
+trees are frozen evidence outside this lane's write fence
+(`C:\tmp\LANE_PROMPTS_20260828\LANE_W283R_REPAIR_ROUND1.md:7-9`). The gate was not rerun.
 
 ## Commits
 
@@ -203,7 +258,10 @@ end (`C:\tmp\LANE_PROMPTS_20260828\LANE_W283R_REPAIR_ROUND1.md:40-45`).
 | R3 + R4 | `1a88695c8837a9eca1e4de4726ce081650945540` | `fix(mtc-v2): refuse ineligible funding duplicates` |
 | R5 | `1f3f71b7dbfcd537dafc5548b0d32024b67f659f` | `test(mtc-v2): pin funding lifecycle keys` |
 | R6 | `f7ca024338fcf6c8420422a6788470f2647b2f74` | `test(mtc-v2): cover runner funding lifecycle identity` |
-| R7 | pending | report evidence commit |
+| R7 | `b3a7478a936b9d75eae70ccda42cdab4260221aa` | `docs: record W283R shared-field evidence` |
+
+The final report update cannot include its own stable SHA; that containing commit is supplied in the
+chat close.
 
 ## Discrepancies
 
@@ -219,5 +277,10 @@ end (`C:\tmp\LANE_PROMPTS_20260828\LANE_W283R_REPAIR_ROUND1.md:40-45`).
    the same-pair assurance half, without claiming the latter reproduces the old behavior.
 4. **The prompt calls the set "ten pinned probe copies".** The repository has ten probe directories,
    but only nine contain kernel copies; `PROBE-P012-03-A` is record-only. The measured full-tree old
-   identifier hits are therefore nine copies, 72 lines, and 36 files. The repository measurement
+   identifier hits before this report are therefore nine copies, 72 lines, and 36 files. The final
+   tree has two additional documentation-only quotes in this report. The repository measurement
    controls under C-2.
+5. **The canonical gate has ten refusals, not a review-only refusal.** The missing semantic review is
+   accompanied by nine `PROBE_BASE_TREE_OID_MISMATCH` preflight refusals because the authorized W283
+   and W283R kernel repairs changed the active core tree while the immutable probe manifests remain
+   bound to their earlier tree. Editing or re-sealing those probes is expressly outside this lane.
