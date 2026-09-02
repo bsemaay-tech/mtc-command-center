@@ -351,6 +351,22 @@ def test_v283b_f2_runner_does_not_memoize_funding_id_across_lifecycles() -> None
     assert [row.lifecycle_id for row in runner.state.funding_events] == [1, 2]
 
 
+def test_v283b_f5_reused_runner_evaluates_funding_for_new_lifecycle() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    runner.state.position = _open_long()
+
+    runner.run(bars[1:])
+    runner.state.position = replace(_open_long(), lifecycle_id=2)
+    runner.run(bars[1:])
+
+    assert runner.state.applied_funding_event_keys == {
+        ("TEST-FUND-1", 1),
+        ("TEST-FUND-1", 2),
+    }
+    assert [row.lifecycle_id for row in runner.state.funding_events] == [1, 2]
+
+
 def test_v283b_f3_pre_window_funding_is_dispositioned_without_equity_effect() -> None:
     config, bars = _scenario("RULE2-08-RED")
     runner = Runner(config)
