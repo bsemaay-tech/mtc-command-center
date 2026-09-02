@@ -3987,3 +3987,20 @@ The authorized kernel repairs (W283..W285, W284 item 0) changed `mtc_v2/core`; t
 | PROBE-P012-06-A | `f54132eda453169414d4e7c16e70edfe257f55ccb3f1ec1c7bfc2f1e59610902` | `fa51d604ef31863ae91f932ef32e95b2a9d72a0a924acdb0406fcadc4f371841` |
 | PROBE-P012-07-A | `c9f81cec21a789f4131f333a501b8260ef8ca3ede884df6b197eef3ab9a6a1e5` | `ea91b62f48edbb9ff15072a763f7255daf88c067bcab9645e7d3b4fc5b63e4da` |
 | PROBE-P012-08-A | `d976769490645ea5fefefbe7e44b0921807bdc561b3f9e77293601f8068823c9` | `48e63ab55bbd160d0d5f2b50747aac65674af91893dc35ce796d6bd1cfc8b95a` |
+
+
+## Re-seal #13 - nine KERNEL probe variants rebuilt on the final core and re-pinned (2026-09-03, Lead act under owner decision 132)
+
+W299's variants (re-seal #12) had been patched onto the old variant trees, so fourteen repaired core files stayed stale inside them and the gate refused PROBE_KERNEL_DIFF_INVALID. W299B deleted each variant and recreated it as a byte-for-byte copy of the final core tree `457a06d6e5e67b255c2830be8989f4e0610fba63` plus the unchanged `modification.patch` (one changed file per variant). The Lead recomputed both digests per probe from the committed bytes (two-party pin); no RED/GREEN row, golden, input or derivation value moved.
+
+| probe | modification_manifest_digest | modified_copy_digest |
+|---|---|---|
+| PROBE-P012-01-A | `dcad00109d4f0ceb49e01f644fbfb167b69fac5ef23f85ac4dd0c76a6b729643` | `bf3d60086b94fc6ac1987ac3be48d4043295c046b3bf965d8f0db1bc082c1d5f` |
+| PROBE-P012-01-B | `3721ff47900bb4d134827206009012b48d94e845c162ce18f3f852f15b289ba2` | `a68dd872f75977c85931c762d24f6525a53e978ee633aff023c14644e5ed9d8a` |
+| PROBE-P012-02-A | `f37e6d9f3443292d9458ec5de609c1b4854fa2b4f67a3289b64ff9fdf91036c8` | `0e51bd03658fa54a255560459038abfadd030aac8e65b703dcfaedf9aa15f316` |
+| PROBE-P012-04-A | `24f70876403398f1663a659bdc1a63b44af355f5d4118c02ed4e95c94b7c0d72` | `c35479033870e5c1811626ce623ca67a4a779bf3dea66f03375d2f8fa4022f9c` |
+| PROBE-P012-05-A | `44251938704af7f92d1e880b4dd3b4239c21ac927daae4db3840fc23c19643d5` | `59eff888dbb654e8cda576132fe4244aa7f2a3f7d55f7501e620a716586838ac` |
+| PROBE-P012-05-B | `709a543786be9a07e77d1b81f6676d6c95c5bd027248e0aa85ea4dad78198661` | `41844cf3db3790a028cd6bf71f7859ec90db94bb83083fb07785b76497090365` |
+| PROBE-P012-06-A | `39c8af08f17c7bf3f8d7c689b8ce0db7d3d1ee8504aa5fedf5d401c0149e5380` | `2fe755a71836585361592e9bd3b913f843ccb3a9c0ba523a44e1d65561048869` |
+| PROBE-P012-07-A | `57fee87191150d2afb983017339e1cec1a63faed80694155af803313afd40f37` | `b65811b6d77e376d34ffad34b7210cf6a0f983ee3bdf9c5efd0c2e88c4ca2e9c` |
+| PROBE-P012-08-A | `96aaa32930b1bfff487fadb7cdea34e14408e62fe939787c0c5e162ddb35c47d` | `98e73b51a0ee3ac05a285a8a0710f73ea0a9e621171317b4806cf0eb335c04c1` |
