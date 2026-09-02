@@ -324,8 +324,10 @@ class PositionManager:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: cash event already applied"
             )
-        funding_ids = {row.funding_event_id for row in transition.funding_events}
-        if funding_ids & state.applied_funding_event_ids:
+        funding_keys = {
+            (row.funding_event_id, row.lifecycle_id) for row in transition.funding_events
+        }
+        if funding_keys & state.applied_funding_event_keys:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding event already applied"
             )
@@ -435,7 +437,7 @@ class PositionManager:
         state.funding_events.extend(transition.funding_events)
         state.applied_transition_keys.add(transition_key)
         state.applied_cash_event_keys.update(cash_keys)
-        state.applied_funding_event_ids.update(funding_ids)
+        state.applied_funding_event_keys.update(funding_keys)
 
         for row in transition.cash_events:
             if row.kind is CashEventKind.GROSS_REALIZATION:

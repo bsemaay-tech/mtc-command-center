@@ -293,7 +293,7 @@ def test_funding_tick_emits_one_cash_row_and_one_equal_projection() -> None:
                 position_side="LONG",
                 quantity=1.0,
                 entry_fill_price=100.0,
-                applied_funding_event_ids=frozenset({"TEST-FUND-1"}),
+                applied_funding_event_keys=frozenset({("TEST-FUND-1", 1)}),
             ),
             "TEST-FUND-1",
             REFUSED_DUPLICATE_FUNDING_EVENT,
@@ -324,6 +324,38 @@ def test_funding_refusal_families(
             records,
         )
     assert exc_info.value.refusal_code == code
+
+
+def test_w276_f02_funding_duplicate_identity_includes_lifecycle_id() -> None:
+    records = EconomicRecords.from_record_paths(
+        instrument_path=(
+            RECORD_ROOT / "instruments" / "SYNTH-INSTRUMENT-RULE2-08-RED-V1.json"
+        ),
+        funding_path=RECORD_ROOT / "funding" / "SYNTH-FUNDING-RULE2-08-V1.json",
+    )
+    state = EconomicState(
+        lifecycle_id=2,
+        position_side="LONG",
+        quantity=1.0,
+        entry_fill_price=100.0,
+        applied_funding_event_keys=frozenset({("TEST-FUND-1", 1)}),
+    )
+
+    transition = CorrectedEconomicsAdapter().resolve(
+        state,
+        EconomicIntent(kind=IntentKind.FUNDING_TICK, funding_event_id="TEST-FUND-1"),
+        MarketEvent(
+            timestamp=datetime(2000, 1, 1, tzinfo=timezone.utc),
+            bar_index=2,
+            open=100.0,
+            high=100.0,
+            low=100.0,
+            close=100.0,
+        ),
+        records,
+    )
+
+    assert transition.funding_events[0].lifecycle_id == 2
 
 
 def test_fill_without_cost_schedule_is_refused() -> None:

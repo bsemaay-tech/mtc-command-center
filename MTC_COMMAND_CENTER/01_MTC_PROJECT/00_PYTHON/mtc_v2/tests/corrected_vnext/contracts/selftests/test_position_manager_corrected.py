@@ -419,7 +419,7 @@ def test_funding_transition_updates_signed_total_and_exact_event_identity() -> N
     assert state.position is not None and state.position.qty == 2.0
     assert state.cumulative_funding == -0.2
     assert state.funding_events == list(transition.funding_events)
-    assert state.applied_funding_event_ids == {"TEST-FUND-1"}
+    assert state.applied_funding_event_keys == {("TEST-FUND-1", 1)}
 
 
 def test_p08_same_side_add_retains_book_history_and_final_entry_facts() -> None:

@@ -511,8 +511,8 @@ class Runner:
             sizing_equity=sizing_equity,
             equity=self.state.equity,
             cumulative_funding=self.state.cumulative_funding,
-            applied_funding_event_ids=frozenset(
-                self.state.applied_funding_event_ids
+            applied_funding_event_keys=frozenset(
+                self.state.applied_funding_event_keys
             ),
             next_lifecycle_id=self.state.next_position_lifecycle_id,
             next_decision_sequence=len(self.state.decision_events),
@@ -716,7 +716,13 @@ class Runner:
             if not (previous.timestamp < event_time <= current.timestamp):
                 continue
             event_id = str(event["funding_event_id"])
-            if event_id in self.state.applied_funding_event_ids:
+            lifecycle_id = (
+                None if self.state.position is None else self.state.position.lifecycle_id
+            )
+            if (
+                lifecycle_id is not None
+                and (event_id, lifecycle_id) in self.state.applied_funding_event_keys
+            ):
                 continue
             transition = CorrectedEconomicsAdapter().resolve(
                 self._economic_state(),

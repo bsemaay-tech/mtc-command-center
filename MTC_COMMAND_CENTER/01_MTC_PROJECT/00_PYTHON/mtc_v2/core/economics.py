@@ -31,6 +31,7 @@ from mtc_v2.core.types import (
     FeeEvent,
     FillDecision,
     FundingEvent,
+    FundingEventKey,
     PositionFacts,
 )
 
@@ -110,7 +111,7 @@ class EconomicState:
     sizing_equity: float = 0.0
     equity: float = 0.0
     cumulative_funding: float = 0.0
-    applied_funding_event_ids: frozenset[str] = frozenset()
+    applied_funding_event_keys: frozenset[FundingEventKey] = frozenset()
     next_lifecycle_id: int = 1
     next_decision_sequence: int = 0
     next_fill_sequence: int = 0
@@ -1104,9 +1105,9 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         matching = [event for event in events if event.get("funding_event_id") == event_id]
         if len(matching) != 1:
             raise EconomicsRefusal(REFUSED_MISSING_FUNDING_EVENT, str(event_id))
-        if event_id in state.applied_funding_event_ids:
-            raise EconomicsRefusal(REFUSED_DUPLICATE_FUNDING_EVENT, str(event_id))
         eligible = state.lifecycle_id is not None and state.quantity > 0.0
+        if eligible and (str(event_id), int(state.lifecycle_id)) in state.applied_funding_event_keys:
+            raise EconomicsRefusal(REFUSED_DUPLICATE_FUNDING_EVENT, str(event_id))
         decision = DecisionEvent(
             sequence=state.next_decision_sequence + len(prefix),
             event_timestamp=market.timestamp,

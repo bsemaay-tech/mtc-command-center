@@ -13,6 +13,7 @@ from mtc_v2.core.instrument import InstrumentMetadata
 LifecycleId: TypeAlias = int
 FillId: TypeAlias = str
 CashEventId: TypeAlias = str
+FundingEventKey: TypeAlias = tuple[str, LifecycleId]
 
 REFUSED_INVALID_CASH_LEDGER_JOIN = "REFUSED_INVALID_CASH_LEDGER_JOIN"
 
@@ -430,7 +431,7 @@ class PortfolioState:
     funding_events: list[FundingEvent] = field(default_factory=list)
     applied_transition_keys: set[tuple[object, ...]] = field(default_factory=set)
     applied_cash_event_keys: set[tuple[datetime, int, str]] = field(default_factory=set)
-    applied_funding_event_ids: set[str] = field(default_factory=set)
+    applied_funding_event_keys: set[FundingEventKey] = field(default_factory=set)
     cumulative_fee: float = 0.0
     cumulative_funding: float = 0.0
     guard_realized_equity: float = 0.0
