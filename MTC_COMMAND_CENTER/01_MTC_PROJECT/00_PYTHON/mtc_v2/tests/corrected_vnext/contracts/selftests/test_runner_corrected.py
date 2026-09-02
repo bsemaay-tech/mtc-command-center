@@ -375,7 +375,7 @@ def test_v283b_f3_pre_window_funding_is_dispositioned_without_equity_effect() ->
     assert runner.corrected_equity_curve == [1000.0]
 
 
-def test_w279_f09_tail_funding_event_gets_eligibility_disposition() -> None:
+def test_v283b_f4_post_window_funding_stays_outside_equity_curve() -> None:
     config, bars = _scenario("RULE2-08-RED")
     runner = Runner(config)
     runner.state.position = _open_long()
@@ -386,8 +386,11 @@ def test_w279_f09_tail_funding_event_gets_eligibility_disposition() -> None:
         row for row in runner.state.decision_events if row.decision == "FUNDING_ELIGIBILITY"
     ]
     assert len(funding_decisions) == 1
-    assert dict(funding_decisions[0].details)["eligible"] is True
-    assert len(runner.state.funding_events) == 1
+    assert dict(funding_decisions[0].details)["eligible"] is False
+    assert runner.state.funding_events == []
+    assert runner.state.cash_events == []
+    assert runner.state.equity == 1000.0
+    assert runner.corrected_equity_curve[-1] == runner.state.equity
 
 
 def test_w279_f08_position_snapshot_and_interval_boundary_are_applied() -> None:
