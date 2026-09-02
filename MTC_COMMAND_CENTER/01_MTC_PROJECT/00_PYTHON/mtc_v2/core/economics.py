@@ -286,6 +286,7 @@ def _fee_rows(
     event_timestamp: datetime,
     lifecycle_id: int,
     fill_id: str,
+    fill_sequence: int,
     event_class: str,
     fill_price: float,
     quantity: float,
@@ -310,7 +311,7 @@ def _fee_rows(
     notional = abs(fill_price * quantity * contract_multiplier)
     amount = max(notional * rate + fixed, minimum)
     signed = 0.0 if amount == 0.0 else -amount
-    cash_event_id = f"CE-FEE-{fee_sequence}"
+    cash_event_id = f"CE-FEE-{fill_sequence}"
     cash = CashEvent(
         sequence=cash_sequence,
         cash_event_id=cash_event_id,
@@ -716,6 +717,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             event_timestamp=market.timestamp,
             lifecycle_id=lifecycle_id,
             fill_id=fill.fill_id,
+            fill_sequence=fill_sequence,
             event_class=event_class,
             fill_price=final_fill,
             quantity=quantity,
@@ -955,6 +957,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 event_timestamp=market.timestamp,
                 lifecycle_id=state.lifecycle_id,
                 fill_id=fill_id,
+                fill_sequence=fill_sequence,
                 event_class=event_class,
                 fill_price=final_fill,
                 quantity=quantity,
@@ -1063,6 +1066,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             event_timestamp=market.timestamp,
             lifecycle_id=int(state.lifecycle_id),
             fill_id=fill.fill_id,
+            fill_sequence=fill_sequence,
             event_class=event_class,
             fill_price=final_fill,
             quantity=quantity,

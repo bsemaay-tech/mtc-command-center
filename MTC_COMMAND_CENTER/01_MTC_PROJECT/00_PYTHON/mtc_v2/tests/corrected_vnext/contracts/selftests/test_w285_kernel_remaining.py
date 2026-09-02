@@ -156,3 +156,29 @@ def test_w279_f13_corrected_path_contains_no_new_absolute_epsilon() -> None:
     assert "1e-12" not in economics_source
     assert manager_source.count("1e-12") == 1  # Frozen legacy close threshold.
     assert "1e-12" not in results_source
+
+
+def test_w279_f16_fee_cash_event_id_uses_the_fill_sequence() -> None:
+    transition = CorrectedEconomicsAdapter().resolve(
+        EconomicState(
+            lifecycle_id=1,
+            position_side="LONG",
+            quantity=1.0,
+            entry_fill_price=100.0,
+            next_fill_sequence=7,
+            next_cash_sequence=11,
+            next_fee_sequence=2,
+        ),
+        EconomicIntent(
+            kind=IntentKind.MARKET_EXIT,
+            event_class="MARKET_EXIT",
+            exit_id="EXIT-SEVEN",
+        ),
+        MarketEvent(NOW, 1, 100.0, 100.0, 100.0, 100.0),
+        _records("RULE2-07-RED"),
+    )
+
+    assert transition.fill_decisions[0].fill_id == "F7"
+    assert transition.fee_events[0].sequence == 2
+    assert transition.cash_events[0].cash_event_id == "CE-FEE-7"
+    assert transition.fee_events[0].cash_event_id == "CE-FEE-7"
