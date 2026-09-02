@@ -801,8 +801,11 @@ _P0-31 Milestone 2 (rows 34-41)_
 123. **KERNEL SCOPE = ALL 14** (owner: "GO", item A default). The seven kernel defects not covered by
     decisions 80-81 are authorized under the same conditions: W279-F06 (HIGH, test constructor with
     override fields inside `mtc_v2/core`), W279-F13 (nine `1e-12` tolerances vs exact-binary64),
-    W279-F16 (fee `cash_event_id` from the fee counter), W279-F18, F19, F20, F21 (LOW), plus the
-    kernel half of W279-F17. Conditions: failing-then-passing test per item, legacy replay
+    W279-F16 (fee `cash_event_id` from the fee counter), W279-F18, F19, F20, F21 (LOW). NOT covered
+    by this GO: the kernel half of W279-F17 (`_state_refusals` cannot emit the four members named
+    at design 23.4:1215; exposed when W284-5 removes the harness override) - the Lead had written it
+    into this decision by mistake, W293 (Codex secondary check) caught it at 19:44, corrected here;
+    it is a separate owner question. Conditions: failing-then-passing test per item, legacy replay
     byte-exact, different-family verification, both flagships and the detection lane re-run on
     the result before any pull-request question. Lane W285 after W283.
 124. **PROBE-COPY WHITESPACE STAYS** (owner: "GO", item B default). The whitespace diagnostics inside
