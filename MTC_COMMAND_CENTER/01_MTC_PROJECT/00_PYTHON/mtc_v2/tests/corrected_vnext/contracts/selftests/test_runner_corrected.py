@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import replace
 from datetime import datetime
@@ -270,6 +271,27 @@ def test_funding_boundary_is_applied_before_same_timestamp_bar_evaluation() -> N
     assert runner.state.cumulative_funding == -0.1
     assert runner.state.funding_events[0].event_timestamp == event_time
     assert runner.state.equity == 999.9
+
+
+def test_w276_f03_missing_production_funding_events_are_typed_refusal() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    record_path = (
+        MTC_V2_ROOT
+        / "core"
+        / "economic_records"
+        / "funding"
+        / "HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json"
+    )
+    config.update(
+        funding_schedule_id="HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1",
+        funding_schedule_sha256=hashlib.sha256(record_path.read_bytes()).hexdigest(),
+    )
+    runner = Runner(config)
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        runner._apply_corrected_funding_between(bars[1], bars[2])
+
+    assert exc_info.value.refusal_code == "REFUSED_MISSING_FUNDING_EVENT"
 
 
 def test_record_runtime_override_refuses_before_first_economic_intent() -> None:

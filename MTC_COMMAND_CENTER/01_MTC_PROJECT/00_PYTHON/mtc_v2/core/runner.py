@@ -35,6 +35,7 @@ from mtc_v2.core.economics import (
     IntentKind,
     MarketEvent,
     REFUSED_ECONOMIC_INPUT,
+    REFUSED_MISSING_FUNDING_EVENT,
 )
 from mtc_v2.core.gates import (
     GATE_MA_FILTER,
@@ -711,6 +712,11 @@ class Runner:
     def _apply_corrected_funding_between(self, previous: Bar, current: Bar) -> None:
         assert self._corrected_records is not None
         events = self._corrected_records.funding.get("events", ())
+        if not isinstance(events, (tuple, list)):
+            raise EconomicsRefusal(
+                REFUSED_MISSING_FUNDING_EVENT,
+                "funding schedule has no admitted event collection",
+            )
         for event in events:
             event_time = self._record_timestamp(event.get("event_timestamp"))
             if not (previous.timestamp < event_time <= current.timestamp):
