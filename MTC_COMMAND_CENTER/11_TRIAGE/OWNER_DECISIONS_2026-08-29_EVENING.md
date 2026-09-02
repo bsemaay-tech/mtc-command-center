@@ -923,3 +923,15 @@ live trading, a build, or a kernel change.
     different requirements, neither replaces the other; no strategy becomes live-ready from a short
     forward test alone; final time and trade requirements are separate versioned rules for day,
     swing and position (values not given: VALUE PENDING).
+
+## Addendum 33 - 2026-09-02 ~20:1x REAL (owner routing amendment, Turkish, translated)
+
+131. **CLAUDE MAX = ORCHESTRATOR ONLY; NO AUDIT LANES ON MAX** (owner, 2026-09-02 ~20:1x, in Turkish:
+    "Claude MAX credits started draining very fast after moving to Fable 5.1. Use Claude MAX only
+    as orchestrator. Use Codex, Gemini, OpenRouter/Go as auditors"). Supersedes the audit-class
+    allowance for Opus-on-MAX in decisions 79 and the addendum-30 standing order: from this word
+    no lane of any kind runs on the MAX subscription; Fable orchestrates only. Auditors and
+    verifiers: the Codex accounts, Gemini, OpenCode Go (DeepSeek/GLM/Kimi) and OpenRouter PAYG
+    per OD-20260829-2. Claude Pro (separate subscription) remains a coding/audit route under
+    decision 79. The V283b lane on MAX Opus was stopped at 20:1x; its report had already landed
+    and is used.
