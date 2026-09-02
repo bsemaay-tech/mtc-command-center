@@ -896,7 +896,7 @@ def test_receipt_accounts_for_every_blocked_expected_node(
     )
 
 
-def test_probe_driver_rejects_identity_copy_and_detects_modified_copy(
+def test_probe_driver_refuses_unclosed_base_before_variant_comparison(
     tmp_path: Path,
 ) -> None:
     catalog = load_json_exact(
@@ -922,8 +922,11 @@ def test_probe_driver_rejects_identity_copy_and_detects_modified_copy(
     )
 
     assert identity_receipt["status"] == "NOT_DETECTED"
-    assert identity_receipt["measured_failed_check"] is None
-    assert identity_receipt["comparator_first_differing_node"] is None
+    assert identity_receipt["measured_failed_check"] == "CLOSED_SET_VIOLATION"
+    assert (
+        identity_receipt["comparator_first_differing_node"]
+        == "/RESULT_SURFACE/cumulative_funding"
+    )
     assert identity_receipt["expected_node_changed"] is False
 
     modified = MTC_V2_ROOT / probe["modified_copy_path"]
@@ -931,7 +934,7 @@ def test_probe_driver_rejects_identity_copy_and_detects_modified_copy(
         MTC_V2_ROOT
         / "tests/corrected_vnext/probes/PROBE-P012-08-A/modified_tree_manifest.json"
     )
-    detected_receipt = verify_bceg.drive_probe_variant_process(
+    modified_receipt = verify_bceg.drive_probe_variant_process(
         MTC_V2_ROOT,
         tmp_path / "unused-baseline",
         probe,
@@ -939,16 +942,16 @@ def test_probe_driver_rejects_identity_copy_and_detects_modified_copy(
         modified_manifest,
     )
 
-    assert detected_receipt["status"] == "DETECTED"
-    assert detected_receipt["measured_failed_check"] == "CORRECTED_EXPECTATION"
+    assert modified_receipt["status"] == "NOT_DETECTED"
+    assert modified_receipt["measured_failed_check"] == "CLOSED_SET_VIOLATION"
     assert (
-        detected_receipt["comparator_first_differing_node"]
-        == "/EVENT_SURFACE/cash_events/0/signed_delta"
+        modified_receipt["comparator_first_differing_node"]
+        == "/RESULT_SURFACE/cumulative_funding"
     )
-    assert detected_receipt["expected_node_changed"] is True
+    assert modified_receipt["expected_node_changed"] is False
 
 
-def test_probe_detection_uses_target_membership_not_first_node(
+def test_probe_cannot_claim_target_membership_when_base_is_refused(
     tmp_path: Path,
 ) -> None:
     catalog = load_json_exact(
@@ -976,9 +979,14 @@ def test_probe_detection_uses_target_membership_not_first_node(
         modified_manifest,
     )
 
-    assert receipt["status"] == "DETECTED"
+    assert receipt["status"] == "NOT_DETECTED"
+    assert receipt["measured_failed_check"] == "CLOSED_SET_VIOLATION"
     assert receipt["expected_first_changed_node"] == expected_node
-    assert receipt["comparator_first_differing_node"] == comparator_first_node
+    assert (
+        receipt["comparator_first_differing_node"]
+        == "/RESULT_SURFACE/cumulative_funding"
+    )
+    assert receipt["expected_node_changed"] is False
 
 
 @pytest.mark.parametrize(
@@ -1092,8 +1100,15 @@ def test_corrected_closed_set_refuses_observed_only_member(
         verify_bceg, "corrected_surfaces", with_observed_only_member
     )
 
+    observed = execute_corrected_scenario(MTC_V2_ROOT, row)
     with pytest.raises(GateRefusal) as caught:
-        execute_corrected_scenario(MTC_V2_ROOT, row)
+        verify_bceg.validate_corrected_closed_sets(
+            row["scenario_id"],
+            {
+                "EVENT_SURFACE": observed["EVENT_SURFACE"],
+                "RESULT_SURFACE": observed["RESULT_SURFACE"],
+            },
+        )
     assert caught.value.check_id == "CLOSED_SET_VIOLATION"
     assert caught.value.pointer == "/EVENT_SURFACE/fill_events/0/observed_only"
 
@@ -1104,7 +1119,7 @@ def test_corrected_closed_set_refuses_missing_member(
     catalog = load_json_exact(
         MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
     )
-    row = next(member for member in catalog if member["scenario_id"] == "RULE2-01-RED")
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-03-GREEN")
     original = verify_bceg.corrected_surfaces
 
     def without_required_member(**kwargs):
@@ -1114,10 +1129,75 @@ def test_corrected_closed_set_refuses_missing_member(
 
     monkeypatch.setattr(verify_bceg, "corrected_surfaces", without_required_member)
 
+    observed = execute_corrected_scenario(MTC_V2_ROOT, row)
     with pytest.raises(GateRefusal) as caught:
-        execute_corrected_scenario(MTC_V2_ROOT, row)
+        verify_bceg.validate_corrected_closed_sets(
+            row["scenario_id"],
+            {
+                "EVENT_SURFACE": observed["EVENT_SURFACE"],
+                "RESULT_SURFACE": observed["RESULT_SURFACE"],
+            },
+        )
     assert caught.value.check_id == "CLOSED_SET_VIOLATION"
     assert caught.value.pointer == "/RESULT_SURFACE/warnings"
+
+
+@pytest.mark.parametrize(
+    "scenario_id", ["RULE2-01-RED", "RULE2-03-RED", "RULE2-07-RED"]
+)
+def test_observed_projection_passes_no_authoring_or_membership_overrides(
+    scenario_id: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+    original = verify_bceg.corrected_surfaces
+    calls: list[set[str]] = []
+
+    def capture_projection(**kwargs):
+        calls.append(set(kwargs))
+        return original(**kwargs)
+
+    monkeypatch.setattr(verify_bceg, "corrected_surfaces", capture_projection)
+    monkeypatch.setattr(
+        verify_bceg, "validate_corrected_closed_sets", lambda *_args: None
+    )
+
+    execute_corrected_scenario(MTC_V2_ROOT, row)
+
+    assert len(calls) == 1
+    assert calls[0].isdisjoint(
+        {
+            "refusals",
+            "guards",
+            "include_order_notional",
+            "admitted",
+            "include_cumulative_funding",
+        }
+    )
+
+
+def test_observed_exit_reason_is_not_rewritten(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-04-RED")
+    monkeypatch.setattr(
+        verify_bceg, "validate_corrected_closed_sets", lambda *_args: None
+    )
+
+    observed = execute_corrected_scenario(MTC_V2_ROOT, row)
+
+    assert observed["EVENT_SURFACE"]["exit_events"][0]["reason"] == "STOP"
+
+
+def test_observed_path_has_no_legacy_state_seed_or_literal_surface_builder() -> None:
+    assert not hasattr(verify_bceg, "_prepare_rule2_08_observation")
+    assert not hasattr(verify_bceg, "_refusal_surfaces")
+    assert not hasattr(verify_bceg, "_normalize_exit_surface")
 
 
 @pytest.mark.parametrize(
@@ -1138,11 +1218,11 @@ def test_corrected_closed_set_refuses_missing_member(
         ("RULE2-06-GREEN", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
         ("RULE2-07-RED", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
         ("RULE2-07-GREEN", ["SEMANTICS_VALIDATED"]),
-        ("RULE2-08-RED", ["SEMANTICS_VALIDATED", "FUNDING_ELIGIBILITY"]),
-        ("RULE2-08-GREEN", ["SEMANTICS_VALIDATED", "FUNDING_ELIGIBILITY"]),
+        ("RULE2-08-RED", ["SEMANTICS_VALIDATED"]),
+        ("RULE2-08-GREEN", ["SEMANTICS_VALIDATED"]),
     ],
 )
-def test_section_23_decision_trail_contains_each_evaluated_closed_reason(
+def test_raw_kernel_decision_trail_contains_each_evaluated_closed_reason(
     scenario_id: str, expected_decisions: list[str]
 ) -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
@@ -1301,7 +1381,7 @@ def test_section_23_fill_and_exit_conditionals_are_closed(
         "RULE2-08-GREEN",
     ],
 )
-def test_section_23_result_top_level_conditionals_are_closed(
+def test_raw_kernel_result_membership_is_not_harness_shaped(
     scenario_id: str,
 ) -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
@@ -1316,15 +1396,6 @@ def test_section_23_result_top_level_conditionals_are_closed(
         "refusals",
         "run_manifest",
     }
-    if scenario_id.startswith(("RULE2-01-", "RULE2-02-", "RULE2-05-")):
-        expected.add("order_notional")
-    if scenario_id == "RULE2-02-GREEN":
-        expected.add("admitted")
-    if scenario_id.startswith("RULE2-07-"):
-        expected.add("guards")
-    if scenario_id.startswith("RULE2-08-"):
-        expected.add("cumulative_funding")
-
     assert set(result) == expected
     assert result["metrics"] is None
 
@@ -1363,33 +1434,16 @@ def test_section_23_refusals_are_closed_tagged_objects(
     assert refusals == [expected_refusal]
 
 
-@pytest.mark.parametrize(
-    ("scenario_id", "lifecycle_closed"),
-    [
-        ("RULE2-07-RED", True),
-        ("RULE2-07-GREEN", False),
-    ],
-)
-def test_section_23_guard_projection_has_closed_members(
-    scenario_id: str, lifecycle_closed: bool
+@pytest.mark.parametrize("scenario_id", ["RULE2-07-RED", "RULE2-07-GREEN"])
+def test_raw_kernel_projection_does_not_inject_guard_snapshot(
+    scenario_id: str,
 ) -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == scenario_id)
 
-    guards = execute_corrected_scenario(MTC_V2_ROOT, row)["RESULT_SURFACE"]["guards"]
-    expected = {
-        "guard_pnl_basis",
-        "consecutive_loss_count",
-        "consec_loss_ok",
-        "guard_blocked_raw",
-    }
-    if lifecycle_closed:
-        expected.add("last_closed_guard_pnl")
+    result = execute_corrected_scenario(MTC_V2_ROOT, row)["RESULT_SURFACE"]
 
-    assert set(guards) == expected
-    assert guards["guard_pnl_basis"] == "GROSS-MINUS-FEES"
-    assert type(guards["consec_loss_ok"]) is bool
-    assert type(guards["guard_blocked_raw"]) is bool
+    assert "guards" not in result
 
 
 def test_rule2_05_red_sizes_from_final_fill_and_preserves_zero_economics() -> None:
@@ -1413,7 +1467,7 @@ def test_rule2_05_red_sizes_from_final_fill_and_preserves_zero_economics() -> No
         "quantity": 0,
         "entry_fill_price": 101,
     }
-    assert observed["RESULT_SURFACE"]["order_notional"] == 0
+    assert "order_notional" not in observed["RESULT_SURFACE"]
 
 
 def test_rule2_06_green_uses_the_closed_stop_touch_token() -> None:
@@ -1426,17 +1480,9 @@ def test_rule2_06_green_uses_the_closed_stop_touch_token() -> None:
     assert observed["EVENT_SURFACE"]["exit_events"][0]["fill_trigger"] == "STOP_TOUCH"
 
 
-@pytest.mark.parametrize(
-    ("scenario_id", "expected_cash", "expected_cumulative"),
-    [
-        ("RULE2-08-RED", [("FUNDING", -0.1)], -0.1),
-        ("RULE2-08-GREEN", [], 0),
-    ],
-)
-def test_rule2_08_null_cost_is_not_consumed_and_funding_is_projected(
+@pytest.mark.parametrize("scenario_id", ["RULE2-08-RED", "RULE2-08-GREEN"])
+def test_rule2_08_raw_kernel_is_not_seeded_from_legacy_state(
     scenario_id: str,
-    expected_cash: list[tuple[str, float]],
-    expected_cumulative: float,
 ) -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == scenario_id)
@@ -1447,11 +1493,9 @@ def test_rule2_08_null_cost_is_not_consumed_and_funding_is_projected(
     event = observed["EVENT_SURFACE"]
     assert result["refusals"] == []
     assert result["run_manifest"]["cost_schedule_id"] == "NOT_CONSUMED"
-    assert [(member["kind"], member["signed_delta"]) for member in event["cash_events"]] == expected_cash
-    assert [member["funding_cash_delta"] for member in event["funding_events"]] == [
-        delta for _kind, delta in expected_cash
-    ]
-    assert result["cumulative_funding"] == expected_cumulative
+    assert event["cash_events"] == []
+    assert event["funding_events"] == []
+    assert "cumulative_funding" not in result
 
 
 def test_rule2_02_red_projection_matches_design_and_all_pairs_diverge() -> None:

@@ -1354,90 +1354,6 @@ def run_contract_target_scenario(
     runner.corrected_equity_curve.append(runner.state.equity)
 
 
-def _prepare_rule2_08_observation(
-    runner: Runner,
-    *,
-    scenario_id: str,
-    legacy: dict[str, Any],
-    corrected: dict[str, Any],
-    bars: list[Bar],
-) -> list[Bar]:
-    """Build the pre-window premise without consuming a corrected CostSchedule."""
-
-    window_start = _timestamp(corrected["observation_window"]["start_timestamp"])
-    setup_bars = [bar for bar in bars if bar.timestamp < window_start]
-    if not setup_bars:
-        raise GateRefusal("RULE2_08_SETUP_INVALID", "missing pre-window bars")
-    setup = Runner(dict(legacy["config"]))
-    setup.run(setup_bars)
-    expected_open = scenario_id == "RULE2-08-RED"
-    if (setup.state.position is not None) is not expected_open:
-        raise GateRefusal("RULE2_08_SETUP_INVALID", scenario_id)
-
-    # Design v1.5 line 429 makes both RULE2-08 rows funding-only inside the
-    # observation window; lines 888-889 make CostSchedule absent/NOT_CONSUMED.
-    runner.state.position = deepcopy(setup.state.position)
-    runner.state.equity = setup.state.equity
-    runner.state.realized_equity = setup.state.realized_equity
-    runner.state.next_position_lifecycle_id = setup.state.next_position_lifecycle_id
-    return [setup_bars[-1], *[bar for bar in bars if bar.timestamp >= window_start]]
-
-
-def _refusal_surfaces(
-    *,
-    config: dict[str, Any],
-    records: EconomicRecords,
-    refusal: EconomicsRefusal | InstrumentRecordRefusal,
-) -> dict[str, dict[str, Any]]:
-    if refusal.refusal_code != "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION":
-        raise GateRefusal(
-            "CORRECTED_REFUSAL_SCHEMA_UNDECLARED",
-            refusal.refusal_code,
-        )
-    manifest = CorrectedRunManifest.from_records(
-        records,
-        execution_profile_id=str(config["execution_profile_id"]),
-        same_bar_collision_policy_id=str(config["same_bar_collision_policy_id"]),
-    )
-    return {
-        "EVENT_SURFACE": {name: [] for name in CORRECTED_CONTAINERS},
-        "RESULT_SURFACE": {
-            "final_position": None,
-            "trades": [],
-            "equity_curve": {
-                "first": config["initial_capital"],
-                "last": config["initial_capital"],
-            },
-            "metrics": None,
-            "warnings": [],
-            "refusals": [
-                {
-                    "code": refusal.refusal_code,
-                    "field": "price_tick",
-                    "record_value": records.instrument.price_tick,
-                    "runtime_value": config["instrument_price_tick"],
-                    "stage": "PRE_EVALUATION",
-                }
-            ],
-            "run_manifest": manifest.to_dict(),
-        },
-    }
-
-
-def _normalize_exit_surface(surfaces: dict[str, dict[str, Any]]) -> None:
-    fills = {
-        row["fill_id"]: row for row in surfaces["EVENT_SURFACE"]["fill_events"]
-    }
-    for row in surfaces["EVENT_SURFACE"]["exit_events"]:
-        fill = fills[row["fill_id"]]
-        if fill["event_class"] == "PROTECTIVE_STOP_EXIT":
-            row["reason"] = "PROTECTIVE_STOP"
-            if "fill_trigger" in fill:
-                row["fill_trigger"] = fill["fill_trigger"]
-        elif fill["event_class"] == "MARKET_EXIT":
-            row["reason"] = str(row["exit_id"]).lower()
-
-
 def execute_corrected_scenario(
     root: Path,
     row: dict[str, Any],
@@ -1461,7 +1377,6 @@ def execute_corrected_scenario(
         root if record_root is None else record_root,
         document["corrected_only"]["records"],
     )
-    legacy = document["legacy_arm"]
     corrected = document["corrected_only"]
     config = corrected_contract_config(
         document,
@@ -1471,82 +1386,29 @@ def execute_corrected_scenario(
     selector_stop = decode_stop_price_f64(document, scenario_id=scenario_id)
     target_book = _target_book_overrides(scenario_id, document, bars)
     runner = Runner(config)
-    execution_bars = bars
-    if scenario_id.startswith("RULE2-08-"):
-        execution_bars = _prepare_rule2_08_observation(
-            runner,
-            scenario_id=scenario_id,
-            legacy=legacy,
-            corrected=corrected,
-            bars=bars,
-        )
     try:
         if selector_stop is not None:
             run_contract_entry_scenario(
                 runner,
-                execution_bars,
+                bars,
                 stop_price=selector_stop,
             )
         elif target_book:
-            run_contract_target_scenario(runner, execution_bars, target_book)
+            run_contract_target_scenario(runner, bars, target_book)
         else:
-            runner.run(execution_bars)
-    except (EconomicsRefusal, InstrumentRecordRefusal) as exc:
-        if exc.refusal_code == "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION":
-            surfaces = corrected_surfaces(
-                state=runner.state,
-                equity_values=runner.corrected_equity_curve,
-                manifest=CorrectedRunManifest.from_records(
-                    records,
-                    execution_profile_id=row["execution_profile_id"],
-                ),
-                refusals=[
-                    {
-                        "code": exc.refusal_code,
-                        "field": "price_tick",
-                        "record_value": records.instrument.price_tick,
-                        "runtime_value": config["instrument_price_tick"],
-                        "stage": "PRE_EVALUATION",
-                    }
-                ],
-                observation_start=_timestamp(
-                    corrected["observation_window"]["start_timestamp"]
-                ),
-                observation_end=_timestamp(
-                    corrected["observation_window"]["end_timestamp"]
-                ),
-            )
-        else:
-            surfaces = _refusal_surfaces(config=config, records=records, refusal=exc)
-    else:
-        include_guards = scenario_id.startswith("RULE2-07-")
-        surfaces = corrected_surfaces(
-            state=runner.state,
-            equity_values=runner.corrected_equity_curve,
-            manifest=CorrectedRunManifest.from_records(
-                records,
-                execution_profile_id=row["execution_profile_id"],
-                same_bar_collision_policy_id=(
-                    str(config["same_bar_collision_policy_id"])
-                    if scenario_id.startswith("RULE2-06-")
-                    else None
-                ),
-            ),
-            guards=runner.corrected_guard_snapshot if include_guards else None,
-            include_order_notional=scenario_id.startswith(
-                ("RULE2-01-", "RULE2-02-", "RULE2-05-")
-            ),
-            admitted=(
-                runner.state.position is not None
-                if scenario_id == "RULE2-02-GREEN"
-                else None
-            ),
-            observation_start=_timestamp(corrected["observation_window"]["start_timestamp"]),
-            observation_end=_timestamp(corrected["observation_window"]["end_timestamp"]),
-            include_cumulative_funding=scenario_id.startswith("RULE2-08-"),
-        )
-        _normalize_exit_surface(surfaces)
-    validate_corrected_closed_sets(scenario_id, surfaces)
+            runner.run(bars)
+    except (EconomicsRefusal, InstrumentRecordRefusal):
+        pass
+    surfaces = corrected_surfaces(
+        state=runner.state,
+        equity_values=runner.corrected_equity_curve,
+        manifest=CorrectedRunManifest.from_records(
+            records,
+            execution_profile_id=row["execution_profile_id"],
+        ),
+        observation_start=_timestamp(corrected["observation_window"]["start_timestamp"]),
+        observation_end=_timestamp(corrected["observation_window"]["end_timestamp"]),
+    )
     validate_corrected_event_surface(surfaces["EVENT_SURFACE"])
     return {
         "schema": "P012_OBSERVED_SURFACES_V1",
@@ -2732,6 +2594,13 @@ def _run_probe_child(
             base_row,
             record_root=record_root,
         )
+        validate_corrected_closed_sets(
+            base_row["scenario_id"],
+            {
+                "EVENT_SURFACE": observed["EVENT_SURFACE"],
+                "RESULT_SURFACE": observed["RESULT_SURFACE"],
+            },
+        )
     except GateRefusal as exc:
         record_checks = {
             "RECORD_REFERENCE_INVALID",
@@ -3358,6 +3227,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
     scenarios: list[dict[str, Any]] = []
     legacy_blockers: list[dict[str, Any]] = []
     legacy_surface_count = 0
+    closed_set_blockers: list[dict[str, Any]] = []
     corrected_blockers: list[dict[str, Any]] = []
     blocked_node_skips: list[dict[str, str]] = []
     for row in value_rows:
@@ -3379,6 +3249,18 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
             legacy_blockers.append(legacy_blocker)
         golden = load_json_exact(root / row["expected_artifacts"]["2.0.0"]["path"])
         corrected = execute_corrected_scenario(root, row)
+        try:
+            validate_corrected_closed_sets(
+                scenario_id,
+                {
+                    "EVENT_SURFACE": corrected["EVENT_SURFACE"],
+                    "RESULT_SURFACE": corrected["RESULT_SURFACE"],
+                },
+            )
+        except GateRefusal as exc:
+            if exc.check_id != "CLOSED_SET_VIOLATION":
+                raise
+            closed_set_blockers.append({"scenario_id": scenario_id, **exc.as_dict()})
         scenario_blocked_nodes: list[dict[str, str]] = []
         corrected_difference = compare_scoped_expected(
             golden, corrected, blocked_nodes=scenario_blocked_nodes
@@ -3396,19 +3278,46 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
                 }
             )
         legacy_result = load_json_exact(baseline_root / "out" / scenario_id / "result_surface.json")
-        projections = build_projection_results(scenario_id, input_document, legacy_result, corrected)
-        if row["role"] == "RED":
-            bad = [projection for projection in projections if projection["equal"]]
-            status = "REFUSED_DECLARED_DIVERGENCE" if not bad else "INVALID_RED_NO_DIVERGENCE"
-            if bad:
-                raise GateRefusal("RULE2_DIVERGENCE_MISSING", scenario_id, pointer=bad[0]["selector"])
-            first = projections[0]["selector"]
-        else:
-            bad = [projection for projection in projections if not projection["equal"]]
-            status = "GREEN_SHARED_PROJECTION_EQUAL" if not bad else "INVALID_GREEN_DIVERGENCE"
-            if bad:
-                raise GateRefusal("RULE2_GREEN_MISMATCH", scenario_id, pointer=bad[0]["selector"])
+        try:
+            projections = build_projection_results(
+                scenario_id, input_document, legacy_result, corrected
+            )
+        except (IndexError, KeyError, TypeError) as exc:
+            projections = []
+            status = "STOP_COULD_NOT_EVALUATE"
             first = None
+            corrected_blockers.append(
+                {
+                    "check_id": "RULE2_PROJECTION_COULD_NOT_EVALUATE",
+                    "scenario_id": scenario_id,
+                    "detail": f"{type(exc).__name__}: {exc}",
+                }
+            )
+        else:
+            if row["role"] == "RED":
+                bad = [projection for projection in projections if projection["equal"]]
+                status = "REFUSED_DECLARED_DIVERGENCE" if not bad else "INVALID_RED_NO_DIVERGENCE"
+                if bad:
+                    corrected_blockers.append(
+                        {
+                            "check_id": "RULE2_DIVERGENCE_MISSING",
+                            "scenario_id": scenario_id,
+                            "pointer": bad[0]["selector"],
+                        }
+                    )
+                first = projections[0]["selector"]
+            else:
+                bad = [projection for projection in projections if not projection["equal"]]
+                status = "GREEN_SHARED_PROJECTION_EQUAL" if not bad else "INVALID_GREEN_DIVERGENCE"
+                if bad:
+                    corrected_blockers.append(
+                        {
+                            "check_id": "RULE2_GREEN_MISMATCH",
+                            "scenario_id": scenario_id,
+                            "pointer": bad[0]["selector"],
+                        }
+                    )
+                first = None
         scenarios.append({
             "scenario_id": scenario_id,
             "role": row["role"],
@@ -3448,6 +3357,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
             *expected_source_blockers,
             *corpus.blockers,
             *probe_suite["probe_blockers"],
+            *closed_set_blockers,
             *corrected_blockers,
         ],
         "scenarios": scenarios,
