@@ -278,38 +278,32 @@ def test_contract_constructor_builds_equal_price_book_without_production_policy_
     assert runner.state.position is None
 
 
-def test_funding_boundary_is_applied_before_same_timestamp_bar_evaluation() -> None:
+def test_v283b_f6_same_timestamp_funding_uses_post_bar_position_snapshot() -> None:
     config, bars = _scenario("RULE2-08-RED")
-    runner = Runner(config)
-    runner._bind_corrected_instrument(bars[0].timestamp)
-    runner.state.position = Position(
-        side="long",
-        entry_price=100.0,
-        avg_entry_price=100.0,
-        qty=1.0,
-        entry_bar=1,
-        initial_qty=1.0,
-        entry_legs=[EntryLeg(100.0, 1.0, 1)],
-        lifecycle_id=1,
-        working_exit_reference_qty=1.0,
-    )
+    cost_config, _ = _scenario("RULE2-05-GREEN")
+    for field in ("cost_schedule_id", "cost_schedule_sha256"):
+        config[field] = cost_config[field]
     event_time = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
-    previous = Bar(
-        datetime.fromisoformat("1999-12-31T23:59:00+00:00"),
-        100.0,
-        100.0,
-        100.0,
-        100.0,
-        0.0,
-        1,
+    event_bar = replace(bars[2], timestamp=event_time)
+    runner = Runner(config)
+    runner.signal_producer = _StaticSignals(
+        [
+            RawSignal(False, False, "none", direction=0, line=100.0),
+            RawSignal(True, False, "same_timestamp_entry", direction=1, line=100.0),
+        ]
     )
-    current = Bar(event_time, 100.0, 100.0, 100.0, 100.0, 0.0, 2)
+    runner.state.warmup_bars = 0
 
-    runner._apply_corrected_funding_between(previous, current)
+    runner.run([bars[1], event_bar])
 
-    assert runner.state.cumulative_funding == -0.1
+    assert runner.state.position is not None
     assert runner.state.funding_events[0].event_timestamp == event_time
-    assert runner.state.equity == 999.9
+    assert runner.state.funding_events[0].lifecycle_id == runner.state.position.lifecycle_id
+    funding_decision = next(
+        row for row in runner.state.decision_events if row.decision == "FUNDING_ELIGIBILITY"
+    )
+    assert dict(funding_decision.details)["eligible"] is True
+    assert runner.state.decision_events[-1] is funding_decision
 
 
 def test_w283r_r4_runner_refuses_ineligible_same_funding_pair() -> None:
