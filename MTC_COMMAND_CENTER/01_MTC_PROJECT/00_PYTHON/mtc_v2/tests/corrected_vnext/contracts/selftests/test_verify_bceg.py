@@ -378,11 +378,18 @@ def sealed_producer_fixture(
     seal = hashlib.sha256(
         "\n".join(sorted(seal_lines)).encode("utf-8")
     ).hexdigest()
+    design_path = root / "design.md"
+    design_path.write_bytes(b"Design pin\nSecond line\n")
     (contracts / "CONTRACT_TABLES_MANIFEST.json").write_bytes(
         verify_bceg.canonical_json_bytes(
             {
                 "schema": "P012_CONTRACT_TABLES_MANIFEST_V1",
                 "files": manifest_members,
+                "design": {
+                    "file": str(design_path),
+                    "sha256": verify_bceg.sha256_file(design_path),
+                    "total_lines": 2,
+                },
                 "seal": {"EXPECTED_SEAL_SHA": seal},
             }
         )
@@ -501,6 +508,20 @@ def test_sealed_producer_validation_accepts_manifest_recorded_current_seal(
     )
     identities = verify_bceg.validate_sealed_producers(root, baseline_root)
     assert identities["expected_seal_sha256"] == current_seal
+
+
+def test_sealed_producer_validation_refuses_one_byte_changed_design_copy(
+    tmp_path: Path,
+) -> None:
+    root, baseline_root, _current_seal, _member_path = sealed_producer_fixture(
+        tmp_path
+    )
+    (root / "design.md").write_bytes(b"Design qin\nSecond line\n")
+
+    refusal(
+        "DESIGN_PIN_MISMATCH",
+        lambda: verify_bceg.validate_sealed_producers(root, baseline_root),
+    )
 
 
 def test_sealed_producer_validation_refuses_modified_copy_with_stale_recorded_seal(

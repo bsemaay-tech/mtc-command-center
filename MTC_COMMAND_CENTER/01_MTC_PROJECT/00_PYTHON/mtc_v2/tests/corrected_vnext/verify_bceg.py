@@ -213,7 +213,7 @@ def _require_nonempty_line(value: Any, member: str) -> str:
 def measure_semantic_review_identities(
     root: Path,
     baseline_root: Path,
-    sealed_identities: dict[str, str],
+    sealed_identities: dict[str, Any],
 ) -> dict[str, str]:
     try:
         prefix = subprocess.check_output(
@@ -1812,7 +1812,7 @@ class Corpus:
     baseline_root: Path
     catalog: list[dict[str, Any]]
     blockers: tuple[dict[str, Any], ...]
-    identities: dict[str, str]
+    identities: dict[str, Any]
 
 
 def validate_expected_source_provenance(
@@ -1930,12 +1930,56 @@ def validate_expected_source_provenance(
     }
 
 
-def validate_sealed_producers(root: Path, baseline_root: Path) -> dict[str, str]:
+def validate_design_pin(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Measure the exact design bytes named by the contract manifest."""
+
+    design = manifest.get("design")
+    if type(design) is not dict:
+        raise GateRefusal("DESIGN_PIN_MISMATCH", "manifest.design is not an object")
+    design_file = design.get("file")
+    recorded_sha = design.get("sha256")
+    recorded_lines = design.get("total_lines")
+    if (
+        type(design_file) is not str
+        or not design_file
+        or type(recorded_sha) is not str
+        or SHA256_RE.fullmatch(recorded_sha) is None
+        or type(recorded_lines) is not int
+        or type(recorded_lines) is bool
+        or recorded_lines < 1
+    ):
+        raise GateRefusal("DESIGN_PIN_MISMATCH", "invalid manifest.design pin")
+    design_path = Path(design_file)
+    try:
+        raw = design_path.read_bytes()
+    except OSError as exc:
+        raise GateRefusal("DESIGN_PIN_MISMATCH", str(design_path)) from exc
+    actual_sha = hashlib.sha256(raw).hexdigest()
+    actual_lines = len(raw.splitlines())
+    if actual_sha != recorded_sha or actual_lines != recorded_lines:
+        raise GateRefusal(
+            "DESIGN_PIN_MISMATCH",
+            (
+                f"{design_path}: recorded_sha256={recorded_sha}, "
+                f"actual_sha256={actual_sha}, recorded_total_lines={recorded_lines}, "
+                f"actual_total_lines={actual_lines}"
+            ),
+            pointer="/design",
+        )
+    return {
+        "file": str(design_path),
+        "sha256": actual_sha,
+        "total_lines": actual_lines,
+    }
+
+
+def validate_sealed_producers(root: Path, baseline_root: Path) -> dict[str, Any]:
     contracts = root / "tests/corrected_vnext/contracts"
     manifest_path = contracts / "CONTRACT_TABLES_MANIFEST.json"
     manifest = load_json_exact(manifest_path)
     if manifest.get("schema") != "P012_CONTRACT_TABLES_MANIFEST_V1" or len(manifest.get("files", [])) != 19:
         raise GateRefusal("EXPECTED_MANIFEST_INVALID", "expected 19-member contract manifest")
+    design_pin = validate_design_pin(manifest)
     seal_lines: list[str] = []
     for member in manifest["files"]:
         relative = member.get("path")
@@ -1988,6 +2032,9 @@ def validate_sealed_producers(root: Path, baseline_root: Path) -> dict[str, str]
         "catalog_sha256": catalog_digest,
         "baseline_driver_sha256": driver_digest,
         "implementation_anchor_sha256": sidecar,
+        "design_file": design_pin["file"],
+        "design_file_sha256": design_pin["sha256"],
+        "design_total_lines": design_pin["total_lines"],
     }
 
 

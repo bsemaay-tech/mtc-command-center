@@ -12,11 +12,11 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.11 (W261 amendment-choice: probe first-changed-node rule; measured by re-seal #10)",
-  "sha256": "2d8d0e38c5c9b426abfab50ca647a58fd4312d1cae7864aa9cb991d269bda99a",
-  "total_lines": 1404,
+  "version": "v1.12 (W266 amendment-choice: trade-row quantity; measured by re-seal #11)",
+  "sha256": "1f506c923c700df3a2a757ab3d49efabcd4d06bf39c251f8965c55bc10de8b75",
+  "total_lines": 1419,
   "line_span_used": "whole file",
-  "heading_line_map_measured_at_reseal10": {
+  "heading_line_map_measured_at_reseal11": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
    "Prior versions": 18,
    "1. Authority, claim, and design posture": 24,
@@ -72,12 +72,83 @@
    "23.2 Equity-curve observation-window rule (G76-04 / V15-D02)": 1102,
    "23.3 Closed `fill_events` and `exit_events` member sets (G76-06 / D-13)": 1121,
    "23.4 Closed `RESULT_SURFACE`, guards, and refusal objects (G76-05c/07/08 / D-13)": 1163,
-   "23.5 TABLES REVISION SCOPE and expected KERNEL DELTA": 1234,
-   "23.6 v1.8 change log — terminal micro-fold": 1328,
-   "23.7 v1.8 closed enumeration summary": 1352,
-   "23.8 v1.9 change log - owner addendum 28, decision 67": 1374,
-   "23.9 v1.10 change log - owner addendum 29, decisions 71-72": 1380,
-   "23.10 v1.11 change log - probe first-changed-node rule (AMENDMENT-CHOICE, W261)": 1394
+   "23.5 TABLES REVISION SCOPE and expected KERNEL DELTA": 1236,
+   "23.6 v1.8 change log — terminal micro-fold": 1333,
+   "23.7 v1.8 closed enumeration summary": 1357,
+   "23.8 v1.9 change log - owner addendum 28, decision 67": 1379,
+   "23.9 v1.10 change log - owner addendum 29, decisions 71-72": 1385,
+   "23.10 v1.11 change log - probe first-changed-node rule (AMENDMENT-CHOICE, W261)": 1399,
+   "23.11 v1.12 change log - trade-row quantity (AMENDMENT-CHOICE, W266)": 1411
+  },
+  "superseded_pin_v1_11_at_reseal10": {
+   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+   "version": "v1.11 (W261 amendment-choice: probe first-changed-node rule; measured by re-seal #10)",
+   "sha256": "2d8d0e38c5c9b426abfab50ca647a58fd4312d1cae7864aa9cb991d269bda99a",
+   "total_lines": 1404,
+   "line_span_used": "whole file",
+   "heading_line_map_measured_at_reseal10": {
+    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
+    "Prior versions": 18,
+    "1. Authority, claim, and design posture": 24,
+    "2. Deep module and seam": 35,
+    "2.1 Interface": 55,
+    "2.2 Two real adapters": 85,
+    "3. Exact ordering for `2.0.0`": 92,
+    "4. Versioning and addressability": 115,
+    "5. Immutable economic records and provenance": 129,
+    "5.1 Record byte identity": 133,
+    "5.2 `InstrumentRecord`": 148,
+    "5.3 `CostSchedule`": 154,
+    "5.4 `FundingSchedule`": 158,
+    "6. Defect record contract": 162,
+    "7. DEF-P012-01 - contract multiplier in sizing": 190,
+    "Legacy behavior": 406,
+    "Corrected semantic": 410,
+    "RULE 2 and expected delta": 441,
+    "8. DEF-P012-02 - real minimum-notional admission": 229,
+    "9. DEF-P012-03 - frozen instrument metadata": 254,
+    "10. DEF-P012-04 - gap-aware protective stops; continuous activation owner-gated": 278,
+    "11. DEF-P012-05 - in-path slippage, applied exactly once": 306,
+    "12. DEF-P012-06 - named same-bar collision policy": 334,
+    "Corrected semantic and tie-break table": 340,
+    "13. DEF-P012-07 - provenanced real fee schedule": 363,
+    "14. DEF-P012-08 - per-interval funding and `funding_events`": 404,
+    "15. Bounded Correction Evidence Gate (`BCEG-1`)": 449,
+    "15.1 Producers": 453,
+    "15.2 Scenario enumeration": 464,
+    "15.3 Two comparison surfaces": 501,
+    "15.4 Comparisons and inputs that make them fail": 547,
+    "15.5 Receipt and exact gate claim": 575,
+    "15.6 v1.5 input-embedding computability note": 592,
+    "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 620,
+    "17. Honest limits": 633,
+    "18. Build-lane work breakdown and shape census": 646,
+    "19. Single consolidated `[OPEN — owner-gated]` ledger": 669,
+    "20. Defect-class prevention table": 686,
+    "21. Required build preconditions and non-goals": 697,
+    "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 709,
+    "22. v1.5 input-embedding addendum": 717,
+    "22.1 Classification and canonical input envelope": 725,
+    "22.2 Shared mechanical bindings": 766,
+    "22.3 Shared synthetic record bindings": 788,
+    "22.4 Per-scenario LEGACY embeddings: RULE2-01 through RULE2-03": 881,
+    "22.5 Per-scenario LEGACY embeddings: RULE2-04 through RULE2-06": 898,
+    "22.6 Per-scenario LEGACY embeddings: RULE2-07 and RULE2-08": 923,
+    "22.7 RULE2-01-GREEN NaN wire contract": 937,
+    "22.8 Honest `[OPEN-EMBED]` refusals": 959,
+    "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 973,
+    "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1010,
+    "23.1 `decision_events` closed shape and reason vocabulary (G76-09 / D-11)": 1034,
+    "23.2 Equity-curve observation-window rule (G76-04 / V15-D02)": 1102,
+    "23.3 Closed `fill_events` and `exit_events` member sets (G76-06 / D-13)": 1121,
+    "23.4 Closed `RESULT_SURFACE`, guards, and refusal objects (G76-05c/07/08 / D-13)": 1163,
+    "23.5 TABLES REVISION SCOPE and expected KERNEL DELTA": 1234,
+    "23.6 v1.8 change log — terminal micro-fold": 1328,
+    "23.7 v1.8 closed enumeration summary": 1352,
+    "23.8 v1.9 change log - owner addendum 28, decision 67": 1374,
+    "23.9 v1.10 change log - owner addendum 29, decisions 71-72": 1380,
+    "23.10 v1.11 change log - probe first-changed-node rule (AMENDMENT-CHOICE, W261)": 1394
+   }
   },
   "superseded_pin_v1_10_at_reseal8": {
    "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
@@ -669,6 +740,13 @@
     }
    },
    "independently_verified": "design v1.11: DS93 (OpenCode) CLEAN, ENGINEERING classification CONFIRMED, rule strictly superset on the node dimension - C:/tmp/LANE_PROMPTS_20260828/DETECT_DS93_V111.md; W262 probe rows: GM77 (Gemini) CLEAN, 31 changed pointers all inside the ten PROBE rows, RED/GREEN rows byte-identical, DERIVATIONS insertion-only - C:/tmp/LANE_PROMPTS_20260828/DETECT_GM77_W262.md; probe digests: Lead recomputation from worktree bytes == W256 table == committed modified_tree_manifest.json, 10/10"
+  },
+  {
+   "revision": "design v1.12 trade-row quantity amendment-choice (W266), 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W266_TRADE_QUANTITY_RULE.md",
+   "report": "C:\\tmp\\LANE_PROMPTS_20260828\\W266_TRADE_QUANTITY_REPORT.md",
+   "effect": "design pin only; no golden, catalog, input or derivation byte moved; no economic value moved",
+   "independently_verified": "DS95 (OpenCode, different family): Verdict CLEAN (0 findings), Classification ENGINEERING CONFIRMED - C:/tmp/LANE_PROMPTS_20260828/DETECT_DS95_V112.md"
   }
  ],
  "seal_state": {
@@ -685,7 +763,7 @@
  "seal": {
   "EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
   "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "set_by": "Lead re-seal act #10 2026-09-02T14:13:22+03:00"
+  "set_by": "Lead re-seal act #11 2026-09-02T14:43:01+03:00 (design pin only; files[] and EXPECTED_SEAL_SHA unchanged from re-seal #10)"
  },
  "reseal_history": [
   {
@@ -941,6 +1019,15 @@
     "PROBE-P012-08-A"
    ],
    "design_pin": "v1.11",
+   "everything_else_verified_byte_identical": true
+  },
+  {
+   "at": "2026-09-02T14:43:01+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #11",
+   "old_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "new_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "files_changed": [],
+   "design_pin": "v1.12",
    "everything_else_verified_byte_identical": true
   }
  ],
