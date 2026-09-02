@@ -627,3 +627,10 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     sheets again, so the owner is asked once, after re-seal #8, whether to re-generate the reference
     results or let the frozen ones stand. That is a decision to execute a run and is his alone.
     Until then the refusal stands: no skip flag, no manifest edit, no baseline clearing.
+
+73. **EXECUTION AUTHORIZED FOR DECISIONS 71-72** (owner: "Yes, authorize" / "Yes, run after re-seal
+    #8"). Authorises, in the build worktree only: design v1.9 -> v1.10 amendment closing the trade-row
+    member set and the receipt order; the tables family re-deriving the four goldens named in 71 and
+    72 under protected scope `MTC_V2`; Lead re-seal #8; and one gate rerun after that seal. It does
+    not authorise a kernel edit, a repository master change, clearing the canonical gate's baseline
+    refusal, or regenerating the frozen reference results (Q3, still held).
