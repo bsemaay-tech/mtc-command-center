@@ -15,9 +15,13 @@ import base64
 import hashlib
 import json
 import math
+import os
 import re
+import shutil
 import struct
+import subprocess
 import sys
+import tempfile
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime
@@ -142,6 +146,28 @@ def canonical_json_bytes(value: Any) -> bytes:
     except (TypeError, ValueError) as exc:
         raise GateRefusal("OBSERVED_SERIALIZATION_INVALID", str(exc)) from exc
     return (encoded + "\n").encode("utf-8")
+
+
+def canonical_tree_manifest(root: Path) -> tuple[dict[str, Any], bytes]:
+    """Enumerate a regular-file tree using the probe digest contract."""
+
+    if not root.is_dir() or root.is_symlink():
+        raise GateRefusal("PROBE_MODIFIED_COPY_INVALID", str(root))
+    files: list[dict[str, str]] = []
+    members = sorted(root.rglob("*"), key=lambda path: path.relative_to(root).as_posix().encode("utf-8"))
+    for path in members:
+        relative = path.relative_to(root).as_posix()
+        if path.is_symlink():
+            raise GateRefusal("PROBE_TREE_SYMLINK", relative)
+        if path.is_file():
+            files.append({"path": relative, "sha256": sha256_file(path)})
+        elif not path.is_dir():
+            raise GateRefusal("PROBE_TREE_MEMBER_TYPE_INVALID", relative)
+    manifest = {
+        "digest_method": "SHA256_CANONICAL_TREE_MANIFEST_V1",
+        "files": files,
+    }
+    return manifest, canonical_json_bytes(manifest)
 
 
 def _escape_pointer(value: str) -> str:
@@ -581,7 +607,12 @@ def _normalize_exit_surface(surfaces: dict[str, dict[str, Any]]) -> None:
             row["reason"] = str(row["exit_id"]).lower()
 
 
-def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any]:
+def execute_corrected_scenario(
+    root: Path,
+    row: dict[str, Any],
+    *,
+    record_root: Path | None = None,
+) -> dict[str, Any]:
     """Execute one sealed input through the real corrected runner/economics seam."""
 
     scenario_id = row["scenario_id"]
@@ -595,7 +626,10 @@ def execute_corrected_scenario(root: Path, row: dict[str, Any]) -> dict[str, Any
         execution_profile_id=row["execution_profile_id"],
     )
     resolve_semantics_id("2.0.0")
-    records = resolve_record_references(root, document["corrected_only"]["records"])
+    records = resolve_record_references(
+        root if record_root is None else record_root,
+        document["corrected_only"]["records"],
+    )
     legacy = document["legacy_arm"]
     corrected = document["corrected_only"]
     config: dict[str, Any] = {
@@ -1087,12 +1121,6 @@ def validate_catalog(root: Path, baseline_root: Path) -> Corpus:
                 if type(row[path_key]) is not str or type(row[digest_key]) is not str:
                     raise GateRefusal("CATALOG_PROBE_REF_INVALID", scenario_id)
                 _safe_relative_path(root, row[path_key], PurePosixPath("tests/corrected_vnext/probes"))
-                if row[digest_key] == "BLOCKED-BUILD-ARTIFACT":
-                    blockers.append({
-                        "check_id": "PROBE_ARTIFACT_NOT_MATERIALIZED",
-                        "scenario_id": scenario_id,
-                        "member": member,
-                    })
     expected_ids = set(EXPECTED_SCENARIO_IDS)
     red_green_ids = {row["scenario_id"] for row in catalog if row["role"] in {"RED", "GREEN"}}
     if red_green_ids != expected_ids or roles != {"RED": 9, "GREEN": 8, "PROBE": 10}:
@@ -1101,6 +1129,797 @@ def validate_catalog(root: Path, baseline_root: Path) -> Corpus:
     if golden_files != expected_paths:
         raise GateRefusal("EXPECTED_ROOT_CONSERVATION_INVALID", "golden root differs from catalog")
     return Corpus(root=root, baseline_root=baseline_root, catalog=catalog, blockers=tuple(blockers), identities=identities)
+
+
+def _git_base_tree(
+    root: Path, base_path: str
+) -> tuple[str, Path, dict[str, str]]:
+    try:
+        prefix = subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", "--show-prefix"],
+            text=True,
+            stderr=subprocess.STDOUT,
+        ).strip().replace("\\", "/")
+        git_path = f"{prefix}{base_path}".strip("/")
+        tree_oid = subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", f"HEAD:{git_path}"],
+            text=True,
+            stderr=subprocess.STDOUT,
+        ).strip()
+        encoded_paths = subprocess.check_output(
+            [
+                "git",
+                "-C",
+                str(root),
+                "ls-tree",
+                "-r",
+                "-z",
+                "--full-tree",
+                "--name-only",
+                tree_oid,
+            ],
+            stderr=subprocess.STDOUT,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise GateRefusal("PROBE_BASE_TREE_UNAVAILABLE", str(exc)) from exc
+    base_root = root.joinpath(*PurePosixPath(base_path).parts)
+    relative_paths: list[str] = []
+    for encoded in encoded_paths.split(b"\0"):
+        if not encoded:
+            continue
+        relative_paths.append(encoded.decode("utf-8"))
+    members: dict[str, str] = {}
+    for relative in relative_paths:
+        path = base_root.joinpath(*PurePosixPath(relative).parts)
+        if not path.is_file() or path.is_symlink():
+            raise GateRefusal("PROBE_BASE_TREE_MEMBER_MISSING", relative)
+        members[relative] = sha256_file(path)
+    return tree_oid, base_root, members
+
+
+def _tree_manifest_members(manifest: Any) -> dict[str, str]:
+    if (
+        type(manifest) is not dict
+        or set(manifest) != {"digest_method", "files"}
+        or manifest.get("digest_method") != "SHA256_CANONICAL_TREE_MANIFEST_V1"
+        or type(manifest.get("files")) is not list
+    ):
+        raise GateRefusal("PROBE_TREE_MANIFEST_INVALID", "closed schema mismatch")
+    paths: list[str] = []
+    members: dict[str, str] = {}
+    for member in manifest["files"]:
+        if type(member) is not dict or set(member) != {"path", "sha256"}:
+            raise GateRefusal("PROBE_TREE_MANIFEST_MEMBER_INVALID", str(member))
+        relative = member["path"]
+        digest = member["sha256"]
+        value = PurePosixPath(str(relative))
+        if (
+            type(relative) is not str
+            or value.is_absolute()
+            or ".." in value.parts
+            or type(digest) is not str
+            or SHA256_RE.fullmatch(digest) is None
+            or relative in members
+        ):
+            raise GateRefusal("PROBE_TREE_MANIFEST_MEMBER_INVALID", str(relative))
+        paths.append(relative)
+        members[relative] = digest
+    if paths != sorted(paths, key=lambda item: item.encode("utf-8")):
+        raise GateRefusal("PROBE_TREE_MANIFEST_ORDER_INVALID", "members are not UTF-8 sorted")
+    return members
+
+
+def _copy_members(source: Path, destination: Path, members: Iterable[str]) -> None:
+    for relative in members:
+        source_path = source.joinpath(*PurePosixPath(relative).parts)
+        destination_path = destination.joinpath(*PurePosixPath(relative).parts)
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_path, destination_path)
+
+
+def _validate_probe_artifact(
+    root: Path,
+    row: dict[str, Any],
+    base_row: dict[str, Any],
+) -> dict[str, Any]:
+    probe_id = row["probe_id"]
+    case_root = root / "tests/corrected_vnext/probes" / probe_id
+    modified_copy = _safe_relative_path(
+        root,
+        row["modified_copy_path"],
+        PurePosixPath("tests/corrected_vnext/probes"),
+    )
+    manifest_path = _safe_relative_path(
+        root,
+        row["modification_manifest_path"],
+        PurePosixPath("tests/corrected_vnext/probes"),
+    )
+    if not modified_copy.is_dir() or modified_copy.is_symlink():
+        raise GateRefusal(
+            "PROBE_ARTIFACT_NOT_MATERIALIZED", probe_id, pointer="modified_copy"
+        )
+    if not manifest_path.is_file() or manifest_path.is_symlink():
+        raise GateRefusal(
+            "PROBE_ARTIFACT_NOT_MATERIALIZED",
+            probe_id,
+            pointer="modification_manifest",
+        )
+    expected_case = case_root.resolve()
+    if modified_copy.resolve().parent != expected_case or manifest_path.resolve().parent != expected_case:
+        raise GateRefusal("PROBE_ARTIFACT_CASE_PATH_INVALID", probe_id)
+
+    manifest = load_json_exact(manifest_path)
+    required_manifest = {
+        "schema",
+        "probe_id",
+        "target_kind",
+        "base_tree_oid",
+        "base_path",
+        "modified_copy_path",
+        "modified_copy_digest",
+        "digest_method",
+        "modified_tree_manifest_path",
+        "modified_tree_manifest_sha256",
+        "modifications",
+        "expected_failed_check",
+        "expected_first_changed_node",
+    }
+    if type(manifest) is not dict or set(manifest) != required_manifest:
+        raise GateRefusal("PROBE_MODIFICATION_MANIFEST_INVALID", probe_id)
+    if (
+        manifest["schema"] != "P012_PROBE_MODIFICATION_MANIFEST_V1"
+        or manifest["probe_id"] != probe_id
+        or manifest["target_kind"] != row["target_kind"]
+        or manifest["modified_copy_path"] != row["modified_copy_path"]
+        or manifest["expected_failed_check"] != row["expected_failed_check"]
+        or manifest["expected_first_changed_node"]
+        != row["expected_first_changed_node"]
+        or type(manifest["modifications"]) is not list
+        or len(manifest["modifications"]) != 1
+    ):
+        raise GateRefusal("PROBE_MODIFICATION_MANIFEST_BINDING_INVALID", probe_id)
+    digest_method = manifest["digest_method"]
+    if (
+        type(digest_method) is not dict
+        or digest_method.get("name") != "SHA256_CANONICAL_TREE_MANIFEST_V1"
+    ):
+        raise GateRefusal("PROBE_DIGEST_METHOD_INVALID", probe_id)
+
+    tree_manifest_path = _safe_relative_path(
+        root,
+        manifest["modified_tree_manifest_path"],
+        PurePosixPath("tests/corrected_vnext/probes"),
+    )
+    if tree_manifest_path.resolve().parent != expected_case:
+        raise GateRefusal("PROBE_TREE_MANIFEST_PATH_INVALID", probe_id)
+    stored_tree_manifest = load_json_exact(tree_manifest_path)
+    if canonical_json_bytes(stored_tree_manifest) != tree_manifest_path.read_bytes():
+        raise GateRefusal("PROBE_TREE_MANIFEST_NOT_CANONICAL", probe_id)
+    stored_members = _tree_manifest_members(stored_tree_manifest)
+    computed_tree_manifest, computed_tree_bytes = canonical_tree_manifest(modified_copy)
+    computed_members = _tree_manifest_members(computed_tree_manifest)
+    computed_tree_digest = hashlib.sha256(computed_tree_bytes).hexdigest()
+    if stored_members != computed_members or stored_tree_manifest != computed_tree_manifest:
+        raise GateRefusal("PROBE_MODIFIED_COPY_DIGEST_MISMATCH", probe_id)
+    if (
+        manifest["modified_tree_manifest_sha256"] != computed_tree_digest
+        or manifest["modified_copy_digest"] != computed_tree_digest
+        or sha256_file(tree_manifest_path) != computed_tree_digest
+    ):
+        raise GateRefusal("PROBE_MODIFIED_COPY_DIGEST_MISMATCH", probe_id)
+
+    manifest_digest = sha256_file(manifest_path)
+    copy_pin = row["modified_copy_digest"]
+    manifest_pin = row["modification_manifest_digest"]
+    marker = "BLOCKED-BUILD-ARTIFACT"
+    if (copy_pin == marker) != (manifest_pin == marker):
+        raise GateRefusal("PROBE_DIGEST_PIN_STATE_INVALID", probe_id)
+    pinned = copy_pin != marker
+    if pinned:
+        if (
+            SHA256_RE.fullmatch(copy_pin) is None
+            or SHA256_RE.fullmatch(manifest_pin) is None
+            or copy_pin != computed_tree_digest
+            or manifest_pin != manifest_digest
+        ):
+            raise GateRefusal("PROBE_CATALOG_DIGEST_MISMATCH", probe_id)
+
+    target_kind = row["target_kind"]
+    if target_kind == "KERNEL":
+        expected_base_path = "core"
+        expected_operation = "KERNEL_FILE_PATCH"
+    elif target_kind == "INPUT" and probe_id == "PROBE-P012-03-A":
+        expected_base_path = "core/economic_records/instruments"
+        expected_operation = "INPUT_FILE_PATCH"
+    else:
+        raise GateRefusal("PROBE_TARGET_KIND_UNSUPPORTED", str(target_kind))
+    if manifest["base_path"] != expected_base_path:
+        raise GateRefusal("PROBE_BASE_PATH_INVALID", probe_id)
+    tree_oid, base_root, base_members = _git_base_tree(root, expected_base_path)
+    if manifest["base_tree_oid"] != tree_oid:
+        raise GateRefusal("PROBE_BASE_TREE_OID_MISMATCH", probe_id)
+
+    modification = manifest["modifications"][0]
+    if type(modification) is not dict or modification.get("operation") != expected_operation:
+        raise GateRefusal("PROBE_MODIFICATION_OPERATION_INVALID", probe_id)
+    changed_file = modification.get("file")
+    if type(changed_file) is not str:
+        raise GateRefusal("PROBE_MODIFICATION_FILE_INVALID", probe_id)
+    patch_path = _safe_relative_path(
+        root,
+        modification.get("patch_path", ""),
+        PurePosixPath("tests/corrected_vnext/probes"),
+    )
+    if (
+        not patch_path.is_file()
+        or patch_path.is_symlink()
+        or patch_path.resolve().parent != expected_case
+        or modification.get("patch_sha256") != sha256_file(patch_path)
+    ):
+        raise GateRefusal("PROBE_PATCH_DIGEST_MISMATCH", probe_id)
+
+    if target_kind == "KERNEL":
+        if set(computed_members) != set(base_members):
+            raise GateRefusal("PROBE_KERNEL_MEMBER_SET_MISMATCH", probe_id)
+        changed = [
+            relative
+            for relative in base_members
+            if base_members[relative] != computed_members[relative]
+        ]
+        if changed != [changed_file]:
+            raise GateRefusal("PROBE_KERNEL_DIFF_INVALID", f"{probe_id}:{changed}")
+        required_modification = {
+            "operation",
+            "file",
+            "before_sha256",
+            "after_sha256",
+            "patch_path",
+            "patch_sha256",
+            "before_hunk",
+            "after_hunk",
+        }
+        if set(modification) != required_modification:
+            raise GateRefusal("PROBE_MODIFICATION_SCHEMA_INVALID", probe_id)
+        before_bytes = (base_root / changed_file).read_bytes()
+        after_bytes = modified_copy.joinpath(*PurePosixPath(changed_file).parts).read_bytes()
+        before_hunk = modification["before_hunk"].encode("utf-8")
+        after_hunk = modification["after_hunk"].encode("utf-8")
+        if (
+            before_bytes.count(before_hunk) < 1
+            or after_bytes.count(after_hunk) < 1
+        ):
+            raise GateRefusal("PROBE_KERNEL_HUNK_INVALID", probe_id)
+    else:
+        input_document = load_json_exact(root / base_row["input"]["path"])
+        record_id = input_document["corrected_only"]["records"]["instrument_record_id"]
+        expected_files = {f"{record_id}.json", f"{record_id}.json.sha256"}
+        if set(computed_members) != expected_files or changed_file != f"{record_id}.json":
+            raise GateRefusal("PROBE_INPUT_MEMBER_SET_MISMATCH", probe_id)
+        required_modification = {
+            "operation",
+            "file",
+            "before_sha256",
+            "after_sha256",
+            "patch_path",
+            "patch_sha256",
+            "byte_offset",
+            "before_bytes_hex",
+            "after_bytes_hex",
+        }
+        if set(modification) != required_modification:
+            raise GateRefusal("PROBE_MODIFICATION_SCHEMA_INVALID", probe_id)
+        sidecar = f"{record_id}.json.sha256"
+        if computed_members[sidecar] != base_members[sidecar]:
+            raise GateRefusal("PROBE_INPUT_DIGEST_SIDECAR_CHANGED", probe_id)
+        before_bytes = (base_root / changed_file).read_bytes()
+        after_bytes = (modified_copy / changed_file).read_bytes()
+        offset = modification["byte_offset"]
+        differences = [
+            index
+            for index, (before, after) in enumerate(zip(before_bytes, after_bytes, strict=True))
+            if before != after
+        ]
+        if (
+            type(offset) is not int
+            or differences != [offset]
+            or before_bytes[offset : offset + 1].hex()
+            != modification["before_bytes_hex"]
+            or after_bytes[offset : offset + 1].hex()
+            != modification["after_bytes_hex"]
+        ):
+            raise GateRefusal("PROBE_INPUT_BYTE_PATCH_INVALID", probe_id)
+
+    if (
+        modification["before_sha256"] != base_members[changed_file]
+        or modification["after_sha256"] != computed_members[changed_file]
+        or patch_path.read_bytes().count(b"\n@@ ") != 1
+    ):
+        raise GateRefusal("PROBE_MODIFICATION_FILE_DIGEST_MISMATCH", probe_id)
+
+    with tempfile.TemporaryDirectory(prefix=f"w256-{probe_id}-patch-") as temporary:
+        patched_root = Path(temporary) / "patched"
+        patched_root.mkdir()
+        patch_members = computed_members if target_kind == "INPUT" else base_members
+        _copy_members(base_root, patched_root, patch_members)
+        completed = subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.autocrlf=false",
+                "apply",
+                "--unidiff-zero",
+                str(patch_path),
+            ],
+            cwd=patched_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if completed.returncode != 0:
+            raise GateRefusal(
+                "PROBE_PATCH_APPLICATION_FAILED",
+                f"{probe_id}:{completed.stderr.strip()}",
+            )
+        patched_manifest, _ = canonical_tree_manifest(patched_root)
+        if patched_manifest != computed_tree_manifest:
+            raise GateRefusal("PROBE_PATCH_RESULT_MISMATCH", probe_id)
+
+    return {
+        "variant_root": modified_copy,
+        "tree_manifest": computed_tree_manifest,
+        "modified_copy_digest": computed_tree_digest,
+        "modification_manifest_digest": manifest_digest,
+        "pinned": pinned,
+    }
+
+
+def _probe_catalog_rows(
+    root: Path, probe_id: str
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    catalog = load_json_exact(
+        root / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    if type(catalog) is not list:
+        raise GateRefusal("CATALOG_ROOT_INVALID", "catalog root is not an array")
+    probe_rows = [
+        row
+        for row in catalog
+        if type(row) is dict
+        and row.get("role") == "PROBE"
+        and row.get("probe_id") == probe_id
+    ]
+    if len(probe_rows) != 1:
+        raise GateRefusal("CATALOG_PROBE_BINDING_INVALID", probe_id)
+    probe_row = probe_rows[0]
+    base_rows = [
+        row
+        for row in catalog
+        if type(row) is dict
+        and row.get("scenario_id") == probe_row.get("base_scenario_id")
+        and row.get("role") in {"RED", "GREEN"}
+    ]
+    if len(base_rows) != 1:
+        raise GateRefusal("CATALOG_PROBE_BASE_INVALID", probe_id)
+    base_row = base_rows[0]
+    if base_row.get("execution_profile_id") != probe_row.get("execution_profile_id"):
+        raise GateRefusal("CATALOG_PROBE_PROFILE_MISMATCH", probe_id)
+    input_path = _safe_relative_path(
+        root,
+        base_row["input"]["path"],
+        PurePosixPath("tests/corrected_vnext/contracts/inputs"),
+    )
+    input_document = load_json_exact(input_path)
+    validate_input_envelope(
+        input_document,
+        path=input_path,
+        expected_digest=base_row["input"]["digest"],
+        scenario_id=base_row["scenario_id"],
+        execution_profile_id=base_row["execution_profile_id"],
+    )
+    expected = base_row["expected_artifacts"]["2.0.0"]
+    expected_path = _safe_relative_path(
+        root, expected["path"], PurePosixPath("golden/corrected_vnext")
+    )
+    if sha256_file(expected_path) != expected["digest"]:
+        raise GateRefusal("EXPECTED_DIGEST_MISMATCH", base_row["scenario_id"])
+    return probe_row, base_row
+
+
+def _attest_kernel_imports(import_root: Path, tree_manifest: dict[str, Any]) -> None:
+    package_root = (import_root / "mtc_v2").resolve()
+    core_root = (package_root / "core").resolve()
+    mtc_package = sys.modules.get("mtc_v2")
+    package_paths = [] if mtc_package is None else list(getattr(mtc_package, "__path__", ()))
+    if [Path(path).resolve() for path in package_paths] != [package_root]:
+        raise GateRefusal("PROBE_IMPORT_ROOT_INVALID", str(package_paths))
+    expected = _tree_manifest_members(tree_manifest)
+    loaded = 0
+    for name, module in sorted(sys.modules.items()):
+        if name != "mtc_v2.core" and not name.startswith("mtc_v2.core."):
+            continue
+        file_value = getattr(module, "__file__", None)
+        if type(file_value) is not str:
+            raise GateRefusal("PROBE_KERNEL_MODULE_PATH_MISSING", name)
+        path = Path(file_value).resolve()
+        try:
+            relative = path.relative_to(core_root).as_posix()
+        except ValueError as exc:
+            raise GateRefusal("PROBE_KERNEL_MODULE_PATH_ESCAPE", f"{name}:{path}") from exc
+        if relative not in expected or sha256_file(path) != expected[relative]:
+            raise GateRefusal("PROBE_KERNEL_MODULE_DIGEST_MISMATCH", f"{name}:{relative}")
+        loaded += 1
+    if loaded == 0:
+        raise GateRefusal("PROBE_KERNEL_MODULE_SET_EMPTY", str(core_root))
+
+
+def _probe_failure_receipt(
+    probe_id: str,
+    check_id: str,
+    pointer: str | None,
+    *,
+    refusal: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    receipt: dict[str, Any] = {
+        "mode": "probe-child",
+        "probe_id": probe_id,
+        "claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+        "failed_check": check_id,
+        "first_changed_node": pointer,
+    }
+    if refusal is not None:
+        receipt["gate_refusal"] = refusal
+    return receipt
+
+
+def _green_projection_difference(
+    baseline_root: Path,
+    base_row: dict[str, Any],
+    input_document: dict[str, Any],
+    observed: dict[str, Any],
+) -> str | None:
+    scenario_id = base_row["scenario_id"]
+    legacy_result = load_json_exact(
+        baseline_root / "out" / scenario_id / "result_surface.json"
+    )
+    if scenario_id == "RULE2-02-GREEN":
+        legacy_admitted = _present(_legacy_position(legacy_result)["present"])
+        corrected_admitted = _present(
+            observed["RESULT_SURFACE"]["final_position"] is not None
+        )
+        if legacy_admitted != corrected_admitted:
+            return "/RESULT_SURFACE/admitted"
+    projections = build_projection_results(
+        scenario_id, input_document, legacy_result, observed
+    )
+    bad = [projection for projection in projections if not projection["equal"]]
+    return None if not bad else bad[0]["selector"]
+
+
+def _run_probe_child(
+    root: Path,
+    baseline_root: Path,
+    probe_id: str,
+    *,
+    variant_import_root: Path | None,
+    tree_manifest_path: Path | None,
+    record_root: Path | None,
+) -> dict[str, Any]:
+    probe_row, base_row = _probe_catalog_rows(root, probe_id)
+    if probe_row["target_kind"] == "KERNEL":
+        if variant_import_root is None or tree_manifest_path is None:
+            raise GateRefusal("PROBE_CHILD_VARIANT_MISSING", probe_id)
+        tree_manifest = load_json_exact(tree_manifest_path)
+        _attest_kernel_imports(variant_import_root, tree_manifest)
+    elif probe_row["target_kind"] == "INPUT":
+        if record_root is None:
+            raise GateRefusal("PROBE_CHILD_RECORD_ROOT_MISSING", probe_id)
+    else:
+        raise GateRefusal("PROBE_TARGET_KIND_UNSUPPORTED", probe_row["target_kind"])
+
+    input_document = load_json_exact(root / base_row["input"]["path"])
+    try:
+        observed = execute_corrected_scenario(
+            root,
+            base_row,
+            record_root=record_root,
+        )
+    except GateRefusal as exc:
+        record_checks = {
+            "RECORD_REFERENCE_INVALID",
+            "RECORD_REFERENCE_MISSING",
+            "RECORD_DIGEST_INVALID",
+            "RECORD_DIGEST_SIDECAR_MISSING",
+            "RECORD_DIGEST_MISMATCH",
+            "RECORD_IDENTITY_MISMATCH",
+        }
+        check_id = (
+            "RECORD_IDENTITY_PREFLIGHT" if exc.check_id in record_checks else exc.check_id
+        )
+        pointer = exc.pointer
+        if check_id == "RECORD_IDENTITY_PREFLIGHT" and pointer is None:
+            record_id = input_document["corrected_only"]["records"][
+                "instrument_record_id"
+            ]
+            pointer = f"core/economic_records/instruments/{record_id}.json"
+        return _probe_failure_receipt(
+            probe_id, check_id, pointer, refusal=exc.as_dict()
+        )
+
+    expected_check = probe_row["expected_failed_check"]
+    if expected_check == "CORRECTED_EXPECTATION":
+        golden = load_json_exact(
+            root / base_row["expected_artifacts"]["2.0.0"]["path"]
+        )
+        difference = compare_scoped_expected(golden, observed)
+        if difference is not None:
+            return _probe_failure_receipt(
+                probe_id, "CORRECTED_EXPECTATION", difference[0]
+            )
+    elif expected_check == "RULE2_GREEN_CROSS_VERSION_EXPECTATION":
+        difference = _green_projection_difference(
+            baseline_root, base_row, input_document, observed
+        )
+        if difference is not None:
+            return _probe_failure_receipt(
+                probe_id, "RULE2_GREEN_CROSS_VERSION_EXPECTATION", difference
+            )
+    elif expected_check != "RECORD_IDENTITY_PREFLIGHT":
+        raise GateRefusal("PROBE_EXPECTED_CHECK_UNSUPPORTED", str(expected_check))
+
+    return {
+        "mode": "probe-child",
+        "probe_id": probe_id,
+        "claim_label": "PROBE_BASE_SCENARIO_ACCEPTED",
+        "failed_check": None,
+        "first_changed_node": None,
+    }
+
+
+def drive_probe_variant_process(
+    root: Path,
+    baseline_root: Path,
+    probe_row: dict[str, Any],
+    variant_root: Path,
+    tree_manifest: dict[str, Any],
+) -> dict[str, Any]:
+    """Drive one isolated variant through this file's top-level entrypoint."""
+
+    probe_id = probe_row["probe_id"]
+    entrypoint = Path(__file__).resolve()
+    with tempfile.TemporaryDirectory(prefix=f"w256-{probe_id}-drive-") as temporary:
+        scratch = Path(temporary)
+        tree_manifest_path = scratch / "modified_tree_manifest.json"
+        tree_manifest_path.write_bytes(canonical_json_bytes(tree_manifest))
+        command = [
+            sys.executable,
+            str(entrypoint),
+            "--mode",
+            "probe-child",
+            "--root",
+            str(root),
+            "--baseline-root",
+            str(baseline_root),
+            "--probe-id",
+            probe_id,
+        ]
+        environment = os.environ.copy()
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        environment["PYTHONNOUSERSITE"] = "1"
+        if probe_row["target_kind"] == "KERNEL":
+            import_root = scratch / "import-root"
+            package_root = import_root / "mtc_v2"
+            package_root.mkdir(parents=True)
+            shutil.copy2(root / "__init__.py", package_root / "__init__.py")
+            shutil.copytree(variant_root, package_root / "core")
+            shutil.copytree(
+                root / "signals",
+                package_root / "signals",
+                ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+            )
+            command.extend(
+                [
+                    "--variant-import-root",
+                    str(import_root),
+                    "--tree-manifest",
+                    str(tree_manifest_path),
+                ]
+            )
+            environment["PYTHONPATH"] = str(import_root)
+        elif probe_row["target_kind"] == "INPUT":
+            record_package_root = scratch / "record-root"
+            shutil.copytree(
+                root / "core/economic_records",
+                record_package_root / "core/economic_records",
+                ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+            )
+            destination = record_package_root / "core/economic_records/instruments"
+            for member in tree_manifest["files"]:
+                relative = member["path"]
+                shutil.copy2(
+                    variant_root.joinpath(*PurePosixPath(relative).parts),
+                    destination.joinpath(*PurePosixPath(relative).parts),
+                )
+            command.extend(["--record-root", str(record_package_root)])
+            environment["PYTHONPATH"] = str(root.parent)
+        else:
+            raise GateRefusal(
+                "PROBE_TARGET_KIND_UNSUPPORTED", str(probe_row["target_kind"])
+            )
+        completed = subprocess.run(
+            command,
+            cwd=scratch,
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        try:
+            child = json.loads(completed.stdout)
+        except json.JSONDecodeError as exc:
+            raise GateRefusal(
+                "PROBE_CHILD_OUTPUT_INVALID",
+                f"{probe_id}:exit={completed.returncode}:stderr={completed.stderr.strip()}",
+            ) from exc
+    if (
+        type(child) is not dict
+        or child.get("mode") != "probe-child"
+        or child.get("probe_id") != probe_id
+        or completed.returncode not in {0, 2}
+    ):
+        raise GateRefusal(
+            "PROBE_CHILD_RECEIPT_INVALID", f"{probe_id}:exit={completed.returncode}"
+        )
+    measured_check = child.get("failed_check")
+    measured_node = child.get("first_changed_node")
+    detected = (
+        completed.returncode == 2
+        and child.get("claim_label") == "PROBE_BASE_SCENARIO_REFUSED"
+        and measured_check == probe_row["expected_failed_check"]
+        and measured_node == probe_row["expected_first_changed_node"]
+    )
+    return {
+        "probe_id": probe_id,
+        "base_scenario_id": probe_row["base_scenario_id"],
+        "entrypoint": str(entrypoint),
+        "expected_failed_check": probe_row["expected_failed_check"],
+        "expected_first_changed_node": probe_row["expected_first_changed_node"],
+        "measured_failed_check": measured_check,
+        "measured_first_changed_node": measured_node,
+        "measured_matches_expected": detected,
+        "status": "DETECTED" if detected else "NOT_DETECTED",
+        "child_returncode": completed.returncode,
+        "child_claim_label": child.get("claim_label"),
+    }
+
+
+def run_probe_suite(corpus: Corpus, probe_id: str | None = None) -> dict[str, Any]:
+    probes = [row for row in corpus.catalog if row["role"] == "PROBE"]
+    if probe_id is not None:
+        probes = [row for row in probes if row["probe_id"] == probe_id]
+        if len(probes) != 1:
+            raise GateRefusal("CATALOG_PROBE_BINDING_INVALID", probe_id)
+    base_rows = {
+        row["scenario_id"]: row
+        for row in corpus.catalog
+        if row["role"] in {"RED", "GREEN"}
+    }
+    receipts: list[dict[str, Any]] = []
+    blockers: list[dict[str, Any]] = []
+    for row in probes:
+        current_probe_id = row["probe_id"]
+        modified_copy = _safe_relative_path(
+            corpus.root,
+            row["modified_copy_path"],
+            PurePosixPath("tests/corrected_vnext/probes"),
+        )
+        modification_manifest = _safe_relative_path(
+            corpus.root,
+            row["modification_manifest_path"],
+            PurePosixPath("tests/corrected_vnext/probes"),
+        )
+        missing = []
+        if not modified_copy.is_dir():
+            missing.append("modified_copy")
+        if not modification_manifest.is_file():
+            missing.append("modification_manifest")
+        if missing:
+            receipts.append(
+                {
+                    "probe_id": current_probe_id,
+                    "status": "COULD_NOT_EVALUATE",
+                    "digest_status": "PROBE_ARTIFACT_NOT_MATERIALIZED",
+                    "missing_members": missing,
+                }
+            )
+            blockers.extend(
+                {
+                    "check_id": "PROBE_ARTIFACT_NOT_MATERIALIZED",
+                    "scenario_id": current_probe_id,
+                    "member": member,
+                }
+                for member in missing
+            )
+            continue
+        try:
+            base_row = base_rows[row["base_scenario_id"]]
+            artifact = _validate_probe_artifact(corpus.root, row, base_row)
+            receipt = drive_probe_variant_process(
+                corpus.root,
+                corpus.baseline_root,
+                row,
+                artifact["variant_root"],
+                artifact["tree_manifest"],
+            )
+        except (GateRefusal, KeyError) as exc:
+            refusal = (
+                exc.as_dict()
+                if isinstance(exc, GateRefusal)
+                else {"check_id": "PROBE_BASE_BINDING_INVALID", "detail": str(exc)}
+            )
+            receipts.append(
+                {
+                    "probe_id": current_probe_id,
+                    "status": "COULD_NOT_EVALUATE",
+                    "digest_status": "PROBE_ARTIFACT_INVALID",
+                    "refusal": refusal,
+                }
+            )
+            blockers.append(
+                {
+                    "check_id": "PROBE_COULD_NOT_EVALUATE",
+                    "scenario_id": current_probe_id,
+                    "detail": refusal,
+                }
+            )
+            continue
+        receipt["modified_copy_digest"] = artifact["modified_copy_digest"]
+        receipt["modification_manifest_digest"] = artifact[
+            "modification_manifest_digest"
+        ]
+        receipt["digest_status"] = (
+            "PROBE_DIGEST_MATCH" if artifact["pinned"] else "PROBE_DIGEST_UNPINNED"
+        )
+        receipts.append(receipt)
+        if receipt["status"] != "DETECTED":
+            blockers.append(
+                {
+                    "check_id": "PROBE_NOT_DETECTED",
+                    "scenario_id": current_probe_id,
+                    "measured_failed_check": receipt["measured_failed_check"],
+                    "measured_first_changed_node": receipt[
+                        "measured_first_changed_node"
+                    ],
+                }
+            )
+        if not artifact["pinned"]:
+            blockers.append(
+                {
+                    "check_id": "PROBE_DIGEST_UNPINNED",
+                    "scenario_id": current_probe_id,
+                    "modified_copy_digest": artifact["modified_copy_digest"],
+                    "modification_manifest_digest": artifact[
+                        "modification_manifest_digest"
+                    ],
+                }
+            )
+    return {"probes": receipts, "probe_blockers": blockers}
+
+
+def run_probe_mode(
+    root: Path, baseline_root: Path, probe_id: str | None = None
+) -> dict[str, Any]:
+    corpus = validate_catalog(root, baseline_root)
+    suite = run_probe_suite(corpus, probe_id=probe_id)
+    return {
+        "mode": "probe",
+        "claim_label": "NON_ACCEPTING_PROBE_EVIDENCE",
+        "acceptance_reachable": False,
+        "catalog_counts": {
+            role: sum(row["role"] == role for row in corpus.catalog)
+            for role in ("RED", "GREEN", "PROBE")
+        },
+        **suite,
+    }
 
 
 def _decode_legacy_number(value: Any) -> float | int:
@@ -1361,6 +2180,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
             ),
             "projections": projections,
         })
+    probe_suite = run_probe_suite(corpus)
     return {
         "catalog_counts": {role: sum(row["role"] == role for row in corpus.catalog) for role in ("RED", "GREEN", "PROBE")},
         "sealed_producer_identities": corpus.identities,
@@ -1369,9 +2189,11 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
         "acceptance_blockers": [
             {"check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISSING", "detail": "no seal-pinned map/digest exists in the supplied bundle"},
             *corpus.blockers,
+            *probe_suite["probe_blockers"],
             *corrected_blockers,
         ],
         "scenarios": scenarios,
+        "probes": probe_suite["probes"],
     }
 
 
@@ -1434,11 +2256,22 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--mode",
-        choices=("selftest", "observe", "red-evidence", "full-gate"),
+        choices=(
+            "selftest",
+            "observe",
+            "probe",
+            "probe-child",
+            "red-evidence",
+            "full-gate",
+        ),
         required=True,
     )
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--baseline-root", type=Path, default=Path(r"C:\tmp\P012_BASELINE_RUN"))
+    parser.add_argument("--probe-id")
+    parser.add_argument("--variant-import-root", type=Path, help=argparse.SUPPRESS)
+    parser.add_argument("--tree-manifest", type=Path, help=argparse.SUPPRESS)
+    parser.add_argument("--record-root", type=Path, help=argparse.SUPPRESS)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
     try:
@@ -1446,6 +2279,21 @@ def main(argv: list[str] | None = None) -> int:
             receipt = run_selftests(args.root)
         elif args.mode == "observe":
             receipt = materialize_observed_artifacts(args.root, args.baseline_root)
+        elif args.mode == "probe":
+            receipt = run_probe_mode(
+                args.root, args.baseline_root, probe_id=args.probe_id
+            )
+        elif args.mode == "probe-child":
+            if args.probe_id is None:
+                raise GateRefusal("PROBE_CHILD_ID_MISSING", "--probe-id is required")
+            receipt = _run_probe_child(
+                args.root,
+                args.baseline_root,
+                args.probe_id,
+                variant_import_root=args.variant_import_root,
+                tree_manifest_path=args.tree_manifest,
+                record_root=args.record_root,
+            )
         else:
             pipeline = run_comparison_pipeline(args.root, args.baseline_root)
             if args.mode == "red-evidence":
@@ -1476,6 +2324,11 @@ def main(argv: list[str] | None = None) -> int:
             args.output.write_text(encoded, encoding="utf-8", newline="\n")
         sys.stdout.write(encoded)
         if args.mode == "full-gate" and receipt["claim_label"] != ACCEPTING_LABEL:
+            return 2
+        if (
+            args.mode == "probe-child"
+            and receipt["claim_label"] == "PROBE_BASE_SCENARIO_REFUSED"
+        ):
             return 2
         return 0
     except GateRefusal as exc:

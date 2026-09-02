@@ -1,0 +1,58 @@
+{
+  "admission_status": "REFUSED_INCOMPLETE_COST_SCHEDULE",
+  "liquidity_roles": {
+    "MARKET_ENTRY": "TAKER",
+    "MARKET_EXIT_FILTER_BLOCK": "TAKER",
+    "MARKET_EXIT_OPPOSITE_SIGNAL": "TAKER",
+    "MARKET_EXIT_TIME_STOP": "TAKER",
+    "PROTECTIVE_STOP_GAP_OPEN": "TAKER",
+    "PROTECTIVE_STOP_LEVEL": "TAKER",
+    "STOP_MARKET_ENTRY": "TAKER",
+    "TARGET_EXIT": "TAKER"
+  },
+  "maker_rate": 0.00015,
+  "product_type_scope": "LINEAR_PERPETUAL",
+  "provenance": {
+    "captured_at_utc": "2026-08-31T07:00:53Z",
+    "extraction_method": "OWNER_APPROVED_PACKAGE_TRANSCRIPTION_V1",
+    "owner_decision_ref": "OWNER_DECISIONS_2026-08-29_EVENING.md addendum 16: fees option (a), base tier-0 schedule, adopted class mapping",
+    "sources": [
+      {
+        "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees",
+        "source_sha256": "3c49f9030a427df06f70943f53517204e4bd804bb205dcd05b2d27a75f51ce8b",
+        "source_title": "Fees | Hyperliquid Docs"
+      },
+      {
+        "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/order-types",
+        "source_sha256": "8c65a45d63a554ae54568378ba7e29e505aee6a3f9758b0cdcd298ab95992640",
+        "source_title": "Order types | Hyperliquid Docs"
+      }
+    ]
+  },
+  "refused_event_classes": {
+    "MARGIN_CALL_LIQUIDATION": "CANNOT_MAP_NO_FROZEN_LIQUIDATION_FEE_SEMANTICS"
+  },
+  "refused_missing_fields": [
+    "effective_interval",
+    "fee_rounding_rule",
+    "fixed_component",
+    "minimum_fee",
+    "tier_account_selection_evidence"
+  ],
+  "schedule_id": "HYPERLIQUID-BTC-PERP-BASE-TIER0-V1",
+  "settlement_currency": "USDC",
+  "slippage_model_id": "BPS_OF_REFERENCE_V1",
+  "slippage_parameters": {
+    "slippage_bps": 0
+  },
+  "slippage_provenance": {
+    "class": "OWNER-DECLARED EXPLICIT ZERO ASSUMPTION",
+    "measurement_claimed": false,
+    "owner_decision_ref": "OWNER_DECISIONS_2026-08-29_EVENING.md addendum 15 row 38",
+    "venue_source_claimed": false
+  },
+  "symbol_scope": "BTC",
+  "taker_rate": 0.00045,
+  "tier_selection_basis": "OWNER_APPROVED_BASE_TIER_0_WITH_ACCOUNT_EVIDENCE_RESIDUAL",
+  "venue_scope": "HYPERLIQUID"
+}

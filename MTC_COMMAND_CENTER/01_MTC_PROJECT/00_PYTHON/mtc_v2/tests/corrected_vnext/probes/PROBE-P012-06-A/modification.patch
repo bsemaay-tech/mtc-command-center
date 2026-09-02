@@ -1,0 +1,5 @@
+--- a/economics.py
++++ b/economics.py
+@@ -787 +787 @@
+-                    key=lambda item: (item[0].price, item[0].exit_id.encode("utf-8"))
++                    key=lambda item: (-item[0].price, item[0].exit_id.encode("utf-8"))

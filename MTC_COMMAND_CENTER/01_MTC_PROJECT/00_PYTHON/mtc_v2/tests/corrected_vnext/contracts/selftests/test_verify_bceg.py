@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import shutil
 from copy import deepcopy
 from pathlib import Path
 
@@ -276,6 +277,56 @@ def test_comparison_pipeline_measures_executed_output_once_per_row(
         and blocker.get("scenario_id") == scenario_id
         and blocker.get("pointer") == "/RESULT_SURFACE/final_position/quantity"
         for blocker in receipt["acceptance_blockers"]
+    )
+
+
+def test_probe_driver_rejects_identity_copy_and_detects_modified_copy(
+    tmp_path: Path,
+) -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    probe = next(
+        row for row in catalog if row.get("probe_id") == "PROBE-P012-08-A"
+    )
+    unmodified = tmp_path / "kernel"
+    shutil.copytree(
+        MTC_V2_ROOT / "core",
+        unmodified,
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+    )
+    unmodified_manifest, _ = verify_bceg.canonical_tree_manifest(unmodified)
+
+    identity_receipt = verify_bceg.drive_probe_variant_process(
+        MTC_V2_ROOT,
+        tmp_path / "unused-baseline",
+        probe,
+        unmodified,
+        unmodified_manifest,
+    )
+
+    assert identity_receipt["status"] == "NOT_DETECTED"
+    assert identity_receipt["measured_failed_check"] is None
+    assert identity_receipt["measured_first_changed_node"] is None
+
+    modified = MTC_V2_ROOT / probe["modified_copy_path"]
+    modified_manifest = load_json_exact(
+        MTC_V2_ROOT
+        / "tests/corrected_vnext/probes/PROBE-P012-08-A/modified_tree_manifest.json"
+    )
+    detected_receipt = verify_bceg.drive_probe_variant_process(
+        MTC_V2_ROOT,
+        tmp_path / "unused-baseline",
+        probe,
+        modified,
+        modified_manifest,
+    )
+
+    assert detected_receipt["status"] == "DETECTED"
+    assert detected_receipt["measured_failed_check"] == "CORRECTED_EXPECTATION"
+    assert (
+        detected_receipt["measured_first_changed_node"]
+        == "/EVENT_SURFACE/cash_events/0/signed_delta"
     )
 
 

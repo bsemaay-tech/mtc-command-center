@@ -1,0 +1,5 @@
+--- a/economics.py
++++ b/economics.py
+@@ -1132 +1132 @@
+-        long_rate = -raw_rate if payer == "LONG" else raw_rate
++        long_rate = raw_rate if payer == "LONG" else -raw_rate
