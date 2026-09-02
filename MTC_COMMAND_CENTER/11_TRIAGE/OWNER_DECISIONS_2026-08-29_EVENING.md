@@ -646,3 +646,13 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     state word. Consequence: a small change to the register and its dashboard reader, with the
     reader checked to render the new value rather than blank; the ten affected rows move to the
     new state only after that check. Nothing else in the register changes under this word.
+
+76. **Q3: REGENERATE THE FROZEN REFERENCE AGAINST SEAL #8** (owner: "Regenerate against seal #8").
+    Context: the canonical P0-12 gate refuses with `BASELINE_SEAL_IDENTITY_MISMATCH` because the
+    BASELINE_BYTES reference was frozen before eight re-sealings of the contract tables; the gate
+    rerun on seal #8 (W246) measured 15/17 row-by-row with two KERNEL-SHORT rows (equity-curve
+    ordered-addition grouping, `core/results.py:790-811` vs design `:1070-1078`). The owner
+    authorises ONE baseline regeneration run in the build worktree against seal `4ebcdfc5ad42`,
+    after the two engine fixes land and are verified, followed by the canonical gate. No skip flag,
+    no manifest hand-edit: the refusal clears only because the reference and the seal agree. This
+    is a decision to execute a run and is recorded as the owner's.
