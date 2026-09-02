@@ -1,7 +1,7 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+ "EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
  "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
  "core_tree_oid_at_base": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
@@ -30,7 +30,7 @@
  "lead_acceptance": {
   "accepted_by": "Lead (claude-fable-5), 2026-08-31 ~15:55 local",
   "basis": "Gate-2 plan v2 (A7-cleared) owner-approved addendum 16; tables bundle W127b sealed, all 19 file digests re-verified by W150; owner rulings addenda 14-17 complete; design v1.4 terminal dual-zero",
-  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #10 seal d763f62f9a42... on 2026-09-02T14:13:22+03:00; design v1.11; probe digests pinned; goldens and inputs unchanged since seal #8."
+  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #10 seal d763f62f9a42... on 2026-09-02T14:13:22+03:00; design v1.11; probe digests pinned; goldens and inputs unchanged since seal #8. Re-seal #11 2026-09-02T14:43:01+03:00: design v1.12 pinned; seal digest unchanged."
  },
  "reseal_history": [
   {
@@ -86,6 +86,18 @@
    "old_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
    "new_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
    "reason": "Re-seal #10: PROBE rows under v1.11, ten probe digest pairs pinned two-party; goldens/inputs unchanged."
+  },
+  {
+   "at": "2026-09-02T14:43:01+03:00",
+   "old_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "new_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "reason": "Re-seal #11: design pin v1.12 (trade-row quantity amendment-choice); no sealed byte moved."
+  },
+  {
+   "at": "2026-09-02T23:40:31+03:00",
+   "old_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "new_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
+   "reason": "Re-seal #12: nine kernel probe digests re-pinned after the authorized kernel repairs (decision 132); baseline regeneration W300 follows."
   }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862"
