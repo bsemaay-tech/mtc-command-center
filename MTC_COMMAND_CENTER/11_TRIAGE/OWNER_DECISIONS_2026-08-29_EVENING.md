@@ -702,3 +702,17 @@ micro-fold + terminal pass -> CONTRACT_TABLES (Claude, Q3a) -> open_item_applica
     worktree for exactly those three, each with a failing-then-passing test, legacy replay
     byte-exact, verified by a different family; flagship 2 (W279) and the Gemini detection lane
     then judge the result; the pull-request question follows only after that.
+
+81. **KERNEL FIX AUTHORIZATION EXTENDED TO FLAGSHIP-2'S FOUR ENGINE DEFECTS** (owner: "Yes, all
+    seven in one authorized lane set", 2026-09-02 ~17:5x). Flagship audit 2 (Claude Pro, W279)
+    returned NOT READY with twelve findings; four are engine defects of the same class as decision
+    80's: W279-F09 (funding events outside the strictly-between-bars window silently dropped, no
+    eligibility row, no refusal), W279-F08 (`position_snapshot_rule` echoed but never implemented;
+    `interval_boundary_convention` never read), W279-F11 (corrected entry path does not apply the
+    capital/margin admission check the legacy path applies), W279-F12 (`PROTECTIVE_STOP_EVALUATED`
+    and `COLLISION_RESOLVED` emitted only for LONG positions; decision 72's receipt order not
+    enforced). W279-F10 duplicates W276-F02. Same conditions as decision 80: failing-then-passing
+    test per item, legacy replay byte-exact, different-family verification, both flagships and the
+    detection lane re-run on the result before any pull-request question. Harness findings
+    (W279-F01, F03, F04, F05, F07; F02 = the receipt binding already under repair) proceed under the
+    standing build authorization and need no further word.
