@@ -950,3 +950,26 @@ live trading, a build, or a kernel change.
     regenerated against seal #12 exactly as decision 77 did for seal #10 (W265 method): no sealed
     VALUE moves, only the nine probe digest rows. The design item "bind the baseline to the
     RED/GREEN content digest rather than the whole-bundle seal" stays OPEN for the morning.
+
+## Addendum 35 - 2026-09-02 23:5x / 2026-09-03 00:0x REAL (owner verbatim: "I am sleeping give very short status report and make sure to work until I stop or plan completed"; plan rev 7 defaults applied)
+
+133. **Q4 APPLIED BY DEFAULT: KERNEL PRODUCER CONTRACT LANE W304 AUTHORIZED.** Plan rev 7 (23:2x) put
+    Q3/Q4 to the owner with "defaults apply if you say nothing"; at 23:5x the Lead pushed Q4 to the
+    owner's phone; the owner answered only with the instruction above (keep working until stopped or
+    the plan completes). Under that instruction the Lead applies the stated default: the corrected
+    kernel serializer must emit the design's closed result contract (`order_notional`, `admitted`,
+    `guards` where §23.4 requires them; exit reason tokens in the §23.3/§13 domain - `PROTECTIVE_STOP`,
+    `time_stop`) from the kernel's own computations; plus the two harness rows (runner's real collision
+    policy passed into `run_manifest`; the sealed RULE2-08 input's funding events fed to the run, else
+    an input question). One commit per outcome, failing-then-passing evidence, legacy replay byte-exact,
+    different-family verification, both flagships and detection re-run after. Evidence:
+    `C:\WP012BUILD\W284R_VALIDATOR_REPAIR_REPORT.md` (residual table) and `W284R_GATE_RECEIPT.json`.
+    Q3 (plan rev 7) is superseded: the RULE2-05-RED value is ABSENT, not 101 (W301 read a stale file).
+    The owner may reverse this on waking; nothing is pushed or merged.
+134. **Q2 APPLIED BY DEFAULT: RULE2-01-GREEN PROVENANCE EXCEPTION.** The golden was revised by
+    design-directed lanes W156 (design v1.5), W167 (v1.8) and W172 (owner Reading Y), each verified at
+    the time; the new provenance predicate (W284 item 4) refuses `EXPECTED_PATH_CHANGED_AFTER_BASE`
+    without a recorded exception. Default applied: record those three repairs as the authorized §15.4
+    exception; no golden byte changes now. The recording mechanism (a provenance exception record
+    the gate reads) is harness work for the next harness lane; until then the record stays as an
+    expected refusal. The owner may reverse on waking.
