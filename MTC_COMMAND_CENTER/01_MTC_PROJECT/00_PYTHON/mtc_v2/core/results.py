@@ -795,19 +795,17 @@ def _realized_equity_window(
 ) -> tuple[float, float] | None:
     if observation_start is None:
         return None
-    first = state.initial_capital + sum(
-        float(row.signed_delta)
-        for row in state.cash_events
-        if row.event_timestamp < observation_start
-    )
-    last = first + sum(
-        float(row.signed_delta)
-        for row in _event_rows(
-            state.cash_events,
-            start=observation_start,
-            end=observation_end,
-        )
-    )
+    first = state.initial_capital
+    for row in state.cash_events:
+        if row.event_timestamp < observation_start:
+            first += float(row.signed_delta)
+    last = first
+    for row in _event_rows(
+        state.cash_events,
+        start=observation_start,
+        end=observation_end,
+    ):
+        last += float(row.signed_delta)
     return first, last
 
 

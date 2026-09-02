@@ -9,10 +9,11 @@ from mtc_v2.core.economics import EconomicRecords
 from mtc_v2.core.results import (
     CorrectedRunManifest,
     TradeRecord,
+    _realized_equity_window,
     corrected_surfaces,
 )
 from mtc_v2.core.runner import Runner
-from mtc_v2.core.types import Bar
+from mtc_v2.core.types import Bar, CashEvent, CashEventKind, PortfolioState
 
 
 MTC_V2_ROOT = Path(__file__).resolve().parents[4]
@@ -147,6 +148,42 @@ def test_corrected_manifest_marks_an_unconsumed_cost_schedule_without_padding_di
     assert manifest["cost_schedule_id"] == "NOT_CONSUMED"
     assert "cost_schedule_digest" not in manifest
     assert manifest["funding_schedule_id"] == "SYNTH-FUNDING-RULE2-08-V1"
+
+
+def test_realized_equity_window_adds_in_window_deltas_in_array_order() -> None:
+    observation_start = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
+    deltas = [1e16, 1.0, -1e16]
+    state = PortfolioState(initial_capital=1.0)
+    state.cash_events = [
+        CashEvent(
+            sequence=sequence,
+            cash_event_id=f"CASH-{sequence}",
+            event_timestamp=observation_start,
+            lifecycle_id=1,
+            kind=CashEventKind.GROSS_REALIZATION,
+            signed_delta=delta,
+            settlement_currency="USD",
+        )
+        for sequence, delta in enumerate(deltas)
+    ]
+
+    grouped_delta = sum(deltas)
+    ordered_delta = 0.0
+    for delta in deltas:
+        ordered_delta += delta
+    assert grouped_delta.hex() != ordered_delta.hex()
+
+    expected_last = state.initial_capital
+    for delta in deltas:
+        expected_last += delta
+    first, last = _realized_equity_window(
+        state,
+        observation_start=observation_start,
+        observation_end=observation_start,
+    )
+
+    assert first.hex() == state.initial_capital.hex()
+    assert last.hex() == expected_last.hex()
 
 
 def test_corrected_min_notional_refusal_retains_nonblocked_result_facts() -> None:
