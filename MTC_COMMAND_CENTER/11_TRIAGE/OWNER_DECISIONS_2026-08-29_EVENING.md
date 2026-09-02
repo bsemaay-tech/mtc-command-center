@@ -816,6 +816,14 @@ _P0-31 Milestone 2 (rows 34-41)_
     section-16 review is not spent tonight; it follows the kernel and harness fixes and the
     re-run of both flagships plus detection on the fixed branch.
 
+126. **W279-F17 KERNEL HALF AUTHORIZED** (owner verbatim: "kernel half, yes", 2026-09-02 19:5x REAL,
+    answering the Lead's question after W293 removed it from decision 123). The engine's refusal
+    writer (`mtc_v2/core/results.py:755-771`, `_state_refusals`) may be changed so it can emit the
+    four members named at design 23.4 `:1215`; W284-5 removing the harness override exposes the
+    gap. Same conditions as decisions 80, 81, 123: failing-then-passing test, legacy replay
+    byte-exact, different-family verification, both flagships and detection re-run before any
+    pull-request question. Lane W285 item 7b, one commit.
+
 Notes carried from the answers file: row 1 opens a NEW owner decision (the separate loss-at-stop
 ceiling, `brief:1334`, `[OPEN]`) - scheduled, not set; rows 2, 8, 11, 23, 27 deliberately leave a
 value open or defer it to a measurement - folds write `OWNER-DEFERRED-TO-MEASUREMENT`, never a
