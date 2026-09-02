@@ -5,7 +5,7 @@ from dataclasses import replace
 from datetime import datetime
 import math
 from pathlib import Path
-from typing import Iterable, Mapping
+from typing import Iterable
 
 from mtc_v2.core.config import SIGNAL_MODE_RANGE_FILTER, SIGNAL_MODE_SUPERTREND, resolve_config
 from mtc_v2.core.confirmation import (
@@ -35,6 +35,7 @@ from mtc_v2.core.economics import (
     IntentKind,
     MarketEvent,
     REFUSED_ECONOMIC_INPUT,
+    REFUSED_MISSING_FUNDING_EVENT,
 )
 from mtc_v2.core.gates import (
     GATE_MA_FILTER,
@@ -125,6 +126,8 @@ FILL_POLICY_DECISION_BAR_CLOSE = "decision_bar_close"
 EXIT_BEFORE_ENTRY_PLACEHOLDER = "future_position_manager_exit_before_entry"
 SAME_BAR_REENTRY_OWNER = "future_position_manager_same_bar_reentry"
 REASON_EXIT_MARGIN_CALL = "margin_call"
+FUNDING_POSITION_SNAPSHOT_RULE = "END_OF_INTERVAL_INCLUDE_SAME_TIMESTAMP_V1"
+FUNDING_INTERVAL_BOUNDARY_CONVENTION = "HOURLY_INTERVAL_END_V1"
 
 
 class Runner:
@@ -137,11 +140,6 @@ class Runner:
             config.get("kernel_semantics_version", "1.0.0")
         )
         self._corrected_semantics = self.kernel_semantics_version == "2.0.0"
-        self._allow_corrected_test_policy = False
-        self._corrected_selector_stop_override: float | None = None
-        self._corrected_requested_quantity_override: float | None = None
-        self._corrected_test_target_book: dict[str, tuple[str, float, float]] = {}
-        self._corrected_instrument_validation_field: str | None = None
         self._corrected_records: EconomicRecords | None = None
         self._corrected_instrument_bound = False
         if self._corrected_semantics:
@@ -367,36 +365,6 @@ class Runner:
             int(self.config["sl_swing_lookback"]) if bool(self.config["use_sl"] and self.config["use_sl_swing_atr"]) else 0,
         )
 
-    @classmethod
-    def for_corrected_contract(
-        cls,
-        config: dict[str, object],
-        *,
-        selector_stop_override: float | None = None,
-        requested_quantity_override: float | None = None,
-        target_book_overrides: Mapping[str, tuple[str, float, float]] | None = None,
-        instrument_validation_field: str | None = None,
-    ) -> "Runner":
-        """Create the non-production runner used by declared migration fixtures."""
-
-        runner = cls(config)
-        if not runner._corrected_semantics:
-            raise EconomicsRefusal(
-                REFUSED_ECONOMIC_INPUT,
-                "corrected contract runner requires semantics 2.0.0",
-            )
-        runner._allow_corrected_test_policy = True
-        runner._corrected_selector_stop_override = selector_stop_override
-        runner._corrected_requested_quantity_override = requested_quantity_override
-        runner._corrected_test_target_book = dict(target_book_overrides or {})
-        if instrument_validation_field not in {None, "price_tick"}:
-            raise EconomicsRefusal(
-                REFUSED_ECONOMIC_INPUT,
-                f"unsupported instrument validation field {instrument_validation_field!r}",
-            )
-        runner._corrected_instrument_validation_field = instrument_validation_field
-        return runner
-
     def _load_corrected_records(self) -> EconomicRecords:
         root = Path(__file__).resolve().parent / "economic_records"
         instrument_id = str(self.config["instrument_record_id"])
@@ -456,12 +424,14 @@ class Runner:
                     decision="SEMANTICS_VALIDATED",
                 )
             )
-        validation_field = self._corrected_instrument_validation_field
+        runtime_config = self._corrected_records.runtime_instrument_config or {}
+        validation_field = None
         record_value = None
         runtime_value = None
-        if validation_field == "price_tick":
+        if "instrument_price_tick" in runtime_config:
+            validation_field = "price_tick"
             record_value = self._corrected_records.instrument.price_tick
-            runtime_value = self._source_config.get("instrument_price_tick")
+            runtime_value = runtime_config["instrument_price_tick"]
         try:
             self.instrument = self._corrected_records.instrument.for_evaluation(
                 evaluation_time,
@@ -511,8 +481,8 @@ class Runner:
             sizing_equity=sizing_equity,
             equity=self.state.equity,
             cumulative_funding=self.state.cumulative_funding,
-            applied_funding_event_ids=frozenset(
-                self.state.applied_funding_event_ids
+            applied_funding_event_keys=frozenset(
+                self.state.applied_funding_event_keys
             ),
             next_lifecycle_id=self.state.next_position_lifecycle_id,
             next_decision_sequence=len(self.state.decision_events),
@@ -560,10 +530,6 @@ class Runner:
                     stop_distance = abs(reference_price - provisional)
                 else:
                     stop_price = provisional
-        if self._corrected_selector_stop_override is not None:
-            stop_price = self._corrected_selector_stop_override
-            stop_percent = None
-            stop_distance = None
         transition = CorrectedEconomicsAdapter().resolve(
             self._economic_state(sizing_equity=sizing_equity),
             EconomicIntent(
@@ -581,7 +547,6 @@ class Runner:
                 ),
                 fallback_size_pct=float(self.config["fallback_size_pct"]),
                 max_leverage_cap=self.max_leverage_cap,
-                requested_quantity=self._corrected_requested_quantity_override,
                 event_class="ENTRY",
                 reason=reason,
             ),
@@ -597,6 +562,13 @@ class Runner:
             )
             return False
         fill = transition.fill_decisions[0]
+        if self._entry_blocked_by_capital(
+            entry_price=fill.final_fill_price,
+            side=side,
+            qty=fill.quantity,
+            sizing_equity=sizing_equity,
+        ):
+            return False
         existing = self.state.position
         if existing is not None:
             transition = replace(
@@ -629,18 +601,6 @@ class Runner:
             book_version=next_book_version,
             completed_exit_ids=completed_exit_ids,
         )
-        if self._corrected_test_target_book:
-            working_exits = [
-                replace(
-                    member,
-                    exit_id=self._corrected_test_target_book[member.exit_id][0],
-                    target_price=self._corrected_test_target_book[member.exit_id][1],
-                    qty_fraction=self._corrected_test_target_book[member.exit_id][2],
-                )
-                if member.exit_id in self._corrected_test_target_book
-                else member
-                for member in working_exits
-            ]
         self.position_manager.apply_transition(
             bar=bar,
             state=self.state,
@@ -708,27 +668,78 @@ class Runner:
             )
         return datetime.fromisoformat(value[:-1] + "+00:00")
 
-    def _apply_corrected_funding_between(self, previous: Bar, current: Bar) -> None:
+    def _apply_corrected_funding_between(
+        self,
+        previous: Bar | None,
+        current: Bar | None,
+        *,
+        include_current: bool | None = None,
+    ) -> None:
         assert self._corrected_records is not None
-        events = self._corrected_records.funding.get("events", ())
+        if previous is None and current is None:
+            return
+        events = self._corrected_records.funding.get("events")
+        if not isinstance(events, (tuple, list)):
+            raise EconomicsRefusal(
+                REFUSED_MISSING_FUNDING_EVENT,
+                "funding schedule has no admitted event collection",
+            )
+        position_snapshot_rule = self._corrected_records.funding.get(
+            "position_snapshot_rule"
+        )
+        if position_snapshot_rule != FUNDING_POSITION_SNAPSHOT_RULE:
+            raise EconomicsRefusal(
+                REFUSED_ECONOMIC_INPUT,
+                f"unsupported position_snapshot_rule {position_snapshot_rule!r}",
+            )
+        interval_boundary_convention = self._corrected_records.funding.get(
+            "interval_boundary_convention"
+        )
+        if interval_boundary_convention != FUNDING_INTERVAL_BOUNDARY_CONVENTION:
+            raise EconomicsRefusal(
+                REFUSED_ECONOMIC_INPUT,
+                f"unsupported interval_boundary_convention {interval_boundary_convention!r}",
+            )
+        upper_inclusive = (
+            position_snapshot_rule == FUNDING_POSITION_SNAPSHOT_RULE
+            if include_current is None
+            else include_current
+        )
         for event in events:
             event_time = self._record_timestamp(event.get("event_timestamp"))
-            if not (previous.timestamp < event_time <= current.timestamp):
+            if previous is None:
+                in_window = current is not None and (
+                    event_time < current.timestamp
+                    if include_current is False
+                    else event_time == current.timestamp
+                )
+            elif current is None:
+                in_window = previous.timestamp < event_time
+            else:
+                in_window = previous.timestamp < event_time and (
+                    event_time < current.timestamp
+                    or (upper_inclusive and event_time == current.timestamp)
+                )
+            if not in_window:
                 continue
             event_id = str(event["funding_event_id"])
-            if event_id in self.state.applied_funding_event_ids:
-                continue
+            bar_context = current if current is not None else previous
+            assert bar_context is not None
             transition = CorrectedEconomicsAdapter().resolve(
                 self._economic_state(),
                 EconomicIntent(
                     kind=IntentKind.FUNDING_TICK,
                     funding_event_id=event_id,
+                    funding_event_in_window=(
+                        current is not None
+                        and not (previous is None and include_current is False)
+                    ),
                 ),
-                self._market_event(current, timestamp=event_time),
+                self._market_event(bar_context, timestamp=event_time),
                 self._corrected_records,
             )
             self.position_manager.apply_transition(
-                bar=current,
+                bar=bar_context,
                 state=self.state,
                 transition=transition,
                 reason="funding_tick",
@@ -761,8 +772,9 @@ class Runner:
                 _first_bar = bar
             if self._corrected_semantics:
                 self._bind_corrected_instrument(bar.timestamp)
-                if self._prev_bar is not None:
-                    self._apply_corrected_funding_between(self._prev_bar, bar)
+                self._apply_corrected_funding_between(
+                    self._prev_bar, bar, include_current=False
+                )
             self.state.current_bar_index = bar.bar_index
             self.state.block_new_entries_this_bar = False
             self.state.opened_this_bar_reason = None
@@ -999,7 +1011,6 @@ class Runner:
                                 "same_bar_collision_policy_id", "STOP_FIRST"
                             )
                         ),
-                        allow_test_policy=self._allow_corrected_test_policy,
                         next_decision_sequence=len(self.state.decision_events),
                     )
                     if transition.decision_events and not transition.fill_decisions:
@@ -1566,7 +1577,10 @@ class Runner:
             self._l18_prev_raw_long = raw.long
             self._l18_prev_raw_short = raw.short
             if self._corrected_semantics:
+                self._apply_corrected_funding_between(None, bar)
                 self.corrected_equity_curve.append(self.state.equity)
+        if self._corrected_semantics and self._prev_bar is not None:
+            self._apply_corrected_funding_between(self._prev_bar, None)
         # --- L24: DEBUG METADATA ---
         if bool(self.config.get("debug_mode", False)):
             self._debug_metadata = {

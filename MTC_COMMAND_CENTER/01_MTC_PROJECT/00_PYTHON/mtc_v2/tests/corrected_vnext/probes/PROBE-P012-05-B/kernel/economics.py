@@ -31,6 +31,7 @@ from mtc_v2.core.types import (
     FeeEvent,
     FillDecision,
     FundingEvent,
+    FundingEventKey,
     PositionFacts,
 )
 
@@ -88,6 +89,7 @@ class EconomicIntent:
     exit_candidates: tuple[ExitCandidate, ...] = ()
     same_bar_collision_policy_id: str | None = "STOP_FIRST"
     funding_event_id: str | None = None
+    funding_event_in_window: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,7 +112,7 @@ class EconomicState:
     sizing_equity: float = 0.0
     equity: float = 0.0
     cumulative_funding: float = 0.0
-    applied_funding_event_ids: frozenset[str] = frozenset()
+    applied_funding_event_keys: frozenset[FundingEventKey] = frozenset()
     next_lifecycle_id: int = 1
     next_decision_sequence: int = 0
     next_fill_sequence: int = 0
@@ -284,6 +286,7 @@ def _fee_rows(
     event_timestamp: datetime,
     lifecycle_id: int,
     fill_id: str,
+    fill_sequence: int,
     event_class: str,
     fill_price: float,
     quantity: float,
@@ -308,7 +311,7 @@ def _fee_rows(
     notional = abs(fill_price * quantity * contract_multiplier)
     amount = max(notional * rate + fixed, minimum)
     signed = 0.0 if amount == 0.0 else -amount
-    cash_event_id = f"CE-FEE-{fee_sequence}"
+    cash_event_id = f"CE-FEE-{fill_sequence}"
     cash = CashEvent(
         sequence=cash_sequence,
         cash_event_id=cash_event_id,
@@ -714,6 +717,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             event_timestamp=market.timestamp,
             lifecycle_id=lifecycle_id,
             fill_id=fill.fill_id,
+            fill_sequence=fill_sequence,
             event_class=event_class,
             fill_price=final_fill,
             quantity=quantity,
@@ -803,13 +807,21 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 chosen = [(stops[0][0], stops[0][1], state.quantity)]
         decisions = list(prefix)
         next_sequence = state.next_decision_sequence + len(decisions)
-        if stop_candidate is not None and state.position_side == "LONG":
-            if market.open <= stop_candidate.price:
+        if stop_candidate is not None:
+            if state.position_side == "LONG":
+                open_beyond_stop = market.open <= stop_candidate.price
+                intrabar_touch = market.low <= stop_candidate.price
+                touch_predicate = "LOW_TOUCH"
+            else:
+                open_beyond_stop = market.open >= stop_candidate.price
+                intrabar_touch = market.high >= stop_candidate.price
+                touch_predicate = "HIGH_TOUCH"
+            if open_beyond_stop:
                 predicate = "OPEN_BEYOND_STOP"
                 reference_source = "BAR_OPEN"
                 reference_price = market.open
-            elif market.low <= stop_candidate.price:
-                predicate = "LOW_TOUCH"
+            elif intrabar_touch:
+                predicate = touch_predicate
                 reference_source = "STOP_LEVEL"
                 reference_price = stop_candidate.price
             else:
@@ -850,7 +862,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 records=records,
                 decisions=tuple(decisions),
             )
-        if state.position_side == "LONG" and any(
+        if any(
             candidate.kind is IntentKind.TARGET
             for candidate in intent.exit_candidates
         ):
@@ -859,7 +871,16 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             collision_details: dict[str, object] = {
                 "collision": collision,
                 "same_bar_collision_policy_id": policy,
-                "touched_exit_ids": [candidate.exit_id for candidate, _reference in touched],
+                "touched_exit_ids": [
+                    candidate.exit_id
+                    for candidate, _reference in touched
+                    if candidate.kind is IntentKind.PROTECTIVE_STOP
+                ]
+                + [
+                    candidate.exit_id
+                    for candidate, _reference in touched
+                    if candidate.kind is IntentKind.TARGET
+                ],
                 "ordered_chosen_exit_ids": [candidate.exit_id for candidate, _reference, _quantity in chosen],
                 "reference_quantity": state.quantity,
                 "stop_remainder_quantity": sum(
@@ -869,7 +890,12 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 ),
             }
             if targets:
-                collision_details["target_ordering_rule"] = "LONG_ASCENDING_TARGET_PRICE" + (
+                ordering_rule = (
+                    "LONG_ASCENDING_TARGET_PRICE"
+                    if state.position_side == "LONG"
+                    else "SHORT_DESCENDING_TARGET_PRICE"
+                )
+                collision_details["target_ordering_rule"] = ordering_rule + (
                     "_THEN_EXIT_ID_UTF8_BYTE_ORDER" if equal_price_tie else ""
                 )
             if equal_price_tie:
@@ -931,6 +957,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 event_timestamp=market.timestamp,
                 lifecycle_id=state.lifecycle_id,
                 fill_id=fill_id,
+                fill_sequence=fill_sequence,
                 event_class=event_class,
                 fill_price=final_fill,
                 quantity=quantity,
@@ -956,7 +983,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             remaining -= quantity
         next_facts = (
             _position_facts(lifecycle_id=None, side=None, quantity=0.0, entry_fill_price=None)
-            if remaining <= 1e-12
+            if remaining <= 0.0
             else _position_facts(
                 lifecycle_id=state.lifecycle_id,
                 side=state.position_side,
@@ -1039,6 +1066,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             event_timestamp=market.timestamp,
             lifecycle_id=int(state.lifecycle_id),
             fill_id=fill.fill_id,
+            fill_sequence=fill_sequence,
             event_class=event_class,
             fill_price=final_fill,
             quantity=quantity,
@@ -1066,7 +1094,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 quantity=0.0,
                 entry_fill_price=None,
             )
-            if remainder <= 1e-12
+            if remainder <= 0.0
             else _position_facts(
                 lifecycle_id=state.lifecycle_id,
                 side=state.position_side,
@@ -1104,9 +1132,23 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
         matching = [event for event in events if event.get("funding_event_id") == event_id]
         if len(matching) != 1:
             raise EconomicsRefusal(REFUSED_MISSING_FUNDING_EVENT, str(event_id))
-        if event_id in state.applied_funding_event_ids:
+        event = matching[0]
+        payer = event.get("positive_rate_payer")
+        if not isinstance(payer, str) or payer not in {"LONG", "SHORT"}:
+            raise EconomicsRefusal(
+                REFUSED_ECONOMIC_INPUT,
+                f"positive_rate_payer must be LONG or SHORT, got {payer!r}",
+            )
+        eligible = (
+            intent.funding_event_in_window
+            and state.lifecycle_id is not None
+            and state.quantity > 0.0
+        )
+        if (
+            state.lifecycle_id is not None
+            and (str(event_id), int(state.lifecycle_id)) in state.applied_funding_event_keys
+        ):
             raise EconomicsRefusal(REFUSED_DUPLICATE_FUNDING_EVENT, str(event_id))
-        eligible = state.lifecycle_id is not None and state.quantity > 0.0
         decision = DecisionEvent(
             sequence=state.next_decision_sequence + len(prefix),
             event_timestamp=market.timestamp,
@@ -1124,11 +1166,9 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 records=records,
                 decisions=(*prefix, decision),
             )
-        event = matching[0]
         multiplier = float(records.instrument.contract_multiplier)
         mark_price = float(event["mark_price"])
         raw_rate = float(event["raw_rate"])
-        payer = str(event["positive_rate_payer"])
         long_rate = -raw_rate if payer == "LONG" else raw_rate
         side_factor = 1.0 if state.position_side == "LONG" else -1.0
         notional = abs(mark_price * state.quantity * multiplier)

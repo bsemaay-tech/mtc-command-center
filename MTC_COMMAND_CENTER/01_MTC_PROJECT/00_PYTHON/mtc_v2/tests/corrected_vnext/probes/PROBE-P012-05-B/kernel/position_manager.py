@@ -16,6 +16,7 @@ from mtc_v2.core.types import (
     RawSignal,
     REFUSED_INVALID_CASH_LEDGER_JOIN,
     WorkingExit,
+    _same_binary64,
 )
 
 
@@ -114,6 +115,20 @@ class PositionManager:
 
     @staticmethod
     def _transition_key(transition: EconomicTransition) -> tuple[object, ...]:
+        if not (
+            transition.decision_events
+            or transition.fill_decisions
+            or transition.cash_events
+            or transition.fee_events
+            or transition.funding_events
+        ):
+            return (
+                transition.semantics_id,
+                transition.instrument_record_digest,
+                transition.cost_schedule_digest,
+                transition.funding_schedule_digest,
+                transition._application_identity,
+            )
         return (
             transition.semantics_id,
             transition.instrument_record_digest,
@@ -157,11 +172,11 @@ class PositionManager:
     ) -> Position | None:
         exited = sum(row.quantity for row in fills)
         calculated_remainder = max(0.0, position.qty - exited)
-        if abs(calculated_remainder - next_quantity) > 1e-12:
+        if not _same_binary64(calculated_remainder, next_quantity):
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: next position quantity mismatch"
             )
-        if next_quantity <= 1e-12:
+        if next_quantity <= 0.0:
             return None
 
         legs = list(position.entry_legs)
@@ -225,7 +240,7 @@ class PositionManager:
         side = facts.side.lower()
         exits = list(working_exits or [])
         if state.position is None:
-            if abs(facts.quantity - fill.quantity) > 1e-12:
+            if not _same_binary64(facts.quantity, fill.quantity):
                 raise EconomicTransitionError(
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: open quantity mismatch"
                 )
@@ -258,7 +273,7 @@ class PositionManager:
         if (
             current.side != side
             or current.lifecycle_id != facts.lifecycle_id
-            or abs(facts.quantity - expected_quantity) > 1e-12
+            or not _same_binary64(facts.quantity, expected_quantity)
         ):
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: add transition position mismatch"
@@ -324,8 +339,10 @@ class PositionManager:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: cash event already applied"
             )
-        funding_ids = {row.funding_event_id for row in transition.funding_events}
-        if funding_ids & state.applied_funding_event_ids:
+        funding_keys = {
+            (row.funding_event_id, row.lifecycle_id) for row in transition.funding_events
+        }
+        if funding_keys & state.applied_funding_event_keys:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding event already applied"
             )
@@ -392,7 +409,7 @@ class PositionManager:
                 facts.lifecycle_id != state.position.lifecycle_id
                 or facts.side is None
                 or facts.side.lower() != state.position.side
-                or abs(facts.quantity - state.position.qty) > 1e-12
+                or not _same_binary64(facts.quantity, state.position.qty)
             ):
                 raise EconomicTransitionError(
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: non-fill position mismatch"
@@ -405,12 +422,14 @@ class PositionManager:
         )
         if transition.funding_events:
             expected_cumulative = state.cumulative_funding + funding_cash
-            if abs(transition.funding_events[-1].cumulative_funding - expected_cumulative) > 1e-12:
+            if not _same_binary64(
+                transition.funding_events[-1].cumulative_funding,
+                expected_cumulative,
+            ):
                 raise EconomicTransitionError(
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding cumulative mismatch"
                 )
 
-        cash_delta = sum(row.signed_delta for row in transition.cash_events)
         guard_delta = sum(
             row.signed_delta
             for row in transition.cash_events
@@ -423,8 +442,9 @@ class PositionManager:
         )
 
         state.position = next_position
-        state.realized_equity += cash_delta
-        state.equity = state.initial_capital + state.realized_equity
+        for row in transition.cash_events:
+            state.realized_equity += row.signed_delta
+            state.equity += row.signed_delta
         state.guard_realized_equity += guard_delta
         state.cumulative_fee += sum(row.fee_amount for row in transition.fee_events)
         state.cumulative_funding += funding_cash
@@ -435,7 +455,7 @@ class PositionManager:
         state.funding_events.extend(transition.funding_events)
         state.applied_transition_keys.add(transition_key)
         state.applied_cash_event_keys.update(cash_keys)
-        state.applied_funding_event_ids.update(funding_ids)
+        state.applied_funding_event_keys.update(funding_keys)
 
         for row in transition.cash_events:
             if row.kind is CashEventKind.GROSS_REALIZATION:
