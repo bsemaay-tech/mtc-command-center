@@ -737,3 +737,28 @@ def test_w279_f11_corrected_entry_applies_total_margin_admission() -> None:
     assert opened is False
     assert runner.state.position.qty == 10.0
     assert runner.state.fill_events == []
+
+
+def test_v283b_f10_pending_open_uses_corrected_margin_admission() -> None:
+    config, bars = _scenario("RULE2-05-GREEN")
+    config.update(
+        max_leverage_cap=1.0,
+        margin_long_pct=2000.0,
+        tw_audit_semantics_mode="research",
+        tw_reversal_reentry_mode="next_bar_open_after_protective_exit_signal",
+    )
+    runner = Runner.for_corrected_contract(
+        config,
+        requested_quantity_override=5.0,
+    )
+    runner._tw_pending_open_side = "long"
+    runner._tw_pending_open_reason = "pending_margin_probe"
+
+    runner._maybe_execute_tw_pending_open_entry(
+        bar=bars[1],
+        sizing_equity_snapshot=1000.0,
+    )
+
+    assert runner.state.position is None
+    assert runner.state.fill_events == []
+    assert runner._tw_pending_open_side is None
