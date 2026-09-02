@@ -2132,9 +2132,78 @@ def compute_legacy_event_order_map(corpus: Corpus) -> tuple[dict[str, str], str]
     return mapping, hashlib.sha256(encoded).hexdigest()
 
 
+def consume_legacy_event_order_map_pin(
+    root: Path,
+    computed_map: dict[str, str],
+    computed_digest: str,
+) -> tuple[dict[str, str], list[dict[str, Any]]]:
+    contracts = root / "tests/corrected_vnext/contracts"
+    manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
+    pin = manifest.get("legacy_event_order_map_pin")
+    if pin is None:
+        return {"status": "MISSING"}, [
+            {
+                "check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISSING",
+                "detail": "no seal-pinned map/digest exists in the supplied bundle",
+            }
+        ]
+
+    pinned_digest = pin.get("legacy_event_order_map_sha256") if type(pin) is dict else None
+    pinned_map = pin.get("legacy_event_order_map") if type(pin) is dict else None
+    if pinned_digest != computed_digest:
+        return {"status": "MISMATCH"}, [
+            {
+                "check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISMATCH",
+                "pinned_digest": pinned_digest,
+                "computed_digest": computed_digest,
+            }
+        ]
+
+    if type(pinned_map) is not dict:
+        first_differing_key = "<invalid-map>"
+    else:
+        missing = object()
+        first_differing_key = next(
+            (
+                key
+                for key in sorted(set(pinned_map) | set(computed_map))
+                if pinned_map.get(key, missing) != computed_map.get(key, missing)
+            ),
+            None,
+        )
+    if first_differing_key is not None:
+        return {"status": "MISMATCH"}, [
+            {
+                "check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISMATCH",
+                "pinned_digest": pinned_digest,
+                "computed_digest": computed_digest,
+                "first_differing_key": first_differing_key,
+            }
+        ]
+
+    anchor = load_json_exact(contracts / "implementation_anchor.json")
+    anchor_digest = anchor.get("legacy_event_order_map_sha256")
+    if anchor_digest != pinned_digest:
+        return {"status": "MISMATCH"}, [
+            {
+                "check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISMATCH",
+                "manifest_digest": pinned_digest,
+                "anchor_digest": anchor_digest,
+            }
+        ]
+
+    return {
+        "status": "MATCH",
+        "legacy_event_order_map_sha256": computed_digest,
+    }, []
+
+
 def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
     corpus = validate_catalog(root, baseline_root)
     event_order_map, event_order_digest = compute_legacy_event_order_map(corpus)
+    event_order_pin, event_order_pin_blockers = consume_legacy_event_order_map_pin(
+        root, event_order_map, event_order_digest
+    )
     scenarios: list[dict[str, Any]] = []
     corrected_blockers: list[dict[str, Any]] = []
     for row in corpus.catalog:
@@ -2186,8 +2255,9 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
         "sealed_producer_identities": corpus.identities,
         "legacy_event_order_map": event_order_map,
         "computed_legacy_event_order_map_digest": event_order_digest,
+        "legacy_event_order_map_pin": event_order_pin,
         "acceptance_blockers": [
-            {"check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISSING", "detail": "no seal-pinned map/digest exists in the supplied bundle"},
+            *event_order_pin_blockers,
             *corpus.blockers,
             *probe_suite["probe_blockers"],
             *corrected_blockers,

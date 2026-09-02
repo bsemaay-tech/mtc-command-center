@@ -119,6 +119,52 @@ def sealed_producer_fixture(
     return root, baseline_root, seal, contract_paths[1]
 
 
+def legacy_event_order_pin_fixture(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> tuple[Path, Path, dict[str, str], str, Path, Path]:
+    root = tmp_path / "root"
+    baseline_root = tmp_path / "baseline"
+    contracts = root / "tests" / "corrected_vnext" / "contracts"
+    contracts.mkdir(parents=True)
+    mapping = {
+        "RULE2-01-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1"
+    }
+    digest = hashlib.sha256(verify_bceg.canonical_json_bytes(mapping)).hexdigest()
+    manifest_path = contracts / "CONTRACT_TABLES_MANIFEST.json"
+    anchor_path = contracts / "implementation_anchor.json"
+    manifest_path.write_bytes(
+        verify_bceg.canonical_json_bytes(
+            {
+                "legacy_event_order_map_pin": {
+                    "legacy_event_order_map": mapping,
+                    "legacy_event_order_map_sha256": digest,
+                }
+            }
+        )
+    )
+    anchor_path.write_bytes(
+        verify_bceg.canonical_json_bytes(
+            {"legacy_event_order_map_sha256": digest}
+        )
+    )
+    corpus = verify_bceg.Corpus(
+        root=root,
+        baseline_root=baseline_root,
+        catalog=[],
+        blockers=(),
+        identities={},
+    )
+    monkeypatch.setattr(
+        verify_bceg, "validate_catalog", lambda _root, _baseline_root: corpus
+    )
+    monkeypatch.setattr(
+        verify_bceg,
+        "compute_legacy_event_order_map",
+        lambda _corpus: (mapping, digest),
+    )
+    return root, baseline_root, mapping, digest, manifest_path, anchor_path
+
+
 def test_sealed_producer_validation_accepts_manifest_recorded_current_seal(
     tmp_path: Path,
 ) -> None:
@@ -158,6 +204,104 @@ def test_sealed_producer_validation_refuses_modified_copy_with_stale_recorded_se
         "EXPECTED_SEAL_MISMATCH",
         lambda: verify_bceg.validate_sealed_producers(root, baseline_root),
     )
+
+
+def test_legacy_event_order_pin_missing_is_distinct_and_match_clears_blocker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, baseline_root, _mapping, digest, manifest_path, anchor_path = (
+        legacy_event_order_pin_fixture(tmp_path, monkeypatch)
+    )
+    manifest = load_json_exact(manifest_path)
+    del manifest["legacy_event_order_map_pin"]
+    manifest_path.write_bytes(verify_bceg.canonical_json_bytes(manifest))
+
+    missing = verify_bceg.run_comparison_pipeline(root, baseline_root)
+
+    assert missing["legacy_event_order_map_pin"] == {"status": "MISSING"}
+    assert missing["acceptance_blockers"] == [
+        {
+            "check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISSING",
+            "detail": "no seal-pinned map/digest exists in the supplied bundle",
+        }
+    ]
+
+    manifest["legacy_event_order_map_pin"] = {
+        "legacy_event_order_map": _mapping,
+        "legacy_event_order_map_sha256": digest,
+    }
+    manifest_path.write_bytes(verify_bceg.canonical_json_bytes(manifest))
+    matched = verify_bceg.run_comparison_pipeline(root, baseline_root)
+    assert matched["legacy_event_order_map_pin"] == {
+        "status": "MATCH",
+        "legacy_event_order_map_sha256": digest,
+    }
+    assert matched["acceptance_blockers"] == []
+
+    anchor_path.write_bytes(
+        verify_bceg.canonical_json_bytes(
+            {"legacy_event_order_map_sha256": "f" * 64}
+        )
+    )
+    anchor_mismatch = verify_bceg.run_comparison_pipeline(root, baseline_root)
+    assert anchor_mismatch["acceptance_blockers"] == [
+        {
+            "check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISMATCH",
+            "manifest_digest": digest,
+            "anchor_digest": "f" * 64,
+        }
+    ]
+
+
+def test_legacy_event_order_pin_digest_modified_copy_is_mismatch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, baseline_root, _mapping, digest, manifest_path, _anchor_path = (
+        legacy_event_order_pin_fixture(tmp_path, monkeypatch)
+    )
+    manifest = load_json_exact(manifest_path)
+    modified_digest = ("1" if digest[0] != "1" else "0") + digest[1:]
+    manifest["legacy_event_order_map_pin"][
+        "legacy_event_order_map_sha256"
+    ] = modified_digest
+    manifest_path.write_bytes(verify_bceg.canonical_json_bytes(manifest))
+
+    receipt = verify_bceg.run_comparison_pipeline(root, baseline_root)
+
+    assert receipt["legacy_event_order_map_pin"]["status"] == "MISMATCH"
+    assert receipt["acceptance_blockers"] == [
+        {
+            "check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISMATCH",
+            "pinned_digest": modified_digest,
+            "computed_digest": digest,
+        }
+    ]
+
+
+def test_legacy_event_order_pin_map_modified_copy_names_first_key(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, baseline_root, mapping, digest, manifest_path, _anchor_path = (
+        legacy_event_order_pin_fixture(tmp_path, monkeypatch)
+    )
+    first_key = next(iter(mapping))
+    manifest = load_json_exact(manifest_path)
+    manifest["legacy_event_order_map_pin"]["legacy_event_order_map"][
+        first_key
+    ] = "LEGACY_SEQUENCE_FIELD_V1"
+    manifest_path.write_bytes(verify_bceg.canonical_json_bytes(manifest))
+
+    receipt = verify_bceg.run_comparison_pipeline(root, baseline_root)
+
+    assert receipt["legacy_event_order_map_pin"]["status"] == "MISMATCH"
+    assert receipt["acceptance_blockers"] == [
+        {
+            "check_id": "LEGACY_EVENT_ORDER_MAP_PIN_MISMATCH",
+            "pinned_digest": digest,
+            "computed_digest": digest,
+            "first_differing_key": first_key,
+        }
+    ]
 
 
 def test_identical_pair_compares_equal_on_every_node() -> None:
@@ -206,6 +350,23 @@ def test_comparison_pipeline_measures_executed_output_once_per_row(
     baseline_path = baseline_root / "out" / scenario_id / "result_surface.json"
     for path in (input_path, golden_path, baseline_path):
         path.parent.mkdir(parents=True, exist_ok=True)
+    contracts = root / "tests" / "corrected_vnext" / "contracts"
+    contracts.mkdir(parents=True)
+    (contracts / "CONTRACT_TABLES_MANIFEST.json").write_bytes(
+        verify_bceg.canonical_json_bytes(
+            {
+                "legacy_event_order_map_pin": {
+                    "legacy_event_order_map": {},
+                    "legacy_event_order_map_sha256": "0" * 64,
+                }
+            }
+        )
+    )
+    (contracts / "implementation_anchor.json").write_bytes(
+        verify_bceg.canonical_json_bytes(
+            {"legacy_event_order_map_sha256": "0" * 64}
+        )
+    )
 
     golden = {
         "EVENT_SURFACE": {
