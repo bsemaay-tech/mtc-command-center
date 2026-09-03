@@ -1195,3 +1195,29 @@ live trading, a build, or a kernel change.
   pre-window fill premise of addendum 20 for RULE2-08 (then no funding transcript can exist and DEF-P012-08's
   evidence must be re-designed). Default if silent: (a).
 - W312 (M6 + M4) proceeds for every row except the RULE2-08 rows and probe 08-A, which wait for M1b.
+
+## Addendum 47 - 2026-09-03 08:4x REAL (Lead record: morning program state - K landed, three verifies ACCEPT)
+
+- **K (decision 136) landed** on the engine branch by the kernel author family (Codex, W306): `4b1853c4` (F02:
+  `cumulative_funding` membership keyed on the sealed declaration `owning_def_ids` containing DEF-P012-08, value 0
+  with no funding event), `4cc00714` (F13: ordered per-row accumulation of `cumulative_funding` and
+  `cumulative_fee`), `67f86ad2` (F11: deterministic content identity for empty transitions); receipt `8b9e2964`,
+  report `191637e2`. Each item has a quoted RED (failing before) and GREEN (passing after) test; the legacy replay
+  reads `SURFACES_EQUAL=34 MISMATCH=0 SKIPPED=0` after each of the three commits. The canonical gate was invoked
+  once and refused on `DESIGN_PIN_MISMATCH` only: the in-repo design pin is still v1.12 (1419 lines) while the
+  design is v1.13 (1469 lines) after M8 - expected, the re-pin is the later in-repo copy lane. Independent
+  second-family verification (V306, DeepSeek V4 Pro) is running at the time of this record.
+- **K follow-up (W314, Codex fourth, launched 08:34):** five contract self-test cases in `test_verify_bceg.py` still
+  assert the pre-F02 behaviour (absence of `cumulative_funding`; old `CLOSED_SET_VIOLATION`) and contradict the
+  design (`P012_FRESH_DESIGN_V1.md:1224-1228`); W306 reported them rather than editing harness bytes. W314 aligns
+  exactly those five cases, nothing else; verified by another family before seal #14.
+- **Harness residual (not fixed, recorded for the fresh audits):** the gate's early-refusal path does not write
+  `--output` (only stdout); W306 preserved the emitted JSON by hand as its receipt.
+- **Verifies (DeepSeek V4 Pro, read-only):** V313 = ACCEPT (design v1.13: zero deletions, the three claim
+  occurrences struck and superseded by the bounded claim, wording matches the harness labels and
+  `comparison_claim_scope=ALL_NON_BLOCKED_EXPECTED_NODES`, honest limit added as L9 in section 17 - the spec's
+  "0.2.5" did not exist, C-2 applied). V311 = ACCEPT x3 (M7 `target_book` traceable to design section 22.5; M1
+  correctly STOPPED, RULE2-08 inputs byte-identical before/after; catalog delta = the one digest).
+- Running: W312 (M6 + M4, Claude Pro; RULE2-08 rows and probe 08-A held for M1b), W314, V306. Next after they
+  land: V312, V314, then the Lead sequence repin_base14 (M5) -> reseal14 -> baseline regeneration (decision 132
+  shape) -> probe manifests from the W312 table -> in-repo five-file copy + design pin v1.13 -> fresh audits.
