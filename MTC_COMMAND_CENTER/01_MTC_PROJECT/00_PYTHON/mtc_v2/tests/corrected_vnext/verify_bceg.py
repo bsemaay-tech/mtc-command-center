@@ -1492,10 +1492,21 @@ def compare_scoped_expected_nodes(
         if type(observed) is not dict:
             return [(pointer, canonical_node(observed), canonical_node(expected))]
         differences = []
-        for key in sorted(expected, key=lambda item: item.encode("utf-8")):
+        # Design v1.5 section 15.3 requires every node of both enumerated
+        # surfaces to match, and section 23 closes every member set below them:
+        # no container under a comparison surface is named open. The walk
+        # therefore visits the union of members in UTF-8 byte order, so a member
+        # carried only by the observed document is an extra node rather than an
+        # unvisited one.
+        for key in sorted(
+            set(expected) | set(observed), key=lambda item: item.encode("utf-8")
+        ):
             child = f"{pointer}/{_escape_pointer(key)}"
             if key not in observed:
                 differences.append((child, None, canonical_node(expected[key])))
+                continue
+            if key not in expected:
+                differences.append((child, canonical_node(observed[key]), None))
                 continue
             differences.extend(
                 compare_scoped_expected_nodes(
@@ -3329,19 +3340,38 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
                 raise
             closed_set_blockers.append({"scenario_id": scenario_id, **exc.as_dict()})
         scenario_blocked_nodes: list[dict[str, str]] = []
-        corrected_difference = compare_scoped_expected(
+        corrected_differences = compare_scoped_expected_nodes(
             golden, corrected, blocked_nodes=scenario_blocked_nodes
+        )
+        corrected_difference = (
+            corrected_differences[0] if corrected_differences else None
         )
         blocked_node_skips.extend(
             {"scenario_id": scenario_id, **node}
             for node in scenario_blocked_nodes
         )
-        if corrected_difference is not None:
+        # An observed-only member has no expected node at all (design v1.5
+        # section 15.3: missing, null, and empty are different), so it is
+        # reported under its own typed check rather than folded into the
+        # value-mismatch record.
+        for difference in corrected_differences:
+            if difference[2] is None:
+                corrected_blockers.append(
+                    {
+                        "check_id": "OBSERVED_EXTRA_MEMBER",
+                        "scenario_id": scenario_id,
+                        "pointer": difference[0],
+                    }
+                )
+        value_differences = [
+            difference for difference in corrected_differences if difference[2] is not None
+        ]
+        if value_differences:
             corrected_blockers.append(
                 {
                     "check_id": "CORRECTED_EXPECTATION_MISMATCH",
                     "scenario_id": scenario_id,
-                    "pointer": corrected_difference[0],
+                    "pointer": value_differences[0][0],
                 }
             )
         legacy_result = load_json_exact(baseline_root / "out" / scenario_id / "result_surface.json")

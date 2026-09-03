@@ -727,6 +727,43 @@ def test_corrected_expectation_compares_only_the_two_design_surfaces() -> None:
     assert difference[0] == "/RESULT_SURFACE/value"
 
 
+def test_w305_item1_extra_observed_member_at_a_nested_level_is_detected() -> None:
+    """GM83B-F02: the comparator visited only expected keys, so a nested extra escaped."""
+
+    golden = load_json_exact(
+        MTC_V2_ROOT / "golden/corrected_vnext/RULE2-01-GREEN.json"
+    )
+    observed = deepcopy(golden)
+    observed["EVENT_SURFACE"]["decision_events"][0]["undeclared_member"] = 1
+
+    differences = verify_bceg.compare_scoped_expected_nodes(golden, observed)
+
+    assert [difference[0] for difference in differences] == [
+        "/EVENT_SURFACE/decision_events/0/undeclared_member"
+    ]
+    assert differences[0][1] == verify_bceg.canonical_node(1)
+    assert differences[0][2] is None
+
+
+def test_w305_item1_union_walk_keeps_the_section_15_3_byte_order() -> None:
+    expected = {
+        "EVENT_SURFACE": {"b": 1, "d": 2},
+        "RESULT_SURFACE": {},
+    }
+    observed = {
+        "EVENT_SURFACE": {"a": 0, "b": 1, "c": 0, "d": 3},
+        "RESULT_SURFACE": {},
+    }
+
+    differences = verify_bceg.compare_scoped_expected_nodes(expected, observed)
+
+    assert [difference[0] for difference in differences] == [
+        "/EVENT_SURFACE/a",
+        "/EVENT_SURFACE/c",
+        "/EVENT_SURFACE/d",
+    ]
+
+
 def test_comparison_pipeline_measures_executed_output_once_per_row(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
