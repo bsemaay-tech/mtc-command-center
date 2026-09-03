@@ -1866,3 +1866,24 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
   shape, fifth run), W349 in-repo copies + one gate, the decision-147 base re-anchor to that commit (`repin_base16.py`), W350
   (in-repo manifest/anchor + provenance record re-measured at the new base + one gate). W344 (decision 148) and W346
   (decision 150) are timed on Codex fourth from 22:14; Wayfinder revision 5 on secondary at 22:16.
+
+## Addendum 74 - 2026-09-03 20:5x REAL (Lead record: decision 151 executed and verified; design v1.17; RE-SEAL #16; baseline regeneration launched; no new owner decision)
+
+- **W348 (Codex free, 20:23-20:39; decision 151) = PASS, Gemini V348 ACCEPT 3/3:** the RULE2-08 pair gained
+  `run_manifest.cost_schedule_digest` (RED `806e9851...`, GREEN `040c8366...`, the sealed RULE2-07 records' sidecar values) and
+  the RED funding cash row gained `funding_event_id` `TEST-FUND-1` (the joined funding row's id); the other fifteen goldens needed
+  no member (W345 had installed their digests; none has a funding cash row); two catalog pins; DERIVATIONS insertion-only.
+  W348-D01: design v1.16 marked `same_bar_collision_policy_id` REQUIRED on every 2.0.0 manifest while the sealed inputs carry it
+  only on the three RULE2-06 rows and the serializer emits it only when present - the lane refused to invent a value.
+- **W347B (Codex free, 20:45-20:51) = design v1.17** (1800 lines; +32 / -1): one AMENDMENT-CHOICE after the section-23.4 table
+  makes that presence rule CONDITIONAL on the sealed input's `economic_inputs` member (serializer line quoted); nothing else
+  moved. W347B-D01 recorded, not amended (one-member fence): the serializer emits `cost_schedule_digest` only when the attribute
+  is not None and does not tie it to `cost_schedule_id != NOT_CONSUMED` as the design's presence rule states - an open
+  harness/kernel invariant for the second pass or the `later` tail. **Gemini V347B = ACCEPT 4/4; the Lead accepted v1.17.**
+- **Lead RE-SEAL #16 executed 20:54 (`reseal16.py`, full seal-15 snapshot from the W343 commit measured 19/19):** `EXPECTED_SEAL_SHA`
+  `27bf72e8...` -> `40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab`; moved members = the seventeen goldens
+  (W345/W348), the catalog (17 rows), DERIVATIONS (insertion-only); design pin v1.17; base still `5e8e5794` (the decision-147
+  re-anchor follows the copies commit); `VERIFIED_BY` = the Gemini verifies V345B, V348, V347, V347B. Seal-#15 baseline run
+  archived (`P012_BASELINE_RUN_seal27bf72e8_archive`), dry-run 17/17, Lead note `LEAD_DRYRUN_NOTE_2026-09-03_SEAL16.md`;
+  **W300E (decision 132 shape, fifth run) launched on Codex free**; W349 (in-repo copies + one gate) chains after it; then
+  the Lead re-anchors the base to the W349 commit (`repin_base16.py`) and W350 re-measures the provenance record and runs the gate.
