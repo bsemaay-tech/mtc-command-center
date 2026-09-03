@@ -709,9 +709,12 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
     assert record["declaration_kind"] == "OWNER_DECISION_DECLARATION_NOT_EVIDENCE"
     assert "not evidence" in record["statement"]
     assert record["exceptions"][0]["owner_decision"] == 134
-    assert record["exceptions"][0]["lane_ids"] == ["W156", "W167", "W172"]
-    assert record["exceptions"][0]["base_state"] == "ABSENT_AT_BASE"
-    assert record["exceptions"][0]["base_blob_oid"] is None
+    # Owner decision 135; design P012_FRESH_DESIGN_V1.md:701 binds provenance to the re-measured M5 base.
+    assert record["exceptions"][0]["lane_ids"] == ["W156", "W167", "W172", "W316D"]
+    assert record["exceptions"][0]["base_state"] == "PRESENT_AT_BASE"
+    assert record["exceptions"][0]["base_blob_oid"] == (
+        "b811ce9d9d4efe574828c6d3fc2703bea71b71a8"
+    )
 
 
 def test_w305_item8_provenance_refusal_reports_every_unlifted_path(
@@ -1426,7 +1429,8 @@ def test_probe_cannot_claim_target_membership_when_base_is_refused(
         row for row in catalog if row.get("probe_id") == "PROBE-P012-08-A"
     )
     expected_node = "/EVENT_SURFACE/funding_events/0/funding_cash_delta"
-    comparator_first_node = "/EVENT_SURFACE/cash_events/0/signed_delta"
+    # Owner decision 144; design P012_FRESH_DESIGN_V1.md:558-560 binds index-ascending comparator order.
+    comparator_first_node = "/EVENT_SURFACE/cash_events/1/signed_delta"
     assert probe["expected_first_changed_node"] == expected_node
     assert probe["comparator_first_differing_node"] == comparator_first_node
     assert expected_node != comparator_first_node
@@ -1444,14 +1448,16 @@ def test_probe_cannot_claim_target_membership_when_base_is_refused(
         modified_manifest,
     )
 
-    assert receipt["status"] == "NOT_DETECTED"
-    assert receipt["measured_failed_check"] == "CLOSED_SET_VIOLATION"
+    # Owner decision 144; design P012_FRESH_DESIGN_V1.md:498 binds DETECTED at CORRECTED_EXPECTATION.
+    assert receipt["status"] == "DETECTED"
+    assert receipt["measured_failed_check"] == "CORRECTED_EXPECTATION"
     assert receipt["expected_first_changed_node"] == expected_node
+    # Owner decision 144; design P012_FRESH_DESIGN_V1.md:558-560 emits the unequal container before children.
     assert (
         receipt["comparator_first_differing_node"]
-        == "/RESULT_SURFACE/cumulative_funding"
+        == "/EVENT_SURFACE/cash_events"
     )
-    assert receipt["expected_node_changed"] is False
+    assert receipt["expected_node_changed"] is True
 
 
 @pytest.mark.parametrize(
@@ -1732,8 +1738,10 @@ def test_observed_path_has_no_legacy_state_seed_or_literal_surface_builder() -> 
         ("RULE2-06-GREEN", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
         ("RULE2-07-RED", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
         ("RULE2-07-GREEN", ["SEMANTICS_VALIDATED"]),
-        ("RULE2-08-RED", ["SEMANTICS_VALIDATED"]),
-        ("RULE2-08-GREEN", ["SEMANTICS_VALIDATED"]),
+        # Owner decisions 136/137/144; design P012_FRESH_DESIGN_V1.md:1278 binds this RED reason.
+        ("RULE2-08-RED", ["SEMANTICS_VALIDATED", "FUNDING_ELIGIBILITY"]),
+        # Owner decisions 136/137/144; design P012_FRESH_DESIGN_V1.md:1278 binds this GREEN reason.
+        ("RULE2-08-GREEN", ["SEMANTICS_VALIDATED", "FUNDING_ELIGIBILITY"]),
     ],
 )
 def test_raw_kernel_decision_trail_contains_each_evaluated_closed_reason(
@@ -2069,10 +2077,24 @@ def test_rule2_08_raw_kernel_is_not_seeded_from_legacy_state(
     result = observed["RESULT_SURFACE"]
     event = observed["EVENT_SURFACE"]
     assert result["refusals"] == []
-    assert result["run_manifest"]["cost_schedule_id"] == "NOT_CONSUMED"
-    assert event["cash_events"] == []
-    assert event["funding_events"] == []
-    assert result["cumulative_funding"] == 0
+    # Owner decision 144; design P012_FRESH_DESIGN_V1.md:490 binds RED->RED and GREEN->GREEN cost records.
+    assert result["run_manifest"]["cost_schedule_id"] == {
+        "RULE2-08-RED": "SYNTH-COST-RULE2-07-RED-V1",
+        "RULE2-08-GREEN": "SYNTH-COST-RULE2-07-GREEN-V1",
+    }[scenario_id]
+    # Owner decision 144; design P012_FRESH_DESIGN_V1.md:488,492,494 binds the in-window funding projection.
+    assert [member["signed_delta"] for member in event["cash_events"]] == {
+        "RULE2-08-RED": [-0.1],
+        "RULE2-08-GREEN": [],
+    }[scenario_id]
+    assert [member["funding_cash_delta"] for member in event["funding_events"]] == {
+        "RULE2-08-RED": [-0.1],
+        "RULE2-08-GREEN": [],
+    }[scenario_id]
+    assert result["cumulative_funding"] == {
+        "RULE2-08-RED": -0.1,
+        "RULE2-08-GREEN": 0,
+    }[scenario_id]
 
 
 @pytest.fixture
@@ -2193,11 +2215,14 @@ def test_w305_item6_refuses_missing_sealed_equal_price_target_book() -> None:
     )
     row = next(member for member in catalog if member["scenario_id"] == scenario_id)
 
-    with pytest.raises(GateRefusal) as caught:
-        execute_corrected_scenario(MTC_V2_ROOT, row)
+    observed = execute_corrected_scenario(MTC_V2_ROOT, row)
 
-    assert caught.value.check_id == "INPUT_DECLARATION_MISSING"
-    assert caught.value.pointer == "/corrected_only/economic_inputs/target_book"
+    # Owner decisions 139/142; design P012_FRESH_DESIGN_V1.md:402 binds the sealed equal-price target order.
+    assert observed["RESULT_SURFACE"]["refusals"] == []
+    assert [member["exit_id"] for member in observed["EVENT_SURFACE"]["exit_events"]] == [
+        "TARGET-FAR",
+        "TARGET-NEAR",
+    ]
 
 
 def test_w305_item6_config_transports_only_declared_economic_inputs() -> None:
@@ -2226,17 +2251,11 @@ def test_all_declared_corrected_scenarios_execute_or_refuse_missing_input() -> N
         except GateRefusal as exc:
             refused.append((row["scenario_id"], exc.check_id, exc.pointer))
 
+    # Owner decisions 139/142/144; design P012_FRESH_DESIGN_V1.md:402,488-494 binds all declared rows runnable.
     assert [member["scenario_id"] for member in observed] == [
         row["scenario_id"]
         for row in catalog
         if row["role"] in {"RED", "GREEN"}
-        and row["scenario_id"] != "RULE2-06-EQUAL-PRICE-RED"
     ]
     assert all(member["semantics_version"] == "2.0.0" for member in observed)
-    assert refused == [
-        (
-            "RULE2-06-EQUAL-PRICE-RED",
-            "INPUT_DECLARATION_MISSING",
-            "/corrected_only/economic_inputs/target_book",
-        )
-    ]
+    assert refused == []

@@ -153,8 +153,11 @@ def test_corrected_manifest_marks_an_unconsumed_cost_schedule_without_padding_di
         _records(config), execution_profile_id=str(config["execution_profile_id"])
     ).to_dict()
 
-    assert manifest["cost_schedule_id"] == "NOT_CONSUMED"
-    assert "cost_schedule_digest" not in manifest
+    # Owner decision 144; design P012_FRESH_DESIGN_V1.md:932 binds the RED cost record id and digest.
+    assert manifest["cost_schedule_id"] == "SYNTH-COST-RULE2-07-RED-V1"
+    assert manifest["cost_schedule_digest"] == (
+        "806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b"
+    )
     assert manifest["funding_schedule_id"] == "SYNTH-FUNDING-RULE2-08-V1"
 
 
