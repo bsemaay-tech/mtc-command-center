@@ -888,7 +888,9 @@ def validate_corrected_closed_sets(
     }
     if owning_def_ids.intersection({"DEF-P012-01", "DEF-P012-02", "DEF-P012-05"}):
         result_keys.add("order_notional")
-    if "DEF-P012-02" in owning_def_ids and role == "GREEN":
+    if "DEF-P012-02" in owning_def_ids and any(
+        event.get("decision") == "MIN_NOTIONAL_ADMITTED" for event in decisions
+    ):
         result_keys.add("admitted")
     if "DEF-P012-07" in owning_def_ids:
         result_keys.add("guards")

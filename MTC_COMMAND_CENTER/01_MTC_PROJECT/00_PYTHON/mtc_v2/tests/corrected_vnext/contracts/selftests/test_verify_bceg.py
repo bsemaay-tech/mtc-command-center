@@ -1371,8 +1371,43 @@ def test_probe_driver_refuses_unclosed_base_before_variant_comparison(
         MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
     )
     probe = next(
-        row for row in catalog if row.get("probe_id") == "PROBE-P012-08-A"
+        row for row in catalog if row.get("probe_id") == "PROBE-P012-02-A"
     )
+    base_row = next(
+        row
+        for row in catalog
+        if row.get("scenario_id") == probe["base_scenario_id"]
+        and row.get("role") in {"RED", "GREEN"}
+    )
+    expected = load_json_exact(
+        MTC_V2_ROOT / base_row["expected_artifacts"]["2.0.0"]["path"]
+    )
+    refused_row = next(
+        row
+        for row in catalog
+        if row.get("scenario_id") == "RULE2-02-RED" and row.get("role") == "RED"
+    )
+    refused_admission = load_json_exact(
+        MTC_V2_ROOT / refused_row["expected_artifacts"]["2.0.0"]["path"]
+    )
+    assert "admitted" not in refused_admission["RESULT_SURFACE"]
+
+    # Design v1.17 sections 23.4/23.5 (:1425, :1537-1539): admitted exists only
+    # when the DEF-P012-02 minimum-notional predicate terminates in admission.
+    verify_bceg.validate_corrected_closed_sets(
+        base_row,
+        {
+            "EVENT_SURFACE": refused_admission["EVENT_SURFACE"],
+            "RESULT_SURFACE": refused_admission["RESULT_SURFACE"],
+        },
+    )
+    differences = verify_bceg.compare_scoped_expected_nodes(
+        expected, refused_admission
+    )
+    assert "/RESULT_SURFACE/admitted" in {
+        pointer for pointer, _observed, _expected in differences
+    }
+
     unmodified = tmp_path / "kernel"
     shutil.copytree(
         MTC_V2_ROOT / "core",
@@ -1390,17 +1425,14 @@ def test_probe_driver_refuses_unclosed_base_before_variant_comparison(
     )
 
     assert identity_receipt["status"] == "NOT_DETECTED"
-    assert identity_receipt["measured_failed_check"] == "CLOSED_SET_VIOLATION"
-    assert (
-        identity_receipt["comparator_first_differing_node"]
-        == "/RESULT_SURFACE/cumulative_funding"
-    )
+    assert identity_receipt["measured_failed_check"] is None
+    assert identity_receipt["comparator_first_differing_node"] is None
     assert identity_receipt["expected_node_changed"] is False
 
     modified = MTC_V2_ROOT / probe["modified_copy_path"]
     modified_manifest = load_json_exact(
         MTC_V2_ROOT
-        / "tests/corrected_vnext/probes/PROBE-P012-08-A/modified_tree_manifest.json"
+        / "tests/corrected_vnext/probes/PROBE-P012-02-A/modified_tree_manifest.json"
     )
     modified_receipt = verify_bceg.drive_probe_variant_process(
         MTC_V2_ROOT,
@@ -1410,13 +1442,15 @@ def test_probe_driver_refuses_unclosed_base_before_variant_comparison(
         modified_manifest,
     )
 
-    assert modified_receipt["status"] == "NOT_DETECTED"
-    assert modified_receipt["measured_failed_check"] == "CLOSED_SET_VIOLATION"
+    # Owner decision 143; design v1.17 :273-303 re-targets this probe to the
+    # corrected-expectation comparator and keeps admitted in the changed set.
+    assert modified_receipt["status"] == "DETECTED"
+    assert modified_receipt["measured_failed_check"] == "CORRECTED_EXPECTATION"
     assert (
         modified_receipt["comparator_first_differing_node"]
-        == "/RESULT_SURFACE/cumulative_funding"
+        == "/EVENT_SURFACE/cash_events"
     )
-    assert modified_receipt["expected_node_changed"] is False
+    assert modified_receipt["expected_node_changed"] is True
 
 
 def test_probe_cannot_claim_target_membership_when_base_is_refused(
