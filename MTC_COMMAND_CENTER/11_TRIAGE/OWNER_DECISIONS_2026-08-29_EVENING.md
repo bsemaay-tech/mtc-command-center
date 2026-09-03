@@ -1519,3 +1519,38 @@ live trading, a build, or a kernel change.
   W279C (Claude Pro, 18:10 window), GM83C (Gemini 3.8; no git writes while it runs) on that exact snapshot.
 - Wayfinder: new session `2026-09-03T1332-claude` revision 1 OPEN_PROVISIONAL imported by the dashboard at 14:07
   (measured hours only: WP-P0-12 0.21 h, WP-P0-14 0.35 h; Lead time NOT RECORDED).
+
+## Addendum 61 - 2026-09-03 15:3x REAL (Lead record: the seal-#14 snapshot's gate list; two Lead misses corrected (#14b, provenance record); W300C baseline identical; no new owner decision)
+
+- **W300C (Codex free, 14:22-14:4x; decision 132 shape, third run):** 11/11 preconditions PASS, one run, 17/17 legacy arms;
+  regression against the seal-e4ffde6a archive: **34/34 scenario surfaces byte-identical**, including the five scenarios
+  whose sealed inputs moved (the legacy kernel does not read the corrected-only members `target_book` /
+  `cost_schedule_id`); only `run_status.json` (catalog sha + five `input_sha256` members) and its checksum line differ.
+  The Lead's expectation sentence in the spec ("five surfaces may differ") was wrong in the safe direction and is recorded
+  as the lane's W300C-F01. Baseline manifest sealed to #14 (sha `d522debe...`).
+- **W316 (Codex secondary):** five in-repo copies + design pin v1.15 (`d574a405`), then the two RULE2-08 goldens and five
+  inputs (`de0a2404`). Lead spec defect: the golden/input copies were listed after the "Do" list, so the lane ran its
+  single gate BEFORE them and the gate refused at the first stale member. **W316B (`443457d7`) ran the gate on the
+  complete snapshot: 16 refusals, 9 of 10 probes DETECTED.** Classes: (a) the missing section-16 review record (expected);
+  (b) `IMPLEMENTATION_BASE_ANCESTRY_MISMATCH` - the bundle manifest's `seal` / `seal_state` `IMPLEMENTATION_BASE_SHA` still
+  read `108ea066` while the anchor read `5e8e5794`: the Lead's M5 script had re-pinned the anchor only. **Corrected by the
+  Lead as re-seal #14b** (two members moved to the anchor's value; `EXPECTED_SEAL_SHA` is computed over `files[]` only and
+  is UNCHANGED at `a58b6dea...`; `reseal_history` records it; backup kept); (c) ten `OBSERVED_ARTIFACT_STALE` on
+  RULE2-06-RED / -EQUAL-PRICE-RED / -GREEN and RULE2-08-RED / -GREEN (1.0.0 and 2.0.0) - the committed observed files
+  predate the owner's input changes; W316C materialized exactly those ten by the harness's own `--mode observe`; (d) the
+  decision-134 provenance exception record (`contracts/expected_provenance_exceptions.json`) still bound to base
+  `108ea066` - W316C's gate refused `EXPECTED_PROVENANCE_EXCEPTION_INVALID` and stopped honestly without committing;
+  **W316D (Codex free, launched 15:2x)** commits the W316C work and re-measures that record at the M5 base (read-only git;
+  the owner-134 authorization is unchanged), then runs the gate once; (e) **four substantive items, untouched, for the fresh
+  audits:** PROBE-P012-02-A NOT DETECTED (expected `CORRECTED_EXPECTATION`, measured `CLOSED_SET_VIOLATION` at
+  `/RESULT_SURFACE/admitted` - a decision-143 value that must come from the design's check order, never from the run);
+  `OBSERVED_EXTRA_MEMBER` `/RESULT_SURFACE/run_manifest/cost_schedule_digest` on both RULE2-08 rows (the kernel emits the
+  member, the golden says ABSENT - a closed-set naming question, design 23.4); `CORRECTED_EXPECTATION_MISMATCH` on
+  RULE2-08-RED `/EVENT_SURFACE/cash_events` (kernel two-item array vs the tables' fee/funding array; exact values not
+  emitted by the receipt). No RULE2-01-GREEN provenance refusal appeared.
+- **Audit specs updated** to name these known refusals as objects to judge (kernel vs design vs tables, inside/outside
+  decisions 135-144), not as surprises. The audits (W276C Codex fourth, W279C Claude Pro, GM83C Gemini 3.8) start on
+  W316D's HEAD. Routes: Codex secondary capped until 17:12 after three lanes; free and fourth live; Claude Pro window to
+  18:10.
+- Wayfinder session 2026-09-03T1332-claude revision 2 imported 15:06 (WP-P0-12 1.28 h, WP-P0-14 0.35 h, measured lanes
+  only). Owner word still pending: `accept design P0-14 v1.10`.
