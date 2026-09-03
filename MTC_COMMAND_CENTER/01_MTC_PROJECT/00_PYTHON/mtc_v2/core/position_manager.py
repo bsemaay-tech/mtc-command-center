@@ -114,7 +114,9 @@ class PositionManager:
         self.qty_step = float(qty_step)
 
     @staticmethod
-    def _transition_key(transition: EconomicTransition) -> tuple[object, ...]:
+    def _transition_key(
+        transition: EconomicTransition, *, bar: Bar
+    ) -> tuple[object, ...]:
         if not (
             transition.decision_events
             or transition.fill_decisions
@@ -122,12 +124,28 @@ class PositionManager:
             or transition.fee_events
             or transition.funding_events
         ):
+            facts = transition.next_position_facts
             return (
                 transition.semantics_id,
                 transition.instrument_record_digest,
                 transition.cost_schedule_digest,
                 transition.funding_schedule_digest,
-                transition._application_identity,
+                "EMPTY_TRANSITION_V1",
+                bar.timestamp.isoformat(),
+                bar.bar_index,
+                facts.lifecycle_id,
+                facts.side,
+                float(facts.quantity).hex(),
+                (
+                    None
+                    if facts.entry_fill_price is None
+                    else float(facts.entry_fill_price).hex()
+                ),
+                (
+                    None
+                    if facts.active_stop_price is None
+                    else float(facts.active_stop_price).hex()
+                ),
             )
         return (
             transition.semantics_id,
@@ -327,7 +345,7 @@ class PositionManager:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: corrected manager requires 2.0.0"
             )
-        transition_key = self._transition_key(transition)
+        transition_key = self._transition_key(transition, bar=bar)
         if transition_key in state.applied_transition_keys:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: transition already applied"

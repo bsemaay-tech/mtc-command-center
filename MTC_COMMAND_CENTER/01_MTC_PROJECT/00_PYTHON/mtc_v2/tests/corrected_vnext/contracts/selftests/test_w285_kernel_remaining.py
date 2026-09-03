@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
@@ -243,7 +245,54 @@ def test_w279_f16_fee_cash_event_id_uses_the_fill_sequence() -> None:
     assert transition.fee_events[0].cash_event_id == "CE-FEE-7"
 
 
-def test_w279_f19_distinct_empty_transitions_have_distinct_apply_identities() -> None:
+def test_w279b_f11_equal_empty_transition_keys_are_process_stable() -> None:
+    script = """
+import json
+from datetime import datetime, timezone
+
+from mtc_v2.core.position_manager import PositionManager
+from mtc_v2.core.types import Bar, EconomicTransition, PortfolioState, PositionFacts
+
+now = datetime(2000, 1, 1, tzinfo=timezone.utc)
+transition = EconomicTransition(
+    semantics_id="2.0.0",
+    instrument_record_id="I",
+    instrument_record_digest="0" * 64,
+    funding_schedule_id="F",
+    funding_schedule_digest="1" * 64,
+    next_position_facts=PositionFacts(1, "LONG", 1.0, 100.0),
+)
+state = PortfolioState()
+manager = PositionManager(
+    enable_long=True,
+    enable_short=True,
+    regime_lock=False,
+    max_entries=1,
+    cooldown_bars=0,
+    contract_multiplier=1.0,
+)
+manager.apply_transition(
+    bar=Bar(now, 100.0, 100.0, 100.0, 100.0, 1.0, 7),
+    state=state,
+    transition=transition,
+)
+print(json.dumps(next(iter(state.applied_transition_keys)), separators=(",", ":")))
+"""
+    runs = [
+        subprocess.run(
+            [sys.executable, "-c", script],
+            cwd=MTC_V2_ROOT.parent,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        for _ in range(2)
+    ]
+    assert [run.returncode for run in runs] == [0, 0], "\n".join(
+        run.stderr for run in runs
+    )
+    assert runs[0].stdout.encode("utf-8") == runs[1].stdout.encode("utf-8")
+
     economic_state = EconomicState(
         lifecycle_id=1,
         position_side="LONG",
@@ -278,10 +327,9 @@ def test_w279_f19_distinct_empty_transitions_have_distinct_apply_identities() ->
     manager = _manager()
 
     manager.apply_transition(bar=_bar(), state=state, transition=first)
-    manager.apply_transition(bar=_bar(), state=state, transition=second)
-    assert len(state.applied_transition_keys) == 2
     with pytest.raises(EconomicTransitionError, match="transition already applied"):
-        manager.apply_transition(bar=_bar(), state=state, transition=first)
+        manager.apply_transition(bar=_bar(), state=state, transition=second)
+    assert len(state.applied_transition_keys) == 1
 
 
 def test_w279_f20_unknown_positive_rate_payer_is_a_typed_refusal() -> None:
