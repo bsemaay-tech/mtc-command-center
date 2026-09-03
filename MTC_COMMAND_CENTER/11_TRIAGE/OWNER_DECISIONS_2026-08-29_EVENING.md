@@ -1586,3 +1586,36 @@ live trading, a build, or a kernel change.
   objects; none of them is a hidden defect, and none is fixable inside decisions 135-144 without an owner word on at
   least two of them (the provenance anchor; the 02-A expected check). The two flagship verdicts and the cross-family
   triage (T340) follow before anything is proposed. Owner word still pending: `accept design P0-14 v1.10`.
+
+## Addendum 63 - 2026-09-03 16:2x REAL (Lead record: both flagship verdicts are in - the round is NOT clean; three families agree; triage running; no new owner decision)
+
+- **W279C (Claude Pro, Opus; 15:20-15:5x) = BLOCK.** 25 findings (8 HIGH / 10 MEDIUM / 7 LOW). HIGH: F01-F04 SEALED TABLES -
+  the RULE2-08-RED golden (decision-144 chain, authored by the DeepSeek stand-in and verified by Codex over six rounds)
+  places the pre-window fee inside the compared window while excluding the fill that produced it; its fee row uses a
+  member shape outside the design's closed `fee_events` set; `equity_curve.first` is 1000 where the design's own amendment
+  requires 999.9; both RULE2-08 goldens omit `run_manifest.cost_schedule_digest` that decision 144 binds. F05 HARNESS -
+  PROBE-P012-02-A is NOT DETECTED because the gate makes `/RESULT_SURFACE/admitted` unconditionally required, against
+  design 23.5. F06 PROVENANCE - the M5 re-pin did not achieve its stated purpose (nine owner-directed re-seals landed after
+  the base); an 18-row exception list would leave section 15.4 with zero residual coverage; two honest positions offered
+  (keep the anchor and let the refusal stand as a visible blocker with a new honest limit; or re-anchor forward after
+  writing that limit). F07 HARNESS/EVIDENCE - ten contract self-tests fail at the snapshot (nine assert the pre-decision
+  behaviour decisions 136-144 superseded; the tenth is the recorded 02-A open case) and no gate surface reports a red
+  suite. F08 SEALED TABLES - 81 of the 100 gate-skipped nodes are `BLOCKED-MISSING-RECORD-BYTES` digests whose record
+  files now exist and whose digests the kernel emits; the tables family may derive them. Strong points recorded by the
+  auditor: legacy 34/34 byte-exact on the modified kernel, 15 of 17 scenarios zero differing nodes, 9/10 probes DETECTED,
+  the pin surface intact.
+- **W276C (Codex; 15:21-16:2x, on the free account after the fourth capped at launch) = BLOCK.** 7 findings (4 HIGH / 3
+  MEDIUM): F01-F02 the RULE2-08 expectation/surface defects; F03 the undetected probe (harness); F04 the unrecorded
+  authorization for 18 post-base expectation changes; F05 the deliberately absent section-16 review; F06 the red committed
+  contract suite (10 failed / 303 passed); F07 the record-provenance run manifest is incomplete. Legacy replay 34/34 by the
+  W249 method; the K RED/GREEN proofs reproduced. Its own flip condition to PASS-WITH-NITS: closed run manifest implemented;
+  a fresh snapshot with a green suite and one full-gate run accepting with zero refusals and 10/10 probes; an owner-
+  ratified section-16 record. At the chat close the Codex FREE account hit its WEEKLY cap (resets Sep 7 06:50); fourth and
+  secondary are 5-hour-capped until 17:12; third weekly-capped until Sep 7.
+- **Agreement:** the three families (Codex, Claude Pro, Gemini) name the same objects: the RULE2-08 golden defects, the
+  02-A harness check, the provenance anchor after M5, the red self-test suite, the blocked record digests. None is a
+  hidden kernel defect; the K fixes and the legacy path hold. Cross-family triage T340 (DeepSeek V4 Pro reader over all
+  three reports + the gate list + the Lead's known-open list) is running; the Lead then brings the owner ONE page of
+  yes/no questions for the items outside decisions 135-144 (provenance anchor; 02-A harness correction; the 81 record
+  digests; the self-test alignment) and lists the inside-fence repairs (the RULE2-08-RED golden under the 144 chain) that
+  proceed on the existing words. Section 16 stays unprepared. Owner word still pending: `accept design P0-14 v1.10`.
