@@ -1251,3 +1251,17 @@ live trading, a build, or a kernel change.
 - Revised order: W317 + W319 + W318 (parallel, three families) -> V317/V319/V318 -> W315 (probe variants rebuilt on
   the post-K core + M4/M4b values; Codex) -> Lead repin_base14 + reseal14 -> W300C baseline regeneration -> W316
   in-repo copies + design pin -> fresh audits on that exact snapshot.
+
+## Addendum 49 - 2026-09-03 09:1x REAL (owner decision 144: M1b = (a))
+
+144. **M1b DECIDED (a), owner 09:1x verbatim: "M1b decision a) amends the design so RULE2-08 references the existing
+    RULE2-07 cost record".** Consequences, all inside the M1 fence (decision 137): (i) design amendment by the design
+    author family (W320, Claude Pro, after W317 releases the design file): RULE2-08-RED and RULE2-08-GREEN consume a
+    cost record, bound BY REFERENCE to the existing sealed RULE2-07 cost record (its id and sha256 as sealed in the
+    branch), superseding the "no cost schedule is consumed" sentences (design lines 443, 788-790, 960-961) by the
+    retain-and-strike convention; no new number. (ii) tables-family act (W321, Claude Pro, bundle): the two RULE2-08
+    inputs receive the cost-schedule binding members, catalog digests re-pinned, DERIVATIONS insertion-only; the two
+    held M6 projection rows and the held probe 08-A values are then derived from the amended design. (iii) verified
+    (V320, V321) before seal #14. The reverted probe-driver selftest (W314B) is closed by the same chain.
+- State at this record: V319 ACCEPT (M7b). W317 (design v1.14: members admitted, shape pinned, L10, M4b re-target)
+  and W318 (harness consumes the sealed projections) still running.
