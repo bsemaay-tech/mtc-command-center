@@ -1089,3 +1089,23 @@ live trading, a build, or a kernel change.
   verified by a second family (final snapshot `SNAPSHOTS/20260903_0320`).
 - Route reality for the record: Claude Pro's 5-hour window carried three lanes (flagship 2b, one fold, one
   harness lane) before capping; all three Codex accounts capped between 01:04 and 02:42 and reset at 05:43.
+
+## Addendum 42 - 2026-09-03 06:2x REAL (Lead record: harness continuation W305B; two new owner items; no new owner decision)
+
+- **W305B (Codex fourth) landed items 5-8** at HEAD `f06e3a2d`: unsealed RULE-2 projections refused instead of
+  computed (W279B-F04); reader-authored economic inputs removed, fail-closed `INPUT_DECLARATION_MISSING`
+  (W279B-F05); closed sets derived from the sealed declarations, not scenario ids (W279B-F07 / GM83B-F06);
+  provenance refusal reports every changed path (W279B-F14). 308 self-tests. Verify V305C running.
+- **The honest gate now refuses 28 records; 21 are new because the harness no longer authors expectations or
+  inputs.** They resolve to owner/tables items, not lane work:
+  - **M6 (new):** sixteen `EXPECTATION_UNSEALED` records - the sealed tables carry no RULE-2 projection
+    declarations (divergence / GREEN cross-version expectations); the tables family must seal them
+    (design-directed re-derivation, re-seal follows). *Approve?* default yes.
+  - **M7 (new):** the equal-price scenario (RULE2-06-EQUAL-PRICE-RED) has no sealed `target_book` economic
+    input; the harness used to construct it. Same shape as M1: a sealed-input change (owner-gated). *Approve?*
+    default yes.
+  - **M4 grows:** RULE2-06-RED now differs from its golden at one node and PROBE-P012-06-A is not detected,
+    because the removed reader shaping used to make them match; re-derivation by the tables family joins the
+    two existing probe rows.
+  - **M5 confirmed:** 18 sealed members remain changed after the recorded base commit (decision 134 lifts one).
+- Flagship 1b (W276B, Codex free) started 06:15 on HEAD `f06e3a2d`.
