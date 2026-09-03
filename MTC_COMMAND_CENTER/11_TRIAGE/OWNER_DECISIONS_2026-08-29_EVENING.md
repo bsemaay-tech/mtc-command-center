@@ -1414,3 +1414,25 @@ live trading, a build, or a kernel change.
     the word; the Lead makes NO change to `C:\LAB\WAYFINDER_DASHBOARD` (the staged W332 lane stays gated on an
     authorization marker that will not be written; spec retained for whoever repairs the reader). Session updates
     to the inbox still import normally (that path is unaffected).
+
+## Addendum 57 - 2026-09-03 13:2x REAL (Lead record: P0-12 tables round 3-4; Wayfinder revisions 4-6; P0-14 fold launched)
+
+- **W321 (RULE2-08 tables) verification rounds:** round 3 (Codex free) accepted the M1 binding, the four re-pinned
+  catalog digests, the sealed projection values, the GREEN design-gap handling (`BLOCKED-OPEN-EMBED-05`, projection
+  pair STOPPED), the probe check ids and the enumerated RED (11 nodes) / GREEN (9 nodes) golden deltas; two
+  REQUEST_CHANGES remained: F-07 - PROBE-P012-02-A's comparator-first pointer must be the array pointer
+  `/EVENT_SURFACE/cash_events` (the comparator returns the container on a list-length mismatch,
+  `verify_bceg.py:1545-1549`), not `/EVENT_SURFACE/cash_events/0/signed_delta`; F-06 - stale design locators in the
+  two inputs' `digest_reason` and the RED golden's provenance members (traceability only; economics unchanged). A
+  narrow fourth pass (DeepSeek V4 Pro) fixed exactly those; the Lead LF-normalized and re-pinned the RED golden
+  digest again (catalog sha `a94aca67...`); V321C round 4 is running. F-04 (manifest at seal #13) is deferred to the
+  Lead's re-seal #14 by design.
+- **Wayfinder session update:** revision 4 (13:03, imported) states decision 145 and the reader rejection;
+  revision 5 (13:16, imported) added W331; its closeout still carried the question-146 text, so the Lead replaced
+  that one section by hand and bumped to revision 6 (13:19): "No owner decision pending at this revision; 146 = (b)".
+  Hours unchanged since revision 2 (no new lane with both endpoints evidenced was added by the builder; measured
+  only, never estimated).
+- **P0-14:** W331 fold (three T330-confirmed findings) launched 13:10:30 on Claude Pro after its reset; the fresh
+  census (DeepSeek V4 Pro, `_packets_CENSUS_P014_R2`) is staged to run on its DONE; then back to the owner.
+- **Route note:** DeepSeek author lanes need three to four verify-repair rounds on sealed-table work (locator drift,
+  report accuracy); the substantive content was right from round 2. Codex free carried all four verify rounds.
