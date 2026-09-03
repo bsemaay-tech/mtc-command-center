@@ -83,6 +83,8 @@ SEMANTIC_COVERAGE_REVIEW_DISPOSITIONS = {
     "REFUSED",
 }
 SEMANTIC_COVERAGE_REVIEW_CHAIN = ("#5", "#6", "#7", "#8", "#9")
+OBSERVED_ROOT = PurePosixPath("tests/corrected_vnext/observed")
+PROBE_ROOT = PurePosixPath("tests/corrected_vnext/probes")
 CORRECTED_CONTAINERS = (
     "decision_events",
     "fill_events",
@@ -2173,6 +2175,7 @@ def validate_catalog(root: Path, baseline_root: Path) -> Corpus:
     golden_files = {path.relative_to(root).as_posix() for path in (root / "golden/corrected_vnext").glob("*.json")}
     if golden_files != expected_paths:
         raise GateRefusal("EXPECTED_ROOT_CONSERVATION_INVALID", "golden root differs from catalog")
+    validate_root_conservation(root, catalog)
     return Corpus(root=root, baseline_root=baseline_root, catalog=catalog, blockers=tuple(blockers), identities=identities)
 
 
@@ -2252,6 +2255,140 @@ def _tree_manifest_members(manifest: Any) -> dict[str, str]:
     if paths != sorted(paths, key=lambda item: item.encode("utf-8")):
         raise GateRefusal("PROBE_TREE_MANIFEST_ORDER_INVALID", "members are not UTF-8 sorted")
     return members
+
+
+def _root_files(root: Path, relative_root: PurePosixPath) -> set[str]:
+    base = root.joinpath(*relative_root.parts)
+    if not base.is_dir():
+        return set()
+    present: set[str] = set()
+    for path in base.rglob("*"):
+        if path.is_symlink():
+            raise GateRefusal(
+                "CATALOG_PATH_SYMLINK", path.relative_to(root).as_posix()
+            )
+        if path.is_file():
+            present.add(path.relative_to(root).as_posix())
+    return present
+
+
+def _record_root_reference(
+    references: dict[str, list[str]], relative: str, referrer: str
+) -> None:
+    references.setdefault(relative, []).append(referrer)
+
+
+def validate_root_conservation(
+    root: Path, catalog: list[dict[str, Any]]
+) -> dict[str, int]:
+    """Design v1.5 section 15.2 step 5 and section 15.4 scenario/file conservation.
+
+    Every file beneath `OBSERVED_ROOT` and `PROBE_ROOT` is referenced exactly
+    once: observed artifacts directly by their catalog row, KERNEL variant
+    members transitively through the catalog-bound tree manifest, and the single
+    `KERNEL_FILE_PATCH` file transitively through the catalog-bound modification
+    manifest that names it. Extra, missing, shared, or multiply referenced files
+    are refused.
+    """
+
+    observed_references: dict[str, list[str]] = {}
+    probe_references: dict[str, list[str]] = {}
+    for row in catalog:
+        if row["role"] in {"RED", "GREEN"}:
+            references = row.get("observed_artifact_paths")
+            if type(references) is not dict:
+                raise GateRefusal(
+                    "CATALOG_OBSERVED_REF_INVALID", str(row.get("scenario_id"))
+                )
+            for version, relative in sorted(references.items()):
+                if type(relative) is not str:
+                    raise GateRefusal(
+                        "CATALOG_OBSERVED_REF_INVALID", str(row.get("scenario_id"))
+                    )
+                _safe_relative_path(root, relative, OBSERVED_ROOT)
+                _record_root_reference(
+                    observed_references,
+                    relative,
+                    f"{row['scenario_id']}:{version}",
+                )
+            continue
+        probe_id = row["probe_id"]
+        manifest_relative = row["modification_manifest_path"]
+        manifest_path = _safe_relative_path(root, manifest_relative, PROBE_ROOT)
+        _record_root_reference(
+            probe_references, manifest_relative, f"{probe_id}:modification_manifest"
+        )
+        # A manifest this preflight cannot read contributes no transitive
+        # reference; its members then surface as unreferenced files here and the
+        # manifest itself is refused by _validate_probe_artifact.
+        try:
+            manifest = load_json_exact(manifest_path)
+        except GateRefusal:
+            continue
+        if type(manifest) is not dict:
+            continue
+        modifications = manifest.get("modifications")
+        if type(modifications) is list:
+            for modification in modifications:
+                patch_relative = (
+                    modification.get("patch_path")
+                    if type(modification) is dict
+                    else None
+                )
+                if type(patch_relative) is str:
+                    _safe_relative_path(root, patch_relative, PROBE_ROOT)
+                    _record_root_reference(
+                        probe_references, patch_relative, f"{probe_id}:patch"
+                    )
+        tree_relative = manifest.get("modified_tree_manifest_path")
+        if type(tree_relative) is not str:
+            continue
+        tree_path = _safe_relative_path(root, tree_relative, PROBE_ROOT)
+        _record_root_reference(
+            probe_references, tree_relative, f"{probe_id}:modified_tree_manifest"
+        )
+        try:
+            members = _tree_manifest_members(load_json_exact(tree_path))
+        except GateRefusal:
+            continue
+        prefix = PurePosixPath(str(row["modified_copy_path"]))
+        for member in sorted(members, key=lambda item: item.encode("utf-8")):
+            _record_root_reference(
+                probe_references,
+                (prefix / member).as_posix(),
+                f"{probe_id}:variant_member",
+            )
+
+    counts: dict[str, int] = {}
+    for label, relative_root, references in (
+        ("observed_root_files", OBSERVED_ROOT, observed_references),
+        ("probe_root_files", PROBE_ROOT, probe_references),
+    ):
+        duplicated = sorted(
+            relative
+            for relative, referrers in references.items()
+            if len(referrers) > 1
+        )
+        if duplicated:
+            raise GateRefusal(
+                "CATALOG_DOUBLE_REFERENCE",
+                f"{duplicated[0]} referenced by "
+                f"{', '.join(sorted(references[duplicated[0]]))}",
+                pointer=duplicated[0],
+            )
+        present = _root_files(root, relative_root)
+        unreferenced = sorted(present - set(references))
+        if unreferenced:
+            raise GateRefusal(
+                "CATALOG_UNREFERENCED_FILE", unreferenced[0], pointer=unreferenced[0]
+            )
+        missing = sorted(set(references) - present)
+        if missing:
+            raise GateRefusal(
+                "CATALOG_REFERENCED_FILE_MISSING", missing[0], pointer=missing[0]
+            )
+        counts[label] = len(present)
+    return counts
 
 
 def _copy_members(source: Path, destination: Path, members: Iterable[str]) -> None:

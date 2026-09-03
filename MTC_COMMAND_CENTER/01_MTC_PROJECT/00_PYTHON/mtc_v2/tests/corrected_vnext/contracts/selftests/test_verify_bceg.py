@@ -29,6 +29,9 @@ from mtc_v2.tests.corrected_vnext.verify_bceg import (
 FIXTURES = Path(__file__).parent
 MTC_V2_ROOT = FIXTURES.parents[3]
 BASELINE_ROOT = Path(r"C:\tmp\P012_BASELINE_RUN")
+EMPTY_DOCUMENT_BYTES = b"{}" + bytes([10])
+PATCH_BYTES = b"--- a" + bytes([10])
+MEMBER_BYTES = b"x = 1" + bytes([10])
 
 SYNTHETIC_REVIEW_IDENTITIES = {
     "worktree_head_commit": "1" * 40,
@@ -762,6 +765,148 @@ def test_w305_item1_union_walk_keeps_the_section_15_3_byte_order() -> None:
         "/EVENT_SURFACE/c",
         "/EVENT_SURFACE/d",
     ]
+
+
+def _conservation_root(tmp_path: Path) -> tuple[Path, list[dict[str, object]]]:
+    """A minimal root carrying one observed pair and one KERNEL probe case."""
+
+    root = tmp_path / "root"
+    observed = root / "tests/corrected_vnext/observed"
+    case = root / "tests/corrected_vnext/probes/PROBE-X"
+    (observed / "1.0.0").mkdir(parents=True)
+    (observed / "2.0.0").mkdir(parents=True)
+    (case / "kernel").mkdir(parents=True)
+    (observed / "1.0.0/S.json").write_bytes(EMPTY_DOCUMENT_BYTES)
+    (observed / "2.0.0/S.json").write_bytes(EMPTY_DOCUMENT_BYTES)
+    (case / "modification.patch").write_bytes(PATCH_BYTES)
+    member = case / "kernel/economics.py"
+    member.write_bytes(MEMBER_BYTES)
+    tree_manifest = {
+        "digest_method": "SHA256_CANONICAL_TREE_MANIFEST_V1",
+        "files": [
+            {
+                "path": "economics.py",
+                "sha256": hashlib.sha256(member.read_bytes()).hexdigest(),
+            }
+        ],
+    }
+    (case / "modified_tree_manifest.json").write_bytes(
+        verify_bceg.canonical_json_bytes(tree_manifest)
+    )
+    (case / "modification_manifest.json").write_bytes(
+        verify_bceg.canonical_json_bytes(
+            {
+                "modified_tree_manifest_path": (
+                    "tests/corrected_vnext/probes/PROBE-X/modified_tree_manifest.json"
+                ),
+                "modifications": [
+                    {
+                        "operation": "KERNEL_FILE_PATCH",
+                        "patch_path": (
+                            "tests/corrected_vnext/probes/PROBE-X/modification.patch"
+                        ),
+                    }
+                ],
+            }
+        )
+    )
+    catalog: list[dict[str, object]] = [
+        {
+            "scenario_id": "S",
+            "role": "GREEN",
+            "observed_artifact_paths": {
+                "1.0.0": "tests/corrected_vnext/observed/1.0.0/S.json",
+                "2.0.0": "tests/corrected_vnext/observed/2.0.0/S.json",
+            },
+        },
+        {
+            "scenario_id": "PROBE-X",
+            "role": "PROBE",
+            "probe_id": "PROBE-X",
+            "modified_copy_path": "tests/corrected_vnext/probes/PROBE-X/kernel/",
+            "modification_manifest_path": (
+                "tests/corrected_vnext/probes/PROBE-X/modification_manifest.json"
+            ),
+        },
+    ]
+    return root, catalog
+
+
+def test_w305_item2_conserved_roots_are_accepted(tmp_path: Path) -> None:
+    root, catalog = _conservation_root(tmp_path)
+
+    assert verify_bceg.validate_root_conservation(root, catalog) == {
+        "observed_root_files": 2,
+        "probe_root_files": 4,
+    }
+
+
+def test_w305_item2_orphan_under_observed_root_is_refused(tmp_path: Path) -> None:
+    root, catalog = _conservation_root(tmp_path)
+    (root / "tests/corrected_vnext/observed/leak.json").write_bytes(
+        EMPTY_DOCUMENT_BYTES
+    )
+
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.validate_root_conservation(root, catalog)
+    assert caught.value.check_id == "CATALOG_UNREFERENCED_FILE"
+    assert caught.value.pointer == "tests/corrected_vnext/observed/leak.json"
+
+
+def test_w305_item2_orphan_under_probe_root_is_refused(tmp_path: Path) -> None:
+    root, catalog = _conservation_root(tmp_path)
+    (root / "tests/corrected_vnext/probes/unreferenced_probe.json").write_bytes(
+        EMPTY_DOCUMENT_BYTES
+    )
+
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.validate_root_conservation(root, catalog)
+    assert caught.value.check_id == "CATALOG_UNREFERENCED_FILE"
+    assert (
+        caught.value.pointer
+        == "tests/corrected_vnext/probes/unreferenced_probe.json"
+    )
+
+
+def test_w305_item2_twice_referenced_observed_file_is_refused(tmp_path: Path) -> None:
+    root, catalog = _conservation_root(tmp_path)
+    catalog[0]["observed_artifact_paths"]["2.0.0"] = (
+        "tests/corrected_vnext/observed/1.0.0/S.json"
+    )
+
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.validate_root_conservation(root, catalog)
+    assert caught.value.check_id == "CATALOG_DOUBLE_REFERENCE"
+    assert caught.value.pointer == "tests/corrected_vnext/observed/1.0.0/S.json"
+
+
+def test_w305_item2_patch_file_named_as_a_variant_member_is_refused(
+    tmp_path: Path,
+) -> None:
+    root, catalog = _conservation_root(tmp_path)
+    case = root / "tests/corrected_vnext/probes/PROBE-X"
+    manifest = load_json_exact(case / "modification_manifest.json")
+    manifest["modifications"][0]["patch_path"] = (
+        "tests/corrected_vnext/probes/PROBE-X/kernel/economics.py"
+    )
+    (case / "modification_manifest.json").write_bytes(
+        verify_bceg.canonical_json_bytes(manifest)
+    )
+
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.validate_root_conservation(root, catalog)
+    assert caught.value.check_id == "CATALOG_DOUBLE_REFERENCE"
+
+
+def test_w305_item2_real_catalog_conserves_both_roots() -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+
+    counts = verify_bceg.validate_root_conservation(MTC_V2_ROOT, catalog)
+
+    assert counts["observed_root_files"] == 34
+    assert counts["probe_root_files"] == 1103
 
 
 def test_comparison_pipeline_measures_executed_output_once_per_row(
