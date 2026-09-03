@@ -1669,3 +1669,32 @@ live trading, a build, or a kernel change.
 - Wayfinder session 2026-09-03T1332-claude revision 3 imported 16:27 (WP-P0-12 3.31 h, WP-P0-14 0.35 h, measured lanes
   only; the five pending owner words listed verbatim). Plan rev 4 sent 16:3x. Owner words pending: `accept design P0-14
   v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `later|now`.
+
+## Addendum 66 - 2026-09-03 17:4x REAL (Lead record: the inside-fence repairs landed and were verified; one design gap escalated to the owner as Q-E; no new owner decision)
+
+- **W342 (Codex secondary, 17:13-17:2x, `91c3a54b`):** the nine stale contract self-tests aligned to decisions 136/137/144
+  (each failing-then-passing run quoted; the 02-A probe-driver case left red on purpose pending Q-B); the false prose
+  sentence in the decision-134 provenance record replaced (machine fields unchanged). Suite `1 failed, 312 passed`; legacy
+  replay `SURFACES_EQUAL=34`; the gate's six-entry refusal list byte-identical to W316D's.
+- **W341 (RULE2-08 goldens re-derived under decision 144) ran on Codex fourth (17:14-17:31)** after three Claude Pro
+  deaths on Anthropic server errors and the OpenRouter key limit (addendum 65). Design reading, quoted: the RED compared
+  window (line 1104) excludes the candidate setup fill, and the cash-ledger rule (75-81) joins the fee cash row and the
+  typed fee row to that fill, so all three are outside the window: RED `cash_events` = the funding row only, `fee_events`
+  empty, `equity_curve.first` 999.9 / `last` 999.8 (design 492/1107, 1283-1289); GREEN's six containers empty, equity
+  nodes still `BLOCKED-OPEN-EMBED-05` (L12). Record-digest nodes on the pair derived from the committed record files'
+  checksum sidecars (recomputed); the RED `source_event_digest` marker kept (no committed preimage, design 916-919,
+  1045-1054). **Item 4 STOPPED as a genuine DESIGN-GAP:** section 23.4 closes the `run_manifest` container but defines no
+  child schema, so `cost_schedule_digest` (emitted by the kernel under decision 144) has no design-named slot; the gate's
+  `OBSERVED_EXTRA_MEMBER` refusals on the pair therefore persist. **Escalated to the owner as Q-E** (default (a): design
+  amendment closing the run_manifest child schema with the members the kernel already emits by decision; (b): kernel stops
+  emitting unnamed members). Six discrepancies recorded, among them: the fee member list lives at design 427-433 (not
+  section 23.3); the RULE2-08 InstrumentRecords' `source_locator` points at the mutable design path whose current bytes no
+  longer hash to the recorded `source_sha256`.
+- **V341 by Gemini 3.8 (packet verify, 17:34-17:37; Claude Pro still unreachable):** checks 1-5 and 7 ACCEPT; check 6
+  REQUEST_CHANGES on exactly one sealed projection pair - the RED `/EVENT_SURFACE/fee_events` divergent projection sealed
+  by W321 as `A:1` must become `A:0` (design 15.3 lines 636-639: the state carries the cardinality); and the Lead's note B
+  answered: the PROBE-P012-08-A `comparator_first_differing_node` becomes `/EVENT_SURFACE/cash_events/0/signed_delta` after
+  the window correction. Both are catalog-only consequences (decision 144 / 140 fence) - lane W341B (Codex secondary),
+  Gemini re-verify, then the Lead's re-seal #15 and W343 in-repo copies + one gate run.
+- Owner words pending: `accept design P0-14 v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `Q-E a|b`; `later|now`;
+  and the billing ask on the OpenRouter key (addendum 65).
