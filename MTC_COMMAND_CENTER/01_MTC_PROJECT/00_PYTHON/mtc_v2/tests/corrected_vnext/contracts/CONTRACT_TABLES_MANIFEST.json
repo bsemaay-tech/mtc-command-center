@@ -564,7 +564,7 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
-  "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
+  "IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
   "reason": "Sealed by the Lead at re-seal #16 (2026-09-03T20:54:18+03:00): owner decisions 149 (record digests derived on the fifteen goldens) and 151 (members admitted by design v1.16 added to the goldens); design pin moves to v1.17; base unchanged until the decision-147 re-anchor after the copies commit."
  },
  "section_16_review": {
@@ -575,7 +575,7 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
-  "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
+  "IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
   "set_by": "Lead re-seal act #16 2026-09-03T20:54:18+03:00"
  },
  "reseal_history": [
@@ -955,6 +955,14 @@
     "scenario_catalog.json"
    ],
    "design_pin": "v1.17"
+  },
+  {
+   "at": "2026-09-03T21:14:29+03:00",
+   "actor": "Lead (claude-fable-5-1), base re-anchor (decision 147); seal value unchanged",
+   "old_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
+   "new_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
+   "files_changed": [],
+   "note": "IMPLEMENTATION_BASE_SHA 5e8e5794 -> 63cfe2dd in seal/seal_state; anchor moved in the same act."
   }
  ],
  "legacy_event_order_map_pin": {

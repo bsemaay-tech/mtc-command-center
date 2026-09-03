@@ -2,8 +2,8 @@
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
  "EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
- "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
- "core_tree_oid_at_base": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
+ "IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
+ "core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
@@ -133,6 +133,14 @@
    "new_IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
    "new_core_tree_oid_at_base": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
    "reason": "Owner decision 135 (2026-09-03): the recorded base predated the sealed bundle, so the expected-source provenance check could never clear (W279B-F06, W276B / W305B FINDING-4); re-pinned to the commit that first placed the sealed bundle."
+  },
+  {
+   "at": "2026-09-03T21:14:29+03:00",
+   "actor": "Lead (claude-fable-5-1), decision 147 re-anchor forward",
+   "old_IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
+   "new_IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
+   "new_core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
+   "reason": "Owner decision 147 (Q-A = b): the base is the commit that carries the latest owner-directed re-seal in-repo; the section-15.4 predicate now proves only that no expected path changed since that re-seal (design v1.16 L14)."
   }
  ]
 }
