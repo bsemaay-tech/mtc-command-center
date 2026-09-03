@@ -1535,7 +1535,7 @@ def test_corrected_closed_set_refuses_observed_only_member(
     observed = execute_corrected_scenario(MTC_V2_ROOT, row)
     with pytest.raises(GateRefusal) as caught:
         verify_bceg.validate_corrected_closed_sets(
-            row["scenario_id"],
+            row,
             {
                 "EVENT_SURFACE": observed["EVENT_SURFACE"],
                 "RESULT_SURFACE": observed["RESULT_SURFACE"],
@@ -1564,7 +1564,7 @@ def test_corrected_closed_set_refuses_missing_member(
     observed = execute_corrected_scenario(MTC_V2_ROOT, row)
     with pytest.raises(GateRefusal) as caught:
         verify_bceg.validate_corrected_closed_sets(
-            row["scenario_id"],
+            row,
             {
                 "EVENT_SURFACE": observed["EVENT_SURFACE"],
                 "RESULT_SURFACE": observed["RESULT_SURFACE"],
@@ -1572,6 +1572,24 @@ def test_corrected_closed_set_refuses_missing_member(
         )
     assert caught.value.check_id == "CLOSED_SET_VIOLATION"
     assert caught.value.pointer == "/RESULT_SURFACE/warnings"
+
+
+def test_w305_item7_closed_sets_ignore_scenario_identity() -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-02-GREEN")
+    observed = execute_corrected_scenario(MTC_V2_ROOT, row)
+    renamed_row = deepcopy(row)
+    renamed_row["scenario_id"] = "RENAMED-SAME-DECLARATION"
+
+    verify_bceg.validate_corrected_closed_sets(
+        renamed_row,
+        {
+            "EVENT_SURFACE": observed["EVENT_SURFACE"],
+            "RESULT_SURFACE": observed["RESULT_SURFACE"],
+        },
+    )
 
 
 @pytest.mark.parametrize(
@@ -1857,7 +1875,7 @@ def test_raw_kernel_result_membership_follows_declared_contract(
     }
     if row["owning_def_ids"][0] in {"DEF-P012-01", "DEF-P012-02", "DEF-P012-05"}:
         expected.add("order_notional")
-    if scenario_id == "RULE2-02-GREEN":
+    if "DEF-P012-02" in row["owning_def_ids"] and row["role"] == "GREEN":
         expected.add("admitted")
     if row["owning_def_ids"][0] == "DEF-P012-07":
         expected.add("guards")

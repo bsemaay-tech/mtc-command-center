@@ -631,10 +631,12 @@ def _closed_discriminator(
 
 
 def validate_corrected_closed_sets(
-    scenario_id: str, surfaces: dict[str, Any]
+    catalog_row: Mapping[str, Any], surfaces: dict[str, Any]
 ) -> None:
     """Enforce the finite CORRECTED_V2 member sets from design sections 23.1-23.4."""
 
+    owning_def_ids = frozenset(catalog_row.get("owning_def_ids", ()))
+    role = catalog_row.get("role")
     _require_closed_member_set(
         surfaces, {"EVENT_SURFACE", "RESULT_SURFACE"}, ""
     )
@@ -713,9 +715,11 @@ def validate_corrected_closed_sets(
         if decision == "PROTECTIVE_STOP_EVALUATED" and stop_fill_selected:
             expected |= {"reference_source", "reference_price"}
         if decision == "COLLISION_RESOLVED":
-            if scenario_id in {"RULE2-06-RED", "RULE2-06-EQUAL-PRICE-RED"}:
+            if "DEF-P012-06" in owning_def_ids and role == "RED":
                 expected.add("target_ordering_rule")
-            if scenario_id == "RULE2-06-EQUAL-PRICE-RED":
+            if event.get("target_ordering_rule") == (
+                "LONG_ASCENDING_TARGET_PRICE_THEN_EXIT_ID_UTF8_BYTE_ORDER"
+            ):
                 expected.add("tie_break_applied")
         _require_closed_member_set(event, expected, pointer)
 
@@ -866,14 +870,13 @@ def validate_corrected_closed_sets(
         "refusals",
         "run_manifest",
     }
-    rule_number = scenario_id[6:8]
-    if rule_number in {"01", "02", "05"}:
+    if owning_def_ids.intersection({"DEF-P012-01", "DEF-P012-02", "DEF-P012-05"}):
         result_keys.add("order_notional")
-    if scenario_id == "RULE2-02-GREEN":
+    if "DEF-P012-02" in owning_def_ids and role == "GREEN":
         result_keys.add("admitted")
-    if rule_number == "07":
+    if "DEF-P012-07" in owning_def_ids:
         result_keys.add("guards")
-    if rule_number == "08":
+    if "DEF-P012-08" in owning_def_ids:
         result_keys.add("cumulative_funding")
     _require_closed_member_set(result, result_keys, "/RESULT_SURFACE")
     _require_closed_member_set(
@@ -906,7 +909,7 @@ def validate_corrected_closed_sets(
             "consec_loss_ok",
             "guard_blocked_raw",
         }
-        if scenario_id == "RULE2-07-RED":
+        if "DEF-P012-07" in owning_def_ids and role == "RED":
             guard_keys.add("last_closed_guard_pnl")
         _require_closed_member_set(result["guards"], guard_keys, "/RESULT_SURFACE/guards")
 
@@ -3019,7 +3022,7 @@ def _run_probe_child(
             record_root=record_root,
         )
         validate_corrected_closed_sets(
-            base_row["scenario_id"],
+            base_row,
             {
                 "EVENT_SURFACE": observed["EVENT_SURFACE"],
                 "RESULT_SURFACE": observed["RESULT_SURFACE"],
@@ -3612,7 +3615,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
         )
         try:
             validate_corrected_closed_sets(
-                scenario_id,
+                row,
                 {
                     "EVENT_SURFACE": corrected["EVENT_SURFACE"],
                     "RESULT_SURFACE": corrected["RESULT_SURFACE"],
