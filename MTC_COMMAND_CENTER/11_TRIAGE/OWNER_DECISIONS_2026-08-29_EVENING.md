@@ -1648,3 +1648,24 @@ live trading, a build, or a kernel change.
   launcher with a clean-worktree precondition. After both: Lead re-seal #15, in-repo copies, one gate run, and a second
   audit pass only on what changed.
 - Owner word still pending: `accept design P0-14 v1.10`.
+
+## Addendum 65 - 2026-09-03 17:0x REAL (Lead record: route outage during the repair cycle; one owner ask on the OpenRouter key; no new owner decision)
+
+- **W341 (RULE2-08 goldens re-derivation under decision 144) could not start on its intended family.** Claude Pro lanes
+  died three times at or shortly after launch on Anthropic server errors (`API Error: 529 Overloaded` 16:2x, `500 Internal
+  server error` 16:27, `529` again 16:36 after about three minutes); the DeepSeek stand-in died at its first call on
+  OpenRouter `403 Key limit exceeded (total limit)`. The bundle was re-measured after each death: the four W341 files are
+  byte-identical to the seal-#14b snapshot (no partial edit). **Owner ask (billing, plain language): the OpenRouter key's
+  spend limit is reached; raising it or topping up at openrouter.ai restores the DeepSeek route (verifier of record and
+  cheap author). Until then the Lead has Codex fourth/secondary (reset 17:12), Gemini (read-only packets) and Claude Pro
+  when Anthropic recovers.**
+- **Reroute:** W341 runs on Codex fourth from 17:14 (tables act by the Codex family; the verifier will be a family that did
+  not write - a Gemini packet verify or Claude Pro once its API answers). W342 (nine stale self-tests + provenance prose,
+  Codex secondary, worktree) starts at 17:13 as planned. Then V341 -> Lead re-seal #15 (`reseal15.py`, snapshot
+  `20260903_1620_seal14b_full`, 19/19 members measured equal to the manifest) -> W343 in-repo copies + one gate run.
+- Codex free reached its weekly cap at the end of W276C (resets Sep 7 06:50); third also weekly-capped; Gemini's GM83C
+  attempt 1 had been aborted by the launcher's watchdog because a stray `opencode-cli serve` process (left from the parked
+  OpenCode route) wrote `.git/opencode`; the Lead stopped it before attempt 2.
+- Wayfinder session 2026-09-03T1332-claude revision 3 imported 16:27 (WP-P0-12 3.31 h, WP-P0-14 0.35 h, measured lanes
+  only; the five pending owner words listed verbatim). Plan rev 4 sent 16:3x. Owner words pending: `accept design P0-14
+  v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `later|now`.
