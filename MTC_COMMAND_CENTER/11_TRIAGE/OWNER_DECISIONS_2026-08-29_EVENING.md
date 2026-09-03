@@ -1336,3 +1336,25 @@ live trading, a build, or a kernel change.
   digest re-pin script, recorded), manifest not re-pinned (expected, reseal #14), and one real defect: GREEN equity
   sealed as 1000 where design v1.15 requires `BLOCKED-OPEN-EMBED-05`. Repair pass landed (GREEN golden nodes carry the
   marker; the GREEN equity projection pair STOPPED as DESIGN-GAP); V321C round 2 running. Catalog sha now `577a6055`.
+
+## Addendum 53 - 2026-09-03 12:4x REAL (Lead record: six designs ready for the owner's acceptance word; P0-12 tables round 2)
+
+- **Folds after the census triage (T330):** P0-13 v2.2 -> v2.3 (FOLD-P013, DeepSeek V4 Pro standing in for the
+  design family; two AMENDMENT-CHOICE blocks quoting the owner's addendum-32 wording "for example"; header the only
+  changed line, 17 inserted; verified ACCEPT by DeepSeek V4 Flash). P0-20 v1.8 -> v1.9 (FOLD-P020, same shape, 10
+  inserted; the verifier passed the draft checks 1-4 and faulted only the fold report's line-count claims - the Lead
+  accepted the draft and recorded the report defect). Both drafts LF-normalized by the Lead after the harness pass.
+- **Acceptance packet, table that stands (Issue 2 + rows updated):** ACCEPT NOW = P0-30 v1.9, P0-21 v1.12, P0-22 v1.11,
+  P0-31 M2 v1.9, P0-13 v2.3, P0-20 v1.9. NOT READY = P0-14 v1.8 (W331 fold on Claude Pro, armed for the 13:10 reset).
+  PARKED = P0-31 M1 (owner may reopen). Register transition on the owner's word: `DESIGN_IN_REPAIR` ->
+  `DESIGN_CONVERGED` with the draft version; `g1_ia` / `implementation_authorized` untouched; the Lead commits the
+  status record; the dashboard re-imports.
+- **P0-12 tables (W321) round 2, Codex verifier:** M1 binding, the four re-pinned catalog digests, the projection
+  container and values, the probe expectation values and the listed RED (11 nodes) / GREEN (7 nodes) golden deltas
+  ACCEPT; still open: F-04 (manifest at seal #13 - closes at the Lead's re-seal #14, by design) and F-06 residue (GREEN
+  golden `run_manifest` still `NOT_CONSUMED`; a projection prose still `1000`; two stale locators) - a narrow third
+  pass (W321DS3) is fixing exactly those four spots; then V321C round 3, then W315.
+- **Process defects recorded against the Lead today:** line-ending normalization after a DeepSeek author lane moved
+  three sealed digests (fixed by a byte-level re-pin script, run after every such lane); a snapshot folder mixed
+  inputs and goldens of the same basename (restored from the pre-W311 snapshot; hash tables now carry full paths);
+  the harness cwd trap killed three launches (standing wrapper `C:/tmp/run_ds.sh`).
