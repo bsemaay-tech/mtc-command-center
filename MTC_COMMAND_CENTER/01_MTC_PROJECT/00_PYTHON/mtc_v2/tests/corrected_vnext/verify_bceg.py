@@ -4065,6 +4065,47 @@ def run_selftests(root: Path) -> dict[str, Any]:
     return {"mode": "selftest", "claim_label": "NON_ACCEPTING_SELFTEST", "checks": checks}
 
 
+def run_contract_selftest_suite(root: Path) -> dict[str, Any]:
+    suite = root / "tests/corrected_vnext/contracts/selftests"
+    command = [sys.executable, "-m", "pytest", str(suite), "-q", "--tb=no"]
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=root.parent,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=600,
+        )
+    except subprocess.TimeoutExpired:
+        return {
+            "returncode": 124,
+            "failing_test_ids": [],
+            "detail": "contract self-test suite timed out after 600 seconds",
+        }
+    except OSError as exc:
+        return {
+            "returncode": 126,
+            "failing_test_ids": [],
+            "detail": f"contract self-test suite could not start: {exc}",
+        }
+
+    output = "\n".join((completed.stdout, completed.stderr))
+    failing_test_ids = []
+    for line in output.splitlines():
+        if not line.startswith("FAILED "):
+            continue
+        test_id = line.removeprefix("FAILED ").split(" - ", 1)[0].strip()
+        if test_id and test_id not in failing_test_ids:
+            failing_test_ids.append(test_id.replace("\\", "/"))
+    return {
+        "returncode": completed.returncode,
+        "failing_test_ids": failing_test_ids,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -4108,6 +4149,11 @@ def main(argv: list[str] | None = None) -> int:
                 record_root=args.record_root,
             )
         else:
+            contract_selftests = (
+                run_contract_selftest_suite(args.root)
+                if args.mode == "full-gate"
+                else None
+            )
             pipeline = run_comparison_pipeline(args.root, args.baseline_root)
             if args.mode == "red-evidence":
                 receipt = {
@@ -4140,6 +4186,20 @@ def main(argv: list[str] | None = None) -> int:
                                 f"reviewed_identities: {exc.check_id}: {exc.detail}",
                             )
                         blockers.insert(0, invalid.as_dict())
+                if contract_selftests is not None and contract_selftests["returncode"] != 0:
+                    failing_test_ids = contract_selftests["failing_test_ids"]
+                    failed_count = len(failing_test_ids)
+                    detail = contract_selftests.get("detail")
+                    if detail is None:
+                        noun = "test" if failed_count == 1 else "tests"
+                        detail = f"{failed_count} contract self-{noun} failed"
+                    blockers.append(
+                        {
+                            "check_id": "CONTRACT_SELFTEST_RED",
+                            "detail": detail,
+                            "failing_test_ids": failing_test_ids,
+                        }
+                    )
                 if blockers:
                     receipt = {
                         "mode": "full-gate",

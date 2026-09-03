@@ -99,6 +99,7 @@ def run_synthetic_full_gate(
     monkeypatch: pytest.MonkeyPatch,
     measured_identities: dict[str, str] | None = None,
     use_real_git: bool = False,
+    contract_selftests: dict[str, object] | None = None,
 ) -> int:
     measured = measured_identities or SYNTHETIC_REVIEW_IDENTITIES
     monkeypatch.setattr(
@@ -121,6 +122,14 @@ def run_synthetic_full_gate(
             lambda _root, reviewed_commit, head_commit: reviewed_commit
             == head_commit,
         )
+    monkeypatch.setattr(
+        verify_bceg,
+        "run_contract_selftest_suite",
+        lambda _root: contract_selftests
+        if contract_selftests is not None
+        else {"returncode": 0, "failing_test_ids": []},
+        raising=False,
+    )
     return verify_bceg.main(
         [
             "--mode",
@@ -353,6 +362,38 @@ def test_semantic_coverage_review_fully_valid_synthetic_receipt_clears_blocker(
     assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 0
     gate_receipt = json.loads(capsys.readouterr().out)
     assert gate_receipt["claim_label"] == verify_bceg.ACCEPTING_LABEL
+
+
+def test_full_gate_refuses_a_red_contract_selftest_suite(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+    failing_test_id = (
+        "mtc_v2/tests/corrected_vnext/contracts/selftests/test_verify_bceg.py::"
+        "test_probe_driver_refuses_unclosed_base_before_variant_comparison"
+    )
+
+    assert run_synthetic_full_gate(
+        root,
+        tmp_path / "baseline",
+        monkeypatch,
+        contract_selftests={"returncode": 1, "failing_test_ids": [failing_test_id]},
+    ) == 2
+    gate_receipt = json.loads(capsys.readouterr().out)
+    assert gate_receipt["claim_label"] == verify_bceg.REFUSAL_LABEL
+    assert gate_receipt["refusals"] == [
+        {
+            "check_id": "CONTRACT_SELFTEST_RED",
+            "detail": "1 contract self-test failed",
+            "failing_test_ids": [failing_test_id],
+        }
+    ]
 
 
 def sealed_producer_fixture(
