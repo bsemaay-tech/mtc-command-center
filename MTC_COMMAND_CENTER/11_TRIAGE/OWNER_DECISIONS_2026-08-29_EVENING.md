@@ -1179,3 +1179,19 @@ live trading, a build, or a kernel change.
     Codex desktop app (pid 25588), its app-server (pid 11112) and the VS Code Codex extension (pid 53872) - none
     is a lane (lanes run `codex exec` and all have exited). Worktree `C:/WP012BUILD` clean at `ac2d2ca9`; no lane
     DONE file is missing; no old lane is writing.
+
+## Addendum 46 - 2026-09-03 08:2x REAL (Lead record: M1 cannot be executed as a sealed-input change; owner question M1b)
+
+- W311 (Claude Pro, tables family) did M7 (equal-price `target_book` sealed from design line quoted; catalog row 11
+  digest; DERIVATIONS insertion-only) and STOPPED M1 honestly: the design does not merely omit a RULE2-08 cost
+  record, it binds that there is none (`P012_FRESH_DESIGN_V1.md:788-790` "both cost members are JSON null only
+  for RULE2-08, where section 14 says no cost schedule is consumed"; `:443`; `:960-961` "C is absent /
+  NOT_CONSUMED"), while owner addendum 20 (4a)/(5a) binds real pre-window fills for both RULE2-08 rows, and the
+  kernel refuses the state-building OPEN without a cost record. The conflict is already recorded at
+  `DERIVATIONS.md:1735-1741` (V15-D01). No RULE2-08 cost record exists under `core/economic_records/costs/`.
+- **Owner question M1b** (decision 137 cannot be carried out without it): (a) amend the design so RULE2-08
+  consumes a cost record and name it - the Lead's default proposal binds RULE2-08 to the EXISTING sealed
+  RULE2-07 cost record (DEF-P012-07 schedule) by reference, so no new number is invented; or (b) withdraw the
+  pre-window fill premise of addendum 20 for RULE2-08 (then no funding transcript can exist and DEF-P012-08's
+  evidence must be re-designed). Default if silent: (a).
+- W312 (M6 + M4) proceeds for every row except the RULE2-08 rows and probe 08-A, which wait for M1b.
