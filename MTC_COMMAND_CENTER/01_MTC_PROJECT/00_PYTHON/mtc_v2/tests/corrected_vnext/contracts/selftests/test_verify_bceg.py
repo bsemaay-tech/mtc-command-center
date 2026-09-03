@@ -597,6 +597,123 @@ def test_expected_source_provenance_refuses_expected_path_changed_after_base() -
     )
 
 
+W305_EXCEPTIONS_RELATIVE = (
+    "tests/corrected_vnext/contracts/expected_provenance_exceptions.json"
+)
+W305_DECISION_134_PATH = (
+    "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/"
+    "golden/corrected_vnext/RULE2-01-GREEN.json"
+)
+
+
+def w305_exception_record() -> dict[str, object]:
+    return load_json_exact(MTC_V2_ROOT / W305_EXCEPTIONS_RELATIVE)
+
+
+def w305_provenance(record: dict[str, object] | None, tmp_path: Path):
+    """Run the provenance predicate against a substituted exception record."""
+
+    contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
+    target = contracts / "expected_provenance_exceptions.json"
+    original = target.read_bytes()
+    backup = tmp_path / "expected_provenance_exceptions.json"
+    backup.write_bytes(original)
+    try:
+        if record is None:
+            target.unlink()
+        else:
+            target.write_bytes(
+                json.dumps(
+                    record, ensure_ascii=False, sort_keys=True, indent=2
+                ).encode("utf-8")
+                + bytes([10])
+            )
+        try:
+            return verify_bceg.validate_expected_source_provenance(
+                MTC_V2_ROOT,
+                load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json"),
+                load_json_exact(contracts / "implementation_anchor.json"),
+            )
+        except GateRefusal as exc:
+            return exc
+    finally:
+        target.write_bytes(backup.read_bytes())
+
+
+def test_w305_item3_recorded_exception_lifts_only_the_decision_134_path(
+    tmp_path: Path,
+) -> None:
+    """Owner decision 134 names RULE2-01-GREEN; the other changed paths stay refused."""
+
+    without = w305_provenance(None, tmp_path)
+    assert isinstance(without, GateRefusal)
+    assert without.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
+    assert without.pointer == W305_DECISION_134_PATH
+
+    with_record = w305_provenance(w305_exception_record(), tmp_path)
+    assert isinstance(with_record, GateRefusal)
+    assert with_record.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
+    assert with_record.pointer != W305_DECISION_134_PATH
+
+
+def test_w305_item3_wrong_current_oid_does_not_lift_the_refusal(
+    tmp_path: Path,
+) -> None:
+    record = w305_exception_record()
+    record["exceptions"][0]["current_blob_oid"] = "0" * 40
+
+    outcome = w305_provenance(record, tmp_path)
+
+    assert isinstance(outcome, GateRefusal)
+    assert outcome.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
+    assert outcome.pointer == W305_DECISION_134_PATH
+
+
+def test_w305_item3_wrong_base_state_does_not_lift_the_refusal(
+    tmp_path: Path,
+) -> None:
+    record = w305_exception_record()
+    record["exceptions"][0]["base_state"] = "PRESENT_AT_BASE"
+    record["exceptions"][0]["base_blob_oid"] = "1" * 40
+
+    outcome = w305_provenance(record, tmp_path)
+
+    assert isinstance(outcome, GateRefusal)
+    assert outcome.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
+    assert outcome.pointer == W305_DECISION_134_PATH
+
+
+def test_w305_item3_record_bound_to_another_base_is_invalid(tmp_path: Path) -> None:
+    record = w305_exception_record()
+    record["implementation_base_sha"] = "a" * 40
+
+    outcome = w305_provenance(record, tmp_path)
+
+    assert isinstance(outcome, GateRefusal)
+    assert outcome.check_id == "EXPECTED_PROVENANCE_EXCEPTION_INVALID"
+
+
+def test_w305_item3_unknown_member_in_the_record_is_invalid(tmp_path: Path) -> None:
+    record = w305_exception_record()
+    record["exceptions"][0]["extra_member"] = 1
+
+    outcome = w305_provenance(record, tmp_path)
+
+    assert isinstance(outcome, GateRefusal)
+    assert outcome.check_id == "EXPECTED_PROVENANCE_EXCEPTION_INVALID"
+
+
+def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
+    record = w305_exception_record()
+
+    assert record["declaration_kind"] == "OWNER_DECISION_DECLARATION_NOT_EVIDENCE"
+    assert "not evidence" in record["statement"]
+    assert record["exceptions"][0]["owner_decision"] == 134
+    assert record["exceptions"][0]["lane_ids"] == ["W156", "W167", "W172"]
+    assert record["exceptions"][0]["base_state"] == "ABSENT_AT_BASE"
+    assert record["exceptions"][0]["base_blob_oid"] is None
+
+
 def test_legacy_event_order_pin_missing_is_distinct_and_match_clears_blocker(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

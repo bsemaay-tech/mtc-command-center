@@ -1848,6 +1848,144 @@ class Corpus:
     identities: dict[str, Any]
 
 
+EXPECTED_PROVENANCE_EXCEPTIONS_SCHEMA = "P012_EXPECTED_PROVENANCE_EXCEPTIONS_V1"
+EXPECTED_PROVENANCE_EXCEPTION_KEYS = {
+    "schema",
+    "declaration_kind",
+    "statement",
+    "owner_decision_ref",
+    "implementation_base_sha",
+    "exceptions",
+}
+EXPECTED_PROVENANCE_EXCEPTION_MEMBER_KEYS = {
+    "path",
+    "base_state",
+    "base_blob_oid",
+    "current_blob_oid",
+    "lane_ids",
+    "owner_decision",
+    "reason",
+}
+
+
+def _git_blob_oid(root: Path, commit: str, relative: str) -> str | None:
+    """Return the blob object id of `relative` at `commit`, or None if absent."""
+
+    try:
+        done = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(root),
+                "rev-parse",
+                "--verify",
+                "--quiet",
+                f"{commit}:{relative}",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError as exc:
+        raise GateRefusal("EXPECTED_PROVENANCE_EXCEPTION_INVALID", str(exc)) from exc
+    if done.returncode != 0:
+        return None
+    oid = done.stdout.strip()
+    return oid if GIT_OID_RE.fullmatch(oid) else None
+
+
+def load_expected_provenance_exceptions(
+    path: Path, implementation_base_sha: str
+) -> dict[str, dict[str, Any]]:
+    """Read the recorded section-15.4 exceptions.
+
+    The record is a harness declaration of an owner decision, not evidence: it
+    states which post-base expected-path changes the owner authorized and pins
+    the exact blob object ids that authorization covers. Design v1.5 section
+    15.4 (line 564) states the provenance predicate with no exception clause,
+    so this mechanism exists only because owner decision 134 directed it.
+    """
+
+    if not path.is_file():
+        return {}
+    record = load_json_exact(path)
+    if (
+        type(record) is not dict
+        or set(record) != EXPECTED_PROVENANCE_EXCEPTION_KEYS
+        or record["schema"] != EXPECTED_PROVENANCE_EXCEPTIONS_SCHEMA
+        or record["declaration_kind"] != "OWNER_DECISION_DECLARATION_NOT_EVIDENCE"
+        or type(record["statement"]) is not str
+        or not record["statement"]
+        or type(record["owner_decision_ref"]) is not str
+        or not record["owner_decision_ref"]
+        or type(record["exceptions"]) is not list
+    ):
+        raise GateRefusal(
+            "EXPECTED_PROVENANCE_EXCEPTION_INVALID", "closed schema mismatch"
+        )
+    if record["implementation_base_sha"] != implementation_base_sha:
+        raise GateRefusal(
+            "EXPECTED_PROVENANCE_EXCEPTION_INVALID",
+            f"record base={record['implementation_base_sha']} "
+            f"manifest base={implementation_base_sha}",
+        )
+    exceptions: dict[str, dict[str, Any]] = {}
+    for member in record["exceptions"]:
+        if (
+            type(member) is not dict
+            or set(member) != EXPECTED_PROVENANCE_EXCEPTION_MEMBER_KEYS
+            or type(member["path"]) is not str
+            or not member["path"]
+            or member["base_state"] not in {"ABSENT_AT_BASE", "PRESENT_AT_BASE"}
+            or type(member["current_blob_oid"]) is not str
+            or GIT_OID_RE.fullmatch(member["current_blob_oid"]) is None
+            or type(member["lane_ids"]) is not list
+            or not member["lane_ids"]
+            or not all(type(lane) is str and lane for lane in member["lane_ids"])
+            or type(member["owner_decision"]) is not int
+            or type(member["owner_decision"]) is bool
+            or type(member["reason"]) is not str
+            or not member["reason"]
+        ):
+            raise GateRefusal(
+                "EXPECTED_PROVENANCE_EXCEPTION_INVALID", str(member.get("path"))
+            )
+        base_oid = member["base_blob_oid"]
+        if member["base_state"] == "ABSENT_AT_BASE":
+            if base_oid is not None:
+                raise GateRefusal(
+                    "EXPECTED_PROVENANCE_EXCEPTION_INVALID", member["path"]
+                )
+        elif type(base_oid) is not str or GIT_OID_RE.fullmatch(base_oid) is None:
+            raise GateRefusal("EXPECTED_PROVENANCE_EXCEPTION_INVALID", member["path"])
+        if member["path"] in exceptions:
+            raise GateRefusal(
+                "EXPECTED_PROVENANCE_EXCEPTION_DUPLICATE", member["path"]
+            )
+        exceptions[member["path"]] = member
+    return exceptions
+
+
+def _exception_lifts_path(
+    root: Path,
+    member: dict[str, Any],
+    relative: str,
+    implementation_base_sha: str,
+    observed_build_sha: str,
+) -> bool:
+    """A recorded exception lifts a changed path only on exact blob identity."""
+
+    measured_base = _git_blob_oid(root, implementation_base_sha, relative)
+    if member["base_state"] == "ABSENT_AT_BASE":
+        if measured_base is not None:
+            return False
+    elif measured_base != member["base_blob_oid"]:
+        return False
+    return _git_blob_oid(root, observed_build_sha, relative) == member[
+        "current_blob_oid"
+    ]
+
+
 def validate_expected_source_provenance(
     root: Path, manifest: dict[str, Any], anchor: dict[str, Any]
 ) -> dict[str, Any]:
@@ -1948,11 +2086,25 @@ def validate_expected_source_provenance(
     changed_paths = [
         item.decode("utf-8") for item in changed.split(b"\0") if item
     ]
-    if changed_paths:
+    exceptions = load_expected_provenance_exceptions(
+        contracts / "expected_provenance_exceptions.json", manifest_base
+    )
+    lifted_paths: list[str] = []
+    refused_paths: list[str] = []
+    for relative in changed_paths:
+        member = exceptions.get(relative)
+        if member is not None and _exception_lifts_path(
+            root, member, relative, manifest_base, observed_build_sha
+        ):
+            lifted_paths.append(relative)
+            continue
+        refused_paths.append(relative)
+    unused_exceptions = sorted(set(exceptions) - set(lifted_paths))
+    if refused_paths:
         raise GateRefusal(
             "EXPECTED_PATH_CHANGED_AFTER_BASE",
-            changed_paths[0],
-            pointer=changed_paths[0],
+            refused_paths[0],
+            pointer=refused_paths[0],
         )
     return {
         "status": "MATCH",
@@ -1960,6 +2112,8 @@ def validate_expected_source_provenance(
         "implementation_base_sha": manifest_base,
         "observed_build_sha": observed_build_sha,
         "expected_path_change_count": 0,
+        "owner_declared_exception_paths": lifted_paths,
+        "unused_owner_declared_exception_paths": unused_exceptions,
     }
 
 

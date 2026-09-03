@@ -1,0 +1,22 @@
+{
+  "declaration_kind": "OWNER_DECISION_DECLARATION_NOT_EVIDENCE",
+  "exceptions": [
+    {
+      "base_blob_oid": null,
+      "base_state": "ABSENT_AT_BASE",
+      "current_blob_oid": "f7b72d452e1d2abed58a97e541ee156d3e5821c2",
+      "lane_ids": [
+        "W156",
+        "W167",
+        "W172"
+      ],
+      "owner_decision": 134,
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/golden/corrected_vnext/RULE2-01-GREEN.json",
+      "reason": "Owner decision 134: the RULE2-01-GREEN golden was revised by the design-directed lanes W156 (design v1.5), W167 (v1.8) and W172 (owner Reading Y), each verified at the time; those three repairs are recorded as the authorized section 15.4 exception. Measured here: the path does not exist at IMPLEMENTATION_BASE_SHA at all, so there is no base blob object id to record and the change since the base is a creation, not a revision of a base blob."
+    }
+  ],
+  "implementation_base_sha": "108ea066a710ff7ef5c09246903fe3d523da1d56",
+  "owner_decision_ref": "MTC_COMMAND_CENTER/11_TRIAGE/OWNER_DECISIONS_2026-08-29_EVENING.md addendum 35, decision 134",
+  "schema": "P012_EXPECTED_PROVENANCE_EXCEPTIONS_V1",
+  "statement": "This file is a harness declaration of an owner decision, not evidence. It records that the owner authorized specific post-base changes to expected paths; it measures nothing about whether those changes are correct. Design v1.5 section 15.4 (line 564) states the expected-source-provenance predicate without an exception clause, so the mechanism below exists only because owner decision 134 directed it. Each listed path is lifted from EXPECTED_PATH_CHANGED_AFTER_BASE only while its recorded base state and current blob object id match the repository exactly; any further edit to a listed path restores the refusal."
+}
