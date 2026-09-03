@@ -1383,3 +1383,24 @@ live trading, a build, or a kernel change.
   the importer rejects the added member, the Lead restores the backup and re-applies the status change without the
   member, keeping the acceptance record in this ledger.
 - Wayfinder session update revision 4 (measured hours only) follows the import verification.
+
+## Addendum 55 - 2026-09-03 12:5x REAL (Lead record: the dashboard's reader rejects the owner's status word; owner question 146)
+
+- **Measured:** after the register act of addendum 54, the dashboard's register watcher reports
+  `refreshState: ERROR`, `sourceError: "WP-P0-13 has an unsupported status."` and keeps its last good snapshot
+  (12:45:25, the pre-acceptance register). Cause, read in the dashboard code
+  (`site/scripts/lib/package-snapshot.mjs:3`): `allowedStatuses = {BUILT_MERGED, IN_PROGRESS,
+  BUILD_AUTHORIZED_IN_PROGRESS, DESIGN_IN_REPAIR, NOT_STARTED}` - `DESIGN_CONVERGED` is not in the reader's set
+  (the decision-75 repair added `DESIGN_IN_REPAIR` and the reader currently in service was rebuilt without the
+  converged word). The added `design_acceptance` member is NOT the cause (the reader does not reject unknown members).
+- **Not done:** the Lead did not edit the dashboard (owner rule 09:1x: "Do not edit C:\LAB\WAYFINDER_DASHBOARD, its
+  configuration, or its data directly") and did not change the register away from the owner's word. The register
+  stands as decided (authority); the dashboard shows the 12:45 snapshot with a visible ERROR state until the reader
+  accepts the word.
+- **Owner question 146 (default if silent: (a)):** (a) authorize a two-line change to the dashboard reader
+  (`allowedStatuses` gains `DESIGN_CONVERGED`; it is bucketed with the active, not-built statuses as it was before
+  2026-09-02), made by a coding route and checked by the dashboard's own tests before the service restarts; or (b)
+  leave the dashboard on the old snapshot until someone else changes the reader; or (c) replace the word in the
+  register by one the reader accepts (would contradict the owner's word - not recommended).
+- Wayfinder session update revision 4 (measured hours only) is published regardless; its closeout states the
+  register rejection verbatim.
