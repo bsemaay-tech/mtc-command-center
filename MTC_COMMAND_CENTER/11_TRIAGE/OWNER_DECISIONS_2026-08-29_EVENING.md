@@ -1146,3 +1146,36 @@ live trading, a build, or a kernel change.
   handoff page.
 - Routes at close: Codex x3 live, Claude Pro live (07:40 reset), Gemini idle, OpenRouter DeepSeek harness 25
   distinct verify/triage tasks, MAX untouched since 20:1x, OpenCode/NIM/GLM parked, DeepSeek direct and Grok 402.
+
+## Addendum 45 - 2026-09-03 08:1x REAL (owner verbatim: "I approve M5, K, M1, M6, M7, M4, and M8, with their stated safety conditions. Keep every change strictly limited to those items. For K, require a real failing-then-passing proof, unchanged legacy replay, and independent second-family verification. Do not sign or prepare my Section 16 acceptance yet. First complete the scoped corrections, create one fresh sealed snapshot, and run the required fresh independent audits against that exact snapshot. After that, schedule M2. Include the separate loss-at-stop decision in that session; do not invent a number for me. Before launching new work, classify the four remaining Claude-related background processes and confirm that no old lane is still writing.")
+
+135. **M5 APPROVED - base commit re-pin.** The recorded `IMPLEMENTATION_BASE_SHA` moves from `108ea066` to the
+    commit that first carried the sealed bundle (`5e8e5794`), with `core_tree_oid_at_base` re-measured at that
+    commit; a Lead act at the fresh seal (#14), bundle anchor and in-repo anchor copy, verified by another family.
+136. **K APPROVED - three kernel fixes (W306): W279B-F02, F13, F11.** Conditions (owner's words): a real
+    failing-then-passing proof per item, unchanged legacy replay (34/34 byte-exact after every commit),
+    independent second-family verification. Scope strictly the three items.
+137. **M1 APPROVED - sealed-input change:** the two RULE2-08 inputs receive the cost-schedule record the
+    kernel's contract requires, so the funding transcript can exist; tables-family act (Claude Pro), input
+    digests re-pinned in the catalog, fresh seal follows; nothing else in those inputs moves.
+138. **M6 APPROVED - seal the RULE-2 projection expectations** (divergence and GREEN cross-version) in the
+    sealed tables by design-directed derivation; tables-family act; verified by another family before the seal.
+139. **M7 APPROVED - sealed-input change:** the equal-price scenario receives its sealed `target_book` economic
+    input (same shape as M1).
+140. **M4 APPROVED - re-derive** the expected check / first-changed node of probes PROBE-P012-02-A, 06-A, 08-A and
+    the one RULE2-06-RED golden node that depended on the removed reader shaping; tables-family act, design-
+    directed, verified, fresh seal.
+141. **M8 APPROVED - design amendment:** the accepting claim becomes the bounded claim the receipt states (only
+    the explicitly decided nodes are compared; the 96 design-unenumerated BLOCKED nodes are listed in the
+    receipt); design v1.13 amendment by the design author family, verified; harness label already conforms.
+    **Section-16 acceptance: NOT to be signed or prepared** until the scoped corrections land, ONE fresh sealed
+    snapshot (#14) exists, and the fresh independent audits (two flagships of different families + detection)
+    run against that exact snapshot. **M2 session** scheduled after that; it includes the separate loss-at-stop
+    decision; no number is invented for the owner.
+    **Process census (owner's precondition), measured 08:11:** the Claude processes are the Claude desktop app
+    (pid 52744) with its Chromium helpers, plus three Claude Code engine processes under it: this session
+    (pid 24380, started 19:18), and two idle sessions from the day (pids 19312 started 09:34 and 45536 started
+    09:35 - the day Lead and its fork, both closed by their Leads; they hold no lane). Codex processes: the
+    Codex desktop app (pid 25588), its app-server (pid 11112) and the VS Code Codex extension (pid 53872) - none
+    is a lane (lanes run `codex exec` and all have exited). Worktree `C:/WP012BUILD` clean at `ac2d2ca9`; no lane
+    DONE file is missing; no old lane is writing.
