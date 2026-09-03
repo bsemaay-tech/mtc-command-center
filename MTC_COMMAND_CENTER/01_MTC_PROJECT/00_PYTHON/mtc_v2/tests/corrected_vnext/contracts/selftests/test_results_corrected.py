@@ -146,7 +146,7 @@ def test_corrected_result_is_version_shaped_and_net_cash_based() -> None:
     }
 
 
-def test_corrected_manifest_marks_an_unconsumed_cost_schedule_without_padding_digest() -> None:
+def test_corrected_manifest_carries_the_consumed_cost_schedule_and_digest() -> None:
     config, _bars = _scenario("RULE2-08-RED")
 
     manifest = CorrectedRunManifest.from_records(

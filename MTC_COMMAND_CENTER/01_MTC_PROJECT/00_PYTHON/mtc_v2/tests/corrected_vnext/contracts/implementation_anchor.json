@@ -121,7 +121,7 @@
    "at": "2026-09-03T20:54:18+03:00",
    "old_EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
    "new_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
-   "reason": "Re-seal #16: owner decisions 149/151 executed (W345, W348); design v1.16 pinned."
+   "reason": "Re-seal #16: owner decisions 149/151 executed (W345, W348); design v1.17 pinned."
   }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",

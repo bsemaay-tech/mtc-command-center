@@ -128,7 +128,7 @@ def run_synthetic_full_gate(
         lambda _root: contract_selftests
         if contract_selftests is not None
         else {"returncode": 0, "failing_test_ids": []},
-        raising=False,
+        raising=True,
     )
     return verify_bceg.main(
         [
@@ -394,6 +394,76 @@ def test_full_gate_refuses_a_red_contract_selftest_suite(
             "failing_test_ids": [failing_test_id],
         }
     ]
+
+
+def test_contract_selftest_suite_reports_only_failing_test_ids(tmp_path: Path) -> None:
+    root = tmp_path / "mtc_v2"
+    suite = root / "tests/corrected_vnext/contracts/selftests"
+    suite.mkdir(parents=True)
+    (suite / "test_synthetic_contract.py").write_text(
+        "def test_failing_contract():\n"
+        "    assert False\n\n"
+        "def test_passing_contract():\n"
+        "    assert True\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    result = verify_bceg.run_contract_selftest_suite(root)
+
+    assert result["returncode"] != 0
+    assert result["failing_test_ids"] == [
+        "mtc_v2/tests/corrected_vnext/contracts/selftests/"
+        "test_synthetic_contract.py::test_failing_contract"
+    ]
+
+
+def test_contract_selftest_suite_reports_empty_failure_ids_when_all_pass(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "mtc_v2"
+    suite = root / "tests/corrected_vnext/contracts/selftests"
+    suite.mkdir(parents=True)
+    (suite / "test_synthetic_contract.py").write_text(
+        "def test_passing_contract():\n"
+        "    assert True\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    result = verify_bceg.run_contract_selftest_suite(root)
+
+    assert result == {"returncode": 0, "failing_test_ids": []}
+
+
+def test_contract_selftest_suite_records_timeout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def raise_timeout(command: list[str], **kwargs: object) -> None:
+        raise subprocess.TimeoutExpired(command, timeout=kwargs["timeout"])
+
+    monkeypatch.setattr(verify_bceg.subprocess, "run", raise_timeout)
+
+    assert verify_bceg.run_contract_selftest_suite(tmp_path) == {
+        "returncode": 124,
+        "failing_test_ids": [],
+        "detail": "contract self-test suite timed out after 600 seconds",
+    }
+
+
+def test_contract_selftest_suite_records_oserror(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def raise_oserror(_command: list[str], **_kwargs: object) -> None:
+        raise OSError("synthetic launch failure")
+
+    monkeypatch.setattr(verify_bceg.subprocess, "run", raise_oserror)
+
+    assert verify_bceg.run_contract_selftest_suite(tmp_path) == {
+        "returncode": 126,
+        "failing_test_ids": [],
+        "detail": "contract self-test suite could not start: synthetic launch failure",
+    }
 
 
 def sealed_producer_fixture(
