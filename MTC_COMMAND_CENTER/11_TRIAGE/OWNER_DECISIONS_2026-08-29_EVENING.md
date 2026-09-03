@@ -1312,3 +1312,27 @@ live trading, a build, or a kernel change.
 - **Gemini route:** owner 09:4x - `gemini-3.8-flash-high` replaces 3.7 (both launchers switched; 3.7 kept as fallback).
 - **24h plan** sent to the owner (`C:/tmp/LANE_PROMPTS_20260828/PLAN_24H_2026-09-03.md`): one clean fresh audit round
   on seal #14; Section 16 / M2 not scheduled before that.
+
+## Addendum 52 - 2026-09-03 12:3x REAL (owner question: why the design packages still show "Awaiting acceptance"; Lead answer and the acceptance path)
+
+- **Owner (12:xx):** "Why is P0-12, P0-13, P0-14, P0-20, P0-21, P0-22, P0-30 and P0-31 still looks Awaiting acceptance? when do
+  we proceed? it look like we are stuck here." **Lead answer:** the dashboard never approves; green comes only from the
+  accepted package register, whose rows moved to "in repair" under decision 75 (2026-09-02). The night's folds converged the
+  drafts and were fold-verified, but no one asked the owner to accept them, and no detection census had run on the
+  post-fold text. P0-12 is genuinely in progress (build authorized) and turns green only when BUILT_MERGED.
+- **Post-fold censuses (DeepSeek V4 Pro, read-only, seven drafts) + cross-family triage (Codex, T330):** P0-30 v1.9
+  CONVERGED; P0-21 v1.12, P0-22 v1.11, P0-31 M2 v1.9 ACCEPTABLE AS IS (every census finding disputed by measurement -
+  retained-text convention misread); P0-13 v2.2 and P0-20 v1.8 ONE FOLD (the strategy-type list stated as closed
+  where the owner's addendum-32 wording is "for example") - folds running on DeepSeek V4 Pro (design family capped),
+  verified by another family; P0-14 v1.8 NOT READY (three confirmed: open-item count contradiction; "QuantStats
+  adopted" vs WP-P0-24 entries REJECTED; finding-record writer unnamed) - W331 fold on Claude Pro after 13:10;
+  P0-31 M1 stays PARKED by its stopping rule unless the owner reopens it.
+- **Acceptance packet** `C:/tmp/LANE_PROMPTS_20260828/OWNER_ACCEPTANCE_PACKET_DESIGNS_2026-09-03.md` (Issue 2 table
+  is the one that stands; the builder's first "last verdict" column was stale and is marked so). Owner words of the
+  form `accept design P0-30 v1.9`. Accepting = design accepted for build planning only; the Lead then commits the
+  register status change (standing git delegation) and the dashboard turns green on import.
+- **P0-12 chain state:** W321 (tables, DeepSeek author) round 1 BLOCKED by the Codex verifier - three digests moved by
+  the Lead's own line-ending normalization after the harness wrote CRLF (Lead process defect, fixed by a byte-level
+  digest re-pin script, recorded), manifest not re-pinned (expected, reseal #14), and one real defect: GREEN equity
+  sealed as 1000 where design v1.15 requires `BLOCKED-OPEN-EMBED-05`. Repair pass landed (GREEN golden nodes carry the
+  marker; the GREEN equity projection pair STOPPED as DESIGN-GAP); V321C round 2 running. Catalog sha now `577a6055`.
