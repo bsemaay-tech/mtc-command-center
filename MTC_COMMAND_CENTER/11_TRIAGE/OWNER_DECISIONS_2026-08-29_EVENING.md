@@ -1845,3 +1845,24 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
   chains after it; Wayfinder revision 5 at 22:16 on secondary.
 - The owner asked for the P0-14 v1.10 one-paragraph evidence and recommendation; delivered in chat 19:4x; the acceptance word
   stays the owner's.
+
+## Addendum 73 - 2026-09-03 20:2x REAL (Lead record: decision 149 executed and verified; a Lead brief defect corrected honestly; decision 151 tables act launched; no new owner decision)
+
+- **W345 (Codex free, 19:53-20:16; decision 149):** 73 `BLOCKED-MISSING-RECORD-BYTES` nodes on the fifteen goldens replaced by
+  derived values (60 `run_manifest` digests, 13 fee-row schedule digests); every value = the committed record file's sha256 =
+  its sidecar (45 records recomputed), except `instrument_source_document_digest`, which is the committed InstrumentRecord's
+  own `provenance.source_sha256` member (design section 5.1; the treatment Gemini accepted for the RULE2-08 pair in V341);
+  the 73 matching `blocked_cells` entries removed; `authored_value_tokens` unchanged; 15 catalog pins re-pinned; DERIVATIONS
+  insertion-only; the W341 pair untouched.
+- **Verification, recorded honestly:** the first Gemini verify (GMV345) returned BLOCK on check 1 because the Lead's brief had
+  written the rule "any value not in the sidecar table = BLOCK", which does not cover the section-5.1 source-document digest;
+  its check-2 objection concerned the pre-existing ledger reason text of the `metrics` markers (design limit L9), outside
+  W345's scope. The Lead measured both (all seventeen InstrumentRecords carry the same `provenance.source_sha256`
+  `0ab0accb...`; the metrics entries were not changed) and re-ran the verify with the corrected rule and the provenance
+  table: **GMV345B = ACCEPT 4/4.** The Lead accepted W345 (`W345_ACCEPTED.txt`). Lead brief defect recorded in N_TIMES.
+- **W348 (Codex free, launched 20:2x; decision 151):** the members design v1.16 admits (the eleven-key `run_manifest` child
+  schema with presence rules; `funding_event_id` on funding cash rows) added to the goldens by derivation from the sealed
+  inputs and committed records; Gemini verifies; then Lead re-seal #16 (design pin v1.16), W300E baseline (decision 132
+  shape, fifth run), W349 in-repo copies + one gate, the decision-147 base re-anchor to that commit (`repin_base16.py`), W350
+  (in-repo manifest/anchor + provenance record re-measured at the new base + one gate). W344 (decision 148) and W346
+  (decision 150) are timed on Codex fourth from 22:14; Wayfinder revision 5 on secondary at 22:16.
