@@ -1075,3 +1075,17 @@ live trading, a build, or a kernel change.
   F03/F04/F05/F07/F14 are in W305 (standing authorization) after flagship 1b at 05:43.
 - Route/cost note: MAX unused since 20:1x; the OpenRouter DeepSeek harness has carried every verify and
   triage since 20:2x (29 runs, all under ten minutes).
+
+## Addendum 41 - 2026-09-03 03:5x REAL (Lead record: harness lane W305 partial; folds complete; no new owner decision)
+
+- **W305 (Claude Pro, standing harness authorization) landed items 1-4** at HEAD `b22a912c`: symmetric
+  comparator at every level (GM83B-F02), conservation of OBSERVED_ROOT and PROBE_ROOT (GM83B-F03), a recorded
+  provenance-exception record read by the predicate for owner decision 134 (exact blob OIDs), observed
+  artifacts pinned to the gate's own run and refreshed (W279B-F03). V305a (DeepSeek V4 Pro): items 1-3
+  ACCEPT; item 4 verified separately (V305b, from the code part of a 530 KB commit). Pro then hit its session
+  cap (resets 07:40); item 5 (W279B-F04) was in progress and is saved as a patch; **W305B** (items 5-8:
+  F04, F05, F07, F14) fires on Codex fourth at the 05:43 reset, then flagship 1b (W276B) on Codex free.
+- **Goal 2 met:** all seven original folds and the three amendment layers (addendum 32) are done and
+  verified by a second family (final snapshot `SNAPSHOTS/20260903_0320`).
+- Route reality for the record: Claude Pro's 5-hour window carried three lanes (flagship 2b, one fold, one
+  harness lane) before capping; all three Codex accounts capped between 01:04 and 02:42 and reset at 05:43.
