@@ -1,7 +1,7 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
+ "EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
  "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
  "core_tree_oid_at_base": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
@@ -30,7 +30,7 @@
  "lead_acceptance": {
   "accepted_by": "Lead (claude-fable-5), 2026-08-31 ~15:55 local",
   "basis": "Gate-2 plan v2 (A7-cleared) owner-approved addendum 16; tables bundle W127b sealed, all 19 file digests re-verified by W150; owner rulings addenda 14-17 complete; design v1.4 terminal dual-zero",
-  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #10 seal d763f62f9a42... on 2026-09-02T14:13:22+03:00; design v1.11; probe digests pinned; goldens and inputs unchanged since seal #8. Re-seal #11 2026-09-02T14:43:01+03:00: design v1.12 pinned; seal digest unchanged. Re-seal #14 2026-09-03T14:20:14+03:00: design v1.15 pinned; base re-pinned (M5); seal a58b6dea7539. Re-seal #15 2026-09-03T17:49:59+03:00: RULE2-08 goldens re-derived (W341/V341); seal 27bf72e82643."
+  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #10 seal d763f62f9a42... on 2026-09-02T14:13:22+03:00; design v1.11; probe digests pinned; goldens and inputs unchanged since seal #8. Re-seal #11 2026-09-02T14:43:01+03:00: design v1.12 pinned; seal digest unchanged. Re-seal #14 2026-09-03T14:20:14+03:00: design v1.15 pinned; base re-pinned (M5); seal a58b6dea7539. Re-seal #15 2026-09-03T17:49:59+03:00: RULE2-08 goldens re-derived (W341/V341); seal 27bf72e82643. Re-seal #16 2026-09-03T20:54:18+03:00: decisions 149/151 executed; design v1.16 pinned; seal 40aaf7da2a67."
  },
  "reseal_history": [
   {
@@ -116,6 +116,12 @@
    "old_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
    "new_EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
    "reason": "Re-seal #15: RULE2-08 goldens repaired inside decision 144 after the fresh audit round on seal #14 (W341/V341)."
+  },
+  {
+   "at": "2026-09-03T20:54:18+03:00",
+   "old_EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
+   "new_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
+   "reason": "Re-seal #16: owner decisions 149/151 executed (W345, W348); design v1.16 pinned."
   }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",

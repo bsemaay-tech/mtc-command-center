@@ -34,7 +34,7 @@
       {"sequence": 1, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-GROSS-0", "kind": "GROSS_REALIZATION", "fill_id": "F0", "signed_delta": -10}
     ],
     "fee_events": [
-      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:13:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-04-RED-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.00045, "fixed_component": 0, "fee_notional": 90, "fee_amount": 0.0405, "fee_cash_delta": -0.0405, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:13:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-04-RED-V1", "schedule_digest": "3376e72230dc21797202a0dab1a16173c0909846ed767eea38047aa7d0775e16", "rate": 0.00045, "fixed_component": 0, "fee_notional": 90, "fee_amount": 0.0405, "fee_cash_delta": -0.0405, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
     ],
     "funding_events": [],
     "exit_events": [
@@ -54,13 +54,13 @@
       "kernel_semantics_version": "2.0.0",
       "execution_profile_id": "close_only_deterministic_v2",
       "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-04-RED-V1",
-      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
-      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_record_digest": "6b707ef71df5e4b6565d2a5ee07a7c5cecc8805ed6b1a8ac9c8f0e4b613850ab",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
       "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
       "cost_schedule_id": "SYNTH-COST-RULE2-04-RED-V1",
-      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "cost_schedule_digest": "3376e72230dc21797202a0dab1a16173c0909846ed767eea38047aa7d0775e16",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-04-RED-V1",
-      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+      "funding_schedule_digest": "963c1e3407b711dc8ad460958b952cefed81d0b4da4b638cbdca865481b90a36"
     }
   },
   "observation_window": {
@@ -108,11 +108,6 @@
     {"pointer": "/EVENT_SURFACE/cash_events/*/kind", "value": "GROSS_REALIZATION", "design_fact": "P012_FRESH_DESIGN_V1.md:71 and :100 (section 3 step 11 appends gross realized PnL as a cash event).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
   ],
   "blocked_cells": [
-    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."}
   ]
 }

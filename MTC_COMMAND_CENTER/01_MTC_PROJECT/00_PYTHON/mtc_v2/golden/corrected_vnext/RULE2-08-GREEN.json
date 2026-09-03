@@ -7,15 +7,16 @@
   "expected_semantics_version": "2.0.0",
   "provenance": {
     "method": "INDEPENDENT_DERIVATION",
-    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; v1.15 decision-144 corrections by lane W321; fresh-audit record-digest re-derivation under owner decision 144 by lane W341",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; v1.15 decision-144 corrections by lane W321; fresh-audit record-digest re-derivation under owner decision 144 by lane W341; members admitted by design v1.16 under owner decision 151 by lane W348",
     "design_file": "P012_FRESH_DESIGN_V1.md",
-    "design_version": "v1.15",
-    "design_lines": "129-160; 449-498; 896-1054; 1098-1107; 1183; 1281-1289; 1342-1376; 1456-1463; 1645-1663",
+    "design_version": "v1.16",
+    "design_lines": "139-170; 459-508; 934-1092; 1136-1145; 1221; 1332-1340; 1393-1427; 1466-1496; 1539-1546; 1751-1769",
     "worksheet": "DERIVATIONS.md",
     "worksheet_section": "8. DEF-P012-08 / RULE2-08-GREEN",
     "worksheet_section_v18": "v1.8 revision / RULE2-08-GREEN",
     "worksheet_section_v15": "v1.5 revision / RULE2-08-GREEN",
-    "worksheet_section_w341": "W341 - fresh-audit re-derivation of the RULE2-08 goldens under decision 144"
+    "worksheet_section_w341": "W341 - fresh-audit re-derivation of the RULE2-08 goldens under decision 144",
+    "worksheet_section_w348": "W348 - members admitted by design v1.16 (decision 151)"
   },
   "open_item_bindings": [
     {"open_id": "OPEN-05", "source": "open_item_applicability_DRAFT.json items[OPEN-05] (draft_revision 3)", "owner_disposition": "APPLICABLE - same-timestamp snapshot eligibility = INCLUDE (addendum 17 row 46)", "effect_on_this_scenario": "no value effect: design 14:429 states the position is closed immediately BEFORE the event timestamp, so it is ineligible under an INCLUDE rule as well as under an EXCLUDE rule. The INCLUDE answer creates a separate build obligation (a fill AT the exact funding timestamp) that this declared vector does not exercise; that obligation is recorded in the applicability draft and is not a CONTRACT_TABLES cell."},
@@ -48,6 +49,7 @@
       "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
       "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
       "cost_schedule_id": "SYNTH-COST-RULE2-07-GREEN-V1",
+      "cost_schedule_digest": "040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-08-V1",
       "funding_schedule_digest": "aa4eaa939a83af1faa768eed82a2cd0216c26fccfb335240d05c5b1f7069d26d"
     }
@@ -67,7 +69,7 @@
     {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
     {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-FUNDING-RULE2-08-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-754 - RULE2-08-RED and RULE2-08-GREEN share the exact funding record id, canonical bytes and digests because section 14 requires the same complete schedule."}
   ],
-  "unchanged_sealed_values": "cumulative_funding 0, every empty economic container, the FUNDING_ELIGIBILITY decision row, final_position null, and the BLOCKED-OPEN-EMBED-05 equity markers are unchanged by W341. The instrument, instrument-source, and funding digest nodes are filled from committed record bytes and provenance under design v1.15 lines 135-146 and 969-971. The proposed cost digest child remains absent because section 23.4 does not define a closed run_manifest child schema.",
+  "unchanged_sealed_values": "cumulative_funding 0, every empty economic container, the FUNDING_ELIGIBILITY decision row, final_position null, and the BLOCKED-OPEN-EMBED-05 equity markers remain unchanged. The instrument, instrument-source, and funding digest nodes were filled from committed record bytes and provenance under design v1.15. W348 adds only the cost_schedule_digest child from the consumed committed cost record under design v1.16 line 1482; no economic value moved.",
   "v18_revised_nodes": [
     {"pointer": "/EVENT_SURFACE/decision_events", "change": "RE-DERIVED under the design 23.1 closed shape: flat members sequence/decision/kernel_semantics_version, per-reason event_timestamp presence, no lifecycle_id, exact per-reason payloads, section-3 order.", "authority": "P012_FRESH_DESIGN_V1.md:987-1053 (table :1016-1024) and the tables-revision item 1 at :1175-1181."},
     {"pointer": "/EVENT_SURFACE/*/*/kernel_semantics_version", "change": "ADDED to every member of all six corrected event containers.", "authority": "P012_FRESH_DESIGN_V1.md:998-1002 (section-4 identity / GM28-F03) and tables-revision item 2 at :1182-1185."},
@@ -79,6 +81,9 @@
     {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest", "before": "BLOCKED-MISSING-RECORD-BYTES", "after": "20adf2749d255efd3fe281ec3ead2e07df0a36a5ad59718a54d0a1a7c0712b17", "authority": "P012_FRESH_DESIGN_V1.md:135-146,307; recomputed from the committed record bytes and matched the detached sidecar."},
     {"pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest", "before": "BLOCKED-MISSING-RECORD-BYTES", "after": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc", "authority": "P012_FRESH_DESIGN_V1.md:137-146; copied from the committed InstrumentRecord provenance.source_sha256 member."},
     {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest", "before": "BLOCKED-MISSING-RECORD-BYTES", "after": "aa4eaa939a83af1faa768eed82a2cd0216c26fccfb335240d05c5b1f7069d26d", "authority": "P012_FRESH_DESIGN_V1.md:135-146,158-160,969-971; recomputed from the committed schedule bytes and matched the detached sidecar."}
+  ],
+  "w348_admitted_members": [
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest", "value": "040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe", "authority": "P012_FRESH_DESIGN_V1.md:1482; lower-case SHA-256 recomputed from the committed SYNTH-COST-RULE2-07-GREEN-V1 record bytes and matched to its detached sidecar and the sealed input."}
   ],
   "blocked_cells": [
     {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "Design v1.15 line 496 requires funding-adjusted metrics but fixes no metric node set."},

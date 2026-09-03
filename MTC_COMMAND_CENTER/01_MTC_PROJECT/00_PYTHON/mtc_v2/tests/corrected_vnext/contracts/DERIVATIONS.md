@@ -5067,3 +5067,145 @@ index; no other probe-row member changes.
 - W341B-D03: The prompt cites design line 543 for divergence
   (`LANE_W341B_CATALOG_FOLLOWUP.md:20-21`), but line 543 is blank in the measured v1.15 design. The
   governing present-versus-absent divergence rule is at design line 613.
+
+## W345 - record digests on the fifteen goldens under owner decision Q-C
+
+Owner decision Q-C (a) is recorded at
+`C:\tmp\LANE_PROMPTS_20260828\OWNER_QC_A.txt:1`. The pre-edit snapshot is
+`C:\tmp\SNAPSHOTS\20260903_195412_preW345`; its 17-source-file checksum manifest is
+`C:\tmp\SNAPSHOTS\20260903_195412_preW345\SHA256SUMS.txt:1-17`.
+
+The current design names the fee-row schedule digest at
+`C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md:437-442` and closes the four manifest digest
+members and their recipes at `P012_FRESH_DESIGN_V1.md:1477-1484`. Exact record bytes and detached
+sidecars are authoritative under `P012_FRESH_DESIGN_V1.md:143-156`; the source-document digest is
+copied from InstrumentRecord provenance rather than from the record sidecar
+(`P012_FRESH_DESIGN_V1.md:1479`). Each sealed input binds the same I/C/F ids and record hashes on its
+single line under `tests/corrected_vnext/contracts/inputs/<golden>:1`.
+
+In the table, I/C/F paths are below
+`C:\WP012BUILD\MTC_COMMAND_CENTER\01_MTC_PROJECT\00_PYTHON\mtc_v2\core\economic_records\`.
+Every named record and its adjacent `.sha256` is a one-line committed file (`:1`); targeted Git
+status for this record root was empty. Sidecar and independently recomputed values agreed for all 45
+records. `fee` is the number of fee-row `schedule_digest` nodes using C; `nodes` also includes the
+four manifest nodes.
+
+| Golden | nodes / fee | I record and SHA-256 | C record and SHA-256 | F record and SHA-256 |
+|---|---:|---|---|---|
+| RULE2-01-GREEN | 5 / 1 | instruments/SYNTH-INSTRUMENT-RULE2-01-GREEN-V1.json:1 / 2d8a75cb156c2d2709d5a505a6d1b267e6608cfef5a577f61f2a506382dbe3dd | costs/SYNTH-COST-RULE2-01-GREEN-V1.json:1 / a18832f5574b75c4ffd2284e929b0c465f7b390a1724159f8d369dbc41ec4633 | funding/SYNTH-FUNDING-RULE2-01-GREEN-V1.json:1 / baeddddba25249877943f20fa72cebb348b0d37130ea4c1468ef98f04121eb68 |
+| RULE2-01-RED | 5 / 1 | instruments/SYNTH-INSTRUMENT-RULE2-01-RED-V1.json:1 / e3612111ca302bc86dfac316efb80d08aac12a8312287e7117b0115f289e1e5d | costs/SYNTH-COST-RULE2-01-RED-V1.json:1 / 39e569711f4059329430402adc50543c392c4d358bd6ec8e78489718b185a3ce | funding/SYNTH-FUNDING-RULE2-01-RED-V1.json:1 / 742910b2fc30c9d8c4f6ba447661230fad1ef7f71470c9f8aea846b0d06200c1 |
+| RULE2-02-GREEN | 5 / 1 | instruments/SYNTH-INSTRUMENT-RULE2-02-GREEN-V1.json:1 / b3d480a84a2eb716bab12dca46483cb0372a64eb2cdbb85072521a103982c817 | costs/SYNTH-COST-RULE2-02-GREEN-V1.json:1 / 5d2fbe4f65f64e7b8b7ebf4cbb27c2b1daa43d7306655d883ae20822c3c44783 | funding/SYNTH-FUNDING-RULE2-02-GREEN-V1.json:1 / ba87c50c8fb4ee594526eb45c0ba47e77ebd9d65270e8d9ee27d250394771957 |
+| RULE2-02-RED | 4 / 0 | instruments/SYNTH-INSTRUMENT-RULE2-02-RED-V1.json:1 / 527ae2deeb8360548c32d98cc7d3b0907288acb8549f6aace331852e18411946 | costs/SYNTH-COST-RULE2-02-RED-V1.json:1 / 2ebdfd2a4080cc779951d05e14dfd76517a2f08faf567fb9900b533f3ad74ce7 | funding/SYNTH-FUNDING-RULE2-02-RED-V1.json:1 / d73c96ed5cb8f8f3915f1ac4e69bbad85ceeaba7d56bd7c48644698d93d96968 |
+| RULE2-03-GREEN | 4 / 0 | instruments/SYNTH-INSTRUMENT-RULE2-03-GREEN-V1.json:1 / dbc58337b036055593aaa88be054e405375204450e72a50612b0dd68179d9585 | costs/SYNTH-COST-RULE2-03-GREEN-V1.json:1 / 05ca006ccbba614eb0f8177181ac24d2e0b166d12db7826e00df79df279339c0 | funding/SYNTH-FUNDING-RULE2-03-GREEN-V1.json:1 / 3e2e121e537ad234802ed82e2ce6a39a75ea3f51bdf1fd072febbede6717cbf0 |
+| RULE2-03-RED | 4 / 0 | instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json:1 / 498ae36ea28a7f40df519724b1fb80d98a68c7261cda8fc7c0c3d6893c909a9a | costs/SYNTH-COST-RULE2-03-RED-V1.json:1 / 9f391fcb1d19d9d7ad23f18c079631d976a895e09e8de135eed315d04642f4bb | funding/SYNTH-FUNDING-RULE2-03-RED-V1.json:1 / 38d3b55db92dc6f5c4864dd19a39492bd3306b01a10bc8767f08a1819c2eaf5f |
+| RULE2-04-GREEN | 4 / 0 | instruments/SYNTH-INSTRUMENT-RULE2-04-GREEN-V1.json:1 / f71d1ab990f1da3d9c55e1960f79af91330908e0927c2b2e54f2020a9f596a11 | costs/SYNTH-COST-RULE2-04-GREEN-V1.json:1 / 95ea0075173c08bd7f8c1ae3ea49b41432823e325abdf29f4fced10affac6272 | funding/SYNTH-FUNDING-RULE2-04-GREEN-V1.json:1 / ba470d56e9468015f8b77a41bb0afa35dda930cb27e535bbb620e3a8abc10397 |
+| RULE2-04-RED | 5 / 1 | instruments/SYNTH-INSTRUMENT-RULE2-04-RED-V1.json:1 / 6b707ef71df5e4b6565d2a5ee07a7c5cecc8805ed6b1a8ac9c8f0e4b613850ab | costs/SYNTH-COST-RULE2-04-RED-V1.json:1 / 3376e72230dc21797202a0dab1a16173c0909846ed767eea38047aa7d0775e16 | funding/SYNTH-FUNDING-RULE2-04-RED-V1.json:1 / 963c1e3407b711dc8ad460958b952cefed81d0b4da4b638cbdca865481b90a36 |
+| RULE2-05-GREEN | 5 / 1 | instruments/SYNTH-INSTRUMENT-RULE2-05-GREEN-V1.json:1 / 5a101048abd939ecb89470a4125b209b322944764aee924b18a6dbea2540391a | costs/SYNTH-COST-RULE2-05-GREEN-V1.json:1 / 931974624690314deb43969bfe7721a81fd03380e2db36370791b403c5bf517d | funding/SYNTH-FUNDING-RULE2-05-GREEN-V1.json:1 / bd15cbfba5325a7496b0cbb91f16e6791e7455dc01a3e8d62eac025b79f00608 |
+| RULE2-05-RED | 5 / 1 | instruments/SYNTH-INSTRUMENT-RULE2-05-RED-V1.json:1 / fcffb9aee0b759f30f8822d2360f6a3a7fdb747389c055e691ebdb0879dd7e51 | costs/SYNTH-COST-RULE2-05-RED-V1.json:1 / 5e133f8b0ceec2069fedc53d8995b3e5ae66873344cbbe9500b139de6dd7c681 | funding/SYNTH-FUNDING-RULE2-05-RED-V1.json:1 / 119ac0d21ed81d084bb4ca80d2b627dcf48e391f0a70173e402c9ff97382d0f6 |
+| RULE2-06-EQUAL-PRICE-RED | 6 / 2 | instruments/SYNTH-INSTRUMENT-RULE2-06-EQUAL-PRICE-RED-V1.json:1 / 61b54a3761e99a2669506f1a4c785dc3d70e6abdbb9d993755935e0c93069a63 | costs/SYNTH-COST-RULE2-06-EQUAL-PRICE-RED-V1.json:1 / d0b3d31fac5e9cae42bcae54d63370f81b2a0a304f4e81a73fcbdf015c92223e | funding/SYNTH-FUNDING-RULE2-06-EQUAL-PRICE-RED-V1.json:1 / 93288e17b686ae9179aec7a38aca6d3f8dbbd37e23c85a09ba201dffcc0a8c6b |
+| RULE2-06-GREEN | 5 / 1 | instruments/SYNTH-INSTRUMENT-RULE2-06-GREEN-V1.json:1 / 3039159a5b35c7bbae8f481abbe99b9a6bb6d376b86bd0e71129edddde249d64 | costs/SYNTH-COST-RULE2-06-GREEN-V1.json:1 / 7d8510ce6ee3101754fb6d7ffb55fa09109c3d3dda07b7b4d01c0d99a7913abf | funding/SYNTH-FUNDING-RULE2-06-GREEN-V1.json:1 / f3df84929ce109d51f6b4ea82924ee0850404d3f4c1abc6885642fa5eeb1b313 |
+| RULE2-06-RED | 6 / 2 | instruments/SYNTH-INSTRUMENT-RULE2-06-RED-V1.json:1 / da5428f48b4b8141af15cf81bb25653ef8838f2694c00ec32083de1459f318d4 | costs/SYNTH-COST-RULE2-06-RED-V1.json:1 / eac27b27e42a843404e09a3778a5cd960afdde269469b854358c44bb048dc9ee | funding/SYNTH-FUNDING-RULE2-06-RED-V1.json:1 / 48a51d3129b433131c79d841c5065a54b169c1d7bc6f95e54125767ff070277a |
+| RULE2-07-GREEN | 4 / 0 | instruments/SYNTH-INSTRUMENT-RULE2-07-GREEN-V1.json:1 / ae208b1e578362f005f11ebe48addc4b405950fc63c0f57cf9853c3eedc1e614 | costs/SYNTH-COST-RULE2-07-GREEN-V1.json:1 / 040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe | funding/SYNTH-FUNDING-RULE2-07-GREEN-V1.json:1 / 9e732a45d61e44c3d377200ef26a26a55d20eebb4213d300d03be109d10641ce |
+| RULE2-07-RED | 6 / 2 | instruments/SYNTH-INSTRUMENT-RULE2-07-RED-V1.json:1 / f25b99e512c1efe24eebd10326cd39c7c370723d39c9c3ca5ec3c29851268df4 | costs/SYNTH-COST-RULE2-07-RED-V1.json:1 / 806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b | funding/SYNTH-FUNDING-RULE2-07-RED-V1.json:1 / c7c6001c331a518b31e05f5d9bcbabac2977dabf438aff4d58f10dce2bee4a19 |
+
+All 15 InstrumentRecords carry
+`provenance.source_sha256=0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc`
+on their cited line; that value supplies all 15 manifest source-document nodes under design line
+1479. The result is 73 marker replacements: 60 manifest nodes plus 13 fee-row schedule nodes. Every
+corresponding `blocked_cells` row was removed, leaving only the existing metrics row in each golden;
+every `authored_value_tokens` array is byte-equivalent as parsed to its snapshot counterpart. No
+source-event digest occurs in these fifteen surfaces, so no unfixed source-event preimage stop was
+encountered.
+
+| Golden | Before SHA-256 | After SHA-256 / catalog expected-artifact pin |
+|---|---|---|
+| RULE2-01-GREEN.json | 38b79ef1cd114724c63e665f3f0e18a478e0693b79ee49356426561a6aaa597a | 27891e5eddc7e604e2087e9d39c9266d5825cefc16ea4a5c7672be57357d7458 |
+| RULE2-01-RED.json | 74f6f80cd44f7f980c3f0b332681bcc34e0a4f5a21bf567c84a17b14aacc38fa | 3cf30e13db25a99093d9087c374c05dabbc6ca0a33ad6cebdfdd1d28df42b94d |
+| RULE2-02-GREEN.json | aefa016537dd342e307a974c97b513fcbd1c9ef140ef7bfaee5a62b648b6a146 | 5cf90e11a1b5251d7615cd9001a35ec5673d7297ac716d4f6448a9292bd7a822 |
+| RULE2-02-RED.json | b6b4e4bfb21c162cdee84e49762357f543afc6bf72320765748d70bdc030388d | 82c4651527a16c0daa21927ec7ae643ad0a5041eeebf3314f36b84a2435a10a0 |
+| RULE2-03-GREEN.json | c10b5e71d7c84ccdc8668cb081ba5b394d3fbeba2119a0a53eeb96c9f4fea880 | 46b93e223eb7e5733ba5ef6d7e50345f5665437d9552c8852a8d2c04b9f631b9 |
+| RULE2-03-RED.json | e04ddf0cdd14c68076ddd1b081467ee21fafb836d7a51751990bfb361b1bb724 | d475b8096699a1df6d0985f4b67eeda86c6b96dca36778da683fc859058e96b0 |
+| RULE2-04-GREEN.json | 7309d4cbe1445cea9d8ccb4ca44bc91e81e45fd8c157fa3daed3b295561ba7f7 | 5384c298d0d103b67b8d9968267a4a4b736f5c75430cf623f61e80f0a9f025c5 |
+| RULE2-04-RED.json | 50a990c2005ade1fa5db41cdd00f7bd194e0e89db1f3cd1b24d3d71e693aa85c | f31e3b879599e4fbc621fd4410944896a39aeac9411c59dff42164d8eb87b2b3 |
+| RULE2-05-GREEN.json | 26bbb48caf2fb2c5f9f13f08f23664ede89f31c9bfa337d9b878ab68ffa19798 | b68bf0bb5975cc06c3f47fdf795221c8e255b88c9329f770558d97af2b7732f8 |
+| RULE2-05-RED.json | 88197710a9a767a130d794dbbebe56a81fe9ef990081d3c15171b574e25dbc9a | 9a59aada281a548192e18e0333fad3fadfa8c19cbd17d603943a453a98193242 |
+| RULE2-06-EQUAL-PRICE-RED.json | c05a51eb1e03b8864c495a3d48d3ccd722a2d598489038f055d755f32cb31de0 | 49c845eb7234e464dd29fea2dd79bae2aba1289afc2f8cff8c0d94729e89d590 |
+| RULE2-06-GREEN.json | 45f10ddb072e19b2dae4473e09c6af74268bef11bb64247eea94dc8d0538cda2 | 1df73f308d3695f16ba1ee27fac598fea58cd0509c41da478af270293e20fb75 |
+| RULE2-06-RED.json | 9d9d3a9748571d63c8790d9b7ef5df398ed945f75c59b7148975debfe167a581 | 6dcbefed552d175a25f7668e430d873715d7846782c34d33c8569bf2e4bde9ab |
+| RULE2-07-GREEN.json | 1acd5a74f98d22165971486d6a2ede029f58bf984f85181617055ca473644a4a | f23d1d83007ce27f2094dcb6931021a4850c8a48d7e509da458e18d1efbe92ac |
+| RULE2-07-RED.json | e4d966eee8587ca3d645e3abd9a98847daf8f41a3743250563624975f926435b | b26e0fafe9b61f319c25174792d735a0fe9a85cb9458cfa5addd7d992b1df1c4 |
+
+Only the 15 corresponding `expected_artifacts.2.0.0.digest` catalog lines changed
+(`scenario_catalog.json:30,150,270,378,502,607,717,839,952,1088,1161,1353,1546,1675,1870`).
+The pins equal SHA-256 over the final LF golden bytes.
+
+### W345 discrepancies
+
+- W345-D01: The lane prompt's source-event line locators 916-919 and 1045-1054 are stale against the
+  current v1.16 design: those ranges now contain the v1.4 change-log heading and CostSchedule text.
+  The current source-event description is at `P012_FRESH_DESIGN_V1.md:1083-1092`, and the digest
+  recipes used here are at `P012_FRESH_DESIGN_V1.md:1477-1484`. No source-event node exists in the
+  fifteen in-scope surfaces, so this locator drift changes no golden result.
+
+## W348 - members admitted by design v1.16 (decision 151)
+
+Authority is design v1.16's closed `run_manifest` schema and record-byte recipes
+(`C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md:1466-1496`) and its funding cash-row join
+and closed member set (`P012_FRESH_DESIGN_V1.md:75,85-93,1319-1330`). The pre-edit bundle snapshot
+is `C:\tmp\SNAPSHOTS\20260903_202343_preW348`; its checksum manifest covers all 17 goldens plus
+`scenario_catalog.json` and `DERIVATIONS.md` (`SHA256SUMS.txt:1-19`).
+
+Every sealed input consumes an instrument, cost, and funding record through its one-line `records`
+object (`tests/corrected_vnext/contracts/inputs/<scenario>.json:1`). Fifteen goldens already carried
+all four record-digest members after W345 (`DERIVATIONS.md:5071-5140`). The two RULE2-08 goldens were
+the remaining cost-record cases: design v1.16 line 1482 requires `cost_schedule_digest` when the cost
+schedule is consumed, and design lines 500, 970, 1006, 1145, and 1221 bind their exact reused
+RULE2-07 cost ids and hashes without introducing a new record or number.
+
+This session verified all 51 I/C/F references across the 17 inputs, covering 48 unique record files.
+All 48 records and all 48 adjacent sidecars are tracked in the record repository, and targeted status
+for the record root is clean. Every recomputed record-file SHA-256 equals both its sidecar and its
+sealed-input hash.
+
+| Golden | W348 members added | Exact value | Derivation / authority |
+|---|---|---|---|
+| RULE2-01-GREEN | none | - | All admitted record-digest members already present from W345. |
+| RULE2-01-RED | none | - | All admitted record-digest members already present from W345. |
+| RULE2-02-GREEN | none | - | All admitted record-digest members already present from W345. |
+| RULE2-02-RED | none | - | All admitted record-digest members already present from W345. |
+| RULE2-03-GREEN | none | - | All admitted record-digest members already present from W345. |
+| RULE2-03-RED | none | - | All admitted record-digest members already present from W345. |
+| RULE2-04-GREEN | none | - | All admitted record-digest members already present from W345. |
+| RULE2-04-RED | none | - | All admitted record-digest members already present from W345. |
+| RULE2-05-GREEN | none | - | All admitted record-digest members already present from W345. |
+| RULE2-05-RED | none | - | All admitted record-digest members already present from W345. |
+| RULE2-06-EQUAL-PRICE-RED | none | - | All eleven admitted manifest members already present; no funding-kind cash row. |
+| RULE2-06-GREEN | none | - | All eleven admitted manifest members already present; no funding-kind cash row. |
+| RULE2-06-RED | none | - | All eleven admitted manifest members already present; no funding-kind cash row. |
+| RULE2-07-GREEN | none | - | All admitted record-digest members already present from W345. |
+| RULE2-07-RED | none | - | All admitted record-digest members already present from W345. |
+| RULE2-08-GREEN | `/RESULT_SURFACE/run_manifest/cost_schedule_digest` | `040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe` | SHA-256 over committed `costs/SYNTH-COST-RULE2-07-GREEN-V1.json:1`; equals its `.json.sha256:1`, the sealed input at `RULE2-08-GREEN.json:1`, and design line 1482. |
+| RULE2-08-RED | `/RESULT_SURFACE/run_manifest/cost_schedule_digest` | `806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b` | SHA-256 over committed `costs/SYNTH-COST-RULE2-07-RED-V1.json:1`; equals its `.json.sha256:1`, the sealed input at `RULE2-08-RED.json:1`, and design line 1482. |
+| RULE2-08-RED | `/EVENT_SURFACE/cash_events/0/funding_event_id` | `TEST-FUND-1` | The cash row and `funding_events/0` join by `cash_event_id=CE-FUND-0`; the value equals the joined funding row and sealed input id under design lines 75 and 85-93, with the closed funding row shape at 1319-1330. |
+
+The committed records are below
+`C:\WP012BUILD\MTC_COMMAND_CENTER\01_MTC_PROJECT\00_PYTHON\mtc_v2\core\economic_records\`.
+For the two changed goldens, the two InstrumentRecords, two reused CostSchedules, and one shared
+FundingSchedule were read in full; every exact-byte SHA-256 matched both its adjacent `.sha256`
+sidecar and the sealed input. Both InstrumentRecords also carry
+`provenance.source_sha256=0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc`
+on their one-line record, which agrees with the existing manifest member under design line 1479.
+
+The funding cash-row member is a sealed identity, not a tables-authored token, and the two digest
+members are record-derived; therefore neither changed golden's `authored_value_tokens` changes.
+No marker was resolved or introduced, so both `blocked_cells` arrays remain unchanged. Provenance is
+re-anchored to design v1.16 and each changed golden carries a `w348_admitted_members` ledger.
+
+| Golden | Before SHA-256 | After SHA-256 / catalog expected-artifact pin |
+|---|---|---|
+| RULE2-08-GREEN.json | `1185758e987bca067eaed98b7dd2ecca322837893010b9a04dfcc04ceb0b796c` | `fec568d4d5912668816b91bd9ddce31757a9a38464b276e2a061380782ff0803` |
+| RULE2-08-RED.json | `b4da2832a3218750935f464d4fd91a3a3dd1fdf6d6a46f661f6a3a884d6bba5f` | `5260d9eec444fe59e7af0acef79785d1981dd9f43de125353cbd9966e4f33aa1` |
+
+Only the two matching `expected_artifacts.2.0.0.digest` catalog members changed. All four edited
+JSON files parse, retain UTF-8/no-BOM/LF/final-LF byte discipline, and the two catalog pins equal
+SHA-256 over the final golden bytes. No kernel was executed and no `observed/` file was read.

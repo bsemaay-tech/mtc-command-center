@@ -30,7 +30,7 @@
       {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.045}
     ],
     "fee_events": [
-      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-02-GREEN-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.00045, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.045, "fee_cash_delta": -0.045, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-02-GREEN-V1", "schedule_digest": "5d2fbe4f65f64e7b8b7ebf4cbb27c2b1daa43d7306655d883ae20822c3c44783", "rate": 0.00045, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.045, "fee_cash_delta": -0.045, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
     ],
     "funding_events": [],
     "exit_events": []
@@ -48,13 +48,13 @@
       "kernel_semantics_version": "2.0.0",
       "execution_profile_id": "close_only_deterministic_v2",
       "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-02-GREEN-V1",
-      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
-      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_record_digest": "b3d480a84a2eb716bab12dca46483cb0372a64eb2cdbb85072521a103982c817",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
       "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
       "cost_schedule_id": "SYNTH-COST-RULE2-02-GREEN-V1",
-      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "cost_schedule_digest": "5d2fbe4f65f64e7b8b7ebf4cbb27c2b1daa43d7306655d883ae20822c3c44783",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-02-GREEN-V1",
-      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+      "funding_schedule_digest": "ba87c50c8fb4ee594526eb45c0ba47e77ebd9d65270e8d9ee27d250394771957"
     }
   },
   "cash_ledger_join": "Design 2.1:75 and 13:376 - fee_events/0.fee_cash_delta = -0.045 equals the joined cash_events/0.signed_delta (CE-FEE-0). The M-06 window is the full bar span, so equity_curve.last = 1000 + (-0.045) = 999.955.",
@@ -90,11 +90,6 @@
     {"pointer": "/RESULT_SURFACE/final_position/side", "value": "LONG", "design_fact": "P012_FRESH_DESIGN_V1.md:275-280 (section 10 table rows name the Long position) and :406 (side_factor +1 for long).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
   ],
   "blocked_cells": [
-    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."}
   ]
 }

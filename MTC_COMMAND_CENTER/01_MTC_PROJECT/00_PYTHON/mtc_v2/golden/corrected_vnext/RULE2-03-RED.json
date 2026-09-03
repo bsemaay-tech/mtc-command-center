@@ -43,13 +43,13 @@
       "kernel_semantics_version": "2.0.0",
       "execution_profile_id": "close_only_deterministic_v2",
       "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-03-RED-V1",
-      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
-      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_record_digest": "498ae36ea28a7f40df519724b1fb80d98a68c7261cda8fc7c0c3d6893c909a9a",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
       "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
       "cost_schedule_id": "SYNTH-COST-RULE2-03-RED-V1",
-      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "cost_schedule_digest": "9f391fcb1d19d9d7ad23f18c079631d976a895e09e8de135eed315d04642f4bb",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-03-RED-V1",
-      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+      "funding_schedule_digest": "38d3b55db92dc6f5c4864dd19a39492bd3306b01a10bc8767f08a1819c2eaf5f"
     }
   },
   "tick_identity_derivation": "Design 9:259 and 22.4:854 - the frozen InstrumentRecord overrides the section-22.3 default price_tick 0.01 to 0.5 for this row, while the LEGACY runtime config carries instrument_price_tick 0.25 and every other explicit runtime instrument field equals the record. Design 5.2:145 accepts only the record value, so 0.25 != 0.5 is REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION before the first bar. Both tokens carry a fraction and are therefore binary64 float nodes (design 15.3:480); their exact forms are F:0x1.0000000000000p-1 and F:0x1.0000000000000p-2.",
@@ -67,11 +67,7 @@
     {"pointer": "/RESULT_SURFACE/refusals/0", "change": "RE-VERIFIED against the closed five-member tagged object; the sealed object already had exactly {code, field, record_value, runtime_value, stage=\"PRE_EVALUATION\"} and no free-form detail, so no byte changed.", "authority": "P012_FRESH_DESIGN_V1.md:1163; tables-revision item 7 at :1201-1202."}
   ],
   "blocked_cells": [
-    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design 9:261 requires record id, exact record digest, source digest and effective interval on every corrected manifest. Design v1.5 binds every record member value but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."}
   ],
   "derivable_empty_containers_note": "all five economic containers are derivably empty: design 9:255 and 9:261 make this a typed pre-evaluation refusal, so no scenario output exists (design 9:263 uses the same wording for the record-identity preflight). Design 22.4:854 supplies exactly one NO_ACTION100 bar, which cannot emit an entry in any case (design 22.2:733, :743-745)."
 }

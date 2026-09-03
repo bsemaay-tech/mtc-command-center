@@ -43,13 +43,13 @@
       "kernel_semantics_version": "2.0.0",
       "execution_profile_id": "close_only_deterministic_v2",
       "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-02-RED-V1",
-      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
-      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_record_digest": "527ae2deeb8360548c32d98cc7d3b0907288acb8549f6aace331852e18411946",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
       "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
       "cost_schedule_id": "SYNTH-COST-RULE2-02-RED-V1",
-      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "cost_schedule_digest": "2ebdfd2a4080cc779951d05e14dfd76517a2f08faf567fb9900b533f3ad74ce7",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-02-RED-V1",
-      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+      "funding_schedule_digest": "d73c96ed5cb8f8f3915f1ac4e69bbad85ceeaba7d56bd7c48644698d93d96968"
     }
   },
   "min_notional_preflight": "Design 8:241 and 22.4:852 - the LEGACY runtime carries instrument_min_notional 0 while the corrected frozen InstrumentRecord carries minimum_notional 101. Order notional 1 * 100 * 1 = 100. Corrected admits iff 100 >= 101, which is false, so the corrected adapter refuses REFUSED_MIN_NOTIONAL and opens no position; the legacy strict comparison 100 < 0 is false, so legacy opens. Both thresholds are now explicit scenario inputs at design 22.4:852 rather than prose-only values.",
@@ -73,11 +73,7 @@
     {"pointer": "/EVENT_SURFACE/decision_events/1/selector", "value": "RISK", "design_fact": "P012_FRESH_DESIGN_V1.md:200-203 - a finite stop with stop_distance > 0 selects risk_raw_qty.", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
   ],
   "blocked_cells": [
-    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "design 15.3:474 names metrics but fixes no metric node set."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design 8:243 requires the RED artifact to record the instrument digest. Design v1.5 binds every record member value but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer, so the exact record bytes still do not exist; :697-700 keeps digests build artifacts."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "design 15.3:474 names metrics but fixes no metric node set."}
   ],
   "derivable_empty_containers_note": "fill_events, cash_events, fee_events and exit_events are derivably empty: design 8:241 states the corrected adapter opens no position, and design 8:243 removes entry/position/fill-dependent events, so no fill exists to carry a fee (design 3:100). funding_events is derivably empty: design 22.3:813-829 gives RULE2-01..07 an event-free schedule whose coverage spans the window, and the ordinary bars end before 2000-01-01T01:00:00Z."
 }

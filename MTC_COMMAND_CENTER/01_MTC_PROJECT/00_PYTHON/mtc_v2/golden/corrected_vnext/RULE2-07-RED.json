@@ -36,8 +36,8 @@
       {"sequence": 2, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-GROSS-1", "kind": "GROSS_REALIZATION", "fill_id": "F1", "signed_delta": 0}
     ],
     "fee_events": [
-      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-07-RED-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.001, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.1, "fee_cash_delta": -0.1, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"},
-      {"sequence": 1, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "lifecycle_id": 1, "fill_id": "F1", "event_class": "MARKET_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-07-RED-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.001, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.1, "fee_cash_delta": -0.1, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-1"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:11:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "ENTRY", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-07-RED-V1", "schedule_digest": "806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b", "rate": 0.001, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.1, "fee_cash_delta": -0.1, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"},
+      {"sequence": 1, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "lifecycle_id": 1, "fill_id": "F1", "event_class": "MARKET_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-07-RED-V1", "schedule_digest": "806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b", "rate": 0.001, "fixed_component": 0, "fee_notional": 100, "fee_amount": 0.1, "fee_cash_delta": -0.1, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-1"}
     ],
     "funding_events": [],
     "exit_events": [
@@ -64,13 +64,13 @@
       "kernel_semantics_version": "2.0.0",
       "execution_profile_id": "close_only_deterministic_v2",
       "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-07-RED-V1",
-      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
-      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_record_digest": "f25b99e512c1efe24eebd10326cd39c7c370723d39c9c3ca5ec3c29851268df4",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
       "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
       "cost_schedule_id": "SYNTH-COST-RULE2-07-RED-V1",
-      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "cost_schedule_digest": "806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-07-RED-V1",
-      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+      "funding_schedule_digest": "c7c6001c331a518b31e05f5d9bcbabac2977dabf438aff4d58f10dce2bee4a19"
     }
   },
   "cash_ledger_join": "Design 2.1:75 and 13:376 - each fee_events row is the typed projection of exactly one fee-kind cash_events row joined by cash_event_id, and the typed signed delta equals the joined cash signed delta. fee_events/0.fee_cash_delta = -0.1 = cash_events/0.signed_delta (CE-FEE-0); fee_events/1.fee_cash_delta = -0.1 = cash_events/1.signed_delta (CE-FEE-1). Gross realization appears only in cash_events (CE-GROSS-1). The M-06 observation window is the full bar span 2000-01-01T00:10:00Z..2000-01-01T00:12:00Z, so only the three cash_events rows are applied to equity: 1000 + (-0.1) + (-0.1) + 0 = 999.8.",
@@ -119,12 +119,6 @@
     {"pointer": "/EVENT_SURFACE/cash_events/*/kind", "value": "GROSS_REALIZATION", "design_fact": "P012_FRESH_DESIGN_V1.md:71 and :100 (section 3 step 11 appends gross realized PnL as a cash event).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
   ],
   "blocked_cells": [
-    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "design 13:386 requires fee-adjusted metrics but fixes no metric node set."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/1/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "design 13:386 requires fee-adjusted metrics but fixes no metric node set."}
   ]
 }

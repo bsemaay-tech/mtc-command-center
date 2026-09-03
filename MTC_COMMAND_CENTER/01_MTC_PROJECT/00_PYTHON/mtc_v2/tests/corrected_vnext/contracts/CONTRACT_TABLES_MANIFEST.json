@@ -12,37 +12,37 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.15 (W313 M8 bounded claim dec 141; W317 projection members/shape/L10/M4b dec 142-143; W320 M1b RULE2-08 cost-record binding dec 144; measured by re-seal #14; re-measured unchanged at #15)",
-  "sha256": "137180aee4834fa6b87932e289d7ce8cf56d9471c08e7b53982445598347c62f",
-  "total_lines": 1664,
+  "version": "v1.17 (W347: run_manifest child schema + funding cash-row member closed, L13/L14, section-15.4 re-anchor rule; W347B: same_bar_collision_policy_id presence rule CONDITIONAL; owner decisions 147/151; measured by re-seal #16)",
+  "sha256": "5c657ec93c714b59d56a9ca99e7f42005061ceaad6f8d2889e2d691af3381c09",
+  "total_lines": 1800,
   "line_span_used": "whole file",
-  "heading_line_map_measured_at_reseal15": {
+  "heading_line_map_measured_at_reseal16": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
    "1. Authority, claim, and design posture": 24,
    "2. Deep module and seam": 35,
-   "3. Exact ordering for `2.0.0`": 92,
-   "4. Versioning and addressability": 115,
-   "5. Immutable economic records and provenance": 129,
-   "6. Defect record contract": 162,
-   "7. DEF-P012-01 - contract multiplier in sizing": 199,
-   "8. DEF-P012-02 - real minimum-notional admission": 238,
-   "9. DEF-P012-03 - frozen instrument metadata": 299,
-   "10. DEF-P012-04 - gap-aware protective stops; continuous activation owner-gated": 323,
-   "11. DEF-P012-05 - in-path slippage, applied exactly once": 351,
-   "12. DEF-P012-06 - named same-bar collision policy": 379,
-   "13. DEF-P012-07 - provenanced real fee schedule": 408,
-   "14. DEF-P012-08 - per-interval funding and `funding_events`": 449,
-   "15. Bounded Correction Evidence Gate (`BCEG-1`)": 500,
-   "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 778,
-   "17. Honest limits": 791,
-   "18. Build-lane work breakdown and shape census": 808,
-   "19. Single consolidated `[OPEN — owner-gated]` ledger": 831,
-   "20. Defect-class prevention table": 848,
-   "21. Required build preconditions and non-goals": 868,
-   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 880,
-   "22. v1.5 input-embedding addendum": 888,
-   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 1150,
-   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1189
+   "3. Exact ordering for `2.0.0`": 102,
+   "4. Versioning and addressability": 125,
+   "5. Immutable economic records and provenance": 139,
+   "6. Defect record contract": 172,
+   "7. DEF-P012-01 - contract multiplier in sizing": 209,
+   "8. DEF-P012-02 - real minimum-notional admission": 248,
+   "9. DEF-P012-03 - frozen instrument metadata": 309,
+   "10. DEF-P012-04 - gap-aware protective stops; continuous activation owner-gated": 333,
+   "11. DEF-P012-05 - in-path slippage, applied exactly once": 361,
+   "12. DEF-P012-06 - named same-bar collision policy": 389,
+   "13. DEF-P012-07 - provenanced real fee schedule": 418,
+   "14. DEF-P012-08 - per-interval funding and `funding_events`": 459,
+   "15. Bounded Correction Evidence Gate (`BCEG-1`)": 510,
+   "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 798,
+   "17. Honest limits": 811,
+   "18. Build-lane work breakdown and shape census": 846,
+   "19. Single consolidated `[OPEN — owner-gated]` ledger": 869,
+   "20. Defect-class prevention table": 886,
+   "21. Required build preconditions and non-goals": 906,
+   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 918,
+   "22. v1.5 input-embedding addendum": 926,
+   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 1188,
+   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1227
   }
  },
  "repository_evidence_identity": {
@@ -62,98 +62,98 @@
  "files": [
   {
    "path": "DERIVATIONS.md",
-   "sha256": "c1ca836757b05b3f57c619fc82d9229fe47baccd219e4420b77c49fb729329a6",
-   "bytes": 356443
+   "sha256": "0be3a60721e7cfb2eaefc6e2f01277309c64f8c136d0e809d893322b154ec34d",
+   "bytes": 372915
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "726cbc95aaacfc7024522c4c46f28deeb440b8bf56d4087ff446713fa27f03a8",
-   "bytes": 81729
+   "sha256": "3ca90039dbecdc8b0902ba2acabd87db5476da15c493ce74979b434cdba656ff",
+   "bytes": 81731
   },
   {
    "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
-   "sha256": "38b79ef1cd114724c63e665f3f0e18a478e0693b79ee49356426561a6aaa597a",
-   "bytes": 12778
+   "sha256": "27891e5eddc7e604e2087e9d39c9266d5825cefc16ea4a5c7672be57357d7458",
+   "bytes": 11992
   },
   {
    "path": "golden/corrected_vnext/RULE2-01-RED.json",
-   "sha256": "74f6f80cd44f7f980c3f0b332681bcc34e0a4f5a21bf567c84a17b14aacc38fa",
-   "bytes": 13204
+   "sha256": "3cf30e13db25a99093d9087c374c05dabbc6ca0a33ad6cebdfdd1d28df42b94d",
+   "bytes": 12268
   },
   {
    "path": "golden/corrected_vnext/RULE2-02-GREEN.json",
-   "sha256": "aefa016537dd342e307a974c97b513fcbd1c9ef140ef7bfaee5a62b648b6a146",
-   "bytes": 11310
+   "sha256": "5cf90e11a1b5251d7615cd9001a35ec5673d7297ac716d4f6448a9292bd7a822",
+   "bytes": 10524
   },
   {
    "path": "golden/corrected_vnext/RULE2-02-RED.json",
-   "sha256": "b6b4e4bfb21c162cdee84e49762357f543afc6bf72320765748d70bdc030388d",
-   "bytes": 8450
+   "sha256": "82c4651527a16c0daa21927ec7ae643ad0a5041eeebf3314f36b84a2435a10a0",
+   "bytes": 7648
   },
   {
    "path": "golden/corrected_vnext/RULE2-03-GREEN.json",
-   "sha256": "c10b5e71d7c84ccdc8668cb081ba5b394d3fbeba2119a0a53eeb96c9f4fea880",
-   "bytes": 7332
+   "sha256": "46b93e223eb7e5733ba5ef6d7e50345f5665437d9552c8852a8d2c04b9f631b9",
+   "bytes": 6653
   },
   {
    "path": "golden/corrected_vnext/RULE2-03-RED.json",
-   "sha256": "e04ddf0cdd14c68076ddd1b081467ee21fafb836d7a51751990bfb361b1bb724",
-   "bytes": 7907
+   "sha256": "d475b8096699a1df6d0985f4b67eeda86c6b96dca36778da683fc859058e96b0",
+   "bytes": 7103
   },
   {
    "path": "golden/corrected_vnext/RULE2-04-GREEN.json",
-   "sha256": "7309d4cbe1445cea9d8ccb4ca44bc91e81e45fd8c157fa3daed3b295561ba7f7",
-   "bytes": 11688
+   "sha256": "5384c298d0d103b67b8d9968267a4a4b736f5c75430cf623f61e80f0a9f025c5",
+   "bytes": 11009
   },
   {
    "path": "golden/corrected_vnext/RULE2-04-RED.json",
-   "sha256": "50a990c2005ade1fa5db41cdd00f7bd194e0e89db1f3cd1b24d3d71e693aa85c",
-   "bytes": 17700
+   "sha256": "f31e3b879599e4fbc621fd4410944896a39aeac9411c59dff42164d8eb87b2b3",
+   "bytes": 16914
   },
   {
    "path": "golden/corrected_vnext/RULE2-05-GREEN.json",
-   "sha256": "26bbb48caf2fb2c5f9f13f08f23664ede89f31c9bfa337d9b878ab68ffa19798",
-   "bytes": 12893
+   "sha256": "b68bf0bb5975cc06c3f47fdf795221c8e255b88c9329f770558d97af2b7732f8",
+   "bytes": 12107
   },
   {
    "path": "golden/corrected_vnext/RULE2-05-RED.json",
-   "sha256": "88197710a9a767a130d794dbbebe56a81fe9ef990081d3c15171b574e25dbc9a",
-   "bytes": 21008
+   "sha256": "9a59aada281a548192e18e0333fad3fadfa8c19cbd17d603943a453a98193242",
+   "bytes": 20222
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
-   "sha256": "c05a51eb1e03b8864c495a3d48d3ccd722a2d598489038f055d755f32cb31de0",
-   "bytes": 21745
+   "sha256": "49c845eb7234e464dd29fea2dd79bae2aba1289afc2f8cff8c0d94729e89d590",
+   "bytes": 20852
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-GREEN.json",
-   "sha256": "45f10ddb072e19b2dae4473e09c6af74268bef11bb64247eea94dc8d0538cda2",
-   "bytes": 20072
+   "sha256": "1df73f308d3695f16ba1ee27fac598fea58cd0509c41da478af270293e20fb75",
+   "bytes": 19286
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-RED.json",
-   "sha256": "9d9d3a9748571d63c8790d9b7ef5df398ed945f75c59b7148975debfe167a581",
-   "bytes": 20782
+   "sha256": "6dcbefed552d175a25f7668e430d873715d7846782c34d33c8569bf2e4bde9ab",
+   "bytes": 19889
   },
   {
    "path": "golden/corrected_vnext/RULE2-07-GREEN.json",
-   "sha256": "1acd5a74f98d22165971486d6a2ede029f58bf984f85181617055ca473644a4a",
-   "bytes": 11327
+   "sha256": "f23d1d83007ce27f2094dcb6931021a4850c8a48d7e509da458e18d1efbe92ac",
+   "bytes": 10648
   },
   {
    "path": "golden/corrected_vnext/RULE2-07-RED.json",
-   "sha256": "e4d966eee8587ca3d645e3abd9a98847daf8f41a3743250563624975f926435b",
-   "bytes": 21365
+   "sha256": "b26e0fafe9b61f319c25174792d735a0fe9a85cb9458cfa5addd7d992b1df1c4",
+   "bytes": 20472
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
-   "sha256": "1185758e987bca067eaed98b7dd2ecca322837893010b9a04dfcc04ceb0b796c",
-   "bytes": 11390
+   "sha256": "fec568d4d5912668816b91bd9ddce31757a9a38464b276e2a061380782ff0803",
+   "bytes": 12026
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-RED.json",
-   "sha256": "b4da2832a3218750935f464d4fd91a3a3dd1fdf6d6a46f661f6a3a884d6bba5f",
-   "bytes": 22930
+   "sha256": "5260d9eec444fe59e7af0acef79785d1981dd9f43de125353cbd9966e4f33aa1",
+   "bytes": 23932
   }
  ],
  "byte_discipline": "Every file above is UTF-8 with no BOM, LF line endings and a required final LF, per P012_FRESH_DESIGN_V1.md:480. Every JSON file parses with duplicate-key rejection and contains no non-finite number token. Re-verified by lane W156 over the 18 JSON files it revised or re-read (17 golden artifacts plus scenario_catalog.json): each file was byte-inspected for BOM, CR and final LF, parsed, checked for bare NaN/Infinity/undefined tokens outside string literals, and checked for duplicate keys by comparing the raw key-token count with the parsed property count (equal in every file).",
@@ -553,12 +553,19 @@
    "report": "W341_RULE2_08_GOLDENS_REPORT.md; _packets_V341/V341_REPORT.md; W279C_REPORT.md F01-F04/F08; W276C_REPORT.md F01-F02; DETECT_GM83C_BRANCH.md F02/F04",
    "effect": "goldens RULE2-08-RED/GREEN re-derived (window membership, fee row shape, equity first/last, cost_schedule_digest, record digests), catalog rows RULE2-08-RED, RULE2-08-GREEN, PROBE-P012-08-A, DERIVATIONS insertion-only; design pin v1.15 unchanged; base unchanged",
    "independently_verified": "V341 = Gemini 3.8 packet verify (_packets_V341/V341_GEMINI_REPORT.md): checks 1-5 and 7 ACCEPT, check 6 REQUEST_CHANGES resolved by W341B's measurement (the corrected side is a selector, no stored cardinality; GMV341B ACCEPT); V341B = Gemini 3.8 (_packets_V341/V341B_GEMINI_REPORT.md) ACCEPT 3/3 on W341B (08-A comparator pointer re-pinned; fee_events pair honest STOP) on W341 (Claude Pro: RULE2-08 goldens re-derived under decision 144 after fresh-audit rows M1/M7 = W276C F01-F02, W279C F01-F04/F08, GM83C F02/F04); the seal #14/#14b VERIFIED_BY list is carried in revision_history[-2]"
+  },
+  {
+   "revision": "re-seal #16: owner decisions 149/151 (W345, W348) and design v1.16 (W347, decisions 147/151)",
+   "lane_spec": "LANE_W345_RECORD_DIGESTS_15_GOLDENS.md; LANE_W348_TABLES_ADMITTED_MEMBERS.md; LANE_W347_DESIGN_CLOSE_KERNEL_MEMBERS.md (C:/tmp/LANE_PROMPTS_20260828)",
+   "report": "W345_RECORD_DIGESTS_REPORT.md; W348_TABLES_REPORT.md; W347_DESIGN_V116_REPORT.md; V345/V348/V347 Gemini reports",
+   "effect": "goldens: record digests (149) + admitted members (151); catalog rows RULE2-01-RED, RULE2-01-GREEN, RULE2-02-RED, RULE2-02-GREEN, RULE2-03-RED, RULE2-03-GREEN, RULE2-04-RED, RULE2-04-GREEN, RULE2-05-RED, RULE2-05-GREEN, RULE2-06-RED, RULE2-06-EQUAL-PRICE-RED, RULE2-06-GREEN, RULE2-07-RED, RULE2-07-GREEN, RULE2-08-RED, RULE2-08-GREEN, DERIVATIONS insertion-only; design pin v1.16; base unchanged (re-anchor follows)",
+   "independently_verified": "V345 = Gemini V345B ACCEPT 4/4 (V345B_GEMINI_REPORT.md; the first GMV345 BLOCK rested on the Lead brief rule, corrected) on W345; V348 = Gemini ACCEPT 3/3 (V348_GEMINI_REPORT.md) on W348; design v1.16 verified by Gemini V347 (V347_GEMINI_REPORT.md) and v1.17 by Gemini V347B ACCEPT 4/4 (V347B_GEMINI_REPORT.md); seal #15 VERIFIED_BY carried in revision_history"
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
+  "EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
   "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
-  "reason": "Sealed by the Lead at re-seal #15 (2026-09-03T17:49:59+03:00): the RULE2-08 goldens re-derived from design v1.15 under decision 144 after the fresh audit round on seal #14 (three families BLOCK; triage rows M1/M7 inside the fence); nothing else moved."
+  "reason": "Sealed by the Lead at re-seal #16 (2026-09-03T20:54:18+03:00): owner decisions 149 (record digests derived on the fifteen goldens) and 151 (members admitted by design v1.16 added to the goldens); design pin moves to v1.17; base unchanged until the decision-147 re-anchor after the copies commit."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -567,9 +574,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
+  "EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
   "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
-  "set_by": "Lead re-seal act #15 2026-09-03T17:49:59+03:00"
+  "set_by": "Lead re-seal act #16 2026-09-03T20:54:18+03:00"
  },
  "reseal_history": [
   {
@@ -920,6 +927,34 @@
     "scenario_catalog.json"
    ],
    "design_pin": "v1.15"
+  },
+  {
+   "at": "2026-09-03T20:54:18+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #16",
+   "old_EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
+   "new_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-01-GREEN.json",
+    "golden/corrected_vnext/RULE2-01-RED.json",
+    "golden/corrected_vnext/RULE2-02-GREEN.json",
+    "golden/corrected_vnext/RULE2-02-RED.json",
+    "golden/corrected_vnext/RULE2-03-GREEN.json",
+    "golden/corrected_vnext/RULE2-03-RED.json",
+    "golden/corrected_vnext/RULE2-04-GREEN.json",
+    "golden/corrected_vnext/RULE2-04-RED.json",
+    "golden/corrected_vnext/RULE2-05-GREEN.json",
+    "golden/corrected_vnext/RULE2-05-RED.json",
+    "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+    "golden/corrected_vnext/RULE2-06-GREEN.json",
+    "golden/corrected_vnext/RULE2-06-RED.json",
+    "golden/corrected_vnext/RULE2-07-GREEN.json",
+    "golden/corrected_vnext/RULE2-07-RED.json",
+    "golden/corrected_vnext/RULE2-08-GREEN.json",
+    "golden/corrected_vnext/RULE2-08-RED.json",
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.17"
   }
  ],
  "legacy_event_order_map_pin": {

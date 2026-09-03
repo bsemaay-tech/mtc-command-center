@@ -34,7 +34,7 @@
       {"sequence": 1, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-GROSS-0", "kind": "GROSS_REALIZATION", "fill_id": "F0", "signed_delta": -20}
     ],
     "fee_events": [
-      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-06-GREEN-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "rate": 0.00045, "fixed_component": 0, "fee_notional": 180, "fee_amount": 0.081, "fee_cash_delta": -0.081, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-06-GREEN-V1", "schedule_digest": "7d8510ce6ee3101754fb6d7ffb55fa09109c3d3dda07b7b4d01c0d99a7913abf", "rate": 0.00045, "fixed_component": 0, "fee_notional": 180, "fee_amount": 0.081, "fee_cash_delta": -0.081, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
     ],
     "funding_events": [],
     "exit_events": [
@@ -55,13 +55,13 @@
       "execution_profile_id": "raw_close_only_v1",
       "same_bar_collision_policy_id": "TARGET_FIRST",
       "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-06-GREEN-V1",
-      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
-      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_record_digest": "3039159a5b35c7bbae8f481abbe99b9a6bb6d376b86bd0e71129edddde249d64",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
       "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
       "cost_schedule_id": "SYNTH-COST-RULE2-06-GREEN-V1",
-      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "cost_schedule_digest": "7d8510ce6ee3101754fb6d7ffb55fa09109c3d3dda07b7b4d01c0d99a7913abf",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-06-GREEN-V1",
-      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+      "funding_schedule_digest": "f3df84929ce109d51f6b4ea82924ee0850404d3f4c1abc6885642fa5eeb1b313"
     }
   },
   "observation_window": {
@@ -115,11 +115,6 @@
     {"pointer": "/EVENT_SURFACE/cash_events/*/kind", "value": "GROSS_REALIZATION", "design_fact": "P012_FRESH_DESIGN_V1.md:71 and :100 (section 3 step 11 appends gross realized PnL as a cash event).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
   ],
   "blocked_cells": [
-    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "EVENT_SURFACE", "pointer": "/fee_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."}
   ]
 }

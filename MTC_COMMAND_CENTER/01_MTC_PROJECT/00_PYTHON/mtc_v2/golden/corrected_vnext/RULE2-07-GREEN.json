@@ -47,13 +47,13 @@
       "kernel_semantics_version": "2.0.0",
       "execution_profile_id": "close_only_deterministic_v2",
       "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-07-GREEN-V1",
-      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
-      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_record_digest": "ae208b1e578362f005f11ebe48addc4b405950fc63c0f57cf9853c3eedc1e614",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
       "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
       "cost_schedule_id": "SYNTH-COST-RULE2-07-GREEN-V1",
-      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "cost_schedule_digest": "040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-07-GREEN-V1",
-      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+      "funding_schedule_digest": "9e732a45d61e44c3d377200ef26a26a55d20eebb4213d300d03be109d10641ce"
     }
   },
   "empty_fill_input_derivation": "Design 13:384 states an empty fill-event input. Design 22.6:887 now supplies the exact non-empty but no-signal LEGACY input that produces it: a single NO_ACTION100 bar at 2000-01-01T00:10:00Z with use_time_stop = false and the exact GUARD07 switch set. Design 22.2:733 and :743-745 establish that a first Range Filter call only initializes its line and cannot emit an entry for any finite constant OHLC, so no fill exists. The driver's non-empty-bar requirement is satisfied without a state-injection field.",
@@ -83,11 +83,7 @@
   ],
   "authored_value_tokens": [],
   "blocked_cells": [
-    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."}
   ],
   "derivable_empty_containers_note": "all six economic containers are derivably empty: design 13:384 states an empty fill-event input and design 22.6:887 supplies the exact no-signal bar that realizes it, so there is no fill, no fee (design 3:100 attaches a fee only to a fill), no gross realization and no exit; the row's FundingSchedule declares no in-window event (design 22.3:813-829)."
 }

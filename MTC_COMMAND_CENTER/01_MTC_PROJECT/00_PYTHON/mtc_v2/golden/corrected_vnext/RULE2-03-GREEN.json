@@ -41,13 +41,13 @@
       "kernel_semantics_version": "2.0.0",
       "execution_profile_id": "close_only_deterministic_v2",
       "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-03-GREEN-V1",
-      "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
-      "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "instrument_record_digest": "dbc58337b036055593aaa88be054e405375204450e72a50612b0dd68179d9585",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
       "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
       "cost_schedule_id": "SYNTH-COST-RULE2-03-GREEN-V1",
-      "cost_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES",
+      "cost_schedule_digest": "05ca006ccbba614eb0f8177181ac24d2e0b166d12db7826e00df79df279339c0",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-03-GREEN-V1",
-      "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
+      "funding_schedule_digest": "3e2e121e537ad234802ed82e2ce6a39a75ea3f51bdf1fd072febbede6717cbf0"
     }
   },
   "tick_identity_derivation": "Design 9:259 and 22.4:855 - the frozen InstrumentRecord overrides the section-22.3 default price_tick 0.01 to 0.5 and the LEGACY runtime carries the same 0.5, with every other runtime instrument field equal to the record. Identity validates and no override refusal is raised. The consumed price_tick 0.5 is a binary64 float node, exact form F:0x1.0000000000000p-1.",
@@ -65,11 +65,7 @@
     {"pointer": "/EVENT_SURFACE/decision_events/1", "change": "INSTRUMENT_RECORD_VALIDATED kept with the closed triple {field, record_value, runtime_value}; event_timestamp FORBIDDEN.", "authority": "P012_FRESH_DESIGN_V1.md:1020."}
   ],
   "blocked_cells": [
-    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_record_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds record member values but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer; :697-700 keeps digests build artifacts."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/instrument_source_document_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/cost_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."},
-    {"surface": "RESULT_SURFACE", "pointer": "/run_manifest/funding_schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "as above."}
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "no metric node set fixed by the design."}
   ],
   "derivable_empty_containers_note": "all five economic containers are derivably empty: design 22.4:855 supplies one NO_ACTION100 bar, and design 22.2:733 plus :743-745 state that a first Range Filter call only initializes its line and cannot emit an entry for any finite constant OHLC. No fill therefore exists to carry a fee (design 3:100), and the row's schedule contains no in-window funding event (design 22.3:813-829)."
 }
