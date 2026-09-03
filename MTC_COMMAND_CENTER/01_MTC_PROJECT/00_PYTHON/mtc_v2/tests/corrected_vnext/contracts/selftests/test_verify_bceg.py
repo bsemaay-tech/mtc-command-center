@@ -1387,10 +1387,10 @@ def test_probe_driver_refuses_unclosed_base_before_variant_comparison(
     )
 
     assert identity_receipt["status"] == "NOT_DETECTED"
-    assert identity_receipt["measured_failed_check"] == "CORRECTED_EXPECTATION"
+    assert identity_receipt["measured_failed_check"] == "CLOSED_SET_VIOLATION"
     assert (
         identity_receipt["comparator_first_differing_node"]
-        == "/EVENT_SURFACE/cash_events"
+        == "/RESULT_SURFACE/cumulative_funding"
     )
     assert identity_receipt["expected_node_changed"] is False
 
