@@ -1035,3 +1035,30 @@ live trading, a build, or a kernel change.
   into M2. None is a kernel edit.
 - Flagship 2b (W279B, Claude Pro) running since 02:41; flagship 1b (W276B) waits for the Codex reset at
   05:43 (all three Codex accounts capped at 02:42).
+
+## Addendum 39 - 2026-09-03 03:1x REAL (Lead record: flagship 2b re-run verdict; no new owner decision)
+
+- **W279B (Claude Pro, flagship 2 re-run on HEAD `8ca003e4`, re-seal #13): BLOCK, 19 findings (6 HIGH,
+  8 MEDIUM, 5 LOW).** Its own tally of the 25 DS102 rows: 17 FIXED, 2 partially, 4 NOT FIXED (W276-F05,
+  W276-F06 owner-word pending, W279-F14 metrics never produced, W279-F18 design-bound); three highest
+  fixes reproduced RED-then-GREEN by the auditor; legacy path byte-exact.
+- **Its single sentence to reach PASS-WITH-NITS:** the canonical gate returns the accepting label with
+  zero refusals, which requires (a) a funding transcript on both DEF-P012-08 rows (= morning item M1 plus
+  W279B-F02: `cumulative_funding` presence keyed on runtime state instead of the declared DEF, a one-line
+  kernel fix needing owner word), (b) the owner's signed section-16 review, (c) `IMPLEMENTATION_BASE_SHA`
+  at or after the seal commit (W279B-F06: the base is pinned before the sealed bundle exists, so the
+  provenance check can never clear; **owner item M5**: re-pin the base to the seal commit or record the
+  exception).
+- **Harness HIGHs for the next harness lane (standing authorization):** F03 committed OBSERVED_ROOT 2.0.0
+  artifacts stale and unpinned (refresh or pin), F04 RULE-2 divergence / GREEN cross-version checks
+  computed by the reader from actuals, F05 GATE_READER supplies economic inputs to KERNEL_2 (the D3
+  declaration transport), F07 scenario-conditioned closed sets, F14 provenance refusal reports one path
+  of nineteen. Folded into W305's scope as items 4-8.
+- **Kernel MEDIUM/LOW items needing owner word (morning):** F02 (above), F11 empty-transition key on a
+  per-instance object, F13 ordered accumulation applied to equity only (cumulative_funding/fee still
+  sum-then-add), F18 stop predicate outside the closed domain reachable, F16 = F18-old node kind.
+- **Design items (M2 grows):** F08 accepting label renamed and 96 nodes excluded without a design
+  amendment; F09 exit_events[].reason has no closed design vocabulary; F10 design authority and baseline
+  producer live at absolute paths outside the repository; F12 metrics never produced (= W279-F14).
+- Detection GM83B (8 findings, triage in addendum 38) and flagship 1b (W276B, Codex, waits for the 05:43
+  reset) complete the round; the merge decision belongs to the owner in the morning.
