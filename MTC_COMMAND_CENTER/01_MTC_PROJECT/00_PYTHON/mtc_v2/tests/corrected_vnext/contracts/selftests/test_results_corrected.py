@@ -158,6 +158,27 @@ def test_corrected_manifest_marks_an_unconsumed_cost_schedule_without_padding_di
     assert manifest["funding_schedule_id"] == "SYNTH-FUNDING-RULE2-08-V1"
 
 
+def test_def_p012_08_result_includes_zero_cumulative_funding_without_events() -> None:
+    config, _bars = _scenario("RULE2-08-GREEN")
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        realized_equity=1000.0,
+    )
+    assert state.funding_events == []
+
+    result = corrected_surfaces(
+        state=state,
+        equity_values=[],
+        manifest=CorrectedRunManifest.from_records(
+            _records(config), execution_profile_id=str(config["execution_profile_id"])
+        ),
+        declared_def_ids=("DEF-P012-08",),
+    )["RESULT_SURFACE"]
+
+    assert result["cumulative_funding"] == 0
+
+
 def test_realized_equity_window_adds_in_window_deltas_in_array_order() -> None:
     observation_start = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
     deltas = [1e16, 1.0, -1e16]
