@@ -1062,3 +1062,16 @@ live trading, a build, or a kernel change.
   producer live at absolute paths outside the repository; F12 metrics never produced (= W279-F14).
 - Detection GM83B (8 findings, triage in addendum 38) and flagship 1b (W276B, Codex, waits for the 05:43
   reset) complete the round; the merge decision belongs to the owner in the morning.
+
+## Addendum 40 - 2026-09-03 03:4x REAL (Lead record: second-family cross-check of flagship 2b; no new owner decision)
+
+- **T279B (DeepSeek V4 Pro) agrees with the BLOCK verdict** and confirms all six HIGHs as REAL on HEAD
+  `8ca003e4`: F01 (no DEF-P012-08 funding transcript = M1), F02 (`cumulative_funding` keyed on runtime state;
+  one-line kernel fix at `core/results.py:968`, needs owner word), F03 (committed observed 2.0.0 artifacts
+  stale; 17/17 differ from live), F04 (reader-authored RULE-2 checks), F05 (= W304-D3, `_target_book_overrides`
+  re-implements target arithmetic in the harness), F06 (base SHA `108ea066` predates the sealed-bundle commit
+  `5e8e5794`; all 19 members refuse; owner item M5). F11 and F13 REAL MEDIUM (kernel, owner word).
+- **Kernel lane W306 pre-written** (F02, F13, F11) - fires only on the owner's morning word; harness items
+  F03/F04/F05/F07/F14 are in W305 (standing authorization) after flagship 1b at 05:43.
+- Route/cost note: MAX unused since 20:1x; the OpenRouter DeepSeek harness has carried every verify and
+  triage since 20:2x (29 runs, all under ten minutes).
