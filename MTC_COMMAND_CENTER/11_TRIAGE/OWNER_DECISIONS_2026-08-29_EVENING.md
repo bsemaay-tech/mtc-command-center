@@ -1887,3 +1887,20 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
   archived (`P012_BASELINE_RUN_seal27bf72e8_archive`), dry-run 17/17, Lead note `LEAD_DRYRUN_NOTE_2026-09-03_SEAL16.md`;
   **W300E (decision 132 shape, fifth run) launched on Codex free**; W349 (in-repo copies + one gate) chains after it; then
   the Lead re-anchors the base to the W349 commit (`repin_base16.py`) and W350 re-measures the provenance record and runs the gate.
+
+## Addendum 75 - 2026-09-03 21:1x REAL (Lead record: seal #16 in the repo, decision 147 re-anchor executed; every RULE2-08 member refusal gone; no new owner decision)
+
+- **W300E (Codex free, 20:55-21:04; decision 132 shape, fifth run):** 34/34 scenario surfaces byte-identical to the seal-27bf72e8
+  archive; baseline manifest consumes seal #16 `40aaf7da...`; 0 findings.
+- **W349 (Codex free, 21:06-21:14):** in-repo copies of the seventeen goldens, catalog, DERIVATIONS, manifest and anchor to
+  re-seal #16 with the design pin v1.17 (`63cfe2dd`), one gate recorded (`7333263a`). **Gate at `7333263a`: 3 refusals, 9 of 10
+  probes DETECTED** - the missing section-16 review; `EXPECTED_PATH_CHANGED_AFTER_BASE` x18 (measured before the re-anchor);
+  PROBE-P012-02-A NOT DETECTED (W344 pending). **Every `OBSERVED_EXTRA_MEMBER` on the RULE2-08 rows is gone** (decisions 149/151
+  executed); the cash_events mismatch stayed gone.
+- **Lead re-anchor executed 21:14 (decision 147, `repin_base16.py`):** `IMPLEMENTATION_BASE_SHA` `5e8e5794` -> `63cfe2dd2dcb...`
+  (the commit carrying re-seal #16 in-repo), `core_tree_oid_at_base` `efac9783...` re-measured, the manifest `seal` / `seal_state`
+  members moved in the same act (the M5 lesson), `base_repin_history` appended; `EXPECTED_SEAL_SHA` unchanged. **W350 launched on
+  Codex free:** in-repo manifest/anchor copies, the decision-134 provenance record re-measured at the new base, one gate;
+  prediction: the 18-path refusal disappears.
+- Queue: W344 (decision 148) on Codex fourth after 22:14 and after W350 (one lane per worktree), then W346 (decision 150), then the
+  second audit pass (W276D Codex, GM83D Gemini refreshed, W279D Claude Pro if its API answers) on the final HEAD.
