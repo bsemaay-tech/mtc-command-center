@@ -1436,3 +1436,13 @@ live trading, a build, or a kernel change.
   census (DeepSeek V4 Pro, `_packets_CENSUS_P014_R2`) is staged to run on its DONE; then back to the owner.
 - **Route note:** DeepSeek author lanes need three to four verify-repair rounds on sealed-table work (locator drift,
   report accuracy); the substantive content was right from round 2. Codex free carried all four verify rounds.
+
+## Addendum 58 - 2026-09-03 13:3x REAL (Lead handover: old session stopped; results of the last two lanes)
+
+- Owner started the fresh session from `%TEMP%/HANDOFF_NEXT_SESSION_2026-09-03_AFTERNOON.md` (rev with section 0.5);
+  the old session stopped launching (no two Leads in parallel). No lane running at handover.
+- V321C round 4 (Codex): REQUEST_CHANGES with one metadata finding F-08 (RED golden `authored_value_tokens` ledger
+  not synchronized with the fee/cash-event insertion; sealed tokens only, no economic number); F-06/F-07 CLOSED; all
+  economics, digests, values and probe pointers ACCEPT; F-04 deferred to reseal #14. Next: narrow fifth pass, round 5.
+- CENSUS-P014-R2 (DeepSeek V4 Pro, fresh census after W331): NOT CONVERGED - 0 HIGH / 1 MEDIUM / 2 LOW; the three
+  T330 findings judged CLOSED; one new MEDIUM (N1) to be triaged cross-family before P0-14 goes back to the owner.
