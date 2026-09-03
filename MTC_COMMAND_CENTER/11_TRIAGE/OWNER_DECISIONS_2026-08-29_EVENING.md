@@ -1358,3 +1358,28 @@ live trading, a build, or a kernel change.
   three sealed digests (fixed by a byte-level re-pin script, run after every such lane); a snapshot folder mixed
   inputs and goldens of the same basename (restored from the pre-W311 snapshot; hash tables now carry full paths);
   the harness cwd trap killed three launches (standing wrapper `C:/tmp/run_ds.sh`).
+
+## Addendum 54 - 2026-09-03 12:4x REAL (owner decision 145: six designs ACCEPTED for build planning only; register act)
+
+145. **OWNER, verbatim (12:4x):** "I accept these designs for build planning only. This does not authorize
+    implementation, merge, execution, trading, or any live action. - accept design P0-13 v2.3 - accept design P0-20
+    v1.9 - accept design P0-21 v1.12 - accept design P0-22 v1.11 - accept design P0-30 v1.9 - accept design P0-31-M2
+    v1.9. For each accepted item, change the register status from DESIGN_IN_REPAIR to DESIGN_CONVERGED, record the
+    exact accepted draft version, and keep g1_ia and implementation_authorized unchanged. Do not accept P0-14 yet.
+    Complete its repair, run a fresh census, then bring it back to me. Keep P0-31 M1 parked. Do not reopen it unless
+    I explicitly say so. After updating the register, verify the Wayfinder dashboard imports the changes. Publish a
+    valid session update with measured hours only; do not estimate missing hours."
+- **Register act (Lead, `C:/tmp/P012_LEAD_RESEAL/update_register_20260903_accept6.py`, same surgical byte-edit method
+  as the decision-75 script; backup `WAYFINDER_PACKAGE_REGISTER.json.bak-20260903-accept6`; BOM kept):** six rows
+  `DESIGN_IN_REPAIR` -> `DESIGN_CONVERGED` (WP-P0-13, -20, -21, -22, -30, -31), each with a new `design_acceptance`
+  member recording state `DESIGN_CONVERGED_OWNER_ACCEPTED_2026_09_03`, the accepted draft version, file, sha256, the
+  owner's word, the scope sentence and the evidence pointer; `g1_ia` and `implementation_authorized` untouched
+  (asserted by the script); the WP-P0-31 row records "M2 v1.9 only; M1 stays PARKED". WP-P0-14 stays
+  `DESIGN_IN_REPAIR` (W331 fold armed for the 13:10 Claude Pro reset; fresh census after; back to the owner).
+  Top-level `last_progress_update` / `generated_on` / `as_of` updated. Census after: 21 BUILT_MERGED, 6
+  DESIGN_CONVERGED, 4 DESIGN_IN_REPAIR, 1 BUILD_AUTHORIZED_IN_PROGRESS, 44 NOT_STARTED.
+- **Dashboard import:** the dashboard's register watcher re-scanned at 12:45:25 (before the write); a new source
+  snapshot carrying the six acceptances is awaited (the Lead is watching; result recorded in the next addendum). If
+  the importer rejects the added member, the Lead restores the backup and re-applies the status change without the
+  member, keeping the acceptance record in this ledger.
+- Wayfinder session update revision 4 (measured hours only) follows the import verification.
