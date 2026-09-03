@@ -1724,3 +1724,25 @@ live trading, a build, or a kernel change.
   Q-E stands - the two `OBSERVED_EXTRA_MEMBER` rows on `cost_schedule_digest`.
 - Owner words pending: `accept design P0-14 v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `Q-E a|b`; `later|now`;
   OpenRouter key limit (billing).
+
+## Addendum 68 - 2026-09-03 18:4x REAL (Lead record: baseline regenerated against seal #15; Codex outage over; in-repo copies + gate running; no new owner decision)
+
+- **Route outage window 16:2x-18:3x, measured:** Claude Pro lanes died three times on Anthropic 529/500 and a one-word probe
+  hung twice; OpenRouter refused `403 Key limit exceeded` (owner billing ask stands); the Codex responses endpoint answered
+  `404 Not Found` on both accounts 17:51-17:5x; both Codex accounts answered PROBE_OK again at 18:35. Two Lead lessons
+  recorded in N_TIMES: a Codex probe launched from a bash loop hangs on stdin regardless of redirects (use the PowerShell
+  launcher form only); a stale Codex process from the weekly-capped free lane was found and stopped.
+- **W300D (Codex secondary, 18:38-18:47; decision 132 shape, fourth run):** 11/11 preconditions PASS; dry-run 17/17; one run,
+  17/17 arms; regression against the seal-a58b6dea archive: **34/34 scenario surfaces byte-identical**; only `run_status.json`
+  (catalog sha) and its checksum line differ; `BASELINE_BYTES_MANIFEST.json` now consumes seal #15 `27bf72e8...`; 0 findings.
+- **WF13 (Codex fourth, low effort, standing in for the DeepSeek builder):** Wayfinder session 2026-09-03T1332-claude revision 4
+  OPEN_PROVISIONAL imported by the dashboard 18:43 (WP-P0-12 4.00 h, WP-P0-14 0.35 h; measured lanes only; the five pending
+  owner words listed verbatim).
+- **W343 (Codex secondary, launched 18:48):** in-repo copies of the seal-#15 members (two goldens, catalog, DERIVATIONS,
+  manifest, anchor + sidecar) on the clean worktree at `91c3a54b`, one commit, ONE canonical gate run. Prediction, stated
+  as a prediction: refusals = the review record; the 18-path provenance (Q-A); 02-A NOT DETECTED (Q-B); the two
+  `OBSERVED_EXTRA_MEMBER cost_schedule_digest` rows (Q-E); no other RULE2-08 refusal if the re-derived goldens match the
+  kernel's design-conforming output. Then the second audit pass on the changed objects only (W276D Codex, W279D Claude Pro
+  when its API answers, GM83D Gemini), specs staged.
+- Owner words pending: `accept design P0-14 v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `Q-E a|b`; `later|now`;
+  OpenRouter key limit.
