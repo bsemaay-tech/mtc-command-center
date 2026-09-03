@@ -118,7 +118,7 @@
     "expected_path_change_count": 0,
     "implementation_base_sha": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
     "method": "INDEPENDENT_DERIVATION",
-    "observed_build_sha": "3ed6ea8722acf571a02353209e6f87226bcc7cd6",
+    "observed_build_sha": "b037ad93ab0e9cb820c4bf0a90a65d2d8f10ffb4",
     "owner_declared_exception_paths": [],
     "status": "MATCH",
     "unused_owner_declared_exception_paths": [
@@ -1929,6 +1929,6 @@
     "design_file_sha256": "5c657ec93c714b59d56a9ca99e7f42005061ceaad6f8d2889e2d691af3381c09",
     "design_total_lines": 1800,
     "expected_seal_sha256": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
-    "implementation_anchor_sha256": "302b1c6d6d25224aef42c99f92f8bafb2f7bde86dd8e0ddc252d189317679864"
+    "implementation_anchor_sha256": "6991a6a4cf7f81d4a30f3e0badb6ca257e9d31b7a7f9bd71a4d51a0779ea837d"
   }
 }

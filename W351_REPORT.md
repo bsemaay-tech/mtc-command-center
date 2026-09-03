@@ -98,3 +98,24 @@ During post-gate diff inspection, the edited anchor line was found to have gaine
 ### D-2 - bare `pytest` was initially absent from PATH
 
 The first literal suite attempt returned PowerShell `CommandNotFoundException`. `python -m pytest` was available and produced `318 passed`; the literal command subsequently produced `318 passed` after adding `%APPDATA%\Python\Python314\Scripts` to the process-local `PATH`. This is an environment invocation discrepancy, not a repository test failure.
+
+## W351B - receipt regenerated at the final bytes
+
+The canonical gate was run once from `C:\WP012BUILD\MTC_COMMAND_CENTER\01_MTC_PROJECT\00_PYTHON` with the same full command recorded by W351 (`W351_REPORT.md:58-63`):
+
+```text
+PYTHONUTF8=1 PYTHONDONTWRITEBYTECODE=1 python -m mtc_v2.tests.corrected_vnext.verify_bceg --mode full-gate --baseline-root C:/tmp/P012_BASELINE_RUN --output C:/WP012BUILD/W351_GATE_RECEIPT.json
+```
+
+The receipt's anchor digest moved from `implementation_anchor_sha256 = "302b1c6d6d25224aef42c99f92f8bafb2f7bde86dd8e0ddc252d189317679864"` (`b037ad93:W351_GATE_RECEIPT.json:1932`) to `implementation_anchor_sha256 = "6991a6a4cf7f81d4a30f3e0badb6ca257e9d31b7a7f9bd71a4d51a0779ea837d"` (`W351_GATE_RECEIPT.json:1932`), matching the committed sidecar (`MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/implementation_anchor.json.sha256:1`).
+
+Verbatim measured receipt facts:
+
+```text
+refusals = ["SEMANTIC_COVERAGE_REVIEW_MISSING"]
+probes = 10/10 DETECTED
+implementation_anchor_sha256 = "6991a6a4cf7f81d4a30f3e0badb6ca257e9d31b7a7f9bd71a4d51a0779ea837d"
+observed_build_sha = "b037ad93ab0e9cb820c4bf0a90a65d2d8f10ffb4"
+```
+
+The refusal is at `W351_GATE_RECEIPT.json:650-654`, the ten `DETECTED` probe rows span `W351_GATE_RECEIPT.json:478-648`, and the regenerated identities are at `W351_GATE_RECEIPT.json:121,1932`.
