@@ -1939,3 +1939,30 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
   (V341/V341B/V345B/V347/V347B/V348) with Codex as author; the second pass adds the Codex and, when reachable, the Claude view.
 - Nothing is signed. If the second pass is clean-except-the-review, the Lead drafts the Section-16 review package for the owner's
   own reading and the M2 session brief with loss-at-stop left blank. Owner word still pending: `accept design P0-14 v1.10`.
+
+## Addendum 78 - 2026-09-03 23:1x REAL (Lead record: second audit pass on `3ed6ea87` complete; cross-family triage OWNER-NEEDED; six owner questions Q-F..Q-K; fold W351 inside the fence; nothing signed)
+
+- **Second pass, three families, same HEAD `3ed6ea87` / seal #16 `40aaf7da...` / base `63cfe2dd` / design v1.17:**
+  W276D (Codex, free account after the fourth and secondary accounts hit their WEEKLY caps until Sep 9 14:38): **0 new findings**;
+  changed goldens, W344/W346 harness, re-anchor provenance and gate all PASS; blocks only on `SEMANTIC_COVERAGE_REVIEW_MISSING`.
+  W279D (Claude Pro, route back at 22:07): **PASS-WITH-NITS** under the stopping rule it wrote in its first pass; 10 findings
+  (1 HIGH, 5 MEDIUM, 4 LOW), all in the records and self-tests AROUND the changed objects, none in a sealed value; first-pass
+  F01-F08 and F10 FIXED, the rest DEFERRED under decision 152. GM83D (Gemini, packet at HEAD; attempt 1 carried a stale gate
+  receipt = Lead packaging residual, re-run): 3 findings (W347B-D01 recorded; decision-147 limit L14 recorded; one new LOW).
+- **T350 cross-family triage (Claude):** every finding measured TRUE against the repository; verdict **OWNER-NEEDED**.
+  Four items INSIDE approved decisions -> fold **W351** (Codex free, launched 23:1x; files bounded to the anchor + sidecar and
+  `contracts/selftests/**`; seal value does not move): the anchor's re-seal-#16 entry names design v1.16 where the act pinned
+  v1.17 (Lead error in the re-seal script; W279D-F05); a real self-test for the contract-suite runner itself (W279D-F06,
+  decision 150); rename the retargeted cost-schedule test (GM83D-F02); and the honest statement that the provenance self-test
+  coverage is ONE live git-measured refusal test plus SIX exception-logic tests over a synthesized path list (W279D-F04).
+- **Six items need the owner's word** (packet `C:\tmp\LANE_PROMPTS_20260828\OWNER_QUESTIONS_SECOND_PASS_2026-09-03.md`):
+  Q-F the sealed manifest's independence statement is now false (HIGH, W279D-F01; record-only correction, seal value unmoved);
+  Q-G design citations by line number went stale with v1.16/v1.17; Q-H L14's re-seal range stops at #15; Q-I five-space indent
+  in the sealed catalog (no defect); Q-J the heading-line map is unchecked; **Q-K the gate's hard-coded ratification chain
+  `#5..#9` (W279D-F09, in the `later` tail by decision 152) would force the Section-16 receipt to name a chain nine re-seals
+  short of the artifact under review - it blocks the next act, so the Lead asks before drafting.**
+- Triage discrepancies recorded: W279D-F03's member-commit count is 11 measured, not 5; L14's "nine" is defensible over the
+  numbered re-seals; the two flagships' counts (0 vs 10) differ by SCOPE, not by contradiction on any shared object.
+- **Consequence:** the Section-16 review package is NOT drafted tonight. The round is clean on every changed object but not
+  clean-except-review on the records the reviewer must rely on (Q-F) or on the receipt the gate would accept (Q-K).
+  Nothing signed, no number invented, engine branch unpushed, dashboard untouched.
