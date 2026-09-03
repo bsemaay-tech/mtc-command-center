@@ -1446,3 +1446,42 @@ live trading, a build, or a kernel change.
   economics, digests, values and probe pointers ACCEPT; F-04 deferred to reseal #14. Next: narrow fifth pass, round 5.
 - CENSUS-P014-R2 (DeepSeek V4 Pro, fresh census after W331): NOT CONVERGED - 0 HIGH / 1 MEDIUM / 2 LOW; the three
   T330 findings judged CLOSED; one new MEDIUM (N1) to be triaged cross-family before P0-14 goes back to the owner.
+
+## Addendum 59 - 2026-09-03 14:0x REAL (Lead record, fresh session: W321 tables ACCEPTED after six verify rounds; P0-14 v1.10 CONVERGED and ready for the owner's word; W315 running)
+
+- **W321 (RULE2-08 tables; decisions 137/144/138/140/143) - ACCEPTED by the Lead 14:0x.** Verification history (author
+  DeepSeek V4 Pro through the repo harness, verifier Codex free): round 4 = REQUEST_CHANGES F-08 (the RED golden's
+  `authored_value_tokens` ledger still described the pre-fee cash layout; sealed tokens only); fifth narrow pass moved the
+  FUNDING entry's pointer to `cash_events/1/kind` and added the two FEE entries; round 5 = checks 1-5 ACCEPT, F-08 CLOSED,
+  one locator finding F-09 (the correction entry named section W321-H where the sentence sits in W321-E, line 4769); sixth
+  narrow pass appended W321-K; round 6 (scoped, final by the Lead's stopping rule) = ACCEPT: F-09 CLOSED, DERIVATIONS
+  insertion-only against the pre-W321 snapshot, the four pinned input/golden digests equal the raw-file SHA-256, no byte
+  moved since round 5. Current identities: catalog `74c9511607f28412...`, DERIVATIONS `8eeacb17be2a1d3d...`, RED golden
+  `2157c03fc52daa91...`. F-04 (manifest still at seal #13) closes at the Lead's re-seal #14, by design.
+- **Lead acts on sealed bytes, recorded:** (i) after each harness pass the Lead LF-normalized the written files and re-pinned
+  the RED golden digest in the catalog by byte-level replacement (`repin_catalog_lf.py --write`; `95066157...` ->
+  `2157c03f...`); (ii) the fifth-pass author overwrote the lane report with only its own section and re-typed the W315
+  handoff table with two columns (dropping `comparator_first_differing_node`) - the Lead restored the round-4 report as
+  the base and appended the fifth-pass text with a note; the raw fifth-pass file is kept
+  (`W321_TABLES_M1_REPORT_fifthpass_raw.md`); the catalog was not changed by that pass; (iii) at 13:5x, with round 5
+  accepting every value and digest, the Lead accepted W321 on values (conditional marker) so that W315 could start, and
+  closed the marker unconditionally after round 6; (iv) one Lead slip: the marker file was first written into the build
+  worktree by a shell cwd error and moved out within a minute, the worktree measured clean at `f37f2677` before W315 launched.
+- **P0-14 (owner decision 145: "Complete its repair, run a fresh census, then bring it back to me").** After W331 the
+  fresh census CENSUS-P014-R2 (DeepSeek V4 Pro) returned 0 HIGH / 1 MEDIUM / 2 LOW with the three T330 findings CLOSED;
+  the cross-family triage T333 (Codex secondary) CONFIRMED the MEDIUM (a retained W292 change-log sentence saying the banner
+  reads v1.8 after W331 bumped line 1 to v1.9, with the correction 87 lines away and no marker at the site - a different
+  class from the T330-disputed banner findings) and specified the smallest insertion-only repair; lane W334 (DeepSeek V4
+  Pro) inserted three `[W334 note]` lines and a v1.10 change-log section and bumped the header in place (Lead-measured:
+  zero deletions, one modified line = the header, 18 inserted; LF; 1305 lines; sha256 `6a932c8f98017a94b6999de323cb62cc73a833f83d683882fc28c95a9ad78fb8`).
+  CENSUS-P014-R3 (DeepSeek V4 Pro, fresh, read-only) on v1.10: **CONVERGED - 0/0/0**; N1-N3 CLOSED; T330 F01/F03/F04 still
+  CLOSED. The draft carries two honest open items opened by W331 (`[OPEN-P014-PRODUCER-2]`, `[OPEN-P014-FINDING-RECORD-WRITER]`)
+  and 18 open entries / 16 distinct questions in its own count; acceptance is for build planning only. **Owner word
+  requested:** `accept design P0-14 v1.10` (packet `OWNER_ACCEPTANCE_PACKET_DESIGNS_2026-09-03.md`, Issue 3).
+- **P0-12 chain:** W315 (probe variants on the post-K core + M4/M4b/08-A values; Codex fourth, xhigh) launched 13:52 on the
+  clean worktree at `f37f2677`. Staged by the Lead for the next blocks: `reseal14.py` design pin v1.13 -> v1.15 (backup kept),
+  W316 spec pin v1.15 (sha `137180ae...`, 1664 lines), launchers for W300C/W316, the fresh-audit specs W276C (Codex) /
+  W279C (Claude Pro) / GM83C (Gemini 3.8, packet builder `refresh_gm83c.py`) on the seal-#14 snapshot with the disposition
+  table for the previous round's 5 + 19 + 8 findings. Plan `PLAN_16H_2026-09-03_PM.md` rev 1 sent 13:37.
+- Routes measured 13:35: Codex free / fourth / secondary all live; Claude Pro window 13:10-18:10; Gemini idle; DeepSeek
+  V4 Pro carried the two author passes, the fold and both censuses; MAX orchestration only.
