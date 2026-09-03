@@ -136,16 +136,32 @@ RECORD_ID_RE = re.compile(r"[A-Z0-9][A-Z0-9.-]*\Z")
 class GateRefusal(RuntimeError):
     """A closed, machine-readable gate refusal."""
 
-    def __init__(self, check_id: str, detail: str, *, pointer: str | None = None):
+    def __init__(
+        self,
+        check_id: str,
+        detail: str,
+        *,
+        pointer: str | None = None,
+        pointers: Iterable[str] | None = None,
+    ):
         super().__init__(f"{check_id}: {detail}")
         self.check_id = check_id
         self.detail = detail
-        self.pointer = pointer
+        self.pointers = list(pointers) if pointers is not None else (
+            [] if pointer is None else [pointer]
+        )
+        self.pointer = pointer if pointer is not None else (
+            self.pointers[0] if self.pointers else None
+        )
+        self._reports_all_pointers = pointers is not None
 
     def as_dict(self) -> dict[str, Any]:
         result: dict[str, Any] = {"check_id": self.check_id, "detail": self.detail}
         if self.pointer is not None:
             result["pointer"] = self.pointer
+        if self._reports_all_pointers:
+            result["pointers"] = self.pointers
+            result["count"] = len(self.pointers)
         return result
 
 
@@ -2167,8 +2183,9 @@ def validate_expected_source_provenance(
     if refused_paths:
         raise GateRefusal(
             "EXPECTED_PATH_CHANGED_AFTER_BASE",
-            refused_paths[0],
+            f"{len(refused_paths)} expected paths changed after the implementation base",
             pointer=refused_paths[0],
+            pointers=refused_paths,
         )
     return {
         "status": "MATCH",

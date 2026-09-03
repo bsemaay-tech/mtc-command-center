@@ -714,6 +714,39 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
     assert record["exceptions"][0]["base_blob_oid"] is None
 
 
+def test_w305_item8_provenance_refusal_reports_every_unlifted_path(
+    tmp_path: Path,
+) -> None:
+    outcome = w305_provenance(w305_exception_record(), tmp_path)
+    assert isinstance(outcome, GateRefusal)
+    contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
+    manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
+    git_root = Path(
+        subprocess.check_output(
+            ["git", "-C", str(MTC_V2_ROOT), "rev-parse", "--show-toplevel"],
+            text=True,
+        ).strip()
+    )
+    manifest_paths = {
+        (
+            MTC_V2_ROOT / member["path"]
+            if member["path"].startswith("golden/")
+            else contracts / member["path"]
+        )
+        .resolve()
+        .relative_to(git_root.resolve())
+        .as_posix()
+        for member in manifest["files"]
+    }
+    expected_refused_paths = manifest_paths - {W305_DECISION_134_PATH}
+
+    assert outcome.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
+    assert set(outcome.pointers) == expected_refused_paths
+    assert outcome.as_dict()["pointers"] == outcome.pointers
+    assert outcome.as_dict()["count"] == len(expected_refused_paths)
+    assert len(outcome.pointers) + 1 == len(manifest_paths) == 19
+
+
 def test_legacy_event_order_pin_missing_is_distinct_and_match_clears_blocker(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
