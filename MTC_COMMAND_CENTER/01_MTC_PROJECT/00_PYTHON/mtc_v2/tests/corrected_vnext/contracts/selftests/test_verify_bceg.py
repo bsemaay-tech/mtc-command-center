@@ -1429,8 +1429,8 @@ def test_probe_cannot_claim_target_membership_when_base_is_refused(
         row for row in catalog if row.get("probe_id") == "PROBE-P012-08-A"
     )
     expected_node = "/EVENT_SURFACE/funding_events/0/funding_cash_delta"
-    # Owner decision 144; design P012_FRESH_DESIGN_V1.md:558-560 binds index-ascending comparator order.
-    comparator_first_node = "/EVENT_SURFACE/cash_events/1/signed_delta"
+    # Owner decision 144; design P012_FRESH_DESIGN_V1.md:558-560 binds index-ascending comparator order; re-aligned to the W341B catalog value (W342B).
+    comparator_first_node = "/EVENT_SURFACE/cash_events/0/signed_delta"
     assert probe["expected_first_changed_node"] == expected_node
     assert probe["comparator_first_differing_node"] == comparator_first_node
     assert expected_node != comparator_first_node
@@ -1455,7 +1455,7 @@ def test_probe_cannot_claim_target_membership_when_base_is_refused(
     # Owner decision 144; design P012_FRESH_DESIGN_V1.md:558-560 emits the unequal container before children.
     assert (
         receipt["comparator_first_differing_node"]
-        == "/EVENT_SURFACE/cash_events"
+        == "/EVENT_SURFACE/cash_events/0/funding_event_id"
     )
     assert receipt["expected_node_changed"] is True
 
