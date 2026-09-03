@@ -1387,10 +1387,10 @@ def test_probe_driver_refuses_unclosed_base_before_variant_comparison(
     )
 
     assert identity_receipt["status"] == "NOT_DETECTED"
-    assert identity_receipt["measured_failed_check"] == "CLOSED_SET_VIOLATION"
+    assert identity_receipt["measured_failed_check"] == "CORRECTED_EXPECTATION"
     assert (
         identity_receipt["comparator_first_differing_node"]
-        == "/RESULT_SURFACE/cumulative_funding"
+        == "/EVENT_SURFACE/cash_events"
     )
     assert identity_receipt["expected_node_changed"] is False
 
@@ -1912,6 +1912,8 @@ def test_raw_kernel_result_membership_follows_declared_contract(
         expected.add("admitted")
     if row["owning_def_ids"][0] == "DEF-P012-07":
         expected.add("guards")
+    if "DEF-P012-08" in row["owning_def_ids"]:
+        expected.add("cumulative_funding")
     assert set(result) == expected
     assert result["metrics"] is None
 
@@ -2070,7 +2072,7 @@ def test_rule2_08_raw_kernel_is_not_seeded_from_legacy_state(
     assert result["run_manifest"]["cost_schedule_id"] == "NOT_CONSUMED"
     assert event["cash_events"] == []
     assert event["funding_events"] == []
-    assert "cumulative_funding" not in result
+    assert result["cumulative_funding"] == 0
 
 
 def test_rule2_02_red_projection_refuses_without_sealed_selector_declaration() -> None:
