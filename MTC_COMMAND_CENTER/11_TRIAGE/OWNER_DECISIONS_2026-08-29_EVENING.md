@@ -1786,3 +1786,36 @@ live trading, a build, or a kernel change.
   at `%TEMP%\HANDOFF_NEXT_SESSION_2026-09-04_MORNING.md`).
 - Owner words pending: `accept design P0-14 v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `Q-E a|b`; `later|now`;
   OpenRouter key limit.
+
+## Addendum 71 - 2026-09-03 19:4x REAL (owner verbatim: "my ansvers / Q-A b / Q-B a / Q-C a / Q-D a / Q-E a / later"; also "P0-14 v1.10 Show me its final one-paragraph evidence and recommendation" and "Codex pro has credit now I used weekly reset")
+
+Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda 64, 66, 70). Recorded as decisions 147-152.
+
+147. **Q-A = (b): RE-ANCHOR FORWARD.** `IMPLEMENTATION_BASE_SHA` moves to the last owner-directed re-seal commit, AFTER the
+    design's honest-limits section states that the pre-implementation seal property is carried by the measurement at
+    `5e8e5794` (corrected kernel absent at that base) and that the section-15.4 predicate then proves only "no expected
+    path changed since the last re-seal". Sequence: design amendment (with 151) -> tables (Q-C/Q-E members) -> re-seal #16
+    -> baseline W300E -> in-repo copies commit -> Lead base re-pin to THAT commit (anchor + manifest seal/seal_state members
+    + the decision-134 provenance record re-measured, all three - the M5 lessons) -> gate. Every act verified by a family
+    that did not write.
+148. **Q-B = (a): harness correction for PROBE-P012-02-A.** `/RESULT_SURFACE/admitted` admitted exactly as design 23.5 states
+    (only on admitted DEF-P012-02), with a failing-then-passing self-test; the W314B-reverted probe-driver case aligns to
+    `CORRECTED_EXPECTATION` (decision 143). Lane W344 (Codex), verified by another family.
+149. **Q-C = (a): record digests on the other fifteen goldens.** The tables family replaces the `BLOCKED-MISSING-RECORD-BYTES`
+    markers whose preimage is a committed record file by the derived digest (sidecar + recomputation, cited); markers whose
+    preimage is not a committed file stay with the design line. Lane W345 (bundle only), verified; then re-seal #16.
+150. **Q-D = (a): the full gate refuses when the contract self-test suite is red** (`CONTRACT_SELFTEST_RED`, naming the failing
+    cases). Lane W346 (Codex), failing-then-passing proof, verified.
+151. **Q-E = (a): design amendment v1.16** closing the `run_manifest` child schema and the funding cash-row member with the
+    members the kernel already emits by decision (`cost_schedule_digest` and its siblings; `funding_event_id` on funding
+    cash rows), plus the source-document digests / intervals Codex named, each with its justification or listed
+    REFUSED-UNNAMED; honest limit L13. Lane W347 (design family; Codex stand-in with Gemini verify while the Anthropic route
+    is down); then the tables add the admitted members (W348).
+152. **Long tail = later:** the remaining T340 OUTSIDE rows (run-manifest source digests beyond Q-E, first-mismatch stop,
+    stale design citations, ratification chain, per-scenario approximations, anchor history, open-item record, exit-reason
+    vocabulary, reviewer-independence test, dead legacy adapter, root lane files, absolute paths, instrument fence,
+    HIGH_TOUCH, the two M2 conventions) are recorded as open items for the M2 session / next design round; no lane starts on
+    them now.
+- The owner asked for the one-paragraph P0-14 v1.10 evidence and recommendation (delivered in chat 19:4x; the word remains
+  the owner's). The owner reports the Codex Pro weekly reset applied ("Codex pro has credit now"); the Lead probes all four
+  accounts before launching.
