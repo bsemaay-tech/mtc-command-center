@@ -1724,6 +1724,61 @@ def _observed_paths(root: Path, row: dict[str, Any]) -> tuple[Path, Path]:
     )
 
 
+def pin_observed_artifacts(
+    root: Path,
+    row: dict[str, Any],
+    legacy_document: Any,
+    corrected_document: Any,
+    blockers: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Measure the committed OBSERVED_ROOT bytes against this run's own output.
+
+    Design v1.5 section 15.2 (line 468) binds observed artifacts by path only:
+    unlike an expected artifact, a catalog row records no observed digest, so
+    step 4's "exists at its recorded digest" has nothing to check for
+    OBSERVED_ROOT. The gate therefore digests the bytes its own KERNEL_1 and
+    KERNEL_2 runs produced, records those digests as the receipt-side pin, and
+    refuses OBSERVED_ARTIFACT_STALE when a committed copy is not exactly those
+    bytes. Refreshing the committed copies is the writing `observe` mode's job;
+    a gate that rewrote the artifact it checks would confirm itself.
+    """
+
+    scenario_id = row["scenario_id"]
+    legacy_path, corrected_path = _observed_paths(root, row)
+    pins: list[dict[str, Any]] = []
+    for version, producer_id, path, document in (
+        ("1.0.0", "KERNEL_1", legacy_path, legacy_document),
+        ("2.0.0", "KERNEL_2", corrected_path, corrected_document),
+    ):
+        live_digest = hashlib.sha256(canonical_json_bytes(document)).hexdigest()
+        committed_digest = (
+            sha256_file(path) if path.is_file() and not path.is_symlink() else None
+        )
+        relative = path.relative_to(root).as_posix()
+        pins.append(
+            {
+                "scenario_id": scenario_id,
+                "semantics_version": version,
+                "producer_id": producer_id,
+                "path": relative,
+                "live_run_sha256": live_digest,
+                "committed_sha256": committed_digest,
+            }
+        )
+        if committed_digest != live_digest:
+            blockers.append(
+                {
+                    "check_id": "OBSERVED_ARTIFACT_STALE",
+                    "scenario_id": scenario_id,
+                    "pointer": relative,
+                    "detail": (
+                        f"committed={committed_digest} live_run={live_digest}"
+                    ),
+                }
+            )
+    return pins
+
+
 def materialize_observed_artifacts(root: Path, baseline_root: Path) -> dict[str, Any]:
     """Write only catalog-bound observed files from the two real producers."""
 
@@ -3598,6 +3653,8 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
     legacy_surface_count = 0
     closed_set_blockers: list[dict[str, Any]] = []
     corrected_blockers: list[dict[str, Any]] = []
+    observed_artifact_blockers: list[dict[str, Any]] = []
+    observed_artifact_pins: list[dict[str, Any]] = []
     blocked_node_skips: list[dict[str, str]] = []
     for row in value_rows:
         scenario_id = row["scenario_id"]
@@ -3618,6 +3675,11 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
             legacy_blockers.append(legacy_blocker)
         golden = load_json_exact(root / row["expected_artifacts"]["2.0.0"]["path"])
         corrected = execute_corrected_scenario(root, row)
+        observed_artifact_pins.extend(
+            pin_observed_artifacts(
+                root, row, legacy_observed, corrected, observed_artifact_blockers
+            )
+        )
         try:
             validate_corrected_closed_sets(
                 scenario_id,
@@ -3739,6 +3801,11 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
             "count": len(blocked_node_skips),
             "nodes": blocked_node_skips,
         },
+        "observed_artifact_pins": {
+            "count": len(observed_artifact_pins),
+            "stale_count": len(observed_artifact_blockers),
+            "pins": observed_artifact_pins,
+        },
         "acceptance_blockers": [
             *legacy_blockers,
             *event_order_pin_blockers,
@@ -3746,6 +3813,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
             *corpus.blockers,
             *probe_suite["probe_blockers"],
             *closed_set_blockers,
+            *observed_artifact_blockers,
             *corrected_blockers,
         ],
         "scenarios": scenarios,

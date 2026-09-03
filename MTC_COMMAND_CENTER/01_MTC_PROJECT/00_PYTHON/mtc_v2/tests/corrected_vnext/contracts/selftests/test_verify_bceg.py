@@ -1075,12 +1075,33 @@ def test_comparison_pipeline_measures_executed_output_once_per_row(
             {"events": [{"price": 100}], "position": {}}
         )
     )
+    observed_root = root / "tests" / "corrected_vnext" / "observed"
+    legacy_observed_path = observed_root / "1.0.0" / f"{scenario_id}.json"
+    corrected_observed_path = observed_root / "2.0.0" / f"{scenario_id}.json"
+    legacy_observed_path.parent.mkdir(parents=True, exist_ok=True)
+    corrected_observed_path.parent.mkdir(parents=True, exist_ok=True)
+    legacy_observed_document = {
+        "EVENT_SURFACE": [],
+        "RESULT_SURFACE": load_json_exact(baseline_path),
+    }
+    corrected_observed_document = deepcopy(golden)
+    corrected_observed_document["RESULT_SURFACE"]["final_position"]["quantity"] = 2
+    legacy_observed_path.write_bytes(
+        verify_bceg.canonical_json_bytes(legacy_observed_document)
+    )
+    corrected_observed_path.write_bytes(
+        verify_bceg.canonical_json_bytes(corrected_observed_document)
+    )
     row = {
         "scenario_id": scenario_id,
         "role": "RED",
         "input": {"path": input_path.relative_to(root).as_posix()},
         "expected_artifacts": {
             "2.0.0": {"path": golden_path.relative_to(root).as_posix()}
+        },
+        "observed_artifact_paths": {
+            "1.0.0": legacy_observed_path.relative_to(root).as_posix(),
+            "2.0.0": corrected_observed_path.relative_to(root).as_posix(),
         },
     }
     corpus = verify_bceg.Corpus(
@@ -1154,6 +1175,97 @@ def test_comparison_pipeline_measures_executed_output_once_per_row(
         and blocker.get("pointer") == "/RESULT_SURFACE/final_position/quantity"
         for blocker in receipt["acceptance_blockers"]
     )
+    assert receipt["observed_artifact_pins"]["count"] == 2
+    assert receipt["observed_artifact_pins"]["stale_count"] == 0
+    assert all(
+        pin["committed_sha256"] == pin["live_run_sha256"]
+        for pin in receipt["observed_artifact_pins"]["pins"]
+    )
+
+
+def _observed_pin_root(tmp_path: Path) -> tuple[Path, dict[str, object], dict, dict]:
+    root = tmp_path / "root"
+    observed = root / "tests/corrected_vnext/observed"
+    (observed / "1.0.0").mkdir(parents=True)
+    (observed / "2.0.0").mkdir(parents=True)
+    legacy_document = {"EVENT_SURFACE": [], "RESULT_SURFACE": {"account": {}}}
+    corrected_document = {"EVENT_SURFACE": {}, "RESULT_SURFACE": {"quantity": 1}}
+    (observed / "1.0.0/S.json").write_bytes(
+        verify_bceg.canonical_json_bytes(legacy_document)
+    )
+    (observed / "2.0.0/S.json").write_bytes(
+        verify_bceg.canonical_json_bytes(corrected_document)
+    )
+    row = {
+        "scenario_id": "S",
+        "observed_artifact_paths": {
+            "1.0.0": "tests/corrected_vnext/observed/1.0.0/S.json",
+            "2.0.0": "tests/corrected_vnext/observed/2.0.0/S.json",
+        },
+    }
+    return root, row, legacy_document, corrected_document
+
+
+def test_w305_item4_fresh_observed_copies_pin_and_do_not_refuse(
+    tmp_path: Path,
+) -> None:
+    root, row, legacy_document, corrected_document = _observed_pin_root(tmp_path)
+    blockers: list[dict[str, object]] = []
+
+    pins = verify_bceg.pin_observed_artifacts(
+        root, row, legacy_document, corrected_document, blockers
+    )
+
+    assert blockers == []
+    assert [pin["semantics_version"] for pin in pins] == ["1.0.0", "2.0.0"]
+    assert [pin["producer_id"] for pin in pins] == ["KERNEL_1", "KERNEL_2"]
+    assert all(
+        pin["committed_sha256"] == pin["live_run_sha256"] for pin in pins
+    )
+
+
+def test_w305_item4_stale_committed_observed_artifact_is_refused(
+    tmp_path: Path,
+) -> None:
+    """W279B-F03: the committed OBSERVED_ROOT copies were never measured."""
+
+    root, row, legacy_document, corrected_document = _observed_pin_root(tmp_path)
+    stale = deepcopy(corrected_document)
+    stale["RESULT_SURFACE"]["quantity"] = 2
+    (root / "tests/corrected_vnext/observed/2.0.0/S.json").write_bytes(
+        verify_bceg.canonical_json_bytes(stale)
+    )
+    blockers: list[dict[str, object]] = []
+
+    pins = verify_bceg.pin_observed_artifacts(
+        root, row, legacy_document, corrected_document, blockers
+    )
+
+    assert [blocker["check_id"] for blocker in blockers] == [
+        "OBSERVED_ARTIFACT_STALE"
+    ]
+    assert blockers[0]["pointer"] == "tests/corrected_vnext/observed/2.0.0/S.json"
+    assert pins[1]["committed_sha256"] != pins[1]["live_run_sha256"]
+    assert pins[1]["live_run_sha256"] == hashlib.sha256(
+        verify_bceg.canonical_json_bytes(corrected_document)
+    ).hexdigest()
+
+
+def test_w305_item4_missing_committed_observed_artifact_is_refused(
+    tmp_path: Path,
+) -> None:
+    root, row, legacy_document, corrected_document = _observed_pin_root(tmp_path)
+    (root / "tests/corrected_vnext/observed/1.0.0/S.json").unlink()
+    blockers: list[dict[str, object]] = []
+
+    pins = verify_bceg.pin_observed_artifacts(
+        root, row, legacy_document, corrected_document, blockers
+    )
+
+    assert [blocker["check_id"] for blocker in blockers] == [
+        "OBSERVED_ARTIFACT_STALE"
+    ]
+    assert pins[0]["committed_sha256"] is None
 
 
 def test_legacy_reproduction_refuses_one_ulp_actual(
