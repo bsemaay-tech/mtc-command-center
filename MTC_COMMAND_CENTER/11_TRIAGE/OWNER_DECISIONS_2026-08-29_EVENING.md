@@ -1287,3 +1287,28 @@ live trading, a build, or a kernel change.
 - Next: V320 -> W321 -> V321 -> W315 (Codex, probe variants on the post-K core + M4/M4b/08-A values) -> Lead
   repin_base14 + reseal14 -> W300C -> W316 -> fresh audits on that exact snapshot. Section 16 and M2 remain
   unscheduled until that round is clean.
+
+## Addendum 51 - 2026-09-03 10:1x REAL (Lead record: design v1.15 for decision 144; route reroute; 24h plan)
+
+- **Claude Pro session cap at 09:26 (resets 13:10)** killed W320 at launch. Under the owner's checkpoint rule (cheap
+  verified routes for bounded edits) the design amendment was authored by DeepSeek V4 Pro through the repo harness and
+  verified by the Codex family (V320C, Codex free) - families still differ between author and verifier.
+- **W320 history, recorded honestly:** attempt 1 rejected by the Lead (three v1.14 lines modified in place, blocks
+  inserted inside tables, CRLF written by the harness) - design restored from the v1.14 snapshot; attempt 2 met the
+  insertion-only convention (minus 1 header / plus 29) but V320C round 1 returned REQUEST_CHANGES with seven findings,
+  three substantive: (1) the RED corrected equity chain must become 1000 -> 999.9 (pre-window OPEN fee 0.1 at taker
+  0.001 on notional 100, the design's own fee identity) -> 999.8 (funding), so the RULE2-08-RED golden equity/net/cost
+  nodes are re-derived by the tables family; (2) RULE2-08-GREEN is NOT fill-free under addendum 20 (5a) - two
+  pre-window fills consume the GREEN record; their prices are design-unenumerated (OPEN-EMBED-05 mechanism bound,
+  numbers not), so the GREEN numeric equity node carries `BLOCKED-OPEN-EMBED-05` (new honest limit L12) - no price
+  invented; (3) L11 wrongly claimed a cost-record interval check (the kernel validates id + digest + JSON form only).
+  Repair pass (attempt 3) closed all seven; V320C round 2 = ACCEPT on every substantive check (1-5), REQUEST_CHANGES
+  only on the author report's line map. **Lead accepted design v1.15** (LF, sha `137180ae...`, 1664 lines; vs v1.14
+  minus 1 / plus 38) and recorded the report defect as a discrepancy; the V320C round-2 report is the line map of
+  record. EOL normalization CRLF->LF by the Lead after each harness pass is recorded here.
+- **Consequences inside the M1 fence:** W321 (tables, DeepSeek author, Codex verifier) binds the two RULE2-08 inputs
+  to the RULE2-07 records, seals the two projection rows, re-derives the RED golden nodes from the 999.8 chain, keeps
+  GREEN blocked nodes as the design marks them, and derives the 08-A / re-targeted 02-A probe values.
+- **Gemini route:** owner 09:4x - `gemini-3.8-flash-high` replaces 3.7 (both launchers switched; 3.7 kept as fallback).
+- **24h plan** sent to the owner (`C:/tmp/LANE_PROMPTS_20260828/PLAN_24H_2026-09-03.md`): one clean fresh audit round
+  on seal #14; Section 16 / M2 not scheduled before that.
