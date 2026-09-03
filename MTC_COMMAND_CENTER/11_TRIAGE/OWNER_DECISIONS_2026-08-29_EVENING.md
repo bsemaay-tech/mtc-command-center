@@ -1698,3 +1698,29 @@ live trading, a build, or a kernel change.
   Gemini re-verify, then the Lead's re-seal #15 and W343 in-repo copies + one gate run.
 - Owner words pending: `accept design P0-14 v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `Q-E a|b`; `later|now`;
   and the billing ask on the OpenRouter key (addendum 65).
+
+## Addendum 67 - 2026-09-03 17:5x REAL (Lead record: RE-SEAL #15 executed; baseline regeneration W300D launched; no new owner decision)
+
+- **W341B (Codex secondary, 17:39-17:46; catalog only):** the PROBE-P012-08-A `comparator_first_differing_node` re-pinned to
+  `/EVENT_SURFACE/cash_events/0/signed_delta` (after the window correction the funding row is index 0; derivation from the
+  design's probe rule and the comparator's traversal order); on the RULE2-08-RED `fee_events` projection pair the lane
+  STOPPED honestly: the corrected side of a sealed projection is a four-member selector resolved against the golden at gate
+  time (design 656-666), it stores no cardinality, so there was no `A:1` to move - the Gemini check-6 finding rested on the
+  W321 report's resolved value; relation `DIFFERS` (legacy ABSENT vs corrected `A:0`) stands. **GMV341B (Gemini 3.8) =
+  ACCEPT 3/3.**
+- **Lead RE-SEAL #15 executed 17:50 (`reseal15.py`, snapshot `20260903_1620_seal14b_full` measured 19/19 = manifest):**
+  `EXPECTED_SEAL_SHA` `a58b6dea...` -> `27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe`; moved members
+  exactly the four W341/W341B touched: `golden/corrected_vnext/RULE2-08-RED.json` (`b4da2832...`), `RULE2-08-GREEN.json`
+  (`1185758e...`), `scenario_catalog.json` (`726cbc95...`; rows RULE2-08-RED, RULE2-08-GREEN, PROBE-P012-08-A),
+  `DERIVATIONS.md` (`c1ca8367...`, insertion-only verified); design pin v1.15 and the M5 base unchanged; `VERIFIED_BY` =
+  the two Gemini verifies (Claude Pro unreachable, Codex the author family). Backup `pre_reseal15_backup`.
+- **Baseline (decision 132 shape, fourth run):** the gate binds the baseline manifest to the bundle seal, so the seal move
+  requires a regeneration even though NO sealed input moved. The seal-#14 run archived whole to
+  `C:/tmp/P012_BASELINE_RUN_seala58b6dea_archive/out` (36 files, byte-identical copy verified); dry-run 17/17 ready; Lead
+  note `LEAD_DRYRUN_NOTE_2026-09-03_SEAL15.md`; **W300D launched 17:5x on Codex** (the first launch on the fourth account
+  died on an OpenAI backend `404` at the responses endpoint; relaunched); expectation stated as an expectation: 34/34
+  surfaces byte-identical to the seal-#14 archive. Then W343 (Codex): in-repo copies of the moved members + ONE gate run;
+  predicted residual refusals: the review record, the 18-path provenance (Q-A), 02-A (Q-B), and - if the design gap of
+  Q-E stands - the two `OBSERVED_EXTRA_MEMBER` rows on `cost_schedule_digest`.
+- Owner words pending: `accept design P0-14 v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `Q-E a|b`; `later|now`;
+  OpenRouter key limit (billing).
