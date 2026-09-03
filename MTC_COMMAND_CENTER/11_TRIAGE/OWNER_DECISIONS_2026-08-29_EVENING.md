@@ -1746,3 +1746,20 @@ live trading, a build, or a kernel change.
   when its API answers, GM83D Gemini), specs staged.
 - Owner words pending: `accept design P0-14 v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `Q-E a|b`; `later|now`;
   OpenRouter key limit.
+
+## Addendum 69 - 2026-09-03 19:0x REAL (Lead record: the gate on the seal-#15 snapshot; second audit pass launched; no new owner decision)
+
+- **W343 (Codex secondary, 18:48-18:57):** in-repo copies of the six re-seal-#15 members (`6bed8ad1`), one gate run recorded
+  (`05af785e`). **Gate at `05af785e`: 6 refusals, 9 of 10 probes DETECTED.** The RULE2-08-RED `CORRECTED_EXPECTATION_MISMATCH`
+  on cash_events is GONE (the re-derived golden matches the kernel's in-window output). Remaining: the missing section-16
+  review; `EXPECTED_PATH_CHANGED_AFTER_BASE` x18 (owner question Q-A); PROBE-P012-02-A NOT DETECTED (Q-B);
+  `OBSERVED_EXTRA_MEMBER /RESULT_SURFACE/run_manifest/cost_schedule_digest` on both RULE2-08 rows (Q-E); and ONE new row of
+  the same class: `OBSERVED_EXTRA_MEMBER /EVENT_SURFACE/cash_events/0/funding_event_id` on RULE2-08-RED - the kernel's
+  funding cash row carries `funding_event_id` (`TEST-FUND-1`) while the design's cash-event member list, which the tables
+  followed, does not name it. Not fixed; handed to the second audit pass as an object (kernel member vs design closed set,
+  the Q-E class).
+- **Second audit pass, changed objects only, on HEAD `05af785e` / seal #15:** W276D (Codex fourth) and GM83D (Gemini 3.8,
+  packet refreshed at that HEAD) launched 19:0x; W279D (Claude Pro) waits for the Anthropic API, which still fails a one-word
+  probe at 18:5x - recorded, not estimated.
+- Owner words pending: `accept design P0-14 v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `Q-E a|b`; `later|now`;
+  OpenRouter key limit.
