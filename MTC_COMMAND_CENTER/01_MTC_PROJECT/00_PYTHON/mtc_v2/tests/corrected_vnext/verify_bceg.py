@@ -1842,7 +1842,7 @@ def materialize_observed_artifacts(root: Path, baseline_root: Path) -> dict[str,
             projections = build_projection_results(
                 row["scenario_id"],
                 row,
-                legacy["RESULT_SURFACE"],
+                {"must_not_be_read": "KERNEL_1"},
                 golden,
             )
         except GateRefusal as exc:
@@ -1861,6 +1861,7 @@ def materialize_observed_artifacts(root: Path, baseline_root: Path) -> dict[str,
             {
                 "scenario_id": row["scenario_id"],
                 "role": row["role"],
+                "legacy_side_source": _projection_legacy_side_source(row),
                 "corrected_expectation": (
                     "MATCH" if corrected_difference is None else "STOP_MISMATCH"
                 ),
@@ -2337,7 +2338,11 @@ def validate_catalog(root: Path, baseline_root: Path) -> Corpus:
                 "surface_schema_id", "required_semantics_versions", "surfaces", "input",
                 "expected_artifacts", "observed_artifact_paths", "design_lines",
             }
-            allowed = required | {"legacy_arm_construction"}
+            allowed = required | {
+                "legacy_arm_construction",
+                "rule2_divergent_projection",
+                "rule2_green_projection",
+            }
             if set(row) - allowed or required - set(row):
                 raise GateRefusal("CATALOG_ROW_KEYS_INVALID", scenario_id)
             if row["required_semantics_versions"] != ["1.0.0", "2.0.0"]:
@@ -2995,14 +3000,15 @@ def _green_projection_differences(
     base_row: dict[str, Any],
 ) -> list[str]:
     scenario_id = base_row["scenario_id"]
-    legacy_result = load_json_exact(
-        baseline_root / "out" / scenario_id / "result_surface.json"
-    )
+    del baseline_root
     expected_corrected = load_json_exact(
         root / base_row["expected_artifacts"]["2.0.0"]["path"]
     )
     projections = build_projection_results(
-        scenario_id, base_row, legacy_result, expected_corrected
+        scenario_id,
+        base_row,
+        {"must_not_be_read": "BASELINE_BYTES"},
+        expected_corrected,
     )
     differences = [
         projection["selector"] for projection in projections if not projection["equal"]
@@ -3378,7 +3384,7 @@ def _present(value: Any, kind: str | None = None) -> dict[str, Any]:
     elif kind == "F":
         value = float(value)
     node = canonical_node(value)
-    if kind is not None and not node.startswith(kind + ":"):
+    if kind is not None and node != kind and not node.startswith(kind + ":"):
         raise GateRefusal("PROJECTION_NODE_KIND_INVALID", f"expected {kind}, got {node}")
     return {"tag": "PRESENT", "canonical_value": node}
 
@@ -3417,8 +3423,190 @@ def _legacy_position(result: dict[str, Any]) -> dict[str, Any]:
     return result["position"]
 
 
-def _projection_pair(pointer: str, left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
-    return {"selector": pointer, "legacy": left, "corrected": right, "equal": left == right}
+def _projection_pair(
+    pointer: str,
+    left: dict[str, Any],
+    right: dict[str, Any],
+    *,
+    legacy_side_source: str,
+) -> dict[str, Any]:
+    return {
+        "selector": pointer,
+        "legacy": left,
+        "corrected": right,
+        "equal": left == right,
+        "legacy_side_source": legacy_side_source,
+    }
+
+
+def _projection_field(catalog_row: dict[str, Any]) -> str:
+    return (
+        "rule2_divergent_projection"
+        if catalog_row.get("role") == "RED"
+        else "rule2_green_projection"
+    )
+
+
+def _projection_legacy_side_source(catalog_row: dict[str, Any]) -> str | None:
+    declarations = catalog_row.get(_projection_field(catalog_row))
+    if type(declarations) is not list or not declarations:
+        return None
+    sources = {
+        member.get("legacy", {}).get("source")
+        for member in declarations
+        if type(member) is dict and type(member.get("legacy")) is dict
+    }
+    if len(sources) == 1:
+        source = next(iter(sources))
+        return source if type(source) is str else None
+    return None
+
+
+def _projection_shape_refusal(
+    scenario_id: str, pointer: str, detail: str
+) -> GateRefusal:
+    return GateRefusal(
+        "PROJECTION_SELECTOR_INVALID",
+        f"{scenario_id}: {detail}",
+        pointer=pointer,
+    )
+
+
+def _declared_legacy_projection_state(
+    scenario_id: str,
+    pointer: str,
+    declaration: Any,
+    expected_relation: str,
+) -> dict[str, Any]:
+    if type(declaration) is not dict:
+        raise _projection_shape_refusal(scenario_id, pointer, "legacy state is not an object")
+    required = {"tag", "source", "design_lines"}
+    allowed = required | {
+        "node_kind",
+        "value",
+        "baseline_selector_advisory",
+        "note",
+        "refusal_code",
+    }
+    if required - set(declaration) or set(declaration) - allowed:
+        raise _projection_shape_refusal(scenario_id, pointer, "legacy state members are invalid")
+    if declaration["source"] != "DESIGN_DERIVED":
+        raise _projection_shape_refusal(
+            scenario_id, pointer, "legacy state is not DESIGN_DERIVED"
+        )
+    if type(declaration["design_lines"]) is not str or not declaration["design_lines"]:
+        raise _projection_shape_refusal(scenario_id, pointer, "legacy design_lines is invalid")
+    advisory = declaration.get("baseline_selector_advisory")
+    if "baseline_selector_advisory" in declaration and (
+        type(advisory) is not list
+        or not advisory
+        or any(type(token) not in {str, int} for token in advisory)
+    ):
+        raise _projection_shape_refusal(
+            scenario_id, pointer, "legacy baseline selector advisory is invalid"
+        )
+    note = declaration.get("note")
+    if "note" in declaration and (type(note) is not str or not note):
+        raise _projection_shape_refusal(scenario_id, pointer, "legacy note is invalid")
+
+    tag = declaration["tag"]
+    if tag == "ABSENT":
+        if {"node_kind", "value", "refusal_code"} & set(declaration):
+            raise _projection_shape_refusal(
+                scenario_id, pointer, "legacy ABSENT state members are invalid"
+            )
+        return _absent()
+    if tag == "REFUSAL":
+        refusal_code = declaration.get("refusal_code")
+        if (
+            type(refusal_code) is not str
+            or not refusal_code
+            or {"node_kind", "value"} & set(declaration)
+        ):
+            raise _projection_shape_refusal(
+                scenario_id, pointer, "legacy REFUSAL state members are invalid"
+            )
+        return _refusal(refusal_code)
+    if tag != "PRESENT":
+        raise _projection_shape_refusal(scenario_id, pointer, "legacy tag is invalid")
+    if "refusal_code" in declaration:
+        raise _projection_shape_refusal(
+            scenario_id, pointer, "legacy PRESENT state members are invalid"
+        )
+
+    kind = declaration.get("node_kind")
+    if kind not in {"I", "F", "S", "B", "N", "A", "O"}:
+        raise _projection_shape_refusal(scenario_id, pointer, "legacy node_kind is invalid")
+    if "value" not in declaration:
+        if expected_relation != "DIFFERS" or note is None:
+            raise _projection_shape_refusal(
+                scenario_id, pointer, "unpinned legacy PRESENT state is not evaluable"
+            )
+        # The two sealed RULE2-06 declarations prove a legacy stop id is present
+        # and differs from the corrected target id without inventing that string.
+        return {"tag": "PRESENT", "node_kind": kind}
+
+    value = declaration["value"]
+    if kind in {"A", "O"}:
+        if type(value) is not int or value < 0:
+            raise _projection_shape_refusal(
+                scenario_id, pointer, "legacy container cardinality is invalid"
+            )
+        # Container declarations carry the canonical cardinality rather than
+        # duplicated container contents; _present only needs a value of that size.
+        value = [None] * value if kind == "A" else {str(index): None for index in range(value)}
+    return _present(value, kind)
+
+
+def _declared_corrected_projection_state(
+    scenario_id: str,
+    pointer: str,
+    declaration: Any,
+    expected_corrected: dict[str, Any],
+) -> dict[str, Any]:
+    if type(declaration) is not dict:
+        raise _projection_shape_refusal(
+            scenario_id, pointer, "corrected state is not an object"
+        )
+    if declaration.get("tag") == "REFUSAL":
+        required = {"tag", "refusal_code", "source", "design_lines"}
+        if set(declaration) != required:
+            raise _projection_shape_refusal(
+                scenario_id, pointer, "corrected refusal members are invalid"
+            )
+        refusal_code = declaration["refusal_code"]
+        if (
+            type(refusal_code) is not str
+            or not refusal_code
+            or declaration["source"] != "DESIGN_DERIVED"
+            or type(declaration["design_lines"]) is not str
+            or not declaration["design_lines"]
+        ):
+            raise _projection_shape_refusal(
+                scenario_id, pointer, "corrected refusal declaration is invalid"
+            )
+        return _refusal(refusal_code)
+
+    required = {"selector", "node_kind", "source", "design_lines"}
+    if set(declaration) != required:
+        raise _projection_shape_refusal(
+            scenario_id, pointer, "corrected selector members are invalid"
+        )
+    selector = declaration["selector"]
+    kind = declaration["node_kind"]
+    if (
+        type(selector) is not list
+        or not selector
+        or any(type(token) not in {str, int} for token in selector)
+        or kind not in {"I", "F", "S", "B", "N", "A", "O"}
+        or declaration["source"] != "CONTRACT_TABLES"
+        or type(declaration["design_lines"]) is not str
+        or not declaration["design_lines"]
+    ):
+        raise _projection_shape_refusal(
+            scenario_id, pointer, "corrected selector declaration is invalid"
+        )
+    return _projection_value(expected_corrected, *selector, kind=kind)
 
 
 def build_projection_results(
@@ -3427,26 +3615,64 @@ def build_projection_results(
     legacy_result: dict[str, Any],
     expected_corrected: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """Refuse projections whose selectors are not sealed in the catalog.
+    """Evaluate only the RULE-2 projection states declared by the sealed row."""
 
-    The current catalog seals the expected artifact paths and values but carries
-    neither ``rule2_divergent_projection`` nor ``rule2_green_projection``.
-    GATE_READER therefore has no authorized selector list to evaluate.  The
-    documents are accepted only to make the two permitted expected producers
-    explicit; no value or selector is derived from either actual kernel output.
-    """
+    del legacy_result
+    field = _projection_field(catalog_row)
+    declarations = catalog_row.get(field)
+    if type(declarations) is not list or not declarations:
+        raise GateRefusal(
+            "EXPECTATION_UNSEALED",
+            f"{scenario_id}: sealed catalog row has no evaluable {field}",
+            pointer=f"/{field}",
+        )
 
-    del legacy_result, expected_corrected
-    field = (
-        "rule2_divergent_projection"
-        if catalog_row.get("role") == "RED"
-        else "rule2_green_projection"
-    )
-    raise GateRefusal(
-        "EXPECTATION_UNSEALED",
-        f"{scenario_id}: sealed catalog row has no evaluable {field}",
-        pointer=f"/{field}",
-    )
+    expected_relation = "DIFFERS" if field == "rule2_divergent_projection" else "EQUAL"
+    projections: list[dict[str, Any]] = []
+    for index, member in enumerate(declarations):
+        member_pointer = f"/{field}/{index}"
+        if type(member) is not dict or set(member) != {
+            "selector",
+            "legacy",
+            "corrected",
+            "expected_relation",
+            "derivation",
+        }:
+            raise _projection_shape_refusal(
+                scenario_id, member_pointer, "projection member shape is invalid"
+            )
+        selector = member["selector"]
+        if (
+            type(selector) is not str
+            or not selector
+            or member["expected_relation"] != expected_relation
+            or type(member["derivation"]) is not str
+            or not member["derivation"]
+        ):
+            raise _projection_shape_refusal(
+                scenario_id, member_pointer, "projection identity is invalid"
+            )
+        legacy = _declared_legacy_projection_state(
+            scenario_id,
+            member_pointer + "/legacy",
+            member["legacy"],
+            expected_relation,
+        )
+        corrected = _declared_corrected_projection_state(
+            scenario_id,
+            member_pointer + "/corrected",
+            member["corrected"],
+            expected_corrected,
+        )
+        projections.append(
+            _projection_pair(
+                selector,
+                legacy,
+                corrected,
+                legacy_side_source=member["legacy"]["source"],
+            )
+        )
+    return projections
 
 
 def compute_legacy_event_order_map(corpus: Corpus) -> tuple[dict[str, str], str]:
@@ -3616,6 +3842,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
                 {
                     "scenario_id": scenario_id,
                     "role": row["role"],
+                    "legacy_side_source": _projection_legacy_side_source(row),
                     "status": "STOP_INPUT_DECLARATION_MISSING",
                     "first_changed_node": None,
                     "legacy_reproduction": legacy_reproduction,
@@ -3677,10 +3904,12 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
                     "pointer": value_differences[0][0],
                 }
             )
-        legacy_result = load_json_exact(baseline_root / "out" / scenario_id / "result_surface.json")
         try:
             projections = build_projection_results(
-                scenario_id, row, legacy_result, golden
+                scenario_id,
+                row,
+                {"must_not_be_read": "BASELINE_BYTES"},
+                golden,
             )
         except GateRefusal as exc:
             if exc.check_id != "EXPECTATION_UNSEALED":
@@ -3728,6 +3957,7 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
         scenarios.append({
             "scenario_id": scenario_id,
             "role": row["role"],
+            "legacy_side_source": _projection_legacy_side_source(row),
             "status": status,
             "first_changed_node": first,
             "legacy_reproduction": legacy_reproduction,

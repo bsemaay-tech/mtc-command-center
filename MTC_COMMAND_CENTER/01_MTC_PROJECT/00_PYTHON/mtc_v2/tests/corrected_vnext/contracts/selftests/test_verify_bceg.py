@@ -2075,74 +2075,115 @@ def test_rule2_08_raw_kernel_is_not_seeded_from_legacy_state(
     assert result["cumulative_funding"] == 0
 
 
-def test_rule2_02_red_projection_refuses_without_sealed_selector_declaration() -> None:
-    scenario_id = "RULE2-02-RED"
-    catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
-    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
-    legacy = load_json_exact(
-        Path(r"C:\tmp\P012_BASELINE_RUN")
-        / "out"
-        / scenario_id
-        / "result_surface.json"
+@pytest.fixture
+def sealed_projection_row():
+    def build(role: str, corrected_kind: str) -> dict[str, object]:
+        field = (
+            "rule2_divergent_projection"
+            if role == "RED"
+            else "rule2_green_projection"
+        )
+        relation = "DIFFERS" if role == "RED" else "EQUAL"
+        return {
+            "scenario_id": f"W318-{role}",
+            "role": role,
+            field: [
+                {
+                    "selector": "/RESULT_SURFACE/value",
+                    "legacy": {
+                        "tag": "PRESENT",
+                        "node_kind": "I",
+                        "value": 1,
+                        "source": "DESIGN_DERIVED",
+                        "design_lines": "543",
+                    },
+                    "corrected": {
+                        "selector": ["RESULT_SURFACE", "value"],
+                        "node_kind": corrected_kind,
+                        "source": "CONTRACT_TABLES",
+                        "design_lines": "543",
+                    },
+                    "expected_relation": relation,
+                    "derivation": f"W318-{role}-FIXTURE",
+                }
+            ],
+        }
+
+    return build
+
+
+@pytest.mark.parametrize(
+    ("corrected_kind", "corrected_value", "expected_pass"),
+    [("F", 1.0, True), ("I", 1, False)],
+    ids=("unequal-kinds-pass", "equal-states-fail"),
+)
+def test_rule2_divergent_projection_discriminates_sealed_states(
+    sealed_projection_row,
+    corrected_kind: str,
+    corrected_value: float | int,
+    expected_pass: bool,
+) -> None:
+    row = sealed_projection_row("RED", corrected_kind)
+
+    projections = build_projection_results(
+        "W318-RED",
+        row,
+        {"must_not_be_read": "BASELINE_BYTES"},
+        {"RESULT_SURFACE": {"value": corrected_value}},
     )
-    corrected = load_json_exact(
-        MTC_V2_ROOT / row["expected_artifacts"]["2.0.0"]["path"]
+
+    assert all(not projection["equal"] for projection in projections) is expected_pass
+    assert projections[0]["legacy_side_source"] == "DESIGN_DERIVED"
+
+
+@pytest.mark.parametrize(
+    ("corrected_kind", "corrected_value", "expected_pass"),
+    [("I", 1, True), ("F", 1.0, False)],
+    ids=("equal-states-pass", "unequal-kinds-fail"),
+)
+def test_rule2_green_projection_discriminates_sealed_states(
+    sealed_projection_row,
+    corrected_kind: str,
+    corrected_value: float | int,
+    expected_pass: bool,
+) -> None:
+    row = sealed_projection_row("GREEN", corrected_kind)
+
+    projections = build_projection_results(
+        "W318-GREEN",
+        row,
+        {"must_not_be_read": "BASELINE_BYTES"},
+        {"RESULT_SURFACE": {"value": corrected_value}},
     )
 
-    with pytest.raises(GateRefusal) as caught:
-        build_projection_results(scenario_id, row, legacy, corrected)
-
-    assert caught.value.check_id == "EXPECTATION_UNSEALED"
-    assert caught.value.pointer == "/rule2_divergent_projection"
-
-
-def test_w305_item5_refuses_reader_authored_green_projection_when_catalog_has_none() -> None:
-    scenario_id = "RULE2-02-GREEN"
-    catalog = load_json_exact(
-        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
-    )
-    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
-    legacy = load_json_exact(
-        BASELINE_ROOT / "out" / scenario_id / "result_surface.json"
-    )
-    golden = load_json_exact(
-        MTC_V2_ROOT / row["expected_artifacts"]["2.0.0"]["path"]
-    )
-
-    with pytest.raises(GateRefusal) as caught:
-        build_projection_results(scenario_id, row, legacy, golden)
-
-    assert caught.value.check_id == "EXPECTATION_UNSEALED"
-    assert caught.value.pointer == "/rule2_green_projection"
+    assert all(projection["equal"] for projection in projections) is expected_pass
+    assert projections[0]["legacy_side_source"] == "DESIGN_DERIVED"
 
 
 def test_all_projection_rows_refuse_without_sealed_selector_declarations() -> None:
-    baseline_root = Path(r"C:\tmp\P012_BASELINE_RUN")
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
 
     for row in catalog:
         if row["role"] not in {"RED", "GREEN"}:
+            continue
+        field = (
+            "rule2_divergent_projection"
+            if row["role"] == "RED"
+            else "rule2_green_projection"
+        )
+        if field in row:
             continue
         scenario_id = row["scenario_id"]
         with pytest.raises(GateRefusal) as caught:
             build_projection_results(
                 scenario_id,
                 row,
-                load_json_exact(
-                    baseline_root / "out" / scenario_id / "result_surface.json"
-                ),
-                load_json_exact(
-                    MTC_V2_ROOT / row["expected_artifacts"]["2.0.0"]["path"]
-                ),
+                {"must_not_be_read": "BASELINE_BYTES"},
+                {"must_not_be_read": "CONTRACT_TABLES"},
             )
 
-        expected_field = (
-            "/rule2_divergent_projection"
-            if row["role"] == "RED"
-            else "/rule2_green_projection"
-        )
         assert caught.value.check_id == "EXPECTATION_UNSEALED"
-        assert caught.value.pointer == expected_field
+        assert caught.value.pointer == f"/{field}"
 
 
 def test_w305_item6_refuses_missing_sealed_equal_price_target_book() -> None:
