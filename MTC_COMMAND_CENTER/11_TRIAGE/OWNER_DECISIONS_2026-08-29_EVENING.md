@@ -1127,3 +1127,22 @@ live trading, a build, or a kernel change.
 - W308 (cross-draft consistency of the addendum-32 layers): one drift fixed by measurement (the owner's
   "for example" hedge restored in P0-20), echo lines added; design item: one owner for the policy-version
   concept (Lead ruling P0-20; morning confirm).
+
+## Addendum 44 - 2026-09-03 07:5x REAL (Lead close-out of the overnight run; no new owner decision)
+
+- **Final engine branch state:** `C:/WP012BUILD` HEAD `ac2d2ca9` (flagship-audited `f06e3a2d` + W310's one
+  hygiene commit under decision 124: 1 ordinary whitespace diagnostic repaired, 99 pinned-probe-copy diagnostics
+  preserved), clean, never pushed; bundle re-seal #13 `e4ffde6a`; baseline W300B; tests 308 + 142; legacy replay
+  34/34 byte-exact after every commit of the night. Every kernel and harness commit accepted by a non-author
+  family.
+- **Night tally against the overnight prompt:** goal 1 (branch re-audited clean) NOT MET - the three-verdict round
+  (detection 8 findings / flagship 2b BLOCK 19 / flagship 1b REQUEST_CHANGES 5) agrees the remainder is owner or
+  tables-family work (M1, M4, M5, M6, M7, M8, K, section-16 review); goal 2 (41 answers folded) MET, 10 folds
+  verified; goal 3 (signature) deliberately not spent (decision 125); goal 4 (routes) MET; goal 5 (plans every
+  2 h, handoff) MET - plans rev 5-11, handoff at
+  `%TEMP%/HANDOFF_OVERNIGHT_2026-09-03_MORNING.md` rev 5 after two outside checks (W307, W309).
+- **Owner decisions taken tonight by his word:** 123-126, 131, 132, 127-130 (addendum 32); by default under his
+  "work until stopped" instruction: 133, 134 (Q4, Q2). Morning items M1-M8 and K are yes/no with defaults on the
+  handoff page.
+- Routes at close: Codex x3 live, Claude Pro live (07:40 reset), Gemini idle, OpenRouter DeepSeek harness 25
+  distinct verify/triage tasks, MAX untouched since 20:1x, OpenCode/NIM/GLM parked, DeepSeek direct and Grok 402.
