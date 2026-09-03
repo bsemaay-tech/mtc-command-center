@@ -1904,3 +1904,23 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
   prediction: the 18-path refusal disappears.
 - Queue: W344 (decision 148) on Codex fourth after 22:14 and after W350 (one lane per worktree), then W346 (decision 150), then the
   second audit pass (W276D Codex, GM83D Gemini refreshed, W279D Claude Pro if its API answers) on the final HEAD.
+
+## Addendum 76 - 2026-09-03 21:5x REAL (Lead record: decisions 147, 148 and 150 executed; the gate's residual is the section-16 review plus seven self-tests that the re-anchor made stale; no new owner decision)
+
+- **W350 (Codex free, 21:14-21:24; decision 147):** in-repo manifest and anchor re-anchored to `63cfe2dd` (the seal-16 copies
+  commit), the decision-134 provenance record re-measured at that base (`PRESENT_AT_BASE`, blob oid, `lane_ids` += W350); gate
+  at `5a178ca2`: **`EXPECTED_PATH_CHANGED_AFTER_BASE` GONE**; refusals = the section-16 review and PROBE-P012-02-A only.
+- **W344 (Codex free, 21:25-21:36; decision 148):** the closed-set validator admits `/RESULT_SURFACE/admitted` exactly when the
+  DEF-P012-02 terminal decision is `MIN_NOTIONAL_ADMITTED` (design 23.5, cited); failing-then-passing test quoted; **PROBE-P012-02-A
+  DETECTED at `CORRECTED_EXPECTATION`; the gate at `942fa18b` reports 10 of 10 probes DETECTED and ONE refusal - the missing
+  section-16 review.** Two discrepancies: the W314B-reverted case had already been re-assigned to 08-A by W342B (honoured);
+  the contract suite measured 7 failed / 306 - seven provenance self-tests assert the pre-re-anchor base state (a decision-147
+  consequence, not a W344 defect).
+- **W346 (Codex free, 21:38-21:49; decision 150):** the full gate now appends `CONTRACT_SELFTEST_RED` naming the failing cases
+  whenever the contract suite is red; RED/GREEN quoted; gate at `cb7998e2` = the review refusal + `CONTRACT_SELFTEST_RED` (the
+  same seven). Lane wrote its completion marker into the worktree; the Lead moved it out (worktree clean).
+- **W342C launched (Codex free):** the seven provenance self-tests re-fixtured to the re-anchored world (synthetic post-base
+  change; recorded values from the committed record; each test must still fail if its guarded behaviour is removed). Expected
+  after it: suite green, gate residual = ONLY the section-16 review. Then the second audit pass (W276D Codex, GM83D Gemini,
+  W279D Claude Pro if its API answers) on that HEAD; if it is clean-except-the-review, the Section-16 review package is
+  DRAFTED (not signed) and the M2 session brief prepared with loss-at-stop left blank.
