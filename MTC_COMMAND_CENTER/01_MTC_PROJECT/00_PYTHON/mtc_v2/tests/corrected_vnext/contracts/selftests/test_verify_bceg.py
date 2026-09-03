@@ -627,15 +627,14 @@ def test_expected_source_provenance_refuses_non_ancestor_base() -> None:
 
 def test_expected_source_provenance_refuses_expected_path_changed_after_base() -> None:
     contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
-    manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
+    manifest = w342c_provenance_manifest("expected_provenance_exceptions.json")
     anchor = load_json_exact(contracts / "implementation_anchor.json")
 
-    refusal(
-        "EXPECTED_PATH_CHANGED_AFTER_BASE",
-        lambda: verify_bceg.validate_expected_source_provenance(
-            MTC_V2_ROOT, manifest, anchor
-        ),
-    )
+    # Decision 147; design v1.17 L14 / section-15.4 amendment: model a post-63cfe2dd expected-path change.
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.validate_expected_source_provenance(MTC_V2_ROOT, manifest, anchor)
+    assert caught.value.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
+    assert caught.value.pointer == W342C_MOVED_GIT_PATHS[0]
 
 
 W305_EXCEPTIONS_RELATIVE = (
@@ -645,65 +644,126 @@ W305_DECISION_134_PATH = (
     "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/"
     "golden/corrected_vnext/RULE2-01-GREEN.json"
 )
+W342C_MOVED_MANIFEST_PATHS = (
+    "expected_provenance_exceptions.json",
+    "implementation_anchor.json",
+)
+W342C_MOVED_GIT_PATHS = tuple(
+    "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/"
+    f"tests/corrected_vnext/contracts/{relative}"
+    for relative in W342C_MOVED_MANIFEST_PATHS
+)
+
+
+def w342c_provenance_manifest(*moved_paths: str) -> dict[str, object]:
+    """Move expected members in-memory to paths changed after the re-anchored base."""
+
+    contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
+    manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
+    record = w305_exception_record()
+    assert manifest["seal"]["IMPLEMENTATION_BASE_SHA"] == record[
+        "implementation_base_sha"
+    ]
+    candidates = [
+        member
+        for member in manifest["files"]
+        if member["path"] != "golden/corrected_vnext/RULE2-01-GREEN.json"
+    ]
+    assert len(candidates) >= len(moved_paths)
+    for member, moved_path in zip(
+        candidates[: len(moved_paths)], moved_paths, strict=True
+    ):
+        member["path"] = moved_path
+    return manifest
 
 
 def w305_exception_record() -> dict[str, object]:
     return load_json_exact(MTC_V2_ROOT / W305_EXCEPTIONS_RELATIVE)
 
 
-def w305_provenance(record: dict[str, object] | None, tmp_path: Path):
-    """Run the provenance predicate against a substituted exception record."""
+def w305_provenance(
+    record: dict[str, object] | None,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    moved_paths: tuple[str, ...] = (W342C_MOVED_MANIFEST_PATHS[0],),
+):
+    """Run the predicate against an isolated record and synthetic changed paths."""
 
+    manifest = w342c_provenance_manifest(*moved_paths)
     contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
-    target = contracts / "expected_provenance_exceptions.json"
-    original = target.read_bytes()
-    backup = tmp_path / "expected_provenance_exceptions.json"
-    backup.write_bytes(original)
-    try:
+    anchor = load_json_exact(contracts / "implementation_anchor.json")
+    record_path = tmp_path / "expected_provenance_exceptions.json"
+    original_loader = verify_bceg.load_expected_provenance_exceptions
+    original_check_output = verify_bceg.subprocess.check_output
+    changed_paths = [
+        W305_DECISION_134_PATH,
+        *W342C_MOVED_GIT_PATHS[: len(moved_paths)],
+    ]
+
+    with monkeypatch.context() as synthetic:
         if record is None:
-            target.unlink()
-        else:
-            target.write_bytes(
-                json.dumps(
-                    record, ensure_ascii=False, sort_keys=True, indent=2
-                ).encode("utf-8")
-                + bytes([10])
+            synthetic.setattr(
+                verify_bceg,
+                "load_expected_provenance_exceptions",
+                lambda _path, _base: {},
             )
+        else:
+            record_path.write_bytes(verify_bceg.canonical_json_bytes(record))
+            synthetic.setattr(
+                verify_bceg,
+                "load_expected_provenance_exceptions",
+                lambda _path, base: original_loader(record_path, base),
+            )
+
+        def synthetic_check_output(command, **kwargs):
+            if "diff" in command and "--name-only" in command:
+                return b"".join(path.encode("utf-8") + b"\0" for path in changed_paths)
+            return original_check_output(command, **kwargs)
+
+        synthetic.setattr(verify_bceg.subprocess, "check_output", synthetic_check_output)
         try:
             return verify_bceg.validate_expected_source_provenance(
                 MTC_V2_ROOT,
-                load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json"),
-                load_json_exact(contracts / "implementation_anchor.json"),
+                manifest,
+                anchor,
             )
         except GateRefusal as exc:
             return exc
-    finally:
-        target.write_bytes(backup.read_bytes())
 
 
 def test_w305_item3_recorded_exception_lifts_only_the_decision_134_path(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Owner decision 134 names RULE2-01-GREEN; the other changed paths stay refused."""
 
-    without = w305_provenance(None, tmp_path)
+    # Decision 147; design v1.17 L14 / section-15.4 amendment: use synthetic post-63cfe2dd changes.
+    without = w305_provenance(None, tmp_path, monkeypatch)
     assert isinstance(without, GateRefusal)
     assert without.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
     assert without.pointer == W305_DECISION_134_PATH
 
-    with_record = w305_provenance(w305_exception_record(), tmp_path)
+    with_record = w305_provenance(w305_exception_record(), tmp_path, monkeypatch)
     assert isinstance(with_record, GateRefusal)
     assert with_record.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
-    assert with_record.pointer != W305_DECISION_134_PATH
+    assert with_record.pointer == W342C_MOVED_GIT_PATHS[0]
 
 
 def test_w305_item3_wrong_current_oid_does_not_lift_the_refusal(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     record = w305_exception_record()
-    record["exceptions"][0]["current_blob_oid"] = "0" * 40
+    wrong_current_oid = subprocess.check_output(
+        ["git", "-C", str(MTC_V2_ROOT), "rev-parse", f"HEAD:{W342C_MOVED_GIT_PATHS[0]}"],
+        text=True,
+    ).strip()
+    assert wrong_current_oid != record["exceptions"][0]["current_blob_oid"]
+    record["exceptions"][0]["current_blob_oid"] = wrong_current_oid
 
-    outcome = w305_provenance(record, tmp_path)
+    # Decision 147; design v1.17 L14 / section-15.4 amendment: wrong current identity cannot lift a synthetic change.
+    outcome = w305_provenance(record, tmp_path, monkeypatch)
 
     assert isinstance(outcome, GateRefusal)
     assert outcome.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
@@ -712,33 +772,40 @@ def test_w305_item3_wrong_current_oid_does_not_lift_the_refusal(
 
 def test_w305_item3_wrong_base_state_does_not_lift_the_refusal(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     record = w305_exception_record()
-    record["exceptions"][0]["base_state"] = "PRESENT_AT_BASE"
-    record["exceptions"][0]["base_blob_oid"] = "1" * 40
+    assert record["exceptions"][0]["base_state"] == "PRESENT_AT_BASE"
+    record["exceptions"][0]["base_state"] = "ABSENT_AT_BASE"
+    record["exceptions"][0]["base_blob_oid"] = None
 
-    outcome = w305_provenance(record, tmp_path)
+    # Decision 147; design v1.17 L14 / section-15.4 amendment: wrong base state cannot lift a synthetic change.
+    outcome = w305_provenance(record, tmp_path, monkeypatch)
 
     assert isinstance(outcome, GateRefusal)
     assert outcome.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
     assert outcome.pointer == W305_DECISION_134_PATH
 
 
-def test_w305_item3_record_bound_to_another_base_is_invalid(tmp_path: Path) -> None:
+def test_w305_item3_record_bound_to_another_base_is_invalid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     record = w305_exception_record()
     record["implementation_base_sha"] = "a" * 40
 
-    outcome = w305_provenance(record, tmp_path)
+    outcome = w305_provenance(record, tmp_path, monkeypatch)
 
     assert isinstance(outcome, GateRefusal)
     assert outcome.check_id == "EXPECTED_PROVENANCE_EXCEPTION_INVALID"
 
 
-def test_w305_item3_unknown_member_in_the_record_is_invalid(tmp_path: Path) -> None:
+def test_w305_item3_unknown_member_in_the_record_is_invalid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     record = w305_exception_record()
     record["exceptions"][0]["extra_member"] = 1
 
-    outcome = w305_provenance(record, tmp_path)
+    outcome = w305_provenance(record, tmp_path, monkeypatch)
 
     assert isinstance(outcome, GateRefusal)
     assert outcome.check_id == "EXPECTED_PROVENANCE_EXCEPTION_INVALID"
@@ -747,48 +814,46 @@ def test_w305_item3_unknown_member_in_the_record_is_invalid(tmp_path: Path) -> N
 def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
     record = w305_exception_record()
 
+    # Decision 147; design v1.17 L14 / section-15.4 amendment: pin the re-anchored declaration values.
     assert record["declaration_kind"] == "OWNER_DECISION_DECLARATION_NOT_EVIDENCE"
     assert "not evidence" in record["statement"]
+    assert record["implementation_base_sha"] == (
+        "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5"
+    )
     assert record["exceptions"][0]["owner_decision"] == 134
-    # Owner decision 135; design P012_FRESH_DESIGN_V1.md:701 binds provenance to the re-measured M5 base.
-    assert record["exceptions"][0]["lane_ids"] == ["W156", "W167", "W172", "W316D"]
+    assert record["exceptions"][0]["lane_ids"] == [
+        "W156",
+        "W167",
+        "W172",
+        "W316D",
+        "W350",
+    ]
     assert record["exceptions"][0]["base_state"] == "PRESENT_AT_BASE"
     assert record["exceptions"][0]["base_blob_oid"] == (
-        "b811ce9d9d4efe574828c6d3fc2703bea71b71a8"
+        "0ad42dafc7c6634319afddc9ff12a43d095438ae"
+    )
+    assert record["exceptions"][0]["current_blob_oid"] == (
+        "0ad42dafc7c6634319afddc9ff12a43d095438ae"
     )
 
 
 def test_w305_item8_provenance_refusal_reports_every_unlifted_path(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    outcome = w305_provenance(w305_exception_record(), tmp_path)
-    assert isinstance(outcome, GateRefusal)
-    contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
-    manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
-    git_root = Path(
-        subprocess.check_output(
-            ["git", "-C", str(MTC_V2_ROOT), "rev-parse", "--show-toplevel"],
-            text=True,
-        ).strip()
+    # Decision 147; design v1.17 L14 / section-15.4 amendment: report every synthetic post-base path.
+    outcome = w305_provenance(
+        w305_exception_record(),
+        tmp_path,
+        monkeypatch,
+        moved_paths=W342C_MOVED_MANIFEST_PATHS,
     )
-    manifest_paths = {
-        (
-            MTC_V2_ROOT / member["path"]
-            if member["path"].startswith("golden/")
-            else contracts / member["path"]
-        )
-        .resolve()
-        .relative_to(git_root.resolve())
-        .as_posix()
-        for member in manifest["files"]
-    }
-    expected_refused_paths = manifest_paths - {W305_DECISION_134_PATH}
+    assert isinstance(outcome, GateRefusal)
 
     assert outcome.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
-    assert set(outcome.pointers) == expected_refused_paths
+    assert outcome.pointers == list(W342C_MOVED_GIT_PATHS)
     assert outcome.as_dict()["pointers"] == outcome.pointers
-    assert outcome.as_dict()["count"] == len(expected_refused_paths)
-    assert len(outcome.pointers) + 1 == len(manifest_paths) == 19
+    assert outcome.as_dict()["count"] == len(W342C_MOVED_GIT_PATHS)
 
 
 def test_legacy_event_order_pin_missing_is_distinct_and_match_clears_blocker(
@@ -1496,6 +1561,7 @@ def test_probe_driver_refuses_unclosed_base_before_variant_comparison(
 
 def test_probe_cannot_claim_target_membership_when_base_is_refused(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     catalog = load_json_exact(
         MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
@@ -1515,24 +1581,34 @@ def test_probe_cannot_claim_target_membership_when_base_is_refused(
         MTC_V2_ROOT
         / "tests/corrected_vnext/probes/PROBE-P012-08-A/modified_tree_manifest.json"
     )
-    receipt = verify_bceg.drive_probe_variant_process(
-        MTC_V2_ROOT,
-        tmp_path / "unused-baseline",
-        probe,
-        modified,
-        modified_manifest,
+    child = {
+        "mode": "probe-child",
+        "probe_id": probe["probe_id"],
+        "claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+        "failed_check": probe["expected_failed_check"],
+        "changed_nodes": [comparator_first_node],
+        "comparator_first_differing_node": comparator_first_node,
+    }
+    completed = subprocess.CompletedProcess(
+        args=[], returncode=2, stdout=json.dumps(child), stderr=""
     )
+    # Decision 147; design v1.17 L14 / section-15.4 amendment: a synthetic base refusal omits the target node.
+    with monkeypatch.context() as synthetic:
+        synthetic.setattr(verify_bceg.subprocess, "run", lambda *args, **kwargs: completed)
+        receipt = verify_bceg.drive_probe_variant_process(
+            MTC_V2_ROOT,
+            tmp_path / "unused-baseline",
+            probe,
+            modified,
+            modified_manifest,
+        )
 
-    # Owner decision 144; design P012_FRESH_DESIGN_V1.md:498 binds DETECTED at CORRECTED_EXPECTATION.
-    assert receipt["status"] == "DETECTED"
+    assert receipt["status"] == "NOT_DETECTED"
     assert receipt["measured_failed_check"] == "CORRECTED_EXPECTATION"
     assert receipt["expected_first_changed_node"] == expected_node
-    # Owner decision 144; design P012_FRESH_DESIGN_V1.md:558-560 emits the unequal container before children.
-    assert (
-        receipt["comparator_first_differing_node"]
-        == "/EVENT_SURFACE/cash_events/0/funding_event_id"
-    )
-    assert receipt["expected_node_changed"] is True
+    assert receipt["comparator_first_differing_node"] == comparator_first_node
+    assert receipt["expected_node_changed"] is False
+    assert receipt["measured_matches_expected"] is False
 
 
 @pytest.mark.parametrize(
