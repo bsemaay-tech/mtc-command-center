@@ -1554,3 +1554,35 @@ live trading, a build, or a kernel change.
   18:10.
 - Wayfinder session 2026-09-03T1332-claude revision 2 imported 15:06 (WP-P0-12 1.28 h, WP-P0-14 0.35 h, measured lanes
   only). Owner word still pending: `accept design P0-14 v1.10`.
+
+## Addendum 62 - 2026-09-03 15:4x REAL (Lead record: the fresh audit round is running on the seal-#14 snapshot; detection verdict in; no new owner decision)
+
+- **The audited snapshot:** engine HEAD `de7c5c01` (W316B `443457d7` gate receipt -> W316C `eda17c3f` manifest #14b copy +
+  ten observed artifacts materialized by the harness -> W316D `de7c5c01` decision-134 provenance record re-measured at the
+  M5 base); bundle seal `a58b6dea...` (#14b), catalog `555c4441...`, design v1.15. The gate at that HEAD: **6 refusals**,
+  9 of 10 probes DETECTED: the missing section-16 review; `EXPECTED_PATH_CHANGED_AFTER_BASE` for 18 paths (every golden
+  except RULE2-01-GREEN, plus DERIVATIONS.md and scenario_catalog.json - a consequence of the M5 base re-pin: at
+  `5e8e5794` the bundle already existed, so every owner-directed tables change since is "post-base" for the section-15.4
+  provenance predicate; NOT fixed, an audit object); PROBE-P012-02-A NOT DETECTED; `OBSERVED_EXTRA_MEMBER`
+  `cost_schedule_digest` on the RULE2-08 pair; `CORRECTED_EXPECTATION_MISMATCH` on RULE2-08-RED cash_events.
+- **Launches 15:20-15:31:** W279C (Claude Pro, Opus) and W276C (Codex; the fourth account capped at launch despite a
+  live probe at 14:35 - re-launched on the free account) run in parallel; GM83C (Gemini 3.8) attempt 1 was aborted by
+  the launcher's watchdog because a stray OpenCode server process (`opencode-cli serve`, PID 18212, left from the parked
+  route, started 2026-09-02 17:04) rewrote its marker file `.git/opencode`; the Lead stopped that process (not a lane)
+  and relaunched. Codex secondary and fourth are capped until 17:12.
+- **GM83C detection (attempt 2, 15:31-15:41) = FINDINGS (10): 4 HIGH, 2 MEDIUM, 4 LOW.** HIGH: F01 PROBE-P012-02-A is
+  blocked by a role check in the harness's closed-set validation (attributed to the harness); F02 the RULE2-08 goldens omit
+  `cost_schedule_digest` that the kernel emits under the decision-144 binding (attributed to the tables); F03 the 18-path
+  provenance refusal - the decision-134 exception mechanism cannot honestly lift 18 of 19 expected paths; the detection
+  lane's own proposal: re-anchor `IMPLEMENTATION_BASE_SHA` to the commit sealing the finalized tables, or a formal re-seal
+  protocol (an OWNER question; decision 135 chose the current anchor); F04 RULE2-08-RED cash_events mismatch between
+  the kernel and the W321 golden (tables derivation under decision 144). MEDIUM: F05 comparator skips `BLOCKED-` nodes
+  (design limit L9, retained); F06 dead `LegacyEconomicsAdapter` (= GM83B-F04, unchanged). LOW: F07 cost-record sha
+  preimage (L11); F08/F09/F10 = the retained implementer conventions the owner deferred to the M2 session (addendum 36).
+  Fix census of the previous round: GM83B F02/F03 FIXED, F01/F06 PARTIAL, F04/F05/F07/F08 NOT FIXED (by decision);
+  DS102 rows: kernel/harness items FIXED except the M2-deferred conventions and W276-F05/F06 (retained by decision).
+  Report `C:/tmp/LANE_PROMPTS_20260828/DETECT_GM83C_BRANCH.md`.
+- **Lead reading, not a verdict:** the four HIGHs map onto the four gate refusals the Lead had already listed as audit
+  objects; none of them is a hidden defect, and none is fixable inside decisions 135-144 without an owner word on at
+  least two of them (the provenance anchor; the 02-A expected check). The two flagship verdicts and the cross-family
+  triage (T340) follow before anything is proposed. Owner word still pending: `accept design P0-14 v1.10`.
