@@ -7,15 +7,16 @@
   "expected_semantics_version": "2.0.0",
   "provenance": {
     "method": "INDEPENDENT_DERIVATION",
-    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; owner Reading Y (owner addendum 26, 2026-09-01) applied by lane W172; v1.9 GOLDEN-OVER repair of the guard nodes under design v1.9 section 23.5 item 9 (owner addendum 28 decision 67 approved v1.9 as drafted, 2026-09-01) by lane W200",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; owner Reading Y (owner addendum 26, 2026-09-01) applied by lane W172; v1.9 GOLDEN-OVER repair of the guard nodes under design v1.9 section 23.5 item 9 (owner addendum 28 decision 67 approved v1.9 as drafted, 2026-09-01) by lane W200; v1.15 W320 amendment (owner decision 144, M1b) applied by lane W321: cost record by reference, fee event, equity re-derived",
     "design_file": "P012_FRESH_DESIGN_V1.md",
-    "design_version": "v1.8",
-    "design_lines": "390-433; 676-745; 747-839; 888; 969-1273 (section 23 v1.8 terminal micro-fold)",
+    "design_version": "v1.15",
+    "design_lines": "390-433; 676-745; 747-839; 888; 969-1273 (section 23 v1.8 terminal micro-fold); 490,492,932,968,1107,1183 (v1.15 W320 amendment)",
     "worksheet": "DERIVATIONS.md",
     "worksheet_section": "8. DEF-P012-08 / RULE2-08-RED",
     "worksheet_section_w200": "W200 v1.9 GOLDEN-OVER repair / RULE2-08-RED",
     "worksheet_section_v18": "v1.8 revision / RULE2-08-RED",
-    "worksheet_section_v15": "v1.5 revision / RULE2-08-RED"
+    "worksheet_section_v15": "v1.5 revision / RULE2-08-RED",
+    "worksheet_section_w321": "W321 v1.15 M1/4c / RULE2-08-RED"
   },
   "open_item_bindings": [
     {"open_id": "OPEN-10", "source": "open_item_applicability_DRAFT.json items[OPEN-10] (draft_revision 3)", "owner_disposition": "APPLICABLE - option (a): guards keep GROSS-MINUS-FEES; funding is NOT admitted into the guard basis; no per-control divergence (addendum 15 row 35)", "effect_on_this_scenario": "design section 14 :437 makes guard outcomes follow the sourced OPEN-10 decision, and under the owner answer the captured funding delta -0.1 does NOT enter the guard basis. CORRECTED BY LANE W172 (G83-F04): the sentence formerly ended by asserting funding_included_in_guard_basis is false; that member had already been removed from this artifact by design 23.4 and tables-revision item 4. FURTHER CORRECTED BY LANE W200: design v1.9 :1232-1233 directs removal of this row's whole guards object unless a separate owner-approved scenario-input amendment binds its threshold, and none exists, so this artifact now carries no guard node at all and states no live guard fact of any kind. The OPEN-10 disposition is unchanged and still binds the family; it simply has no node on this row. NO ECONOMIC VALUE MOVED."},
@@ -29,9 +30,12 @@
     ],
     "fill_events": [],
     "cash_events": [
-      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FUND-0", "kind": "FUNDING", "lifecycle_id": 1, "signed_delta": -0.1}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-0", "kind": "FEE", "lifecycle_id": 1, "signed_delta": -0.1},
+      {"sequence": 1, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FUND-0", "kind": "FUNDING", "lifecycle_id": 1, "signed_delta": -0.1}
     ],
-    "fee_events": [],
+    "fee_events": [
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "fee_event_id": "CE-FEE-0", "kind": "FEE", "lifecycle_id": 1, "signed_delta": -0.1, "liquidity_role": "TAKER", "notional": 100, "rate_used": 0.001, "rounding_rule": "EXACT_IDENTITY_V1"}
+    ],
     "funding_events": [
       {"sequence": 0, "kernel_semantics_version": "2.0.0", "funding_event_id": "TEST-FUND-1", "event_timestamp": "2000-01-01T00:00:00Z", "lifecycle_id": 1, "position_side": "LONG", "open_qty": 1, "contract_multiplier": 1, "mark_price": 100, "raw_rate": 0.001, "positive_rate_payer": "LONG", "long_cashflow_rate": -0.001, "notional": 100, "funding_cash_delta": -0.1, "cumulative_funding": -0.1, "schedule_id": "SYNTH-FUNDING-RULE2-08-V1", "schedule_digest": "BLOCKED-MISSING-RECORD-BYTES", "source_event_digest": "BLOCKED-MISSING-RECORD-BYTES", "cash_event_id": "CE-FUND-0"}
     ],
@@ -40,7 +44,7 @@
   "RESULT_SURFACE": {
     "final_position": {"side": "LONG", "quantity": 1, "entry_fill_price": 100},
     "trades": [],
-    "equity_curve": {"first": 1000, "last": 999.9},
+    "equity_curve": {"first": 1000, "last": 999.8},
     "cumulative_funding": -0.1,
     "metrics": "BLOCKED-DESIGN-UNENUMERATED",
     "warnings": [],
@@ -52,7 +56,7 @@
       "instrument_record_digest": "BLOCKED-MISSING-RECORD-BYTES",
       "instrument_source_document_digest": "BLOCKED-MISSING-RECORD-BYTES",
       "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
-      "cost_schedule_id": "NOT_CONSUMED",
+      "cost_schedule_id": "SYNTH-COST-RULE2-07-RED-V1",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-08-V1",
       "funding_schedule_digest": "BLOCKED-MISSING-RECORD-BYTES"
     }
@@ -63,9 +67,9 @@
     "inclusivity": "CLOSED",
     "authority": "P012_FRESH_DESIGN_V1.md:888 - the observation window is [2000-01-01T00:00:00Z, 2000-01-01T00:01:00Z], excluding the candidate setup fill; the corrected-only FUNDING_TICK is inserted between bars 1 and 2 at 2000-01-01T00:00:00Z."
   },
-  "cash_ledger_join": "Design 2.1:75 and 14:423 - funding_events/0.funding_cash_delta = -0.1 equals the joined cash_events/0.signed_delta (CE-FUND-0), and only the cash row is applied to equity. No CostSchedule is consumed (design 14:429; design 22.6:888 makes C absent/NOT_CONSUMED), so no fee cash row exists inside the window and equity_curve.first is the seeded 1000: 1000 + (-0.1) = 999.9.",
+  "cash_ledger_join": "Design 2.1:75 and 14:423 with W320 amendment (design v1.15 lines 492,1107) - the pre-window OPEN fill consumes cost record SYNTH-COST-RULE2-07-RED-V1 at taker rate 0.001 on notional 100, producing fee cash delta -0.1 (CE-FEE-0). funding_events/0.funding_cash_delta = -0.1 equals the joined cash_events/1.signed_delta (CE-FUND-0). Both cash rows are applied to equity: 1000 + (-0.1) + (-0.1) = 999.8.",
   "funding_source_event": "Design 22.3:833-838 binds the exact synthetic source-event object: event_timestamp 2000-01-01T00:00:00Z, funding_event_id TEST-FUND-1, mark_price 100, mark_price_source SPOT_ORACLE, positive_rate_payer LONG, raw_rate 0.001. Design 22.6:894 records that mark_price is normatively the bound spot-oracle valuation, not a venue mark. mark_price_source is a member of the FundingSchedule event object, not of the design 14:417-420 funding_events row field list, so it is not a node of this surface.",
-  "no_slippage_note": "Design 14:429 - neither RULE2-08 vector contains an in-window fill intent, so section 3's fill-only slippage sequence is not entered inside the observation window and no slippage value or CostSchedule is consumed. cost_schedule_id is therefore NOT_CONSUMED rather than blocked.",
+  "no_slippage_note": "Design 14:429 with W320 amendment (design v1.15 lines 492,1107) - RULE2-08-RED consumes cost record SYNTH-COST-RULE2-07-RED-V1 by reference for the pre-window OPEN fill; the fill is outside the observation window so no in-window fill intent exists, but the fee is assessed and recorded. cost_schedule_id is SYNTH-COST-RULE2-07-RED-V1. No slippage value is consumed (slippage 0 bps, EXACT_IDENTITY_V1).",
   "v15_filled_cells": [
     {"pointer": "/EVENT_SURFACE/decision_events/1/position_snapshot_rule", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "END_OF_INTERVAL_INCLUDE_SAME_TIMESTAMP_V1", "authority": "P012_FRESH_DESIGN_V1.md:826-828 fixes the exact schedule rule fields."},
     {"pointer": "/EVENT_SURFACE/funding_events/0/schedule_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-FUNDING-RULE2-08-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-754 - RULE2-08-RED and RULE2-08-GREEN share the exact funding record id SYNTH-FUNDING-RULE2-08-V1."},
@@ -74,7 +78,7 @@
     {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "P012_FRESH_DESIGN_V1.md:782-784, :772-773."},
     {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-FUNDING-RULE2-08-V1", "authority": "P012_FRESH_DESIGN_V1.md:751-754."}
   ],
-  "unchanged_sealed_values": "notional 100, long_cashflow_rate -0.001, funding_cash_delta -0.1, cumulative_funding -0.1, and equity_curve first 1000 / last 999.9 are byte-identical to the pre-v1.5 seal. Lane W200 struck the former clause 'and every guard node': design v1.9 :1232-1233 removed this row's guards object outright, so no guard node exists here to be identical or different. Every value named above is unchanged by that removal.",
+  "unchanged_sealed_values": "notional 100, long_cashflow_rate -0.001, funding_cash_delta -0.1, cumulative_funding -0.1 are byte-identical to the pre-v1.5 seal. equity_curve first 1000 is unchanged; equity_curve last re-derived from 999.9 to 999.8 under design v1.15 W320 amendment (1000 - 0.1 fee - 0.1 funding = 999.8). Lane W200 struck the former clause 'and every guard node': design v1.9 :1232-1233 removed this row's guards object outright, so no guard node exists here to be identical or different. Every value named above except equity_curve.last is unchanged by this amendment.",
   "v18_revised_nodes": [
     {"pointer": "/EVENT_SURFACE/decision_events", "change": "RE-DERIVED under the design 23.1 closed shape: flat members sequence/decision/kernel_semantics_version, per-reason event_timestamp presence, no lifecycle_id, exact per-reason payloads, section-3 order.", "authority": "P012_FRESH_DESIGN_V1.md:987-1053 (table :1016-1024) and the tables-revision item 1 at :1175-1181."},
     {"pointer": "/EVENT_SURFACE/*/*/kernel_semantics_version", "change": "ADDED to every member of all six corrected event containers.", "authority": "P012_FRESH_DESIGN_V1.md:998-1002 (section-4 identity / GM28-F03) and tables-revision item 2 at :1182-1185."},
@@ -97,8 +101,10 @@
   ],
   "authored_value_tokens": [
     {"pointer": "/EVENT_SURFACE/funding_events/0/position_side", "value": "LONG", "design_fact": "P012_FRESH_DESIGN_V1.md:406 (side_factor +1 for long) and :417 (the position_side field).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
-    {"pointer": "/EVENT_SURFACE/cash_events/0/kind", "value": "FUNDING", "design_fact": "P012_FRESH_DESIGN_V1.md:71 (section 2.1 cash-event kinds).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
-    {"pointer": "/RESULT_SURFACE/final_position/side", "value": "LONG", "design_fact": "P012_FRESH_DESIGN_V1.md:275-280 (section 10 table rows name the Long position) and :406 (side_factor +1 for long).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."}
+    {"pointer": "/EVENT_SURFACE/cash_events/1/kind", "value": "FUNDING", "design_fact": "P012_FRESH_DESIGN_V1.md:71 (section 2.1 cash-event kinds).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/RESULT_SURFACE/final_position/side", "value": "LONG", "design_fact": "P012_FRESH_DESIGN_V1.md:275-280 (section 10 table rows name the Long position) and :406 (side_factor +1 for long).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W172 under G83-F06."},
+    {"pointer": "/EVENT_SURFACE/cash_events/0/kind", "value": "FEE", "design_fact": "P012_FRESH_DESIGN_V1.md:71 (section 2.1 cash-event kinds).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W321 fifth pass under V321C F-08."},
+    {"pointer": "/EVENT_SURFACE/fee_events/0/kind", "value": "FEE", "design_fact": "P012_FRESH_DESIGN_V1.md:71 (section 2.1 cash-event kinds).", "spelling": "TABLES-AUTHORED: the design states the fact but names no token for this value. D-13 / W167-D02 class; labeled by lane W321 fifth pass under V321C F-08."}
   ],
   "blocked_cells": [
     {"surface": "EVENT_SURFACE", "pointer": "/funding_events/0/schedule_digest", "marker": "BLOCKED-MISSING-RECORD-BYTES", "reason": "design v1.5 binds every FundingSchedule member value but not the canonical serialization width or separators, and :758-761 refuses to fabricate provenance captured_at_utc and human_reviewer, so the exact record bytes still do not exist; :697-700 keeps digests build artifacts."},
