@@ -1619,3 +1619,32 @@ live trading, a build, or a kernel change.
   yes/no questions for the items outside decisions 135-144 (provenance anchor; 02-A harness correction; the 81 record
   digests; the self-test alignment) and lists the inside-fence repairs (the RULE2-08-RED golden under the 144 chain) that
   proceed on the existing words. Section 16 stays unprepared. Owner word still pending: `accept design P0-14 v1.10`.
+
+## Addendum 64 - 2026-09-03 16:2x REAL (Lead record: cross-family triage of the audit round; four owner questions sent; inside-fence repairs launched; no new owner decision)
+
+- **T340 (DeepSeek V4 Pro reader over W276C, W279C, GM83C, the W316D gate list and the Lead's known-open list):** 28 merged
+  rows. INSIDE decisions 135-144 (repairs proceed on the existing words, verified by a family that did not write, then
+  re-seal): M1 the two RULE2-08 goldens re-derived from design v1.15 under decision 144 (the fee's window membership per
+  design line 1105 "excluding the candidate setup fill", the fee row's closed member shape, `equity_curve.first` per the
+  amendment chain, `run_manifest.cost_schedule_digest` on both goldens); M7 (RULE2-08 part) the record-digest nodes marked
+  `BLOCKED-MISSING-RECORD-BYTES` derived from the committed record checksums; M5 the nine stale contract self-tests that
+  still assert pre-decision behaviour (decisions 136/137/144); M9 the stale prose sentence in the decision-134 provenance
+  record; M18 the "96 vs 100 blocked nodes" count in decision 141 recorded as a discrepancy (the design states no count).
+  ALREADY-KNOWN: the 02-A harness check (K3), the provenance anchor after M5 (K12), the section-16 review (K1). OUTSIDE:
+  a long tail of harness/design/process items (run-manifest child schema, first-mismatch stop, stale design citations,
+  hardcoded ratification chain, per-scenario approximations, anchor history, open-item record, exit-reason vocabulary,
+  reviewer-independence test, dead legacy adapter, root lane files, absolute paths, instrument fence, HIGH_TOUCH, plus the
+  two M2-deferred conventions). DOWNGRADED: three Gemini rows that are design limits L9/L11 or design-specified (signed
+  zero). The two flagships agree on BLOCK; their one attribution dispute (whether the kernel should keep pre-window
+  containers) is settled by design line 1105 in the tables' disfavour, i.e. the golden moves, not the kernel.
+- **Owner packet sent 16:2x** (`C:/tmp/LANE_PROMPTS_20260828/OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md`): Q-A provenance
+  anchor (default a: keep the anchor, let the refusal stand as a visible blocker, write the honest limit); Q-B authorize the
+  02-A harness correction (default a); Q-C derive the 81 record digests on the other 15 goldens (default a); Q-D a gate
+  refusal for a red self-test suite (default a); `later` / `now` for the long tail. No repair outside the fence starts
+  before the word.
+- **Launched:** W341 (Claude Pro, Opus; bundle only; RULE2-08 goldens re-derivation, items 1-8 of its spec; verifier to be
+  DeepSeek V4 Pro since Codex free is weekly-capped and fourth/secondary reset 17:12) at 16:18; W342 (Codex secondary at
+  its 17:12 reset; nine self-tests + provenance prose; the tenth 02-A case untouched pending Q-B) armed on a timed
+  launcher with a clean-worktree precondition. After both: Lead re-seal #15, in-repo copies, one gate run, and a second
+  audit pass only on what changed.
+- Owner word still pending: `accept design P0-14 v1.10`.
