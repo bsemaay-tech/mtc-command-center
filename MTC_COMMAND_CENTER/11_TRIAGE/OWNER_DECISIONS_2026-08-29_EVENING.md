@@ -1109,3 +1109,21 @@ live trading, a build, or a kernel change.
     two existing probe rows.
   - **M5 confirmed:** 18 sealed members remain changed after the recorded base commit (decision 134 lifts one).
 - Flagship 1b (W276B, Codex free) started 06:15 on HEAD `f06e3a2d`.
+
+## Addendum 43 - 2026-09-03 07:3x REAL (Lead record: flagship 1b re-run; the three-verdict round is complete; no new owner decision)
+
+- **W276B (Codex free, flagship 1 re-run on HEAD `f06e3a2d`): REQUEST_CHANGES, 5 findings.** F01 HIGH: the
+  accepting predicate still skips every `BLOCKED-*` expected node (bounded label; the design's "every node"
+  claim at the accepting label is neither met nor amended) - **owner item M8**: make blocked nodes typed
+  acceptance blockers, or amend the design to the bounded claim (Lead default proposal: amend, because the
+  96 blocked nodes are design-unenumerated by construction). F02 LOW: the ordinary self-test blank line
+  (decision 124 said repair; still present) - one-line hygiene commit, next lane. F03 = M6, F04 = M7,
+  F05 = M4 (RULE2-06 evidence). Its own DS102 tally agrees with flagship 2b except W279-F03, which it counts
+  NOT FIXED (= M8). Legacy replay 34/34; tests 308 + 142; gate 28 refusals, honest.
+- **Round complete:** detection 8 findings (no block), flagship 2b BLOCK (19), flagship 1b REQUEST_CHANGES
+  (5). All three agree the remaining work is owner/tables-family decisions (M1, M4, M5, M6, M7, M8, K, review),
+  not lane work. V305C accepted W305B items 5-8; every kernel/harness change of the night is now
+  independently accepted.
+- W308 (cross-draft consistency of the addendum-32 layers): one drift fixed by measurement (the owner's
+  "for example" hedge restored in P0-20), echo lines added; design item: one owner for the policy-version
+  concept (Lead ruling P0-20; morning confirm).
