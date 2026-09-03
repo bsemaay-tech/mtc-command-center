@@ -114,7 +114,9 @@ class PositionManager:
         self.qty_step = float(qty_step)
 
     @staticmethod
-    def _transition_key(transition: EconomicTransition) -> tuple[object, ...]:
+    def _transition_key(
+        transition: EconomicTransition, *, bar: Bar
+    ) -> tuple[object, ...]:
         if not (
             transition.decision_events
             or transition.fill_decisions
@@ -122,12 +124,28 @@ class PositionManager:
             or transition.fee_events
             or transition.funding_events
         ):
+            facts = transition.next_position_facts
             return (
                 transition.semantics_id,
                 transition.instrument_record_digest,
                 transition.cost_schedule_digest,
                 transition.funding_schedule_digest,
-                transition._application_identity,
+                "EMPTY_TRANSITION_V1",
+                bar.timestamp.isoformat(),
+                bar.bar_index,
+                facts.lifecycle_id,
+                facts.side,
+                float(facts.quantity).hex(),
+                (
+                    None
+                    if facts.entry_fill_price is None
+                    else float(facts.entry_fill_price).hex()
+                ),
+                (
+                    None
+                    if facts.active_stop_price is None
+                    else float(facts.active_stop_price).hex()
+                ),
             )
         return (
             transition.semantics_id,
@@ -327,7 +345,7 @@ class PositionManager:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: corrected manager requires 2.0.0"
             )
-        transition_key = self._transition_key(transition)
+        transition_key = self._transition_key(transition, bar=bar)
         if transition_key in state.applied_transition_keys:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: transition already applied"
@@ -415,13 +433,11 @@ class PositionManager:
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: non-fill position mismatch"
                 )
 
-        funding_cash = sum(
-            row.signed_delta
-            for row in transition.cash_events
-            if row.kind is CashEventKind.FUNDING
-        )
+        expected_cumulative = state.cumulative_funding
+        for row in transition.cash_events:
+            if row.kind is CashEventKind.FUNDING:
+                expected_cumulative += row.signed_delta
         if transition.funding_events:
-            expected_cumulative = state.cumulative_funding + funding_cash
             if not _same_binary64(
                 transition.funding_events[-1].cumulative_funding,
                 expected_cumulative,
@@ -445,9 +461,11 @@ class PositionManager:
         for row in transition.cash_events:
             state.realized_equity += row.signed_delta
             state.equity += row.signed_delta
+            if row.kind is CashEventKind.FUNDING:
+                state.cumulative_funding += row.signed_delta
         state.guard_realized_equity += guard_delta
-        state.cumulative_fee += sum(row.fee_amount for row in transition.fee_events)
-        state.cumulative_funding += funding_cash
+        for row in transition.fee_events:
+            state.cumulative_fee += row.fee_amount
         state.decision_events.extend(transition.decision_events)
         state.fill_events.extend(transition.fill_decisions)
         state.cash_events.extend(transition.cash_events)

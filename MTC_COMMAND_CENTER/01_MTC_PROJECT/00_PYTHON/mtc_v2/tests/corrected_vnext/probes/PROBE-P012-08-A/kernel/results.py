@@ -849,7 +849,6 @@ def corrected_surfaces(
     declared_def_ids: Iterable[str] = (),
     observation_start: datetime | None = None,
     observation_end: datetime | None = None,
-    include_cumulative_funding: bool | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Project corrected state into exact version-shaped event/result surfaces."""
 
@@ -965,9 +964,7 @@ def corrected_surfaces(
             },
         }
     )
-    if include_cumulative_funding is None:
-        include_cumulative_funding = bool(state.funding_events)
-    if include_cumulative_funding:
+    if "DEF-P012-08" in declared_defs:
         result_surface["cumulative_funding"] = _json_number(
             state.cumulative_funding
         )

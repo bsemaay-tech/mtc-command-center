@@ -171,11 +171,6 @@ class EconomicTransition:
     cash_events: tuple[CashEvent, ...] = ()
     fee_events: tuple[FeeEvent, ...] = ()
     funding_events: tuple[FundingEvent, ...] = ()
-    _application_identity: object = field(
-        default_factory=object,
-        compare=False,
-        repr=False,
-    )
 
     def __post_init__(self) -> None:
         _require_contiguous_sequences("decision_events", self.decision_events)
