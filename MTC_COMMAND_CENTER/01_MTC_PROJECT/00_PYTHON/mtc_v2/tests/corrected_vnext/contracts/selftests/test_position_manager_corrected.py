@@ -27,6 +27,7 @@ from mtc_v2.core.types import (
     EntryLeg,
     FeeEvent,
     FillDecision,
+    FundingEvent,
     PortfolioState,
     Position,
     PositionFacts,
@@ -163,6 +164,111 @@ def test_w276_f01_runtime_equity_applies_cash_events_in_order() -> None:
 
     assert state.realized_equity == 1.0
     assert state.equity == 1.0
+
+
+def test_w279b_f13_cumulative_funding_applies_rows_in_order() -> None:
+    funding_deltas = (-1e16, 1.0)
+    transition = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="I",
+        instrument_record_digest="0" * 64,
+        funding_schedule_id="F",
+        funding_schedule_digest="1" * 64,
+        next_position_facts=PositionFacts(None, None, 0.0),
+        cash_events=tuple(
+            CashEvent(
+                sequence=sequence,
+                cash_event_id=f"CE-FUND-{sequence}",
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                kind=CashEventKind.FUNDING,
+                signed_delta=delta,
+                settlement_currency="TEST-USD",
+                funding_event_id=f"FUND-{sequence}",
+            )
+            for sequence, delta in enumerate(funding_deltas)
+        ),
+        funding_events=tuple(
+            FundingEvent(
+                sequence=sequence,
+                funding_event_id=f"FUND-{sequence}",
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                position_side="LONG",
+                open_qty=1.0,
+                contract_multiplier=1.0,
+                mark_price=1.0,
+                raw_rate=0.0,
+                positive_rate_payer="LONG",
+                long_cashflow_rate=0.0,
+                notional=1.0,
+                funding_cash_delta=delta,
+                cumulative_funding=0.0 if sequence == 0 else 1.0,
+                schedule_id="F",
+                schedule_digest="1" * 64,
+                source_event_digest=str(sequence),
+                cash_event_id=f"CE-FUND-{sequence}",
+            )
+            for sequence, delta in enumerate(funding_deltas)
+        ),
+    )
+    state = PortfolioState(cumulative_funding=1e16)
+
+    _manager().apply_transition(bar=_bar(), state=state, transition=transition)
+
+    assert state.cumulative_funding == 1.0
+
+
+def test_w279b_f13_cumulative_fee_applies_rows_in_order() -> None:
+    fee_amounts = (1e16, 1.0)
+    transition = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="I",
+        instrument_record_digest="0" * 64,
+        cost_schedule_id="C",
+        cost_schedule_digest="2" * 64,
+        funding_schedule_id="F",
+        funding_schedule_digest="1" * 64,
+        next_position_facts=PositionFacts(None, None, 0.0),
+        cash_events=tuple(
+            CashEvent(
+                sequence=sequence,
+                cash_event_id=f"CE-FEE-{sequence}",
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                kind=CashEventKind.FEE,
+                signed_delta=-amount,
+                settlement_currency="TEST-USD",
+                fill_id=f"F{sequence}",
+            )
+            for sequence, amount in enumerate(fee_amounts)
+        ),
+        fee_events=tuple(
+            FeeEvent(
+                sequence=sequence,
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                fill_id=f"F{sequence}",
+                event_class="ENTRY",
+                liquidity_role="TAKER",
+                schedule_id="C",
+                schedule_digest="2" * 64,
+                rate=0.0,
+                fixed_component=amount,
+                fee_notional=1.0,
+                fee_amount=amount,
+                fee_cash_delta=-amount,
+                settlement_currency="TEST-USD",
+                cash_event_id=f"CE-FEE-{sequence}",
+            )
+            for sequence, amount in enumerate(fee_amounts)
+        ),
+    )
+    state = PortfolioState(cumulative_fee=-1e16)
+
+    _manager().apply_transition(bar=_bar(), state=state, transition=transition)
+
+    assert state.cumulative_fee == 1.0
 
 
 def test_apply_transition_is_atomic_and_cannot_apply_same_cash_twice() -> None:

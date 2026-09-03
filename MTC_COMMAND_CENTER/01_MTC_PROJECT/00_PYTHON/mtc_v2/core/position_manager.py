@@ -415,13 +415,11 @@ class PositionManager:
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: non-fill position mismatch"
                 )
 
-        funding_cash = sum(
-            row.signed_delta
-            for row in transition.cash_events
-            if row.kind is CashEventKind.FUNDING
-        )
+        expected_cumulative = state.cumulative_funding
+        for row in transition.cash_events:
+            if row.kind is CashEventKind.FUNDING:
+                expected_cumulative += row.signed_delta
         if transition.funding_events:
-            expected_cumulative = state.cumulative_funding + funding_cash
             if not _same_binary64(
                 transition.funding_events[-1].cumulative_funding,
                 expected_cumulative,
@@ -445,9 +443,11 @@ class PositionManager:
         for row in transition.cash_events:
             state.realized_equity += row.signed_delta
             state.equity += row.signed_delta
+            if row.kind is CashEventKind.FUNDING:
+                state.cumulative_funding += row.signed_delta
         state.guard_realized_equity += guard_delta
-        state.cumulative_fee += sum(row.fee_amount for row in transition.fee_events)
-        state.cumulative_funding += funding_cash
+        for row in transition.fee_events:
+            state.cumulative_fee += row.fee_amount
         state.decision_events.extend(transition.decision_events)
         state.fill_events.extend(transition.fill_decisions)
         state.cash_events.extend(transition.cash_events)
