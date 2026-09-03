@@ -1763,3 +1763,26 @@ live trading, a build, or a kernel change.
   probe at 18:5x - recorded, not estimated.
 - Owner words pending: `accept design P0-14 v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `Q-E a|b`; `later|now`;
   OpenRouter key limit.
+
+## Addendum 70 - 2026-09-03 19:1x REAL (Lead record: second-pass detection verdict; one inside-fence desynchronization found; Q-E widened; no new owner decision)
+
+- **GM83D (Gemini 3.8, second pass on HEAD `05af785e` / seal #15, 19:00-19:04) = FINDINGS (3).** F01 HIGH: the kernel writes
+  `funding_event_id` inside the funding cash row of RULE2-08-RED; design section 2.1 (71-82) and the every-event identity
+  rule (1224-1228) do not admit that member on `cash_events[]`; the re-derived golden followed the design, so the symmetric
+  comparator refuses `OBSERVED_EXTRA_MEMBER` - attributed to the kernel (the same class as Q-E: a member the kernel emits by
+  decision that the design's closed set never named). F03: that extra member is also what the comparator now meets first on
+  probe 08-A, masking the sealed pointer (the probe still DETECTS; the validator binds `expected_failed_check` only - W315
+  D3 class). **F02 HIGH, inside the fence:** W342 aligned `test_probe_cannot_claim_target_membership_when_base_is_refused` to
+  `/EVENT_SURFACE/cash_events/1/signed_delta` against the catalog as it stood at 17:13; W341B then moved the catalog pointer
+  to index 0 at 17:46; at HEAD the contract suite fails on that line. Lead sequencing miss (two lanes on the same member in
+  one hour); fix = W342B, one assertion re-aligned to the sealed catalog value (Codex, at the 22:13 reset), then the Codex
+  second pass W276D on the resulting HEAD. Gemini's fix-coverage census of its own GM83C rows: F02/F04 FIXED (goldens),
+  F01/F03 OPEN-BY-OWNER-QUESTION, F05-F10 unchanged as recorded.
+- **Owner packet updated:** Q-E now names both members the kernel emits outside the design's closed sets
+  (`run_manifest.cost_schedule_digest`; `cash_events[].funding_event_id` on funding rows); default (a) = one design amendment
+  closing both, then the tables add them; (b) = the kernel stops emitting unnamed members.
+- Routes at 19:1x: all Codex accounts capped (fourth/secondary reset 22:13; free/third Sep 7); Claude Pro still failing the
+  one-word probe; OpenRouter key limit; Gemini fine. The Lead spends the gap on records only (memory, handoff draft rev 0
+  at `%TEMP%\HANDOFF_NEXT_SESSION_2026-09-04_MORNING.md`).
+- Owner words pending: `accept design P0-14 v1.10`; `Q-A a|b`; `Q-B a|b`; `Q-C a|b`; `Q-D a|b`; `Q-E a|b`; `later|now`;
+  OpenRouter key limit.
