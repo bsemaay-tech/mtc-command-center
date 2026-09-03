@@ -2002,7 +2002,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-08-RED.json",
-    "digest": "2157c03fc52daa9183d14e5a1552d6dec58eb4d90024701bd49abb7487f98c4b"
+    "digest": "b4da2832a3218750935f464d4fd91a3a3dd1fdf6d6a46f661f6a3a884d6bba5f"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -2130,7 +2130,7 @@
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
-    "digest": "08a559422eca70cb302f1381f2abbd409dd3c8482fdb58db47cdda5528e4de32"
+    "digest": "1185758e987bca067eaed98b7dd2ecca322837893010b9a04dfcc04ceb0b796c"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -2395,8 +2395,8 @@
   "modification_manifest_digest": "3f939edd8ad56bb48a06de178bb64dda1d1a190407c7e946796e79fec6f1c1ac",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/funding_events/0/funding_cash_delta",
-  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/1/signed_delta",
-  "note": "Design 14:498 - the variant flips the sign for the long positive-rate event; the check must refuse at the cash-delta node because independent expected -0.1 differs from actual +0.1. With the W320 amendment (design v1.15 line 490), the pre-window OPEN fill adds a fee cash event at cash_events[0] (signed_delta -0.1), so the funding cash event moves to cash_events[1]. The variant does not change the fee sign, so cash_events[0] matches (-0.1 = -0.1) and cash_events[1] differs (-0.1 vs +0.1). cash_events precedes funding_events in UTF-8 key order, so the joined cash row's signed_delta at index 1 is the first changed node; /EVENT_SURFACE/funding_events/0/funding_cash_delta is the typed projection the design names. RE-DERIVED AT DESIGN v1.11 (amendment-choice W261): design 15.2:481-493 separates the design-named target node from the comparator's traversal-order first node. RE-DERIVED AT DESIGN v1.15 (W321): comparator index updated for the new fee cash event. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design 14:498 - the variant flips the sign for the long positive-rate event; the check must refuse at the cash-delta node because independent expected -0.1 differs from actual +0.1. Following W341's design-directed window correction, design 22.6:1104 excludes the pre-window OPEN fill, and design 2.1:75-81 keeps its joined fee cash row outside the compared window. The funding cash event is therefore cash_events[0]. The sign-flip variant changes that row's signed_delta from expected -0.1 to actual +0.1. Under design 15.3:558-560,586-609, cash_events precedes funding_events in UTF-8 key order, array index 0 is visited first, and signed_delta is the first differing leaf, so /EVENT_SURFACE/cash_events/0/signed_delta is the comparator's first differing node; /EVENT_SURFACE/funding_events/0/funding_cash_delta remains the design-named typed projection. RE-DERIVED AT DESIGN v1.11 (amendment-choice W261): design 15.2:481-493 separates the design-named target node from the comparator's traversal-order first node. RE-DERIVED AT DESIGN v1.15 (W341B): comparator index updated after W341 removed the pre-window fee cash row. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
   "design_lines": "498"
  }
 ]

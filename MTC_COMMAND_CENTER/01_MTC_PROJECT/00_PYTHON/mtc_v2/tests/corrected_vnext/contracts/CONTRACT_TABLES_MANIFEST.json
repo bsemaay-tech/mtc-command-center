@@ -12,11 +12,11 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.15 (W313 M8 bounded claim dec 141; W317 projection members/shape/L10/M4b dec 142-143; W320 M1b RULE2-08 cost-record binding dec 144; measured by re-seal #14)",
+  "version": "v1.15 (W313 M8 bounded claim dec 141; W317 projection members/shape/L10/M4b dec 142-143; W320 M1b RULE2-08 cost-record binding dec 144; measured by re-seal #14; re-measured unchanged at #15)",
   "sha256": "137180aee4834fa6b87932e289d7ce8cf56d9471c08e7b53982445598347c62f",
   "total_lines": 1664,
   "line_span_used": "whole file",
-  "heading_line_map_measured_at_reseal14": {
+  "heading_line_map_measured_at_reseal15": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
    "1. Authority, claim, and design posture": 24,
    "2. Deep module and seam": 35,
@@ -62,13 +62,13 @@
  "files": [
   {
    "path": "DERIVATIONS.md",
-   "sha256": "8eeacb17be2a1d3d5c6f4cfb741dccde13a864f91ab3152aa04d5a115330dcd2",
-   "bytes": 343198
+   "sha256": "c1ca836757b05b3f57c619fc82d9229fe47baccd219e4420b77c49fb729329a6",
+   "bytes": 356443
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "555c4441b40c3f6fe5e00729f7d4d496c9a5cf78215fcfddd82d6243d2a7bb14",
-   "bytes": 81569
+   "sha256": "726cbc95aaacfc7024522c4c46f28deeb440b8bf56d4087ff446713fa27f03a8",
+   "bytes": 81729
   },
   {
    "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
@@ -147,13 +147,13 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
-   "sha256": "08a559422eca70cb302f1381f2abbd409dd3c8482fdb58db47cdda5528e4de32",
-   "bytes": 10453
+   "sha256": "1185758e987bca067eaed98b7dd2ecca322837893010b9a04dfcc04ceb0b796c",
+   "bytes": 11390
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-RED.json",
-   "sha256": "2157c03fc52daa9183d14e5a1552d6dec58eb4d90024701bd49abb7487f98c4b",
-   "bytes": 22395
+   "sha256": "b4da2832a3218750935f464d4fd91a3a3dd1fdf6d6a46f661f6a3a884d6bba5f",
+   "bytes": 22930
   }
  ],
  "byte_discipline": "Every file above is UTF-8 with no BOM, LF line endings and a required final LF, per P012_FRESH_DESIGN_V1.md:480. Every JSON file parses with duplicate-key rejection and contains no non-finite number token. Re-verified by lane W156 over the 18 JSON files it revised or re-read (17 golden artifacts plus scenario_catalog.json): each file was byte-inspected for BOM, CR and final LF, parsed, checked for bare NaN/Infinity/undefined tokens outside string literals, and checked for duplicate keys by comparing the raw key-token count with the parsed property count (equal in every file).",
@@ -546,12 +546,19 @@
    "report": "W311_SEALED_INPUTS_REPORT.md; W312_TABLES_M6_M4_REPORT.md; W313_DESIGN_M8_REPORT.md; W317_DESIGN_M6_REPORT.md; W319_TABLES_M7B_REPORT.md; W320_DESIGN_M1B_REPORT.md; W321_TABLES_M1_REPORT.md",
    "effect": "sealed inputs (3), catalog rows RULE2-01-RED, RULE2-01-GREEN, RULE2-02-RED, RULE2-02-GREEN, RULE2-03-RED, RULE2-03-GREEN, RULE2-04-RED, RULE2-04-GREEN, RULE2-05-RED, RULE2-05-GREEN, RULE2-06-RED, RULE2-06-EQUAL-PRICE-RED, RULE2-06-GREEN, RULE2-07-RED, RULE2-07-GREEN, RULE2-08-RED, RULE2-08-GREEN, PROBE-P012-01-A, PROBE-P012-01-B, PROBE-P012-02-A, PROBE-P012-04-A, PROBE-P012-05-A, PROBE-P012-05-B, PROBE-P012-06-A, PROBE-P012-07-A, PROBE-P012-08-A, goldens RULE2-06-RED (one node) + RULE2-08-RED/GREEN (design-derived chain / BLOCKED markers), DERIVATIONS insertion-only, design pin v1.15, base re-pin",
    "independently_verified": "V311 ACCEPT x3 (_packets_V311/V311_REPORT.md); V312 ACCEPT (_packets_V312/V312_REPORT.md); V313 ACCEPT (_packets_V313/V313_REPORT.md); V306+V306B ACCEPT x3 kernel (_packets_V306/V306_REPORT.md, V306B_REPORT.md); V314 2-5 ACCEPT + W314B revert (_packets_V314/V314_REPORT.md); V317 ACCEPT (_packets_V317/V317_REPORT.md); V318 ACCEPT (_packets_V318/V318_REPORT.md); V319 ACCEPT (_packets_V319/V319_REPORT.md); V320C round 2 ACCEPT on design v1.15 substantive checks 1-5 (_packets_V320/V320_REPORT.md = round 2, round 1 archived as V320_REPORT_round1.md; author report line-map REQUEST_CHANGES recorded as discrepancy); V321C round 6 ACCEPT after rounds 1-5 (_packets_V321/V321_REPORT.md = round 6; rounds 1-5 archived alongside; F-04 manifest = this re-seal); V315 ACCEPT 6/6 on W315 af97ec8c (_packets_V315/V315_REPORT.md; variant bytes NOT VERIFIED by packet, Lead one-file measurement 9/9 in PER_PROBE_ONE_FILE_CHECK.txt; W315 D3 pre-existing 03-A/07-A manifest-vs-catalog expected_first_changed_node differences RECORDED, outside M4 scope); Lead: repin_base14 (M5) 09:2x, design v1.15 EOL normalization 09:5x"
+  },
+  {
+   "revision": "re-seal #15: fresh-audit repairs inside decision 144 (W341 RULE2-08 goldens; V341)",
+   "lane_spec": "LANE_W341_RULE2_08_GOLDENS_REDERIVE.md (C:/tmp/LANE_PROMPTS_20260828)",
+   "report": "W341_RULE2_08_GOLDENS_REPORT.md; _packets_V341/V341_REPORT.md; W279C_REPORT.md F01-F04/F08; W276C_REPORT.md F01-F02; DETECT_GM83C_BRANCH.md F02/F04",
+   "effect": "goldens RULE2-08-RED/GREEN re-derived (window membership, fee row shape, equity first/last, cost_schedule_digest, record digests), catalog rows RULE2-08-RED, RULE2-08-GREEN, PROBE-P012-08-A, DERIVATIONS insertion-only; design pin v1.15 unchanged; base unchanged",
+   "independently_verified": "V341 = Gemini 3.8 packet verify (_packets_V341/V341_GEMINI_REPORT.md): checks 1-5 and 7 ACCEPT, check 6 REQUEST_CHANGES resolved by W341B's measurement (the corrected side is a selector, no stored cardinality; GMV341B ACCEPT); V341B = Gemini 3.8 (_packets_V341/V341B_GEMINI_REPORT.md) ACCEPT 3/3 on W341B (08-A comparator pointer re-pinned; fee_events pair honest STOP) on W341 (Claude Pro: RULE2-08 goldens re-derived under decision 144 after fresh-audit rows M1/M7 = W276C F01-F02, W279C F01-F04/F08, GM83C F02/F04); the seal #14/#14b VERIFIED_BY list is carried in revision_history[-2]"
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+  "EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
   "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
-  "reason": "Sealed by the Lead at re-seal #14 (2026-09-03T14:20:14+03:00): the one fresh snapshot after owner decisions 135-144 (K kernel fixes, M1/M1b/M7/M7b sealed inputs, M6 projection expectations, M4/M4b re-derivations, M8 design amendment, design v1.15, M5 base re-pin)."
+  "reason": "Sealed by the Lead at re-seal #15 (2026-09-03T17:49:59+03:00): the RULE2-08 goldens re-derived from design v1.15 under decision 144 after the fresh audit round on seal #14 (three families BLOCK; triage rows M1/M7 inside the fence); nothing else moved."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -560,9 +567,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+  "EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
   "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
-  "set_by": "Lead re-seal act #14b 2026-09-03T14:58:44+03:00 (base member; seal unchanged from #14)"
+  "set_by": "Lead re-seal act #15 2026-09-03T17:49:59+03:00"
  },
  "reseal_history": [
   {
@@ -900,6 +907,19 @@
    "files_changed": [],
    "design_pin": "v1.15",
    "note": "M5 (owner decision 135) completion: the manifest seal/seal_state IMPLEMENTATION_BASE_SHA members moved 108ea066 -> 5e8e5794 to equal the anchor (repin_base14.py had re-pinned the anchor only; the gate refused IMPLEMENTATION_BASE_ANCESTRY_MISMATCH at W316B). EXPECTED_SEAL_SHA is computed over files[] path:sha only and is unchanged."
+  },
+  {
+   "at": "2026-09-03T17:49:59+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #15",
+   "old_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+   "new_EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-08-GREEN.json",
+    "golden/corrected_vnext/RULE2-08-RED.json",
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.15"
   }
  ],
  "legacy_event_order_map_pin": {

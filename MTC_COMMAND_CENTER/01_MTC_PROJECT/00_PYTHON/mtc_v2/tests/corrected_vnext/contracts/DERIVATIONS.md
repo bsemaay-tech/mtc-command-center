@@ -4887,3 +4887,183 @@ W321-J (above) states it corrects the `no other golden node changed` sentence of
 verifier measured that sentence at current line 4769 inside W321-E: "No other node in the golden
 was changed." W321-H (lines 4798-4828) contains the Round-2 residue corrections and no such
 sentence. W321-J's disposition is otherwise unchanged.
+
+## W341 - fresh-audit re-derivation of the RULE2-08 goldens under decision 144
+
+Authority and method: owner decisions 137 and 144; design v1.15 at
+C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md, SHA-256
+137180aee4834fa6b87932e289d7ce8cf56d9471c08e7b53982445598347c62f, 1664 lines. This derivation
+uses only that design, the sealed inputs already bound by it, and committed economic-record bytes.
+No kernel was executed and no observed artifact was read. This entry supersedes the W321 claims at
+lines 4657-4664 and 4751-4762 that the pre-window fee row belongs to the compared EVENT_SURFACE.
+
+### W341-A. Window membership and RED equity
+
+Design line 1104 fixes the closed RED observation window as
+[2000-01-01T00:00:00Z, 2000-01-01T00:01:00Z] and excludes the candidate setup fill. Lines 75-81
+require every fee projection and fee cash row to remain a one-to-one joined projection of its fill.
+Lines 492 and 1107 place the OPEN fee before the window and derive the chain 1000 -> 999.9 -> 999.8.
+Lines 1283-1289 define first as realized equity after all earlier cash but before cash at the inclusive
+start, and last as first plus in-window cash deltas.
+
+| RED container | Setup OPEN row | Funding-tick row | Derivation |
+|---|---:|---:|---|
+| fill_events | out | none | The setup fill is excluded by line 1104. |
+| cash_events | fee out | funding in at sequence 0 | The fee stays joined to the excluded fill under lines 75-81; TEST-FUND-1 is at the inclusive start under lines 488 and 1104. |
+| fee_events | fee out | none | The typed fee row follows its joined fee cash/fill event under lines 72 and 75. |
+| funding_events | none | in at sequence 0 | Lines 473-480 and 488 require the eligible funding row at 2000-01-01T00:00:00Z. |
+
+Therefore RED cash_events changes from two rows to one funding row, re-sequenced 1 -> 0;
+fee_events changes A:1 -> A:0; fill_events remains A:0; funding_events remains A:1.
+equity_curve.first changes I:1000 -> F:999.9 because the pre-window fee is
+abs(100 x 1 x 1) x 0.001 + 0 = 0.1 and signed -0.1 (lines 416-425, 492, 1107).
+equity_curve.last remains F:999.8 because 999.9 + (-0.1 funding) = 999.8 (lines 462-469,
+488, 492, 1107, 1283-1289). GREEN keeps all six event containers empty and both equity cells at
+BLOCKED-OPEN-EMBED-05 because lines 494, 806, 1105 and 1107 enumerate no pre-window fill numbers.
+
+### W341-B. Fee-row closed shape
+
+No RULE2-08-RED fee_events[0] survives the window derivation. If a fee row were in scope, its closed
+16-member shape would be: sequence, event_timestamp, lifecycle_id, fill_id, event_class,
+liquidity_role, schedule_id, schedule_digest, rate, fixed_component, fee_notional, fee_amount,
+fee_cash_delta, settlement_currency, cash_event_id (lines 427-433), plus
+kernel_semantics_version (lines 1224-1228). The removed W321 row's fee_event_id, kind, signed_delta,
+notional, rate_used and rounding_rule are not in that set. No member was renamed speculatively; the
+whole row is absent because its generating fill is pre-window.
+
+### W341-C. Record-backed digest derivation
+
+Design lines 135-146 define detached record-file SHA-256 and require record/source digests in the run
+manifest. Lines 969-971 make record-file and source-byte digests mechanical values after record bytes
+exist. Each record and sidecar below is committed at the measured worktree (targeted git status was
+clean). Every recomputed record hash matched its one-line sidecar.
+
+| Record path below core/economic_records | Sidecar and recomputed SHA-256 | Golden use |
+|---|---|---|
+| instruments/SYNTH-INSTRUMENT-RULE2-08-RED-V1.json | 1316ce06307a6fbf01fa7c007146df2bf7525bed385fbbf0045d29129d9f7a71 | RED instrument_record_digest; marker replaced |
+| instruments/SYNTH-INSTRUMENT-RULE2-08-GREEN-V1.json | 20adf2749d255efd3fe281ec3ead2e07df0a36a5ad59718a54d0a1a7c0712b17 | GREEN instrument_record_digest; marker replaced |
+| funding/SYNTH-FUNDING-RULE2-08-V1.json | aa4eaa939a83af1faa768eed82a2cd0216c26fccfb335240d05c5b1f7069d26d | RED funding row schedule_digest and both manifest funding_schedule_digest nodes; markers replaced |
+| costs/SYNTH-COST-RULE2-07-RED-V1.json | 806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b | Confirms RED decision-144 cost binding at lines 490 and 932; proposed run-manifest child stopped below |
+| costs/SYNTH-COST-RULE2-07-GREEN-V1.json | 040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe | Confirms GREEN decision-144 cost binding at lines 490 and 932; proposed run-manifest child stopped below |
+
+Both committed InstrumentRecords carry provenance.source_sha256 =
+0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc on their sole JSON line;
+that record member supplies both instrument_source_document_digest nodes under lines 137-146.
+The shared FundingSchedule asserts source_event_digest
+d348f49ebea85fccfdbc41e90f4d8f2802cfd9fd22bae9e069fa6015a2086cf3. A measured 173-byte minified,
+sorted-key, final-LF candidate hashes to that value, but lines 916-919 and 1049-1054 do not fix JSON
+separator/indentation bytes and no source-event preimage file is committed. Therefore RED
+funding_events/0/source_event_digest remains BLOCKED-MISSING-RECORD-BYTES rather than promoting an
+asserted digest without its unique preimage.
+
+### W341-D. run_manifest cost digest DESIGN-GAP
+
+The proposed run_manifest.cost_schedule_digest remains ABSENT on both goldens. Design line 1347
+names run_manifest only as one of seven RESULT members; section 23.4 does not enumerate a closed
+run_manifest child set or the exact cost child spelling. Lines 490, 932 and 1653 bind the cost record
+id and its SHA as corrected-input record members, while line 146 requires a record-file digest in a
+run manifest at the semantic level. Those facts do not close the JSON child name. The task's explicit
+stop condition therefore applies: before ABSENT, after ABSENT, DESIGN-GAP. No BLOCKED marker was
+inserted because the design names no marker-bearing child node. W276C_REPORT.md lines 58-60 and
+T340_TRIAGE_REPORT.md lines 23 and 55 independently record this missing child schema as M6 outside
+owner decisions 135-144.
+
+### W341-E. Ledgers, provenance and catalog pins
+
+RED blocked_cells changes from six entries to two: funding source_event_digest and metrics remain;
+the record-backed funding schedule, instrument record, instrument source-document and manifest
+funding schedule marker rows are removed. RED authored_value_tokens removes the two pre-window FEE
+rows and moves FUNDING kind from cash_events/1 to cash_events/0. GREEN blocked_cells changes from
+five entries to two: metrics and observation_window.end_timestamp remain. Both provenance blocks now
+identify v1.15/W341 and their current design lines. The GREEN economic values and its two remaining
+markers do not move.
+
+Final golden SHA-256 values over the LF bytes written are:
+
+- RULE2-08-RED.json: b4da2832a3218750935f464d4fd91a3a3dd1fdf6d6a46f661f6a3a884d6bba5f
+- RULE2-08-GREEN.json: 1185758e987bca067eaed98b7dd2ecca322837893010b9a04dfcc04ceb0b796c
+
+Only expected_artifacts.2.0.0.digest in the corresponding RULE2-08 catalog rows is re-pinned to
+those values. No sealed projection pair carries a copied value that follows a changed node: RED
+fee_events is selected dynamically from CONTRACT_TABLES and remains PRESENT as an A node even when
+its cardinality changes from one to zero; the RED equity projection selects last, which stays 999.8;
+GREEN fill_events/final_position stay A:0/N:null. Therefore no projection pair is changed.
+
+## Discrepancies
+
+- W341-D01: The lane prompt and T340 line 18 cite design line 1105 for the RED phrase excluding the
+  candidate setup fill; in the verified 1664-line v1.15 file that phrase is at line 1104. Line 1105
+  is the GREEN row. The text, not the stale locator, was followed.
+- W341-D02: The lane prompt and W279C-F04 assume section 23.4 contains a closed run_manifest child
+  set naming cost_schedule_digest. It does not: line 1347 names only the run_manifest container.
+  W276C-F07 and T340 M6 explicitly confirm the missing child schema. The node is stopped as required.
+- W341-D03: The lane prompt and W279C-F02 call the fee_events member list a section-23.3 closed set.
+  Section 23.3 at lines 1300-1340 closes fill_events and exit_events; the fee list is actually lines
+  427-433 plus the common kernel_semantics_version rule at lines 1224-1228.
+- W341-D04: Each committed RULE2-08 instrument record points source_locator at the mutable design
+  path and carries source_sha256 0ab0accb...e6fc, while the current file at that locator hashes to
+  137180ae...7c62f. The manifest nodes use the immutable record's provenance value, but the historical
+  raw source preimage is not available at the current locator.
+- W341-D05: scenario_catalog.json line 2398, in the out-of-scope PROBE-P012-08-A row, still names
+  /EVENT_SURFACE/cash_events/1/signed_delta. After the design-directed removal of the pre-window fee
+  row, the funding cash row is index 0. The catalog edit fence permits only the two RULE2-08 rows, so
+  this PROBE row was not changed.
+- W341-D06: DERIVATIONS.md is insertion-only, so the superseded W321 A:1 fee derivation remains at
+  lines 4657-4664 and 4751-4762. This W341 entry records the current authoritative re-derivation.
+
+## W341B - projection pair and 08-A pointer following the W341 window correction
+
+Authority: `C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md`, measured 1664 lines and
+SHA-256 `137180aee4834fa6b87932e289d7ce8cf56d9471c08e7b53982445598347c62f`.
+
+### W341B-A. RULE2-08-RED fee-events projection
+
+Design line 1104 says the RED `observation_window` is
+`[2000-01-01T00:00:00Z,2000-01-01T00:01:00Z]`, "excluding the candidate setup fill."
+Line 1107 says that OPEN fill is pre-window and pays the fee. Line 75 requires "every fee or funding
+delta" to be present once in `cash_events[]` and once in its typed projection, joined one-to-one.
+The current golden consequently has `fee_events: []` and only the funding row in `cash_events[0]`
+(`golden/corrected_vnext/RULE2-08-RED.json:33-38`). Its fee-events node is therefore `A:0`.
+
+Design lines 636-639 say that a declared container value is "the container's cardinality as a
+non-negative integer," expanded to a container of that length. That rule is inside the legacy-state
+member list at lines 626-655. The corrected selector has a different exact shape at lines 656-666:
+`selector`, `node_kind`, `source`, and `design_lines`; it admits no `value` member. The committed gate
+reader enforces that exact four-member set and resolves its value from the corrected artifact
+(`C:\WP012BUILD@HEAD:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/verify_bceg.py:3590-3609`).
+Accordingly the catalog's corrected selector already resolves dynamically to `PRESENT(A, A:0)` and
+must remain byte-identical; inserting `"value": 0` would make the selector invalid.
+
+Design line 613 says: "Differs means the two tagged states are unequal" and explicitly counts
+present-versus-absent. Legacy `ABSENT` versus corrected `PRESENT(A, A:0)` therefore remains
+`DIFFERS`; the relation is unchanged.
+
+### W341B-B. PROBE-P012-08-A comparator pointer
+
+Design line 498 says: "flip the sign for the long positive-rate event"; independent expected
+`-0.1` differs from actual `+0.1` at the cash-delta node. After the window correction, the only
+`cash_events` row is the funding row at index 0
+(`golden/corrected_vnext/RULE2-08-RED.json:33-34`). Design lines 558-560 define the comparator result
+as the first unequal node from the recursive walk. Lines 586-609 say to emit the current node first,
+visit object keys in UTF-8 byte order, and visit array indices in ascending order. `cash_events`
+sorts before `funding_events`; the equal row/container identities are visited first, then the first
+unequal leaf is `signed_delta` in array index 0. The derived pointer is therefore
+`/EVENT_SURFACE/cash_events/0/signed_delta`, replacing
+`/EVENT_SURFACE/cash_events/1/signed_delta`. The row note is synchronized because it stated the old
+index; no other probe-row member changes.
+
+## Discrepancies
+
+- W341B-D01: The lane prompt applies the cardinality `value` rule at design lines 636-639 to the
+  corrected side (`LANE_W341B_CATALOG_FOLLOWUP.md:14-19`). In the current design those lines are
+  inside the legacy declaration, while the corrected selector's exact member set at lines 656-666
+  excludes `value`. The committed reader independently enforces that exact set at lines 3590-3609.
+  Repository/design evidence wins under C-2, so the requested explicit corrected-side catalog value
+  is stopped; the selector continues to resolve the current golden's `A:0` dynamically.
+- W341B-D02: The prompt says the current catalog corrected side was sealed as explicit `A:1`
+  (`LANE_W341B_CATALOG_FOLLOWUP.md:14-18`), but the pre-W341B snapshot contains only the selector,
+  `node_kind: A`, source, and design lines, with no cardinality member
+  (`C:\tmp\SNAPSHOTS\20260903_1739_preW341B\scenario_catalog.json:2027-2035`).
+- W341B-D03: The prompt cites design line 543 for divergence
+  (`LANE_W341B_CATALOG_FOLLOWUP.md:20-21`), but line 543 is blank in the measured v1.15 design. The
+  governing present-versus-absent divergence rule is at design line 613.
