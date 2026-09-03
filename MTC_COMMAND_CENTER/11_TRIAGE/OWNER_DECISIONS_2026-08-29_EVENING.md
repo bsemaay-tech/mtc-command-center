@@ -1404,3 +1404,13 @@ live trading, a build, or a kernel change.
   register by one the reader accepts (would contradict the owner's word - not recommended).
 - Wayfinder session update revision 4 (measured hours only) is published regardless; its closeout states the
   register rejection verbatim.
+
+## Addendum 56 - 2026-09-03 13:0x REAL (owner decision 146 = (b))
+
+146. **OWNER, verbatim (13:0x): "b"** - answer to question 146 (addendum 55): leave the dashboard on its last good
+    snapshot until someone else changes the reader. Consequences: the register stands as decided in 145 (six rows
+    `DESIGN_CONVERGED` with the accepted versions); the dashboard keeps showing the 12:45:25 snapshot with its
+    visible `refreshState: ERROR` / `sourceError: "WP-P0-13 has an unsupported status."` until the reader accepts
+    the word; the Lead makes NO change to `C:\LAB\WAYFINDER_DASHBOARD` (the staged W332 lane stays gated on an
+    authorization marker that will not be written; spec retained for whoever repairs the reader). Session updates
+    to the inbox still import normally (that path is unaffected).
