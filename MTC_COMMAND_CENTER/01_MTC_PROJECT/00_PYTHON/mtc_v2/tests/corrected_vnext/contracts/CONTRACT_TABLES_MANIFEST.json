@@ -550,7 +550,7 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
-  "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
+  "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
   "reason": "Sealed by the Lead at re-seal #14 (2026-09-03T14:20:14+03:00): the one fresh snapshot after owner decisions 135-144 (K kernel fixes, M1/M1b/M7/M7b sealed inputs, M6 projection expectations, M4/M4b re-derivations, M8 design amendment, design v1.15, M5 base re-pin)."
  },
  "section_16_review": {
@@ -561,8 +561,8 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at :596-:603). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
-  "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
-  "set_by": "Lead re-seal act #14 2026-09-03T14:20:14+03:00"
+  "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
+  "set_by": "Lead re-seal act #14b 2026-09-03T14:58:44+03:00 (base member; seal unchanged from #14)"
  },
  "reseal_history": [
   {
@@ -891,6 +891,15 @@
     "scenario_catalog.json"
    ],
    "design_pin": "v1.15"
+  },
+  {
+   "at": "2026-09-03T14:58:44+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #14b (base member only; seal value unchanged)",
+   "old_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+   "new_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+   "files_changed": [],
+   "design_pin": "v1.15",
+   "note": "M5 (owner decision 135) completion: the manifest seal/seal_state IMPLEMENTATION_BASE_SHA members moved 108ea066 -> 5e8e5794 to equal the anchor (repin_base14.py had re-pinned the anchor only; the gate refused IMPLEMENTATION_BASE_ANCESTRY_MISMATCH at W316B). EXPECTED_SEAL_SHA is computed over files[] path:sha only and is unchanged."
   }
  ],
  "legacy_event_order_map_pin": {
