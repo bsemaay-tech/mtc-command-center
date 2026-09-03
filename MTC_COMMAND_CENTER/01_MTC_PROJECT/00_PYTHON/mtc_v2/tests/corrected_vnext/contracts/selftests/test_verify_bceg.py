@@ -1643,7 +1643,7 @@ def test_w304_row5_serializes_the_bound_time_stop_reason() -> None:
 
 @pytest.mark.parametrize(
     "scenario_id",
-    ["RULE2-06-RED", "RULE2-06-EQUAL-PRICE-RED", "RULE2-06-GREEN"],
+    ["RULE2-06-RED", "RULE2-06-GREEN"],
 )
 def test_w304_row6_manifest_passes_the_runners_actual_collision_policy(
     scenario_id: str,
@@ -1678,7 +1678,6 @@ def test_observed_path_has_no_legacy_state_seed_or_literal_surface_builder() -> 
         ("RULE2-05-RED", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
         ("RULE2-05-GREEN", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
         ("RULE2-06-RED", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
-        ("RULE2-06-EQUAL-PRICE-RED", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
         ("RULE2-06-GREEN", ["SEMANTICS_VALIDATED", "PROTECTIVE_STOP_EVALUATED", "COLLISION_RESOLVED"]),
         ("RULE2-07-RED", ["SEMANTICS_VALIDATED", "SIZING_COMPUTED", "MIN_NOTIONAL_ADMITTED"]),
         ("RULE2-07-GREEN", ["SEMANTICS_VALIDATED"]),
@@ -1717,7 +1716,6 @@ def test_raw_kernel_decision_trail_contains_each_evaluated_closed_reason(
         "RULE2-05-RED",
         "RULE2-05-GREEN",
         "RULE2-06-RED",
-        "RULE2-06-EQUAL-PRICE-RED",
         "RULE2-06-GREEN",
         "RULE2-07-RED",
         "RULE2-07-GREEN",
@@ -1746,7 +1744,6 @@ def test_section_23_every_emitted_event_carries_kernel_identity(
         ("RULE2-04-RED", {"first": 999.955, "last": 989.9145}),
         ("RULE2-04-GREEN", {"first": 999.955, "last": 999.955}),
         ("RULE2-06-RED", {"first": 999.91, "last": 1014.81325}),
-        ("RULE2-06-EQUAL-PRICE-RED", {"first": 999.91, "last": 1009.8155}),
         ("RULE2-06-GREEN", {"first": 999.91, "last": 979.829}),
     ],
 )
@@ -1769,7 +1766,6 @@ def test_section_23_equity_endpoints_are_window_scoped_realized_equity(
         "RULE2-04-RED",
         "RULE2-04-GREEN",
         "RULE2-06-RED",
-        "RULE2-06-EQUAL-PRICE-RED",
         "RULE2-06-GREEN",
     ],
 )
@@ -1837,7 +1833,6 @@ def test_section_23_fill_and_exit_conditionals_are_closed(
         "RULE2-05-RED",
         "RULE2-05-GREEN",
         "RULE2-06-RED",
-        "RULE2-06-EQUAL-PRICE-RED",
         "RULE2-06-GREEN",
         "RULE2-07-RED",
         "RULE2-07-GREEN",
@@ -2097,16 +2092,57 @@ def test_all_projection_rows_refuse_without_sealed_selector_declarations() -> No
         assert caught.value.pointer == expected_field
 
 
-def test_all_cataloged_corrected_scenarios_are_executable() -> None:
+def test_w305_item6_refuses_missing_sealed_equal_price_target_book() -> None:
+    scenario_id = "RULE2-06-EQUAL-PRICE-RED"
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+
+    with pytest.raises(GateRefusal) as caught:
+        execute_corrected_scenario(MTC_V2_ROOT, row)
+
+    assert caught.value.check_id == "INPUT_DECLARATION_MISSING"
+    assert caught.value.pointer == "/corrected_only/economic_inputs/target_book"
+
+
+def test_w305_item6_config_transports_only_declared_economic_inputs() -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-01-RED")
+    document = load_json_exact(MTC_V2_ROOT / row["input"]["path"])
+
+    config = verify_bceg.corrected_contract_config(document)
+
+    assert "same_bar_collision_policy_id" not in config
+    assert "slippage_model_id" not in config
+
+
+def test_all_declared_corrected_scenarios_execute_or_refuse_missing_input() -> None:
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
 
-    observed = [
-        execute_corrected_scenario(MTC_V2_ROOT, row)
-        for row in catalog
-        if row["role"] in {"RED", "GREEN"}
-    ]
+    observed = []
+    refused = []
+    for row in catalog:
+        if row["role"] not in {"RED", "GREEN"}:
+            continue
+        try:
+            observed.append(execute_corrected_scenario(MTC_V2_ROOT, row))
+        except GateRefusal as exc:
+            refused.append((row["scenario_id"], exc.check_id, exc.pointer))
 
     assert [member["scenario_id"] for member in observed] == [
-        row["scenario_id"] for row in catalog if row["role"] in {"RED", "GREEN"}
+        row["scenario_id"]
+        for row in catalog
+        if row["role"] in {"RED", "GREEN"}
+        and row["scenario_id"] != "RULE2-06-EQUAL-PRICE-RED"
     ]
     assert all(member["semantics_version"] == "2.0.0" for member in observed)
+    assert refused == [
+        (
+            "RULE2-06-EQUAL-PRICE-RED",
+            "INPUT_DECLARATION_MISSING",
+            "/corrected_only/economic_inputs/target_book",
+        )
+    ]

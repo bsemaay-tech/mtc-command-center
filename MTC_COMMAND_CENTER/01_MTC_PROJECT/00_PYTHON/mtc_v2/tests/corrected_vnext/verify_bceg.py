@@ -1162,24 +1162,6 @@ def _bars(document: dict[str, Any]) -> list[Bar]:
     ]
 
 
-def _target_book_overrides(
-    scenario_id: str, document: dict[str, Any], bars: list[Bar]
-) -> dict[str, tuple[str, float, float]]:
-    if not scenario_id.startswith("RULE2-06-"):
-        return {}
-    config = document["legacy_arm"]["config"]
-    entry = bars[1].close
-    risk = entry * float(config["sl_percent"]) / 100.0
-    near = entry + risk * float(config["tp1_r_multiple"])
-    far = entry + risk * float(config["tp2_r_multiple"])
-    if scenario_id == "RULE2-06-EQUAL-PRICE-RED":
-        far = near
-    return {
-        "TP1": ("TARGET-NEAR", near, 0.5),
-        "TP2": ("TARGET-FAR", far, 0.5),
-    }
-
-
 def corrected_contract_config(
     document: Mapping[str, Any], *, validate_price_tick: bool = False
 ) -> dict[str, Any]:
@@ -1194,14 +1176,35 @@ def corrected_contract_config(
     config.update(
         corrected["records"],
         kernel_semantics_version="2.0.0",
-        same_bar_collision_policy_id=economic.get(
-            "same_bar_collision_policy_id", "STOP_FIRST"
-        ),
-        slippage_model_id="BPS_OF_REFERENCE_V1",
     )
+    for member in ("same_bar_collision_policy_id", "slippage_model_id"):
+        if member in economic:
+            config[member] = economic[member]
     if validate_price_tick:
         config["instrument_price_tick"] = legacy["config"]["instrument_price_tick"]
     return config
+
+
+def _declared_target_book(
+    row: Mapping[str, Any], document: Mapping[str, Any]
+) -> Mapping[str, tuple[str, float, float]] | None:
+    """Transport a sealed corrected-only target book without deriving its values."""
+
+    economic = document["corrected_only"]["economic_inputs"]
+    declaration = economic.get("target_book")
+    if row.get("scenario_id") == "RULE2-06-EQUAL-PRICE-RED" and declaration is None:
+        raise GateRefusal(
+            "INPUT_DECLARATION_MISSING",
+            "equal-price corrected-only target book is absent from the sealed input",
+            pointer="/corrected_only/economic_inputs/target_book",
+        )
+    if declaration is not None and type(declaration) is not dict:
+        raise GateRefusal(
+            "INPUT_DECLARATION_INVALID",
+            "target_book must be an object",
+            pointer="/corrected_only/economic_inputs/target_book",
+        )
+    return declaration
 
 
 def apply_contract_entry(
@@ -1298,23 +1301,24 @@ def run_contract_entry_scenario(
 def run_contract_target_scenario(
     runner: Runner,
     bars: list[Bar],
-    target_book: Mapping[str, tuple[str, float, float]],
+    target_book: Mapping[str, tuple[str, float, float]] | None,
 ) -> None:
     runner.run(bars[:-1])
     position = runner.state.position
     if position is None:
         raise ValueError("contract target scenario did not establish a position")
-    position.working_exits = [
-        replace(
-            member,
-            exit_id=target_book[member.exit_id][0],
-            target_price=target_book[member.exit_id][1],
-            qty_fraction=target_book[member.exit_id][2],
-        )
-        if member.exit_id in target_book
-        else member
-        for member in position.working_exits
-    ]
+    if target_book is not None:
+        position.working_exits = [
+            replace(
+                member,
+                exit_id=target_book[member.exit_id][0],
+                target_price=target_book[member.exit_id][1],
+                qty_fraction=target_book[member.exit_id][2],
+            )
+            if member.exit_id in target_book
+            else member
+            for member in position.working_exits
+        ]
     bar = bars[-1]
     update_protective_stop_owner(
         runner.config,
@@ -1387,7 +1391,7 @@ def execute_corrected_scenario(
     )
     bars = _bars(document)
     selector_stop = decode_stop_price_f64(document, scenario_id=scenario_id)
-    target_book = _target_book_overrides(scenario_id, document, bars)
+    target_book = _declared_target_book(row, document)
     runner = Runner(config)
     try:
         if selector_stop is not None:
@@ -1396,7 +1400,7 @@ def execute_corrected_scenario(
                 bars,
                 stop_price=selector_stop,
             )
-        elif target_book:
+        elif "DEF-P012-06" in row["owning_def_ids"]:
             run_contract_target_scenario(runner, bars, target_book)
         else:
             runner.run(bars)
@@ -3582,7 +3586,25 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
         if legacy_blocker is not None and not legacy_blockers:
             legacy_blockers.append(legacy_blocker)
         golden = load_json_exact(root / row["expected_artifacts"]["2.0.0"]["path"])
-        corrected = execute_corrected_scenario(root, row)
+        try:
+            corrected = execute_corrected_scenario(root, row)
+        except GateRefusal as exc:
+            if exc.check_id != "INPUT_DECLARATION_MISSING":
+                raise
+            corrected_blockers.append({"scenario_id": scenario_id, **exc.as_dict()})
+            scenarios.append(
+                {
+                    "scenario_id": scenario_id,
+                    "role": row["role"],
+                    "status": "STOP_INPUT_DECLARATION_MISSING",
+                    "first_changed_node": None,
+                    "legacy_reproduction": legacy_reproduction,
+                    "corrected_expectation": "STOP_COULD_NOT_EVALUATE",
+                    "first_corrected_mismatch": exc.pointer,
+                    "projections": [],
+                }
+            )
+            continue
         observed_artifact_pins.extend(
             pin_observed_artifacts(
                 root, row, legacy_observed, corrected, observed_artifact_blockers
