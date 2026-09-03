@@ -1265,3 +1265,25 @@ live trading, a build, or a kernel change.
     (V320, V321) before seal #14. The reverted probe-driver selftest (W314B) is closed by the same chain.
 - State at this record: V319 ACCEPT (M7b). W317 (design v1.14: members admitted, shape pinned, L10, M4b re-target)
   and W318 (harness consumes the sealed projections) still running.
+
+## Addendum 50 - 2026-09-03 09:2x REAL (Lead record: verify round 2 clean; owner checkpoint prompt; Wayfinder update)
+
+- **Verify round 2 (DeepSeek V4 Pro, read-only): V317 ACCEPT** (design v1.14, 1627 lines, sha `a17e6768...`: zero
+  deletions; section 15.2 admits the two projection members; container pinned member-by-member to the sealed bytes
+  (tighter than W312 prose where the bytes carry `note` / `refusal_code`); L10 honest limit; M4b: PROBE-P012-02-A
+  re-targeted to `CORRECTED_EXPECTATION`, a check a KERNEL-kind variant can fail, no retirement, no invented id).
+  **V318 ACCEPT** (harness `3c372de0` consumes the sealed members by the sealed shape, refuses `EXPECTATION_UNSEALED`
+  only for rows lacking the member, records `legacy_side_source`, no `BASELINE_BYTES` read; discriminators real;
+  replay `SURFACES_EQUAL=34`; selftests 3 failed/310 = the expected pin pair + the reverted probe-driver case).
+  **V319 ACCEPT** (M7b). Engine HEAD `f37f2677`.
+- **Owner checkpoint prompt (09:1x) applied:** its premise "M1b undecided" is superseded by the owner's own 09:1x
+  message (decision 144); the RULE2-08 branch proceeds under that word only: W320 (design v1.15, Claude Pro) launched
+  09:23; W321 (tables) follows V320. No duplicate writers; worktree lanes serial; MAX spent on sequencing and owner
+  summaries only; mechanical production (Wayfinder update, packets) on DeepSeek.
+- **Wayfinder session update** `2026-09-02T1918-claude` revision 1 OPEN_PROVISIONAL written 09:20 (8 packages,
+  hours UNKNOWN pending the evidence rollup) and imported by the dashboard at 09:20
+  (`data/session-revisions/2026-09-02T1918-claude/revision-000001-...`). Revision 2 with evidence-computed lane
+  hours follows; FINAL_CLOSEOUT only at genuine close.
+- Next: V320 -> W321 -> V321 -> W315 (Codex, probe variants on the post-K core + M4/M4b/08-A values) -> Lead
+  repin_base14 + reseal14 -> W300C -> W316 -> fresh audits on that exact snapshot. Section 16 and M2 remain
+  unscheduled until that round is clean.
