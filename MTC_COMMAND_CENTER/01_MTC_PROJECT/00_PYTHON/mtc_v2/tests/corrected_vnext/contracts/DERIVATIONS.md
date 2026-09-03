@@ -4004,3 +4004,886 @@ W299's variants (re-seal #12) had been patched onto the old variant trees, so fo
 | PROBE-P012-06-A | `39c8af08f17c7bf3f8d7c689b8ce0db7d3d1ee8504aa5fedf5d401c0149e5380` | `2fe755a71836585361592e9bd3b913f843ccb3a9c0ba523a44e1d65561048869` |
 | PROBE-P012-07-A | `57fee87191150d2afb983017339e1cec1a63faed80694155af803313afd40f37` | `b65811b6d77e376d34ffad34b7210cf6a0f983ee3bdf9c5efd0c2e88c4ca2e9c` |
 | PROBE-P012-08-A | `96aaa32930b1bfff487fadb7cdea34e14408e62fe939787c0c5e162ddb35c47d` | `98e73b51a0ee3ac05a285a8a0710f73ea0a9e621171317b4806cf0eb335c04c1` |
+
+## W311 - sealed-input changes M1 (owner decision 137) and M7 (owner decision 139) (2026-09-03, tables family, insertion-only)
+
+Authority: `C:\WLDOCS\MTC_COMMAND_CENTER\11_TRIAGE\OWNER_DECISIONS_2026-08-29_EVENING.md:1150` (addendum 45),
+items `137` (M1) and `139` (M7). Owner's fence, verbatim: "Keep every change strictly limited to those items."
+No golden, probe, design, manifest-seal or anchor byte was touched; the Lead re-seals.
+
+### M7 (decision 139) - `RULE2-06-EQUAL-PRICE-RED` receives its sealed corrected-only `target_book`
+
+Changed input: `tests/corrected_vnext/contracts/inputs/RULE2-06-EQUAL-PRICE-RED.json`.
+
+| | sha256 | bytes |
+|---|---|---|
+| before | `5972c66c0fbb5e357f548daaf5fdd2ed0dd42fd948229235260bdbe6c2dee978` | 1833 |
+| after | `0c65c82b911f3a510d074df00bc81335bb3397697e96f422f5c05267e4ea085c` | 1908 |
+
+Exact JSON delta - one added member at `/corrected_only/economic_inputs/target_book`; no other member of the
+document was added, removed or changed:
+
+```json
+{"TP1":["TARGET-NEAR",105,0.5],"TP2":["TARGET-FAR",105,0.5]}
+```
+
+Design lines the values are quoted from (no number is invented):
+
+- `C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md:357` (section 12): "`RULE2-06-RED` is a synthetic long
+  ... stop `90`, target `TARGET-NEAR` at `105` with target fraction `0.5`, target `TARGET-FAR` at `110` with
+  target fraction `0.5` ... `RULE2-06-EQUAL-PRICE-RED` ... uses the exact `RULE2-06-RED` inputs except that
+  `TARGET-FAR` is also at `105`."
+- `C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md:946` (section 22.5, the equal-price scenario row):
+  "Corrected book remains the section-12 stated `TARGET-FAR=105`, `TARGET-NEAR=105`, fractions `.5/.5`, policy
+  `TARGET_FIRST`".
+- `C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md:944` (section 22.5, the `RULE2-06-RED` row) supplies the
+  alias direction: "corrected aliases TP1/TP2 mechanically to the stated `TARGET-NEAR`/`TARGET-FAR` ids and uses
+  stated fractions `.5/.5`". `TP1` therefore carries `TARGET-NEAR` and `TP2` carries `TARGET-FAR`.
+
+Arithmetic (design-stated; restated only to show that the equal-price override is the sole difference from
+`RULE2-06-RED`): the sealed config carries entry-bar close `100`, `sl_percent=10`, `tp1_r_multiple=0.5` and
+`tp2_r_multiple=1` (`tests/corrected_vnext/contracts/inputs/RULE2-06-EQUAL-PRICE-RED.json:1`). Risk per unit is
+`100 * 10 / 100 = 10`, so legacy Multi-TP builds `TP1 = 100 + 10 * 0.5 = 105` and `TP2 = 100 + 10 * 1 = 110`
+(`MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py:264-286` at branch HEAD `ac2d2ca9`). The
+equal-price scenario differs only in that design `:357` places `TARGET-FAR` at `105` as well, so the sealed book
+carries `105` for both ids. Fractions `0.5`/`0.5` applied to reference quantity `2` give quantity `1` per target,
+as design `:357` states.
+
+Transport shape (`MECHANICAL`, not an economic value): the gate reads the member as an object keyed by the legacy
+working-exit id, whose value supplies `(exit_id, target_price, qty_fraction)`
+(`MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/verify_bceg.py:1207-1226,1329-1340` at
+branch HEAD `ac2d2ca9`). Bytes are canonical per design `:744-746`: sorted keys, `(',',':')` separators, UTF-8, LF
+line endings, one final LF - byte-identical round-trip verified against the pre-change file.
+
+### M1 (decision 137) - NOT PERFORMED: `DESIGN-GAP`, no cost record is named and none exists
+
+The lane instruction is to bind the cost record "the design's scenario row names" and, "if the design names none,
+STOP and report DESIGN-GAP (do not invent a record)". The design names none, and refuses one:
+
+- `C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md:790` (section 22.1): "both cost members are JSON `null`
+  only for RULE2-08, where section 14 says no cost schedule is consumed".
+- `C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md:443` (section 14): "Neither vector contains a fill intent,
+  so section 3's fill-only slippage sequence is not entered and no slippage value or `CostSchedule` is consumed."
+- `C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md:960` and `:961` (section 22.6, both RULE2-08 rows): "C is
+  absent/`NOT_CONSUMED`."
+
+No candidate exists either: branch `feature/wp-p0-12-corrected-vnext-20260831` at HEAD `ac2d2ca9` carries sixteen
+sealed cost records under
+`MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/`
+(`HYPERLIQUID-BTC-PERP-BASE-TIER0-V1`, `SYNTH-COST-RULE2-01-RED/GREEN-V1` through `SYNTH-COST-RULE2-07-RED/GREEN-V1`,
+and `SYNTH-COST-RULE2-06-EQUAL-PRICE-RED-V1`); there is no `SYNTH-COST-RULE2-08-*` record. The listing was taken
+read-only with `git -C C:\WP012BUILD ls-tree -r --name-only HEAD`; nothing under `C:\WP012BUILD` was written.
+
+`RULE2-08-RED.json` and `RULE2-08-GREEN.json` are therefore unchanged
+(`5136b0ce11f9e7b949e8b5105ce128df65ffcaf3ba0399f27141978ef341b0c1` and
+`3cb3cf0db3ab22134449f07c1c90e738a643736e16f97860889d80a08ebb900d`, identical before and after this lane), their
+catalog rows are untouched, and the pre-existing conflict recorded above at `DERIVATIONS.md:1735-1741` (V15-D01)
+stands unresolved. Closing M1 requires an owner-gated design amendment that either names a RULE2-08 cost record or
+withdraws the pre-window fill premise.
+
+### Catalog rows changed by this section
+
+One row only: `scenario_catalog.json` index `11`, `scenario_id="RULE2-06-EQUAL-PRICE-RED"`, member `/input/digest`
+re-pinned from `5972c66c...` to `0c65c82b...`. That row has no `input.bytes` member. No other catalog member
+changed. `scenario_catalog.json` sha256 before `bdfb42e7058df08cd57ea9c57434784e452676be16ea61be7324f2f866148742`,
+after `a9ba2a89a1de83b4ba9687b3f9708ee8ca8fc1b15f36c737bd115586cdf051f6` (49676 bytes both).
+
+## W312 - M6 sealed RULE-2 projections and M4 probe/collision re-derivation (owner decisions 138 and 140) (2026-09-03, tables family, insertion-only)
+
+Authority: ledger addendum 45, owner decisions `138` (M6) and `140` (M4). Lane spec
+`C:\tmp\LANE_PROMPTS_20260828\LANE_W312_TABLES_M6_M4.md`. Design file read as it stands:
+`C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md`, whose own title line `:1` says **v1.13**
+(the lane spec says v1.12 - recorded as a discrepancy in the lane report). Every design citation
+below is a measured line number of that v1.13 file, not a carried-forward v1.8 number.
+
+No kernel was executed, no observed artifact was read, and no design, input, manifest-seal, anchor
+or probe-manifest byte was written. The only bundle file changed by this lane is
+`scenario_catalog.json` (fifteen rows gain one declared-projection member each) plus this
+insertion-only worksheet entry.
+
+### W312-A. What the harness names and what the design defines
+
+`build_projection_results` at branch `feature/wp-p0-12-corrected-vnext-20260831` HEAD `8b9e2964`
+(`MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/verify_bceg.py:3424-3449`,
+read read-only through `git show`) refuses `EXPECTATION_UNSEALED` with pointer
+`/rule2_divergent_projection` for a `RED` row and `/rule2_green_projection` for a `GREEN` row
+(`:3441-3443`, `:3445-3449`). Those two member names on the catalog row are therefore the members
+the harness reads. The pipeline records the typed refusal and stops the projection claim at
+`:3682-3691`; the probe path reaches the same refusal through `_green_projection_differences`
+(`:2992-3009`) from the `RULE2_GREEN_CROSS_VERSION_EXPECTATION` branch at `:3083-3096`.
+
+The design defines the member's content, not the harness: design `:175` `rule2_divergent_projection[]`
+is "exact nodes that must differ", `:178` `rule2_green_projection[]` is "exact behavioral nodes that
+must agree", and `:543` says each declared member "is a pair of version-local node selectors" whose
+sides resolve to `PRESENT(node_kind, canonical_value)`, `ABSENT` or `REFUSAL(refusal_code)`, with
+present-versus-absent, present-versus-refusal, absent-versus-refusal, distinct refusal codes and
+unequal present values or kinds all counting as divergence. `:555` requires every RED scenario to
+differ at every declared node and `:556` requires the named GREEN projection to be equal.
+
+Sealed member shape, one object per declared node:
+
+```text
+selector            the node the design names (an RFC 6901 pointer, or the design's own
+                    non-pointer projection name where the design names a consumed value)
+legacy              the 1.0.0 tagged state: tag PRESENT/ABSENT/REFUSAL, node_kind, value,
+                    source DESIGN_DERIVED, design_lines, and where one exists an advisory
+                    baseline_selector_advisory path
+corrected           the 2.0.0 side: a version-local selector into the sealed CONTRACT_TABLES
+                    artifact plus its node_kind, or a declared REFUSAL where the design says
+                    the corrected run consumes nothing
+expected_relation   DIFFERS for a divergent member, EQUAL for a GREEN member
+derivation          the W312-M6 entry id in this worksheet
+```
+
+`node_kind` uses the design `:509-541` enumerator letters (`I`, `F`, `S`, `B`, `N`, `A`, `O`) and the
+`value` member carries the raw value, not a hand-encoded canonical string, so the gate applies its
+own `canonical_node` (`verify_bceg.py:514-530`) to it. The corrected side is a selector rather than a
+pinned value because design `:555-556` name `CONTRACT_TABLES` itself as the right-hand producer: the
+sealed golden is the expectation, and duplicating its bytes here would create a second seal that can
+drift. Every corrected selector below was resolved against its golden this session and its resolved
+canonical node is quoted.
+
+### W312-B. Per-value derivations, fifteen rows, fifty-five sealed members
+
+Rows sealed: nine RED (`RULE2-01-RED`, `-02-RED`, `-03-RED`, `-04-RED`, `-05-RED`, `-06-RED`,
+`RULE2-06-EQUAL-PRICE-RED`, `-07-RED`) - eight of the nine; and six GREEN (`RULE2-01-GREEN` through
+`RULE2-07-GREEN`) - six of the eight. `RULE2-08-RED` and `RULE2-08-GREEN` are **STOPPED, nothing
+derived, no byte written**, per the lane's M1-pending instruction: "waits for owner M1b".
+
+#### RULE2-01-RED - `rule2_divergent_projection` (3 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/fill_events/0/quantity` | PRESENT(I:10) | PRESENT(`I:5`) | DIFFERS |
+| 2 | `/RESULT_SURFACE/final_position/quantity` | PRESENT(I:10) | PRESENT(`I:5`) | DIFFERS |
+| 3 | `/RESULT_SURFACE/order_notional` | PRESENT(I:2000) | PRESENT(`I:1000`) | DIFFERS |
+
+- **W312-M6-01R-1** - legacy risk_raw_qty = 100 / (|100-90|) = 10 ; corrected = 100 / (10 * cm 2) = 5 (design :223 states legacy 10 versus corrected 5)
+- **W312-M6-01R-2** - the entry fill quantity is the position quantity after entry: legacy 10, corrected 5 (design :223)
+- **W312-M6-01R-3** - legacy order_notional = 10 * 100 * 2 = 2000 ; corrected = 5 * 100 * 2 = 1000 (design :223 order-notional projection)
+
+#### RULE2-01-GREEN - `rule2_green_projection` (3 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/fill_events/0/quantity` | PRESENT(I:1) | PRESENT(`I:1`) | EQUAL |
+| 2 | `/RESULT_SURFACE/final_position/quantity` | PRESENT(I:1) | PRESENT(`I:1`) | EQUAL |
+| 3 | `/RESULT_SURFACE/order_notional` | PRESENT(I:100) | PRESENT(`I:100`) | EQUAL |
+
+- **W312-M6-01G-1** - non-finite stop -> fallback on both versions: fallback_notional = 1000 * 10/100 = 100 ; raw_qty = 100 / (100 * 1) = 1 on both (design :223 'both final quantities are 1')
+- **W312-M6-01G-2** - same fallback quantity 1 carried to the position (design :223)
+- **W312-M6-01G-3** - order_notional = 1 * 100 * 1 = 100 on both versions (design :223)
+
+#### RULE2-02-RED - `rule2_divergent_projection` (3 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/RESULT_SURFACE/refusals/0/code` | ABSENT | PRESENT(`S:20:UkVGVVNFRF9NSU5fTk9USU9OQUw=`) | DIFFERS |
+| 2 | `/EVENT_SURFACE/fill_events` | PRESENT(A:1) | PRESENT(`A:0`) | DIFFERS |
+| 3 | `/EVENT_SURFACE/decision_events/2/decision` | ABSENT | PRESENT(`S:20:UkVGVVNFRF9NSU5fTk9USU9OQUw=`) | DIFFERS |
+
+- **W312-M6-02R-1** - 1.0.0 has no typed refusal object at all; 2.0.0 refuses because 100 >= 101 is false (design :241, :250)
+- **W312-M6-02R-2** - legacy rejects only when 100 < 0, which is false, so legacy opens and fills once (A:1); corrected opens no position, so fill_events is A:0 (design :241, :250)
+- **W312-M6-02R-3** - the typed refusal decision row exists only at 2.0.0; index 2 is the third and last decision row of this artifact after Reading Y removed the padded fourth row (design :250)
+
+#### RULE2-02-GREEN - `rule2_green_projection` (3 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/RESULT_SURFACE/admitted` | PRESENT(B:1) | PRESENT(`B:1`) | EQUAL |
+| 2 | `/EVENT_SURFACE/fill_events/0/quantity` | PRESENT(I:1) | PRESENT(`I:1`) | EQUAL |
+| 3 | `/RESULT_SURFACE/final_position/quantity` | PRESENT(I:1) | PRESENT(`I:1`) | EQUAL |
+
+- **W312-M6-02G-1** - order_notional = 1 * 100 * 1 = 100 ; corrected admits iff 100 >= 100 (true) and legacy rejects iff 100 < 100 (false), so both admit (design :241, :252; the positive boolean is design :1226)
+- **W312-M6-02G-2** - both versions size and fill quantity 1 (design :241)
+- **W312-M6-02G-3** - both versions carry position quantity 1 (design :241)
+
+#### RULE2-03-RED - `rule2_divergent_projection` (3 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/RESULT_SURFACE/refusals/0/code` | ABSENT | PRESENT(`S:41:UkVGVVNFRF9JTlNUUlVNRU5UX09WRVJSSURFX09OX0VWQUxVQVRJT04=`) | DIFFERS |
+| 2 | `/EVENT_SURFACE/decision_events/1/decision` | ABSENT | PRESENT(`S:41:UkVGVVNFRF9JTlNUUlVNRU5UX09WRVJSSURFX09OX0VWQUxVQVRJT04=`) | DIFFERS |
+| 3 | `consumed price_tick` | PRESENT(F:0x1.0000000000000p-2) | REFUSAL(REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION) | DIFFERS |
+
+- **W312-M6-03R-1** - legacy accepts the runtime override and raises no refusal; corrected refuses before the first bar (design :259, :268)
+- **W312-M6-03R-2** - the pre-evaluation refusal decision row exists only at 2.0.0 (design :259, :268)
+- **W312-M6-03R-3** - legacy consumes runtime price_tick 0.25; corrected consumes no tick because it refuses before evaluation, which design :543 tags REFUSAL (design :259)
+
+#### RULE2-03-GREEN - `rule2_green_projection` (3 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/decision_events/1/runtime_value` | PRESENT(F:0x1.0000000000000p-1) | PRESENT(`F:0x1.0000000000000p-1`) | EQUAL |
+| 2 | `/RESULT_SURFACE/refusals` | PRESENT(A:0) | PRESENT(`A:0`) | EQUAL |
+| 3 | `/RESULT_SURFACE/final_position` | PRESENT(N) | PRESENT(`N`) | EQUAL |
+
+- **W312-M6-03G-1** - price_tick 0.5 is supplied on both sides and every runtime field equals the frozen record, so the consumed tick is 0.5 on both (design :259)
+- **W312-M6-03G-2** - no override mismatch, so neither version raises a refusal (design :259, :268)
+- **W312-M6-03G-3** - the vector states no entry or exit action, so no position exists on either version (design :259)
+
+#### RULE2-04-RED - `rule2_divergent_projection` (3 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/fill_events/0/reference_price` | PRESENT(I:92) | PRESENT(`I:90`) | DIFFERS |
+| 2 | `/EVENT_SURFACE/fill_events/0/final_fill_price` | PRESENT(I:92) | PRESENT(`I:90`) | DIFFERS |
+| 3 | `/EVENT_SURFACE/fill_events/0/fill_trigger` | ABSENT | PRESENT(`S:8:R0FQX09QRU4=`) | DIFFERS |
+
+- **W312-M6-04R-1** - legacy close-only triggers and fills from close 92; corrected gap-aware takes open 90 as the reference because open 90 <= stop 100 (design :300)
+- **W312-M6-04R-2** - slippage_bps 0 so impact = |90| * 0 / 10000 = 0 ; sell -> 90 - 0 = 90 ; floor_to_price_tick(90, 1) = 90 versus legacy 92 (design :300, :302, :304)
+- **W312-M6-04R-3** - fill_trigger is a 2.0.0-only node recording GAP_OPEN (design :302)
+
+#### RULE2-04-GREEN - `rule2_green_projection` (3 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/exit_events` | PRESENT(A:0) | PRESENT(`A:0`) | EQUAL |
+| 2 | `/EVENT_SURFACE/fill_events` | PRESENT(A:0) | PRESENT(`A:0`) | EQUAL |
+| 3 | `/RESULT_SURFACE/final_position/quantity` | PRESENT(I:1) | PRESENT(`I:1`) | EQUAL |
+
+- **W312-M6-04G-1** - corrected: open 105 <= stop 100 false and low 101 <= stop 100 false -> no stop; legacy: close 104 > stop 100 -> no hit; no exit on either version (design :300)
+- **W312-M6-04G-2** - no exit means no fill on either version (design :300, :302)
+- **W312-M6-04G-3** - the existing long of quantity 1 survives the bar on both versions (design :300)
+
+#### RULE2-05-RED - `rule2_divergent_projection` (4 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/fill_events/0/reference_price` | ABSENT | PRESENT(`I:100`) | DIFFERS |
+| 2 | `/EVENT_SURFACE/fill_events/0/slippage_impact` | ABSENT | PRESENT(`I:1`) | DIFFERS |
+| 3 | `/EVENT_SURFACE/fill_events/0/final_fill_price` | PRESENT(I:100) | PRESENT(`I:101`) | DIFFERS |
+| 4 | `/EVENT_SURFACE/fill_events/0/slippage_application_count` | ABSENT | PRESENT(`I:1`) | DIFFERS |
+
+- **W312-M6-05R-1** - 1.0.0 records no pre-slippage reference; 2.0.0 records reference 100 (design :328, :330)
+- **W312-M6-05R-2** - impact = |100| * 100 / 10000 = 1, a 2.0.0-only node (design :328, :330)
+- **W312-M6-05R-3** - legacy passes the reference through unadjusted at 100; corrected buy -> 100 + 1 = 101 ; ceil_to_price_tick(101, 0.01) = 101 (design :328, :332)
+- **W312-M6-05R-4** - slippage is applied exactly once, a 2.0.0-only count node (design :328, :330)
+
+#### RULE2-05-GREEN - `rule2_green_projection` (1 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/fill_events/0/final_fill_price` | PRESENT(I:100) | PRESENT(`I:100`) | EQUAL |
+
+- **W312-M6-05G-1** - impact = |100| * 0 / 10000 = 0 ; buy -> 100 + 0 = 100 ; ceil_to_price_tick(100, 0.01) = 100, equal to the legacy pass-through 100 (design :328)
+
+#### RULE2-06-RED - `rule2_divergent_projection` (6 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/fill_events/0/exit_id` | PRESENT(S, value not pinned) | PRESENT(`S:11:VEFSR0VULU5FQVI=`) | DIFFERS |
+| 2 | `/EVENT_SURFACE/fill_events` | PRESENT(A:1) | PRESENT(`A:2`) | DIFFERS |
+| 3 | `/EVENT_SURFACE/fill_events/0/final_fill_price` | PRESENT(I:90) | PRESENT(`I:105`) | DIFFERS |
+| 4 | `/EVENT_SURFACE/fill_events/1/final_fill_price` | ABSENT | PRESENT(`I:110`) | DIFFERS |
+| 5 | `/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids` | ABSENT | PRESENT(`A:2`) | DIFFERS |
+| 6 | `/RESULT_SURFACE/trades/0/gross_realized_pnl` | PRESENT(I:-20) | PRESENT(`I:15`) | DIFFERS |
+
+- **W312-M6-06R-1** - legacy's implicit stop-first path exits at the stop; corrected TARGET_FIRST orders long targets by ascending price, 105 < 110, so the first corrected fill is TARGET-NEAR (design :349, :357, :361)
+- **W312-M6-06R-2** - legacy exits the full quantity 2 in one fill (A:1); corrected exits 0.5 * 2 = 1 at TARGET-NEAR then 0.5 * 2 = 1 at TARGET-FAR, leaving remainder 2 - 1 - 1 = 0, so A:2 (design :349, :357)
+- **W312-M6-06R-3** - legacy stop reference 90 (low 85 <= 90); corrected first target reference 105, floor_to_price_tick(105, 1) = 105 (design :357)
+- **W312-M6-06R-4** - legacy has no second fill; corrected second target fills at floor_to_price_tick(110, 1) = 110 (design :357)
+- **W312-M6-06R-5** - 1.0.0 has no policy id and no collision receipt; 2.0.0 emits the ordered chosen ids as a 2-member array (design :340, :349, :351, :1101)
+- **W312-M6-06R-6** - legacy gross = (90 - 100) * 2 * 1 = -20 ; corrected gross = (105-100)*1*1 + (110-100)*1*1 = 5 + 10 = 15 (design :357, :359)
+
+#### RULE2-06-EQUAL-PRICE-RED - `rule2_divergent_projection` (6 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/fill_events/0/exit_id` | PRESENT(S, value not pinned) | PRESENT(`S:10:VEFSR0VULUZBUg==`) | DIFFERS |
+| 2 | `/EVENT_SURFACE/fill_events/1/exit_id` | ABSENT | PRESENT(`S:11:VEFSR0VULU5FQVI=`) | DIFFERS |
+| 3 | `/EVENT_SURFACE/fill_events` | PRESENT(A:1) | PRESENT(`A:2`) | DIFFERS |
+| 4 | `/EVENT_SURFACE/fill_events/0/final_fill_price` | PRESENT(I:90) | PRESENT(`I:105`) | DIFFERS |
+| 5 | `/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids` | ABSENT | PRESENT(`A:2`) | DIFFERS |
+| 6 | `/RESULT_SURFACE/trades/0/gross_realized_pnl` | PRESENT(I:-20) | PRESENT(`I:10`) | DIFFERS |
+
+- **W312-M6-06ER-1** - equal prices 105/105 force the exit_id UTF-8 tie-break: after the common prefix TARGET-, 0x46 (F) < 0x4e (N), so TARGET-FAR fills first; legacy still exits at the stop (design :349, :357)
+- **W312-M6-06ER-2** - legacy has no second fill; corrected second equal-price target is TARGET-NEAR (design :349, :357)
+- **W312-M6-06ER-3** - legacy one fill of quantity 2; corrected 0.5 * 2 = 1 twice, remainder 0, so two fills (design :357)
+- **W312-M6-06ER-4** - legacy stop reference 90; corrected first equal-price target reference 105 (design :357)
+- **W312-M6-06ER-5** - 1.0.0 has no collision receipt; 2.0.0 emits [TARGET-FAR, TARGET-NEAR] (design :349, :351, :1101)
+- **W312-M6-06ER-6** - legacy gross = (90 - 100) * 2 * 1 = -20 ; corrected gross = (105-100)*1*1 twice = 10 (design :357, :359)
+
+#### RULE2-06-GREEN - `rule2_green_projection` (3 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/fill_events/0/final_fill_price` | PRESENT(I:90) | PRESENT(`I:90`) | EQUAL |
+| 2 | `/EVENT_SURFACE/fill_events/0/quantity` | PRESENT(I:2) | PRESENT(`I:2`) | EQUAL |
+| 3 | `/RESULT_SURFACE/trades/0/gross_realized_pnl` | PRESENT(I:-20) | PRESENT(`I:-20`) | EQUAL |
+
+- **W312-M6-06G-1** - targets do not touch (high 104 < 105 and < 110); the stop touches (low 85 <= 90), so all three policies select the sole class; stop reference = 90 and floor_to_price_tick(90, 1) = 90 on both versions (design :353, :357)
+- **W312-M6-06G-2** - only the stop touches, so both versions fill the full reference quantity 2 (design :357)
+- **W312-M6-06G-3** - gross = (90 - 100) * 2 * 1 = -20 on both versions (design :357, :359)
+
+#### RULE2-07-RED - `rule2_divergent_projection` (7 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/EVENT_SURFACE/fee_events` | ABSENT | PRESENT(`A:2`) | DIFFERS |
+| 2 | `/RESULT_SURFACE/trades/0/net_trade_pnl` | ABSENT | PRESENT(`F:-0x1.999999999999ap-3`) | DIFFERS |
+| 3 | `/RESULT_SURFACE/guards/guard_pnl_basis` | ABSENT | PRESENT(`S:16:R1JPU1MtTUlOVVMtRkVFUw==`) | DIFFERS |
+| 4 | `/RESULT_SURFACE/guards/last_closed_guard_pnl` | ABSENT | PRESENT(`F:-0x1.999999999999ap-3`) | DIFFERS |
+| 5 | `/RESULT_SURFACE/guards/consecutive_loss_count` | PRESENT(I:0) | PRESENT(`I:1`) | DIFFERS |
+| 6 | `/RESULT_SURFACE/guards/guard_blocked_raw` | PRESENT(B:0) | PRESENT(`B:1`) | DIFFERS |
+| 7 | `/RESULT_SURFACE/equity_curve/last` | PRESENT(I:1000) | PRESENT(`F:0x1.f3e6666666666p+9`) | DIFFERS |
+
+- **W312-M6-07R-1** - 1.0.0 has no fee model and no fee_events container (design :398, :400, :509); 2.0.0 emits one fee row per taker fill, so A:2
+- **W312-M6-07R-2** - 1.0.0 has no net field; corrected net = 0 + (-0.1) + (-0.1) = -0.2 (design :398, :400)
+- **W312-M6-07R-3** - the guard basis node exists only at 2.0.0 (design :394, :398, :1245)
+- **W312-M6-07R-4** - the closed-guard PnL node exists only at 2.0.0; its value is the lifecycle net -0.2 (design :394, :398)
+- **W312-M6-07R-5** - legacy stores gross last_realized_pnl 0, so (0 < 0) is false and the count resets to 0; corrected stores -0.2, so (-0.2 < 0) is true and the count is 1 (design :398)
+- **W312-M6-07R-6** - legacy predicate (0 < 1) is true so nothing is blocked; corrected predicate (1 < 1) is false so guard_blocked_raw is true (design :398)
+- **W312-M6-07R-7** - legacy equity stays 1000 with no fee model; corrected equity = 1000 - 0.1 - 0.1 = 999.8, which is also a float node against a legacy integer node (design :398, :400)
+
+#### RULE2-07-GREEN - `rule2_green_projection` (4 members)
+
+| # | selector | `1.0.0` derived state | `2.0.0` resolved node | relation |
+|---|---|---|---|---|
+| 1 | `/RESULT_SURFACE/equity_curve/last` | PRESENT(I:1000) | PRESENT(`I:1000`) | EQUAL |
+| 2 | `/RESULT_SURFACE/guards/consecutive_loss_count` | PRESENT(I:0) | PRESENT(`I:0`) | EQUAL |
+| 3 | `/EVENT_SURFACE/fill_events` | PRESENT(A:0) | PRESENT(`A:0`) | EQUAL |
+| 4 | `/RESULT_SURFACE/final_position` | PRESENT(N) | PRESENT(`N`) | EQUAL |
+
+- **W312-M6-07G-1** - the empty fill-event input produces no fee and no realization, so equity stays 1000 on both versions (design :398)
+- **W312-M6-07G-2** - no lifecycle closes, so the counter stays 0 on both versions (design :398)
+- **W312-M6-07G-3** - the vector supplies an empty fill-event input, so fill_events is A:0 on both versions (design :398)
+- **W312-M6-07G-4** - no fill means no position on either version (design :398)
+
+Mechanical check run this session over all fifty-five members: every corrected selector resolves in
+its sealed golden, every resolved canonical node starts with the declared `node_kind`, and the
+declared `expected_relation` equals the relation computed from the two tagged states. **0 failures.**
+
+### W312-C. Two legacy sides deliberately left unpinned
+
+`RULE2-06-RED` and `RULE2-06-EQUAL-PRICE-RED` member 1 (`/EVENT_SURFACE/fill_events/0/exit_id`) pin
+the legacy side as `PRESENT` of kind `S` with **no value**. Design `:357` fixes only that legacy's
+implicit stop-first path exits at the stop; it does not state legacy's own exit-id string. The removed
+reader mapped `INITIAL_SL` to `STOP` in code, which is exactly the reader-authored shaping commit
+`4c57e4e4` and `b0933b1a` deleted, so this lane does not restore it. The divergence claim does not
+need it: the corrected ids are `TARGET-NEAR` and `TARGET-FAR`, which no legacy stop id equals.
+
+### W312-D. Members the design excludes, restated so they are not re-added
+
+- `fee_events` and `funding_events` are excluded from every GREEN projection (correction C-02 above):
+  they do not exist in `LEGACY_P011_EXACT_V1` (design `:509`), so the legacy side is `ABSENT` and
+  design `:543` scores `ABSENT` versus `A:0` as divergence.
+- `equity_curve` and `net_trade_pnl` are excluded from the `RULE2-01/02/04/05/06` GREEN projections:
+  1.0.0 has no fee model, so corrected equity carries a version-specific added effect (design `:188`).
+  They **are** members of `RULE2-07-GREEN`, whose vector has no fill and therefore no fee split.
+- `RULE2-07-RED` `/RESULT_SURFACE/trades/0/gross_realized_pnl` stays excluded from the divergent set
+  (correction C-07): it is `0` on both versions, and design `:543` says identical present values are
+  not divergence.
+- No `/RESULT_SURFACE/collision/*` member is sealed. That object was removed at design v1.9
+  `:1296`; the sole receipt is the closed `COLLISION_RESOLVED` decision row (design `:1101`),
+  which is what member 5 of both RULE2-06 RED rows selects.
+
+### W312-E. M4 item 1 - `PROBE-P012-02-A` re-derivation
+
+Design `:252` binds this probe: "change the corrected comparison to `>` so equality refuses. The
+RULE-2-GREEN cross-version check must refuse on the admission/refusal projection for
+`RULE2-02-GREEN`." Design `:1226` names the admission node `admitted`.
+
+Re-derived values, both **unchanged** from the sealed catalog row:
+
+| member | sealed value | re-derived value | authority |
+|---|---|---|---|
+| `expected_failed_check` | `RULE2_GREEN_CROSS_VERSION_EXPECTATION` | `RULE2_GREEN_CROSS_VERSION_EXPECTATION` | design `:252` |
+| `expected_first_changed_node` | `/RESULT_SURFACE/admitted` | `/RESULT_SURFACE/admitted` | design `:252`, `:1226` |
+| `comparator_first_differing_node` | `/RESULT_SURFACE/admitted` | `/RESULT_SURFACE/admitted` | same single-member projection |
+
+What actually changed is the node's provenance, not its pointer. Before `4c57e4e4` the reader
+synthesised `/RESULT_SURFACE/admitted` from `result["final_position"] is not None`. At HEAD the node
+is a real closed-set member of the corrected `RESULT_SURFACE` for a DEF-P012-02 GREEN row
+(`verify_bceg.py:891-892`) and is sealed in the golden as `"admitted": true`
+(`golden/corrected_vnext/RULE2-02-GREEN.json`, resolved this session to `B:1`). Its arithmetic:
+`order_notional = 1 * 100 * 1 = 100`; corrected admits iff `100 >= 100` (true); legacy rejects iff
+`100 < 100` (false), so both admit and the sealed GREEN member `W312-M6-02G-1` is `EQUAL`.
+
+**Reachability finding, reported and not absorbed.** After `b0933b1a`,
+`_green_projection_differences` takes `(root, baseline_root, base_row)` and compares the sealed
+`BASELINE_BYTES` legacy result against the sealed `CONTRACT_TABLES` golden
+(`verify_bceg.py:2992-3009`); it no longer reads the probe variant's output at all. Design `:556`
+names exactly those two producers for this check. A `target_kind=KERNEL` variant therefore cannot
+move either side, so the check the design names at `:252` is unreachable from this probe row as it
+stands. Design `:555-556`'s own concrete fail input for this check is an expected-side perturbation
+("Perturb corrected GREEN expected fill price by one ULP"), not a kernel patch. Closing this needs
+one owner-gated design act - either amend `:252` to bind a check a `KERNEL_2` variant can fail, or
+change the row's `target_kind`. **No value is invented here and no probe byte is written.**
+
+### W312-F. M4 item 2 - `PROBE-P012-06-A` re-derivation
+
+Design `:361` binds this probe to `base_scenario_id=RULE2-06-RED`, `subject_producer_id=KERNEL_2`,
+`target_kind=KERNEL`, and states "The corrected-expectation check must refuse at the first changed
+event sequence node: expected first fill `TARGET-NEAR`, modified-kernel first fill `TARGET-FAR`."
+
+Re-derived values, all **unchanged** from the sealed catalog row:
+
+| member | sealed value | re-derived value | authority |
+|---|---|---|---|
+| `expected_failed_check` | `CORRECTED_EXPECTATION` | `CORRECTED_EXPECTATION` | design `:361`, `:555` row 2 |
+| `expected_first_changed_node` | `/EVENT_SURFACE/fill_events/0/exit_id` | `/EVENT_SURFACE/fill_events/0/exit_id` | design `:361`, `:481-493` |
+| `comparator_first_differing_node` | `/EVENT_SURFACE/cash_events/0/signed_delta` | `/EVENT_SURFACE/cash_events/0/signed_delta` | derived below |
+
+The comparator node was previously a W256 measurement. It is now derivable in writing, so it is
+re-derived rather than carried. Design `:509-541` walks object children in UTF-8 byte-sorted key
+order. Top level: `EVENT_SURFACE` before `RESULT_SURFACE` (`E` = 0x45 < `R` = 0x52). Inside
+`EVENT_SURFACE`: `cash_events` first (`c` = 0x63 < `d` = 0x64 of `decision_events`). The taker rate
+for both TARGET roles is `0.00045` (design `:944`). Base order, sealed in the golden:
+
+```text
+base   fill 0 = TARGET-NEAR @ 105 -> fee = 105 * 1 * 0.00045 = 0.04725 -> cash_events[0] = -0.04725
+base   fill 1 = TARGET-FAR  @ 110 -> fee = 110 * 1 * 0.00045 = 0.0495  -> cash_events[2] = -0.0495
+variant reverses the TARGET_FIRST target-event order:
+       fill 0 = TARGET-FAR  @ 110 -> fee = 110 * 1 * 0.00045 = 0.0495  -> cash_events[0] = -0.0495
+-0.0495 != -0.04725, so /EVENT_SURFACE/cash_events/0/signed_delta is the first node the
+comparator's traversal order reaches that differs.
+```
+
+`/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0` also changes under the variant
+(`TARGET-NEAR` becomes `TARGET-FAR`) and remains a member of the complete changed-node set, which is
+all design `:481-493` requires of it.
+
+### W312-G. M4 item 3 - the `RULE2-06-RED` golden node, re-derived from the collision rule
+
+Node: `/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0`. Sealed byte before this lane:
+`"TARGET-NEAR"`.
+
+Design `:349` (the `TARGET_FIRST` row of the section-12 tie-break table) fixes target ordering as
+"Long ascending target price; short descending target price; equal prices by `exit_id` UTF-8 byte
+order". Design `:351` (**OWNER-RULED, owner addendum 29, decision 72**) says the receipt-only
+`touched_exit_ids` listing rule "does not alter `ordered_chosen_exit_ids`, `TARGET_FIRST` execution
+order, fills, or PnL", and design `:1101` repeats that in the closed `COLLISION_RESOLVED` shape.
+
+Arithmetic from the sealed input `tests/corrected_vnext/contracts/inputs/RULE2-06-RED.json`
+(`legacy_arm.config`: `sl_percent=10`, `tp1_r_multiple=0.5`, `tp2_r_multiple=1`, `tp_mode=Multi-TP`,
+`tp1_close_pct=50`; `legacy_arm.bars[1].close=100`), with design `:944`'s mechanical alias
+"corrected aliases TP1/TP2 mechanically to the stated `TARGET-NEAR`/`TARGET-FAR` ids":
+
+```text
+risk per unit  = 100 * 10 / 100          = 10        -> percent stop = 100 - 10 = 90
+TP1 = 100 + 10 * 0.5 = 105  -> alias TARGET-NEAR
+TP2 = 100 + 10 * 1   = 110  -> alias TARGET-FAR
+both targets touch (high 115 >= 110 and >= 105); the stop touches (low 85 <= 90)
+TARGET_FIRST, long -> ascending target price: 105 < 110
+-> ordered_chosen_exit_ids = [TARGET-NEAR, TARGET-FAR]
+-> ordered_chosen_exit_ids/0 = "TARGET-NEAR"
+prices are not equal, so the UTF-8 byte-order tie-break of design :349 is not entered
+decision 72 (design :351) is receipt-only and does not touch this member
+```
+
+**The re-derivation reproduces the sealed byte exactly. No golden byte was written.** The sealed
+value `"TARGET-NEAR"` is derived from design `:349`, `:351`, `:357` and `:944` and from the sealed
+input, with no dependence on the removed reader shaping. What the removed shaping did affect is a
+separate defect, recorded in the lane report: the `RULE2-06-RED` and `RULE2-06-GREEN` sealed inputs
+carry no `/corrected_only/economic_inputs/target_book`, so at HEAD the corrected run keeps the
+kernel's own `TP1`/`TP2` working-exit ids (`verify_bceg.py:1329-1340` applies the book only when the
+member is present) and design `:944`'s mechanical alias has no carrier for these two rows. That is an
+owner-gated **input** change of exactly the shape W311 made for `RULE2-06-EQUAL-PRICE-RED` under
+owner decision 139, and this lane may not write an input byte.
+
+### W312-H. `RULE2-08-RED` and `RULE2-08-GREEN` - STOPPED
+
+Nothing was derived and no byte was written for either row, or for `PROBE-P012-08-A`. The lane's
+M1-pending instruction (Lead note 08:3x, ledger addendum 46) directs the stop, and W311 recorded M1
+as a DESIGN-GAP: design `:443` says no `CostSchedule` is consumed by RULE2-08, `:788-790` makes both
+cost members JSON `null` for those rows, and `:960`/`:961` say `C` is absent/`NOT_CONSUMED`, while
+owner addendum 20 binds real pre-window fills. Reason of record: **waits for owner M1b.**
+
+### W312-I. Byte record
+
+| file | sha256 before | sha256 after | bytes |
+|---|---|---|---|
+| `scenario_catalog.json` | `a9ba2a89a1de83b4ba9687b3f9708ee8ca8fc1b15f36c737bd115586cdf051f6` | `c2a4ade275f0fcd50e6fe26974b8d5a0a69ce5029189535789c2b65d569590f6` | 49676 -> 78801 |
+
+Measured leaf-level diff of the whole catalog against the pre-W312 snapshot
+(`C:\tmp\SNAPSHOTS\20260903_0833_preW312\`): `removed: []`, `changed:` only the fifteen row
+object-member counts (`O:n` -> `O:n+1`), `added:` 1072 leaves, every one of them inside a
+`rule2_divergent_projection` or `rule2_green_projection` member. No probe row, no `RULE2-08` row, no
+golden, no input, no manifest and no anchor byte moved.
+
+For the Lead's re-seal: `CONTRACT_TABLES_MANIFEST.json` `files[1]` pins `scenario_catalog.json` and
+must be re-pinned to the sha256 above. This lane may not move a manifest-seal byte.
+
+## W319 - sealed corrected-only `target_book` for `RULE2-06-RED` and `RULE2-06-GREEN` (owner decision 142) (2026-09-03, tables family, insertion-only)
+
+Authority: owner decision 142 = W312 D-7 default (a). Same defect class the owner closed for
+`RULE2-06-EQUAL-PRICE-RED` with decision 139 (executed by W311, `W311_SEALED_INPUTS_REPORT.md`
+section 2). No value below is computed; each is quoted from design v1.13
+`C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md`.
+
+### W319-A. Design lines the values come from
+
+`:357` (section 12), verbatim:
+
+> "`RULE2-06-RED` is a synthetic long under `execution_profile_id=raw_close_only_v1` with entry fill
+> `100`, reference quantity `2`, `qty_step=1`, stop `90`, target `TARGET-NEAR` at `105` with target
+> fraction `0.5`, target `TARGET-FAR` at `110` with target fraction `0.5`, `price_tick=1` ..."
+
+> "`RULE2-06-GREEN` uses `execution_profile_id=raw_close_only_v1` and the same position, quantity
+> step, stop, two targets, target fractions, tick, test-only zero-impact model/parameter record, and
+> policy with full bar `open=100, high=104, low=85, close=95` ..."
+
+`:944` (section 22.5, `RULE2-06-RED` row, "Corrected-only binding" column), verbatim:
+
+> "corrected aliases TP1/TP2 mechanically to the stated `TARGET-NEAR`/`TARGET-FAR` ids and uses
+> stated fractions `.5/.5`, policy `TARGET_FIRST`"
+
+i.e. `TP1` -> `TARGET-NEAR`, `TP2` -> `TARGET-FAR`.
+
+`:945` (section 22.5, `RULE2-06-GREEN` row), verbatim:
+
+> "Same config/prelude, explicitly including `instrument_contract_multiplier=1`; evaluation
+> `(2000-01-01T00:12:00Z,2,100,104,85,95,0)`. | Same reached book; only stop touches ..."
+
+So the GREEN book is the RED book; `:357` states the same two targets and target fractions for GREEN
+independently.
+
+### W319-B. Value ledger (per value: design line -> member written)
+
+| member (JSON pointer) | value | design line quoted |
+|---|---|---|
+| `/corrected_only/economic_inputs/target_book/TP1/0` | `"TARGET-NEAR"` | `:944` alias direction; id stated at `:357` |
+| `/corrected_only/economic_inputs/target_book/TP1/1` | `105` | `:357` "target `TARGET-NEAR` at `105`" |
+| `/corrected_only/economic_inputs/target_book/TP1/2` | `0.5` | `:357` "with target fraction `0.5`"; `:944` "fractions `.5/.5`" |
+| `/corrected_only/economic_inputs/target_book/TP2/0` | `"TARGET-FAR"` | `:944` alias direction; id stated at `:357` |
+| `/corrected_only/economic_inputs/target_book/TP2/1` | `110` | `:357` "target `TARGET-FAR` at `110`" |
+| `/corrected_only/economic_inputs/target_book/TP2/2` | `0.5` | `:357` "with target fraction `0.5`"; `:944` "fractions `.5/.5`" |
+
+The same six values are written to `RULE2-06-GREEN.json`, on the authority of `:945` "Same reached
+book" and `:357` "the same position, quantity step, stop, two targets, target fractions, tick ...".
+
+The keys `"TP1"` and `"TP2"` are the kernel's own Multi-TP working-exit ids, not authored numbers:
+`MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py:264-282` (branch HEAD `8112ff0b`,
+read read-only via `git -C C:\WP012BUILD show HEAD:<path>`) constructs `WorkingExit("TP1","TP1",...)`
+and `WorkingExit("TP2","TP2",...)` under `tp_mode == TP_MODE_MULTI`, which is the mode both rows'
+`legacy_arm.config` sets (`tp_mode="Multi-TP"`, design `:944`).
+
+### W319-C. Transport shape is `MECHANICAL` and read from the repository
+
+`MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/verify_bceg.py:1207-1226`
+reads the member at `/corrected_only/economic_inputs/target_book` and requires a JSON object;
+`verify_bceg.py:1329-1340` fixes the value-tuple positions as
+`[exit_id, target_price, qty_fraction]`, keyed by the legacy working-exit id. Shape written:
+
+```json
+{"TP1":["TARGET-NEAR",105,0.5],"TP2":["TARGET-FAR",110,0.5]}
+```
+
+identical in shape to the book W311 sealed for `RULE2-06-EQUAL-PRICE-RED`
+(`{"TP1":["TARGET-NEAR",105,0.5],"TP2":["TARGET-FAR",105,0.5]}`), differing only in the `TARGET-FAR`
+price, which design `:357` states as `110` for `RULE2-06-RED`/`-GREEN` and `105` for the equal-price
+row.
+
+Byte discipline: canonical JSON per design `:513` and `:776` - sorted object keys, no BOM, LF, one
+required final LF, compact `(',' , ':')` separators. Verified by round-trip: re-serialising each
+*pre-change* file with `json.dumps(sort_keys=True, separators=(',',':')) + "\n"` reproduced its exact
+pre-change bytes (1773 and 1782), so the writer used the corpus's own encoder settings.
+
+### W319-D. Measured leaf-level diff against the pre-W319 snapshot
+
+For each of the two inputs (`C:\tmp\SNAPSHOTS\20260903_0900_preW319\`):
+
+```
+added  : /corrected_only/economic_inputs/target_book/TP1/0
+         /corrected_only/economic_inputs/target_book/TP1/1
+         /corrected_only/economic_inputs/target_book/TP1/2
+         /corrected_only/economic_inputs/target_book/TP2/0
+         /corrected_only/economic_inputs/target_book/TP2/1
+         /corrected_only/economic_inputs/target_book/TP2/2
+removed: []
+changed: []
+```
+
+`scenario_catalog.json`: `added: []`, `removed: []`, `changed: ['/10/input/digest',
+'/12/input/digest']` - rows `[10] RULE2-06-RED` and `[12] RULE2-06-GREEN`. Neither row has an
+`input.bytes` member (the whole file contains no `"bytes"` key), so none was written; the
+`digest_reason` strings were left untouched, and the W312-sealed projection members of both rows and
+every `PROBE` row are byte-identical. Each old digest literal occurred exactly once in the file and
+was replaced in place, so the file length is unchanged (78801 bytes before and after). Cross-check:
+every catalog row whose `input.path` exists in the bundle now has `input.digest` equal to the
+measured sha256 of that file - no mismatch.
+
+### W319-E. Byte record
+
+| file | sha256 before | sha256 after | bytes |
+|---|---|---|---|
+| `tests/corrected_vnext/contracts/inputs/RULE2-06-RED.json` | `c946e1a24f3b96ad0886132720a43df92ffb9c1fe2729e0a903940001650b349` | `8c62e57e0584207d99ab6d581a91535d341b65df46b362dc402a48da702f1f68` | 1773 -> 1848 |
+| `tests/corrected_vnext/contracts/inputs/RULE2-06-GREEN.json` | `e4c4f861c48df32447f4dc1d32d65f61fec5c2dc9baf3f563983ed554de68cff` | `c334b07011bd538e7b9d02de451abbd5f389da8cf7392da64fed7dfc941dd4e2` | 1782 -> 1857 |
+| `scenario_catalog.json` | `c2a4ade275f0fcd50e6fe26974b8d5a0a69ce5029189535789c2b65d569590f6` | `b43624dc94219576ce79225a1f4282d116b0b21307b77371abbd4a5b52d74234` | 78801 (unchanged) |
+
+No golden, manifest-seal, anchor, probe or design byte was written; no kernel was executed and no
+observed artifact was read.
+
+For the Lead's re-seal: `CONTRACT_TABLES_MANIFEST.json` `files[1]` pins `scenario_catalog.json` and
+`files[0]` pins `DERIVATIONS.md`; both must be re-pinned to the post-W319 sha256 values. This lane
+may not move a manifest-seal byte.
+
+## W321 - Tables acts for RULE2-08 branch after owner decision 144 (M1 binding; M6 rows; probe 08-A/02-A values; RED golden) (2026-09-03, tables family, insertion-only)
+
+Authority: owner decisions 137/144 (M1), 138 (M6), 140 (M4), 143 (M4b). Design v1.15
+`C:\tmp\LANE_PROMPTS_20260828\P012_FRESH_DESIGN_V1.md` lines 490,932,968,1107,1183 (W320 amendment);
+lines 492,494 (W320 repair); line 498 (probe 08-A); lines 263-297 (probe 02-A W317 amendment).
+
+### W321-A. M1 (decisions 137/144) — RULE2-08 input cost record binding
+
+Design v1.15 line 490: "RULE2-08-RED consumes cost record `SYNTH-COST-RULE2-07-RED-V1` (sha256
+`806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b`) and RULE2-08-GREEN consumes
+`SYNTH-COST-RULE2-07-GREEN-V1` (sha256
+`040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe`), bound BY REFERENCE to the
+existing sealed RULE2-07 cost records."
+
+Design v1.15 line 932: "For RULE2-08-RED, `cost_schedule_id` is `"SYNTH-COST-RULE2-07-RED-V1"` and
+`cost_schedule_sha256` is `"806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b"`; for
+RULE2-08-GREEN, `cost_schedule_id` is `"SYNTH-COST-RULE2-07-GREEN-V1"` and `cost_schedule_sha256` is
+`"040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe"`."
+
+The two cost record sha256 values were confirmed against the sealed records at
+`core/economic_records/costs/` (read via COST_RECORDS_07.md in the W321 packet). Both match the
+design exactly.
+
+**Changes to RULE2-08-RED.json input:**
+- `records.cost_schedule_id`: `null` → `"SYNTH-COST-RULE2-07-RED-V1"`
+- `records.cost_schedule_sha256`: `null` → `"806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b"`
+- No other member moved.
+
+**Changes to RULE2-08-GREEN.json input:**
+- `records.cost_schedule_id`: `null` → `"SYNTH-COST-RULE2-07-GREEN-V1"`
+- `records.cost_schedule_sha256`: `null` → `"040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe"`
+- No other member moved.
+
+### W321-B. M6 (decision 138) — RULE2-08 sealed projections
+
+#### W321-M6-08R-1 — `/EVENT_SURFACE/fee_events`
+
+- Design v1.15 line 488: legacy has no funding cashflow and remains at equity 1000; legacy has no fee
+  events.
+- Design v1.15 lines 490,492: the pre-window OPEN fill consumes the cost record at taker rate 0.001 on
+  notional 100, producing fee cash delta -0.1. The corrected golden carries one fee event
+  (CE-FEE-0, TAKER, notional 100, rate 0.001, signed_delta -0.1, EXACT_IDENTITY_V1).
+- Legacy: ABSENT. Corrected: A:1. Relation: DIFFERS.
+
+#### W321-M6-08R-2 — `/EVENT_SURFACE/funding_events`
+
+- Design v1.15 line 488: legacy has no funding cashflow. Corrected has one funding event
+  (TEST-FUND-1, notional 100, rate -0.001, funding_cash_delta -0.1).
+- Legacy: ABSENT. Corrected: A:1. Relation: DIFFERS.
+
+#### W321-M6-08R-3 — `/RESULT_SURFACE/equity_curve/last`
+
+- Design v1.15 line 488: legacy equity remains 1000.
+- Design v1.15 lines 492,1107: corrected equity chain 1000 → 999.9 (pre-window OPEN fee at taker rate
+  0.001 on notional 100: fee = abs(100 × 1 × 1) × 0.001 + 0 = 0.1, cash delta -0.1) → 999.8 (funding: notional 100 ×
+  -0.001 = -0.1). equity_curve.last = 999.8.
+- Legacy: PRESENT(I:1000). Corrected: F:999.8. Relation: DIFFERS.
+
+#### W321-M6-08R-4 — `/RESULT_SURFACE/cumulative_funding`
+
+- Design v1.15 line 488: legacy has no funding cashflow, no cumulative_funding.
+- Corrected: cumulative_funding = -0.1 (the single funding event's cash delta).
+- Legacy: ABSENT. Corrected: F:-0.1. Relation: DIFFERS.
+
+#### W321-M6-08G-1 — `/RESULT_SURFACE/equity_curve/last` — DESIGN-GAP (STOPPED)
+
+- Design v1.15 line 494: "The design does not state the GREEN pre-window bar prices/quantities
+  (OPEN-EMBED-05 mechanism is bound by 5a, its numbers are not in the design): the fee arithmetic is
+  therefore fee_i = abs(price_i × qty_i × multiplier) × 0.001 per pre-window fill, and equity at
+  window start = 1000 − sum of fees. The numeric equity node for GREEN is a design-unenumerated value
+  carrying the `BLOCKED-OPEN-EMBED-05` marker until the owner binds the GREEN prefix numbers; no price
+  is invented."
+- Design v1.15 line 806 (L12): "the resulting equity node carries the `BLOCKED-OPEN-EMBED-05` marker
+  until the owner binds the GREEN prefix numbers. No price is invented."
+- Design v1.15 line 1107 (§22.6 amendment): "the numeric equity node carries `BLOCKED-OPEN-EMBED-05`."
+- **DESIGN-GAP:** The design does not enumerate the GREEN pre-window fill prices or quantities, so no
+  numeric equity value is derivable. This projection member is STOPPED and removed from the catalog.
+  The golden equity nodes carry `"BLOCKED-OPEN-EMBED-05"` (string marker, not a number).
+
+#### W321-M6-08G-2 — `/EVENT_SURFACE/fill_events`
+
+- Design v1.15 line 494: position is closed before the event; pre-window fills are outside the
+  observation window and contribute no in-window fill events.
+- Design v1.15 line 1107: "no fill in the observation window" is true.
+- Legacy: PRESENT(A:0). Corrected: A:0. Relation: EQUAL.
+
+#### W321-M6-08G-3 — `/RESULT_SURFACE/final_position`
+
+- Design v1.15 line 494: position is closed immediately before the event timestamp.
+- Design v1.15 line 1107: under addendum 20 (5a) GREEN has pre-window fills (OPEN and CLOSE before
+  2000-01-01T00:00:00Z); at window start no position is eligible.
+- Legacy: PRESENT(N:null). Corrected: N:null. Relation: EQUAL.
+
+#### W321-M6-08G-DESIGN-GAP — `/RESULT_SURFACE/equity_curve/last` — STOPPED
+
+Design v1.15 line 494: GREEN pre-window fill prices/quantities are unenumerated; fee arithmetic is
+fee_i = abs(price_i × qty_i × multiplier) × 0.001 per pre-window fill; equity at window start =
+1000 − sum of fees. Design v1.15 line 806 (L12): "the resulting equity node carries the
+`BLOCKED-OPEN-EMBED-05` marker until the owner binds the GREEN prefix numbers. No price is
+invented." Design v1.15 line 1107 (§22.6 amendment): "the numeric equity node carries
+`BLOCKED-OPEN-EMBED-05`." The design does not decide a numeric value for this node; the projection
+member is STOPPED and removed from the catalog. The golden carries the string marker
+`"BLOCKED-OPEN-EMBED-05"` in place of the former numeric `1000`.
+
+### W321-C. M4 (decision 140) — PROBE-P012-08-A re-derivation
+
+Design v1.15 line 498: "Fail probe `PROBE-P012-08-A`: flip the sign for the long positive-rate
+event. The corrected-expectation check must refuse at the cash-delta node because independent
+expected -0.1 differs from actual +0.1."
+
+| member | value | derivation |
+|---|---|---|
+| `expected_failed_check` | `CORRECTED_EXPECTATION` | Design line 498; variant changes kernel bytes (funding sign flip in economics.py), so the check is corrected-expectation (design lines 685-687). |
+| `expected_first_changed_node` | `/EVENT_SURFACE/funding_events/0/funding_cash_delta` | Design line 498 names the cash-delta node; the design-named typed projection is the funding_cash_delta. |
+| `comparator_first_differing_node` | `/EVENT_SURFACE/cash_events/1/signed_delta` | With the W320 amendment adding a fee cash event at index 0, the funding cash event moves to index 1. The variant flips only the funding sign, so cash_events[0] matches (-0.1 = -0.1) and cash_events[1] differs (-0.1 vs +0.1). Under UTF-8 key order, cash_events (0x63) precedes funding_events (0x75) in EVENT_SURFACE (0x45), which precedes RESULT_SURFACE (0x52). |
+
+### W321-D. M4b (decision 143) — PROBE-P012-02-A re-derivation
+
+Design v1.15 lines 263-297 (W317 amendment): re-targeted from `RULE2_GREEN_CROSS_VERSION_EXPECTATION`
+to `CORRECTED_EXPECTATION`. The variant changes the corrected admission comparison from `>=` to `>`,
+so the equal case of RULE2-02-GREEN (order_notional = 100 against min_notional = 100) no longer
+admits.
+
+| member | value | derivation |
+|---|---|---|
+| `expected_failed_check` | `CORRECTED_EXPECTATION` | Design lines 276-278: the one value comparison in section 15.4 whose left producer is a kernel is the corrected-expectation row at line 685, KERNEL_2 against CONTRACT_TABLES. |
+| `expected_first_changed_node` | `/RESULT_SURFACE/admitted` | Design lines 285-294: the node section 23.4 line 1358 names as the DEF-P012-02 admission projection. It is a member of the changed-node set under lines 545-557. |
+| `comparator_first_differing_node` | `/EVENT_SURFACE/cash_events/0/signed_delta` | The variant refuses admission, so no position opens, fill_events empties, fee_events empties, and cash_events empties. The sealed expected artifact carries cash_events with one fee entry. Under UTF-8 key order, cash_events (0x63) is the first key in EVENT_SURFACE (0x45), which precedes RESULT_SURFACE (0x52). The first differing node is /EVENT_SURFACE/cash_events/0/signed_delta. |
+
+### W321-E. Item 4c — RULE2-08-RED golden re-derivation
+
+Design v1.15 lines 492,1107: the corrected equity chain is 1000 → 999.9 (pre-window OPEN fee) →
+999.8 (funding).
+
+**Nodes changed in `golden/corrected_vnext/RULE2-08-RED.json`:**
+
+| node | before | after | arithmetic |
+|---|---|---|---|
+| `EVENT_SURFACE.fee_events` | `[]` (A:0) | `[{sequence:0, fee_event_id:"CE-FEE-0", kind:"FEE", lifecycle_id:1, signed_delta:-0.1, liquidity_role:"TAKER", notional:100, rate_used:0.001, rounding_rule:"EXACT_IDENTITY_V1"}]` (A:1) | Design lines 490,492: pre-window OPEN fill at taker rate 0.001 on notional 100 → fee = abs(100 × 1 × 1) × 0.001 + 0 = 0.1, cash delta -0.1. |
+| `EVENT_SURFACE.cash_events` | `[{sequence:0, kind:"FUNDING", signed_delta:-0.1}]` | `[{sequence:0, kind:"FEE", signed_delta:-0.1}, {sequence:1, kind:"FUNDING", signed_delta:-0.1}]` | Fee cash event added at index 0; funding cash event re-sequenced to index 1. |
+| `RESULT_SURFACE.equity_curve.last` | `999.9` | `999.8` | 1000 - 0.1 (fee) - 0.1 (funding) = 999.8. |
+| `RESULT_SURFACE.run_manifest.cost_schedule_id` | `"NOT_CONSUMED"` | `"SYNTH-COST-RULE2-07-RED-V1"` | Design line 490: cost record consumed by reference. |
+| `cash_ledger_join` (prose) | no fee mentioned | fee + funding cash rows | Updated to reflect both cash rows. |
+| `no_slippage_note` (prose) | "no CostSchedule is consumed" | "consumes cost record SYNTH-COST-RULE2-07-RED-V1 by reference" | Updated per W320 amendment. |
+| `unchanged_sealed_values` (prose) | equity_curve.last 999.9 | equity_curve.last re-derived to 999.8 | Updated. |
+| `provenance` | design_version v1.8 | design_version v1.15; W321 author entry added | Housekeeping. |
+
+No other node in the golden was changed. The RULE2-08-GREEN golden equity nodes were changed from
+numeric `1000` to string marker `"BLOCKED-OPEN-EMBED-05"` (design v1.15 lines 494,806,1107; V321C
+F-05 repair). The GREEN `rule2_green_projection` member for `/RESULT_SURFACE/equity_curve/last` was
+STOPPED (DESIGN-GAP) and removed from the catalog.
+
+### W321-F. Catalog digest re-pins
+
+| catalog row | member | before | after |
+|---|---|---|---|
+| `RULE2-08-RED` | `input.digest` | `5136b0ce11f9e7b949e8b5105ce128df65ffcaf3ba0399f27141978ef341b0c1` | `995da57180072a369425bd7e14211b7d88effa27dbaa878c3ab6bdf7c705ca37` |
+| `RULE2-08-GREEN` | `input.digest` | `3cb3cf0db3ab22134449f07c1c90e738a643736e16f97860889d80a08ebb900d` | `979401efe76427ef27c78cc395e7087bf12b672f02cb5a207ce4f75bebe5e962` |
+| `RULE2-08-RED` | `expected_artifacts.2.0.0.digest` | `6e76d54f82a5486d0500a9a8c2e0792e186db3a5d1f8ec8d18eff8eee27e4b17` | `759e341d0d3823fd019243bbb7cc5f4c1ce81a6a15262f4fb853e4a7d054e0f4` |
+
+The manifest (`CONTRACT_TABLES_MANIFEST.json`) also carries digests for `scenario_catalog.json`,
+`DERIVATIONS.md`, and `golden/corrected_vnext/RULE2-08-RED.json` which must be re-pinned by the Lead
+(this lane may not move a manifest-seal byte).
+
+### W321-G. Byte record
+
+| file | sha256 before | sha256 after | bytes before → after |
+|---|---|---|---|
+| `tests/corrected_vnext/contracts/inputs/RULE2-08-RED.json` | `5136b0ce11f9e7b949e8b5105ce128df65ffcaf3ba0399f27141978ef341b0c1` | `995da57180072a369425bd7e14211b7d88effa27dbaa878c3ab6bdf7c705ca37` | 1556 → 1643 |
+| `tests/corrected_vnext/contracts/inputs/RULE2-08-GREEN.json` | `3cb3cf0db3ab22134449f07c1c90e738a643736e16f97860889d80a08ebb900d` | `979401efe76427ef27c78cc395e7087bf12b672f02cb5a207ce4f75bebe5e962` | 1783 → 1872 |
+| `scenario_catalog.json` | `b43624dc94219576ce79225a1f4282d116b0b21307b77371abbd4a5b52d74234` | `0c1266691bd98e6b57a68e3f4b07f2403ebfb6b3a199d5a0e0dfa612ad1a9511` | 78801 → 84402 |
+| `golden/corrected_vnext/RULE2-08-RED.json` | `6e76d54f82a5486d0500a9a8c2e0792e186db3a5d1f8ec8d18eff8eee27e4b17` | `759e341d0d3823fd019243bbb7cc5f4c1ce81a6a15262f4fb853e4a7d054e0f4` | 20820 → 21879 |
+
+No other file in the bundle was touched. No design, manifest-seal, anchor, or probe-manifest byte was
+written. No kernel was executed and no observed artifact was read.
+
+### W321-H. Round-2 residues correction (V321C round 2, 2026-09-03)
+
+The V321C round-2 verifier accepted the M1 edits, digests, container, values and listed golden deltas
+but found four F-06 residues (stale identities, stale locators, NOT_CONSUMED, projection 1000).
+Dispositioned as follows:
+
+1. **GREEN golden `run_manifest.cost_schedule_id`**: changed from `NOT_CONSUMED` to
+   `SYNTH-COST-RULE2-07-GREEN-V1`, mirroring the RED golden's shape (design v1.15 line 494 binds the
+   GREEN record as consumed by the two pre-window fills).
+
+2. **GREEN golden `version_specific_lineage_nodes` prose**: replaced the declared economic projection
+   value `1000` with `BLOCKED-OPEN-EMBED-05` and added the design's reason (design v1.15 line 494:
+   pre-window fill prices/quantities are unenumerated; no price is invented).
+
+3. **DERIVATIONS.md byte record**: the W321-G table carries pre-normalization hashes written before
+   the Lead's LF normalization. The current before-state identities are those in
+   `LEAD_PRE_EDIT_SHA256.txt` (snapshot `C:\tmp\SNAPSHOTS\20260903_0950_preW321`):
+   - `inputs/RULE2-08-RED.json`: `5136b0ce11f9e7b949e8b5105ce128df65ffcaf3ba0399f27141978ef341b0c1`
+   - `inputs/RULE2-08-GREEN.json`: `3cb3cf0db3ab22134449f07c1c90e738a643736e16f97860889d80a08ebb900d`
+   - `golden/RULE2-08-RED.json`: `6e76d54f82a5486d0500a9a8c2e0792e186db3a5d1f8ec8d18eff8eee27e4b17`
+   - `golden/RULE2-08-GREEN.json`: `6ad9432df9bcc1ef8d7f5ec31fcb2a5c7b30a7c80c56095c74aaeb6a24e91b97`
+   - `scenario_catalog.json`: `b43624dc94219576ce79225a1f4282d116b0b21307b77371abbd4a5b52d74234`
+   - `DERIVATIONS.md`: `cfdc0ad910b020c84ed137bc236a801de7c4fcb5435b9918832571cb31734e76`
+   Post-edit identities are measured by the Lead after LF normalization. Current v1.15 design lines:
+   490 (cost-record binding), 492 (RED arithmetic), 494 (GREEN blocker), 498 (probe rule).
+
+4. **Catalog PROBE-P012-08-A row**: corrected `design_lines` from `447` to `498` and note locator
+   from `Design 14:494` to `Design 14:498` (the probe rule is at design v1.15 line 498).
+
+Decisions cited: 137/144 (M1), 138 (M6), 140 (M4), 143 (M4b). Design v1.15 lines: 490, 492, 494,
+498, 806, 932, 968, 1107, 1183.
+
+### W321-I. Round-3 residues correction (V321C round 3, 2026-09-03)
+
+The V321C round-3 verifier accepted all prior work but found two active findings: F-07 (PROBE-P012-02-A
+comparator pointer one level too deep) and F-06 residue (stale v1.15 locators in catalog input
+digest_reason and RED golden provenance/cash_ledger_join/no_slippage_note). Dispositioned as follows:
+
+1. **F-07 — PROBE-P012-02-A `comparator_first_differing_node`**: changed from
+   `/EVENT_SURFACE/cash_events/0/signed_delta` to `/EVENT_SURFACE/cash_events`. The variant changes
+   `>=` to `>` so equality refuses (design v1.15 lines 263-268); the sealed expected artifact has one
+   `cash_events` member, while the variant's `cash_events` is empty (no position opens, no fee).
+   The comparator at `verify_bceg.py:1545-1549` returns the array pointer immediately on list-length
+   mismatch (expected length 1 vs variant length 0), so the first differing node is
+   `/EVENT_SURFACE/cash_events`, not a member within it. The design-named target node
+   `/RESULT_SURFACE/admitted` (design v1.15 lines 285-294) is unchanged. Catalog member, DERIVATIONS
+   entry, and W315 handoff table all updated.
+
+2. **F-06 locators — catalog input `digest_reason`**: both RULE2-08-RED and RULE2-08-GREEN rows'
+   `digest_reason` cited displaced design lines `490,927,963,1102,1178`. Corrected to current v1.15
+   lines `490,492,932,968,1107,1183` (binding 490, RED arithmetic 492, GREEN blocker 494, amendments
+   932, 968, 1107, 1183).
+
+3. **F-06 locators — RED golden `provenance.design_lines`**: changed from
+   `490,927,963,1102,1178` to `490,492,932,968,1107,1183`.
+
+4. **F-06 locators — RED golden `cash_ledger_join`**: changed design citation from `490,1102` to
+   `492,1107` (RED arithmetic at 492, §22.6 amendment at 1107).
+
+5. **F-06 locators — RED golden `no_slippage_note`**: changed design citation from `490,1102` to
+   `492,1107`.
+
+Values, arithmetic, ids, and all other members unchanged. No economic number moved.
+
+Decisions cited: 137/144 (M1), 138 (M6), 140 (M4), 143 (M4b). Design v1.15 lines: 490, 492, 494,
+498, 806, 932, 968, 1107, 1183.
+
+### W321-J. V321C F-08 disposition — RED `authored_value_tokens` ledger synchronized (fifth pass, 2026-09-03)
+
+The V321C round-4 verifier found that the RED golden's `authored_value_tokens` ledger still described
+the pre-fee cash layout (F-08). Dispositioned as three ledger changes in
+`golden/corrected_vnext/RULE2-08-RED.json`:
+
+1. **Existing FUNDING entry pointer moved**: `/EVENT_SURFACE/cash_events/0/kind` → `/EVENT_SURFACE/cash_events/1/kind`,
+   value `FUNDING` unchanged, design_fact and spelling text unchanged.
+2. **New FEE entry added**: `/EVENT_SURFACE/cash_events/0/kind` = `FEE`, design_fact cites design v1.15
+   line 71 (section 2.1 cash-event kinds), spelling is TABLES-AUTHORED, labeled by lane W321 fifth pass
+   under V321C F-08.
+3. **New FEE entry added**: `/EVENT_SURFACE/fee_events/0/kind` = `FEE`, same design_fact and spelling
+   as above.
+
+The `no other golden node changed` sentence of W321-H is corrected by this entry: the
+`authored_value_tokens` ledger is a dependent metadata inventory (DERIVATIONS.md Y-5, G83-F06), not an
+economic node. FEE(kind) and FUNDING(kind) are explicitly in the tables-authored class
+(DERIVATIONS.md:2564-2565). No economic value moved; no other golden node changed.
+
+### W321-K - V321C F-09 locator correction
+
+W321-J (above) states it corrects the `no other golden node changed` sentence of W321-H. The
+verifier measured that sentence at current line 4769 inside W321-E: "No other node in the golden
+was changed." W321-H (lines 4798-4828) contains the Round-2 residue corrections and no such
+sentence. W321-J's disposition is otherwise unchanged.

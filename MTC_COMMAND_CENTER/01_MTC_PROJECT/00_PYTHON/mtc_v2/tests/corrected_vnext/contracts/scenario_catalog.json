@@ -40,7 +40,84 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-01-RED.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-01-RED.json"
   },
-  "design_lines": "183-220; 676-745; 747-839; 850"
+  "design_lines": "183-220; 676-745; 747-839; 850",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 10,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "223",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "223"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-01R-1"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 10,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "223",
+     "baseline_selector_advisory": [
+      "position",
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position",
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "223"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-01R-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/order_notional",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 2000,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "223"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "order_notional"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "223"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-01R-3"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-01-GREEN",
@@ -83,7 +160,84 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-01-GREEN.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-01-GREEN.json"
   },
-  "design_lines": "183-220; 676-745; 747-839; 851; 896-916"
+  "design_lines": "183-220; 676-745; 747-839; 851; 896-916",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "223",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "223"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-01G-1"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "223",
+     "baseline_selector_advisory": [
+      "position",
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position",
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "223"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-01G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/order_notional",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 100,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "223"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "order_notional"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "223"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-01G-3"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-02-RED",
@@ -126,7 +280,72 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-02-RED.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-02-RED.json"
   },
-  "design_lines": "222-245; 676-745; 747-839; 852"
+  "design_lines": "222-245; 676-745; 747-839; 852",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/RESULT_SURFACE/refusals/0/code",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "241,250"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "refusals",
+      0,
+      "code"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "241,250"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-02R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "241,250"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "241,250"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-02R-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/decision_events/2/decision",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "250"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "decision_events",
+      2,
+      "decision"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "250"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-02R-3"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-02-GREEN",
@@ -169,7 +388,88 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-02-GREEN.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-02-GREEN.json"
   },
-  "design_lines": "222-245; 676-745; 747-839; 853"
+  "design_lines": "222-245; 676-745; 747-839; 853",
+  "rule2_green_projection": [
+   {
+    "selector": "/RESULT_SURFACE/admitted",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "B",
+     "value": true,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "241,1226",
+     "baseline_selector_advisory": [
+      "position",
+      "present"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "admitted"
+     ],
+     "node_kind": "B",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "241,252,1226"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-02G-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "241",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "241"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-02G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "241",
+     "baseline_selector_advisory": [
+      "position",
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position",
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "241"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-02G-3"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-03-RED",
@@ -212,7 +512,69 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-03-RED.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-03-RED.json"
   },
-  "design_lines": "247-263; 676-745; 747-839; 854"
+  "design_lines": "247-263; 676-745; 747-839; 854",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/RESULT_SURFACE/refusals/0/code",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "259,268"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "refusals",
+      0,
+      "code"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "259,268"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-03R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/decision_events/1/decision",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "259,268"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "decision_events",
+      1,
+      "decision"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "259,268"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-03R-2"
+   },
+   {
+    "selector": "consumed price_tick",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "F",
+     "value": 0.25,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "259"
+    },
+    "corrected": {
+     "tag": "REFUSAL",
+     "refusal_code": "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "259,268"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-03R-3"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-03-GREEN",
@@ -255,7 +617,74 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-03-GREEN.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-03-GREEN.json"
   },
-  "design_lines": "247-263; 676-745; 747-839; 855"
+  "design_lines": "247-263; 676-745; 747-839; 855",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/decision_events/1/runtime_value",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "F",
+     "value": 0.5,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "259"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "decision_events",
+      1,
+      "runtime_value"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "259"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-03G-1"
+   },
+   {
+    "selector": "/RESULT_SURFACE/refusals",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "259,268"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "refusals"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "259,268"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-03G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "N",
+     "value": null,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "259"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position"
+     ],
+     "node_kind": "N",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "259"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-03G-3"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-04-RED",
@@ -298,7 +727,86 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-04-RED.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-04-RED.json"
   },
-  "design_lines": "265-291; 676-745; 747-839; 857-868"
+  "design_lines": "265-291; 676-745; 747-839; 857-868",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/reference_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 92,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "300",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "reference_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "300,302"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-04R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 92,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "300",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "300,302,304"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-04R-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/fill_trigger",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "302"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "fill_trigger"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "302"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-04R-3"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-04-GREEN",
@@ -341,7 +849,77 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-04-GREEN.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-04-GREEN.json"
   },
-  "design_lines": "265-291; 676-745; 747-839; 857-864, 869"
+  "design_lines": "265-291; 676-745; 747-839; 857-864, 869",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/exit_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "300,302"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "exit_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "300,302"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-04G-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "300,302"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "300,302"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-04G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "300",
+     "baseline_selector_advisory": [
+      "position",
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position",
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "300"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-04G-3"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-05-RED",
@@ -384,7 +962,100 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-05-RED.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-05-RED.json"
   },
-  "design_lines": "293-319; 676-745; 747-839; 870"
+  "design_lines": "293-319; 676-745; 747-839; 870",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/reference_price",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "328,330"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "reference_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "328,330"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-05R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/slippage_impact",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "328,330"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "slippage_impact"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "328,330"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-05R-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 100,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "328",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "328,332"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-05R-3"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/slippage_application_count",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "328,330"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "slippage_application_count"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "328,330"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-05R-4"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-05-GREEN",
@@ -427,7 +1098,37 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-05-GREEN.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-05-GREEN.json"
   },
-  "design_lines": "293-319; 676-745; 747-839; 871"
+  "design_lines": "293-319; 676-745; 747-839; 871",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 100,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "328",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "328"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-05G-1"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-06-RED",
@@ -450,7 +1151,7 @@
   ],
   "input": {
    "path": "tests/corrected_vnext/contracts/inputs/RULE2-06-RED.json",
-   "digest": "c946e1a24f3b96ad0886132720a43df92ffb9c1fe2729e0a903940001650b349",
+   "digest": "8c62e57e0584207d99ab6d581a91535d341b65df46b362dc402a48da702f1f68",
    "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
   },
   "expected_artifacts": {
@@ -470,7 +1171,156 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-RED.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-RED.json"
   },
-  "design_lines": "321-347; 676-745; 747-839; 872"
+  "design_lines": "321-347; 676-745; 747-839; 872",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/exit_id",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "S",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "exit_id"
+     ],
+     "note": "legacy exit-id string is not stated by the design and is not read here; design :357 fixes only that legacy exits at the stop, so the pair differs for any legacy stop id"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "exit_id"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "349,357,361"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "357"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 90,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "349,357"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-3"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/1/final_fill_price",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      1,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "349,357"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-4"
+   },
+   {
+    "selector": "/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "340,359"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "decision_events",
+      2,
+      "ordered_chosen_exit_ids"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "349,351,1101"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-5"
+   },
+   {
+    "selector": "/RESULT_SURFACE/trades/0/gross_realized_pnl",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": -20,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "realized_pnl"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "trades",
+      0,
+      "gross_realized_pnl"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "357,359"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-6"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-06-EQUAL-PRICE-RED",
@@ -493,7 +1343,7 @@
   ],
   "input": {
    "path": "tests/corrected_vnext/contracts/inputs/RULE2-06-EQUAL-PRICE-RED.json",
-   "digest": "5972c66c0fbb5e357f548daaf5fdd2ed0dd42fd948229235260bdbe6c2dee978",
+   "digest": "0c65c82b911f3a510d074df00bc81335bb3397697e96f422f5c05267e4ea085c",
    "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
   },
   "expected_artifacts": {
@@ -514,7 +1364,156 @@
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-EQUAL-PRICE-RED.json"
   },
   "legacy_arm_construction": "Owner addendum 20 item 49 (3a) (C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348): the equal-price target book is constructed by the corrected 2.0.0 target-book test machinery directly; the legacy engine is untouched and this row is recorded honestly as NOT-RUNNABLE-ON-LEGACY for that book, because current Multi-TP validation requires tp2_r_multiple greater than tp1_r_multiple (mtc_v2/core/config.py:540-545). The inherited real prelude still supplies the position on both arms; only the equal-price book is corrected-only. The 1.0.0 expected artifact stays OUT-OF-LANE and the cross-version comparison for the target book has no valid 1.0.0 counterpart.",
-  "design_lines": "343, 454, 645; 676-745; 747-839; 874"
+  "design_lines": "343, 454, 645; 676-745; 747-839; 874",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/exit_id",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "S",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "exit_id"
+     ],
+     "note": "legacy exit-id string is not stated by the design and is not read here; design :357 fixes only that legacy exits at the stop, so the pair differs for any legacy stop id"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "exit_id"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "349,357"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/1/exit_id",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      1,
+      "exit_id"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "349,357"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "357"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-3"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 90,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "349,357"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-4"
+   },
+   {
+    "selector": "/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "340,359"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "decision_events",
+      2,
+      "ordered_chosen_exit_ids"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "349,351,1101"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-5"
+   },
+   {
+    "selector": "/RESULT_SURFACE/trades/0/gross_realized_pnl",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": -20,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "realized_pnl"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "trades",
+      0,
+      "gross_realized_pnl"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "357,359"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-6"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-06-GREEN",
@@ -537,7 +1536,7 @@
   ],
   "input": {
    "path": "tests/corrected_vnext/contracts/inputs/RULE2-06-GREEN.json",
-   "digest": "e4c4f861c48df32447f4dc1d32d65f61fec5c2dc9baf3f563983ed554de68cff",
+   "digest": "c334b07011bd538e7b9d02de451abbd5f389da8cf7392da64fed7dfc941dd4e2",
    "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
   },
   "expected_artifacts": {
@@ -557,7 +1556,93 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-GREEN.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-GREEN.json"
   },
-  "design_lines": "321-347; 676-745; 747-839; 873"
+  "design_lines": "321-347; 676-745; 747-839; 873",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 90,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "357"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-06G-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 2,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "357"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-06G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/trades/0/gross_realized_pnl",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": -20,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "357",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "realized_pnl"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "trades",
+      0,
+      "gross_realized_pnl"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "357"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-06G-3"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-07-RED",
@@ -600,7 +1685,159 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-07-RED.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-07-RED.json"
   },
-  "design_lines": "349-388; 676-745; 747-839; 886"
+  "design_lines": "349-388; 676-745; 747-839; 886",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fee_events",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398,400,509"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fee_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "398,400"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-1"
+   },
+   {
+    "selector": "/RESULT_SURFACE/trades/0/net_trade_pnl",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398,400"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "trades",
+      0,
+      "net_trade_pnl"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "398,400"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/guards/guard_pnl_basis",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398,400"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "guards",
+      "guard_pnl_basis"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "394,398,1245"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-3"
+   },
+   {
+    "selector": "/RESULT_SURFACE/guards/last_closed_guard_pnl",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398,400"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "guards",
+      "last_closed_guard_pnl"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "394,398"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-4"
+   },
+   {
+    "selector": "/RESULT_SURFACE/guards/consecutive_loss_count",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "guards",
+      "consecutive_loss_count"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "398"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-5"
+   },
+   {
+    "selector": "/RESULT_SURFACE/guards/guard_blocked_raw",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "B",
+     "value": false,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "guards",
+      "guard_blocked_raw"
+     ],
+     "node_kind": "B",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "398"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-6"
+   },
+   {
+    "selector": "/RESULT_SURFACE/equity_curve/last",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1000,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398",
+     "baseline_selector_advisory": [
+      "account",
+      "equity"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "equity_curve",
+      "last"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "398,400"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-7"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-07-GREEN",
@@ -643,7 +1880,99 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-07-GREEN.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-07-GREEN.json"
   },
-  "design_lines": "349-388; 676-745; 747-839; 887"
+  "design_lines": "349-388; 676-745; 747-839; 887",
+  "rule2_green_projection": [
+   {
+    "selector": "/RESULT_SURFACE/equity_curve/last",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1000,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398",
+     "baseline_selector_advisory": [
+      "account",
+      "equity"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "equity_curve",
+      "last"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "398"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-07G-1"
+   },
+   {
+    "selector": "/RESULT_SURFACE/guards/consecutive_loss_count",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "guards",
+      "consecutive_loss_count"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "398"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-07G-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "398"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-07G-3"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "N",
+     "value": null,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "398"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position"
+     ],
+     "node_kind": "N",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "398"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-07G-4"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-08-RED",
@@ -666,14 +1995,14 @@
   ],
   "input": {
    "path": "tests/corrected_vnext/contracts/inputs/RULE2-08-RED.json",
-   "digest": "5136b0ce11f9e7b949e8b5105ce128df65ffcaf3ba0399f27141978ef341b0c1",
-   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+   "digest": "4bc3cc7402e1eb8dde4416fd698a9d2a46b5477aa9d5e7a10061aa7f8b281c4d",
+   "digest_reason": "digest re-pinned by W321 after M1 (owner decisions 137/144) amended the cost_schedule_id/cost_schedule_sha256 members from null to the RULE2-07 cost record by reference; design v1.15 lines 490,492,932,968,1107,1183."
   },
   "expected_artifacts": {
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-08-RED.json",
-    "digest": "6e76d54f82a5486d0500a9a8c2e0792e186db3a5d1f8ec8d18eff8eee27e4b17"
+    "digest": "2157c03fc52daa9183d14e5a1552d6dec58eb4d90024701bd49abb7487f98c4b"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -686,7 +2015,92 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-08-RED.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-08-RED.json"
   },
-  "design_lines": "390-433; 676-745; 747-839; 888"
+  "design_lines": "390-433; 676-745; 747-839; 888",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fee_events",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "488,490"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fee_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "488,490"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W321-M6-08R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/funding_events",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "488"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "funding_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "488"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W321-M6-08R-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/equity_curve/last",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1000,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "488",
+     "baseline_selector_advisory": [
+      "account",
+      "equity"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "equity_curve",
+      "last"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "488,490"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W321-M6-08R-3"
+   },
+   {
+    "selector": "/RESULT_SURFACE/cumulative_funding",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "488"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "cumulative_funding"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "488"
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W321-M6-08R-4"
+   }
+  ]
  },
  {
   "scenario_id": "RULE2-08-GREEN",
@@ -709,14 +2123,14 @@
   ],
   "input": {
    "path": "tests/corrected_vnext/contracts/inputs/RULE2-08-GREEN.json",
-   "digest": "3cb3cf0db3ab22134449f07c1c90e738a643736e16f97860889d80a08ebb900d",
-   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+   "digest": "6c349e8bf180e63dddb34834aa13098f9d723aecdff6b02d328aa6b55996a939",
+   "digest_reason": "digest re-pinned by W321 after M1 (owner decisions 137/144) amended the cost_schedule_id/cost_schedule_sha256 members from null to the RULE2-07 cost record by reference; design v1.15 lines 490,492,932,968,1107,1183."
   },
   "expected_artifacts": {
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
-    "digest": "6ad9432df9bcc1ef8d7f5ec31fcb2a5c7b30a7c80c56095c74aaeb6a24e91b97"
+    "digest": "08a559422eca70cb302f1381f2abbd409dd3c8482fdb58db47cdda5528e4de32"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -729,7 +2143,51 @@
    "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-08-GREEN.json",
    "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-08-GREEN.json"
   },
-  "design_lines": "390-433; 676-745; 747-839; 889"
+  "design_lines": "390-433; 676-745; 747-839; 889",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "488,494,1107"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "488,494,1107"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W321-M6-08G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "N",
+     "value": null,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "488,494,1107"
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position"
+     ],
+     "node_kind": "N",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "488,494,1107"
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W321-M6-08G-3"
+   }
+  ]
  },
  {
   "scenario_id": "PROBE-P012-01-A",
@@ -743,9 +2201,9 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-01-A/kernel/",
-  "modified_copy_digest": "bf3d60086b94fc6ac1987ac3be48d4043295c046b3bf965d8f0db1bc082c1d5f",
+  "modified_copy_digest": "53601f03974d3c6d815bb598f7c87453dad170f6e2e230bb7b96dee621f3050b",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-01-A/modification_manifest.json",
-  "modification_manifest_digest": "dcad00109d4f0ceb49e01f644fbfb167b69fac5ef23f85ac4dd0c76a6b729643",
+  "modification_manifest_digest": "18268dce2927dffb70bd2dcafb78a46a712056e0d3adc9a07e8083293b7916da",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
   "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
@@ -764,9 +2222,9 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-01-B/kernel/",
-  "modified_copy_digest": "a68dd872f75977c85931c762d24f6525a53e978ee633aff023c14644e5ed9d8a",
+  "modified_copy_digest": "728847388090267c44907e6eb272103f12b83c14ec1175c5ef591a31ddf629d2",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-01-B/modification_manifest.json",
-  "modification_manifest_digest": "3721ff47900bb4d134827206009012b48d94e845c162ce18f3f852f15b289ba2",
+  "modification_manifest_digest": "ff2d87846239ec9eeffe5a52f2fd92346ee360ebf1c417e7eb7e15cda7cc2474",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
   "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
@@ -785,13 +2243,13 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-02-A/kernel/",
-  "modified_copy_digest": "0e51bd03658fa54a255560459038abfadd030aac8e65b703dcfaedf9aa15f316",
+  "modified_copy_digest": "767f89a4e4d0b267fe9036afce4e7b12cc86e6403cb4da319791943a2a4bfe31",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-02-A/modification_manifest.json",
-  "modification_manifest_digest": "f37e6d9f3443292d9458ec5de609c1b4854fa2b4f67a3289b64ff9fdf91036c8",
-  "expected_failed_check": "RULE2_GREEN_CROSS_VERSION_EXPECTATION",
+  "modification_manifest_digest": "cfeb3a6bd60bc8159e943dd76f3386f94f94f71c1759f38dc48d97d77dad0c89",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/RESULT_SURFACE/admitted",
-  "comparator_first_differing_node": "/RESULT_SURFACE/admitted",
-  "note": "Design 8:245 - the variant changes the corrected comparison to > so equality refuses; the RULE-2-GREEN cross-version check must refuse on the admission/refusal projection for RULE2-02-GREEN. Under the variant the corrected side resolves REFUSAL(REFUSED_MIN_NOTIONAL) while the legacy side resolves PRESENT(B:1) at /RESULT_SURFACE/admitted; design 15.3:510 counts present-versus-refusal as unequal. Scope note: design 15.3:476 makes the cross-version GREEN check compare ONLY the declared shared behavioral projection, so the first changed node is taken within that projection. The variant also changes /EVENT_SURFACE/decision_events/3/decision and empties /EVENT_SURFACE/fill_events, which the separate corrected-expectation check would catch earlier in enumeration order. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events",
+  "note": "Design 8:263-297 (W317 amendment, owner decision 143) - re-targeted from RULE2_GREEN_CROSS_VERSION_EXPECTATION to CORRECTED_EXPECTATION. The variant changes the corrected admission comparison from >= to > so equality refuses; the corrected-expectation check compares the variant's output against the sealed expected artifact. Under the variant the corrected side refuses admission (order_notional 100 >= min_notional 100 is false with >), so no position opens, fill_events empties, fee_events empties, and cash_events empties. The sealed expected artifact carries cash_events with one fee entry; under UTF-8 key order cash_events (0x63) is the first key in EVENT_SURFACE (0x45), which precedes RESULT_SURFACE (0x52). The comparator returns the array pointer on list-length mismatch (verify_bceg.py:1545-1549; expected length 1 vs variant length 0), so the first differing node is /EVENT_SURFACE/cash_events. expected_first_changed_node stays /RESULT_SURFACE/admitted per design lines 285-294 as a member of the changed-node set. Re-derived by W321 under design v1.15 lines 263-297.",
   "design_lines": "252"
  },
  {
@@ -827,9 +2285,9 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-04-A/kernel/",
-  "modified_copy_digest": "c35479033870e5c1811626ce623ca67a4a779bf3dea66f03375d2f8fa4022f9c",
+  "modified_copy_digest": "72889d6ec0bc33481fdb862b20edf4861afbd2270b16ed1f6d14d55b4a8d91c6",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-04-A/modification_manifest.json",
-  "modification_manifest_digest": "24f70876403398f1663a659bdc1a63b44af355f5d4118c02ed4e95c94b7c0d72",
+  "modification_manifest_digest": "9d7f6bd538280d3e60b0d63c98b2d757888ff27f0626118abbc5f75c344bb478",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
   "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
@@ -848,9 +2306,9 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-05-A/kernel/",
-  "modified_copy_digest": "59eff888dbb654e8cda576132fe4244aa7f2a3f7d55f7501e620a716586838ac",
+  "modified_copy_digest": "1af733383c1fc9bfbbf2b769e1a63816ed3b676fa8a2ce19984e84be40c57f1c",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-05-A/modification_manifest.json",
-  "modification_manifest_digest": "44251938704af7f92d1e880b4dd3b4239c21ac927daae4db3840fc23c19643d5",
+  "modification_manifest_digest": "4f94bd6c01de0da1dbd41bf2117a8447f3afff5d877f187846669944b8b6afe2",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
   "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
@@ -869,9 +2327,9 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-05-B/kernel/",
-  "modified_copy_digest": "41844cf3db3790a028cd6bf71f7859ec90db94bb83083fb07785b76497090365",
+  "modified_copy_digest": "46e4c7bfa8d5a219d9ad904ca6f86e07a8ccb8efdf5153a23f5241bd8e9025c3",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-05-B/modification_manifest.json",
-  "modification_manifest_digest": "709a543786be9a07e77d1b81f6676d6c95c5bd027248e0aa85ea4dad78198661",
+  "modification_manifest_digest": "7f1f9c6e80f7bcbdf51e6a8f7b714640122c1e5a35c98456c1c38a8682a55bfb",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
   "comparator_first_differing_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
@@ -890,9 +2348,9 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-06-A/kernel/",
-  "modified_copy_digest": "2fe755a71836585361592e9bd3b913f843ccb3a9c0ba523a44e1d65561048869",
+  "modified_copy_digest": "66536389fe9f05a97ff84a1c5db13170ad9e0bb4794f383708c91e3605f11346",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-06-A/modification_manifest.json",
-  "modification_manifest_digest": "39c8af08f17c7bf3f8d7c689b8ce0db7d3d1ee8504aa5fedf5d401c0149e5380",
+  "modification_manifest_digest": "baecbd0e2569a6302d5f63b5f54e45c8f956169ec74a130030d3369c4898ca00",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/exit_id",
   "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
@@ -911,9 +2369,9 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-07-A/kernel/",
-  "modified_copy_digest": "b65811b6d77e376d34ffad34b7210cf6a0f983ee3bdf9c5efd0c2e88c4ca2e9c",
+  "modified_copy_digest": "1259f010f19dd9082fcfbc83632ee19fdd4720e744062e7b577b84ac821d0d88",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-07-A/modification_manifest.json",
-  "modification_manifest_digest": "57fee87191150d2afb983017339e1cec1a63faed80694155af803313afd40f37",
+  "modification_manifest_digest": "ed5bf6bdf3e3c1548a07c56f1bf0702798edb61b28abe1f8abc81f77d9e614f0",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/fee_events/1/liquidity_role",
   "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/1/signed_delta",
@@ -932,13 +2390,13 @@
   "subject_producer_id": "KERNEL_2",
   "target_kind": "KERNEL",
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-08-A/kernel/",
-  "modified_copy_digest": "98e73b51a0ee3ac05a285a8a0710f73ea0a9e621171317b4806cf0eb335c04c1",
+  "modified_copy_digest": "0b8ed6759544e3817762777bb3ba347af54cacfee098f2f0678e00e3ef46fe50",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-08-A/modification_manifest.json",
-  "modification_manifest_digest": "96aaa32930b1bfff487fadb7cdea34e14408e62fe939787c0c5e162ddb35c47d",
+  "modification_manifest_digest": "3f939edd8ad56bb48a06de178bb64dda1d1a190407c7e946796e79fec6f1c1ac",
   "expected_failed_check": "CORRECTED_EXPECTATION",
   "expected_first_changed_node": "/EVENT_SURFACE/funding_events/0/funding_cash_delta",
-  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
-  "note": "Design 14:433 - the variant flips the sign for the long positive-rate event; the check must refuse at the cash-delta node because independent expected -0.1 differs from actual +0.1. cash_events precedes funding_events in UTF-8 key order, so the joined cash row's signed_delta is the first changed node; /EVENT_SURFACE/funding_events/0/funding_cash_delta is the typed projection the design names. RE-DERIVED AT DESIGN v1.11 (amendment-choice W261): design 15.2:481-493 separates the design-named target node from the comparator's traversal-order first node, so expected_first_changed_node now carries the design-named typed projection /EVENT_SURFACE/funding_events/0/funding_cash_delta, which is a member of the complete changed-node set, and /EVENT_SURFACE/cash_events/0/signed_delta - measured by W256 (W256_PROBES_REPORT.md:182) - is recorded above as comparator_first_differing_node. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
-  "design_lines": "447"
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/1/signed_delta",
+  "note": "Design 14:498 - the variant flips the sign for the long positive-rate event; the check must refuse at the cash-delta node because independent expected -0.1 differs from actual +0.1. With the W320 amendment (design v1.15 line 490), the pre-window OPEN fill adds a fee cash event at cash_events[0] (signed_delta -0.1), so the funding cash event moves to cash_events[1]. The variant does not change the fee sign, so cash_events[0] matches (-0.1 = -0.1) and cash_events[1] differs (-0.1 vs +0.1). cash_events precedes funding_events in UTF-8 key order, so the joined cash row's signed_delta at index 1 is the first changed node; /EVENT_SURFACE/funding_events/0/funding_cash_delta is the typed projection the design names. RE-DERIVED AT DESIGN v1.11 (amendment-choice W261): design 15.2:481-493 separates the design-named target node from the comparator's traversal-order first node. RE-DERIVED AT DESIGN v1.15 (W321): comparator index updated for the new fee cash event. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "design_lines": "498"
  }
 ]

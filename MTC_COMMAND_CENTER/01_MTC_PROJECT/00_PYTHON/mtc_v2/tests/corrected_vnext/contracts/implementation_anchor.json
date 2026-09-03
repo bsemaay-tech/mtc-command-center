@@ -1,8 +1,8 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "e4ffde6a420202d2c9f3872f99c5527c1af7e7b83341764ec874d774f8aaa531",
- "IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
+ "EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+ "IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
  "core_tree_oid_at_base": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
@@ -30,7 +30,7 @@
  "lead_acceptance": {
   "accepted_by": "Lead (claude-fable-5), 2026-08-31 ~15:55 local",
   "basis": "Gate-2 plan v2 (A7-cleared) owner-approved addendum 16; tables bundle W127b sealed, all 19 file digests re-verified by W150; owner rulings addenda 14-17 complete; design v1.4 terminal dual-zero",
-  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #10 seal d763f62f9a42... on 2026-09-02T14:13:22+03:00; design v1.11; probe digests pinned; goldens and inputs unchanged since seal #8. Re-seal #11 2026-09-02T14:43:01+03:00: design v1.12 pinned; seal digest unchanged."
+  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #10 seal d763f62f9a42... on 2026-09-02T14:13:22+03:00; design v1.11; probe digests pinned; goldens and inputs unchanged since seal #8. Re-seal #11 2026-09-02T14:43:01+03:00: design v1.12 pinned; seal digest unchanged. Re-seal #14 2026-09-03T14:20:14+03:00: design v1.15 pinned; base re-pinned (M5); seal a58b6dea7539."
  },
  "reseal_history": [
   {
@@ -104,7 +104,23 @@
    "old_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
    "new_EXPECTED_SEAL_SHA": "e4ffde6a420202d2c9f3872f99c5527c1af7e7b83341764ec874d774f8aaa531",
    "reason": "Re-seal #13: nine kernel probe digests re-pinned after the authorized kernel repairs (decision 132); baseline regeneration W300 follows."
+  },
+  {
+   "at": "2026-09-03T14:20:14+03:00",
+   "old_EXPECTED_SEAL_SHA": "e4ffde6a420202d2c9f3872f99c5527c1af7e7b83341764ec874d774f8aaa531",
+   "new_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+   "reason": "Re-seal #14: owner decisions 135-144; the fresh snapshot the owner asked the fresh audits to run against."
   }
  ],
- "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862"
+ "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+ "base_repin_history": [
+  {
+   "at": "2026-09-03T09:27:33+03:00",
+   "actor": "Lead (claude-fable-5-1), M5 base re-pin",
+   "old_IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
+   "new_IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
+   "new_core_tree_oid_at_base": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
+   "reason": "Owner decision 135 (2026-09-03): the recorded base predated the sealed bundle, so the expected-source provenance check could never clear (W279B-F06, W276B / W305B FINDING-4); re-pinned to the commit that first placed the sealed bundle."
+  }
+ ]
 }
