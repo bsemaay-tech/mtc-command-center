@@ -1924,3 +1924,18 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
   after it: suite green, gate residual = ONLY the section-16 review. Then the second audit pass (W276D Codex, GM83D Gemini,
   W279D Claude Pro if its API answers) on that HEAD; if it is clean-except-the-review, the Section-16 review package is
   DRAFTED (not signed) and the M2 session brief prepared with loss-at-stop left blank.
+
+## Addendum 77 - 2026-09-03 22:0x REAL (Lead record: the engine branch reached CLEAN-EXCEPT-REVIEW; second audit pass launched; no new owner decision)
+
+- **W342C (Codex free, 21:50-22:03; decision 147 consequence):** the seven provenance self-tests re-fixtured to the re-anchored
+  base (synthetic post-base change; recorded values from the committed record; each test shown to fail if its guarded behaviour
+  is removed); contract suite **314 passed**; legacy replay 34/34; **the canonical gate at `3ed6ea87` refuses ONLY
+  `SEMANTIC_COVERAGE_REVIEW_MISSING`** (the owner's section-16 act, deliberately not prepared until the fresh audits are clean).
+- **State the owner asked for on 2026-09-03 08:1x (decision 141) now exists:** scoped corrections complete (decisions 135-152), one
+  fresh sealed snapshot (re-seal #16 `40aaf7da...`, design v1.17, base `63cfe2dd`, baseline consuming it), and the fresh audits'
+  first round plus the owner-directed repairs; the **second independent pass on the exact final snapshot** starts now: GM83D
+  (Gemini 3.8, packet at `3ed6ea87`), W276D (Codex fourth at its 22:13 reset, xhigh), W279D (Claude Pro) deferred while the
+  Anthropic API still fails a one-word probe (21:51) - recorded, not estimated. Verifiers of every repair today: Gemini
+  (V341/V341B/V345B/V347/V347B/V348) with Codex as author; the second pass adds the Codex and, when reachable, the Claude view.
+- Nothing is signed. If the second pass is clean-except-the-review, the Lead drafts the Section-16 review package for the owner's
+  own reading and the M2 session brief with loss-at-stop left blank. Owner word still pending: `accept design P0-14 v1.10`.
