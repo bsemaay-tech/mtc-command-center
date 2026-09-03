@@ -1819,3 +1819,29 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
 - The owner asked for the one-paragraph P0-14 v1.10 evidence and recommendation (delivered in chat 19:4x; the word remains
   the owner's). The owner reports the Codex Pro weekly reset applied ("Codex pro has credit now"); the Lead probes all four
   accounts before launching.
+
+## Addendum 72 - 2026-09-03 19:5x REAL (Lead record: decisions 147-152 in execution - self-test re-sync, design v1.16 accepted, record-digest lane running; no new owner decision)
+
+- **Codex free returned on the owner's weekly reset (probe 19:40; third still capped to Sep 7; fourth/secondary 22:13).** The
+  owner-word lanes run serially on it; fourth/secondary rejoin at 22:13 for the worktree lanes.
+- **W342B (Codex free, 19:31-19:38, `78da7991`):** the one self-test literal re-aligned to the W341B catalog value (GM83D-F02);
+  suite 1 failed (the deliberately open 02-A case) / 312; legacy replay 34/34; gate list unchanged.
+- **W347 (Codex free standing in for the design family, 19:39-19:52) = design v1.16** (1769 lines; +106 / -1 = the header):
+  section 2.1 admits `funding_event_id` on funding-kind cash rows as a second consistency key (`cash_event_id` stays the sole
+  one-to-one join); a block after the section-23.1 table closes the cash member sets; section 23.4 closes `run_manifest` to
+  the eleven keys the committed serializer emits (11 source / 11 design / 0 missing / 0 extra; a twelfth is refused until
+  named); the three record-file digests by the sidecar recipe and the source-document digest by the section-5.1 raw-byte
+  recipe; L13 (post-hoc admitted members are declared, not venue-derived); **L14 and the section-15.4 AMENDMENT-CHOICE for
+  decision 147** (the pre-implementation seal property is the measurement that the corrected kernel is absent at
+  `5e8e5794`; after the re-anchor the predicate proves only "no expected path changed since the last re-seal"; the nine
+  re-seals between carry owner decisions and written derivations, human-reviewed under section 16). Two discrepancies
+  recorded: the Q-E wording grouped lineage members the kernel does not emit (closed only over the measured emission;
+  lineage stays `later`); the sidecar recipe does not apply to the source-document digest. **Gemini V347 = ACCEPT 6/6;
+  the Lead accepted v1.16 (`W347_ACCEPTED.txt`, sha256 in the marker).**
+- **W345 (Codex free, since 19:53; decision 149):** record digests on the fifteen goldens; Gemini verifies; then W348 (decision
+  151 members) -> Lead re-seal #16 with design pin v1.16 -> W300E baseline -> W349 in-repo copies -> Lead base re-anchor
+  (decision 147, `repin_base16.py`: anchor + manifest members together) -> provenance record re-measured at the new base ->
+  one gate. W344 (02-A harness, decision 148) is timed for Codex fourth at 22:14 and W346 (red-suite refusal, decision 150)
+  chains after it; Wayfinder revision 5 at 22:16 on secondary.
+- The owner asked for the P0-14 v1.10 one-paragraph evidence and recommendation; delivered in chat 19:4x; the acceptance word
+  stays the owner's.
