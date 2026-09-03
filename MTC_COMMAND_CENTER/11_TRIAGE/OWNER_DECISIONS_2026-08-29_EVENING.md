@@ -1485,3 +1485,37 @@ live trading, a build, or a kernel change.
   table for the previous round's 5 + 19 + 8 findings. Plan `PLAN_16H_2026-09-03_PM.md` rev 1 sent 13:37.
 - Routes measured 13:35: Codex free / fourth / secondary all live; Claude Pro window 13:10-18:10; Gemini idle; DeepSeek
   V4 Pro carried the two author passes, the fold and both censuses; MAX orchestration only.
+
+## Addendum 60 - 2026-09-03 14:2x REAL (Lead record: W315 accepted; RE-SEAL #14 executed; baseline regeneration W300C launched; no new owner decision)
+
+- **W315 (Codex fourth, xhigh, 13:52-14:19) landed as one commit `af97ec8c` on the engine branch:** the nine KERNEL probe
+  variants rebuilt on the post-K core (tree oid `efac9783...`; 0 patch conflicts; patch sha unchanged per probe; the
+  Lead's own measurement of every variant against the live core = exactly one differing file, `economics.py`, 119
+  members each, no extras); the M4/M4b/08-A expectation values written exactly as handed over by W312 (06-A) and W321
+  (02-A, 08-A); the bundle catalog's nine PROBE rows re-pinned, RED/GREEN rows byte-identical; the gate refused only
+  the predicted `DESIGN_PIN_MISMATCH`. **V315 (DeepSeek V4 Pro, read-only) = ACCEPT 6/6**; variant bytes themselves
+  NOT VERIFIED by packet (stated) - covered by the Lead measurement above. W315 recorded three discrepancies; the one
+  that matters for the owner: **two pre-existing manifest-versus-catalog `expected_first_changed_node` differences
+  (PROBE-P012-03-A, INPUT-kind, and PROBE-P012-07-A)** lie outside the M4 fence (decision 140 names 02-A, 06-A, 08-A)
+  and were NOT changed; the current validator binds `expected_failed_check` only, so both still validate. Recorded
+  here as an open tables item for the fresh audits and, if they confirm it, for an owner word (no number invented).
+- **Lead re-seal #14 executed 14:1x (`reseal14.py`):** `EXPECTED_SEAL_SHA` `e4ffde6a...` -> `a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba`;
+  moved members against the pre-W311 snapshot: `scenario_catalog.json` (26 rows: input digests M1/M1b/M7/M7b, the
+  sealed projection members M6 on 17 rows, the nine PROBE rows), `DERIVATIONS.md` (insertion-only, verified),
+  `golden/corrected_vnext/RULE2-08-RED.json` and `RULE2-08-GREEN.json` (decision 144 chain); design pin v1.15 (sha
+  `137180ae...`, 1664 lines, heading map re-measured); anchor base `5e8e5794` (M5); `files[].bytes` and sha updated;
+  `VERIFIED_BY` names twelve verify reports (V306/V306B, V311, V312, V313, V314, V317, V318, V319, V320C r2, V321C r6,
+  V315). Catalog sha at seal #14: `555c4441b40c3f6fe5e00729f7d4d496c9a5cf78215fcfddd82d6243d2a7bb14`. Backup of the
+  four pre-seal files in `C:/tmp/P012_LEAD_RESEAL/pre_reseal14_backup`. Structural note for the audits: the manifest
+  `files[]` carries the catalog, DERIVATIONS and the 17 goldens (19 members); the sealed INPUTS are bound through the
+  catalog rows' `input.digest` members, not listed directly (unchanged structure since seal #10).
+- **Baseline (decision 132 shape, third run):** the seal-#13 run archived whole to
+  `C:/tmp/P012_BASELINE_RUN_seale4ffde6a_archive/out` (36 files, byte-identical copy verified), live `out/` removed,
+  dry-run 17/17 ready at driver sha `b7648f71...` and catalog `555c4441...`, Lead note
+  `LEAD_DRYRUN_NOTE_2026-09-03_SEAL14.md`. Expected regression: exactly FIVE scenario surfaces may differ from the
+  seal-#13 archive (RULE2-06-EQUAL-PRICE-RED, RULE2-06-RED, RULE2-06-GREEN, RULE2-08-RED, RULE2-08-GREEN - the inputs
+  the owner's decisions moved); every other surface byte-identical. **W300C launched 14:22 on Codex free.** Next:
+  W316 (in-repo copies to seal #14 + design pin v1.15 + one gate run; Codex secondary) -> fresh audits W276C (Codex),
+  W279C (Claude Pro, 18:10 window), GM83C (Gemini 3.8; no git writes while it runs) on that exact snapshot.
+- Wayfinder: new session `2026-09-03T1332-claude` revision 1 OPEN_PROVISIONAL imported by the dashboard at 14:07
+  (measured hours only: WP-P0-12 0.21 h, WP-P0-14 0.35 h; Lead time NOT RECORDED).
