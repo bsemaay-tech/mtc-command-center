@@ -1221,3 +1221,33 @@ live trading, a build, or a kernel change.
 - Running: W312 (M6 + M4, Claude Pro; RULE2-08 rows and probe 08-A held for M1b), W314, V306. Next after they
   land: V312, V314, then the Lead sequence repin_base14 (M5) -> reseal14 -> baseline regeneration (decision 132
   shape) -> probe manifests from the W312 table -> in-repo five-file copy + design pin v1.13 -> fresh audits.
+
+## Addendum 48 - 2026-09-03 09:0x REAL (owner decisions 142-143 from the W312 discrepancies; state after the first verify round)
+
+142. **M7b APPROVED (default (a), owner 09:0x "both questions are default"):** the RULE2-06-RED and RULE2-06-GREEN
+    sealed inputs receive the `target_book` member (W312 D-7: without it the corrected run keeps the kernel's own
+    TP1/TP2 ids and mismatches its golden before probe 06-A runs - the class decision 139 closed for the equal-price
+    row). Values quoted from the design's own scenario rows; no invented number; tables-family act (W319, Claude
+    Pro), verified, in seal #14.
+143. **M4b APPROVED (default (a)):** PROBE-P012-02-A's design-named check is unreachable for a KERNEL-kind probe
+    (W312 D-6: the check now compares two sealed producers only). The design family re-targets 02-A to a reachable
+    check derived from the design's own RULE-2 fail input (W317); the tables family then derives the row values;
+    if no reachable check exists, 02-A is proposed for retirement and the owner decides.
+- **Lead dispositions inside the M6 fence (owner may veto):** (i) W312 D-2/D-3 - the design's closed catalog-row
+  member list (section 15.2) does not admit the two projection members the harness reads from the row, and their
+  JSON container is not pinned; W317 (design family) admits them and pins the shape W312 wrote (V312 ACCEPT), adds
+  honest limit L10 (legacy-side states are `DESIGN_DERIVED` declarations until reconciled against the baseline
+  bytes by a later lane - W312 D-4/D-5). (ii) W312 D-12 - the harness raises `EXPECTATION_UNSEALED` before reading
+  the row and a selftest asserts that for every row; W318 (harness family, Codex free) wires consumption with
+  RED/GREEN discriminators. Neither adds a number.
+- **Verify round 1 complete:** V306B ACCEPT x3 (K commits, diff-level); V311 ACCEPT x3; V312 ACCEPT (55 members
+  on 15 rows; RULE2-08 x2 + 08-A STOPPED for M1b; 12 discrepancies all accepted as recorded); V313 ACCEPT; V314:
+  cases 2-5 ACCEPT, case 1 (probe-driver selftest) REQUEST_CHANGES because W314 took its value from a run instead
+  of stopping - reverted by W314B (`0c44a447`), the case now fails honestly as an open item of the 08-A cluster.
+  Engine HEAD `8112ff0b`. Codex fourth and secondary capped until 10:45; free live.
+- **Owner question M1b remains open** (addendum 46; default (a) = bind RULE2-08 to the existing RULE2-07 cost
+  record by design amendment). The Lead will apply the default only on the owner's word or at the seal-#14
+  deadline stated in the next status; the RULE2-08 rows and probe 08-A stay held until then.
+- Revised order: W317 + W319 + W318 (parallel, three families) -> V317/V319/V318 -> W315 (probe variants rebuilt on
+  the post-K core + M4/M4b values; Codex) -> Lead repin_base14 + reseal14 -> W300C baseline regeneration -> W316
+  in-repo copies + design pin -> fresh audits on that exact snapshot.
