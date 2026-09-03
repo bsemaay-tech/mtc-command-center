@@ -84,4 +84,3 @@ def test_corrected_only_config_keys_require_exact_v2_selector() -> None:
     config.pop("kernel_semantics_version")
     with pytest.raises(ValueError):
         validate_config(config)
-
