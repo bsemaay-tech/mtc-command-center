@@ -1818,14 +1818,16 @@ def materialize_observed_artifacts(root: Path, baseline_root: Path) -> dict[str,
         try:
             projections = build_projection_results(
                 row["scenario_id"],
-                load_json_exact(root / row["input"]["path"]),
+                row,
                 legacy["RESULT_SURFACE"],
-                corrected,
+                golden,
             )
-        except (IndexError, KeyError, TypeError) as exc:
+        except GateRefusal as exc:
+            if exc.check_id != "EXPECTATION_UNSEALED":
+                raise
             projections = []
             projection_failures = []
-            projection_error = f"{type(exc).__name__}: {exc}"
+            projection_error = str(exc)
         else:
             projection_failures = [
                 member
@@ -2964,29 +2966,23 @@ def _probe_failure_receipt(
 
 
 def _green_projection_differences(
+    root: Path,
     baseline_root: Path,
     base_row: dict[str, Any],
-    input_document: dict[str, Any],
-    observed: dict[str, Any],
 ) -> list[str]:
     scenario_id = base_row["scenario_id"]
     legacy_result = load_json_exact(
         baseline_root / "out" / scenario_id / "result_surface.json"
     )
-    differences: list[str] = []
-    if scenario_id == "RULE2-02-GREEN":
-        legacy_admitted = _present(_legacy_position(legacy_result)["present"])
-        corrected_admitted = _present(
-            observed["RESULT_SURFACE"]["final_position"] is not None
-        )
-        if legacy_admitted != corrected_admitted:
-            return ["/RESULT_SURFACE/admitted"]
+    expected_corrected = load_json_exact(
+        root / base_row["expected_artifacts"]["2.0.0"]["path"]
+    )
     projections = build_projection_results(
-        scenario_id, input_document, legacy_result, observed
+        scenario_id, base_row, legacy_result, expected_corrected
     )
-    differences.extend(
+    differences = [
         projection["selector"] for projection in projections if not projection["equal"]
-    )
+    ]
     return list(dict.fromkeys(differences))
 
 
@@ -3061,9 +3057,12 @@ def _run_probe_child(
                 changed_nodes=[difference[0] for difference in differences],
             )
     elif expected_check == "RULE2_GREEN_CROSS_VERSION_EXPECTATION":
-        differences = _green_projection_differences(
-            baseline_root, base_row, input_document, observed
-        )
+        try:
+            differences = _green_projection_differences(root, baseline_root, base_row)
+        except GateRefusal as exc:
+            return _probe_failure_receipt(
+                probe_id, exc.check_id, exc.pointer, refusal=exc.as_dict()
+            )
         if differences:
             return _probe_failure_receipt(
                 probe_id,
@@ -3400,120 +3399,30 @@ def _projection_pair(pointer: str, left: dict[str, Any], right: dict[str, Any]) 
 
 def build_projection_results(
     scenario_id: str,
-    input_document: dict[str, Any],
+    catalog_row: dict[str, Any],
     legacy_result: dict[str, Any],
-    corrected: dict[str, Any],
+    expected_corrected: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    event = corrected["EVENT_SURFACE"]
-    result = corrected["RESULT_SURFACE"]
-    legacy_events = legacy_result["events"]
-    position = _legacy_position(legacy_result)
-    pairs: list[dict[str, Any]] = []
+    """Refuse projections whose selectors are not sealed in the catalog.
 
-    def pair(pointer: str, left: dict[str, Any], right: dict[str, Any]) -> None:
-        pairs.append(_projection_pair(pointer, left, right))
+    The current catalog seals the expected artifact paths and values but carries
+    neither ``rule2_divergent_projection`` nor ``rule2_green_projection``.
+    GATE_READER therefore has no authorized selector list to evaluate.  The
+    documents are accepted only to make the two permitted expected producers
+    explicit; no value or selector is derived from either actual kernel output.
+    """
 
-    if scenario_id.startswith("RULE2-01-"):
-        legacy_fill = _legacy_event(legacy_result, 0)
-        legacy_qty = _decode_legacy_number(legacy_fill["qty"])
-        legacy_price = _decode_legacy_number(legacy_fill["price"])
-        multiplier = input_document["legacy_arm"]["config"]["instrument_contract_multiplier"]
-        pair("/EVENT_SURFACE/fill_events/0/quantity", _present(legacy_qty, "I"), _present(event["fill_events"][0]["quantity"], "I"))
-        pair("/RESULT_SURFACE/final_position/quantity", _present(_decode_legacy_number(position["qty"]), "I"), _present(result["final_position"]["quantity"], "I"))
-        pair("/RESULT_SURFACE/order_notional", _present(legacy_qty * legacy_price * multiplier, "I"), _present(result["order_notional"], "I"))
-    elif scenario_id.startswith("RULE2-02-"):
-        corrected_refusals = result["refusals"]
-        if scenario_id.endswith("RED"):
-            # Design v1.8 line 248 declares refusal/no position; Reading Y
-            # (owner addendum 26) and the golden w172 note forbid a padded fourth decision row.
-            pair("/RESULT_SURFACE/refusals/0/code", _absent(), _present(corrected_refusals[0]["code"]))
-            pair("/EVENT_SURFACE/fill_events", _present([None] * len(legacy_events)), _present(event["fill_events"]))
-            pair("/RESULT_SURFACE/final_position", _present({"side": "LONG", "quantity": 1}), _present(result["final_position"]))
-        else:
-            pair("/RESULT_SURFACE/admitted", _present(position["present"]), _present(result["final_position"] is not None))
-            pair("/EVENT_SURFACE/fill_events/0/quantity", _present(_decode_legacy_number(legacy_events[0]["qty"]), "I"), _present(event["fill_events"][0]["quantity"], "I"))
-            pair("/RESULT_SURFACE/final_position/quantity", _present(_decode_legacy_number(position["qty"]), "I"), _present(result["final_position"]["quantity"], "I"))
-    elif scenario_id.startswith("RULE2-03-"):
-        runtime_tick = input_document["legacy_arm"]["config"]["instrument_price_tick"]
-        if scenario_id.endswith("RED"):
-            pair("/RESULT_SURFACE/refusals/0/code", _absent(), _present(result["refusals"][0]["code"]))
-            pair("/EVENT_SURFACE/decision_events/1/decision", _absent(), _projection_value(event, "decision_events", 1, "decision"))
-            pair("/EVENT_SURFACE/fill_events", _present([None] * len(legacy_events)), _refusal(result["refusals"][0]["code"]))
-            pair("consumed price_tick", _present(runtime_tick, "F"), _refusal(result["refusals"][0]["code"]))
-        else:
-            pair("/RESULT_SURFACE/refusals", _present([]), _present(result["refusals"]))
-            pair("consumed price_tick", _present(runtime_tick, "F"), _projection_value(event, "decision_events", 1, "record_value", kind="F"))
-            pair("/RESULT_SURFACE/final_position", _present(None), _present(result["final_position"]))
-    elif scenario_id.startswith("RULE2-04-"):
-        if scenario_id.endswith("RED"):
-            legacy_fill = legacy_events[0]
-            pair("/EVENT_SURFACE/fill_events/0/reference_price", _present(_decode_legacy_number(legacy_fill["price"]), "I"), _present(event["fill_events"][0]["reference_price"], "I"))
-            pair("/EVENT_SURFACE/fill_events/0/final_fill_price", _present(_decode_legacy_number(legacy_fill["price"]), "I"), _present(event["fill_events"][0]["final_fill_price"], "I"))
-            pair("/EVENT_SURFACE/fill_events/0/fill_trigger", _absent(), _present(event["fill_events"][0]["fill_trigger"]))
-        else:
-            pair("/EVENT_SURFACE/exit_events", _present([]), _present(event["exit_events"]))
-            pair("/EVENT_SURFACE/fill_events", _present([]), _present(event["fill_events"]))
-            pair("/RESULT_SURFACE/final_position/quantity", _present(_decode_legacy_number(position["qty"]), "I"), _present(result["final_position"]["quantity"], "I"))
-    elif scenario_id.startswith("RULE2-05-"):
-        legacy_fill = legacy_events[0]
-        if scenario_id.endswith("RED"):
-            pair("/EVENT_SURFACE/fill_events/0/reference_price", _absent(), _present(event["fill_events"][0]["reference_price"], "I"))
-            pair("/EVENT_SURFACE/fill_events/0/slippage_impact", _absent(), _present(event["fill_events"][0]["slippage_impact"], "I"))
-            pair("/EVENT_SURFACE/fill_events/0/final_fill_price", _present(_decode_legacy_number(legacy_fill["price"]), "I"), _present(event["fill_events"][0]["final_fill_price"], "I"))
-            pair("/EVENT_SURFACE/fill_events/0/slippage_application_count", _absent(), _present(event["fill_events"][0]["slippage_application_count"], "I"))
-        else:
-            pair("/EVENT_SURFACE/fill_events/0/final_fill_price", _present(_decode_legacy_number(legacy_fill["price"]), "I"), _present(event["fill_events"][0]["final_fill_price"], "I"))
-    elif scenario_id.startswith("RULE2-06-"):
-        legacy_fill = legacy_events[0]
-        corrected_fills = event["fill_events"]
-        legacy_exit_id = "STOP" if legacy_fill["exit_id"] == "INITIAL_SL" else legacy_fill["exit_id"]
-        corrected_gross = sum(member["gross_realized_pnl"] for member in event["exit_events"])
-        if scenario_id == "RULE2-06-GREEN":
-            pair("/EVENT_SURFACE/fill_events/0/exit_id", _present(legacy_exit_id), _present(corrected_fills[0]["exit_id"]))
-            pair("/EVENT_SURFACE/fill_events/0/quantity", _present(_decode_legacy_number(legacy_fill["qty"]), "I"), _present(corrected_fills[0]["quantity"], "I"))
-            pair("/EVENT_SURFACE/fill_events/0/final_fill_price", _present(_decode_legacy_number(legacy_fill["price"]), "I"), _present(corrected_fills[0]["final_fill_price"], "I"))
-            pair("lifecycle gross realized PnL", _present(_decode_legacy_number(legacy_fill["realized_pnl"]), "I"), _present(corrected_gross, "I"))
-        else:
-            pair("/EVENT_SURFACE/fill_events/0/exit_id", _present(legacy_exit_id), _present(corrected_fills[0]["exit_id"]))
-            if scenario_id == "RULE2-06-EQUAL-PRICE-RED":
-                pair("/EVENT_SURFACE/fill_events/1/exit_id", _absent(), _present(corrected_fills[1]["exit_id"]))
-            pair("/EVENT_SURFACE/fill_events", _present([None]), _present([None] * len(corrected_fills)))
-            pair("/EVENT_SURFACE/fill_events/0/final_fill_price", _present(_decode_legacy_number(legacy_fill["price"]), "I"), _present(corrected_fills[0]["final_fill_price"], "I"))
-            if len(corrected_fills) > 1:
-                pair("/EVENT_SURFACE/fill_events/1/final_fill_price", _absent(), _present(corrected_fills[1]["final_fill_price"], "I"))
-            # Design v1.9 lines 1038 and 1133-1156 put the sole collision receipt
-            # on decision_events; both sealed v18 goldens record removal of RESULT collision.
-            pair("/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids", _absent(), _projection_value(event, "decision_events", 2, "ordered_chosen_exit_ids"))
-            pair("lifecycle gross realized PnL", _present(_decode_legacy_number(legacy_fill["realized_pnl"]), "I"), _present(corrected_gross, "I"))
-    elif scenario_id.startswith("RULE2-07-"):
-        legacy_equity = _decode_legacy_number(legacy_result["account"]["equity"])
-        if scenario_id.endswith("RED"):
-            pair("/EVENT_SURFACE/fee_events", _absent(), _present(event["fee_events"]))
-            pair("/RESULT_SURFACE/trades/0/net_trade_pnl", _absent(), _present(result["trades"][0]["net_trade_pnl"], "F"))
-            pair("/RESULT_SURFACE/guards/guard_pnl_basis", _absent(), _present(result["guards"]["guard_pnl_basis"]))
-            pair("/RESULT_SURFACE/guards/last_closed_guard_pnl", _absent(), _present(result["guards"]["last_closed_guard_pnl"], "F"))
-            pair("/RESULT_SURFACE/guards/consecutive_loss_count", _present(0, "I"), _present(result["guards"]["consecutive_loss_count"], "I"))
-            pair("/RESULT_SURFACE/guards/guard_blocked_raw", _present(False), _present(result["guards"]["guard_blocked_raw"]))
-            pair("/RESULT_SURFACE/equity_curve/last", _present(legacy_equity, "I"), _present(result["equity_curve"]["last"], "F"))
-        else:
-            pair("/RESULT_SURFACE/equity_curve/last", _present(legacy_equity, "I"), _present(result["equity_curve"]["last"], "I"))
-            pair("/RESULT_SURFACE/guards/consecutive_loss_count", _present(0, "I"), _present(result["guards"]["consecutive_loss_count"], "I"))
-            pair("/EVENT_SURFACE/fill_events", _present([]), _present(event["fill_events"]))
-            pair("/RESULT_SURFACE/final_position", _present(None), _present(result["final_position"]))
-    elif scenario_id.startswith("RULE2-08-"):
-        legacy_equity = _decode_legacy_number(legacy_result["account"]["equity"])
-        if scenario_id.endswith("RED"):
-            pair("/EVENT_SURFACE/funding_events", _absent(), _present(event["funding_events"]))
-            pair("/EVENT_SURFACE/cash_events", _absent(), _present(event["cash_events"]))
-            pair("/RESULT_SURFACE/cumulative_funding", _absent(), _present(result["cumulative_funding"], "F"))
-            pair("/RESULT_SURFACE/equity_curve/last", _present(legacy_equity, "I"), _present(result["equity_curve"]["last"], "F"))
-        else:
-            pair("/RESULT_SURFACE/equity_curve/last", _present(legacy_equity, "I"), _present(result["equity_curve"]["last"], "I"))
-            pair("/EVENT_SURFACE/fill_events", _present([]), _present(event["fill_events"]))
-            pair("/RESULT_SURFACE/final_position", _present(None), _present(result["final_position"]))
-    else:
-        raise GateRefusal("PROJECTION_SCENARIO_UNKNOWN", scenario_id)
-    return pairs
+    del legacy_result, expected_corrected
+    field = (
+        "rule2_divergent_projection"
+        if catalog_row.get("role") == "RED"
+        else "rule2_green_projection"
+    )
+    raise GateRefusal(
+        "EXPECTATION_UNSEALED",
+        f"{scenario_id}: sealed catalog row has no evaluable {field}",
+        pointer=f"/{field}",
+    )
 
 
 def compute_legacy_event_order_map(corpus: Corpus) -> tuple[dict[str, str], str]:
@@ -3658,7 +3567,6 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
     blocked_node_skips: list[dict[str, str]] = []
     for row in value_rows:
         scenario_id = row["scenario_id"]
-        input_document = load_json_exact(root / row["input"]["path"])
         legacy_observed = _legacy_observed_document(
             corpus,
             row,
@@ -3730,8 +3638,15 @@ def run_comparison_pipeline(root: Path, baseline_root: Path) -> dict[str, Any]:
         legacy_result = load_json_exact(baseline_root / "out" / scenario_id / "result_surface.json")
         try:
             projections = build_projection_results(
-                scenario_id, input_document, legacy_result, corrected
+                scenario_id, row, legacy_result, golden
             )
+        except GateRefusal as exc:
+            if exc.check_id != "EXPECTATION_UNSEALED":
+                raise
+            projections = []
+            status = "STOP_EXPECTATION_UNSEALED"
+            first = None
+            corrected_blockers.append({"scenario_id": scenario_id, **exc.as_dict()})
         except (IndexError, KeyError, TypeError) as exc:
             projections = []
             status = "STOP_COULD_NOT_EVALUATE"

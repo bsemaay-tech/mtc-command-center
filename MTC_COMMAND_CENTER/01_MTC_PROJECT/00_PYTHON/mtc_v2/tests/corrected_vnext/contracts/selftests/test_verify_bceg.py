@@ -2027,16 +2027,10 @@ def test_rule2_08_raw_kernel_is_not_seeded_from_legacy_state(
     assert "cumulative_funding" not in result
 
 
-def test_rule2_02_red_projection_matches_design_and_all_pairs_diverge() -> None:
+def test_rule2_02_red_projection_refuses_without_sealed_selector_declaration() -> None:
     scenario_id = "RULE2-02-RED"
-    expected_selectors = [
-        "/RESULT_SURFACE/refusals/0/code",
-        "/EVENT_SURFACE/fill_events",
-        "/RESULT_SURFACE/final_position",
-    ]
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
     row = next(member for member in catalog if member["scenario_id"] == scenario_id)
-    input_document = load_json_exact(MTC_V2_ROOT / row["input"]["path"])
     legacy = load_json_exact(
         Path(r"C:\tmp\P012_BASELINE_RUN")
         / "out"
@@ -2047,40 +2041,60 @@ def test_rule2_02_red_projection_matches_design_and_all_pairs_diverge() -> None:
         MTC_V2_ROOT / row["expected_artifacts"]["2.0.0"]["path"]
     )
 
-    projections = build_projection_results(
-        scenario_id,
-        input_document,
-        legacy,
-        corrected,
+    with pytest.raises(GateRefusal) as caught:
+        build_projection_results(scenario_id, row, legacy, corrected)
+
+    assert caught.value.check_id == "EXPECTATION_UNSEALED"
+    assert caught.value.pointer == "/rule2_divergent_projection"
+
+
+def test_w305_item5_refuses_reader_authored_green_projection_when_catalog_has_none() -> None:
+    scenario_id = "RULE2-02-GREEN"
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == scenario_id)
+    legacy = load_json_exact(
+        BASELINE_ROOT / "out" / scenario_id / "result_surface.json"
+    )
+    golden = load_json_exact(
+        MTC_V2_ROOT / row["expected_artifacts"]["2.0.0"]["path"]
     )
 
-    assert [member["selector"] for member in projections] == expected_selectors
-    assert [member["equal"] for member in projections] == [False] * len(
-        expected_selectors
-    )
+    with pytest.raises(GateRefusal) as caught:
+        build_projection_results(scenario_id, row, legacy, golden)
+
+    assert caught.value.check_id == "EXPECTATION_UNSEALED"
+    assert caught.value.pointer == "/rule2_green_projection"
 
 
-def test_all_red_projection_pairs_resolve_on_sealed_goldens_and_diverge() -> None:
+def test_all_projection_rows_refuse_without_sealed_selector_declarations() -> None:
     baseline_root = Path(r"C:\tmp\P012_BASELINE_RUN")
     catalog = load_json_exact(MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json")
 
     for row in catalog:
-        if row["role"] != "RED":
+        if row["role"] not in {"RED", "GREEN"}:
             continue
         scenario_id = row["scenario_id"]
-        projections = build_projection_results(
-            scenario_id,
-            load_json_exact(MTC_V2_ROOT / row["input"]["path"]),
-            load_json_exact(
-                baseline_root / "out" / scenario_id / "result_surface.json"
-            ),
-            load_json_exact(
-                MTC_V2_ROOT / row["expected_artifacts"]["2.0.0"]["path"]
-            ),
-        )
+        with pytest.raises(GateRefusal) as caught:
+            build_projection_results(
+                scenario_id,
+                row,
+                load_json_exact(
+                    baseline_root / "out" / scenario_id / "result_surface.json"
+                ),
+                load_json_exact(
+                    MTC_V2_ROOT / row["expected_artifacts"]["2.0.0"]["path"]
+                ),
+            )
 
-        assert all(member["corrected"]["tag"] != "ABSENT" for member in projections)
-        assert all(not member["equal"] for member in projections)
+        expected_field = (
+            "/rule2_divergent_projection"
+            if row["role"] == "RED"
+            else "/rule2_green_projection"
+        )
+        assert caught.value.check_id == "EXPECTATION_UNSEALED"
+        assert caught.value.pointer == expected_field
 
 
 def test_all_cataloged_corrected_scenarios_are_executable() -> None:
