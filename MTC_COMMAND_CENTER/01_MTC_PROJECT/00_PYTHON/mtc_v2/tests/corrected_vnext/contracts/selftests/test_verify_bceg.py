@@ -1065,7 +1065,7 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
         # (decision 154) moved every expected path. This assertion's job is to pin whatever the
         # CURRENT re-anchored declaration says, and it was updated the same way when lane W350
         # re-anchored to 63cfe2dd. The owner's decision-134 authorization is untouched.
-        "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf"
+        "2424237364a23c61c860a8cad79250351156c9e1"
     )
     assert record["exceptions"][0]["owner_decision"] == 134
     assert record["exceptions"][0]["lane_ids"] == [
