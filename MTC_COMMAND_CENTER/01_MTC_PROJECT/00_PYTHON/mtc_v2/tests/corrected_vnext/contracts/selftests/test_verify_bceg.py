@@ -1659,6 +1659,81 @@ def test_receipt_accounts_for_every_blocked_expected_node(
     )
 
 
+def _w356_probe_and_base_rows(
+    probe_id: str,
+) -> tuple[dict[str, object], dict[str, object]]:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    probe = next(row for row in catalog if row.get("probe_id") == probe_id)
+    base = next(
+        row
+        for row in catalog
+        if row.get("scenario_id") == probe["base_scenario_id"]
+        and row.get("role") in {"RED", "GREEN"}
+    )
+    return probe, base
+
+
+def test_w356_agreeing_probe_manifest_and_catalog_are_accepted() -> None:
+    probe, base = _w356_probe_and_base_rows("PROBE-P012-01-A")
+
+    artifact = verify_bceg._validate_probe_artifact(MTC_V2_ROOT, probe, base)
+
+    assert artifact["pinned"] is True
+
+
+def test_w356_probe_manifest_catalog_disagreement_is_refused() -> None:
+    probe, base = _w356_probe_and_base_rows("PROBE-P012-01-A")
+    disagreeing_probe = deepcopy(probe)
+    disagreeing_probe["expected_first_changed_node"] = "/synthetic/disagreement"
+
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg._validate_probe_artifact(
+            MTC_V2_ROOT, disagreeing_probe, base
+        )
+
+    assert (
+        caught.value.check_id
+        == "PROBE_MODIFICATION_MANIFEST_CATALOG_MISMATCH"
+    )
+
+
+def test_w356_all_real_probe_manifests_agree_with_catalog() -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    probes = sorted(
+        (row for row in catalog if row.get("role") == "PROBE"),
+        key=lambda row: row["probe_id"],
+    )
+    assert len(probes) == 10
+
+    for probe in probes:
+        manifest_path = MTC_V2_ROOT / probe["modification_manifest_path"]
+        manifest = load_json_exact(manifest_path)
+        assert (
+            manifest["expected_first_changed_node"]
+            == probe["expected_first_changed_node"]
+        )
+        base = next(
+            row
+            for row in catalog
+            if row.get("scenario_id") == probe["base_scenario_id"]
+            and row.get("role") in {"RED", "GREEN"}
+        )
+        resealed_probe = deepcopy(probe)
+        resealed_probe["modification_manifest_digest"] = hashlib.sha256(
+            manifest_path.read_bytes()
+        ).hexdigest()
+
+        artifact = verify_bceg._validate_probe_artifact(
+            MTC_V2_ROOT, resealed_probe, base
+        )
+
+        assert artifact["pinned"] is True
+
+
 def test_probe_driver_refuses_unclosed_base_before_variant_comparison(
     tmp_path: Path,
 ) -> None:

@@ -2777,6 +2777,18 @@ def _validate_probe_artifact(
         or len(manifest["modifications"]) != 1
     ):
         raise GateRefusal("PROBE_MODIFICATION_MANIFEST_BINDING_INVALID", probe_id)
+    if (
+        manifest["expected_first_changed_node"]
+        != row["expected_first_changed_node"]
+    ):
+        raise GateRefusal(
+            "PROBE_MODIFICATION_MANIFEST_CATALOG_MISMATCH",
+            (
+                f"{probe_id}: catalog={row['expected_first_changed_node']!r}, "
+                f"manifest={manifest['expected_first_changed_node']!r}"
+            ),
+            pointer="expected_first_changed_node",
+        )
     digest_method = manifest["digest_method"]
     if (
         type(digest_method) is not dict
