@@ -7,6 +7,16 @@ retaining the re-anchored `63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5` declaration
 contract suite measured 314 passed, the frozen legacy replay measured 34 matching surfaces, and the
 single canonical gate invocation contains only `SEMANTIC_COVERAGE_REVIEW_MISSING`
 (`W342C_GATE_RECEIPT.json:117-126,193-198,650-655`).
+Measured at HEAD `4642998d` and appended by lane W353, that coverage is not uniform: of the seven, ONE
+(`test_expected_source_provenance_refuses_expected_path_changed_after_base`, `test_verify_bceg.py:698-707`) keeps a live
+`git diff` measurement, calling `validate_expected_source_provenance` against the paths that really changed after base
+`63cfe2dd`; FOUR (`test_verify_bceg.py:805-820,823-840,843-857,910-926`) exercise the exception-lifting logic over a
+synthesized changed-path list built by the helper `w305_provenance` (`test_verify_bceg.py:754-802`, which replaces
+`subprocess.check_output` for `git diff --name-only`); ONE (`test_verify_bceg.py:884-907`) only pins the committed exception
+record's values and reads no changed-path list at all; and ONE
+(`test_probe_cannot_claim_target_membership_when_base_is_refused`, `test_verify_bceg.py:1632-1681`) drives a probe against a
+synthetic child receipt rather than any changed-path list - the split exists because owner decision 147 required lane W342C to
+re-anchor these tests onto synthetic post-base conditions instead of the historical live repository state.
 
 The worktree started clean at required HEAD `cb7998e2c379183bc49a76f43fb160f83bc57c33`
 on non-master branch `feature/wp-p0-12-corrected-vnext-20260831`. The lane authorizes only the
