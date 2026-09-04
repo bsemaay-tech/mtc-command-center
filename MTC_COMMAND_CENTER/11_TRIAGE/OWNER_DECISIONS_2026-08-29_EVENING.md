@@ -1990,3 +1990,27 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
   in the Wayfinder update for that period (rev 6 was written at 23:30-23:32 and imported).
 - **Still the owner's:** Q-F..Q-K (packet `OWNER_QUESTIONS_SECOND_PASS_2026-09-03.md`; Lead defaults a/b/a/b/b/a, with Q-F and
   Q-K blocking any Section-16 package), and `accept design P0-14 v1.10`. Section 16 remains undrafted and unsigned.
+
+## Addendum 80 - 2026-09-04 06:5x REAL (Lead record: the "later" tail is now measured, not remembered; one new owner question Q-L; a count in decision 141 recorded as drifted, NOT edited)
+
+- **T360 (Claude Pro, read-only, 06:32-06:47)** inventoried everything owner decision 152 deferred, one row per DISTINCT item
+  measured at HEAD `4642998d` rather than copied between reports: **20 items** - 5 `KERNEL`, 2 `HARNESS-LARGE`,
+  4 `HARNESS-SMALL`, 3 `DESIGN-AMENDMENT`, 5 `RECORD-ONLY`, 1 `UNKNOWN` (the two flagships disagree on which side is wrong).
+  Three would move `EXPECTED_SEAL_SHA`; five change a claim the owner has already been shown; eighteen have a live instance.
+  Report: `C:	mp\LANE_PROMPTS_20260828\_packets_T360\T360_LATER_TAIL_INVENTORY.md`.
+- **Two items are held by nothing.** (1) **LT-20**: for probes 03-A and 07-A the probe's own manifest and the sealed catalog
+  name DIFFERENT first-changed nodes; the harness requires that manifest member and never compares it (detection uses the
+  catalog value, so the ten probes still detect). It is the package's own declared-but-unchecked class inside the probe
+  machinery, and fixing it moves sealed bytes -> **new owner question Q-L** (packet
+  `OWNER_QUESTIONS_SECOND_PASS_2026-09-03.md`; Lead recommends (a), bundled with the next re-seal, never a re-seal of its own).
+  (2) **LT-04**: decision 141's text says the receipt lists 96 excluded nodes; the receipt at HEAD lists **20**, because the
+  owner's later decisions 149/151 replaced 81 of them. The design states no count (measured: zero occurrences). **The Lead does
+  not edit an owner decision's words**; the drift is recorded here, and the owner may annotate 141 if he wishes. No act needed.
+- **The tail was over-counted by three.** The Gemini census marked three rows as owner-deferred that are design limits, not
+  work: the comparator's blocked-node skip (stated behaviour, enumerated in the receipt), the synthetic cost preimage (honest
+  limit L11), and negative-zero preservation - which is **already specified** in the design's section 15.3, so it was carried
+  forward as open after it had been closed. Decision 152's own enumeration names none of the three.
+- Decision 152's text has a category sentence ("the remaining T340 OUTSIDE rows") and a sixteen-item enumeration; they agree on
+  sixteen rows, and the two unheld items above fall outside both. Recorded so the next session schedules from a measured list.
+- Nothing was fixed, nothing signed, no sealed byte moved by this lane. Section 16 remains undrafted; Q-F..Q-L and
+  `accept design P0-14 v1.10` are still the owner's.
