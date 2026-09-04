@@ -479,24 +479,23 @@ def test_w352_derivation_handles_legacy_corrective_and_base_history_rows() -> No
         "reseal_history": [
             {"actor": "Synthetic legacy Lead"},
             {"actor": "Synthetic legacy Lead"},
-            {"actor": "Synthetic Lead, re-seal #22"},
-            {"actor": "Synthetic Lead, re-seal #22b (metadata only)"},
+            {"actor": "Synthetic Lead, re-seal #4"},
+            {"actor": "Synthetic Lead, re-seal #5"},
+            {"actor": "Synthetic Lead, re-seal #5b (metadata only)"},
             {
                 "actor": (
                     "Synthetic Lead, base re-anchor (decision 1); "
                     "seal value unchanged"
                 )
             },
-            {"actor": "Synthetic Lead, re-seal #23"},
+            {"actor": "Synthetic Lead, re-seal #6"},
         ]
     }
 
     assert verify_bceg.derive_semantic_coverage_review_chain(manifest) == [
-        "#20",
-        "#21",
-        "#22",
-        "#22b",
-        "#23",
+        "#5",
+        "#5b",
+        "#6",
     ]
 
 

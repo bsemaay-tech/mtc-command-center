@@ -298,7 +298,13 @@ def derive_semantic_coverage_review_chain(manifest: Mapping[str, Any]) -> list[s
             "owner_ratification.chain",
             "manifest reseal_history has duplicate re-seal ids",
         )
-    return chain
+    try:
+        ratification_start = chain.index("#5")
+    except ValueError:
+        _semantic_review_invalid(
+            "owner_ratification.chain", "manifest reseal_history has no re-seal #5"
+        )
+    return chain[ratification_start:]
 
 
 def measure_semantic_review_identities(
