@@ -26,22 +26,6 @@
         "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/DERIVATIONS.md",
         "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/scenario_catalog.json"
       ]
-    },
-    {
-      "check_id": "PROBE_COULD_NOT_EVALUATE",
-      "detail": {
-        "check_id": "PROBE_CATALOG_DIGEST_MISMATCH",
-        "detail": "PROBE-P012-03-A"
-      },
-      "scenario_id": "PROBE-P012-03-A"
-    },
-    {
-      "check_id": "PROBE_COULD_NOT_EVALUATE",
-      "detail": {
-        "check_id": "PROBE_CATALOG_DIGEST_MISMATCH",
-        "detail": "PROBE-P012-07-A"
-      },
-      "scenario_id": "PROBE-P012-07-A"
     }
   ],
   "acceptance_reachable": true,
@@ -565,13 +549,21 @@
       "status": "DETECTED"
     },
     {
-      "digest_status": "PROBE_ARTIFACT_INVALID",
+      "base_scenario_id": "RULE2-03-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "RECORD_IDENTITY_PREFLIGHT",
+      "expected_first_changed_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+      "expected_node_changed": true,
+      "measured_failed_check": "RECORD_IDENTITY_PREFLIGHT",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "a496c97b16db3d219e3b2a7ff0222c70e9ce00fb38f057082a2706fbfc64e578",
+      "modified_copy_digest": "35193efcfc568ec582e430b0acdc35fa4bcc3e7866313ad9f4798fd2e4e0d304",
       "probe_id": "PROBE-P012-03-A",
-      "refusal": {
-        "check_id": "PROBE_CATALOG_DIGEST_MISMATCH",
-        "detail": "PROBE-P012-03-A"
-      },
-      "status": "COULD_NOT_EVALUATE"
+      "status": "DETECTED"
     },
     {
       "base_scenario_id": "RULE2-04-RED",
@@ -642,13 +634,21 @@
       "status": "DETECTED"
     },
     {
-      "digest_status": "PROBE_ARTIFACT_INVALID",
+      "base_scenario_id": "RULE2-07-RED",
+      "child_claim_label": "PROBE_BASE_SCENARIO_REFUSED",
+      "child_returncode": 2,
+      "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/1/signed_delta",
+      "digest_status": "PROBE_DIGEST_MATCH",
+      "entrypoint": "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+      "expected_failed_check": "CORRECTED_EXPECTATION",
+      "expected_first_changed_node": "/EVENT_SURFACE/fee_events/1/liquidity_role",
+      "expected_node_changed": true,
+      "measured_failed_check": "CORRECTED_EXPECTATION",
+      "measured_matches_expected": true,
+      "modification_manifest_digest": "a872886751d72851f5fbfcba6027377e1d91948972bef99a74ba55126c2033a5",
+      "modified_copy_digest": "1259f010f19dd9082fcfbc83632ee19fdd4720e744062e7b577b84ac821d0d88",
       "probe_id": "PROBE-P012-07-A",
-      "refusal": {
-        "check_id": "PROBE_CATALOG_DIGEST_MISMATCH",
-        "detail": "PROBE-P012-07-A"
-      },
-      "status": "COULD_NOT_EVALUATE"
+      "status": "DETECTED"
     },
     {
       "base_scenario_id": "RULE2-08-RED",
@@ -699,22 +699,6 @@
         "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/DERIVATIONS.md",
         "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/scenario_catalog.json"
       ]
-    },
-    {
-      "check_id": "PROBE_COULD_NOT_EVALUATE",
-      "detail": {
-        "check_id": "PROBE_CATALOG_DIGEST_MISMATCH",
-        "detail": "PROBE-P012-03-A"
-      },
-      "scenario_id": "PROBE-P012-03-A"
-    },
-    {
-      "check_id": "PROBE_COULD_NOT_EVALUATE",
-      "detail": {
-        "check_id": "PROBE_CATALOG_DIGEST_MISMATCH",
-        "detail": "PROBE-P012-07-A"
-      },
-      "scenario_id": "PROBE-P012-07-A"
     },
     {
       "check_id": "CONTRACT_SELFTEST_RED",
@@ -1997,11 +1981,11 @@
   ],
   "sealed_producer_identities": {
     "baseline_driver_sha256": "b7648f71cc089d683f54fe9a82c7dc95302bc2cb3481288c2c99313944f56d53",
-    "catalog_sha256": "70da8796451c506d220417c2c80aa4eba9ddef2a57a97219e2a260b4a470f057",
+    "catalog_sha256": "bca5a072ac4d893bcc62e1965fabfc6558c4408691c8ac24ee07e08cc48ea95f",
     "design_file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
     "design_file_sha256": "03fdf5952a2365b2de60b55292a1bd50fce8c6c51788c19b59cecc5d8f5b3c94",
     "design_total_lines": 1843,
-    "expected_seal_sha256": "555075146636af3442424035e2544e73e07961dd14661de9c019e203f6720024",
-    "implementation_anchor_sha256": "56ccbc164ba584e93e98af6c7037661bb17841771e382ad7810d72be30642112"
+    "expected_seal_sha256": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
+    "implementation_anchor_sha256": "79f6d4a23a94cebdb1af17d2db056040c98279c6f444712337f94b64bf3bc77d"
   }
 }
