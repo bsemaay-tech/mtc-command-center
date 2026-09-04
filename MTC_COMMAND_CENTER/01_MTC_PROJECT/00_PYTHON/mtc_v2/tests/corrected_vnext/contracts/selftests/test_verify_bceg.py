@@ -46,6 +46,16 @@ SYNTHETIC_REVIEW_IDENTITIES = {
 }
 
 
+def write_synthetic_reseal_manifest(
+    root: Path, history: list[dict[str, object]]
+) -> None:
+    manifest = root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_bytes(
+        verify_bceg.canonical_json_bytes({"reseal_history": history})
+    )
+
+
 def refusal(check_id: str, action) -> None:
     with pytest.raises(GateRefusal) as caught:
         action()
@@ -101,6 +111,15 @@ def run_synthetic_full_gate(
     use_real_git: bool = False,
     contract_selftests: dict[str, object] | None = None,
 ) -> int:
+    manifest = root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
+    if not manifest.exists():
+        write_synthetic_reseal_manifest(
+            root,
+            [
+                {"actor": f"Synthetic Lead, re-seal #{seal_id}"}
+                for seal_id in range(5, 10)
+            ],
+        )
     measured = measured_identities or SYNTHETIC_REVIEW_IDENTITIES
     monkeypatch.setattr(
         verify_bceg,
@@ -362,6 +381,106 @@ def test_semantic_coverage_review_fully_valid_synthetic_receipt_clears_blocker(
     assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 0
     gate_receipt = json.loads(capsys.readouterr().out)
     assert gate_receipt["claim_label"] == verify_bceg.ACCEPTING_LABEL
+
+
+def test_w352_old_chain_is_refused_when_manifest_is_past_nine(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    write_synthetic_reseal_manifest(
+        root,
+        [
+            {"actor": f"Synthetic Lead, re-seal #{seal_id}"}
+            for seal_id in range(5, 11)
+        ],
+    )
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(
+        capsys,
+        "owner_ratification.chain: expected seal ids #5, #6, #7, #8, #9, #10",
+    )
+
+
+def test_w352_manifest_derived_chain_clears_ratification_check(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    derived_chain = [f"#{seal_id}" for seal_id in range(5, 11)]
+    write_synthetic_reseal_manifest(
+        root,
+        [
+            {"actor": f"Synthetic Lead, re-seal {seal_id}"}
+            for seal_id in derived_chain
+        ],
+    )
+    receipt["owner_ratification"]["chain"] = derived_chain
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 0
+    gate_receipt = json.loads(capsys.readouterr().out)
+    assert gate_receipt["claim_label"] == verify_bceg.ACCEPTING_LABEL
+
+
+def test_w352_reseal_absent_from_manifest_is_refused(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    derived_chain = [f"#{seal_id}" for seal_id in range(5, 11)]
+    write_synthetic_reseal_manifest(
+        root,
+        [
+            {"actor": f"Synthetic Lead, re-seal {seal_id}"}
+            for seal_id in derived_chain
+        ],
+    )
+    receipt["owner_ratification"]["chain"] = [*derived_chain, "#999"]
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(
+        capsys,
+        "owner_ratification.chain: expected seal ids #5, #6, #7, #8, #9, #10",
+    )
+
+
+def test_w352_derivation_handles_legacy_corrective_and_base_history_rows() -> None:
+    manifest = {
+        "reseal_history": [
+            {"actor": "Synthetic legacy Lead"},
+            {"actor": "Synthetic legacy Lead"},
+            {"actor": "Synthetic Lead, re-seal #22"},
+            {"actor": "Synthetic Lead, re-seal #22b (metadata only)"},
+            {
+                "actor": (
+                    "Synthetic Lead, base re-anchor (decision 1); "
+                    "seal value unchanged"
+                )
+            },
+            {"actor": "Synthetic Lead, re-seal #23"},
+        ]
+    }
+
+    assert verify_bceg.derive_semantic_coverage_review_chain(manifest) == [
+        "#20",
+        "#21",
+        "#22",
+        "#22b",
+        "#23",
+    ]
 
 
 def test_full_gate_refuses_a_red_contract_selftest_suite(

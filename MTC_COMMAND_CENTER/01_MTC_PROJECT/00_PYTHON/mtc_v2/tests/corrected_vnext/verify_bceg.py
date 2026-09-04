@@ -82,7 +82,9 @@ SEMANTIC_COVERAGE_REVIEW_DISPOSITIONS = {
     "ACCEPTED_WITH_RESIDUAL_RISK",
     "REFUSED",
 }
-SEMANTIC_COVERAGE_REVIEW_CHAIN = ("#5", "#6", "#7", "#8", "#9")
+RESEAL_ACTOR_ID_RE = re.compile(
+    r"\bre-seal #(?P<number>[1-9][0-9]*)(?P<suffix>b?)\b", re.IGNORECASE
+)
 OBSERVED_ROOT = PurePosixPath("tests/corrected_vnext/observed")
 PROBE_ROOT = PurePosixPath("tests/corrected_vnext/probes")
 CORRECTED_CONTAINERS = (
@@ -227,6 +229,76 @@ def _require_nonempty_line(value: Any, member: str) -> str:
     if type(value) is not str or not value.strip() or "\n" in value or "\r" in value:
         _semantic_review_invalid(member, "expected non-empty single line")
     return value
+
+
+def derive_semantic_coverage_review_chain(manifest: Mapping[str, Any]) -> list[str]:
+    """Derive the owner-ratified re-seal ids from the bundle's own history."""
+
+    history = manifest.get("reseal_history")
+    if type(history) is not list or not history:
+        _semantic_review_invalid(
+            "owner_ratification.chain",
+            "manifest reseal_history is not a non-empty list",
+        )
+
+    first_explicit_index: int | None = None
+    first_explicit_number: int | None = None
+    for index, entry in enumerate(history):
+        if type(entry) is not dict or type(entry.get("actor")) is not str:
+            _semantic_review_invalid(
+                "owner_ratification.chain",
+                f"manifest reseal_history.{index}.actor is not a string",
+            )
+        match = RESEAL_ACTOR_ID_RE.search(entry["actor"])
+        if match is not None:
+            if match.group("suffix"):
+                _semantic_review_invalid(
+                    "owner_ratification.chain",
+                    "first explicit re-seal id has a corrective suffix",
+                )
+            first_explicit_index = index
+            first_explicit_number = int(match.group("number"))
+            break
+
+    if first_explicit_index is None or first_explicit_number is None:
+        _semantic_review_invalid(
+            "owner_ratification.chain", "manifest reseal_history has no re-seal id"
+        )
+
+    leading_reseals = [
+        entry
+        for entry in history[:first_explicit_index]
+        if "base re-anchor" not in entry["actor"].casefold()
+    ]
+    first_inferred_number = first_explicit_number - len(leading_reseals)
+    if first_inferred_number < 1:
+        _semantic_review_invalid(
+            "owner_ratification.chain", "leading re-seal ids cannot be inferred"
+        )
+    chain = [
+        f"#{number}"
+        for number in range(first_inferred_number, first_explicit_number)
+    ]
+
+    for index, entry in enumerate(
+        history[first_explicit_index:], start=first_explicit_index
+    ):
+        actor = entry["actor"]
+        match = RESEAL_ACTOR_ID_RE.search(actor)
+        if match is not None:
+            chain.append(f"#{match.group('number')}{match.group('suffix')}")
+        elif "base re-anchor" not in actor.casefold():
+            _semantic_review_invalid(
+                "owner_ratification.chain",
+                f"manifest reseal_history.{index}.actor has no re-seal id",
+            )
+
+    if len(chain) != len(set(chain)):
+        _semantic_review_invalid(
+            "owner_ratification.chain",
+            "manifest reseal_history has duplicate re-seal ids",
+        )
+    return chain
 
 
 def measure_semantic_review_identities(
@@ -445,9 +517,14 @@ def validate_semantic_coverage_review(
     ratification = _require_exact_members(
         receipt["owner_ratification"], ("chain", "ratified"), "owner_ratification"
     )
-    if ratification["chain"] != list(SEMANTIC_COVERAGE_REVIEW_CHAIN):
+    manifest = load_json_exact(
+        root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
+    )
+    expected_chain = derive_semantic_coverage_review_chain(manifest)
+    if ratification["chain"] != expected_chain:
         _semantic_review_invalid(
-            "owner_ratification.chain", "expected seal ids #5 through #9"
+            "owner_ratification.chain",
+            f"expected seal ids {', '.join(expected_chain)}",
         )
     if ratification["ratified"] is not True:
         _semantic_review_invalid("owner_ratification.ratified", "must be true")
