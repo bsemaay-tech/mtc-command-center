@@ -4170,13 +4170,19 @@ def run_contract_selftest_suite(root: Path) -> dict[str, Any]:
         )
     except subprocess.TimeoutExpired:
         return {
+            "ran": True,
             "returncode": 124,
+            "passed_count": None,
+            "failed_count": None,
             "failing_test_ids": [],
             "detail": "contract self-test suite timed out after 600 seconds",
         }
     except OSError as exc:
         return {
+            "ran": False,
             "returncode": 126,
+            "passed_count": None,
+            "failed_count": None,
             "failing_test_ids": [],
             "detail": f"contract self-test suite could not start: {exc}",
         }
@@ -4190,7 +4196,14 @@ def run_contract_selftest_suite(root: Path) -> dict[str, Any]:
         if test_id and test_id not in failing_test_ids:
             failing_test_ids.append(test_id.replace("\\", "/"))
     return {
+        "ran": True,
         "returncode": completed.returncode,
+        "passed_count": int(matches[-1])
+        if (matches := re.findall(r"(\d+) passed\b", output))
+        else 0,
+        "failed_count": int(matches[-1])
+        if (matches := re.findall(r"(\d+) failed\b", output))
+        else 0,
         "failing_test_ids": failing_test_ids,
     }
 
@@ -4294,11 +4307,17 @@ def main(argv: list[str] | None = None) -> int:
                         "mode": "full-gate",
                         "claim_label": REFUSAL_LABEL,
                         "acceptance_reachable": True,
+                        "contract_selftest_suite": contract_selftests,
                         "refusals": blockers,
                         **pipeline,
                     }
                 else:
-                    receipt = {"mode": "full-gate", "claim_label": ACCEPTING_LABEL, **pipeline}
+                    receipt = {
+                        "mode": "full-gate",
+                        "claim_label": ACCEPTING_LABEL,
+                        "contract_selftest_suite": contract_selftests,
+                        **pipeline,
+                    }
         encoded = json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
         if args.output is not None:
             args.output.parent.mkdir(parents=True, exist_ok=True)

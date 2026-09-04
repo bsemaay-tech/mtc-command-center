@@ -5,6 +5,7 @@ import json
 import math
 import shutil
 import subprocess
+import tempfile
 from copy import deepcopy
 from pathlib import Path
 
@@ -146,7 +147,13 @@ def run_synthetic_full_gate(
         "run_contract_selftest_suite",
         lambda _root: contract_selftests
         if contract_selftests is not None
-        else {"returncode": 0, "failing_test_ids": []},
+        else {
+            "ran": True,
+            "returncode": 0,
+            "passed_count": 1,
+            "failed_count": 0,
+            "failing_test_ids": [],
+        },
         raising=True,
     )
     return verify_bceg.main(
@@ -171,7 +178,9 @@ def assert_invalid_semantic_review(
         assert receipt["refusals"][0]["detail"] == expected_detail
 
 
-def two_commit_repository(root: Path) -> tuple[str, str]:
+def two_commit_repository(
+    root: Path, marker_relative: str = "commit-marker.txt"
+) -> tuple[str, str]:
     root.mkdir(parents=True, exist_ok=True)
     commands = (
         ("init",),
@@ -185,10 +194,11 @@ def two_commit_repository(root: Path) -> tuple[str, str]:
             capture_output=True,
             text=True,
         )
-    marker = root / "commit-marker.txt"
+    marker = root / marker_relative
+    marker.parent.mkdir(parents=True, exist_ok=True)
     marker.write_text("reviewed\n", encoding="utf-8", newline="\n")
     subprocess.run(
-        ["git", "-C", str(root), "add", "commit-marker.txt"],
+        ["git", "-C", str(root), "add", marker_relative],
         check=True,
         capture_output=True,
         text=True,
@@ -204,7 +214,7 @@ def two_commit_repository(root: Path) -> tuple[str, str]:
     ).strip()
     marker.write_text("reviewed\nreceipt added\n", encoding="utf-8", newline="\n")
     subprocess.run(
-        ["git", "-C", str(root), "add", "commit-marker.txt"],
+        ["git", "-C", str(root), "add", marker_relative],
         check=True,
         capture_output=True,
         text=True,
@@ -381,6 +391,13 @@ def test_semantic_coverage_review_fully_valid_synthetic_receipt_clears_blocker(
     assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 0
     gate_receipt = json.loads(capsys.readouterr().out)
     assert gate_receipt["claim_label"] == verify_bceg.ACCEPTING_LABEL
+    assert gate_receipt["contract_selftest_suite"] == {
+        "ran": True,
+        "returncode": 0,
+        "passed_count": 1,
+        "failed_count": 0,
+        "failing_test_ids": [],
+    }
 
 
 def test_w352_old_chain_is_refused_when_manifest_is_past_nine(
@@ -502,7 +519,13 @@ def test_full_gate_refuses_a_red_contract_selftest_suite(
         root,
         tmp_path / "baseline",
         monkeypatch,
-        contract_selftests={"returncode": 1, "failing_test_ids": [failing_test_id]},
+        contract_selftests={
+            "ran": True,
+            "returncode": 1,
+            "passed_count": 1,
+            "failed_count": 1,
+            "failing_test_ids": [failing_test_id],
+        },
     ) == 2
     gate_receipt = json.loads(capsys.readouterr().out)
     assert gate_receipt["claim_label"] == verify_bceg.REFUSAL_LABEL
@@ -513,6 +536,13 @@ def test_full_gate_refuses_a_red_contract_selftest_suite(
             "failing_test_ids": [failing_test_id],
         }
     ]
+    assert gate_receipt["contract_selftest_suite"] == {
+        "ran": True,
+        "returncode": 1,
+        "passed_count": 1,
+        "failed_count": 1,
+        "failing_test_ids": [failing_test_id],
+    }
 
 
 def test_contract_selftest_suite_reports_only_failing_test_ids(tmp_path: Path) -> None:
@@ -531,6 +561,9 @@ def test_contract_selftest_suite_reports_only_failing_test_ids(tmp_path: Path) -
     result = verify_bceg.run_contract_selftest_suite(root)
 
     assert result["returncode"] != 0
+    assert result["ran"] is True
+    assert result["passed_count"] == 1
+    assert result["failed_count"] == 1
     assert result["failing_test_ids"] == [
         "mtc_v2/tests/corrected_vnext/contracts/selftests/"
         "test_synthetic_contract.py::test_failing_contract"
@@ -552,7 +585,13 @@ def test_contract_selftest_suite_reports_empty_failure_ids_when_all_pass(
 
     result = verify_bceg.run_contract_selftest_suite(root)
 
-    assert result == {"returncode": 0, "failing_test_ids": []}
+    assert result == {
+        "ran": True,
+        "returncode": 0,
+        "passed_count": 1,
+        "failed_count": 0,
+        "failing_test_ids": [],
+    }
 
 
 def test_contract_selftest_suite_records_timeout(
@@ -564,7 +603,10 @@ def test_contract_selftest_suite_records_timeout(
     monkeypatch.setattr(verify_bceg.subprocess, "run", raise_timeout)
 
     assert verify_bceg.run_contract_selftest_suite(tmp_path) == {
+        "ran": True,
         "returncode": 124,
+        "passed_count": None,
+        "failed_count": None,
         "failing_test_ids": [],
         "detail": "contract self-test suite timed out after 600 seconds",
     }
@@ -579,7 +621,10 @@ def test_contract_selftest_suite_records_oserror(
     monkeypatch.setattr(verify_bceg.subprocess, "run", raise_oserror)
 
     assert verify_bceg.run_contract_selftest_suite(tmp_path) == {
+        "ran": False,
         "returncode": 126,
+        "passed_count": None,
+        "failed_count": None,
         "failing_test_ids": [],
         "detail": "contract self-test suite could not start: synthetic launch failure",
     }
@@ -815,15 +860,24 @@ def test_expected_source_provenance_refuses_non_ancestor_base() -> None:
 
 
 def test_expected_source_provenance_refuses_expected_path_changed_after_base() -> None:
-    contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
-    manifest = w342c_provenance_manifest("expected_provenance_exceptions.json")
-    anchor = load_json_exact(contracts / "implementation_anchor.json")
+    with tempfile.TemporaryDirectory(prefix="w385-provenance-", dir=r"C:\tmp") as temporary:
+        root = Path(temporary) / "mtc_v2"
+        expected_relative = "tests/corrected_vnext/contracts/expected.json"
+        implementation_base, _head = two_commit_repository(root, expected_relative)
+        manifest = {
+            "expected_value_provenance": {
+                "method": "INDEPENDENT_DERIVATION",
+                "not_method": "COPY_OBSERVED",
+            },
+            "seal": {"IMPLEMENTATION_BASE_SHA": implementation_base},
+            "files": [{"path": "expected.json"}],
+        }
+        anchor = {"IMPLEMENTATION_BASE_SHA": implementation_base}
 
-    # Decision 147; design v1.17 L14 / section-15.4 amendment: model a post-63cfe2dd expected-path change.
-    with pytest.raises(GateRefusal) as caught:
-        verify_bceg.validate_expected_source_provenance(MTC_V2_ROOT, manifest, anchor)
-    assert caught.value.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
-    assert caught.value.pointer == W342C_MOVED_GIT_PATHS[0]
+        with pytest.raises(GateRefusal) as caught:
+            verify_bceg.validate_expected_source_provenance(root, manifest, anchor)
+        assert caught.value.check_id == "EXPECTED_PATH_CHANGED_AFTER_BASE"
+        assert caught.value.pointer == expected_relative
 
 
 W305_EXCEPTIONS_RELATIVE = (
@@ -1721,6 +1775,9 @@ def test_w356_all_real_probe_manifests_agree_with_catalog() -> None:
     for probe in probes:
         manifest_path = MTC_V2_ROOT / probe["modification_manifest_path"]
         manifest = load_json_exact(manifest_path)
+        assert probe["modification_manifest_digest"] == hashlib.sha256(
+            manifest_path.read_bytes()
+        ).hexdigest()
         assert (
             manifest["expected_first_changed_node"]
             == probe["expected_first_changed_node"]
@@ -1731,13 +1788,8 @@ def test_w356_all_real_probe_manifests_agree_with_catalog() -> None:
             if row.get("scenario_id") == probe["base_scenario_id"]
             and row.get("role") in {"RED", "GREEN"}
         )
-        resealed_probe = deepcopy(probe)
-        resealed_probe["modification_manifest_digest"] = hashlib.sha256(
-            manifest_path.read_bytes()
-        ).hexdigest()
-
         artifact = verify_bceg._validate_probe_artifact(
-            MTC_V2_ROOT, resealed_probe, base
+            MTC_V2_ROOT, probe, base
         )
 
         assert artifact["pinned"] is True
