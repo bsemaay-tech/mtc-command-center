@@ -2106,3 +2106,110 @@ bounded tightly enough that its finish is checkable. The packet is written for a
 **Register note (Lead, needs the owner's word, not assumed):** the P0-13 precedent (decision 145) recorded an accepted design
 in the official package register as design-converged. The Lead has NOT changed WP-P0-14's register row and will not do so
 through session reporting; whether the register moves is a separate owner act, raised here rather than performed.
+
+## Addendum 84 - 2026-09-04 11:4x REAL (OWNER DECISIONS 162-164 recorded late: build-start approval, register move, unattended run. Lead record of a records gap found by a verifying lane, not by the Lead)
+
+**Why this addendum exists at all.** Lane P14B1V, verifying the first P0-14 screen against the owner's
+own finish test, raised discrepancy **D-2: the owner's build-start approval is NOT recorded in the
+decision ledger. NOT VERIFIED.** The commit subject `feat(p0-14): first read-only sample table screen
+(owner build-start approval 2026-09-04)` asserts an authority that, at the moment the verifier read
+the ledger, no file in the repository evidenced: the ledger ended at addendum 83, whose own text says
+"**NOT authorised:** screen code, tool adoption, repository change for P0-14, any run, any spend.
+Build remains blocked." The verifier was right to refuse to take the commit's word for it. This
+addendum closes the gap. The build itself was inside the approval; the record of the approval was
+missing.
+
+**A limit on this addendum, stated before its content.** Decision 161 (addendum 83) has a verbatim
+owner file, `C:\tmp\LANE_PROMPTS_20260828\OWNER_P014_ACCEPTED_BUILD_PLANNING.txt`, written as he
+spoke. Decisions 162, 163 and 164 below were given in chat and **no verbatim marker file was written
+at the time**. What follows is therefore the **Lead's contemporaneous record of the owner's words, not
+a transcript of them**, and it is marked as such rather than dressed as a quotation. The Lead does not
+reconstruct an owner's sentences. If the owner wishes the exact wording preserved, he can restate any
+of the three and it will be recorded verbatim as a further addendum.
+
+---
+
+### Decision 162 - the build-start packet is APPROVED; the first coding step is authorised
+
+**Lead's record (not verbatim).** At about 11:11 the owner approved the build-start packet
+`C:\tmp\LANE_PROMPTS_20260828\P014_BUILD_START_PACKET.md` and authorised the first coding step. He
+also asked that a plan be followed autonomously until 08:00 the next morning, that the Wayfinder
+session be kept updated while it ran, and that a new session be started afterwards.
+
+**What this authorises, exactly.** The FIRST CODING STEP ONLY, as section 4 of that packet defines it:
+one screen, a plain read-only table filled from a small fixed sample file clearly marked as sample,
+each row carrying an identifier, a name, a status cell, a stage, one headline figure and a rejection
+reason. Named as deliberately NOT built: real research data, a family tree, a "what changed" strip,
+charts, a detailed report, filters, a candidate page, and anything that writes anywhere.
+
+**What decision 161's three fixed rules continue to bind:** read-only viewer; unknown drawn as Pending
+and never inferred, guessed or styled as healthy; an important figure shown only when two independent
+computations agree and withheld with a stated reason when they do not.
+
+**What stops being freely changeable.** Per the packet's own closing list, layout, wording, filters
+and table presentation stop being freely changeable at this approval.
+
+**What this does NOT authorise.** Anything past section 4: no second screen, no real data connection,
+no tool adoption, no push, no pull request, no merge, no spend.
+
+**Executed under it, measured.** Worktree `C:\P014BUILD`, branch
+`feature/wp-p0-14-first-screen-20260904`, one commit `732f1742`, five files added, 635 insertions,
+zero modifications and zero deletions, never pushed, no upstream, nothing on master. `C:\WP012BUILD`
+was not touched. Lane P14B1 built it on codex/free 11:12-11:27; lane P14B1V verified it on
+claude-opus-5 11:27-11:37, a family that did not build it.
+
+**Independent verdict: ACCEPT-WITH-NOTES.** Every one of the owner's finish-test conditions was
+reproduced by the verifier from the rendered page rather than read from the build lane's report: one
+table; the sample banner; both status cells reading Pending and carrying "Status book is parked; no
+status has been assigned."; one row showing `Median OOS Sharpe` = `1.24` with "two independent
+computations agree"; one row showing the same label withheld with "Two independent computations
+disagreed"; zero buttons, inputs, forms, selects or textareas in the rendered DOM; and all four file
+hashes byte-identical before and after the page was opened. No write path of any kind was found.
+
+**Its four open notes, none of them blocking, recorded here so they are not lost:** (D-1) the commit
+carries `P14B1_REPORT.md`, a file the packet never describes and the build lane's own spec ordered
+into that commit - the two specs disagree and the prompt, not the build, is what needs correcting;
+(D-3) the screen has no freshness stamp, which section 2 of the packet promises for the fuller home
+screen and section 4 does not ask for - recorded so section 2's promise is not later assumed to have
+been delivered here; (D-4) `.figure-value` is declared three times in `styles.css`, cosmetic only;
+(D-5) the branch is one commit behind master (`4ca0e5e8`) and will need an update-branch before any
+merge.
+
+### Decision 163 - the WP-P0-14 register row MOVE is approved
+
+**Lead's record (not verbatim).** At about 10:3x the owner approved moving the WP-P0-14 register row.
+Addendum 83 had raised this and explicitly refused to perform it without his word: "whether the
+register moves is a separate owner act, raised here rather than performed." His word closes that.
+
+**Executed, measured.** `C:\tmp\P012_LEAD_RESEAL\update_register_20260904_p014.py`, backup
+`.bak-20260904-p014` retained. WP-P0-14 `DESIGN_IN_REPAIR` -> `DESIGN_CONVERGED`; the
+`design_acceptance` block records design v1.10 sha `6a932c8f`, the owner's word, the three FIXED
+design rules, the four CHANGEABLE items and the build-start gate. `g1_ia` UNSATISFIED and
+`implementation_authorized` **False** were both left untouched. Zero other rows changed. Census
+`DESIGN_CONVERGED` 6 -> 7, `DESIGN_IN_REPAIR` 4 -> 3. This was a separate recorded act, not a
+by-product of session reporting.
+
+### Decision 164 - the unattended run is approved; no OpenRouter purchase
+
+**Lead's record (not verbatim).** At about 10:3x the owner approved the unattended chain running
+without him, declined to buy OpenRouter credit - naming OpenCode Go, Gemini 3.8 flash, "codex luna"
+and Grok as what to use instead - and asked that all accounts be checked again.
+
+**The account check he asked for, measured** (`probe_all_routes.ps1` plus direct exe calls, 10:28 and
+10:35). codex `third` (bsemaay3) PROBE_OK. codex `free` (bsemaay2, prolite) PROBE_OK. codex
+`secondary` and codex `fourth` both capped to 9 September **and their id_token emails prove they are
+the same account, `bsemaay@gmail.com`, under two homes** (`.codex-hesap2`, `.codex-bsemaay`): there
+are THREE distinct Codex accounts, not four, and running a lane on each was never parallelism. Claude
+Pro live, Gemini live, Grok live. OpenCode Go ALIVE and carrying `gpt-5.6-luna` (the owner's "codex
+luna"), `deepseek-v4-flash`, `deepseek-v4-pro`, `glm-5.3-flash`, `qwen3.8-flash`, `grok-4.6`.
+
+**Two Lead reporting errors this check corrected, recorded rather than smoothed over.** The Lead had
+been reporting DeepSeek as OFF since the OpenRouter key limit; only the OpenRouter PATH is limited and
+OpenCode Go was never dead. The Lead had also been planning around four Codex accounts when there are
+three.
+
+---
+
+**Register note.** This addendum records owner decisions and Lead measurements. It changes no
+package's official status by itself; decision 163's register move was performed by its own recorded
+act with a retained backup, before this addendum was written.
