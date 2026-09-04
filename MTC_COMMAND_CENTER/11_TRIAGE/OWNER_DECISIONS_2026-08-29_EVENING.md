@@ -2014,3 +2014,24 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
   sixteen rows, and the two unheld items above fall outside both. Recorded so the next session schedules from a measured list.
 - Nothing was fixed, nothing signed, no sealed byte moved by this lane. Section 16 remains undrafted; Q-F..Q-L and
   `accept design P0-14 v1.10` are still the owner's.
+
+## Addendum 81 - 2026-09-04 07:0x REAL (Lead record: two lane records corrected, verified by Gemini; a number four documents had repeated turns out to be wrong; no owner decision)
+
+- **W353 (Claude Pro, 06:50-06:55, commit `d119d814`, record-only)**: `W351_REPORT.md`'s verdict line said `FINDING` although
+  the same file records that W351B closed that finding - it now states both facts, with the original discrepancy text retained
+  unaltered; its citation of the four new runner tests moved from `399-469` to the measured `399-466`; and `W342C_REPORT.md`
+  gained one appended sentence describing what its seven provenance self-tests actually do. No code, no sealed byte: the
+  manifest's `files[]` holds 19 members (DERIVATIONS.md, the catalog, the 17 goldens) and neither report is among them, so
+  `EXPECTED_SEAL_SHA` `40aaf7da...` is unchanged and the manifest itself was untouched.
+- **GMV353 (Gemini, packet-only, 06:56-06:58): ACCEPT.** It re-measured the citation span itself (399-466), listed the 19
+  sealed members, and confirmed the scope was exactly two files.
+- **A number that four documents had repeated is wrong.** W279D-F04, the T350 triage, the V351C verification and the Lead's own
+  W353 spec all said the seven provenance self-tests are "one live measurement plus six synthesized". Opening the file shows
+  **one** live git measurement, **four** exception-lifting tests over a synthesized path list, **one** that only pins the
+  committed record's values, and **one** that drives a probe against a synthetic receipt. W353 wrote what it measured
+  (repository wins, C-2) and Gemini independently confirmed the bytes support the non-uniform split.
+- That is the **third inherited number corrected today**, after W279D-F03's member-commit count (5 written, 11 measured) and
+  decision 141's blocked-node count (96 written, 20 measured). Recorded as a working rule for the remaining packages: a count
+  repeated across several documents is still an assertion until a family opens the file at the current build.
+- Engine HEAD is now `d119d814`; the gate residual is unchanged (only the section-16 review). Nothing signed, no sealed byte
+  moved, branch unpushed. Q-F..Q-L and `accept design P0-14 v1.10` remain the owner's.
