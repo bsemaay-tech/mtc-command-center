@@ -2213,3 +2213,47 @@ three.
 **Register note.** This addendum records owner decisions and Lead measurements. It changes no
 package's official status by itself; decision 163's register move was performed by its own recorded
 act with a retained backup, before this addendum was written.
+
+## Addendum 85 - 2026-09-04 11:5x REAL (OWNER DECISIONS 165-166: the first P0-14 screen stays local and unmerged; no second coding step is drafted. His own words carry a finding the finish test could not catch)
+
+**The owner's words, verbatim** (marker file `C:\tmp\LANE_PROMPTS_20260828\OWNER_P014_SCREEN_LEAVE_LOCAL.txt`,
+written at the moment he spoke, before any Lead act):
+
+> Leave it local for now. I see no information on the page to jundge. I will imrove it later.
+
+He was shown the built screen itself, as a single self-contained page he could open, not as a path or
+a description of one. He was asked two questions with written-out options.
+
+### Decision 165 - the screen stays local, unpushed and unmerged
+
+He chose **"Leave it local for now"** over opening a pull request and over asking for changes now.
+Branch `feature/wp-p0-14-first-screen-20260904` in worktree `C:\P014BUILD`, one commit `732f1742`,
+stays on his machine only: no push, no pull request, no merge, nothing on master. This is consistent
+with the register, where WP-P0-14 `implementation_authorized` is still **False**; merging the code
+would have been a step past the build-start approval, which authorised building the first step and
+not shipping it. **He said he will improve it later. It is therefore not finished work parked; it is
+work he intends to return to.**
+
+### Decision 166 - no second coding step is drafted yet
+
+He chose **"Not yet - wait for my word"** over drafting the second build-start packet and over
+redirecting the idle lane. Track B's capacity stays idle rather than building a plan on top of a
+screen he has not yet judged. No second-step packet exists and none is to be written until he says so.
+
+### The finding inside his answer, recorded because it is about the work and not only about the decision
+
+**"I see no information on the page to judge."** The screen passed its own finish test completely -
+lane P14B1V reproduced every one of the owner's conditions from the rendered page and found no write
+path - and it still gave him nothing to judge. Both rows are invented sample data, every status is
+Pending because the status book is parked (decision 145), and the one headline figure is a made-up
+number. The finish test was written to be *checkable*, and it was; it was not written to be
+*informative*, and it was not.
+
+This is a Lead planning limit, not a build defect, and it is recorded here rather than smoothed over:
+the build-start packet's own section 2 already measured that the whole home screen shows Pending on
+day one, and the walkthrough (lane W358) named it among seven weak parts before he accepted. He
+accepted knowing it. But knowing a thing in a packet and seeing an empty screen are different, and the
+first coding step chosen was one whose success he could verify and whose value he could not. **Any
+second-step packet must lead with what the owner would be able to judge when the step is done, not
+only with how its finish would be checked.** No such packet is to be written until decision 166 is
+lifted.
