@@ -571,7 +571,7 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
-  "IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
+  "IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
   "reason": "Re-seal #20: the canonical gate refused PROBE_CATALOG_DIGEST_MISMATCH on PROBE-P012-03-A and PROBE-P012-07-A. Lane W356 corrected expected_first_changed_node inside those two probe modification manifests on 2026-09-04 and the catalog's modification_manifest_digest pins were not updated with them. Eight of the ten probe pins already matched; exactly these two did not. Re-pinned to the live manifest bytes; only those two digest leaves moved."
  },
  "section_16_review": {
@@ -582,7 +582,7 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
-  "IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
+  "IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
   "set_by": "Lead re-seal act #17 2026-09-04T12:46:33+03:00"
  },
  "reseal_history": [

@@ -1007,7 +1007,12 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
     assert record["declaration_kind"] == "OWNER_DECISION_DECLARATION_NOT_EVIDENCE"
     assert "not evidence" in record["statement"]
     assert record["implementation_base_sha"] == (
-        "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5"
+        # Decision 147 re-anchor forward, 2026-09-04: the base moved from the seal-16 copies commit
+        # 63cfe2dd to the seal-20 copies commit bdacf8e4 after the owner-directed citation restyle
+        # (decision 154) moved every expected path. This assertion's job is to pin whatever the
+        # CURRENT re-anchored declaration says, and it was updated the same way when lane W350
+        # re-anchored to 63cfe2dd. The owner's decision-134 authorization is untouched.
+        "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf"
     )
     assert record["exceptions"][0]["owner_decision"] == 134
     assert record["exceptions"][0]["lane_ids"] == [
@@ -1018,11 +1023,15 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
         "W350",
     ]
     assert record["exceptions"][0]["base_state"] == "PRESENT_AT_BASE"
+    # Decision 147 re-anchor forward, 2026-09-04. RULE2-01-GREEN's blob was 0ad42daf at the seal-16
+    # copies base 63cfe2dd; at the seal-20 copies base bdacf8e4 it is d57b6151, and it is IDENTICAL
+    # at HEAD - which is the property this record exists to assert. Measured with
+    # `git rev-parse <base>:<path>` and `git rev-parse HEAD:<path>`, both d57b6151.
     assert record["exceptions"][0]["base_blob_oid"] == (
-        "0ad42dafc7c6634319afddc9ff12a43d095438ae"
+        "d57b6151c3d91516a780c76097d76870fd3ee8ee"
     )
     assert record["exceptions"][0]["current_blob_oid"] == (
-        "0ad42dafc7c6634319afddc9ff12a43d095438ae"
+        "d57b6151c3d91516a780c76097d76870fd3ee8ee"
     )
 
 

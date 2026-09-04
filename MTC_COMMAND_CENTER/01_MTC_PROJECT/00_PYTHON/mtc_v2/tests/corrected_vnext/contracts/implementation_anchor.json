@@ -2,7 +2,7 @@
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
  "EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
- "IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
+ "IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
  "core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
@@ -165,6 +165,14 @@
    "new_IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
    "new_core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
    "reason": "Owner decision 147 (Q-A = b): the base is the commit that carries the latest owner-directed re-seal in-repo; the section-15.4 predicate now proves only that no expected path changed since that re-seal (design v1.16 L14)."
+  },
+  {
+   "at": "2026-09-04T15:37:01+03:00",
+   "actor": "Lead (claude-opus-5, owner-facing session), decision 147 re-anchor forward",
+   "old_IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
+   "new_IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
+   "new_core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
+   "reason": "Owner decision 147 (Q-A = b), applied as a standing rule and not as a new decision: the base is the commit that carries the latest owner-directed re-seal in-repo. Re-seal #20 (owner decisions 153/154/155/159) was copied in-repo by that commit. Before this act the gate refused EXPECTED_PATH_CHANGED_AFTER_BASE on 19 expected paths - the 17 goldens, DERIVATIONS.md and scenario_catalog.json - which are exactly the members the owner-directed citation restyle moved. The section-15.4 predicate now proves only that no expected path changed since re-seal #20, which is what decision 147 says it should prove."
   }
  ]
 }
