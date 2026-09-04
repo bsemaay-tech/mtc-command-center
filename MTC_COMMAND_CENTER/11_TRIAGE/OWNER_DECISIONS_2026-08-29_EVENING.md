@@ -2035,3 +2035,37 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
   repeated across several documents is still an assertion until a family opens the file at the current build.
 - Engine HEAD is now `d119d814`; the gate residual is unchanged (only the section-16 review). Nothing signed, no sealed byte
   moved, branch unpushed. Q-F..Q-L and `accept design P0-14 v1.10` remain the owner's.
+
+## Addendum 82 - 2026-09-04 07:1x REAL (OWNER WORDS: decisions 153-160; every second-pass question answered; P0-14 v1.10 SENT BACK)
+
+**How they were given.** The owner said he could not open the questions file. The Lead asked all seven in the chat, one at a
+time with the options written in plain language and the Lead's recommendation marked. His selections, verbatim by option:
+
+- **Decision 153 (Q-F): "Correct it now."** The sealed bundle manifest's `expected_value_provenance.statement` is corrected to
+  what is true at re-seal #16. Record-only; the manifest is not a member of its own `files[]`, so `EXPECTED_SEAL_SHA` must not
+  move - the Lead measures that and shows it. Verified by a family that did not write it.
+- **Decision 154 (Q-G): "Cite by section + phrase."** At the NEXT re-seal (not before, and no re-seal is triggered for this
+  alone) the sealed tables stop citing the design by line number and cite a section number plus a quoted phrase instead.
+- **Decision 155 (Q-H): "One-line amendment."** Design v1.18 rephrases honest limit L14 so it names "the re-seal the bundle
+  currently pins" instead of the fixed range "#5 and #15". Retain-and-strike; verified; no kernel and no table change.
+- **Decision 156 (Q-I): "Leave both for now" (indentation).** The five-space indentation in the sealed catalog stays.
+- **Decision 157 (Q-J): "Leave both for now" (heading map).** The measured heading-to-line map stays a record; wiring the gate
+  to read it is revisited in the M2 session.
+- **Decision 158 (Q-K): "Fix the harness first."** The gate reads the ratified re-seal chain from the bundle's own re-seal
+  history instead of the hard-coded `#5..#9`, with failing-then-passing evidence and one gate run, BEFORE any Section-16
+  package is drafted.
+- **Decision 159 (Q-L): "Fix at next re-seal."** The two probe manifests that contradict the sealed catalog are corrected, and
+  a check is added that refuses when a probe manifest and the catalog disagree - bundled with whatever else triggers the next
+  re-seal, never a re-seal of its own, with a fresh audit pass after it.
+- **Decision 160 (WP-P0-14 v1.10): "Not yet, send it back."** The design is NOT accepted. It stays parked until the owner says
+  what he wants changed; the Lead asks him for that and does not guess.
+- **Routing note (not a decision on the work):** the owner will raise the OpenRouter key limit himself, which returns the
+  DeepSeek lanes for mechanical work.
+
+**Lead record.** Decisions 153, 155 and 158 are executable now and are being executed. 154, 157 and 159 are scheduled to the
+next re-seal or to M2 and must not be done early. 156 is a decision to do nothing. Nothing here authorises a Section-16
+signature: after 153/155/158 land and are verified, a THIRD audit pass runs on the resulting HEAD, and only then is a
+Section-16 package drafted for the owner's own reading.
+
+**Lead lesson recorded.** The owner cannot open files the Lead sends. Questions go to him in the chat with the options and a
+recommendation, never as a path to a packet.
