@@ -2683,6 +2683,34 @@ def test_all_projection_rows_refuse_without_sealed_selector_declarations() -> No
         assert caught.value.pointer == f"/{field}"
 
 
+def test_rederived_value_projection_refuses_a_sibling_citation_copy() -> None:
+    catalog = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/scenario_catalog.json"
+    )
+    row = next(member for member in catalog if member["scenario_id"] == "RULE2-01-RED")
+    golden = load_json_exact(MTC_V2_ROOT / "golden/corrected_vnext/RULE2-01-RED.json")
+    modified = deepcopy(row)
+    declarations = modified["rule2_divergent_projection"]
+    declarations[2]["legacy"]["design_lines"] = declarations[0]["legacy"]["design_lines"]
+
+    with pytest.raises(GateRefusal) as caught:
+        build_projection_results(
+            "RULE2-01-RED",
+            modified,
+            {"must_not_be_read": "BASELINE_BYTES"},
+            golden,
+        )
+
+    assert caught.value.check_id == "PROJECTION_CITATION_DUPLICATE"
+    assert caught.value.pointer == "/rule2_divergent_projection/2/legacy/design_lines"
+    build_projection_results(
+        "RULE2-01-RED",
+        row,
+        {"must_not_be_read": "BASELINE_BYTES"},
+        golden,
+    )
+
+
 def test_w305_item6_refuses_missing_sealed_equal_price_target_book() -> None:
     scenario_id = "RULE2-06-EQUAL-PRICE-RED"
     catalog = load_json_exact(

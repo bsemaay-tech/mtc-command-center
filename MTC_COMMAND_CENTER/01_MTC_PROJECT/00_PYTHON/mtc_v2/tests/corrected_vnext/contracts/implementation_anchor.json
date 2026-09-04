@@ -1,7 +1,7 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
+ "EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
  "IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
  "core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
@@ -146,6 +146,12 @@
    "old_EXPECTED_SEAL_SHA": "555075146636af3442424035e2544e73e07961dd14661de9c019e203f6720024",
    "new_EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
    "reason": "Re-seal #20: the canonical gate refused PROBE_CATALOG_DIGEST_MISMATCH on PROBE-P012-03-A and PROBE-P012-07-A. Lane W356 corrected expected_first_changed_node inside those two probe modification manifests on 2026-09-04 and the catalog's modification_manifest_digest pins were not updated with them. Eight of the ten probe pins already matched; exactly these two did not. Re-pinned to the live manifest bytes; only those two digest leaves moved."
+  },
+  {
+   "at": "2026-09-04T19:57:17+03:00",
+   "old_EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
+   "new_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "reason": "Re-seal #21: the SINGLE re-seal for fold tier 3 (owner decision 159's bundling rule). Lane W387 converted 79 live bare design locators in DERIVATIONS.md to section + quoted phrase out of 349 syntactic candidates, re-cited 7 value-bearing nodes from the sentence that states the value, and added a check refusing identical sibling citations in one projection. Owner decision 175 added one sentence to honest limit L14 and bumped the design to v1.19, so the design pin is re-pinned here too."
   }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",

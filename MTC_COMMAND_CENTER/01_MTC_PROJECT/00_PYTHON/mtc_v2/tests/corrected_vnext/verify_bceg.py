@@ -3559,6 +3559,53 @@ def _projection_legacy_side_source(catalog_row: dict[str, Any]) -> str | None:
     return None
 
 
+# W387 leaves supported citation reuse unchanged; this is its seven-node repair census.
+_REDERIVED_VALUE_CITATION_SELECTORS = {
+    "RULE2-01-RED": frozenset(
+        {
+            "/EVENT_SURFACE/fill_events/0/quantity",
+            "/RESULT_SURFACE/order_notional",
+        }
+    ),
+    "RULE2-02-GREEN": frozenset(
+        {
+            "/EVENT_SURFACE/fill_events/0/quantity",
+            "/RESULT_SURFACE/final_position/quantity",
+        }
+    ),
+    "RULE2-06-RED": frozenset({"/RESULT_SURFACE/trades/0/gross_realized_pnl"}),
+    "RULE2-06-EQUAL-PRICE-RED": frozenset(
+        {"/RESULT_SURFACE/trades/0/gross_realized_pnl"}
+    ),
+    "RULE2-06-GREEN": frozenset({"/RESULT_SURFACE/trades/0/gross_realized_pnl"}),
+}
+
+
+def _validate_rederived_value_citation_uniqueness(
+    scenario_id: str, field: str, declarations: list[Any]
+) -> None:
+    audited = _REDERIVED_VALUE_CITATION_SELECTORS.get(scenario_id, frozenset())
+    if not audited:
+        return
+
+    seen: dict[str, tuple[int, str]] = {}
+    for index, member in enumerate(declarations):
+        if type(member) is not dict or type(member.get("legacy")) is not dict:
+            continue
+        selector = member.get("selector")
+        citation = member["legacy"].get("design_lines")
+        if type(selector) is not str or type(citation) is not str:
+            continue
+        prior = seen.get(citation)
+        if prior is not None and (selector in audited or prior[1] in audited):
+            raise GateRefusal(
+                "PROJECTION_CITATION_DUPLICATE",
+                f"{scenario_id}: audited value citations copied between {prior[1]} and {selector}",
+                pointer=f"/{field}/{index}/legacy/design_lines",
+            )
+        seen[citation] = (index, selector)
+
+
 def _projection_shape_refusal(
     scenario_id: str, pointer: str, detail: str
 ) -> GateRefusal:
@@ -3723,6 +3770,7 @@ def build_projection_results(
             f"{scenario_id}: sealed catalog row has no evaluable {field}",
             pointer=f"/{field}",
         )
+    _validate_rederived_value_citation_uniqueness(scenario_id, field, declarations)
 
     expected_relation = "DIFFERS" if field == "rule2_divergent_projection" else "EQUAL"
     projections: list[dict[str, Any]] = []

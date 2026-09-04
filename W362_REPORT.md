@@ -220,3 +220,44 @@ provenance file was changed.
    `seal.set_by` still says `Lead re-seal act #17 2026-09-04T12:46:33+03:00`
    (`MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json:572-586,1028-1038`).
    The lane authorized byte-for-byte copying only, so this source-authored residue was preserved.
+
+---
+
+# W362 re-seal #21 attempt — STOP report
+
+## Verdict
+
+STOP: the current lane requires a clean worktree and mandates STOP on any failed precondition
+(`C:/tmp/LANE_PROMPTS_20260828/LANE_W362_COPIES_SEAL17_GATE.md:7-10`). The measured
+`git status --porcelain=v1` output at the start of this attempt was non-empty:
+
+```text
+ M MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/golden/corrected_vnext/RULE2-08-RED.json
+ M MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/DERIVATIONS.md
+ M MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/scenario_catalog.json
+ M MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/selftests/test_verify_bceg.py
+ M MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/verify_bceg.py
+```
+
+The measured branch was `feature/wp-p0-12-corrected-vnext-20260831`; the recorded starting HEAD
+was `f45dd0f8121ee64d2ec758bd9c39b58c4df38acd`. These Git measurements are reproduced verbatim
+above or in this paragraph; they have no path-and-line source, so under C-4 they are command
+evidence rather than file-cited claims (`C:/tmp/LANE_PROMPTS_20260828/N_COMMON_CLAUSES.md:20-23`).
+
+Both named marker files were present and their first lines read `exit=0`; `RESEAL21_DONE.txt` also
+named seal `d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f`
+(`C:/tmp/LANE_PROMPTS_20260828/RESEAL21_DONE.txt:1`;
+`C:/tmp/LANE_PROMPTS_20260828/W361_DONE.txt:1`). The independent bundle-seal recomputation was not
+reached because the earlier clean-worktree precondition had already failed.
+
+No bundle copy, checksum regeneration, commit, canonical-gate invocation, `--mode observe`
+invocation, or `W362_DONE.txt` write was performed in this attempt. The prompt reserves those
+actions for after successful preconditions and requires the gate exactly once
+(`C:/tmp/LANE_PROMPTS_20260828/LANE_W362_COPIES_SEAL17_GATE.md:17-35`).
+
+## Discrepancies
+
+1. The task specification expects a clean worktree before re-seal #21 processing, but the measured
+   porcelain output contained the five modified paths reproduced above
+   (`C:/tmp/LANE_PROMPTS_20260828/LANE_W362_COPIES_SEAL17_GATE.md:7-10`). Nothing was repaired or
+   overwritten.

@@ -1040,7 +1040,7 @@ Cross-checks against the design's own conservation statements:
   `probe_id` exactly once; it also contains the additional DEF-P012-06 `RULE2-06-EQUAL-PRICE-RED` row
   exactly once" ✓ — verified mechanically: the emitted catalog has 27 rows and 27 unique
   `scenario_id` values.
-- `:174-179` fail-probe contract: each declared `probe_id` binds exactly once to a `PROBE` catalog
+- `Design section 6, "Every `fail_probes[]` member has a unique `probe_id`"` fail-probe contract: each declared `probe_id` binds exactly once to a `PROBE` catalog
   row; the per-DEF probe counts match each correction section's "Fail probe(s)" paragraph; total 10 ✓.
 
 Expected-surface artifacts authored: one file per RED/GREEN scenario → **17 files** under
@@ -1224,8 +1224,8 @@ and the v1.5 change log after the old end of file. Therefore:
   EOF 646 → 674).
 
 Sections 0-11 above use almost exclusively citations ≤ 549 and are therefore still exact as written;
-the few above 549 (for example the `core/types.py` shape-census citation written `:593`, and the §16
-citation in the header) map to `:621` and `:579-590` under that rule. The `## v1.5 revision` section
+the few above 549 (for example the `core/types.py` shape-census citation written `Design section 18, "| `core/types.py` | Transition, decision/fill/cash events"`, and the §16
+citation in the header) map to `Design section 18, "Correct both multiplier formulas and final-fill min-notional basis"` and `Design section 17, "This is revision scope for the later `CONTRACT_TABLES` family"` under that rule. The `## v1.5 revision` section
 below states v1.5 line numbers directly. `CONTRACT_TABLES_MANIFEST.json` has had its three stale
 spans corrected against the v1.5 headings.
 
@@ -1427,7 +1427,7 @@ Record ids are the `MECHANICAL` string `SYNTH-{INSTRUMENT|COST|FUNDING}-<scenari
 that `RULE2-08-RED` and `RULE2-08-GREEN` share the exact funding record id
 `SYNTH-FUNDING-RULE2-08-V1`. Every `InstrumentRecord` carries effective interval
 `[1999-12-31T00:00:00Z, 2000-01-02T00:00:00Z)`, written here with the closed member set
-`{start_inclusive, end_exclusive}` fixed at `:772-773`. Those cells were
+`{start_inclusive, end_exclusive}` fixed at `Design section 22.3, "`end_exclusive` and `start_inclusive`"`. Those cells were
 `BLOCKED-MISSING-RECORD-BYTES` / `BLOCKED-MISSING-SCENARIO-INPUT` and are now filled in all 17
 artifacts.
 
@@ -1488,7 +1488,7 @@ Filled: the three record identities plus the effective interval. Everything else
 
 ### R-4 RULE2-02-GREEN
 
-Entry admitted at equality (`100 >= 100`), quantity 1, `cm = 1` (`:853`).
+Entry admitted at equality (`100 >= 100`), quantity 1, `cm = 1` (`Design section 22.4, "Corrected I also has `minimum_notional=100`"`).
 
 ```
 fee_notional = abs(100 * 1 * 1) = 100 ; fee_amount 0.045 ; fee_cash_delta -0.045
@@ -1497,7 +1497,7 @@ equity_curve = { first 1000, last 999.955 }
 
 ### R-5 RULE2-03-RED
 
-`[NO_ACTION100]` (`:733` M-05, `:854`); runtime `instrument_price_tick=0.25` against record
+`[NO_ACTION100]` (`Design section 22.2, "`NO_ACTION100=(2000-01-01T00:10:00Z,0,100,100,100,100,0)`"` M-05, `Design section 22.4, "`[NO_ACTION100]`; runtime `instrument_price_tick=0.25`"`); runtime `instrument_price_tick=0.25` against record
 `price_tick=0.5`; the corrected adapter refuses `REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION` before
 the first bar. Owner addendum 20 (1a) binds `initial_capital = 1000`, and the refusal precedes any
 cash event, so
@@ -1511,9 +1511,9 @@ tick values, the refusal row and all five empty containers are byte-identical.
 
 ### R-6 RULE2-03-GREEN
 
-`[NO_ACTION100]`; runtime and record `price_tick=0.5` (`:855`); identity validates. A first Range
+`[NO_ACTION100]`; runtime and record `price_tick=0.5` (`Design section 22.4, "`[NO_ACTION100]`; runtime and I `price_tick=0.5`"`); identity validates. A first Range
 Filter call only initializes its line and cannot emit an entry for any finite constant OHLC
-(`:733`, `:743-745`), so there is no fill, no fee and no equity movement:
+(`Design section 22.2, "`NO_ACTION100=(2000-01-01T00:10:00Z,0,100,100,100,100,0)`"`, `Design section 22.2, "a first Range Filter call only initializes its"`), so there is no fill, no fee and no equity movement:
 `equity_curve = { first 1000, last 1000 }`. Same four record cells filled.
 
 ### R-7 RULE2-04-RED
@@ -1555,7 +1555,7 @@ Filled: `exit_events/0/gross_realized_pnl`, `fill_events/0/liquidity_role`, `cas
 
 ### R-8 RULE2-04-GREEN
 
-Same bound prefix and config, evaluation bar `(00:13:00Z, 3, 105, 106, 101, 104, 0)` (`:869`).
+Same bound prefix and config, evaluation bar `(00:13:00Z, 3, 105, 106, 101, 104, 0)` (`Design section 22.5, "evaluation bar is unconditionally `(2000-01-01T00:13:00Z,3,105,106,101,104,0)`"`).
 Neither the corrected gap-aware predicate (`open 105 <= 100`? no; `low 101 <= 100`? no) nor the
 legacy close-only predicate fires, so the position survives.
 
@@ -1591,7 +1591,7 @@ quantity is ZERO. The current sealed bytes are `quantity 0` (`RULE2-05-RED.json:
 (`RULE2-05-RED.json:43`) and `equity_curve {"first": 1000, "last": 1000}`
 (`RULE2-05-RED.json:45`); the golden's own before/after ledger is `RULE2-05-RED.json:90-97`. **What
 still stands on this row:** `equity_curve.first 1000`, the fill price `101`, the impact `1`, the
-explicit `cm = 1` input and the `:360` final-fill fee basis - W186 Z-5 says in terms "its fill price
+explicit `cm = 1` input and the `Design section 13, "fee_notional = abs(final_fill_price * fill_qty * contract_multiplier)"` final-fill fee basis - W186 Z-5 says in terms "its fill price
 101 and impact 1 stand". **D-06 itself remains closed** for this row; only the value the paragraph
 calls byte-identical moved. **NO VALUE MOVED BY THIS MARKER** - the superseded arithmetic above is
 left exactly as written. The re-derivation is W186 Z-5, which already named this section by its
@@ -1612,7 +1612,7 @@ equity_curve = { first 1000, last 999.955 }
 Bars `[INIT98, ENTRY100, (00:12:00Z, 2, 100, 115, 85, 105, 0)]`, profile `raw_close_only_v1`,
 `initial_capital=1000` (addendum 20 (1a)), `risk_per_long_pct=2`, tick/step/minima `1/1/0/0`,
 `cm=1` explicit, percent stop 10, `tp_mode="Multi-TP"`, `tp1_r_multiple=0.5`, `tp1_close_pct=50`,
-`tp2_r_multiple=1` (`:872`). Re-derivation of the reached book:
+`tp2_r_multiple=1` (`Design section 22.5, "`tp2_r_multiple=1`. | Real legacy entry constructs qty `2`"`). Re-derivation of the reached book:
 
 ```
 risk_amount 1000 * 2% = 20 ; stop 90 ; distance 10 = 1R ; risk_raw_qty 20/10 = 2 ; qty 2
@@ -1640,7 +1640,7 @@ trade row: gross 15, fee_total -0.18674999999999997, funding_total 0, net 14.813
 
 ### R-12 RULE2-06-GREEN
 
-Same prelude/config, evaluation bar `(00:12:00Z, 2, 100, 104, 85, 95, 0)` (`:873`). Only the stop
+Same prelude/config, evaluation bar `(00:12:00Z, 2, 100, 104, 85, 95, 0)` (`Design section 22.5, "evaluation `(2000-01-01T00:12:00Z,2,100,104,85,95,0)`"`). Only the stop
 touches; both versions fill quantity 2 at 90 with gross `-20` (unchanged).
 
 ```
@@ -1655,7 +1655,7 @@ trade row: gross -20, fee_total -0.17099999999999999, net -20.171
 Owner addendum 20 (3a) closes `OPEN-EMBED-03` by ruling that the equal-price target book is
 constructed by the **corrected 2.0.0 target-book test machinery directly**, the legacy engine
 untouched, and that the row is recorded honestly as **not runnable on legacy for that book**. The
-row still "inherits the RULE2-06-RED config" (`:874`), so the position itself (quantity 2, entry
+row still "inherits the RULE2-06-RED config" (`Design section 22.5, "Inherits the RULE2-06-RED config"`), so the position itself (quantity 2, entry
 100, stop 90) comes from the same real prelude on both arms; only the two equal targets at 105 are
 corrected-only. The tie-break, ordered ids, fills and the sealed `5`/`5`/`10` are unchanged.
 
@@ -1704,7 +1704,7 @@ sealed value stands. Filled: the four record-identity cells only.
 
 ### R-16 RULE2-08-RED
 
-Owner addendum 20 (4a) binds the pre-event entry basis/fill to `100` via the `:888` candidate
+Owner addendum 20 (4a) binds the pre-event entry basis/fill to `100` via the `Design section 22.6, "Candidate prefix, if the owner binds entry basis `100`, is"` candidate
 prefix `[(1999-12-31T23:58:00Z,0,98,98,98,98,0),(1999-12-31T23:59:00Z,1,100,100,100,100,0)]` with
 `initial_capital=1000`, fallback `10%`, tick/step/minima `.01/1/0/0`, `cm=1`, no SL/TP.
 
@@ -1736,13 +1736,13 @@ bars before the observation window, by the real mechanism, with nothing injected
 pre-window, so they contribute no in-window fill, cash, fee, gross-realization or exit fact — which
 is exactly the empty-container reading this artifact had already sealed as a judgement call under
 **D-05**. The sealed values do not change; their status changes from premise-blocked to
-premise-supported. No `CostSchedule` is consumed (`:889`), so no fee arises even from the
+premise-supported. No `CostSchedule` is consumed (`Design section 22.6, "C is absent/`NOT_CONSUMED`. | I/F values are closed"`), so no fee arises even from the
 pre-window round trip, and equity stays `1000` on both versions.
 
-The owner answer names no specific pre-window bars and `:889` declares no closing evaluation bar, so
+The owner answer names no specific pre-window bars and `Design section 22.6, "its closing evaluation bar and premise are not declared reachable"` declares no closing evaluation bar, so
 the window's `end_timestamp` remains `BLOCKED-MISSING-SCENARIO-INPUT` and no bar-level cell is
 authored. Filled: `instrument_record_id`, `instrument_effective_interval`, and
-`funding_schedule_id = SYNTH-FUNDING-RULE2-08-V1` (shared with RED per `:751-754`).
+`funding_schedule_id = SYNTH-FUNDING-RULE2-08-V1` (shared with RED per `Design section 22.3, "RULE2-08-GREEN share the exact funding record id"`).
 
 ---
 
@@ -1814,10 +1814,10 @@ Recorded per clause C-2; none is absorbed.
   runnable on legacy for that book, while the catalog row still declares
   `required_semantics_versions ["1.0.0","2.0.0"]`. This lane recorded the fact in the row rather
   than editing the gate-bearing `required_semantics_versions` array, which is the Lead's to change.
-- **V15-D05** — "canonical" bytes are not byte-determined. `:697-699` fixes sorted keys, no BOM, LF,
+- **V15-D05** — "canonical" bytes are not byte-determined. `Design section 22.1, "sorted object keys, no BOM, LF line endings, a final LF"` fixes sorted keys, no BOM, LF,
   a final LF, duplicate-key refusal and finite tokens, but not the separator or indentation width,
-  and `:759-761` refuses to fabricate two provenance members. Consequently no record digest and not
-  even the fully enumerated RULE2-08 source-event digest (`:833-838`) is computable, and this lane
+  and `Design section 22.3, "rather than fabricating either here"` refuses to fabricate two provenance members. Consequently no record digest and not
+  even the fully enumerated RULE2-08 source-event digest (`Design section 22.3, "the synthetic source-event bytes are the section-22.1 canonical"`) is computable, and this lane
   refused to guess one.
 - **V15-D06** — two omissions in the addendum's own golden-impact list. It does not name
   `RULE2-02-RED`'s cost/funding schedule identities (which §22.4 `Design section 22.4, ", restating section 8"` does bind and which this
@@ -1903,7 +1903,7 @@ lane actually revised, and the `design` version/line-span block. Design `Design 
 list and is **not** authority for this lane to edit code; nothing outside this bundle was written.
 
 **Owner authority.** Addendum 22 authorised exactly one micro-fold closing four findings
-(`:1231-1237`): `FUNDING_ELIGIBILITY` labelled `AMENDMENT-CHOICE` at all three enumeration sites,
+(`Design v1.8 change log, "all three enumeration sites now label that minimal one-reason choice"`): `FUNDING_ELIGIBILITY` labelled `AMENDMENT-CHOICE` at all three enumeration sites,
 `COLLISION_RESOLVED.collision` closed as a JSON boolean with domain `{false,true}` present on the
 sole-class receipt, tables-revision item 1 re-pointed at the nine-closed-reason mapping, and
 `cumulative_funding` made unconditional on every DEF-P012-08 RESULT. Addenda 19, 20 and 21 apply
@@ -2032,7 +2032,7 @@ Members added per artifact:
 (the count is every member of all six containers in that artifact, including the re-authored
 `decision_events` rows; each carries the field exactly once). Verified mechanically afterwards: every
 member of all six containers in all 17 artifacts carries the field, and every `sequence` still equals
-its array index under `SEQUENCE_FIELD_V1` (`:512`).
+its array index under `SEQUENCE_FIELD_V1` (`Design section 15.3, "the value must equal the array index"`).
 
 ### W-4 Item 3 — `equity_curve` under the §23.2 window rule
 
@@ -2041,7 +2041,7 @@ its array index under `SEQUENCE_FIELD_V1` (`:512`).
 but **before** any cash event at the inclusive start timestamp; `last` is `first` plus, in
 section-3/array order, every `cash_events.signed_delta` whose event timestamp lies in the closed
 window; with no in-window cash event `last == first`; pre-window fees, funding and gross realizations
-affect `first`; unrealized position value never does. `:1066-1072` labels the window scope an
+affect `first`; unrealized position value never does. `Design section 23.2, "Pre-window fees/funding/gross realizations affect `first`"` labels the window scope an
 `AMENDMENT-CHOICE` and states that run-scoped endpoints are **not** `CORRECTED_V2` comparison nodes.
 
 Re-derived for the five rows item 3 names. Every window here starts and ends on the evaluation bar,
@@ -2074,14 +2074,14 @@ not proof; these five rows survive because the §23.2 rule reproduces them, not 
 already written.
 
 The rule was also applied to the twelve rows item 3 does not name, as a consistency check: each takes
-the M-06 default first-through-last-bar window (`:734`), has no cash event before or at its start
+the M-06 default first-through-last-bar window (`Design section 22.2, "`observation_window` is the closed interval from its first through last bar"`), has no cash event before or at its start
 timestamp, and therefore keeps `first` = the account seed `1000`, with `last` the same accumulation
 already sealed. No token moved. `08-GREEN` is the one row where the new "pre-window gross
 realizations affect `first`" clause bites — recorded as **W167-D03**.
 
 ### W-5 Item 4 — guards
 
-`:1142-1147`: a present `guards` object admits exactly `guard_pnl_basis`,
+`Design section 23.4, "A present `guards` object admits exactly"`: a present `guards` object admits exactly `guard_pnl_basis`,
 `consecutive_loss_count`, `consec_loss_ok`, `guard_blocked_raw`, plus `last_closed_guard_pnl`
 required exactly when a lifecycle closed and produced that fact; `max_consecutive_losses` and
 `funding_included_in_guard_basis` are forbidden.
@@ -2141,7 +2141,7 @@ required exactly when a lifecycle closed and produced that fact; `max_consecutiv
 
 ### W-6 Item 5 — conditional fill and exit members
 
-`:1090-1099` and `:1106-1107`. Applied to RULE2-04 and the RULE2-06 family and re-verified on all 17:
+`Design section 23.3, "Every `fill_events[]` member has exactly these common members"` and `Design section 23.3, "`exit_id` is required on every exit-class fill"`. Applied to RULE2-04 and the RULE2-06 family and re-verified on all 17:
 
 ```
 unrounded_fill_price REMOVED   05-RED (101) and 05-GREEN (100). :1097-1099 makes unrounded_fill a
@@ -2180,7 +2180,7 @@ only the `GAP_OPEN` token, so the non-gap spelling `STOP_TOUCH` is tables-author
 
 ### W-7 Item 6 — the top-level RESULT member set
 
-`:1116` fixes the seven base members and `:1128-1131` the four conditionals; `:1133-1137` forbids
+`Design section 23.4, "Every `CORRECTED_V2` `RESULT_SURFACE` has exactly these seven base members"` fixes the seven base members and `Design section 23.4, "Only these conditional top-level members are admitted"` the four conditionals; `Design section 23.4, "No other top-level member is allowed"` forbids
 everything else and the top-level `collision` object. Re-derived on all 17:
 
 | Row | Base 7 | `order_notional` | `admitted` | `guards` | `cumulative_funding` | change |
@@ -2281,7 +2281,7 @@ that counts leaf string values equal to a marker: `BLOCKED-MISSING-RECORD-BYTES`
 (`RULE2-08-GREEN` `/observation_window/end_timestamp`) is unchanged.
 
 **V15-D02 is CLOSED** by §23.2, as a labelled choice rather than a forced identity. Every artifact
-sentence that recorded it as an open scoping question has been rewritten to cite `:1057-1072` and to
+sentence that recorded it as an open scoping question has been rewritten to cite `Design section 23.2, "not run-scoped equity and not mark-to-market equity"` and to
 say so.
 
 ### W-10 Discrepancies raised by this revision
@@ -2308,7 +2308,7 @@ Recorded per clause C-2; none is absorbed into a derived value.
   `LONG_ASCENDING_TARGET_PRICE_THEN_EXIT_ID_UTF8_BYTE_ORDER`, `CEIL` and `FLOOR` spellings. These are
   tables-authored strings in the sense of **D-13**, and every "first changed node" whose value they
   are depends on them. v1.8 closed the member sets but not these domains.
-- **W167-D03** — §23.2 versus `RULE2-08-GREEN`'s unnamed pre-window bars. `:1063` makes pre-window
+- **W167-D03** — §23.2 versus `RULE2-08-GREEN`'s unnamed pre-window bars. `Design section 23.2, "Pre-window fees/funding/gross realizations affect `first`"` makes pre-window
   gross realizations affect `equity_curve.first`. Owner addendum 20 (5a) places lifecycle 1 opening
   and closing on ordinary bars before the window but names none of them, and §22.6 `Design section 22.6, "its closing evaluation bar and premise are not declared reachable"` declares
   no closing evaluation bar. `first = 1000` is derivable only under the premise that the pre-window
@@ -2403,7 +2403,7 @@ was re-numbered and no §23 span moved.
 
 ### Y-0 Occurrence test actually applied
 
-For each of the 17 scenarios and each of the nine closed reasons in the `:1016-1024` table, the
+For each of the 17 scenarios and each of the nine closed reasons in the `Design section 23.1, "The allowed `decision` values and their exact members"` table, the
 question asked was: *is that reason's named decision evaluated inside this artifact's compared
 observation window?* Two fences did most of the work and are stated here because they are what keeps
 Reading Y from becoming padding:
@@ -2417,7 +2417,7 @@ Reading Y from becoming padding:
    `00:10:00Z..00:12:00Z`, entry inside) but **not** to `RULE2-04`, the `RULE2-06` family or
    `RULE2-08`.
 2. **Terminal-reason fence.** Where a predicate terminates in a refusal, the refusal reason is the
-   row (`:1035`); the admitted spelling is not also emitted. `RULE2-02-RED` therefore keeps
+   row (`Design section 23.1, "pre-evaluation refusal still produces its typed"`); the admitted spelling is not also emitted. `RULE2-02-RED` therefore keeps
    `REFUSED_MIN_NOTIONAL` and gains nothing.
 
 Result: **eight of seventeen** scenarios grow, by **ten rows** in total. The other nine do not. That
@@ -2541,18 +2541,18 @@ sequence `2` and its `order_notional` to `0`. The Y-1 table line
 
 ### Y-3 `PROTECTIVE_STOP_EVALUATED` additions on the three RULE2-06 rows
 
-Members at `:1022`: `event_timestamp` REQUIRED, `position_side`, `stop_price`, `predicate`; plus
+Members at `Design section 23.1, "`PROTECTIVE_STOP_EVALUATED` | `REQUIRED` | `position_side`, `stop_price`, `predicate`"`: `event_timestamp` REQUIRED, `position_side`, `stop_price`, `predicate`; plus
 `reference_source` and `reference_price` **iff a fill reference was selected**.
 
 *Why the decision is evaluated.* Section 3 step 2 `Design section 3, "but do not choose a"` says that for exits the adapter records
 which stop and targets touched, before choosing any winner or reference. Design `Design section 12, "close=95`; only the stop touches"` states in
 terms that on `RULE2-06-RED` "the two targets and stop all touch", on `RULE2-06-GREEN` "only the
 stop touches", and on `RULE2-06-EQUAL-PRICE-RED` "both equal-price targets and the stop touch". The
-independence row `:1046` states that sections 3, 10 and 12 **separate stop evaluation from same-bar
+independence row `Design section 23.1, "Sections 3, 10, and 12 separate stop evaluation from same-bar policy resolution"` states that sections 3, 10 and 12 **separate stop evaluation from same-bar
 policy resolution**, and maps the prior kernel name `SOLE_EXIT_CLASS` onto
 `PROTECTIVE_STOP_EVALUATED` - which is exactly the sole-touched-class shape of `RULE2-06-GREEN`.
 The stop evaluation and the policy resolution are therefore two distinct closed reasons on a
-DEF-P012-06 row. `:1023`'s restriction is on `COLLISION_RESOLVED` (DEF-P012-06 only, never RULE2-04
+DEF-P012-06 row. `Design section 23.1, "It is emitted only when a DEF-P012-06 row evaluates its named same-bar policy"`'s restriction is on `COLLISION_RESOLVED` (DEF-P012-06 only, never RULE2-04
 close-only selection); it says nothing that would suppress the stop reason here.
 
 *Order.* Step 2 precedes step 3, so the stop evaluation is sequence 1 and `COLLISION_RESOLVED` moves
@@ -2578,10 +2578,10 @@ Bars from design `Design section 12, "all touch. Legacy's implicit"` and `Design
   full quantity at stop `90`, and section 10 row 2 makes the stop level the reference, so a fill
   reference was selected. `reference_source = STOP_LEVEL`, `reference_price = 90` - the value the
   artifact already seals on its stop fill.
-- `06-RED` and `06-EQUAL`: **absent**. Under `TARGET_FIRST` (`:336`, `:872`, `:874`) the touched
+- `06-RED` and `06-EQUAL`: **absent**. Under `TARGET_FIRST` (`Design section 12, "and corrected policy `TARGET_FIRST`. The two targets"`, `Design section 22.5, "policy `TARGET_FIRST`; C zero-slippage"`, `Design section 22.5, "policy `TARGET_FIRST`; I has"`) the touched
   targets consume the reference quantity `2`, `stop_remainder_quantity` is `0` (already sealed on
   the collision row), so no stop fill intent was chosen at step 3 and no stop reference was selected
-  at step 4 (`:92-93`). `:1022`'s `iff` therefore keeps both members off.
+  at step 4 (`Design section 3, "but do not choose a winner, reference fill, or state mutation yet"`). `Design section 23.1, "reference_source` and `reference_price` iff a fill reference was selected"`'s `iff` therefore keeps both members off.
 
 **No economic value moved:** `stop_price 90` and `reference_price 90` restate stated scenario
 inputs and already-sealed nodes; no fill, cash, fee, PnL, equity or metrics node was touched on any
@@ -2863,16 +2863,16 @@ required_min_notional = 0                                            (:870 under
 admit iff 0 >= 0  ->  TRUE                                           (:234)
 ```
 
-`:237` states that equality passes "because the legacy comparison is strict `<`". So
+`Design section 8, "Equality passes because the legacy comparison is strict `<`"` states that equality passes "because the legacy comparison is strict `<`". So
 `MIN_NOTIONAL_ADMITTED` survives on this row; only its `order_notional` member moves, from `101` to
 `0`, and its `sequence` moves from `1` to `2` because a `SIZING_COMPUTED` row now precedes it
 (`Design section 23.1, "Section 8 makes admission a"` section-3 order; `Design section 23.1, "Section 8 makes admission a"` "section 8 makes admission a separate predicate after sizing").
 
 ### Z-3 The withheld row CAN now be filled
 
-**Yes.** `SIZING_COMPUTED` is added at sequence `1`. Its member set is closed at `:1017`:
+**Yes.** `SIZING_COMPUTED` is added at sequence `1`. Its member set is closed at `Design section 23.1, "`SIZING_COMPUTED` | `REQUIRED` | `selector`, `contract_multiplier`, `order_notional`"`:
 `event_timestamp` REQUIRED, plus `selector`, `contract_multiplier`, `order_notional`, on top of the
-common `sequence`, `decision`, `kernel_semantics_version` at `:994`.
+common `sequence`, `decision`, `kernel_semantics_version` at `Design section 23.1, "Every member has exactly these common members"`.
 
 ```
 sequence                 = 1                       (Design section 3, "performs this total order" section-3 order: step 1 validation,
@@ -2948,10 +2948,10 @@ therefore no fee or cash row, `Design section 23.2, "last == first`. Pre-window"
 quantity: "Required changed projection: quantity, order notional, later position quantity, and any
 quantity-derived cash event." `final_position.quantity` therefore follows the floored `0`.
 `final_position.side LONG` and `final_position.entry_fill_price 101` are not quantity-derived —
-`:275-280` / `:406` fix the long side and `:315` / `:307` fix the fill price — and are unchanged.
+`Design section 22.2, "`enable_long=true`, `enable_short=false`"` / `Design section 11, "a synthetic buy intent"` fix the long side and `Design section 11, "derive impact `1` and adverse tick-aligned fill `101`"` / `Design section 11, "corrected fill is `101`"` fix the fill price — and are unchanged.
 
-**RESULT `order_notional`.** `:209` and `:233` both give `0 * 101 * 1 = 0`. The member stays present:
-`:1128` requires it exactly when DEF-P012-01/02/05 declares the entry-sizing/notional projection, and
+**RESULT `order_notional`.** `Design section 7, "fallback_raw_qty  = fallback_notional / (final_entry_fill * cm)"` and `Design section 7, "order_notional   = qty * final_entry_fill * cm"` both give `0 * 101 * 1 = 0`. The member stays present:
+`Design section 23.4, "`order_notional` | DEF-P012-01, DEF-P012-02, or DEF-P012-05"` requires it exactly when DEF-P012-01/02/05 declares the entry-sizing/notional projection, and
 this row owns DEF-P012-05.
 
 ### Z-5 Before/after, one line per changed node
@@ -3054,14 +3054,14 @@ filling of one withheld row.
 Item 4 of the lane spec requires that a change implied elsewhere be reported, not made. Nothing is
 implied elsewhere. `RULE2-05-RED` is the **only** row in the corpus whose corrected final entry fill
 differs from its reference price, because it is the only row with a non-zero `slippage_bps`
-(`:315`, `:870`). Every other row that sizes an entry binds `slippage_bps=0` explicitly:
-`RULE2-01-RED/GREEN` at `:216` and `:850-851`, `RULE2-02-RED/GREEN` at `:241` and `:852-853`,
-`RULE2-03` at `:259` and `:854`, `RULE2-04-RED/GREEN` at `:287` and `:868-869`, `RULE2-05-GREEN` at
-`:315` and `:871`, the `RULE2-06` family at `:872-874`, `RULE2-07-RED` at `:384` and `:886`; and
-`RULE2-08-RED`'s `CostSchedule` is absent/`NOT_CONSUMED` at `:888`, with its entry basis and fill
+(`Design section 11, "with reference `100`, `slippage_bps=100`"`, `Design section 22.5, "C has `slippage_bps=100`, entry TAKER"`). Every other row that sizes an entry binds `slippage_bps=0` explicitly:
+`RULE2-01-RED/GREEN` at `Design section 7, "the same zero-impact slippage model/tick"` and `Design section 22.4, "C has `slippage_bps=0`; F has no in-window event"`, `RULE2-02-RED/GREEN` at `Design section 8, "including the zero-impact schedule"` and `Design section 22.4, "C zero-slippage with approved entry-taker fee"`,
+`RULE2-03` at `Design section 9, "a synthetic `BPS_OF_REFERENCE_V1` schedule having `slippage_bps=0`"` and `Design section 22.4, "C zero-slippage and F empty are identity-only"`, `RULE2-04-RED/GREEN` at `Design section 10, "test-only zero-impact model/parameter record with stop `100`"` and `Design section 22.5, "same I/C/F identities; the same evaluation-only observation window"`, `RULE2-05-GREEN` at
+`Design section 11, "and `slippage_bps=0`; both final fills are `100`"` and `Design section 22.5, "Same intent/qty with `slippage_bps=0`"`, the `RULE2-06` family at `Design section 22.5, "Inherits the RULE2-06-RED config"`, `RULE2-07-RED` at `Design section 13, "two taker fills, taker rate `0.001`, fixed component `0`"` and `Design section 22.6, "exact-identity rounding and zero slippage"`; and
+`RULE2-08-RED`'s `CostSchedule` is absent/`NOT_CONSUMED` at `Design section 22.6, "C is absent/`NOT_CONSUMED`. `observation_window`"`, with its entry basis and fill
 bound to `100` by owner addendum 20 item 49 (4a). Sizing over a final fill above the reference is
 precisely what pushes `fallback_notional / final_fill` below one step. Every other fill-producing
-row, re-checked by hand this session against its own `:850-888` bindings:
+row, re-checked by hand this session against its own `Design section 22.2, "every economic key named in sections 22.3-22.6 is explicit in input bytes"` bindings:
 
 ```
 row                    path      arithmetic                                    qty  sealed  moves?
@@ -3173,7 +3173,7 @@ clauses — the `metrics` `null` change and the digest placeholders — are **ou
 and were not performed; they touch all 17 goldens and are named here only so their omission is a
 recorded choice rather than an oversight.
 
-`V19_TOKEN_AMENDMENT_PROPOSAL.md:373` and `:376`, the source item 9 cites at `:1235`, carry the same
+`V19_TOKEN_AMENDMENT_PROPOSAL.md:373` and `:376`, the source item 9 cites at `Design section 23.5, "v1.9 design housekeeping for the four rejected table defects"`, carry the same
 two dispositions and name the exact byte positions:
 `RULE2-07-GREEN.json:37`, `RULE2-07-RED.json:53`, `RULE2-08-RED.json:45` for the token, and
 `RULE2-08-RED.json:47-48` for the removal.
@@ -3255,7 +3255,7 @@ The condition is therefore unmet and removal is what the design directs. Section
 independently: the conditional member `guards` is *"Required exactly when a declared guard projection
 is evaluated"*, and no guard projection is declared for this vector, so the object was not admissible
 in the first place. After the removal, `RULE2-08-RED`'s `RESULT_SURFACE` carries exactly the seven
-base members of `:1133` plus the one conditional member `cumulative_funding` that `:1148` requires on
+base members of `Design section 23.4, "Every `CORRECTED_V2` `RESULT_SURFACE` has exactly these seven base members"` plus the one conditional member `cumulative_funding` that `Design section 23.4, "every DEF-P012-08 RESULT, whether the schedule event is eligible or ineligible"` requires on
 every `DEF-P012-08` result — eight keys, no more:
 
 ```
@@ -3331,7 +3331,7 @@ This lane did not renumber outside the nodes it revised; doing so on three rows 
 bundle whose 17 artifacts disagree about which design they cite. The renumber is a bundle-wide act.
 
 **W200-D04 — W167-D01 is relocated, not closed.** The missing scenario input that forced
-`consec_loss_ok` and `guard_blocked_raw` to be marked is unchanged: `:894` still binds no guard
+`consec_loss_ok` and `guard_blocked_raw` to be marked is unchanged: `Design section 22.6, "multiplier `1`, and no SL/TP. | A corrected-only `FUNDING_TICK`"` still binds no guard
 threshold for either `RULE2-08` row. The removal changes how that gap is expressed — an absent object
 instead of two marked cells — and nothing about the gap itself. If the owner later binds a `RULE2-08`
 guard threshold, the object must be reinstated and genuinely re-derived, which is exactly what item 9's
@@ -4039,9 +4039,9 @@ exactly the difference between those and the values written here.
 Every original `note` string is retained verbatim; text was only appended to the end of it.
 
 - `PROBE-P012-01-A`, `PROBE-P012-04-A`, `PROBE-P012-06-A` — the three notes that recorded the **D-14**
-  ordering ambiguity. Each gains one sentence saying v1.11 closed it and how: `:481-493` requires only
+  ordering ambiguity. Each gains one sentence saying v1.11 closed it and how: `Design section 15.2, "`expected_first_changed_node` is in the complete set of nodes/paths"` requires only
   membership in the changed-node set and records the comparator node separately.
-- `PROBE-P012-03-A` — one sentence recording that the record bytes now exist, that `:272-276` names
+- `PROBE-P012-03-A` — one sentence recording that the record bytes now exist, that `Design section 9, "Now that the record bytes exist, this probe's `expected_first_changed_node` is the record path"` names
   the real record path, and that **D-15** is closed for that field.
 - `PROBE-P012-07-A`, `PROBE-P012-08-A` — one sentence each recording the re-derivation of the field to
   the design-named node and the comparator node beside it.
@@ -4642,7 +4642,7 @@ i.e. `TP1` -> `TARGET-NEAR`, `TP2` -> `TARGET-FAR`.
 > "Same config/prelude, explicitly including `instrument_contract_multiplier=1`; evaluation
 > `(2000-01-01T00:12:00Z,2,100,104,85,95,0)`. | Same reached book; only stop touches ..."
 
-So the GREEN book is the RED book; `:357` states the same two targets and target fractions for GREEN
+So the GREEN book is the RED book; `Design section 12, "the same position, quantity step, stop, two targets, target fractions"` states the same two targets and target fractions for GREEN
 independently.
 
 ### W319-B. Value ledger (per value: design line -> member written)

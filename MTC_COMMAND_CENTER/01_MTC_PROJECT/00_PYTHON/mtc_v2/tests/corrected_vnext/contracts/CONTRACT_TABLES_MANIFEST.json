@@ -12,9 +12,9 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.18 (W355: honest limit L14's re-seal endpoint restated as a rule that names the re-seal the bundle pins, owner decision 155; measured by re-seal #17)",
-  "sha256": "03fdf5952a2365b2de60b55292a1bd50fce8c6c51788c19b59cecc5d8f5b3c94",
-  "total_lines": 1843,
+  "version": "v1.19 (W387: owner decision 175 - a section-16 signature is valid only for the re-seal it names and must be re-signed after any later re-seal; measured by re-seal #21)",
+  "sha256": "eef891bd384382ae1ba5351fdd3c3fe42ad42df2752cf1c47ae18bfa4b57d9d8",
+  "total_lines": 1857,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
@@ -62,13 +62,13 @@
  "files": [
   {
    "path": "DERIVATIONS.md",
-   "sha256": "9bc0b6bfa442465cee5769a9392270f8b88e6ccb93fae25be542dfd8ec4cc08f",
-   "bytes": 456461
+   "sha256": "d20fb927f33a32784f1b5174935c5a0d37323188a688e204aad4b35ffffacafc",
+   "bytes": 462089
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "bca5a072ac4d893bcc62e1965fabfc6558c4408691c8ac24ee07e08cc48ea95f",
-   "bytes": 101132
+   "sha256": "45ff32c7a340a7c705561d4f772c6b0e8a42fd264ce7149d60b5fadff4c3aed5",
+   "bytes": 101675
   },
   {
    "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
@@ -152,8 +152,8 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-RED.json",
-   "sha256": "7302ad0eda8a461ce70c19b25264a260fec85bd34aa02bbaf051faba11da8ae3",
-   "bytes": 30022
+   "sha256": "d6f9ee20d054263188c845f7aead6e2188c60f98789ed63fedd4b22c16c63002",
+   "bytes": 30092
   }
  ],
  "byte_discipline": "Every file above is UTF-8 with no BOM, LF line endings and a required final LF, per Design section 14, \"taker 0.001 on its notional\". Every JSON file parses with duplicate-key rejection and contains no non-finite number token. Re-verified by lane W156 over the 18 JSON files it revised or re-read (17 golden artifacts plus scenario_catalog.json): each file was byte-inspected for BOM, CR and final LF, parsed, checked for bare NaN/Infinity/undefined tokens outside string literals, and checked for duplicate keys by comparing the raw key-token count with the parsed property count (equal in every file).",
@@ -570,9 +570,9 @@
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
+  "EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
   "IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
-  "reason": "Re-seal #20: the canonical gate refused PROBE_CATALOG_DIGEST_MISMATCH on PROBE-P012-03-A and PROBE-P012-07-A. Lane W356 corrected expected_first_changed_node inside those two probe modification manifests on 2026-09-04 and the catalog's modification_manifest_digest pins were not updated with them. Eight of the ten probe pins already matched; exactly these two did not. Re-pinned to the live manifest bytes; only those two digest leaves moved."
+  "reason": "Re-seal #21: the SINGLE re-seal for fold tier 3 (owner decision 159's bundling rule). Lane W387 converted 79 live bare design locators in DERIVATIONS.md to section + quoted phrase out of 349 syntactic candidates, re-cited 7 value-bearing nodes from the sentence that states the value, and added a check refusing identical sibling citations in one projection. Owner decision 175 added one sentence to honest limit L14 and bumped the design to v1.19, so the design pin is re-pinned here too."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -581,9 +581,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
+  "EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
   "IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
-  "set_by": "Lead re-seal act #20 2026-09-04T15:11:30+03:00"
+  "set_by": "Lead re-seal act #21 2026-09-04T19:57:17+03:00"
  },
  "reseal_history": [
   {
@@ -1036,6 +1036,20 @@
    "design_pin": "v1.18",
    "reason": "Re-seal #20: the canonical gate refused PROBE_CATALOG_DIGEST_MISMATCH on PROBE-P012-03-A and PROBE-P012-07-A. Lane W356 corrected expected_first_changed_node inside those two probe modification manifests on 2026-09-04 and the catalog's modification_manifest_digest pins were not updated with them. Eight of the ten probe pins already matched; exactly these two did not. Re-pinned to the live manifest bytes; only those two digest leaves moved.",
    "independently_verified": "pending - the third audit pass runs on this seal"
+  },
+  {
+   "at": "2026-09-04T19:57:17+03:00",
+   "actor": "Lead (claude-opus-5, owner-facing session), re-seal #21",
+   "old_EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
+   "new_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-08-RED.json",
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.19",
+   "reason": "Re-seal #21: the SINGLE re-seal for fold tier 3 (owner decision 159's bundling rule). Lane W387 converted 79 live bare design locators in DERIVATIONS.md to section + quoted phrase out of 349 syntactic candidates, re-cited 7 value-bearing nodes from the sentence that states the value, and added a check refusing identical sibling citations in one projection. Owner decision 175 added one sentence to honest limit L14 and bumped the design to v1.19, so the design pin is re-pinned here too.",
+   "independently_verified": "pending - a fresh three-family audit round runs on this seal"
   }
  ],
  "legacy_event_order_map_pin": {
