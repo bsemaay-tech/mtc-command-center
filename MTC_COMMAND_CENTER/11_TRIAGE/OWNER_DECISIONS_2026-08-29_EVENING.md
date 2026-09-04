@@ -2257,3 +2257,79 @@ first coding step chosen was one whose success he could verify and whose value h
 second-step packet must lead with what the owner would be able to judge when the step is done, not
 only with how its finish would be checked.** No such packet is to be written until decision 166 is
 lifted.
+
+## Addendum 86 - 2026-09-04 19:4x REAL (OWNER DECISIONS 167-177; and four Lead defects that independent audits found in the Lead's own work)
+
+Every decision here has a verbatim marker file written at the moment he spoke.
+
+### Decisions 167-168 - V2A in parallel; the approvals batched
+**167** (`OWNER_V2A_AND_BATCH_APPROVALS.txt`): V2A design work runs in parallel with the P0-12 chain.
+Design only - no code, no register change, and never on a route the P0-12 chain needs. He was first
+shown the measurement that Phase 0 cannot close: 31 packages, 21 BUILT_MERGED, 8 open once he set
+WP-P0-16/17 aside, **400 planned engineering hours**, seven of the eight with `implementation_authorized
+= false`, and all eight forming ONE dependency chain five levels deep headed by WP-P0-12.
+**168**: the remaining Phase-0 build-start packets come to him **together, in one sitting**, each one
+page, rather than one at a time over successive mornings.
+
+### Decisions 169-172 - how the audits were run
+**169** (`OWNER_KEEP_AUDITS_WAKE_UP.txt`), verbatim: *"dont cut the audits bu make sure you wakep up."*
+He refused the Lead's offer to hold a deadline by dropping the third audit family, and named the real
+problem instead - the Lead going idle. **The refusal was vindicated within two hours:** the third
+family (Gemini) found regex debris and wrong-subject citations that the two mechanical checkers, which
+verified 982 of 982 phrases exhaustively and correctly, could not have caught.
+**170**: redundant watchers; every watcher exit must wake the Lead. **171**: keep going to a clean gate
+rather than stopping early. **172**: the capped Claude family is SUBSTITUTED, not dropped.
+
+### Decisions 173-175 - the three triage questions
+**173** (`OWNER_O1_O2_O3_ANSWERS.txt`): accept the removal of the five-space catalog indentation that
+decision 156 had said to leave. Recorded as superseded, not forgotten; nothing re-sealed.
+**174**: fix all three harness gaps BEFORE the section-16 package is drafted. Executed as lane W385 and
+verified by the Lead: only two harness files changed, no sealed member moved, gate refusals unchanged
+at one, and the receipt now carries `contract_selftest_suite {ran: true, passed_count: 325}` where a
+green suite previously left no trace at all.
+**175** (`OWNER_O2_WRITE_IT_DOWN.txt`), verbatim: *"Write it down ı guess"* - **the hesitation is
+recorded as he said it and is not written up as a confident ratification.** A section-16 signature is
+valid only for the re-seal it names. He was told a third shape exists - make the check accept the named
+re-seal or later, provided only citations moved - and that nobody has designed or measured it; he did
+not take it up and was not pressed.
+
+### Decisions 176-177 - the night
+**176** (`OWNER_WORK_UNTIL_MORNING.txt`), verbatim: *"ok this time you happend to stop a lot. make sure
+you work untill the morning. non stop. ok dont stop to report only report if I ask anything to you"*.
+**177** (`OWNER_LEAVING_CONTINUE_ALL.txt`), verbatim: *"ı am leaving the offivce make sure you
+comntinue until finishing all P0 packages and ven do V2A packages in paralel ok"*.
+
+**The Lead told him before he left that "finish all P0 packages" is not reachable**, because seven of
+them carry `implementation_authorized = false` and that switch is his alone. It is recorded here so no
+later reader thinks the Lead accepted an instruction it knew it could not execute.
+
+---
+
+### FOUR LEAD DEFECTS, three of them found by an audit and not by the Lead
+
+Nothing downstream checks the Lead. These are recorded because the alternative is that they are
+recorded nowhere.
+
+1. **An owner decision was reversed by a Lead script (W371-F05).** Decision 156 said the five-space
+   catalog indentation stays. `reseal19_catalog_digests.py` re-emitted the file and removed it -
+   measured, two such lines at `598224f5`, zero at `f3f72773` - **and that same script's record says
+   "only digest members moved"**, which understated what it did. Closed by decision 173.
+2. **A false finding was published to the owner (W371-F06 / F-3 withdrawn).** At 15:52 the Lead told
+   him a self-test's red-proof had died, and called it CONFIRMED. It was measured in a dirty working
+   tree: the base commit was HEAD, so the check had nothing to compare. The committed tree measures
+   **325 passed, 0 failed**. A measurement taken mid-edit is not a measurement.
+3. **A commit message states a failure the tree does not have (W371-F06).** `bd20348f` says "Suite: 324
+   passed, 1 failed" and refers that withdrawn finding. A commit message is history; the correction is
+   a follow-up record, written as `W386_COMMIT_CORRECTION.md`.
+4. **The Lead went silent twice while finished work waited** - 35 minutes and then 84 minutes, the
+   second time after telling him the problem was fixed. This is what decision 176 answers.
+
+### The defect family of the day, named once rather than reported seven times
+Seven times on 2026-09-04, in seven places, **a value was changed and the field that describes it was
+not**: the 17 catalog expected-artifact digests; the 2 probe manifest digests; lane W359 removing one
+design locator and writing two new ones; the regex debris in `RULE2-08-RED`; `seal.set_by` left at
+re-seal #17 (found independently by all three families); the ten-probe test that overwrites the
+measured digest into the row it compares against, so it can never fail; and lane W386 repairing the
+downstream manifest copy while leaving the authoritative one - which the next routine copy refresh
+would have silently reverted, restoring a false claim that the owner's own review had happened.
+**Every one was caught by something other than whoever made it.**
