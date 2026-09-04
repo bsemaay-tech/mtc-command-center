@@ -1966,3 +1966,27 @@ Answers to the owner packet `OWNER_QUESTIONS_AUDIT_ROUND_2026-09-03.md` (addenda
 - **Consequence:** the Section-16 review package is NOT drafted tonight. The round is clean on every changed object but not
   clean-except-review on the records the reviewer must rely on (Q-F) or on the receipt the gate would accept (Q-K).
   Nothing signed, no number invented, engine branch unpushed, dashboard untouched.
+
+## Addendum 79 - 2026-09-04 06:3x REAL (Lead record: the W351 fold is verified by two non-writing families; engine HEAD `4642998d`; no new owner decision; a seven-hour session gap recorded)
+
+- **W351 (`b037ad93`, Codex free 23:08-23:18)** folded the four inside-fence items of the second pass and reported its own
+  discrepancy honestly: its single gate run happened while the anchor carried a stray leading space, so the committed receipt
+  named an intermediate digest. The Lead disposed of it with **W351B (`4642998d`, 23:19-23:23)**, which regenerated the receipt
+  at the committed bytes and changed nothing else. Contract suite **318 passed**; gate refusal list **only**
+  `SEMANTIC_COVERAGE_REVIEW_MISSING`; probes 10/10 DETECTED; `implementation_anchor_sha256` `6991a6a4...` == the committed
+  sidecar; `EXPECTED_SEAL_SHA` `40aaf7da...` unmoved (the anchor is not a seal member). The Lead mirrored the corrected anchor
+  into the bundle's `IMPLEMENTATION_ANCHOR_DRAFT.json` (pre-copy snapshot kept); the seal value is unchanged by that copy.
+- **Verified by two families that did not write it:** GMV351 (Gemini, packet-only) and V351C (Claude Pro, in-worktree,
+  read-only) both **ACCEPT-WITH-NOTES**, independently confirming the scope fence (6 files), the one-string anchor edit, that
+  the new tests call the real contract-suite runner, the rename, the honest coverage sentence, and the gate residual. V351C also
+  swept every self-test name against its body across the three families and found no second name/assertion contradiction, and
+  judged the anchor's decision-147 entry a CITATION of the version that introduced honest limit L14, not a version pin.
+- **Notes recorded, none blocking and none changing a sealed byte:** `W351_REPORT.md` still carries its original
+  `Verdict: FINDING` header although W351B closed that finding in the same file; `W342C_REPORT.md` keeps the older
+  seven-self-tests sentence because the fold spec routed the honest-coverage wording to the fold report instead of the lane
+  record the triage named; three sub-steps of the `FAILED ` parser stay unexercised; and
+  `test_cost_schedule_identity_is_both_null_or_both_present` asserts one side of the invariant it names.
+- **Session gap recorded honestly:** no Lead act and no running lane between 23:36 and 06:2x. Nothing was estimated or invented
+  in the Wayfinder update for that period (rev 6 was written at 23:30-23:32 and imported).
+- **Still the owner's:** Q-F..Q-K (packet `OWNER_QUESTIONS_SECOND_PASS_2026-09-03.md`; Lead defaults a/b/a/b/b/a, with Q-F and
+  Q-K blocking any Section-16 package), and `accept design P0-14 v1.10`. Section 16 remains undrafted and unsigned.
