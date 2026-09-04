@@ -2069,3 +2069,40 @@ Section-16 package drafted for the owner's own reading.
 
 **Lead lesson recorded.** The owner cannot open files the Lead sends. Questions go to him in the chat with the options and a
 recommendation, never as a path to a packet.
+
+## Addendum 83 - 2026-09-04 09:5x REAL (OWNER DECISION 161: WP-P0-14 design v1.10 ACCEPTED for build planning only, with three fixed design rules and a build-start gate)
+
+**The owner's words, verbatim:**
+
+> I approve P0-14 v1.10 for build planning only.
+>
+> Keep the read-only rule, honest Pending states, and independent checking of important figures as fixed design rules.
+>
+> Do not start screen code yet. Before coding starts, bring me one short build-start packet showing:
+> 1. which dependencies are now ready,
+> 2. which parts will still show Pending,
+> 3. the proposed final layout,
+> 4. the exact scope of the first coding step.
+>
+> The visual layout, wording, filters, and table presentation remain changeable until that build-start approval.
+
+**How it was reached.** The owner first answered "Not yet, send it back" (decision 160), then, asked why, chose "Explain it to
+me first". The Lead produced a plain-language walkthrough (lane W358) that named seven weak parts and did not advocate, and,
+on the owner's `/prototype` request, a local throwaway visual prototype of the screen with three structurally different layouts
+and a "day one vs the parked package delivered" switch. He accepted after reading both.
+
+**What decision 161 fixes and what it leaves open.**
+- **FIXED design rules, not to be traded away in any later lane:** (1) the viewer is read-only and may never change a status;
+  (2) unknown is drawn as Pending and never inferred, guessed, or styled as healthy; (3) an important figure is displayed only
+  when two independent computations agree, and is withheld with a stated reason when they do not.
+- **CHANGEABLE until build-start approval:** visual layout, wording, filters, and table presentation. No lane may treat the
+  prototype's layouts or this design's screen sketches as settled.
+- **NOT authorised:** screen code, tool adoption, repository change for P0-14, any run, any spend. Build remains blocked.
+
+**The build-start gate.** Before any coding lane exists, the Lead brings ONE short packet with exactly the four items above.
+Items 1 and 2 are measurements across other packages, not opinions; item 3 is a proposal the owner may reject; item 4 must be
+bounded tightly enough that its finish is checkable. The packet is written for a non-technical reader.
+
+**Register note (Lead, needs the owner's word, not assumed):** the P0-13 precedent (decision 145) recorded an accepted design
+in the official package register as design-converged. The Lead has NOT changed WP-P0-14's register row and will not do so
+through session reporting; whether the register moves is a separate owner act, raised here rather than performed.
