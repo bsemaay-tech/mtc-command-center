@@ -14,7 +14,7 @@
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
   "version": "v1.19 (W387: owner decision 175 - a section-16 signature is valid only for the re-seal it names and must be re-signed after any later re-seal; measured by re-seal #21)",
   "sha256": "eef891bd384382ae1ba5351fdd3c3fe42ad42df2752cf1c47ae18bfa4b57d9d8",
-  "total_lines": 1857,
+  "total_lines": 1856,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
