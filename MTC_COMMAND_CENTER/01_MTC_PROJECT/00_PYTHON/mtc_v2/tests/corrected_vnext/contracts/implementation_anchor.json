@@ -2,7 +2,7 @@
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
  "EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
- "IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
+ "IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
  "core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
@@ -179,6 +179,14 @@
    "new_IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
    "new_core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
    "reason": "Owner decision 147 (Q-A = b), applied as a standing rule and not as a new decision: the base is the commit that carries the latest owner-directed re-seal in-repo. Re-seal #20 (owner decisions 153/154/155/159) was copied in-repo by that commit. Before this act the gate refused EXPECTED_PATH_CHANGED_AFTER_BASE on 19 expected paths - the 17 goldens, DERIVATIONS.md and scenario_catalog.json - which are exactly the members the owner-directed citation restyle moved. The section-15.4 predicate now proves only that no expected path changed since re-seal #20, which is what decision 147 says it should prove."
+  },
+  {
+   "at": "2026-09-04T20:21:00+03:00",
+   "actor": "Lead (claude-opus-5, owner-facing session), decision 147 re-anchor forward to re-seal #21",
+   "old_IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
+   "new_IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
+   "new_core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
+   "reason": "Owner decision 147 (Q-A = b) applied as a standing rule: the base is the commit that carries the latest owner-directed re-seal in-repo. Re-seal #21 bundled fold tier 3 (79 design locators, 7 value-node re-citations) with the owner's decision-175 design amendment to v1.19, and its copies landed in this commit."
   }
  ]
 }

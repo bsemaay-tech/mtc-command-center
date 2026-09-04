@@ -571,7 +571,7 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
-  "IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
+  "IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
   "reason": "Re-seal #21: the SINGLE re-seal for fold tier 3 (owner decision 159's bundling rule). Lane W387 converted 79 live bare design locators in DERIVATIONS.md to section + quoted phrase out of 349 syntactic candidates, re-cited 7 value-bearing nodes from the sentence that states the value, and added a check refusing identical sibling citations in one projection. Owner decision 175 added one sentence to honest limit L14 and bumped the design to v1.19, so the design pin is re-pinned here too."
  },
  "section_16_review": {
@@ -582,7 +582,7 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
-  "IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
+  "IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
   "set_by": "Lead re-seal act #21 2026-09-04T19:57:17+03:00"
  },
  "reseal_history": [
