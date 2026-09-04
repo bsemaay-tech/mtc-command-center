@@ -1,7 +1,7 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "12fc3d4a5b0ed199ef9173f03c78cf35dea9e621f6b9d3384f6530625b4d2be4",
+ "EXPECTED_SEAL_SHA": "555075146636af3442424035e2544e73e07961dd14661de9c019e203f6720024",
  "IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
  "core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
@@ -134,6 +134,12 @@
    "old_EXPECTED_SEAL_SHA": "bbab640c070393314d2c19e6bd77ee6a80d1b16d08c0d0dd998b5d903fdba677",
    "new_EXPECTED_SEAL_SHA": "12fc3d4a5b0ed199ef9173f03c78cf35dea9e621f6b9d3384f6530625b4d2be4",
    "reason": "Re-seal #18: W363 citation repair (owner decision 154), found by V357A and V359D after re-seal #17."
+  },
+  {
+   "at": "2026-09-04T14:44:42+03:00",
+   "old_EXPECTED_SEAL_SHA": "12fc3d4a5b0ed199ef9173f03c78cf35dea9e621f6b9d3384f6530625b4d2be4",
+   "new_EXPECTED_SEAL_SHA": "555075146636af3442424035e2544e73e07961dd14661de9c019e203f6720024",
+   "reason": "Re-seal #19: the canonical gate refused EXPECTED_DIGEST_MISMATCH on RULE2-01-RED. Measured: all 17 catalog expected-artifact digests still equalled the pre-W357 golden hashes. The citation restyle (owner decision 154) changed every golden's bytes and no lane updated the catalog pins that reference them. Re-pinned to the live golden bytes; only digest members moved."
   }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
