@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from datetime import datetime, timezone
 
 import pytest
@@ -242,6 +242,62 @@ def _funding_pair(
         "cash_events": cash_rows,
         "funding_events": (first, second),
     }
+
+
+def test_d026_projection_kind_guard_discriminates_a_gross_cash_join() -> None:
+    gross_cash = _cash(
+        CashEventKind.GROSS_REALIZATION, "CE-GROSS", -0.1, fill_id="FILL-1"
+    )
+    with pytest.raises(
+        EconomicTransitionError, match="projection kind or join mismatch"
+    ):
+        _transition(
+            cash_events=(gross_cash,),
+            fee_events=(_fee_event(gross_cash.cash_event_id),),
+        )
+
+
+def test_d026_projection_delta_guard_discriminates_unequal_cash() -> None:
+    fee_cash = _cash(CashEventKind.FEE, "CE-FEE", -0.1, fill_id="FILL-1")
+    with pytest.raises(EconomicTransitionError, match="projection delta mismatch"):
+        _transition(
+            cash_events=(fee_cash,),
+            fee_events=(
+                _fee_event(fee_cash.cash_event_id, fee_cash_delta=-0.2),
+            ),
+        )
+
+
+def test_d026_fee_schedule_identity_guard_discriminates_foreign_id() -> None:
+    fee_cash = _cash(CashEventKind.FEE, "CE-FEE", -0.1, fill_id="FILL-1")
+    with pytest.raises(EconomicTransitionError, match="cost schedule identity mismatch"):
+        _transition(
+            cash_events=(fee_cash,),
+            fee_events=(
+                replace(_fee_event(fee_cash.cash_event_id), schedule_id="OTHER-COST"),
+            ),
+        )
+
+
+def test_d026_funding_schedule_identity_guard_discriminates_foreign_id() -> None:
+    funding_cash = _cash(
+        CashEventKind.FUNDING,
+        "CE-FUND",
+        -0.2,
+        funding_event_id="TEST-FUND-1",
+    )
+    with pytest.raises(
+        EconomicTransitionError, match="funding schedule identity mismatch"
+    ):
+        _transition(
+            cash_events=(funding_cash,),
+            funding_events=(
+                replace(
+                    _funding_event(funding_cash.cash_event_id),
+                    schedule_id="OTHER-FUNDING",
+                ),
+            ),
+        )
 
 
 def test_d026_duplicate_cash_event_id_refuses_before_any_map_is_built() -> None:
