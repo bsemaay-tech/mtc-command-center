@@ -1028,6 +1028,9 @@ class Runner:
                             )
                         ),
                         next_decision_sequence=len(self.state.decision_events),
+                        next_fill_sequence=len(self.state.fill_events),
+                        next_cash_sequence=len(self.state.cash_events),
+                        next_fee_sequence=len(self.state.fee_events),
                     )
                     if transition.decision_events and not transition.fill_decisions:
                         self.position_manager.apply_transition(

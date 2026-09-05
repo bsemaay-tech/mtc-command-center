@@ -2,24 +2,28 @@ from __future__ import annotations
 
 import dataclasses
 import math
-import re
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
 from mtc_v2.core.economics import EconomicRecords
-from mtc_v2.core.types import CashEventKind, PortfolioState
-
-
-SOURCE_DIGEST_RE = re.compile(r"[0-9a-f]{64}\Z")
+from mtc_v2.core.types import (
+    CashEventKind,
+    EconomicTransitionError,
+    PortfolioState,
+    _require_source_digest as _require_transition_source_digest,
+)
 
 
 def _require_source_digest(label: str, value: object) -> str:
-    if type(value) is not str or SOURCE_DIGEST_RE.fullmatch(value) is None:
-        raise ValueError(
-            f"corrected run manifest refuses {label} that is not lowercase 64-hex"
-        )
-    return value
+    try:
+        return _require_transition_source_digest(label, value)
+    except EconomicTransitionError:
+        pass
+    raise ValueError(
+        f"corrected run manifest refuses {label} that is not lowercase 64-hex"
+    )
 
 
 @dataclass(frozen=True)
@@ -930,15 +934,26 @@ def corrected_surfaces(
         state.funding_events, start=observation_start, end=observation_end
     )
     exit_rows = _joined_exit_fills(fill_rows, cash_rows)
+    source_fill_ids = [getattr(row, "fill_id") for row in fill_rows]
+    source_fill_id_counts = Counter(
+        getattr(row, "fill_id") for row in state.fill_events
+    )
+    if any(source_fill_id_counts[fill_id] != 1 for fill_id in source_fill_ids):
+        raise ValueError("corrected surface refuses duplicate source fill id")
     fill_id_by_source = {
         getattr(row, "fill_id"): f"F{sequence}"
         for sequence, row in enumerate(fill_rows)
     }
+
     def with_projected_fill_id(row: Any) -> Any:
         source_fill_id = getattr(row, "fill_id")
+        if source_fill_id is None:
+            return row
+        if source_fill_id not in fill_id_by_source:
+            raise ValueError("corrected surface refuses unjoined fill reference")
         return dataclasses.replace(
             row,
-            fill_id=fill_id_by_source.get(source_fill_id, source_fill_id),
+            fill_id=fill_id_by_source[source_fill_id],
         )
 
     projected_fill_rows = [with_projected_fill_id(row) for row in fill_rows]

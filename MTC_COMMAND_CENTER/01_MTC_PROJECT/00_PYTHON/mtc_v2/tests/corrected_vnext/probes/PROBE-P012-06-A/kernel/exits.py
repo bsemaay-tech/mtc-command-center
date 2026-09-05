@@ -398,6 +398,9 @@ def resolve_corrected_price_exits(
     same_bar_collision_policy_id: str = "STOP_FIRST",
     allow_test_policy: bool = False,
     next_decision_sequence: int = 0,
+    next_fill_sequence: int = 0,
+    next_cash_sequence: int = 0,
+    next_fee_sequence: int = 0,
 ) -> EconomicTransition:
     """Resolve the complete corrected stop/target candidate set atomically.
 
@@ -441,6 +444,9 @@ def resolve_corrected_price_exits(
         quantity=position.qty,
         entry_fill_price=position.avg_entry_price,
         next_decision_sequence=next_decision_sequence,
+        next_fill_sequence=next_fill_sequence,
+        next_cash_sequence=next_cash_sequence,
+        next_fee_sequence=next_fee_sequence,
     )
     transition = CorrectedEconomicsAdapter().resolve(
         state,
