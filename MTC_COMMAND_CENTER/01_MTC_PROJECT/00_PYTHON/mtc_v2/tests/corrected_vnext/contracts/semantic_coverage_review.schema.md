@@ -62,5 +62,5 @@ counts, assignments, and digest identity.
 
 `owner_ratification.chain` is exactly `#5`, `#6`, `#7`, `#8`, `#9`, `#10`, `#11`, `#12`,
 `#12b`, `#13`, `#14`, `#14b`, `#15`, `#16`, `#17`, `#18`, `#19`, `#20`, `#21`,
-`#22`, `#23`, `#24`, `#25`, and `#26`, in that order. `ratified` must be true, and `signed_at` must be a timezone-qualified
+`#22`, `#23`, `#24`, `#25`, `#26`, and `#27`, in that order. `ratified` must be true, and `signed_at` must be a timezone-qualified
 date-time.

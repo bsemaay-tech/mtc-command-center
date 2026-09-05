@@ -1,8 +1,8 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
- "IMPLEMENTATION_BASE_SHA": "4a780f078f429c6c781e02e60d56afb1589144b7",
+ "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+ "IMPLEMENTATION_BASE_SHA": "e6ee0abb48588ee29e0fb47e39a2ea360d0d751a",
  "core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
@@ -184,6 +184,14 @@
    "new_EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
    "reason": "Re-seal #26 candidate: owner-approved R26 identity and Item-2 closure; five measured manifest members changed (catalog plus four corrected identity-only goldens). No economic values, production facts, or Item-4 disposition changed. Base C is provisional and this intermediate commit is NONACCEPTED until the decision-147 forward repin to M.",
    "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T02:38:01+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #27 candidate",
+   "old_EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+   "new_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "reason": "Re-seal #27 candidate under OD20260906-1 delegated same-package repair authority: scenario_catalog.json alone now names the four already-approved current golden digests. No golden, observed artifact, economic value, source, probe, design, production fact, or Item-4 disposition changed. Base C27 is provisional; NONACCEPTED until forward repin F27.",
+   "independently_verified": "pending Lead and required audits"
   }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
@@ -272,6 +280,15 @@
    "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
    "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
    "reason": "Decision 147: M is the commit carrying re-seal #26 in-repo. F changes only active-base metadata, sidecar, and its current-pin selftest; no seal member, seal, design, catalog, or economic value changes."
+  },
+  {
+   "at": "2026-09-06T02:38:01+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, provisional re-seal #27 base",
+   "old_IMPLEMENTATION_BASE_SHA": "4a780f078f429c6c781e02e60d56afb1589144b7",
+   "new_IMPLEMENTATION_BASE_SHA": "e6ee0abb48588ee29e0fb47e39a2ea360d0d751a",
+   "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "reason": "Provisional C27 base required to commit re-seal #27 bytes; NONACCEPTED until the separate decision-147 C27-to-M27 forward repin."
   }
  ]
 }

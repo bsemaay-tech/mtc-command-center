@@ -73,7 +73,7 @@
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "e0dbb8157ad60d8bc5d67aa9b1abef0d9d5462667726039b3d2d4f053b24c82a",
+   "sha256": "de02ab8fdb10463a510b272b6959eb80f826a94b25cf936822a43e096fe757d3",
    "bytes": 101675
   },
   {
@@ -577,9 +577,9 @@
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
-  "IMPLEMENTATION_BASE_SHA": "4a780f078f429c6c781e02e60d56afb1589144b7",
-  "reason": "Re-seal #26 candidate: owner-approved R26 identity and Item-2 closure; five measured manifest members changed (catalog plus four corrected identity-only goldens). No economic values, production facts, or Item-4 disposition changed. Base C is provisional and this intermediate commit is NONACCEPTED until the decision-147 forward repin to M. Decision-147 forward repin completed separately at F; active base is exact re-seal commit M."
+  "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+  "IMPLEMENTATION_BASE_SHA": "e6ee0abb48588ee29e0fb47e39a2ea360d0d751a",
+  "reason": "Re-seal #27 candidate under OD20260906-1 delegated same-package repair authority: scenario_catalog.json alone now names the four already-approved current golden digests. No golden, observed artifact, economic value, source, probe, design, production fact, or Item-4 disposition changed. Base C27 is provisional; NONACCEPTED until forward repin F27."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -588,9 +588,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
-  "IMPLEMENTATION_BASE_SHA": "4a780f078f429c6c781e02e60d56afb1589144b7",
-  "set_by": "R26 re-seal #26 candidate, 2026-09-06T02:14:17+03:00"
+  "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+  "IMPLEMENTATION_BASE_SHA": "e6ee0abb48588ee29e0fb47e39a2ea360d0d751a",
+  "set_by": "R27 re-seal #27 candidate, 2026-09-06T02:38:01+03:00"
  },
  "reseal_history": [
   {
@@ -1118,6 +1118,18 @@
    ],
    "design_pin": "v1.23",
    "reason": "Re-seal #26 candidate: owner-approved R26 identity and Item-2 closure; five measured manifest members changed (catalog plus four corrected identity-only goldens). No economic values, production facts, or Item-4 disposition changed. Base C is provisional and this intermediate commit is NONACCEPTED until the decision-147 forward repin to M.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T02:38:01+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #27 candidate",
+   "old_EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+   "new_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.23",
+   "reason": "Re-seal #27 candidate under OD20260906-1 delegated same-package repair authority: scenario_catalog.json alone now names the four already-approved current golden digests. No golden, observed artifact, economic value, source, probe, design, production fact, or Item-4 disposition changed. Base C27 is provisional; NONACCEPTED until forward repin F27.",
    "independently_verified": "pending Lead and required audits"
   }
  ],
