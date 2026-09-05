@@ -1,5 +1,14 @@
 # Governance stage handoff
 
+## [Codex Lead] 2026-09-06 — Owner-delegated same-package repair scope
+
+- **OD-20260906-1:** all P012 Item-2 rows are approved; Lead owns evidenced same-package corrective
+  scope under `AUTONOMY_AUTHORIZATION.md`. New features/behavior/economics, production facts,
+  operations/PAYG, audit waivers, and acceptance remain gated. Item 4 stays `NONE_KEEP_REFUSED`;
+  future explicit owner restrictions prevail.
+- **NEXT ACTION:** publish this T3 policy through normal Lead verification and protected CI.
+- **WAITING FOR OWNER:** Nothing for evidenced same-package corrective repairs.
+
 ## [Codex Lead] 2026-09-05 — Standing autonomy and verified R24 repair
 
 - **Standing permission:** OD-20260905-4 allows ordinary forward local commits of authorized

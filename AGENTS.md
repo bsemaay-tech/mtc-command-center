@@ -20,8 +20,9 @@ Do not load `_AI_MEMORY/history/` by default. Grep it on demand. For triage hist
 - Do not change Pine logic, parity behavior/corpora, MTC strategy behavior, trading logic,
   thresholds, broker/exchange behavior, or protected schemas without explicit owner approval.
 - Treat `02_MTC_BACKTEST`, `07_ADAPTERS`, `01_PINE`/`*.pine`, every `MTC_V2` or parity path,
-  `06_SCHEMAS`, and `.git/` as owner-gated protected scopes. Do not rewrite hardcoded paths without
-  an approved rewrite policy.
+  `06_SCHEMAS`, and `.git/` as owner-gated protected scopes. The standing owner delegation permits
+  only Lead-authorized corrective exceptions under `AUTONOMY_AUTHORIZATION.md`; other changes still
+  need explicit owner approval. Do not rewrite hardcoded paths without an approved rewrite policy.
 - Never recommend or imply authorization for live trading. Host contact, deploy, credentials,
   TESTNET/mainnet, ARM, order placement, destructive Git, merge, and history cleanup each require
   explicit scope. Never add secrets or bypass hooks.
@@ -42,7 +43,7 @@ Do not load `_AI_MEMORY/history/` by default. Grep it on demand. For triage hist
   repair dispatch, and authorized sequencing; the counterpart implements and self-QAs. A lead
   never accepts an implementer report without inspecting the real diff and reproducing evidence.
 - Repair-round defaults are T0=3, T1=2, T2=1, T3=0. They are internal Lead checkpoints,
-  extendable on concrete evidence within already-approved package behavior and path ceilings under
+  extendable on concrete evidence within already-approved package behavior under
   [AUTONOMY_AUTHORIZATION.md](MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AUTONOMY_AUTHORIZATION.md).
   Record actual rounds and never repeat an identical failed attempt without new evidence or a changed
   hypothesis. Accepting verdicts are PASS or PASS-WITH-NITS (optional nits only); REQUEST_CHANGES
@@ -67,9 +68,13 @@ Do not load `_AI_MEMORY/history/` by default. Grep it on demand. For triage hist
 
 For ask-vs-autonomous triggers, read [AUTONOMY_AUTHORIZATION.md](MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AUTONOMY_AUTHORIZATION.md).
 Standing authority includes ordinary forward local commits and necessary defect/test/evidence repair,
-reseal, and same-scope baseline regeneration/archive/restore within already-approved package behavior
-and path ceilings. Prior numeric repair/reseal/run limits are Lead checkpoints, not owner questions;
-a future explicit owner restriction overrides this authority. Preserve exact scopes, mandatory
+reseal, and same-scope baseline regeneration/archive/restore within already-approved package behavior.
+For a reproduced same-package defect, the Lead may authorize the necessary corrective paths, tests,
+verifier changes, and identity-only references under the evidence contract in
+[AUTONOMY_AUTHORIZATION.md](MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AUTONOMY_AUTHORIZATION.md); this is
+not authority for a new feature or changed original behavior. Prior numeric repair/reseal/run limits
+are Lead checkpoints, not owner questions; a future explicit owner restriction overrides this
+authority. Preserve exact recorded scopes, mandatory
 auditors and tests, Lead acceptance, protected CI, economical routing, and operation/credential/PAYG
 gates. Before unattended execution, inspect all foreseeable source,
 test, schema, manifest, hash, anchor, and run consumers. Batch only real owner decisions. Always

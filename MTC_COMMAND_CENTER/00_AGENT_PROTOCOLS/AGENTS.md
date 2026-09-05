@@ -34,6 +34,9 @@ Highest overlap wins. T2 deployed-identity findings alone escalate to one T1 fla
 Repair counts are internal Lead checkpoints governed by
 [`AUTONOMY_AUTHORIZATION.md`](AUTONOMY_AUTHORIZATION.md), not owner-facing stop gates. Preserve
 actual round accounting and avoid identical blind retries.
+For a reproduced defect inside an already-approved package behavior, the Lead also owns the exact
+necessary corrective path/test/verifier/identity-reference scope decision. Record the evidence
+contract before dispatch; ask the owner only at the retained gates in `AUTONOMY_AUTHORIZATION.md`.
 Invoked Claude is exact `claude-opus-5`; invoked Codex exact `gpt-5.6-sol`; no alias/fallback.
 Unavailable exact model/effort is BLOCK unless owner-waived. Each audit is fresh, receives only
 scope, plan, diff/files, evidence, and repo rules, and is never resumed/continued. Codex audits are
