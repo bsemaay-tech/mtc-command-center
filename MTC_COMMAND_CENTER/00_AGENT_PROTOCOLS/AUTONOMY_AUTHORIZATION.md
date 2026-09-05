@@ -21,3 +21,18 @@ entry creates new operation authority.
 - Keep Gemini/current policy and economical subscription routing.
 - No authorization for live trading, deployment, credentials, authenticated host/exchange contact,
   TESTNET/mainnet, ARM, orders, wallet/transfers, new spend, or history rewrite.
+
+## Maximum useful throughput
+
+- Target 4–6 actually `RUNNING` independent workers; Lead, CI, queued/completed work, and failed
+  subscriptions do not count. Refill on completion or quiet-window end without owner prompting.
+  Use 8–10 only when distinct authorized tasks and resources exist.
+- Every lane records its output, exact read/write paths, dependency, provider/model, deadline, and
+  stop condition. Use the cheapest capable included route and prioritize the critical path.
+- During Gemini quiet windows, pause watched-repository/Git writers; use already-frozen read-only
+  packets elsewhere. Preserve path isolation.
+- Throughput never creates duplicate audits, busywork, path collisions, or waivers of tests,
+  evidence, acceptance, permissions, safety, or audit requirements.
+- Report shortfalls/provider idleness precisely: dependency, overlap, missing frozen packet,
+  provider failure, runtime capacity, or no useful work. The current native worker limit of three is
+  session capacity, not permanent repository policy.
