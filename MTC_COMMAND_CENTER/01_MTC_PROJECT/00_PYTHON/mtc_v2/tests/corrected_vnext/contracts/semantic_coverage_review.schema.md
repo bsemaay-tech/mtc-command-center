@@ -41,5 +41,7 @@ The gate compares the content identities with fresh measurements from the run:
 - `verify_bceg.py` harness SHA-256;
 - `scenario_catalog.json` SHA-256.
 
-`owner_ratification.chain` is exactly `#5` through `#9`, `ratified` must be true, and `signed_at`
-must be a timezone-qualified date-time.
+`owner_ratification.chain` is exactly `#5`, `#6`, `#7`, `#8`, `#9`, `#10`, `#11`, `#12`,
+`#12b`, `#13`, `#14`, `#14b`, `#15`, `#16`, `#17`, `#18`, `#19`, `#20`, `#21`, and
+`#22`, in that order. `ratified` must be true, and `signed_at` must be a timezone-qualified
+date-time.

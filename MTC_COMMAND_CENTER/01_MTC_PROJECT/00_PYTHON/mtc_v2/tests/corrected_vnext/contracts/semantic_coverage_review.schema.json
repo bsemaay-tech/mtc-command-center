@@ -116,14 +116,29 @@
       "properties": {
         "chain": {
           "type": "array",
-          "minItems": 5,
-          "maxItems": 5,
+          "minItems": 20,
+          "maxItems": 20,
           "prefixItems": [
             {"const": "#5"},
             {"const": "#6"},
             {"const": "#7"},
             {"const": "#8"},
-            {"const": "#9"}
+            {"const": "#9"},
+            {"const": "#10"},
+            {"const": "#11"},
+            {"const": "#12"},
+            {"const": "#12b"},
+            {"const": "#13"},
+            {"const": "#14"},
+            {"const": "#14b"},
+            {"const": "#15"},
+            {"const": "#16"},
+            {"const": "#17"},
+            {"const": "#18"},
+            {"const": "#19"},
+            {"const": "#20"},
+            {"const": "#21"},
+            {"const": "#22"}
           ],
           "items": false
         },

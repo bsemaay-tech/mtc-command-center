@@ -158,16 +158,17 @@
  ],
  "byte_discipline": "Every file above is UTF-8 with no BOM, LF line endings and a required final LF, per Design section 14, \"taker 0.001 on its notional\". Every JSON file parses with duplicate-key rejection and contains no non-finite number token. Re-verified by lane W156 over the 18 JSON files it revised or re-read (17 golden artifacts plus scenario_catalog.json): each file was byte-inspected for BOM, CR and final LF, parsed, checked for bare NaN/Infinity/undefined tokens outside string literals, and checked for duplicate keys by comparing the raw key-token count with the parsed property count (equal in every file).",
  "blocked_cell_markers": {
-  "BLOCKED-ON-OPEN-nn": "ZERO cells. All ten section-19 OPEN rows carry an owner-approved APPLICABLE disposition in C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT.json (draft_revision 3), so no expected value in this bundle is blocked on an owner decision. The five design v1.5 [OPEN-EMBED-01..05] refusals are likewise closed by owner addendum 20; see owner_addendum_20_source.",
+  "BLOCKED-ON-OPEN-nn": "ZERO cells. All ten section-19 OPEN rows carry an owner-approved APPLICABLE disposition in tests/corrected_vnext/contracts/open_item_applicability.json (revision 4; SHA-256 b15eac592d2d70d43cddecff586eab79423ef01fe4d69ea10a947b97c4fe74fe), so no expected value in this bundle is blocked on an owner decision. The five design v1.5 [OPEN-EMBED-01..05] refusals are likewise closed by owner addendum 20; see owner_addendum_20_source.",
   "BLOCKED-MISSING-SCENARIO-INPUT": "the declared synthetic vector omits an input the cell needs (design gap). After the W200 v1.9 GOLDEN-OVER repair exactly ONE such cell remains in the bundle: RULE2-08-GREEN /observation_window/end_timestamp (an authoring member outside both surfaces, unchanged). The two surface cells that design 23.4's closed guards member set had forced onto RULE2-08-RED - /RESULT_SURFACE/guards/consec_loss_ok and /RESULT_SURFACE/guards/guard_blocked_raw - no longer exist, because Design v1.9 section 23.4, \"23.4 Closed `RESULT_SURFACE`, guards, and\" directs removal of that row's whole guards object unless a separate owner-approved scenario-input amendment binds its threshold, none exists, and lane W200 removed the object. The underlying gap is unchanged: Design section 22.6, \"per the §14 RED equity\" (v1.9 numbering; Design v1.9 section 22.6, \"per the §14 RED equity\" in v1.8) still binds no guard switch and no max_consecutive_losses for either RULE2-08 row, and design 22.8 still forbids borrowing another scenario's value. The gap is now expressed by the absence of the object rather than by two marked cells. See DERIVATIONS.md discrepancy W167-D01 and the W200 section, which records the relocation as W200-D04.",
   "BLOCKED-MISSING-RECORD-BYTES": "the cell is a digest of a synthetic frozen test record whose exact bytes still do not exist. Design v1.5 sections 22.1 and 22.3 (Design v1.5 section 22.1, \"members are JSON `null` only for RULE2-08, where section 14 says no cost schedule is consumed\", Design v1.5 section 22.3, \"sealed RULE2-07 cost records by\") now bind every record member VALUE and every record id, but they fix only sorted keys, no BOM, LF, final LF, duplicate-key refusal and finite tokens - not the separator or indentation width - and Design v1.5 section 22.3, \"the existing sealed RULE2-07 cost records by\" expressly refuses to fabricate the provenance captured_at_utc and human_reviewer members. The hashed byte string is therefore still undetermined, and Design section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\" keeps digests MECHANICAL build artifacts. Design section 5, \"choice. Synthetic RULE-2 vectors in\" additionally forbids substituting the answered production record. See DERIVATIONS.md discrepancy V15-D05.",
   "BLOCKED-DESIGN-UNENUMERATED": "the design names the member but fixes no node set for it. After design v1.8 this is metrics ONLY (17 cells, one per artifact): Design v1.8 section 23.1, \"addendum 29, decision 72):** `touched_exit_ids\" now enumerates the nine closed decision_events reasons with exact per-reason member sets, so the decision_events-vocabulary block is CLOSED and was removed from all 17 blocked_cells lists. Design section 23.1, \"addendum 29, decision 72):** `touched_exit_ids\" states that the amendment does not un-block design-unenumerated metrics.",
   "BLOCKED-BUILD-ARTIFACT": "a path or digest that only exists after the Gate-2 build (serialized scenario-input files, probe kernel-variant trees, KERNEL_FILE_PATCH files, observed outputs)."
  },
  "open_item_applicability_source": {
-  "path": "C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT.json",
-  "draft_revision": 3,
-  "status": "DRAFT staged in C:\\tmp; the build lane places it at tests/corrected_vnext/contracts/open_item_applicability.json. Design precondition 21.2 requires the placed, owner-approved file. Rows cited by this bundle are recorded per artifact in open_item_bindings.",
+  "path": "tests/corrected_vnext/contracts/open_item_applicability.json",
+  "sha256": "b15eac592d2d70d43cddecff586eab79423ef01fe4d69ea10a947b97c4fe74fe",
+  "draft_revision": 4,
+  "status": "Placed in-repo revision 4, owner-approved. Design precondition 21.2 requires this placed file. Rows cited by this bundle are recorded per artifact in open_item_bindings.",
   "rows_cited": [
    "OPEN-02",
    "OPEN-05",
@@ -572,7 +573,7 @@
  "seal_state": {
   "EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
   "IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
-  "reason": "Re-seal #21: the SINGLE re-seal for fold tier 3 (owner decision 159's bundling rule). Lane W387 converted 79 live bare design locators in DERIVATIONS.md to section + quoted phrase out of 349 syntactic candidates, re-cited 7 value-bearing nodes from the sentence that states the value, and added a check refusing identical sibling citations in one projection. Owner decision 175 added one sentence to honest limit L14 and bumped the design to v1.19, so the design pin is re-pinned here too."
+  "reason": "Re-seal #22 (metadata only): reconciled the semantic coverage receipt sheets with the live gate-derived re-seal chain and refreshed the manifest's applicability and baseline-manifest references from the measured files. No sealed member bytes moved; the computed EXPECTED_SEAL_SHA remains unchanged."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -583,7 +584,7 @@
  "seal": {
   "EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
   "IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
-  "set_by": "Lead re-seal act #21 2026-09-04T19:57:17+03:00"
+  "set_by": "Codex gpt-5.6-sol implementer re-seal act #22 2026-09-05T10:47:28+03:00"
  },
  "reseal_history": [
   {
@@ -1050,6 +1051,16 @@
    "design_pin": "v1.19",
    "reason": "Re-seal #21: the SINGLE re-seal for fold tier 3 (owner decision 159's bundling rule). Lane W387 converted 79 live bare design locators in DERIVATIONS.md to section + quoted phrase out of 349 syntactic candidates, re-cited 7 value-bearing nodes from the sentence that states the value, and added a check refusing identical sibling citations in one projection. Owner decision 175 added one sentence to honest limit L14 and bumped the design to v1.19, so the design pin is re-pinned here too.",
    "independently_verified": "pending - a fresh three-family audit round runs on this seal"
+  },
+  {
+   "at": "2026-09-05T10:47:28+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #22 (metadata only)",
+   "old_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "new_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "files_changed": [],
+   "design_pin": "v1.19",
+   "reason": "Re-seal #22 (metadata only): reconciled the semantic coverage receipt sheets with the live gate-derived re-seal chain and refreshed the manifest's applicability and baseline-manifest references from the measured files. No sealed member bytes moved; the computed EXPECTED_SEAL_SHA remains unchanged.",
+   "independently_verified": "pending - Gate 4 self-QA and the fresh T0 three-family Gate 5 audit run after this implementer change"
   }
  ],
  "legacy_event_order_map_pin": {
@@ -1058,9 +1069,9 @@
   "design_authority": "Design section 15.3, \"an integer `sequence` equal to\" (LEGACY_EVENT_SHAPE_CHECK at expected-bundle seal time)",
   "baseline_manifest": {
    "path": "C:\\tmp\\P012_BASELINE_RUN\\BASELINE_BYTES_MANIFEST.json",
-   "sha256": "4996067da2f063f579f4f5ca6eb6a57fc7159d9ea0fd44fcf536342166d760dd",
-   "authorization": "ONE run performed under owner decision 76 (2026-09-02).",
-   "EXPECTED_SEAL_SHA_consumed": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461"
+   "sha256": "7dd945cbc19a44b021fc3c749d78d1be03333cb076137c65890498cf82afcb45",
+   "authorization": "ONE run performed under owner decision 132 shape, seal #21 (2026-09-04).",
+   "EXPECTED_SEAL_SHA_consumed": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f"
   },
   "legacy_event_order_map": {
    "RULE2-01-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
