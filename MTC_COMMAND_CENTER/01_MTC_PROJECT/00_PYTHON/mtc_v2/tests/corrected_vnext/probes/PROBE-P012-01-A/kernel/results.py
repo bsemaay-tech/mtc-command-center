@@ -930,21 +930,39 @@ def corrected_surfaces(
         state.funding_events, start=observation_start, end=observation_end
     )
     exit_rows = _joined_exit_fills(fill_rows, cash_rows)
+    fill_id_by_source = {
+        getattr(row, "fill_id"): f"F{sequence}"
+        for sequence, row in enumerate(fill_rows)
+    }
+    def with_projected_fill_id(row: Any) -> Any:
+        source_fill_id = getattr(row, "fill_id")
+        return dataclasses.replace(
+            row,
+            fill_id=fill_id_by_source.get(source_fill_id, source_fill_id),
+        )
+
+    projected_fill_rows = [with_projected_fill_id(row) for row in fill_rows]
+    projected_cash_rows = [with_projected_fill_id(row) for row in cash_rows]
+    projected_fee_rows = [with_projected_fill_id(row) for row in fee_rows]
+    projected_exit_rows = [
+        (with_projected_fill_id(row), gross_realized_pnl)
+        for row, gross_realized_pnl in exit_rows
+    ]
     event_surface = {
         "decision_events": _decision_surface(
             decision_rows,
             kernel_semantics_version=manifest.kernel_semantics_version,
         ),
         "fill_events": _fill_surface(
-            fill_rows,
+            projected_fill_rows,
             kernel_semantics_version=manifest.kernel_semantics_version,
         ),
         "cash_events": _cash_surface(
-            cash_rows,
+            projected_cash_rows,
             kernel_semantics_version=manifest.kernel_semantics_version,
         ),
         "fee_events": _fee_surface(
-            fee_rows,
+            projected_fee_rows,
             kernel_semantics_version=manifest.kernel_semantics_version,
         ),
         "funding_events": _funding_surface(
@@ -952,7 +970,7 @@ def corrected_surfaces(
             kernel_semantics_version=manifest.kernel_semantics_version,
         ),
         "exit_events": _exit_surface(
-            exit_rows,
+            projected_exit_rows,
             kernel_semantics_version=manifest.kernel_semantics_version,
         ),
     }
