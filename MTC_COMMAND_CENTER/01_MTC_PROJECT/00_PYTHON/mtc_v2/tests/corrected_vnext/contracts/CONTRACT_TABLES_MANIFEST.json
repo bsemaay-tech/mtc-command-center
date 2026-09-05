@@ -578,8 +578,8 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
-  "IMPLEMENTATION_BASE_SHA": "2da57c3944c90818f473202718cb24bc0dc48b9f",
-  "reason": "Re-seal #26 candidate: owner-approved R26 identity and Item-2 closure; five measured manifest members changed (catalog plus four corrected identity-only goldens). No economic values, production facts, or Item-4 disposition changed. Base C is provisional and this intermediate commit is NONACCEPTED until the decision-147 forward repin to M."
+  "IMPLEMENTATION_BASE_SHA": "4a780f078f429c6c781e02e60d56afb1589144b7",
+  "reason": "Re-seal #26 candidate: owner-approved R26 identity and Item-2 closure; five measured manifest members changed (catalog plus four corrected identity-only goldens). No economic values, production facts, or Item-4 disposition changed. Base C is provisional and this intermediate commit is NONACCEPTED until the decision-147 forward repin to M. Decision-147 forward repin completed separately at F; active base is exact re-seal commit M."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -589,7 +589,7 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
-  "IMPLEMENTATION_BASE_SHA": "2da57c3944c90818f473202718cb24bc0dc48b9f",
+  "IMPLEMENTATION_BASE_SHA": "4a780f078f429c6c781e02e60d56afb1589144b7",
   "set_by": "R26 re-seal #26 candidate, 2026-09-06T02:14:17+03:00"
  },
  "reseal_history": [

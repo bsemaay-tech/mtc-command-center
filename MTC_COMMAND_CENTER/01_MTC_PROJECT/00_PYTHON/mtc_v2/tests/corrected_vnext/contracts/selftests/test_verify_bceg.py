@@ -2254,7 +2254,7 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
         # CURRENT re-anchored declaration says. G2 moved it from the 04067aa1 production-fix
         # commit to e5d70cd6, which also carries the full probe/catalog cascade; the owner's
         # decision-134 authorization is untouched.
-        "e5d70cd661392952da535abeccdf0757ca4d5f1e"
+        "4a780f078f429c6c781e02e60d56afb1589144b7"
     )
     assert record["exceptions"][0]["owner_decision"] == 134
     assert record["exceptions"][0]["lane_ids"] == [
