@@ -572,7 +572,7 @@
  ],
  "seal_state": {
    "EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
-  "IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
+  "IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
    "reason": "Re-seal #23 metadata preparation: Items 2/5/6 approved repair; catalog/design pins measured; goldens and observed unchanged. Independently verified: pending Lead."
  },
  "section_16_review": {
@@ -583,7 +583,7 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
    "EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
-  "IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
+  "IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
    "set_by": "OpenCode gpt-5.6-luna implementer re-seal act #23 2026-09-05T17:35:47+03:00"
  },
  "reseal_history": [
