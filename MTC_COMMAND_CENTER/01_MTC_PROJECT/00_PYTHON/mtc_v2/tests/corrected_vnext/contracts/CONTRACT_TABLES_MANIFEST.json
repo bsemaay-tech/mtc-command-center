@@ -572,7 +572,7 @@
  ],
  "seal_state": {
    "EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
-  "IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
+   "IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
    "reason": "Re-seal #24 candidate, 2026-09-05T21:09:50+03:00: duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed. Pending independent audits."
  },
  "section_16_review": {
@@ -583,7 +583,7 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
    "EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
-  "IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
+   "IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
    "set_by": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate, 2026-09-05T21:09:50+03:00"
  },
  "reseal_history": [

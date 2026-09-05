@@ -2,8 +2,8 @@
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
  "EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
- "IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
- "core_tree_oid_at_base": "f28402fb9f6f0c3a1e2d10d9f9ad7ae6e56a9ef7",
+ "IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
+ "core_tree_oid_at_base": "43c7d5a1f71b4b557758f0e23b5fc7faf751aa9a",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
@@ -211,6 +211,15 @@
    "new_IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
    "new_core_tree_oid_at_base": "f28402fb9f6f0c3a1e2d10d9f9ad7ae6e56a9ef7",
    "reason": "Owner decision 147 forward rule; fresh YES current packet C:/tmp/P0_OWNER_EXECUTION_DECISIONS_20260905_1747.md."
-  }
+   },
+   {
+    "at": "2026-09-05T21:17:24+03:00",
+    "actor": "OpenCode Go Luna implementer",
+    "old_IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
+    "new_IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
+    "old_core_tree_oid_at_base": "f28402fb9f6f0c3a1e2d10d9f9ad7ae6e56a9ef7",
+    "new_core_tree_oid_at_base": "43c7d5a1f71b4b557758f0e23b5fc7faf751aa9a",
+    "reason": "Owner-approved 20:48 extra-round local forward-anchor; second commit reserved for Lead."
+   }
  ]
 }
