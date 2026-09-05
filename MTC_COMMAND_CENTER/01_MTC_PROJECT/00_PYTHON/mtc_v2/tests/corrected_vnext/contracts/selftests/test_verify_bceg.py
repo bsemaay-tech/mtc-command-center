@@ -1262,7 +1262,7 @@ def test_v2_schema_accepts_complete_receipt_and_rejects_nested_mutants() -> None
     receipt = semantic_review_fixture(Path(tempfile.mkdtemp(prefix="schema-receipt-")))
     receipt["owner_ratification"]["chain"] = [
         "#5", "#6", "#7", "#8", "#9", "#10", "#11", "#12", "#12b", "#13",
-        "#14", "#14b", "#15", "#16", "#17", "#18", "#19", "#20", "#21", "#22", "#23", "#24",
+        "#14", "#14b", "#15", "#16", "#17", "#18", "#19", "#20", "#21", "#22", "#23", "#24", "#25",
     ]
     assert list(validator.iter_errors(receipt)) == []
     mutants = [
@@ -2090,9 +2090,9 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
         # Decision 147 re-anchor forward, 2026-09-04: the base moved from the seal-16 copies commit
         # 63cfe2dd to the seal-20 copies commit bdacf8e4 after the owner-directed citation restyle
         # (decision 154) moved every expected path. This assertion's job is to pin whatever the
-        # CURRENT re-anchored declaration says, and it was updated the same way when lane W350
-        # re-anchored to 63cfe2dd. The owner's decision-134 authorization is untouched.
-        "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7"
+        # CURRENT re-anchored declaration says. Re-seal #25 moved it to the committed 04067aa1
+        # window-identity implementation base; the owner's decision-134 authorization is untouched.
+        "04067aa1ce247053416519139f99edfc8a7b2dd0"
     )
     assert record["exceptions"][0]["owner_decision"] == 134
     assert record["exceptions"][0]["lane_ids"] == [

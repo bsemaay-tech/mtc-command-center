@@ -12,9 +12,9 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-   "version": "v1.21",
-   "sha256": "a8dff7513c3535c55bd48bc7a79fc0467de04574d2940e51b0d51b30ebd7e665",
-   "total_lines": 1862,
+   "version": "v1.22",
+   "sha256": "ccbd98d4e281bbac80cd065c4ff6930cbff52f27e2a717e30743ed225839ab91",
+   "total_lines": 1880,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
@@ -43,6 +43,9 @@
    "22. v1.5 input-embedding addendum": 948,
    "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 1210,
    "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1249
+  },
+  "heading_line_map_addition_measured_at_reseal25": {
+   "23.19 v1.22 change log - window-local serialized fill identity": 1864
   }
  },
  "repository_evidence_identity": {
@@ -67,7 +70,7 @@
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "e33725b6ece727707d3d66d389cb44a329d0cb145977c19729250716d0a99d98",
+   "sha256": "b50e13dbdb59d1ec2201799f17d5bc15d62b957d142041a0d1a59292d36a7bc2",
    "bytes": 101675
   },
   {
@@ -571,9 +574,9 @@
   }
  ],
  "seal_state": {
-   "EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
-   "IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
-   "reason": "Re-seal #24 candidate, 2026-09-05T21:09:50+03:00: duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed. Pending independent audits."
+   "EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+   "IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
+   "reason": "Re-seal #25 candidate, 2026-09-05T23:19:36+03:00: window-local serialized fill identity repair; separately measured catalog and v1.22 design pins; no economic values, goldens, observed artifacts, or production facts changed. Item 4 remains NONE_KEEP_REFUSED. Pending Lead verification and required audits."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -582,9 +585,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-   "EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
-   "IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
-   "set_by": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate, 2026-09-05T21:09:50+03:00"
+   "EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+   "IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
+   "set_by": "Codex gpt-5.6-sol implementer, re-seal #25 candidate, 2026-09-05T23:19:36+03:00"
  },
  "reseal_history": [
   {
@@ -1081,6 +1084,16 @@
      "design_pin": "v1.21",
      "reason": "Duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed.",
      "independently_verified": "pending independent audits"
+    },
+    {
+     "at": "2026-09-05T23:19:36+03:00",
+     "actor": "Codex gpt-5.6-sol implementer, re-seal #25 candidate",
+     "old_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+     "new_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+     "files_changed": ["scenario_catalog.json"],
+     "design_pin": "v1.22",
+     "reason": "Window-local serialized fill identity repair; catalog digest measured from committed e5d70cd6 bytes and design v1.22 measured from the external live file. No economic values, goldens, observed artifacts, or production facts changed; Item 4 remains NONE_KEEP_REFUSED.",
+     "independently_verified": "pending Lead and required audits"
     }
  ],
  "legacy_event_order_map_pin": {
