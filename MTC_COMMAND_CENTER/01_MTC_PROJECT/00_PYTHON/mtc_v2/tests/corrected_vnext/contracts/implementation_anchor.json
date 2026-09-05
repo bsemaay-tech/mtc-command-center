@@ -1,9 +1,9 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
- "IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
- "core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+ "EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+ "IMPLEMENTATION_BASE_SHA": "2da57c3944c90818f473202718cb24bc0dc48b9f",
+ "core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
@@ -152,31 +152,39 @@
    "old_EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
    "new_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
    "reason": "Re-seal #21: the SINGLE re-seal for fold tier 3 (owner decision 159's bundling rule). Lane W387 converted 79 live bare design locators in DERIVATIONS.md to section + quoted phrase out of 349 syntactic candidates, re-cited 7 value-bearing nodes from the sentence that states the value, and added a check refusing identical sibling citations in one projection. Owner decision 175 added one sentence to honest limit L14 and bumped the design to v1.19, so the design pin is re-pinned here too."
-   },
-   {
-    "at": "2026-09-05T17:35:47+03:00",
-    "actor": "OpenCode gpt-5.6-luna implementer, re-seal #23 (metadata only)",
-    "old_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
-    "new_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
-    "reason": "P0-12 approved re-seal metadata preparation: Items 2/5/6 repair; catalog and design pins measured; goldens and observed unchanged. No claim that all economic behavior is unchanged.",
-    "independently_verified": "pending Lead"
-    },
-    {
-     "at": "2026-09-05T21:09:50+03:00",
-     "actor": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate",
-     "old_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
-     "new_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
-     "reason": "Duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed.",
-     "independently_verified": "pending independent audits"
-    },
-    {
-     "at": "2026-09-05T23:19:36+03:00",
-     "actor": "Codex gpt-5.6-sol implementer, re-seal #25 candidate",
-     "old_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
-     "new_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
-     "reason": "Window-local serialized fill identity repair; catalog and v1.22 design pins measured from frozen bytes; no economic values, goldens, observed artifacts, or production facts changed. Item 4 remains NONE_KEEP_REFUSED.",
-     "independently_verified": "pending Lead and required audits"
-    }
+  },
+  {
+   "at": "2026-09-05T17:35:47+03:00",
+   "actor": "OpenCode gpt-5.6-luna implementer, re-seal #23 (metadata only)",
+   "old_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "new_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+   "reason": "P0-12 approved re-seal metadata preparation: Items 2/5/6 repair; catalog and design pins measured; goldens and observed unchanged. No claim that all economic behavior is unchanged.",
+   "independently_verified": "pending Lead"
+  },
+  {
+   "at": "2026-09-05T21:09:50+03:00",
+   "actor": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate",
+   "old_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+   "new_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+   "reason": "Duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed.",
+   "independently_verified": "pending independent audits"
+  },
+  {
+   "at": "2026-09-05T23:19:36+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #25 candidate",
+   "old_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+   "new_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+   "reason": "Window-local serialized fill identity repair; catalog and v1.22 design pins measured from frozen bytes; no economic values, goldens, observed artifacts, or production facts changed. Item 4 remains NONE_KEEP_REFUSED.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T02:14:17+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #26 candidate",
+   "old_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+   "new_EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+   "reason": "Re-seal #26 candidate: owner-approved R26 identity and Item-2 closure; five measured manifest members changed (catalog plus four corrected identity-only goldens). No economic values, production facts, or Item-4 disposition changed. Base C is provisional and this intermediate commit is NONACCEPTED until the decision-147 forward repin to M.",
+   "independently_verified": "pending Lead and required audits"
+  }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
  "base_repin_history": [
@@ -219,33 +227,42 @@
    "new_IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
    "new_core_tree_oid_at_base": "f28402fb9f6f0c3a1e2d10d9f9ad7ae6e56a9ef7",
    "reason": "Owner decision 147 forward rule; fresh YES current packet C:/tmp/P0_OWNER_EXECUTION_DECISIONS_20260905_1747.md."
-   },
-   {
-    "at": "2026-09-05T21:17:24+03:00",
-    "actor": "OpenCode Go Luna implementer",
-    "old_IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
-    "new_IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
-    "old_core_tree_oid_at_base": "f28402fb9f6f0c3a1e2d10d9f9ad7ae6e56a9ef7",
-    "new_core_tree_oid_at_base": "43c7d5a1f71b4b557758f0e23b5fc7faf751aa9a",
-    "reason": "Owner-approved 20:48 extra-round local forward-anchor; second commit reserved for Lead."
-   },
-   {
-    "at": "2026-09-05T23:19:36+03:00",
-    "actor": "Codex gpt-5.6-sol implementer",
-    "old_IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
-    "new_IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
-    "old_core_tree_oid_at_base": "43c7d5a1f71b4b557758f0e23b5fc7faf751aa9a",
-    "new_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
-    "reason": "Owner-approved re-seal #25 forward anchor to the committed window-identity implementation base; core tree verified independently before this write."
-   },
-   {
-    "at": "2026-09-06T00:06:34+03:00",
-    "actor": "Codex gpt-5.6-sol implementer, G2 metadata sequencing closure",
-    "old_IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
-    "new_IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
-    "old_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
-    "new_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
-    "reason": "Standing OD5 checkpoint extension: close the re-seal #25 metadata sequencing gap by anchoring to the committed full 28-path probe/catalog cascade; no behavior, production source, sealed member, design, baseline, golden, observed artifact, or production fact changed."
-   }
+  },
+  {
+   "at": "2026-09-05T21:17:24+03:00",
+   "actor": "OpenCode Go Luna implementer",
+   "old_IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
+   "new_IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
+   "old_core_tree_oid_at_base": "f28402fb9f6f0c3a1e2d10d9f9ad7ae6e56a9ef7",
+   "new_core_tree_oid_at_base": "43c7d5a1f71b4b557758f0e23b5fc7faf751aa9a",
+   "reason": "Owner-approved 20:48 extra-round local forward-anchor; second commit reserved for Lead."
+  },
+  {
+   "at": "2026-09-05T23:19:36+03:00",
+   "actor": "Codex gpt-5.6-sol implementer",
+   "old_IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
+   "new_IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
+   "old_core_tree_oid_at_base": "43c7d5a1f71b4b557758f0e23b5fc7faf751aa9a",
+   "new_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+   "reason": "Owner-approved re-seal #25 forward anchor to the committed window-identity implementation base; core tree verified independently before this write."
+  },
+  {
+   "at": "2026-09-06T00:06:34+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, G2 metadata sequencing closure",
+   "old_IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
+   "new_IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
+   "old_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+   "new_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+   "reason": "Standing OD5 checkpoint extension: close the re-seal #25 metadata sequencing gap by anchoring to the committed full 28-path probe/catalog cascade; no behavior, production source, sealed member, design, baseline, golden, observed artifact, or production fact changed."
+  },
+  {
+   "at": "2026-09-06T02:14:17+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, provisional re-seal #26 base",
+   "old_IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
+   "new_IMPLEMENTATION_BASE_SHA": "2da57c3944c90818f473202718cb24bc0dc48b9f",
+   "old_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+   "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "reason": "Provisional C base required to commit re-seal #26 bytes; NONACCEPTED until the separate decision-147 C-to-M forward repin."
+  }
  ]
 }

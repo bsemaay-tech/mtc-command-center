@@ -12,12 +12,12 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-   "version": "v1.22",
-   "sha256": "ccbd98d4e281bbac80cd065c4ff6930cbff52f27e2a717e30743ed225839ab91",
-   "total_lines": 1880,
+  "version": "v1.23",
+  "sha256": "cc1952ee6e2fc37aba06d0342275fcb33563057d052ab8d6d3ad1d945bb61210",
+  "total_lines": 1895,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
-   "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
+   "v1.3 change log \u2014 DS15 fold + owner rulings 2026-08-31": 7,
    "1. Authority, claim, and design posture": 24,
    "2. Deep module and seam": 35,
    "3. Exact ordering for `2.0.0`": 102,
@@ -36,16 +36,19 @@
    "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 798,
    "17. Honest limits": 811,
    "18. Build-lane work breakdown and shape census": 868,
-   "19. Single consolidated `[OPEN — owner-gated]` ledger": 891,
+   "19. Single consolidated `[OPEN \u2014 owner-gated]` ledger": 891,
    "20. Defect-class prevention table": 908,
    "21. Required build preconditions and non-goals": 928,
-   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 940,
+   "v1.4 change log \u2014 micro-fold (owner 2026-08-31 \"design a\")": 940,
    "22. v1.5 input-embedding addendum": 948,
-   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 1210,
-   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1249
+   "v1.5 change log \u2014 input-embedding addendum (owner 2026-08-31 `1a`)": 1210,
+   "23. v1.8 terminal micro-fold \u2014 v1.7 detector-union repair": 1249
   },
   "heading_line_map_addition_measured_at_reseal25": {
    "23.19 v1.22 change log - window-local serialized fill identity": 1864
+  },
+  "heading_line_map_addition_measured_at_reseal26": {
+   "23.20 v1.23 change log - R26 identity and Item-2 closure": 1882
   }
  },
  "repository_evidence_identity": {
@@ -70,7 +73,7 @@
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "b50e13dbdb59d1ec2201799f17d5bc15d62b957d142041a0d1a59292d36a7bc2",
+   "sha256": "e0dbb8157ad60d8bc5d67aa9b1abef0d9d5462667726039b3d2d4f053b24c82a",
    "bytes": 101675
   },
   {
@@ -110,7 +113,7 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-04-RED.json",
-   "sha256": "65fe5ccefe4d04ae0b360e733b5632903ec29b71887d1ae27de8d6b27c9c05d1",
+   "sha256": "4e89dffbc2a345b0cdeed40b63e04b5e16bdf2cdcbb6e8e318bdcedcdd6cce6d",
    "bytes": 19671
   },
   {
@@ -125,17 +128,17 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
-   "sha256": "d5eb751edac5bec0de32cc41aae23455b73357d6b73c43ffacd1a1bd3d64ea67",
+   "sha256": "ffcc867a8c15258c42aa9312655b469bd90b7b72f00f22875d30f83fe061928c",
    "bytes": 24514
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-GREEN.json",
-   "sha256": "7057c3da1ede144725cb2edfdb34fe8c104bd2fe519fc3ca2af79628652e2ff6",
+   "sha256": "135f4ed135db6d351371dd00f19031c42257954faeec791c7244f87659c5144b",
    "bytes": 22986
   },
   {
    "path": "golden/corrected_vnext/RULE2-06-RED.json",
-   "sha256": "b734e65a9806dbd9ba48d0b3a3104b9a3a92d008516a9345199c083170707371",
+   "sha256": "2895e012edabff097087006edf469d6122b0c83b80807a7b696d63f426d9e471",
    "bytes": 23315
   },
   {
@@ -574,9 +577,9 @@
   }
  ],
  "seal_state": {
-   "EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
-   "IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
-   "reason": "Re-seal #25 candidate, 2026-09-05T23:19:36+03:00: window-local serialized fill identity repair; separately measured catalog and v1.22 design pins; no economic values, goldens, observed artifacts, or production facts changed. Item 4 remains NONE_KEEP_REFUSED. Pending Lead verification and required audits."
+  "EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+  "IMPLEMENTATION_BASE_SHA": "2da57c3944c90818f473202718cb24bc0dc48b9f",
+  "reason": "Re-seal #26 candidate: owner-approved R26 identity and Item-2 closure; five measured manifest members changed (catalog plus four corrected identity-only goldens). No economic values, production facts, or Item-4 disposition changed. Base C is provisional and this intermediate commit is NONACCEPTED until the decision-147 forward repin to M."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -585,9 +588,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-   "EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
-   "IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
-   "set_by": "Codex gpt-5.6-sol implementer, re-seal #25 candidate, 2026-09-05T23:19:36+03:00"
+  "EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+  "IMPLEMENTATION_BASE_SHA": "2da57c3944c90818f473202718cb24bc0dc48b9f",
+  "set_by": "R26 re-seal #26 candidate, 2026-09-06T02:14:17+03:00"
  },
  "reseal_history": [
   {
@@ -1064,37 +1067,59 @@
    "design_pin": "v1.19",
    "reason": "Re-seal #22 (metadata only): reconciled the semantic coverage receipt sheets with the live gate-derived re-seal chain and refreshed the manifest's applicability and baseline-manifest references from the measured files. No sealed member bytes moved; the computed EXPECTED_SEAL_SHA remains unchanged.",
    "independently_verified": "pending - Gate 4 self-QA and the fresh T0 three-family Gate 5 audit run after this implementer change"
-   },
-   {
-    "at": "2026-09-05T17:35:47+03:00",
-    "actor": "OpenCode gpt-5.6-luna implementer, re-seal #23 (metadata only)",
-    "old_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
-    "new_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
-    "files_changed": ["scenario_catalog.json"],
-    "design_pin": "v1.20",
-    "reason": "P0-12 approved re-seal metadata preparation: Items 2/5/6 repair; catalog and design pins measured; goldens and observed unchanged. No claim that all economic behavior is unchanged.",
-    "independently_verified": "pending Lead"
-    },
-    {
-     "at": "2026-09-05T21:09:50+03:00",
-     "actor": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate",
-     "old_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
-     "new_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
-     "files_changed": ["scenario_catalog.json"],
-     "design_pin": "v1.21",
-     "reason": "Duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed.",
-     "independently_verified": "pending independent audits"
-    },
-    {
-     "at": "2026-09-05T23:19:36+03:00",
-     "actor": "Codex gpt-5.6-sol implementer, re-seal #25 candidate",
-     "old_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
-     "new_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
-     "files_changed": ["scenario_catalog.json"],
-     "design_pin": "v1.22",
-     "reason": "Window-local serialized fill identity repair; catalog digest measured from committed e5d70cd6 bytes and design v1.22 measured from the external live file. No economic values, goldens, observed artifacts, or production facts changed; Item 4 remains NONE_KEEP_REFUSED.",
-     "independently_verified": "pending Lead and required audits"
-    }
+  },
+  {
+   "at": "2026-09-05T17:35:47+03:00",
+   "actor": "OpenCode gpt-5.6-luna implementer, re-seal #23 (metadata only)",
+   "old_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "new_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.20",
+   "reason": "P0-12 approved re-seal metadata preparation: Items 2/5/6 repair; catalog and design pins measured; goldens and observed unchanged. No claim that all economic behavior is unchanged.",
+   "independently_verified": "pending Lead"
+  },
+  {
+   "at": "2026-09-05T21:09:50+03:00",
+   "actor": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate",
+   "old_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+   "new_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.21",
+   "reason": "Duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed.",
+   "independently_verified": "pending independent audits"
+  },
+  {
+   "at": "2026-09-05T23:19:36+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #25 candidate",
+   "old_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+   "new_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.22",
+   "reason": "Window-local serialized fill identity repair; catalog digest measured from committed e5d70cd6 bytes and design v1.22 measured from the external live file. No economic values, goldens, observed artifacts, or production facts changed; Item 4 remains NONE_KEEP_REFUSED.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T02:14:17+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #26 candidate",
+   "old_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+   "new_EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+   "files_changed": [
+    "golden/corrected_vnext/RULE2-04-RED.json",
+    "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+    "golden/corrected_vnext/RULE2-06-GREEN.json",
+    "golden/corrected_vnext/RULE2-06-RED.json",
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.23",
+   "reason": "Re-seal #26 candidate: owner-approved R26 identity and Item-2 closure; five measured manifest members changed (catalog plus four corrected identity-only goldens). No economic values, production facts, or Item-4 disposition changed. Base C is provisional and this intermediate commit is NONACCEPTED until the decision-147 forward repin to M.",
+   "independently_verified": "pending Lead and required audits"
+  }
  ],
  "legacy_event_order_map_pin": {
   "schema": "P012_LEGACY_EVENT_ORDER_MAP_PIN_V1",
