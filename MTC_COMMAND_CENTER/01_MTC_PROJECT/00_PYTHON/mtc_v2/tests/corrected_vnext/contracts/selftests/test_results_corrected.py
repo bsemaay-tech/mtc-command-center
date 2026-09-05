@@ -20,6 +20,7 @@ from mtc_v2.core.types import (
     Bar,
     CashEvent,
     CashEventKind,
+    FeeEvent,
     FillDecision,
     FundingEvent,
     PortfolioState,
@@ -515,6 +516,15 @@ def test_d026_window_renumber_rewrites_sequence_and_keeps_independent_ids() -> N
         exit_id="TIME_STOP",
         price_tick_alignment="FLOOR",
     )
+    third_fill = dataclasses.replace(
+        second_fill,
+        sequence=2,
+        event_timestamp=datetime.fromisoformat("2000-01-01T00:14:00+00:00"),
+        fill_id="F2",
+        exit_id="EXIT-LATE",
+        final_fill_price=99.0,
+        quantity=2.0,
+    )
     first_gross = _gross_cash("CE-GROSS-0", "F0", 1.0)
     first_funding_cash = CashEvent(
         sequence=1,
@@ -537,7 +547,7 @@ def test_d026_window_renumber_rewrites_sequence_and_keeps_independent_ids() -> N
         fill_id="F1",
     )
     second_funding_cash = CashEvent(
-        sequence=3,
+        sequence=4,
         cash_event_id="CE-FUND-IN",
         event_timestamp=datetime.fromisoformat("2000-01-01T00:13:00+00:00"),
         lifecycle_id=1,
@@ -546,6 +556,57 @@ def test_d026_window_renumber_rewrites_sequence_and_keeps_independent_ids() -> N
         settlement_currency="TEST-USD",
         funding_event_id="TEST-FUND-IN",
     )
+    second_fee_cash = CashEvent(
+        sequence=3,
+        cash_event_id="CE-FEE-1",
+        event_timestamp=datetime.fromisoformat("2000-01-01T00:13:00+00:00"),
+        lifecycle_id=1,
+        kind=CashEventKind.FEE,
+        signed_delta=-0.01,
+        settlement_currency="TEST-USD",
+        fill_id="F1",
+    )
+    third_gross = CashEvent(
+        sequence=5,
+        cash_event_id="CE-GROSS-2",
+        event_timestamp=datetime.fromisoformat("2000-01-01T00:14:00+00:00"),
+        lifecycle_id=1,
+        kind=CashEventKind.GROSS_REALIZATION,
+        signed_delta=2.0,
+        settlement_currency="TEST-USD",
+        fill_id="F2",
+    )
+    third_fee_cash = dataclasses.replace(
+        second_fee_cash,
+        sequence=6,
+        cash_event_id="CE-FEE-2",
+        event_timestamp=datetime.fromisoformat("2000-01-01T00:14:00+00:00"),
+        signed_delta=-0.02,
+        fill_id="F2",
+    )
+    fee_rows = [
+        FeeEvent(
+            sequence=sequence,
+            event_timestamp=datetime.fromisoformat(timestamp),
+            lifecycle_id=1,
+            fill_id=fill_id,
+            event_class="MARKET_EXIT",
+            liquidity_role="TAKER",
+            schedule_id="TEST-COST",
+            schedule_digest="4" * 64,
+            rate=rate,
+            fixed_component=0.0,
+            fee_notional=notional,
+            fee_amount=amount,
+            fee_cash_delta=-amount,
+            settlement_currency="TEST-USD",
+            cash_event_id=cash_event_id,
+        )
+        for sequence, timestamp, fill_id, rate, notional, amount, cash_event_id in (
+            (0, "2000-01-01T00:13:00+00:00", "F1", 0.0001, 100.0, 0.01, "CE-FEE-1"),
+            (1, "2000-01-01T00:14:00+00:00", "F2", 0.0001, 198.0, 0.02, "CE-FEE-2"),
+        )
+    ]
     funding_rows = [
         FundingEvent(
             sequence=sequence,
@@ -575,15 +636,22 @@ def test_d026_window_renumber_rewrites_sequence_and_keeps_independent_ids() -> N
     state = PortfolioState(
         initial_capital=1000.0,
         equity=1000.0,
-        fill_events=[first_fill, second_fill],
+        fill_events=[first_fill, second_fill, third_fill],
         cash_events=[
             first_gross,
             first_funding_cash,
             second_gross,
+            second_fee_cash,
             second_funding_cash,
+            third_gross,
+            third_fee_cash,
         ],
+        fee_events=fee_rows,
         funding_events=funding_rows,
     )
+    source_fill_ids = [row.fill_id for row in state.fill_events]
+    source_cash_fill_ids = [row.fill_id for row in state.cash_events]
+    source_fee_fill_ids = [row.fill_id for row in state.fee_events]
     surfaces = corrected_surfaces(
         state=state,
         equity_values=[],
@@ -594,19 +662,78 @@ def test_d026_window_renumber_rewrites_sequence_and_keeps_independent_ids() -> N
         observation_start=datetime.fromisoformat("2000-01-01T00:13:00+00:00"),
     )
     event = surfaces["EVENT_SURFACE"]
-    assert [row["sequence"] for row in event["fill_events"]] == [0]
-    assert [row["fill_id"] for row in event["fill_events"]] == ["F1"]
-    assert [row["sequence"] for row in event["cash_events"]] == [0, 1]
+    assert [row["sequence"] for row in event["fill_events"]] == [0, 1]
+    assert [row["fill_id"] for row in event["fill_events"]] == ["F0", "F1"]
+    assert [row["sequence"] for row in event["cash_events"]] == list(range(5))
     assert [row["cash_event_id"] for row in event["cash_events"]] == [
         "CE-GROSS-1",
+        "CE-FEE-1",
         "CE-FUND-IN",
+        "CE-GROSS-2",
+        "CE-FEE-2",
     ]
-    assert event["cash_events"][1]["funding_event_id"] == "TEST-FUND-IN"
+    assert [row.get("fill_id") for row in event["cash_events"]] == [
+        "F0",
+        "F0",
+        None,
+        "F1",
+        "F1",
+    ]
+    assert event["cash_events"][2]["funding_event_id"] == "TEST-FUND-IN"
+    assert [row["fill_id"] for row in event["fee_events"]] == ["F0", "F1"]
+    assert [row["cash_event_id"] for row in event["fee_events"]] == [
+        "CE-FEE-1",
+        "CE-FEE-2",
+    ]
     assert [row["sequence"] for row in event["funding_events"]] == [0]
     assert [row["cash_event_id"] for row in event["funding_events"]] == ["CE-FUND-IN"]
     assert [row["funding_event_id"] for row in event["funding_events"]] == [
         "TEST-FUND-IN"
     ]
-    assert [row["fill_id"] for row in event["exit_events"]] == ["F1"]
-    assert [row["exit_id"] for row in event["exit_events"]] == ["TIME_STOP"]
-    assert [row["sequence"] for row in event["exit_events"]] == [0]
+    assert [row["fill_id"] for row in event["exit_events"]] == ["F0", "F1"]
+    assert [row["exit_id"] for row in event["exit_events"]] == [
+        "TIME_STOP",
+        "EXIT-LATE",
+    ]
+    assert [row["sequence"] for row in event["exit_events"]] == [0, 1]
+    assert [row["final_fill_price"] for row in event["fill_events"]] == [100.0, 99.0]
+    assert [row["quantity"] for row in event["fill_events"]] == [1.0, 2.0]
+    assert [row["signed_delta"] for row in event["cash_events"]] == [
+        1.0,
+        -0.01,
+        -0.1,
+        2.0,
+        -0.02,
+    ]
+    assert [row["fee_amount"] for row in event["fee_events"]] == [0.01, 0.02]
+    assert [row["gross_realized_pnl"] for row in event["exit_events"]] == [1.0, 2.0]
+    assert surfaces["RESULT_SURFACE"]["equity_curve"] == pytest.approx(
+        {"first": 1000.9, "last": 1003.77}
+    )
+    assert [row.fill_id for row in state.fill_events] == source_fill_ids
+    assert [row.fill_id for row in state.cash_events] == source_cash_fill_ids
+    assert [row.fill_id for row in state.fee_events] == source_fee_fill_ids
+
+    unfiltered = corrected_surfaces(
+        state=state,
+        equity_values=[],
+        manifest=CorrectedRunManifest.from_records(
+            records,
+            execution_profile_id=str(config["execution_profile_id"]),
+        ),
+    )["EVENT_SURFACE"]
+    assert [row["fill_id"] for row in unfiltered["fill_events"]] == ["F0", "F1", "F2"]
+    assert [row["fill_id"] for row in unfiltered["fee_events"]] == ["F1", "F2"]
+
+    empty = corrected_surfaces(
+        state=PortfolioState(initial_capital=1000.0, equity=1000.0),
+        equity_values=[],
+        manifest=CorrectedRunManifest.from_records(
+            records,
+            execution_profile_id=str(config["execution_profile_id"]),
+        ),
+    )["EVENT_SURFACE"]
+    assert empty["fill_events"] == []
+    assert empty["cash_events"] == []
+    assert empty["fee_events"] == []
+    assert empty["exit_events"] == []
