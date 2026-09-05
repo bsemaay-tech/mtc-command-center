@@ -1262,7 +1262,7 @@ def test_v2_schema_accepts_complete_receipt_and_rejects_nested_mutants() -> None
     receipt = semantic_review_fixture(Path(tempfile.mkdtemp(prefix="schema-receipt-")))
     receipt["owner_ratification"]["chain"] = [
         "#5", "#6", "#7", "#8", "#9", "#10", "#11", "#12", "#12b", "#13",
-        "#14", "#14b", "#15", "#16", "#17", "#18", "#19", "#20", "#21", "#22", "#23",
+        "#14", "#14b", "#15", "#16", "#17", "#18", "#19", "#20", "#21", "#22", "#23", "#24",
     ]
     assert list(validator.iter_errors(receipt)) == []
     mutants = [
