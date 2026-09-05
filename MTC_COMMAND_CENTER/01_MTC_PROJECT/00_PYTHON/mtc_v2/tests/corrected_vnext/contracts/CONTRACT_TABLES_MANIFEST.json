@@ -578,8 +578,8 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
-  "IMPLEMENTATION_BASE_SHA": "e6ee0abb48588ee29e0fb47e39a2ea360d0d751a",
-  "reason": "Re-seal #27 candidate under OD20260906-1 delegated same-package repair authority: scenario_catalog.json alone now names the four already-approved current golden digests. No golden, observed artifact, economic value, source, probe, design, production fact, or Item-4 disposition changed. Base C27 is provisional; NONACCEPTED until forward repin F27."
+  "IMPLEMENTATION_BASE_SHA": "18ef4f2a93830f49b14a2a4975c5aea3d4713c94",
+  "reason": "Re-seal #27 candidate under OD20260906-1 delegated same-package repair authority: scenario_catalog.json alone now names the four already-approved current golden digests. No golden, observed artifact, economic value, source, probe, design, production fact, or Item-4 disposition changed. Base C27 is provisional; NONACCEPTED until forward repin F27. Decision-147 forward repin completed separately at F27; active base is exact re-seal commit M27."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -589,7 +589,7 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
-  "IMPLEMENTATION_BASE_SHA": "e6ee0abb48588ee29e0fb47e39a2ea360d0d751a",
+  "IMPLEMENTATION_BASE_SHA": "18ef4f2a93830f49b14a2a4975c5aea3d4713c94",
   "set_by": "R27 re-seal #27 candidate, 2026-09-06T02:38:01+03:00"
  },
  "reseal_history": [

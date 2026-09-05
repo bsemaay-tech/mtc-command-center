@@ -2,7 +2,7 @@
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
  "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
- "IMPLEMENTATION_BASE_SHA": "e6ee0abb48588ee29e0fb47e39a2ea360d0d751a",
+ "IMPLEMENTATION_BASE_SHA": "18ef4f2a93830f49b14a2a4975c5aea3d4713c94",
  "core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
@@ -289,6 +289,15 @@
    "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
    "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
    "reason": "Provisional C27 base required to commit re-seal #27 bytes; NONACCEPTED until the separate decision-147 C27-to-M27 forward repin."
+  },
+  {
+   "at": "2026-09-06T02:42:18.942137+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, decision-147 R27 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "e6ee0abb48588ee29e0fb47e39a2ea360d0d751a",
+   "new_IMPLEMENTATION_BASE_SHA": "18ef4f2a93830f49b14a2a4975c5aea3d4713c94",
+   "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "reason": "Decision 147: M27 is the commit carrying re-seal #27 in-repo. F27 changes only active-base metadata, sidecar, and current-pin selftest; files, seal, design, catalog, schema, and economics are unchanged."
   }
  ]
 }
