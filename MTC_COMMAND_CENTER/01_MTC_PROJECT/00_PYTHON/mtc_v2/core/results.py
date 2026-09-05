@@ -2,24 +2,27 @@ from __future__ import annotations
 
 import dataclasses
 import math
-import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
 from mtc_v2.core.economics import EconomicRecords
-from mtc_v2.core.types import CashEventKind, PortfolioState
-
-
-SOURCE_DIGEST_RE = re.compile(r"[0-9a-f]{64}\Z")
+from mtc_v2.core.types import (
+    CashEventKind,
+    EconomicTransitionError,
+    PortfolioState,
+    _require_source_digest as _require_transition_source_digest,
+)
 
 
 def _require_source_digest(label: str, value: object) -> str:
-    if type(value) is not str or SOURCE_DIGEST_RE.fullmatch(value) is None:
-        raise ValueError(
-            f"corrected run manifest refuses {label} that is not lowercase 64-hex"
-        )
-    return value
+    try:
+        return _require_transition_source_digest(label, value)
+    except EconomicTransitionError:
+        pass
+    raise ValueError(
+        f"corrected run manifest refuses {label} that is not lowercase 64-hex"
+    )
 
 
 @dataclass(frozen=True)
