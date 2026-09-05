@@ -36,6 +36,14 @@ Unavailable exact model/effort is BLOCK unless owner-waived. Each audit is fresh
 scope, plan, diff/files, evidence, and repo rules, and is never resumed/continued. Codex audits are
 ephemeral and read-only.
 
+**OD-20260905-1 — campaign-only Gemini model override (2026-09-05 window).** For the bounded
+autonomous campaign from 2026-09-05T12:33:44+03:00 through 2026-09-05T23:33:44+03:00, the mandatory
+Gemini parallel corroboration below dispatches exactly `gemini-3.8-flash-high`; do not retry or
+substitute `gemini-3.7-flash-high` during that window. Every other OD-20260829-1 boundary stays in
+force: same scope/evidence package, Lead comparison and reproduction, `SUPPLEMENTAL_UNEXECUTED`
+labelling, no replacement of exact flagship slots or acceptance authority. Outside the bounded
+window the rule below remains the unchanged default unless a later owner action changes it.
+
 **OD-20260829-1 — mandatory Gemini parallel corroboration.** Every T0, T1, or T2 Gate 5/Gate 6
 audit that dispatches one or more model auditors must also dispatch a fresh
 `gemini-3.7-flash-high` review through
