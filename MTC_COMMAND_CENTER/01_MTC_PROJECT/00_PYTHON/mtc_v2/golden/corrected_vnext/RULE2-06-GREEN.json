@@ -30,11 +30,11 @@
       {"sequence": 0, "kernel_semantics_version": "2.0.0", "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "side": "SELL", "exit_id": "STOP", "fill_trigger": "STOP_TOUCH", "reference_price": 90, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "FLOOR", "final_fill_price": 90, "quantity": 2, "liquidity_role": "TAKER"}
     ],
     "cash_events": [
-      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.081},
-      {"sequence": 1, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-GROSS-0", "kind": "GROSS_REALIZATION", "fill_id": "F0", "signed_delta": -20}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-1", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.081},
+      {"sequence": 1, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-GROSS-1", "kind": "GROSS_REALIZATION", "fill_id": "F0", "signed_delta": -20}
     ],
     "fee_events": [
-      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-06-GREEN-V1", "schedule_digest": "7d8510ce6ee3101754fb6d7ffb55fa09109c3d3dda07b7b4d01c0d99a7913abf", "rate": 0.00045, "fixed_component": 0, "fee_notional": 180, "fee_amount": 0.081, "fee_cash_delta": -0.081, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:12:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-06-GREEN-V1", "schedule_digest": "7d8510ce6ee3101754fb6d7ffb55fa09109c3d3dda07b7b4d01c0d99a7913abf", "rate": 0.00045, "fixed_component": 0, "fee_notional": 180, "fee_amount": 0.081, "fee_cash_delta": -0.081, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-1"}
     ],
     "funding_events": [],
     "exit_events": [

@@ -136,7 +136,7 @@ RECORD_ID_RE = re.compile(r"[A-Z0-9][A-Z0-9.-]*\Z")
 SEMANTIC_HUNK_COVERAGE_SCHEMA = "P012_KERNEL_HUNK_COVERAGE_V2"
 SEMANTIC_HUNK_COVERAGE_SCHEMA_V1 = "P012_KERNEL_HUNK_COVERAGE_V1"
 SEMANTIC_HUNK_COVERAGE_DIFF_COMMAND = (
-    "git diff --unified=0 --no-ext-diff --no-textconv --no-renames "
+    "git diff --relative --unified=0 --no-ext-diff --no-textconv --no-renames "
     "--diff-algorithm=myers --no-indent-heuristic"
 )
 HUNK_DIFF_BASE_COMMIT = "5e8e579410ee55008bfd2d2d85054fd1d782f32c"
@@ -282,10 +282,35 @@ def _resolve_manifest_design_pin(
     return design_path, raw, design_sha
 
 
-def derive_section18_served_def_sets(
+def _parse_section18_path_cell(cell: str, row: str) -> tuple[str, ...]:
+    token = r"`([^`]*)`(?:\s+\((?:new|new data)\))?"
+    if re.fullmatch(rf"{token}(?:\s*;\s*{token})*", cell) is None:
+        _semantic_review_invalid("section18", f"malformed proposed path/module {row}")
+    paths = tuple(re.findall(r"`([^`]*)`", cell))
+    for path in paths:
+        if (
+            not path
+            or path.startswith("/")
+            or "\\" in path
+            or "\x00" in path
+            or ":" in path.split("/", 1)[0]
+        ):
+            _semantic_review_invalid("section18", f"invalid proposed path/module {row}")
+        parts = path.split("/")
+        if any(part in {"", ".", ".."} for part in parts):
+            _semantic_review_invalid("section18", f"invalid proposed path/module {row}")
+        wildcard_positions = [index for index, part in enumerate(parts) if "*" in part]
+        if wildcard_positions and not (
+            wildcard_positions == [len(parts) - 1] and parts[-1] == "**"
+        ):
+            _semantic_review_invalid("section18", f"invalid proposed path/module {row}")
+    return paths
+
+
+def derive_section18_census(
     root: Path, manifest: Mapping[str, Any]
-) -> dict[str, frozenset[str]]:
-    """Read the ratified census from the manifest-pinned design bytes only."""
+) -> tuple[dict[str, frozenset[str]], dict[str, tuple[str, ...]]]:
+    """Read served sets and module bindings from manifest-pinned design bytes."""
 
     try:
         design_path, raw, _design_sha = _resolve_manifest_design_pin(
@@ -300,14 +325,15 @@ def derive_section18_served_def_sets(
         _semantic_review_invalid("section18", "manifest-pinned design bytes drifted")
 
     rows: dict[str, frozenset[str]] = {}
+    bindings: dict[str, tuple[str, ...]] = {}
     row_re = re.compile(
-        r"^\|\s*`(S18-\d{2})`\s*\|[^|]*\|[^|]*\|\s*([^|]*?)\s*\|"
+        r"^\|\s*`(S18-\d{2})`\s*\|\s*([^|]*?)\s*\|[^|]*\|\s*([^|]*?)\s*\|"
     )
     for line in text.splitlines():
         match = row_re.match(line)
         if match is None:
             continue
-        row, served_cell = match.groups()
+        row, path_cell, served_cell = match.groups()
         if row in rows:
             _semantic_review_invalid("section18", f"duplicate census row {row}")
         cell = served_cell.strip()
@@ -324,9 +350,36 @@ def derive_section18_served_def_sets(
                 _semantic_review_invalid("section18", f"served set must be sorted and unique {row}")
         served = frozenset(served_values)
         rows[row] = served
+        bindings[row] = _parse_section18_path_cell(path_cell.strip(), row)
     if tuple(rows) != SECTION18_ROW_IDS:
         _semantic_review_invalid("section18", "census rows missing, unexpected, or out of order")
+    return rows, bindings
+
+
+def derive_section18_served_def_sets(
+    root: Path, manifest: Mapping[str, Any]
+) -> dict[str, frozenset[str]]:
+    """Compatibility view of the ratified Section-18 served sets."""
+
+    rows, _bindings = derive_section18_census(root, manifest)
     return rows
+
+
+def _section18_matching_rows(
+    path: str, bindings: Mapping[str, tuple[str, ...]]
+) -> list[str]:
+    matches: list[str] = []
+    for row, patterns in bindings.items():
+        for pattern in patterns:
+            if pattern.endswith("/**"):
+                prefix = pattern[:-2]
+                matched = path.startswith(prefix) and len(path) > len(prefix)
+            else:
+                matched = path == pattern
+            if matched:
+                matches.append(row)
+                break
+    return matches
 
 
 def derive_semantic_coverage_review_chain(manifest: Mapping[str, Any]) -> list[str]:
@@ -606,7 +659,7 @@ def validate_semantic_coverage_review(
     manifest = load_json_exact(
         root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
     )
-    section18_sets = derive_section18_served_def_sets(root, manifest)
+    section18_sets, section18_bindings = derive_section18_census(root, manifest)
     for item_number in range(1, 7):
         item_key = str(item_number)
         item = _require_exact_members(
@@ -648,6 +701,7 @@ def validate_semantic_coverage_review(
                 item["hunk_coverage"],
                 reviewed_identities["worktree_head_commit"],
                 section18_sets,
+                section18_bindings,
             )
 
     unresolved_items = receipt["unresolved_items"]
@@ -703,6 +757,7 @@ def compute_hunk_diff(root: Path, reviewed_head: str) -> bytes:
         "-C",
         str(root),
         "diff",
+        "--relative",
         "--unified=0",
         "--no-ext-diff",
         "--no-textconv",
@@ -898,6 +953,7 @@ def _validate_hunk_record(
     expected: ParsedHunk,
     member: str,
     section18_sets: Mapping[str, frozenset[str]],
+    section18_bindings: Mapping[str, tuple[str, ...]],
 ) -> str:
     if type(record) is not dict:
         _semantic_review_invalid(member, "expected object")
@@ -939,6 +995,16 @@ def _validate_hunk_record(
             or section18_row not in section18_sets
         ):
             _semantic_review_invalid(f"{member}.section18_row", "unknown section-18 census row")
+        matching_rows = _section18_matching_rows(expected.path, section18_bindings)
+        if matching_rows != [section18_row]:
+            if not matching_rows:
+                detail = f"{section18_row} does not allow {expected.path}"
+            else:
+                detail = (
+                    f"{expected.path} matches {', '.join(matching_rows)}, "
+                    f"not exactly {section18_row}"
+                )
+            _semantic_review_invalid(f"{member}.section18_row", detail)
         served_def_ids = record["served_def_ids"]
         _require_sorted_unique_def_ids(served_def_ids, f"{member}.served_def_ids")
         if set(served_def_ids) != section18_sets[section18_row]:
@@ -958,6 +1024,7 @@ def _validate_hunk_coverage_receipt(
     document: dict[str, Any],
     reviewed_head: str,
     section18_sets: Mapping[str, frozenset[str]],
+    section18_bindings: Mapping[str, tuple[str, ...]],
 ) -> None:
     """Machine-check the V2 semantic hunk receipt against a recomputed diff."""
 
@@ -1019,7 +1086,11 @@ def _validate_hunk_coverage_receipt(
         zip(hunks, parsed, strict=True)
     ):
         terminal_class = _validate_hunk_record(
-            record, expected, f"items.2.hunks.{index}", section18_sets
+            record,
+            expected,
+            f"items.2.hunks.{index}",
+            section18_sets,
+            section18_bindings,
         )
         if terminal_class == "UNDOCUMENTED":
             undocumented.append(str(index))
@@ -1087,10 +1158,13 @@ def _validate_item2_hunk_coverage(
     document: Any,
     reviewed_head: str,
     section18_sets: Mapping[str, frozenset[str]],
+    section18_bindings: Mapping[str, tuple[str, ...]],
 ) -> None:
     if type(document) is not dict:
         _semantic_review_invalid("items.2.hunk_coverage", "embedded V2 object required")
-    _validate_hunk_coverage_receipt(root, document, reviewed_head, section18_sets)
+    _validate_hunk_coverage_receipt(
+        root, document, reviewed_head, section18_sets, section18_bindings
+    )
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -1990,6 +2064,9 @@ def run_contract_target_scenario(
         ),
         allow_test_policy=True,
         next_decision_sequence=len(runner.state.decision_events),
+        next_fill_sequence=len(runner.state.fill_events),
+        next_cash_sequence=len(runner.state.cash_events),
+        next_fee_sequence=len(runner.state.fee_events),
     )
     if transition.decision_events and not transition.fill_decisions:
         runner.position_manager.apply_transition(

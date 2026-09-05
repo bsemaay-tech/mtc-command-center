@@ -30,11 +30,11 @@
       {"sequence": 0, "kernel_semantics_version": "2.0.0", "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "side": "SELL", "exit_id": "STOP", "fill_trigger": "GAP_OPEN", "reference_price": 90, "slippage_model_id": "BPS_OF_REFERENCE_V1", "slippage_bps": 0, "slippage_impact": 0, "slippage_application_count": 1, "price_tick_alignment": "FLOOR", "final_fill_price": 90, "quantity": 1, "liquidity_role": "TAKER"}
     ],
     "cash_events": [
-      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-0", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.0405},
-      {"sequence": 1, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-GROSS-0", "kind": "GROSS_REALIZATION", "fill_id": "F0", "signed_delta": -10}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-FEE-1", "kind": "FEE", "fill_id": "F0", "signed_delta": -0.0405},
+      {"sequence": 1, "kernel_semantics_version": "2.0.0", "cash_event_id": "CE-GROSS-1", "kind": "GROSS_REALIZATION", "fill_id": "F0", "signed_delta": -10}
     ],
     "fee_events": [
-      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:13:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-04-RED-V1", "schedule_digest": "3376e72230dc21797202a0dab1a16173c0909846ed767eea38047aa7d0775e16", "rate": 0.00045, "fixed_component": 0, "fee_notional": 90, "fee_amount": 0.0405, "fee_cash_delta": -0.0405, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-0"}
+      {"sequence": 0, "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:13:00Z", "lifecycle_id": 1, "fill_id": "F0", "event_class": "PROTECTIVE_STOP_EXIT", "liquidity_role": "TAKER", "schedule_id": "SYNTH-COST-RULE2-04-RED-V1", "schedule_digest": "3376e72230dc21797202a0dab1a16173c0909846ed767eea38047aa7d0775e16", "rate": 0.00045, "fixed_component": 0, "fee_notional": 90, "fee_amount": 0.0405, "fee_cash_delta": -0.0405, "settlement_currency": "TEST-USD", "cash_event_id": "CE-FEE-1"}
     ],
     "funding_events": [],
     "exit_events": [

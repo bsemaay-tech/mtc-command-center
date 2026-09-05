@@ -73,11 +73,27 @@ def write_synthetic_reseal_manifest(
     manifest = root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
     manifest.parent.mkdir(parents=True, exist_ok=True)
     design = root / "design.md"
+    proposed_paths = {
+        1: "`core/semantics.py` (new)",
+        2: "`core/economics.py` (new)",
+        3: "`core/position_sizer.py`",
+        4: "`core/instrument.py`; `core/economic_records/instruments/**` (new data)",
+        5: "`core/exits.py`",
+        6: "`core/position_manager.py`",
+        7: "`core/runner.py`",
+        8: "`core/config.py`",
+        9: "`core/types.py`",
+        10: "`core/results.py`",
+        11: "`core/economic_records/costs/**`; `core/economic_records/funding/**` (new data)",
+        12: "`tests/corrected_vnext/contracts/**`; `tests/corrected_vnext/observed/**`; "
+        "`tests/corrected_vnext/probes/**`; `tests/corrected_vnext/verify_bceg.py`; "
+        "`golden/corrected_vnext/**`",
+    }
     design.write_text(
         "Design v1.11\n"
         + "\n".join(
             [
-                f"| `S18-{number:02d}` | core/x.py | text | {served} | note |"
+                f"| `S18-{number:02d}` | {proposed_paths[number]} | text | {served} | note |"
                 for number, served in (
                     (1, ", ".join(f"`DEF-P012-{n:02d}`" for n in range(1, 9))),
                     (2, ", ".join(f"`DEF-P012-{n:02d}`" for n in (1, 2, 4, 5, 6, 7, 8))),
@@ -957,6 +973,34 @@ def test_v2_item2_mixed_class_payload_is_invalid(
     )
 
 
+def test_v2_item2_wrong_section18_module_binding_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    coverage = receipt["items"]["2"]["hunk_coverage"]
+    record = coverage["hunks"][0]
+    record.pop("def_ids")
+    record.update(
+        terminal_class="SECTION18_SHARED",
+        section18_row="S18-05",
+        served_def_ids=["DEF-P012-04", "DEF-P012-06"],
+    )
+    coverage["section18_coverage"][4]["hunk_indices"] = [0, 1]
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(
+        capsys,
+        "items.2.hunks.0.section18_row: "
+        "core/position_sizer.py matches S18-03, not exactly S18-05",
+    )
+
+
 def test_v2_parse_hunk_diff_uses_exact_raw_bytes() -> None:
     parsed = verify_bceg.parse_hunk_diff(SYNTHETIC_DIFF_BYTES)
 
@@ -1072,6 +1116,69 @@ def core_hunk_repository(tmp_path: Path) -> tuple[Path, str, str]:
     return root, base, head
 
 
+def test_v2_real_nested_git_diff_is_relative_to_mtc_root(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = tmp_path / "repo"
+    root = repository / "nested/project/mtc_v2"
+    core = root / "core"
+    core.mkdir(parents=True)
+    for command in (
+        ("init",),
+        ("config", "user.email", "v2@example.invalid"),
+        ("config", "user.name", "V2 selftest"),
+        ("config", "core.autocrlf", "false"),
+    ):
+        subprocess.run(
+            ["git", "-C", str(repository), *command],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    target = core / "exits.py"
+    target.write_text("exit_value = 1\n", encoding="utf-8", newline="\n")
+    subprocess.run(
+        ["git", "-C", str(repository), "add", "nested"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(repository), "commit", "-m", "base"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    base = subprocess.check_output(
+        ["git", "-C", str(repository), "rev-parse", "HEAD"], text=True
+    ).strip()
+    target.write_text("exit_value = 2\n", encoding="utf-8", newline="\n")
+    subprocess.run(
+        ["git", "-C", str(repository), "add", "nested"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(repository), "commit", "-m", "reviewed"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    head = subprocess.check_output(
+        ["git", "-C", str(repository), "rev-parse", "HEAD"], text=True
+    ).strip()
+    monkeypatch.setattr(verify_bceg, "HUNK_DIFF_BASE_COMMIT", base)
+
+    diff_bytes = verify_bceg.compute_hunk_diff(root, head)
+
+    assert b"diff --git a/core/exits.py b/core/exits.py" in diff_bytes
+    assert [hunk.path for hunk in verify_bceg.parse_hunk_diff(diff_bytes)] == [
+        "core/exits.py"
+    ]
+    assert " --relative " in f" {verify_bceg.canonical_hunk_diff_command(head)} "
+
+
 def _real_v2_receipt(
     root: Path, base: str, head: str, diff_bytes: bytes
 ) -> dict[str, object]:
@@ -1110,8 +1217,10 @@ def _real_v2_receipt(
         11: ["DEF-P012-07", "DEF-P012-08"],
         12: [],
     }
-    records = [
-        {
+    records = []
+    for hunk in parsed:
+        row_number = 3 if hunk.path == "core/position_sizer.py" else 5
+        records.append({
             "path": hunk.path,
             "old_start": hunk.old_start,
             "old_count": hunk.old_count,
@@ -1119,11 +1228,9 @@ def _real_v2_receipt(
             "new_count": hunk.new_count,
             "hunk_sha256": hashlib.sha256(hunk.raw_bytes).hexdigest(),
             "terminal_class": "SECTION18_SHARED",
-            "section18_row": "S18-05",
-            "served_def_ids": served_def_ids[5],
-        }
-        for hunk in parsed
-    ]
+            "section18_row": f"S18-{row_number:02d}",
+            "served_def_ids": served_def_ids[row_number],
+        })
     return {
         "schema": verify_bceg.SEMANTIC_HUNK_COVERAGE_SCHEMA,
         "base_commit": base,
@@ -1148,7 +1255,11 @@ def _real_v2_receipt(
             {
                 "row": f"S18-{number:02d}",
                 "served_def_ids": served_def_ids[number],
-                "hunk_indices": [index for index in range(len(parsed)) if number == 5],
+                "hunk_indices": [
+                    index
+                    for index, record in enumerate(records)
+                    if record["section18_row"] == f"S18-{number:02d}"
+                ],
             }
             for number in range(1, 13)
         ],
@@ -1172,9 +1283,10 @@ def test_v2_real_git_receipt_accepts(
         root, [{"actor": f"Synthetic Lead, re-seal #{n}"} for n in range(5, 10)]
     )
     manifest = load_json_exact(root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json")
+    section18_sets, section18_bindings = verify_bceg.derive_section18_census(root, manifest)
 
     verify_bceg._validate_item2_hunk_coverage(
-        root, receipt, head, verify_bceg.derive_section18_served_def_sets(root, manifest)
+        root, receipt, head, section18_sets, section18_bindings
     )
 
 
@@ -1213,9 +1325,10 @@ def test_v2_real_git_receipt_census_mutations_refuse(
         root, [{"actor": "Synthetic Lead, re-seal #5"}]
     )
     manifest = load_json_exact(root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json")
+    section18_sets, section18_bindings = verify_bceg.derive_section18_census(root, manifest)
     with pytest.raises(GateRefusal):
         verify_bceg._validate_item2_hunk_coverage(
-            root, receipt, head, derive_section18_served_def_sets(root, manifest)
+            root, receipt, head, section18_sets, section18_bindings
         )
 
 
@@ -1252,6 +1365,53 @@ def test_v2_section18_served_cell_accepts_exact_ordered_tokens(tmp_path: Path) -
     assert sets["S18-02"] == frozenset(
         {"DEF-P012-01", "DEF-P012-02", "DEF-P012-04", "DEF-P012-05", "DEF-P012-06", "DEF-P012-07", "DEF-P012-08"}
     )
+
+
+@pytest.mark.parametrize(
+    ("path", "expected_rows"),
+    [
+        ("core/instrument.py", ["S18-04"]),
+        ("core/economic_records/instruments/a/b.json", ["S18-04"]),
+        ("core/economic_records/costs/a.json", ["S18-11"]),
+        ("core/economic_records/funding/a.json", ["S18-11"]),
+        ("tests/corrected_vnext/contracts/a.json", ["S18-12"]),
+        ("core/economic_records/instruments-old/a.json", []),
+        ("core/economic_records/instruments", []),
+        ("core/subdir/exits.py", []),
+    ],
+)
+def test_v2_section18_module_bindings_are_exact_or_recursive_descendants(
+    tmp_path: Path, path: str, expected_rows: list[str]
+) -> None:
+    root = tmp_path / "root"
+    write_synthetic_reseal_manifest(root, [{"actor": "Synthetic Lead, re-seal #5"}])
+    manifest = load_json_exact(
+        root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
+    )
+    _sets, bindings = verify_bceg.derive_section18_census(root, manifest)
+
+    assert verify_bceg._section18_matching_rows(path, bindings) == expected_rows
+
+
+def test_v2_section18_module_binding_grammar_fails_closed(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    write_synthetic_reseal_manifest(root, [{"actor": "Synthetic Lead, re-seal #5"}])
+    design = root / "design.md"
+    design.write_text(
+        design.read_text(encoding="utf-8").replace(
+            "`core/exits.py`", "`core/**/exits.py`"
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    manifest_path = root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
+    manifest = load_json_exact(manifest_path)
+    manifest["design"]["sha256"] = verify_bceg.sha256_file(design)
+    manifest_path.write_bytes(verify_bceg.canonical_json_bytes(manifest))
+
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.derive_section18_census(root, manifest)
+    assert caught.value.detail == "section18: invalid proposed path/module S18-05"
 
 
 def test_v2_schema_accepts_complete_receipt_and_rejects_nested_mutants() -> None:
@@ -1298,10 +1458,11 @@ def test_v2_real_git_receipt_wrong_digest_refuses(
         root, [{"actor": "Synthetic Lead, re-seal #5"}]
     )
     manifest = load_json_exact(root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json")
+    section18_sets, section18_bindings = verify_bceg.derive_section18_census(root, manifest)
 
     with pytest.raises(GateRefusal) as caught:
         verify_bceg._validate_item2_hunk_coverage(
-            root, receipt, head, verify_bceg.derive_section18_served_def_sets(root, manifest)
+            root, receipt, head, section18_sets, section18_bindings
         )
     assert caught.value.detail == "items.2.diff_sha256: does not match recomputed diff"
 

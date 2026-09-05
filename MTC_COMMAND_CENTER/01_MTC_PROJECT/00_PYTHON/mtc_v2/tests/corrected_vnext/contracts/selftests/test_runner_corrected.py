@@ -242,6 +242,42 @@ def test_corrected_runner_normalizes_dynamic_stop_owner_to_stop_exit_id() -> Non
     assert stop_fill[0].fill_trigger == "GAP_OPEN"
 
 
+def test_d026_runner_preserves_global_exit_identity_counters() -> None:
+    config, bars = _scenario("RULE2-04-RED")
+    runner = Runner(config)
+
+    runner.run([bars[0], bars[1], bars[3]])
+
+    assert [(row.sequence, row.fill_id) for row in runner.state.fill_events] == [
+        (0, "F0"),
+        (1, "F1"),
+    ]
+    assert [
+        (row.sequence, row.cash_event_id, row.fill_id, row.kind)
+        for row in runner.state.cash_events
+    ] == [
+        (0, "CE-FEE-0", "F0", "FEE"),
+        (1, "CE-FEE-1", "F1", "FEE"),
+        (2, "CE-GROSS-1", "F1", "GROSS_REALIZATION"),
+    ]
+    assert [row.signed_delta for row in runner.state.cash_events] == pytest.approx(
+        [-0.045, -0.0405, -10.0]
+    )
+    assert [
+        (row.sequence, row.cash_event_id, row.fill_id)
+        for row in runner.state.fee_events
+    ] == [
+        (0, "CE-FEE-0", "F0"),
+        (1, "CE-FEE-1", "F1"),
+    ]
+    assert [row.fee_amount for row in runner.state.fee_events] == pytest.approx(
+        [0.045, 0.0405]
+    )
+    assert runner.state.last_gross_realized_pnl == -10.0
+    assert runner.state.realized_equity == pytest.approx(-10.0855)
+    assert runner.state.equity == pytest.approx(979.9145)
+
+
 def test_target_first_is_test_only_and_production_runner_refuses_it() -> None:
     config, bars = _scenario("RULE2-06-RED")
 
