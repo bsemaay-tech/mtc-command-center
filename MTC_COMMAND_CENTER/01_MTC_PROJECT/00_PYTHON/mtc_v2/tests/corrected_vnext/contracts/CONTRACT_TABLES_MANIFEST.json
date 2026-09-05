@@ -575,7 +575,7 @@
  ],
  "seal_state": {
    "EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
-   "IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
+   "IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
    "reason": "Re-seal #25 candidate, 2026-09-05T23:19:36+03:00: window-local serialized fill identity repair; separately measured catalog and v1.22 design pins; no economic values, goldens, observed artifacts, or production facts changed. Item 4 remains NONE_KEEP_REFUSED. Pending Lead verification and required audits."
  },
  "section_16_review": {
@@ -586,7 +586,7 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
    "EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
-   "IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
+   "IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
    "set_by": "Codex gpt-5.6-sol implementer, re-seal #25 candidate, 2026-09-05T23:19:36+03:00"
  },
  "reseal_history": [

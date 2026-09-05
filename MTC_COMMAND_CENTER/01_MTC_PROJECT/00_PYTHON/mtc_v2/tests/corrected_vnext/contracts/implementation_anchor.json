@@ -2,7 +2,7 @@
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
  "EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
- "IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
+ "IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
  "core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
@@ -237,6 +237,15 @@
     "old_core_tree_oid_at_base": "43c7d5a1f71b4b557758f0e23b5fc7faf751aa9a",
     "new_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
     "reason": "Owner-approved re-seal #25 forward anchor to the committed window-identity implementation base; core tree verified independently before this write."
+   },
+   {
+    "at": "2026-09-06T00:06:34+03:00",
+    "actor": "Codex gpt-5.6-sol implementer, G2 metadata sequencing closure",
+    "old_IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
+    "new_IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
+    "old_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+    "new_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+    "reason": "Standing OD5 checkpoint extension: close the re-seal #25 metadata sequencing gap by anchoring to the committed full 28-path probe/catalog cascade; no behavior, production source, sealed member, design, baseline, golden, observed artifact, or production fact changed."
    }
  ]
 }

@@ -2090,9 +2090,10 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
         # Decision 147 re-anchor forward, 2026-09-04: the base moved from the seal-16 copies commit
         # 63cfe2dd to the seal-20 copies commit bdacf8e4 after the owner-directed citation restyle
         # (decision 154) moved every expected path. This assertion's job is to pin whatever the
-        # CURRENT re-anchored declaration says. Re-seal #25 moved it to the committed 04067aa1
-        # window-identity implementation base; the owner's decision-134 authorization is untouched.
-        "04067aa1ce247053416519139f99edfc8a7b2dd0"
+        # CURRENT re-anchored declaration says. G2 moved it from the 04067aa1 production-fix
+        # commit to e5d70cd6, which also carries the full probe/catalog cascade; the owner's
+        # decision-134 authorization is untouched.
+        "e5d70cd661392952da535abeccdf0757ca4d5f1e"
     )
     assert record["exceptions"][0]["owner_decision"] == 134
     assert record["exceptions"][0]["lane_ids"] == [
