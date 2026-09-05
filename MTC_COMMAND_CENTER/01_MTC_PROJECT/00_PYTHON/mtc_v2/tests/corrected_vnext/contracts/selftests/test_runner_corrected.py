@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
@@ -786,3 +787,150 @@ def test_v283b_f10_pending_open_uses_corrected_margin_admission() -> None:
     assert runner.state.position is None
     assert runner.state.fill_events == []
     assert runner._tw_pending_open_side is None
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("instrument_record_sha256", None),
+        ("instrument_record_sha256", ""),
+        ("instrument_record_sha256", "   "),
+        ("instrument_record_sha256", "A" * 64),
+        ("instrument_record_sha256", "a" * 63),
+        ("instrument_record_sha256", "g" * 64),
+        ("funding_schedule_sha256", "F" * 64),
+        ("cost_schedule_sha256", "C" * 64),
+    ],
+)
+def test_d026_configured_source_digests_must_be_lowercase_64_hex(
+    field: str, value: object
+) -> None:
+    config, _bars = _scenario("RULE2-08-RED")
+    cost_config, _ = _scenario("RULE2-07-RED")
+    for cost_field in ("cost_schedule_id", "cost_schedule_sha256"):
+        config[cost_field] = cost_config[cost_field]
+    config[field] = value
+
+    with pytest.raises(ValueError, match=re.escape(field)):
+        Runner(config)
+
+
+def test_d026_absent_configured_source_digest_refuses() -> None:
+    config, _bars = _scenario("RULE2-08-RED")
+    config.pop("instrument_record_sha256")
+
+    with pytest.raises(ValueError, match=re.escape("instrument_record_sha256")):
+        Runner(config)
+
+
+def test_d026_valid_source_digests_pass_through_to_verified_records() -> None:
+    config, _bars = _scenario("RULE2-08-RED")
+    cost_config, _ = _scenario("RULE2-05-GREEN")
+    for cost_field in ("cost_schedule_id", "cost_schedule_sha256"):
+        config[cost_field] = cost_config[cost_field]
+
+    runner = Runner(config)
+
+    assert runner._corrected_records is not None
+    assert (
+        runner._corrected_records.instrument.record_id
+        == config["instrument_record_id"]
+    )
+    assert (
+        runner._corrected_records.instrument.digest
+        == config["instrument_record_sha256"]
+    )
+    assert (
+        runner._corrected_records.funding_schedule_id
+        == config["funding_schedule_id"]
+    )
+    assert (
+        runner._corrected_records.funding_digest
+        == config["funding_schedule_sha256"]
+    )
+    assert runner._corrected_records.cost_schedule_id == config["cost_schedule_id"]
+    assert runner._corrected_records.cost_digest == config["cost_schedule_sha256"]
+
+
+def _funding_records_with_events(
+    runner: Runner, events: tuple[dict[str, object], ...]
+) -> None:
+    assert runner._corrected_records is not None
+    runner._corrected_records = replace(
+        runner._corrected_records,
+        funding={
+            **runner._corrected_records.funding,
+            "events": events,
+        },
+    )
+
+
+def _funding_event_copy(
+    runner: Runner, **overrides: object
+) -> dict[str, object]:
+    assert runner._corrected_records is not None
+    template = dict(runner._corrected_records.funding["events"][0])
+    template.update(overrides)
+    return template
+
+
+def test_d026_funding_record_events_order_by_timestamp_then_utf8_event_id() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    runner.state.position = _open_long()
+    event_time = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
+    event_bar = replace(bars[2], timestamp=event_time)
+    event_b = _funding_event_copy(runner, funding_event_id="B-EVENT")
+    event_a = _funding_event_copy(runner, funding_event_id="A-EVENT")
+    _funding_records_with_events(runner, (event_b, event_a))
+
+    runner._apply_corrected_funding_between(bars[1], event_bar)
+
+    assert [row.funding_event_id for row in runner.state.funding_events] == [
+        "A-EVENT",
+        "B-EVENT",
+    ]
+    assert runner.state.cumulative_funding == -0.2
+    eligibility_ids = [
+        dict(row.details)["funding_event_id"]
+        for row in runner.state.decision_events
+        if row.decision == "FUNDING_ELIGIBILITY"
+    ]
+    assert eligibility_ids == ["A-EVENT", "B-EVENT"]
+
+
+def test_d026_duplicate_funding_event_id_in_record_refuses() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    runner.state.position = _open_long()
+    event_time = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
+    event_bar = replace(bars[2], timestamp=event_time)
+    first = _funding_event_copy(runner, funding_event_id="TEST-FUND-1")
+    second = _funding_event_copy(
+        runner, funding_event_id="TEST-FUND-1", raw_rate=0.002
+    )
+    _funding_records_with_events(runner, (first, second))
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        runner._apply_corrected_funding_between(bars[1], event_bar)
+
+    assert exc_info.value.refusal_code == "REFUSED_ECONOMIC_INPUT"
+    assert "duplicate funding_event_id" in str(exc_info.value)
+    assert runner.state.decision_events == []
+    assert runner.state.funding_events == []
+    assert runner.state.cash_events == []
+    assert runner.state.applied_funding_event_keys == set()
+
+
+def test_d026_empty_funding_event_collection_applies_nothing() -> None:
+    config, bars = _scenario("RULE2-08-RED")
+    runner = Runner(config)
+    runner.state.position = _open_long()
+    _funding_records_with_events(runner, ())
+
+    runner._apply_corrected_funding_between(bars[1], bars[2])
+
+    assert runner.state.funding_events == []
+    assert runner.state.cash_events == []
+    assert runner.state.equity == 1000.0
+    assert runner.state.cumulative_funding == 0.0

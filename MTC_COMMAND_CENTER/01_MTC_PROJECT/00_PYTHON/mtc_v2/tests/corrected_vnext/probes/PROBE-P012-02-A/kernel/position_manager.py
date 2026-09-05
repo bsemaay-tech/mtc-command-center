@@ -350,16 +350,25 @@ class PositionManager:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: transition already applied"
             )
-        cash_keys = {
-            self._cash_key(row) for row in transition.cash_events
-        }
+        cash_key_rows = [self._cash_key(row) for row in transition.cash_events]
+        if len(set(cash_key_rows)) != len(cash_key_rows):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: duplicate cash event key"
+            )
+        cash_keys = set(cash_key_rows)
         if cash_keys & state.applied_cash_event_keys:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: cash event already applied"
             )
-        funding_keys = {
-            (row.funding_event_id, row.lifecycle_id) for row in transition.funding_events
-        }
+        funding_key_rows = [
+            (row.funding_event_id, row.lifecycle_id)
+            for row in transition.funding_events
+        ]
+        if len(set(funding_key_rows)) != len(funding_key_rows):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: duplicate funding event key"
+            )
+        funding_keys = set(funding_key_rows)
         if funding_keys & state.applied_funding_event_keys:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding event already applied"
@@ -374,9 +383,40 @@ class PositionManager:
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: mixed entry and exit transition"
             )
 
+        gross_fill_ids = [
+            row.fill_id
+            for row in transition.cash_events
+            if row.kind is CashEventKind.GROSS_REALIZATION
+        ]
+        if any(fill_id is None for fill_id in gross_fill_ids):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: gross cash row requires fill_id"
+            )
+        if len(set(gross_fill_ids)) != len(gross_fill_ids):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: duplicate gross fill join"
+            )
+        if not exit_fills and gross_fill_ids:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: gross cash row requires exit fill"
+            )
+
         next_position = state.position
         exit_events: list[ExitEvent] = []
         if entry_fills:
+            cash_fill_ids = [
+                row.fill_id
+                for row in transition.cash_events
+                if row.kind is CashEventKind.FEE and row.fill_id is not None
+            ]
+            if len(set(cash_fill_ids)) != len(cash_fill_ids):
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: duplicate entry cash fill join"
+                )
+            if not set(cash_fill_ids) <= {row.fill_id for row in entry_fills}:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: entry cash fill join mismatch"
+                )
             next_position = self._position_after_open(
                 state, transition, bar=bar, working_exits=working_exits
             )
@@ -385,15 +425,20 @@ class PositionManager:
                 raise EconomicTransitionError(
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: exit without position"
                 )
+            exit_fill_ids = [row.fill_id for row in exit_fills]
+            if len(set(exit_fill_ids)) != len(exit_fill_ids):
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: duplicate exit fill id"
+                )
+            if set(gross_fill_ids) != {row.fill_id for row in exit_fills}:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: exit gross-cash join mismatch"
+                )
             gross_by_fill = {
                 row.fill_id: row.signed_delta
                 for row in transition.cash_events
                 if row.kind is CashEventKind.GROSS_REALIZATION and row.fill_id is not None
             }
-            if set(gross_by_fill) != {row.fill_id for row in exit_fills}:
-                raise EconomicTransitionError(
-                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: exit gross-cash join mismatch"
-                )
             next_position = self._position_after_exit(
                 state.position,
                 exit_fills,
@@ -432,6 +477,20 @@ class PositionManager:
                 raise EconomicTransitionError(
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: non-fill position mismatch"
                 )
+
+        fee_fill_ids = [
+            row.fill_id
+            for row in transition.cash_events
+            if row.kind is CashEventKind.FEE
+        ]
+        fee_fill_ids.extend(row.fill_id for row in transition.fee_events)
+        if any(
+            sum(fill.fill_id == fill_id for fill in fills) != 1
+            for fill_id in fee_fill_ids
+        ):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: fee fill join mismatch"
+            )
 
         expected_cumulative = state.cumulative_funding
         for row in transition.cash_events:

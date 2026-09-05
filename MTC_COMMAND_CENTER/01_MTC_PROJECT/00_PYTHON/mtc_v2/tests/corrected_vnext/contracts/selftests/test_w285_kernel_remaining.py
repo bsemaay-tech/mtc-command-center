@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
@@ -32,11 +33,15 @@ from mtc_v2.core.types import (
     CashEvent,
     CashEventKind,
     DecisionEvent,
+    EconomicTransition,
     EconomicTransitionError,
     EntryLeg,
+    FeeEvent,
     FillDecision,
+    FundingEvent,
     PortfolioState,
     Position,
+    PositionFacts,
 )
 
 
@@ -386,17 +391,15 @@ def test_w279_f21_trade_exit_ids_use_the_exit_surface_source_set() -> None:
         ],
     )
 
-    surfaces = corrected_surfaces(
-        state=state,
-        equity_values=[],
-        manifest=CorrectedRunManifest.from_records(
-            records,
-            execution_profile_id="close_only_deterministic_v2",
-        ),
-    )
-
-    assert surfaces["EVENT_SURFACE"]["exit_events"] == []
-    assert surfaces["RESULT_SURFACE"]["trades"] == []
+    with pytest.raises(ValueError, match="exit gross-cash join mismatch"):
+        corrected_surfaces(
+            state=state,
+            equity_values=[],
+            manifest=CorrectedRunManifest.from_records(
+                records,
+                execution_profile_id="close_only_deterministic_v2",
+            ),
+        )
 
 
 def test_w279_f17_state_writer_emits_closed_override_refusal_members() -> None:
@@ -504,3 +507,172 @@ def test_v283r2_d1_first_bar_default_funding_window_does_not_repeat_strictly_ear
     assert [row.funding_event_id for row in runner.state.funding_events] == [
         "SAME-TIMESTAMP"
     ]
+
+
+def _d026_funding_row(
+    *,
+    sequence: int,
+    funding_event_id: str,
+    lifecycle_id: int,
+) -> tuple[CashEvent, FundingEvent]:
+    cash = CashEvent(
+        sequence=sequence,
+        cash_event_id=f"CE-FUND-{sequence}",
+        event_timestamp=NOW,
+        lifecycle_id=lifecycle_id,
+        kind=CashEventKind.FUNDING,
+        signed_delta=-0.1,
+        settlement_currency="TEST-USD",
+        funding_event_id=funding_event_id,
+    )
+    row = FundingEvent(
+        sequence=sequence,
+        funding_event_id=funding_event_id,
+        event_timestamp=NOW,
+        lifecycle_id=lifecycle_id,
+        position_side="LONG",
+        open_qty=1.0,
+        contract_multiplier=1.0,
+        mark_price=100.0,
+        raw_rate=0.001,
+        positive_rate_payer="LONG",
+        long_cashflow_rate=-0.001,
+        notional=100.0,
+        funding_cash_delta=-0.1,
+        cumulative_funding=-0.1,
+        schedule_id="F",
+        schedule_digest="1" * 64,
+        source_event_digest="3" * 64,
+        cash_event_id=cash.cash_event_id,
+    )
+    return cash, row
+
+
+def test_d026_funding_row_order_puts_lifecycle_after_utf8_event_id() -> None:
+    cash_a, row_a = _d026_funding_row(
+        sequence=0, funding_event_id="SAME-EVENT", lifecycle_id=1
+    )
+    cash_b, row_b = _d026_funding_row(
+        sequence=1, funding_event_id="SAME-EVENT", lifecycle_id=2
+    )
+    transition = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="I",
+        instrument_record_digest="0" * 64,
+        funding_schedule_id="F",
+        funding_schedule_digest="1" * 64,
+        next_position_facts=PositionFacts(None, None, 0.0),
+        cash_events=(cash_a, cash_b),
+        funding_events=(row_a, row_b),
+    )
+    assert transition.funding_events == (row_a, row_b)
+
+    with pytest.raises(
+        EconomicTransitionError, match="funding rows are not in event order"
+    ):
+        reverse_cash_a, reverse_row_a = _d026_funding_row(
+            sequence=0, funding_event_id="SAME-EVENT", lifecycle_id=2
+        )
+        reverse_cash_b, reverse_row_b = _d026_funding_row(
+            sequence=1, funding_event_id="SAME-EVENT", lifecycle_id=1
+        )
+        EconomicTransition(
+            semantics_id="2.0.0",
+            instrument_record_id="I",
+            instrument_record_digest="0" * 64,
+            funding_schedule_id="F",
+            funding_schedule_digest="1" * 64,
+            next_position_facts=PositionFacts(None, None, 0.0),
+            cash_events=(reverse_cash_a, reverse_cash_b),
+            funding_events=(reverse_row_a, reverse_row_b),
+        )
+
+
+def test_d026_empty_state_surfaces_accept_empty_event_collections() -> None:
+    records = _records("RULE2-07-GREEN")
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+    )
+    surfaces = corrected_surfaces(
+        state=state,
+        equity_values=[],
+        manifest=CorrectedRunManifest.from_records(
+            records,
+            execution_profile_id="close_only_deterministic_v2",
+        ),
+    )
+    assert surfaces["EVENT_SURFACE"]["funding_events"] == []
+    assert surfaces["EVENT_SURFACE"]["cash_events"] == []
+    assert surfaces["EVENT_SURFACE"]["exit_events"] == []
+
+
+def test_d026_exit_foreign_fee_fill_refuses_before_any_state_mutation() -> None:
+    transition = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="I",
+        instrument_record_digest="0" * 64,
+        funding_schedule_id="F",
+        funding_schedule_digest="1" * 64,
+        cost_schedule_id="COST",
+        cost_schedule_digest="2" * 64,
+        next_position_facts=PositionFacts(None, None, 0.0),
+        fill_decisions=(
+            _fill(event_class="MARKET_EXIT", quantity=1.0, exit_id="EXIT-ONLY"),
+        ),
+        cash_events=(
+            CashEvent(
+                sequence=0,
+                cash_event_id="CE-GROSS-0",
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                kind=CashEventKind.GROSS_REALIZATION,
+                signed_delta=5.0,
+                settlement_currency="TEST-USD",
+                fill_id="F0",
+            ),
+            CashEvent(
+                sequence=1,
+                cash_event_id="CE-FEE-9",
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                kind=CashEventKind.FEE,
+                signed_delta=-0.7,
+                settlement_currency="TEST-USD",
+                fill_id="F9",
+            ),
+        ),
+        fee_events=(
+            FeeEvent(
+                sequence=0,
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                fill_id="F9",
+                event_class="MARKET_EXIT",
+                liquidity_role="TAKER",
+                schedule_id="COST",
+                schedule_digest="2" * 64,
+                rate=0.0005,
+                fixed_component=0.2,
+                fee_notional=100.0,
+                fee_amount=0.7,
+                fee_cash_delta=-0.7,
+                settlement_currency="TEST-USD",
+                cash_event_id="CE-FEE-9",
+            ),
+        ),
+    )
+    position = Position(
+        side="long", entry_price=100.0, avg_entry_price=100.0, qty=1.0,
+        entry_bar=0, initial_qty=1.0, entry_legs=[EntryLeg(100.0, 1.0, 0)],
+        lifecycle_id=1,
+    )
+    state = PortfolioState(position=position, equity=1000.0, initial_capital=1000.0)
+    snapshot = deepcopy(state)
+
+    with pytest.raises(EconomicTransitionError, match="fee fill join mismatch"):
+        _manager().apply_transition(
+            bar=_bar(), state=state, transition=transition, reason="time_stop"
+        )
+
+    assert state == snapshot

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+import re
 import struct
 from typing import Optional, TypeAlias
 
@@ -16,6 +17,8 @@ CashEventId: TypeAlias = str
 FundingEventKey: TypeAlias = tuple[str, LifecycleId]
 
 REFUSED_INVALID_CASH_LEDGER_JOIN = "REFUSED_INVALID_CASH_LEDGER_JOIN"
+
+SOURCE_DIGEST_RE = re.compile(r"[0-9a-f]{64}\Z")
 
 
 class EconomicTransitionError(ValueError):
@@ -135,6 +138,14 @@ def _same_binary64(left: float, right: float) -> bool:
     return struct.pack(">d", float(left)) == struct.pack(">d", float(right))
 
 
+def _require_source_digest(label: str, value: object) -> str:
+    if type(value) is not str or SOURCE_DIGEST_RE.fullmatch(value) is None:
+        raise EconomicTransitionError(
+            f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: {label} must be lowercase 64-hex"
+        )
+    return value
+
+
 def _require_contiguous_sequences(label: str, rows: tuple[object, ...]) -> None:
     if not rows:
         return
@@ -179,13 +190,84 @@ class EconomicTransition:
         _require_contiguous_sequences("fee_events", self.fee_events)
         _require_contiguous_sequences("funding_events", self.funding_events)
 
-        cash_by_id: dict[CashEventId, CashEvent] = {}
-        for row in self.cash_events:
-            if row.cash_event_id in cash_by_id:
+        _require_source_digest(
+            "instrument_record_digest", self.instrument_record_digest
+        )
+        _require_source_digest(
+            "funding_schedule_digest", self.funding_schedule_digest
+        )
+        if self.cost_schedule_id is None:
+            if self.cost_schedule_digest is not None:
                 raise EconomicTransitionError(
-                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: duplicate cash_event_id"
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: cost schedule digest without id"
                 )
-            cash_by_id[row.cash_event_id] = row
+        else:
+            _require_source_digest(
+                "cost_schedule_digest", self.cost_schedule_digest
+            )
+
+        cash_ids = [row.cash_event_id for row in self.cash_events]
+        if len(set(cash_ids)) != len(cash_ids):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: duplicate cash_event_id"
+            )
+        for row in self.cash_events:
+            if row.kind is CashEventKind.GROSS_REALIZATION:
+                if row.fill_id is None:
+                    raise EconomicTransitionError(
+                        f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: gross cash row requires fill_id"
+                    )
+                if row.funding_event_id is not None:
+                    raise EconomicTransitionError(
+                        f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: gross cash row must not carry funding_event_id"
+                    )
+            elif row.kind is CashEventKind.FEE:
+                if row.funding_event_id is not None:
+                    raise EconomicTransitionError(
+                        f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: fee cash row must not carry funding_event_id"
+                    )
+            else:
+                if row.funding_event_id is None:
+                    raise EconomicTransitionError(
+                        f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding cash row requires funding_event_id"
+                    )
+                if row.fill_id is not None:
+                    raise EconomicTransitionError(
+                        f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding cash row must not carry fill_id"
+                    )
+
+        funding_keys = [
+            (row.funding_event_id, row.lifecycle_id)
+            for row in self.funding_events
+        ]
+        if len(set(funding_keys)) != len(funding_keys):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: duplicate funding event key"
+            )
+        funding_order = [
+            (
+                row.event_timestamp,
+                row.funding_event_id.encode("utf-8"),
+                row.lifecycle_id,
+            )
+            for row in self.funding_events
+        ]
+        try:
+            canonically_ordered = funding_order == sorted(funding_order)
+        except TypeError:
+            canonically_ordered = False
+        if not canonically_ordered:
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding rows are not in event order"
+            )
+        for row in self.funding_events:
+            _require_source_digest(
+                "funding source_event_digest", row.source_event_digest
+            )
+
+        cash_by_id: dict[CashEventId, CashEvent] = {
+            row.cash_event_id: row for row in self.cash_events
+        }
 
         projected_ids: set[CashEventId] = set()
         for row in self.fee_events:
@@ -195,6 +277,7 @@ class EconomicTransition:
                 CashEventKind.FEE,
                 row.schedule_id,
                 row.schedule_digest,
+                row.fill_id,
                 projected_ids,
             )
         for row in self.funding_events:
@@ -204,6 +287,7 @@ class EconomicTransition:
                 CashEventKind.FUNDING,
                 row.schedule_id,
                 row.schedule_digest,
+                row.funding_event_id,
                 projected_ids,
             )
 
@@ -224,6 +308,7 @@ class EconomicTransition:
         expected_kind: CashEventKind,
         schedule_id: str,
         schedule_digest: str,
+        reference_id: str | None,
         projected_ids: set[CashEventId],
     ) -> None:
         if cash_event_id in projected_ids:
@@ -238,6 +323,24 @@ class EconomicTransition:
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: projection kind or join mismatch"
             )
+        if expected_kind is CashEventKind.FEE:
+            if cash_row.fill_id is None:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: fee cash row requires fill_id"
+                )
+            if cash_row.fill_id != reference_id:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: fee cash fill_id mismatch"
+                )
+        else:
+            if cash_row.funding_event_id is None:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding cash row requires funding_event_id"
+                )
+            if cash_row.funding_event_id != reference_id:
+                raise EconomicTransitionError(
+                    f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: funding cash funding_event_id mismatch"
+                )
         if not _same_binary64(cash_row.signed_delta, signed_delta):
             raise EconomicTransitionError(
                 f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: projection delta mismatch"

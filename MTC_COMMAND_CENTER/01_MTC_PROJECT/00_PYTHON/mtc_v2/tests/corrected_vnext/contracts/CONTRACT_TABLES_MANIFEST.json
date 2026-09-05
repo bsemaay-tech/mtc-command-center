@@ -12,9 +12,9 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.19 (W387: owner decision 175 - a section-16 signature is valid only for the re-seal it names and must be re-signed after any later re-seal; measured by re-seal #21)",
-  "sha256": "eef891bd384382ae1ba5351fdd3c3fe42ad42df2752cf1c47ae18bfa4b57d9d8",
-  "total_lines": 1856,
+   "version": "v1.20",
+   "sha256": "840769e910dc1e5d8e1d99740ea704c8909e76b519bc33f4cb7ab3c2a8def0fd",
+   "total_lines": 1858,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
@@ -67,7 +67,7 @@
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "45ff32c7a340a7c705561d4f772c6b0e8a42fd264ce7149d60b5fadff4c3aed5",
+   "sha256": "805f3661b94b1a9c7f7fc899783c040fbe8f66c19a949ecb593c4296b3a8fb68",
    "bytes": 101675
   },
   {
@@ -571,9 +571,9 @@
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
   "IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
-  "reason": "Re-seal #22 (metadata only): reconciled the semantic coverage receipt sheets with the live gate-derived re-seal chain and refreshed the manifest's applicability and baseline-manifest references from the measured files. No sealed member bytes moved; the computed EXPECTED_SEAL_SHA remains unchanged."
+   "reason": "Re-seal #23 metadata preparation: Items 2/5/6 approved repair; catalog/design pins measured; goldens and observed unchanged. Independently verified: pending Lead."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -582,9 +582,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
   "IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
-  "set_by": "Codex gpt-5.6-sol implementer re-seal act #22 2026-09-05T10:47:28+03:00"
+   "set_by": "OpenCode gpt-5.6-luna implementer re-seal act #23 2026-09-05T17:35:47+03:00"
  },
  "reseal_history": [
   {
@@ -1061,7 +1061,17 @@
    "design_pin": "v1.19",
    "reason": "Re-seal #22 (metadata only): reconciled the semantic coverage receipt sheets with the live gate-derived re-seal chain and refreshed the manifest's applicability and baseline-manifest references from the measured files. No sealed member bytes moved; the computed EXPECTED_SEAL_SHA remains unchanged.",
    "independently_verified": "pending - Gate 4 self-QA and the fresh T0 three-family Gate 5 audit run after this implementer change"
-  }
+   },
+   {
+    "at": "2026-09-05T17:35:47+03:00",
+    "actor": "OpenCode gpt-5.6-luna implementer, re-seal #23 (metadata only)",
+    "old_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+    "new_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+    "files_changed": ["scenario_catalog.json"],
+    "design_pin": "v1.20",
+    "reason": "P0-12 approved re-seal metadata preparation: Items 2/5/6 repair; catalog and design pins measured; goldens and observed unchanged. No claim that all economic behavior is unchanged.",
+    "independently_verified": "pending Lead"
+   }
  ],
  "legacy_event_order_map_pin": {
   "schema": "P012_LEGACY_EVENT_ORDER_MAP_PIN_V1",
@@ -1069,9 +1079,9 @@
   "design_authority": "Design section 15.3, \"an integer `sequence` equal to\" (LEGACY_EVENT_SHAPE_CHECK at expected-bundle seal time)",
   "baseline_manifest": {
    "path": "C:\\tmp\\P012_BASELINE_RUN\\BASELINE_BYTES_MANIFEST.json",
-   "sha256": "7dd945cbc19a44b021fc3c749d78d1be03333cb076137c65890498cf82afcb45",
-   "authorization": "ONE run performed under owner decision 132 shape, seal #21 (2026-09-04).",
-   "EXPECTED_SEAL_SHA_consumed": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f"
+    "sha256": "21c6c86d69351b3d17030c442cda2f03ccef08eeee3d29a7e649a952ca589514",
+    "authorization": "ONE run performed under owner P012_BASELINE_REGEN=YES, exact packet C:/tmp/P0_OWNER_EXECUTION_DECISIONS_20260905_1747.md, re-seal23 (2026-09-05).",
+    "EXPECTED_SEAL_SHA_consumed": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337"
   },
   "legacy_event_order_map": {
    "RULE2-01-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",

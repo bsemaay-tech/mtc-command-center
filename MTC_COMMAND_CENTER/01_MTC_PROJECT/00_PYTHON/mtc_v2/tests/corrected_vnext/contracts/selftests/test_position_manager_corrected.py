@@ -131,37 +131,25 @@ def test_w276_f01_runtime_equity_applies_cash_events_in_order() -> None:
         funding_schedule_id="F",
         funding_schedule_digest="1" * 64,
         next_position_facts=PositionFacts(None, None, 0.0),
+        fill_decisions=(
+            replace(_d026_exit_fill("F0"), quantity=1.0),
+            replace(_d026_exit_fill("F1"), sequence=1, quantity=1.0),
+        ),
         cash_events=(
-            CashEvent(
-                sequence=0,
-                cash_event_id="CE-GROSS-0",
-                event_timestamp=NOW,
-                lifecycle_id=1,
-                kind=CashEventKind.GROSS_REALIZATION,
-                signed_delta=-1e16,
-                settlement_currency="TEST-USD",
-                fill_id="F0",
-            ),
-            CashEvent(
-                sequence=1,
-                cash_event_id="CE-GROSS-1",
-                event_timestamp=NOW,
-                lifecycle_id=1,
-                kind=CashEventKind.GROSS_REALIZATION,
-                signed_delta=1.0,
-                settlement_currency="TEST-USD",
-                fill_id="F1",
-            ),
+            _d026_gross_cash("CE-GROSS-0", "F0", signed_delta=-1e16),
+            _d026_gross_cash("CE-GROSS-1", "F1", signed_delta=1.0, sequence=1),
         ),
     )
     state = PortfolioState(
         initial_capital=0.0,
         equity=1e16,
         realized_equity=1e16,
+        position=_open_position(),
     )
 
     _manager().apply_transition(bar=_bar(), state=state, transition=transition)
 
+    assert state.position is None
     assert state.realized_equity == 1.0
     assert state.equity == 1.0
 
@@ -206,7 +194,7 @@ def test_w279b_f13_cumulative_funding_applies_rows_in_order() -> None:
                 cumulative_funding=0.0 if sequence == 0 else 1.0,
                 schedule_id="F",
                 schedule_digest="1" * 64,
-                source_event_digest=str(sequence),
+                source_event_digest="3" * 64 if sequence == 0 else "4" * 64,
                 cash_event_id=f"CE-FUND-{sequence}",
             )
             for sequence, delta in enumerate(funding_deltas)
@@ -230,18 +218,37 @@ def test_w279b_f13_cumulative_fee_applies_rows_in_order() -> None:
         funding_schedule_id="F",
         funding_schedule_digest="1" * 64,
         next_position_facts=PositionFacts(None, None, 0.0),
-        cash_events=tuple(
-            CashEvent(
-                sequence=sequence,
-                cash_event_id=f"CE-FEE-{sequence}",
-                event_timestamp=NOW,
-                lifecycle_id=1,
-                kind=CashEventKind.FEE,
-                signed_delta=-amount,
-                settlement_currency="TEST-USD",
-                fill_id=f"F{sequence}",
+        fill_decisions=tuple(
+            replace(
+                _d026_exit_fill(f"F{sequence}", sequence=sequence),
+                quantity=1.0,
+                exit_id=f"EXIT-{sequence}",
             )
-            for sequence, amount in enumerate(fee_amounts)
+            for sequence in range(len(fee_amounts))
+        ),
+        cash_events=(
+            *tuple(
+                CashEvent(
+                    sequence=sequence,
+                    cash_event_id=f"CE-FEE-{sequence}",
+                    event_timestamp=NOW,
+                    lifecycle_id=1,
+                    kind=CashEventKind.FEE,
+                    signed_delta=-amount,
+                    settlement_currency="TEST-USD",
+                    fill_id=f"F{sequence}",
+                )
+                for sequence, amount in enumerate(fee_amounts)
+            ),
+            *tuple(
+                _d026_gross_cash(
+                    f"CE-GROSS-{sequence}",
+                    f"F{sequence}",
+                    sequence=sequence + len(fee_amounts),
+                    signed_delta=0.0,
+                )
+                for sequence in range(len(fee_amounts))
+            ),
         ),
         fee_events=tuple(
             FeeEvent(
@@ -249,7 +256,7 @@ def test_w279b_f13_cumulative_fee_applies_rows_in_order() -> None:
                 event_timestamp=NOW,
                 lifecycle_id=1,
                 fill_id=f"F{sequence}",
-                event_class="ENTRY",
+                event_class="MARKET_EXIT",
                 liquidity_role="TAKER",
                 schedule_id="C",
                 schedule_digest="2" * 64,
@@ -264,7 +271,7 @@ def test_w279b_f13_cumulative_fee_applies_rows_in_order() -> None:
             for sequence, amount in enumerate(fee_amounts)
         ),
     )
-    state = PortfolioState(cumulative_fee=-1e16)
+    state = PortfolioState(cumulative_fee=-1e16, position=_open_position())
 
     _manager().apply_transition(bar=_bar(), state=state, transition=transition)
 
@@ -609,3 +616,554 @@ def test_p08_same_side_add_retains_book_history_and_final_entry_facts() -> None:
     assert state.position.working_exit_book_version == 2
     assert state.position.completed_exit_ids == {"TARGET-NEAR"}
     assert state.position.working_exits == replacement
+
+
+def _mutate_transition(
+    transition: EconomicTransition, **overrides: object
+) -> EconomicTransition:
+    for name, value in overrides.items():
+        object.__setattr__(transition, name, value)
+    return transition
+
+
+def _funding_row(
+    *,
+    cash_event_id: str,
+    funding_event_id: str,
+    sequence: int,
+) -> tuple[CashEvent, FundingEvent]:
+    cash = CashEvent(
+        sequence=sequence,
+        cash_event_id=cash_event_id,
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        kind=CashEventKind.FUNDING,
+        signed_delta=-0.1,
+        settlement_currency="TEST-USD",
+        funding_event_id=funding_event_id,
+    )
+    row = FundingEvent(
+        sequence=sequence,
+        funding_event_id=funding_event_id,
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        position_side="LONG",
+        open_qty=1.0,
+        contract_multiplier=1.0,
+        mark_price=100.0,
+        raw_rate=0.0,
+        positive_rate_payer="LONG",
+        long_cashflow_rate=0.0,
+        notional=1.0,
+        funding_cash_delta=-0.1,
+        cumulative_funding=-0.1,
+        schedule_id="F",
+        schedule_digest="1" * 64,
+        source_event_digest="3" * 64,
+        cash_event_id=cash_event_id,
+    )
+    return cash, row
+
+
+def test_d026_duplicate_cash_key_refuses_before_applied_set_collapses() -> None:
+    base = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="I",
+        instrument_record_digest="0" * 64,
+        funding_schedule_id="F",
+        funding_schedule_digest="1" * 64,
+        next_position_facts=PositionFacts(None, None, 0.0),
+        cash_events=(
+            CashEvent(
+                sequence=0,
+                cash_event_id="CE-GROSS-0",
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                kind=CashEventKind.GROSS_REALIZATION,
+                signed_delta=1.0,
+                settlement_currency="TEST-USD",
+                fill_id="F0",
+            ),
+        ),
+    )
+    duplicate = _mutate_transition(
+        base,
+        cash_events=(
+            base.cash_events[0],
+            replace(base.cash_events[0], sequence=1),
+        ),
+    )
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    initial = (state.realized_equity, state.equity, len(state.cash_events))
+    with pytest.raises(
+        EconomicTransitionError, match="duplicate cash event key"
+    ):
+        _manager().apply_transition(bar=_bar(), state=state, transition=duplicate)
+    assert (state.realized_equity, state.equity, len(state.cash_events)) == initial
+    assert state.cash_events == []
+
+
+def test_d026_duplicate_funding_key_refuses_before_applied_set_collapses() -> None:
+    cash_0, row_0 = _funding_row(
+        cash_event_id="CE-FUND-0", funding_event_id="TEST-FUND-1", sequence=0
+    )
+    cash_1, row_1 = _funding_row(
+        cash_event_id="CE-FUND-1", funding_event_id="TEST-FUND-1", sequence=1
+    )
+    base = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="I",
+        instrument_record_digest="0" * 64,
+        funding_schedule_id="F",
+        funding_schedule_digest="1" * 64,
+        next_position_facts=PositionFacts(None, None, 0.0),
+        cash_events=(cash_0,),
+        funding_events=(row_0,),
+    )
+    duplicate = _mutate_transition(
+        base, cash_events=(cash_0, cash_1), funding_events=(row_0, row_1)
+    )
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    with pytest.raises(
+        EconomicTransitionError, match="duplicate funding event key"
+    ):
+        _manager().apply_transition(bar=_bar(), state=state, transition=duplicate)
+    assert state.funding_events == []
+    assert state.applied_funding_event_keys == set()
+
+
+def test_d026_duplicate_gross_fill_join_refuses_before_dict_fans_out() -> None:
+    gross_cash = CashEvent(
+        sequence=0,
+        cash_event_id="CE-GROSS-0",
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        kind=CashEventKind.GROSS_REALIZATION,
+        signed_delta=7.0,
+        settlement_currency="TEST-USD",
+        fill_id="F0",
+    )
+    base = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="I",
+        instrument_record_digest="0" * 64,
+        funding_schedule_id="F",
+        funding_schedule_digest="1" * 64,
+        next_position_facts=PositionFacts(None, None, 0.0),
+        fill_decisions=(
+            FillDecision(
+                sequence=0,
+                event_timestamp=NOW,
+                lifecycle_id=1,
+                fill_id="F0",
+                event_class="MARKET_EXIT",
+                side="SELL",
+                reference_price=110.0,
+                slippage_model_id="BPS_OF_REFERENCE_V1",
+                slippage_bps=0.0,
+                slippage_impact=0.0,
+                slippage_application_count=1,
+                final_fill_price=110.0,
+                quantity=2.0,
+                liquidity_role="TAKER",
+                exit_id="TIME_STOP",
+            ),
+        ),
+        cash_events=(gross_cash,),
+    )
+    duplicate = _mutate_transition(
+        base,
+        cash_events=(
+            gross_cash,
+            replace(gross_cash, sequence=1, cash_event_id="CE-GROSS-1"),
+        ),
+    )
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        position=_open_position(),
+    )
+    with pytest.raises(
+        EconomicTransitionError, match="duplicate gross fill join"
+    ):
+        _manager().apply_transition(
+            bar=_bar(), state=state, transition=duplicate, reason="time_stop"
+        )
+    assert state.exit_events_this_bar == []
+    assert state.position is not None
+
+
+def test_d026_duplicate_exit_fill_id_refuses_before_gross_join() -> None:
+    gross_cash = CashEvent(
+        sequence=0,
+        cash_event_id="CE-GROSS-0",
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        kind=CashEventKind.GROSS_REALIZATION,
+        signed_delta=7.0,
+        settlement_currency="TEST-USD",
+        fill_id="F0",
+    )
+    fill = FillDecision(
+        sequence=0,
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        fill_id="F0",
+        event_class="MARKET_EXIT",
+        side="SELL",
+        reference_price=110.0,
+        slippage_model_id="BPS_OF_REFERENCE_V1",
+        slippage_bps=0.0,
+        slippage_impact=0.0,
+        slippage_application_count=1,
+        final_fill_price=110.0,
+        quantity=1.0,
+        liquidity_role="TAKER",
+        exit_id="TIME_STOP",
+    )
+    base = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="I",
+        instrument_record_digest="0" * 64,
+        funding_schedule_id="F",
+        funding_schedule_digest="1" * 64,
+        next_position_facts=PositionFacts(None, None, 0.0),
+        fill_decisions=(fill,),
+        cash_events=(gross_cash,),
+    )
+    duplicate = _mutate_transition(
+        base,
+        fill_decisions=(fill, replace(fill, sequence=1)),
+    )
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        position=_open_position(),
+    )
+    with pytest.raises(
+        EconomicTransitionError, match="duplicate exit fill id"
+    ):
+        _manager().apply_transition(
+            bar=_bar(), state=state, transition=duplicate, reason="time_stop"
+        )
+    assert state.exit_events_this_bar == []
+
+
+def test_d026_applied_fill_renumber_keeps_independent_ids() -> None:
+    fill = FillDecision(
+        sequence=0,
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        fill_id="F5",
+        event_class="MARKET_EXIT",
+        side="SELL",
+        reference_price=110.0,
+        slippage_model_id="BPS_OF_REFERENCE_V1",
+        slippage_bps=0.0,
+        slippage_impact=0.0,
+        slippage_application_count=1,
+        final_fill_price=110.0,
+        quantity=2.0,
+        liquidity_role="TAKER",
+        exit_id="TIME_STOP",
+    )
+    gross = CashEvent(
+        sequence=0,
+        cash_event_id="CE-GROSS-5",
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        kind=CashEventKind.GROSS_REALIZATION,
+        signed_delta=7.0,
+        settlement_currency="TEST-USD",
+        fill_id="F5",
+    )
+    transition = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="I",
+        instrument_record_digest="0" * 64,
+        funding_schedule_id="F",
+        funding_schedule_digest="1" * 64,
+        next_position_facts=PositionFacts(None, None, 0.0),
+        fill_decisions=(fill,),
+        cash_events=(gross,),
+    )
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        position=_open_position(),
+    )
+
+    _manager().apply_transition(
+        bar=_bar(), state=state, transition=transition, reason="time_stop"
+    )
+
+    assert [row.fill_id for row in state.fill_events] == ["F5"]
+    assert [row.cash_event_id for row in state.cash_events] == ["CE-GROSS-5"]
+    assert [row.exit_id for row in state.exit_events_this_bar] == ["TIME_STOP"]
+    assert [row.fill_id for row in state.exit_events_this_bar] == ["F5"]
+    assert [row.sequence for row in state.fill_events] == [0]
+    assert [row.sequence for row in state.cash_events] == [0]
+
+
+def _d026_bare_transition(**overrides: object) -> EconomicTransition:
+    values: dict[str, object] = {
+        "semantics_id": "2.0.0",
+        "instrument_record_id": "I",
+        "instrument_record_digest": "0" * 64,
+        "funding_schedule_id": "F",
+        "funding_schedule_digest": "1" * 64,
+        "next_position_facts": PositionFacts(None, None, 0.0),
+    }
+    values.update(overrides)
+    return EconomicTransition(**values)
+
+
+def _d026_exit_fill(fill_id: str = "F0", *, sequence: int = 0) -> FillDecision:
+    return FillDecision(
+        sequence=sequence,
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        fill_id=fill_id,
+        event_class="MARKET_EXIT",
+        side="SELL",
+        reference_price=110.0,
+        slippage_model_id="BPS_OF_REFERENCE_V1",
+        slippage_bps=0.0,
+        slippage_impact=0.0,
+        slippage_application_count=1,
+        final_fill_price=110.0,
+        quantity=2.0,
+        liquidity_role="TAKER",
+        exit_id="TIME_STOP",
+    )
+
+
+def _d026_entry_fill(fill_id: str = "F0", *, sequence: int = 0) -> FillDecision:
+    return FillDecision(
+        sequence=sequence,
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        fill_id=fill_id,
+        event_class="MARKET_ENTRY",
+        side="BUY",
+        reference_price=100.0,
+        slippage_model_id="BPS_OF_REFERENCE_V1",
+        slippage_bps=0.0,
+        slippage_impact=0.0,
+        slippage_application_count=1,
+        final_fill_price=101.0,
+        quantity=1.0,
+        liquidity_role="TAKER",
+    )
+
+
+def _d026_gross_cash(
+    cash_event_id: str,
+    fill_id: str,
+    *,
+    sequence: int = 0,
+    signed_delta: float = 7.0,
+) -> CashEvent:
+    return CashEvent(
+        sequence=sequence,
+        cash_event_id=cash_event_id,
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        kind=CashEventKind.GROSS_REALIZATION,
+        signed_delta=signed_delta,
+        settlement_currency="TEST-USD",
+        fill_id=fill_id,
+    )
+
+
+def _d026_fee_cash(
+    cash_event_id: str,
+    fill_id: str,
+    *,
+    sequence: int = 0,
+) -> CashEvent:
+    return CashEvent(
+        sequence=sequence,
+        cash_event_id=cash_event_id,
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        kind=CashEventKind.FEE,
+        signed_delta=-0.1,
+        settlement_currency="TEST-USD",
+        fill_id=fill_id,
+    )
+
+
+def _d026_fee_event(cash: CashEvent, *, sequence: int = 0) -> FeeEvent:
+    return FeeEvent(
+        sequence=sequence,
+        event_timestamp=NOW,
+        lifecycle_id=1,
+        fill_id=cash.fill_id,
+        event_class="ENTRY",
+        liquidity_role="TAKER",
+        schedule_id="COST",
+        schedule_digest="2" * 64,
+        rate=0.001,
+        fixed_component=0.0,
+        fee_notional=100.0,
+        fee_amount=0.1,
+        fee_cash_delta=cash.signed_delta,
+        settlement_currency="TEST-USD",
+        cash_event_id=cash.cash_event_id,
+    )
+
+
+def test_d026_exit_fill_without_gross_row_refuses_before_join() -> None:
+    transition = _d026_bare_transition(fill_decisions=(_d026_exit_fill(),))
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        position=_open_position(),
+    )
+    initial = (state.realized_equity, state.equity, state.guard_realized_equity)
+    with pytest.raises(
+        EconomicTransitionError, match="exit gross-cash join mismatch"
+    ):
+        _manager().apply_transition(
+            bar=_bar(), state=state, transition=transition, reason="time_stop"
+        )
+    assert state.position is not None
+    assert state.exit_events_this_bar == []
+    assert (state.realized_equity, state.equity, state.guard_realized_equity) == initial
+
+
+def test_d026_orphan_gross_row_refuses_before_join() -> None:
+    transition = _d026_bare_transition(
+        fill_decisions=(_d026_exit_fill(),),
+        cash_events=(_d026_gross_cash("CE-GROSS-9", "F9"),),
+    )
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        position=_open_position(),
+    )
+    initial = (state.realized_equity, state.equity, state.guard_realized_equity)
+    with pytest.raises(
+        EconomicTransitionError, match="exit gross-cash join mismatch"
+    ):
+        _manager().apply_transition(
+            bar=_bar(), state=state, transition=transition, reason="time_stop"
+        )
+    assert state.position is not None
+    assert state.exit_events_this_bar == []
+    assert (state.realized_equity, state.equity, state.guard_realized_equity) == initial
+
+
+def test_d026_entry_bound_gross_fill_refuses_before_open() -> None:
+    transition = _d026_bare_transition(
+        next_position_facts=PositionFacts(1, "LONG", 1.0),
+        fill_decisions=(_d026_entry_fill(),),
+        cash_events=(_d026_gross_cash("CE-GROSS-0", "F0", signed_delta=1.0),),
+    )
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    initial = (state.realized_equity, state.equity, state.total_entries)
+    with pytest.raises(
+        EconomicTransitionError, match="gross cash row requires exit fill"
+    ):
+        _manager().apply_transition(
+            bar=_bar(), state=state, transition=transition, reason="signal"
+        )
+    assert state.position is None
+    assert state.cash_events == []
+    assert (state.realized_equity, state.equity, state.total_entries) == initial
+
+
+def test_d026_entry_bound_foreign_fee_fill_refuses_before_open() -> None:
+    fee_cash = _d026_fee_cash("CE-FEE-9", "F9")
+    transition = _d026_bare_transition(
+        cost_schedule_id="COST",
+        cost_schedule_digest="2" * 64,
+        next_position_facts=PositionFacts(1, "LONG", 1.0),
+        fill_decisions=(_d026_entry_fill(),),
+        cash_events=(fee_cash,),
+        fee_events=(_d026_fee_event(fee_cash),),
+    )
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    with pytest.raises(
+        EconomicTransitionError, match="entry cash fill join mismatch"
+    ):
+        _manager().apply_transition(
+            bar=_bar(), state=state, transition=transition, reason="signal"
+        )
+    assert state.position is None
+    assert state.cash_events == []
+
+
+def test_d026_entry_bound_duplicate_cash_fill_refuses() -> None:
+    fee_cash_0 = _d026_fee_cash("CE-FEE-0", "F0")
+    fee_cash_1 = _d026_fee_cash("CE-FEE-1", "F0", sequence=1)
+    transition = _d026_bare_transition(
+        cost_schedule_id="COST",
+        cost_schedule_digest="2" * 64,
+        next_position_facts=PositionFacts(1, "LONG", 1.0),
+        fill_decisions=(_d026_entry_fill(),),
+        cash_events=(fee_cash_0, fee_cash_1),
+        fee_events=(
+            _d026_fee_event(fee_cash_0),
+            _d026_fee_event(fee_cash_1, sequence=1),
+        ),
+    )
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    with pytest.raises(
+        EconomicTransitionError, match="duplicate entry cash fill join"
+    ):
+        _manager().apply_transition(
+            bar=_bar(), state=state, transition=transition, reason="signal"
+        )
+    assert state.position is None
+    assert state.cash_events == []
+
+
+def test_d026_no_fill_duplicate_gross_fill_refuses_before_mutation() -> None:
+    transition = _d026_bare_transition(
+        cash_events=(
+            _d026_gross_cash("CE-GROSS-0", "F0"),
+            _d026_gross_cash("CE-GROSS-1", "F0", sequence=1, signed_delta=1.0),
+        ),
+    )
+    state = PortfolioState(initial_capital=0.0, equity=0.0)
+    initial = (state.realized_equity, state.equity)
+    with pytest.raises(
+        EconomicTransitionError, match="duplicate gross fill join"
+    ):
+        _manager().apply_transition(bar=_bar(), state=state, transition=transition)
+    assert (state.realized_equity, state.equity) == initial
+    assert state.cash_events == []
+
+
+def test_d026_no_fill_valid_gross_row_refuses_before_mutation() -> None:
+    transition = _d026_bare_transition(
+        cash_events=(_d026_gross_cash("CE-GROSS-0", "F0"),),
+    )
+    state = PortfolioState(initial_capital=0.0, equity=0.0)
+    initial = (state.realized_equity, state.equity)
+    with pytest.raises(
+        EconomicTransitionError, match="gross cash row requires exit fill"
+    ):
+        _manager().apply_transition(bar=_bar(), state=state, transition=transition)
+    assert (state.realized_equity, state.equity) == initial
+    assert state.cash_events == []
+    assert state.position is None
+
+
+def test_d026_no_fill_gross_missing_fill_id_refuses_after_mutation() -> None:
+    base = _d026_bare_transition(
+        cash_events=(_d026_gross_cash("CE-GROSS-0", "F0"),),
+    )
+    stripped = _mutate_transition(
+        base,
+        cash_events=(replace(base.cash_events[0], fill_id=None),),
+    )
+    state = PortfolioState(initial_capital=0.0, equity=0.0)
+    with pytest.raises(
+        EconomicTransitionError, match="gross cash row requires fill_id"
+    ):
+        _manager().apply_transition(bar=_bar(), state=state, transition=stripped)
+    assert state.realized_equity == 0.0
+    assert state.cash_events == []

@@ -53,7 +53,7 @@ from mtc_v2.core.types import Bar
 
 ACCEPTING_LABEL = "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_ACCEPTED"
 REFUSAL_LABEL = "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_REFUSED"
-SEMANTIC_COVERAGE_REVIEW_SCHEMA = "P012_SEMANTIC_COVERAGE_REVIEW_V1"
+SEMANTIC_COVERAGE_REVIEW_SCHEMA = "P012_SEMANTIC_COVERAGE_REVIEW_V2"
 SEMANTIC_COVERAGE_REVIEW_KEYS = (
     "schema",
     "reviewer",
@@ -133,6 +133,29 @@ SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 GIT_OID_RE = re.compile(r"[0-9a-f]{40}\Z")
 F64BITS_RE = re.compile(r"f64bits:0x([0-9a-f]{16})\Z")
 RECORD_ID_RE = re.compile(r"[A-Z0-9][A-Z0-9.-]*\Z")
+SEMANTIC_HUNK_COVERAGE_SCHEMA = "P012_KERNEL_HUNK_COVERAGE_V2"
+SEMANTIC_HUNK_COVERAGE_SCHEMA_V1 = "P012_KERNEL_HUNK_COVERAGE_V1"
+SEMANTIC_HUNK_COVERAGE_DIFF_COMMAND = (
+    "git diff --unified=0 --no-ext-diff --no-textconv --no-renames "
+    "--diff-algorithm=myers --no-indent-heuristic"
+)
+HUNK_DIFF_BASE_COMMIT = "5e8e579410ee55008bfd2d2d85054fd1d782f32c"
+HUNK_DIFF_SCOPE = "core"
+SEMANTIC_HUNK_TERMINAL_CLASSES = {"DEF", "SECTION18_SHARED", "UNDOCUMENTED"}
+VALID_DEF_IDS = tuple(f"DEF-P012-{number:02d}" for number in range(1, 9))
+DEF_ID_RE = re.compile(r"DEF-P012-0[1-8]\Z")
+SECTION18_ROW_RE = re.compile(r"S18-\d{2}\Z")
+HUNK_HEADER_RE = re.compile(rb"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(?: .*)?$")
+SECTION18_ROW_IDS = tuple(f"S18-{number:02d}" for number in range(1, 13))
+HUNK_RECORD_COMMON_KEYS = (
+    "path",
+    "old_start",
+    "old_count",
+    "new_start",
+    "new_count",
+    "hunk_sha256",
+    "terminal_class",
+)
 
 
 class GateRefusal(RuntimeError):
@@ -229,6 +252,81 @@ def _require_nonempty_line(value: Any, member: str) -> str:
     if type(value) is not str or not value.strip() or "\n" in value or "\r" in value:
         _semantic_review_invalid(member, "expected non-empty single line")
     return value
+
+
+def _resolve_manifest_design_pin(
+    manifest: Mapping[str, Any], *, check_id: str
+) -> tuple[Path, bytes, str]:
+    design = manifest.get("design")
+    if type(design) is not dict:
+        raise GateRefusal(check_id, "manifest design pin malformed")
+    design_file = design.get("file")
+    design_sha = design.get("sha256")
+    if (
+        type(design_file) is not str
+        or not design_file
+        or not Path(design_file).is_absolute()
+        or type(design_sha) is not str
+        or SHA256_RE.fullmatch(design_sha) is None
+    ):
+        raise GateRefusal(check_id, "invalid manifest design pin")
+    design_path = Path(design_file)
+    if design_path.is_symlink() or not design_path.is_file():
+        raise GateRefusal(check_id, "manifest-pinned design unavailable")
+    try:
+        raw = design_path.read_bytes()
+    except OSError as exc:
+        raise GateRefusal(check_id, str(design_path)) from exc
+    if hashlib.sha256(raw).hexdigest() != design_sha:
+        raise GateRefusal(check_id, "manifest-pinned design bytes drifted")
+    return design_path, raw, design_sha
+
+
+def derive_section18_served_def_sets(
+    root: Path, manifest: Mapping[str, Any]
+) -> dict[str, frozenset[str]]:
+    """Read the ratified census from the manifest-pinned design bytes only."""
+
+    try:
+        design_path, raw, _design_sha = _resolve_manifest_design_pin(
+            manifest, check_id="SEMANTIC_COVERAGE_REVIEW_INVALID"
+        )
+        text = raw.decode("utf-8")
+    except GateRefusal as exc:
+        _semantic_review_invalid("section18", exc.detail)
+    except UnicodeError as exc:
+        _semantic_review_invalid("section18", f"manifest-pinned design unreadable: {exc}")
+    if b"\r" in raw or not raw.endswith(b"\n"):
+        _semantic_review_invalid("section18", "manifest-pinned design bytes drifted")
+
+    rows: dict[str, frozenset[str]] = {}
+    row_re = re.compile(
+        r"^\|\s*`(S18-\d{2})`\s*\|[^|]*\|[^|]*\|\s*([^|]*?)\s*\|"
+    )
+    for line in text.splitlines():
+        match = row_re.match(line)
+        if match is None:
+            continue
+        row, served_cell = match.groups()
+        if row in rows:
+            _semantic_review_invalid("section18", f"duplicate census row {row}")
+        cell = served_cell.strip()
+        if cell == "—":
+            served_values: list[str] = []
+        else:
+            token = r"`(DEF-P012-(?:0[1-8]|09|010))`"
+            if re.fullmatch(rf"{token}(?:\s*,\s*{token})*", cell) is None:
+                _semantic_review_invalid("section18", f"malformed served set {row}")
+            served_values = re.findall(r"`([^`]*)`", cell)
+            if any(def_id not in VALID_DEF_IDS for def_id in served_values):
+                _semantic_review_invalid("section18", f"unknown DEF in {row}")
+            if served_values != sorted(served_values) or len(served_values) != len(set(served_values)):
+                _semantic_review_invalid("section18", f"served set must be sorted and unique {row}")
+        served = frozenset(served_values)
+        rows[row] = served
+    if tuple(rows) != SECTION18_ROW_IDS:
+        _semantic_review_invalid("section18", "census rows missing, unexpected, or out of order")
+    return rows
 
 
 def derive_semantic_coverage_review_chain(manifest: Mapping[str, Any]) -> list[str]:
@@ -337,14 +435,16 @@ def measure_semantic_review_identities(
     harness_path = root / "tests/corrected_vnext/verify_bceg.py"
     baseline_manifest_path = baseline_root / "BASELINE_BYTES_MANIFEST.json"
     manifest = load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json")
-    design = manifest.get("design")
-    if type(design) is not dict or type(design.get("file")) is not str:
-        raise GateRefusal("SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE", "manifest.design.file")
-    design_path = Path(design["file"])
-    if not design_path.is_file():
-        raise GateRefusal("SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE", str(design_path))
     try:
-        first_line = design_path.read_text(encoding="utf-8").splitlines()[0]
+        design_path, raw, _design_sha = _resolve_manifest_design_pin(
+            manifest, check_id="SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE"
+        )
+    except GateRefusal as exc:
+        raise GateRefusal(
+            "SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE", exc.detail
+        ) from exc
+    try:
+        first_line = raw.decode("utf-8").splitlines()[0]
     except (OSError, UnicodeError, IndexError) as exc:
         raise GateRefusal("SEMANTIC_REVIEW_IDENTITY_UNAVAILABLE", str(design_path)) from exc
     version_match = re.search(r"\bDesign (v[0-9]+\.[0-9]+)\s*$", first_line)
@@ -390,6 +490,27 @@ def semantic_review_commit_is_ancestor(
             "reviewed_identities.worktree_head_commit", str(exc)
         )
     return result.returncode == 0
+
+
+def semantic_review_core_tree(root: Path, commit: str) -> str:
+    """Return the repo-relative `core` subtree object id at `commit`."""
+
+    try:
+        prefix = subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", "--show-prefix"],
+            text=True,
+            stderr=subprocess.STDOUT,
+        ).strip().replace("\\", "/")
+        return subprocess.check_output(
+            ["git", "-C", str(root), "rev-parse", f"{commit}:{prefix}core"],
+            text=True,
+            stderr=subprocess.STDOUT,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        _semantic_review_invalid(
+            "reviewed_identities.worktree_head_commit",
+            f"reviewed head core tree unavailable: {exc}",
+        )
 
 
 def validate_semantic_coverage_review(
@@ -465,6 +586,14 @@ def validate_semantic_coverage_review(
             "reviewed_identities.worktree_head_commit",
             "not an ancestor of measured HEAD",
         )
+    reviewed_core_tree = semantic_review_core_tree(
+        root, reviewed_identities["worktree_head_commit"]
+    )
+    if reviewed_core_tree != measured_identities["core_tree_oid"]:
+        _semantic_review_invalid(
+            "reviewed_identities.core_tree_oid",
+            "reviewed-head core tree does not match current core tree",
+        )
     for member in SEMANTIC_COVERAGE_REVIEW_CONTENT_IDENTITY_KEYS:
         if reviewed_identities[member] != measured_identities.get(member):
             _semantic_review_invalid(
@@ -474,11 +603,17 @@ def validate_semantic_coverage_review(
     items = _require_exact_members(
         receipt["items"], tuple(str(item) for item in range(1, 7)), "items"
     )
+    manifest = load_json_exact(
+        root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
+    )
+    section18_sets = derive_section18_served_def_sets(root, manifest)
     for item_number in range(1, 7):
         item_key = str(item_number)
         item = _require_exact_members(
             items[item_key],
-            ("disposition", "evidence_paths", "notes"),
+            ("disposition", "evidence_paths", "notes", "hunk_coverage")
+            if item_number == 2
+            else ("disposition", "evidence_paths", "notes"),
             f"items.{item_key}",
         )
         disposition = item["disposition"]
@@ -505,14 +640,15 @@ def validate_semantic_coverage_review(
             member = f"items.{item_key}.evidence_paths.{evidence_index}"
             if type(evidence_path) is not str or not evidence_path:
                 _semantic_review_invalid(member, "expected path string")
-            path = Path(evidence_path)
-            candidate = (
-                path
-                if path.is_absolute()
-                else root.joinpath(*PurePosixPath(evidence_path).parts)
-            )
-            if not candidate.exists():
+            if not _evidence_candidate(root, evidence_path).exists():
                 _semantic_review_invalid(member, f"missing {evidence_path}")
+        if item_number == 2:
+            _validate_item2_hunk_coverage(
+                root,
+                item["hunk_coverage"],
+                reviewed_identities["worktree_head_commit"],
+                section18_sets,
+            )
 
     unresolved_items = receipt["unresolved_items"]
     if type(unresolved_items) is not list:
@@ -522,9 +658,6 @@ def validate_semantic_coverage_review(
 
     ratification = _require_exact_members(
         receipt["owner_ratification"], ("chain", "ratified"), "owner_ratification"
-    )
-    manifest = load_json_exact(
-        root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
     )
     expected_chain = derive_semantic_coverage_review_chain(manifest)
     if ratification["chain"] != expected_chain:
@@ -544,6 +677,420 @@ def validate_semantic_coverage_review(
         _semantic_review_invalid("signed_at", str(exc))
     if signed.tzinfo is None:
         _semantic_review_invalid("signed_at", "timezone required")
+
+
+def _evidence_candidate(root: Path, evidence_path: Any) -> Path:
+    path = Path(evidence_path)
+    if path.is_absolute():
+        return path
+    return root.joinpath(*PurePosixPath(evidence_path).parts)
+
+
+def canonical_hunk_diff_command(reviewed_head: str) -> str:
+    """The exact canonical V2 diff command for the reviewed head commit."""
+
+    return (
+        f"{SEMANTIC_HUNK_COVERAGE_DIFF_COMMAND} "
+        f"{HUNK_DIFF_BASE_COMMIT}..{reviewed_head} -- {HUNK_DIFF_SCOPE}"
+    )
+
+
+def compute_hunk_diff(root: Path, reviewed_head: str) -> bytes:
+    """Recompute the exact ordered raw diff bytes the V2 receipt reviews."""
+
+    command = [
+        "git",
+        "-C",
+        str(root),
+        "diff",
+        "--unified=0",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--no-renames",
+        "--diff-algorithm=myers",
+        "--no-indent-heuristic",
+        f"{HUNK_DIFF_BASE_COMMIT}..{reviewed_head}",
+        "--",
+        HUNK_DIFF_SCOPE,
+    ]
+    try:
+        completed = subprocess.run(command, capture_output=True, check=False)
+    except OSError as exc:
+        _semantic_review_invalid("items.2", f"git diff could not run: {exc}")
+    if completed.returncode != 0:
+        detail = completed.stderr.decode("utf-8", "replace").strip()
+        _semantic_review_invalid("items.2", f"git diff failed: {detail}")
+    return completed.stdout
+
+
+@dataclass(frozen=True)
+class ParsedHunk:
+    path: str
+    old_start: int
+    old_count: int
+    new_start: int
+    new_count: int
+    raw_bytes: bytes
+
+
+def _parse_diff_git_path(line: bytes) -> str:
+    body = line.rstrip(b"\r")
+    if not body.startswith(b"diff --git "):
+        _semantic_review_invalid("items.2", "unparsed diff metadata refused")
+    body = body[len(b"diff --git "):]
+    if not body.startswith(b"a/"):
+        _semantic_review_invalid("items.2", "unparsed diff metadata refused")
+    body = body[len(b"a/"):]
+    separator = body.find(b" b/")
+    if separator < 0:
+        _semantic_review_invalid("items.2", "unparsed diff metadata refused")
+    path_bytes = body[:separator]
+    if path_bytes.startswith(b'"'):
+        _semantic_review_invalid("items.2", "quoted diff path refused")
+    try:
+        path = path_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        _semantic_review_invalid("items.2", "unparsed diff path")
+    if not path.startswith(HUNK_DIFF_SCOPE + "/"):
+        _semantic_review_invalid(
+            "items.2", f"diff path outside {HUNK_DIFF_SCOPE} scope: {path}"
+        )
+    return path
+
+
+_ALLOWED_FILE_HEADER_PREFIXES = (
+    b"index ",
+    b"--- ",
+    b"+++ ",
+    b"old mode ",
+    b"new mode ",
+    b"new file mode ",
+    b"deleted file mode ",
+)
+
+
+def _reject_unparsed_file_line(line: bytes) -> None:
+    if line.startswith(b"Binary files "):
+        _semantic_review_invalid("items.2", "binary diff refused")
+    if line.startswith(b"Subproject commit "):
+        _semantic_review_invalid("items.2", "submodule diff refused")
+    if any(
+        line.startswith(prefix)
+        for prefix in (
+            b"rename from ",
+            b"rename to ",
+            b"copy from ",
+            b"copy to ",
+            b"similarity index ",
+            b"dissimilarity index ",
+        )
+    ):
+        _semantic_review_invalid("items.2", "rename/copy diff refused")
+    _semantic_review_invalid("items.2", "unparsed diff metadata refused")
+
+
+def _validate_file_header_region(region: bytes) -> None:
+    for line in region.split(b"\n"):
+        stripped = line.rstrip(b"\r")
+        if stripped == b"":
+            continue
+        if not any(
+            stripped.startswith(prefix) for prefix in _ALLOWED_FILE_HEADER_PREFIXES
+        ):
+            _reject_unparsed_file_line(stripped)
+
+
+def _hunk_header_offsets(body: bytes) -> list[int]:
+    offsets: list[int] = []
+    offset = 0
+    length = len(body)
+    while offset < length:
+        if body.startswith(b"@@", offset):
+            offsets.append(offset)
+        newline = body.find(b"\n", offset)
+        if newline < 0:
+            break
+        offset = newline + 1
+    return offsets
+
+
+def _parse_hunk(path: str, raw: bytes) -> ParsedHunk:
+    newline = raw.find(b"\n")
+    header_line = raw[:newline].rstrip(b"\r") if newline >= 0 else raw.rstrip(b"\r")
+    match = HUNK_HEADER_RE.match(header_line)
+    if match is None:
+        _semantic_review_invalid("items.2", "unparsed hunk header refused")
+    old_start = int(match.group(1))
+    old_count = int(match.group(2)) if match.group(2) is not None else 1
+    new_start = int(match.group(3))
+    new_count = int(match.group(4)) if match.group(4) is not None else 1
+    content = raw[newline + 1:] if newline >= 0 else b""
+    for line in content.split(b"\n"):
+        if line == b"":
+            continue
+        if line.rstrip(b"\r").startswith(b"\\"):
+            continue
+        if not (
+            line.startswith(b"+")
+            or line.startswith(b"-")
+            or line.startswith(b" ")
+        ):
+            _semantic_review_invalid("items.2", "unparsed hunk content refused")
+    return ParsedHunk(
+        path=path,
+        old_start=old_start,
+        old_count=old_count,
+        new_start=new_start,
+        new_count=new_count,
+        raw_bytes=raw,
+    )
+
+
+def _parse_file_block(block: bytes) -> list[ParsedHunk]:
+    newline = block.find(b"\n")
+    first_line = block[:newline] if newline >= 0 else block
+    path = _parse_diff_git_path(first_line)
+    body = block[newline + 1:] if newline >= 0 else b""
+    offsets = _hunk_header_offsets(body)
+    if not offsets:
+        _validate_file_header_region(body)
+        _semantic_review_invalid("items.2", "diff file has no text hunks")
+    _validate_file_header_region(body[: offsets[0]])
+    hunks: list[ParsedHunk] = []
+    for index, start in enumerate(offsets):
+        end = offsets[index + 1] if index + 1 < len(offsets) else len(body)
+        hunks.append(_parse_hunk(path, body[start:end]))
+    return hunks
+
+
+def parse_hunk_diff(diff_bytes: bytes) -> list[ParsedHunk]:
+    """Parse exact `git diff --unified=0 ... -- core` bytes into ordered hunks."""
+
+    if diff_bytes == b"":
+        return []
+    hunks: list[ParsedHunk] = []
+    block: list[bytes] = []
+    for line in diff_bytes.splitlines(keepends=True):
+        if line.startswith(b"diff --git "):
+            if block:
+                hunks.extend(_parse_file_block(b"".join(block)))
+            block = [line]
+        else:
+            block.append(line)
+    if block:
+        hunks.extend(_parse_file_block(b"".join(block)))
+    return hunks
+
+
+def _require_sorted_unique_def_ids(value: Any, member: str) -> None:
+    if type(value) is not list or not value:
+        _semantic_review_invalid(member, "expected non-empty DEF id list")
+    if any(type(def_id) is not str or DEF_ID_RE.fullmatch(def_id) is None for def_id in value):
+        _semantic_review_invalid(
+            member, "DEF ids must be DEF-P012-01 through DEF-P012-08"
+        )
+    if value != sorted(value) or len(value) != len(set(value)):
+        _semantic_review_invalid(member, "DEF ids must be sorted and unique")
+
+
+def _validate_hunk_record(
+    record: Any,
+    expected: ParsedHunk,
+    member: str,
+    section18_sets: Mapping[str, frozenset[str]],
+) -> str:
+    if type(record) is not dict:
+        _semantic_review_invalid(member, "expected object")
+    terminal_class = record.get("terminal_class")
+    if terminal_class == "DEF":
+        expected_keys = HUNK_RECORD_COMMON_KEYS + ("def_ids",)
+    elif terminal_class == "SECTION18_SHARED":
+        expected_keys = HUNK_RECORD_COMMON_KEYS + ("section18_row", "served_def_ids")
+    elif terminal_class == "UNDOCUMENTED":
+        expected_keys = HUNK_RECORD_COMMON_KEYS + ("reason",)
+    else:
+        _semantic_review_invalid(f"{member}.terminal_class", "outside closed domain")
+    _require_exact_members(record, expected_keys, member)
+
+    if type(record["path"]) is not str or not record["path"]:
+        _semantic_review_invalid(f"{member}.path", "expected path string")
+    if record["path"] != expected.path:
+        _semantic_review_invalid(f"{member}.path", "does not match recomputed path")
+    for key in ("old_start", "old_count", "new_start", "new_count"):
+        value = record[key]
+        if type(value) is not int or type(value) is bool or value != getattr(expected, key):
+            _semantic_review_invalid(
+                f"{member}.{key}", "does not match recomputed hunk range"
+            )
+    hunk_sha256 = record["hunk_sha256"]
+    if type(hunk_sha256) is not str or SHA256_RE.fullmatch(hunk_sha256) is None:
+        _semantic_review_invalid(f"{member}.hunk_sha256", "invalid sha256")
+    if hashlib.sha256(expected.raw_bytes).hexdigest() != hunk_sha256:
+        _semantic_review_invalid(
+            f"{member}.hunk_sha256", "does not match recomputed raw hunk bytes"
+        )
+
+    if terminal_class == "DEF":
+        _require_sorted_unique_def_ids(record["def_ids"], f"{member}.def_ids")
+    elif terminal_class == "SECTION18_SHARED":
+        section18_row = record["section18_row"]
+        if (
+            type(section18_row) is not str
+            or section18_row not in section18_sets
+        ):
+            _semantic_review_invalid(f"{member}.section18_row", "unknown section-18 census row")
+        served_def_ids = record["served_def_ids"]
+        _require_sorted_unique_def_ids(served_def_ids, f"{member}.served_def_ids")
+        if set(served_def_ids) != section18_sets[section18_row]:
+            _semantic_review_invalid(
+                f"{member}.served_def_ids",
+                "served DEF set does not match the ratified section-18 census row",
+            )
+    else:
+        reason = record["reason"]
+        if type(reason) is not str or not reason.strip() or "\n" in reason or "\r" in reason:
+            _semantic_review_invalid(f"{member}.reason", "nonempty reason required")
+    return terminal_class
+
+
+def _validate_hunk_coverage_receipt(
+    root: Path,
+    document: dict[str, Any],
+    reviewed_head: str,
+    section18_sets: Mapping[str, frozenset[str]],
+) -> None:
+    """Machine-check the V2 semantic hunk receipt against a recomputed diff."""
+
+    _require_exact_members(
+        document,
+        (
+            "schema",
+            "base_commit",
+            "reviewed_head",
+            "diff_command",
+            "diff_sha256",
+            "total_changed_paths",
+            "total_changed_files",
+            "changed_paths",
+            "section18_coverage",
+            "hunks",
+        ),
+        "items.2",
+    )
+    if document["schema"] != SEMANTIC_HUNK_COVERAGE_SCHEMA:
+        _semantic_review_invalid("items.2.schema", "expected V2 schema")
+    if document["base_commit"] != HUNK_DIFF_BASE_COMMIT:
+        _semantic_review_invalid(
+            "items.2.base_commit", f"expected fixed base {HUNK_DIFF_BASE_COMMIT}"
+        )
+    head = document["reviewed_head"]
+    if type(head) is not str or GIT_OID_RE.fullmatch(head) is None:
+        _semantic_review_invalid("items.2.reviewed_head", "invalid git oid")
+    if head != reviewed_head:
+        _semantic_review_invalid(
+            "items.2.reviewed_head",
+            "does not match reviewed_identities.worktree_head_commit",
+        )
+    if document["diff_command"] != canonical_hunk_diff_command(head):
+        _semantic_review_invalid("items.2.diff_command", "expected canonical command")
+    diff_sha256 = document["diff_sha256"]
+    if type(diff_sha256) is not str or SHA256_RE.fullmatch(diff_sha256) is None:
+        _semantic_review_invalid("items.2.diff_sha256", "invalid sha256")
+
+    diff_bytes = compute_hunk_diff(root, head)
+    if hashlib.sha256(diff_bytes).hexdigest() != diff_sha256:
+        _semantic_review_invalid(
+            "items.2.diff_sha256", "does not match recomputed diff"
+        )
+    parsed = parse_hunk_diff(diff_bytes)
+    hunks = document["hunks"]
+    if type(hunks) is not list:
+        _semantic_review_invalid("items.2.hunks", "expected list")
+    if not parsed:
+        _semantic_review_invalid("items.2", "recomputed diff has no hunks")
+    if len(hunks) != len(parsed):
+        _semantic_review_invalid(
+            "items.2.hunks",
+            f"expected {len(parsed)} hunk records, got {len(hunks)}",
+        )
+
+    undocumented: list[str] = []
+    for index, (record, expected) in enumerate(
+        zip(hunks, parsed, strict=True)
+    ):
+        terminal_class = _validate_hunk_record(
+            record, expected, f"items.2.hunks.{index}", section18_sets
+        )
+        if terminal_class == "UNDOCUMENTED":
+            undocumented.append(str(index))
+    if undocumented:
+        _semantic_review_invalid(
+            "items.2",
+            "UNDOCUMENTED hunk refuses item 2 for core/**",
+        )
+
+    path_order: list[str] = []
+    path_hunks: dict[str, list[int]] = {}
+    for index, hunk in enumerate(parsed):
+        path_hunks.setdefault(hunk.path, []).append(index)
+        if hunk.path not in path_order:
+            path_order.append(hunk.path)
+    if document["total_changed_paths"] != len(path_order) or document["total_changed_files"] != len(path_order):
+        _semantic_review_invalid("items.2", "changed path/file count mismatch")
+    changed_paths = document["changed_paths"]
+    if type(changed_paths) is not list or len(changed_paths) != len(path_order):
+        _semantic_review_invalid("items.2.changed_paths", "path census mismatch")
+    for index, (entry, path) in enumerate(zip(changed_paths, path_order, strict=True)):
+        member = f"items.2.changed_paths.{index}"
+        _require_exact_members(entry, ("path", "hunk_count", "hunk_indices", "hunk_sha256s"), member)
+        indices = path_hunks[path]
+        if entry["path"] != path or entry["hunk_count"] != len(indices):
+            _semantic_review_invalid(member, "path census mismatch")
+        expected_digests = [hashlib.sha256(parsed[i].raw_bytes).hexdigest() for i in indices]
+        if entry["hunk_indices"] != indices or entry["hunk_sha256s"] != expected_digests:
+            _semantic_review_invalid(member, "hunk identity census mismatch")
+
+    coverage = document["section18_coverage"]
+    if type(coverage) is not list or len(coverage) != len(SECTION18_ROW_IDS):
+        _semantic_review_invalid("items.2.section18_coverage", "row census mismatch")
+    owned: dict[int, str] = {}
+    for index, (entry, row) in enumerate(zip(coverage, SECTION18_ROW_IDS, strict=True)):
+        member = f"items.2.section18_coverage.{index}"
+        _require_exact_members(entry, ("row", "served_def_ids", "hunk_indices"), member)
+        if entry["row"] != row:
+            _semantic_review_invalid(member, "unexpected or reordered section-18 row")
+        if section18_sets[row]:
+            _require_sorted_unique_def_ids(entry["served_def_ids"], f"{member}.served_def_ids")
+        elif entry["served_def_ids"] != []:
+            _semantic_review_invalid(f"{member}.served_def_ids", "empty row must serve no DEF")
+        if set(entry["served_def_ids"]) != set(section18_sets[row]):
+            _semantic_review_invalid(f"{member}.served_def_ids", "does not match manifest-pinned design")
+        indices = entry["hunk_indices"]
+        if type(indices) is not list or indices != sorted(indices) or len(indices) != len(set(indices)):
+            _semantic_review_invalid(f"{member}.hunk_indices", "must be sorted and unique")
+        for hunk_index in indices:
+            if type(hunk_index) is not int or hunk_index < 0 or hunk_index >= len(hunks):
+                _semantic_review_invalid(f"{member}.hunk_indices", "hunk index out of range")
+            hunk = hunks[hunk_index]
+            if hunk.get("terminal_class") != "SECTION18_SHARED" or hunk.get("section18_row") != row:
+                _semantic_review_invalid(f"{member}.hunk_indices", "does not match hunk assignment")
+            if hunk_index in owned:
+                _semantic_review_invalid(f"{member}.hunk_indices", "duplicate hunk ownership")
+            owned[hunk_index] = row
+    for index, hunk in enumerate(hunks):
+        if hunk.get("terminal_class") == "SECTION18_SHARED" and owned.get(index) != hunk.get("section18_row"):
+            _semantic_review_invalid("items.2.section18_coverage", "missing hunk assignment")
+
+
+def _validate_item2_hunk_coverage(
+    root: Path,
+    document: Any,
+    reviewed_head: str,
+    section18_sets: Mapping[str, frozenset[str]],
+) -> None:
+    if type(document) is not dict:
+        _semantic_review_invalid("items.2.hunk_coverage", "embedded V2 object required")
+    _validate_hunk_coverage_receipt(root, document, reviewed_head, section18_sets)
 
 
 def canonical_json_bytes(value: Any) -> bytes:
@@ -2290,24 +2837,15 @@ def validate_design_pin(manifest: dict[str, Any]) -> dict[str, Any]:
     design = manifest.get("design")
     if type(design) is not dict:
         raise GateRefusal("DESIGN_PIN_MISMATCH", "manifest.design is not an object")
-    design_file = design.get("file")
-    recorded_sha = design.get("sha256")
     recorded_lines = design.get("total_lines")
-    if (
-        type(design_file) is not str
-        or not design_file
-        or type(recorded_sha) is not str
-        or SHA256_RE.fullmatch(recorded_sha) is None
-        or type(recorded_lines) is not int
-        or type(recorded_lines) is bool
-        or recorded_lines < 1
-    ):
+    if type(recorded_lines) is not int or type(recorded_lines) is bool or recorded_lines < 1:
         raise GateRefusal("DESIGN_PIN_MISMATCH", "invalid manifest.design pin")
-    design_path = Path(design_file)
     try:
-        raw = design_path.read_bytes()
-    except OSError as exc:
-        raise GateRefusal("DESIGN_PIN_MISMATCH", str(design_path)) from exc
+        design_path, raw, recorded_sha = _resolve_manifest_design_pin(
+            manifest, check_id="DESIGN_PIN_MISMATCH"
+        )
+    except GateRefusal as exc:
+        raise GateRefusal("DESIGN_PIN_MISMATCH", exc.detail) from exc
     actual_sha = hashlib.sha256(raw).hexdigest()
     actual_lines = len(raw.splitlines())
     if actual_sha != recorded_sha or actual_lines != recorded_lines:

@@ -2,12 +2,24 @@ from __future__ import annotations
 
 import dataclasses
 import math
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
 from mtc_v2.core.economics import EconomicRecords
 from mtc_v2.core.types import CashEventKind, PortfolioState
+
+
+SOURCE_DIGEST_RE = re.compile(r"[0-9a-f]{64}\Z")
+
+
+def _require_source_digest(label: str, value: object) -> str:
+    if type(value) is not str or SOURCE_DIGEST_RE.fullmatch(value) is None:
+        raise ValueError(
+            f"corrected run manifest refuses {label} that is not lowercase 64-hex"
+        )
+    return value
 
 
 @dataclass(frozen=True)
@@ -149,16 +161,32 @@ class CorrectedRunManifest:
     ) -> "CorrectedRunManifest":
         provenance = records.instrument.provenance or {}
         effective = records.instrument.effective_interval or {}
+        instrument_record_digest = _require_source_digest(
+            "instrument_record_digest", records.instrument.digest
+        )
+        if records.cost_schedule_id is None:
+            if records.cost_digest is not None:
+                raise ValueError("cost schedule digest without id")
+            cost_schedule_digest = None
+        else:
+            cost_schedule_digest = _require_source_digest(
+                "cost_schedule_digest", records.cost_digest
+            )
         return cls(
             execution_profile_id=execution_profile_id,
             instrument_record_id=records.instrument.record_id,
-            instrument_record_digest=records.instrument.digest,
-            instrument_source_document_digest=str(provenance.get("source_sha256", "")),
+            instrument_record_digest=instrument_record_digest,
+            instrument_source_document_digest=_require_source_digest(
+                "instrument_source_document_digest",
+                provenance.get("source_sha256"),
+            ),
             instrument_effective_interval=dict(effective),
             cost_schedule_id=records.cost_schedule_id or "NOT_CONSUMED",
-            cost_schedule_digest=records.cost_digest,
+            cost_schedule_digest=cost_schedule_digest,
             funding_schedule_id=records.funding_schedule_id,
-            funding_schedule_digest=records.funding_digest,
+            funding_schedule_digest=_require_source_digest(
+                "funding_schedule_digest", records.funding_digest
+            ),
             same_bar_collision_policy_id=same_bar_collision_policy_id,
         )
 
@@ -640,15 +668,34 @@ def _joined_exit_fills(
     fills: list[object],
     cash_rows: Iterable[object],
 ) -> list[tuple[object, float]]:
+    cash_row_list = list(cash_rows)
+    exit_fills = [
+        row for row in fills if getattr(row, "event_class").endswith("EXIT")
+    ]
+    gross_fill_ids = [
+        getattr(row, "fill_id")
+        for row in cash_row_list
+        if getattr(row, "kind") is CashEventKind.GROSS_REALIZATION
+    ]
+    if any(fill_id is None for fill_id in gross_fill_ids):
+        raise ValueError("corrected gross cash row requires fill_id")
+    if len(set(gross_fill_ids)) != len(gross_fill_ids):
+        raise ValueError("corrected surface refuses duplicate gross fill join")
+    exit_fill_ids = [getattr(row, "fill_id") for row in exit_fills]
+    if any(fill_id is None for fill_id in exit_fill_ids):
+        raise ValueError("corrected exit fill requires fill_id")
+    if len(set(exit_fill_ids)) != len(exit_fill_ids):
+        raise ValueError("corrected surface refuses duplicate joined fill id")
+    if set(exit_fill_ids) != set(gross_fill_ids):
+        raise ValueError("corrected surface exit gross-cash join mismatch")
     gross_by_fill = {
         getattr(row, "fill_id"): getattr(row, "signed_delta")
-        for row in cash_rows
+        for row in cash_row_list
         if getattr(row, "kind") is CashEventKind.GROSS_REALIZATION
     }
     return [
         (row, gross_by_fill[getattr(row, "fill_id")])
-        for row in fills
-        if getattr(row, "fill_id") in gross_by_fill
+        for row in exit_fills
     ]
 
 

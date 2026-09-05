@@ -10,6 +10,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 
 from mtc_v2.tests.corrected_vnext import verify_bceg
 from mtc_v2.tests.corrected_vnext.verify_bceg import (
@@ -18,6 +19,7 @@ from mtc_v2.tests.corrected_vnext.verify_bceg import (
     compare_documents,
     compare_scoped_expected,
     decode_stop_price_f64,
+    derive_section18_served_def_sets,
     execute_corrected_scenario,
     load_json_exact,
     resolve_record_references,
@@ -33,6 +35,24 @@ BASELINE_ROOT = Path(r"C:\tmp\P012_BASELINE_RUN")
 EMPTY_DOCUMENT_BYTES = b"{}" + bytes([10])
 PATCH_BYTES = b"--- a" + bytes([10])
 MEMBER_BYTES = b"x = 1" + bytes([10])
+SYNTHETIC_DIFF_BYTES = (
+    b"diff --git a/core/position_sizer.py b/core/position_sizer.py\n"
+    b"index 0000000..1111111 100644\n"
+    b"--- a/core/position_sizer.py\n"
+    b"+++ b/core/position_sizer.py\n"
+    b"@@ -43,7 +43,14 @@\n"
+    b"-def legacy_sizing():\n"
+    b"+def corrected_sizing():\n"
+    b"+    return cm * qty\n"
+    b"diff --git a/core/exits.py b/core/exits.py\n"
+    b"index 2222222..3333333 100644\n"
+    b"--- a/core/exits.py\n"
+    b"+++ b/core/exits.py\n"
+    b"@@ -353,5 +353,8 @@\n"
+    b"-def stop_first():\n"
+    b"+def policy():\n"
+    b"+    pass\n"
+)
 
 SYNTHETIC_REVIEW_IDENTITIES = {
     "worktree_head_commit": "1" * 40,
@@ -52,9 +72,127 @@ def write_synthetic_reseal_manifest(
 ) -> None:
     manifest = root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
     manifest.parent.mkdir(parents=True, exist_ok=True)
-    manifest.write_bytes(
-        verify_bceg.canonical_json_bytes({"reseal_history": history})
+    design = root / "design.md"
+    design.write_text(
+        "Design v1.11\n"
+        + "\n".join(
+            [
+                f"| `S18-{number:02d}` | core/x.py | text | {served} | note |"
+                for number, served in (
+                    (1, ", ".join(f"`DEF-P012-{n:02d}`" for n in range(1, 9))),
+                    (2, ", ".join(f"`DEF-P012-{n:02d}`" for n in (1, 2, 4, 5, 6, 7, 8))),
+                    (3, "`DEF-P012-01`, `DEF-P012-02`"),
+                    (4, "`DEF-P012-03`"),
+                    (5, "`DEF-P012-04`, `DEF-P012-06`"),
+                    (6, "`DEF-P012-05`, `DEF-P012-07`, `DEF-P012-08`"),
+                    (7, "`DEF-P012-03`, `DEF-P012-05`, `DEF-P012-07`"),
+                    (8, "`DEF-P012-02`, `DEF-P012-03`, `DEF-P012-04`, `DEF-P012-06`"),
+                    (9, "`DEF-P012-08`"),
+                    (10, "`DEF-P012-07`"),
+                    (11, "`DEF-P012-07`, `DEF-P012-08`"),
+                    (12, "—"),
+                )
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
+    manifest.write_bytes(
+        verify_bceg.canonical_json_bytes(
+            {
+                "reseal_history": history,
+                "design": {
+                    "file": str(design),
+                    "sha256": verify_bceg.sha256_file(design),
+                },
+            }
+        )
+    )
+
+
+def synthetic_v2_hunk_receipt(
+    reviewed_head: str = SYNTHETIC_REVIEW_IDENTITIES["worktree_head_commit"],
+) -> dict[str, object]:
+    """Valid V2 hunk receipt: one DEF hunk and one SECTION18_SHARED hunk."""
+
+    parsed = verify_bceg.parse_hunk_diff(SYNTHETIC_DIFF_BYTES)
+    assert len(parsed) == 2
+
+    def record(hunk: verify_bceg.ParsedHunk, **extra: object) -> dict[str, object]:
+        base: dict[str, object] = {
+            "path": hunk.path,
+            "old_start": hunk.old_start,
+            "old_count": hunk.old_count,
+            "new_start": hunk.new_start,
+            "new_count": hunk.new_count,
+            "hunk_sha256": hashlib.sha256(hunk.raw_bytes).hexdigest(),
+        }
+        base.update(extra)
+        return base
+
+    return {
+        "schema": verify_bceg.SEMANTIC_HUNK_COVERAGE_SCHEMA,
+        "base_commit": verify_bceg.HUNK_DIFF_BASE_COMMIT,
+        "reviewed_head": reviewed_head,
+        "diff_command": verify_bceg.canonical_hunk_diff_command(reviewed_head),
+        "diff_sha256": hashlib.sha256(SYNTHETIC_DIFF_BYTES).hexdigest(),
+        "total_changed_paths": 2,
+        "total_changed_files": 2,
+        "changed_paths": [
+            {
+                "path": parsed[0].path,
+                "hunk_count": 1,
+                "hunk_indices": [0],
+                "hunk_sha256s": [hashlib.sha256(parsed[0].raw_bytes).hexdigest()],
+            },
+            {
+                "path": parsed[1].path,
+                "hunk_count": 1,
+                "hunk_indices": [1],
+                "hunk_sha256s": [hashlib.sha256(parsed[1].raw_bytes).hexdigest()],
+            },
+        ],
+        "section18_coverage": [
+            {
+                "row": f"S18-{number:02d}",
+                "served_def_ids": {
+                    1: [f"DEF-P012-{n:02d}" for n in range(1, 9)],
+                    2: ["DEF-P012-01", "DEF-P012-02", "DEF-P012-04", "DEF-P012-05", "DEF-P012-06", "DEF-P012-07", "DEF-P012-08"],
+                    3: ["DEF-P012-01", "DEF-P012-02"], 4: ["DEF-P012-03"],
+                    5: ["DEF-P012-04", "DEF-P012-06"], 6: ["DEF-P012-05", "DEF-P012-07", "DEF-P012-08"],
+                    7: ["DEF-P012-03", "DEF-P012-05", "DEF-P012-07"], 8: ["DEF-P012-02", "DEF-P012-03", "DEF-P012-04", "DEF-P012-06"],
+                    9: ["DEF-P012-08"], 10: ["DEF-P012-07"], 11: ["DEF-P012-07", "DEF-P012-08"], 12: [],
+                }[number],
+                "hunk_indices": [1] if number == 5 else [],
+            }
+            for number in range(1, 13)
+        ],
+        "hunks": [
+            record(parsed[0], terminal_class="DEF", def_ids=["DEF-P012-01"]),
+            record(
+                parsed[1],
+                terminal_class="SECTION18_SHARED",
+                section18_row="S18-05",
+                served_def_ids=["DEF-P012-04", "DEF-P012-06"],
+            ),
+        ],
+    }
+
+
+def write_v2_hunk_receipt(root: Path, receipt: dict[str, object]) -> Path:
+    path = root / "review-evidence" / "item-2-hunks.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+    return path
+
+
+def hunk_record(**overrides: object) -> dict[str, object]:
+    """A mutable copy of the first (DEF) hunk record for mutant tests."""
+
+    entry = deepcopy(synthetic_v2_hunk_receipt()["hunks"][0])
+    entry.update(overrides)
+    return entry
 
 
 def refusal(check_id: str, action) -> None:
@@ -63,15 +201,30 @@ def refusal(check_id: str, action) -> None:
     assert caught.value.check_id == check_id
 
 
-def semantic_review_fixture(root: Path) -> dict[str, object]:
+def semantic_review_fixture(
+    root: Path,
+    reviewed_head: str = SYNTHETIC_REVIEW_IDENTITIES["worktree_head_commit"],
+) -> dict[str, object]:
     evidence_paths: list[str] = []
     for item in range(1, 7):
         path = root / "review-evidence" / f"item-{item}.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(f"item {item} evidence\n", encoding="utf-8", newline="\n")
         evidence_paths.append(path.relative_to(root).as_posix())
+    embedded_hunk_coverage = synthetic_v2_hunk_receipt(reviewed_head=reviewed_head)
+    items = {
+        str(item): {
+            "disposition": "ACCEPTED",
+            "evidence_paths": [evidence_paths[item - 1]],
+            "notes": "Reviewed against the synthetic fixture.",
+        }
+        for item in range(1, 7)
+    }
+    items["2"]["hunk_coverage"] = embedded_hunk_coverage
+    identities = dict(SYNTHETIC_REVIEW_IDENTITIES)
+    identities["worktree_head_commit"] = reviewed_head
     return {
-        "schema": "P012_SEMANTIC_COVERAGE_REVIEW_V1",
+        "schema": verify_bceg.SEMANTIC_COVERAGE_REVIEW_SCHEMA,
         "reviewer": {
             "identity": "synthetic independent reviewer",
             "family": "Gemini",
@@ -86,15 +239,8 @@ def semantic_review_fixture(root: Path) -> dict[str, object]:
                 },
             ],
         },
-        "reviewed_identities": dict(SYNTHETIC_REVIEW_IDENTITIES),
-        "items": {
-            str(item): {
-                "disposition": "ACCEPTED",
-                "evidence_paths": [evidence_paths[item - 1]],
-                "notes": "Reviewed against the synthetic fixture.",
-            }
-            for item in range(1, 7)
-        },
+        "reviewed_identities": identities,
+        "items": items,
         "unresolved_items": [],
         "owner_ratification": {
             "chain": ["#5", "#6", "#7", "#8", "#9"],
@@ -134,6 +280,16 @@ def run_synthetic_full_gate(
         verify_bceg,
         "measure_semantic_review_identities",
         lambda _root, _baseline_root, _sealed_identities: dict(measured),
+    )
+    monkeypatch.setattr(
+        verify_bceg,
+        "semantic_review_core_tree",
+        lambda _root, _commit: measured["core_tree_oid"],
+    )
+    monkeypatch.setattr(
+        verify_bceg,
+        "compute_hunk_diff",
+        lambda _root, _reviewed_head: SYNTHETIC_DIFF_BYTES,
     )
     if not use_real_git:
         monkeypatch.setattr(
@@ -299,11 +455,10 @@ def test_w280_reviewed_ancestor_with_matching_content_clears_blocker(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     root = tmp_path / "root"
-    receipt = semantic_review_fixture(root)
     reviewed_commit, head_commit = two_commit_repository(root)
+    receipt = semantic_review_fixture(root, reviewed_head=reviewed_commit)
     measured = dict(SYNTHETIC_REVIEW_IDENTITIES)
     measured["worktree_head_commit"] = head_commit
-    receipt["reviewed_identities"]["worktree_head_commit"] = reviewed_commit
     review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
     review.parent.mkdir(parents=True, exist_ok=True)
     review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
@@ -398,6 +553,843 @@ def test_semantic_coverage_review_fully_valid_synthetic_receipt_clears_blocker(
         "failed_count": 0,
         "failing_test_ids": [],
     }
+
+
+def run_v2_receipt_gate(
+    root: Path,
+    baseline_root: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    document: dict[str, object],
+) -> int:
+    """Write a V2 hunk receipt as item-2 evidence and run the synthetic full gate."""
+
+    receipt = semantic_review_fixture(root)
+    receipt["items"]["2"]["hunk_coverage"] = document
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+    return run_synthetic_full_gate(root, baseline_root, monkeypatch)
+
+
+def test_v2_item2_missing_hunk_receipt_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    receipt["items"]["2"].pop("hunk_coverage")
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(capsys, "items.2.hunk_coverage: missing")
+
+
+def test_v2_item2_v1_ledger_is_superseded(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    v1 = {
+        "schema": verify_bceg.SEMANTIC_HUNK_COVERAGE_SCHEMA_V1,
+        "diff_command": "git diff --unified=0",
+        "hunks": [],
+    }
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True)
+    receipt["items"]["2"]["hunk_coverage"] = v1
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(capsys, "items.2.base_commit: missing")
+
+
+def test_v2_item2_valid_receipt_clears_blocker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    assert run_v2_receipt_gate(
+        root, tmp_path / "baseline", monkeypatch, synthetic_v2_hunk_receipt()
+    ) == 0
+    gate_receipt = json.loads(capsys.readouterr().out)
+    assert gate_receipt["claim_label"] == verify_bceg.ACCEPTING_LABEL
+
+
+def test_v2_item2_external_evidence_never_substitutes_embedded_receipt(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    receipt["items"]["2"].pop("hunk_coverage")
+    external = write_v2_hunk_receipt(root, synthetic_v2_hunk_receipt())
+    receipt["items"]["2"]["evidence_paths"] = [
+        external.relative_to(root).as_posix()
+    ]
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(capsys, "items.2.hunk_coverage: missing")
+
+
+def test_v2_item2_s18_02_extra_def_refuses(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["section18_coverage"][1]["served_def_ids"].append("DEF-P012-03")
+    document["section18_coverage"][1]["served_def_ids"].sort()
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2.section18_coverage.1.served_def_ids: does not match manifest-pinned design"
+    )
+
+
+def test_v2_item2_design_manifest_drift_refuses(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    receipt = semantic_review_fixture(root)
+    write_synthetic_reseal_manifest(
+        root, [{"actor": f"Synthetic Lead, re-seal #{n}"} for n in range(5, 10)]
+    )
+    (root / "design.md").write_text("Design v1.11\ndrift\n", encoding="utf-8", newline="\n")
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    assert run_synthetic_full_gate(root, tmp_path / "baseline", monkeypatch) == 2
+    assert_invalid_semantic_review(capsys, "section18: manifest-pinned design bytes drifted")
+
+
+def test_v2_item2_wrong_base_commit_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["base_commit"] = "0" * 40
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys,
+        f"items.2.base_commit: expected fixed base {verify_bceg.HUNK_DIFF_BASE_COMMIT}",
+    )
+
+
+def test_v2_item2_reviewed_head_mismatch_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["reviewed_head"] = "f" * 40
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys,
+        "items.2.reviewed_head: does not match reviewed_identities.worktree_head_commit",
+    )
+
+
+def test_v2_item2_wrong_diff_command_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["diff_command"] = "git diff --unified=3"
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2.diff_command: expected canonical command"
+    )
+
+
+def test_v2_item2_wrong_diff_sha256_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["diff_sha256"] = "0" * 64
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2.diff_sha256: does not match recomputed diff"
+    )
+
+
+def test_v2_item2_extra_hunk_record_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"] = document["hunks"] + [deepcopy(document["hunks"][0])]
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(capsys, "items.2.hunks: expected 2 hunk records, got 3")
+
+
+def test_v2_item2_missing_hunk_record_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"] = document["hunks"][:1]
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(capsys, "items.2.hunks: expected 2 hunk records, got 1")
+
+
+def test_v2_item2_reordered_hunks_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"] = list(reversed(document["hunks"]))
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2.hunks.0.path: does not match recomputed path"
+    )
+
+
+def test_v2_item2_wrong_path_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"][0]["path"] = "core/other.py"
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2.hunks.0.path: does not match recomputed path"
+    )
+
+
+def test_v2_item2_wrong_hunk_range_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"][0]["old_start"] = 999
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2.hunks.0.old_start: does not match recomputed hunk range"
+    )
+
+
+def test_v2_item2_wrong_hunk_sha256_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"][0]["hunk_sha256"] = "0" * 64
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys,
+        "items.2.hunks.0.hunk_sha256: does not match recomputed raw hunk bytes",
+    )
+
+
+@pytest.mark.parametrize(
+    ("def_ids", "detail"),
+    [
+        ([], "expected non-empty DEF id list"),
+        (["DEF-P012-02", "DEF-P012-01"], "DEF ids must be sorted and unique"),
+        (["DEF-P012-01", "DEF-P012-01"], "DEF ids must be sorted and unique"),
+        (["DEF-P012-09"], "DEF ids must be DEF-P012-01 through DEF-P012-08"),
+        (["DEF-P012-00"], "DEF ids must be DEF-P012-01 through DEF-P012-08"),
+        (["DEF p012 01"], "DEF ids must be DEF-P012-01 through DEF-P012-08"),
+    ],
+)
+def test_v2_item2_def_ids_rejection_matrix(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    def_ids: list[str],
+    detail: str,
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"][0]["def_ids"] = def_ids
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(capsys, f"items.2.hunks.0.def_ids: {detail}")
+
+
+def test_v2_item2_shared_unknown_row_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"][1]["section18_row"] = "S18-99"
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2.hunks.1.section18_row: unknown section-18 census row"
+    )
+
+
+@pytest.mark.parametrize(
+    ("served_def_ids", "detail"),
+    [
+        (["DEF-P012-04"], "served DEF set does not match the ratified section-18 census row"),
+        (["DEF-P012-04", "DEF-P012-05", "DEF-P012-06"], "served DEF set does not match the ratified section-18 census row"),
+        (["DEF-P012-06", "DEF-P012-04"], "DEF ids must be sorted and unique"),
+        (["DEF-P012-04", "DEF-P012-04"], "DEF ids must be sorted and unique"),
+        (["DEF-P012-09"], "DEF ids must be DEF-P012-01 through DEF-P012-08"),
+    ],
+)
+def test_v2_item2_shared_served_def_set_rejection_matrix(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    served_def_ids: list[str],
+    detail: str,
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"][1]["served_def_ids"] = served_def_ids
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, f"items.2.hunks.1.served_def_ids: {detail}"
+    )
+
+
+def test_v2_item2_undocumented_empty_reason_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"][0]["terminal_class"] = "UNDOCUMENTED"
+    document["hunks"][0].pop("def_ids")
+    document["hunks"][0]["reason"] = "   "
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2.hunks.0.reason: nonempty reason required"
+    )
+
+
+def test_v2_item2_undocumented_hunk_always_refuses_item_2(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"][0]["terminal_class"] = "UNDOCUMENTED"
+    document["hunks"][0].pop("def_ids")
+    document["hunks"][0]["reason"] = "no DEF authority names this hunk"
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2: UNDOCUMENTED hunk refuses item 2 for core/**"
+    )
+
+
+def test_v2_item2_unknown_terminal_class_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"][0]["terminal_class"] = "MAYBE"
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2.hunks.0.terminal_class: outside closed domain"
+    )
+
+
+def test_v2_item2_mixed_class_payload_is_invalid(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "root"
+    document = synthetic_v2_hunk_receipt()
+    document["hunks"][0]["section18_row"] = "S18-05"
+
+    assert run_v2_receipt_gate(root, tmp_path / "baseline", monkeypatch, document) == 2
+    assert_invalid_semantic_review(
+        capsys, "items.2.hunks.0.section18_row: unknown member"
+    )
+
+
+def test_v2_parse_hunk_diff_uses_exact_raw_bytes() -> None:
+    parsed = verify_bceg.parse_hunk_diff(SYNTHETIC_DIFF_BYTES)
+
+    assert [hunk.path for hunk in parsed] == [
+        "core/position_sizer.py",
+        "core/exits.py",
+    ]
+    assert (parsed[0].old_start, parsed[0].old_count) == (43, 7)
+    assert (parsed[0].new_start, parsed[0].new_count) == (43, 14)
+    assert (parsed[1].old_start, parsed[1].old_count) == (353, 5)
+    assert (parsed[1].new_start, parsed[1].new_count) == (353, 8)
+    assert parsed[0].raw_bytes.startswith(b"@@ -43,7 +43,14 @@")
+    assert len(parsed) == 2
+
+
+def test_v2_parse_refuses_binary_diff() -> None:
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.parse_hunk_diff(
+            b"diff --git a/core/foo.png b/core/foo.png\n"
+            b"index 0000000..1111111 100644\n"
+            b"Binary files a/core/foo.png and b/core/foo.png differ\n"
+        )
+    assert caught.value.check_id == "SEMANTIC_COVERAGE_REVIEW_INVALID"
+    assert caught.value.detail == "items.2: binary diff refused"
+
+
+def test_v2_parse_refuses_submodule_diff() -> None:
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.parse_hunk_diff(
+            b"diff --git a/core/sub b/core/sub\n"
+            b"index 1111111..2222222 160000\n"
+            b"--- a/core/sub\n"
+            b"+++ b/core/sub\n"
+            b"Subproject commit 1111111111111111111111111111111111111111\n"
+        )
+    assert caught.value.check_id == "SEMANTIC_COVERAGE_REVIEW_INVALID"
+    assert caught.value.detail == "items.2: submodule diff refused"
+
+
+def test_v2_parse_refuses_rename_diff() -> None:
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.parse_hunk_diff(
+            b"diff --git a/core/foo.py b/core/bar.py\n"
+            b"similarity index 100%\n"
+            b"rename from core/foo.py\n"
+            b"rename to core/bar.py\n"
+        )
+    assert caught.value.check_id == "SEMANTIC_COVERAGE_REVIEW_INVALID"
+    assert caught.value.detail == "items.2: rename/copy diff refused"
+
+
+def test_v2_parse_refuses_no_text_hunks() -> None:
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.parse_hunk_diff(
+            b"diff --git a/core/foo.py b/core/foo.py\n"
+            b"old mode 100644\n"
+            b"new mode 100755\n"
+        )
+    assert caught.value.check_id == "SEMANTIC_COVERAGE_REVIEW_INVALID"
+    assert caught.value.detail == "items.2: diff file has no text hunks"
+
+
+def test_v2_parse_refuses_unparsed_metadata() -> None:
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.parse_hunk_diff(
+            b"diff --git a/core/foo.py b/core/foo.py\n"
+            b"totally unknown line\n"
+        )
+    assert caught.value.check_id == "SEMANTIC_COVERAGE_REVIEW_INVALID"
+    assert caught.value.detail == "items.2: unparsed diff metadata refused"
+
+
+def test_v2_parse_empty_diff_yields_no_hunks() -> None:
+    assert verify_bceg.parse_hunk_diff(b"") == []
+
+
+def core_hunk_repository(tmp_path: Path) -> tuple[Path, str, str]:
+    root = tmp_path / "repo"
+    root.mkdir(parents=True)
+    for command in (
+        ("init",),
+        ("config", "user.email", "v2@example.invalid"),
+        ("config", "user.name", "V2 selftest"),
+        ("config", "core.autocrlf", "false"),
+    ):
+        subprocess.run(
+            ["git", "-C", str(root), *command],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    core = root / "core"
+    core.mkdir()
+    (core / "position_sizer.py").write_text(
+        "\n".join(f"value_{index} = {index}" for index in range(1, 21)) + "\n",
+        encoding="utf-8", newline="\n"
+    )
+    (core / "exits.py").write_text("exit_value = 1\n", encoding="utf-8", newline="\n")
+    subprocess.run(["git", "-C", str(root), "add", "core"], check=True, capture_output=True, text=True)
+    subprocess.run(["git", "-C", str(root), "commit", "-m", "base"], check=True, capture_output=True, text=True)
+    base = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
+    (core / "position_sizer.py").write_text(
+        "\n".join(
+            f"value_{index} = {index + 100 if index in (2, 18) else index}"
+            for index in range(1, 21)
+        ) + "\n",
+        encoding="utf-8", newline="\n"
+    )
+    (core / "exits.py").write_text("exit_value = 2\n", encoding="utf-8", newline="\n")
+    subprocess.run(["git", "-C", str(root), "add", "core"], check=True, capture_output=True, text=True)
+    subprocess.run(["git", "-C", str(root), "commit", "-m", "reviewed"], check=True, capture_output=True, text=True)
+    head = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
+    return root, base, head
+
+
+def _real_v2_receipt(
+    root: Path, base: str, head: str, diff_bytes: bytes
+) -> dict[str, object]:
+    parsed = verify_bceg.parse_hunk_diff(diff_bytes)
+    path_order: list[str] = []
+    path_hunks: dict[str, list[int]] = {}
+    for index, hunk in enumerate(parsed):
+        path_hunks.setdefault(hunk.path, []).append(index)
+        if hunk.path not in path_order:
+            path_order.append(hunk.path)
+
+    served_def_ids = {
+        1: [f"DEF-P012-{number:02d}" for number in range(1, 9)],
+        2: [
+            "DEF-P012-01",
+            "DEF-P012-02",
+            "DEF-P012-04",
+            "DEF-P012-05",
+            "DEF-P012-06",
+            "DEF-P012-07",
+            "DEF-P012-08",
+        ],
+        3: ["DEF-P012-01", "DEF-P012-02"],
+        4: ["DEF-P012-03"],
+        5: ["DEF-P012-04", "DEF-P012-06"],
+        6: ["DEF-P012-05", "DEF-P012-07", "DEF-P012-08"],
+        7: ["DEF-P012-03", "DEF-P012-05", "DEF-P012-07"],
+        8: [
+            "DEF-P012-02",
+            "DEF-P012-03",
+            "DEF-P012-04",
+            "DEF-P012-06",
+        ],
+        9: ["DEF-P012-08"],
+        10: ["DEF-P012-07"],
+        11: ["DEF-P012-07", "DEF-P012-08"],
+        12: [],
+    }
+    records = [
+        {
+            "path": hunk.path,
+            "old_start": hunk.old_start,
+            "old_count": hunk.old_count,
+            "new_start": hunk.new_start,
+            "new_count": hunk.new_count,
+            "hunk_sha256": hashlib.sha256(hunk.raw_bytes).hexdigest(),
+            "terminal_class": "SECTION18_SHARED",
+            "section18_row": "S18-05",
+            "served_def_ids": served_def_ids[5],
+        }
+        for hunk in parsed
+    ]
+    return {
+        "schema": verify_bceg.SEMANTIC_HUNK_COVERAGE_SCHEMA,
+        "base_commit": base,
+        "reviewed_head": head,
+        "diff_command": verify_bceg.canonical_hunk_diff_command(head),
+        "diff_sha256": hashlib.sha256(diff_bytes).hexdigest(),
+        "total_changed_paths": len(path_order),
+        "total_changed_files": len(path_order),
+        "changed_paths": [
+            {
+                "path": path,
+                "hunk_count": len(indices),
+                "hunk_indices": indices,
+                "hunk_sha256s": [
+                    hashlib.sha256(parsed[index].raw_bytes).hexdigest()
+                    for index in indices
+                ],
+            }
+            for path, indices in ((path, path_hunks[path]) for path in path_order)
+        ],
+        "section18_coverage": [
+            {
+                "row": f"S18-{number:02d}",
+                "served_def_ids": served_def_ids[number],
+                "hunk_indices": [index for index in range(len(parsed)) if number == 5],
+            }
+            for number in range(1, 13)
+        ],
+        "hunks": records,
+    }
+
+
+def test_v2_real_git_receipt_accepts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, base, head = core_hunk_repository(tmp_path)
+    monkeypatch.setattr(verify_bceg, "HUNK_DIFF_BASE_COMMIT", base)
+    diff_bytes = verify_bceg.compute_hunk_diff(root, head)
+    assert b"diff --git a/core/position_sizer.py" in diff_bytes
+
+    receipt = _real_v2_receipt(root, base, head, diff_bytes)
+    evidence = root / "review-evidence" / "item-2-hunks.json"
+    evidence.parent.mkdir(parents=True, exist_ok=True)
+    evidence.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+    write_synthetic_reseal_manifest(
+        root, [{"actor": f"Synthetic Lead, re-seal #{n}"} for n in range(5, 10)]
+    )
+    manifest = load_json_exact(root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json")
+
+    verify_bceg._validate_item2_hunk_coverage(
+        root, receipt, head, verify_bceg.derive_section18_served_def_sets(root, manifest)
+    )
+
+
+@pytest.mark.parametrize("mutation", [
+    "missing_path", "duplicate_path", "reordered_path", "missing_row", "duplicate_row",
+    "reordered_row", "duplicate_owner", "missing_assignment", "out_of_range_index",
+])
+def test_v2_real_git_receipt_census_mutations_refuse(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mutation: str
+) -> None:
+    root, base, head = core_hunk_repository(tmp_path)
+    monkeypatch.setattr(verify_bceg, "HUNK_DIFF_BASE_COMMIT", base)
+    diff_bytes = verify_bceg.compute_hunk_diff(root, head)
+    receipt = _real_v2_receipt(root, base, head, diff_bytes)
+    if mutation == "missing_path":
+        receipt["changed_paths"].pop()
+    elif mutation == "duplicate_path":
+        receipt["changed_paths"].append(deepcopy(receipt["changed_paths"][0]))
+    elif mutation == "reordered_path":
+        receipt["changed_paths"] = list(reversed(receipt["changed_paths"]))
+    elif mutation == "missing_row":
+        receipt["section18_coverage"].pop()
+    elif mutation == "duplicate_row":
+        receipt["section18_coverage"].append(deepcopy(receipt["section18_coverage"][0]))
+    elif mutation == "reordered_row":
+        receipt["section18_coverage"][4], receipt["section18_coverage"][5] = (
+            receipt["section18_coverage"][5], receipt["section18_coverage"][4]
+        )
+    elif mutation == "duplicate_owner":
+        receipt["section18_coverage"][4]["hunk_indices"] = [0, 0]
+    elif mutation == "missing_assignment":
+        receipt["section18_coverage"][4]["hunk_indices"] = []
+    elif mutation == "out_of_range_index":
+        receipt["section18_coverage"][4]["hunk_indices"] = [999]
+    write_synthetic_reseal_manifest(
+        root, [{"actor": "Synthetic Lead, re-seal #5"}]
+    )
+    manifest = load_json_exact(root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json")
+    with pytest.raises(GateRefusal):
+        verify_bceg._validate_item2_hunk_coverage(
+            root, receipt, head, derive_section18_served_def_sets(root, manifest)
+        )
+
+
+@pytest.mark.parametrize(
+    "served",
+    [
+        "`DEF-P012-01`, `DEF-P012-01`",
+        "`DEF-P012-01`, `DEF-P012-09`",
+        "`DEF-P012-010`",
+        "`DEF-P012-02`, `DEF-P012-01`",
+    ],
+)
+def test_v2_section18_served_cell_closed_grammar_refuses(
+    tmp_path: Path, served: str
+) -> None:
+    root = tmp_path / "root"
+    write_synthetic_reseal_manifest(root, [{"actor": "Synthetic Lead, re-seal #5"}])
+    design = root / "design.md"
+    text = design.read_text(encoding="utf-8")
+    design.write_text(text.replace("`DEF-P012-01`, `DEF-P012-02`", served), encoding="utf-8", newline="\n")
+    manifest_path = root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
+    manifest = load_json_exact(manifest_path)
+    manifest["design"]["sha256"] = verify_bceg.sha256_file(design)
+    manifest_path.write_bytes(verify_bceg.canonical_json_bytes(manifest))
+    with pytest.raises(GateRefusal):
+        derive_section18_served_def_sets(root, manifest)
+
+
+def test_v2_section18_served_cell_accepts_exact_ordered_tokens(tmp_path: Path) -> None:
+    root = tmp_path / "root"
+    write_synthetic_reseal_manifest(root, [{"actor": "Synthetic Lead, re-seal #5"}])
+    manifest = load_json_exact(root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json")
+    sets = derive_section18_served_def_sets(root, manifest)
+    assert sets["S18-02"] == frozenset(
+        {"DEF-P012-01", "DEF-P012-02", "DEF-P012-04", "DEF-P012-05", "DEF-P012-06", "DEF-P012-07", "DEF-P012-08"}
+    )
+
+
+def test_v2_schema_accepts_complete_receipt_and_rejects_nested_mutants() -> None:
+    schema = json.loads(
+        (MTC_V2_ROOT / "tests/corrected_vnext/contracts/semantic_coverage_review.schema.json").read_text()
+    )
+    validator = Draft202012Validator(schema)
+    receipt = semantic_review_fixture(Path(tempfile.mkdtemp(prefix="schema-receipt-")))
+    receipt["owner_ratification"]["chain"] = [
+        "#5", "#6", "#7", "#8", "#9", "#10", "#11", "#12", "#12b", "#13",
+        "#14", "#14b", "#15", "#16", "#17", "#18", "#19", "#20", "#21", "#22", "#23",
+    ]
+    assert list(validator.iter_errors(receipt)) == []
+    mutants = [
+        ("changed_paths", [True]),
+        ("section18_coverage", None),
+        ("hunks", [1]),
+        ("hunks", [{**receipt["items"]["2"]["hunk_coverage"]["hunks"][0], "terminal_class": "DEF", "section18_row": "S18-05"}]),
+    ]
+    for member, value in mutants:
+        candidate = deepcopy(receipt)
+        if member == "hunks":
+            candidate["items"]["2"]["hunk_coverage"][member] = value
+        else:
+            candidate["items"]["2"]["hunk_coverage"][member] = value
+        assert list(validator.iter_errors(candidate)), member
+
+
+def test_v2_real_git_receipt_wrong_digest_refuses(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, base, head = core_hunk_repository(tmp_path)
+    monkeypatch.setattr(verify_bceg, "HUNK_DIFF_BASE_COMMIT", base)
+    diff_bytes = verify_bceg.compute_hunk_diff(root, head)
+    receipt = _real_v2_receipt(root, base, head, diff_bytes)
+    receipt["diff_sha256"] = "0" * 64
+    evidence = root / "review-evidence" / "item-2-hunks.json"
+    evidence.parent.mkdir(parents=True, exist_ok=True)
+    evidence.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+    write_synthetic_reseal_manifest(
+        root, [{"actor": f"Synthetic Lead, re-seal #{n}"} for n in range(5, 10)]
+    )
+    write_synthetic_reseal_manifest(
+        root, [{"actor": "Synthetic Lead, re-seal #5"}]
+    )
+    manifest = load_json_exact(root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json")
+
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg._validate_item2_hunk_coverage(
+            root, receipt, head, verify_bceg.derive_section18_served_def_sets(root, manifest)
+        )
+    assert caught.value.detail == "items.2.diff_sha256: does not match recomputed diff"
+
+
+def drifted_core_repository(tmp_path: Path) -> tuple[Path, str, str, str]:
+    root = tmp_path / "repo"
+    root.mkdir(parents=True)
+    for command in (
+        ("init",),
+        ("config", "user.email", "v2@example.invalid"),
+        ("config", "user.name", "V2 selftest"),
+        ("config", "core.autocrlf", "false"),
+    ):
+        subprocess.run(
+            ["git", "-C", str(root), *command],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    core = root / "core"
+    core.mkdir()
+    marker = root / "receipt.txt"
+    marker.write_text("base\n", encoding="utf-8", newline="\n")
+    (core / "a.py").write_text("1\n", encoding="utf-8", newline="\n")
+    subprocess.run(["git", "-C", str(root), "add", "."], check=True, capture_output=True, text=True)
+    subprocess.run(["git", "-C", str(root), "commit", "-m", "base"], check=True, capture_output=True, text=True)
+    base = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
+    (core / "a.py").write_text("2\n", encoding="utf-8", newline="\n")
+    subprocess.run(["git", "-C", str(root), "add", "core"], check=True, capture_output=True, text=True)
+    subprocess.run(["git", "-C", str(root), "commit", "-m", "reviewed"], check=True, capture_output=True, text=True)
+    reviewed = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
+    (core / "a.py").write_text("3\n", encoding="utf-8", newline="\n")
+    marker.write_text("base\nreceipt\n", encoding="utf-8", newline="\n")
+    subprocess.run(["git", "-C", str(root), "add", "."], check=True, capture_output=True, text=True)
+    subprocess.run(["git", "-C", str(root), "commit", "-m", "receipt"], check=True, capture_output=True, text=True)
+    head = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
+    return root, base, reviewed, head
+
+
+def test_v2_reviewed_head_core_drift_refuses(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, base, reviewed, head = drifted_core_repository(tmp_path)
+    monkeypatch.setattr(verify_bceg, "HUNK_DIFF_BASE_COMMIT", base)
+    monkeypatch.setattr(
+        verify_bceg, "compute_hunk_diff", lambda _root, _head: SYNTHETIC_DIFF_BYTES
+    )
+    receipt = semantic_review_fixture(root, reviewed_head=reviewed)
+    write_synthetic_reseal_manifest(
+        root, [{"actor": f"Synthetic Lead, re-seal #{n}"} for n in range(5, 10)]
+    )
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+    measured = dict(SYNTHETIC_REVIEW_IDENTITIES)
+    measured["worktree_head_commit"] = head
+    measured["core_tree_oid"] = verify_bceg.semantic_review_core_tree(root, head)
+
+    with pytest.raises(GateRefusal) as caught:
+        verify_bceg.validate_semantic_coverage_review(review, root, measured)
+    assert caught.value.check_id == "SEMANTIC_COVERAGE_REVIEW_INVALID"
+    assert caught.value.detail == (
+        "reviewed_identities.core_tree_oid: "
+        "reviewed-head core tree does not match current core tree"
+    )
+
+
+def test_v2_reviewed_head_core_identity_matches_clears(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, base, reviewed, head = drifted_core_repository(tmp_path)
+    monkeypatch.setattr(verify_bceg, "HUNK_DIFF_BASE_COMMIT", base)
+    monkeypatch.setattr(
+        verify_bceg, "compute_hunk_diff", lambda _root, _head: SYNTHETIC_DIFF_BYTES
+    )
+    receipt = semantic_review_fixture(root, reviewed_head=head)
+    write_synthetic_reseal_manifest(
+        root, [{"actor": f"Synthetic Lead, re-seal #{n}"} for n in range(5, 10)]
+    )
+    measured = dict(SYNTHETIC_REVIEW_IDENTITIES)
+    measured["worktree_head_commit"] = head
+    measured["core_tree_oid"] = verify_bceg.semantic_review_core_tree(root, head)
+    receipt["reviewed_identities"]["core_tree_oid"] = measured["core_tree_oid"]
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    verify_bceg.validate_semantic_coverage_review(review, root, measured)
 
 
 def test_w352_old_chain_is_refused_when_manifest_is_past_nine(
@@ -795,6 +1787,41 @@ def test_sealed_producer_validation_refuses_one_byte_changed_design_copy(
     )
     (root / "design.md").write_bytes(b"Design qin\nSecond line\n")
 
+    refusal(
+        "DESIGN_PIN_MISMATCH",
+        lambda: verify_bceg.validate_sealed_producers(root, baseline_root),
+    )
+
+
+def test_design_pin_refuses_relative_path_even_when_cwd_can_reach_same_bytes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root, baseline_root, _seal, _member_path = sealed_producer_fixture(tmp_path)
+    manifest_path = root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
+    manifest = load_json_exact(manifest_path)
+    manifest["design"]["file"] = "design.md"
+    manifest_path.write_bytes(verify_bceg.canonical_json_bytes(manifest))
+    monkeypatch.chdir(root)
+    refusal(
+        "DESIGN_PIN_MISMATCH",
+        lambda: verify_bceg.validate_sealed_producers(root, baseline_root),
+    )
+
+
+def test_design_pin_refuses_symlink_to_identical_bytes(
+    tmp_path: Path,
+) -> None:
+    root, baseline_root, _seal, _member_path = sealed_producer_fixture(tmp_path)
+    design = root / "design.md"
+    target = root / "design-copy.md"
+    try:
+        target.symlink_to(design)
+    except OSError:
+        pytest.skip("symlink creation unavailable")
+    manifest_path = root / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
+    manifest = load_json_exact(manifest_path)
+    manifest["design"]["file"] = str(target)
+    manifest_path.write_bytes(verify_bceg.canonical_json_bytes(manifest))
     refusal(
         "DESIGN_PIN_MISMATCH",
         lambda: verify_bceg.validate_sealed_producers(root, baseline_root),

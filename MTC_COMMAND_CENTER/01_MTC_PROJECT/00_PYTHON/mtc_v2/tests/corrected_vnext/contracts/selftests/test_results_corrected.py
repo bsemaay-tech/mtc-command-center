@@ -5,15 +5,25 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+import pytest
+
 from mtc_v2.core.economics import EconomicRecords
 from mtc_v2.core.results import (
     CorrectedRunManifest,
     TradeRecord,
+    _joined_exit_fills,
     _realized_equity_window,
     corrected_surfaces,
 )
 from mtc_v2.core.runner import Runner
-from mtc_v2.core.types import Bar, CashEvent, CashEventKind, PortfolioState
+from mtc_v2.core.types import (
+    Bar,
+    CashEvent,
+    CashEventKind,
+    FillDecision,
+    FundingEvent,
+    PortfolioState,
+)
 
 
 MTC_V2_ROOT = Path(__file__).resolve().parents[4]
@@ -274,3 +284,329 @@ def test_legacy_trade_record_shape_is_not_padded_with_corrected_fields() -> None
         "exit_reason",
         "bars_held",
     }
+
+
+def _manifest_records() -> EconomicRecords:
+    config, _bars = _scenario("RULE2-08-RED")
+    return _records(config)
+
+
+def _instrument_without_source_sha256(source_sha256: object) -> EconomicRecords:
+    records = _manifest_records()
+    provenance = None
+    if source_sha256 is not None:
+        provenance = {"source_sha256": source_sha256}
+    return dataclasses.replace(
+        records,
+        instrument=dataclasses.replace(
+            records.instrument, provenance=provenance
+        ),
+    )
+
+
+def test_d026_manifest_source_document_digest_requires_lowercase_64_hex() -> None:
+    for source_sha256 in (None, "", "   ", "A" * 64, "a" * 63, "g" * 64):
+        with pytest.raises(ValueError, match="lowercase 64-hex"):
+            CorrectedRunManifest.from_records(
+                _instrument_without_source_sha256(source_sha256),
+                execution_profile_id="close_only_deterministic_v2",
+            )
+
+
+def test_d026_manifest_record_digests_require_lowercase_64_hex() -> None:
+    records = _manifest_records()
+    for field, value in (
+        ("digest", "A" * 64),
+        ("digest", "a" * 63),
+        ("digest", ""),
+        ("digest", "   "),
+        ("digest", "g" * 64),
+    ):
+        with pytest.raises(ValueError, match="lowercase 64-hex"):
+            CorrectedRunManifest.from_records(
+                dataclasses.replace(
+                    records,
+                    instrument=dataclasses.replace(records.instrument, **{field: value}),
+                ),
+                execution_profile_id="close_only_deterministic_v2",
+            )
+    for value in ("Z" * 64, "", "   ", "z" * 63, "g" * 64):
+        with pytest.raises(ValueError, match="lowercase 64-hex"):
+            CorrectedRunManifest.from_records(
+                dataclasses.replace(records, funding_digest=value),
+                execution_profile_id="close_only_deterministic_v2",
+            )
+    for value in ("C" * 64, "", "   ", "c" * 63, "g" * 64):
+        with pytest.raises(ValueError, match="lowercase 64-hex"):
+            CorrectedRunManifest.from_records(
+                dataclasses.replace(records, cost_digest=value),
+                execution_profile_id="close_only_deterministic_v2",
+            )
+
+
+def test_d026_manifest_valid_digests_pass_through_unchanged() -> None:
+    records = _manifest_records()
+    manifest = CorrectedRunManifest.from_records(
+        records, execution_profile_id="close_only_deterministic_v2"
+    )
+    assert manifest.instrument_record_digest == records.instrument.digest
+    assert manifest.funding_schedule_digest == records.funding_digest
+    assert manifest.cost_schedule_digest == records.cost_digest
+    provenance = records.instrument.provenance or {}
+    assert manifest.instrument_source_document_digest == provenance["source_sha256"]
+
+
+def test_d026_manifest_refuses_cost_digest_without_schedule_id() -> None:
+    with pytest.raises(ValueError, match="cost schedule digest without id"):
+        CorrectedRunManifest.from_records(
+            dataclasses.replace(_manifest_records(), cost=None, cost_digest="a" * 64),
+            execution_profile_id="close_only_deterministic_v2",
+        )
+
+
+def test_d026_surfaces_refuse_duplicate_gross_fill_join() -> None:
+    config, _bars = _scenario("RULE2-08-GREEN")
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        fill_events=[
+            _exit_fill(fill_id="F0"),
+            _exit_fill(fill_id="F0", sequence=1),
+        ],
+        cash_events=[
+            _gross_cash("CE-GROSS-0", "F0", 1.0),
+            _gross_cash("CE-GROSS-1", "F0", 1.0, sequence=1),
+        ],
+    )
+    with pytest.raises(ValueError, match="duplicate gross fill join"):
+        corrected_surfaces(
+            state=state,
+            equity_values=[],
+            manifest=CorrectedRunManifest.from_records(
+                _records(config),
+                execution_profile_id=str(config["execution_profile_id"]),
+            ),
+        )
+
+
+def test_d026_surfaces_refuse_duplicate_joined_fill_id() -> None:
+    config, _bars = _scenario("RULE2-08-GREEN")
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        fill_events=[
+            _exit_fill(fill_id="F0"),
+            _exit_fill(fill_id="F0", sequence=1),
+        ],
+        cash_events=[_gross_cash("CE-GROSS-0", "F0", 1.0)],
+    )
+    with pytest.raises(ValueError, match="duplicate joined fill id"):
+        corrected_surfaces(
+            state=state,
+            equity_values=[],
+            manifest=CorrectedRunManifest.from_records(
+                _records(config),
+                execution_profile_id=str(config["execution_profile_id"]),
+            ),
+        )
+
+
+def _exit_fill(
+    *, fill_id: str, sequence: int = 0
+) -> FillDecision:
+    return FillDecision(
+        sequence=sequence,
+        event_timestamp=datetime.fromisoformat("2000-01-01T00:12:00+00:00"),
+        lifecycle_id=1,
+        fill_id=fill_id,
+        event_class="MARKET_EXIT",
+        side="SELL",
+        reference_price=100.0,
+        slippage_model_id="BPS_OF_REFERENCE_V1",
+        slippage_bps=0.0,
+        slippage_impact=0.0,
+        slippage_application_count=1,
+        final_fill_price=100.0,
+        quantity=1.0,
+        liquidity_role="TAKER",
+        exit_id="TIME_STOP",
+        price_tick_alignment="FLOOR",
+    )
+
+
+def _gross_cash(
+    cash_event_id: str,
+    fill_id: str,
+    signed_delta: float,
+    *,
+    sequence: int = 0,
+) -> CashEvent:
+    return CashEvent(
+        sequence=sequence,
+        cash_event_id=cash_event_id,
+        event_timestamp=datetime.fromisoformat("2000-01-01T00:12:00+00:00"),
+        lifecycle_id=1,
+        kind=CashEventKind.GROSS_REALIZATION,
+        signed_delta=signed_delta,
+        settlement_currency="TEST-USD",
+        fill_id=fill_id,
+    )
+
+
+def test_d026_join_accepts_single_pass_cash_generator() -> None:
+    fill = _exit_fill(fill_id="F0")
+    cash = _gross_cash("CE-GROSS-0", "F0", 1.0)
+
+    assert _joined_exit_fills([fill], iter([cash])) == [(fill, 1.0)]
+
+
+def test_d026_join_accepts_empty_inputs() -> None:
+    assert _joined_exit_fills([], iter(())) == []
+
+
+@pytest.mark.parametrize(
+    "fills, cash_rows",
+    [
+        ([_exit_fill(fill_id="F0")], []),
+        ([], [_gross_cash("CE-GROSS-0", "F0", 1.0)]),
+        (
+            [
+                _exit_fill(fill_id="F0"),
+                dataclasses.replace(_exit_fill(fill_id="F1"), event_class="ENTRY"),
+            ],
+            [_gross_cash("CE-GROSS-0", "F1", 1.0)],
+        ),
+        (
+            [_exit_fill(fill_id="F0")],
+            [
+                dataclasses.replace(
+                    _gross_cash("CE-GROSS-0", "F0", 1.0), fill_id=None
+                )
+            ],
+        ),
+    ],
+)
+def test_d026_join_refuses_mismatched_exit_and_gross_sets(
+    fills: list[object], cash_rows: list[object]
+) -> None:
+    with pytest.raises(ValueError, match="join mismatch|requires fill_id"):
+        _joined_exit_fills(fills, iter(cash_rows))
+
+
+def test_d026_window_renumber_rewrites_sequence_and_keeps_independent_ids() -> None:
+    config, _bars = _scenario("RULE2-08-GREEN")
+    records = _records(config)
+    first_fill = _exit_fill(fill_id="F0")
+    second_fill = FillDecision(
+        sequence=1,
+        event_timestamp=datetime.fromisoformat("2000-01-01T00:13:00+00:00"),
+        lifecycle_id=1,
+        fill_id="F1",
+        event_class="MARKET_EXIT",
+        side="SELL",
+        reference_price=100.0,
+        slippage_model_id="BPS_OF_REFERENCE_V1",
+        slippage_bps=0.0,
+        slippage_impact=0.0,
+        slippage_application_count=1,
+        final_fill_price=100.0,
+        quantity=1.0,
+        liquidity_role="TAKER",
+        exit_id="TIME_STOP",
+        price_tick_alignment="FLOOR",
+    )
+    first_gross = _gross_cash("CE-GROSS-0", "F0", 1.0)
+    first_funding_cash = CashEvent(
+        sequence=1,
+        cash_event_id="CE-FUND-PRE",
+        event_timestamp=datetime.fromisoformat("2000-01-01T00:12:00+00:00"),
+        lifecycle_id=1,
+        kind=CashEventKind.FUNDING,
+        signed_delta=-0.1,
+        settlement_currency="TEST-USD",
+        funding_event_id="TEST-FUND-PRE",
+    )
+    second_gross = CashEvent(
+        sequence=2,
+        cash_event_id="CE-GROSS-1",
+        event_timestamp=datetime.fromisoformat("2000-01-01T00:13:00+00:00"),
+        lifecycle_id=1,
+        kind=CashEventKind.GROSS_REALIZATION,
+        signed_delta=1.0,
+        settlement_currency="TEST-USD",
+        fill_id="F1",
+    )
+    second_funding_cash = CashEvent(
+        sequence=3,
+        cash_event_id="CE-FUND-IN",
+        event_timestamp=datetime.fromisoformat("2000-01-01T00:13:00+00:00"),
+        lifecycle_id=1,
+        kind=CashEventKind.FUNDING,
+        signed_delta=-0.1,
+        settlement_currency="TEST-USD",
+        funding_event_id="TEST-FUND-IN",
+    )
+    funding_rows = [
+        FundingEvent(
+            sequence=sequence,
+            funding_event_id=funding_event_id,
+            event_timestamp=datetime.fromisoformat(timestamp),
+            lifecycle_id=1,
+            position_side="LONG",
+            open_qty=1.0,
+            contract_multiplier=1.0,
+            mark_price=100.0,
+            raw_rate=0.001,
+            positive_rate_payer="LONG",
+            long_cashflow_rate=-0.001,
+            notional=100.0,
+            funding_cash_delta=-0.1,
+            cumulative_funding=-0.1 * (sequence + 1),
+            schedule_id=records.funding_schedule_id,
+            schedule_digest=records.funding_digest,
+            source_event_digest="3" * 64,
+            cash_event_id=cash_event_id,
+        )
+        for sequence, funding_event_id, cash_event_id, timestamp in (
+            (0, "TEST-FUND-PRE", "CE-FUND-PRE", "2000-01-01T00:12:00+00:00"),
+            (1, "TEST-FUND-IN", "CE-FUND-IN", "2000-01-01T00:13:00+00:00"),
+        )
+    ]
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        fill_events=[first_fill, second_fill],
+        cash_events=[
+            first_gross,
+            first_funding_cash,
+            second_gross,
+            second_funding_cash,
+        ],
+        funding_events=funding_rows,
+    )
+    surfaces = corrected_surfaces(
+        state=state,
+        equity_values=[],
+        manifest=CorrectedRunManifest.from_records(
+            records,
+            execution_profile_id=str(config["execution_profile_id"]),
+        ),
+        observation_start=datetime.fromisoformat("2000-01-01T00:13:00+00:00"),
+    )
+    event = surfaces["EVENT_SURFACE"]
+    assert [row["sequence"] for row in event["fill_events"]] == [0]
+    assert [row["fill_id"] for row in event["fill_events"]] == ["F1"]
+    assert [row["sequence"] for row in event["cash_events"]] == [0, 1]
+    assert [row["cash_event_id"] for row in event["cash_events"]] == [
+        "CE-GROSS-1",
+        "CE-FUND-IN",
+    ]
+    assert event["cash_events"][1]["funding_event_id"] == "TEST-FUND-IN"
+    assert [row["sequence"] for row in event["funding_events"]] == [0]
+    assert [row["cash_event_id"] for row in event["funding_events"]] == ["CE-FUND-IN"]
+    assert [row["funding_event_id"] for row in event["funding_events"]] == [
+        "TEST-FUND-IN"
+    ]
+    assert [row["fill_id"] for row in event["exit_events"]] == ["F1"]
+    assert [row["exit_id"] for row in event["exit_events"]] == ["TIME_STOP"]
+    assert [row["sequence"] for row in event["exit_events"]] == [0]

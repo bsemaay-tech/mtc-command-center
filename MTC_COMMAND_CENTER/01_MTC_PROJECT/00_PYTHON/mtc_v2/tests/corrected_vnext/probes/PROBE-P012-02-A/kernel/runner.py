@@ -705,8 +705,24 @@ class Runner:
             if include_current is None
             else include_current
         )
+        lifecycle_id = (
+            None if self.state.position is None else self.state.position.lifecycle_id
+        )
+        admitted: list[tuple[datetime, bytes, int | None, dict[str, object]]] = []
+        seen_funding_keys: set[tuple[str, int | None]] = set()
         for event in events:
             event_time = self._record_timestamp(event.get("event_timestamp"))
+            event_id = str(event["funding_event_id"])
+            funding_key = (event_id, lifecycle_id)
+            if funding_key in seen_funding_keys:
+                raise EconomicsRefusal(
+                    REFUSED_ECONOMIC_INPUT,
+                    f"duplicate funding_event_id {event_id!r} in admitted event collection",
+                )
+            seen_funding_keys.add(funding_key)
+            admitted.append((event_time, event_id.encode("utf-8"), lifecycle_id, event))
+        admitted.sort(key=lambda row: (row[0], row[1], row[2]))
+        for event_time, _order_key, _lifecycle_key, event in admitted:
             if previous is None:
                 in_window = current is not None and (
                     event_time < current.timestamp

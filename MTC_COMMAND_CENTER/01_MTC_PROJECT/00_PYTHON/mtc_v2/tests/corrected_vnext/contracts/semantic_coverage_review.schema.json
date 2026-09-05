@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:mtc:p012:semantic-coverage-review:v1",
+  "$id": "urn:mtc:p012:semantic-coverage-review:v2",
   "title": "P012 semantic coverage review receipt",
   "type": "object",
   "additionalProperties": false,
@@ -15,7 +15,7 @@
   ],
   "properties": {
     "schema": {
-      "const": "P012_SEMANTIC_COVERAGE_REVIEW_V1"
+        "const": "P012_SEMANTIC_COVERAGE_REVIEW_V2"
     },
     "reviewer": {
       "type": "object",
@@ -98,7 +98,7 @@
       "required": ["1", "2", "3", "4", "5", "6"],
       "properties": {
         "1": {"$ref": "#/$defs/reviewItem"},
-        "2": {"$ref": "#/$defs/reviewItem"},
+        "2": {"$ref": "#/$defs/reviewItem2"},
         "3": {"$ref": "#/$defs/reviewItem"},
         "4": {"$ref": "#/$defs/reviewItem"},
         "5": {"$ref": "#/$defs/reviewItem"},
@@ -116,8 +116,8 @@
       "properties": {
         "chain": {
           "type": "array",
-          "minItems": 20,
-          "maxItems": 20,
+          "minItems": 21,
+          "maxItems": 21,
           "prefixItems": [
             {"const": "#5"},
             {"const": "#6"},
@@ -138,7 +138,8 @@
             {"const": "#19"},
             {"const": "#20"},
             {"const": "#21"},
-            {"const": "#22"}
+            {"const": "#22"},
+            {"const": "#23"}
           ],
           "items": false
         },
@@ -209,6 +210,193 @@
           "pattern": "^(?![\\s\\S]*NOT_VERIFIED)[\\s\\S]*$"
         }
       }
+    },
+    "reviewItem2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["disposition", "evidence_paths", "notes", "hunk_coverage"],
+      "properties": {
+        "disposition": {"enum": ["ACCEPTED", "ACCEPTED_WITH_RESIDUAL_RISK", "REFUSED"]},
+        "evidence_paths": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "notes": {"type": "string", "pattern": "^(?![\\s\\S]*NOT_VERIFIED)[\\s\\S]*$"},
+        "hunk_coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema", "base_commit", "reviewed_head", "diff_command", "diff_sha256", "total_changed_paths", "total_changed_files", "changed_paths", "section18_coverage", "hunks"],
+          "properties": {
+            "schema": {"const": "P012_KERNEL_HUNK_COVERAGE_V2"},
+            "base_commit": {"$ref": "#/$defs/gitOid"},
+            "reviewed_head": {"$ref": "#/$defs/gitOid"},
+            "diff_command": {"type": "string", "minLength": 1},
+            "diff_sha256": {"$ref": "#/$defs/sha256"},
+            "total_changed_paths": {"type": "integer", "minimum": 1},
+            "total_changed_files": {"type": "integer", "minimum": 1},
+            "changed_paths": {
+              "type": "array",
+              "minItems": 1,
+              "items": {"$ref": "#/$defs/changedPath"}
+            },
+            "section18_coverage": {
+              "type": "array",
+              "minItems": 12,
+              "maxItems": 12,
+              "prefixItems": [
+                {"$ref": "#/$defs/coverage01"},
+                {"$ref": "#/$defs/coverage02"},
+                {"$ref": "#/$defs/coverage03"},
+                {"$ref": "#/$defs/coverage04"},
+                {"$ref": "#/$defs/coverage05"},
+                {"$ref": "#/$defs/coverage06"},
+                {"$ref": "#/$defs/coverage07"},
+                {"$ref": "#/$defs/coverage08"},
+                {"$ref": "#/$defs/coverage09"},
+                {"$ref": "#/$defs/coverage10"},
+                {"$ref": "#/$defs/coverage11"},
+                {"$ref": "#/$defs/coverage12"}
+              ],
+              "items": false
+            },
+            "hunks": {
+              "type": "array",
+              "minItems": 1,
+              "items": {"$ref": "#/$defs/hunk"}
+            }
+          }
+        }
+      }
+      },
+    "nonnegativeInteger": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "defId": {
+      "type": "string",
+      "enum": [
+        "DEF-P012-01", "DEF-P012-02", "DEF-P012-03", "DEF-P012-04",
+        "DEF-P012-05", "DEF-P012-06", "DEF-P012-07", "DEF-P012-08"
+      ],
+      "pattern": "^DEF-P012-0[1-8]$"
+    },
+    "section18Row": {
+      "type": "string",
+      "enum": [
+        "S18-01", "S18-02", "S18-03", "S18-04", "S18-05", "S18-06",
+        "S18-07", "S18-08", "S18-09", "S18-10", "S18-11", "S18-12"
+      ],
+      "pattern": "^S18-(0[1-9]|1[0-2])$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sha256List": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/sha256"}
+    },
+    "indexList": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/nonnegativeInteger"}
+    },
+    "changedPath": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "hunk_count", "hunk_indices", "hunk_sha256s"],
+      "properties": {
+        "path": {"$ref": "#/$defs/path"},
+        "hunk_count": {"$ref": "#/$defs/nonnegativeInteger"},
+        "hunk_indices": {"$ref": "#/$defs/indexList"},
+        "hunk_sha256s": {"$ref": "#/$defs/sha256List"}
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["row", "served_def_ids", "hunk_indices"],
+      "properties": {
+        "row": {"$ref": "#/$defs/section18Row"},
+        "served_def_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/defId"}
+        },
+        "hunk_indices": {"$ref": "#/$defs/indexList"}
+      }
+    },
+    "coverage01": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-01"}}}]},
+    "coverage02": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-02"}}}]},
+    "coverage03": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-03"}}}]},
+    "coverage04": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-04"}}}]},
+    "coverage05": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-05"}}}]},
+    "coverage06": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-06"}}}]},
+    "coverage07": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-07"}}}]},
+    "coverage08": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-08"}}}]},
+    "coverage09": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-09"}}}]},
+    "coverage10": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-10"}}}]},
+    "coverage11": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-11"}}}]},
+    "coverage12": {"allOf": [{"$ref": "#/$defs/coverage"}, {"properties": {"row": {"const": "S18-12"}}}]},
+    "hunkCommon": {
+      "type": "object",
+      "required": ["path", "old_start", "old_count", "new_start", "new_count", "hunk_sha256", "terminal_class"],
+      "properties": {
+        "path": {"$ref": "#/$defs/path"},
+        "old_start": {"$ref": "#/$defs/nonnegativeInteger"},
+        "old_count": {"$ref": "#/$defs/nonnegativeInteger"},
+        "new_start": {"$ref": "#/$defs/nonnegativeInteger"},
+        "new_count": {"$ref": "#/$defs/nonnegativeInteger"},
+        "hunk_sha256": {"$ref": "#/$defs/sha256"},
+        "terminal_class": {"enum": ["DEF", "SECTION18_SHARED", "UNDOCUMENTED"]}
+      }
+    },
+    "hunk": {
+      "oneOf": [
+        {
+          "allOf": [
+            {"$ref": "#/$defs/hunkCommon"},
+            {
+              "type": "object",
+              "unevaluatedProperties": false,
+              "required": ["path", "old_start", "old_count", "new_start", "new_count", "hunk_sha256", "terminal_class", "def_ids"],
+              "properties": {
+                "path": {"$ref": "#/$defs/path"}, "old_start": {"$ref": "#/$defs/nonnegativeInteger"}, "old_count": {"$ref": "#/$defs/nonnegativeInteger"},
+                "new_start": {"$ref": "#/$defs/nonnegativeInteger"}, "new_count": {"$ref": "#/$defs/nonnegativeInteger"}, "hunk_sha256": {"$ref": "#/$defs/sha256"},
+                "terminal_class": {"const": "DEF"}, "def_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/defId"}}
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/hunkCommon"},
+            {
+              "type": "object",
+              "unevaluatedProperties": false,
+              "required": ["path", "old_start", "old_count", "new_start", "new_count", "hunk_sha256", "terminal_class", "section18_row", "served_def_ids"],
+              "properties": {
+                "path": {"$ref": "#/$defs/path"}, "old_start": {"$ref": "#/$defs/nonnegativeInteger"}, "old_count": {"$ref": "#/$defs/nonnegativeInteger"},
+                "new_start": {"$ref": "#/$defs/nonnegativeInteger"}, "new_count": {"$ref": "#/$defs/nonnegativeInteger"}, "hunk_sha256": {"$ref": "#/$defs/sha256"},
+                "terminal_class": {"const": "SECTION18_SHARED"}, "section18_row": {"$ref": "#/$defs/section18Row"},
+                "served_def_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/defId"}}
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {"$ref": "#/$defs/hunkCommon"},
+            {
+              "type": "object",
+              "unevaluatedProperties": false,
+              "required": ["path", "old_start", "old_count", "new_start", "new_count", "hunk_sha256", "terminal_class", "reason"],
+              "properties": {
+                "path": {"$ref": "#/$defs/path"}, "old_start": {"$ref": "#/$defs/nonnegativeInteger"}, "old_count": {"$ref": "#/$defs/nonnegativeInteger"},
+                "new_start": {"$ref": "#/$defs/nonnegativeInteger"}, "new_count": {"$ref": "#/$defs/nonnegativeInteger"}, "hunk_sha256": {"$ref": "#/$defs/sha256"},
+                "terminal_class": {"const": "UNDOCUMENTED"}, "reason": {"$ref": "#/$defs/nonemptyLine"}
+              }
+            }
+          ]
+        }
+      ]
     }
   }
 }
