@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
@@ -1118,6 +1119,95 @@ def test_d026_entry_bound_duplicate_cash_fill_refuses() -> None:
         )
     assert state.position is None
     assert state.cash_events == []
+
+
+def test_d026_exit_bound_duplicate_fee_fill_refuses_before_mutation() -> None:
+    fee_cash_0 = _d026_fee_cash("CE-FEE-0", "F0", sequence=1)
+    fee_cash_1 = _d026_fee_cash("CE-FEE-1", "F0", sequence=2)
+    transition = _d026_bare_transition(
+        cost_schedule_id="COST",
+        cost_schedule_digest="2" * 64,
+        fill_decisions=(_d026_exit_fill(),),
+        cash_events=(
+            _d026_gross_cash("CE-GROSS-0", "F0"),
+            fee_cash_0,
+            fee_cash_1,
+        ),
+        fee_events=(
+            replace(
+                _d026_fee_event(fee_cash_0, sequence=0),
+                event_class="MARKET_EXIT",
+            ),
+            replace(
+                _d026_fee_event(fee_cash_1, sequence=1),
+                event_class="MARKET_EXIT",
+            ),
+        ),
+    )
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        position=_open_position(),
+    )
+    snapshot = deepcopy(state)
+
+    with pytest.raises(EconomicTransitionError, match="duplicate fee fill join"):
+        _manager().apply_transition(
+            bar=_bar(), state=state, transition=transition, reason="time_stop"
+        )
+
+    assert state == snapshot
+
+
+def test_d026_exit_distinct_fee_fills_apply_once_each() -> None:
+    fee_cash_0 = _d026_fee_cash("CE-FEE-0", "F0", sequence=1)
+    fee_cash_1 = _d026_fee_cash("CE-FEE-1", "F1", sequence=3)
+    transition = _d026_bare_transition(
+        cost_schedule_id="COST",
+        cost_schedule_digest="2" * 64,
+        fill_decisions=(
+            replace(_d026_exit_fill("F0"), quantity=1.0, exit_id="EXIT-0"),
+            replace(
+                _d026_exit_fill("F1", sequence=1),
+                quantity=1.0,
+                exit_id="EXIT-1",
+            ),
+        ),
+        cash_events=(
+            _d026_gross_cash("CE-GROSS-0", "F0", sequence=0),
+            fee_cash_0,
+            _d026_gross_cash("CE-GROSS-1", "F1", sequence=2),
+            fee_cash_1,
+        ),
+        fee_events=(
+            replace(
+                _d026_fee_event(fee_cash_0, sequence=0),
+                event_class="MARKET_EXIT",
+            ),
+            replace(
+                _d026_fee_event(fee_cash_1, sequence=1),
+                event_class="MARKET_EXIT",
+            ),
+        ),
+    )
+    state = PortfolioState(
+        initial_capital=1000.0,
+        equity=1000.0,
+        position=_open_position(),
+    )
+
+    _manager().apply_transition(
+        bar=_bar(), state=state, transition=transition, reason="time_stop"
+    )
+
+    assert state.position is None
+    assert state.last_gross_realized_pnl == 14.0
+    assert state.equity == 1013.8
+    assert state.realized_equity == 13.8
+    assert state.cumulative_fee == 0.2
+    assert [row.fill_id for row in state.cash_events] == ["F0", "F0", "F1", "F1"]
+    assert [row.fill_id for row in state.fee_events] == ["F0", "F1"]
+    assert [row.fill_id for row in state.exit_events_this_bar] == ["F0", "F1"]
 
 
 def test_d026_no_fill_duplicate_gross_fill_refuses_before_mutation() -> None:

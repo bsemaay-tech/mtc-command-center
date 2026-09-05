@@ -1,7 +1,7 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+ "EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
  "IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
  "core_tree_oid_at_base": "f28402fb9f6f0c3a1e2d10d9f9ad7ae6e56a9ef7",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
@@ -160,7 +160,15 @@
     "new_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
     "reason": "P0-12 approved re-seal metadata preparation: Items 2/5/6 repair; catalog and design pins measured; goldens and observed unchanged. No claim that all economic behavior is unchanged.",
     "independently_verified": "pending Lead"
-   }
+    },
+    {
+     "at": "2026-09-05T21:09:50+03:00",
+     "actor": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate",
+     "old_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+     "new_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+     "reason": "Duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed.",
+     "independently_verified": "pending independent audits"
+    }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
  "base_repin_history": [

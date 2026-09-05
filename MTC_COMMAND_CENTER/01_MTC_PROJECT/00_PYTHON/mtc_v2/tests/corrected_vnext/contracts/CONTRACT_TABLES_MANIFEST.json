@@ -12,9 +12,9 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-   "version": "v1.20",
-   "sha256": "840769e910dc1e5d8e1d99740ea704c8909e76b519bc33f4cb7ab3c2a8def0fd",
-   "total_lines": 1858,
+   "version": "v1.21",
+   "sha256": "a8dff7513c3535c55bd48bc7a79fc0467de04574d2940e51b0d51b30ebd7e665",
+   "total_lines": 1862,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
@@ -67,7 +67,7 @@
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "805f3661b94b1a9c7f7fc899783c040fbe8f66c19a949ecb593c4296b3a8fb68",
+   "sha256": "e33725b6ece727707d3d66d389cb44a329d0cb145977c19729250716d0a99d98",
    "bytes": 101675
   },
   {
@@ -571,9 +571,9 @@
   }
  ],
  "seal_state": {
-   "EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+   "EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
   "IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
-   "reason": "Re-seal #23 metadata preparation: Items 2/5/6 approved repair; catalog/design pins measured; goldens and observed unchanged. Independently verified: pending Lead."
+   "reason": "Re-seal #24 candidate, 2026-09-05T21:09:50+03:00: duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed. Pending independent audits."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -582,9 +582,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-   "EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+   "EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
   "IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
-   "set_by": "OpenCode gpt-5.6-luna implementer re-seal act #23 2026-09-05T17:35:47+03:00"
+   "set_by": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate, 2026-09-05T21:09:50+03:00"
  },
  "reseal_history": [
   {
@@ -1071,7 +1071,17 @@
     "design_pin": "v1.20",
     "reason": "P0-12 approved re-seal metadata preparation: Items 2/5/6 repair; catalog and design pins measured; goldens and observed unchanged. No claim that all economic behavior is unchanged.",
     "independently_verified": "pending Lead"
-   }
+    },
+    {
+     "at": "2026-09-05T21:09:50+03:00",
+     "actor": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate",
+     "old_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+     "new_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+     "files_changed": ["scenario_catalog.json"],
+     "design_pin": "v1.21",
+     "reason": "Duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed.",
+     "independently_verified": "pending independent audits"
+    }
  ],
  "legacy_event_order_map_pin": {
   "schema": "P012_LEGACY_EVENT_ORDER_MAP_PIN_V1",
@@ -1079,9 +1089,9 @@
   "design_authority": "Design section 15.3, \"an integer `sequence` equal to\" (LEGACY_EVENT_SHAPE_CHECK at expected-bundle seal time)",
   "baseline_manifest": {
    "path": "C:\\tmp\\P012_BASELINE_RUN\\BASELINE_BYTES_MANIFEST.json",
-    "sha256": "21c6c86d69351b3d17030c442cda2f03ccef08eeee3d29a7e649a952ca589514",
-    "authorization": "ONE run performed under owner P012_BASELINE_REGEN=YES, exact packet C:/tmp/P0_OWNER_EXECUTION_DECISIONS_20260905_1747.md, re-seal23 (2026-09-05).",
-    "EXPECTED_SEAL_SHA_consumed": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337"
+     "sha256": "c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242",
+     "authorization": "ONE run completed under P012_ONE_EXTRA_COORDINATED_REPAIR=YES, overnight 2050 packet approved 2026-09-05 20:48, re-seal24; 17/17 complete, 0 blocked, all 34 surfaces identical.",
+     "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa"
   },
   "legacy_event_order_map": {
    "RULE2-01-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",

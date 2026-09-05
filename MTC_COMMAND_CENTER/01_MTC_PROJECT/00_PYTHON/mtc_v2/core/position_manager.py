@@ -478,12 +478,20 @@ class PositionManager:
                     f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: non-fill position mismatch"
                 )
 
-        fee_fill_ids = [
+        fee_cash_fill_ids = [
             row.fill_id
             for row in transition.cash_events
             if row.kind is CashEventKind.FEE
         ]
-        fee_fill_ids.extend(row.fill_id for row in transition.fee_events)
+        fee_event_fill_ids = [row.fill_id for row in transition.fee_events]
+        if (
+            len(set(fee_cash_fill_ids)) != len(fee_cash_fill_ids)
+            or len(set(fee_event_fill_ids)) != len(fee_event_fill_ids)
+        ):
+            raise EconomicTransitionError(
+                f"{REFUSED_INVALID_CASH_LEDGER_JOIN}: duplicate fee fill join"
+            )
+        fee_fill_ids = fee_cash_fill_ids + fee_event_fill_ids
         if any(
             sum(fill.fill_id == fill_id for fill in fills) != 1
             for fill_id in fee_fill_ids
