@@ -15,15 +15,18 @@ from mtc_v2.core.results import (
     _realized_equity_window,
     corrected_surfaces,
 )
+from mtc_v2.core.position_manager import PositionManager
 from mtc_v2.core.runner import Runner
 from mtc_v2.core.types import (
     Bar,
     CashEvent,
     CashEventKind,
+    EconomicTransition,
     FeeEvent,
     FillDecision,
     FundingEvent,
     PortfolioState,
+    PositionFacts,
 )
 
 
@@ -737,3 +740,268 @@ def test_d026_window_renumber_rewrites_sequence_and_keeps_independent_ids() -> N
     assert empty["cash_events"] == []
     assert empty["fee_events"] == []
     assert empty["exit_events"] == []
+
+
+def _public_entry_transition(
+    fill_id: str,
+    timestamp: datetime,
+    *,
+    sequence: int,
+    next_quantity: float,
+    fee_timestamp: datetime | None = None,
+) -> EconomicTransition:
+    fill = FillDecision(
+        sequence=sequence,
+        event_timestamp=timestamp,
+        lifecycle_id=1,
+        fill_id=fill_id,
+        event_class="MARKET_ENTRY",
+        side="BUY",
+        reference_price=100.0,
+        slippage_model_id="BPS_OF_REFERENCE_V1",
+        slippage_bps=0.0,
+        slippage_impact=0.0,
+        slippage_application_count=1,
+        final_fill_price=100.0,
+        quantity=1.0,
+        liquidity_role="TAKER",
+        price_tick_alignment="CEIL",
+    )
+    cash_events: tuple[CashEvent, ...] = ()
+    fee_events: tuple[FeeEvent, ...] = ()
+    if fee_timestamp is not None:
+        cash = CashEvent(
+            sequence=0,
+            cash_event_id=f"CE-FEE-{fill_id}",
+            event_timestamp=fee_timestamp,
+            lifecycle_id=1,
+            kind=CashEventKind.FEE,
+            signed_delta=-0.1,
+            settlement_currency="TEST-USD",
+            fill_id=fill_id,
+        )
+        cash_events = (cash,)
+        fee_events = (
+            FeeEvent(
+                sequence=0,
+                event_timestamp=fee_timestamp,
+                lifecycle_id=1,
+                fill_id=fill_id,
+                event_class="MARKET_ENTRY",
+                liquidity_role="TAKER",
+                schedule_id="TEST-COST",
+                schedule_digest="4" * 64,
+                rate=0.001,
+                fixed_component=0.0,
+                fee_notional=100.0,
+                fee_amount=0.1,
+                fee_cash_delta=-0.1,
+                settlement_currency="TEST-USD",
+                cash_event_id=cash.cash_event_id,
+            ),
+        )
+    return EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="TEST-INSTRUMENT",
+        instrument_record_digest="0" * 64,
+        cost_schedule_id="TEST-COST",
+        cost_schedule_digest="4" * 64,
+        funding_schedule_id="TEST-FUNDING",
+        funding_schedule_digest="5" * 64,
+        next_position_facts=PositionFacts(1, "LONG", next_quantity, 100.0),
+        fill_decisions=(fill,),
+        cash_events=cash_events,
+        fee_events=fee_events,
+    )
+
+
+def _apply_public_transitions(*transitions: EconomicTransition) -> PortfolioState:
+    state = PortfolioState(initial_capital=1000.0, equity=1000.0)
+    owner = PositionManager(
+        enable_long=True,
+        enable_short=True,
+        regime_lock=False,
+        max_entries=3,
+        cooldown_bars=0,
+        contract_multiplier=1.0,
+        qty_step=1.0,
+    )
+    for bar_index, transition in enumerate(transitions):
+        events = transition.fill_decisions or transition.cash_events
+        owner.apply_transition(
+            bar=Bar(
+                events[0].event_timestamp,
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+                1.0,
+                bar_index,
+            ),
+            state=state,
+            transition=transition,
+            reason="test",
+        )
+    return state
+
+
+def _public_manifest() -> CorrectedRunManifest:
+    return CorrectedRunManifest(
+        execution_profile_id="WINDOW-MAPPING-TEST",
+        instrument_record_id="TEST-INSTRUMENT",
+        instrument_record_digest="0" * 64,
+        instrument_source_document_digest="3" * 64,
+        instrument_effective_interval={},
+        cost_schedule_id="TEST-COST",
+        cost_schedule_digest="4" * 64,
+        funding_schedule_id="TEST-FUNDING",
+        funding_schedule_digest="5" * 64,
+    )
+
+
+def test_d026_window_refuses_unjoined_public_transition_fill_reference() -> None:
+    first = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
+    second = datetime.fromisoformat("2000-01-01T00:01:00+00:00")
+    state = _apply_public_transitions(
+        _public_entry_transition("F0", first, sequence=0, next_quantity=1.0, fee_timestamp=second),
+        _public_entry_transition("F1", second, sequence=1, next_quantity=2.0),
+    )
+    source_state = dataclasses.asdict(state)
+
+    with pytest.raises(ValueError, match="unjoined fill reference"):
+        corrected_surfaces(
+            state=state,
+            equity_values=[],
+            manifest=_public_manifest(),
+            observation_start=second,
+        )
+    assert dataclasses.asdict(state) == source_state
+
+
+def test_d026_window_refuses_duplicate_public_transition_fill_ids() -> None:
+    first = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
+    second = datetime.fromisoformat("2000-01-01T00:01:00+00:00")
+    state = _apply_public_transitions(
+        _public_entry_transition("F0", first, sequence=0, next_quantity=1.0),
+        _public_entry_transition("F0", second, sequence=1, next_quantity=2.0),
+    )
+    source_state = dataclasses.asdict(state)
+
+    with pytest.raises(ValueError, match="duplicate source fill id"):
+        corrected_surfaces(state=state, equity_values=[], manifest=_public_manifest())
+    assert dataclasses.asdict(state) == source_state
+
+
+def test_d026_window_refuses_duplicate_fill_id_split_across_boundary() -> None:
+    first = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
+    second = datetime.fromisoformat("2000-01-01T00:01:00+00:00")
+    state = _apply_public_transitions(
+        _public_entry_transition("F0", first, sequence=0, next_quantity=1.0, fee_timestamp=second),
+        _public_entry_transition("F0", second, sequence=1, next_quantity=2.0),
+    )
+    source_state = dataclasses.asdict(state)
+
+    with pytest.raises(ValueError, match="duplicate source fill id"):
+        corrected_surfaces(
+            state=state,
+            equity_values=[],
+            manifest=_public_manifest(),
+            observation_start=second,
+        )
+    assert dataclasses.asdict(state) == source_state
+
+
+def test_window_projection_keeps_valid_timestamp_skew_and_source_rows_immutable() -> None:
+    first = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
+    second = datetime.fromisoformat("2000-01-01T00:01:00+00:00")
+    state = _apply_public_transitions(
+        _public_entry_transition("F7", first, sequence=7, next_quantity=1.0, fee_timestamp=second),
+        _public_entry_transition("F19", second, sequence=19, next_quantity=2.0),
+    )
+    source_state = dataclasses.asdict(state)
+
+    event = corrected_surfaces(
+        state=state, equity_values=[], manifest=_public_manifest()
+    )["EVENT_SURFACE"]
+
+    assert [row["fill_id"] for row in event["fill_events"]] == ["F0", "F1"]
+    assert [row["fill_id"] for row in event["cash_events"]] == ["F0"]
+    assert [row["fill_id"] for row in event["fee_events"]] == ["F0"]
+    assert event["cash_events"][0]["cash_event_id"] == "CE-FEE-F7"
+    assert event["cash_events"][0]["signed_delta"] == -0.1
+    assert event["fee_events"][0]["fee_amount"] == 0.1
+    assert event["fee_events"][0]["fee_cash_delta"] == -0.1
+    assert dataclasses.asdict(state) == source_state
+
+
+def test_window_projection_keeps_funding_cash_without_fill_id() -> None:
+    first = datetime.fromisoformat("2000-01-01T00:00:00+00:00")
+    second = datetime.fromisoformat("2000-01-01T00:01:00+00:00")
+    cash = CashEvent(
+        sequence=0,
+        cash_event_id="CE-FUND-0",
+        event_timestamp=second,
+        lifecycle_id=1,
+        kind=CashEventKind.FUNDING,
+        signed_delta=-0.1,
+        settlement_currency="TEST-USD",
+        funding_event_id="FUND-0",
+    )
+    funding = FundingEvent(
+        sequence=0,
+        funding_event_id="FUND-0",
+        event_timestamp=second,
+        lifecycle_id=1,
+        position_side="LONG",
+        open_qty=1.0,
+        contract_multiplier=1.0,
+        mark_price=100.0,
+        raw_rate=0.001,
+        positive_rate_payer="LONG",
+        long_cashflow_rate=-0.001,
+        notional=100.0,
+        funding_cash_delta=-0.1,
+        cumulative_funding=-0.1,
+        schedule_id="TEST-FUNDING",
+        schedule_digest="5" * 64,
+        source_event_digest="6" * 64,
+        cash_event_id=cash.cash_event_id,
+    )
+    funding_transition = EconomicTransition(
+        semantics_id="2.0.0",
+        instrument_record_id="TEST-INSTRUMENT",
+        instrument_record_digest="0" * 64,
+        cost_schedule_id="TEST-COST",
+        cost_schedule_digest="4" * 64,
+        funding_schedule_id="TEST-FUNDING",
+        funding_schedule_digest="5" * 64,
+        next_position_facts=PositionFacts(1, "LONG", 1.0, 100.0),
+        cash_events=(cash,),
+        funding_events=(funding,),
+    )
+    state = _apply_public_transitions(
+        _public_entry_transition("F7", first, sequence=7, next_quantity=1.0),
+        funding_transition,
+    )
+
+    event = corrected_surfaces(
+        state=state,
+        equity_values=[],
+        manifest=_public_manifest(),
+        observation_start=second,
+    )["EVENT_SURFACE"]
+
+    assert event["fill_events"] == []
+    assert event["cash_events"] == [
+        {
+            "sequence": 0,
+            "kernel_semantics_version": "2.0.0",
+            "cash_event_id": "CE-FUND-0",
+            "kind": "FUNDING",
+            "signed_delta": -0.1,
+            "funding_event_id": "FUND-0",
+            "lifecycle_id": 1,
+        }
+    ]
+    assert event["funding_events"][0]["funding_event_id"] == "FUND-0"
+    assert state.cash_events[-1].fill_id is None
