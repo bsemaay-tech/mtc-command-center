@@ -41,8 +41,12 @@ Do not load `_AI_MEMORY/history/` by default. Grep it on demand. For triage hist
 - Lead and implementer are separate flagships. The lead owns scope, independent acceptance,
   repair dispatch, and authorized sequencing; the counterpart implements and self-QAs. A lead
   never accepts an implementer report without inspecting the real diff and reproducing evidence.
-- Repair limits are T0=3, T1=2, T2=1, T3=0. Stop after the cap. Accepting verdicts are PASS or
-  PASS-WITH-NITS (optional nits only); REQUEST_CHANGES and BLOCK are non-accepting.
+- Repair-round defaults are T0=3, T1=2, T2=1, T3=0. They are internal Lead checkpoints,
+  extendable on concrete evidence within already-approved package behavior and path ceilings under
+  [AUTONOMY_AUTHORIZATION.md](MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AUTONOMY_AUTHORIZATION.md).
+  Record actual rounds and never repeat an identical failed attempt without new evidence or a changed
+  hypothesis. Accepting verdicts are PASS or PASS-WITH-NITS (optional nits only); REQUEST_CHANGES
+  and BLOCK are non-accepting.
 - A regression test offered as defect-closure evidence must show RED on exact pre-fix behavior or
   an equivalent mutation, then GREEN with the fix, with real commands/output recorded (D026).
 - Work on a `feature/<scope>` branch, never directly on `master`. Stage exact explicit paths; never
@@ -62,12 +66,12 @@ Do not load `_AI_MEMORY/history/` by default. Grep it on demand. For triage hist
 ## Autonomous campaigns
 
 For ask-vs-autonomous triggers, read [AUTONOMY_AUTHORIZATION.md](MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AUTONOMY_AUTHORIZATION.md).
-Standing permission: ordinary forward local commits of authorized owned scope are always allowed,
-including non-accepting candidates, fixes, and evidence/test-fixture alignment within approved
-behavior, paths, and repair caps. This supersedes earlier campaign commit ceilings and pre-acceptance
-commit prohibitions; a future explicit owner restriction overrides it. Preserve exact scopes,
-non-commit execution limits, repair caps, mandatory auditors, protected boundaries, economical routing,
-and operation/credential/PAYG gates. Before unattended execution, inspect all foreseeable source,
+Standing authority includes ordinary forward local commits and necessary defect/test/evidence repair,
+reseal, and same-scope baseline regeneration/archive/restore within already-approved package behavior
+and path ceilings. Prior numeric repair/reseal/run limits are Lead checkpoints, not owner questions;
+a future explicit owner restriction overrides this authority. Preserve exact scopes, mandatory
+auditors and tests, Lead acceptance, protected CI, economical routing, and operation/credential/PAYG
+gates. Before unattended execution, inspect all foreseeable source,
 test, schema, manifest, hash, anchor, and run consumers. Batch only real owner decisions. Always
 proceed on authorized independent work; no owner reply is needed for routine authorized steps. Pause
 the whole front only when no authorized independent work remains. No new commit quotas. Keep truthful
