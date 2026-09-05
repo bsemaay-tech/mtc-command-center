@@ -61,17 +61,18 @@ Do not load `_AI_MEMORY/history/` by default. Grep it on demand. For triage hist
 
 ## Autonomous campaigns
 
-Before unattended execution, inspect live dependencies plus all foreseeable source, test, schema,
-manifest, hash, anchor, and commit consumers; freeze exact path scopes and commit permissions. Ask
-genuinely needed decisions once in a recommendations-first batch, with each independent choice's
-consequence clear. Reuse granted authority; avoid routine prompts. Continue authorized independent
-lanes; preserve an unforeseen blocked lane and consolidate critical questions. Pause the whole front
-only when no safe lane remains. Autonomy never expands explicit scope or commit limits, resets
-  repair caps, invents economics, substitutes mandatory auditors, or authorizes operations, credentials,
-  or PAYG. Preserve existing economical subscription routing. For an already-required exact Claude audit,
-  use Claude Pro first and Claude Max only as a subscription-account fallback; preserve the exact model.
-  Every handoff states `NEXT ACTION` and `WAITING FOR OWNER` or
-`Nothing`, with truthful active/blocked status. No guarantee of completion or no-input execution.
+For ask-vs-autonomous triggers, read [AUTONOMY_AUTHORIZATION.md](MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AUTONOMY_AUTHORIZATION.md).
+Standing permission: ordinary forward local commits of authorized owned scope are always allowed,
+including non-accepting candidates, fixes, and evidence/test-fixture alignment within approved
+behavior, paths, and repair caps. This supersedes earlier campaign commit ceilings and pre-acceptance
+commit prohibitions; a future explicit owner restriction overrides it. Preserve exact scopes,
+non-commit execution limits, repair caps, mandatory auditors, protected boundaries, economical routing,
+and operation/credential/PAYG gates. Before unattended execution, inspect all foreseeable source,
+test, schema, manifest, hash, anchor, and run consumers. Batch only real owner decisions. Always
+proceed on authorized independent work; no owner reply is needed for routine authorized steps. Pause
+the whole front only when no authorized independent work remains. No new commit quotas. Keep truthful
+`NEXT ACTION` plus `WAITING FOR OWNER`/`Nothing` handoffs. Claude Pro first, Claude Max only as
+exact-audit subscription fallback; preserve model.
 
 For workflow, audit-roster, delegation, Git/handoff, or repository-governance work, the selected
 stage is `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/`.
