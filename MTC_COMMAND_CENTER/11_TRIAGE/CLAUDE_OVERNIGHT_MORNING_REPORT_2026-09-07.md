@@ -12,7 +12,7 @@ from them.
 
 ## 1. Owner decisions needed
 
-None are required for anything this lane did. Sixteen findings (D1–D16 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
+None are required for anything this lane did. Seventeen findings (D1–D17 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
 are batched here; each is a stage-owned repair with a verified patch attached, and none was
 applied to the tree.
 
@@ -59,7 +59,8 @@ unreachable from this container and remain required before merge.
 | `ec80222d` | `mcc_readonly/registry_reader.py` + tests (D15) | repaired CSV row must match header width, else skipped as malformed | dashboard 125 passed |
 | `44b11300` | four dashboard readers + tests (D14) | 20 read sites `utf-8` → `utf-8-sig`; one BOM regression test per reader | dashboard 129 passed |
 | `1dc4e47b` | `03_QUANTLENS/tools/heavy_night_report.py` + test (D16) | emit the computed pass-cell count | 2 tests pass |
-| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q,S}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
+| `aeaef767` | `11_TRIAGE/overnight_orchestrator.py`, regenerated runner, new template test (D17) | prototypes imported from their directory | 38 triage tests pass; runner compiles |
+| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q,R1,S,T}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
 
 Still owner-gated and NOT changed: D7 (`02_MTC_BACKTEST`), D8 (MTC_V2), plus anything Pine,
 parity, adapters, schemas. Read-only review lanes (J Bridge static hunt, K non-protected static hunt, L dashboard legacy
@@ -280,6 +281,15 @@ new STRONG_PASS detail table) is the owner's call; left unchanged with the optio
   Bridge delta is exactly one import line, whitespace/encoding clean, handoffs ≤ 4 KiB with
   NEXT ACTION / WAITING FOR OWNER, index `--check` OK, links resolve, Python compiles, trailers
   present, no secrets, §3 claims match the commits.
+
+### D17 — generated overnight runner imported a non-existent package (T1, `11_TRIAGE` template)
+
+Lane R1 nit, fixed by lane T (`aeaef767`): the template inserted `ROOT.parent` into `sys.path` and
+emitted `from PYTHON_PROTOTYPES import <id>_prototype`, but the directory is literally
+`04_PYTHON_PROTOTYPES` (not an importable name), so the runner could never load a prototype. Now
+`sys.path.insert(0, str(ROOT))` and bare `import <id>_prototype`; all 19 candidate ids map to
+existing files; static `find_spec` probe RED (0/19) → GREEN (19/19); 7 new template tests; runner
+regenerated (no execution). This runner remains a backtest-sweep launcher: running it is owner-gated.
 
 ### Independent adversarial review of the code commits (lane R1, record `OVERNIGHT_LANE_R1_*`)
 
