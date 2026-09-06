@@ -56,6 +56,10 @@ def _read_candidate_csv(path: Path, quantlens_root: Path) -> list[dict[str, Any]
         header = next(reader, [])
         for fields in reader:
             row = _candidate_csv_row(header, fields)
+            if row is None:
+                # Malformed row whose repair didn't land on the header's
+                # column count: fail closed rather than zip a misaligned row.
+                continue
             candidates.append(_candidate_from_row(row, path, quantlens_root))
     return candidates
 
@@ -177,7 +181,7 @@ def _normalize_source_url(value: Any) -> str:
     return url
 
 
-def _candidate_csv_row(header: list[str], fields: list[str]) -> dict[str, Any]:
+def _candidate_csv_row(header: list[str], fields: list[str]) -> dict[str, Any] | None:
     if len(fields) <= len(header):
         return dict(zip(header, fields))
 
@@ -186,6 +190,12 @@ def _candidate_csv_row(header: list[str], fields: list[str]) -> dict[str, Any]:
     repaired = fields[:12]
     repaired.append(",".join(field.strip() for field in fields[12:-4]))
     repaired.extend(fields[-4:])
+    if len(repaired) != len(header):
+        # The repair didn't land on the header's shape (e.g. the header has
+        # drifted from the 12-leading/4-trailing layout this split assumes).
+        # Fail closed instead of zipping a row that would silently drop or
+        # misalign columns.
+        return None
     return dict(zip(header, repaired))
 
 
