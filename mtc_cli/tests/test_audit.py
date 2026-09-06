@@ -204,3 +204,187 @@ class TestRouterEraLayout:
         env = audit_mod.run(repo_root=root)
         assert env.ok is True
         assert env.data["handoff_waiting_for_owner"] == 1
+
+
+# ---------------------------------------------------------------------------
+# Lane R1 adversarial-review nits (OVERNIGHT_LANE_R1_ADVERSARIAL_CODE_REVIEW,
+# 361b6451 subsection): widen the WAITING FOR OWNER "no ask" tokens beyond
+# bare "nothing...", and line-anchor the NEXT ACTION presence check so a
+# prose mention without a label doesn't satisfy it.
+# ---------------------------------------------------------------------------
+class TestWaitingForOwnerNoAskTokens:
+    """`_is_no_owner_ask` must treat each of these as "no ask" (case-insensitive),
+    matching the widened `_WAITING_NOTHING_WHOLE_VALUE_TOKENS` /
+    `_WAITING_NOTHING_PREFIX_RE`."""
+
+    def test_bare_none_token_is_no_ask(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        assert audit_mod._is_no_owner_ask("none") is True
+        assert audit_mod._is_no_owner_ask("None") is True
+        assert audit_mod._is_no_owner_ask("NONE") is True
+
+    def test_none_with_trailing_prose_is_not_automatically_no_ask(self):
+        """Unlike 'nothing', 'none' is matched as the whole value, not a
+        prefix: 'none' followed by more words is a real, countable ask."""
+        from mtc_cli.commands import audit as audit_mod
+
+        assert audit_mod._is_no_owner_ask("none for this lane") is False
+
+    def test_parenthesized_none_is_no_ask(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        assert audit_mod._is_no_owner_ask("(none)") is True
+        assert audit_mod._is_no_owner_ask("(None)") is True
+        assert audit_mod._is_no_owner_ask("( none )") is True
+
+    def test_n_slash_a_token_is_no_ask(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        assert audit_mod._is_no_owner_ask("n/a") is True
+        assert audit_mod._is_no_owner_ask("N/A") is True
+
+    def test_bare_hyphen_placeholder_is_no_ask(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        assert audit_mod._is_no_owner_ask("-") is True
+
+    def test_em_dash_placeholder_is_no_ask(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        assert audit_mod._is_no_owner_ask("—") is True
+
+    def test_empty_value_is_no_ask(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        assert audit_mod._is_no_owner_ask("") is True
+        assert audit_mod._is_no_owner_ask("   ") is True
+
+    def test_nothing_for_this_lane_still_no_ask(self):
+        """Regression: the pre-existing 'Nothing ...' behavior is unchanged."""
+        from mtc_cli.commands import audit as audit_mod
+
+        assert audit_mod._is_no_owner_ask("Nothing for this lane") is True
+        assert audit_mod._is_no_owner_ask("Nothing.") is True
+
+    def test_real_ask_is_not_no_ask(self):
+        """A genuine ask must not be swallowed by the widened tokens."""
+        from mtc_cli.commands import audit as audit_mod
+
+        assert audit_mod._is_no_owner_ask("approve PAYG budget") is False
+        assert audit_mod._is_no_owner_ask("none of the below — needs a decision on scope") is False
+
+    def test_hyphen_prefixed_real_item_is_not_no_ask(self):
+        """A '-' that starts a real sentence (not a bare placeholder) still counts."""
+        from mtc_cli.commands import audit as audit_mod
+
+        assert audit_mod._is_no_owner_ask("- approve the PR") is False
+
+    def test_fixture_none_token_yields_zero_waiting_for_owner(self, tmp_path):
+        """End-to-end: a 'None' WAITING FOR OWNER value audits as 0, not 1."""
+        from mtc_cli.commands import audit as audit_mod
+
+        root = _router_era_fixture(tmp_path)
+        (root / GOV_HANDOFF).write_text(
+            "# Governance stage handoff\n\n"
+            "## [Lead] 2026-09-07 — fixture\n\n"
+            "- **NEXT ACTION:** publish through protected CI.\n"
+            "- **WAITING FOR OWNER:** None\n",
+            encoding="utf-8",
+        )
+        env = audit_mod.run(repo_root=root)
+        assert env.ok is True
+        assert env.data["handoff_waiting_for_owner"] == 0
+
+    def test_fixture_parenthesized_none_yields_zero_waiting_for_owner(self, tmp_path):
+        """End-to-end: a '(none)' WAITING FOR OWNER value audits as 0, not 1."""
+        from mtc_cli.commands import audit as audit_mod
+
+        root = _router_era_fixture(tmp_path)
+        (root / GOV_HANDOFF).write_text(
+            "# Governance stage handoff\n\n"
+            "## [Lead] 2026-09-07 — fixture\n\n"
+            "- **NEXT ACTION:** publish through protected CI.\n"
+            "- **WAITING FOR OWNER:** (none)\n",
+            encoding="utf-8",
+        )
+        env = audit_mod.run(repo_root=root)
+        assert env.ok is True
+        assert env.data["handoff_waiting_for_owner"] == 0
+
+
+class TestNextActionLabelLine:
+    """`_handoff_next_action_count` is line-anchored: it counts lines carrying
+    NEXT ACTION as a *label* (bolded or colon-terminated), not a bare
+    substring match anywhere in the section."""
+
+    def test_labelled_bullet_line_is_counted(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        section = "- **NEXT ACTION:** open a PR for review.\n"
+        assert audit_mod._handoff_next_action_count(section) == 1
+
+    def test_bolded_label_without_colon_is_counted(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        section = "**NEXT ACTION** open a PR for review.\n"
+        assert audit_mod._handoff_next_action_count(section) == 1
+
+    def test_plain_colon_label_without_bold_is_counted(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        section = "NEXT ACTION: open a PR for review.\n"
+        assert audit_mod._handoff_next_action_count(section) == 1
+
+    def test_bare_prose_mention_without_label_is_not_counted(self):
+        """A NEXT ACTION mention with no colon and no bold-wrap is prose, not
+        a label, and must NOT satisfy the check — this is the bug the
+        line-anchored regex fixes (previously a bare substring count)."""
+        from mtc_cli.commands import audit as audit_mod
+
+        section = "We are still deciding on the NEXT ACTION for this lane.\n"
+        assert audit_mod._handoff_next_action_count(section) == 0
+
+    def test_labelled_occurrence_embedded_in_a_longer_prose_line_is_counted(self):
+        """A NEXT ACTION label (colon-terminated) that sits inside a longer
+        prose sentence, rather than on its own bullet line, still counts —
+        the label form (not the line's shape) is what makes it countable."""
+        from mtc_cli.commands import audit as audit_mod
+
+        section = (
+            "Discussion continued for a while, and the NEXT ACTION: ship the fix, "
+            "was agreed by everyone on the call.\n"
+        )
+        assert audit_mod._handoff_next_action_count(section) == 1
+
+    def test_two_labelled_lines_count_two(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        section = (
+            "- **NEXT ACTION:** first item.\n"
+            "- **NEXT ACTION:** second item (superseded by history; kept for the count).\n"
+        )
+        assert audit_mod._handoff_next_action_count(section) == 2
+
+    def test_fixture_prose_only_mention_fails_the_audit(self, tmp_path):
+        """End-to-end: an unlabelled NEXT ACTION mention must not satisfy the
+        real audit's presence check (exit 2 / ERROR finding)."""
+        from mtc_cli import contract
+        from mtc_cli.commands import audit as audit_mod
+
+        root = _router_era_fixture(tmp_path)
+        (root / GOV_HANDOFF).write_text(
+            "# Governance stage handoff\n\n"
+            "## [Lead] 2026-09-07 — fixture\n\n"
+            "Still deciding on the NEXT ACTION for this lane.\n"
+            "- **WAITING FOR OWNER:** Nothing.\n",
+            encoding="utf-8",
+        )
+        env = audit_mod.run(repo_root=root)
+        assert env.ok is False
+        assert env.exit_code() == contract.EXIT_VALIDATION
+        assert env.data["handoff_next_actions"] == 0
+        missing_next_action = [
+            f for f in env.findings if "missing a NEXT ACTION line" in f["message"]
+        ]
+        assert len(missing_next_action) == 1

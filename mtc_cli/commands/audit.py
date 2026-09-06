@@ -7,6 +7,13 @@ Checks:
   - Git index clean (no staged changes)
   - Overnight loop heartbeat age
   - Governance HANDOFF.md newest section carries NEXT ACTION / WAITING FOR OWNER
+
+The governance HANDOFF.md (MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md) is
+written newest-first: each lane/session appends its "## " section above the
+older ones, so the current state is always the section nearest the top. This
+check reads only that first "## " section (see `_newest_section`) — an older
+section further down is out of scope for the NEXT ACTION / WAITING FOR OWNER
+presence checks below.
 """
 from __future__ import annotations
 
@@ -58,7 +65,47 @@ HEARTBEAT_STALE_MINUTES = 30
 # root AGENTS.md "Keep truthful NEXT ACTION plus WAITING FOR OWNER/Nothing
 # handoffs."
 _SECTION_SPLIT_RE = re.compile(r"(?m)^## ")
-_WAITING_NOTHING_RE = re.compile(r"^\s*nothing\b", re.IGNORECASE)
+
+# A WAITING FOR OWNER value that means "no ask" — matched after stripping the
+# leading "WAITING FOR OWNER" label, ":"/"*" markers, and a trailing ".".
+#
+# "nothing" keeps its pre-existing, prefix-tolerant behavior: it may be
+# followed by trailing prose, e.g. "Nothing for this lane" (this is the
+# established convention this change must not break). The newly added
+# tokens (none/n/a/-/—/empty) are matched as the *entire* value instead —
+# each is a placeholder in its own right, not a prefix, so "none of the
+# below needs a decision" is still a real, countable ask.
+_WAITING_NOTHING_PREFIX_RE = re.compile(r"^\s*nothing\b", re.IGNORECASE)
+_WAITING_NOTHING_WHOLE_VALUE_TOKENS = {"nothing", "none", "n/a", "na", "-", "—"}
+
+# Kept for backward compatibility / external callers that reference the old
+# name directly; prefer `_is_no_owner_ask` for new checks.
+_WAITING_NOTHING_RE = _WAITING_NOTHING_PREFIX_RE
+
+
+def _is_no_owner_ask(value: str) -> bool:
+    """True when a WAITING FOR OWNER value carries no real ask.
+
+    Covers an empty value, a bare "-"/"—" placeholder, an optionally
+    parenthesized "none"/"n/a" token (case-insensitive, matched as the whole
+    value), and "nothing" (case-insensitive), which — as before this change
+    — may also be followed by trailing prose (e.g. "Nothing for this
+    lane"). Anything else, including a token embedded as a prefix of a
+    longer real ask (e.g. "none of the below needs a decision"), is a real,
+    countable item.
+    """
+    stripped = value.strip()
+    if not stripped:
+        return True
+    if _WAITING_NOTHING_PREFIX_RE.match(stripped):
+        return True
+    unwrapped = stripped
+    if unwrapped.startswith("(") and unwrapped.endswith(")") and len(unwrapped) > 1:
+        unwrapped = unwrapped[1:-1].strip()
+        if not unwrapped:
+            return True
+    normalized = unwrapped.rstrip(".").strip().lower()
+    return normalized in _WAITING_NOTHING_WHOLE_VALUE_TOKENS
 
 
 def _newest_section(handoff_text: str) -> str:
@@ -67,19 +114,34 @@ def _newest_section(handoff_text: str) -> str:
     return parts[1] if len(parts) > 1 else handoff_text
 
 
+# A NEXT ACTION *label* line: NEXT ACTION either bolded ("**NEXT ACTION**")
+# or colon-terminated ("NEXT ACTION:", with or without surrounding "**"). A
+# bare mention of the phrase inside prose that carries neither form does not
+# count, even though the substring "NEXT ACTION" is present on that line; a
+# labelled occurrence embedded inside a longer prose line (e.g. "... the
+# NEXT ACTION: ship it.") still counts — the label form is what
+# disambiguates a committed action item from incidental prose.
+_NEXT_ACTION_LABEL_RE = re.compile(
+    r"^.*(?:\*\*NEXT ACTION\*\*|NEXT ACTION\s*:).*$",
+    re.MULTILINE,
+)
+
+
 def _handoff_next_action_count(section: str) -> int:
-    return len(re.findall(r"NEXT ACTION", section))
+    """Count lines carrying a NEXT ACTION label (line-anchored, not a bare
+    substring count — see `_NEXT_ACTION_LABEL_RE`)."""
+    return len(_NEXT_ACTION_LABEL_RE.findall(section))
 
 
 def _handoff_waiting_for_owner_count(section: str) -> int:
-    """Count WAITING FOR OWNER lines whose value is not 'Nothing ...'."""
+    """Count WAITING FOR OWNER lines whose value is not a "no ask" token."""
     real = 0
     for line in section.splitlines():
         if "WAITING FOR OWNER" not in line:
             continue
         value = line.split("WAITING FOR OWNER", 1)[1]
         value = value.lstrip(":*").strip().rstrip(".").strip()
-        if value and not _WAITING_NOTHING_RE.match(value):
+        if not _is_no_owner_ask(value):
             real += 1
     return real
 

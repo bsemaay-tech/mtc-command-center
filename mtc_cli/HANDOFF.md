@@ -31,3 +31,18 @@
 - **NEXT ACTION:** open a PR from this worktree branch for protected-CI review; no further
   mtc_cli audit work pending from this task.
 - **WAITING FOR OWNER:** Nothing.
+
+## [Claude lane U] 2026-09-07 — audit nit repair
+
+- **Changes:** `mtc_cli/commands/audit.py` widened WAITING FOR OWNER "no ask" detection
+  (`_is_no_owner_ask`) to also treat `none`, `(none)`, `n/a`, `-`, `—`, and empty as no ask
+  (whole-value match; `nothing` keeps its existing prefix-tolerant behavior), and line-anchored
+  the NEXT ACTION presence check (`_handoff_next_action_count` via `_NEXT_ACTION_LABEL_RE`) so a
+  bare prose mention no longer satisfies it while a labelled `**NEXT ACTION**`/`NEXT ACTION:`
+  line does, even embedded in prose. Docstring now documents the governance HANDOFF.md's
+  newest-first ordering and the first-`## `-section read. No command/flag/exit-code change.
+- **Evidence:** RED — 14 new tests failed against pre-fix `audit.py` (missing `_is_no_owner_ask`
+  plus 2 NEXT ACTION behavior mismatches, via `git stash`). GREEN — `pytest mtc_cli/tests -q`:
+  32 passed; real CLI `python -m mtc_cli audit repo --json` exit 0, unchanged shape
+  (`handoff_next_actions: 1`, `handoff_waiting_for_owner: 0`). `ruff check --select E9,F821,F811`
+  and `git diff --check` clean.
