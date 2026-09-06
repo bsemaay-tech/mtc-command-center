@@ -12,9 +12,9 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.23",
-  "sha256": "cc1952ee6e2fc37aba06d0342275fcb33563057d052ab8d6d3ad1d945bb61210",
-  "total_lines": 1895,
+  "version": "v1.24",
+  "sha256": "d071a13f7b122c52ea022e1f6cfd825d9b4916c1729155b12d5e5a68f0e57dea",
+  "total_lines": 2025,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
    "v1.3 change log \u2014 DS15 fold + owner rulings 2026-08-31": 7,
@@ -49,6 +49,9 @@
   },
   "heading_line_map_addition_measured_at_reseal26": {
    "23.20 v1.23 change log - R26 identity and Item-2 closure": 1882
+  },
+  "heading_line_map_addition_measured_at_reseal28": {
+   "23.21 v1.24 change log - SYNTHETIC_ONLY milestone scope and Item-4 disposition": 1897
   }
  },
  "repository_evidence_identity": {
@@ -578,8 +581,8 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
-  "IMPLEMENTATION_BASE_SHA": "18ef4f2a93830f49b14a2a4975c5aea3d4713c94",
-  "reason": "Re-seal #27 candidate under OD20260906-1 delegated same-package repair authority: scenario_catalog.json alone now names the four already-approved current golden digests. No golden, observed artifact, economic value, source, probe, design, production fact, or Item-4 disposition changed. Base C27 is provisional; NONACCEPTED until forward repin F27. Decision-147 forward repin completed separately at F27; active base is exact re-seal commit M27."
+  "IMPLEMENTATION_BASE_SHA": "94cb4822931c3cb5dbdb79f0e9fad6595633eab6",
+  "reason": "Re-seal #28 candidate under OD-20260906-2: design v1.24 adds the SYNTHETIC_ONLY non-production milestone scope and its Section-16 Item-4 disposition rule. Design only; no sealed manifest member, core, golden, observed artifact, probe, economic value, production fact, threshold, or behavior changed. The existing seal recipe was recomputed and is unchanged. Base C28 is provisional; NONACCEPTED until forward repin F28."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -589,8 +592,8 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
-  "IMPLEMENTATION_BASE_SHA": "18ef4f2a93830f49b14a2a4975c5aea3d4713c94",
-  "set_by": "R27 re-seal #27 candidate, 2026-09-06T02:38:01+03:00"
+  "IMPLEMENTATION_BASE_SHA": "94cb4822931c3cb5dbdb79f0e9fad6595633eab6",
+  "set_by": "R28 re-seal #28 candidate, 2026-09-06T13:38:41+03:00"
  },
  "reseal_history": [
   {
@@ -1130,6 +1133,18 @@
    ],
    "design_pin": "v1.23",
    "reason": "Re-seal #27 candidate under OD20260906-1 delegated same-package repair authority: scenario_catalog.json alone now names the four already-approved current golden digests. No golden, observed artifact, economic value, source, probe, design, production fact, or Item-4 disposition changed. Base C27 is provisional; NONACCEPTED until forward repin F27.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T13:38:41+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #28 candidate",
+   "old_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "new_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "files_changed": [
+    "P012_FRESH_DESIGN_V1.md"
+   ],
+   "design_pin": "v1.24",
+   "reason": "Re-seal #28 candidate under OD-20260906-2: design v1.24 adds the SYNTHETIC_ONLY non-production milestone scope and its Section-16 Item-4 disposition rule. Design only; no sealed manifest member, core, golden, observed artifact, probe, economic value, production fact, threshold, or behavior changed. The existing seal recipe was recomputed and is unchanged. Base C28 is provisional; NONACCEPTED until forward repin F28.",
    "independently_verified": "pending Lead and required audits"
   }
  ],
