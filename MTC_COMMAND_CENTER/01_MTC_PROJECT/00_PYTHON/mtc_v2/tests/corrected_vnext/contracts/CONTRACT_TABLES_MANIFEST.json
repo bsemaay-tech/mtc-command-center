@@ -581,8 +581,8 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
-  "IMPLEMENTATION_BASE_SHA": "94cb4822931c3cb5dbdb79f0e9fad6595633eab6",
-  "reason": "Re-seal #28 candidate under OD-20260906-2: design v1.24 adds the SYNTHETIC_ONLY non-production milestone scope and its Section-16 Item-4 disposition rule. Design only; no sealed manifest member, core, golden, observed artifact, probe, economic value, production fact, threshold, or behavior changed. The existing seal recipe was recomputed and is unchanged. Base C28 is provisional; NONACCEPTED until forward repin F28."
+  "IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
+  "reason": "Re-seal #28 candidate under OD-20260906-2: design v1.24 adds the SYNTHETIC_ONLY non-production milestone scope and its Section-16 Item-4 disposition rule. Design only; no sealed manifest member, core, golden, observed artifact, probe, economic value, production fact, threshold, or behavior changed. The existing seal recipe was recomputed and is unchanged. Base C28 is provisional; NONACCEPTED until forward repin F28. Decision-147 forward repin completed separately at F28; active base is exact re-seal commit M28."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -592,7 +592,7 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
-  "IMPLEMENTATION_BASE_SHA": "94cb4822931c3cb5dbdb79f0e9fad6595633eab6",
+  "IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
   "set_by": "R28 re-seal #28 candidate, 2026-09-06T13:38:41+03:00"
  },
  "reseal_history": [

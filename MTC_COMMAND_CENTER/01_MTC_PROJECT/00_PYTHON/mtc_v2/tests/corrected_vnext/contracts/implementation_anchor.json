@@ -2,7 +2,7 @@
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
  "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
- "IMPLEMENTATION_BASE_SHA": "94cb4822931c3cb5dbdb79f0e9fad6595633eab6",
+ "IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
  "core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
@@ -315,6 +315,15 @@
    "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
    "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
    "reason": "Provisional C28 base required to commit re-seal #28 bytes; NONACCEPTED until the separate decision-147 C28-to-M28 forward repin."
+  },
+  {
+   "at": "2026-09-06T14:58:00+03:00",
+   "actor": "Lead (Claude Fable 5.1), decision-147 R28 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "94cb4822931c3cb5dbdb79f0e9fad6595633eab6",
+   "new_IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
+   "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "reason": "Decision 147: M28 is the commit carrying re-seal #28 in-repo. F28 changes only active-base metadata, sidecar, and current-pin selftest; files, seal, design, catalog, schema, and economics are unchanged."
   }
  ]
 }
