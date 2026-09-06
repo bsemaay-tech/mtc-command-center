@@ -161,3 +161,16 @@ launch recovered every window. (3) PS5.1 dispatch traps (unquoted Start-Process 
 | Claude Max | — | not used | Pro sufficed. |
 
 Later the same day (11:00-11:55): P030 rounds 3-5 - Claude Pro Opus xhigh x3 (executed the published check each time, 3-5 min); Codex free Sol xhigh x4 (executed; PASS-WITH-NITS / REQUEST_CHANGES / PASS-WITH-NITS; Standards PASS); Codex third Sol x3 static-only (read-only sandbox: BLOCK env-only when execution is required, otherwise PASS / REQUEST_CHANGES); Gemini 3.7 x3 PASS (~1 min each). P012 Sol execution closure attempt 4 PASS via an auditor-triggered Lead fixed-command supervisor (gate byte-identical to the Opus gate). Lessons: auditors hold the Lead to its own TASK wording; the Lead session hook drops .impeccable/hook.cache.json into any shell cwd - build and verify packets with absolute paths only.
+
+## 2026-09-06 afternoon/evening (12:40-19:45) - rule 16 entry, Lead Claude Fable 5.1
+
+| Route | Used for | Measured | Assessment |
+|---|---|---|---|
+| Claude Pro claude-opus-5 xhigh/high | re-seal #28 T0 x3 (v1 REQUEST_CHANGES on packet labelling, v2 same, v3 PASS-WITH-NITS with seal recomputed from the manifest recipe); P021 v2.1 PASS-WITH-NITS; capture v3 PASS-WITH-NITS (executed 369-check QA) | 4-12 min each; independent re-measurement; caught my own evidence-labelling defects three times | Best static+exec reviewer; session cap 12:52->15:20 and 19:05->20:20 |
+| Claude Max claude-opus-5 high | capture R2 (executed QA) PASS; capture R3 fix lane with web read (20 doc-page fetches) | 10-25 min | Reserved for critical/web lanes per owner |
+| Codex `free` gpt-5.6-sol xhigh (workspace-write) | capture R2 REQUEST_CHANGES (S4 only) then R3 PASS, both executed; P021 v2.1 doc repair; re-seal #28 lane (seven-file candidate; sandbox denied `.git`); capture-fold proposal (QA 101 PASS) | 10-30 min; the only Sol + exec account; cannot commit (Lead commits) | Workhorse |
+| Codex `third` gpt-5.5 (read-only) | #28 v1 static read REQUEST_CHANGES; v2 read died on its own policy blocks | serves gpt-5.5 only since 14:27 | Static second reader, not a flagship |
+| Gemini 3.8 Flash High (Antigravity, read-only) | Section-16: 1A/1B (formula re-derivations, wave 1); 2A/2B/2C (167 hunks, all confirmed); 3 and 4 (A-W-R-R; item 4 under the milestone rule); 1C REFUSED x2 on the precondition-3-vs-L14 ground | 8-25 min per lane; strict evidence-path rule fixed one fabricated-path report; killed by: my mirroring (x1), my commit (x3), IDE fetch (x3), other-app object freshen (x6), then RESOURCE_EXHAUSTED 429 from 19:30 | Mandated reviewer; needs the two owner-authorized watcher tolerances (FETCH_HEAD, byte-identical freshen) and quota headroom |
+| Gemini 3.7 | P021 v2.1 corroboration probe | 429 (shared quota) | Same pool as 3.8 |
+
+Lessons carried to memory `route-lessons-2026-09-06-afternoon`: watcher covers `.git`; never git-write in any canonical worktree during a Gemini wave; probe pins hash git's on-disk CRLF form; Codex-lane launcher `git status`es every declared read root; a monitor-only turn can idle for hours (17:00-19:00 lost).
