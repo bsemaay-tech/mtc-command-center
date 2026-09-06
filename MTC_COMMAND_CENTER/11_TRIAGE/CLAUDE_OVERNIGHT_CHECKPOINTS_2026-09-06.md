@@ -17,7 +17,7 @@ credential, broker, TESTNET/mainnet, ARM, order, backtest, optimization, or laun
 `MTC_COMMAND_CENTER/11_TRIAGE/CLAUDE_OVERNIGHT_MORNING_REPORT_2026-09-07.md` (morning).
 No live dependency contacted or changed.
 
-## Checkpoint 1 — 2026-09-06 23:13 +03
+## Checkpoint 1 — 2026-09-06 22:45 +03 (heading time corrected in Checkpoint 2)
 
 - **Protected CI reproduced on master head `afe52ea`** with `/usr/bin/python3.12` (3.12.3),
   hash-locked `IBKR_PAPER_BRIDGE/requirements.lock` install (pip exit 0),
@@ -56,3 +56,64 @@ No live dependency contacted or changed.
 - **NEXT ACTION:** confirm non-root GREEN; continue read-only inspection lanes; checkpoint 2 at
   ~23:45 +03.
 - **WAITING FOR OWNER:** Nothing for this lane's authorized work.
+
+## Checkpoint 2 — 2026-09-06 22:55 +03
+
+- **Correction:** Checkpoint 1's heading originally read `23:13 +03`; that was a clock estimate
+  error. The authoritative time is its commit `93828d9` at 2026-09-06 22:45 +03. Heading fixed.
+- **Root-cause confirmed both ways (same Bridge tree; `afe52ea..93828d9` touches only two
+  triage docs):** as uid 0 → 3 failed / 1390 passed; as uid 65534 with
+  `git config safe.directory=*` → **1393 passed, exit 0** in 63 s. The intermediate non-root run
+  without `safe.directory` failed only
+  `test_linux_deployment.py::test_canonical_ledger_artifact_fresh_autocrlf_checkout_matches_recorded_identity`
+  because `git show HEAD:…` exits 128 on a root-owned checkout ("dubious ownership"); that is a
+  harness artifact, not a test defect.
+- **Operational relevance of the root-only WAL finding:** the Linux units run as
+  `User=mtc-bridge` (`deploy/linux/systemd/*.service.template`), and `deploy/linux/COMMANDS.md`
+  Stage E runs the capture on the old Windows writer host, so no documented path runs
+  `wal_state_bundle.py create` as Linux root. Impact is limited to root-run test/QA sessions on
+  Linux; the failure direction is safe (fail-closed). No code change made or proposed here;
+  a T2 note in `IBKR_PAPER_BRIDGE/TESTS.md` ("run the suite as a non-root user on Linux") is the
+  smallest useful follow-up for the Bridge stage owner.
+- **Other suites executed read-only (all with the same Python 3.12.3 venv):**
+  `mtc_cli/tests` 8 passed; `_deepseek_driver/tests` 20 passed;
+  `IBKR_PAPER_BRIDGE/tools_v2/observability/tests` 19 passed;
+  `IBKR_PAPER_BRIDGE/tools_v2/analysis_package/tests` 11 passed;
+  `MTC_COMMAND_CENTER/contracts` 50 passed and `ruff==0.16.4` "All checks passed";
+  25 QuantLens strategy test directories (13 under `03_QUANTLENS/strategies`, 12 under
+  `research/strategy_batch_2026_05_03`) all passed (2–6 tests each);
+  `08_DASHBOARD_APP/apps/api/tests` **120 passed, 1 failed** (below). `02_MTC_BACKTEST` and
+  `12_PARITY_PINETS` were not executed (owner-gated protected scopes).
+- **Finding D1 (test-only, dashboard stage, T1):**
+  `apps/api/tests/test_pipeline_reader.py::PipelineReaderTests::test_discovers_extra_quantlens_jsonl_candidates`
+  asserts `discovery_source == "research\\batch\\FINAL_LLM_KNOWLEDGE_BASE.jsonl"`, a Windows
+  separator literal; `_relative_to_quantlens()` returns `str(path.relative_to(root))`, which is
+  native (`/` on Linux). Product behaviour is consistent; the assertion is platform-bound.
+- **Finding D2 (generator defect, governance stage `11_TRIAGE`, T1):**
+  `11_TRIAGE/overnight_orchestrator.py::write_runner_extension` interpolates a multi-line
+  `{imports}` block into an f-string **before** `textwrap.dedent`, so only the first import line
+  carries the template indent and `dedent` strips nothing. The committed output
+  `03_QUANTLENS/tools/overnight_extended_run.py` therefore fails to compile
+  (`IndentationError: unexpected indent`, line 1). Every other tracked Python tree compiles
+  (`compileall` over `mtc_cli`, `03_QUANTLENS/tools` [93 files, this one error], `tools`,
+  `_deepseek_driver`, `08_DASHBOARD_APP`, `11_TRIAGE`, `12_PARITY_PINETS`).
+- **Finding D3 (writer defect, `01_MTC_PROJECT` stage, T1):** all 7 tracked files under
+  `01_MTC_PROJECT/optimization/parameter_library/**/*.yml` are invalid YAML
+  (`mapping values are not allowed here`, line 4). `tools/extract_parameter_library_seeds.py::write_seed_regions`
+  emits `RESEARCH_WARNING` as a bare unquoted prose line directly under the `#` title, so the
+  scalar swallows the following `regions:` key. 108 other tracked YAML files parse.
+- **Finding D4 (misnamed artifact, `03_QUANTLENS` stage, T3):**
+  `03_QUANTLENS/tools/night_runs/AGGREGATE_night_2026-06-02.json` (40,534 B) is Markdown
+  (`# OVERNIGHT AGGREGATED REPORT …`), not JSON; `write_overnight_morning_report.py` names the
+  aggregate as `.md`. 2,202 other tracked JSON files parse.
+- **Clean sweeps:** credential-pattern grep over tracked files finds only labelled fakes in
+  `tools_v2/analysis_package` fixtures and `_deepseek_driver` tests; the only `.env`-like tracked
+  file is an `.env.example`. `git ls-files --eol`: 7,773 LF, 345 `-text`, 249 binary/none, 0 mixed.
+  `bash -n` over 120 tracked `.sh`: the only 4 non-parsing files are the deliberately malformed
+  `WPI_PREREG_DRAFT_ROUND1/sec102_r7_fixtures/entry_extglob_*` security fixtures.
+  `requirements.in` mirrors `requirements.txt` entry-for-entry; lock pins match the installed set.
+- **Largest tracked file:** `03_QUANTLENS/research/stage2_robustness_…/LBR_COIL/trades.csv`
+  at 89.3 MB; twelve 5-minute Binance research CSVs at 14–16 MB each; `.git` is 130 MB.
+- **NEXT ACTION:** assemble the morning report with exact patches for D1–D4 as owner-dispatchable
+  proposals (no code changed by this lane); heartbeat checkpoints every 30 min until 08:00 +03.
+- **WAITING FOR OWNER:** Nothing for this lane; D1–D4 need their stage owners' dispatch.
