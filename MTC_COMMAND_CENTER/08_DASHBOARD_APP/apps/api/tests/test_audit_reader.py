@@ -10,15 +10,16 @@ from mcc_readonly.audit_reader import build_candidate_audit
 
 class CandidateAuditTests(unittest.TestCase):
     def test_audit_classifies_duplicate_blocked_and_eligible_rows(self) -> None:
-        with self.subTest("audit row classification"):
-            triage_map = Path("C:/TEMP/MTC_COMMAND_CENTER/11_TRIAGE/strategies")
+        with tempfile.TemporaryDirectory() as tmp, self.subTest("audit row classification"):
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            triage_map = root / "11_TRIAGE" / "strategies"
             triage_map.mkdir(parents=True, exist_ok=True)
             (triage_map / "_stg_code_map.json").write_text(
                 json.dumps({"A": "Stg001", "B": "Stg002", "C": "Stg003"}),
                 encoding="utf-8",
             )
             audit = build_candidate_audit(
-                Path("C:/TEMP/MTC_COMMAND_CENTER"),
+                root,
                 candidate_pipeline={
                     "rows": [
                         _row(
@@ -258,48 +259,51 @@ class CandidateAuditTests(unittest.TestCase):
             self.assertEqual(row["recommended_next_pipeline_step"], "Split into indicator cases")
 
     def test_audit_hides_source_parent_when_child_candidates_exist(self) -> None:
-        audit = build_candidate_audit(
-            Path("C:/TEMP/MTC_COMMAND_CENTER"),
-            candidate_pipeline={
-                "rows": [
-                    _row(
-                        "QLR_PARENT123",
-                        "Interview parent",
-                        "classified",
-                        "https://www.youtube.com/watch?v=parent123",
-                        "REJECT_NO_TEST because parent source was not Pine-ready",
-                        "Source parent",
-                    ),
-                    _row(
-                        "QL_CHILD_SETUP_001",
-                        "Extracted setup",
-                        "classified",
-                        "https://www.youtube.com/watch?v=parent123",
-                        "close > EMA(high, 4) AND close[1] <= EMA(high, 4)",
-                        "Extracted setup",
-                    ),
-                ]
-            },
-            strategy_registry={"candidates": [], "strategies": []},
-        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            root.mkdir(parents=True, exist_ok=True)
+            audit = build_candidate_audit(
+                root,
+                candidate_pipeline={
+                    "rows": [
+                        _row(
+                            "QLR_PARENT123",
+                            "Interview parent",
+                            "classified",
+                            "https://www.youtube.com/watch?v=parent123",
+                            "REJECT_NO_TEST because parent source was not Pine-ready",
+                            "Source parent",
+                        ),
+                        _row(
+                            "QL_CHILD_SETUP_001",
+                            "Extracted setup",
+                            "classified",
+                            "https://www.youtube.com/watch?v=parent123",
+                            "close > EMA(high, 4) AND close[1] <= EMA(high, 4)",
+                            "Extracted setup",
+                        ),
+                    ]
+                },
+                strategy_registry={"candidates": [], "strategies": []},
+            )
 
-        rows = {row["id"]: row for row in audit["rows"]}
-        parent = rows["QLR_PARENT123"]
-        child = rows["QL_CHILD_SETUP_001"]
+            rows = {row["id"]: row for row in audit["rows"]}
+            parent = rows["QLR_PARENT123"]
+            child = rows["QL_CHILD_SETUP_001"]
 
-        self.assertEqual(parent["audit_status"], "SOURCE_PARENT")
-        self.assertTrue(parent["is_source_parent"])
-        self.assertFalse(parent["visible_in_strategy_tables"])
-        self.assertFalse(parent["eligible_for_backtest"])
-        self.assertEqual(parent["blocked_reason"], "")
-        self.assertEqual(parent["source_quality"], "PARENT")
-        self.assertEqual(parent["recommended_next_pipeline_step"], "Hidden source parent")
+            self.assertEqual(parent["audit_status"], "SOURCE_PARENT")
+            self.assertTrue(parent["is_source_parent"])
+            self.assertFalse(parent["visible_in_strategy_tables"])
+            self.assertFalse(parent["eligible_for_backtest"])
+            self.assertEqual(parent["blocked_reason"], "")
+            self.assertEqual(parent["source_quality"], "PARENT")
+            self.assertEqual(parent["recommended_next_pipeline_step"], "Hidden source parent")
 
-        self.assertNotEqual(child["audit_status"], "SOURCE_PARENT")
-        self.assertTrue(child["visible_in_strategy_tables"])
-        self.assertTrue(child["eligible_for_backtest"])
-        self.assertEqual(audit["summary"]["source_parent_rows"], 1)
-        self.assertEqual(audit["summary"]["visible_strategy_rows"], 1)
+            self.assertNotEqual(child["audit_status"], "SOURCE_PARENT")
+            self.assertTrue(child["visible_in_strategy_tables"])
+            self.assertTrue(child["eligible_for_backtest"])
+            self.assertEqual(audit["summary"]["source_parent_rows"], 1)
+            self.assertEqual(audit["summary"]["visible_strategy_rows"], 1)
 
     def test_audit_hides_qlr_multi_case_parent_without_registered_children(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

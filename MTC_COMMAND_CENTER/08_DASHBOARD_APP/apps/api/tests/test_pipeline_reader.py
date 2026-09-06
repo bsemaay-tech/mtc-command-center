@@ -201,7 +201,10 @@ class PipelineReaderTests(unittest.TestCase):
             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["stages"]["discovered"]["status"], "done")
             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["stages"]["backtested"]["status"], "na")
             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["source_url"], "https://www.youtube.com/watch?v=abc123")
-            self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["discovery_source"], "research\\batch\\FINAL_LLM_KNOWLEDGE_BASE.jsonl")
+            self.assertEqual(
+                rows["QLR_EXTRA_PULLBACK"]["discovery_source"],
+                str(Path("research") / "batch" / "FINAL_LLM_KNOWLEDGE_BASE.jsonl"),
+            )
             self.assertEqual(rows["QLR_EXTRA_PULLBACK"]["classification"]["kind"], "wiki")
             self.assertIn("QLR_BLOCKED", rows)
             self.assertEqual(rows["QLR_BLOCKED"]["stages"]["backtested"]["status"], "na")
