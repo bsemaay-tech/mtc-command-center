@@ -1,5 +1,5 @@
 # Supertrend Rejected Regions
-Research seed only; not Pine default; not production parameter.
+# Research seed only; not Pine default; not production parameter.
 
 rejected_or_caution_regions:
   - region_id: smoke_schema_only_warning

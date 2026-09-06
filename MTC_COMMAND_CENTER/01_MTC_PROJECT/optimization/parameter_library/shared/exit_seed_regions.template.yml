@@ -1,5 +1,5 @@
 # exit_refinement Template
-Research seeds only; not Pine defaults; not production parameters.
+# Research seeds only; not Pine defaults; not production parameters.
 
 purpose: exit_refinement
 input_seed_library: optimization/parameter_library/<producer>/<seed_file>
