@@ -210,6 +210,44 @@ class PipelineReaderTests(unittest.TestCase):
             self.assertEqual(rows["QLR_BLOCKED"]["stages"]["backtested"]["status"], "na")
             self.assertEqual(rows["QLR_BLOCKED"]["classification"]["kind"], "rejected")
 
+    def test_discovers_bom_prefixed_producer_spec(self) -> None:
+        # PowerShell-launched writers can emit a UTF-8 BOM. Plain "utf-8" decoding
+        # leaves the BOM character in the string, json.loads then raises
+        # JSONDecodeError on the "﻿{" prefix, and _iter_producer_specs' except
+        # clause silently skips the file, so the whole candidate row goes missing
+        # instead of just losing a field.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            spec_dir = (
+                Path(tmp)
+                / "01_MASTER TEMPLATE_V2"
+                / "06_QUANTLENS_LAB"
+                / "06_PROMOTED_TO_PARITY"
+                / "QL_BOM_PROMOTED_SPEC"
+            )
+            spec_dir.mkdir(parents=True)
+            (spec_dir / "producer_spec.json").write_text(
+                "﻿"
+                + json.dumps(
+                    {
+                        "candidate_id": "QL_BOM_PROMOTED_SPEC",
+                        "title": "BOM promoted producer spec",
+                        "kind": "strategy",
+                        "direction": "long_only",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            pipeline = build_candidate_pipeline(root, {"candidates": [], "strategies": []}, {}, {}, {}, {})
+            rows = {row["id"]: row for row in pipeline["rows"]}
+
+            self.assertIn("QL_BOM_PROMOTED_SPEC", rows)
+            row = rows["QL_BOM_PROMOTED_SPEC"]
+            self.assertEqual(row["stages"]["promoted"]["status"], "done")
+            self.assertIsNotNone(row["producer_spec"])
+            self.assertEqual(row["producer_spec"]["title"], "BOM promoted producer spec")
+
     def test_discovers_promoted_producer_specs_without_registry_strategy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
