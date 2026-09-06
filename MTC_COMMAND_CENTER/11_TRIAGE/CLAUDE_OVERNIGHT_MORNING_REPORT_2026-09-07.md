@@ -12,7 +12,7 @@ from them.
 
 ## 1. Owner decisions needed
 
-None are required for anything this lane did. Eleven findings (D1–D11 in §4); D1–D5 are already repaired on the branch as NONACCEPTED candidates, the rest are dispatch decisions
+None are required for anything this lane did. Eleven findings (D1–D11 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
 are batched here; each is a stage-owned repair with a verified patch attached, and none was
 applied to the tree.
 
@@ -48,11 +48,17 @@ unreachable from this container and remain required before merge.
 | `5c617b3f` | `11_TRIAGE/overnight_orchestrator.py` + regenerated `03_QUANTLENS/tools/overnight_extended_run.py` (D2) | dedent-safe import join; artifact regenerated (no run) | `py_compile` + ruff E9/F821 clean |
 | `91ccbba6` | `01_MTC_PROJECT/tools/extract_parameter_library_seeds.py` + 7 YAML (D3) | warning emitted as `# ` comment | 8/8 YAML parse |
 | `151e1700` | `03_QUANTLENS/tools/night_runs/AGGREGATE_night_2026-06-02.{json→md}` (D4) | `git mv`, bytes unchanged | content starts `# OVERNIGHT AGGREGATED REPORT` |
-| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, lane records, `INDEX.md`, stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically |
+| `361b6451` | `mtc_cli/commands/audit.py`, `mtc_cli/tests/test_audit.py` (D9) | required-file list = router-era current-state files; NEXT_STEPS check → governance `HANDOFF.md` NEXT ACTION / WAITING FOR OWNER check; `run(repo_root=…)` for fixtures | 13 tests pass; `python -m mtc_cli audit repo` → OK, exit 0 |
+| `f4455150` | `00_CONFIG/paths.example.json`, `paths.local.example.json` (D10) | canonical `C:/LAB/Tradingview_LAB_CLEAN/…` layout; every value backed by an existing repo dir (`01_MTC_PROJECT`, `12_PARITY_PINETS`, `12_PARITY_PINETS/TW_EXPORT_CASES_V2`, `04_REPORTS`) | JSON parses; dashboard suite 121 passed |
+| `f8fa3caf` | `IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py` (+1 import line, D6), `TESTS.md` Linux note, `HANDOFF.md` | import-only; no behavior change; T0 audit still required | ruff F821 clean; full suite as non-root on `63de031a`: **1393 passed, exit 0** |
+| `63de031a` | `11_TRIAGE/overnight_orchestrator.py` (D11) | `QLAB_ROOT = MCC_ROOT / "03_QUANTLENS"` (was legacy `01_MASTER TEMPLATE_V2/06_QUANTLENS_LAB`) | `TOOLS_DIR.exists()` True; py_compile + ruff clean; dry emit compiles |
+| `31e975f1` | `04_SHARED/modules/#00 README_Pine_Module_Pack_v2.md` | two legacy links repaired (one target never existed → plain text) | 0 unresolved links in the file |
+| `a216b61f` | `11_TRIAGE/generate_index.py`, `test_generate_index.py` (new tool) | stdlib port of `generate_index.ps1` with `--check`; .NET sort/extension semantics | 31 tests pass; ruff clean; output byte-identical to the lead's validated port; `--check` OK after regeneration |
+| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
 
 Still owner-gated and NOT changed: D7 (`02_MTC_BACKTEST`), D8 (MTC_V2), plus anything Pine,
-parity, adapters, schemas. Lanes for D6, D9, D10 and the index tool were in flight at the time of
-this draft; the close-out section lists what landed.
+parity, adapters, schemas. Read-only review lanes (J Bridge static hunt, K non-protected static hunt, L dashboard legacy
+fallbacks, M independent branch audit) were in flight at this draft; §8 lists what landed.
 
 ## 4. Findings with verified patches (not applied)
 
