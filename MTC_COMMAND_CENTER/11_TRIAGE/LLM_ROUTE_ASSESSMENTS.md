@@ -126,3 +126,38 @@ launch recovered every window. (3) PS5.1 dispatch traps (unquoted Start-Process 
 - **Fable (Lead):** orchestration + seal acts + micro-folds only; two self-inflicted
   incidents both self-caught (wayfinder rev-6 double-save; W153 spec encoding botch) and
   A15/G72 found 17 more Lead defects - the audit-the-Lead practice is non-negotiable.
+
+
+## 2026-09-05 late morning - section-16 review re-attempt (Fable Lead)
+
+- **gemini-3.8-flash-high via Invoke-GeminiProReadOnly:** the prior "zero bytes on long jobs" verdict was WRONG - the
+  helper's read policy allows only the canonical root, and every failed lane had been pointed at C:\tmp or
+  C:\WP012BUILD. With one in-repo packet per lane (design + evidence copies + PATH_MAP + BRIEF) it delivered six real
+  section-16 item reviews (10-30 KB, 2-5 min each, 3 parallel), with design/code/golden/DERIVATIONS pointers per
+  formula. Two runs self-reported gemini-2.5-flash and fabricated paths - reject on the header and re-run. The helper's
+  root-wide FileSystemWatcher kills any lane that overlaps a packet write; and CP1252 .md files are unreadable to it.
+- **grok-4.6 (Invoke-GrokSubscription, cwd = in-repo packet):** real 20 KB item-6 review in 7 min, deep member-set and
+  identity analysis; one HIGH was a packet-scope artifact (exits.py absent), three grounds confirmed by the Lead.
+  Three hung grok.exe from the previous session (0-byte logs, 2-22 h) had to be killed.
+- **opencode-go deepseek-v4-pro (run, agent build):** auto-rejects its own cwd as external_directory; no allowlist in
+  opencode.jsonc; two launches lost to prompt-path mangling (sed/heredoc). Not usable for reviews today.
+- **Fable (Lead):** three self-inflicted lane deaths (packet writes during Gemini runs), two path-mangling launches, one
+  kill pattern that matched its own shell. All caught by the Lead's own re-measurement; none reached the owner.
+
+
+## 2026-09-06 (Lead: Claude Fable 5.1, 08:20–) — route assessments
+
+| Route / model | Task | Outcome | Assessment |
+|---|---|---|---|
+| Claude Pro exact claude-opus-5 xhigh (`claude --print`, dontAsk) | P030 T0 flagship round 1 | PASS-WITH-NITS, 3 min, but `python` denied by `--allowedTools "Bash(python *)"` when env-prefixed/`cd`-prefixed → unexecuted | Strong static reviewer; allowlist patterns must include `Bash(PYTHONDONTWRITEBYTECODE=1 python *)`, `Bash(cd *)` and the brief must say "plain `python -B`, no prefix". |
+| Claude Pro claude-opus-5 medium | P012 addendum Standards-axis review | PASS-WITH-NITS, ~1 min, independent Git derivation | Medium effort sufficient for T2 documentary work. |
+| Claude Pro claude-opus-5 xhigh | P030 exec closure + static nit check | both PASS-WITH-NITS, 3–4 min; honest about not capturing `$?` | Reliable; reports its own harness limits precisely. |
+| Codex `free` (.codex_OLD) gpt-5.6-sol | probe / exec closure attempts | PROBE_OK 16 s; attempts 1–3 died on launcher/sandbox defects (PS5.1 stderr under Stop; sandbox job kills detached child); attempt 4 in progress via trigger supervisor | Account live; elevated Windows sandbox is hostile to >600 s or detached work — use an out-of-sandbox supervisor triggered by the auditor. |
+| Codex `third` (.codex-plus3) gpt-5.6-sol | probe; P030 flagship | PROBE_OK 14 s; flagship in progress | Live. |
+| Codex `secondary`, `fourth` | probe | usage limit, retry Sep 9 14:38 | Capped. |
+| Codex native desktop agents | — | capped until Sep 12 17:08 | Not usable. |
+| Gemini 3.7 Flash High read-only (Antigravity) | addendum + P030 corroboration | 2× SUCCESS, ~1 min each, PASS; accurate counts by reading | Good supplemental corroborator; requires canonical-repo mirror and role text via file (Start-Process splits long args). 3.8 window expired 09:00. |
+| `codex sandbox` standalone | gate execution | requires app-server-internal `--sandbox-state-json` | Dead end. |
+| Claude Max | — | not used | Pro sufficed. |
+
+Later the same day (11:00-11:55): P030 rounds 3-5 - Claude Pro Opus xhigh x3 (executed the published check each time, 3-5 min); Codex free Sol xhigh x4 (executed; PASS-WITH-NITS / REQUEST_CHANGES / PASS-WITH-NITS; Standards PASS); Codex third Sol x3 static-only (read-only sandbox: BLOCK env-only when execution is required, otherwise PASS / REQUEST_CHANGES); Gemini 3.7 x3 PASS (~1 min each). P012 Sol execution closure attempt 4 PASS via an auditor-triggered Lead fixed-command supervisor (gate byte-identical to the Opus gate). Lessons: auditors hold the Lead to its own TASK wording; the Lead session hook drops .impeccable/hook.cache.json into any shell cwd - build and verify packets with absolute paths only.
