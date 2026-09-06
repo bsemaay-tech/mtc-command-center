@@ -81,6 +81,41 @@ class LiveOpsReaderTests(unittest.TestCase):
             self.assertEqual(status["summary"]["paper_trade_plan_count"], 0)
             self.assertEqual(status["paper_trade_plans"], [])
 
+    def test_paper_trade_plans_discovered_without_mtc_v2_root(self) -> None:
+        # D18 follow-up regression: _paper_trade_plans reads promoted-strategy
+        # plans purely from <mcc_root>/03_QUANTLENS/strategies/<id>/ and no longer
+        # depends on mtc_v2_root at all, so build_liveops_status must still
+        # discover the plan even when mtc_v2_root is unconfigured. Before this
+        # fix the call site guarded on `mtc_v2_root and mtc_v2_root.exists()`,
+        # so an unconfigured mtc_v2_root always produced paper_trade_plans == [].
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            promoted = root / "03_QUANTLENS" / "strategies" / "STG011"
+            (root / "00_CONFIG").mkdir(parents=True)
+            (root / "03_STATUS").mkdir(parents=True)
+            promoted.mkdir(parents=True)
+            (root / "00_CONFIG" / "paths.example.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "1.0",
+                        "mcc_root": str(root),
+                        "mtc_v2_root": None,
+                        "mtc_v2_python_exe": None,
+                        "pinets_root": None,
+                        "tradingview_exports_dir": None,
+                        "reports_root": str(root / "04_REPORTS"),
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (promoted / "FORWARD_PAPER_TRADE_PLAN.md").write_text(
+                "# Forward Paper Trade Plan\n", encoding="utf-8"
+            )
+
+            status = build_liveops_status(root)
+            self.assertEqual(status["summary"]["paper_trade_plan_count"], 1)
+            self.assertEqual(status["paper_trade_plans"][0]["candidate_id"], "STG011")
+
     def test_real_config_returns_liveops_shape(self) -> None:
         status = build_liveops_status(SOURCE_MCC_ROOT)
         self.assertIn("summary", status)
