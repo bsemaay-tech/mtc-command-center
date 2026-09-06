@@ -238,3 +238,9 @@ No live dependency contacted or changed.
   `HANDOFF.md` refresh; final push by 06:30.
 - **NEXT ACTION:** hold; R2 at ~05:30; close-out at 06:00.
 - **WAITING FOR OWNER:** Nothing for the lane.
+
+## Checkpoint 8 — 2026-09-07 02:14 +03 — idle tick
+
+- No lanes running; no new lane commits; `origin/master` still `afe52ea`; main tree clean; head
+  `2ed73f54` pushed. No refill: remaining items are owner-gated (see Checkpoint 7).
+- **NEXT ACTION:** hold; R2 final audit ~05:30; close-out 06:00. **WAITING FOR OWNER:** Nothing.
