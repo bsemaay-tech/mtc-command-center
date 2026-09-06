@@ -61,7 +61,8 @@ unreachable from this container and remain required before merge.
 | `1dc4e47b` | `03_QUANTLENS/tools/heavy_night_report.py` + test (D16) | emit the computed pass-cell count | 2 tests pass |
 | `aeaef767` | `11_TRIAGE/overnight_orchestrator.py`, regenerated runner, new template test (D17) | prototypes imported from their directory | 38 triage tests pass; runner compiles |
 | `234c7188` | `mtc_cli/commands/audit.py` + tests (R1 nits) | no-ask tokens `none/(none)/n/a/-/—/empty`; label-anchored NEXT ACTION check; newest-first documented | 32 tests pass; `audit repo` OK |
-| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q,R1,S,T}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
+| lane W (see §8 for the branch SHA) | `mcc_readonly/{pine_builder_reader,liveops_reader}.py` + tests (D18) | promoted-strategy plans read from the QuantLens strategies root | dashboard 133 passed |
+| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q,R1,S,T,V,W}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
 
 Still owner-gated and NOT changed: D7 (`02_MTC_BACKTEST`), D8 (MTC_V2), plus anything Pine,
 parity, adapters, schemas. Read-only review lanes (J Bridge static hunt, K non-protected static hunt, L dashboard legacy
@@ -298,8 +299,10 @@ Lane V's decision packet (`OVERNIGHT_LANE_V_*`, 31 derived locations mapped) fou
 under the canonical layout. Two are always-firing with no fallback: `pine_builder_reader.py:47` and
 `liveops_reader.py:59` read only `mtc_v2_root/06_QUANTLENS_LAB/06_PROMOTED_TO_PARITY`, so the Pine
 Builder compile-status join and the LiveOps paper-trade-plan list are permanently empty even though
-the plan files exist under `03_QUANTLENS/strategies/<id>/…`. Lane W is repointing both to the
-QuantLens root with RED/GREEN tests; §8 records the outcome. The other two gaps
+the plan files exist under `03_QUANTLENS/strategies/<id>/…`. Repaired by lane W (branch commit listed in §3): both now read
+`default_quantlens_root(mcc_root) / "strategies"`; RED 4 failed → GREEN, dashboard suite 133 passed.
+Nit left for the owner: the callers still guard on `mtc_v2_root.exists()` before reading plans,
+which no longer depend on that root. The other two gaps
 (`backtest_reader.py:114`, `optimization_reader.py:27` → `mtc_v2_root/reports/optimization`) have no
 producer anywhere in the repo yet (`metrics.json` absent), so lane V recommends keeping them
 documented fail-closed until a producer exists — owner decision, packet options A/B/C per reader.
