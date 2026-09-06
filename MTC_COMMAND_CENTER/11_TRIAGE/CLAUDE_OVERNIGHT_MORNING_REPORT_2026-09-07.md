@@ -12,7 +12,7 @@ from them.
 
 ## 1. Owner decisions needed
 
-None are required for anything this lane did. Seventeen findings (D1–D17 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
+None are required for anything this lane did. Eighteen findings (D1–D18 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
 are batched here; each is a stage-owned repair with a verified patch attached, and none was
 applied to the tree.
 
@@ -291,6 +291,18 @@ emitted `from PYTHON_PROTOTYPES import <id>_prototype`, but the directory is lit
 `sys.path.insert(0, str(ROOT))` and bare `import <id>_prototype`; all 19 candidate ids map to
 existing files; static `find_spec` probe RED (0/19) → GREEN (19/19); 7 new template tests; runner
 regenerated (no execution). This runner remains a backtest-sweep launcher: running it is owner-gated.
+
+### D18 — two dashboard panels always read a pre-migration promoted-strategy path (T1, `08_DASHBOARD_APP`)
+
+Lane V's decision packet (`OVERNIGHT_LANE_V_*`, 31 derived locations mapped) found four live gaps
+under the canonical layout. Two are always-firing with no fallback: `pine_builder_reader.py:47` and
+`liveops_reader.py:59` read only `mtc_v2_root/06_QUANTLENS_LAB/06_PROMOTED_TO_PARITY`, so the Pine
+Builder compile-status join and the LiveOps paper-trade-plan list are permanently empty even though
+the plan files exist under `03_QUANTLENS/strategies/<id>/…`. Lane W is repointing both to the
+QuantLens root with RED/GREEN tests; §8 records the outcome. The other two gaps
+(`backtest_reader.py:114`, `optimization_reader.py:27` → `mtc_v2_root/reports/optimization`) have no
+producer anywhere in the repo yet (`metrics.json` absent), so lane V recommends keeping them
+documented fail-closed until a producer exists — owner decision, packet options A/B/C per reader.
 
 ### Independent adversarial review of the code commits (lane R1, record `OVERNIGHT_LANE_R1_*`)
 
