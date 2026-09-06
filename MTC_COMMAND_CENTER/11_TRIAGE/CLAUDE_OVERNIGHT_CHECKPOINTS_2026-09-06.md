@@ -117,3 +117,30 @@ No live dependency contacted or changed.
 - **NEXT ACTION:** assemble the morning report with exact patches for D1–D4 as owner-dispatchable
   proposals (no code changed by this lane); heartbeat checkpoints every 30 min until 08:00 +03.
 - **WAITING FOR OWNER:** Nothing for this lane; D1–D4 need their stage owners' dispatch.
+
+## Checkpoint 3 — 2026-09-06 23:12 +03 — owner instruction and lane roster
+
+- **Owner instruction (2026-09-06 ~23:05 +03, verbatim intent):** work non-stop until 06:30 +03 with
+  at least 4–6 parallel lanes maximizing throughput; at 06:30 prepare the handoff and save everything;
+  owner is asleep, asks no questions, and states the lane is "authorized for everything to keep the
+  work running to the goal". Lead reading: this authorizes autonomous defect/test/evidence repairs in
+  non-protected scopes on the work branch with D026 RED/GREEN evidence, as NONACCEPTED candidates
+  pending the exact T0–T2 audits (unreachable from this container). It does not touch the standing
+  protected-scope, live-trading, host, credential, PAYG, or destructive-Git gates, so D7
+  (`02_MTC_BACKTEST/app.py`) and D8 (MTC_V2 `runner.py`) stay proposals with patches. The remote
+  container cannot power off the owner's PC; the 06:30 close is "everything pushed + handoff".
+- **Correction to Checkpoint 2 heading:** it says 22:55; its commit `1ca180c` is 22:52 +03.
+- **Lane roster (all in isolated worktrees of this branch at base `f163592d`; provider: this
+  Claude session's subagents; deadline 06:00 +03; stop condition: one verified commit each, no push;
+  the Lead inspects diffs, re-runs tests, and cherry-picks):**
+  - A — D1+D5 dashboard test portability. W: `08_DASHBOARD_APP/apps/api/tests/{test_pipeline_reader,test_audit_reader}.py`, `08_DASHBOARD_APP/HANDOFF.md`.
+  - B — D2 runner generator fix + regenerate. W: `11_TRIAGE/overnight_orchestrator.py`, `03_QUANTLENS/tools/overnight_extended_run.py`, `11_TRIAGE/OVERNIGHT_LANE_B_D2_RUNNER_GENERATOR_2026-09-06.md`.
+  - C — D3 YAML writer + 7 files; D4 aggregate rename. W: `01_MTC_PROJECT/tools/extract_parameter_library_seeds.py`, `01_MTC_PROJECT/optimization/parameter_library/**/*.yml`, `03_QUANTLENS/tools/night_runs/AGGREGATE_night_2026-06-02.{json→md}`, `01_MTC_PROJECT/HANDOFF.md`, `03_QUANTLENS/HANDOFF.md`.
+  - D — D9 `mtc_cli audit repo` router-era paths. W: `mtc_cli/commands/audit.py`, `mtc_cli/tests/`, `mtc_cli/HANDOFF.md`.
+  - E — D10 canonical path examples. W: `00_CONFIG/paths.example.json`, `00_CONFIG/paths.local.example.json`, `11_TRIAGE/OVERNIGHT_LANE_E_D10_PATH_EXAMPLES_2026-09-06.md`.
+  - F — D6 import-only + Linux non-root note. W: `IBKR_PAPER_BRIDGE/bridge/broker/hyperliquid.py`, `IBKR_PAPER_BRIDGE/TESTS.md`, `IBKR_PAPER_BRIDGE/HANDOFF.md`.
+  - Lead — this record, `11_TRIAGE/INDEX.md`, the morning report, `00_AGENT_PROTOCOLS/HANDOFF.md`; integration and cherry-picks.
+- **NEXT ACTION:** integrate lane commits as they land; refill lanes (queued: cross-platform
+  `11_TRIAGE/generate_index.py` with `--check`; `04_SHARED/modules` README link repair; test-suite
+  sweep for other hard-coded `C:/` paths); heartbeat 23:25.
+- **WAITING FOR OWNER:** Nothing.
