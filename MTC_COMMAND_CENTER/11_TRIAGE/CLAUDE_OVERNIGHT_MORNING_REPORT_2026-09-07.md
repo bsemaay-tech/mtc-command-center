@@ -12,7 +12,7 @@ from them.
 
 ## 1. Owner decisions needed
 
-None are required for anything this lane did. Fifteen findings (D1–D15 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
+None are required for anything this lane did. Sixteen findings (D1–D16 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
 are batched here; each is a stage-owned repair with a verified patch attached, and none was
 applied to the tree.
 
@@ -58,7 +58,8 @@ unreachable from this container and remain required before merge.
 | `68a2d601` | `_deepseek_driver/ds_agent.py` + tests (D13) | default report path under the system temp dir; parent dir created | 25 tests pass |
 | `ec80222d` | `mcc_readonly/registry_reader.py` + tests (D15) | repaired CSV row must match header width, else skipped as malformed | dashboard 125 passed |
 | `44b11300` | four dashboard readers + tests (D14) | 20 read sites `utf-8` → `utf-8-sig`; one BOM regression test per reader | dashboard 129 passed |
-| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
+| `1dc4e47b` | `03_QUANTLENS/tools/heavy_night_report.py` + test (D16) | emit the computed pass-cell count | 2 tests pass |
+| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q,S}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
 
 Still owner-gated and NOT changed: D7 (`02_MTC_BACKTEST`), D8 (MTC_V2), plus anything Pine,
 parity, adapters, schemas. Read-only review lanes (J Bridge static hunt, K non-protected static hunt, L dashboard legacy
@@ -250,6 +251,15 @@ without a length check, silently dropping or shifting columns when the repair do
 header width. Repaired by lane Q (`ec80222d`): `_candidate_csv_row` returns `None` on width mismatch and the
 row is skipped like the reader's other malformed records; RED showed a reviewer value leaking into
 `candidate_folder`, GREEN 3 new tests.
+
+### D16 — QuantLens night-report scripts compute summaries they never write (T1, `03_QUANTLENS/tools`)
+
+Lane K finding; lane S decision (`1dc4e47b`): `heavy_night_report.py` builds `passcells` in both
+branches and reports every sibling collection's count except that one — unambiguous omission, so
+one line `- pass cells (PASS+STRONG_PASS): **N**` was added with a synthetic-run regression test
+(RED 1 failed → GREEN 2 passed; no real run data touched). `generate_morning_report.py:34` computes
+`strong` whose length already appears in the classification table, so the intent (dead code vs. a
+new STRONG_PASS detail table) is the owner's call; left unchanged with the options in the lane record.
 
 ### Read-only review lanes (records in `11_TRIAGE/OVERNIGHT_LANE_{J,K,L,M}_*`)
 
