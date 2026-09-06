@@ -12,7 +12,7 @@ from them.
 
 ## 1. Owner decisions needed
 
-None are required for anything this lane did. Twelve findings (D1–D12 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
+None are required for anything this lane did. Fifteen findings (D1–D15 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
 are batched here; each is a stage-owned repair with a verified patch attached, and none was
 applied to the tree.
 
@@ -220,6 +220,51 @@ but on a machine with a leftover legacy folder it would silently render stale da
 canonical checkout it always reports the parity tracker as unavailable. Lane L's record also maps the
 remaining `06_QUANTLENS_LAB` fallbacks (`paths.py:27` and four call sites) with an owner-decidable
 option A (remove) / option B (log) proposal. Lane N was dispatched to fix the reader root only.
+
+### D13 — `_deepseek_driver/ds_agent.py` defaulted its report path to `C:\tmp` (T1, supplemental tool)
+
+Lane K finding: with `report_out` absent the agent wrote its report to a hard-coded Windows path,
+which on POSIX became a literal relative `C:\tmp/...` segment; the write failure was only logged,
+so a run "succeeded" without its report. Repaired by lane O (`68a2d601`): a pure
+`default_report_path(slug)` under `tempfile.gettempdir()/mtc_ds_reports`, parent created before
+writing, explicit `report_out` unchanged; RED 4 failed → GREEN 25 passed. The duplicate `"remove"`
+in `_BANNED_ATTRS` (a set literal, no runtime effect) was left alone: the intended second attribute
+is unknown and is the owner's call.
+
+### D14 — dashboard readers split on UTF-8 BOM handling (T1, `08_DASHBOARD_APP`)
+
+Lane K finding: `heartbeat_reader.py`/`mtc_v2_reader.py` read with `utf-8-sig` while
+`pipeline_reader.py`, `audit_reader.py`, `optimization_reader.py`, `backtest_reader.py` use plain
+`utf-8`, so a PowerShell-written BOM-prefixed JSON/CSV artifact is treated as malformed/missing by
+half the readers. Lane P is applying `utf-8-sig` to the four readers' read sites with one
+BOM-fixture regression test per reader; §8 records the outcome.
+
+### D15 — registry CSV row repair can misalign columns (T1, `08_DASHBOARD_APP`)
+
+Lane K finding: `registry_reader.py:180-189` repairs malformed rows and then `zip(header, repaired)`
+without a length check, silently dropping or shifting columns when the repair does not land on the
+header width. Lane Q is making it fail closed (row treated as malformed like the reader's other
+malformed paths) with RED/GREEN tests; §8 records the outcome.
+
+### Read-only review lanes (records in `11_TRIAGE/OVERNIGHT_LANE_{J,K,L,M}_*`)
+
+- **J (Bridge static hunt):** 13 ruff hits → 2 real, 2 latent, 9 style; all proposals owner-gated
+  (T0). Notables: `store/db.py:3174-3177` computes `new_submitted_ts` but never compares it in a
+  duplicate-intent migration identity check; `broker/mock.py` uses naive `datetime.now()` on the
+  dry-run path only; seven float `==` comparisons on qty/px in matching code; ~50 `except Exception`
+  blocks reviewed, none swallowing a money-path error silently.
+- **K (non-protected static hunt):** 134 hits → 6 real/latent-serious, 5 latent, rest style;
+  the actionable ones became D13–D15; two QuantLens report scripts compute summaries they never
+  write (`generate_morning_report.py:34`, `heavy_night_report.py:77,80`) and
+  `build_all_gate_evidence.py:126-127` computes `symbol`/`timeframe` it never uses — reported,
+  not changed (intent unclear).
+- **L (dashboard legacy fallbacks):** 14 hits; none can read the frozen sibling repo; the real
+  bug was D12 (fixed); remaining `06_QUANTLENS_LAB` fallbacks (`paths.py:27` + four call sites)
+  have an owner-decidable option A (remove, ~7 tests change) / option B (log when fallback fires).
+- **M (independent branch audit at `c306d1cc`):** all 10 checks PASS — no protected path touched,
+  Bridge delta is exactly one import line, whitespace/encoding clean, handoffs ≤ 4 KiB with
+  NEXT ACTION / WAITING FOR OWNER, index `--check` OK, links resolve, Python compiles, trailers
+  present, no secrets, §3 claims match the commits.
 
 ## 5. Suggested Bridge-stage doc note (T2, optional)
 
