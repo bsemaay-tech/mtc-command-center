@@ -199,3 +199,24 @@ No live dependency contacted or changed.
 - **NEXT ACTION:** integrate P and Q; keep heartbeat cadence; from ~06:00 finalize §8 of the
   morning report and the governance handoff; stop at 06:30 +03 with everything pushed.
 - **WAITING FOR OWNER:** Nothing for the lane; morning decisions listed in the report §1/§4.
+
+## Checkpoint 6 — 2026-09-07 00:58 +03 — second wave integrated, queue exhausted
+
+- **Integrated since Checkpoint 5:** Q `d460d86f`→`ec80222d` (D15 registry fail-closed; dashboard
+  125), P `15999f7a`→`44b11300` (D14 BOM reads; dashboard 129), S `96a2b5aa`→`1dc4e47b` (D16 heavy
+  night report pass-cell line; 2 tests), R1 `d5b90e62`→`52c82002` (adversarial review: 9 PASS,
+  5 PASS-WITH-NITS, 0 REQUEST_CHANGES), T `7f2d577c`→`aeaef767` (D17 runner import path; 38 triage
+  tests; runner compiles), U `9f05e46a`→`234c7188` (mtc_cli nits; 32 tests; `audit repo` OK).
+  Index regenerated after each record with `generate_index.py`.
+- **Lane P incident closed:** its worktree commit contains exactly the 20 encoding changes + tests;
+  the main checkout was restored textually and has been clean at every subsequent check.
+- **RUNNING:** none at this instant; a read-only mapping lane (V: dashboard reader sub-paths vs the
+  migrated layout, for the owner's option A/B decision) is being dispatched. All other queue items
+  are owner-gated (D7, D8, Bridge lane-J proposals, lane-L option A/B, `generate_morning_report`
+  intent) — recorded in the morning report, not dispatched. This is a truthful shortfall report per
+  OD-20260905-6: no further distinct authorized work exists for parallel lanes tonight.
+- **Plan to 06:30:** heartbeat checkpoints every 30 min; a final independent branch audit lane at
+  ~05:30 over the whole delta; §8 close-out + governance HANDOFF.md refresh at ~06:00; final push by
+  06:30. Master still `afe52ea`; branch head pushed after every integration.
+- **NEXT ACTION:** integrate V; final audit at ~05:30; close-out at 06:00.
+- **WAITING FOR OWNER:** Nothing for the lane.
