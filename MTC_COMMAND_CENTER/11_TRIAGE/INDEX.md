@@ -21,6 +21,7 @@
 | `AI_MEMORY_FILE_CLASSIFICATION_BATCH2_2026-08-17.md` | 2026-08-17 | AI Memory File Classification — Batch 2 | **Date:** 2026-08-17 |
 | `AI_MEMORY_ROTATION_GATE1_2026-08-17.md` | 2026-08-17 | AI memory live-journal rotation — Gate 1 | **Date:** 2026-08-17 |
 | `AI_MEMORY_ROTATION_T2_STATUS_2026-08-17.md` | 2026-08-17 | AI-memory rotation — T2 status — 2026-08-17 | The bounded rotation covers only the three live onboarding files and three new |
+| `AI_PROVIDER_ROUTING_RECOMMENDATION_2026-08-29.md` | 2026-08-29 | AI provider routing recommendation — 2026-08-29 | This is a current, source-backed routing recommendation for the already working |
 | `AI_TASK_CATALOG_2026-06-30.md` | 2026-06-30 | AI Task Catalog — every job the AI runs on Barış's command | Source for the planned **AI Task** dashboard tab. Synthesized from `04_SHARED/prompts/05_ai_workflow/`, |
 | `analyze_transcripts.py` | - | Strong markers: hard to confuse with timestamps. Each hit means a deliberate enumeration by the speaker. | """Heuristic transcript scanner for triage decisions. |
 | `andrew_connell_deep_read_2026-05-30.md` | 2026-05-30 | Andrew Connell deep read — `QLR_kao-hhaQnig` | After targeted grep + reading the core event-driven section (lines 700-900), the strategy is **more codifiable than the initial sampler suggested.** Reclassified from "REVIEW fu... |
@@ -84,6 +85,7 @@
 | `CLAUDE_AUDIT_PROMPT_STRATEGY_DETAIL_A11Y_FOCUS_2026-06-28.md` | 2026-06-28 | Claude Audit Prompt - Strategy Detail P1 A11y Focus | Repo: `C:\LAB\Tradingview_LAB_CLEAN` |
 | `CLAUDE_AUDIT_REPORT_ARTIFACT_UNIVERSE_MISMATCH_2026-06-28.md` | 2026-06-28 | Claude Audit Report — Artifact Contract Universe-Mismatch Boolean (NEXT_STEPS 11e) | **Auditor:** Claude Opus 4.8 |
 | `CLAUDE_AUDIT_REPORT_STRATEGY_DETAIL_A11Y_FOCUS_2026-06-28.md` | 2026-06-28 | Claude Audit Report — Strategy Detail P1 A11y Focus | **Auditor:** Claude Opus 4.8 |
+| `CLAUDE_OVERNIGHT_CHECKPOINTS_2026-09-06.md` | 2026-09-06 | Claude Overnight Autonomous Checkpoints — 2026-09-06/07 | **Class:** T3 factual checkpoint record; self-verified, not product acceptance |
 | `CLAUDE_PROMPT_FINISH_TRADINGVIEW_SPY_10M_NATIVE_SMOKE_2026-06-28.md` | 2026-06-28 | Claude Prompt - Finish TradingView SPY 10m Native Smoke | Repo: `C:\LAB\Tradingview_LAB_CLEAN` |
 | `CLAUDE_TSP1001_BUILD_PROMPT_2026-07-20.md` | 2026-07-20 | CLAUDE PROMPT — BUILD TS-P1-001 CANONICAL ORDER-STATE MACHINE | Use this prompt in a fresh Claude session. You are the builder/orchestrator for |
 | `CLAUDE_TSP1001_BUILD_REPORT_2026-07-20.md` | 2026-07-20 | CLAUDE TS-P1-001 BUILD REPORT — 2026-07-20 | Builder: Claude (Sonnet 5), acting as builder/orchestrator per |
@@ -247,6 +249,7 @@
 | `GATE1_PACKAGE4_ANALYSIS_PACKAGE_GENERATOR_2026-08-18.md` | 2026-08-18 | Gate-1 Scope Record — Package 4: Owner Analysis-Package Generator (first increment) | **Date:** 2026-08-18 (overnight) · **Lead:** Claude (Fable) · **Tier: T1** |
 | `GATE1_PACKAGE5A_OBSERVABILITY_TOOLKIT_2026-08-18.md` | 2026-08-18 | Gate-1 Scope Record — Package 5a: Local Observability Toolkit (first increment) | **Date:** 2026-08-18 (overnight) · **Lead:** Claude (Fable) · **Tier: T1** |
 | `GATE1_PACKAGE7_EXCHANGE_REVERIFICATION_2026-08-17.md` | 2026-08-17 | Gate-1 Scope Record — Package 7: Official Exchange Reverification | **Date:** 2026-08-17 night · **Lead:** Claude (Fable) · **Tier: T2, read-only, documentation** |
+| `GC_REFERENT_TEST_FIX_2026-08-25/LANE_REPORT.md` | - | GC Referent Test Fix Lane Report - 2026-08-25 | Role: Codex implementer under live Claude lead. |
 | `GEMINI_LAUNCHER_BRANCH_PIN_REPAIR_2026-08-17.md` | 2026-08-17 | Gemini Read-Only Launcher — Branch-Pin Repair — 2026-08-17 (night) | **Authorized by:** owner, in chat, 2026-08-17 night ("gemini launcher repair authorised"), |
 | `GEMINI_PRO_CODER_ROUTE_QA_2026-08-16.md` | 2026-08-16 | Gemini Pro isolated coder route — concise QA | Date: 2026-08-16 |
 | `GEMINI_PRO_READ_ONLY_CYCLE2_T0_AUDIT_PROMPT_2026-08-16.md` | 2026-08-16 | Gemini read-only adviser — cycle-2 T0 independent audit | You are a fresh independent T0 safety auditor. Do not implement or edit anything. The owner |
@@ -263,6 +266,7 @@
 | `HOME_CANONICAL_UNIVERSE_PATCH_AUDIT_2026-06-15.md` | 2026-06-15 | HOME_CANONICAL_UNIVERSE_PATCH Audit - 2026-06-15 | Verdict: ACCEPT WITH SMALL FOLLOW-UP |
 | `HOME_CANONICAL_UNIVERSE_PATCH_REPORT_2026-06-15.md` | 2026-06-15 | Home Canonical Strategy Universe Patch — Report — 2026-06-15 | Overnight bounded maintenance queue. Resolved the product ambiguity from the prior Home |
 | `HOME_METRIC_AGGREGATION_PATCH_REPORT_2026-06-15.md` | 2026-06-15 | Home / Command Center Metric Aggregation Patch — 2026-06-15 | Home metric cards previously mixed strategy-level counts with raw scorecard-row counts |
+| `HOURS_AND_COST_2026-08-28_NIGHT2.md` | 2026-08-28 | Hours and cost per package — night of 2026-08-28 into 2026-08-29 | Owner asked for time spent per package. Markdown only, per his standing instruction — no JSON ledger. |
 | `HYPERLIQUID_PUBLIC_DOCS_VERIFICATION_ADDENDUM_2026-08-17.md` | 2026-08-17 | Hyperliquid Public-Docs Verification Addendum — 2026-08-17 (overnight) | **Artifact class:** unaccepted supplemental research draft; documentation only |
 | `INCIDENT_D1V1_SLEEP_STOP_2026-07-20.md` | 2026-07-20 | INCIDENT — Day 1 v1 monitoring window stopped by system sleep — 2026-07-20 | Recorded by: Claude Fable 5 (found during TS-P0 repair audit; bridge API returned empty) |
 | `INCIDENT_P2_BATTERY_STOP_2026-07-16.md` | 2026-07-16 | INCIDENT — P2 bridge stopped by scheduled-task battery policy (2026-07-16) | Recorded: 2026-07-18 (Claude Fable 5, from Barış-supplied investigation results). |
@@ -505,6 +509,8 @@
 | `US_EQUITIES_10M_MULTI_STRATEGY_SWEEP_2026-06-28.md` | 2026-06-28 | US-Equities 10m — Multi-Strategy Native Sweep | **Date:** 2026-06-28 |
 | `V2_DASHBOARD_EXTERNAL_RESEARCH_DRAFT_2026-08-17.md` | 2026-08-17 | Bridge V2 & Dashboard V2 External Research & Architecture Recommendations | **Draft Date:** 2026-08-17 |
 | `V2_SLIM_PACKAGE_SCOPE_CONTRACT_DRAFT_2026-08-17.md` | 2026-08-17 | V2 slim Bridge package scope contract — draft — 2026-08-17 | **Status: design draft only.** This document records a conservative future V2 |
+| `WAL_CAPTURE_FIX_2026-08-25/FIX_EVIDENCE.md` | - | WAL capture-ordering repair-2 evidence — 2026-08-25 | - Owner-authorized scope remains the Bridge WAL/SQLite capture tool and its tests, T0 audited, nothing else. |
+| `WAL_CAPTURE_FIX_2026-08-25/LANE_REPORT.md` | - | Lane W repair-2 report — WAL capture ordering | **REPAIR ROUND 2 IMPLEMENTATION + GATE 4 SELF-QA COMPLETE; READY FOR CLAUDE LEAD T0 CI/AUDIT.** |
 | `WAYFINDER_DECISION_FOLD_2026-08-23.md` | 2026-08-23 | WAYFINDER DECISION FOLD — 2026-08-23 | **Status:** owner-decision record and plan-amendment pass. Planning only — **implementation authorized: NO · `G1-IA` UNSATISFIED · every work package NOT STARTED.** Per D-12, no... |
 | `WAYFINDER_EXECUTION_CRITIQUE_FOLD_2026-08-23.md` | 2026-08-23 | WAYFINDER EXECUTION-CRITIQUE FOLD — 2026-08-23 (map #79) | **Status:** owner-decision record and plan-amendment pass. Planning only — **implementation authorized: NO.** Per D-12, nothing here authorizes trading code, Pine, Bridge behavi... |
 | `WAYFINDER_EXPLORER_FOLD_2026-08-23.md` | 2026-08-23 | WAYFINDER EXPLORER FOLD — 2026-08-23 (map #78) | **Status:** owner-decision record and plan-amendment pass. Planning only — **implementation authorized: NO.** Per D-12, nothing here is an authorization: no viewer is built, no ... |
@@ -562,6 +568,69 @@
 | `WP_P0_08_WRITER_INVENTORY_2026-08-25/LANE_REPORT.md` | - | Lane G Report — WP-P0-08 Writer Inventory | Date: 2026-08-25 |
 | `WP_P0_08_WRITER_INVENTORY_2026-08-25/SEARCH_LOG.md` | - | WP-P0-08 Search Log | Date: 2026-08-25 |
 | `WP_P0_08_WRITER_INVENTORY_2026-08-25/WRITER_INVENTORY.md` | - | WP-P0-08 Writer Inventory | Date: 2026-08-25 |
+| `WP_P0_09_CAPABILITY_TABLE_2026-08-25/CAPABILITY_CANONICALIZATION_TABLE.md` | - | WP-P0-09 Capability Canonicalization Table | **Date:** 2026-08-25 |
+| `WP_P0_09_CAPABILITY_TABLE_2026-08-25/COVERAGE_SWEEP.md` | - | WP-P0-09 Coverage Sweep | **Lane input base SHA:** `fead492b0b87f207aa6e7a259372b9767d4301f9` |
+| `WP_P0_09_CAPABILITY_TABLE_2026-08-25/LANE_REPORT.md` | - | Lane Q Report — WP-P0-09 Capability Canonicalization | **Status:** REPAIR ROUND 6 COMPLETE — the final permitted T0 repair round. **Round 6 closes the full union of the two round-2 flagship audits: ten enumerated items across both v... |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_01.json` | - | family 01 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_02.json` | - | family 02 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_03.json` | - | family 03 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_04.json` | - | family 04 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_05.json` | - | family 05 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_06.json` | - | family 06 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_07.json` | - | family 07 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_08.json` | - | family 08 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_09.json` | - | family 09 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_10.json` | - | family 10 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_11.json` | - | family 11 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_12.json` | - | family 12 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_13.json` | - | family 13 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_14.json` | - | family 14 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_15.json` | - | family 15 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_16.json` | - | family 16 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_17.json` | - | family 17 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_20.json` | - | family 20 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_21.json` | - | family 21 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_22.json` | - | family 22 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_23.json` | - | family 23 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_24.json` | - | family 24 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/family_25.json` | - | family 25 | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/gen_declaration_inventory.py` | - | gen declaration inventory | """Print the current WP-P0-10 declaration-inventory measurements.""" |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/manifest.json` | - | manifest | { |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/README.md` | - | WP-P0-10 deterministic golden fixtures | This directory is a new data-only corpus. It does not overwrite or recapture any existing parity corpus. |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/test_verify_fixtures.py` | - | test verify fixtures | """Executable tamper regressions for the WP-P0-10 fixture verifier.""" |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/fixtures/verify_fixtures.py` | - | DECLARATION_INVENTORY_SHA256 is authoritative for declaration-set identity; | """Verify the WP-P0-10 fixture contract and its pinned declaration inventory. |
+| `WP_P0_10_GOLDEN_SUITE_2026-08-25/LANE_REPORT.md` | - | WP-P0-10 Kernel Economic Golden Suite — Implementer Repair Report | **Date:** 2026-08-25 |
+| `WP_P0_11_GATE_2026-08-28/.gitattributes` | - | .gitattributes | GITATTRIBUTES file |
+| `WP_P0_11_GATE_2026-08-28/.gitignore` | - | .gitignore | GITIGNORE file |
+| `WP_P0_11_GATE_2026-08-28/evidence/discrimination_matrix/discrimination_matrix.json` | - | discrimination matrix | { |
+| `WP_P0_11_GATE_2026-08-28/evidence/discrimination_matrix/mutation_transcript.jsonl` | - | mutation transcript | JSONL file |
+| `WP_P0_11_GATE_2026-08-28/evidence/discrimination_matrix/representative_expected.jsonl` | - | representative expected | JSONL file |
+| `WP_P0_11_GATE_2026-08-28/evidence/f3_raw_gated_divergence.json` | - | f3 raw gated divergence | {"artifact_schema_version":"P011_F3_RAW_GATED_DIVERGENCE_v1","authority_commit":"5c5603065c994d545c0eaa8c137fa9edd5cdfc28","clean_actual":{"final_state":{"legacy_substitution_ob... |
+| `WP_P0_11_GATE_2026-08-28/evidence/producer_discrimination_matrix.py` | - | producer discrimination matrix | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/evidence/remeasure.py` | - | remeasure | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/evidence/row_arm/batch_manifest.json` | - | batch manifest | {"artifact_schema_version":"P011_ROW_ARM_BATCH_v1","artifacts":{"row_corroboration.json":"e17f8841d8b3c50151843bfc66fe036d6e458a269a6aac3c38e1004e0e008c8a","row_results.jsonl":"... |
+| `WP_P0_11_GATE_2026-08-28/evidence/row_arm/row_corroboration.json` | - | row corroboration | {"artifact_schema_version":"P011_ROW_CORROBORATION_v2","counts":{"green":33,"not_applicable":2,"stop":7,"total":42},"gate_version":"P011-LC-GATE-v2","outcome":"STOP","reason":"r... |
+| `WP_P0_11_GATE_2026-08-28/evidence/row_arm/row_results.jsonl` | - | row results | JSONL file |
+| `WP_P0_11_GATE_2026-08-28/evidence/row_arm/unresolved_rows.json` | - | unresolved rows | {"artifact_schema_version":"P011_UNRESOLVED_ROWS_v1","gate_version":"P011-LC-GATE-v2","rows":[{"authority":{"citations":["controller config.py:226-238 and MTC_V2.pine:2010-2028 ... |
+| `WP_P0_11_GATE_2026-08-28/evidence/row_arm_contract_mutations.json` | - | row arm contract mutations | {"artifact_schema_version":"P011_ROW_ARM_CONTRACT_MUTATIONS_v1","cases":[{"case_id":"scenario_identity_changed","expected_outcome":"FAIL","expected_return_code":1,"result":{"arg... |
+| `WP_P0_11_GATE_2026-08-28/evidence/row_arm_remeasure.py` | - | row arm remeasure | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/evidence/structural_mutations.json` | - | structural mutations | { |
+| `WP_P0_11_GATE_2026-08-28/evidence/structural_mutations.py` | - | structural mutations | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/LANE_REPORT.md` | - | WP-P0-11 `P011-LC-GATE-v3` finalization report | Date: 2026-08-30 |
+| `WP_P0_11_GATE_2026-08-28/p011_gate.py` | - | p011 gate | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/P011_GATE_RECEIPT.json` | - | P011 GATE RECEIPT | { |
+| `WP_P0_11_GATE_2026-08-28/p011_legacy_manifest.json` | - | p011 legacy manifest | { |
+| `WP_P0_11_GATE_2026-08-28/P011_OBSERVATION_SCHEMA_v1.json` | - | P011 OBSERVATION SCHEMA v1 | { |
+| `WP_P0_11_GATE_2026-08-28/P011_V3_PUBLICATION_RECEIPT.json` | - | P011 V3 PUBLICATION RECEIPT | { |
+| `WP_P0_11_GATE_2026-08-28/profiles/mtc_v2_legacy_range_filter_default_v1.json` | - | mtc v2 legacy range filter default v1 | { |
+| `WP_P0_11_GATE_2026-08-28/profiles/mtc_v2_legacy_supertrend_default_v1.json` | - | mtc v2 legacy supertrend default v1 | { |
+| `WP_P0_11_GATE_2026-08-28/row_arm.py` | - | row arm | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/scenario_binding.py` | - | scenario binding | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/stage1_freeze.py` | - | stage1 freeze | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/stage3_oracle_contracts.py` | - | stage3 oracle contracts | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/test_producer_discrimination_matrix.py` | - | test producer discrimination matrix | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/test_scenario_binding.py` | - | test scenario binding | from __future__ import annotations |
+| `WP_P0_11_GATE_2026-08-28/test_stage3_oracles.py` | - | test stage3 oracles | from __future__ import annotations |
 | `WP_P0_15_FRESHNESS_2026-08-24/CLEAN_WORKTREE_PROCEDURE.md` | - | Verified Clean Isolated Worktree Procedure | Use this procedure when an agent must start from a named commit without disturbing an existing |
 | `WP_P0_15_FRESHNESS_2026-08-24/LANE_REPORT.md` | - | Lane B Report — WP-P0-15 Branch Freshness | Implementation and implementer self-QA are complete. Audit tier is **T1**, fixed by the accepted |
 | `WP_P0_15_FRESHNESS_2026-08-24/RED_GREEN_EVIDENCE.md` | - | WP-P0-15 D026 RED/GREEN Evidence | Date: 2026-08-24. All commands were executed locally and offline. The source worktree was |
@@ -580,6 +649,7 @@
 | `WP_P0_18_CHART_POC_2026-08-25/poc/qa_browser.mjs` | - | qa browser | MJS file |
 | `WP_P0_19_PINE_DEFANG_DESIGN_2026-08-25/LANE_REPORT.md` | - | Lane V — WP-P0-19 implementer report | **Status:** DONE — implementer design and self-QA complete; Lead-owned T2 review/acceptance |
 | `WP_P0_19_PINE_DEFANG_DESIGN_2026-08-25/PINE_DEFANG_T0_AUTHORIZATION_PACKAGE.md` | - | WP-P0-19 — Pine de-fang T0 authorization package | **Date:** 2026-08-25 |
+| `WP_P0_23_PINE_DEFANG_2026-08-25/LANE_REPORT.md` | - | WP-P0-23 Pine de-fang — Lane AC implementer report | **Date:** 2026-08-25 |
 | `WP_P0_24_OSS_LEDGER_2026-08-24/DEPENDENCY_LEDGER.md` | - | WP-P0-24 append-only dependency ledger | **Created:** 2026-08-24 |
 | `WP_P0_24_OSS_LEDGER_2026-08-24/LANE_REPORT.md` | - | Lane D report — WP-P0-24 OSS lifecycle policy and ledger | **Status:** **LANE D DONE — implementer package complete; T1 Lead acceptance remains Lead-owned.** |
 | `WP_P0_24_OSS_LEDGER_2026-08-24/PROPOSED_AGENTS_MD_POLICY.md` | - | PROPOSAL — not applied; amending root governance is a separate change under its own authorization | **Package:** WP-P0-24 |
@@ -590,6 +660,10 @@
 | `WP_P0_26_OPSA_2026-08-25/LANE_REPORT.md` | - | Lane J Report — WP-P0-26 OPS-A local backup/restore + dead-man watchdog tooling | **TOOLING DELIVERED / ACCEPTANCE OPEN — repair round 1 of max 2 applied |
 | `WP_P0_26_OPSA_2026-08-25/NOTIFIER_PROPOSAL.md` | - | WP-P0-26 OPS-A — phone-push notifier proposal (DECISION INPUT FOR THE OWNER) | **Status: PROPOSAL — no signup, no credential, no message, no install happened.** |
 | `WP_P0_26_OPSA_2026-08-25/RESTORE_DRILL_EVIDENCE.md` | - | WP-P0-26 OPS-A — D026 RED/GREEN restore + watchdog drill evidence (LOCAL HALF) | **Date:** 2026-08-25 (overnight lane J) · **Worktree:** `C:\WPP026_20260825` |
+| `WP_P0_27_CI_HOME_2026-08-25/CI_POLICY.md` | - | WP-P0-27 CI policy | **Status:** reconciled 2026-08-25 (lane AK) with the protection that is actually enforced. The |
+| `WP_P0_27_CI_HOME_2026-08-25/LANE_REPORT.md` | - | Lane K report — WP-P0-27 repo-root CI | **Status:** **RECONCILED WITH MASTER; ACCEPTANCE GATE OPEN ON GC FIX MERGE** |
+| `WP_P0_27_CI_HOME_2026-08-25/LINUX_RED_DIAGNOSIS.md` | - | Lane R - Linux CI failure diagnosis | **Status:** DIAGNOSIS COMPLETE; DOWNSTREAM REPAIR STATUS UPDATED |
+| `WP_P0_27_CI_HOME_2026-08-25/RED_GREEN_PLAN.md` | - | WP-P0-27 live RED/GREEN and required-check plan | **Executor:** Claude Lead after T1 acceptance and after `master` is green. This reconciliation |
 | `WP_P0_28_VENUE_FACTS_2026-08-25/ACCOUNT_BINDING_AND_FALLBACK_SPEC.md` | - | WP-P0-28 VEN-A — Account Binding and Virtual-Books Fallback Specification | **Status:** Q6 binding specification · documentation half only · T2 |
 | `WP_P0_28_VENUE_FACTS_2026-08-25/LANE_REPORT.md` | - | Lane T Report — WP-P0-28 VEN-A Documentation Half | **Date:** 2026-08-25 |
 | `WP_P0_28_VENUE_FACTS_2026-08-25/VENUE_VERIFICATION_RECORD_2026-08-25.md` | 2026-08-25 | WP-P0-28 VEN-A — Venue Verification Record | **Date:** 2026-08-25 |
