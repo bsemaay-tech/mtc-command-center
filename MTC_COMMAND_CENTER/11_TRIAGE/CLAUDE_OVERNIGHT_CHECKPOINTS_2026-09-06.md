@@ -220,3 +220,21 @@ No live dependency contacted or changed.
   06:30. Master still `afe52ea`; branch head pushed after every integration.
 - **NEXT ACTION:** integrate V; final audit at ~05:30; close-out at 06:00.
 - **WAITING FOR OWNER:** Nothing for the lane.
+
+## Checkpoint 7 — 2026-09-07 01:39 +03 — dashboard path-model wave integrated
+
+- **Integrated since Checkpoint 6:** V `af8247b1`→`402098ed` (decision packet: 31 derived
+  locations, 4 live gaps), W `308600ff`→`a508fc77` (D18: promoted-strategy plans read from the
+  QuantLens strategies root; dashboard 133), X `8c1755e6`→`0322fd43` (D18 follow-up: reads no longer
+  gated on `mtc_v2_root`; dashboard 135). Index regenerated; report rows/SHAs updated.
+- **Branch delta:** 62 commits over `afe52ea`, 69 files, +6,321/−221; head pushed after every step.
+  `origin/master` still `afe52ea`; no PR activity.
+- **RUNNING:** none. Refill assessment (truthful shortfall): every remaining item is owner-gated
+  (D7 `02_MTC_BACKTEST`, D8 MTC_V2, Bridge lane-J proposals, lane-V options for the two
+  `reports/optimization` readers and `paths.py:27` fallbacks, `generate_morning_report` intent) or
+  already proposed with a diff. No busywork lanes will be started.
+- **Plan:** heartbeat checkpoints every 30 min (idle ticks recorded briefly); ~05:30 final
+  independent branch audit (R2) over the complete delta; ~06:00 §8 close-out + governance
+  `HANDOFF.md` refresh; final push by 06:30.
+- **NEXT ACTION:** hold; R2 at ~05:30; close-out at 06:00.
+- **WAITING FOR OWNER:** Nothing for the lane.
