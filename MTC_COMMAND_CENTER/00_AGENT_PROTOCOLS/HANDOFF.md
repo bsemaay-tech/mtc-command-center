@@ -20,11 +20,15 @@
   because SQLite `fchown`s `-wal/-shm` under uid 0 and `ctime_ns` is part of the drift guard
   (safe direction, no documented root path). Defang guard PASS; `mtc_cli`, `_deepseek_driver`,
   `tools_v2`, `contracts` (+ruff), 25 QuantLens strategy suites green; dashboard API 120/121.
-- **Findings D1–D5** (stage-owned, patches scratch-verified, none applied): D1 dashboard test
+- **Findings D1–D10** (stage-owned, patches scratch-verified, none applied): D1 dashboard test
   Windows separator; D2 `11_TRIAGE/overnight_orchestrator.py` dedent bug → uncompilable
   `03_QUANTLENS/tools/overnight_extended_run.py`; D3 seven `parameter_library/*.yml` invalid
   (bare warning line 2); D4 `AGGREGATE_night_2026-06-02.json` is Markdown; D5 dashboard test
-  writes to `C:/TEMP`. Details: the morning report.
+  writes to `C:/TEMP`; D6 `Any` unimported in `bridge/broker/hyperliquid.py` (latent); D7
+  `02_MTC_BACKTEST/app.py` "Generate Run Plan" `NameError` (`pd`); D8 MTC_V2 `runner.py`
+  `debug_mode` constant unimported; D9 `mtc_cli audit repo` FAIL since the 08-25 fold (moved
+  memory files); D10 `00_CONFIG/paths*.example.json` point at the frozen legacy checkout.
+  Details, evidence and patches: the morning report.
 - **T3 done:** `11_TRIAGE/INDEX.md` regenerated (+75 rows, prior rows/order byte-identical).
 - **NEXT ACTION:** owner triages D1–D5; merge the two triage records via normal PR/CI if wanted.
 - **WAITING FOR OWNER:** Nothing for this lane.

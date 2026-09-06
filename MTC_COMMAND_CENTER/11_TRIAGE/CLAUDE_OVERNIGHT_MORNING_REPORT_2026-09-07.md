@@ -12,7 +12,7 @@ from them.
 
 ## 1. Owner decisions needed
 
-None are required for anything this lane did. Eight optional dispatch decisions (D1–D8 in §4)
+None are required for anything this lane did. Ten optional dispatch decisions (D1–D10 in §4)
 are batched here; each is a stage-owned repair with a verified patch attached, and none was
 applied to the tree.
 
@@ -161,6 +161,27 @@ Related lint-only (no runtime effect, annotation strings under `from __future__ 
 annotations`): `mtc_v2/core/gates.py:524,569` reference `"datetime"` without a `TYPE_CHECKING`
 import; same class as D6.
 
+### D9 — `mtc_cli audit repo` has failed on every `master` since the 2026-08-25 routing fold (T1, `mtc_cli`)
+
+`python -m mtc_cli audit repo` (the D002 agent-native, read-only health command) returns
+`[audit repo] FAIL`, exit 2, with `missing: MTC_COMMAND_CENTER/_AI_MEMORY/GLOBAL_HANDOFF.md`
+and `missing: …/_AI_MEMORY/NEXT_STEPS.md`. `mtc_cli/commands/audit.py:27-28,97` still requires
+those paths, but commit `552a41ec` (2026-08-25, "feat(context): add stage-local routing") moved
+both files to `_AI_MEMORY/history/` (255 KB and 344 KB there today), as root `AGENTS.md` records.
+The 8 `mtc_cli` tests pass because they use fixtures. Whether the audit should read the history
+files, the router files (`AGENTS.md`/`DECISIONS.md`/stage `HANDOFF.md`), or be retired is a
+D002-level decision; the command is unusable until one is made.
+
+### D10 — dashboard path examples still point at the frozen legacy checkout (T2, `08_DASHBOARD_APP`)
+
+`00_CONFIG/paths.example.json` and `paths.local.example.json` (10 values) resolve every root to
+`C:/LAB/tradingview-lab/…` and the pre-migration `01_MASTER TEMPLATE_V2` layout. Root `AGENTS.md`
+declares that checkout frozen and forbids reading it, and `PATHS_RESOLUTION.md` loads the example
+first, so `mcc_readonly health` on a machine without `paths.local.json` reports
+`mtc_v2_root_reachable: false` against the legacy path (observed here: `overall_ok: false`).
+Read-only run; no config was written. Fix is a values-only update to the canonical
+`C:/LAB/Tradingview_LAB_CLEAN/…` layout (or relative roots), owner-confirmed.
+
 ## 5. Suggested Bridge-stage doc note (T2, optional)
 
 `IBKR_PAPER_BRIDGE/TESTS.md`: "On Linux run the suite as a non-root user; as root SQLite
@@ -241,6 +262,6 @@ print(f"Indexed {len(files)} files into {out}")
 ## 8. Close-out
 
 - **Heartbeat checkpoints:** see the checkpoint record; the last entry states the close time.
-- **NEXT ACTION (owner):** triage D1–D8 to their stage owners; optionally merge this branch's two
+- **NEXT ACTION (owner):** triage D1–D10 to their stage owners; optionally merge this branch's two
   T3 triage records through the normal PR/CI route.
 - **WAITING FOR OWNER:** Nothing for this lane's authorized work.
