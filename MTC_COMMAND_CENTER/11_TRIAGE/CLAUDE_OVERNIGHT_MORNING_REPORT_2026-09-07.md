@@ -62,7 +62,8 @@ unreachable from this container and remain required before merge.
 | `aeaef767` | `11_TRIAGE/overnight_orchestrator.py`, regenerated runner, new template test (D17) | prototypes imported from their directory | 38 triage tests pass; runner compiles |
 | `234c7188` | `mtc_cli/commands/audit.py` + tests (R1 nits) | no-ask tokens `none/(none)/n/a/-/—/empty`; label-anchored NEXT ACTION check; newest-first documented | 32 tests pass; `audit repo` OK |
 | `a508fc77` | `mcc_readonly/{pine_builder_reader,liveops_reader}.py` + tests (D18) | promoted-strategy plans read from the QuantLens strategies root | dashboard 133 passed |
-| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q,R1,S,T,V,W}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
+| lane X (§8) | `mcc_readonly/{pine_builder_reader,liveops_reader}.py` + tests (D18 follow-up) | plan reads ungated from `mtc_v2_root`; dead locals/imports removed | dashboard 135 passed |
+| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q,R1,S,T,V,W,X}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
 
 Still owner-gated and NOT changed: D7 (`02_MTC_BACKTEST`), D8 (MTC_V2), plus anything Pine,
 parity, adapters, schemas. Read-only review lanes (J Bridge static hunt, K non-protected static hunt, L dashboard legacy
@@ -301,8 +302,8 @@ under the canonical layout. Two are always-firing with no fallback: `pine_builde
 Builder compile-status join and the LiveOps paper-trade-plan list are permanently empty even though
 the plan files exist under `03_QUANTLENS/strategies/<id>/…`. Repaired by lane W (`a508fc77`): both now read
 `default_quantlens_root(mcc_root) / "strategies"`; RED 4 failed → GREEN, dashboard suite 133 passed.
-Nit left for the owner: the callers still guard on `mtc_v2_root.exists()` before reading plans,
-which no longer depend on that root. The other two gaps
+Follow-up by lane X (`8c1755e6`→ branch commit in §3): the reads are no longer gated on `mtc_v2_root`;
+`generated_at` now reflects discovered plans even when that root is unconfigured; dashboard 135 passed. The other two gaps
 (`backtest_reader.py:114`, `optimization_reader.py:27` → `mtc_v2_root/reports/optimization`) have no
 producer anywhere in the repo yet (`metrics.json` absent), so lane V recommends keeping them
 documented fail-closed until a producer exists — owner decision, packet options A/B/C per reader.
