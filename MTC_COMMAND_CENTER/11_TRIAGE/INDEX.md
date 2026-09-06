@@ -389,6 +389,7 @@
 | `OVERNIGHT_LANE_H_D11_ORCHESTRATOR_PATHS_2026-09-07.md` | 2026-09-07 | Lane H — orchestrator path constants (D11) | **Defect:** T1 script defect. `MTC_COMMAND_CENTER/11_TRIAGE/overnight_orchestrator.py` |
 | `OVERNIGHT_LANE_I_04_SHARED_README_LINKS_2026-09-07.md` | 2026-09-07 | Lane I — 04_SHARED module pack README link repair | **Date:** 2026-09-07 |
 | `OVERNIGHT_LANE_J_BRIDGE_STATIC_HUNT_2026-09-07.md` | 2026-09-07 | Lane J — Bridge static defect hunt (read-only) | Scope: `IBKR_PAPER_BRIDGE/bridge/**` and `IBKR_PAPER_BRIDGE/tools/**` (tests excluded). |
+| `OVERNIGHT_LANE_K_NONPROTECTED_STATIC_HUNT_2026-09-07.md` | 2026-09-07 | Lane K — non-protected static defect hunt (read-only) | Scope: `mtc_cli`, `MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly`, |
 | `OVERNIGHT_LANE_L_DASHBOARD_LEGACY_FALLBACKS_2026-09-07.md` | 2026-09-07 | Lane L — dashboard legacy-path fallbacks (read-only review) | Scope: `MTC_COMMAND_CENTER/08_DASHBOARD_APP` (apps/api/mcc_readonly, tests, docs, launchers). |
 | `OVERNIGHT_LANE_M_BRANCH_AUDIT_2026-09-07.md` | 2026-09-07 | Lane M — independent read-only audit of the overnight branch delta | Scope: `afe52ea..HEAD` on `claude/overnight-autonomous-work-e94x3q`, evaluated after |
 | `overnight_loop.sh` | - | overnight_loop.sh — run overnight_v2_runner.py iteratively for ~8 hours | cd "$(dirname "$0")" |
