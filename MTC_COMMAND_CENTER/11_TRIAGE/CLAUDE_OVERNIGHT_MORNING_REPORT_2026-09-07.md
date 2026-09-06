@@ -12,7 +12,7 @@ from them.
 
 ## 1. Owner decisions needed
 
-None are required for anything this lane did. Eleven findings (D1–D11 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
+None are required for anything this lane did. Twelve findings (D1–D12 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
 are batched here; each is a stage-owned repair with a verified patch attached, and none was
 applied to the tree.
 
@@ -209,6 +209,17 @@ Found by lane B while regenerating the runner: `11_TRIAGE/overnight_orchestrator
 pre-migration path that does not exist in this checkout (migrated to
 `MTC_COMMAND_CENTER/03_QUANTLENS/tools`). Any real `--apply` run would create the legacy tree
 instead of writing into QuantLens. Out of D2's scope; queued as a refill lane.
+
+### D12 — MTC_V2 readiness reader ignores the path config (T1, `08_DASHBOARD_APP`)
+
+Found by lane L's read-only review: `mcc_readonly/mtc_v2_reader.py::build_mtc_v2_readiness` computes
+`mtc_root = root.parent / "01_MASTER TEMPLATE_V2"` unconditionally (pre-migration layout), while
+every other reader resolves `mtc_v2_root` from `00_CONFIG/paths*.json` via
+`resolve_configured_path`. It cannot reach the frozen sibling repo (different top-level directory),
+but on a machine with a leftover legacy folder it would silently render stale data, and on a clean
+canonical checkout it always reports the parity tracker as unavailable. Lane L's record also maps the
+remaining `06_QUANTLENS_LAB` fallbacks (`paths.py:27` and four call sites) with an owner-decidable
+option A (remove) / option B (log) proposal. Lane N was dispatched to fix the reader root only.
 
 ## 5. Suggested Bridge-stage doc note (T2, optional)
 
