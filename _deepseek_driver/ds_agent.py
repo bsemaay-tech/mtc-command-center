@@ -36,6 +36,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from openai import OpenAI
@@ -209,6 +210,16 @@ SYSTEM = (
 )
 
 
+def default_report_path(slug: str) -> Path:
+    """Default report/transcript location when a task omits `report_out`.
+
+    Uses the OS temp dir so this resolves on both POSIX and Windows, unlike
+    the old hard-coded `C:\\tmp` fallback (which, on POSIX, produced a
+    literal relative path segment instead of a real temp directory).
+    """
+    return Path(tempfile.gettempdir()) / "mtc_ds_reports" / f"ds_{slug}_report.md"
+
+
 def _dump(out_path: Path, messages: list, report: str, writes: list) -> None:
     try:
         lines = [f"# DeepSeek run report  ({_dt.datetime.now().isoformat(timespec='seconds')})",
@@ -221,6 +232,7 @@ def _dump(out_path: Path, messages: list, report: str, writes: list) -> None:
             for tc in (m.get("tool_calls") or []):
                 fn = tc.get("function", {})
                 lines.append(f"### {role} tool_call {fn.get('name')}\n{fn.get('arguments')}\n")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text("\n".join(lines), encoding="utf-8")
         print(f"\n[saved] full report + transcript -> {out_path}", flush=True)
     except Exception as e:
@@ -237,7 +249,7 @@ def run_task(task: dict) -> int:
     client = OpenAI(api_key=key, base_url=base)
     sb = Sandbox(task.get("allow", []), task.get("read_extra", []), task.get("schema_allow", []))
     slug = re.sub(r"[^a-z0-9]+", "_", task.get("title", "task").lower())[:40]
-    report_path = Path(task.get("report_out") or (Path(r"C:\tmp") / f"ds_{slug}_report.md"))
+    report_path = Path(task.get("report_out") or default_report_path(slug))
     dispatch = {"read_file": sb.read_file, "edit_file": sb.edit_file,
                 "write_file": sb.write_file, "py_compile": sb.py_compile,
                 "run_python": sb.run_python}
