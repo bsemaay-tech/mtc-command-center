@@ -12,7 +12,7 @@ from them.
 
 ## 1. Owner decisions needed
 
-None are required for anything this lane did. Five optional dispatch decisions (D1–D5 in §4)
+None are required for anything this lane did. Six optional dispatch decisions (D1–D6 in §4)
 are batched here; each is a stage-owned repair with a verified patch attached, and none was
 applied to the tree.
 
@@ -29,7 +29,8 @@ applied to the tree.
 | F7 | Governance/link hygiene: 0 broken links in 66 root/governance/_AI_MEMORY docs and 43 stage-contract files; all 8 stages carry their five files; every stage `HANDOFF.md` ≤ 4 KiB. | checkpoint 1 |
 | F8 | `11_TRIAGE/INDEX.md` was 73 files stale (last generated 2026-08-25). Regenerated on this branch with a validated Python port of `generate_index.ps1` (reproduces all 1,374 prior rows and their order byte-for-byte; deterministic across two runs). Rows added only. | commit `93828d9` |
 | F9 | Credential-pattern sweep: only labelled fakes in fixtures/tests. EOL: 0 mixed. 120 tracked `.sh` parse except 4 intentional `sec102_r7` malformed fixtures. 2,202/2,203 JSON and 108/115 YAML tracked files parse (exceptions are D3/D4). | checkpoint 2 |
-| F10 | Open PRs at start, untouched: #26 (draft), #22, #21, #20 — all last updated July 2026. | GitHub list |
+| F10 | Open PRs at start, untouched: #26 (draft), #22, #21, #20 — all last updated July 2026. GitHub reports `mergeable_state: unknown`; locally all four heads share **no merge base** with current `master` (`git merge-base` empty; `git merge-tree` conflicts; each 263 commits behind, 373–382 "ahead" only because the histories are unrelated). None can merge as-is; they are close-or-recreate candidates. #26 also names the superseded auditor `claude-opus-4-8` (D022 fixed `claude-opus-5`). | local fetch + merge-tree |
+| F11 | Static sweeps: `ruff --select F821,F811,F823,E9` over all Python trees finds one product hit, D6 below, plus two benign local re-imports in `tests/test_engine_dryrun.py:3798` (F811); `shellcheck 0.11.0 -S warning` on `deploy/linux/{install,package,rollback,verify}.sh` is clean. | checkpoint 3 |
 
 ## 3. What this lane changed
 
@@ -127,6 +128,15 @@ outside both the repo and pytest's temp dir; on Linux it created a literal
 `tempfile.TemporaryDirectory()`; the same pattern fixes this one. Discovered after the dashboard
 suite run, so it is reported without a scratch-verified patch.
 
+### D6 — `Any` used without import in the Hyperliquid broker (T1, `IBKR_PAPER_BRIDGE`, latent)
+
+`bridge/broker/hyperliquid.py:1643` annotates a local `rich_rows: dict[str, dict[str, Any]]` but
+the module never imports `Any` (ruff F821). With `from __future__ import annotations` (line 7) and
+because local-variable annotations are never evaluated at runtime (verified on 3.12.3), there is
+no runtime effect today; it becomes a `NameError` only if the annotation is ever evaluated
+(e.g. by `typing.get_type_hints`) or the future import is dropped. One-line fix: add `Any` to the
+module's `typing` import. Protected-adjacent Bridge scope; owner-gated.
+
 ## 5. Suggested Bridge-stage doc note (T2, optional)
 
 `IBKR_PAPER_BRIDGE/TESTS.md`: "On Linux run the suite as a non-root user; as root SQLite
@@ -207,6 +217,6 @@ print(f"Indexed {len(files)} files into {out}")
 ## 8. Close-out
 
 - **Heartbeat checkpoints:** see the checkpoint record; the last entry states the close time.
-- **NEXT ACTION (owner):** triage D1–D5 to their stage owners; optionally merge this branch's two
+- **NEXT ACTION (owner):** triage D1–D6 to their stage owners; optionally merge this branch's two
   T3 triage records through the normal PR/CI route.
 - **WAITING FOR OWNER:** Nothing for this lane's authorized work.
