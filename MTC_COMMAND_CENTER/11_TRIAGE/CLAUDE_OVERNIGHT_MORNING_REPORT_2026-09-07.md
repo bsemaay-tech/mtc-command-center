@@ -60,6 +60,7 @@ unreachable from this container and remain required before merge.
 | `44b11300` | four dashboard readers + tests (D14) | 20 read sites `utf-8` → `utf-8-sig`; one BOM regression test per reader | dashboard 129 passed |
 | `1dc4e47b` | `03_QUANTLENS/tools/heavy_night_report.py` + test (D16) | emit the computed pass-cell count | 2 tests pass |
 | `aeaef767` | `11_TRIAGE/overnight_orchestrator.py`, regenerated runner, new template test (D17) | prototypes imported from their directory | 38 triage tests pass; runner compiles |
+| `234c7188` | `mtc_cli/commands/audit.py` + tests (R1 nits) | no-ask tokens `none/(none)/n/a/-/—/empty`; label-anchored NEXT ACTION check; newest-first documented | 32 tests pass; `audit repo` OK |
 | T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q,R1,S,T}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
 
 Still owner-gated and NOT changed: D7 (`02_MTC_BACKTEST`), D8 (MTC_V2), plus anything Pine,
