@@ -108,6 +108,42 @@ class BacktestReaderTests(unittest.TestCase):
         self.assertGreaterEqual(status["summary"]["total_runs"], 0)
 
 
+    def test_reads_bom_prefixed_candidate_results_json(self) -> None:
+        # PowerShell-launched writers (same producer family as heartbeat_reader's
+        # comment on utf-8-sig) can emit a UTF-8 BOM. Plain "utf-8" decoding leaves
+        # the BOM character in the string, json.loads then raises JSONDecodeError on
+        # the "﻿{" prefix, and _quantlens_result_run's except-clause silently
+        # turns the run into a fabricated ERROR row instead of the real summary.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            mtc = Path(tmp) / "mtc"
+            backtests = mtc / "06_QUANTLENS_LAB" / "05_BACKTEST_RESULTS"
+            (root / "00_CONFIG").mkdir(parents=True)
+            backtests.mkdir(parents=True)
+            _write_paths(root, mtc)
+            (backtests / "candidate_results.json").write_text(
+                "﻿"
+                + json.dumps(
+                    {
+                        "backtest_run_at": "2026-05-30T00:00:00+00:00",
+                        "candidate_id": "bom_candidate",
+                        "summary": {
+                            "BTCUSDT": {"trades": 10, "win_rate_pct": 50, "net_return_sum_pct": 4.5},
+                            "ETHUSDT": {"trades": 5, "win_rate_pct": 40, "net_return_sum_pct": -1.0},
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            status = build_backtest_status(root)
+
+            run = next(r for r in status["runs"] if r["run_id"] == "bom_candidate")
+            self.assertEqual(run["status"], "COMPLETED")
+            self.assertNotIn("error", run)
+            self.assertEqual(run["symbols"], 2)
+            self.assertEqual(run["trades"], 15)
+
     def test_discovers_nested_stage_results_as_rows(self) -> None:
         # Orchestrated runs (sweep + CPCV + PBO stages) nest engine output one level
         # deeper: <run>/<stage>/MEGA_walk_forward_results.json. Each stage must appear

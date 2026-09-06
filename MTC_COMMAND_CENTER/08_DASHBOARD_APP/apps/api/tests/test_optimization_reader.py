@@ -55,6 +55,40 @@ class OptimizationReaderTests(unittest.TestCase):
             self.assertEqual(status["top_candidates"][0]["parameter_hash"], "abc")
             self.assertEqual(status["summary"]["risk_note_count"], 1)
 
+    def test_reads_bom_prefixed_run_config_json(self) -> None:
+        # PowerShell-launched writers can emit a UTF-8 BOM. Plain "utf-8" decoding
+        # leaves the BOM character in the string, json.loads then raises
+        # JSONDecodeError on the "﻿{" prefix, and _read_json_dict's except-clause
+        # silently treats the config as {} instead of parsing the real fields.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            mtc = Path(tmp) / "mtc"
+            opt = mtc / "reports" / "optimization" / "bom_run_dir"
+            (root / "00_CONFIG").mkdir(parents=True)
+            opt.mkdir(parents=True)
+            _write_paths(root, mtc)
+            (opt / "run_config.json").write_text(
+                "﻿"
+                + json.dumps(
+                    {
+                        "run_id": "bom_run",
+                        "planned_evaluations": 10,
+                        "max_workers": 4,
+                        "started_at": "2026-05-01T00:00:00+00:00",
+                        "warning": "Research seed only.",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            status = build_optimization_status(root)
+
+            self.assertEqual(status["summary"]["total_runs"], 1)
+            run = status["runs"][0]
+            self.assertEqual(run["run_id"], "bom_run")
+            self.assertEqual(run["max_workers"], 4)
+            self.assertEqual(run["warning"], "Research seed only.")
+
     def test_real_config_returns_optimization_shape(self) -> None:
         status = build_optimization_status(SOURCE_MCC_ROOT)
         self.assertIn("summary", status)

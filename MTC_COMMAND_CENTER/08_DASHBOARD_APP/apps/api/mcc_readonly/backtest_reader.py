@@ -353,7 +353,7 @@ def _timestamp(epoch_seconds: float) -> str:
 
 
 def _read_json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
 def _run_id_from_results_path(path: Path) -> str:

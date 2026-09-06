@@ -863,7 +863,7 @@ def _source_material_text(source_record: dict[str, Any], source_index: dict[str,
                     continue
                 seen.add(key)
                 try:
-                    texts.append(path.read_text(encoding="utf-8", errors="replace")[:80000])
+                    texts.append(path.read_text(encoding="utf-8-sig", errors="replace")[:80000])
                 except Exception:
                     continue
     return "\n".join(texts)
@@ -1048,7 +1048,7 @@ def _transcript_source_url(transcript_path: str, source_index: dict[str, Any]) -
         if not path.exists():
             continue
         try:
-            text = path.read_text(encoding="utf-8", errors="replace")
+            text = path.read_text(encoding="utf-8-sig", errors="replace")
         except Exception:
             continue
         for pattern in (
@@ -1092,7 +1092,7 @@ def _source_url_from_source_file(source_file: str, root: Path) -> str:
 
 def _first_youtube_url(path: Path) -> str:
     try:
-        text = path.read_text(encoding="utf-8", errors="replace")
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
     except Exception:
         return ""
     for pattern in (
@@ -1108,7 +1108,7 @@ def _first_youtube_url(path: Path) -> str:
 def _iter_csv(path: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     try:
-        with path.open("r", encoding="utf-8", newline="") as handle:
+        with path.open("r", encoding="utf-8-sig", newline="") as handle:
             reader = csv.DictReader(handle)
             for row in reader:
                 if isinstance(row, dict):
@@ -1136,7 +1136,7 @@ def _record_rank_from_path(path: Path) -> int:
 def _iter_jsonl(path: Path) -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     try:
-        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        lines = path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
     except Exception:
         return items
     for line in lines:

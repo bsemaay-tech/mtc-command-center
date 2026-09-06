@@ -73,6 +73,34 @@ class CandidateAuditTests(unittest.TestCase):
             self.assertEqual(rows["C"]["recommended_next_pipeline_step"], "Source audit / park")
             self.assertEqual(rows["C"]["stg_code"], "Stg003")
 
+    def test_source_index_counts_bom_prefixed_jsonl_record(self) -> None:
+        # PowerShell-launched writers can emit a UTF-8 BOM. Plain "utf-8" decoding
+        # leaves the BOM character in the line, json.loads then raises
+        # JSONDecodeError on the "﻿{" prefix, and _iter_jsonl's except-clause
+        # silently drops the record instead of counting/indexing it.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            research_dir = (
+                Path(tmp)
+                / "01_MASTER TEMPLATE_V2"
+                / "06_QUANTLENS_LAB"
+                / "research"
+                / "batch"
+            )
+            research_dir.mkdir(parents=True)
+            (research_dir / "AUDITED_CANDIDATE_EXTRACTION.jsonl").write_text(
+                "﻿" + json.dumps({"candidate_id": "QL_BOM_SOURCE", "source_quality": "HIGH"}) + "\n",
+                encoding="utf-8",
+            )
+
+            audit = build_candidate_audit(
+                root,
+                candidate_pipeline={"rows": []},
+                strategy_registry={"candidates": [], "strategies": []},
+            )
+
+            self.assertEqual(audit["source_record_count"], 1)
+
     def test_audit_recovers_source_url_from_transcript_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"

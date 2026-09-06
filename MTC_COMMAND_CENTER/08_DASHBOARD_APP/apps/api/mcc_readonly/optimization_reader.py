@@ -193,7 +193,7 @@ def _ranked_csv_paths(optimization_root: Path) -> list[Path]:
 def _read_candidate_csv(path: Path, optimization_root: Path) -> list[dict[str, Any]]:
     candidates = []
     try:
-        with path.open("r", encoding="utf-8", newline="") as handle:
+        with path.open("r", encoding="utf-8-sig", newline="") as handle:
             reader = csv.DictReader(handle)
             for index, row in enumerate(reader):
                 if index >= MAX_CSV_ROWS_PER_FILE:
@@ -258,7 +258,7 @@ def _worker_benchmark(optimization_root: Path) -> dict[str, Any]:
         return {"available": False}
 
     rows = []
-    with summary_path.open("r", encoding="utf-8", newline="") as handle:
+    with summary_path.open("r", encoding="utf-8-sig", newline="") as handle:
         for row in csv.DictReader(handle):
             rows.append(row)
     if not rows:
@@ -354,7 +354,7 @@ def _param_preview(params: dict[str, Any], row: dict[str, Any]) -> str:
 
 def _markdown_title(path: Path) -> str:
     try:
-        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        for line in path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
             stripped = line.strip()
             if stripped.startswith("#"):
                 return stripped.lstrip("#").strip() or path.stem
@@ -377,7 +377,7 @@ def _json_dict(value: Any) -> dict[str, Any]:
 
 def _read_json_dict(path: Path) -> dict[str, Any]:
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
+        raw = json.loads(path.read_text(encoding="utf-8-sig"))
     except Exception:
         return {}
     return raw if isinstance(raw, dict) else {}
