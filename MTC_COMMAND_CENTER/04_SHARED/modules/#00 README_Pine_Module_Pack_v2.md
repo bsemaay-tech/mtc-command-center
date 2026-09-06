@@ -118,7 +118,7 @@ Kullanıcı bir modül eklemeni istediğinde:
 5. **Input ekle:** Gerekli parametreler için Section 1'e input.xxx() ekle
 6. **Section 4'te çağır:** Module adapter pattern'e yeni case ekle
 7. **signal_mode seçeneklerini güncelle:** input.string options dizisine ekle
-8. **Update CHANGELOG.md** after the change (see [.github/copilot-instructions.md](../../.github/copilot-instructions.md) for documentation workflow)
+8. **Update CHANGELOG.md** after the change (historical reference: `.github/copilot-instructions.md` — not present in this repo)
 
 ### ❌ YAPMA
 
@@ -372,7 +372,7 @@ Libraries return **extended values** for visualization and debugging:
  conf_waitLongStartBar, conf_waitShortStartBar, 
  conf_longLevelUpdatedThisBar, conf_shortLevelUpdatedThisBar] = CL.apply_confirmation(...)
 ```
-- See [LIB_ConfirmationLayer.pine](../20_MODULES_REUSABLE/LIB_ConfirmationLayer.pine) for full parameter list (33 inputs)
+- See [LIB_ConfirmationLayer.pine](LIB_ConfirmationLayer.pine) for full parameter list (33 inputs)
 
 ---
 
