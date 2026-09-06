@@ -281,6 +281,19 @@ new STRONG_PASS detail table) is the owner's call; left unchanged with the optio
   NEXT ACTION / WAITING FOR OWNER, index `--check` OK, links resolve, Python compiles, trailers
   present, no secrets, §3 claims match the commits.
 
+### Independent adversarial review of the code commits (lane R1, record `OVERNIGHT_LANE_R1_*`)
+
+Fourteen code commits reviewed with targeted probes and scratch mutants: **no REQUEST_CHANGES**;
+9 PASS, 5 PASS-WITH-NITS. Nits and pre-existing defects it surfaced: the generated overnight runner
+imports a non-existent `PYTHON_PROTOTYPES` package (template defect predating tonight → D17, lane T
+dispatched); `mtc_cli audit` treats `none`/`(none)` as real owner asks and uses a substring
+`NEXT ACTION` check (lane U dispatched); the dashboard readers derive `reports/optimization` and
+`06_QUANTLENS_LAB` under `mtc_v2_root`, which do not exist under `01_MTC_PROJECT` — a pre-existing
+mismatch now visible with canonical example paths (owner decision, same domain as lane L's option
+A/B); `generate_index.py` differs from the PowerShell original only on undecodable/UTF-16-surrogate
+inputs that no current file triggers; `ds_agent._dump` now also creates the parent directory for an
+explicit `report_out` (benign). Acceptance still requires the exact T0–T2 audits.
+
 ## 5. Suggested Bridge-stage doc note (T2, optional)
 
 `IBKR_PAPER_BRIDGE/TESTS.md`: "On Linux run the suite as a non-root user; as root SQLite
