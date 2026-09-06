@@ -144,3 +144,29 @@ No live dependency contacted or changed.
   `11_TRIAGE/generate_index.py` with `--check`; `04_SHARED/modules` README link repair; test-suite
   sweep for other hard-coded `C:/` paths); heartbeat 23:25.
 - **WAITING FOR OWNER:** Nothing.
+
+## Checkpoint 4 — 2026-09-07 00:08 +03 — outage, integrations, relaunch
+
+- **Outage:** the Claude session usage limit was hit at ~23:13 +03 while six lanes ran; the lead
+  and lanes C, D, E, F, G were terminated by the provider (HTTP 429, "session limit resets 21:00
+  UTC"). Work resumed 00:02 +03 after the reset. No repository state was lost: every lane worked
+  in its own worktree, and interrupted lanes left inspectable uncommitted files. Mitigation from
+  now on: worker lanes run on the cheaper `sonnet` route (per OD-20260829-2 "cheapest capable
+  route"); the lead keeps the exact-model session for integration and acceptance-style checks.
+- **Integrated onto the work branch (cherry-pick -x after diff inspection and re-test):**
+  - Lane A `c4611e50` → `6a25e23a`: D1+D5 dashboard tests; suite re-run here 121 passed, no `C:` dir.
+  - Lane B `fd6c53c3` → `5c617b3f`: D2 generator fix + regenerated runner; `py_compile` and ruff
+    E9/F821 pass here. Lane B also found the orchestrator's default `TOOLS_DIR` still points at
+    the legacy `01_MASTER TEMPLATE_V2/06_QUANTLENS_LAB/tools` (does not exist) — follow-up D11.
+  - Lane C `bc584c5a` → `91ccbba6`: D3 writer + 7 YAML files; all 8 parameter-library YAML files
+    parse here. Lane C's second half (D4 rename + QuantLens handoff note) was interrupted after
+    staging; the lead committed it in the lane worktree (`6ba3ab0a`) → `151e1700`.
+- **Master:** `origin/master` unchanged at `afe52ea` (0 new commits); no new PR activity observed.
+- **Lanes RUNNING now (4 + lead):** D (resume, `mtc_cli` audit D9), E (resume, path examples D10),
+  F (resume, Bridge D6 + Linux note, full non-root suite required), G (new, cross-platform
+  `11_TRIAGE/generate_index.py --check`). Lanes A/B/C are DONE. Provider: `sonnet` subagents;
+  deadline 06:00 +03; stop condition unchanged (one verified commit each, no push).
+- **Queue for refills:** D11 orchestrator default `TOOLS_DIR`; `04_SHARED/modules` README legacy
+  links (2); Bridge `TESTS.md` baseline sentence review; report/handoff finalization (lead).
+- **NEXT ACTION:** integrate D/E/F/G as they land; heartbeat 00:34 +03.
+- **WAITING FOR OWNER:** Nothing.
