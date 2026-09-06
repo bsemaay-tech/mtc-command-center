@@ -572,7 +572,7 @@ def write_runner_extension(apply: bool) -> Path | None:
     # the template body below; the f-string is interpolated BEFORE textwrap.dedent,
     # and a single unindented line would stop dedent from stripping anything.
     imports = "\n        ".join(
-        f"from PYTHON_PROTOTYPES import {c.id}_prototype  # noqa: F401"
+        f"import {c.id}_prototype  # noqa: F401"
         for c in CANDIDATES
     )
     body = textwrap.dedent(f"""\
@@ -583,7 +583,7 @@ def write_runner_extension(apply: bool) -> Path | None:
         import sys
         from pathlib import Path
         ROOT = Path(__file__).resolve().parent.parent / "04_PYTHON_PROTOTYPES"
-        sys.path.insert(0, str(ROOT.parent))
+        sys.path.insert(0, str(ROOT))
 
         # Import the new candidates so the runner discovers them.
         {imports}
