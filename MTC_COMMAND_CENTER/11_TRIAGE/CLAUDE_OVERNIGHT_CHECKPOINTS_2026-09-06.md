@@ -244,3 +244,9 @@ No live dependency contacted or changed.
 - No lanes running; no new lane commits; `origin/master` still `afe52ea`; main tree clean; head
   `2ed73f54` pushed. No refill: remaining items are owner-gated (see Checkpoint 7).
 - **NEXT ACTION:** hold; R2 final audit ~05:30; close-out 06:00. **WAITING FOR OWNER:** Nothing.
+
+## Checkpoint 9 — 2026-09-07 02:46 +03 — idle tick
+
+- No lanes running; no new commits; `origin/master` still `afe52ea`; main tree clean; head
+  `c4f536ba` pushed. No refill (owner-gated remainder).
+- **NEXT ACTION:** hold; R2 final audit ~05:30; close-out 06:00. **WAITING FOR OWNER:** Nothing.
