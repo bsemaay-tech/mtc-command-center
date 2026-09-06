@@ -54,7 +54,11 @@ unreachable from this container and remain required before merge.
 | `63de031a` | `11_TRIAGE/overnight_orchestrator.py` (D11) | `QLAB_ROOT = MCC_ROOT / "03_QUANTLENS"` (was legacy `01_MASTER TEMPLATE_V2/06_QUANTLENS_LAB`) | `TOOLS_DIR.exists()` True; py_compile + ruff clean; dry emit compiles |
 | `31e975f1` | `04_SHARED/modules/#00 README_Pine_Module_Pack_v2.md` | two legacy links repaired (one target never existed → plain text) | 0 unresolved links in the file |
 | `a216b61f` | `11_TRIAGE/generate_index.py`, `test_generate_index.py` (new tool) | stdlib port of `generate_index.ps1` with `--check`; .NET sort/extension semantics | 31 tests pass; ruff clean; output byte-identical to the lead's validated port; `--check` OK after regeneration |
-| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
+| `79c77050` | `mcc_readonly/mtc_v2_reader.py` + tests (D12) | MTC_V2 readiness root from path config; fail-closed empty shape when unconfigured | dashboard 122 passed |
+| `68a2d601` | `_deepseek_driver/ds_agent.py` + tests (D13) | default report path under the system temp dir; parent dir created | 25 tests pass |
+| `ec80222d` | `mcc_readonly/registry_reader.py` + tests (D15) | repaired CSV row must match header width, else skipped as malformed | dashboard 125 passed |
+| `44b11300` | four dashboard readers + tests (D14) | 20 read sites `utf-8` → `utf-8-sig`; one BOM regression test per reader | dashboard 129 passed |
+| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, `OVERNIGHT_LANE_{B,E,G,H,I,J,K,L,M,N,O,P,Q}_*` records, `INDEX.md` (`c306d1cc`), stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically with the new tool |
 
 Still owner-gated and NOT changed: D7 (`02_MTC_BACKTEST`), D8 (MTC_V2), plus anything Pine,
 parity, adapters, schemas. Read-only review lanes (J Bridge static hunt, K non-protected static hunt, L dashboard legacy
@@ -236,15 +240,16 @@ is unknown and is the owner's call.
 Lane K finding: `heartbeat_reader.py`/`mtc_v2_reader.py` read with `utf-8-sig` while
 `pipeline_reader.py`, `audit_reader.py`, `optimization_reader.py`, `backtest_reader.py` use plain
 `utf-8`, so a PowerShell-written BOM-prefixed JSON/CSV artifact is treated as malformed/missing by
-half the readers. Lane P is applying `utf-8-sig` to the four readers' read sites with one
-BOM-fixture regression test per reader; §8 records the outcome.
+half the readers. Repaired by lane P (`44b11300`): 20 read sites now `utf-8-sig`, one BOM regression test per
+reader (RED 4 failed → GREEN), no write sites exist in those modules.
 
 ### D15 — registry CSV row repair can misalign columns (T1, `08_DASHBOARD_APP`)
 
 Lane K finding: `registry_reader.py:180-189` repairs malformed rows and then `zip(header, repaired)`
 without a length check, silently dropping or shifting columns when the repair does not land on the
-header width. Lane Q is making it fail closed (row treated as malformed like the reader's other
-malformed paths) with RED/GREEN tests; §8 records the outcome.
+header width. Repaired by lane Q (`ec80222d`): `_candidate_csv_row` returns `None` on width mismatch and the
+row is skipped like the reader's other malformed records; RED showed a reviewer value leaking into
+`candidate_folder`, GREEN 3 new tests.
 
 ### Read-only review lanes (records in `11_TRIAGE/OVERNIGHT_LANE_{J,K,L,M}_*`)
 
