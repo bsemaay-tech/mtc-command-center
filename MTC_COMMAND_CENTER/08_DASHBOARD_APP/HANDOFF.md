@@ -8,6 +8,16 @@
   measures less custom table/freshness code without weakening private/read-only/security boundaries.
 - No build-step choice, deploy, network, broker, paper/live, or write capability is authorized here.
 
+## [Claude lane W] 2026-09-07 — promoted-root reads (D18)
+
+- `pine_builder_reader.py::_compile_observations` and `liveops_reader.py::_paper_trade_plans`
+  now read `default_quantlens_root(mcc_root) / "strategies"` (glob `*/PINE_PARITY_PLAN.md`,
+  `*/FORWARD_PAPER_TRADE_PLAN.md`) instead of the pre-migration
+  `mtc_v2_root/"06_QUANTLENS_LAB"/"06_PROMOTED_TO_PARITY"`, matching the real
+  `03_QUANTLENS/strategies/<id>/` layout (3 strategies confirmed via `git ls-files`).
+  Schema unchanged; fail-closed on a missing `strategies` dir preserved. Suite: 133 passed
+  (129 + 4 new). Detail: `11_TRIAGE/OVERNIGHT_LANE_W_PROMOTED_ROOT_READS_2026-09-07.md`.
+
 ## [Claude lane N] 2026-09-07 — MTC_V2 readiness root from path config (D12)
 
 - `mcc_readonly/mtc_v2_reader.py::build_mtc_v2_readiness` no longer computes
