@@ -9,42 +9,25 @@
 - **NEXT ACTION:** publish this T3 policy through normal Lead verification and protected CI.
 - **WAITING FOR OWNER:** Nothing for evidenced same-package corrective repairs.
 
-## [Codex Lead] 2026-09-05 — Standing autonomy and verified R24 repair
+## [Claude] 2026-09-06 — Overnight read-only QA lane (remote Linux container)
 
-- **Standing permission:** OD-20260905-4 allows ordinary forward local commits of authorized
-  owned scope, including NONACCEPTED candidates. Earlier numeric local-commit ceilings and
-  preacceptance commit bans are superseded. No routine commit questions or invented commit quotas.
-  Scope, repair caps, economics, baseline/reseal/run limits, exact auditors and operational/PAYG
-  gates remain; future explicit owner restrictions prevail.
-- **Policy accepted/merged:** PR150, merge `012ae521647d3cc5a9a04ba361a68059b64bc205`,
-  substantive `6ace5e2b`; DeepSeek V4 Flash PASS, exact Gemini3.8 PASS, Lead diff/hash checks,
-  up-to-date protected Bridge suite Python3.12 SUCCESS. See `AUTONOMY_AUTHORIZATION.md`.
-  PR148/149 preserved; exact Gemini3.8 override through Sep6 09:00+03.
-- **P012 candidate:** clean local `eb3361d3c8edbb1e8c561057b8c29782da50f89c`, C:/WP012BUILD.
-  Re-seal24 and positive schema fixture #24 complete; no P012 push/PR/merge.
-  Lead receipt C:/tmp/P012_R24_LEAD_FINAL_GATE_20260905_2138.json: 454 PASS/0 FAIL, 10 probes
-  DETECTED, 17 scenarios/34 surfaces MATCH, only SEMANTIC_COVERAGE_REVIEW_MISSING.
-- **Frozen packet:** C:/tmp/P012_R24_FINAL_PACKET_20260905_2140. Private executable checkout
-  C:/P012_R24_AUDIT_20260905_2140 at same HEAD; all1348 raw members matched source/packet/checkout.
-  Exact Opus5 xhigh via Pro PASS-WITH-NITS and exact Sol xhigh PASS: independently executed
-  full gate and D026 RED/GREEN. Gemini3.8 PASS (SUPPLEMENTAL_UNEXECUTED). Grok Standards PASS
-  source-only. Sol's completed review separately confirms Spec PASS for approved R24 scope only.
-  No required R24 findings; Opus optional style nit deferred. Max unused.
-- **Acceptance distinction:** Lead verified R24 correction evidence, not whole P012 or a blanket
-  Section16 Items1-6 acceptance. Item4 NONE_KEEP_REFUSED lacks production facts/semantic receipt.
-  Any broader coordinated-repair coverage must be reconciled from actual reports, not inferred.
-  Extra T0 repair round spent; standing commits never reset repair caps. Baseline dry/full
-  allowance spent; archived prior outputs preserved; no rerun authorized.
-- **P014:** extra test-only repair verified by Lead/Sol/Gemini. Reviewed app/test bytes preserved
-  unchanged in local NONACCEPTED `b7b5873012598644ad14384501e43eca649ffbc4`; clean, node syntax
-  and tests PASS, no push. Full package remains dependency-blocked.
-- **Dependencies:** P031 M1 UNPARKED behind accepted P012 -> P020 -> P013; P021 values unratified,
-  P030 blocked; P016/P017 V-NEXT. No operational authority.
-- **Supervision:** C:/tmp/P0_CAMPAIGN_PLAN_TO_2300_20260905.md is the live plan; old snapshots
-  below its current boundary are history. Every10min heartbeat until Sep6 09:00. Mandatory
-  audits completed; capped Go Spec/status attempts stalled, stopped without invented verdicts.
-- **NEXT ACTION:** finish narrow acceptance/coverage reconciliation and publish this T3 handoff
-  through normal CI; continue only authorized dependency-safe work.
-- **WAITING FOR OWNER:** Nothing for current authorized work.
-- **History:** prior handoff preserved byte-for-byte in
-  `_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF_20260905_2202.md`; older history untouched.
+- **Scope/branch:** `claude/overnight-autonomous-work-e94x3q` from `master` `afe52ea`; writes only
+  `11_TRIAGE/{CLAUDE_OVERNIGHT_CHECKPOINTS_2026-09-06.md,CLAUDE_OVERNIGHT_MORNING_REPORT_2026-09-07.md,INDEX.md}`,
+  this handoff, and the rotated history file. No C:/ packet, launcher, Codex or Gemini route was
+  reachable; no push to other branches, PR, merge, host, credential, trading, backtest or launcher.
+- **Verified:** protected `Bridge suite (Python 3.12)` on `afe52ea` is GREEN as non-root
+  (1393 passed) and matches GitHub run 76; as root exactly 3 `test_wal_state_bundle.py` tests fail
+  because SQLite `fchown`s `-wal/-shm` under uid 0 and `ctime_ns` is part of the drift guard
+  (safe direction, no documented root path). Defang guard PASS; `mtc_cli`, `_deepseek_driver`,
+  `tools_v2`, `contracts` (+ruff), 25 QuantLens strategy suites green; dashboard API 120/121.
+- **Findings D1–D5** (stage-owned, patches scratch-verified, none applied): D1 dashboard test
+  Windows separator; D2 `11_TRIAGE/overnight_orchestrator.py` dedent bug → uncompilable
+  `03_QUANTLENS/tools/overnight_extended_run.py`; D3 seven `parameter_library/*.yml` invalid
+  (bare warning line 2); D4 `AGGREGATE_night_2026-06-02.json` is Markdown; D5 dashboard test
+  writes to `C:/TEMP`. Details: the morning report.
+- **T3 done:** `11_TRIAGE/INDEX.md` regenerated (+75 rows, prior rows/order byte-identical).
+- **NEXT ACTION:** owner triages D1–D5; merge the two triage records via normal PR/CI if wanted.
+- **WAITING FOR OWNER:** Nothing for this lane.
+- **History:** the 2026-09-05 Codex section is preserved byte-for-byte in
+  `_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF_20260906_2257.md` (full pre-rotation file);
+  earlier history in `_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF_20260905_2202.md`.
