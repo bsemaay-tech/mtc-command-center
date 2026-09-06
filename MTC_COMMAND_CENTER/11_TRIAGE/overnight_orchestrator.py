@@ -565,7 +565,10 @@ def write_runner_extension(apply: bool) -> Path | None:
     """Emit overnight_extended_run.py at the tools dir that imports all
     new prototypes + delegates to mega_walk_forward's existing infrastructure."""
     runner_path = TOOLS_DIR / "overnight_extended_run.py"
-    imports = "\n".join(
+    # Join with newline + 8 spaces so every import line carries the same indent as
+    # the template body below; the f-string is interpolated BEFORE textwrap.dedent,
+    # and a single unindented line would stop dedent from stripping anything.
+    imports = "\n        ".join(
         f"from PYTHON_PROTOTYPES import {c.id}_prototype  # noqa: F401"
         for c in CANDIDATES
     )
