@@ -170,3 +170,32 @@ No live dependency contacted or changed.
   links (2); Bridge `TESTS.md` baseline sentence review; report/handoff finalization (lead).
 - **NEXT ACTION:** integrate D/E/F/G as they land; heartbeat 00:34 +03.
 - **WAITING FOR OWNER:** Nothing.
+
+## Checkpoint 5 — 2026-09-07 00:29 +03 — first wave integrated, review wave landed
+
+- **Integrated since Checkpoint 4 (cherry-pick -x after diff inspection + lead re-test):**
+  D `e43fd3c3`→`361b6451` (mtc_cli audit; 13 tests, `audit repo` OK exit 0);
+  E `227df4ea`→`f4455150` (path examples; JSON parse, 4 referenced dirs exist, dashboard 121);
+  F `5242656c`→`f8fa3caf` (Bridge `Any` import + Linux note; lead non-root full suite on
+  `63de031a`: 1393 passed, exit 0); H `a0f2fab5`→`63de031a` (orchestrator paths; `TOOLS_DIR`
+  exists); I `5b7d1ac7`→`31e975f1` (README links; 0 unresolved); G `01dcff0c`→`a216b61f`
+  (`generate_index.py`; 31 tests; output byte-identical to the lead's validated port);
+  `c306d1cc` INDEX regenerated with the new tool (`--check` OK); J `3c96b4aa`→`4fa3e21d`,
+  L `fa2b1a84`→`5a190a24`, M `19d9dbca`→`2314605f`, K `1ab09a0b`→`63e8716e` (read-only records);
+  N `c57c4f9f`→`79c77050` (D12 reader root from config; dashboard 122 passed);
+  O `a3389384`→`68a2d601` (D13 ds_agent temp path; 25 tests). Index rows added after each record.
+- **Lane M independent audit:** 10/10 PASS on the delta `afe52ea..c306d1cc` (no protected path,
+  Bridge delta = one import line, encodings, handoff caps, index, links, compile/ruff, trailers,
+  no secrets, report claims match commits).
+- **Incident:** lane P began editing the four dashboard readers in the MAIN checkout instead of its
+  worktree (`git status` showed 4 unstaged modifications at 00:26). No commit or push picked them
+  up (cherry-picks are commit-content only; verified `git show --stat 79c77050`). Lane P was told
+  to export the diff, apply it in its worktree, then restore the main files; the main tree was clean
+  again by 00:27. Rule reinforced in every later lane prompt: work only inside the worktree.
+- **RUNNING (2 + lead):** P (D14 BOM-tolerant reads), Q (D15 fail-closed registry row repair).
+  Refill queue is now thin; remaining items are owner-gated (D7, D8, Bridge J proposals, lane L
+  option A/B) or intent-ambiguous (QuantLens report scripts) — recorded, not dispatched.
+- **Master:** `origin/master` still `afe52ea`. Branch head `88c86c3c`, all pushed.
+- **NEXT ACTION:** integrate P and Q; keep heartbeat cadence; from ~06:00 finalize §8 of the
+  morning report and the governance handoff; stop at 06:30 +03 with everything pushed.
+- **WAITING FOR OWNER:** Nothing for the lane; morning decisions listed in the report §1/§4.
