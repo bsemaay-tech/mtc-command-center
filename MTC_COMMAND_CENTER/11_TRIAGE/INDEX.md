@@ -86,6 +86,7 @@
 | `CLAUDE_AUDIT_REPORT_ARTIFACT_UNIVERSE_MISMATCH_2026-06-28.md` | 2026-06-28 | Claude Audit Report — Artifact Contract Universe-Mismatch Boolean (NEXT_STEPS 11e) | **Auditor:** Claude Opus 4.8 |
 | `CLAUDE_AUDIT_REPORT_STRATEGY_DETAIL_A11Y_FOCUS_2026-06-28.md` | 2026-06-28 | Claude Audit Report — Strategy Detail P1 A11y Focus | **Auditor:** Claude Opus 4.8 |
 | `CLAUDE_OVERNIGHT_CHECKPOINTS_2026-09-06.md` | 2026-09-06 | Claude Overnight Autonomous Checkpoints — 2026-09-06/07 | **Class:** T3 factual checkpoint record; self-verified, not product acceptance |
+| `CLAUDE_OVERNIGHT_MORNING_REPORT_2026-09-07.md` | 2026-09-07 | Claude Overnight Lane — Morning Report (2026-09-07) | **Recorded:** DRAFT 2026-09-06 22:58 +03 — finalized section at the end states the close time |
 | `CLAUDE_PROMPT_FINISH_TRADINGVIEW_SPY_10M_NATIVE_SMOKE_2026-06-28.md` | 2026-06-28 | Claude Prompt - Finish TradingView SPY 10m Native Smoke | Repo: `C:\LAB\Tradingview_LAB_CLEAN` |
 | `CLAUDE_TSP1001_BUILD_PROMPT_2026-07-20.md` | 2026-07-20 | CLAUDE PROMPT — BUILD TS-P1-001 CANONICAL ORDER-STATE MACHINE | Use this prompt in a fresh Claude session. You are the builder/orchestrator for |
 | `CLAUDE_TSP1001_BUILD_REPORT_2026-07-20.md` | 2026-07-20 | CLAUDE TS-P1-001 BUILD REPORT — 2026-07-20 | Builder: Claude (Sonnet 5), acting as builder/orchestrator per |
