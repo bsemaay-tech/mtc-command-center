@@ -22,7 +22,10 @@ from pathlib import Path
 THIS = Path(__file__).resolve()
 MCC_ROOT = THIS.parent.parent
 REPO_ROOT = MCC_ROOT.parent
-QLAB_ROOT = REPO_ROOT / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB"
+# Post-migration layout (see repo-root .gitignore header): 06_QUANTLENS_LAB/ ->
+# MTC_COMMAND_CENTER/03_QUANTLENS/. QuantLens now lives directly under MCC_ROOT,
+# not nested under 01_MTC_PROJECT.
+QLAB_ROOT = MCC_ROOT / "03_QUANTLENS"
 PROTO_DIR = QLAB_ROOT / "04_PYTHON_PROTOTYPES"
 PROMOTED_DIR = QLAB_ROOT / "06_PROMOTED_TO_PARITY"
 TOOLS_DIR = QLAB_ROOT / "tools"
