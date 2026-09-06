@@ -12,7 +12,7 @@ from them.
 
 ## 1. Owner decisions needed
 
-None are required for anything this lane did. Ten optional dispatch decisions (D1–D10 in §4)
+None are required for anything this lane did. Eleven findings (D1–D11 in §4); D1–D5 are already repaired on the branch as NONACCEPTED candidates, the rest are dispatch decisions
 are batched here; each is a stage-owned repair with a verified patch attached, and none was
 applied to the tree.
 
@@ -34,13 +34,25 @@ applied to the tree.
 
 | F12 | Relative Markdown links across 1,971 non-history docs: 7 broken, all legacy references in owner-gated scopes — `02_MTC_BACKTEST/README.md` → `../00_MASTER_TEMPLATE/`, `../20_MODULES_REUSABLE/`; `02_MTC_BACKTEST/parity_suite_350/{OPTIMIZATION_EXECUTION_SUMMARY,SUPERTREND_OPTIMIZATION_GUIDE}.md` → `../../src/modules/signals/supertrend.py#L110/#L147`; `04_SHARED/modules/#00 README_Pine_Module_Pack_v2.md` → `../../.github/copilot-instructions.md`, `../20_MODULES_REUSABLE/LIB_ConfirmationLayer.pine`. T2 doc repairs for those stages; untouched here. | link sweep |
 | F13 | Read-only dashboard commands `mcc_readonly {health,read-model,snapshot,parity-status,backtest-status}` and `mtc_cli --help` all run without traceback against this checkout (snapshot: 2.2 MB JSON, exit 0). `mtc_cli audit repo` exits 2 by design of its stale path list (D9). | checkpoint 3 |
-## 3. What this lane changed
+## 3. What this lane changed (work branch only; nothing pushed elsewhere, no PR)
 
-Only two triage paths, both T3, on the work branch (no push to any other branch, no PR):
+After the owner's 23:05 +03 instruction ("authorized for everything to keep the work running",
+4–6 lanes until 06:30), non-protected findings were repaired by isolated worker lanes and
+integrated by the lead with `cherry-pick -x` after diff inspection and re-testing. Every code
+commit is a NONACCEPTED candidate: the exact T0–T2 audits (Codex/Gemini launchers) were
+unreachable from this container and remain required before merge.
 
-- `MTC_COMMAND_CENTER/11_TRIAGE/CLAUDE_OVERNIGHT_CHECKPOINTS_2026-09-06.md` (new)
-- `MTC_COMMAND_CENTER/11_TRIAGE/INDEX.md` (regenerated, +74 rows incl. the new records)
-- this report and, at close-out, `00_AGENT_PROTOCOLS/HANDOFF.md` per the rotation rule
+| Commit | Scope | What | Lead re-verification |
+|---|---|---|---|
+| `6a25e23a` | dashboard tests (D1, D5) | Path-built expectation; temp-dir fixtures | 121 passed, no stray `C:` dir |
+| `5c617b3f` | `11_TRIAGE/overnight_orchestrator.py` + regenerated `03_QUANTLENS/tools/overnight_extended_run.py` (D2) | dedent-safe import join; artifact regenerated (no run) | `py_compile` + ruff E9/F821 clean |
+| `91ccbba6` | `01_MTC_PROJECT/tools/extract_parameter_library_seeds.py` + 7 YAML (D3) | warning emitted as `# ` comment | 8/8 YAML parse |
+| `151e1700` | `03_QUANTLENS/tools/night_runs/AGGREGATE_night_2026-06-02.{json→md}` (D4) | `git mv`, bytes unchanged | content starts `# OVERNIGHT AGGREGATED REPORT` |
+| T3 records | `11_TRIAGE/CLAUDE_OVERNIGHT_*`, lane records, `INDEX.md`, stage `HANDOFF.md` notes, governance `HANDOFF.md` + history rotation | evidence and status | index regenerated deterministically |
+
+Still owner-gated and NOT changed: D7 (`02_MTC_BACKTEST`), D8 (MTC_V2), plus anything Pine,
+parity, adapters, schemas. Lanes for D6, D9, D10 and the index tool were in flight at the time of
+this draft; the close-out section lists what landed.
 
 ## 4. Findings with verified patches (not applied)
 
@@ -184,6 +196,14 @@ first, so `mcc_readonly health` on a machine without `paths.local.json` reports
 Read-only run; no config was written. Fix is a values-only update to the canonical
 `C:/LAB/Tradingview_LAB_CLEAN/…` layout (or relative roots), owner-confirmed.
 
+### D11 — orchestrator default `TOOLS_DIR` still names the legacy layout (T1, `11_TRIAGE`)
+
+Found by lane B while regenerating the runner: `11_TRIAGE/overnight_orchestrator.py` derives
+`TOOLS_DIR` from `REPO_ROOT / "01_MASTER TEMPLATE_V2" / "06_QUANTLENS_LAB" / "tools"`, a
+pre-migration path that does not exist in this checkout (migrated to
+`MTC_COMMAND_CENTER/03_QUANTLENS/tools`). Any real `--apply` run would create the legacy tree
+instead of writing into QuantLens. Out of D2's scope; queued as a refill lane.
+
 ## 5. Suggested Bridge-stage doc note (T2, optional)
 
 `IBKR_PAPER_BRIDGE/TESTS.md`: "On Linux run the suite as a non-root user; as root SQLite
@@ -264,6 +284,6 @@ print(f"Indexed {len(files)} files into {out}")
 ## 8. Close-out
 
 - **Heartbeat checkpoints:** see the checkpoint record; the last entry states the close time.
-- **NEXT ACTION (owner):** triage D1–D10 to their stage owners; optionally merge this branch's two
+- **NEXT ACTION (owner):** triage the open findings to their stage owners and route the branch through the normal audit/PR/CI gate; optionally merge this branch's two
   T3 triage records through the normal PR/CI route.
 - **WAITING FOR OWNER:** Nothing for this lane's authorized work.
