@@ -1420,11 +1420,16 @@ def test_v2_schema_accepts_complete_receipt_and_rejects_nested_mutants() -> None
     )
     validator = Draft202012Validator(schema)
     receipt = semantic_review_fixture(Path(tempfile.mkdtemp(prefix="schema-receipt-")))
-    receipt["owner_ratification"]["chain"] = [
-        "#5", "#6", "#7", "#8", "#9", "#10", "#11", "#12", "#12b", "#13",
-        "#14", "#14b", "#15", "#16", "#17", "#18", "#19", "#20", "#21", "#22", "#23", "#24", "#25",
-    ]
+    manifest = load_json_exact(
+        MTC_V2_ROOT / "tests/corrected_vnext/contracts/CONTRACT_TABLES_MANIFEST.json"
+    )
+    valid_chain = verify_bceg.derive_semantic_coverage_review_chain(manifest)
+    receipt["owner_ratification"]["chain"] = valid_chain
     assert list(validator.iter_errors(receipt)) == []
+    for bad_chain in (valid_chain[:-1], [*valid_chain, "#999"]):
+        candidate = deepcopy(receipt)
+        candidate["owner_ratification"]["chain"] = bad_chain
+        assert list(validator.iter_errors(candidate)), bad_chain
     mutants = [
         ("changed_paths", [True]),
         ("section18_coverage", None),
