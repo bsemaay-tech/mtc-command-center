@@ -12,7 +12,7 @@ from them.
 
 ## 1. Owner decisions needed
 
-None are required for anything this lane did. Six optional dispatch decisions (D1–D6 in §4)
+None are required for anything this lane did. Eight optional dispatch decisions (D1–D8 in §4)
 are batched here; each is a stage-owned repair with a verified patch attached, and none was
 applied to the tree.
 
@@ -30,7 +30,7 @@ applied to the tree.
 | F8 | `11_TRIAGE/INDEX.md` was 73 files stale (last generated 2026-08-25). Regenerated on this branch with a validated Python port of `generate_index.ps1` (reproduces all 1,374 prior rows and their order byte-for-byte; deterministic across two runs). Rows added only. | commit `93828d9` |
 | F9 | Credential-pattern sweep: only labelled fakes in fixtures/tests. EOL: 0 mixed. 120 tracked `.sh` parse except 4 intentional `sec102_r7` malformed fixtures. 2,202/2,203 JSON and 108/115 YAML tracked files parse (exceptions are D3/D4). | checkpoint 2 |
 | F10 | Open PRs at start, untouched: #26 (draft), #22, #21, #20 — all last updated July 2026. GitHub reports `mergeable_state: unknown`. Measured locally on the full (unshallowed) history: #26 `feature/two-tier-policy` merge-base `008e065e`, 1 ahead / 1,014 behind, **conflicts**; #22 `feature/exit-aware-gauntlet` merge-base `8721bce0`, 10 ahead / 1,023 behind, merges clean (`git merge-tree`); #21 and #20 merge-base `8721bce0`, 1 ahead / 1,023 behind, **conflicts**. #26 also names the superseded auditor `claude-opus-4-8` (D022 fixed `claude-opus-5`). All predate the 2026-08-23 Map 97 fold; rebase-or-close candidates. (An earlier draft of this row was measured on a shallow clone and wrongly said "no merge base"; corrected here.) | local `git merge-base` / `merge-tree` |
-| F11 | Static sweeps: `ruff --select F821,F811,F823,E9` over all Python trees finds one product hit, D6 below, plus two benign local re-imports in `tests/test_engine_dryrun.py:3798` (F811); `shellcheck 0.11.0 -S warning` on `deploy/linux/{install,package,rollback,verify}.sh` is clean. | checkpoint 3 |
+| F11 | Static sweeps: `ast.parse` over all 1,003 tracked `.py` files finds one syntax error (D2 artifact); `ruff --select F821,F811,F823,E9` over every Python tree (protected trees read-only, `--no-cache`) finds product hits D6, D7, D8 below, plus two benign local re-imports in `tests/test_engine_dryrun.py:3798` (F811); `shellcheck 0.11.0 -S warning` on `deploy/linux/{install,package,rollback,verify}.sh` is clean. | checkpoint 3 |
 
 ## 3. What this lane changed
 
@@ -137,6 +137,30 @@ no runtime effect today; it becomes a `NameError` only if the annotation is ever
 (e.g. by `typing.get_type_hints`) or the future import is dropped. One-line fix: add `Any` to the
 module's `typing` import. Protected-adjacent Bridge scope; owner-gated.
 
+### D7 — Streamlit operator page raises `NameError` on "Generate Run Plan" (T1, `02_MTC_BACKTEST`, protected)
+
+`02_MTC_BACKTEST/app.py:190` inside `show_operator_page()` evaluates `pd.Timestamp.now()` when the
+"Generate Run Plan" button is pressed, but `pandas` is imported only locally inside other
+functions (lines 308, 391, 661, 682, 830) and never at module scope or in this function
+(ruff F821, confirmed by reading the enclosing `def`). Static finding only; the app was not
+launched (owner-gated scope, no server execution). One-line fix: `import pandas as pd` at module
+scope or at the top of the button branch.
+
+### D8 — MTC_V2 runner references an unimported constant when `debug_mode` is on (T1, `MTC_V2`, protected)
+
+`01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py:1052` builds `_debug_metadata` with
+`EXECUTION_PROFILE_RAW_CLOSE_ONLY`, but the module imports only `SIGNAL_MODE_RANGE_FILTER`,
+`SIGNAL_MODE_SUPERTREND`, `resolve_config` from `mtc_v2.core.config` (line 8), where the constant
+is defined. The branch runs only when `config["debug_mode"]` is true (default `False`,
+`config.py:36`); no tracked test or config enables it, so production numerics are untouched, but
+`debug_mode=True` raises `NameError` at the first bar. The portable copy
+`handoff/MTC_V2_PORTABLE_HANDOFF/.../runner.py` carries the same line (files otherwise differ at
+line 1197). Static finding only; nothing in MTC_V2 was executed. Fix is an import-list addition.
+
+Related lint-only (no runtime effect, annotation strings under `from __future__ import
+annotations`): `mtc_v2/core/gates.py:524,569` reference `"datetime"` without a `TYPE_CHECKING`
+import; same class as D6.
+
 ## 5. Suggested Bridge-stage doc note (T2, optional)
 
 `IBKR_PAPER_BRIDGE/TESTS.md`: "On Linux run the suite as a non-root user; as root SQLite
@@ -217,6 +241,6 @@ print(f"Indexed {len(files)} files into {out}")
 ## 8. Close-out
 
 - **Heartbeat checkpoints:** see the checkpoint record; the last entry states the close time.
-- **NEXT ACTION (owner):** triage D1–D6 to their stage owners; optionally merge this branch's two
+- **NEXT ACTION (owner):** triage D1–D8 to their stage owners; optionally merge this branch's two
   T3 triage records through the normal PR/CI route.
 - **WAITING FOR OWNER:** Nothing for this lane's authorized work.
