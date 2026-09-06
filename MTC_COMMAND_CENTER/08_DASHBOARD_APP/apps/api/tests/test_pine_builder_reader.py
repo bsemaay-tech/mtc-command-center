@@ -92,6 +92,43 @@ class PineBuilderReaderTests(unittest.TestCase):
             self.assertEqual(draft["compile_status"], "UNKNOWN")
             self.assertEqual(draft["chart_status"], "NOT_OBSERVED")
 
+    def test_compile_observations_discovered_without_mtc_v2_root(self) -> None:
+        # D18 follow-up regression: _compile_observations reads promoted-strategy
+        # plans purely from <mcc_root>/03_QUANTLENS/strategies/<id>/ and no longer
+        # depends on mtc_v2_root at all, so it must still run (and its
+        # PINE_PARITY_PLAN.md timestamp must still surface via generated_at) even
+        # when mtc_v2_root is unconfigured. Before this fix, build_pine_builder_status
+        # short-circuited to _empty_status(...) (generated_at always None) as soon as
+        # mtc_v2_root was None/missing, before _compile_observations ever ran.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "MTC_COMMAND_CENTER"
+            promoted = root / "03_QUANTLENS" / "strategies" / "STG009"
+            (root / "00_CONFIG").mkdir(parents=True)
+            promoted.mkdir(parents=True)
+            (root / "00_CONFIG" / "paths.example.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "1.0",
+                        "mcc_root": str(root),
+                        "mtc_v2_root": None,
+                        "mtc_v2_python_exe": None,
+                        "pinets_root": None,
+                        "tradingview_exports_dir": None,
+                        "reports_root": str(root / "04_REPORTS"),
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (promoted / "PINE_PARITY_PLAN.md").write_text(
+                "2026-05-30: Pine v6 server compile = PASS (0 errors / 0 warnings).\n"
+                "Live chart run PASS.",
+                encoding="utf-8",
+            )
+
+            status = build_pine_builder_status(root)
+            self.assertEqual(status["source"], "mtc_v2_root_not_configured")
+            self.assertIsNotNone(status["generated_at"])
+
     def test_real_config_returns_pine_builder_shape(self) -> None:
         status = build_pine_builder_status(SOURCE_MCC_ROOT)
         self.assertIn("summary", status)
