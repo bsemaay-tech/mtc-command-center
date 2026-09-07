@@ -48,6 +48,7 @@ is retained as the checked mirror/history required by the current root and gover
 | Backend/Dashboard V2 design record | `IBKR_PAPER_BRIDGE/docs/30_V2_BACKEND_AND_DASHBOARD_DESIGN_DECISIONS.md` | **UNCLAIMED** — released 2026-08-17 00:54 +03; foreign partial preserved | — |
 | Bridge Help / System Map | `IBKR_PAPER_BRIDGE/bridge/static/` Help-only UI, `IBKR_PAPER_BRIDGE/tests/test_dashboard_static.py`, and Help/Wiki reference docs | **UNCLAIMED** — released cleanly at Gate 7 | 2026-08-17 03:54 +03 |
 | Worktree cleanup + Phase Watch V3 review | `11_TRIAGE/WORKTREE_*`, `11_TRIAGE/PHASE_WATCH_V3_*`, worktree registry | **UNCLAIMED** — claimed and released same run by Fable Lead cleanup session, 2026-08-18 (work complete, records committed) | — |
+| Governance handoff + P0-20/P0-30 seed landing | `MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md`; `MTC_COMMAND_CENTER/_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF_20260907_2251.md` | **CLAIMED — Claude Lead, remote Linux container**; no worktree; branch `claude/oauth-token-expired-bocby8` at `fe35b7c`; records the owner-approved #161 merge and the read-only P0 critical-path audit; no tracked-file live dependency; `repo_guard.ps1` not runnable here (no `pwsh`) — read-only git equivalents used and recorded | 2026-09-07 22:51 +03 |
 
 **All rows released 2026-08-12 20:45** by the Fable session "sabaha kadar çalışma planı" at its
 clean stop (Gate 7). Everything it produced is committed and pushed through `d4a07438`. **The

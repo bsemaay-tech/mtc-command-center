@@ -1,40 +1,36 @@
 # Governance stage handoff
 
-## [Claude Lead] 2026-09-07 — Overnight branch landed from the Windows host
+## [Claude Lead] 2026-09-07 — #161 landed; P0 critical path audited and blocked at its head
 
-- **Landed on `master`** (exact audits `claude-opus-5` / `gpt-5.6-sol` / `gemini-3.8-flash-high`,
-  Bridge suite CI green, serial merges): PR #155 Bridge `Any` import (T0); #156 `mtc_cli` audit
-  repairs (T1, 2 rounds); #157 triage/QuantLens/driver tooling incl. the new `--allow-quantlens-writes`
-  guard on the orchestrator (T1, 3 rounds); #158 dashboard repairs incl. owner-decided legacy-fallback
-  removal and registry path containment (T1, 2 rounds). #159 owner-authorized D7/D8 protected repairs
-  (T0, 2 rounds) and this records/index group (T1) follow the same gate.
-- **Owner items closed:** stale PRs #20/#21/#22/#26 CLOSED (`11_TRIAGE/STALE_PR_DISPOSITION_2026-09-07.md`);
-  `strong` dead list removed; `_BANNED_ATTRS` deduplicated; Bridge lane-J proposals NOT implemented —
-  narrow recommendations in `11_TRIAGE/BRIDGE_LANE_J_NARROW_RECOMMENDATIONS_2026-09-07.md`.
-- **Windows-only defects found while re-verifying the container branch:** 8.3 short TEMP path
-  assertions; `generate_index.py --check` on CRLF checkouts (fixed, RED/GREEN).
-- **P0 revalidation census:** `C:/tmp/P0_REVALIDATION_20260907/CENSUS.md` — all seven package SHAs
-  confirmed, six branches 17–18 commits behind master, P0-20/13/31 have no verification evidence.
-- **NEXT ACTION:** merge #159 and the records/index PR on green; then resume the P0 critical path
-  (P0-12 → P0-20 → P0-13 → P0-31 M1 → P0-14) from the census.
-- **WAITING FOR OWNER:** Nothing.
+- **Landed on `master` `fe35b7c`:** PR #161 reconciles the reviewed P0-20 shared-risk-calculator
+  seed and the reviewed P0-30 offline market-data-collector seed onto the current base — four new
+  repository-root files, +1915/-0, **no existing file modified**. Merged on explicit owner approval.
+- **`repo_guard.ps1` could not run:** it is PowerShell-only and this remote Linux container has no
+  `pwsh`. Five read-only git equivalents were run instead and all passed: `4× A` with no `M`/`D`;
+  `origin/master` an ancestor of the head; the four blob OIDs (`e0b0ae58d49d`, `4614d356dc31`,
+  `9b0aea4dd25c`, `8fb902807c7f`) identical to the reviewed heads the panels read; no protected
+  path touched; `Bridge suite (Python 3.12)`, `pine-alert-guard` ×2 and Vercel green on `c7b3435b`.
+- **Neither package is accepted.** P0-20 acceptance still requires caps, quantisation, import
+  identity into `simulate_slice`, and `UNSIMULATED_CONTROLS`; P0-30 integration stays blocked
+  behind P0-21 thresholds and P0-26 alerting. The four files sit at the repository root — a
+  deliberately unresolved placement question, recorded rather than decided.
+- **P0 critical-path audit (read-only).** The path cannot start at its head:
+  - `WP-P0-12`, `-13`, `-14`, `-20`, `-31` have **no `origin` branch and no `11_TRIAGE/WP_P0_*`
+    lane directory**; `wp-p0-01`…`11`, `15`, `19`, `23`…`29` do. NOT STARTED by repository evidence.
+  - `WP-P0-12` depends on `WP-P0-11`, whose gate outcome is `STOP` (11 of steps A–N STOP, `C35
+    STOP_PROTECTED_IMPLEMENTATION_A_APPROVAL_REQUIRED`), stopped by `OD-20260826-1` and
+    `OD-20260826-8`. `WP-P0-12` is itself T0 on the protected strategy kernel.
+  - The approved `P012` Item-2 scope rests on
+    `C:/tmp/P012_ITEM2_VERIFIER_SCOPE_DECISION_20260906_0056.md`, absent from the container:
+    **any P0-12 work in flight is not in this repository.**
+  - Downstream is dependency-blocked, not owner-blocked: P0-13 (P0-04 ok, P0-08 ok, P0-20 no),
+    P0-31 M1 (P0-04 ok, P0-13 no), P0-14 (P0-13 no, P0-31 M1 no).
+- **NEXT ACTION:** re-run both landed checkers on the merged base as independent QA evidence, then
+  take the P0-20 acceptance items as far as the P0-12 gate allows and record the exact stop point.
+- **WAITING FOR OWNER:** Nothing — the owner authorized unattended work for this window.
 
-## [Codex Lead] 2026-09-06 — Owner-delegated same-package repair scope
+## History
 
-- **OD-20260906-1:** all P012 Item-2 rows are approved; Lead owns evidenced same-package corrective
-  scope under `AUTONOMY_AUTHORIZATION.md`. New features/behavior/economics, production facts,
-  operations/PAYG, audit waivers, and acceptance remain gated. Item 4 stays `NONE_KEEP_REFUSED`;
-  future explicit owner restrictions prevail.
-- **NEXT ACTION:** publish this T3 policy through normal Lead verification and protected CI.
-- **WAITING FOR OWNER:** Nothing for evidenced same-package corrective repairs.
-
-## [Claude] 2026-09-07 — Overnight autonomous campaign closed 05:05 +03
-
-- **Branch:** `claude/overnight-autonomous-work-e94x3q` from `master` `afe52ea`; 70 commits, 70
-  files at final head `b82d02df`. 17 NONACCEPTED code commits + 16 lane records +
-  `11_TRIAGE/generate_index.py`; no protected scope touched; exact audits were unreachable from the
-  container. Records: `11_TRIAGE/CLAUDE_OVERNIGHT_MORNING_REPORT_2026-09-07.md`,
-  `CLAUDE_OVERNIGHT_CHECKPOINTS_2026-09-06.md`, `OVERNIGHT_LANE_*`. Superseded by the section above.
-- **History:** the 2026-09-05 Codex section is byte-for-byte in
-  `_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF_20260906_2257.md`; earlier in
-  `_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF_20260905_2202.md`.
+The 2026-09-06 Codex section and both 2026-09-07 overnight sections are byte-for-byte in
+`_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF_20260907_2251.md`; earlier narrative in
+`..._20260906_2257.md` and `..._20260905_2202.md`.
