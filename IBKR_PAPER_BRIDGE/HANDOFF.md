@@ -29,3 +29,26 @@
 - No push, PR, merge, deployment, host contact, service action, credential access, TESTNET/mainnet
   action, ARM, order, broker/exchange endpoint, or live action occurred.
 - Durable repair report: `C:\tmp\LANE_PROMPTS_20260828\W72_REPAIR_REPORT.md`.
+
+## [Claude lane F] 2026-09-07 — import-only lint repair and Linux test note
+
+- `bridge/broker/hyperliquid.py` line ~1644 annotates `rich_rows: dict[str, dict[str, Any]]`
+  but `Any` was never imported. Fixed with one added import line,
+  `from typing import Any`, in the existing `typing` import group. No other line in the
+  file changed.
+- Evidence: `ruff check --select F821` on the pre-fix blob reports
+  `F821 Undefined name \`Any\`` at line 1643; the same check on the fixed file reports
+  "All checks passed!".
+- `TESTS.md` gained one short paragraph noting that on Linux the suite must run as a
+  non-root user (root's `fchown()` on `-wal`/`-shm` files during a read-only open trips
+  the capture drift guard in `tools/wal_state_bundle.py` and fails three
+  `test_wal_state_bundle.py` tests; GitHub CI's non-root runner is unaffected), plus one
+  sentence that a root-owned checkout needs `git config safe.directory` for the non-root
+  user or `test_linux_deployment`'s fresh-checkout test cannot run `git show`. No existing
+  sentence was changed.
+- Full suite re-run as non-root (uid 65534, matching the CI condition): 1,393 passed,
+  exit 0. `python -m compileall -q IBKR_PAPER_BRIDGE` and `git diff --check` both clean.
+- No behavior change; T0 audit still required before acceptance.
+- NEXT ACTION: owner/T0 reviewer signs off on the import-only diff and the Linux non-root
+  test note; no further lane F action pending.
+- WAITING FOR OWNER: Nothing.
