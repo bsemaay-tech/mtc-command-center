@@ -45,12 +45,12 @@ index 8ab21e54..22a09e29 100644
  import sys
 +import tempfile
  from pathlib import Path
- 
+
  from openai import OpenAI
 @@ -209,6 +210,16 @@ SYSTEM = (
  )
- 
- 
+
+
 +def default_report_path(slug: str) -> Path:
 +    """Default report/transcript location when a task omits `report_out`.
 +
