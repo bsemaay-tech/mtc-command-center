@@ -62,6 +62,7 @@
 | `BRIDGE_HELP_TRUTH_CYCLE2_T1_STATUS_2026-08-17.md` | 2026-08-17 | Bridge Help truth cycle 2 — T1 status — 2026-08-17 | - Gate 1: bounded local Help/Wiki UI, index and tests. |
 | `BRIDGE_HELP_WIKI_GATE1_2026-08-16.md` | 2026-08-16 | Bridge Help / System Map — Gate 1 | **Date:** 2026-08-16 |
 | `BRIDGE_HELP_WIKI_IMPLEMENT_PROMPT_2026-08-16.md` | 2026-08-16 | Counterpart implementation task — Bridge Help / System Map | You are the counterpart implementation agent. Work only in |
+| `BRIDGE_LANE_J_NARROW_RECOMMENDATIONS_2026-09-07.md` | 2026-09-07 | Bridge lane-J proposals — exact evidence and narrowly scoped recommendations (2026-09-07) | **Class:** T3 recommendation record (no code changed). Source: overnight read-only lane J |
 | `BRIDGE_PACKAGE_SIZE_INVENTORY_2026-08-17.md` | 2026-08-17 | Bridge package size inventory — 2026-08-17 | This is a documentation-only, read-only inventory of the local Bridge source, |
 | `BRIDGE_V2_DEFERRAL_BACKLOG_2026-08-17.md` | 2026-08-17 | Bridge V2 Deferral Backlog — 2026-08-17 | **Mode:** read-only reconstruction converted into a documentation-only report |
 | `BRIDGE_V2_DEFERRAL_BACKLOG_T2_ACCEPTANCE_2026-08-17.md` | 2026-08-17 | Bridge V2 Deferral Backlog — T2 Acceptance Record — 2026-08-17 (overnight) | **Artifact class:** T2 review acceptance record |
@@ -493,6 +494,7 @@
 | `split_packet_2026-05-30.md` | 2026-05-30 | Split packet — 2026-05-30 | **Source:** 31k-word multi-host webinar (Episode 2 of a 7-part series). Hosts: Ryan, Richard Moglen. |
 | `SPY_10M_NATIVE_SMOKE_REPORT_2026-06-28.md` | 2026-06-28 | SPY 10m Native Smoke — Report | **Date:** 2026-06-28 |
 | `SPY_QQQ_AAPL_10M_8EMA_PARAM_SWEEP_2026-06-28.md` | 2026-06-28 | US-Equities 10m — 8EMA-Pullback Full Param Sweep | **Date:** 2026-06-28 |
+| `STALE_PR_DISPOSITION_2026-09-07.md` | 2026-09-07 | Stale PR disposition — #20, #21, #22, #26 (2026-09-07) | **Class:** T3 process record; read-only comparison against current `master` |
 | `STANDING_AUTONOMY_AUTHORITY_2026-08-09.md` | 2026-08-09 | STANDING AUTONOMY AUTHORITY — owner grant (2026-08-09 night) | Barış granted this in-session, explicitly, to stop the Lead from idling on |
 | `strategies/_stg_code_map.json` | - | stg code map | { |
 | `STRATEGY_INTELLIGENCE_DESIGN_CONTEXT.md` | - | Design System: MTC Strategy Intelligence Command Center | name: MTC Strategy Intelligence Command Center |
@@ -501,7 +503,7 @@
 | `SYSTEM_TEST_LAB_PAGE_DESIGN_2026-07-05.md` | 2026-07-05 | System Test / Fake Money Lab — Dashboard Page Design (2026-07-05) | Author: Claude Opus 4.8. Approved by Barış 2026-07-05 ("onaylıyorum tasarım dokümanı + |
 | `TENCENTDB_AGENT_MEMORY_DECISION_2026-08-09.md` | 2026-08-09 | TencentDB Agent Memory — Adoption Decision (2026-08-09) | **Decider:** Claude Fable 5 (Lead), on Barış's request to evaluate a ChatGPT report built from two YouTube transcripts. |
 | `test_generate_index.py` | - | --------------------------------------------------------------------------- | """Tests for generate_index.py (pytest + stdlib only). |
-| `test_overnight_orchestrator_runner.py` | - | test overnight orchestrator runner | """Tests for overnight_orchestrator.write_runner_extension (pytest + stdlib). |
+| `test_overnight_orchestrator_runner.py` | - | --------------------------------------------------------------------------- | """Tests for overnight_orchestrator.write_runner_extension (pytest + stdlib). |
 | `TRACKED_MEMORY_DIFF_AUDIT_2026-06-21.md` | 2026-06-21 | Tracked Memory Diff Audit - 2026-06-21 | - Repo: `C:\LAB\Tradingview_LAB_CLEAN` |
 | `TRADINGVIEW_SPY_10M_DATA_VALIDATION_2026-06-28.md` | 2026-06-28 | TradingView SPY 10m — Data Validation Report | **Date:** 2026-06-28 |
 | `transcript_reclassification.json` | - | transcript reclassification | { |
