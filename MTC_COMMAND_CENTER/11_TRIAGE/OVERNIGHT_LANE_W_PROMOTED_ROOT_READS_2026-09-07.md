@@ -50,7 +50,7 @@ Diff (full, both files):
 @@ -5,7 +5,13 @@ from datetime import datetime, timezone
  from pathlib import Path
  from typing import Any
- 
+
 -from .paths import canonicalize, default_mcc_root, load_path_config, resolve_configured_path
 +from .paths import (
 +    canonicalize,
@@ -59,8 +59,8 @@ Diff (full, both files):
 +    load_path_config,
 +    resolve_configured_path,
 +)
- 
- 
+
+
  def build_liveops_status(mcc_root: str | Path | None = None) -> dict[str, Any]:
 @@ -13,7 +19,7 @@ def build_liveops_status(mcc_root: str | Path | None = None) -> dict[str, Any]:
      status = _read_status_file(root / "03_STATUS" / "LIVEOPS_STATUS.json")
@@ -69,12 +69,12 @@ Diff (full, both files):
 -    paper_plans = _paper_trade_plans(mtc_v2_root) if mtc_v2_root and mtc_v2_root.exists() else []
 +    paper_plans = _paper_trade_plans(mtc_v2_root, root) if mtc_v2_root and mtc_v2_root.exists() else []
      safety_gates = _safety_gates(status)
- 
+
      return {
 @@ -55,8 +61,13 @@ def _read_status_file(path: Path) -> dict[str, Any]:
      return raw if isinstance(raw, dict) else {}
- 
- 
+
+
 -def _paper_trade_plans(mtc_v2_root: Path) -> list[dict[str, Any]]:
 -    promoted_root = mtc_v2_root / "06_QUANTLENS_LAB" / "06_PROMOTED_TO_PARITY"
 +def _paper_trade_plans(mtc_v2_root: Path, mcc_root: Path) -> list[dict[str, Any]]:
@@ -86,7 +86,7 @@ Diff (full, both files):
 +    promoted_root = default_quantlens_root(mcc_root) / "strategies"
      if not promoted_root.exists():
          return []
- 
+
 @@ -71,7 +82,7 @@ def _paper_trade_plans(mtc_v2_root: Path) -> list[dict[str, Any]]:
                  "webhook_enabled": False,
                  "title": _markdown_title(path),
@@ -100,7 +100,7 @@ diff --git a/MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/pine_buil
 @@ -5,7 +5,13 @@ from datetime import datetime, timezone
  from pathlib import Path
  from typing import Any
- 
+
 -from .paths import canonicalize, default_mcc_root, load_path_config, resolve_configured_path
 +from .paths import (
 +    canonicalize,
@@ -109,13 +109,13 @@ diff --git a/MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/pine_buil
 +    load_path_config,
 +    resolve_configured_path,
 +)
- 
- 
+
+
  MAX_DRAFTS = 80
 @@ -20,7 +26,7 @@ def build_pine_builder_status(mcc_root: str | Path | None = None) -> dict[str, A
      if not mtc_v2_root.exists():
          return _empty_status(str(mtc_v2_root))
- 
+
 -    observations = _compile_observations(mtc_v2_root)
 +    observations = _compile_observations(mtc_v2_root, root)
      pine_files = sorted(mtc_v2_root.rglob("*.pine"))
@@ -123,8 +123,8 @@ diff --git a/MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/pine_buil
      draft_paths = [path for path in pine_files if _is_review_draft(path, mtc_v2_root)]
 @@ -43,8 +49,12 @@ def build_pine_builder_status(mcc_root: str | Path | None = None) -> dict[str, A
      }
- 
- 
+
+
 -def _compile_observations(mtc_v2_root: Path) -> dict[str, dict[str, Any]]:
 -    promoted_root = mtc_v2_root / "06_QUANTLENS_LAB" / "06_PROMOTED_TO_PARITY"
 +def _compile_observations(mtc_v2_root: Path, mcc_root: Path) -> dict[str, dict[str, Any]]:
@@ -135,7 +135,7 @@ diff --git a/MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/pine_buil
 +    promoted_root = default_quantlens_root(mcc_root) / "strategies"
      if not promoted_root.exists():
          return {}
- 
+
 @@ -58,7 +68,7 @@ def _compile_observations(mtc_v2_root: Path) -> dict[str, dict[str, Any]]:
              "candidate_id": candidate_id,
              "compile_status": compile_status,

@@ -86,7 +86,7 @@
 | `CLAUDE_AUDIT_REPORT_ARTIFACT_UNIVERSE_MISMATCH_2026-06-28.md` | 2026-06-28 | Claude Audit Report — Artifact Contract Universe-Mismatch Boolean (NEXT_STEPS 11e) | **Auditor:** Claude Opus 4.8 |
 | `CLAUDE_AUDIT_REPORT_STRATEGY_DETAIL_A11Y_FOCUS_2026-06-28.md` | 2026-06-28 | Claude Audit Report — Strategy Detail P1 A11y Focus | **Auditor:** Claude Opus 4.8 |
 | `CLAUDE_OVERNIGHT_CHECKPOINTS_2026-09-06.md` | 2026-09-06 | Claude Overnight Autonomous Checkpoints — 2026-09-06/07 | **Class:** T3 factual checkpoint record; self-verified, not product acceptance |
-| `CLAUDE_OVERNIGHT_MORNING_REPORT_2026-09-07.md` | 2026-09-07 | Claude Overnight Lane — Morning Report (2026-09-07) | **Recorded:** DRAFT 2026-09-06 22:58 +03 — finalized section at the end states the close time |
+| `CLAUDE_OVERNIGHT_MORNING_REPORT_2026-09-07.md` | 2026-09-07 | Claude Overnight Lane — Morning Report (2026-09-07) | **Recorded:** drafted 2026-09-06 22:58 +03; finalized 2026-09-07 05:05 +03 (§8 close-out) |
 | `CLAUDE_PROMPT_FINISH_TRADINGVIEW_SPY_10M_NATIVE_SMOKE_2026-06-28.md` | 2026-06-28 | Claude Prompt - Finish TradingView SPY 10m Native Smoke | Repo: `C:\LAB\Tradingview_LAB_CLEAN` |
 | `CLAUDE_TSP1001_BUILD_PROMPT_2026-07-20.md` | 2026-07-20 | CLAUDE PROMPT — BUILD TS-P1-001 CANONICAL ORDER-STATE MACHINE | Use this prompt in a fresh Claude session. You are the builder/orchestrator for |
 | `CLAUDE_TSP1001_BUILD_REPORT_2026-07-20.md` | 2026-07-20 | CLAUDE TS-P1-001 BUILD REPORT — 2026-07-20 | Builder: Claude (Sonnet 5), acting as builder/orchestrator per |
@@ -396,6 +396,7 @@
 | `OVERNIGHT_LANE_P_DASHBOARD_BOM_READS_2026-09-07.md` | 2026-09-07 | Lane P — BOM-tolerant reads in dashboard readers (D14) | Scope: `MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/{pipeline_reader.py, |
 | `OVERNIGHT_LANE_Q_REGISTRY_ROW_REPAIR_2026-09-07.md` | 2026-09-07 | Lane Q — fail-closed CSV row repair in registry_reader (D15) | Scope: `MTC_COMMAND_CENTER/08_DASHBOARD_APP/apps/api/mcc_readonly/registry_reader.py` |
 | `OVERNIGHT_LANE_R1_ADVERSARIAL_CODE_REVIEW_2026-09-07.md` | 2026-09-07 | Lane R1 — adversarial review of the overnight code commits (read-only) | - Reviewer: Claude lane R1 (independent second read for the Lead; NOT acceptance). |
+| `OVERNIGHT_LANE_R2_FINAL_BRANCH_AUDIT_2026-09-07.md` | 2026-09-07 | Lane R2 — final independent read-only audit of the overnight branch (afe52ea..HEAD) | Scope: `feature/autonomous-decision-batching` merge base `afe52ea8947` (master) to |
 | `OVERNIGHT_LANE_S_QUANTLENS_REPORT_SUMMARIES_2026-09-07.md` | 2026-09-07 | Lane S — QuantLens report scripts: computed-but-unwritten summaries (D16) | Scope: the two computed-but-unwritten-value defects Lane K flagged (findings #4 and #5 in |
 | `OVERNIGHT_LANE_T_RUNNER_IMPORT_PATH_2026-09-07.md` | 2026-09-07 | Lane T — generated runner import path (D17) | - Date: 2026-09-07 (overnight autonomous campaign, worker lane T) |
 | `OVERNIGHT_LANE_V_DASHBOARD_PATH_MODEL_DECISION_2026-09-07.md` | 2026-09-07 | Lane V — dashboard path model: derived locations vs the migrated layout (decision packet) | Scope: every reader module under `08_DASHBOARD_APP/apps/api/mcc_readonly/*.py`. Read-only — |
