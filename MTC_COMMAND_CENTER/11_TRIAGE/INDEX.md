@@ -676,6 +676,7 @@
 | `WP_P0_19_PINE_DEFANG_DESIGN_2026-08-25/LANE_REPORT.md` | - | Lane V — WP-P0-19 implementer report | **Status:** DONE — implementer design and self-QA complete; Lead-owned T2 review/acceptance |
 | `WP_P0_19_PINE_DEFANG_DESIGN_2026-08-25/PINE_DEFANG_T0_AUTHORIZATION_PACKAGE.md` | - | WP-P0-19 — Pine de-fang T0 authorization package | **Date:** 2026-08-25 |
 | `WP_P0_20_ALLOCATOR_STAGES_2026-09-07/LANE_REPORT.md` | - | WP-P0-20 · allocator stages lane report — 2026-09-07 | Claude Lead, remote Linux container, branch `claude/oauth-token-expired-bocby8` from |
+| `WP_P0_20_DEPENDENT_TOOL_DISPOSITION.md` | - | WP-P0-20 · dependent-tool disposition — per tool, per class | **Status: PROPOSED, not PERFORMED.** The acceptance gate wants a record of what each |
 | `WP_P0_23_PINE_DEFANG_2026-08-25/LANE_REPORT.md` | - | WP-P0-23 Pine de-fang — Lane AC implementer report | **Date:** 2026-08-25 |
 | `WP_P0_24_OSS_LEDGER_2026-08-24/DEPENDENCY_LEDGER.md` | - | WP-P0-24 append-only dependency ledger | **Created:** 2026-08-24 |
 | `WP_P0_24_OSS_LEDGER_2026-08-24/LANE_REPORT.md` | - | Lane D report — WP-P0-24 OSS lifecycle policy and ledger | **Status:** **LANE D DONE — implementer package complete; T1 Lead acceptance remains Lead-owned.** |

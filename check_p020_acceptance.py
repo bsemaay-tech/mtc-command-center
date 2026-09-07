@@ -154,11 +154,24 @@ def probe_before_after():
 
 
 def probe_dependent_disposition():
+    """A record that exists is not a record that is finished.
+
+    The gate wants what each tool *was* -- past tense, a migration output. A record
+    declaring its dispositions PROPOSED is real work and still not that, so the probe reads
+    the record's own status line rather than treating the file's existence as a pass.
+    """
     found = _record("MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_20_DEPENDENT_TOOL_DISPOSITION.md")
-    if found:
-        return MET, f"disposition recorded at {found}"
-    return UNMET, ("no per-class disposition record for the four dependent-tool classes "
-                   "(direct callers, independent simulators, patcher, reporting consumer)")
+    if not found:
+        return UNMET, ("no per-class disposition record for the four dependent-tool classes "
+                       "(direct callers, independent simulators, patcher, reporting consumer)")
+    text = found.read_text(encoding="utf-8")
+    if "Status: PROPOSED, not PERFORMED" in text:
+        return UNMET, (f"{found}: all four classes located and verified against source, "
+                       "dispositions proposed with evidence -- but proposed, not performed; "
+                       "performing them needs the migration")
+    if "PERFORMED" not in text:
+        return UNMET, f"{found}: record does not state whether its dispositions were performed"
+    return MET, f"dispositions performed and recorded at {found}"
 
 
 def probe_throughput():
