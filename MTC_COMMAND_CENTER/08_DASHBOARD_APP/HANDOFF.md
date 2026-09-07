@@ -57,14 +57,6 @@ WAITING FOR OWNER: Nothing.
 
 ## [Claude lane A] 2026-09-06 — test portability repair
 
-- Test-only change under `apps/api/tests/`; no product code touched.
-- `test_pipeline_reader.py`: `discovery_source` expectation now uses
-  `str(Path("research") / "batch" / "FINAL_LLM_KNOWLEDGE_BASE.jsonl")` instead of a Windows literal.
-- `test_audit_reader.py`: both `C:/TEMP/MTC_COMMAND_CENTER` fixtures replaced with
-  `tempfile.TemporaryDirectory()` roots, so no literal `C:` directory is created inside `apps/api`.
-- Evidence (Linux, Python 3.12, `PYTHONUTF8=1 -p no:cacheprovider`): RED = 1 failed on the
-  separator assertion and a stray `apps/api/C:/...` tree after `test_audit_reader.py`; GREEN =
-  `pytest tests -q` 121 passed, no `C:` directory; mutant `"X/" + str(...)` in
-  `_relative_to_quantlens` fails the patched test and was reverted exactly.
-- NEXT ACTION: none for this lane; run the suite on Windows once to confirm parity.
-- WAITING FOR OWNER: Nothing.
+- Test-only (D1/D5): platform-neutral `discovery_source` expectation; `C:/TEMP` fixtures replaced
+  with `tempfile.TemporaryDirectory()`. RED 1 failed -> GREEN 121 (Linux); Windows suite confirmed
+  2026-09-07 (137 passed). NEXT ACTION: none. WAITING FOR OWNER: Nothing.
