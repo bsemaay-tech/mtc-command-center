@@ -124,3 +124,73 @@ planned, not built.
   candidate; the measured full-kernel trials-per-hour figure and the O-28-scale
   feasibility statement.
 - Exact audits and independent Lead acceptance; none is claimed by this lane.
+
+---
+
+# Second run — 2026-09-07, definition artifacts and the acceptance harness
+
+Same lane, same branch, after the owner lifted the WP-P0-11 / WP-P0-12 STOP
+(`OD-20260907-1`) and authorized unattended overnight work (`OD-20260907-2`).
+
+**Outcome: both of WP-P0-20's named definition artifacts now exist, plus the cost-model
+registry, the evidence-class enforcement, and a harness that probes the acceptance gate
+instead of reading it. 6 of 13 criteria MET. The package is still not acceptable, and the
+seven outstanding rows now trace to a single fact rather than a policy.**
+
+## What the lifted STOP did and did not change
+
+It removed the bar on kernel work. It did not move any code: `WP-P0-12`'s Item-2 packet is
+still `C:/tmp/P012_ITEM2_VERIFIER_SCOPE_DECISION_20260906_0056.md` on the Windows host, and
+`CORRECTED_VNEXT` is not in this repository. Every blocked acceptance row below is blocked
+on that absence, not on an owner decision. **Lifting a stop does not import the work.**
+
+## Artifacts built
+
+| Commit | Artifact | Prohibition it mechanises |
+|---|---|---|
+| `4af33bd` | **Control-parity checklist v1** (`control_parity_checklist.py`) | a REQUIRED control absent from a sim run ⇒ BLOCKED evidence; a tolerated row cannot exist without its metric, D026 fixture and `evaluation_run_hash` membership; the table cannot be edited without moving the version |
+| `b12e7fa` | **Statistical-battery definition v1** (`statistical_battery.py`) | none of the seven elements is skippable; a verdict cannot be read against another run or battery version; an opened lockbox era is SPENT |
+| `46890cc` | **Cost-model registry** (`cost_model_registry.py`) | an unregistered or provenance-broken cost model cannot produce acceptance-bearing evidence; a recalibration is event-driven, never calendar-driven, and rotates both lineage and `deployment_identity_hash` |
+| `e201a82` | **Evidence class** (`evidence_class.py`) | a stand-in run is SIGNAL_SCREEN_ONLY and nothing converts it; `ALLOCATOR_NOT_YET_SHARED` is refused on sight; the gate signature carries no stamp or override parameter |
+| `5e5e4e2` | **Acceptance harness** (`check_p020_acceptance.py`) | a criterion cannot be MET without a probe that executes; the package is never reported acceptable while a row is unmet |
+| `28a3258` | **Dependent-tool disposition** (`11_TRIAGE/WP_P0_20_DEPENDENT_TOOL_DISPOSITION.md`) | — records all eight tools, class-verified against source |
+
+Two integration properties are worth more than any single artifact:
+
+- **`check_gate_agreement`** sweeps subsets of simulated controls and asserts the
+  checklist's BLOCKED-evidence verdict and the manifest's promotion verdict match exactly.
+  Two gates over one fact that disagree would be the silent gap D-13 exists to prevent.
+- **`check_signature_has_no_conversion`** is structural: it reads
+  `assert_acceptance_bearing`'s signature and fails if a `stamp`, `label`, `override` or
+  `force` parameter ever appears. The gate's sentence is a claim about the shape of the
+  code, so a behavioural test alone would not hold it.
+
+## Verification, this container, `master` `fe35b7c` + this branch
+
+Eight checkers, every one exit 0; **70 mutation controls, all DETECTED**; `generate_index.py
+--check` GREEN.
+
+```
+check_shared_risk_calculator.py 21   check_statistical_battery.py     10
+check_unsimulated_controls.py   10   check_cost_model_registry.py     11
+check_control_parity_checklist.py 9  check_evidence_class.py           9
+check_market_data_collector.py  PASS check_allocator_import_identity  --self-test PASS
+```
+
+## Acceptance state, probed rather than asserted
+
+```
+MET  (6)  checklist_v1_exists, battery_v1_exists, promotion_block_d026,
+          computed_manifest, cost_model_provenance, standin_prohibition
+BLOCKED   import_identity, kernel_present, required_tier_implemented, before_after,
+          throughput
+UNMET     dependent_disposition (proposed, not performed), audits (not self-certifiable)
+```
+
+`check_p020_acceptance.py` exits 1 and will keep exiting 1 until every row is MET.
+
+## The one thing that unblocks the rest
+
+`WP-P0-12` `CORRECTED_VNEXT` in this repository. Five of the seven outstanding rows resolve
+behind it, `dependent_disposition` moves from proposed to performed with it, and only
+`audits` remains — and that one is deliberately not self-certifiable.
