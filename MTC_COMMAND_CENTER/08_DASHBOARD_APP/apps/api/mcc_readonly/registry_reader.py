@@ -134,16 +134,39 @@ def _candidate_from_row(row: dict[str, Any], source_path: Path, quantlens_root: 
 
 
 def _source_url_from_candidate_folder(folder: str, quantlens_root: Path) -> str:
+    # Gate-5 F1 (2026-09-07): the folder value comes from registry CSV data. It is
+    # resolved only under the canonical QuantLens root; a value that escapes that
+    # root (absolute path, ".." traversal, legacy sibling tree under mcc_root) is
+    # ignored instead of being read.
     if not folder:
         return ""
+    base = _contained_candidate_folder(folder, quantlens_root)
+    if base is None or not base.exists():
+        return ""
+    return _first_youtube_url_in_dir(base)
+
+
+def _contained_candidate_folder(folder: str, quantlens_root: Path) -> Path | None:
+    """Resolve a registry `candidate_folder` cell to a directory under the QuantLens root.
+
+    Accepted forms: relative to the QuantLens root (`01_TRIAGED_CANDIDATES/QL_X`) or
+    relative to `mcc_root` but still inside the QuantLens root
+    (`03_QUANTLENS/01_TRIAGED_CANDIDATES/QL_X`). Absolute paths, `..` traversal and any
+    other `mcc_root` sibling (e.g. the retired legacy lab tree) resolve to None.
+    """
     rel = Path(folder)
-    candidate_roots = [quantlens_root / rel, quantlens_root.parent / rel]
-    for base in candidate_roots:
-        if base.exists():
-            url = _first_youtube_url_in_dir(base)
-            if url:
-                return url
-    return ""
+    if rel.is_absolute():
+        return None
+    root = canonicalize(quantlens_root)
+    for base in (root, root.parent):
+        candidate = canonicalize(base / rel)
+        try:
+            candidate.relative_to(root)
+        except ValueError:
+            continue
+        if candidate.exists():
+            return candidate
+    return None
 
 
 def _first_youtube_url_in_dir(path: Path) -> str:

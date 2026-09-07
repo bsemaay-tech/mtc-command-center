@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from mcc_readonly.pine_builder_reader import build_pine_builder_status
+from mcc_readonly.pine_builder_reader import _compile_observations, build_pine_builder_status
 
 
 SOURCE_MCC_ROOT = Path(__file__).resolve().parents[4]
@@ -90,14 +90,11 @@ class PineBuilderReaderTests(unittest.TestCase):
             self.assertEqual(draft["compile_status"], "UNKNOWN")
             self.assertEqual(draft["chart_status"], "NOT_OBSERVED")
 
-    def test_compile_observations_discovered_without_mtc_v2_root(self) -> None:
-        # D18 follow-up regression: _compile_observations reads promoted-strategy
-        # plans purely from <mcc_root>/03_QUANTLENS/strategies/<id>/ and no longer
-        # depends on mtc_v2_root at all, so it must still run (and its
-        # PINE_PARITY_PLAN.md timestamp must still surface via generated_at) even
-        # when mtc_v2_root is unconfigured. Before this fix, build_pine_builder_status
-        # short-circuited to _empty_status(...) (generated_at always None) as soon as
-        # mtc_v2_root was None/missing, before _compile_observations ever ran.
+    def test_unconfigured_mtc_v2_root_is_fail_closed_even_when_plans_exist(self) -> None:
+        # Gate-5 F2 (2026-09-07): with mtc_v2_root unconfigured there are no drafts to
+        # join observations onto, so the empty payload must carry no generated_at
+        # freshness derived from plan files it does not render. The plan discovery
+        # itself (lane X) still works without mtc_v2_root -- asserted on the helper.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             promoted = root / "03_QUANTLENS" / "strategies" / "STG009"
@@ -125,7 +122,12 @@ class PineBuilderReaderTests(unittest.TestCase):
 
             status = build_pine_builder_status(root)
             self.assertEqual(status["source"], "mtc_v2_root_not_configured")
-            self.assertIsNotNone(status["generated_at"])
+            self.assertIsNone(status["generated_at"])
+            self.assertEqual(status["drafts"], [])
+            self.assertEqual(status["summary"]["total_drafts"], 0)
+
+            observations = _compile_observations(root)
+            self.assertIn("STG009", observations)
 
     def test_real_config_returns_pine_builder_shape(self) -> None:
         status = build_pine_builder_status(SOURCE_MCC_ROOT)

@@ -21,16 +21,17 @@ def build_pine_builder_status(mcc_root: str | Path | None = None) -> dict[str, A
     root = canonicalize(mcc_root or default_mcc_root())
     path_config = load_path_config(root)
     mtc_v2_root = resolve_configured_path(path_config.config, "mtc_v2_root")
-    # Promoted-strategy plan discovery reads from the migrated QuantLens root
-    # (03_QUANTLENS/strategies/<id>/...) and no longer depends on mtc_v2_root
-    # at all, so it is called unconditionally rather than gated behind the
-    # mtc_v2_root configured/existing checks below. See
-    # MTC_COMMAND_CENTER/11_TRIAGE/OVERNIGHT_LANE_X_PLAN_READS_UNGUARDED_2026-09-07.md.
-    observations = _compile_observations(root)
+    # Fail closed before touching anything: without a usable mtc_v2_root there
+    # are no drafts to join compile observations onto, so the empty payload must
+    # not advertise a generated_at freshness derived from data it does not carry
+    # (Gate-5 F2, 2026-09-07; supersedes the lane-X hoist for this reader).
     if mtc_v2_root is None:
-        return _empty_status("mtc_v2_root_not_configured", observations)
+        return _empty_status("mtc_v2_root_not_configured")
     if not mtc_v2_root.exists():
-        return _empty_status(str(mtc_v2_root), observations)
+        return _empty_status(str(mtc_v2_root))
+    # Promoted-strategy plan discovery reads from the migrated QuantLens root
+    # (03_QUANTLENS/strategies/<id>/...) and does not depend on mtc_v2_root.
+    observations = _compile_observations(root)
 
     pine_files = sorted(mtc_v2_root.rglob("*.pine"))
     protected_core_files = [path for path in pine_files if _is_protected_core(path, mtc_v2_root)]
@@ -248,10 +249,10 @@ def _timestamp(epoch_seconds: float) -> str:
     return datetime.fromtimestamp(epoch_seconds, timezone.utc).isoformat()
 
 
-def _empty_status(source: str, observations: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
+def _empty_status(source: str) -> dict[str, Any]:
     return {
         "schema_version": "1.0",
-        "generated_at": _latest_timestamp([], observations or {}),
+        "generated_at": None,
         "source": source,
         "summary": {
             "total_pine_files": 0,
