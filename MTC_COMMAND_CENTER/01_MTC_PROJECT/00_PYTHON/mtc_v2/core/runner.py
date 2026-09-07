@@ -5,7 +5,12 @@ from collections import deque
 import math
 from typing import Iterable
 
-from mtc_v2.core.config import SIGNAL_MODE_RANGE_FILTER, SIGNAL_MODE_SUPERTREND, resolve_config
+from mtc_v2.core.config import (
+    EXECUTION_PROFILE_RAW_CLOSE_ONLY,
+    SIGNAL_MODE_RANGE_FILTER,
+    SIGNAL_MODE_SUPERTREND,
+    resolve_config,
+)
 from mtc_v2.core.confirmation import (
     AdvancedConfirmationState,
     finalize_advanced_confirmation_signal,
