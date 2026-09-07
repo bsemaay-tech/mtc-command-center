@@ -257,6 +257,19 @@ def test_check_round_trip_write_then_check_ok(temp_git_repo):
     assert exit_code == 0
 
 
+def test_check_accepts_crlf_materialised_index(temp_git_repo):
+    """A core.autocrlf=true checkout stores the LF index as CRLF on disk; --check must still pass."""
+    output = temp_git_repo / "INDEX.md"
+    assert gi.main(["--root", str(temp_git_repo), "--output", str(output)]) == 0
+    lf_bytes = output.read_bytes()
+    assert b"\r\n" not in lf_bytes
+    output.write_bytes(lf_bytes.replace(b"\n", b"\r\n"))
+
+    exit_code = gi.main(["--root", str(temp_git_repo), "--output", str(output), "--check"])
+    assert exit_code == 0
+    assert output.read_bytes() != lf_bytes  # --check wrote nothing; file still CRLF
+
+
 def test_check_detects_drift_after_source_file_changes(temp_git_repo):
     output = temp_git_repo / "INDEX.md"
     assert gi.main(["--root", str(temp_git_repo), "--output", str(output)]) == 0

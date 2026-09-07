@@ -247,6 +247,10 @@ def run_check(output: str, content: str) -> int:
     if os.path.exists(output):
         with open(output, "rb") as handle:
             existing_bytes = handle.read()
+        # A checkout with core.autocrlf=true (the Windows host) materialises the
+        # committed LF file as CRLF; compare in git's normalised LF form so the
+        # check reports content drift, not line-ending drift.
+        existing_bytes = existing_bytes.replace(b"\r\n", b"\n")
     else:
         existing_bytes = None
 
