@@ -128,3 +128,48 @@ def test_find_spec_resolves_every_prototype_with_root_on_syspath(generated_runne
         modname = f"{c.id}_prototype"
         spec = importlib.util.find_spec(modname)
         assert spec is not None, f"find_spec could not locate {modname} with ROOT on sys.path"
+
+# ---------------------------------------------------------------------------
+# Gate-5 finding G4-1 (claude-opus-5, 2026-09-07): after D11 repointed the path
+# constants to the live 03_QUANTLENS layout, --apply would write producer specs
+# into 06_PROMOTED_TO_PARITY (owner-gated promotion/parity scope) with no guard.
+# materialize_candidate must refuse unless the explicit flag is passed.
+# ---------------------------------------------------------------------------
+@pytest.fixture()
+def sandboxed_dirs(tmp_path, monkeypatch):
+    promoted = tmp_path / "06_PROMOTED_TO_PARITY"
+    proto = tmp_path / "04_PYTHON_PROTOTYPES"
+    monkeypatch.setattr(oo, "REPO_ROOT", tmp_path)  # summaries use relative_to(REPO_ROOT)
+    monkeypatch.setattr(oo, "PROMOTED_DIR", promoted)
+    monkeypatch.setattr(oo, "PROTO_DIR", proto)
+    return promoted, proto
+
+
+def test_apply_refuses_without_allow_quantlens_writes(sandboxed_dirs):
+    promoted, proto = sandboxed_dirs
+    with pytest.raises(PermissionError, match="allow-quantlens-writes"):
+        oo.materialize_candidate(oo.CANDIDATES[0], apply=True)
+    assert not promoted.exists()
+    assert not proto.exists()
+
+
+def test_apply_writes_only_with_allow_quantlens_writes(sandboxed_dirs):
+    promoted, proto = sandboxed_dirs
+    c = oo.CANDIDATES[0]
+    summary = oo.materialize_candidate(c, apply=True, allow_quantlens_writes=True)
+    assert summary["written"] is True
+    assert (promoted / c.id / "producer_spec.json").is_file()
+    assert (proto / f"{c.id}_prototype.py").is_file()
+
+
+def test_dry_run_never_needs_the_flag(sandboxed_dirs):
+    promoted, proto = sandboxed_dirs
+    summary = oo.materialize_candidate(oo.CANDIDATES[0], apply=False)
+    assert summary["written"] is False
+    assert not promoted.exists() and not proto.exists()
+
+
+def test_cli_exposes_allow_quantlens_writes_flag():
+    import argparse
+    src = MODULE_PATH.read_text(encoding="utf-8")
+    assert "--allow-quantlens-writes" in src
