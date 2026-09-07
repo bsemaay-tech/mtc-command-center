@@ -437,4 +437,9 @@ print(f"Indexed {len(files)} files into {out}")
 - **NEXT ACTION (owner):** dispatch the exact audits on the Windows host, then PR the branch (or
   the split above) through `Bridge suite (Python 3.12)`; triage §1 items 2–6.
 - **WAITING FOR OWNER:** Nothing for this lane; the six decisions above.
-- **R2 verdict:** pending at close-out time; appended below when the lane reports.
+- **R2 verdict (05:13 +03, record `OVERNIGHT_LANE_R2_FINAL_BRANCH_AUDIT_2026-09-07.md`):** 9/10
+  PASS on `93446d28`; the one FAIL was cosmetic — 64 trailing-whitespace blank lines in four lane
+  records (O, Q, W, X), no code/test/schema file affected — stripped by the lead in the same
+  integration commit, after which `git diff --check afe52ea HEAD` is clean. R2 re-ran every suite
+  on the head: Bridge non-root 1393 passed, dashboard 135, `mtc_cli` 32, `_deepseek_driver` 25,
+  tool tests 40; index `--check` OK; trailers, links, secrets, scope and §3 cross-check all PASS.
