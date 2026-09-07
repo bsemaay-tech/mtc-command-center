@@ -251,8 +251,13 @@ No live dependency contacted or changed.
   `c4f536ba` pushed. No refill (owner-gated remainder).
 - **NEXT ACTION:** hold; R2 final audit ~05:30; close-out 06:00. **WAITING FOR OWNER:** Nothing.
 
-## Checkpoint 10 — 2026-09-07 03:19 +03 — idle tick
+## Checkpoint 10 — 2026-09-07 05:02 +03 — idle tick after a second usage-limit outage
 
 - No lanes running; no new commits; `origin/master` still `afe52ea`; main tree clean; head
   `1e2eed45` pushed. No refill (owner-gated remainder).
 - **NEXT ACTION:** hold; R2 final audit ~05:30; close-out 06:00. **WAITING FOR OWNER:** Nothing.
+- **Correction/outage:** the 03:17 heartbeat fired but the session hit the provider usage limit
+  again; the checkpoint above was actually written at 05:02 +03 (commit `42d336bd`) once the limit
+  reset. No lane was running during the outage, so no work was lost. The heading initially said
+  03:19 and was corrected here. R2 final audit dispatched at 05:03 instead of 05:30; close-out
+  starts immediately after so the 06:30 deadline is met even if another limit hits.
