@@ -120,10 +120,30 @@ def probe_import_identity():
 
 
 def probe_kernel_present():
+    """A mention of the kernel is not the kernel.
+
+    This asks the AST for real imports rather than searching the text, because a comment, a
+    docstring or a TODO naming CORRECTED_VNEXT would satisfy a substring search -- and a
+    harness whose purpose is to resist inflation must not be the easiest thing in the
+    repository to fool. When WP-P0-12 lands, confirm the module name below against what it
+    actually delivers; a wrong name here reads as absence, which is the safe direction.
+    """
+    import ast
     import check_allocator_import_identity as identity
     source = identity.CANONICAL_PATH.read_text(encoding="utf-8")
+    imported = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.Import):
+            imported.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imported.add(node.module)
+    kernel = tuple(name for name in sorted(imported)
+                   if "kernel" in name.lower() or name.split(".")[0] == "mtc_v2")
+    if kernel:
+        return MET, f"the canonical path imports the kernel: {', '.join(kernel)}"
     if "CORRECTED_VNEXT" in source:
-        return MET, "the CORRECTED_VNEXT kernel is referenced by the canonical path"
+        return UNMET, ("CORRECTED_VNEXT appears in the canonical path as text only; no "
+                       "kernel module is imported")
     return BLOCKED, ("WP-P0-12 CORRECTED_VNEXT is not in this repository; its Item-2 packet "
                      "is on the Windows host. The STOP is lifted (OD-20260907-1) but the "
                      "work has not been imported")
