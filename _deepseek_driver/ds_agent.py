@@ -60,7 +60,7 @@ _BANNED_NAMES = {"eval", "exec", "compile", "__import__", "open", "input", "brea
 _BANNED_ATTRS = {"write", "writelines", "write_text", "write_bytes", "unlink", "rename",
                  "replace", "rmtree", "remove", "removedirs", "mkdir", "makedirs",
                  "rmdir", "truncate", "chmod", "system", "popen", "spawn", "fdopen",
-                 "remove", "move", "copy", "copyfile", "copytree", "symlink_to"}
+                 "move", "copy", "copyfile", "copytree", "symlink_to"}
 
 
 def check_run_python(code: str) -> str | None:
