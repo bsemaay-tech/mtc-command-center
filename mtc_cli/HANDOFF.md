@@ -8,41 +8,26 @@
 - No CLI implementation, canonical write, migration, host, broker, or live command is authorized by
   this handoff.
 
-## [Claude lane D] 2026-09-07 — audit path repair
+## [Claude lane D] 2026-09-07 — audit path repair (D9)
 
-- **Changes:** `mtc_cli/commands/audit.py` required-memory-files check dropped the two files
-  commit 552a41ec (2026-08-25) moved to `_AI_MEMORY/history/` (`GLOBAL_HANDOFF.md`,
-  `NEXT_STEPS.md`) and now checks the router-era current-state set instead: root `AGENTS.md`,
-  `CONTEXT_MAP.md`, `DECISIONS.md`, `_AI_MEMORY/{START_HERE,AI_RULES,PROJECT_MEMORY,
-  ACTIVE_FILES,SESSION_LOCK}.md`, and `00_AGENT_PROTOCOLS/HANDOFF.md`. Replaced the
-  NEXT_STEPS-stale-in-progress check (silently passed once that file moved) with a check that
-  the governance `00_AGENT_PROTOCOLS/HANDOFF.md` newest section (split on `## `) carries a
-  `NEXT ACTION` line and a `WAITING FOR OWNER` line; a missing file or missing line is an ERROR
-  finding, never a silent pass. Added `run(repo_root=...)` so tests can point the checks at a
-  fixture tree; default call path (`repo_root=None`) is unchanged and still honors the existing
-  `REQUIRED_MEMORY_FILES` monkeypatch test. No command/flag/exit-code contract change; CLI stays
-  read-only.
-- **Evidence:** RED — real CLI: `python -m mtc_cli audit repo` exit 2, findings
-  `missing: MTC_COMMAND_CENTER/_AI_MEMORY/GLOBAL_HANDOFF.md` and `.../NEXT_STEPS.md`; 5 new
-  regression tests failed against pre-fix `audit.py` (`TestRouterEraLayout`, via `git stash`).
-  GREEN — `python -m pytest mtc_cli/tests -q`: 13 passed; real CLI: `python -m mtc_cli audit repo`
-  exit 0, `memory_files_ok: True`, `handoff_next_actions: 1`, `handoff_waiting_for_owner: 0`,
-  no findings. `git diff --check` clean.
-- **NEXT ACTION:** open a PR from this worktree branch for protected-CI review; no further
-  mtc_cli audit work pending from this task.
+- `audit repo` no longer requires the two files 552a41ec moved to `_AI_MEMORY/history/`; the NEXT_STEPS
+  check became a governance `00_AGENT_PROTOCOLS/HANDOFF.md` newest-section NEXT ACTION / WAITING FOR
+  OWNER check; `run(repo_root=...)` added for fixtures. RED exit 2 -> GREEN 13 passed, CLI exit 0.
+
+## [Claude Lead] 2026-09-07 — Gate-5 round-1 repair (gpt-5.6-sol REQUEST_CHANGES)
+
+- **G3-01:** required set is now root `AGENTS.md`/`CONTEXT_MAP.md`/`DECISIONS.md`, the
+  `00_AGENT_PROTOCOLS` five-file contract, `_AI_MEMORY/SESSION_LOCK.md` and `PROJECT_MEMORY.md`;
+  compatibility pointers (`START_HERE`, `AI_RULES`, `ACTIVE_FILES`) are no longer required.
+- **G3-02:** WAITING FOR OWNER presence/count are label-anchored (`**WAITING FOR OWNER**` or
+  `WAITING FOR OWNER:`), same shape as NEXT ACTION; prose mentions no longer satisfy the check.
+- **G3-03:** raw RED arms recorded (`C:/tmp/OVN_AUDIT_20260907/EV/G3_red_arms.log`): repaired tests
+  vs pre-repair candidate 9 failed/27 passed; vs master 28 failed/8 passed. GREEN 36 passed; real
+  CLI `audit repo` exit 0. Round-2 Sol audit dispatched.
+- **NEXT ACTION:** land via PR after round-2 acceptance + Gemini corroboration + protected CI.
 - **WAITING FOR OWNER:** Nothing.
 
 ## [Claude lane U] 2026-09-07 — audit nit repair
 
-- **Changes:** `mtc_cli/commands/audit.py` widened WAITING FOR OWNER "no ask" detection
-  (`_is_no_owner_ask`) to also treat `none`, `(none)`, `n/a`, `-`, `—`, and empty as no ask
-  (whole-value match; `nothing` keeps its existing prefix-tolerant behavior), and line-anchored
-  the NEXT ACTION presence check (`_handoff_next_action_count` via `_NEXT_ACTION_LABEL_RE`) so a
-  bare prose mention no longer satisfies it while a labelled `**NEXT ACTION**`/`NEXT ACTION:`
-  line does, even embedded in prose. Docstring now documents the governance HANDOFF.md's
-  newest-first ordering and the first-`## `-section read. No command/flag/exit-code change.
-- **Evidence:** RED — 14 new tests failed against pre-fix `audit.py` (missing `_is_no_owner_ask`
-  plus 2 NEXT ACTION behavior mismatches, via `git stash`). GREEN — `pytest mtc_cli/tests -q`:
-  32 passed; real CLI `python -m mtc_cli audit repo --json` exit 0, unchanged shape
-  (`handoff_next_actions: 1`, `handoff_waiting_for_owner: 0`). `ruff check --select E9,F821,F811`
-  and `git diff --check` clean.
+- No-ask tokens widened (`none`, `(none)`, `n/a`, `-`, `—`, empty); NEXT ACTION check label-anchored;
+  newest-first ordering documented. RED 14 failed pre-fix -> GREEN 32 passed; CLI shape unchanged.
