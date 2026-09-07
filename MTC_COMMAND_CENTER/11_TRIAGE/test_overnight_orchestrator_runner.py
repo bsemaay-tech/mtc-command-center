@@ -169,7 +169,23 @@ def test_dry_run_never_needs_the_flag(sandboxed_dirs):
     assert not promoted.exists() and not proto.exists()
 
 
-def test_cli_exposes_allow_quantlens_writes_flag():
-    import argparse
-    src = MODULE_PATH.read_text(encoding="utf-8")
-    assert "--allow-quantlens-writes" in src
+def test_cli_apply_without_flag_refuses_through_main(sandboxed_dirs, tmp_path, monkeypatch):
+    """The CLI wiring itself is fenced: `--apply` alone must raise before any write."""
+    promoted, proto = sandboxed_dirs
+    monkeypatch.setattr(oo, "TOOLS_DIR", tmp_path / "tools")
+    monkeypatch.setattr(sys, "argv", ["overnight_orchestrator.py", "--apply"])
+    with pytest.raises(PermissionError, match="allow-quantlens-writes"):
+        oo.main()
+    assert not promoted.exists() and not proto.exists()
+    assert not (tmp_path / "tools").exists()
+
+
+def test_cli_apply_with_flag_writes_through_main(sandboxed_dirs, tmp_path, monkeypatch, capsys):
+    promoted, proto = sandboxed_dirs
+    monkeypatch.setattr(oo, "TOOLS_DIR", tmp_path / "tools")
+    monkeypatch.setattr(sys, "argv", ["overnight_orchestrator.py", "--apply", "--allow-quantlens-writes"])
+    assert oo.main() == 0
+    assert (promoted / oo.CANDIDATES[0].id / "producer_spec.json").is_file()
+    assert (proto / f"{oo.CANDIDATES[0].id}_prototype.py").is_file()
+    assert (tmp_path / "tools" / "overnight_extended_run.py").is_file()
+    assert "WROTE" in capsys.readouterr().out

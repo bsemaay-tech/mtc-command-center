@@ -178,3 +178,7 @@ explicitly out of scope here).
 ## WAITING FOR OWNER
 
 Nothing.
+
+## Lead resolution (2026-09-07, Windows host)
+
+Owner question 6 resolved by inspection: the duplicated `"remove"` entry in `_BANNED_ATTRS` was deduplicated in commit 278317a8 (24 unique members before and after; no new banned attribute). The host-dependent `C:	mp` substring assertion in `test_report_path.py` was replaced by a `tempfile.gettempdir()` redirection test after Gate-5 round 2 (G4v2-1).

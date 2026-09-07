@@ -132,3 +132,7 @@ lint-clean, and ready to review/merge as-is.
 deleted as redundant scratch code, or (b) turned into a new STRONG_PASS detail table (and if so,
 its columns/sort/placement) — see the "PROPOSAL" section above. No script change was made
 pending that decision.
+
+## Lead resolution (2026-09-07, Windows host)
+
+Owner question 5 resolved by inspection: the dead `strong` list was removed in commit 840bac5e (STRONG_PASS already renders via `cls_counts`; no report contract requires a separate table). The WAITING FOR OWNER item above is closed.

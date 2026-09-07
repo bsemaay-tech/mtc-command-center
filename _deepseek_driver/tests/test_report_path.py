@@ -35,10 +35,16 @@ def test_default_report_path_is_under_system_temp_dir():
     assert str(p).startswith(str(Path(tempfile.gettempdir())))
 
 
-def test_default_report_path_does_not_use_hardcoded_windows_path():
+def test_default_report_path_follows_the_system_temp_dir(monkeypatch, tmp_path):
+    """Host-independent replacement for the old "no `C:\\tmp` substring" assertion,
+    which failed on any host whose TMP itself lives under C:\\tmp (Gate-5 G4v2-1).
+    The pre-fix code ignored tempfile.gettempdir() entirely, so redirecting it
+    must move the default path: RED on the old hard-coded fallback, GREEN now.
+    """
+    sentinel = tmp_path / "sentinel_tmp"
+    monkeypatch.setattr(tempfile, "gettempdir", lambda: str(sentinel))
     p = ds_agent.default_report_path("my_slug")
-    assert "C:\\tmp" not in str(p)
-    assert "C:/tmp" not in str(p)
+    assert p == sentinel / "mtc_ds_reports" / "ds_my_slug_report.md"
 
 
 def test_default_report_path_includes_slug_in_filename():
