@@ -657,6 +657,7 @@
 | `WP_P0_11_GATE_2026-08-28/test_producer_discrimination_matrix.py` | - | test producer discrimination matrix | from __future__ import annotations |
 | `WP_P0_11_GATE_2026-08-28/test_scenario_binding.py` | - | test scenario binding | from __future__ import annotations |
 | `WP_P0_11_GATE_2026-08-28/test_stage3_oracles.py` | - | test stage3 oracles | from __future__ import annotations |
+| `WP_P0_12_SCOPE_ASSESSMENT_2026-09-07.md` | 2026-09-07 | WP-P0-12 scope assessment — what the lifted STOP actually opened | Read-only assessment written the night `OD-20260907-1` lifted the WP-P0-11 / WP-P0-12 STOP, |
 | `WP_P0_15_FRESHNESS_2026-08-24/CLEAN_WORKTREE_PROCEDURE.md` | - | Verified Clean Isolated Worktree Procedure | Use this procedure when an agent must start from a named commit without disturbing an existing |
 | `WP_P0_15_FRESHNESS_2026-08-24/LANE_REPORT.md` | - | Lane B Report — WP-P0-15 Branch Freshness | Implementation and implementer self-QA are complete. Audit tier is **T1**, fixed by the accepted |
 | `WP_P0_15_FRESHNESS_2026-08-24/RED_GREEN_EVIDENCE.md` | - | WP-P0-15 D026 RED/GREEN Evidence | Date: 2026-08-24. All commands were executed locally and offline. The source worktree was |
