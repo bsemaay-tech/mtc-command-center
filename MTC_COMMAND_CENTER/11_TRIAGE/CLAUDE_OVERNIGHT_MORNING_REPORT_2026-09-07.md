@@ -1,6 +1,6 @@
 # Claude Overnight Lane — Morning Report (2026-09-07)
 
-**Recorded:** DRAFT 2026-09-06 22:58 +03 — finalized section at the end states the close time
+**Recorded:** drafted 2026-09-06 22:58 +03; finalized 2026-09-07 05:05 +03 (§8 close-out)
 **Class:** T3 factual report; self-verified; no acceptance, promotion, or live implication
 **Branch:** `claude/overnight-autonomous-work-e94x3q` from `origin/master`
 `afe52ea89473300e25555325def111cac599bdf1`
@@ -10,11 +10,28 @@
 the Gemini launcher are on the Windows host and were unreachable; nothing in this report derives
 from them.
 
-## 1. Owner decisions needed
+## 1. Owner decisions needed (read this first)
 
-None are required for anything this lane did. Eighteen findings (D1–D18 in §4); D1–D6 and D9–D11 are repaired on the branch as NONACCEPTED candidates; D7 and D8 (protected scopes) remain dispatch decisions
-are batched here; each is a stage-owned repair with a verified patch attached, and none was
-applied to the tree.
+Nothing is blocking. The branch is a self-contained candidate; decide these in the office session:
+
+1. **Route the branch through the gate.** `claude/overnight-autonomous-work-e94x3q` (67 commits over
+   `afe52ea`, 69 files, +6,362/−221) carries 17 NONACCEPTED code commits plus T3 records. The exact
+   T0–T2 audits (`claude-opus-5` / `gpt-5.6-sol` / Gemini) were unreachable from the container, so
+   dispatch them on the Windows host before any PR; the protected `Bridge suite (Python 3.12)` is
+   green on the head as non-root. Suggested split if you prefer smaller PRs: (a) T3 records +
+   index tool, (b) dashboard fixes (D1, D5, D12, D14, D15, D18), (c) mtc_cli (D9 + nits),
+   (d) QuantLens/triage tooling (D2, D3, D4, D11, D16, D17), (e) Bridge one-line import + notes.
+2. **Protected-scope proposals (patches only, nothing changed):** D7 `02_MTC_BACKTEST/app.py`
+   `NameError` on "Generate Run Plan"; D8 MTC_V2 `runner.py` unimported constant on `debug_mode`;
+   Bridge lane-J proposals (naive `datetime.now()` on the dry-run mock, `db.py:3174` unused
+   `new_submitted_ts`, float `==` on qty/px).
+3. **Dashboard path model:** lane V packet — keep `reports/optimization` readers fail-closed until a
+   producer writes `metrics.json` (option B), and choose remove-vs-log for the remaining
+   `06_QUANTLENS_LAB` fallbacks (`paths.py:27` + 4 call sites).
+4. **Stale July PRs #20/#21/#22/#26:** rebase-or-close (three conflict; #26 names a superseded
+   auditor).
+5. **`generate_morning_report.py:34`:** dead `strong` variable vs. a new STRONG_PASS table — intent.
+6. **`_deepseek_driver` `_BANNED_ATTRS`** duplicate `"remove"`: which attribute was intended.
 
 ## 2. Verified facts
 
@@ -398,9 +415,26 @@ with open(out, 'w', encoding='utf-8', newline='\n') as fh:
 print(f"Indexed {len(files)} files into {out}")
 ```
 
-## 8. Close-out
+## 8. Close-out (2026-09-07 05:05 +03)
 
-- **Heartbeat checkpoints:** see the checkpoint record; the last entry states the close time.
-- **NEXT ACTION (owner):** triage the open findings to their stage owners and route the branch through the normal audit/PR/CI gate; optionally merge this branch's two
-  T3 triage records through the normal PR/CI route.
-- **WAITING FOR OWNER:** Nothing for this lane's authorized work.
+- **Timeline:** start 22:38; six lanes launched 23:06; provider usage limit stopped everything
+  23:13–00:02 and again ~03:19–05:02 (no work lost either time; every lane was worktree-isolated);
+  17 code commits + 16 lane records integrated by 01:27; idle heartbeats afterwards; final audit
+  lane R2 dispatched 05:03; this close-out written 05:05. The owner's PC cannot be powered off from
+  the remote container; everything is pushed instead.
+- **Lanes:** A–I, N, O, P, Q, S, T, U, W, X repaired; J, K, L, M, R1, V read-only; R2 final audit
+  (verdict appended below when it lands). Worker lanes ran on Sonnet after the first outage; the
+  lead kept the exact-model session for integration and re-tests.
+- **Verification on the final head:** dashboard API 135 passed; `mtc_cli` 32; `_deepseek_driver`
+  25; triage/QuantLens tool tests 40; Bridge suite as non-root 1393 passed (lead run on `63de031a`;
+  R2 re-runs on the final head); Pine defang guard PASS on every push; `generate_index.py --check`
+  OK; lane M audit 10/10 PASS at `c306d1cc`; lane R1 adversarial review 0 REQUEST_CHANGES.
+- **Incidents:** lane P briefly edited the main checkout (restored, never committed); two checkpoint
+  headings were clock-estimate errors and are corrected in place with the commit times.
+- **Where to look in the office session:** this report (§1 decisions, §3 commit table, §4
+  findings), `CLAUDE_OVERNIGHT_CHECKPOINTS_2026-09-06.md` (timeline), the `OVERNIGHT_LANE_*`
+  records (per-change evidence), and the governance `00_AGENT_PROTOCOLS/HANDOFF.md`.
+- **NEXT ACTION (owner):** dispatch the exact audits on the Windows host, then PR the branch (or
+  the split above) through `Bridge suite (Python 3.12)`; triage §1 items 2–6.
+- **WAITING FOR OWNER:** Nothing for this lane; the six decisions above.
+- **R2 verdict:** pending at close-out time; appended below when the lane reports.
