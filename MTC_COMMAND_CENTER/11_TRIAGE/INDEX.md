@@ -425,6 +425,7 @@
 | `OWNER_DECISIONS_BRIDGE_V2_BACKLOG_NIGHT_2026-08-17.md` | 2026-08-17 | Owner Decisions — Bridge V2 Backlog Overnight Run — 2026-08-17 (evening) | **Recorded by:** Claude (Fable) Lead session, direct owner Q&A in chat before overnight autonomous run. |
 | `OWNER_MASTER_PLAN_2026-08-22.md` | 2026-08-22 | OWNER MASTER PLAN | **Date:** 2026-08-22 |
 | `OWNER_REVIEW_CAP_DECISION_PACKET_2026-08-17.md` | 2026-08-17 | Owner Decision Packet — Capped Documentation Reviews | **Date:** 2026-08-17 |
+| `P020_P030_CONTAINER_QA_REVERIFICATION_2026-09-07.md` | 2026-09-07 | P0-20 / P0-30 checker re-verification on the merged base — 2026-09-07 | Independent re-run of the two checkers PR #161 landed, performed by the Claude Lead in the remote |
 | `P1_V2_ARCHITECTURE_CONTRACT_PACK_2026-08-17.md` | 2026-08-17 | Package 1 — V2 Architecture Contract Pack (T2, documentation only) | **Date:** 2026-08-17 (night) · **Implementer:** GLM-5.3 (sub-delegated) |
 | `P2_DATA_RESTORE_TIMEOUT_REPORT_2026-07-16.md` | 2026-07-16 | P2 Data-Restore Timeout Build Report — 2026-07-16 | **BUILD + TESTS PASS; DEPLOYMENT LOCKED FOR FABLE AUDIT.** Approved commit `79976577` |
 | `P2_DAY0_V4_DEPLOY_REPORT_2026-07-15.md` | 2026-07-15 | P2 Day 0 v4 Deploy + Task 6 Merge Report — 2026-07-15 | Status: **TASK 5 PASS. TASK 6 STOPPED AT THE EXPLICIT OUT-OF-SCOPE CONFLICT GATE.** |
