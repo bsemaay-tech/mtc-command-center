@@ -200,14 +200,22 @@ def quantise_position_size(*, position_size: Decimal, metadata: PackageMetadata)
 
 def apply_allocation_policy_caps(
     *, proposed_qty: Decimal, account_size: Decimal, notional: Decimal,
-    realised_money_at_risk: Decimal, caps: AllocationPolicyCaps,
-    settings: RiskRequest,
+    realised_money_at_risk: Decimal, existing_gross_notional: Decimal,
+    caps: AllocationPolicyCaps, settings: RiskRequest,
 ) -> None:
     """Reject on a binding cap. Returns ``None`` and never returns a smaller quantity.
 
     This signature is the invariant: there is no return value a caller could mistake for
     a trimmed proposal. A breach of the risk-at-stop ceiling, the leverage cap or the
     exposure cap raises, exactly as brief 5.5 requires.
+
+    Leverage and exposure are deliberately different quantities. Leverage is *this
+    proposal's* notional against the account; exposure is the account's **gross** notional
+    once this proposal is added. For a single flat account they coincide, and computing
+    both from the proposal alone would look correct forever while silently under-reporting
+    exposure the moment a second position exists. ``existing_gross_notional`` is therefore
+    required with no default -- a caller with nothing open passes zero and says so, rather
+    than the module assuming an empty book.
     """
     if not isinstance(caps, AllocationPolicyCaps):
         raise RiskCalculationRefused("caps")
@@ -227,10 +235,16 @@ def apply_allocation_policy_caps(
         ("max_leverage", caps.max_leverage),
         ("max_exposure_fraction", caps.max_exposure_fraction),
     ))
+    # Zero is a legitimate open book, so this one is non-negative rather than positive.
+    if not isinstance(existing_gross_notional, Decimal):
+        raise RiskCalculationRefused("existing_gross_notional")
+    if not existing_gross_notional.is_finite() or existing_gross_notional < 0:
+        raise RiskCalculationRefused("existing_gross_notional")
     try:
         with localcontext(_context()):
             risk_fraction = realised_money_at_risk / account_size
             leverage = notional / account_size
+            exposure = (existing_gross_notional + notional) / account_size
     except Overflow as error:
         raise RiskCalculationRefused("overflow") from error
     except DivisionByZero as error:
@@ -241,14 +255,14 @@ def apply_allocation_policy_caps(
         raise RiskCalculationRefused("cap_risk_at_stop")
     if leverage > caps.max_leverage:
         raise RiskCalculationRefused("cap_leverage")
-    if leverage > caps.max_exposure_fraction:
+    if exposure > caps.max_exposure_fraction:
         raise RiskCalculationRefused("cap_exposure")
 
 
 def resolve_proposed_qty(
     *, account_size: Decimal, entry_reference_price: Decimal, stop_distance: Decimal,
     contract_multiplier: Decimal, settings: RiskRequest, metadata: PackageMetadata,
-    caps: AllocationPolicyCaps,
+    caps: AllocationPolicyCaps, existing_gross_notional: Decimal,
 ) -> ProposedQuantity:
     """The whole Risk Allocator stage: resolve, quantise, then cap or reject.
 
@@ -276,7 +290,8 @@ def resolve_proposed_qty(
         raise RiskCalculationRefused("min_notional")
     apply_allocation_policy_caps(
         proposed_qty=proposed_qty, account_size=account_size, notional=notional,
-        realised_money_at_risk=realised_money_at_risk, caps=caps, settings=settings,
+        realised_money_at_risk=realised_money_at_risk,
+        existing_gross_notional=existing_gross_notional, caps=caps, settings=settings,
     )
     return ProposedQuantity(
         allocation_policy_version=caps.allocation_policy_version,

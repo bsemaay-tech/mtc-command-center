@@ -257,6 +257,7 @@ def allocator_inputs():
             allocation_policy_version="worked-example-v1",
             max_risk_at_stop_fraction=Decimal("0.01"),
             max_leverage=Decimal("1"), max_exposure_fraction=Decimal("1")),
+        existing_gross_notional=Decimal("0"),
     )
 
 
@@ -278,6 +279,27 @@ def check_allocator(resolver=module.resolve_proposed_qty):
     # Rounding down can only reduce risk below the frozen package's request.
     assert Fraction(result.realised_money_at_risk) <= 100, result.realised_money_at_risk
     assert Fraction(result.proposed_qty) <= Fraction(result.calculation.position_size)
+
+
+def check_gross_exposure(resolver=module.resolve_proposed_qty):
+    """Exposure counts the whole book; leverage counts only this proposal.
+
+    With 8000 already open, this 1000 proposal is 0.1 leverage but 0.9 gross exposure. A
+    module computing both from the proposal alone would read 0.1 for each and wave through
+    a book that is nearly fully committed.
+    """
+    arguments = allocator_inputs()
+    arguments.update(existing_gross_notional=Decimal("8000"))
+    # Leverage is unchanged by the existing book, so a 1.0 leverage cap still passes...
+    result = resolver(**arguments)
+    assert result.proposed_qty == Decimal("20"), result.proposed_qty
+    # ...while a 0.5 exposure cap must bind on 9000/10000.
+    arguments.update(caps=replace(allocator_inputs()["caps"],
+                                  max_exposure_fraction=Decimal("0.5")))
+    expect_refused(resolver, arguments, "cap_exposure")
+    # The same proposal on an empty book passes the same 0.5 exposure cap.
+    arguments.update(existing_gross_notional=Decimal("0"))
+    assert resolver(**arguments).proposed_qty == Decimal("20")
 
 
 def check_allocator_refusals(resolver=module.resolve_proposed_qty):
@@ -306,6 +328,8 @@ def check_allocator_refusals(resolver=module.resolve_proposed_qty):
         allocation_policy_version="worked-example-v1",
         max_risk_at_stop_fraction=Decimal("1"), max_leverage=Decimal("1"),
         max_exposure_fraction=Decimal("1")))
+    refuse("existing_gross_notional", existing_gross_notional=Decimal("-1"))
+    refuse("existing_gross_notional", existing_gross_notional=1000)
     refuse("metadata", metadata=SimpleNamespace(
         qty_step=Decimal("0.5"), min_qty=Decimal("1"), min_notional=Decimal("100")))
 
@@ -344,6 +368,9 @@ def check_allocator_mutants():
             return replace(full, proposed_qty=full.proposed_qty / 2)
 
     detected("CAP TRIMS INSTEAD OF REJECTING", check_allocator_refusals, trimming_resolver)
+    detected("EXPOSURE IGNORES EXISTING BOOK", check_gross_exposure,
+             allocator_mutant("exposure = (existing_gross_notional + notional) / account_size",
+                              "exposure = notional / account_size"))
     detected("QUANTISATION ROUNDS UP", check_allocator,
              allocator_mutant("rounding=ROUND_DOWN", 'rounding="ROUND_UP"'))
     detected("MIN_QTY GUARD DROPPED", check_allocator_refusals,
@@ -355,7 +382,7 @@ def check_allocator_mutants():
     detected("LEVERAGE CAP DROPPED", check_allocator_refusals,
              allocator_mutant("if leverage > caps.max_leverage:", "if False:"))
     detected("EXPOSURE CAP DROPPED", check_allocator_refusals,
-             allocator_mutant("if leverage > caps.max_exposure_fraction:", "if False:"))
+             allocator_mutant("if exposure > caps.max_exposure_fraction:", "if False:"))
     detected("POLICY IDENTITY GUARD DROPPED", check_allocator_refusals,
              allocator_mutant("if version != settings.allocation_policy_version:", "if False:"))
     detected("CAPS TYPE GUARD DROPPED", check_allocator_refusals,
@@ -375,6 +402,7 @@ if __name__ == "__main__":
     check_cli_underflow()
     check_mutants()
     check_allocator()
+    check_gross_exposure()
     check_allocator_refusals()
     check_allocator_mutants()
     print("SHARED RISK CALCULATOR CHECK: PASS")
