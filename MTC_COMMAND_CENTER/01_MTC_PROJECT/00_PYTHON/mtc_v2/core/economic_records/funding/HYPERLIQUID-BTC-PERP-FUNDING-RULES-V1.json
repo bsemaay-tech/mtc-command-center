@@ -1,9 +1,6 @@
 {
   "admission_status": "REFUSED_MISSING_PRODUCTION_FUNDING_EVENTS",
-  "effective_interval": {
-    "start_inclusive": "2026-09-06T14:00:30Z",
-    "end_exclusive": null
-  },
+  "effective_interval": null,
   "event_schema": [
     "event_timestamp",
     "funding_event_id",
@@ -43,6 +40,7 @@
     "valuation_price_source": "SPOT_ORACLE"
   },
   "refused_missing_fields": [
+    "effective_interval",
     "events[].event_timestamp",
     "events[].funding_event_id",
     "events[].mark_price",
