@@ -1,5 +1,5 @@
 # Range Filter Seed Regions Template
-Research seeds only; not Pine defaults; not production parameters.
+# Research seeds only; not Pine defaults; not production parameters.
 
 regions:
   - region_id: range_filter_placeholder_region
