@@ -240,3 +240,16 @@ None for this lane.
 ## WAITING FOR OWNER
 
 Nothing.
+
+## Lead resolution — SUPERSEDED for pine_builder_reader (2026-09-07, Gate-5 F2)
+
+The pine_builder half of this record no longer describes head. Gate-5 round 1 (claude-opus-5)
+found that carrying observation-derived `generated_at` on the fail-closed empty payload advertised
+freshness for data the payload does not render (finding F2). Commit 1f317a58 reversed that part:
+`build_pine_builder_status` now returns `_empty_status(source)` with `generated_at: None` BEFORE
+calling `_compile_observations`; `_empty_status` takes one argument again. Plan discovery itself is
+unchanged and still independent of `mtc_v2_root`. The test named above,
+`test_compile_observations_discovered_without_mtc_v2_root`, was replaced by
+`test_unconfigured_mtc_v2_root_is_fail_closed_even_when_plans_exist`, which asserts the fail-closed
+payload (`generated_at is None`, `drafts == []`) and that `_compile_observations(root)` still finds
+the plan. The `liveops_reader` half of this record (plans surfaced ungated) stands.
