@@ -14,8 +14,9 @@ from them.
 
 Nothing is blocking. The branch is a self-contained candidate; decide these in the office session:
 
-1. **Route the branch through the gate.** `claude/overnight-autonomous-work-e94x3q` (67 commits over
-   `afe52ea`, 69 files, +6,362/−221) carries 17 NONACCEPTED code commits plus T3 records. The exact
+1. **Route the branch through the gate.** `claude/overnight-autonomous-work-e94x3q` (70 commits over
+   `afe52ea`, 70 files, +6,576/−221 measured at the final head `b82d02df`; an earlier draft of this
+   line said 67/69/+6,362) carries 17 NONACCEPTED code commits plus T3 records. The exact
    T0–T2 audits (`claude-opus-5` / `gpt-5.6-sol` / Gemini) were unreachable from the container, so
    dispatch them on the Windows host before any PR; the protected `Bridge suite (Python 3.12)` is
    green on the head as non-root. Suggested split if you prefer smaller PRs: (a) T3 records +
