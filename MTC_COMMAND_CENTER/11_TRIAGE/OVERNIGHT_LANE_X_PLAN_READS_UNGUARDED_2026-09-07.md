@@ -66,7 +66,7 @@ index d04e5957..d5fae73b 100644
 @@ -5,21 +5,18 @@ from datetime import datetime, timezone
  from pathlib import Path
  from typing import Any
- 
+
 -from .paths import (
 -    canonicalize,
 -    default_mcc_root,
@@ -75,8 +75,8 @@ index d04e5957..d5fae73b 100644
 -    resolve_configured_path,
 -)
 +from .paths import canonicalize, default_mcc_root, default_quantlens_root
- 
- 
+
+
  def build_liveops_status(mcc_root: str | Path | None = None) -> dict[str, Any]:
      root = canonicalize(mcc_root or default_mcc_root())
      status = _read_status_file(root / "03_STATUS" / "LIVEOPS_STATUS.json")
@@ -90,12 +90,12 @@ index d04e5957..d5fae73b 100644
 +    # MTC_COMMAND_CENTER/11_TRIAGE/OVERNIGHT_LANE_X_PLAN_READS_UNGUARDED_2026-09-07.md.
 +    paper_plans = _paper_trade_plans(root)
      safety_gates = _safety_gates(status)
- 
+
      return {
 @@ -61,7 +58,7 @@ def _read_status_file(path: Path) -> dict[str, Any]:
      return raw if isinstance(raw, dict) else {}
- 
- 
+
+
 -def _paper_trade_plans(mtc_v2_root: Path, mcc_root: Path) -> list[dict[str, Any]]:
 +def _paper_trade_plans(mcc_root: Path) -> list[dict[str, Any]]:
      # Promoted-strategy plan docs (FORWARD_PAPER_TRADE_PLAN.md) live under the
@@ -121,15 +121,15 @@ index 12197e03..b7281fe1 100644
      if not mtc_v2_root.exists():
 -        return _empty_status(str(mtc_v2_root))
 +        return _empty_status(str(mtc_v2_root), observations)
- 
+
 -    observations = _compile_observations(mtc_v2_root, root)
      pine_files = sorted(mtc_v2_root.rglob("*.pine"))
      protected_core_files = [path for path in pine_files if _is_protected_core(path, mtc_v2_root)]
      draft_paths = [path for path in pine_files if _is_review_draft(path, mtc_v2_root)]
 @@ -49,7 +54,7 @@ def build_pine_builder_status(mcc_root: str | Path | None = None) -> dict[str, A
      }
- 
- 
+
+
 -def _compile_observations(mtc_v2_root: Path, mcc_root: Path) -> dict[str, dict[str, Any]]:
 +def _compile_observations(mcc_root: Path) -> dict[str, dict[str, Any]]:
      # Promoted-strategy plan docs (PINE_PARITY_PLAN.md) live under the migrated
@@ -137,8 +137,8 @@ index 12197e03..b7281fe1 100644
      # See MTC_COMMAND_CENTER/11_TRIAGE/OVERNIGHT_LANE_V_DASHBOARD_PATH_MODEL_DECISION_2026-09-07.md
 @@ -243,10 +248,10 @@ def _timestamp(epoch_seconds: float) -> str:
      return datetime.fromtimestamp(epoch_seconds, timezone.utc).isoformat()
- 
- 
+
+
 -def _empty_status(source: str) -> dict[str, Any]:
 +def _empty_status(source: str, observations: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
      return {

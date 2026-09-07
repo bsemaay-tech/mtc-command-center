@@ -37,16 +37,16 @@ index df7d6c3d..52921d3e 100644
 +                continue
              candidates.append(_candidate_from_row(row, path, quantlens_root))
      return candidates
- 
+
 @@ -177,7 +181,7 @@ def _normalize_source_url(value: Any) -> str:
      return url
- 
- 
+
+
 -def _candidate_csv_row(header: list[str], fields: list[str]) -> dict[str, Any]:
 +def _candidate_csv_row(header: list[str], fields: list[str]) -> dict[str, Any] | None:
      if len(fields) <= len(header):
          return dict(zip(header, fields))
- 
+
 @@ -186,6 +190,12 @@ def _candidate_csv_row(header: list[str], fields: list[str]) -> dict[str, Any]:
      repaired = fields[:12]
      repaired.append(",".join(field.strip() for field in fields[12:-4]))
