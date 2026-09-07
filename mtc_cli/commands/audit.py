@@ -42,16 +42,25 @@ AI_MEM    = MCC / "_AI_MEMORY"
 def _required_memory_files(root: Path) -> list[Path]:
     mcc = root / "MTC_COMMAND_CENTER"
     ai_mem = mcc / "_AI_MEMORY"
+    gov = mcc / "00_AGENT_PROTOCOLS"
+    # Router (root AGENTS.md "Load exactly one stage"): the three root router files
+    # plus the governance stage's five-file contract are the governed current-state
+    # artifacts. `_AI_MEMORY/SESSION_LOCK.md` is the checked write-lane mirror and
+    # `_AI_MEMORY/PROJECT_MEMORY.md` the governed stable-fact output (stage
+    # INPUTS.md / OUTPUTS.md). Compatibility pointers such as START_HERE.md,
+    # AI_RULES.md and ACTIVE_FILES.md are not part of the router's read contract
+    # and are deliberately not required (Gate-5 finding G3-01, 2026-09-07).
     return [
         root / "AGENTS.md",
         root / "CONTEXT_MAP.md",
         root / "DECISIONS.md",
-        ai_mem / "START_HERE.md",
-        ai_mem / "AI_RULES.md",
-        ai_mem / "PROJECT_MEMORY.md",
-        ai_mem / "ACTIVE_FILES.md",
+        gov / "AGENTS.md",
+        gov / "INPUTS.md",
+        gov / "OUTPUTS.md",
+        gov / "TESTS.md",
+        gov / "HANDOFF.md",
         ai_mem / "SESSION_LOCK.md",
-        mcc / "00_AGENT_PROTOCOLS" / "HANDOFF.md",
+        ai_mem / "PROJECT_MEMORY.md",
     ]
 
 
@@ -133,13 +142,23 @@ def _handoff_next_action_count(section: str) -> int:
     return len(_NEXT_ACTION_LABEL_RE.findall(section))
 
 
+# A WAITING FOR OWNER *label* line, same shape as `_NEXT_ACTION_LABEL_RE`:
+# bolded ("**WAITING FOR OWNER**") or colon-terminated ("WAITING FOR OWNER:").
+# A bare prose mention without the label is neither a presence hit nor a
+# countable ask (Gate-5 finding G3-02, 2026-09-07).
+_WAITING_LABEL_RE = re.compile(r"(?:\*\*WAITING FOR OWNER\*\*|WAITING FOR OWNER\s*:)")
+
+
+def _handoff_waiting_label_lines(section: str) -> list[str]:
+    """Lines of `section` that carry a WAITING FOR OWNER label."""
+    return [line for line in section.splitlines() if _WAITING_LABEL_RE.search(line)]
+
+
 def _handoff_waiting_for_owner_count(section: str) -> int:
-    """Count WAITING FOR OWNER lines whose value is not a "no ask" token."""
+    """Count WAITING FOR OWNER label lines whose value is not a "no ask" token."""
     real = 0
-    for line in section.splitlines():
-        if "WAITING FOR OWNER" not in line:
-            continue
-        value = line.split("WAITING FOR OWNER", 1)[1]
+    for line in _handoff_waiting_label_lines(section):
+        value = _WAITING_LABEL_RE.split(line, 1)[1]
         value = value.lstrip(":*").strip().rstrip(".").strip()
         if not _is_no_owner_ask(value):
             real += 1
@@ -239,7 +258,7 @@ def run(as_json: bool = False, repo_root: Path | str | None = None) -> Envelope:
                 "severity": "ERROR",
                 "message": f"{_rel(gov_handoff)} newest section is missing a NEXT ACTION line",
             })
-        if "WAITING FOR OWNER" not in section:
+        if not _handoff_waiting_label_lines(section):
             findings.append({
                 "severity": "ERROR",
                 "message": f"{_rel(gov_handoff)} newest section is missing a WAITING FOR OWNER line",

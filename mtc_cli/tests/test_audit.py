@@ -107,14 +107,23 @@ ROUTER_ERA_FILES = [
     "AGENTS.md",
     "CONTEXT_MAP.md",
     "DECISIONS.md",
-    "MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md",
-    "MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md",
+    # governance stage five-file contract (root AGENTS.md "Load exactly one stage")
+    "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AGENTS.md",
+    "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md",
+    "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/OUTPUTS.md",
+    "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/TESTS.md",
     "MTC_COMMAND_CENTER/_AI_MEMORY/PROJECT_MEMORY.md",
-    "MTC_COMMAND_CENTER/_AI_MEMORY/ACTIVE_FILES.md",
     "MTC_COMMAND_CENTER/_AI_MEMORY/SESSION_LOCK.md",
     # archives: present only under history/, never at the pre-router path
     "MTC_COMMAND_CENTER/_AI_MEMORY/history/GLOBAL_HANDOFF.md",
     "MTC_COMMAND_CENTER/_AI_MEMORY/history/NEXT_STEPS.md",
+]
+# Compatibility pointers that exist in the live repo but are NOT part of the
+# router's read contract; the audit must not require them (Gate-5 G3-01).
+NON_GOVERNED_COMPAT_FILES = [
+    "MTC_COMMAND_CENTER/_AI_MEMORY/START_HERE.md",
+    "MTC_COMMAND_CENTER/_AI_MEMORY/AI_RULES.md",
+    "MTC_COMMAND_CENTER/_AI_MEMORY/ACTIVE_FILES.md",
 ]
 GOV_HANDOFF = "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md"
 GOV_HANDOFF_TEXT = (
@@ -204,6 +213,63 @@ class TestRouterEraLayout:
         env = audit_mod.run(repo_root=root)
         assert env.ok is True
         assert env.data["handoff_waiting_for_owner"] == 1
+
+    # --- Gate-5 (gpt-5.6-sol, 2026-09-07) findings G3-01 / G3-02 ------------------
+
+    def test_fixture_missing_stage_contract_file_fails(self, tmp_path):
+        """G3-01: a governed stage contract file (INPUTS.md) is required."""
+        from mtc_cli import contract
+        from mtc_cli.commands import audit as audit_mod
+
+        root = _router_era_fixture(tmp_path)
+        (root / "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md").unlink()
+        env = audit_mod.run(repo_root=root)
+        assert env.ok is False
+        assert env.exit_code() == contract.EXIT_VALIDATION
+        missing = [f["message"].replace("\\", "/") for f in env.findings if f["message"].startswith("missing:")]
+        assert missing == ["missing: MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md"], missing
+
+    def test_compat_pointers_are_not_required(self, tmp_path):
+        """G3-01: START_HERE/AI_RULES/ACTIVE_FILES are compatibility pointers, never required."""
+        from mtc_cli.commands import audit as audit_mod
+
+        root = _router_era_fixture(tmp_path)
+        for rel in NON_GOVERNED_COMPAT_FILES:
+            assert not (root / rel).exists()
+        required = {p.as_posix().replace(root.as_posix() + "/", "") for p in audit_mod._required_memory_files(root)}
+        assert not (required & set(NON_GOVERNED_COMPAT_FILES)), required & set(NON_GOVERNED_COMPAT_FILES)
+        env = audit_mod.run(repo_root=root)
+        assert env.ok is True and env.data["memory_files_ok"] is True
+
+    def test_fixture_prose_only_waiting_for_owner_mention_fails(self, tmp_path):
+        """G3-02: a prose mention of WAITING FOR OWNER without the label is neither
+        presence nor a countable ask."""
+        from mtc_cli import contract
+        from mtc_cli.commands import audit as audit_mod
+
+        root = _router_era_fixture(tmp_path)
+        (root / GOV_HANDOFF).write_text(
+            "# Governance stage handoff\n\n"
+            "## [Lead] 2026-09-06 — fixture\n\n"
+            "- **NEXT ACTION:** publish through protected CI.\n"
+            "- This section discusses WAITING FOR OWNER but has no field.\n",
+            encoding="utf-8",
+        )
+        env = audit_mod.run(repo_root=root)
+        assert env.data["handoff_waiting_for_owner"] == 0
+        assert env.ok is False
+        assert env.exit_code() == contract.EXIT_VALIDATION
+        assert any("missing a WAITING FOR OWNER line" in f["message"] for f in env.findings), env.findings
+
+    def test_prose_only_waiting_for_owner_is_not_counted_but_label_is(self):
+        from mtc_cli.commands import audit as audit_mod
+
+        prose = "This section discusses WAITING FOR OWNER but has no field.\n"
+        assert audit_mod._handoff_waiting_for_owner_count(prose) == 0
+        assert audit_mod._handoff_waiting_label_lines(prose) == []
+        labelled = "- **WAITING FOR OWNER:** approve PAYG budget.\n- WAITING FOR OWNER: Nothing.\n"
+        assert audit_mod._handoff_waiting_for_owner_count(labelled) == 1
+        assert len(audit_mod._handoff_waiting_label_lines(labelled)) == 2
 
 
 # ---------------------------------------------------------------------------
