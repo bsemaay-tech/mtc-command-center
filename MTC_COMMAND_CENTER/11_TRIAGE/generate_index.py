@@ -255,7 +255,7 @@ def run_check(output: str, content: str) -> int:
         existing_bytes = None
 
     if existing_bytes == generated_bytes:
-        print(f"OK: {output} is byte-identical to the regenerated index.")
+        print(f"OK: {output} matches the regenerated index (after CRLF->LF normalisation).")
         return 0
 
     existing_text = existing_bytes.decode("utf-8") if existing_bytes is not None else ""

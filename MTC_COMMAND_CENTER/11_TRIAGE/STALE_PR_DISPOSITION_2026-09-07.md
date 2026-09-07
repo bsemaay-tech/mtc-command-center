@@ -27,5 +27,18 @@ git grep -n -E "MEGA_walk_forward|vinext|wrangler|sites/" origin/master -- .giti
 
 No branch was deleted, rebased, or force-pushed. Closing a PR does not delete its branch.
 
-- **NEXT ACTION:** close the four PRs on GitHub with a comment pointing at this record.
+## Closure record (performed 2026-09-07 11:07 +03, `gh pr close <n> --comment ...`)
+
+Verified afterwards with `gh pr view <n> --json state,closedAt` (UTC):
+
+| PR | State | closedAt |
+|---|---|---|
+| #20 | CLOSED | 2026-09-07T08:07:47Z |
+| #21 | CLOSED | 2026-09-07T08:07:50Z |
+| #22 | CLOSED | 2026-09-07T08:07:52Z |
+| #26 | CLOSED | 2026-09-07T08:07:54Z |
+
+Each PR carries a closing comment pointing at this record. The four head branches remain on the remote.
+
+- **NEXT ACTION:** none for this record.
 - **WAITING FOR OWNER:** Nothing.
