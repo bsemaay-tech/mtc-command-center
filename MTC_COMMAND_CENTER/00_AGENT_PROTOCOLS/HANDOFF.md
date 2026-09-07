@@ -16,7 +16,7 @@
   derived from a run's facts rather than a label it carries · `5e5e4e2` an acceptance
   harness that probes the gate instead of reading it · `28a3258` all eight dependent tools
   located and class-verified against source.
-- **Verification:** eight checkers, every one exit 0; **70 mutation controls, all
+- **Verification:** eight checkers, every one exit 0; **84 mutation controls, all
   DETECTED**; `generate_index.py --check` GREEN. Two controls carry more weight than the
   rest: `check_gate_agreement` proves the checklist and the manifest never disagree about
   one run, and `check_signature_has_no_conversion` is structural — it fails if a `stamp`,
@@ -27,10 +27,17 @@
   `computed_manifest`, `cost_model_provenance`, `standin_prohibition`. BLOCKED —
   `import_identity`, `kernel_present`, `required_tier_implemented`, `before_after`,
   `throughput`. UNMET — `dependent_disposition` (proposed, not performed), `audits`.
+- **Self-review found two real defects, both fixed** (`bf682f3`, `18d73c0`): the cap stage
+  compared one number, `notional / account_size`, against both the leverage and the exposure
+  cap — correct on a flat account and silently wrong the moment a second position exists, so
+  exposure is now gross and `existing_gross_notional` is a required argument; and the
+  harness's kernel probe was a substring search a comment could satisfy, so it now walks the
+  AST for a real import.
+- **CI now runs the research gates** (`11bddf3`, `.github/workflows/research-gates.yml`).
+  It is **not** a required check — ruleset 21444962 still requires exactly `Bridge suite
+  (Python 3.12)` — and `WP-P0-27` is still the carrier for progressive CI activation.
 - **Nothing is accepted, and nothing here claims to be.** No exact audit ran; the container
-  cannot reach the audit models. `ci.yml` still covers `IBKR_PAPER_BRIDGE` only, so none of
-  these root modules is exercised by protected CI — the checkers are the only fence and are
-  run by hand (`WP-P0-27` unbuilt).
+  cannot reach the audit models.
 - **NEXT ACTION:** bring `WP-P0-12` `CORRECTED_VNEXT` into this repository. Five of the
   seven outstanding rows resolve behind it and `dependent_disposition` moves from proposed
   to performed with it. Then run `check_p020_acceptance.py` and work whatever it still

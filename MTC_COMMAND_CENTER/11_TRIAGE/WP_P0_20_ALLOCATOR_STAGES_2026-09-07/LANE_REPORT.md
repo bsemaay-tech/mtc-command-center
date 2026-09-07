@@ -194,3 +194,38 @@ UNMET     dependent_disposition (proposed, not performed), audits (not self-cert
 `WP-P0-12` `CORRECTED_VNEXT` in this repository. Five of the seven outstanding rows resolve
 behind it, `dependent_disposition` moves from proposed to performed with it, and only
 `audits` remains — and that one is deliberately not self-certifiable.
+
+## Self-review of this run's own code — two defects found and fixed
+
+Written unattended with no external audit, so the branch was reviewed against itself.
+
+1. **`bf682f3` — one number, two caps.** `apply_allocation_policy_caps` computed
+   `notional / account_size` and compared it against **both** `max_leverage` and
+   `max_exposure_fraction`. On a single flat account the two coincide, so every test passed
+   and whichever bound was tighter fired first while the other read as dead code. The defect
+   only surfaces once a second position exists: exposure would still report this proposal
+   alone and wave through a nearly fully committed book. A cap that is correct exactly until
+   the system does the thing it guards against is worse than an absent one, because it reads
+   as covered. Exposure is now gross — `existing_gross_notional` is required with no default,
+   validated non-negative because zero is a legitimate book — and
+   `EXPOSURE IGNORES EXISTING BOOK` reproduces the original defect as a DETECTED mutant.
+2. **`18d73c0` — a mention is not a kernel.** `probe_kernel_present` tested
+   `"CORRECTED_VNEXT" in source`, so a comment or a TODO would have flipped the row to MET.
+   It now walks the AST for real imports; a mention with no import reports UNMET and says so.
+   Proven against a synthetic canonical path: comment-only → UNMET, `import mtc_v2.core.kernel`
+   → MET, real tree → BLOCKED.
+
+Both are the same class of error as the one the R1 correction pass records about the
+stand-in: a check that reads correct while measuring the wrong thing.
+
+## CI gap closed
+
+`11bddf3` adds `.github/workflows/research-gates.yml`, running all eight checkers plus the
+index check on Python 3.12. Every module is stdlib-only so the job installs nothing. The
+acceptance harness runs as a **report**, not a gate — it exits non-zero by design until
+acceptance, and wiring that as a failure would leave the workflow permanently red. The
+workflow is **not** a required check: ruleset 21444962 still requires exactly
+`Bridge suite (Python 3.12)`, and `WP-P0-27` is still the unbuilt carrier for progressive CI
+activation. Twenty-two mutation controls in the allocator checker now: 71 across the modules this lane
+authored or extended, and 84 across the whole suite counting the thirteen the collector
+checkers brought with #161.
