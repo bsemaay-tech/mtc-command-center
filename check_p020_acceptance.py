@@ -137,6 +137,41 @@ def probe_required_tier_implemented():
     return UNMET, "migration present; REQUIRED-tier coverage not yet measured"
 
 
+def probe_standin_prohibition():
+    """A stand-in must fail the gate, and no stamp may convert it."""
+    import evidence_class as evidence
+    import cost_model_registry as costs
+    model = costs.CostModel(
+        model_id="probe-model", version="1.0.0", fees_provenance=costs.FROM_SCHEDULE,
+        funding_provenance=costs.FROM_HISTORY, slippage_provenance=costs.FROM_OWN_FILLS,
+        observation_sources=(costs.PAPER,), cost_lineage_id="l", deployment_identity_hash="d",
+        triggering_event="probe")
+    registry = costs.register({}, model)
+    standin = evidence.RunFacts(
+        canonical_simulator=True, allocator_import_identity_proven=False,
+        kernel_version="CORRECTED_VNEXT-1.0.0", cost_model_id="probe-model",
+        manifest_computed=True, manifest_has_required_gap=False)
+    evidence_class, _ = evidence.classify(standin, cost_registry=registry)
+    if evidence_class != evidence.SIGNAL_SCREEN_ONLY:
+        return UNMET, f"a stand-in run classified {evidence_class}"
+    try:
+        evidence.assert_acceptance_bearing(standin, cost_registry=registry)
+    except evidence.NotAcceptanceBearing:
+        pass
+    else:
+        return UNMET, "a stand-in run was accepted as evidence"
+    # The withdrawn accepting state must be refused rather than ignored.
+    import dataclasses
+    stamped = dataclasses.replace(standin, legacy_state_stamp="ALLOCATOR_NOT_YET_SHARED")
+    try:
+        evidence.classify(stamped, cost_registry=registry)
+    except evidence.EvidenceRefused:
+        return MET, ("a stand-in run is SIGNAL_SCREEN_ONLY and non-accepting; "
+                     "ALLOCATOR_NOT_YET_SHARED is refused, and the gate signature offers "
+                     "no conversion parameter")
+    return UNMET, "ALLOCATOR_NOT_YET_SHARED was not refused"
+
+
 def _record(*candidates):
     for candidate in candidates:
         path = Path(candidate)
@@ -206,6 +241,11 @@ CRITERIA = (
               "an unregistered or provenance-broken cost model cannot produce "
               "acceptance-bearing evidence",
               probe_cost_model),
+    Criterion("standin_prohibition",
+              "a stand-in allocator cannot satisfy this gate at all -- a run against a "
+              "stand-in is SIGNAL_SCREEN_ONLY and non-accepting, and there is no manifest "
+              "stamp that converts it",
+              probe_standin_prohibition),
     Criterion("import_identity",
               "the canonical path is shown to import and run the one shared Risk Allocator "
               "implementation delivered here -- proven by import, not asserted",
