@@ -80,13 +80,7 @@ class CandidateAuditTests(unittest.TestCase):
         # silently drops the record instead of counting/indexing it.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
-            research_dir = (
-                Path(tmp)
-                / "01_MASTER TEMPLATE_V2"
-                / "06_QUANTLENS_LAB"
-                / "research"
-                / "batch"
-            )
+            research_dir = root / "03_QUANTLENS" / "research" / "batch"
             research_dir.mkdir(parents=True)
             (research_dir / "AUDITED_CANDIDATE_EXTRACTION.jsonl").write_text(
                 "﻿" + json.dumps({"candidate_id": "QL_BOM_SOURCE", "source_quality": "HIGH"}) + "\n",
@@ -104,7 +98,7 @@ class CandidateAuditTests(unittest.TestCase):
     def test_audit_recovers_source_url_from_transcript_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
-            transcript_rel = "06_QUANTLENS_LAB/00_INBOX_REPORTS/Transcrips/Recovered URL.md"
+            transcript_rel = "03_QUANTLENS/00_INBOX_REPORTS/Transcrips/Recovered URL.md"
             transcript_path = root / transcript_rel
             transcript_path.parent.mkdir(parents=True)
             transcript_path.write_text(
@@ -160,13 +154,7 @@ class CandidateAuditTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             intake_rel = "3 Mayıs/2026-05-03_NGyE4YIgGpU_quantlens_tito_adhikary_options_momentum_intake_report.md"
-            intake_path = (
-                Path(tmp)
-                / "01_MASTER TEMPLATE_V2"
-                / "06_QUANTLENS_LAB"
-                / "00_INBOX_REPORTS"
-                / intake_rel
-            )
+            intake_path = root / "03_QUANTLENS" / "00_INBOX_REPORTS" / intake_rel
             intake_path.parent.mkdir(parents=True)
             intake_path.write_text(
                 "# Intake report\n"
@@ -174,13 +162,7 @@ class CandidateAuditTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            research_dir = (
-                Path(tmp)
-                / "01_MASTER TEMPLATE_V2"
-                / "06_QUANTLENS_LAB"
-                / "research"
-                / "batch"
-            )
+            research_dir = root / "03_QUANTLENS" / "research" / "batch"
             research_dir.mkdir(parents=True)
             (research_dir / "AUDITED_CANDIDATE_EXTRACTION.jsonl").write_text(
                 json.dumps(

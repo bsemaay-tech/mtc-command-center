@@ -19,8 +19,8 @@ class PineBuilderReaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             mtc = Path(tmp) / "mtc"
-            candidate = mtc / "06_QUANTLENS_LAB" / "06_PROMOTED_TO_PARITY" / "QL_ALPHA"
-            sandbox = mtc / "06_QUANTLENS_LAB" / "strategy_sandboxes" / "QLR_ONE"
+            candidate = mtc / "review_drafts" / "QL_ALPHA"
+            sandbox = mtc / "strategy_sandboxes" / "QLR_ONE"
             template = mtc / "parity_oracles" / "templates"
             promoted = root / "03_QUANTLENS" / "strategies" / "QL_ALPHA"
             (root / "00_CONFIG").mkdir(parents=True)
@@ -52,10 +52,8 @@ class PineBuilderReaderTests(unittest.TestCase):
     def test_compile_observations_discovered_from_quantlens_strategies_root(self) -> None:
         # Regression for the migrated-layout fix: PINE_PARITY_PLAN.md under
         # <mcc_root>/03_QUANTLENS/strategies/<id>/ must join into compile_status,
-        # even when mtc_v2_root has no 06_QUANTLENS_LAB at all (the canonical,
-        # already-migrated layout). Must FAIL before the fix (compile_status
-        # stayed UNKNOWN because only mtc_v2_root/06_QUANTLENS_LAB/
-        # 06_PROMOTED_TO_PARITY was ever read) and PASS after.
+        # even when mtc_v2_root has no QuantLens tree (the canonical,
+        # already-migrated layout). Must FAIL before the fix and PASS after.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             mtc = Path(tmp) / "mtc"

@@ -17,7 +17,7 @@ class BacktestReaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             mtc = Path(tmp) / "mtc"
-            backtests = mtc / "06_QUANTLENS_LAB" / "05_BACKTEST_RESULTS"
+            backtests = root / "03_QUANTLENS" / "05_BACKTEST_RESULTS"
             optimization = mtc / "reports" / "optimization" / "run_a"
             (root / "00_CONFIG").mkdir(parents=True)
             backtests.mkdir(parents=True)
@@ -117,7 +117,7 @@ class BacktestReaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             mtc = Path(tmp) / "mtc"
-            backtests = mtc / "06_QUANTLENS_LAB" / "05_BACKTEST_RESULTS"
+            backtests = root / "03_QUANTLENS" / "05_BACKTEST_RESULTS"
             (root / "00_CONFIG").mkdir(parents=True)
             backtests.mkdir(parents=True)
             _write_paths(root, mtc)
@@ -151,7 +151,7 @@ class BacktestReaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             mtc = Path(tmp) / "mtc"
-            backtests = mtc / "06_QUANTLENS_LAB" / "05_BACKTEST_RESULTS"
+            backtests = root / "03_QUANTLENS" / "05_BACKTEST_RESULTS"
             (root / "00_CONFIG").mkdir(parents=True)
             stage = backtests / "overnight_x_2026-07-01" / "sweep_stage"
             stage.mkdir(parents=True)

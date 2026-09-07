@@ -17,7 +17,7 @@ class RegistryReaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             mtc = Path(tmp) / "mtc"
-            lab = mtc / "06_QUANTLENS_LAB"
+            lab = root / "03_QUANTLENS"
             registry = lab / "_registry"
             backtests = lab / "05_BACKTEST_RESULTS"
             promoted = lab / "06_PROMOTED_TO_PARITY" / "QL_ALPHA"
@@ -32,7 +32,7 @@ class RegistryReaderTests(unittest.TestCase):
                 "\n".join(
                     [
                         "candidate_id,status,title,source_url,market_type,timeframe,candidate_kind,commercial_value_score,complexity_score,repaint_risk,lookahead_risk,closed_source_risk,mtc_overlap,next_action,candidate_folder,created_at,updated_at",
-                        "QL_ONE,PROTOTYPED,One,,CRYPTO,1h,entry|exit,7,3,LOW,LOW,LOW,overlap,next,06_QUANTLENS_LAB/01_TRIAGED_CANDIDATES/QL_ONE,2026-05-01,2026-05-30",
+                        "QL_ONE,PROTOTYPED,One,,CRYPTO,1h,entry|exit,7,3,LOW,LOW,LOW,overlap,next,03_QUANTLENS/01_TRIAGED_CANDIDATES/QL_ONE,2026-05-01,2026-05-30",
                     ]
                 ),
                 encoding="utf-8",
@@ -93,7 +93,7 @@ class RegistryReaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             mtc = Path(tmp) / "mtc"
-            lab = mtc / "06_QUANTLENS_LAB"
+            lab = root / "03_QUANTLENS"
             registry = lab / "_registry"
             (root / "00_CONFIG").mkdir(parents=True)
             registry.mkdir(parents=True)
@@ -106,7 +106,7 @@ class RegistryReaderTests(unittest.TestCase):
             )
             good_row = (
                 "QL_GOOD,PROTOTYPED,Good,,CRYPTO,1h,entry|exit,7,3,LOW,LOW,LOW,overlap,next,"
-                "06_QUANTLENS_LAB/01_TRIAGED_CANDIDATES/QL_GOOD,2026-05-01,2026-05-30,"
+                "03_QUANTLENS/01_TRIAGED_CANDIDATES/QL_GOOD,2026-05-01,2026-05-30,"
                 "bob,fine,true"
             )
             # Unquoted comma inside mtc_overlap pushes this row to 21 raw
@@ -135,7 +135,7 @@ class RegistryReaderTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             mtc = Path(tmp) / "mtc"
-            lab = mtc / "06_QUANTLENS_LAB"
+            lab = root / "03_QUANTLENS"
             registry = lab / "_registry"
             (root / "00_CONFIG").mkdir(parents=True)
             registry.mkdir(parents=True)
@@ -151,7 +151,7 @@ class RegistryReaderTests(unittest.TestCase):
             repairable_row = (
                 "QL_REPAIR,PROTOTYPED,Repair,,CRYPTO,1h,entry|exit,7,3,LOW,LOW,LOW,"
                 "overlaps, with mtc,next-step,"
-                "06_QUANTLENS_LAB/01_TRIAGED_CANDIDATES/QL_REPAIR,2026-05-01,2026-05-30"
+                "03_QUANTLENS/01_TRIAGED_CANDIDATES/QL_REPAIR,2026-05-01,2026-05-30"
             )
             (registry / "quantlens_candidate_registry.csv").write_text(
                 "\n".join([header_line, repairable_row]),

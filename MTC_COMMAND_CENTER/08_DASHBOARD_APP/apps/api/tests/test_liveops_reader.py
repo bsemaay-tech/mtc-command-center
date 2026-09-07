@@ -47,10 +47,8 @@ class LiveOpsReaderTests(unittest.TestCase):
     def test_paper_trade_plans_discovered_from_quantlens_strategies_root(self) -> None:
         # Regression for the migrated-layout fix: FORWARD_PAPER_TRADE_PLAN.md
         # under <mcc_root>/03_QUANTLENS/strategies/<id>/ must be discovered even
-        # when mtc_v2_root has no 06_QUANTLENS_LAB at all (the canonical,
-        # already-migrated layout). Must FAIL before the fix (paper_trade_plans
-        # always [] because only mtc_v2_root/06_QUANTLENS_LAB/
-        # 06_PROMOTED_TO_PARITY was ever read) and PASS after.
+        # when mtc_v2_root has no QuantLens tree (the canonical,
+        # already-migrated layout). Must FAIL before the fix and PASS after.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             mtc = Path(tmp) / "mtc"

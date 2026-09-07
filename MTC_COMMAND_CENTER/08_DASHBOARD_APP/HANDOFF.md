@@ -1,12 +1,10 @@
 # Dashboard handoff
 
-## Current state — 2026-08-25
+## Standing state (from 2026-08-25, kept current)
 
-- WP-P0-05 changes onboarding only; dashboard source and runtime are untouched.
-- The accepted shell remains vanilla HTML/JS/CSS, dark command-center style, and read-only.
-- OPEN-01 is still conditional: a bounded framework/build step may be considered only if WP-V2B-05
-  measures less custom table/freshness code without weakening private/read-only/security boundaries.
-- No build-step choice, deploy, network, broker, paper/live, or write capability is authorized here.
+- Shell stays vanilla HTML/JS/CSS, dark command-center style, read-only. OPEN-01 (bounded
+  framework/build step) remains conditional on WP-V2B-05 measurements; no build-step choice,
+  deploy, network, broker, paper/live, or write capability is authorized here.
 
 ## [Claude lane W] 2026-09-07 — promoted-root reads (D18)
 
@@ -47,6 +45,15 @@
   `11_TRIAGE/OVERNIGHT_LANE_L_DASHBOARD_LEGACY_FALLBACKS_2026-09-07.md`.
 - NEXT ACTION: none for this lane.
 - WAITING FOR OWNER: Nothing.
+
+## [Codex] 2026-09-07 — legacy fallbacks removed
+
+- Dashboard QuantLens readers now use only `03_QUANTLENS`; missing canonical data fails closed, while
+  `reports/optimization` stays unchanged and fail-closed. D026: RED 2 failed; GREEN full suite 137 passed.
+
+NEXT ACTION: Lead review and commit the unstaged lane diff.
+
+WAITING FOR OWNER: Nothing.
 
 ## [Claude lane A] 2026-09-06 — test portability repair
 

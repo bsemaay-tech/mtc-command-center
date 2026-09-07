@@ -6,13 +6,12 @@ import unittest
 from pathlib import Path
 
 from mcc_readonly.mtc_v2_reader import build_mtc_v2_readiness
+from mcc_readonly.paths import canonicalize
 
 
 class MtcV2ReaderTests(unittest.TestCase):
     def test_builds_readiness_rows_from_configured_mtc_v2_root(self) -> None:
-        # D12: mtc_v2_root must come from 00_CONFIG (paths.example.json /
-        # paths.local.json), the same way every other reader resolves it —
-        # not from an unconditional root.parent / "01_MASTER TEMPLATE_V2".
+        # D12: mtc_v2_root must come from 00_CONFIG, like every other reader.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "MTC_COMMAND_CENTER"
             mtc_root = Path(tmp) / "01_MTC_PROJECT"
@@ -71,11 +70,13 @@ class MtcV2ReaderTests(unittest.TestCase):
             )
 
             rows = {row["id"]: row for row in readiness["rows"]}
-            # mtc_v2_root must equal the *configured* path, not the legacy
-            # root.parent / "01_MASTER TEMPLATE_V2" sibling-of-root guess.
-            self.assertEqual(readiness["mtc_v2_root"], str(mtc_root))
+            # TemporaryDirectory may expose an 8.3 short TEMP path on Windows; compare canonical forms.
+            self.assertEqual(readiness["mtc_v2_root"], str(canonicalize(mtc_root)))
             self.assertTrue(readiness["pine_exists"])
-            self.assertEqual(readiness["parity_tracker"]["path"], str(mtc_root / "05_PARITY" / "MTC_V2_PARITY_CASES.csv"))
+            self.assertEqual(
+                readiness["parity_tracker"]["path"],
+                str(canonicalize(mtc_root) / "05_PARITY" / "MTC_V2_PARITY_CASES.csv"),
+            )
             self.assertEqual(readiness["parity_tracker"]["total_cases"], 2)
             self.assertEqual(readiness["parity_tracker"]["pass_cases"], 1)
             self.assertEqual(rows["QL_READY"]["status"], "NEEDS_FORWARD_EVIDENCE")
