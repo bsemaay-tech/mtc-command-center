@@ -5,7 +5,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .paths import canonicalize, default_mcc_root, load_path_config, resolve_configured_path
+from .paths import (
+    canonicalize,
+    default_mcc_root,
+    default_quantlens_root,
+    load_path_config,
+    resolve_configured_path,
+)
 
 
 MAX_DRAFTS = 80
@@ -15,12 +21,18 @@ def build_pine_builder_status(mcc_root: str | Path | None = None) -> dict[str, A
     root = canonicalize(mcc_root or default_mcc_root())
     path_config = load_path_config(root)
     mtc_v2_root = resolve_configured_path(path_config.config, "mtc_v2_root")
+    # Fail closed before touching anything: without a usable mtc_v2_root there
+    # are no drafts to join compile observations onto, so the empty payload must
+    # not advertise a generated_at freshness derived from data it does not carry
+    # (Gate-5 F2, 2026-09-07; supersedes the lane-X hoist for this reader).
     if mtc_v2_root is None:
         return _empty_status("mtc_v2_root_not_configured")
     if not mtc_v2_root.exists():
         return _empty_status(str(mtc_v2_root))
+    # Promoted-strategy plan discovery reads from the migrated QuantLens root
+    # (03_QUANTLENS/strategies/<id>/...) and does not depend on mtc_v2_root.
+    observations = _compile_observations(root)
 
-    observations = _compile_observations(mtc_v2_root)
     pine_files = sorted(mtc_v2_root.rglob("*.pine"))
     protected_core_files = [path for path in pine_files if _is_protected_core(path, mtc_v2_root)]
     draft_paths = [path for path in pine_files if _is_review_draft(path, mtc_v2_root)]
@@ -43,8 +55,12 @@ def build_pine_builder_status(mcc_root: str | Path | None = None) -> dict[str, A
     }
 
 
-def _compile_observations(mtc_v2_root: Path) -> dict[str, dict[str, Any]]:
-    promoted_root = mtc_v2_root / "06_QUANTLENS_LAB" / "06_PROMOTED_TO_PARITY"
+def _compile_observations(mcc_root: Path) -> dict[str, dict[str, Any]]:
+    # Promoted-strategy plan docs (PINE_PARITY_PLAN.md) live under the migrated
+    # QuantLens root (03_QUANTLENS/strategies/<id>/...), not under mtc_v2_root.
+    # See MTC_COMMAND_CENTER/11_TRIAGE/OVERNIGHT_LANE_V_DASHBOARD_PATH_MODEL_DECISION_2026-09-07.md
+    # (rows 18/20, Group B) for the confirmed migrated location.
+    promoted_root = default_quantlens_root(mcc_root) / "strategies"
     if not promoted_root.exists():
         return {}
 
@@ -58,7 +74,7 @@ def _compile_observations(mtc_v2_root: Path) -> dict[str, dict[str, Any]]:
             "candidate_id": candidate_id,
             "compile_status": compile_status,
             "chart_status": chart_status,
-            "compile_observation_path": _relative_to_mtc(plan_path, mtc_v2_root),
+            "compile_observation_path": _relative_to_mtc(plan_path, mcc_root),
             "updated_at": _timestamp(plan_path.stat().st_mtime),
         }
     return observations

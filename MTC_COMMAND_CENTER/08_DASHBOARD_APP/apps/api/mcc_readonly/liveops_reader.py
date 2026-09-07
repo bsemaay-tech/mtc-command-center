@@ -5,15 +5,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .paths import canonicalize, default_mcc_root, load_path_config, resolve_configured_path
+from .paths import canonicalize, default_mcc_root, default_quantlens_root
 
 
 def build_liveops_status(mcc_root: str | Path | None = None) -> dict[str, Any]:
     root = canonicalize(mcc_root or default_mcc_root())
     status = _read_status_file(root / "03_STATUS" / "LIVEOPS_STATUS.json")
-    path_config = load_path_config(root)
-    mtc_v2_root = resolve_configured_path(path_config.config, "mtc_v2_root")
-    paper_plans = _paper_trade_plans(mtc_v2_root) if mtc_v2_root and mtc_v2_root.exists() else []
+    # Promoted-strategy plan discovery reads from the migrated QuantLens root
+    # (03_QUANTLENS/strategies/<id>/...) and no longer depends on mtc_v2_root
+    # at all, so it is called unconditionally rather than gated on
+    # mtc_v2_root being configured/existing. See
+    # MTC_COMMAND_CENTER/11_TRIAGE/OVERNIGHT_LANE_X_PLAN_READS_UNGUARDED_2026-09-07.md.
+    paper_plans = _paper_trade_plans(root)
     safety_gates = _safety_gates(status)
 
     return {
@@ -55,8 +58,13 @@ def _read_status_file(path: Path) -> dict[str, Any]:
     return raw if isinstance(raw, dict) else {}
 
 
-def _paper_trade_plans(mtc_v2_root: Path) -> list[dict[str, Any]]:
-    promoted_root = mtc_v2_root / "06_QUANTLENS_LAB" / "06_PROMOTED_TO_PARITY"
+def _paper_trade_plans(mcc_root: Path) -> list[dict[str, Any]]:
+    # Promoted-strategy plan docs (FORWARD_PAPER_TRADE_PLAN.md) live under the
+    # migrated QuantLens root (03_QUANTLENS/strategies/<id>/...), not under
+    # mtc_v2_root. See
+    # MTC_COMMAND_CENTER/11_TRIAGE/OVERNIGHT_LANE_V_DASHBOARD_PATH_MODEL_DECISION_2026-09-07.md
+    # (rows 18/20, Group B) for the confirmed migrated location.
+    promoted_root = default_quantlens_root(mcc_root) / "strategies"
     if not promoted_root.exists():
         return []
 
@@ -71,7 +79,7 @@ def _paper_trade_plans(mtc_v2_root: Path) -> list[dict[str, Any]]:
                 "webhook_enabled": False,
                 "title": _markdown_title(path),
                 "source_path": str(path),
-                "relative_path": _relative_to_mtc(path, mtc_v2_root),
+                "relative_path": _relative_to_mtc(path, mcc_root),
                 "updated_at": _timestamp(stat.st_mtime),
             }
         )
