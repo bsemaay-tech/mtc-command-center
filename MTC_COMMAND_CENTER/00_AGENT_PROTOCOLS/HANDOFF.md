@@ -38,10 +38,13 @@
   (Python 3.12)` — and `WP-P0-27` is still the carrier for progressive CI activation.
 - **Nothing is accepted, and nothing here claims to be.** No exact audit ran; the container
   cannot reach the audit models.
-- **NEXT ACTION:** bring `WP-P0-12` `CORRECTED_VNEXT` into this repository. Five of the
-  seven outstanding rows resolve behind it and `dependent_disposition` moves from proposed
-  to performed with it. Then run `check_p020_acceptance.py` and work whatever it still
-  reports.
+- **NEXT ACTION:** bring the Windows-host `P012` packet into this repository — **not** a
+  fresh kernel start here. `11_TRIAGE/WP_P0_12_SCOPE_ASSESSMENT_2026-09-07.md` measures why:
+  the `mtc_v2/core` seed is present, but four of P0-12's eight outputs are absent from it —
+  fees, funding, in-path slippage and gap-aware stop fills — and those four are **exactly**
+  the checklist's REQUIRED tier, five for five with the allocator. Writing them here would
+  collide with whatever that packet holds, in the scope where silent divergence costs most.
+  Then run `check_p020_acceptance.py` and work whatever it still reports.
 - **WAITING FOR OWNER:** the WP-P0-12 import from the Windows host. Nothing else.
 
 ## History
