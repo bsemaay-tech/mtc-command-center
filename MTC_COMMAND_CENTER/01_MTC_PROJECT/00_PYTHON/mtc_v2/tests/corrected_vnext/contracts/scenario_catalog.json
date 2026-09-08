@@ -1995,14 +1995,14 @@
   ],
   "input": {
    "path": "tests/corrected_vnext/contracts/inputs/RULE2-08-RED.json",
-   "digest": "4bc3cc7402e1eb8dde4416fd698a9d2a46b5477aa9d5e7a10061aa7f8b281c4d",
+   "digest": "2afadcebad9f265e4ea171e1359090d5530cdd17ad04b51a1dc70f1675feef3f",
    "digest_reason": "digest re-pinned by W321 after M1 (owner decisions 137/144) amended the cost_schedule_id/cost_schedule_sha256 members from null to the RULE2-07 cost record by reference; Design v1.15 section 14, \"= abs(100 × 1 × 1\"; Design v1.15 section 14, \"= abs(100 × 1 × 1\"; Design v1.15 section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\"; Design v1.15 section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\"; Design v1.15 section 22.6, \"s `EXACT_IDENTITY_V1` rounding, zero fixed/minimum\"; Design v1.15 section 23.5, \"RULE2-07-RED/GREEN and RULE2-08-RED under owner\"."
   },
   "expected_artifacts": {
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-08-RED.json",
-    "digest": "d6f9ee20d054263188c845f7aead6e2188c60f98789ed63fedd4b22c16c63002"
+    "digest": "dcbbb91d70cd40b0f83dfedbfd4cc37b3cadfca5b9d85ab93b0b442aafc73f54"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
@@ -2123,14 +2123,14 @@
   ],
   "input": {
    "path": "tests/corrected_vnext/contracts/inputs/RULE2-08-GREEN.json",
-   "digest": "6c349e8bf180e63dddb34834aa13098f9d723aecdff6b02d328aa6b55996a939",
+   "digest": "3a193160ffc2d70f0687e92dbaab43b7e0a280c12617c4d9ffaace50876f978b",
    "digest_reason": "digest re-pinned by W321 after M1 (owner decisions 137/144) amended the cost_schedule_id/cost_schedule_sha256 members from null to the RULE2-07 cost record by reference; Design v1.15 section 14, \"record `SYNTH-COST-RULE2-07-RED-V1` (sha256 `806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b`) and RULE2-08-GREEN consumes `SYNTH-COST-RULE2-07-GREEN-V1` (sha256 `040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe`), bound BY REFERENCE to the existing\"; Design v1.15 section 14, \"record `SYNTH-COST-RULE2-07-RED-V1` (sha256 `806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b`) and RULE2-08-GREEN consumes `SYNTH-COST-RULE2-07-GREEN-V1` (sha256 `040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe`), bound BY REFERENCE to the existing\"; Design v1.15 section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\"; Design v1.15 section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\"; Design v1.15 section 22.6, \"rounding, zero fixed/minimum, and zero\"; Design v1.15 section 23.5, \"RULE2-07-RED/GREEN and RULE2-08-RED under owner\"."
   },
   "expected_artifacts": {
    "2.0.0": {
     "producer_id": "CONTRACT_TABLES",
     "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
-    "digest": "7e3b886e4899472c0a92c921f8e27e8c172e46d4bb7c8e29ff6c1314aab4ee69"
+    "digest": "c7b0dad5e0869039705fa9d167fbf4a497cd54fd8dfb7c732d78523d9631056a"
    },
    "1.0.0": {
     "producer_id": "BASELINE_BYTES",
