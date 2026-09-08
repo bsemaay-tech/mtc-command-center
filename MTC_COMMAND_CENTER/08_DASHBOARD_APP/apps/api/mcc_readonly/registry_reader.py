@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .paths import canonicalize, default_mcc_root, default_quantlens_root, load_path_config, resolve_configured_path
+from .paths import canonicalize, default_mcc_root, default_quantlens_root
 
 
 _YOUTUBE_URL_RE = re.compile(
@@ -20,13 +20,7 @@ def build_strategy_registry(mcc_root: str | Path | None = None) -> dict[str, Any
     root = canonicalize(mcc_root or default_mcc_root())
     quantlens_root = default_quantlens_root(root)
     if not quantlens_root.exists():
-        path_config = load_path_config(root)
-        mtc_v2_root = resolve_configured_path(path_config.config, "mtc_v2_root")
-        if mtc_v2_root is None:
-            return _empty_registry("mtc_v2_root_not_configured")
-        quantlens_root = mtc_v2_root / "06_QUANTLENS_LAB"
-        if not quantlens_root.exists():
-            return _empty_registry(str(quantlens_root))
+        return _empty_registry(str(quantlens_root))
 
     candidates = _read_candidates(quantlens_root)
     strategies = _read_promoted_strategies(quantlens_root)
@@ -56,6 +50,10 @@ def _read_candidate_csv(path: Path, quantlens_root: Path) -> list[dict[str, Any]
         header = next(reader, [])
         for fields in reader:
             row = _candidate_csv_row(header, fields)
+            if row is None:
+                # Malformed row whose repair didn't land on the header's
+                # column count: fail closed rather than zip a misaligned row.
+                continue
             candidates.append(_candidate_from_row(row, path, quantlens_root))
     return candidates
 
@@ -136,16 +134,39 @@ def _candidate_from_row(row: dict[str, Any], source_path: Path, quantlens_root: 
 
 
 def _source_url_from_candidate_folder(folder: str, quantlens_root: Path) -> str:
+    # Gate-5 F1 (2026-09-07): the folder value comes from registry CSV data. It is
+    # resolved only under the canonical QuantLens root; a value that escapes that
+    # root (absolute path, ".." traversal, legacy sibling tree under mcc_root) is
+    # ignored instead of being read.
     if not folder:
         return ""
+    base = _contained_candidate_folder(folder, quantlens_root)
+    if base is None or not base.exists():
+        return ""
+    return _first_youtube_url_in_dir(base)
+
+
+def _contained_candidate_folder(folder: str, quantlens_root: Path) -> Path | None:
+    """Resolve a registry `candidate_folder` cell to a directory under the QuantLens root.
+
+    Accepted forms: relative to the QuantLens root (`01_TRIAGED_CANDIDATES/QL_X`) or
+    relative to `mcc_root` but still inside the QuantLens root
+    (`03_QUANTLENS/01_TRIAGED_CANDIDATES/QL_X`). Absolute paths, `..` traversal and any
+    other `mcc_root` sibling (e.g. the retired legacy lab tree) resolve to None.
+    """
     rel = Path(folder)
-    candidate_roots = [quantlens_root / rel, quantlens_root.parent / rel]
-    for base in candidate_roots:
-        if base.exists():
-            url = _first_youtube_url_in_dir(base)
-            if url:
-                return url
-    return ""
+    if rel.is_absolute():
+        return None
+    root = canonicalize(quantlens_root)
+    for base in (root, root.parent):
+        candidate = canonicalize(base / rel)
+        try:
+            candidate.relative_to(root)
+        except ValueError:
+            continue
+        if candidate.exists():
+            return candidate
+    return None
 
 
 def _first_youtube_url_in_dir(path: Path) -> str:
@@ -177,7 +198,7 @@ def _normalize_source_url(value: Any) -> str:
     return url
 
 
-def _candidate_csv_row(header: list[str], fields: list[str]) -> dict[str, Any]:
+def _candidate_csv_row(header: list[str], fields: list[str]) -> dict[str, Any] | None:
     if len(fields) <= len(header):
         return dict(zip(header, fields))
 
@@ -186,6 +207,12 @@ def _candidate_csv_row(header: list[str], fields: list[str]) -> dict[str, Any]:
     repaired = fields[:12]
     repaired.append(",".join(field.strip() for field in fields[12:-4]))
     repaired.extend(fields[-4:])
+    if len(repaired) != len(header):
+        # The repair didn't land on the header's shape (e.g. the header has
+        # drifted from the 12-leading/4-trailing layout this split assumes).
+        # Fail closed instead of zipping a row that would silently drop or
+        # misalign columns.
+        return None
     return dict(zip(header, repaired))
 
 
