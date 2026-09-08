@@ -12,9 +12,9 @@
  },
  "design": {
   "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.24",
-  "sha256": "d071a13f7b122c52ea022e1f6cfd825d9b4916c1729155b12d5e5a68f0e57dea",
-  "total_lines": 2025,
+  "version": "v1.25",
+  "sha256": "c4bb6f67d9dd736725ee0731659b8fc1939f21ac907e4b8a7d6c94ca7dcdec9b",
+  "total_lines": 2072,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
@@ -52,6 +52,9 @@
   },
   "heading_line_map_addition_measured_at_reseal28": {
    "23.21 v1.24 change log - SYNTHETIC_ONLY milestone scope and Item-4 disposition": 1897
+  },
+  "heading_line_map_addition_measured_at_reseal30": {
+   "23.22 v1.25 change log - funding valuation member renamed to `oracle_price`": 2027
   }
  },
  "repository_evidence_identity": {
