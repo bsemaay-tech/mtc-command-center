@@ -581,7 +581,7 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
-  "IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
+  "IMPLEMENTATION_BASE_SHA": "94a0a568f5257f04940de28fc984ac893af3753a",
   "reason": "Re-seal #29 candidate: the D8 import moved core/runner.py and the capture-interval repair moved the HYPERLIQUID cost record, so the core tree left 68127b2d2111e4869d23c7b71a0695c6cea816ba and the nine KERNEL probe modified copies no longer derived from it. Each of the nine copies was re-derived by applying its own recorded modification.patch to a fresh copy of the current core tree 13e1f7788318f51df7e319f601b3f66eb703b816; the recorded before_hunk and after_hunk were re-measured against the derived bytes and no recorded modification was rewritten. scenario_catalog.json alone changed among the 19 sealed members, carrying the eighteen re-measured probe digest pins. No golden, observed artifact, economic value, production fact, design, threshold, or Item-4 disposition changed. Base C29 is provisional; NONACCEPTED until forward repin F29."
  },
  "section_16_review": {
@@ -592,7 +592,7 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
-  "IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
+  "IMPLEMENTATION_BASE_SHA": "94a0a568f5257f04940de28fc984ac893af3753a",
   "set_by": "R29 re-seal #29 candidate, 2026-09-08T11:34:12+03:00"
  },
  "reseal_history": [
