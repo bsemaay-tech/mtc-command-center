@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .paths import canonicalize, default_mcc_root
+from .paths import canonicalize, default_mcc_root, load_path_config, resolve_configured_path
 from .presentation_reader import action_hint
 
 
@@ -15,7 +15,8 @@ def build_mtc_v2_readiness(
     candidate_audit: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     root = canonicalize(mcc_root or default_mcc_root())
-    mtc_root = root.parent / "01_MASTER TEMPLATE_V2"
+    path_config = load_path_config(root)
+    mtc_root = resolve_configured_path(path_config.config, "mtc_v2_root")
     pipeline_rows = (candidate_pipeline or {}).get("rows", []) or []
     audit_rows = (candidate_audit or {}).get("rows", []) or []
     audit_by_id = {str(row.get("id") or ""): row for row in audit_rows}
@@ -33,15 +34,17 @@ def build_mtc_v2_readiness(
         status_counts[status] = status_counts.get(status, 0) + 1
 
     parity_meta = _read_mtc_v2_parity(mtc_root)
+    pine_path = mtc_root / "01_PINE" / "MTC_V2.pine" if mtc_root is not None else None
+    architecture_path = mtc_root / "03_DOCS" / "MTC_V2_ARCHITECTURE.md" if mtc_root is not None else None
     return {
         "schema_version": "1.0",
         "mode": "read_only",
         "source": "Pipeline + Audit + MTC_V2 parity tracker",
-        "mtc_v2_root": str(mtc_root),
-        "pine_path": str(mtc_root / "01_PINE" / "MTC_V2.pine"),
-        "pine_exists": (mtc_root / "01_PINE" / "MTC_V2.pine").exists(),
-        "architecture_path": str(mtc_root / "03_DOCS" / "MTC_V2_ARCHITECTURE.md"),
-        "architecture_exists": (mtc_root / "03_DOCS" / "MTC_V2_ARCHITECTURE.md").exists(),
+        "mtc_v2_root": str(mtc_root) if mtc_root is not None else "",
+        "pine_path": str(pine_path) if pine_path is not None else "",
+        "pine_exists": bool(pine_path is not None and pine_path.exists()),
+        "architecture_path": str(architecture_path) if architecture_path is not None else "",
+        "architecture_exists": bool(architecture_path is not None and architecture_path.exists()),
         "parity_tracker": parity_meta,
         "summary": {
             "total_rows": len(rows),
@@ -242,7 +245,9 @@ def _calibration_note(status_counts: dict[str, int]) -> str:
     return f"{ready} strategy candidate(s) are ready for read-only MTC_V2 review."
 
 
-def _read_mtc_v2_parity(mtc_root: Path) -> dict[str, Any]:
+def _read_mtc_v2_parity(mtc_root: Path | None) -> dict[str, Any]:
+    if mtc_root is None:
+        return {"path": "", "exists": False, "total_cases": 0, "pass_cases": 0}
     tracker = mtc_root / "05_PARITY" / "MTC_V2_PARITY_CASES.csv"
     if not tracker.exists():
         return {"path": str(tracker), "exists": False, "total_cases": 0, "pass_cases": 0}

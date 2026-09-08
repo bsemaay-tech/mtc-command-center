@@ -223,7 +223,7 @@ def _read_pinets_result(promoted_dir: Path, strategy_id: str) -> dict | None:
     if not p.exists():
         return None
     try:
-        return json.loads(p.read_text(encoding="utf-8"))
+        return json.loads(p.read_text(encoding="utf-8-sig"))
     except Exception:
         return None
 
@@ -233,7 +233,7 @@ def _read_producer_spec(promoted_dir: Path, strategy_id: str) -> dict:
     if not p.exists():
         return {}
     try:
-        raw = json.loads(p.read_text(encoding="utf-8"))
+        raw = json.loads(p.read_text(encoding="utf-8-sig"))
     except Exception:
         return {}
     return raw if isinstance(raw, dict) else {}
@@ -279,7 +279,7 @@ def _iter_producer_specs(promoted_dir: Path) -> list[tuple[str, dict]]:
         return specs
     for path in sorted(promoted_dir.glob("*/producer_spec.json")):
         try:
-            raw = json.loads(path.read_text(encoding="utf-8"))
+            raw = json.loads(path.read_text(encoding="utf-8-sig"))
         except Exception:
             continue
         if isinstance(raw, dict):
@@ -321,7 +321,7 @@ def _equity_curve(promoted_dir: Path, strategy_id: str, max_points: int = 60) ->
     try:
         eq = 100.0
         series = [eq]
-        with p.open("r", encoding="utf-8", newline="") as fh:
+        with p.open("r", encoding="utf-8-sig", newline="") as fh:
             for row in csv.DictReader(fh):
                 try:
                     r = float(row.get("ret_net_pct", "") or 0.0)
@@ -373,7 +373,7 @@ def _read_forward_results(strategy_dir: Path) -> dict | None:
     )
     for path in json_matches:
         try:
-            raw = json.loads(path.read_text(encoding="utf-8"))
+            raw = json.loads(path.read_text(encoding="utf-8-sig"))
         except Exception:
             continue
         if isinstance(raw, dict):
@@ -415,7 +415,7 @@ def _forward_metric_summary(raw: dict[str, Any]) -> dict[str, Any]:
 
 def _forward_csv_summary(path: Path) -> dict[str, Any] | None:
     try:
-        rows = list(csv.DictReader(path.open("r", encoding="utf-8", newline="")))
+        rows = list(csv.DictReader(path.open("r", encoding="utf-8-sig", newline="")))
     except Exception:
         return None
     if not rows:
@@ -442,7 +442,7 @@ def _compound_returns(returns_pct: list[float]) -> float:
 
 def _paper_plan_summary(path: Path) -> list[str]:
     try:
-        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        lines = path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
     except Exception:
         return []
     picked = []
@@ -458,7 +458,7 @@ def _paper_plan_summary(path: Path) -> list[str]:
 
 def _markdown_title(path: Path) -> str | None:
     try:
-        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        for line in path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
             stripped = line.strip()
             if stripped.startswith("#"):
                 return stripped.lstrip("#").strip() or path.stem
@@ -619,7 +619,7 @@ def _discover_extra_quantlens_candidates(mcc_root: str | Path, known_ids: set[st
 def _iter_jsonl(path: Path) -> list[dict[str, Any]]:
     items = []
     try:
-        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        lines = path.read_text(encoding="utf-8-sig", errors="replace").splitlines()
     except Exception:
         return items
     for line in lines:
@@ -746,7 +746,7 @@ def _source_file_candidates(source_file: str, root: Path) -> list[Path]:
 
 def _first_youtube_url(path: Path) -> str:
     try:
-        text = path.read_text(encoding="utf-8", errors="ignore")
+        text = path.read_text(encoding="utf-8-sig", errors="ignore")
     except Exception:
         return ""
     match = re.search(r"https?://(?:www\.)?(?:youtube\.com/watch\?v=[^\s<>\")]+|youtu\.be/[^\s<>\")]+)", text, re.IGNORECASE)
