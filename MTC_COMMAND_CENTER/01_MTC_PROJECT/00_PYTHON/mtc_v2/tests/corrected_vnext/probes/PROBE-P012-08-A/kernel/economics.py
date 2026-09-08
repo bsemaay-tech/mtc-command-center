@@ -1167,11 +1167,11 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
                 decisions=(*prefix, decision),
             )
         multiplier = float(records.instrument.contract_multiplier)
-        mark_price = float(event["mark_price"])
+        oracle_price = float(event["oracle_price"])
         raw_rate = float(event["raw_rate"])
         long_rate = raw_rate if payer == "LONG" else -raw_rate
         side_factor = 1.0 if state.position_side == "LONG" else -1.0
-        notional = abs(mark_price * state.quantity * multiplier)
+        notional = abs(oracle_price * state.quantity * multiplier)
         signed = notional * long_rate * side_factor
         cumulative = state.cumulative_funding + signed
         funding_sequence = state.next_funding_sequence
@@ -1194,7 +1194,7 @@ class CorrectedEconomicsAdapter(ExecutionEconomics):
             position_side=str(state.position_side),
             open_qty=state.quantity,
             contract_multiplier=multiplier,
-            mark_price=mark_price,
+            oracle_price=oracle_price,
             raw_rate=raw_rate,
             positive_rate_payer=payer,
             long_cashflow_rate=long_rate,

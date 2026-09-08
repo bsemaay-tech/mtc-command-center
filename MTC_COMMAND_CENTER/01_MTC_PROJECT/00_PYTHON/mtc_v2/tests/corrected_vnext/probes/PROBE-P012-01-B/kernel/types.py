@@ -112,7 +112,7 @@ class FundingEvent:
     position_side: str
     open_qty: float
     contract_multiplier: float
-    mark_price: float
+    oracle_price: float
     raw_rate: float
     positive_rate_payer: str
     long_cashflow_rate: float
