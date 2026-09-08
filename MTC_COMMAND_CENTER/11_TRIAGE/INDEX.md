@@ -425,6 +425,7 @@
 | `OWNER_DECISIONS_BRIDGE_V2_BACKLOG_NIGHT_2026-08-17.md` | 2026-08-17 | Owner Decisions — Bridge V2 Backlog Overnight Run — 2026-08-17 (evening) | **Recorded by:** Claude (Fable) Lead session, direct owner Q&A in chat before overnight autonomous run. |
 | `OWNER_MASTER_PLAN_2026-08-22.md` | 2026-08-22 | OWNER MASTER PLAN | **Date:** 2026-08-22 |
 | `OWNER_REVIEW_CAP_DECISION_PACKET_2026-08-17.md` | 2026-08-17 | Owner Decision Packet — Capped Documentation Reviews | **Date:** 2026-08-17 |
+| `P020_P030_CONTAINER_QA_REVERIFICATION_2026-09-07.md` | 2026-09-07 | P0-20 / P0-30 checker re-verification on the merged base — 2026-09-07 | Independent re-run of the two checkers PR #161 landed, performed by the Claude Lead in the remote |
 | `P1_V2_ARCHITECTURE_CONTRACT_PACK_2026-08-17.md` | 2026-08-17 | Package 1 — V2 Architecture Contract Pack (T2, documentation only) | **Date:** 2026-08-17 (night) · **Implementer:** GLM-5.3 (sub-delegated) |
 | `P2_DATA_RESTORE_TIMEOUT_REPORT_2026-07-16.md` | 2026-07-16 | P2 Data-Restore Timeout Build Report — 2026-07-16 | **BUILD + TESTS PASS; DEPLOYMENT LOCKED FOR FABLE AUDIT.** Approved commit `79976577` |
 | `P2_DAY0_V4_DEPLOY_REPORT_2026-07-15.md` | 2026-07-15 | P2 Day 0 v4 Deploy + Task 6 Merge Report — 2026-07-15 | Status: **TASK 5 PASS. TASK 6 STOPPED AT THE EXPLICIT OUT-OF-SCOPE CONFLICT GATE.** |
@@ -656,6 +657,7 @@
 | `WP_P0_11_GATE_2026-08-28/test_producer_discrimination_matrix.py` | - | test producer discrimination matrix | from __future__ import annotations |
 | `WP_P0_11_GATE_2026-08-28/test_scenario_binding.py` | - | test scenario binding | from __future__ import annotations |
 | `WP_P0_11_GATE_2026-08-28/test_stage3_oracles.py` | - | test stage3 oracles | from __future__ import annotations |
+| `WP_P0_12_SCOPE_ASSESSMENT_2026-09-07.md` | 2026-09-07 | WP-P0-12 scope assessment — what the lifted STOP actually opened | Read-only assessment written the night `OD-20260907-1` lifted the WP-P0-11 / WP-P0-12 STOP, |
 | `WP_P0_15_FRESHNESS_2026-08-24/CLEAN_WORKTREE_PROCEDURE.md` | - | Verified Clean Isolated Worktree Procedure | Use this procedure when an agent must start from a named commit without disturbing an existing |
 | `WP_P0_15_FRESHNESS_2026-08-24/LANE_REPORT.md` | - | Lane B Report — WP-P0-15 Branch Freshness | Implementation and implementer self-QA are complete. Audit tier is **T1**, fixed by the accepted |
 | `WP_P0_15_FRESHNESS_2026-08-24/RED_GREEN_EVIDENCE.md` | - | WP-P0-15 D026 RED/GREEN Evidence | Date: 2026-08-24. All commands were executed locally and offline. The source worktree was |
@@ -674,6 +676,8 @@
 | `WP_P0_18_CHART_POC_2026-08-25/poc/qa_browser.mjs` | - | qa browser | MJS file |
 | `WP_P0_19_PINE_DEFANG_DESIGN_2026-08-25/LANE_REPORT.md` | - | Lane V — WP-P0-19 implementer report | **Status:** DONE — implementer design and self-QA complete; Lead-owned T2 review/acceptance |
 | `WP_P0_19_PINE_DEFANG_DESIGN_2026-08-25/PINE_DEFANG_T0_AUTHORIZATION_PACKAGE.md` | - | WP-P0-19 — Pine de-fang T0 authorization package | **Date:** 2026-08-25 |
+| `WP_P0_20_ALLOCATOR_STAGES_2026-09-07/LANE_REPORT.md` | - | WP-P0-20 · allocator stages lane report — 2026-09-07 | Claude Lead, remote Linux container, branch `claude/oauth-token-expired-bocby8` from |
+| `WP_P0_20_DEPENDENT_TOOL_DISPOSITION.md` | - | WP-P0-20 · dependent-tool disposition — per tool, per class | **Status: PROPOSED, not PERFORMED.** The acceptance gate wants a record of what each |
 | `WP_P0_23_PINE_DEFANG_2026-08-25/LANE_REPORT.md` | - | WP-P0-23 Pine de-fang — Lane AC implementer report | **Date:** 2026-08-25 |
 | `WP_P0_24_OSS_LEDGER_2026-08-24/DEPENDENCY_LEDGER.md` | - | WP-P0-24 append-only dependency ledger | **Created:** 2026-08-24 |
 | `WP_P0_24_OSS_LEDGER_2026-08-24/LANE_REPORT.md` | - | Lane D report — WP-P0-24 OSS lifecycle policy and ledger | **Status:** **LANE D DONE — implementer package complete; T1 Lead acceptance remains Lead-owned.** |
