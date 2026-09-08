@@ -5067,7 +5067,7 @@ clean). Every recomputed record hash matched its one-line sidecar.
 |---|---|---|
 | instruments/SYNTH-INSTRUMENT-RULE2-08-RED-V1.json | 1316ce06307a6fbf01fa7c007146df2bf7525bed385fbbf0045d29129d9f7a71 | RED instrument_record_digest; marker replaced |
 | instruments/SYNTH-INSTRUMENT-RULE2-08-GREEN-V1.json | 20adf2749d255efd3fe281ec3ead2e07df0a36a5ad59718a54d0a1a7c0712b17 | GREEN instrument_record_digest; marker replaced |
-| funding/SYNTH-FUNDING-RULE2-08-V1.json | aa4eaa939a83af1faa768eed82a2cd0216c26fccfb335240d05c5b1f7069d26d | RED funding row schedule_digest and both manifest funding_schedule_digest nodes; markers replaced |
+| funding/SYNTH-FUNDING-RULE2-08-V1.json | 218aa518fec19ca53430891c8b445b6fba27d58c57aeaa0e5c819ec4e9ab9e73 | RED funding row schedule_digest and both manifest funding_schedule_digest nodes; markers replaced |
 | costs/SYNTH-COST-RULE2-07-RED-V1.json | 806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b | Confirms RED decision-144 cost binding at Design section 14, "sha256 `040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe`), bound BY REFERENCE to the existing sealed RULE2-07 cost records under" and Design section 22.1, "members are JSON `null` only for RULE2-08, where section"; proposed run-manifest child stopped below |
 | costs/SYNTH-COST-RULE2-07-GREEN-V1.json | 040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe | Confirms GREEN decision-144 cost binding at Design section 14, "sha256 `040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe`), bound BY REFERENCE to the existing sealed RULE2-07 cost records under" and Design section 22.1, "members are JSON `null` only for RULE2-08, where section"; proposed run-manifest child stopped below |
 
