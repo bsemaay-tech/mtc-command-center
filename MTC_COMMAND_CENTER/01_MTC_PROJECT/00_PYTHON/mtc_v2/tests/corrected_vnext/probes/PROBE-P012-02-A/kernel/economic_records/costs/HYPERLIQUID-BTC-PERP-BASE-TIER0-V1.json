@@ -1,5 +1,9 @@
 {
   "admission_status": "REFUSED_INCOMPLETE_COST_SCHEDULE",
+  "effective_interval": {
+    "start_inclusive": "2026-09-06T14:00:30Z",
+    "end_exclusive": null
+  },
   "liquidity_roles": {
     "MARKET_ENTRY": "TAKER",
     "MARKET_EXIT_FILTER_BLOCK": "TAKER",
@@ -33,7 +37,6 @@
     "MARGIN_CALL_LIQUIDATION": "CANNOT_MAP_NO_FROZEN_LIQUIDATION_FEE_SEMANTICS"
   },
   "refused_missing_fields": [
-    "effective_interval",
     "fee_rounding_rule",
     "fixed_component",
     "minimum_fee",

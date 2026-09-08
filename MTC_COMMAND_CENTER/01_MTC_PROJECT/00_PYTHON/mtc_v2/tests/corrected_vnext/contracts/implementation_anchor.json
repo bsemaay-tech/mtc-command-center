@@ -1,9 +1,9 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+ "EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
  "IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
- "core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+ "core_tree_oid_at_base": "13e1f7788318f51df7e319f601b3f66eb703b816",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
@@ -199,6 +199,14 @@
    "old_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
    "new_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
    "reason": "Re-seal #28 candidate under OD-20260906-2: design v1.24 adds the SYNTHETIC_ONLY non-production milestone scope and its Section-16 Item-4 disposition rule. Design only; no sealed manifest member, core, golden, observed artifact, probe, economic value, production fact, threshold, or behavior changed. The existing seal recipe was recomputed and is unchanged. Base C28 is provisional; NONACCEPTED until forward repin F28.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-08T11:34:12+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #29 candidate",
+   "old_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "new_EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+   "reason": "Re-seal #29 candidate: the nine KERNEL probe modified copies were re-derived from core tree 13e1f7788318f51df7e319f601b3f66eb703b816 by applying each probe's own recorded modification.patch to a fresh copy of the current core; scenario_catalog.json alone changed among the 19 sealed members, carrying the eighteen re-measured probe digest pins. No golden, observed artifact, economic value, production fact, design, threshold, or Item-4 disposition changed. Base C29 is provisional; NONACCEPTED until forward repin F29.",
    "independently_verified": "pending Lead and required audits"
   }
  ],

@@ -76,7 +76,7 @@
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "de02ab8fdb10463a510b272b6959eb80f826a94b25cf936822a43e096fe757d3",
+   "sha256": "6e5eb01be81db74d53b7c48b39789cc979dad32290aa7099993ab34984cd8734",
    "bytes": 101675
   },
   {
@@ -580,9 +580,9 @@
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+  "EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
   "IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
-  "reason": "Re-seal #28 candidate under OD-20260906-2: design v1.24 adds the SYNTHETIC_ONLY non-production milestone scope and its Section-16 Item-4 disposition rule. Design only; no sealed manifest member, core, golden, observed artifact, probe, economic value, production fact, threshold, or behavior changed. The existing seal recipe was recomputed and is unchanged. Base C28 is provisional; NONACCEPTED until forward repin F28. Decision-147 forward repin completed separately at F28; active base is exact re-seal commit M28."
+  "reason": "Re-seal #29 candidate: the D8 import moved core/runner.py and the capture-interval repair moved the HYPERLIQUID cost record, so the core tree left 68127b2d2111e4869d23c7b71a0695c6cea816ba and the nine KERNEL probe modified copies no longer derived from it. Each of the nine copies was re-derived by applying its own recorded modification.patch to a fresh copy of the current core tree 13e1f7788318f51df7e319f601b3f66eb703b816; the recorded before_hunk and after_hunk were re-measured against the derived bytes and no recorded modification was rewritten. scenario_catalog.json alone changed among the 19 sealed members, carrying the eighteen re-measured probe digest pins. No golden, observed artifact, economic value, production fact, design, threshold, or Item-4 disposition changed. Base C29 is provisional; NONACCEPTED until forward repin F29."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -591,9 +591,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+  "EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
   "IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
-  "set_by": "R28 re-seal #28 candidate, 2026-09-06T13:38:41+03:00"
+  "set_by": "R29 re-seal #29 candidate, 2026-09-08T11:34:12+03:00"
  },
  "reseal_history": [
   {
@@ -1145,6 +1145,18 @@
    ],
    "design_pin": "v1.24",
    "reason": "Re-seal #28 candidate under OD-20260906-2: design v1.24 adds the SYNTHETIC_ONLY non-production milestone scope and its Section-16 Item-4 disposition rule. Design only; no sealed manifest member, core, golden, observed artifact, probe, economic value, production fact, threshold, or behavior changed. The existing seal recipe was recomputed and is unchanged. Base C28 is provisional; NONACCEPTED until forward repin F28.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-08T11:34:12+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #29 candidate",
+   "old_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "new_EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.24",
+   "reason": "Re-seal #29 candidate: the D8 import moved core/runner.py and the capture-interval repair moved the HYPERLIQUID cost record, so the core tree left 68127b2d2111e4869d23c7b71a0695c6cea816ba and the nine KERNEL probe modified copies no longer derived from it. Each of the nine copies was re-derived by applying its own recorded modification.patch to a fresh copy of the current core tree 13e1f7788318f51df7e319f601b3f66eb703b816; the recorded before_hunk and after_hunk were re-measured against the derived bytes and no recorded modification was rewritten. scenario_catalog.json alone changed among the 19 sealed members, carrying the eighteen re-measured probe digest pins. No golden, observed artifact, economic value, production fact, design, threshold, or Item-4 disposition changed. Base C29 is provisional; NONACCEPTED until forward repin F29.",
    "independently_verified": "pending Lead and required audits"
   }
  ],
