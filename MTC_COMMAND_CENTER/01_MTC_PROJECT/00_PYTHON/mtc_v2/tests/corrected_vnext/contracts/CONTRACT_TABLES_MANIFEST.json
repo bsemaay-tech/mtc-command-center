@@ -17,7 +17,7 @@
   "total_lines": 2025,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
-   "v1.3 change log \u2014 DS15 fold + owner rulings 2026-08-31": 7,
+   "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
    "1. Authority, claim, and design posture": 24,
    "2. Deep module and seam": 35,
    "3. Exact ordering for `2.0.0`": 102,
@@ -36,13 +36,13 @@
    "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 798,
    "17. Honest limits": 811,
    "18. Build-lane work breakdown and shape census": 868,
-   "19. Single consolidated `[OPEN \u2014 owner-gated]` ledger": 891,
+   "19. Single consolidated `[OPEN — owner-gated]` ledger": 891,
    "20. Defect-class prevention table": 908,
    "21. Required build preconditions and non-goals": 928,
-   "v1.4 change log \u2014 micro-fold (owner 2026-08-31 \"design a\")": 940,
+   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 940,
    "22. v1.5 input-embedding addendum": 948,
-   "v1.5 change log \u2014 input-embedding addendum (owner 2026-08-31 `1a`)": 1210,
-   "23. v1.8 terminal micro-fold \u2014 v1.7 detector-union repair": 1249
+   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 1210,
+   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1249
   },
   "heading_line_map_addition_measured_at_reseal25": {
    "23.19 v1.22 change log - window-local serialized fill identity": 1864
@@ -71,12 +71,12 @@
  "files": [
   {
    "path": "DERIVATIONS.md",
-   "sha256": "d20fb927f33a32784f1b5174935c5a0d37323188a688e204aad4b35ffffacafc",
-   "bytes": 462089
+   "sha256": "7c31f42a2203411d9a2a9fdefff450632e438430f295ef368b0199c2c5657d5f",
+   "bytes": 462097
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "6e5eb01be81db74d53b7c48b39789cc979dad32290aa7099993ab34984cd8734",
+   "sha256": "b53f6e24433d2230c37b1cbd0a778f157f9bd8305f75aab18724b91d20ce4657",
    "bytes": 101675
   },
   {
@@ -156,13 +156,13 @@
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
-   "sha256": "7e3b886e4899472c0a92c921f8e27e8c172e46d4bb7c8e29ff6c1314aab4ee69",
+   "sha256": "c7b0dad5e0869039705fa9d167fbf4a497cd54fd8dfb7c732d78523d9631056a",
    "bytes": 15024
   },
   {
    "path": "golden/corrected_vnext/RULE2-08-RED.json",
-   "sha256": "d6f9ee20d054263188c845f7aead6e2188c60f98789ed63fedd4b22c16c63002",
-   "bytes": 30092
+   "sha256": "dcbbb91d70cd40b0f83dfedbfd4cc37b3cadfca5b9d85ab93b0b442aafc73f54",
+   "bytes": 30104
   }
  ],
  "byte_discipline": "Every file above is UTF-8 with no BOM, LF line endings and a required final LF, per Design section 14, \"taker 0.001 on its notional\". Every JSON file parses with duplicate-key rejection and contains no non-finite number token. Re-verified by lane W156 over the 18 JSON files it revised or re-read (17 golden artifacts plus scenario_catalog.json): each file was byte-inspected for BOM, CR and final LF, parsed, checked for bare NaN/Infinity/undefined tokens outside string literals, and checked for duplicate keys by comparing the raw key-token count with the parsed property count (equal in every file).",
@@ -580,9 +580,9 @@
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+  "EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
   "IMPLEMENTATION_BASE_SHA": "94a0a568f5257f04940de28fc984ac893af3753a",
-  "reason": "Re-seal #29 candidate: the D8 import moved core/runner.py and the capture-interval repair moved the HYPERLIQUID cost record, so the core tree left 68127b2d2111e4869d23c7b71a0695c6cea816ba and the nine KERNEL probe modified copies no longer derived from it. Each of the nine copies was re-derived by applying its own recorded modification.patch to a fresh copy of the current core tree 13e1f7788318f51df7e319f601b3f66eb703b816; the recorded before_hunk and after_hunk were re-measured against the derived bytes and no recorded modification was rewritten. scenario_catalog.json alone changed among the 19 sealed members, carrying the eighteen re-measured probe digest pins. No golden, observed artifact, economic value, production fact, design, threshold, or Item-4 disposition changed. Base C29 is provisional; NONACCEPTED until forward repin F29."
+  "reason": "Re-seal #30 candidate: owner-approved rename of the funding valuation member from mark_price to oracle_price. The venue documents that funding notional uses the spot oracle price and explicitly NOT the mark price, while the record's own rule already declared valuation_price_source SPOT_ORACLE; the member name contradicted both. The margin-call/liquidation use of mark price in core/runner.py is CORRECT and is deliberately untouched. Four sealed members moved: DERIVATIONS.md, scenario_catalog.json, and the RULE2-08 RED/GREEN goldens. No economic value changed; this is a rename plus the digest cascade it forces. Base C30 is provisional; NONACCEPTED until forward repin F30."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -591,9 +591,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+  "EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
   "IMPLEMENTATION_BASE_SHA": "94a0a568f5257f04940de28fc984ac893af3753a",
-  "set_by": "R29 re-seal #29 candidate, 2026-09-08T11:34:12+03:00"
+  "set_by": "R30 re-seal #30 candidate, 2026-09-08T16:45:00+03:00"
  },
  "reseal_history": [
   {
@@ -1151,12 +1151,27 @@
    "at": "2026-09-08T11:34:12+03:00",
    "actor": "Lead (claude-opus-5), re-seal #29 candidate",
    "old_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
-   "new_EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+   "new_EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
    "files_changed": [
     "scenario_catalog.json"
    ],
    "design_pin": "v1.24",
    "reason": "Re-seal #29 candidate: the D8 import moved core/runner.py and the capture-interval repair moved the HYPERLIQUID cost record, so the core tree left 68127b2d2111e4869d23c7b71a0695c6cea816ba and the nine KERNEL probe modified copies no longer derived from it. Each of the nine copies was re-derived by applying its own recorded modification.patch to a fresh copy of the current core tree 13e1f7788318f51df7e319f601b3f66eb703b816; the recorded before_hunk and after_hunk were re-measured against the derived bytes and no recorded modification was rewritten. scenario_catalog.json alone changed among the 19 sealed members, carrying the eighteen re-measured probe digest pins. No golden, observed artifact, economic value, production fact, design, threshold, or Item-4 disposition changed. Base C29 is provisional; NONACCEPTED until forward repin F29.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-08T16:45:00+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #30 candidate",
+   "old_EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+   "new_EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "scenario_catalog.json",
+    "golden/corrected_vnext/RULE2-08-GREEN.json",
+    "golden/corrected_vnext/RULE2-08-RED.json"
+   ],
+   "design_pin": "v1.24",
+   "reason": "Re-seal #30 candidate: owner-approved rename of the funding valuation member from mark_price to oracle_price. The venue documents that funding notional uses the spot oracle price and explicitly NOT the mark price, while the record's own rule already declared valuation_price_source SPOT_ORACLE; the member name contradicted both. The margin-call/liquidation use of mark price in core/runner.py is CORRECT and is deliberately untouched. Four sealed members moved: DERIVATIONS.md, scenario_catalog.json, and the RULE2-08 RED/GREEN goldens. No economic value changed; this is a rename plus the digest cascade it forces. Base C30 is provisional; NONACCEPTED until forward repin F30.",
    "independently_verified": "pending Lead and required audits"
   }
  ],
@@ -1166,9 +1181,9 @@
   "design_authority": "Design section 15.3, \"an integer `sequence` equal to\" (LEGACY_EVENT_SHAPE_CHECK at expected-bundle seal time)",
   "baseline_manifest": {
    "path": "C:\\tmp\\P012_BASELINE_RUN\\BASELINE_BYTES_MANIFEST.json",
-     "sha256": "c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242",
-     "authorization": "ONE run completed under P012_ONE_EXTRA_COORDINATED_REPAIR=YES, overnight 2050 packet approved 2026-09-05 20:48, re-seal24; 17/17 complete, 0 blocked, all 34 surfaces identical.",
-     "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa"
+   "sha256": "c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242",
+   "authorization": "ONE run completed under P012_ONE_EXTRA_COORDINATED_REPAIR=YES, overnight 2050 packet approved 2026-09-05 20:48, re-seal24; 17/17 complete, 0 blocked, all 34 surfaces identical.",
+   "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa"
   },
   "legacy_event_order_map": {
    "RULE2-01-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
