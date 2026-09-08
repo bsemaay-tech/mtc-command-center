@@ -951,11 +951,11 @@ intent, so §3's fill-only slippage sequence is not entered and no `CostSchedule
 
 Sealed `funding_events[0]` fields, all from the vector and the §14 field list at `Design section 14, "sequence, funding_event_id, event_timestamp, lifecycle_id, position_side,"`:
 `sequence 0`, `funding_event_id "TEST-FUND-1"`, `event_timestamp "2000-01-01T00:00:00Z"`,
-`lifecycle_id 1`, `position_side "LONG"`, `open_qty 1`, `contract_multiplier 1`, `mark_price 100`,
+`lifecycle_id 1`, `position_side "LONG"`, `open_qty 1`, `contract_multiplier 1`, `oracle_price 100`,
 `raw_rate 0.001`, `positive_rate_payer "LONG"`, `long_cashflow_rate -0.001`, `notional 100`,
 `funding_cash_delta -0.1`, `cumulative_funding -0.1`, `cash_event_id "CE-FUND-0"`. Float nodes:
 `raw_rate`, `long_cashflow_rate`, `funding_cash_delta`, `cumulative_funding`, equity. Integer nodes:
-`sequence`, `lifecycle_id`, `open_qty`, `contract_multiplier`, `mark_price`, `notional`.
+`sequence`, `lifecycle_id`, `open_qty`, `contract_multiplier`, `oracle_price`, `notional`.
 `schedule_id`, `schedule_digest` and `source_event_digest` are `BLOCKED-MISSING-RECORD-BYTES`.
 
 Guard outcome (design `Design section 14, "outcomes follow the sourced OPEN-10"` "Guard outcomes follow the sourced OPEN-10 decision and are explicit
@@ -1722,7 +1722,7 @@ The funding arithmetic is unchanged and re-verified: `notional = abs(100 * 1 * 1
 `long_cashflow_rate = -0.001`, `funding_cash_delta = 100 * (-0.001) * (+1) = -0.1`,
 `equity 1000 + (-0.1) = 999.9` (§0.6 already proved both tokens exact).
 
-`mark_price_source = "SPOT_ORACLE"` is a member of the schedule's event object (`Design section 22.3, "and LONG-pays-positive convention, and contains"`), not of
+`oracle_price_source = "SPOT_ORACLE"` is a member of the schedule's event object (`Design section 22.3, "and LONG-pays-positive convention, and contains"`), not of
 the design `Design section 14, "are read from the frozen"` `funding_events[]` row field list, so it is **not** added as a surface node.
 
 Filled: `decision_events/1/position_snapshot_rule`, `funding_events/0/schedule_id`,
@@ -3266,7 +3266,7 @@ final_position, trades, equity_curve, cumulative_funding, metrics, warnings, ref
 (`consecutive_loss_count 0`) plus two cells that were already `BLOCKED-MISSING-SCENARIO-INPUT`; no
 money figure, rate, quantity, price or equity token was inside it, and nothing outside it was derived
 from it. Byte-identical after the removal: `notional 100`, `raw_rate 0.001`,
-`long_cashflow_rate -0.001`, `funding_cash_delta -0.1`, `cumulative_funding -0.1`, `mark_price 100`,
+`long_cashflow_rate -0.001`, `funding_cash_delta -0.1`, `cumulative_funding -0.1`, `oracle_price 100`,
 `final_position` `LONG` / `1` / `100`, and `equity_curve` `1000` / `999.9`.
 
 ### W-4 The cascade, stated in full rather than absorbed

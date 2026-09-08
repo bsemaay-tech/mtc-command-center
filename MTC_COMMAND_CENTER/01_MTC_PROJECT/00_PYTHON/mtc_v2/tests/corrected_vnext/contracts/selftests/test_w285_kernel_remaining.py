@@ -533,7 +533,7 @@ def _d026_funding_row(
         position_side="LONG",
         open_qty=1.0,
         contract_multiplier=1.0,
-        mark_price=100.0,
+        oracle_price=100.0,
         raw_rate=0.001,
         positive_rate_payer="LONG",
         long_cashflow_rate=-0.001,
