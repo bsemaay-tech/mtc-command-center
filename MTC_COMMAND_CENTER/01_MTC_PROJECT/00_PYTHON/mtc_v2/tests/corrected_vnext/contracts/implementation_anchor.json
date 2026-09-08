@@ -1,0 +1,346 @@
+{
+ "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
+ "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
+ "EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+ "IMPLEMENTATION_BASE_SHA": "94a0a568f5257f04940de28fc984ac893af3753a",
+ "core_tree_oid_at_base": "13e1f7788318f51df7e319f601b3f66eb703b816",
+ "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
+ "authorized_kernel_paths": [
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economics.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_sizer.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/instrument.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/**",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_manager.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/types.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/results.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/**",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/**"
+ ],
+ "evidence_paths_rows_14_18": [
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/**",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/observed/**",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/probes/**",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/verify_bceg.py",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/golden/corrected_vnext/**"
+ ],
+ "lead_acceptance": {
+  "accepted_by": "Lead (claude-fable-5), 2026-08-31 ~15:55 local",
+  "basis": "Gate-2 plan v2 (A7-cleared) owner-approved addendum 16; tables bundle W127b sealed, all 19 file digests re-verified by W150; owner rulings addenda 14-17 complete; design v1.4 terminal dual-zero",
+  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #10 seal d763f62f9a42... on 2026-09-02T14:13:22+03:00; design v1.11; probe digests pinned; goldens and inputs unchanged since seal #8. Re-seal #11 2026-09-02T14:43:01+03:00: design v1.12 pinned; seal digest unchanged. Re-seal #14 2026-09-03T14:20:14+03:00: design v1.15 pinned; base re-pinned (M5); seal a58b6dea7539. Re-seal #15 2026-09-03T17:49:59+03:00: RULE2-08 goldens re-derived (W341/V341); seal 27bf72e82643. Re-seal #16 2026-09-03T20:54:18+03:00: decisions 149/151 executed; design v1.16 pinned; seal 40aaf7da2a67. Re-seal #17 2026-09-04T12:46:33+03:00: decisions 153/154/155 executed; design v1.18 pinned; seal bbab640c0703."
+ },
+ "reseal_history": [
+  {
+   "at": "2026-08-31T21:09:30+03:00",
+   "old_EXPECTED_SEAL_SHA": "dd4a0401b46c5663ab4a9d0297fe0e1679b0ccfeb72f803234a2cebd123d3115",
+   "new_EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+   "reason": "addendum-19 chain: v1.5 embeddings + tables revision + input digest-pin (two-party) + version-shaped schema binding; re-accepted by the Lead before any kernel edit"
+  },
+  {
+   "at": "2026-09-01T19:48:00+03:00",
+   "old_EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+   "new_EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
+   "reason": "Re-seal #3: design v1.8 sealed by dual-zero terminal re-check; W167 v1.8 tables revision; W172 Reading Y revision under owner addendum 26; independently cleared SAFE TO SEAL by G85."
+  },
+  {
+   "at": "2026-09-01T23:11:48+03:00",
+   "old_EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
+   "new_EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
+   "reason": "Re-seal #4: design now v1.9 under owner addendum 28 decision 67; W186 re-derived RULE2-05-RED under decision 68, moving four economic values; independently cleared SAFE TO SEAL by G94."
+  },
+  {
+   "at": "2026-09-02T01:03:08+03:00",
+   "old_EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
+   "new_EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
+   "reason": "Re-seal #5: W200 repaired the three GOLDEN-OVER rows design v1.9 directs; no economic value moved; the three DESIGN-GAP goldens re-verified byte-identical by this act; independently cleared SAFE TO SEAL by G103 with two documentation findings named."
+  },
+  {
+   "at": "2026-09-02T01:30:14+03:00",
+   "old_EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
+   "new_EXPECTED_SEAL_SHA": "df561e7993df37e473c39b1fe174289d244d0b9b16cea9ab6aed72c11b91a964",
+   "reason": "Re-seal #6: the two documentation residues named at re-seal #5 are marked. DERIVATIONS.md is the only file that changed, verified by measurement; no economic value moved."
+  },
+  {
+   "at": "2026-09-02T04:36:31+03:00",
+   "old_EXPECTED_SEAL_SHA": "df561e7993df37e473c39b1fe174289d244d0b9b16cea9ab6aed72c11b91a964",
+   "new_EXPECTED_SEAL_SHA": "1d0623e44c060a7ea59d4df1a3789d76ec07d8f996fa1f6e85554439f9191008",
+   "reason": "Re-seal #6: the two documentation residues named at re-seal #5 are marked. DERIVATIONS.md is the only file that changed, verified by measurement; no economic value moved."
+  },
+  {
+   "at": "2026-09-02T10:44:21+03:00",
+   "old_EXPECTED_SEAL_SHA": "1d0623e44c060a7ea59d4df1a3789d76ec07d8f996fa1f6e85554439f9191008",
+   "new_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "reason": "Re-seal #8: owner addendum 29 decisions 71-72 applied to four goldens and DERIVATIONS.md; design v1.10; no economic value moved (measured)."
+  },
+  {
+   "at": "2026-09-02T12:37:46+03:00",
+   "old_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "new_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "reason": "Re-seal #9: legacy_event_order_map pinned into the bundle manifest (design :484-486); no golden, catalog, input or derivation byte moved; seal digest unchanged."
+  },
+  {
+   "at": "2026-09-02T14:13:22+03:00",
+   "old_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "new_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "reason": "Re-seal #10: PROBE rows under v1.11, ten probe digest pairs pinned two-party; goldens/inputs unchanged."
+  },
+  {
+   "at": "2026-09-02T14:43:01+03:00",
+   "old_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "new_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "reason": "Re-seal #11: design pin v1.12 (trade-row quantity amendment-choice); no sealed byte moved."
+  },
+  {
+   "at": "2026-09-02T23:40:31+03:00",
+   "old_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "new_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
+   "reason": "Re-seal #12: nine kernel probe digests re-pinned after the authorized kernel repairs (decision 132); baseline regeneration W300 follows."
+  },
+  {
+   "at": "2026-09-03T01:40:17+03:00",
+   "old_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
+   "new_EXPECTED_SEAL_SHA": "e4ffde6a420202d2c9f3872f99c5527c1af7e7b83341764ec874d774f8aaa531",
+   "reason": "Re-seal #13: nine kernel probe digests re-pinned after the authorized kernel repairs (decision 132); baseline regeneration W300 follows."
+  },
+  {
+   "at": "2026-09-03T14:20:14+03:00",
+   "old_EXPECTED_SEAL_SHA": "e4ffde6a420202d2c9f3872f99c5527c1af7e7b83341764ec874d774f8aaa531",
+   "new_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+   "reason": "Re-seal #14: owner decisions 135-144; the fresh snapshot the owner asked the fresh audits to run against."
+  },
+  {
+   "at": "2026-09-03T17:49:59+03:00",
+   "old_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+   "new_EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
+   "reason": "Re-seal #15: RULE2-08 goldens repaired inside decision 144 after the fresh audit round on seal #14 (W341/V341)."
+  },
+  {
+   "at": "2026-09-03T20:54:18+03:00",
+   "old_EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
+   "new_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
+   "reason": "Re-seal #16: owner decisions 149/151 executed (W345, W348); design v1.17 pinned."
+  },
+  {
+   "at": "2026-09-04T12:46:33+03:00",
+   "old_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
+   "new_EXPECTED_SEAL_SHA": "bbab640c070393314d2c19e6bd77ee6a80d1b16d08c0d0dd998b5d903fdba677",
+   "reason": "Re-seal #17: owner decisions 153 (+ extension), 154 and 155 executed (W354, W357, W359, W355); design v1.18 pinned."
+  },
+  {
+   "at": "2026-09-04T14:01:35+03:00",
+   "old_EXPECTED_SEAL_SHA": "bbab640c070393314d2c19e6bd77ee6a80d1b16d08c0d0dd998b5d903fdba677",
+   "new_EXPECTED_SEAL_SHA": "12fc3d4a5b0ed199ef9173f03c78cf35dea9e621f6b9d3384f6530625b4d2be4",
+   "reason": "Re-seal #18: W363 citation repair (owner decision 154), found by V357A and V359D after re-seal #17."
+  },
+  {
+   "at": "2026-09-04T14:44:42+03:00",
+   "old_EXPECTED_SEAL_SHA": "12fc3d4a5b0ed199ef9173f03c78cf35dea9e621f6b9d3384f6530625b4d2be4",
+   "new_EXPECTED_SEAL_SHA": "555075146636af3442424035e2544e73e07961dd14661de9c019e203f6720024",
+   "reason": "Re-seal #19: the canonical gate refused EXPECTED_DIGEST_MISMATCH on RULE2-01-RED. Measured: all 17 catalog expected-artifact digests still equalled the pre-W357 golden hashes. The citation restyle (owner decision 154) changed every golden's bytes and no lane updated the catalog pins that reference them. Re-pinned to the live golden bytes; only digest members moved."
+  },
+  {
+   "at": "2026-09-04T15:11:30+03:00",
+   "old_EXPECTED_SEAL_SHA": "555075146636af3442424035e2544e73e07961dd14661de9c019e203f6720024",
+   "new_EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
+   "reason": "Re-seal #20: the canonical gate refused PROBE_CATALOG_DIGEST_MISMATCH on PROBE-P012-03-A and PROBE-P012-07-A. Lane W356 corrected expected_first_changed_node inside those two probe modification manifests on 2026-09-04 and the catalog's modification_manifest_digest pins were not updated with them. Eight of the ten probe pins already matched; exactly these two did not. Re-pinned to the live manifest bytes; only those two digest leaves moved."
+  },
+  {
+   "at": "2026-09-04T19:57:17+03:00",
+   "old_EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
+   "new_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "reason": "Re-seal #21: the SINGLE re-seal for fold tier 3 (owner decision 159's bundling rule). Lane W387 converted 79 live bare design locators in DERIVATIONS.md to section + quoted phrase out of 349 syntactic candidates, re-cited 7 value-bearing nodes from the sentence that states the value, and added a check refusing identical sibling citations in one projection. Owner decision 175 added one sentence to honest limit L14 and bumped the design to v1.19, so the design pin is re-pinned here too."
+  },
+  {
+   "at": "2026-09-05T17:35:47+03:00",
+   "actor": "OpenCode gpt-5.6-luna implementer, re-seal #23 (metadata only)",
+   "old_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "new_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+   "reason": "P0-12 approved re-seal metadata preparation: Items 2/5/6 repair; catalog and design pins measured; goldens and observed unchanged. No claim that all economic behavior is unchanged.",
+   "independently_verified": "pending Lead"
+  },
+  {
+   "at": "2026-09-05T21:09:50+03:00",
+   "actor": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate",
+   "old_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+   "new_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+   "reason": "Duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed.",
+   "independently_verified": "pending independent audits"
+  },
+  {
+   "at": "2026-09-05T23:19:36+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #25 candidate",
+   "old_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+   "new_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+   "reason": "Window-local serialized fill identity repair; catalog and v1.22 design pins measured from frozen bytes; no economic values, goldens, observed artifacts, or production facts changed. Item 4 remains NONE_KEEP_REFUSED.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T02:14:17+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #26 candidate",
+   "old_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+   "new_EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+   "reason": "Re-seal #26 candidate: owner-approved R26 identity and Item-2 closure; five measured manifest members changed (catalog plus four corrected identity-only goldens). No economic values, production facts, or Item-4 disposition changed. Base C is provisional and this intermediate commit is NONACCEPTED until the decision-147 forward repin to M.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T02:38:01+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #27 candidate",
+   "old_EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+   "new_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "reason": "Re-seal #27 candidate under OD20260906-1 delegated same-package repair authority: scenario_catalog.json alone now names the four already-approved current golden digests. No golden, observed artifact, economic value, source, probe, design, production fact, or Item-4 disposition changed. Base C27 is provisional; NONACCEPTED until forward repin F27.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T13:38:41+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #28 candidate",
+   "old_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "new_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "reason": "Re-seal #28 candidate under OD-20260906-2: design v1.24 adds the SYNTHETIC_ONLY non-production milestone scope and its Section-16 Item-4 disposition rule. Design only; no sealed manifest member, core, golden, observed artifact, probe, economic value, production fact, threshold, or behavior changed. The existing seal recipe was recomputed and is unchanged. Base C28 is provisional; NONACCEPTED until forward repin F28.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-08T11:34:12+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #29 candidate",
+   "old_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "new_EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+   "reason": "Re-seal #29 candidate: the nine KERNEL probe modified copies were re-derived from core tree 13e1f7788318f51df7e319f601b3f66eb703b816 by applying each probe's own recorded modification.patch to a fresh copy of the current core; scenario_catalog.json alone changed among the 19 sealed members, carrying the eighteen re-measured probe digest pins. No golden, observed artifact, economic value, production fact, design, threshold, or Item-4 disposition changed. Base C29 is provisional; NONACCEPTED until forward repin F29.",
+   "independently_verified": "pending Lead and required audits"
+  }
+ ],
+ "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+ "base_repin_history": [
+  {
+   "at": "2026-09-03T09:27:33+03:00",
+   "actor": "Lead (claude-fable-5-1), M5 base re-pin",
+   "old_IMPLEMENTATION_BASE_SHA": "108ea066a710ff7ef5c09246903fe3d523da1d56",
+   "new_IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
+   "new_core_tree_oid_at_base": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
+   "reason": "Owner decision 135 (2026-09-03): the recorded base predated the sealed bundle, so the expected-source provenance check could never clear (W279B-F06, W276B / W305B FINDING-4); re-pinned to the commit that first placed the sealed bundle."
+  },
+  {
+   "at": "2026-09-03T21:14:29+03:00",
+   "actor": "Lead (claude-fable-5-1), decision 147 re-anchor forward",
+   "old_IMPLEMENTATION_BASE_SHA": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
+   "new_IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
+   "new_core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
+   "reason": "Owner decision 147 (Q-A = b): the base is the commit that carries the latest owner-directed re-seal in-repo; the section-15.4 predicate now proves only that no expected path changed since that re-seal (design v1.16 L14)."
+  },
+  {
+   "at": "2026-09-04T15:37:01+03:00",
+   "actor": "Lead (claude-opus-5, owner-facing session), decision 147 re-anchor forward",
+   "old_IMPLEMENTATION_BASE_SHA": "63cfe2dd2dcb3373f2fa18c385f67a1c2d113bb5",
+   "new_IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
+   "new_core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
+   "reason": "Owner decision 147 (Q-A = b), applied as a standing rule and not as a new decision: the base is the commit that carries the latest owner-directed re-seal in-repo. Re-seal #20 (owner decisions 153/154/155/159) was copied in-repo by that commit. Before this act the gate refused EXPECTED_PATH_CHANGED_AFTER_BASE on 19 expected paths - the 17 goldens, DERIVATIONS.md and scenario_catalog.json - which are exactly the members the owner-directed citation restyle moved. The section-15.4 predicate now proves only that no expected path changed since re-seal #20, which is what decision 147 says it should prove."
+  },
+  {
+   "at": "2026-09-04T20:21:00+03:00",
+   "actor": "Lead (claude-opus-5, owner-facing session), decision 147 re-anchor forward to re-seal #21",
+   "old_IMPLEMENTATION_BASE_SHA": "bdacf8e42399f9a3e9a753ca0ab30e5210ae98cf",
+   "new_IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
+   "new_core_tree_oid_at_base": "efac978355c89fc38f7592d68556b7c5d7bc9eef",
+   "reason": "Owner decision 147 (Q-A = b) applied as a standing rule: the base is the commit that carries the latest owner-directed re-seal in-repo. Re-seal #21 bundled fold tier 3 (79 design locators, 7 value-node re-citations) with the owner's decision-175 design amendment to v1.19, and its copies landed in this commit."
+  },
+  {
+   "at": "2026-09-05T18:10:45+03:00",
+   "actor": "OpenCode Go Luna implementer",
+   "old_IMPLEMENTATION_BASE_SHA": "2424237364a23c61c860a8cad79250351156c9e1",
+   "new_IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
+   "new_core_tree_oid_at_base": "f28402fb9f6f0c3a1e2d10d9f9ad7ae6e56a9ef7",
+   "reason": "Owner decision 147 forward rule; fresh YES current packet C:/tmp/P0_OWNER_EXECUTION_DECISIONS_20260905_1747.md."
+  },
+  {
+   "at": "2026-09-05T21:17:24+03:00",
+   "actor": "OpenCode Go Luna implementer",
+   "old_IMPLEMENTATION_BASE_SHA": "3f12c49989932fc33d5ef6742421034e63bff03a",
+   "new_IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
+   "old_core_tree_oid_at_base": "f28402fb9f6f0c3a1e2d10d9f9ad7ae6e56a9ef7",
+   "new_core_tree_oid_at_base": "43c7d5a1f71b4b557758f0e23b5fc7faf751aa9a",
+   "reason": "Owner-approved 20:48 extra-round local forward-anchor; second commit reserved for Lead."
+  },
+  {
+   "at": "2026-09-05T23:19:36+03:00",
+   "actor": "Codex gpt-5.6-sol implementer",
+   "old_IMPLEMENTATION_BASE_SHA": "b0fa4fb1739f8d10fc7927aa1e7a879410fa06c7",
+   "new_IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
+   "old_core_tree_oid_at_base": "43c7d5a1f71b4b557758f0e23b5fc7faf751aa9a",
+   "new_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+   "reason": "Owner-approved re-seal #25 forward anchor to the committed window-identity implementation base; core tree verified independently before this write."
+  },
+  {
+   "at": "2026-09-06T00:06:34+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, G2 metadata sequencing closure",
+   "old_IMPLEMENTATION_BASE_SHA": "04067aa1ce247053416519139f99edfc8a7b2dd0",
+   "new_IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
+   "old_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+   "new_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+   "reason": "Standing OD5 checkpoint extension: close the re-seal #25 metadata sequencing gap by anchoring to the committed full 28-path probe/catalog cascade; no behavior, production source, sealed member, design, baseline, golden, observed artifact, or production fact changed."
+  },
+  {
+   "at": "2026-09-06T02:14:17+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, provisional re-seal #26 base",
+   "old_IMPLEMENTATION_BASE_SHA": "e5d70cd661392952da535abeccdf0757ca4d5f1e",
+   "new_IMPLEMENTATION_BASE_SHA": "2da57c3944c90818f473202718cb24bc0dc48b9f",
+   "old_core_tree_oid_at_base": "40d7d22264c8da430c54ca292f1b0d92753c9c3b",
+   "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "reason": "Provisional C base required to commit re-seal #26 bytes; NONACCEPTED until the separate decision-147 C-to-M forward repin."
+  },
+  {
+   "at": "2026-09-06T02:20:28+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, decision-147 R26 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "2da57c3944c90818f473202718cb24bc0dc48b9f",
+   "new_IMPLEMENTATION_BASE_SHA": "4a780f078f429c6c781e02e60d56afb1589144b7",
+   "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "reason": "Decision 147: M is the commit carrying re-seal #26 in-repo. F changes only active-base metadata, sidecar, and its current-pin selftest; no seal member, seal, design, catalog, or economic value changes."
+  },
+  {
+   "at": "2026-09-06T02:38:01+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, provisional re-seal #27 base",
+   "old_IMPLEMENTATION_BASE_SHA": "4a780f078f429c6c781e02e60d56afb1589144b7",
+   "new_IMPLEMENTATION_BASE_SHA": "e6ee0abb48588ee29e0fb47e39a2ea360d0d751a",
+   "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "reason": "Provisional C27 base required to commit re-seal #27 bytes; NONACCEPTED until the separate decision-147 C27-to-M27 forward repin."
+  },
+  {
+   "at": "2026-09-06T02:42:18.942137+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, decision-147 R27 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "e6ee0abb48588ee29e0fb47e39a2ea360d0d751a",
+   "new_IMPLEMENTATION_BASE_SHA": "18ef4f2a93830f49b14a2a4975c5aea3d4713c94",
+   "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "reason": "Decision 147: M27 is the commit carrying re-seal #27 in-repo. F27 changes only active-base metadata, sidecar, and current-pin selftest; files, seal, design, catalog, schema, and economics are unchanged."
+  },
+  {
+   "at": "2026-09-06T13:38:41+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, provisional re-seal #28 base",
+   "old_IMPLEMENTATION_BASE_SHA": "18ef4f2a93830f49b14a2a4975c5aea3d4713c94",
+   "new_IMPLEMENTATION_BASE_SHA": "94cb4822931c3cb5dbdb79f0e9fad6595633eab6",
+   "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "reason": "Provisional C28 base required to commit re-seal #28 bytes; NONACCEPTED until the separate decision-147 C28-to-M28 forward repin."
+  },
+  {
+   "at": "2026-09-06T14:58:00+03:00",
+   "actor": "Lead (Claude Fable 5.1), decision-147 R28 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "94cb4822931c3cb5dbdb79f0e9fad6595633eab6",
+   "new_IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
+   "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "new_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "reason": "Decision 147: M28 is the commit carrying re-seal #28 in-repo. F28 changes only active-base metadata, sidecar, and current-pin selftest; files, seal, design, catalog, schema, and economics are unchanged."
+  },
+  {
+   "at": "2026-09-08T11:34:12+03:00",
+   "actor": "Lead (claude-opus-5), decision-147 R29 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "f6790517e9bdc4e8bfcc401cae6606d7837b4e29",
+   "new_IMPLEMENTATION_BASE_SHA": "94a0a568f5257f04940de28fc984ac893af3753a",
+   "old_core_tree_oid_at_base": "68127b2d2111e4869d23c7b71a0695c6cea816ba",
+   "new_core_tree_oid_at_base": "13e1f7788318f51df7e319f601b3f66eb703b816",
+   "reason": "Decision 147: M29 is the commit carrying re-seal #29 in-repo. F29 changes only active-base metadata, sidecar, and its current-pin selftest; files, seal, design, catalog, schema, and economics are unchanged."
+  }
+ ]
+}

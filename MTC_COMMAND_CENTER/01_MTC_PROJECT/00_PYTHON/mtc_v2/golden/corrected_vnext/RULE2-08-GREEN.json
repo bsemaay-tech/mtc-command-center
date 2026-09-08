@@ -1,0 +1,93 @@
+{
+  "scenario_id": "RULE2-08-GREEN",
+  "owning_def_ids": ["DEF-P012-08"],
+  "role": "GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": "CORRECTED_V2",
+  "expected_semantics_version": "2.0.0",
+  "provenance": {
+    "method": "INDEPENDENT_DERIVATION",
+    "author": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127; revised for design v1.5 by lane W156; revised for design v1.8 by lane W167; v1.15 decision-144 corrections by lane W321; fresh-audit record-digest re-derivation under owner decision 144 by lane W341; members admitted by design v1.16 under owner decision 151 by lane W348",
+    "design_file": "P012_FRESH_DESIGN_V1.md",
+    "design_version": "v1.16",
+    "design_lines": "Design section 5.1, \"any value not supplied by\"; Design section 14, \"taker rate 0.001: fee =\"; Design v1.5 change log, \"existing sealed RULE2-07 cost records; no new record is\"; Design section 23, \". Every name below either\"; Design section 23, \". Every name below either\"; Design section 23.1, \"OWNER-RULED (owner addendum 29, decision 72):** `touched_exit_ids\"; Design section 23.4, \"AMENDMENT-CHOICE (W347B, owner decision 151, 2026-09-03) -\"; Design section 23.4, \"AMENDMENT-CHOICE (W347B, owner decision 151, 2026-09-03) -\"; Design section 23.5, \"RULE2-07-RED/GREEN and RULE2-08-RED under owner\"; Design section 23.12, \"derivation; owner decision 143, default\"",
+    "worksheet": "DERIVATIONS.md",
+    "worksheet_section": "8. DEF-P012-08 / RULE2-08-GREEN",
+    "worksheet_section_v18": "v1.8 revision / RULE2-08-GREEN",
+    "worksheet_section_v15": "v1.5 revision / RULE2-08-GREEN",
+    "worksheet_section_w341": "W341 - fresh-audit re-derivation of the RULE2-08 goldens under decision 144",
+    "worksheet_section_w348": "W348 - members admitted by design v1.16 (decision 151)"
+  },
+  "open_item_bindings": [
+    {"open_id": "OPEN-05", "source": "open_item_applicability_DRAFT.json items[OPEN-05] (draft_revision 3)", "owner_disposition": "APPLICABLE - same-timestamp snapshot eligibility = INCLUDE (addendum 17 row 46)", "effect_on_this_scenario": "no value effect: Design section 14, \"taker 0.001 on its notional\" states the position is closed immediately BEFORE the event timestamp, so it is ineligible under an INCLUDE rule as well as under an EXCLUDE rule. The INCLUDE answer creates a separate build obligation (a fill AT the exact funding timestamp) that this declared vector does not exercise; that obligation is recorded in the applicability draft and is not a CONTRACT_TABLES cell."},
+    {"open_id": "OPEN-EMBED-05", "source": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348 addendum 20 item 49 (owner verbatim \"1a 2a 3a 4a 5a\")", "owner_disposition": "CLOSED (5a) - the closed-lifecycle premise is built with ordinary price bars before the observation window, by the real mechanism, with nothing injected", "effect_on_this_scenario": "Design v1.15 section 22.6, \"20 (5a) GREEN has pre-window\" left the LEGACY premise as [OPEN-EMBED-05] and design 15.6 blocked the runnable premise and its dependent cells. The owner answer makes the premise reachable: lifecycle 1 opens and closes on ordinary bars before 2000-01-01T00:00:00Z, so at the window start no position is eligible for TEST-FUND-1. Because those fills are outside the observation window they contribute no in-window fill, cash, fee or exit facts. The pre-window fills DO consume the GREEN cost record (Design v1.15 section 14, \"taker 0.001 on its notional\"; Design v1.15 section 22.6, \"20 (5a) GREEN has pre-window\"); the pre-window fill prices/quantities are unenumerated, so the equity node carries BLOCKED-OPEN-EMBED-05 (Design v1.15 section 14, \"taker 0.001 on its notional\"; Design v1.15 section 17, \"a formula (fee_i = abs\"; Design v1.15 section 22.6, \"20 (5a) GREEN has pre-window\")."}
+  ],
+  "EVENT_SURFACE": {
+    "decision_events": [
+      {"sequence": 0, "decision": "SEMANTICS_VALIDATED", "kernel_semantics_version": "2.0.0"},
+      {"sequence": 1, "decision": "FUNDING_ELIGIBILITY", "kernel_semantics_version": "2.0.0", "event_timestamp": "2000-01-01T00:00:00Z", "funding_event_id": "TEST-FUND-1", "eligible": false, "position_snapshot_rule": "END_OF_INTERVAL_INCLUDE_SAME_TIMESTAMP_V1"}
+    ],
+    "fill_events": [],
+    "cash_events": [],
+    "fee_events": [],
+    "funding_events": [],
+    "exit_events": []
+  },
+  "RESULT_SURFACE": {
+    "final_position": null,
+    "trades": [],
+    "equity_curve": {"first": "BLOCKED-OPEN-EMBED-05", "last": "BLOCKED-OPEN-EMBED-05"},
+    "cumulative_funding": 0,
+    "metrics": "BLOCKED-DESIGN-UNENUMERATED",
+    "warnings": [],
+    "refusals": [],
+    "run_manifest": {
+      "kernel_semantics_version": "2.0.0",
+      "execution_profile_id": "close_only_deterministic_v2",
+      "instrument_record_id": "SYNTH-INSTRUMENT-RULE2-08-GREEN-V1",
+      "instrument_record_digest": "20adf2749d255efd3fe281ec3ead2e07df0a36a5ad59718a54d0a1a7c0712b17",
+      "instrument_source_document_digest": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc",
+      "instrument_effective_interval": {"start_inclusive": "1999-12-31T00:00:00Z", "end_exclusive": "2000-01-02T00:00:00Z"},
+      "cost_schedule_id": "SYNTH-COST-RULE2-07-GREEN-V1",
+      "cost_schedule_digest": "040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe",
+      "funding_schedule_id": "SYNTH-FUNDING-RULE2-08-V1",
+      "funding_schedule_digest": "aa4eaa939a83af1faa768eed82a2cd0216c26fccfb335240d05c5b1f7069d26d"
+    }
+  },
+  "observation_window": {
+    "start_timestamp": "2000-01-01T00:00:00Z",
+    "end_timestamp": "BLOCKED-MISSING-SCENARIO-INPUT",
+    "inclusivity": "CLOSED",
+    "authority": "Design section 22.6, \"00Z`, but its closing evaluation\" - the intended window starts at 2000-01-01T00:00:00Z. Owner addendum 20 (5a) closes the state premise but names no closing evaluation bar, and design section 22.6 does not declare one, so the end timestamp is not derivable."
+  },
+  "version_specific_lineage_nodes": [
+    {"pointer": "/RESULT_SURFACE/cumulative_funding", "reason": "version-specific added node. Design section 14, \"at all / record unconsumed\" states PortfolioState carries no funding ledger at 1.0.0, and Design section 15.3, \"containers: `decision_events`, `fill_events`, `cash_events`, `fee_events`, `funding_events`, and `exit_events`; any\" forbids GATE_READER from synthesizing an empty funding container on the legacy surface, so the legacy selector resolves ABSENT. Design section 6, \"projection. Version fields and intentionally\" keeps intentionally added ledger nodes out of the cross-version GREEN equality; the declared GREEN projection is the economic cash/equity value BLOCKED-OPEN-EMBED-05 (Design v1.15 section 14, \"at all / record unconsumed\": pre-window fill prices/quantities are unenumerated; no price is invented)."},
+    {"pointer": "/EVENT_SURFACE/funding_events", "reason": "version-specific added container, same reasoning. A:0 here versus ABSENT at 1.0.0 - this is NOT a GREEN projection member."}
+  ],
+  "v15_filled_cells": [
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-INSTRUMENT-RULE2-08-GREEN-V1", "authority": "Design section 22.3, \"RULE2-08-GREEN consume the existing sealed\"."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_effective_interval", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "start_inclusive 1999-12-31T00:00:00Z, end_exclusive 2000-01-02T00:00:00Z", "authority": "Design section 22.3, \"RULE2-08-GREEN consume the existing sealed\", Design section 22.3, \"RULE2-08-GREEN consume the existing sealed\"."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_id", "old_marker": "BLOCKED-MISSING-RECORD-BYTES", "new_value": "SYNTH-FUNDING-RULE2-08-V1", "authority": "Design section 22.3, \"RULE2-08-GREEN consume the existing sealed\" - RULE2-08-RED and RULE2-08-GREEN share the exact funding record id, canonical bytes and digests because section 14 requires the same complete schedule."}
+  ],
+  "unchanged_sealed_values": "cumulative_funding 0, every empty economic container, the FUNDING_ELIGIBILITY decision row, final_position null, and the BLOCKED-OPEN-EMBED-05 equity markers remain unchanged. The instrument, instrument-source, and funding digest nodes were filled from committed record bytes and provenance under design v1.15. W348 adds only the cost_schedule_digest child from the consumed committed cost record under Design v1.16 section 23.4, \"or ineligible | Section 14 names\"; no economic value moved.",
+  "v18_revised_nodes": [
+    {"pointer": "/EVENT_SURFACE/decision_events", "change": "RE-DERIVED under the design 23.1 closed shape: flat members sequence/decision/kernel_semantics_version, per-reason event_timestamp presence, no lifecycle_id, exact per-reason payloads, section-3 order.", "authority": "Design section 22.2, \"corrected intent/event timestamps are the\" (table Design section 22.2, \"corrected intent/event timestamps are the\") and the tables-revision item 1 at Design section 23.4, \"or ineligible | Section 14 names\"."},
+    {"pointer": "/EVENT_SURFACE/*/*/kernel_semantics_version", "change": "ADDED to every member of all six corrected event containers.", "authority": "Design section 22.2, \"corrected intent/event timestamps are the\" (section-4 identity / GM28-F03) and tables-revision item 2 at Design section 23.4, \"Section 14 names cumulative funding\"."},
+    {"pointer": "/EVENT_SURFACE/decision_events/1", "change": "FUNDING_TICK_SKIPPED RENAMED FUNDING_ELIGIBILITY with eligible false representing the skipped tick; reason and event_coverage_present are outside the closed member set and are dropped (the coverage fact stays in derivable_empty_containers_note). The spelling is a labelled AMENDMENT-CHOICE.", "authority": "Design section 22.2, \"corrected intent/event timestamps are the\", Design section 22.2, \"corrected intent/event timestamps are the\"; change-log row Design section 23.4, \"144's by-reference id-and-sha binding\"."},
+    {"pointer": "/RESULT_SURFACE/cumulative_funding", "change": "RE-CONFIRMED PRESENT and unchanged at 0 under the now-unconditional DEF-P012-08 rule; the design labels the unconditional presence an AMENDMENT-CHOICE.", "authority": "Design section 22.6, \"00Z) each consuming the record\", Design section 23.4, \"ineligible | Section 14 names cumulative\"; change-log row Design section 23.4, \"ineligible | Section 14 names cumulative\"."},
+    {"pointer": "/RESULT_SURFACE/equity_curve", "change": "RE-MARKED BLOCKED-OPEN-EMBED-05 per Design v1.15 section 14, \"OPEN-EMBED-05 mechanism is bound by\"; Design v1.15 section 17, \"formula (fee_i = abs(price_i × qty_i × multiplier\"; Design v1.15 section 22.6, \"00Z) each consuming the record\" (W321 repair pass after V321C F-05). Design v1.15 section 14, \"OPEN-EMBED-05 mechanism is bound by\": GREEN pre-window fill prices/quantities are unenumerated; fee arithmetic is fee_i = abs(price_i × qty_i × multiplier) × 0.001 per pre-window fill; equity at window start = 1000 − sum of fees. The numeric equity node carries BLOCKED-OPEN-EMBED-05 until the owner binds the GREEN prefix numbers. Design section 17, \"formula (fee_i = abs(price_i × qty_i × multiplier\" (L12): no price is invented. Design section 22.6, \"5a) GREEN has pre-window fills\" (§22.6 amendment): the numeric equity node carries BLOCKED-OPEN-EMBED-05.", "authority": "Design section 14, \"OPEN-EMBED-05 mechanism is bound by\",Design section 17, \"formula (fee_i = abs(price_i × qty_i × multiplier\",Design section 22.6, \"5a) GREEN has pre-window fills (OPEN and\"; W321 repair pass after V321C F-05."}
+  ],
+  "w341_rederived_nodes": [
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest", "before": "BLOCKED-MISSING-RECORD-BYTES", "after": "20adf2749d255efd3fe281ec3ead2e07df0a36a5ad59718a54d0a1a7c0712b17", "authority": "Design section 5.1, \"final LF. Its detached `<file>.sha256\",Design section 11, \"fill is `100`, corrected fill\"; recomputed from the committed record bytes and matched the detached sidecar."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest", "before": "BLOCKED-MISSING-RECORD-BYTES", "after": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc", "authority": "Design section 5.1, \"final LF. Its detached `<file>.sha256\"; copied from the committed InstrumentRecord provenance.source_sha256 member."},
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest", "before": "BLOCKED-MISSING-RECORD-BYTES", "after": "aa4eaa939a83af1faa768eed82a2cd0216c26fccfb335240d05c5b1f7069d26d", "authority": "Design section 5.1, \"final LF. Its detached `<file>.sha256\",Design section 5.1, \"required final LF. Its detached\",Design section 22.1, \"superseded. For RULE2-08-RED, `cost_schedule_id` is\"; recomputed from the committed schedule bytes and matched the detached sidecar."}
+  ],
+  "w348_admitted_members": [
+    {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest", "value": "040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe", "authority": "Design section 23.4, \"144's by-reference id-and-sha binding\"; lower-case SHA-256 recomputed from the committed SYNTH-COST-RULE2-07-GREEN-V1 record bytes and matched to its detached sidecar and the sealed input."}
+  ],
+  "blocked_cells": [
+    {"surface": "RESULT_SURFACE", "pointer": "/metrics", "marker": "BLOCKED-DESIGN-UNENUMERATED", "reason": "Design v1.15 section 14, \"no fill at all /\" requires funding-adjusted metrics but fixes no metric node set."},
+    {"surface": "ARTIFACT", "pointer": "/observation_window/end_timestamp", "marker": "BLOCKED-MISSING-SCENARIO-INPUT", "reason": "Design v1.15 section 22.6, \"under addendum 20 (5a) GREEN\" starts the intended window at 2000-01-01T00:00:00Z but declares no closing evaluation bar; owner addendum 20 (5a) closes the state premise without naming that bar."}
+  ],
+  "derivable_empty_containers_note": "all six economic containers are derivably empty inside the observation window. Design v1.15 section 14, \"no fill at all /\": the required event coverage is present, no position is eligible, and no funding row is emitted. Owner addendum 20 (5a) places the opening and closing fills of lifecycle 1 on ordinary bars BEFORE the window, so they contribute no in-window fill, cash, fee, gross-realization or exit fact. trades is [] on the same window-scoped reading. The pre-window fills DO consume the GREEN cost record (Design v1.15 section 14, \"no fill at all /\"; Design v1.15 section 22.6, \"20 (5a) GREEN has pre-window\") and the equity node carries BLOCKED-OPEN-EMBED-05 (Design v1.15 section 14, \"no fill at all /\"; Design v1.15 section 17, \"formula (fee_i = abs(price_i × qty_i × multiplier\"; Design v1.15 section 22.6, \"20 (5a) GREEN has pre-window\")."
+}
