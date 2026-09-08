@@ -1,0 +1,5 @@
+--- a/economics.py
++++ b/economics.py
+@@ -275 +275 @@
+-        return instrument.ceil_price(reference + impact), bps, impact, "CEIL"
++        return instrument.ceil_price(reference), bps, impact, "CEIL"

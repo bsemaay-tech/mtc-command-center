@@ -1,0 +1,5 @@
+--- a/economics.py
++++ b/economics.py
+@@ -646 +646 @@
+-        refused_min_notional = order_notional < instrument.min_notional
++        refused_min_notional = order_notional <= instrument.min_notional

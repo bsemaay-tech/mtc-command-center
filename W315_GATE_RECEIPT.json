@@ -1,0 +1,9 @@
+{
+  "claim_label": "BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_REFUSED",
+  "mode": "full-gate",
+  "refusal": {
+    "check_id": "DESIGN_PIN_MISMATCH",
+    "detail": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md: recorded_sha256=1f506c923c700df3a2a757ab3d49efabcd4d06bf39c251f8965c55bc10de8b75, actual_sha256=137180aee4834fa6b87932e289d7ce8cf56d9471c08e7b53982445598347c62f, recorded_total_lines=1419, actual_total_lines=1664",
+    "pointer": "/design"
+  }
+}

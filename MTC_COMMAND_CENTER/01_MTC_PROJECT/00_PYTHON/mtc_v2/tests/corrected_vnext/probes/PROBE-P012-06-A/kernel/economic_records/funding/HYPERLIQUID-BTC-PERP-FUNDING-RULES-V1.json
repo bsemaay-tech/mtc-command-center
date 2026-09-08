@@ -1,0 +1,55 @@
+{
+  "admission_status": "REFUSED_MISSING_PRODUCTION_FUNDING_EVENTS",
+  "effective_interval": null,
+  "event_schema": [
+    "event_timestamp",
+    "funding_event_id",
+    "raw_rate",
+    "positive_rate_payer",
+    "mark_price",
+    "mark_price_source",
+    "provenance",
+    "source_event_digest"
+  ],
+  "events": null,
+  "interval_boundary_convention": "HOURLY_INTERVAL_END_V1",
+  "position_snapshot_rule": "END_OF_INTERVAL_INCLUDE_SAME_TIMESTAMP_V1",
+  "product_type_scope": "LINEAR_PERPETUAL",
+  "provenance": {
+    "captured_at_utc": "2026-08-31T07:00:53Z",
+    "extraction_method": "OWNER_APPROVED_PACKAGE_TRANSCRIPTION_V1",
+    "owner_decision_ref": "OWNER_DECISIONS_2026-08-29_EVENING.md addenda 16 and 17; funding rules approved; same-timestamp INCLUDE",
+    "sources": [
+      {
+        "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/funding",
+        "source_sha256": "4cceb61ea2bc7755457bbdb360a18aa595d39a916f6dd5d0124512cb2918a716",
+        "source_title": "Funding | Hyperliquid Docs"
+      },
+      {
+        "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/contract-specifications",
+        "source_sha256": "3be3f419b268e9aeac2d85c0a9611eddfd486c510e59b62f44e5547aa5253737",
+        "source_title": "Contract specifications | Hyperliquid Docs"
+      }
+    ]
+  },
+  "rate_rules": {
+    "eight_hour_formula": "AVERAGE_PREMIUM_INDEX_PLUS_CLAMP_INTEREST_MINUS_PREMIUM_V1",
+    "hourly_payment_fraction": 0.125,
+    "payment_interval": "PT1H",
+    "positive_rate_payer": "LONG",
+    "valuation_price_source": "SPOT_ORACLE"
+  },
+  "refused_missing_fields": [
+    "effective_interval",
+    "events[].event_timestamp",
+    "events[].funding_event_id",
+    "events[].mark_price",
+    "events[].provenance",
+    "events[].raw_rate",
+    "events[].source_event_digest"
+  ],
+  "schedule_id": "HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1",
+  "settlement_currency": "USDC",
+  "symbol_scope": "BTC",
+  "venue_scope": "HYPERLIQUID"
+}

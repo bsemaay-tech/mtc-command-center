@@ -1,0 +1,4238 @@
+{
+ "schema": "P012_SEMANTIC_COVERAGE_REVIEW_V2",
+ "reviewer": {
+  "identity": "Gemini 3.8 Flash High (gemini-3.8-flash-high), R29 delta review of f508125141ba86d08a2c41ce23b3bdef88e34889..ca1a44576aa46907ba4b39c417bced4bfabe94de, 2026-09-08; the #28 item dispositions it carried forward were authored by the same family in lanes REV16H_1A..6 under OD-20260906-3; parts assembled mechanically by the Lead (Claude Opus 5) who decided nothing",
+  "family": "Gemini",
+  "independent_of": [
+   {
+    "role": "KERNEL_IMPLEMENTER",
+    "basis": "kernel implemented by the Codex family (CONTRACT_TABLES_MANIFEST.json owner_ruling Q3a, reseal_history actors); reviewer is the Gemini family"
+   },
+   {
+    "role": "CONTRACT_TABLES_AUTHOR",
+    "basis": "CONTRACT_TABLES authored by the Claude family (manifest author_identity, lane W127b on Claude MAX Opus); reviewer is the Gemini family"
+   }
+  ]
+ },
+ "reviewed_identities": {
+  "worktree_head_commit": "ca1a44576aa46907ba4b39c417bced4bfabe94de",
+  "core_tree_oid": "13e1f7788318f51df7e319f601b3f66eb703b816",
+  "expected_seal_sha": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+  "implementation_anchor_sha256": "1e963e751607810cf54a6994864f53c48a5d893f8d794224bd2a4153e31af829",
+  "baseline_manifest_sha256": "8fc9311529449d6008c6945fb3a5c05fada6192d580edd53d426da66f184847e",
+  "design_file_sha256": "d071a13f7b122c52ea022e1f6cfd825d9b4916c1729155b12d5e5a68f0e57dea",
+  "design_version": "v1.24",
+  "harness_sha256": "80223d31013ca0cd4a424563ee1e13d42ec1536a916f3031b46c1a5f00693650",
+  "catalog_sha256": "6e5eb01be81db74d53b7c48b39789cc979dad32290aa7099993ab34984cd8734"
+ },
+ "items": {
+  "1": {
+   "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
+   "evidence_paths": [
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_SECTION16_REVIEW_DRAFT.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\DERIVATIONS.md",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\CONTRACT_TABLES_MANIFEST.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_sizer.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economics.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\instrument.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\exits.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-01-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-01-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-02-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-02-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-03-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-03-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-04-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-04-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\inputs\\RULE2-01-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\inputs\\RULE2-01-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\inputs\\RULE2-02-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\inputs\\RULE2-02-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\inputs\\RULE2-03-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\inputs\\RULE2-03-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\inputs\\RULE2-04-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\inputs\\RULE2-04-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\SYNTH-INSTRUMENT-RULE2-01-RED-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\SYNTH-INSTRUMENT-RULE2-02-RED-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\SYNTH-INSTRUMENT-RULE2-04-RED-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json",
+    "C:\\LAB\\Tradingview_LAB_CLEAN\\_gemini_packets_20260830\\N_COMMON_CLAUSES.md",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\scenario_catalog.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_manager.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\runner.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-05-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-05-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-EQUAL-PRICE-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-07-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-07-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-08-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-08-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\inputs\\RULE2-08-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\costs\\HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\costs\\SYNTH-COST-RULE2-05-GREEN-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\costs\\SYNTH-COST-RULE2-05-RED-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\costs\\SYNTH-COST-RULE2-07-RED-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\funding\\HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\funding\\SYNTH-FUNDING-RULE2-08-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\implementation_anchor.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\implementation_anchor.json.sha256",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\expected_provenance_exceptions.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_corrected_config.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.md"
+   ],
+   "notes": "[1A ACCEPTED_WITH_RESIDUAL_RISK] PARTIAL verdict covering only formulas of DEF-P012-01..04 (design sections 7-10) re-derived and compared with code and expected tables. All 19 formulas and rules of DEF-P012-01..04 have been completely hand-re-derived, compared with core code and sealed golden tables, and confirmed EQUAL without arithmetic deviation. Other parts of Item 1 (ancestry of IMPLEMENTATION_ANCHOR, base repin history, and full authoring import graph inspection) sit outside this sub-lane's partial scope and are assembled by the Lead. Named residuals: (1) Finite-corpus bounded verification: synthetic test scenarios prove numerical agreement at declared vector points only, not whole-domain equivalence (design limit 1); (2) Legacy-side comparison values were reconciled via static code inspection of LegacyEconomicsAdapter in core/economics.py rather than executing frozen P0-11 baseline binaries (design limit 10); (3) DEF-P012-01 and DEF-P012-02 formulas are grounded on self-evident algebraic correctness and legacy comparison inversion rather than explicit external venue specifications.\n[1B ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for formulas of DEF-P012-05..08 (design sections 11-14) re-derived and compared with code and expected tables only. All 40 formulas and rules across design sections 11-14 were successfully re-derived against kernel code and sealed golden tables with zero arithmetic discrepancies; the residual risk consists of two unclosed blocked markers in the sealed tables (RULE2-08-RED source_event_digest retained as a blocked marker while record bytes are populated, and RULE2-08-GREEN equity retained as BLOCKED-OPEN-EMBED-05 due to unenumerated pre-window setup numbers), the harness MIME-type rejection on the two markdown authority documents (mitigated by direct inspection of the canonical JSON economic records), and the lane delegation boundary leaving sections 7-10, authoring graph, and implementation anchor ancestry to sibling reviewer lanes.\n[1C ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this part only (the CONTRACT_TABLES authoring path and import graph, the IMPLEMENTATION_ANCHOR ancestry, and author independence from the kernel implementer). ACCEPTED_WITH_RESIDUAL_RISK on measured grounds: (1) Author independence is confirmed: CONTRACT_TABLES was authored by Claude-family lane W127b and the kernel was implemented by the Codex family (manifest lines 5-7), with zero Python files among the 19 sealed artifacts and selftests residing strictly outside the seal. (2) Ratification chain derivation is fully reconciled: verify_bceg.py lines 385-458 derives a 26-member chain (#5 through #28) from reseal_history, which matches semantic_coverage_review.schema.json lines 117-150 and schema.md lines 63-66. (3) Named residual risk ÔÇö Anchor ancestry: IMPLEMENTATION_BASE_SHA was re-anchored forward 14 times under decision 147 and subsequent rulings to f6790517e9bdc4e8bfcc401cae6606d7837b4e29, so git diff base..HEAD -- core is 0 bytes and does not capture the 54-commit kernel implementation delta. As ratified in design section 15.4 (lines 722-730), honest limit L14 (lines 836-865), and section 23.16 (lines 1827-1845), the pre-implementation property is carried by the measured git history (bundle placed at 5e8e5794 with kernel absent, first kernel commit 784175dd) rather than by the anchor base diff, satisfying the L14 restatement while leaving the original section 21 precondition 3 (:937) delta-expression unsatisfied across base..HEAD. (4) Named residual risk ÔÇö Baseline manifest pin: legacy_event_order_map_pin.baseline_manifest.sha256 in the manifest pins c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242 from re-seal #24 candidate pursuant to design section 15.3 (line 591), which binds seal-time bytes as a historical identity rather than tracking the current frozen baseline (130848719b25f834f903027184240db03eb55beeda5dc32a22f203118fa3e52a in IDENTITIES_MEASURED.json). [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. DEF-P012-01..04 formulas, derivations, DERIVATIONS.md, and verify_bceg.py remain byte-identical between heads; all goldens, inputs, and instrument records are untouched. The update to implementation_anchor.json and its SHA sidecar is routine re-seal bookkeeping reflecting the head commit update without impacting anchor ancestry."
+  },
+  "2": {
+   "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
+   "evidence_paths": [
+    "C:\\tmp\\P012_R26_FINAL_PACKET_20260906_0305\\BASELINE\\CURRENT\\BASELINE_BYTES_MANIFEST.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\CONTRACT_TABLES_MANIFEST.json",
+    "C:\\LAB\\Tradingview_LAB_CLEAN\\_gemini_packets_20260830\\N_COMMON_CLAUSES.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_SECTION16_REVIEW_DRAFT.md",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\config.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economics.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\exits.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\instrument.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_sizer.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\semantics.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.md",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_manager.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\results.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\runner.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\types.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\costs\\HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\costs\\HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json.sha256",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\funding\\HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\funding\\HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json.sha256",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json.sha256"
+   ],
+   "notes": "[2A ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this lane (REV16H-2A: code hunks for config.py, economics.py, exits.py, instrument.py, position_sizer.py, and semantics.py from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889). All 21 assigned hunks map cleanly to ratified Section 18 rows (S18-08, S18-02, S18-05, S18-04, S18-03, S18-01) with valid served DEF sets, exact raw byte SHA-256 matches, and zero undocumented economic modifications. Named residual risks: (1) Remaining 146 of 167 total core hunks reside in files outside this lane (position_manager.py, results.py, runner.py, types.py, and economic_records/**) and require separate Lead assembly; (2) economics.py is introduced as a single monolithic 1226-line diff hunk (global index 110), housing both the ExecutionEconomics seam ABC and internal implementations for DEFs 01, 02, 04, 05, 06, 07, 08; (3) Static shape census cannot inspect dynamic calls, aliases, or callers outside core (Design Section 18 blind spots, Section 17 limit 4); (4) Production collision policy in resolve_corrected_price_exits is structurally fixed to STOP_FIRST while Design Section 19 owner adjudication remains open.\n[2B ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for Part B only, covering kernel diff hunks in position_manager.py, results.py, runner.py, and types.py from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889. All 44 hunks across these four assigned files were inspected against Section 18 of P012_FRESH_DESIGN_V1.md and confirmed as SECTION18_SHARED with exact single-row Section-18 ownership, matching served DEF sets, and zero undocumented hunks. Named residual risk: this partial review covers 44 of 167 total kernel diff hunks (the remaining 123 hunks across config.py, economics.py, exits.py, instrument.py, position_sizer.py, semantics.py, and 102 economic records data files must be assembled by the Lead), and static diff/census inspection cannot evaluate external dynamic callers outside core.\n[2C ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this part only, covering all core/economic_records/** data-file and detached-sidecar hunks (102 hunks) from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889. All 102 assigned hunks were verified against the design Section 5 immutable record specification and Section 18 shape census, cleanly confirming SECTION18_SHARED under unique rows S18-11 and S18-04 with exact served DEF sets and zero undocumented hunks. Named residual risk: this partial review covers only 102 of the 167 total kernel diff hunks (the remaining 65 hunks across core Python modules config.py, economics.py, exits.py, instrument.py, position_manager.py, position_sizer.py, results.py, runner.py, semantics.py, and types.py must be assembled by the Lead); static shape census and record review cannot evaluate external dynamic consumers outside core. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Based on the corrected facts, core/runner.py is within Item 2's ratified hunk_coverage scope (112 paths, previously 167 hunks including 34 in runner.py under S18-07). Regenerating coverage at ca1a4457 yields 168 hunks with zero hunks classified UNDOCUMENTED, as the new hunk deterministically binds to S18-07 under canonical path rules. The modification is strictly an import of EXECUTION_PROFILE_RAW_CLOSE_ONLY for debug_mode metadata, supported by tests/test_runner_debug_metadata.py, while all six sub-lane files remain byte-identical since #28. Because the change introduces no behavioral regressions, semantic shifts, or unmitigated risks to DEF-P012-03/05/07, the ACCEPTED_WITH_RESIDUAL_RISK disposition carries forward intact. RESIDUAL NAMED BY THE REVIEWER: The strongest case for CHANGED is that core/runner.py is inside ratified scope, making hunk 168 an in-scope functional accretion rather than an out-of-scope artifact. S18-07 specifically serves DEF-P012-03, DEF-P012-05, and DEF-P012-07, none of which govern debug_mode metadata; absorbing a new feature hunk into an existing defect row without an explicit ticket could constitute scope drift and alter the residual risk profile of the module. This case does not survive because the gate's diff parser and Section-18 census report zero undocumented hunks, the path binding is mechanical and uniform, and the change is a benign, isolated metadata import with dedicated unit tests that does not compromise execution semantics or invalidate prior risk mitigations.",
+   "hunk_coverage": {
+    "schema": "P012_KERNEL_HUNK_COVERAGE_V2",
+    "base_commit": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
+    "reviewed_head": "ca1a44576aa46907ba4b39c417bced4bfabe94de",
+    "diff_command": "git diff --relative --unified=0 --no-ext-diff --no-textconv --no-renames --diff-algorithm=myers --no-indent-heuristic 5e8e579410ee55008bfd2d2d85054fd1d782f32c..ca1a44576aa46907ba4b39c417bced4bfabe94de -- core",
+    "diff_sha256": "36661881a96df8f61ed1eda7d57d8264c754220c60c9d0eb98e835338a40e3dd",
+    "total_changed_paths": 112,
+    "total_changed_files": 112,
+    "changed_paths": [
+     {
+      "path": "core/config.py",
+      "hunk_count": 8,
+      "hunk_indices": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "hunk_sha256s": [
+       "55307e64e97b1eecc501023ed8c0ed01f8437b00d0e2143405320b279ca8cf8c",
+       "880905672dbb38e4dda8223558c4fd856eb6b9542c52706d9b832e784cd0462a",
+       "ddb61684efb3d0598f6ea5dc20f6a4dd39defd784539f03d24dec76206d97e0f",
+       "33bb1c80440f7b6a3c5cc9ffcceb8592d4465c71aacc421ec8228ec4876861a7",
+       "95464cf8affea72759ce556b0002329e59e5893bba0b22e73228ee24c96f4a12",
+       "95132d691117232f42a1398d81dd5958727fc9398306042fea90bb38327dcd9c",
+       "dc655916479c160b4e19f64cf030ef3ed2f3ec3fa6138ed24c00a76a69b66240",
+       "7d8f1b7c1598ee387c9ee72e17a257a17b45a8b2d0b75e483dadff39a00882b3"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       8
+      ],
+      "hunk_sha256s": [
+       "c1878e9483e0e21e33138def58e8474db0a6807c5895889cf822d6ef76defdfb"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       9
+      ],
+      "hunk_sha256s": [
+       "7b8e1bc7e8291da74f6f5b4e2feece1fa308f25442812f9e8e719107dca5be3b"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-01-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       10
+      ],
+      "hunk_sha256s": [
+       "1ad30e468e81debd23833b8b791006127d38f45dddefd9bb70822d5853660a95"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-01-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       11
+      ],
+      "hunk_sha256s": [
+       "607309c2229bbfd2addf46eac41939cb6d0f89213b2cf558bafe77b495beaac2"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-01-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       12
+      ],
+      "hunk_sha256s": [
+       "ddef5375ad2a2e796f418d9c18ca4cb0d0b884841c3486f6ca759c5aa8d04d5d"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-01-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       13
+      ],
+      "hunk_sha256s": [
+       "a99b930684eceacaaa3217c106df6d447bf7bc3dd207320e8c06aaac3029265f"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-02-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       14
+      ],
+      "hunk_sha256s": [
+       "08e8bcb4d3cfef6a418e8290cfc4922708a1afa35737667e9c16163d70a5141b"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-02-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       15
+      ],
+      "hunk_sha256s": [
+       "d72c8a35ad82900852ba8156604e927958c088648a9d4c154a9813829d96481a"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-02-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       16
+      ],
+      "hunk_sha256s": [
+       "c0e60349c383b88440ed05e7b114ef4276382a4eaa0f6aa9ce8c6be11f0e49c2"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-02-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       17
+      ],
+      "hunk_sha256s": [
+       "3a2b6cf47a72c98e07bde7c92280006d1a53f6b9e7445bb151fbf89df4c9db0d"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-03-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       18
+      ],
+      "hunk_sha256s": [
+       "b4567a52341e7f6db7b96b50a4da4c7130cedda015a57c4664e63fe6ecdd8416"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-03-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       19
+      ],
+      "hunk_sha256s": [
+       "15c6a0305d9e893037adfbdc3973ab95e784faf072e7378f585c190ed769cd92"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-03-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       20
+      ],
+      "hunk_sha256s": [
+       "7ccbe587ae8e09cf5ba42ff0507fb6af34ce525e86cbf8915a8d13be88360cd1"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-03-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       21
+      ],
+      "hunk_sha256s": [
+       "604868823c352523ef7cf8cb4fb935e25ac5a12b2954bac235a1930651c19895"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-04-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       22
+      ],
+      "hunk_sha256s": [
+       "d5b204fdb4ac5e1af32a1cd5e3c0c79484c2720ffc6746bd00f51b50f6b7ac2f"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-04-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       23
+      ],
+      "hunk_sha256s": [
+       "6e465021dee239cb6775bba4b1aadcd668439979012063ed49802bec31c52c27"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-04-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       24
+      ],
+      "hunk_sha256s": [
+       "e47e1727969a702e7499f03355d0a2d09c082b47f7c2930f5abd42cb11e839fd"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-04-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       25
+      ],
+      "hunk_sha256s": [
+       "e9396ee6e0da9089b01b7d0e96b9bf3d3ba545aae71b426945ef07674f9b489a"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-05-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       26
+      ],
+      "hunk_sha256s": [
+       "994b46d8805e06edd0e8d3071cff1aee8638223291b1ebb90f06bad88516f4f7"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-05-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       27
+      ],
+      "hunk_sha256s": [
+       "72613082503d5614946d4c05d76d1609acd5e3f2d428bd3b3cdea9daa8478d1f"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-05-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       28
+      ],
+      "hunk_sha256s": [
+       "c7b26347015be16a7be191c594558dc06b775a51ab948aaa99f93aa482935bbf"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-05-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       29
+      ],
+      "hunk_sha256s": [
+       "0389d34146f741c80a860511d1b19d98191676b638b8ff0991784a62306ee33b"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-EQUAL-PRICE-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       30
+      ],
+      "hunk_sha256s": [
+       "e9554c42b1ef7a8c843eafa52979a4c1822eed027667f22ec9e19d558b0f0736"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-EQUAL-PRICE-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       31
+      ],
+      "hunk_sha256s": [
+       "d5ed485f8d224795ecd501a0d53f45d9de5ab7ab0ea1746b784bfb864cb46938"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       32
+      ],
+      "hunk_sha256s": [
+       "d90690bfdc43a754338bd92c997f6739d97dd71b5339f49b889b88201fc5fd1f"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       33
+      ],
+      "hunk_sha256s": [
+       "f0da1ba0474d94d01e377a72c61e1424e309e95773c963aa408b8fe13b10e14c"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       34
+      ],
+      "hunk_sha256s": [
+       "afd56dc0d8a602f7ad576572e811bb4a9d42d1381227bb25f823e6bd5eea23e4"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       35
+      ],
+      "hunk_sha256s": [
+       "931709768e066a09093535ebb9c37ed3d01c895388c06c29bc8af17e03c91a7d"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-07-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       36
+      ],
+      "hunk_sha256s": [
+       "8661cea550736740d37380a04da1abb0f14339b72aadcc04485fbfbd09431b21"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-07-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       37
+      ],
+      "hunk_sha256s": [
+       "a9b671d40607518fbc6d8ffadd3575cb08616d99addec04738a956b2a0003b40"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-07-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       38
+      ],
+      "hunk_sha256s": [
+       "d48a5dd608eba529880302522719e003ee72547546653f5bd3190039b2868f18"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-07-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       39
+      ],
+      "hunk_sha256s": [
+       "919b0b5da1193c891653c9e6d9fa9ae773187731ae65f20c6e63dc41da62e5a6"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       40
+      ],
+      "hunk_sha256s": [
+       "81095cd7677c5d5d91d45ce19ec92f01c58c1895363ef44d47e0a6418b5a4a08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       41
+      ],
+      "hunk_sha256s": [
+       "24776fffc749bbd8045c2b714bdabf2c0585c465dc7bcfc3185f01abe91bb32d"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-01-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       42
+      ],
+      "hunk_sha256s": [
+       "3f22585cc6cc354d57f620c6065d5c7702d70f4d651acec87edf6681f993b90f"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-01-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       43
+      ],
+      "hunk_sha256s": [
+       "e6fbee9c245f39d0f9b79f9c8a5be2b47e19c731d516648ca3de176a5e35ac08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-01-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       44
+      ],
+      "hunk_sha256s": [
+       "ad86cd26a88ccd57980d43eeaabbd0b70a6f783a1a8199a693e610af648446d1"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-01-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       45
+      ],
+      "hunk_sha256s": [
+       "bb54a9f0892a0aa864e2aca63d088cf65d12248451e97ae083652288062c3667"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-02-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       46
+      ],
+      "hunk_sha256s": [
+       "6fdd2291a772439e701aef136c094cbb3da2da1d1fcfda5aaf0b5f02a95f76f1"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-02-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       47
+      ],
+      "hunk_sha256s": [
+       "c73b01a4d3b162cc0e0963c7ee2fca4fb8d6d5519e9d27fb994fe94b59eefeeb"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-02-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       48
+      ],
+      "hunk_sha256s": [
+       "faf4a115ad06bac5bcd0ab479cae90f9e64c31c9b5020b62effd65974d22a286"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-02-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       49
+      ],
+      "hunk_sha256s": [
+       "5fdeb3ca32cf4b02598e7b4a1b9ea8bdf1ffd86c288049643141dcff97f72f7f"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-03-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       50
+      ],
+      "hunk_sha256s": [
+       "76339da0b5e66346661ade1e05e9cec3c9964b9813afa76a26e7ca01c45ff66b"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-03-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       51
+      ],
+      "hunk_sha256s": [
+       "43afd927f918084a00e9fe24fe6c9b4196271add14a2658c8a79858c87e34786"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-03-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       52
+      ],
+      "hunk_sha256s": [
+       "c7f51672253ecab53704838c4a061a41bd9f36bda5c25068408d15052479224e"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-03-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       53
+      ],
+      "hunk_sha256s": [
+       "a8024c3d6f365718f450bf10c3dbdc1ad6e17155e925a875a2ca330965aee04c"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-04-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       54
+      ],
+      "hunk_sha256s": [
+       "0eede8f9958d22533d26ff267f2839b93992c53b55423333d6e0ea78951e9645"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-04-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       55
+      ],
+      "hunk_sha256s": [
+       "a3b7fbb11ce69b60d1056709c7d38961f9270d0f56c6e51052a51458fdbf29c9"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-04-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       56
+      ],
+      "hunk_sha256s": [
+       "3de2872296294e2644687fc97777e869c3401857039f93be1c175b73a0cae8d5"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-04-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       57
+      ],
+      "hunk_sha256s": [
+       "29c936acc23f88b4150aa35ed90fffe6704642fe3b041a3c7b1aa027cc64a562"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-05-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       58
+      ],
+      "hunk_sha256s": [
+       "87cd051fade16e2c2889e0d25ed3d9e89fc84c5d72712cede5925c30a381ec93"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-05-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       59
+      ],
+      "hunk_sha256s": [
+       "8f6ef105ab7c2df6cb729a7b073070eab243483b2b85f3c5713998257c0c5ba4"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-05-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       60
+      ],
+      "hunk_sha256s": [
+       "20bdae3348b6f5d0e20fd19b14ff4d2bc526507e5fee81549922e278484ef2e5"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-05-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       61
+      ],
+      "hunk_sha256s": [
+       "7c77cb37941824ca485c75dabd9cba7bc3cb909ecdd268c07080b8b8a7f54689"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-EQUAL-PRICE-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       62
+      ],
+      "hunk_sha256s": [
+       "ddf27a5831d757aa9e52bf289efda9e09185dee3e4af71f2d723a1257ec31636"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-EQUAL-PRICE-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       63
+      ],
+      "hunk_sha256s": [
+       "2b94c14625330f3fad16834b4fb1a521b670141ee9dbe8a71f66145350c1ea8f"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       64
+      ],
+      "hunk_sha256s": [
+       "7b9fb9b9bb684fb265cdb7867db84e2e50a294d794be89b4c51b106e72dee867"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       65
+      ],
+      "hunk_sha256s": [
+       "606f99c7b1c1d1ce792c5ba57b13fdbfe09660e402975710f7976841676b80f7"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       66
+      ],
+      "hunk_sha256s": [
+       "9d5135ce37ee6da7c94f58f76a1d0f32685034b910ea7d13666a71fbdea4ae34"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       67
+      ],
+      "hunk_sha256s": [
+       "4d4f3299ab56de2769523f5dc735774b3f0d2f6c951b52d67bd031d67d4f7514"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-07-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       68
+      ],
+      "hunk_sha256s": [
+       "8b049aa77c69f1c915f3055ba8d631f8e011666a917bc1d9f232cb3fce4cd72c"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-07-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       69
+      ],
+      "hunk_sha256s": [
+       "5dea8e2048a145587c950264b21bf7234585ba1b293da5e6cef5016a43f14ac2"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-07-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       70
+      ],
+      "hunk_sha256s": [
+       "36f7493e859dbe005727e2ccc43677c2e9bbe5f829d4ce7e7eef3f92f5425dbd"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-07-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       71
+      ],
+      "hunk_sha256s": [
+       "b5936f7d86dac51f00493a0d6a3a19dc4554432180c41f193d2fbb9f58337f5f"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-08-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       72
+      ],
+      "hunk_sha256s": [
+       "37487143768fec52833e7c53b3e1464871f021c57ce0b7a0812ae727bd889548"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-08-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       73
+      ],
+      "hunk_sha256s": [
+       "5bf0f90c8f51ab89410c85d72b9a19a4eb07fb3ce6ef9a87f89169ce9d736f89"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/HYPERLIQUID-BTC-PERP-V1.3.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       74
+      ],
+      "hunk_sha256s": [
+       "7e164b3fecb0813c5fc525d6be2dec784f3eca9e2512ba80af5eb357753535c3"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/HYPERLIQUID-BTC-PERP-V1.3.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       75
+      ],
+      "hunk_sha256s": [
+       "35379c268751184437613b3f46ac3f3473f28efbbbea6a5c2e2fa4324410603b"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       76
+      ],
+      "hunk_sha256s": [
+       "d4764598ee8a87a0e3fb177dd1d6973b4e799e46d911f5e970840a60f2e76310"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       77
+      ],
+      "hunk_sha256s": [
+       "2292e1932d3b5e6d212ddf548475800be6a8eda3bc7c6d5a77b26ecc66fa8e5f"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       78
+      ],
+      "hunk_sha256s": [
+       "aa9bf1225f397b3704e55c78139afc37972f9eebeee0dd873dec6015abc3f803"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       79
+      ],
+      "hunk_sha256s": [
+       "dbc01b84f64ced282ae4994547e24ab93ec423fce33fea2b82719e24443b447d"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       80
+      ],
+      "hunk_sha256s": [
+       "eac3399b4a9cfced9b3eec6a79bfa9ee139fd8f2a0ddc279660bb52111bd96ff"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       81
+      ],
+      "hunk_sha256s": [
+       "92a3857b3bf07b0f5ad13565b9b9bff7a8a39328cbff2c7d40d25f550a499a2d"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       82
+      ],
+      "hunk_sha256s": [
+       "c5ce9376e250db35f9c9e3197ba629763e720e0fcc5b862f305a6d5c5aa91bbe"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       83
+      ],
+      "hunk_sha256s": [
+       "1cc19a3fde1e1d4a6c478b7c39622bb24090b54248a8af1c8c059bad81c4e116"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       84
+      ],
+      "hunk_sha256s": [
+       "0094181bb3d4c23afc06f96cddfa797e0d4010bfd2d4983bfdd496d25bbf5330"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       85
+      ],
+      "hunk_sha256s": [
+       "372c9c3b282d4940486e156819f7c3d68046308e3db61ebec1eb8de1c0e0f44e"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       86
+      ],
+      "hunk_sha256s": [
+       "515d0e4751b4566f502ac07ad121d7bdd2aea42508dedc9aba69aca8ebb23e58"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       87
+      ],
+      "hunk_sha256s": [
+       "4f3ea63ca2037a3b372fc5f54d846eb4d4d748c1f3fb086e32e16e4333dfd4d3"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       88
+      ],
+      "hunk_sha256s": [
+       "1cde00a664161b5a8b0e50b552f5d263818e9414a90e8e934b9f15ea657fb5dc"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       89
+      ],
+      "hunk_sha256s": [
+       "c147acba8fb85341d9904a053ea186fe35d1f8889572cede91397d255438dfaa"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       90
+      ],
+      "hunk_sha256s": [
+       "ad879ead40d45ef59e2d3f4fdcaa48d3b738c9c47a1ae56eb29e76a6e1400dbf"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       91
+      ],
+      "hunk_sha256s": [
+       "9bf7146cebdaf0b18ac8d7072b8285b04667b558903ebf49eee5072f6b3e026c"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       92
+      ],
+      "hunk_sha256s": [
+       "cbe060914a8d38a34dd1dfd4ad50b1b9631b0775844d69a89af440d731c1f39a"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       93
+      ],
+      "hunk_sha256s": [
+       "92240cebc24d104f713a1001130bb57f7b48ebb505b96bee6a59928766840ada"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       94
+      ],
+      "hunk_sha256s": [
+       "747d9420f1828c4c8bfb8b5e11592b255ec48a09ee1f1c575ea29096394052d2"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       95
+      ],
+      "hunk_sha256s": [
+       "45379fda1ff7a6d8e2f6fe3f015383fd252751bca0049ceb042c2f8b327d4c07"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-EQUAL-PRICE-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       96
+      ],
+      "hunk_sha256s": [
+       "35f5b3a6704a2858bad5e53c6a6c027cef33180e5c43edb4c5d2a3ccfd3f4919"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-EQUAL-PRICE-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       97
+      ],
+      "hunk_sha256s": [
+       "11afcf14cc894661e722c22249639b383df8de381dd15fbf65ecadbc49f2027a"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       98
+      ],
+      "hunk_sha256s": [
+       "e63c83d6d503aa92ecf5df6af49ca58074a94b70ef608224303d4a447fc59d92"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       99
+      ],
+      "hunk_sha256s": [
+       "5ac26c6014ed8298b7d03c9f09a0b71fcf07180c81dfccd57a9200f17e3314ee"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       100
+      ],
+      "hunk_sha256s": [
+       "b19804640f550070a5f021125eac8bea57be36206a18486b666d0d0e3e459599"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       101
+      ],
+      "hunk_sha256s": [
+       "8d2faeca763f00d6d22cfa30f6346c5beb864b5bb7fb9bdb52ea41fa9aae6287"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       102
+      ],
+      "hunk_sha256s": [
+       "2e25849681c995077ca1c3191d8ef81f5a6eccbd85d2f3cbc0fdb31be6e77ffa"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       103
+      ],
+      "hunk_sha256s": [
+       "a0ee2f35ae51a85ad8cc06aaf4fe66a3805b8ee35b4b08b98eebd8821b4efabb"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       104
+      ],
+      "hunk_sha256s": [
+       "9115726358b378fdb5bd7d125b28d76078097ec599433886fc942f5777e8a873"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       105
+      ],
+      "hunk_sha256s": [
+       "b7f34f573258d100f65a4722fab53e4494bab66829dfb93cc5c6f15e3285041b"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-GREEN-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       106
+      ],
+      "hunk_sha256s": [
+       "a922716267089e154b89b370784bd29ed92c9a7e7771ba3079b4552477a88cb9"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-GREEN-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       107
+      ],
+      "hunk_sha256s": [
+       "148e8a740096b70df4de639e87597b427e68b00a92d8d7210d701b7b49d0625f"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-RED-V1.json",
+      "hunk_count": 1,
+      "hunk_indices": [
+       108
+      ],
+      "hunk_sha256s": [
+       "dbfa5993c0976b4bd128bebd678b6f55dbc134bf6692d71c7bf90b9616928cd9"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-RED-V1.json.sha256",
+      "hunk_count": 1,
+      "hunk_indices": [
+       109
+      ],
+      "hunk_sha256s": [
+       "3cb4cd9bfd6235d833cc6d26e8102ec4f9af991147da7a2a443258ac452eeab2"
+      ]
+     },
+     {
+      "path": "core/economics.py",
+      "hunk_count": 1,
+      "hunk_indices": [
+       110
+      ],
+      "hunk_sha256s": [
+       "9d5ac70382768e24b093d27905fc19849999cd8faf860097ff3607dcc458d06c"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "hunk_count": 4,
+      "hunk_indices": [
+       111,
+       112,
+       113,
+       114
+      ],
+      "hunk_sha256s": [
+       "b0bb8fbcf15cb0c94a2a9c2a3bf80b32d5c54d2030a0dbbed687339c4be50734",
+       "bf639f0518992e1c05428452b0adf6248b93fa5f3c9c302405fef8268798261f",
+       "4998f332fce20dcf9f63769299aa848ae530bb29691f009c75a7e17206a1ece6",
+       "c619422146b83772e2349edcf132c3d90e9675e9e302682706772611ccd172cb"
+      ]
+     },
+     {
+      "path": "core/instrument.py",
+      "hunk_count": 3,
+      "hunk_indices": [
+       115,
+       116,
+       117
+      ],
+      "hunk_sha256s": [
+       "22e07801f076229c8391c1c4fa8d2c9e4f9046b349eb21363a9d7d1020bbe561",
+       "8283a6a8a38b05eea80ca4e4c9cd9deee2db5d7bebfccee78824213ecf99b6e0",
+       "1192dbdc9e82d98a923787b5f4dde4132630d05395aa69f7e894a905d148f6c5"
+      ]
+     },
+     {
+      "path": "core/position_manager.py",
+      "hunk_count": 2,
+      "hunk_indices": [
+       118,
+       119
+      ],
+      "hunk_sha256s": [
+       "36edfdee5c7483dd5af0b890834f36b438db537dd3d18c2a579854486d3c2164",
+       "987be0f37660e27aa4406f1255d0e381a85fd83e84ef17ad627e48efcedea906"
+      ]
+     },
+     {
+      "path": "core/position_sizer.py",
+      "hunk_count": 4,
+      "hunk_indices": [
+       120,
+       121,
+       122,
+       123
+      ],
+      "hunk_sha256s": [
+       "377b7084c8ca989b8d5fcfaa1a32131db8813fe637118b56e31dfb04e6d72e38",
+       "03c7a82b0ba2679424d7e7c70b1a545d464c647de8f438e131bcfad8df9920e5",
+       "6d1023f718d81c7fa4e4052a6cf849c156ff84a2b07e573fbb160b628076d43d",
+       "0e864627336b579a7401a50743fe7c5b4946b47028c05cc5369fd277a08f63e7"
+      ]
+     },
+     {
+      "path": "core/results.py",
+      "hunk_count": 4,
+      "hunk_indices": [
+       124,
+       125,
+       126,
+       127
+      ],
+      "hunk_sha256s": [
+       "050a550b2079ea2a9ea8b5cc5397216a363d901c6c7cc5a1337d5d96416d2fc1",
+       "dd3112703ee6a85ebed61f75ec8d3b39c84175ef902bfbc65aeba3aea1b723d3",
+       "1900d9434ed56da3bd8637a2624079769faeb863387266cc8b8d5a7df1951629",
+       "7d512c7a50219f33ad518195af82c8a725cd7407bdf6894e3ebd96996e67d3a7"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "hunk_count": 35,
+      "hunk_indices": [
+       128,
+       129,
+       130,
+       131,
+       132,
+       133,
+       134,
+       135,
+       136,
+       137,
+       138,
+       139,
+       140,
+       141,
+       142,
+       143,
+       144,
+       145,
+       146,
+       147,
+       148,
+       149,
+       150,
+       151,
+       152,
+       153,
+       154,
+       155,
+       156,
+       157,
+       158,
+       159,
+       160,
+       161,
+       162
+      ],
+      "hunk_sha256s": [
+       "c32aedd4bc6a8e80814c7d140adb1c07b04fb3b1c83a3ee0f1b3d8fc86e62789",
+       "02537b1a0d676856ccdc4f93dbd4b3fefbf1e1d2c8c1f201db3c300f6a2f88c4",
+       "0f3716ff7e5e5e20307abb4c078a7a63b679270f59d850e0d9e152cd1749cee7",
+       "963dcab9d8b7972b0c04a9cdbe813cebd03b871fc11636efe4c8ea7fc7a48394",
+       "55b46a2f480cc3b128653d5b71f0e7566720a0663188b64e980a23f006ac1665",
+       "76518495756ea4895466209fc8a1b17e6e73396956c0781b9d4c72039d4aa949",
+       "1b1283a7e2c7b557962778fcb721eec7f34956be6f0b7ac571c69c8ce9ad964d",
+       "270e3a1329ad1afc7c7a0ad749b4c638683c5007c8649cb7489ae1cc7b549d91",
+       "2a88d12d416c6e8123ebfeb25838a2f2687113674330b199831cd7ab9ac9c034",
+       "2fb2426d49750ad2af7886a1f5df1db66290a3d4165a5a78a474a04f24f9dc64",
+       "be7f40cf9de0d01332c541b84ea2c1cbb83d3a2bd7f21b8afcecaf0f2ca1c92e",
+       "9b6807f0b4f3416c516701f9e7108dd2e8d090f60f744bee35a17a8007e388ae",
+       "3bb418ed071ae7fedf8a7ce7f0541e607340a41d8113d8dd7592d1740efafd29",
+       "f2a74f662c1a5eb6ba927ed01907f462fcd2d22cf6396c0ea628d4f1e860b194",
+       "7e2100065ec9db4fdc6ee36ab595796b13002f8b9fe55ffd89d89682520c809b",
+       "c681694a884f4d4a62d2446e1c52f124300f78576bf218415e5e5a7db2a8557b",
+       "b0bf36b8b9bfd2b913079db0b80c279b7f5312e189c1a639789ac9c1bf82c65d",
+       "3cbdf1dbc82b548570271bfa2fa364f5e2aa95ef8b88c5a3cf5eda420d58537d",
+       "0aac251d5c44000498b80c6dba42d323294321bad1a3fdaadc6de3c9a8208eea",
+       "75f57f2e3632456c942adeeb58e912cf14c88a8cac6d59f7ec3d69643e11d425",
+       "1599993fbc44e886cca840530e21e576c529caaef6544959c45a0640e2e51768",
+       "238f961ee743a0447b86b12199de00e4a39d51e11d5a0b1b5b9d8e0cbb363efa",
+       "cfa04c00ac51eff98f4a85315d1807a6f6709e8d65ecdb6159735dc40ef2bc50",
+       "8154f840fad8a55d0029f4d86c358e1ed23cb4cfc6f71239db75ac1de9e0a11e",
+       "004570a4a4a2786bad2e9ad3bad52027d7954c0484b6bb0050a9ec4dea949c03",
+       "d6726152bb0753406682b2379dc0c06c40729af95bcd8a7aae79a23c04b5de22",
+       "6bcf1445377a550241308bf40966f8d57aeecec3aa6bfe75cfe0ee429c9396bc",
+       "34799551ce8eea4fbb5b5ca890b72f260a1489ce707ed47f45b4cb62e2a32b80",
+       "8a4cb9c96190a59446e9af01b3a8b2945187dd65532df9a1721bdecf35e2f580",
+       "774cec034fbabf9c3ab93190a2e0f9524cc0fd0a5d89a217353d8e59788384a2",
+       "6d81f61a229c0948ff2a45e13494f10cdf53f204f9c30012efda9f8cadba3c76",
+       "4e62b855327f64092096275a2b6b1041f3de77436716c7d1dbea561ab3257c5d",
+       "a323d8aa77e166d3e75a7109a27c9b809c4205bf7763fcdf095d59d158ce571a",
+       "7ef3a8138dc01522345b226b175aba91bd77b6df4b8750b44f51849947897d50",
+       "1ea4e68794613ef614675f2e065d13c8ffcd6d5bf71fe1abc3747eee22501876"
+      ]
+     },
+     {
+      "path": "core/semantics.py",
+      "hunk_count": 1,
+      "hunk_indices": [
+       163
+      ],
+      "hunk_sha256s": [
+       "2bae096428a5b61505b44ea9184e2cc4032fcb5e5a3da3d2e0b7104606c5e35b"
+      ]
+     },
+     {
+      "path": "core/types.py",
+      "hunk_count": 4,
+      "hunk_indices": [
+       164,
+       165,
+       166,
+       167
+      ],
+      "hunk_sha256s": [
+       "f1ee192be24aac2973838b25659669b6310675c8580c6dfe3aa9ac79b1471f63",
+       "fea8ae1e1ddbb9e3f5ad2d462ac32adabb8ff291ab2f1fb6c33c6a665803b56d",
+       "7838149f91ca5492cb6d46bbb5f98315295111ca48ee0ecbd9735a5d6b2cd55a",
+       "a89fedf09e3c857d8150b0147afa77a01be980b272924e6c5a12002885d02e0d"
+      ]
+     }
+    ],
+    "section18_coverage": [
+     {
+      "row": "S18-01",
+      "served_def_ids": [
+       "DEF-P012-01",
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-05",
+       "DEF-P012-06",
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ],
+      "hunk_indices": [
+       163
+      ]
+     },
+     {
+      "row": "S18-02",
+      "served_def_ids": [
+       "DEF-P012-01",
+       "DEF-P012-02",
+       "DEF-P012-04",
+       "DEF-P012-05",
+       "DEF-P012-06",
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ],
+      "hunk_indices": [
+       110
+      ]
+     },
+     {
+      "row": "S18-03",
+      "served_def_ids": [
+       "DEF-P012-01",
+       "DEF-P012-02"
+      ],
+      "hunk_indices": [
+       120,
+       121,
+       122,
+       123
+      ]
+     },
+     {
+      "row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ],
+      "hunk_indices": [
+       74,
+       75,
+       76,
+       77,
+       78,
+       79,
+       80,
+       81,
+       82,
+       83,
+       84,
+       85,
+       86,
+       87,
+       88,
+       89,
+       90,
+       91,
+       92,
+       93,
+       94,
+       95,
+       96,
+       97,
+       98,
+       99,
+       100,
+       101,
+       102,
+       103,
+       104,
+       105,
+       106,
+       107,
+       108,
+       109,
+       115,
+       116,
+       117
+      ]
+     },
+     {
+      "row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ],
+      "hunk_indices": [
+       111,
+       112,
+       113,
+       114
+      ]
+     },
+     {
+      "row": "S18-06",
+      "served_def_ids": [
+       "DEF-P012-05",
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ],
+      "hunk_indices": [
+       118,
+       119
+      ]
+     },
+     {
+      "row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ],
+      "hunk_indices": [
+       128,
+       129,
+       130,
+       131,
+       132,
+       133,
+       134,
+       135,
+       136,
+       137,
+       138,
+       139,
+       140,
+       141,
+       142,
+       143,
+       144,
+       145,
+       146,
+       147,
+       148,
+       149,
+       150,
+       151,
+       152,
+       153,
+       154,
+       155,
+       156,
+       157,
+       158,
+       159,
+       160,
+       161,
+       162
+      ]
+     },
+     {
+      "row": "S18-08",
+      "served_def_ids": [
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ],
+      "hunk_indices": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ]
+     },
+     {
+      "row": "S18-09",
+      "served_def_ids": [
+       "DEF-P012-08"
+      ],
+      "hunk_indices": [
+       164,
+       165,
+       166,
+       167
+      ]
+     },
+     {
+      "row": "S18-10",
+      "served_def_ids": [
+       "DEF-P012-07"
+      ],
+      "hunk_indices": [
+       124,
+       125,
+       126,
+       127
+      ]
+     },
+     {
+      "row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ],
+      "hunk_indices": [
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19,
+       20,
+       21,
+       22,
+       23,
+       24,
+       25,
+       26,
+       27,
+       28,
+       29,
+       30,
+       31,
+       32,
+       33,
+       34,
+       35,
+       36,
+       37,
+       38,
+       39,
+       40,
+       41,
+       42,
+       43,
+       44,
+       45,
+       46,
+       47,
+       48,
+       49,
+       50,
+       51,
+       52,
+       53,
+       54,
+       55,
+       56,
+       57,
+       58,
+       59,
+       60,
+       61,
+       62,
+       63,
+       64,
+       65,
+       66,
+       67,
+       68,
+       69,
+       70,
+       71,
+       72,
+       73
+      ]
+     },
+     {
+      "row": "S18-12",
+      "served_def_ids": [],
+      "hunk_indices": []
+     }
+    ],
+    "hunks": [
+     {
+      "path": "core/config.py",
+      "old_start": 3,
+      "old_count": 0,
+      "new_start": 4,
+      "new_count": 1,
+      "hunk_sha256": "55307e64e97b1eecc501023ed8c0ed01f8437b00d0e2143405320b279ca8cf8c",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-08",
+      "served_def_ids": [
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/config.py",
+      "old_start": 5,
+      "old_count": 0,
+      "new_start": 7,
+      "new_count": 2,
+      "hunk_sha256": "880905672dbb38e4dda8223558c4fd856eb6b9542c52706d9b832e784cd0462a",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-08",
+      "served_def_ids": [
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/config.py",
+      "old_start": 17,
+      "old_count": 0,
+      "new_start": 21,
+      "new_count": 30,
+      "hunk_sha256": "ddb61684efb3d0598f6ea5dc20f6a4dd39defd784539f03d24dec76206d97e0f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-08",
+      "served_def_ids": [
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/config.py",
+      "old_start": 236,
+      "old_count": 1,
+      "new_start": 269,
+      "new_count": 1,
+      "hunk_sha256": "33bb1c80440f7b6a3c5cc9ffcceb8592d4465c71aacc421ec8228ec4876861a7",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-08",
+      "served_def_ids": [
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/config.py",
+      "old_start": 240,
+      "old_count": 0,
+      "new_start": 274,
+      "new_count": 3,
+      "hunk_sha256": "95464cf8affea72759ce556b0002329e59e5893bba0b22e73228ee24c96f4a12",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-08",
+      "served_def_ids": [
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/config.py",
+      "old_start": 257,
+      "old_count": 7,
+      "new_start": 293,
+      "new_count": 14,
+      "hunk_sha256": "95132d691117232f42a1398d81dd5958727fc9398306042fea90bb38327dcd9c",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-08",
+      "served_def_ids": [
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/config.py",
+      "old_start": 582,
+      "old_count": 0,
+      "new_start": 626,
+      "new_count": 3,
+      "hunk_sha256": "dc655916479c160b4e19f64cf030ef3ed2f3ec3fa6138ed24c00a76a69b66240",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-08",
+      "served_def_ids": [
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/config.py",
+      "old_start": 612,
+      "old_count": 0,
+      "new_start": 659,
+      "new_count": 57,
+      "hunk_sha256": "7d8f1b7c1598ee387c9ee72e17a257a17b45a8b2d0b75e483dadff39a00882b3",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-08",
+      "served_def_ids": [
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 61,
+      "hunk_sha256": "c1878e9483e0e21e33138def58e8474db0a6807c5895889cf822d6ef76defdfb",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "7b8e1bc7e8291da74f6f5b4e2feece1fa308f25442812f9e8e719107dca5be3b",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-01-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "1ad30e468e81debd23833b8b791006127d38f45dddefd9bb70822d5853660a95",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-01-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "607309c2229bbfd2addf46eac41939cb6d0f89213b2cf558bafe77b495beaac2",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-01-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "ddef5375ad2a2e796f418d9c18ca4cb0d0b884841c3486f6ca759c5aa8d04d5d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-01-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "a99b930684eceacaaa3217c106df6d447bf7bc3dd207320e8c06aaac3029265f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-02-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "08e8bcb4d3cfef6a418e8290cfc4922708a1afa35737667e9c16163d70a5141b",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-02-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "d72c8a35ad82900852ba8156604e927958c088648a9d4c154a9813829d96481a",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-02-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "c0e60349c383b88440ed05e7b114ef4276382a4eaa0f6aa9ce8c6be11f0e49c2",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-02-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "3a2b6cf47a72c98e07bde7c92280006d1a53f6b9e7445bb151fbf89df4c9db0d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-03-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "b4567a52341e7f6db7b96b50a4da4c7130cedda015a57c4664e63fe6ecdd8416",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-03-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "15c6a0305d9e893037adfbdc3973ab95e784faf072e7378f585c190ed769cd92",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-03-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "7ccbe587ae8e09cf5ba42ff0507fb6af34ce525e86cbf8915a8d13be88360cd1",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-03-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "604868823c352523ef7cf8cb4fb935e25ac5a12b2954bac235a1930651c19895",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-04-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "d5b204fdb4ac5e1af32a1cd5e3c0c79484c2720ffc6746bd00f51b50f6b7ac2f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-04-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "6e465021dee239cb6775bba4b1aadcd668439979012063ed49802bec31c52c27",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-04-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "e47e1727969a702e7499f03355d0a2d09c082b47f7c2930f5abd42cb11e839fd",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-04-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "e9396ee6e0da9089b01b7d0e96b9bf3d3ba545aae71b426945ef07674f9b489a",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-05-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "994b46d8805e06edd0e8d3071cff1aee8638223291b1ebb90f06bad88516f4f7",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-05-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "72613082503d5614946d4c05d76d1609acd5e3f2d428bd3b3cdea9daa8478d1f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-05-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "c7b26347015be16a7be191c594558dc06b775a51ab948aaa99f93aa482935bbf",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-05-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "0389d34146f741c80a860511d1b19d98191676b638b8ff0991784a62306ee33b",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-EQUAL-PRICE-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "e9554c42b1ef7a8c843eafa52979a4c1822eed027667f22ec9e19d558b0f0736",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-EQUAL-PRICE-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "d5ed485f8d224795ecd501a0d53f45d9de5ab7ab0ea1746b784bfb864cb46938",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "d90690bfdc43a754338bd92c997f6739d97dd71b5339f49b889b88201fc5fd1f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "f0da1ba0474d94d01e377a72c61e1424e309e95773c963aa408b8fe13b10e14c",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "afd56dc0d8a602f7ad576572e811bb4a9d42d1381227bb25f823e6bd5eea23e4",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-06-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "931709768e066a09093535ebb9c37ed3d01c895388c06c29bc8af17e03c91a7d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-07-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "8661cea550736740d37380a04da1abb0f14339b72aadcc04485fbfbd09431b21",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-07-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "a9b671d40607518fbc6d8ffadd3575cb08616d99addec04738a956b2a0003b40",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-07-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "d48a5dd608eba529880302522719e003ee72547546653f5bd3190039b2868f18",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/costs/SYNTH-COST-RULE2-07-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "919b0b5da1193c891653c9e6d9fa9ae773187731ae65f20c6e63dc41da62e5a6",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 55,
+      "hunk_sha256": "81095cd7677c5d5d91d45ce19ec92f01c58c1895363ef44d47e0a6418b5a4a08",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "24776fffc749bbd8045c2b714bdabf2c0585c465dc7bcfc3185f01abe91bb32d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-01-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "3f22585cc6cc354d57f620c6065d5c7702d70f4d651acec87edf6681f993b90f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-01-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "e6fbee9c245f39d0f9b79f9c8a5be2b47e19c731d516648ca3de176a5e35ac08",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-01-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "ad86cd26a88ccd57980d43eeaabbd0b70a6f783a1a8199a693e610af648446d1",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-01-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "bb54a9f0892a0aa864e2aca63d088cf65d12248451e97ae083652288062c3667",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-02-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "6fdd2291a772439e701aef136c094cbb3da2da1d1fcfda5aaf0b5f02a95f76f1",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-02-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "c73b01a4d3b162cc0e0963c7ee2fca4fb8d6d5519e9d27fb994fe94b59eefeeb",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-02-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "faf4a115ad06bac5bcd0ab479cae90f9e64c31c9b5020b62effd65974d22a286",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-02-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "5fdeb3ca32cf4b02598e7b4a1b9ea8bdf1ffd86c288049643141dcff97f72f7f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-03-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "76339da0b5e66346661ade1e05e9cec3c9964b9813afa76a26e7ca01c45ff66b",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-03-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "43afd927f918084a00e9fe24fe6c9b4196271add14a2658c8a79858c87e34786",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-03-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "c7f51672253ecab53704838c4a061a41bd9f36bda5c25068408d15052479224e",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-03-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "a8024c3d6f365718f450bf10c3dbdc1ad6e17155e925a875a2ca330965aee04c",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-04-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "0eede8f9958d22533d26ff267f2839b93992c53b55423333d6e0ea78951e9645",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-04-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "a3b7fbb11ce69b60d1056709c7d38961f9270d0f56c6e51052a51458fdbf29c9",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-04-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "3de2872296294e2644687fc97777e869c3401857039f93be1c175b73a0cae8d5",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-04-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "29c936acc23f88b4150aa35ed90fffe6704642fe3b041a3c7b1aa027cc64a562",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-05-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "87cd051fade16e2c2889e0d25ed3d9e89fc84c5d72712cede5925c30a381ec93",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-05-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "8f6ef105ab7c2df6cb729a7b073070eab243483b2b85f3c5713998257c0c5ba4",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-05-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "20bdae3348b6f5d0e20fd19b14ff4d2bc526507e5fee81549922e278484ef2e5",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-05-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "7c77cb37941824ca485c75dabd9cba7bc3cb909ecdd268c07080b8b8a7f54689",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-EQUAL-PRICE-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "ddf27a5831d757aa9e52bf289efda9e09185dee3e4af71f2d723a1257ec31636",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-EQUAL-PRICE-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "2b94c14625330f3fad16834b4fb1a521b670141ee9dbe8a71f66145350c1ea8f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "7b9fb9b9bb684fb265cdb7867db84e2e50a294d794be89b4c51b106e72dee867",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "606f99c7b1c1d1ce792c5ba57b13fdbfe09660e402975710f7976841676b80f7",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "9d5135ce37ee6da7c94f58f76a1d0f32685034b910ea7d13666a71fbdea4ae34",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-06-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "4d4f3299ab56de2769523f5dc735774b3f0d2f6c951b52d67bd031d67d4f7514",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-07-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "8b049aa77c69f1c915f3055ba8d631f8e011666a917bc1d9f232cb3fce4cd72c",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-07-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "5dea8e2048a145587c950264b21bf7234585ba1b293da5e6cef5016a43f14ac2",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-07-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "36f7493e859dbe005727e2ccc43677c2e9bbe5f829d4ce7e7eef3f92f5425dbd",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-07-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "b5936f7d86dac51f00493a0d6a3a19dc4554432180c41f193d2fbb9f58337f5f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-08-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "37487143768fec52833e7c53b3e1464871f021c57ce0b7a0812ae727bd889548",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/funding/SYNTH-FUNDING-RULE2-08-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "5bf0f90c8f51ab89410c85d72b9a19a4eb07fb3ce6ef9a87f89169ce9d736f89",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-11",
+      "served_def_ids": [
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/HYPERLIQUID-BTC-PERP-V1.3.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 238,
+      "hunk_sha256": "7e164b3fecb0813c5fc525d6be2dec784f3eca9e2512ba80af5eb357753535c3",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/HYPERLIQUID-BTC-PERP-V1.3.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "35379c268751184437613b3f46ac3f3473f28efbbbea6a5c2e2fa4324410603b",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "d4764598ee8a87a0e3fb177dd1d6973b4e799e46d911f5e970840a60f2e76310",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "2292e1932d3b5e6d212ddf548475800be6a8eda3bc7c6d5a77b26ecc66fa8e5f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "aa9bf1225f397b3704e55c78139afc37972f9eebeee0dd873dec6015abc3f803",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "dbc01b84f64ced282ae4994547e24ab93ec423fce33fea2b82719e24443b447d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "eac3399b4a9cfced9b3eec6a79bfa9ee139fd8f2a0ddc279660bb52111bd96ff",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "92a3857b3bf07b0f5ad13565b9b9bff7a8a39328cbff2c7d40d25f550a499a2d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "c5ce9376e250db35f9c9e3197ba629763e720e0fcc5b862f305a6d5c5aa91bbe",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "1cc19a3fde1e1d4a6c478b7c39622bb24090b54248a8af1c8c059bad81c4e116",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "0094181bb3d4c23afc06f96cddfa797e0d4010bfd2d4983bfdd496d25bbf5330",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "372c9c3b282d4940486e156819f7c3d68046308e3db61ebec1eb8de1c0e0f44e",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "515d0e4751b4566f502ac07ad121d7bdd2aea42508dedc9aba69aca8ebb23e58",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "4f3ea63ca2037a3b372fc5f54d846eb4d4d748c1f3fb086e32e16e4333dfd4d3",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "1cde00a664161b5a8b0e50b552f5d263818e9414a90e8e934b9f15ea657fb5dc",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "c147acba8fb85341d9904a053ea186fe35d1f8889572cede91397d255438dfaa",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "ad879ead40d45ef59e2d3f4fdcaa48d3b738c9c47a1ae56eb29e76a6e1400dbf",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "9bf7146cebdaf0b18ac8d7072b8285b04667b558903ebf49eee5072f6b3e026c",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "cbe060914a8d38a34dd1dfd4ad50b1b9631b0775844d69a89af440d731c1f39a",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "92240cebc24d104f713a1001130bb57f7b48ebb505b96bee6a59928766840ada",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "747d9420f1828c4c8bfb8b5e11592b255ec48a09ee1f1c575ea29096394052d2",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "45379fda1ff7a6d8e2f6fe3f015383fd252751bca0049ceb042c2f8b327d4c07",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-EQUAL-PRICE-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "35f5b3a6704a2858bad5e53c6a6c027cef33180e5c43edb4c5d2a3ccfd3f4919",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-EQUAL-PRICE-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "11afcf14cc894661e722c22249639b383df8de381dd15fbf65ecadbc49f2027a",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "e63c83d6d503aa92ecf5df6af49ca58074a94b70ef608224303d4a447fc59d92",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "5ac26c6014ed8298b7d03c9f09a0b71fcf07180c81dfccd57a9200f17e3314ee",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "b19804640f550070a5f021125eac8bea57be36206a18486b666d0d0e3e459599",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "8d2faeca763f00d6d22cfa30f6346c5beb864b5bb7fb9bdb52ea41fa9aae6287",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "2e25849681c995077ca1c3191d8ef81f5a6eccbd85d2f3cbc0fdb31be6e77ffa",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "a0ee2f35ae51a85ad8cc06aaf4fe66a3805b8ee35b4b08b98eebd8821b4efabb",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "9115726358b378fdb5bd7d125b28d76078097ec599433886fc942f5777e8a873",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "b7f34f573258d100f65a4722fab53e4494bab66829dfb93cc5c6f15e3285041b",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-GREEN-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "a922716267089e154b89b370784bd29ed92c9a7e7771ba3079b4552477a88cb9",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-GREEN-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "148e8a740096b70df4de639e87597b427e68b00a92d8d7210d701b7b49d0625f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-RED-V1.json",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "dbfa5993c0976b4bd128bebd678b6f55dbc134bf6692d71c7bf90b9616928cd9",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-RED-V1.json.sha256",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1,
+      "hunk_sha256": "3cb4cd9bfd6235d833cc6d26e8102ec4f9af991147da7a2a443258ac452eeab2",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/economics.py",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 1226,
+      "hunk_sha256": "9d5ac70382768e24b093d27905fc19849999cd8faf860097ff3607dcc458d06c",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-02",
+      "served_def_ids": [
+       "DEF-P012-01",
+       "DEF-P012-02",
+       "DEF-P012-04",
+       "DEF-P012-05",
+       "DEF-P012-06",
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 4,
+      "old_count": 1,
+      "new_start": 4,
+      "new_count": 1,
+      "hunk_sha256": "b0bb8fbcf15cb0c94a2a9c2a3bf80b32d5c54d2030a0dbbed687339c4be50734",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 16,
+      "old_count": 0,
+      "new_start": 17,
+      "new_count": 11,
+      "hunk_sha256": "bf639f0518992e1c05428452b0adf6248b93fa5f3c9c302405fef8268798261f",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 18,
+      "old_count": 1,
+      "new_start": 29,
+      "new_count": 1,
+      "hunk_sha256": "4998f332fce20dcf9f63769299aa848ae530bb29691f009c75a7e17206a1ece6",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 381,
+      "old_count": 0,
+      "new_start": 393,
+      "new_count": 111,
+      "hunk_sha256": "c619422146b83772e2349edcf132c3d90e9675e9e302682706772611ccd172cb",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/instrument.py",
+      "old_start": 2,
+      "old_count": 0,
+      "new_start": 3,
+      "new_count": 4,
+      "hunk_sha256": "22e07801f076229c8391c1c4fa8d2c9e4f9046b349eb21363a9d7d1020bbe561",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/instrument.py",
+      "old_start": 3,
+      "old_count": 0,
+      "new_start": 8,
+      "new_count": 5,
+      "hunk_sha256": "8283a6a8a38b05eea80ca4e4c9cd9deee2db5d7bebfccee78824213ecf99b6e0",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/instrument.py",
+      "old_start": 7,
+      "old_count": 0,
+      "new_start": 17,
+      "new_count": 312,
+      "hunk_sha256": "1192dbdc9e82d98a923787b5f4dde4132630d05395aa69f7e894a905d148f6c5",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/position_manager.py",
+      "old_start": 5,
+      "old_count": 1,
+      "new_start": 5,
+      "new_count": 16,
+      "hunk_sha256": "36edfdee5c7483dd5af0b890834f36b438db537dd3d18c2a579854486d3c2164",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-06",
+      "served_def_ids": [
+       "DEF-P012-05",
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/position_manager.py",
+      "old_start": 100,
+      "old_count": 0,
+      "new_start": 116,
+      "new_count": 466,
+      "hunk_sha256": "987be0f37660e27aa4406f1255d0e381a85fd83e84ef17ad627e48efcedea906",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-06",
+      "served_def_ids": [
+       "DEF-P012-05",
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/position_sizer.py",
+      "old_start": 4,
+      "old_count": 0,
+      "new_start": 5,
+      "new_count": 1,
+      "hunk_sha256": "377b7084c8ca989b8d5fcfaa1a32131db8813fe637118b56e31dfb04e6d72e38",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-03",
+      "served_def_ids": [
+       "DEF-P012-01",
+       "DEF-P012-02"
+      ]
+     },
+     {
+      "path": "core/position_sizer.py",
+      "old_start": 5,
+      "old_count": 0,
+      "new_start": 7,
+      "new_count": 1,
+      "hunk_sha256": "03c7a82b0ba2679424d7e7c70b1a545d464c647de8f438e131bcfad8df9920e5",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-03",
+      "served_def_ids": [
+       "DEF-P012-01",
+       "DEF-P012-02"
+      ]
+     },
+     {
+      "path": "core/position_sizer.py",
+      "old_start": 31,
+      "old_count": 0,
+      "new_start": 34,
+      "new_count": 2,
+      "hunk_sha256": "6d1023f718d81c7fa4e4052a6cf849c156ff84a2b07e573fbb160b628076d43d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-03",
+      "served_def_ids": [
+       "DEF-P012-01",
+       "DEF-P012-02"
+      ]
+     },
+     {
+      "path": "core/position_sizer.py",
+      "old_start": 34,
+      "old_count": 0,
+      "new_start": 39,
+      "new_count": 15,
+      "hunk_sha256": "0e864627336b579a7401a50743fe7c5b4946b47028c05cc5369fd277a08f63e7",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-03",
+      "served_def_ids": [
+       "DEF-P012-01",
+       "DEF-P012-02"
+      ]
+     },
+     {
+      "path": "core/results.py",
+      "old_start": 4,
+      "old_count": 0,
+      "new_start": 5,
+      "new_count": 1,
+      "hunk_sha256": "050a550b2079ea2a9ea8b5cc5397216a363d901c6c7cc5a1337d5d96416d2fc1",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-10",
+      "served_def_ids": [
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/results.py",
+      "old_start": 6,
+      "old_count": 2,
+      "new_start": 7,
+      "new_count": 20,
+      "hunk_sha256": "dd3112703ee6a85ebed61f75ec8d3b39c84175ef902bfbc65aeba3aea1b723d3",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-10",
+      "served_def_ids": [
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/results.py",
+      "old_start": 111,
+      "old_count": 0,
+      "new_start": 131,
+      "new_count": 93,
+      "hunk_sha256": "1900d9434ed56da3bd8637a2624079769faeb863387266cc8b8d5a7df1951629",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-10",
+      "served_def_ids": [
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/results.py",
+      "old_start": 185,
+      "old_count": 0,
+      "new_start": 298,
+      "new_count": 774,
+      "hunk_sha256": "7d512c7a50219f33ad518195af82c8a725cd7407bdf6894e3ebd96996e67d3a7",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-10",
+      "served_def_ids": [
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 2,
+      "old_count": 1,
+      "new_start": 1,
+      "new_count": 0,
+      "hunk_sha256": "c32aedd4bc6a8e80814c7d140adb1c07b04fb3b1c83a3ee0f1b3d8fc86e62789",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 4,
+      "old_count": 0,
+      "new_start": 4,
+      "new_count": 2,
+      "hunk_sha256": "02537b1a0d676856ccdc4f93dbd4b3fefbf1e1d2c8c1f201db3c300f6a2f88c4",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 5,
+      "old_count": 0,
+      "new_start": 7,
+      "new_count": 1,
+      "hunk_sha256": "0f3716ff7e5e5e20307abb4c078a7a63b679270f59d850e0d9e152cd1749cee7",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 8,
+      "old_count": 0,
+      "new_start": 11,
+      "new_count": 1,
+      "hunk_sha256": "963dcab9d8b7972b0c04a9cdbe813cebd03b871fc11636efe4c8ea7fc7a48394",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 24,
+      "old_count": 0,
+      "new_start": 28,
+      "new_count": 12,
+      "hunk_sha256": "55b46a2f480cc3b128653d5b71f0e7566720a0663188b64e980a23f006ac1665",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 63,
+      "old_count": 1,
+      "new_start": 78,
+      "new_count": 1,
+      "hunk_sha256": "76518495756ea4895466209fc8a1b17e6e73396956c0781b9d4c72039d4aa949",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 76,
+      "old_count": 1,
+      "new_start": 91,
+      "new_count": 10,
+      "hunk_sha256": "1b1283a7e2c7b557962778fcb721eec7f34956be6f0b7ac571c69c8ce9ad964d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 105,
+      "old_count": 0,
+      "new_start": 130,
+      "new_count": 2,
+      "hunk_sha256": "270e3a1329ad1afc7c7a0ad749b4c638683c5007c8649cb7489ae1cc7b549d91",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 111,
+      "old_count": 0,
+      "new_start": 138,
+      "new_count": 1,
+      "hunk_sha256": "2a88d12d416c6e8123ebfeb25838a2f2687113674330b199831cd7ab9ac9c034",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 112,
+      "old_count": 0,
+      "new_start": 140,
+      "new_count": 8,
+      "hunk_sha256": "2fb2426d49750ad2af7886a1f5df1db66290a3d4165a5a78a474a04f24f9dc64",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 136,
+      "old_count": 1,
+      "new_start": 171,
+      "new_count": 14,
+      "hunk_sha256": "be7f40cf9de0d01332c541b84ea2c1cbb83d3a2bd7f21b8afcecaf0f2ca1c92e",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 248,
+      "old_count": 0,
+      "new_start": 297,
+      "new_count": 7,
+      "hunk_sha256": "9b6807f0b4f3416c516701f9e7108dd2e8d090f60f744bee35a17a8007e388ae",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 313,
+      "old_count": 0,
+      "new_start": 369,
+      "new_count": 396,
+      "hunk_sha256": "3bb418ed071ae7fedf8a7ce7f0541e607340a41d8113d8dd7592d1740efafd29",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 338,
+      "old_count": 0,
+      "new_start": 790,
+      "new_count": 5,
+      "hunk_sha256": "f2a74f662c1a5eb6ba927ed01907f462fcd2d22cf6396c0ea628d4f1e860b194",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 562,
+      "old_count": 1,
+      "new_start": 1017,
+      "new_count": 0,
+      "hunk_sha256": "7e2100065ec9db4fdc6ee36ab595796b13002f8b9fe55ffd89d89682520c809b",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 565,
+      "old_count": 5,
+      "new_start": 1020,
+      "new_count": 18,
+      "hunk_sha256": "c681694a884f4d4a62d2446e1c52f124300f78576bf218415e5e5a7db2a8557b",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 571,
+      "old_count": 2,
+      "new_start": 1038,
+      "new_count": 0,
+      "hunk_sha256": "b0bf36b8b9bfd2b913079db0b80c279b7f5312e189c1a639789ac9c1bf82c65d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 574,
+      "old_count": 3,
+      "new_start": 1040,
+      "new_count": 17,
+      "hunk_sha256": "3cbdf1dbc82b548570271bfa2fa364f5e2aa95ef8b88c5a3cf5eda420d58537d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 578,
+      "old_count": 8,
+      "new_start": 1057,
+      "new_count": 0,
+      "hunk_sha256": "0aac251d5c44000498b80c6dba42d323294321bad1a3fdaadc6de3c9a8208eea",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 588,
+      "old_count": 3,
+      "new_start": 1060,
+      "new_count": 28,
+      "hunk_sha256": "75f57f2e3632456c942adeeb58e912cf14c88a8cac6d59f7ec3d69643e11d425",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 598,
+      "old_count": 6,
+      "new_start": 1095,
+      "new_count": 13,
+      "hunk_sha256": "1599993fbc44e886cca840530e21e576c529caaef6544959c45a0640e2e51768",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 658,
+      "old_count": 6,
+      "new_start": 1162,
+      "new_count": 13,
+      "hunk_sha256": "238f961ee743a0447b86b12199de00e4a39d51e11d5a0b1b5b9d8e0cbb363efa",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 697,
+      "old_count": 6,
+      "new_start": 1208,
+      "new_count": 13,
+      "hunk_sha256": "cfa04c00ac51eff98f4a85315d1807a6f6709e8d65ecdb6159735dc40ef2bc50",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 710,
+      "old_count": 1,
+      "new_start": 1228,
+      "new_count": 5,
+      "hunk_sha256": "8154f840fad8a55d0029f4d86c358e1ed23cb4cfc6f71239db75ac1de9e0a11e",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 794,
+      "old_count": 0,
+      "new_start": 1317,
+      "new_count": 11,
+      "hunk_sha256": "004570a4a4a2786bad2e9ad3bad52027d7954c0484b6bb0050a9ec4dea949c03",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 950,
+      "old_count": 1,
+      "new_start": 1483,
+      "new_count": 5,
+      "hunk_sha256": "d6726152bb0753406682b2379dc0c06c40729af95bcd8a7aae79a23c04b5de22",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 988,
+      "old_count": 34,
+      "new_start": 1525,
+      "new_count": 2,
+      "hunk_sha256": "6bcf1445377a550241308bf40966f8d57aeecec3aa6bfe75cfe0ee429c9396bc",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1022,
+      "old_count": 0,
+      "new_start": 1528,
+      "new_count": 1,
+      "hunk_sha256": "34799551ce8eea4fbb5b5ca890b72f260a1489ce707ed47f45b4cb62e2a32b80",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1024,
+      "old_count": 2,
+      "new_start": 1529,
+      "new_count": 0,
+      "hunk_sha256": "8a4cb9c96190a59446e9af01b3a8b2945187dd65532df9a1721bdecf35e2f580",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1027,
+      "old_count": 3,
+      "new_start": 1531,
+      "new_count": 1,
+      "hunk_sha256": "774cec034fbabf9c3ab93190a2e0f9524cc0fd0a5d89a217353d8e59788384a2",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1031,
+      "old_count": 1,
+      "new_start": 1533,
+      "new_count": 2,
+      "hunk_sha256": "6d81f61a229c0948ff2a45e13494f10cdf53f204f9c30012efda9f8cadba3c76",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1033,
+      "old_count": 0,
+      "new_start": 1537,
+      "new_count": 47,
+      "hunk_sha256": "4e62b855327f64092096275a2b6b1041f3de77436716c7d1dbea561ab3257c5d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1048,
+      "old_count": 0,
+      "new_start": 1599,
+      "new_count": 5,
+      "hunk_sha256": "a323d8aa77e166d3e75a7109a27c9b809c4205bf7763fcdf095d59d158ce571a",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1350,
+      "old_count": 0,
+      "new_start": 1906,
+      "new_count": 9,
+      "hunk_sha256": "7ef3a8138dc01522345b226b175aba91bd77b6df4b8750b44f51849947897d50",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1421,
+      "old_count": 8,
+      "new_start": 1985,
+      "new_count": 23,
+      "hunk_sha256": "1ea4e68794613ef614675f2e065d13c8ffcd6d5bf71fe1abc3747eee22501876",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/semantics.py",
+      "old_start": 0,
+      "old_count": 0,
+      "new_start": 1,
+      "new_count": 59,
+      "hunk_sha256": "2bae096428a5b61505b44ea9184e2cc4032fcb5e5a3da3d2e0b7104606c5e35b",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-01",
+      "served_def_ids": [
+       "DEF-P012-01",
+       "DEF-P012-02",
+       "DEF-P012-03",
+       "DEF-P012-04",
+       "DEF-P012-05",
+       "DEF-P012-06",
+       "DEF-P012-07",
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/types.py",
+      "old_start": 5,
+      "old_count": 1,
+      "new_start": 5,
+      "new_count": 4,
+      "hunk_sha256": "f1ee192be24aac2973838b25659669b6310675c8580c6dfe3aa9ac79b1471f63",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-09",
+      "served_def_ids": [
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/types.py",
+      "old_start": 10,
+      "old_count": 0,
+      "new_start": 14,
+      "new_count": 353,
+      "hunk_sha256": "fea8ae1e1ddbb9e3f5ad2d462ac32adabb8ff291ab2f1fb6c33c6a665803b56d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-09",
+      "served_def_ids": [
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/types.py",
+      "old_start": 103,
+      "old_count": 0,
+      "new_start": 460,
+      "new_count": 3,
+      "hunk_sha256": "7838149f91ca5492cb6d46bbb5f98315295111ca48ee0ecbd9735a5d6b2cd55a",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-09",
+      "served_def_ids": [
+       "DEF-P012-08"
+      ]
+     },
+     {
+      "path": "core/types.py",
+      "old_start": 170,
+      "old_count": 0,
+      "new_start": 530,
+      "new_count": 16,
+      "hunk_sha256": "a89fedf09e3c857d8150b0147afa77a01be980b272924e6c5a12002885d02e0d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-09",
+      "served_def_ids": [
+       "DEF-P012-08"
+      ]
+     }
+    ]
+   }
+  },
+  "3": {
+   "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
+   "evidence_paths": [
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\scenario_catalog.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\CONTRACT_TABLES_MANIFEST.json",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_SECTION16_REVIEW_DRAFT.md",
+    "C:\\LAB\\Tradingview_LAB_CLEAN\\_gemini_packets_20260830\\N_COMMON_CLAUSES.md",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-01-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-01-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-02-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-02-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-03-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-03-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-04-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-04-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-05-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-05-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-EQUAL-PRICE-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-07-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-07-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-08-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-08-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-01-A\\modification_manifest.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-01-B\\modification_manifest.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-02-A\\modification_manifest.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-03-A\\modification_manifest.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-04-A\\modification_manifest.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-05-A\\modification_manifest.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-05-B\\modification_manifest.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-06-A\\modification_manifest.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-07-A\\modification_manifest.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-08-A\\modification_manifest.json"
+   ],
+   "notes": "[3 ACCEPTED_WITH_RESIDUAL_RISK] Supplemental review of Item 3 reveals complete structural fidelity between the 27-row scenario catalog and Section 15.2 design specifications. All 8 corrections DEF-P012-01 through DEF-P012-08 possess active probes and dedicated test rows. Residual risk is formally accepted regarding compound higher-order interactions and unexercised parameter permutations outside the finite catalog, which are disambiguated deterministically by Section 3 pipeline ordering but remain empirically unexecuted in test runs per Honest Limit L1. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. The 27-row scenario catalog retains full structural fidelity to Design 15.2, and all 8 corrections retain active probes. The updates to scenario_catalog.json (18 probe digest pins) and the 45 files in tests/corrected_vnext/probes/ are mechanical re-seal bookkeeping mirroring base updates, with kernel/economics.py confirmed byte-identical across all nine kernel probes."
+  },
+  "4": {
+   "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
+   "evidence_paths": [
+    "C:\\tmp\\OWNER_DECISIONS_20260906_1240.md",
+    "C:\\tmp\\P012_SECTION16_OWNER_DECISION_PACKET_20260905.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_SECTION16_REVIEW_DRAFT.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\CONTRACT_TABLES_MANIFEST.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\DERIVATIONS.md",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\open_item_applicability.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\expected_provenance_exceptions.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-01-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-01-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-02-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-02-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-03-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-03-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-04-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-04-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-05-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-05-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-EQUAL-PRICE-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-07-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-07-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-08-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-08-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json.sha256",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\costs\\HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\costs\\HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json.sha256",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\funding\\HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\funding\\HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json.sha256",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\SYNTH-INSTRUMENT-RULE2-01-GREEN-V1.json",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_OPEN06_RETAINED_RETIRED_PROPOSAL_V1.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_OPEN07_BRIDGE_MAPPING_V1.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_OPEN_ITEMS_OWNER_ONEPAGER_2026-08-31.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT.json",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT_rev4.json",
+    "C:\\LAB\\Tradingview_LAB_CLEAN\\_gemini_packets_20260830\\N_COMMON_CLAUSES.md"
+   ],
+   "notes": "[4 ACCEPTED_WITH_RESIDUAL_RISK] ACCEPTED_WITH_RESIDUAL_RISK under P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 (OD-20260906-2, design v1.24 Section 23.21). Every numeric value consumed by the 51 synthetic scenario bindings across all 17 sealed scenarios has complete lineage traced to committed synthetic records and DERIVATIONS.md arithmetic; exactly 0 scenarios consume production records. Production economics remain fail-closed and unadmitted. Residual production risks are retained for 27 items: I rows 1-5 (/status, /price_tick, /minimum_quantity, /provenance/human_reviewer, absent aggregate /provenance/source_sha256); C rows 6-12 (absent /effective_interval, /fee_rounding_rule, /fixed_component, /minimum_fee, /tier_account_selection_evidence, /liquidity_roles/MARGIN_CALL_LIQUIDATION, /provenance/human_reviewer); F rows 13-23 (/effective_interval, /events, and unsourced event members /events/0/{event_timestamp, funding_event_id, raw_rate, positive_rate_payer, mark_price, mark_price_source, provenance, source_event_digest}, /provenance/human_reviewer); and run-manifest requirements 24-27 (cost/funding source digests and effective intervals for which no canonical production pointer exists). All ten Section-19 rows remain OPEN for production. This disposition is bounded non-production mechanical evidence and grants no live, deployment, host, credential, or trading authority. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Exactly 0 scenarios consume production records, fully maintaining P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 (OD-20260906-2, design v1.24 s23.21). The modified production cost record HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json retains admission_status REFUSED_INCOMPLETE_COST_SCHEDULE in compliance with the owner ruling, and all 51 synthetic scenario bindings remain bound exclusively to synthetic records. RESIDUAL NAMED BY THE REVIEWER: Strongest case for CHANGED: A production cost record (core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json) was modified by adding an effective_interval and removing that field from refused_missing_fields. Since Item 4 certifies that exactly 0 scenarios consume production records under milestone P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1, modifying production records in the tree could be interpreted as preparing or enabling production records for consumption, calling into question whether the synthetic-only boundary was breached. Whether the case survives: The case DOES NOT SURVIVE. The record's admission_status remains explicitly REFUSED_INCOMPLETE_COST_SCHEDULE, preventing any scenario execution from consuming it. The modification conforms to an active owner ruling (production COST records may keep their interval while missing required fee fields), and all 51 synthetic scenario bindings continue to bind exclusively to synthetic records with zero production record consumption. The synthetic-only invariant holds without exception, so the disposition remains ACCEPTED_WITH_RESIDUAL_RISK."
+  },
+  "5": {
+   "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
+   "evidence_paths": [
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_SECTION16_REVIEW_DRAFT.md",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\__init__.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\config.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\confirmation.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economics.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\exits.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\gates.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\htf.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\indicators.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\instrument.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\ma.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_manager.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_sizer.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\results.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\rounding.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\runner.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\semantics.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\types.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\signals\\range_filter.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\signals\\supertrend.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_corrected_config.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_economic_records.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_economics.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_exits_corrected.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_open06_exit_migrations.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_position_manager_corrected.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_position_sizer_corrected.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_results_corrected.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_runner_corrected.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_semantics.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_transition_records.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_w285_kernel_remaining.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_advanced_confirm.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_capital_block_fix.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_htf_infrastructure.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_l12_ma_filters.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_l12_new_filters.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_l18b_scaffold.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_level_retest.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_plan_b_gates.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_producer_selection_range_filter.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_range_filter.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_runner_metrics_api.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\test_supertrend_smoke.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\test_band_calculation.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\test_parity.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\05_PARITY\\generate_tw_export_case_suite_v2.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\05_PARITY\\validate_export_parity.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\handoff\\MTC_V2_PORTABLE_HANDOFF\\00_PYTHON\\mtc_v2\\core\\runner.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\parity_oracles\\engines\\python_engine_runner.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\parity_oracles\\run_feature_parity.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\tests\\test_optimizer_post_run_patches.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\tools\\build_feature_factory_v1.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\tools\\run_12h_backtesting_session.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\tools\\run_big_overnight_multiasset_optimization.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\tools\\run_mtc_multidataset_walkforward_optimization.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\tools\\run_mtc_overnight_optimization.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\tools\\run_worker_scaling_benchmark.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\tools\\runner_metrics_adapter.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\parity_compare.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\02_MTC_BACKTEST\\run_2025_audit.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\03_QUANTLENS\\research\\stage2B_code_verification_2026_05_04_CODEX\\run_stage2b_codex_verification.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\p011_gate.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\row_arm.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\stage1_freeze.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\test_scenario_binding.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\test_stage3_oracles.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\12_PARITY_PINETS\\generate_tw_export_case_suite_v2.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\12_PARITY_PINETS\\validate_export_parity.py"
+   ],
+   "notes": "[5 ACCEPTED_WITH_RESIDUAL_RISK] Economic state across core modules is mediated by ExecutionEconomics and atomic EconomicTransition with zero arithmetic performed outside economics.py on the corrected 2.0.0 path; residual risk is accepted for external consumers (runner_metrics_adapter, validate_export_parity, parity_compare, p011_gate) reading legacy or gross fields and uninspected monorepo boundaries per design section 17 limits L4 and L5. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. economics.py is byte-identical since #28. All economic state continues to be mediated strictly by ExecutionEconomics and atomic EconomicTransition, with zero arithmetic outside economics.py on the corrected 2.0.0 path (the runner.py delta is strictly an import of an existing config constant for debug metadata)."
+  },
+  "6": {
+   "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
+   "evidence_paths": [
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_OPEN07_BRIDGE_MAPPING_V1.md",
+    "C:\\tmp\\LANE_PROMPTS_20260828\\P012_SECTION16_REVIEW_DRAFT.md",
+    "C:\\LAB\\Tradingview_LAB_CLEAN\\_gemini_packets_20260830\\N_COMMON_CLAUSES.md",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\types.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\results.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\runner.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economics.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\position_manager.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-06-EQUAL-PRICE-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-08-RED.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\golden\\corrected_vnext\\RULE2-08-GREEN.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\open_item_applicability.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\06_SCHEMAS\\backtest_profile_result.schema.json",
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\06_SCHEMAS\\evaluation_artifact_v1.schema.json"
+   ],
+   "notes": "[6 ACCEPTED_WITH_RESIDUAL_RISK] Item 6 is accepted with residual risk. All emitted event and result surfaces (decision_events, fill_events, exit_events, funding_events, fee ledger, RESULT_SURFACE, guards, and refusal objects) strictly conform to the closed shapes specified in Design sections 13, 14, 23.1, 23.3, and 23.4. Duplicate identity is rejected deterministically via strict cash/funding event sequence and lifecycle checking. Two residual risks are identified and accepted under the P0-12 defect contract: (1) Per OPEN-07, 16 of 18 funding_events fields lack a direct source in the current upstream Bridge schema, with source_event_digest explicitly recorded as a blocked cell (BLOCKED-MISSING-RECORD-BYTES) in RULE2-08-RED pending upstream record byte materialization; (2) In core/types.py line 67, unrounded_fill_price is carried on the FillDecision dataclass but is intentionally suppressed during serialization per Design section 23.3 explicit prohibition from the wire surface. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Emitted event and result surfaces are untouched by the delta and strictly conform to the closed shapes specified in Design 13, 14, 23.1, 23.3, and 23.4."
+  }
+ },
+ "unresolved_items": [],
+ "owner_ratification": {
+  "chain": [
+   "#5",
+   "#6",
+   "#7",
+   "#8",
+   "#9",
+   "#10",
+   "#11",
+   "#12",
+   "#12b",
+   "#13",
+   "#14",
+   "#14b",
+   "#15",
+   "#16",
+   "#17",
+   "#18",
+   "#19",
+   "#20",
+   "#21",
+   "#22",
+   "#23",
+   "#24",
+   "#25",
+   "#26",
+   "#27",
+   "#28",
+   "#29"
+  ],
+  "ratified": true
+ },
+ "signed_at": "2026-09-08T13:32:32+03:00"
+}

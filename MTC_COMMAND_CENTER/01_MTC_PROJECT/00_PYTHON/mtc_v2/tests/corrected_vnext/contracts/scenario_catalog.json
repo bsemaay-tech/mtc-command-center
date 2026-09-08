@@ -1,0 +1,2402 @@
+[
+ {
+  "scenario_id": "RULE2-01-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-01"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-01-RED.json",
+   "digest": "ac61cd315d29981a83f0ebcf994e0cbd8d7fcc7ea7e76301ed5f9c7757f0bc36",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-01-RED.json",
+    "digest": "31646561c134e4e6097a43ff1a9ffee8cbcc68439acc05b3947690ab8782a4fb"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-01-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-01-RED.json"
+  },
+  "design_lines": "Design section 7, \"bits `0x7ff8000000000000` decoded by the\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"COST|FUNDING}-<scenario_id>-V1`, except that\"; Design section 22.4, \"90`; requested quantity is sizing-derived\"",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 10,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 7, \"legacy risk quantity `10`, corrected risk quantity `5`\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 7, \"zero; `RULE2-01-GREEN` still expects fallback\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-01R-1"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 10,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 7, \"notional, later position quantity, and\"",
+     "baseline_selector_advisory": [
+      "position",
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position",
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 7, \"zero; `RULE2-01-GREEN` still expects fallback\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-01R-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/order_notional",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 2000,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 7, \"order_notional   = qty * final_entry_fill * cm\"; DERIVATIONS.md section 1, \"legacy order_notional   = 10 * 100 * 2  = 2000\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "order_notional"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 7, \"order_notional   = qty * final_entry_fill * cm\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-01R-3"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-01-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-01"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-01-GREEN.json",
+   "digest": "996cbef54286db4d9bda23af36dad54329073399025355ad6b497fa38deb8107",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
+    "digest": "03a70ee7d9dbb0c0f7988135efe1577c16b149df8822af94b03cdb96f9c10dbd"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-01-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-01-GREEN.json"
+  },
+  "design_lines": "Design section 7, \"bits `0x7ff8000000000000` decoded by the\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"sealed RULE2-07 cost records by reference (`SYNTH-COST-RULE2-07-RED-V1\"; Design section 22.4, \"section 7. LEGACY uses the\"; Design section 22.7, \"22.7 RULE2-01-GREEN NaN wire contract\"",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 7, \"quantity node. `PROBE-P012-01-B` changes the\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 7, \"zero; `RULE2-01-GREEN` still expects fallback\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-01G-1"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 7, \"notional, later position quantity, and\"",
+     "baseline_selector_advisory": [
+      "position",
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position",
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 7, \"zero; `RULE2-01-GREEN` still expects fallback\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-01G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/order_notional",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 100,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 7, \"fill `100`, a supplied quiet\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "order_notional"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 7, \"quantity node. `PROBE-P012-01-B` changes the\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-01G-3"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-02-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-02"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-02-RED.json",
+   "digest": "77349d5eed0b241c5489f0ac41e7e3f246c65b072ec7aead314e2bfd6228ee2d",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-02-RED.json",
+    "digest": "9511084b30fb45a710ee56484f443042233ebcc700621f1582efd86bad851425"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-02-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-02-RED.json"
+  },
+  "design_lines": "Design section 8, \"frozen test record uses `min_notional=101\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"COST|FUNDING}-<scenario_id>-V1`, except that\"; Design section 22.4, \"section 7. LEGACY uses the\"",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/RESULT_SURFACE/refusals/0/code",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 8, \"corrected frozen test record uses\"; Design section 8, \"corrected frozen test record uses\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "refusals",
+      0,
+      "code"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 8, \"250 from `>=` to `>\"; Design section 8, \"250 from `>=` to `>\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-02R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 8, \"250 from `>=` to `>\"; Design section 8, \"250 from `>=` to `>\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 8, \"250 from `>=` to `>\"; Design section 8, \"250 from `>=` to `>\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-02R-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/decision_events/2/decision",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 8, \"corrected frozen test record uses\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "decision_events",
+      2,
+      "decision"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 8, \"250 from `>=` to `>\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-02R-3"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-02-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-02"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-02-GREEN.json",
+   "digest": "9c9e822dd7c1f5011c0ac7d87e301b2148b0086c8329f8fd6ddb8cd43f36c2af",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-02-GREEN.json",
+    "digest": "59acd8f75d35f384b89417fba4df289ebdf7bf768e4e9b22bf560bbeeaef3dfe"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-02-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-02-GREEN.json"
+  },
+  "design_lines": "Design section 8, \"carries `admitted` present and true\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"sealed RULE2-07 cost records by reference (`SYNTH-COST-RULE2-07-RED-V1\"; Design section 22.4, \"section 7. LEGACY uses the\"",
+  "rule2_green_projection": [
+   {
+    "selector": "/RESULT_SURFACE/admitted",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "B",
+     "value": true,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 8, \"carries `admitted` present and true\"; Design section 23, \". Every name below either\"",
+     "baseline_selector_advisory": [
+      "position",
+      "present"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "admitted"
+     ],
+     "node_kind": "B",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 8, \"artifact carries `admitted` present and\"; Design section 8, \"artifact carries `admitted` present and\"; Design section 23, \". Every name below either\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-02G-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 8, \"pre-floor quantity `1`, leverage-cap quantity `100`\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 8, \"so the equal case of\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-02G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 8, \"and floored quantity `1`. The legacy runtime\"",
+     "baseline_selector_advisory": [
+      "position",
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position",
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 8, \"so the equal case of\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-02G-3"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-03-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-03"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-03-RED.json",
+   "digest": "6d7c760889e772cba939c88935a3dde64e50fdc6018b5894d0c2e24ab58b0f6b",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-03-RED.json",
+    "digest": "7a12c41910edb62a1066e99a6a5306e4974d71edad40af670504f7e10db822b0"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-03-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-03-RED.json"
+  },
+  "design_lines": "Design section 9, \"mtc_v2\\tests\\corrected_vnext\\contracts\\scenario_catalog.json\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"COST|FUNDING}-<scenario_id>-V1`, except that\"; Design section 22.4, \"section 7. LEGACY uses the\"",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/RESULT_SURFACE/refusals/0/code",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 9, \"field. Legacy accepts/uses `0.25`; corrected\"; Design section 9, \"field. Legacy accepts/uses `0.25`; corrected\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "refusals",
+      0,
+      "code"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 9, \"accepts/uses `0.25`; corrected refuses before\"; Design section 9, \"accepts/uses `0.25`; corrected refuses before\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-03R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/decision_events/1/decision",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 9, \"field. Legacy accepts/uses `0.25`; corrected\"; Design section 9, \"field. Legacy accepts/uses `0.25`; corrected\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "decision_events",
+      1,
+      "decision"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 9, \"accepts/uses `0.25`; corrected refuses before\"; Design section 9, \"accepts/uses `0.25`; corrected refuses before\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-03R-2"
+   },
+   {
+    "selector": "consumed price_tick",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "F",
+     "value": 0.25,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 9, \"0.25`; corrected refuses before evaluation\""
+    },
+    "corrected": {
+     "tag": "REFUSAL",
+     "refusal_code": "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 9, \"corrected refuses before evaluation with\"; Design section 9, \"corrected refuses before evaluation with\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-03R-3"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-03-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-03"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-03-GREEN.json",
+   "digest": "484f085f198891debb83192976458258ba797d7742e36cc52af3c4189d60d65f",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-03-GREEN.json",
+    "digest": "b38a9b65ad965280e93f6763ef0cf95c80b5c1b27774e3e65ecafef210f9524e"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-03-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-03-GREEN.json"
+  },
+  "design_lines": "Design section 9, \"mtc_v2\\tests\\corrected_vnext\\contracts\\scenario_catalog.json\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"sealed RULE2-07 cost records by reference (`SYNTH-COST-RULE2-07-RED-V1\"; Design section 22.4, \"section 7. LEGACY uses the\"",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/decision_events/1/runtime_value",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "F",
+     "value": 0.5,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 9, \"accepts/uses `0.25`; corrected refuses before\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "decision_events",
+      1,
+      "runtime_value"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 9, \"field exactly equal to the\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-03G-1"
+   },
+   {
+    "selector": "/RESULT_SURFACE/refusals",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 9, \"accepts/uses `0.25`; corrected refuses before\"; Design section 9, \"accepts/uses `0.25`; corrected refuses before\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "refusals"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 9, \"field exactly equal to the\"; Design section 9, \"field exactly equal to the\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-03G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "N",
+     "value": null,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 9, \"accepts/uses `0.25`; corrected refuses before\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position"
+     ],
+     "node_kind": "N",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 9, \"field exactly equal to the\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-03G-3"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-04-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-04"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-04-RED.json",
+   "digest": "49e9837646daab0cf289933a6d80143427f674ca9d17d18cde1c9fa0d40f42b7",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-04-RED.json",
+    "digest": "4e89dffbc2a345b0cdeed40b63e04b5e16bdf2cdcbb6e8e318bdcedcdd6cce6d"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-04-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-04-RED.json"
+  },
+  "design_lines": "Design section 10, \"close=92`. Legacy fills at\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"COST|FUNDING}-<scenario_id>-V1`, except that\"; Design section 22.5, \"Otherwise the LEGACY premise refuses.\"",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/reference_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 92,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 10, \"92`; the OPEN-06-contingent corrected projection\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "reference_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 10, \"92`; the OPEN-06-contingent corrected projection\"; Design section 10, \"92`; the OPEN-06-contingent corrected projection\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-04R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 92,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 10, \"92`; the OPEN-06-contingent corrected projection\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 10, \"92`; the OPEN-06-contingent corrected projection\"; Design section 10, \"92`; the OPEN-06-contingent corrected projection\"; Design section 10, \"92`; the OPEN-06-contingent corrected projection\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-04R-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/fill_trigger",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 10, \"selects gap/open reference `90` and\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "fill_trigger"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 10, \"golden changes: RED changes exit\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-04R-3"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-04-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-04"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-04-GREEN.json",
+   "digest": "178a0fe11bf27991a9fbc53bfa3cca339099ea6a8b62d5f6380cd9cc74b27b3a",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-04-GREEN.json",
+    "digest": "e192b8b6dedd8c05ae1055a2d7b2b56ac39fdc173cb2c18ac61567ed82f05fe6"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-04-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-04-GREEN.json"
+  },
+  "design_lines": "Design section 10, \"close=92`. Legacy fills at\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"sealed RULE2-07 cost records by reference (`SYNTH-COST-RULE2-07-RED-V1\"; Design section 22.5, \"Otherwise the LEGACY premise refuses.\"; Design section 22.5, \"Otherwise the LEGACY premise refuses.\"",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/exit_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 10, \"the OPEN-06-contingent corrected projection selects\"; Design section 10, \"the OPEN-06-contingent corrected projection selects\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "exit_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 10, \"92`; the OPEN-06-contingent corrected projection\"; Design section 10, \"92`; the OPEN-06-contingent corrected projection\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-04G-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 10, \"the OPEN-06-contingent corrected projection selects\"; Design section 10, \"the OPEN-06-contingent corrected projection selects\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 10, \"92`; the OPEN-06-contingent corrected projection\"; Design section 10, \"92`; the OPEN-06-contingent corrected projection\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-04G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 10, \"92`; the OPEN-06-contingent corrected projection\"",
+     "baseline_selector_advisory": [
+      "position",
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position",
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 10, \"close=92`. Legacy fills at\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-04G-3"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-05-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-05"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-05-RED.json",
+   "digest": "baa8683a2577a9c53dafffbe16013c23d2e69adb2084ce460db3ab4941c78acd",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-05-RED.json",
+    "digest": "6833c49e1d4d48ae7ad36406377358caa5a0387d48d067dfd8f086528b0b8760"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-05-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-05-RED.json"
+  },
+  "design_lines": "Design section 11, \"fill `101`; legacy fill is\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"COST|FUNDING}-<scenario_id>-V1`, except that\"; Design section 22.5, \"Otherwise the LEGACY premise refuses.\"",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/reference_price",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 11, \"legacy fill is `100`, corrected\"; Design section 11, \"legacy fill is `100`, corrected\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "reference_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 11, \"= abs(reference_price) * slippage_bps /\"; Design section 11, \"= abs(reference_price) * slippage_bps /\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-05R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/slippage_impact",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 11, \"legacy fill is `100`, corrected\"; Design section 11, \"legacy fill is `100`, corrected\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "slippage_impact"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 11, \"fill `101`; legacy fill is\"; Design section 11, \"fill `101`; legacy fill is\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-05R-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 100,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 11, \"fill is `100`, corrected fill\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 11, \"fill `101`; legacy fill is\"; Design section 11, \"fill `101`; legacy fill is\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-05R-3"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/slippage_application_count",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 11, \"legacy fill is `100`, corrected\"; Design section 11, \"legacy fill is `100`, corrected\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "slippage_application_count"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 11, \"FillDecision` carries `slippage_application_count = 1\"; Design section 11, \"FillDecision` carries `slippage_application_count = 1\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-05R-4"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-05-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-05"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-05-GREEN.json",
+   "digest": "ffa8487767b21c8f973eac93b38af2586448f929edb41bcdd3fe201824a73b13",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-05-GREEN.json",
+    "digest": "53ed07441c81bd5d49323a209af4ebee51eddad333f831f60eff802a2140ad23"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-05-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-05-GREEN.json"
+  },
+  "design_lines": "Design section 11, \"fill `101`; legacy fill is\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"sealed RULE2-07 cost records by reference (`SYNTH-COST-RULE2-07-RED-V1\"; Design section 22.5, \"Otherwise the LEGACY premise refuses.\"",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 100,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 11, \"fill is `100`, corrected fill\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 11, \"fill `101`; legacy fill is\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-05G-1"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-06-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-06"
+  ],
+  "execution_profile_id": "raw_close_only_v1",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-06-RED.json",
+   "digest": "8c62e57e0584207d99ab6d581a91535d341b65df46b362dc402a48da702f1f68",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-06-RED.json",
+    "digest": "2895e012edabff097087006edf469d6122b0c83b80807a7b696d63f426d9e471"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-RED.json"
+  },
+  "design_lines": "Design section 12, \"exact `RULE2-06-RED` inputs except that\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"COST|FUNDING}-<scenario_id>-V1`, except that\"; Design section 22.5, \"Otherwise the LEGACY premise refuses.\"",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/exit_id",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "S",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"exact `RULE2-06-RED` inputs except that\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "exit_id"
+     ],
+     "note": "legacy exit-id string is not stated by the design and is not read here; Design section 12, \"named collision/fill projection. The shipped\" fixes only that legacy exits at the stop, so the pair differs for any legacy stop id"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "exit_id"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"/`105`, with no stop\"; Design section 12, \"/`105`, with no stop\"; Design section 12, \"/`105`, with no stop\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"so both versions choose and\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"the corrected `TARGET_FIRST` order is\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 90,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"declared synthetic `RED` scenario owned\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"the corrected `TARGET_FIRST` order is\"; Design section 12, \"the corrected `TARGET_FIRST` order is\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-3"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/1/final_fill_price",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"quantity at stop `90` on\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      1,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"the corrected `TARGET_FIRST` order is\"; Design section 12, \"the corrected `TARGET_FIRST` order is\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-4"
+   },
+   {
+    "selector": "/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"quantity at stop `90` on\"; Design section 12, \"quantity at stop `90` on\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "decision_events",
+      2,
+      "ordered_chosen_exit_ids"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"the corrected `TARGET_FIRST` order is\"; Design section 12, \"the corrected `TARGET_FIRST` order is\"; Design section 23, \". Every name below either\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-5"
+   },
+   {
+    "selector": "/RESULT_SURFACE/trades/0/gross_realized_pnl",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": -20,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"Legacy's implicit stop-first path exits the full quantity `2` at `90`\"; DERIVATIONS.md section W312-M6-06R-6, \"legacy gross = (90 - 100) * 2 * 1 = -20 ; corrected gross = (105-100)*1*1 + (110-100)*1*1 = 5 + 10 = 15\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "realized_pnl"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "trades",
+      0,
+      "gross_realized_pnl"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"the corrected `TARGET_FIRST` order is\"; Design section 12, \"the corrected `TARGET_FIRST` order is\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06R-6"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-06-EQUAL-PRICE-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-06"
+  ],
+  "execution_profile_id": "raw_close_only_v1",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-06-EQUAL-PRICE-RED.json",
+   "digest": "0c65c82b911f3a510d074df00bc81335bb3397697e96f422f5c05267e4ea085c",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+    "digest": "ffcc867a8c15258c42aa9312655b469bd90b7b72f00f22875d30f83fe061928c"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-EQUAL-PRICE-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-EQUAL-PRICE-RED.json"
+  },
+  "legacy_arm_construction": "Owner addendum 20 item 49 (3a) (C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:337-348): the equal-price target book is constructed by the corrected 2.0.0 target-book test machinery directly; the legacy engine is untouched and this row is recorded honestly as NOT-RUNNABLE-ON-LEGACY for that book, because current Multi-TP validation requires tp2_r_multiple greater than tp1_r_multiple (mtc_v2/core/config.py:540-545). The inherited real prelude still supplies the position on both arms; only the equal-price book is corrected-only. The 1.0.0 expected artifact stays OUT-OF-LANE and the cross-version comparison for the target book has no valid 1.0.0 counterpart.",
+  "design_lines": "Design section 12, \"with full bar `open=100, high=104\"; Design section 15.2, \"EXPECTED`, `OBSERVED`, `KERNEL`, or `GATE\"; Design section 15.3, \"and `exit_events`; any may be\"; Design section 22.1, \"cost-members sentence.** The retained sentence\"; Design section 22.3, \"AMENDMENT-CHOICE (W320, owner decision 144, 2026-09-03) — §22.3\"; Design section 22.5, \"targets `105/110`; corrected aliases TP1/TP2\"",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/exit_id",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "S",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"exact `RULE2-06-RED` inputs except that\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "exit_id"
+     ],
+     "note": "legacy exit-id string is not stated by the design and is not read here; Design section 12, \"named collision/fill projection. The shipped\" fixes only that legacy exits at the stop, so the pair differs for any legacy stop id"
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "exit_id"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"/`105`, with no stop\"; Design section 12, \"/`105`, with no stop\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/1/exit_id",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"because it has no well-ordered\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      1,
+      "exit_id"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"/`105`, with no stop\"; Design section 12, \"/`105`, with no stop\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 1,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"so both versions choose and\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"the corrected `TARGET_FIRST` order is\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-3"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 90,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"declared synthetic `RED` scenario owned\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"the corrected `TARGET_FIRST` order is\"; Design section 12, \"the corrected `TARGET_FIRST` order is\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-4"
+   },
+   {
+    "selector": "/EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"quantity at stop `90` on\"; Design section 12, \"quantity at stop `90` on\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "decision_events",
+      2,
+      "ordered_chosen_exit_ids"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"the corrected `TARGET_FIRST` order is\"; Design section 12, \"the corrected `TARGET_FIRST` order is\"; Design section 23, \". Every name below either\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-5"
+   },
+   {
+    "selector": "/RESULT_SURFACE/trades/0/gross_realized_pnl",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": -20,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"legacy remains full quantity `2` at stop `90`\"; DERIVATIONS.md section W312-M6-06ER-6, \"legacy gross = (90 - 100) * 2 * 1 = -20 ; corrected gross = (105-100)*1*1 twice = 10\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "realized_pnl"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "trades",
+      0,
+      "gross_realized_pnl"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"the corrected `TARGET_FIRST` order is\"; Design section 12, \"the corrected `TARGET_FIRST` order is\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-06ER-6"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-06-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-06"
+  ],
+  "execution_profile_id": "raw_close_only_v1",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-06-GREEN.json",
+   "digest": "c334b07011bd538e7b9d02de451abbd5f389da8cf7392da64fed7dfc941dd4e2",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-06-GREEN.json",
+    "digest": "135f4ed135db6d351371dd00f19031c42257954faeec791c7244f87659c5144b"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-06-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-06-GREEN.json"
+  },
+  "design_lines": "Design section 12, \"out of scope for DEF-P012-06\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"sealed RULE2-07 cost records by reference (`SYNTH-COST-RULE2-07-RED-V1\"; Design section 22.5, \"Otherwise the LEGACY premise refuses.\"",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 90,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"90` on the named collision/fill\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "price"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "final_fill_price"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"independently produced `CONTRACT_TABLES` bytes exercise\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-06G-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events/0/quantity",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 2,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"90` on the named collision/fill\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "qty"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events",
+      0,
+      "quantity"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"projection. The shipped close-only default\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-06G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/trades/0/gross_realized_pnl",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": -20,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 12, \"both versions choose and fill the full quantity at stop `90`\"; DERIVATIONS.md section W312-M6-06G-3, \"gross = (90 - 100) * 2 * 1 = -20 on both versions\"",
+     "baseline_selector_advisory": [
+      "events",
+      0,
+      "realized_pnl"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "trades",
+      0,
+      "gross_realized_pnl"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 12, \"independently produced `CONTRACT_TABLES` bytes exercise\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-06G-3"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-07-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-07"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-07-RED.json",
+   "digest": "8cd6299bb2322add2d651cc7cfeb404cbc774cd45f8a4426bde0caae17ff182e",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-07-RED.json",
+    "digest": "82d11b9b826df4288e5e96f64d3f1ee6e6b4cf52b1a1b49af50807eb2e84a417"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-07-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-07-RED.json"
+  },
+  "design_lines": "Design section 13, \"and equity remains `1000`.\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"COST|FUNDING}-<scenario_id>-V1`, except that\"; Design section 22.6, \"but the LEGACY premise and\"",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fee_events",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"The same fixture enables only\"; Design section 13, \"The same fixture enables only\"; Design section 13, \"The same fixture enables only\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fee_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"changes: add `fee_events`, gross/net/guard-basis split\"; Design section 13, \"changes: add `fee_events`, gross/net/guard-basis split\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-1"
+   },
+   {
+    "selector": "/RESULT_SURFACE/trades/0/net_trade_pnl",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"The same fixture enables only\"; Design section 13, \"The same fixture enables only\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "trades",
+      0,
+      "net_trade_pnl"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"price-movement fact. `net_trade_pnl` for a\"; Design section 13, \"price-movement fact. `net_trade_pnl` for a\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/guards/guard_pnl_basis",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"fixture enables only the consecutive-loss\"; Design section 13, \"fixture enables only the consecutive-loss\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "guards",
+      "guard_pnl_basis"
+     ],
+     "node_kind": "S",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"therefore adds `guard_pnl_basis` and `last_closed_guard_pnl\"; Design section 13, \"therefore adds `guard_pnl_basis` and `last_closed_guard_pnl\"; Design section 23, \". Every name below either\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-3"
+   },
+   {
+    "selector": "/RESULT_SURFACE/guards/last_closed_guard_pnl",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"fixture enables only the consecutive-loss\"; Design section 13, \"fixture enables only the consecutive-loss\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "guards",
+      "last_closed_guard_pnl"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"enables only the consecutive-loss guard\"; Design section 13, \"enables only the consecutive-loss guard\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-4"
+   },
+   {
+    "selector": "/RESULT_SURFACE/guards/consecutive_loss_count",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"max_consecutive_losses=1`; all other L16 guards\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "guards",
+      "consecutive_loss_count"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"enables only the consecutive-loss guard\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-5"
+   },
+   {
+    "selector": "/RESULT_SURFACE/guards/guard_blocked_raw",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "B",
+     "value": false,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"legacy full close stores gross\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "guards",
+      "guard_blocked_raw"
+     ],
+     "node_kind": "B",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"false, and `guard_blocked_raw` is true\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-6"
+   },
+   {
+    "selector": "/RESULT_SURFACE/equity_curve/last",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1000,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"guard recovery are disabled. The\"",
+     "baseline_selector_advisory": [
+      "account",
+      "equity"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "equity_curve",
+      "last"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"enables only the consecutive-loss guard\"; Design section 13, \"enables only the consecutive-loss guard\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W312-M6-07R-7"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-07-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-07"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-07-GREEN.json",
+   "digest": "be3bb8f1b666a006ff59b8a4c1b7e60764bb9065b8b129a0ea36cbadbd9c81a6",
+   "digest_reason": "digest pinned by the Lead after W152B materialized the serialized scenario-input bytes from design v1.5 (owner addendum 19 chain); two-party agreement with W152B INPUT_INVENTORY.json; previous sealed value was the honest marker BLOCKED-BUILD-ARTIFACT."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-07-GREEN.json",
+    "digest": "8ebdb0b8dcee9b4430c06af96cc21c5b2beea5c59a6a0fc81b6e4ab757f73bb2"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-07-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-07-GREEN.json"
+  },
+  "design_lines": "Design section 13, \"and equity remains `1000`.\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"sealed RULE2-07 cost records by reference (`SYNTH-COST-RULE2-07-RED-V1\"; Design section 22.6, \"but the LEGACY premise and\"",
+  "rule2_green_projection": [
+   {
+    "selector": "/RESULT_SURFACE/equity_curve/last",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1000,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"guard recovery are disabled. The\"",
+     "baseline_selector_advisory": [
+      "account",
+      "equity"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "equity_curve",
+      "last"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"enables only the consecutive-loss guard\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-07G-1"
+   },
+   {
+    "selector": "/RESULT_SURFACE/guards/consecutive_loss_count",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"max_consecutive_losses=1`; all other L16 guards\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "guards",
+      "consecutive_loss_count"
+     ],
+     "node_kind": "I",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"enables only the consecutive-loss guard\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-07G-2"
+   },
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"with test-only `max_consecutive_losses=1`; all other\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"enables only the consecutive-loss guard\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-07G-3"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "N",
+     "value": null,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 13, \"with test-only `max_consecutive_losses=1`; all other\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position"
+     ],
+     "node_kind": "N",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 13, \"enables only the consecutive-loss guard\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W312-M6-07G-4"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-08-RED",
+  "role": "RED",
+  "owning_def_ids": [
+   "DEF-P012-08"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-08-RED.json",
+   "digest": "4bc3cc7402e1eb8dde4416fd698a9d2a46b5477aa9d5e7a10061aa7f8b281c4d",
+   "digest_reason": "digest re-pinned by W321 after M1 (owner decisions 137/144) amended the cost_schedule_id/cost_schedule_sha256 members from null to the RULE2-07 cost record by reference; Design v1.15 section 14, \"= abs(100 × 1 × 1\"; Design v1.15 section 14, \"= abs(100 × 1 × 1\"; Design v1.15 section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\"; Design v1.15 section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\"; Design v1.15 section 22.6, \"s `EXACT_IDENTITY_V1` rounding, zero fixed/minimum\"; Design v1.15 section 23.5, \"RULE2-07-RED/GREEN and RULE2-08-RED under owner\"."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-08-RED.json",
+    "digest": "d6f9ee20d054263188c845f7aead6e2188c60f98789ed63fedd4b22c16c63002"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-08-RED.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-08-RED.json"
+  },
+  "design_lines": "Design section 14, \"0.1 (design fee identity lines\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"COST|FUNDING}-<scenario_id>-V1`, except that\"; Design section 22.6, \"but the LEGACY premise and\"",
+  "rule2_divergent_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fee_events",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 14, \"corrected equity `999.9`. Legacy\"; Design section 14, \"corrected equity `999.9`. Legacy\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fee_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 14, \"abs(100 × 1 × 1) × 0.001\"; Design section 14, \"abs(100 × 1 × 1) × 0.001\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W321-M6-08R-1"
+   },
+   {
+    "selector": "/EVENT_SURFACE/funding_events",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 14, \"corrected equity `999.9`. Legacy\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "funding_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 14, \"changes: add `funding_events`, cumulative funding\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W321-M6-08R-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/equity_curve/last",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "I",
+     "value": 1000,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 14, \"no funding cashflow and remains\"",
+     "baseline_selector_advisory": [
+      "account",
+      "equity"
+     ]
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "equity_curve",
+      "last"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 14, \"abs(100 × 1 × 1) × 0.001\"; Design section 14, \"abs(100 × 1 × 1) × 0.001\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W321-M6-08R-3"
+   },
+   {
+    "selector": "/RESULT_SURFACE/cumulative_funding",
+    "legacy": {
+     "tag": "ABSENT",
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 14, \"100 × 1 × 1) × 0.001 +\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "cumulative_funding"
+     ],
+     "node_kind": "F",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 14, \"abs(100 × 1 × 1) × 0.001\""
+    },
+    "expected_relation": "DIFFERS",
+    "derivation": "W321-M6-08R-4"
+   }
+  ]
+ },
+ {
+  "scenario_id": "RULE2-08-GREEN",
+  "role": "GREEN",
+  "owning_def_ids": [
+   "DEF-P012-08"
+  ],
+  "execution_profile_id": "close_only_deterministic_v2",
+  "surface_schema_id": {
+   "1.0.0": "LEGACY_P011_EXACT_V1",
+   "2.0.0": "CORRECTED_V2"
+  },
+  "required_semantics_versions": [
+   "1.0.0",
+   "2.0.0"
+  ],
+  "surfaces": [
+   "EVENT_SURFACE",
+   "RESULT_SURFACE"
+  ],
+  "input": {
+   "path": "tests/corrected_vnext/contracts/inputs/RULE2-08-GREEN.json",
+   "digest": "6c349e8bf180e63dddb34834aa13098f9d723aecdff6b02d328aa6b55996a939",
+   "digest_reason": "digest re-pinned by W321 after M1 (owner decisions 137/144) amended the cost_schedule_id/cost_schedule_sha256 members from null to the RULE2-07 cost record by reference; Design v1.15 section 14, \"record `SYNTH-COST-RULE2-07-RED-V1` (sha256 `806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b`) and RULE2-08-GREEN consumes `SYNTH-COST-RULE2-07-GREEN-V1` (sha256 `040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe`), bound BY REFERENCE to the existing\"; Design v1.15 section 14, \"record `SYNTH-COST-RULE2-07-RED-V1` (sha256 `806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b`) and RULE2-08-GREEN consumes `SYNTH-COST-RULE2-07-GREEN-V1` (sha256 `040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe`), bound BY REFERENCE to the existing\"; Design v1.15 section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\"; Design v1.15 section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\"; Design v1.15 section 22.6, \"rounding, zero fixed/minimum, and zero\"; Design v1.15 section 23.5, \"RULE2-07-RED/GREEN and RULE2-08-RED under owner\"."
+  },
+  "expected_artifacts": {
+   "2.0.0": {
+    "producer_id": "CONTRACT_TABLES",
+    "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
+    "digest": "7e3b886e4899472c0a92c921f8e27e8c172e46d4bb7c8e29ff6c1314aab4ee69"
+   },
+   "1.0.0": {
+    "producer_id": "BASELINE_BYTES",
+    "path": "OUT-OF-LANE",
+    "digest": "OUT-OF-LANE",
+    "reason": "Design section 15.1, \"event/result artifacts from accepted P0-11\" - the 1.0.0 expected bytes are the frozen BASELINE_BYTES producer from accepted P0-11 scenarios; CONTRACT_TABLES neither authors nor rewrites them."
+   }
+  },
+  "observed_artifact_paths": {
+   "1.0.0": "tests/corrected_vnext/observed/1.0.0/RULE2-08-GREEN.json",
+   "2.0.0": "tests/corrected_vnext/observed/2.0.0/RULE2-08-GREEN.json"
+  },
+  "design_lines": "Design section 14, \"schedule containing `TEST-FUND-1`, the same\"; Design section 22.1, \"members are JSON `null` only\"; Design section 22.3, \"sealed RULE2-07 cost records by reference (`SYNTH-COST-RULE2-07-RED-V1\"; Design section 22.6, \"but the LEGACY premise and\"",
+  "rule2_green_projection": [
+   {
+    "selector": "/EVENT_SURFACE/fill_events",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "A",
+     "value": 0,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 14, \"same complete schedule containing `TEST-FUND-1\"; Design section 14, \"same complete schedule containing `TEST-FUND-1\"; Design section 23, \"window scope, `fill_events` / `exit_events\""
+    },
+    "corrected": {
+     "selector": [
+      "EVENT_SURFACE",
+      "fill_events"
+     ],
+     "node_kind": "A",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 14, \"at equity `1000`. `RULE2-08-GREEN\"; Design section 14, \"at equity `1000`. `RULE2-08-GREEN\"; Design section 23, \"window scope, `fill_events` / `exit_events\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W321-M6-08G-2"
+   },
+   {
+    "selector": "/RESULT_SURFACE/final_position",
+    "legacy": {
+     "tag": "PRESENT",
+     "node_kind": "N",
+     "value": null,
+     "source": "DESIGN_DERIVED",
+     "design_lines": "Design section 14, \"same complete schedule containing `TEST-FUND-1\"; Design section 14, \"same complete schedule containing `TEST-FUND-1\"; Design section 23, \"or non-null `RESULT_SURFACE.final_position.side` is exactly\""
+    },
+    "corrected": {
+     "selector": [
+      "RESULT_SURFACE",
+      "final_position"
+     ],
+     "node_kind": "N",
+     "source": "CONTRACT_TABLES",
+     "design_lines": "Design section 14, \"at equity `1000`. `RULE2-08-GREEN\"; Design section 14, \"at equity `1000`. `RULE2-08-GREEN\"; Design section 23, \"or non-null `RESULT_SURFACE.final_position.side` is exactly\""
+    },
+    "expected_relation": "EQUAL",
+    "derivation": "W321-M6-08G-3"
+   }
+  ]
+ },
+ {
+  "scenario_id": "PROBE-P012-01-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-01-A",
+  "owning_def_ids": [
+   "DEF-P012-01"
+  ],
+  "base_scenario_id": "RULE2-01-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-01-A/kernel/",
+  "modified_copy_digest": "cdfe8856714ead9b33ba2f0cf3669b726c5ee201ed01e981659f2d43571a12e8",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-01-A/modification_manifest.json",
+  "modification_manifest_digest": "5efe73e0806a2aa559a33739298632fb1d045d2ac25fb604bd217829f87a9fa5",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design section 7, \"so the corrected-expectation check must refuse at the quantity node. `PROBE-P012-01-B\" - the variant replaces the corrected multiplier with 1 after record validation; the corrected expected producer remains at quantity 5, so the check must refuse at the quantity node. AMBIGUITY RECORDED (discrepancy D-14): if the variant also rewrites /EVENT_SURFACE/decision_events/1/contract_multiplier, that node precedes fill_events in UTF-8 key order (decision_events < fill_events) and would be the first changed node instead. The design names the quantity node; this catalog records the design's node and flags the ordering risk. D-14 CLOSED AT DESIGN v1.11 (amendment-choice W261): Design v1.11 section 15.2, \"regular-file path, before/after file SHA-256\" supersedes strict first-node equality and requires only that expected_first_changed_node be a member of the complete changed-node set while the comparator's traversal-order first node is recorded separately, so an earlier-sorting node no longer competes for this field; W256 measured that comparator node as /EVENT_SURFACE/cash_events/0/signed_delta (W256_PROBES_REPORT.md:173) and it is recorded above as comparator_first_differing_node. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "design_lines": "Design section 7, \"so the corrected-expectation check must refuse at the quantity node. `PROBE-P012-01-B\""
+ },
+ {
+  "scenario_id": "PROBE-P012-01-B",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-01-B",
+  "owning_def_ids": [
+   "DEF-P012-01"
+  ],
+  "base_scenario_id": "RULE2-01-GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-01-B/kernel/",
+  "modified_copy_digest": "0febda922d5941f20b7405f6cc215a9b4c1b219f921ababa993e2833ff1868ae",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-01-B/modification_manifest.json",
+  "modification_manifest_digest": "532c8b98da0eab8a81c963475f67ff467d1a788eb00bb7eb5e5d52c17fdf9676",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/quantity",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design section 7, \"supplied binary64 NaN stop returns\" - the variant makes a supplied binary64 NaN stop return zero quantity; RULE2-01-GREEN still expects fallback quantity 1, so the check must refuse at the quantity node (expected 1, variant 0). Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "design_lines": "Design section 7, \"supplied binary64 NaN stop returns\""
+ },
+ {
+  "scenario_id": "PROBE-P012-02-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-02-A",
+  "owning_def_ids": [
+   "DEF-P012-02"
+  ],
+  "base_scenario_id": "RULE2-02-GREEN",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-02-A/kernel/",
+  "modified_copy_digest": "838b0ba7352a41d2bcf99c369920d257d4b02b5197b5342a557266541d23afb7",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-02-A/modification_manifest.json",
+  "modification_manifest_digest": "61655c687a924b3d5ceb82f073cca933f541bbd39a127773b87f2e65ee971540",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/RESULT_SURFACE/admitted",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events",
+  "note": "Design section 8, \"corrected comparison to `>` so\" (W317 amendment, owner decision 143) - re-targeted from RULE2_GREEN_CROSS_VERSION_EXPECTATION to CORRECTED_EXPECTATION. The variant changes the corrected admission comparison from >= to > so equality refuses; the corrected-expectation check compares the variant's output against the sealed expected artifact. Under the variant the corrected side refuses admission (order_notional 100 >= min_notional 100 is false with >), so no position opens, fill_events empties, fee_events empties, and cash_events empties. The sealed expected artifact carries cash_events with one fee entry; under UTF-8 key order cash_events (0x63) is the first key in EVENT_SURFACE (0x45), which precedes RESULT_SURFACE (0x52). The comparator returns the array pointer on list-length mismatch (verify_bceg.py:1545-1549; expected length 1 vs variant length 0), so the first differing node is /EVENT_SURFACE/cash_events. expected_first_changed_node stays /RESULT_SURFACE/admitted per Design section 10, \"100` rather than open `90\" as a member of the changed-node set. Re-derived by W321 under Design v1.15 section 8, \"corrected comparison to `>` so\".",
+  "design_lines": "Design section 9, \"changes: RED becomes a typed\""
+ },
+ {
+  "scenario_id": "PROBE-P012-03-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-03-A",
+  "owning_def_ids": [
+   "DEF-P012-03"
+  ],
+  "base_scenario_id": "RULE2-03-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "INPUT",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-03-A/record/",
+  "modified_copy_digest": "35193efcfc568ec582e430b0acdc35fa4bcc3e7866313ad9f4798fd2e4e0d304",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-03-A/modification_manifest.json",
+  "modification_manifest_digest": "a496c97b16db3d219e3b2a7ff0222c70e9ce00fb38f057082a2706fbfc64e578",
+  "expected_failed_check": "RECORD_IDENTITY_PREFLIGHT",
+  "expected_first_changed_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+  "comparator_first_differing_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+  "note": "Design section 9, \"updating the detached digest. The\" - mutate one record byte without updating the detached digest; the record-identity preflight must refuse before any scenario output exists. Because the refusal precedes scenario output there is no comparison-surface node to name; the first changed artifact is the frozen record file itself. DESIGN v1.5 UPDATE: Design v1.5 section 22.3, \"reference (`SYNTH-COST-RULE2-07-RED-V1` and `SYNTH-COST-RULE2-07-GREEN-V1` respectively\" now binds the record id SYNTH-INSTRUMENT-RULE2-03-RED-V1 and Design v1.5 section 22.3, \"reference (`SYNTH-COST-RULE2-07-RED-V1` and `SYNTH-COST-RULE2-07-GREEN-V1` respectively\" binds every record member value, but Design v1.5 section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\" fixes only sorted keys, no BOM, LF, final LF, duplicate-key refusal and finite tokens, and Design v1.5 section 22.3, \"by reference (`SYNTH-COST-RULE2-07-RED-V1` and `SYNTH-COST-RULE2-07-GREEN-V1\" refuses to fabricate provenance captured_at_utc and human_reviewer, so the exact record bytes and their detached .sha256 still do not exist. The node therefore stays BLOCKED-MISSING-RECORD-BYTES (discrepancy D-15, extended by V15-D05). The subject producer is KERNEL_2 because design 15.4 assigns the record-identity preflight to KERNEL_1 and KERNEL_2; this probe binds the corrected subject named by DEF-P012-03. RE-DERIVED AT DESIGN v1.11 (amendment-choice W261): Design v1.11 section 9, \"updating the detached digest. The\" states that the record bytes now exist and names this probe's expected_first_changed_node as the mutated record path core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json rather than a placeholder, and Design section 15.2, \"path/digest below `PROBE_ROOT`, target kind\" makes that mutated record path the path member of the difference set for a record-identity refusal before scenario output; W256 measured the same path (W256_PROBES_REPORT.md:176), so BLOCKED-MISSING-RECORD-BYTES is replaced here and D-15 is closed for this field while the note above is retained as written.",
+  "design_lines": "Design section 9, \"updating the detached digest. The\""
+ },
+ {
+  "scenario_id": "PROBE-P012-04-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-04-A",
+  "owning_def_ids": [
+   "DEF-P012-04"
+  ],
+  "base_scenario_id": "RULE2-04-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-04-A/kernel/",
+  "modified_copy_digest": "309975feaf638401ff825ae935be8c879d6fe56276ca9fa1782db3bee581799f",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-04-A/modification_manifest.json",
+  "modification_manifest_digest": "d16c99e4753145a97b183bad7f1d9058ad7e1272d885ea0c10ea58b72775f90a",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design section 10, \"rather than open `90` on\" - the variant returns stop 100 rather than open 90 on RED; the check must refuse at the fill-price node (expected 90, variant 100). AMBIGUITY RECORDED (discrepancy D-14): under this bundle's node layout three other nodes also change and precede final_fill_price in enumeration order - /EVENT_SURFACE/decision_events/1/reference_price and /EVENT_SURFACE/decision_events/1/reference_source (decision_events sorts before fill_events), and /EVENT_SURFACE/fill_events/0/fill_trigger (the key 'fill_trigger' sorts before 'final_fill_price' because byte 3 is 'l' 0x6c versus 'n' 0x6e). This catalog records the design's named node; the layout-dependent earlier nodes are flagged for section-16 review. D-14 CLOSED AT DESIGN v1.11 (amendment-choice W261): Design v1.11 section 15.2, \"GATE_READER` makes a fresh byte-for-byte\" supersedes strict first-node equality and requires only that expected_first_changed_node be a member of the complete changed-node set while the comparator's traversal-order first node is recorded separately, so the three earlier-sorting nodes no longer compete for this field; W256 measured that comparator node as /EVENT_SURFACE/cash_events/0/signed_delta (W256_PROBES_REPORT.md:177) and it is recorded above as comparator_first_differing_node. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "design_lines": "Design section 11, \"the corrected-expectation check refuse at\""
+ },
+ {
+  "scenario_id": "PROBE-P012-05-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-05-A",
+  "owning_def_ids": [
+   "DEF-P012-05"
+  ],
+  "base_scenario_id": "RULE2-05-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-05-A/kernel/",
+  "modified_copy_digest": "505fc9263bfa874a5dde7df55422e20dbe0e03fdff25409e068fcb3ec43ba01e",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-05-A/modification_manifest.json",
+  "modification_manifest_digest": "3de256dd7b5acc50842f635ec8b91ba965c0a2196e1105405ab0321c6077eae8",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design section 11, \"must make the corrected-expectation check\" - the variant omits the slippage application, so the actual fill is 100 against independent corrected expected 101. Within the fill row, UTF-8 key order puts final_fill_price before slippage_impact/slippage_application_count/unrounded_fill_price, so it is the first changed node. ORDERING CLAIM SUPERSEDED AT DESIGN v1.11 (amendment-choice W261): that sentence is true only within the fill row, and Design v1.11 section 15.2, \"the variant and read-only. The\" now records the comparator's traversal-order first node separately; W256 measured it as /EVENT_SURFACE/cash_events/0/signed_delta (W256_PROBES_REPORT.md:178), so final_fill_price is retained here as the design-named target node that is a member of the complete changed-node set. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "design_lines": "Design section 11, \"must make the corrected-expectation check\""
+ },
+ {
+  "scenario_id": "PROBE-P012-05-B",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-05-B",
+  "owning_def_ids": [
+   "DEF-P012-05"
+  ],
+  "base_scenario_id": "RULE2-05-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-05-B/kernel/",
+  "modified_copy_digest": "ca7f2e6d8a4bae8412a88dfc0f0e707c003398db8ae748d8f1bde34fc9c4a761",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-05-B/modification_manifest.json",
+  "modification_manifest_digest": "3820068df7e465a2f2ecf1042ea52dfa7915c778079592a4e42dd37a6973f2ce",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+  "comparator_first_differing_node": "/EVENT_SURFACE/fill_events/0/final_fill_price",
+  "note": "Design section 11, \"must make the corrected-expectation check\" - the variant applies the slippage twice, so the actual fill is 102 against independent corrected expected 101. Design section 11, \"must make the corrected-expectation check\" also refuses any second application via slippage_application_count; final_fill_price still precedes slippage_application_count in UTF-8 key order. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "design_lines": "Design section 12, \"and independent `CONTRACT_TABLES` expected artifact\""
+ },
+ {
+  "scenario_id": "PROBE-P012-06-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-06-A",
+  "owning_def_ids": [
+   "DEF-P012-06"
+  ],
+  "base_scenario_id": "RULE2-06-RED",
+  "execution_profile_id": "raw_close_only_v1",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-06-A/kernel/",
+  "modified_copy_digest": "42fd158b70edb19ef3bea53e1bd5836e156567cd980d6bca64caf0a95e33722d",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-06-A/modification_manifest.json",
+  "modification_manifest_digest": "03bd27325403faca7a563f83347b0e48d8580c9d91ca5bc69b0692f71cd37a9c",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fill_events/0/exit_id",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design section 12, \"the declared scenario input and\" binds this probe exactly once to base_scenario_id RULE2-06-RED, subject_producer_id KERNEL_2 and target kind KERNEL, and states the refusal is at the first changed event sequence node: expected first fill TARGET-NEAR, modified-kernel first fill TARGET-FAR. In this bundle's node layout the reversed order first shows at /EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0 (decision_events precedes fill_events in UTF-8 key order), then at /EVENT_SURFACE/fill_events/0/exit_id. Both are recorded; the design's named node is /EVENT_SURFACE/fill_events/0/exit_id. Discrepancy D-14. D-14 CLOSED AT DESIGN v1.11 (amendment-choice W261): Design v1.11 section 15.2, \"INPUT`, `EXPECTED`, `OBSERVED`, `KERNEL`, or\" supersedes strict first-node equality, so this row now carries the design-named node /EVENT_SURFACE/fill_events/0/exit_id as expected_first_changed_node - a member of the complete changed-node set - while the comparator's traversal-order first node, measured by W256 as /EVENT_SURFACE/cash_events/0/signed_delta (W256_PROBES_REPORT.md:180), is recorded above as comparator_first_differing_node; /EVENT_SURFACE/decision_events/2/ordered_chosen_exit_ids/0, which this row previously carried, remains a changed node and is retained in this note. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "design_lines": "Design section 12, \"the declared scenario input and\""
+ },
+ {
+  "scenario_id": "PROBE-P012-07-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-07-A",
+  "owning_def_ids": [
+   "DEF-P012-07"
+  ],
+  "base_scenario_id": "RULE2-07-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-07-A/kernel/",
+  "modified_copy_digest": "19ca2126c306b9d3e23a2e5eaeb6960b2b318820299a5d04d16c9bbefe99d4f0",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-07-A/modification_manifest.json",
+  "modification_manifest_digest": "26239a299722e812797c5a3071f71ca868bc2be3c8259e891c47d7e1ef7e29b1",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/fee_events/1/liquidity_role",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/1/signed_delta",
+  "note": "Design section 13, \"corrected-expectation check must refuse at the event-role/rate/fee\" - the variant classifies one declared taker exit as maker; the check must refuse at the event-role/rate/fee nodes even if a coincidental rounded total is equal. The exit fill is fill index 1, so the projected row is fee_events/1. D-16 RESOLVED AT DESIGN v1.5: Design v1.5 section 22.3, \"pattern is unchanged for instrument\" now binds maker_rate 0.00015 on every section-22 CostSchedule, including RULE2-07, so the maker misclassification is fully derivable. Variant fee_notional 100 times 0.00015 equals 0.015 against the expected taker 100 times 0.001 equals 0.1, so fee_amount, fee_cash_delta and the joined cash row all change. Under the Design section 15.3, \"or an unlisted event array\" UTF-8 byte-order walk cash_events sorts before fee_events, so the first changed node is /EVENT_SURFACE/cash_events/1/signed_delta (expected -0.1, variant -0.015); the design-named event-role node /EVENT_SURFACE/fee_events/1/liquidity_role and /EVENT_SURFACE/fee_events/1/fee_amount also change and are recorded here. This matches the treatment already used for PROBE-P012-08-A. RE-DERIVED AT DESIGN v1.11 (amendment-choice W261): Design v1.11 section 15.2, \"EXPECTED`, `OBSERVED`, `KERNEL`, or `GATE\" separates the design-named target node from the comparator's traversal-order first node, so expected_first_changed_node now carries the design-named event-role node /EVENT_SURFACE/fee_events/1/liquidity_role, which is a member of the complete changed-node set, and /EVENT_SURFACE/cash_events/1/signed_delta - measured by W256 (W256_PROBES_REPORT.md:181) - is recorded above as comparator_first_differing_node. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "design_lines": "Design section 13, \"corrected-expectation check must refuse at the event-role/rate/fee\""
+ },
+ {
+  "scenario_id": "PROBE-P012-08-A",
+  "role": "PROBE",
+  "probe_id": "PROBE-P012-08-A",
+  "owning_def_ids": [
+   "DEF-P012-08"
+  ],
+  "base_scenario_id": "RULE2-08-RED",
+  "execution_profile_id": "close_only_deterministic_v2",
+  "subject_producer_id": "KERNEL_2",
+  "target_kind": "KERNEL",
+  "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-08-A/kernel/",
+  "modified_copy_digest": "1a91737ab696c3d7041bb343de266e199bc8d71d8f280f1f2d12586389297fc6",
+  "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-08-A/modification_manifest.json",
+  "modification_manifest_digest": "6088173237f0bdd11f34297f1f6c3237359131cb975ec9ef8fafde34e8576187",
+  "expected_failed_check": "CORRECTED_EXPECTATION",
+  "expected_first_changed_node": "/EVENT_SURFACE/funding_events/0/funding_cash_delta",
+  "comparator_first_differing_node": "/EVENT_SURFACE/cash_events/0/signed_delta",
+  "note": "Design section 14, \"event. The corrected-expectation check must refuse at the cash-delta\" - the variant flips the sign for the long positive-rate event; the check must refuse at the cash-delta node because independent expected -0.1 differs from actual +0.1. Following W341's design-directed window correction, Design section 22.6, \"fee) → 999.8 (funding) per the\" excludes the pre-window OPEN fill, and Design section 2.1, \"AMENDMENT-CHOICE (W347, owner decision Q-E (a), 2026-09-03) - funding\" keeps its joined fee cash row outside the compared window. The funding cash event is therefore cash_events[0]. The sign-flip variant changes that row's signed_delta from expected -0.1 to actual +0.1. Under Design section 15.3, \"be explicitly empty. Legacy reproduction\",Design section 15.3, \"explicitly empty. Legacy reproduction compares\", cash_events precedes funding_events in UTF-8 key order, array index 0 is visited first, and signed_delta is the first differing leaf, so /EVENT_SURFACE/cash_events/0/signed_delta is the comparator's first differing node; /EVENT_SURFACE/funding_events/0/funding_cash_delta remains the design-named typed projection. RE-DERIVED AT DESIGN v1.11 (amendment-choice W261): Design v1.11 section 15.2, \"5. Expected, input, observed, catalog\" separates the design-named target node from the comparator's traversal-order first node. RE-DERIVED AT DESIGN v1.15 (W341B): comparator index updated after W341 removed the pre-window fee cash row. Re-pinned 2026-09-02 23:3x over core tree e8e250589d6b5a887e6f1a77874405836772d4bd (W299 lane; Lead two-party recomputation from committed bytes; owner decision 132). Re-pinned 2026-09-03 over core tree 457a06d6e5e67b255c2830be8989f4e0610fba63 (W299B rebuilt the variant from a fresh copy of the final core; Lead two-party recomputation from committed bytes; owner decision 132).",
+  "design_lines": "Design section 14, \"event. The corrected-expectation check must refuse at the cash-delta\""
+ }
+]

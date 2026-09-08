@@ -1,0 +1,1244 @@
+{
+ "schema": "P012_CONTRACT_TABLES_MANIFEST_V1",
+ "bundle_id": "P012_CONTRACT_TABLES_W127",
+ "producer_id": "CONTRACT_TABLES",
+ "producer_role_authority": "Design section 15.1, \"Authored by a person other\" (section 15.1) - 2.0.0 expected event/result artifacts, hand-derived from sections 7-14 plus frozen records; authored by a person other than the kernel implementer; cannot import mtc_v2.core; cannot read an observed/ path.",
+ "author_identity": "claude-family lane W127b on Claude MAX Opus, non-implementer, owner ruling Q3a 2026-08-31; continuation of capped W127",
+ "owner_ruling": "Q3a, 2026-08-31 - an AI lane from a non-implementer family may satisfy the design's independence role for CONTRACT_TABLES authorship, named in the ledger. The implementer family is Codex (it authored the design and will build the kernel).",
+ "expected_value_provenance": {
+  "method": "INDEPENDENT_DERIVATION",
+  "not_method": "COPY_OBSERVED",
+  "statement": "Every expected value in this bundle was derived without executing the corrected kernel: by explicit written arithmetic from the design's stated contract semantics, or, for the record-digest and record-bound members admitted at re-seal #16 under owner decisions 149 and 151, by the design's written digest recipe over committed inputs; both are shown per value in DERIVATIONS.md. No kernel was executed. No observed/ path was read: no derivation in DERIVATIONS.md cites an observed/ path as a source, and none of the 34 committed observed/ file digests appears in this manifest, the catalog, the goldens or DERIVATIONS.md. The source of the record-derived members is the committed economic record bytes below mtc_v2/core/economic_records/ and their detached .sha256 sidecars, which the design makes authoritative at Design section 5.1, \"exact file bytes. The digest\"; all 51 committed records agree with their sidecars. The first-seal sentence asserting that no corrected-kernel implementation was read or exists is withdrawn as untrue at this seal: the repository now tracks 1194 paths under tests/corrected_vnext/ and 17 modules under mtc_v2/core/, including economics.py and semantics.py, and record bytes below that tree were read for the members named above. The property that these tables were sealed before that kernel existed is not carried by this statement; it is carried by the design's honest limit L14 and the decision-147 re-anchor rule (Design section 15.4, \"anchor's `base_repin_history` records every move\", Design section 17, \"The pre-implementation seal property is carried by the measured history\" and Design section 17, \"The owner-directed re-seal chain that\"), to be asserted and human-reviewed under section 16 and not machine-checked."
+ },
+ "design": {
+  "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
+  "version": "v1.24",
+  "sha256": "d071a13f7b122c52ea022e1f6cfd825d9b4916c1729155b12d5e5a68f0e57dea",
+  "total_lines": 2025,
+  "line_span_used": "whole file",
+  "heading_line_map_measured_at_reseal17": {
+   "v1.3 change log \u2014 DS15 fold + owner rulings 2026-08-31": 7,
+   "1. Authority, claim, and design posture": 24,
+   "2. Deep module and seam": 35,
+   "3. Exact ordering for `2.0.0`": 102,
+   "4. Versioning and addressability": 125,
+   "5. Immutable economic records and provenance": 139,
+   "6. Defect record contract": 172,
+   "7. DEF-P012-01 - contract multiplier in sizing": 209,
+   "8. DEF-P012-02 - real minimum-notional admission": 248,
+   "9. DEF-P012-03 - frozen instrument metadata": 309,
+   "10. DEF-P012-04 - gap-aware protective stops; continuous activation owner-gated": 333,
+   "11. DEF-P012-05 - in-path slippage, applied exactly once": 361,
+   "12. DEF-P012-06 - named same-bar collision policy": 389,
+   "13. DEF-P012-07 - provenanced real fee schedule": 418,
+   "14. DEF-P012-08 - per-interval funding and `funding_events`": 459,
+   "15. Bounded Correction Evidence Gate (`BCEG-1`)": 510,
+   "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 798,
+   "17. Honest limits": 811,
+   "18. Build-lane work breakdown and shape census": 868,
+   "19. Single consolidated `[OPEN \u2014 owner-gated]` ledger": 891,
+   "20. Defect-class prevention table": 908,
+   "21. Required build preconditions and non-goals": 928,
+   "v1.4 change log \u2014 micro-fold (owner 2026-08-31 \"design a\")": 940,
+   "22. v1.5 input-embedding addendum": 948,
+   "v1.5 change log \u2014 input-embedding addendum (owner 2026-08-31 `1a`)": 1210,
+   "23. v1.8 terminal micro-fold \u2014 v1.7 detector-union repair": 1249
+  },
+  "heading_line_map_addition_measured_at_reseal25": {
+   "23.19 v1.22 change log - window-local serialized fill identity": 1864
+  },
+  "heading_line_map_addition_measured_at_reseal26": {
+   "23.20 v1.23 change log - R26 identity and Item-2 closure": 1882
+  },
+  "heading_line_map_addition_measured_at_reseal28": {
+   "23.21 v1.24 change log - SYNTHETIC_ONLY milestone scope and Item-4 disposition": 1897
+  }
+ },
+ "repository_evidence_identity": {
+  "worktree": "C:\\WFMERGE54",
+  "head_commit": "108ea066a710ff7ef5c09246903fe3d523da1d56",
+  "mtc_v2_core_tree_oid": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
+  "verification": "read-only git rev-parse HEAD and git rev-parse HEAD:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core, run this session; both match the design premise at Design section 1, \"The current `mtc_v2/core` behavior is the `LEGACY_COMPATIBLE` baseline\". No git mutation was performed."
+ },
+ "catalog_conservation": {
+  "red_scenarios": 9,
+  "green_scenarios": 8,
+  "probe_rows": 10,
+  "catalog_rows_total": 27,
+  "expected_artifacts_authored": 17,
+  "recount_authority": "re-counted from the v1.4 design itself: sections 7-14 declared RED/GREEN/probe rows, plus Design section 15.2, \"KERNEL`, or `GATE`), expected failed\" (the additional RULE2-06-EQUAL-PRICE-RED row) and Design section 15.2, \"KERNEL`, or `GATE`), expected failed\"-Design section 15.2, \"KERNEL`, or `GATE`), expected failed\" (nine RED, eight GREEN)."
+ },
+ "files": [
+  {
+   "path": "DERIVATIONS.md",
+   "sha256": "d20fb927f33a32784f1b5174935c5a0d37323188a688e204aad4b35ffffacafc",
+   "bytes": 462089
+  },
+  {
+   "path": "scenario_catalog.json",
+   "sha256": "6e5eb01be81db74d53b7c48b39789cc979dad32290aa7099993ab34984cd8734",
+   "bytes": 101675
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-01-GREEN.json",
+   "sha256": "03a70ee7d9dbb0c0f7988135efe1577c16b149df8822af94b03cdb96f9c10dbd",
+   "bytes": 14570
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-01-RED.json",
+   "sha256": "31646561c134e4e6097a43ff1a9ffee8cbcc68439acc05b3947690ab8782a4fb",
+   "bytes": 14542
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-02-GREEN.json",
+   "sha256": "59acd8f75d35f384b89417fba4df289ebdf7bf768e4e9b22bf560bbeeaef3dfe",
+   "bytes": 12187
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-02-RED.json",
+   "sha256": "9511084b30fb45a710ee56484f443042233ebcc700621f1582efd86bad851425",
+   "bytes": 9902
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-03-GREEN.json",
+   "sha256": "b38a9b65ad965280e93f6763ef0cf95c80b5c1b27774e3e65ecafef210f9524e",
+   "bytes": 8034
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-03-RED.json",
+   "sha256": "7a12c41910edb62a1066e99a6a5306e4974d71edad40af670504f7e10db822b0",
+   "bytes": 9262
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-04-GREEN.json",
+   "sha256": "e192b8b6dedd8c05ae1055a2d7b2b56ac39fdc173cb2c18ac61567ed82f05fe6",
+   "bytes": 12914
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-04-RED.json",
+   "sha256": "4e89dffbc2a345b0cdeed40b63e04b5e16bdf2cdcbb6e8e318bdcedcdd6cce6d",
+   "bytes": 19671
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-05-GREEN.json",
+   "sha256": "53ed07441c81bd5d49323a209af4ebee51eddad333f831f60eff802a2140ad23",
+   "bytes": 15600
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-05-RED.json",
+   "sha256": "6833c49e1d4d48ae7ad36406377358caa5a0387d48d067dfd8f086528b0b8760",
+   "bytes": 26361
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+   "sha256": "ffcc867a8c15258c42aa9312655b469bd90b7b72f00f22875d30f83fe061928c",
+   "bytes": 24514
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-06-GREEN.json",
+   "sha256": "135f4ed135db6d351371dd00f19031c42257954faeec791c7244f87659c5144b",
+   "bytes": 22986
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-06-RED.json",
+   "sha256": "2895e012edabff097087006edf469d6122b0c83b80807a7b696d63f426d9e471",
+   "bytes": 23315
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-07-GREEN.json",
+   "sha256": "8ebdb0b8dcee9b4430c06af96cc21c5b2beea5c59a6a0fc81b6e4ab757f73bb2",
+   "bytes": 13241
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-07-RED.json",
+   "sha256": "82d11b9b826df4288e5e96f64d3f1ee6e6b4cf52b1a1b49af50807eb2e84a417",
+   "bytes": 25117
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-08-GREEN.json",
+   "sha256": "7e3b886e4899472c0a92c921f8e27e8c172e46d4bb7c8e29ff6c1314aab4ee69",
+   "bytes": 15024
+  },
+  {
+   "path": "golden/corrected_vnext/RULE2-08-RED.json",
+   "sha256": "d6f9ee20d054263188c845f7aead6e2188c60f98789ed63fedd4b22c16c63002",
+   "bytes": 30092
+  }
+ ],
+ "byte_discipline": "Every file above is UTF-8 with no BOM, LF line endings and a required final LF, per Design section 14, \"taker 0.001 on its notional\". Every JSON file parses with duplicate-key rejection and contains no non-finite number token. Re-verified by lane W156 over the 18 JSON files it revised or re-read (17 golden artifacts plus scenario_catalog.json): each file was byte-inspected for BOM, CR and final LF, parsed, checked for bare NaN/Infinity/undefined tokens outside string literals, and checked for duplicate keys by comparing the raw key-token count with the parsed property count (equal in every file).",
+ "blocked_cell_markers": {
+  "BLOCKED-ON-OPEN-nn": "ZERO cells. All ten section-19 OPEN rows carry an owner-approved APPLICABLE disposition in tests/corrected_vnext/contracts/open_item_applicability.json (revision 4; SHA-256 b15eac592d2d70d43cddecff586eab79423ef01fe4d69ea10a947b97c4fe74fe), so no expected value in this bundle is blocked on an owner decision. The five design v1.5 [OPEN-EMBED-01..05] refusals are likewise closed by owner addendum 20; see owner_addendum_20_source.",
+  "BLOCKED-MISSING-SCENARIO-INPUT": "the declared synthetic vector omits an input the cell needs (design gap). After the W200 v1.9 GOLDEN-OVER repair exactly ONE such cell remains in the bundle: RULE2-08-GREEN /observation_window/end_timestamp (an authoring member outside both surfaces, unchanged). The two surface cells that design 23.4's closed guards member set had forced onto RULE2-08-RED - /RESULT_SURFACE/guards/consec_loss_ok and /RESULT_SURFACE/guards/guard_blocked_raw - no longer exist, because Design v1.9 section 23.4, \"23.4 Closed `RESULT_SURFACE`, guards, and\" directs removal of that row's whole guards object unless a separate owner-approved scenario-input amendment binds its threshold, none exists, and lane W200 removed the object. The underlying gap is unchanged: Design section 22.6, \"per the §14 RED equity\" (v1.9 numbering; Design v1.9 section 22.6, \"per the §14 RED equity\" in v1.8) still binds no guard switch and no max_consecutive_losses for either RULE2-08 row, and design 22.8 still forbids borrowing another scenario's value. The gap is now expressed by the absence of the object rather than by two marked cells. See DERIVATIONS.md discrepancy W167-D01 and the W200 section, which records the relocation as W200-D04.",
+  "BLOCKED-MISSING-RECORD-BYTES": "the cell is a digest of a synthetic frozen test record whose exact bytes still do not exist. Design v1.5 sections 22.1 and 22.3 (Design v1.5 section 22.1, \"members are JSON `null` only for RULE2-08, where section 14 says no cost schedule is consumed\", Design v1.5 section 22.3, \"sealed RULE2-07 cost records by\") now bind every record member VALUE and every record id, but they fix only sorted keys, no BOM, LF, final LF, duplicate-key refusal and finite tokens - not the separator or indentation width - and Design v1.5 section 22.3, \"the existing sealed RULE2-07 cost records by\" expressly refuses to fabricate the provenance captured_at_utc and human_reviewer members. The hashed byte string is therefore still undetermined, and Design section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\" keeps digests MECHANICAL build artifacts. Design section 5, \"choice. Synthetic RULE-2 vectors in\" additionally forbids substituting the answered production record. See DERIVATIONS.md discrepancy V15-D05.",
+  "BLOCKED-DESIGN-UNENUMERATED": "the design names the member but fixes no node set for it. After design v1.8 this is metrics ONLY (17 cells, one per artifact): Design v1.8 section 23.1, \"addendum 29, decision 72):** `touched_exit_ids\" now enumerates the nine closed decision_events reasons with exact per-reason member sets, so the decision_events-vocabulary block is CLOSED and was removed from all 17 blocked_cells lists. Design section 23.1, \"addendum 29, decision 72):** `touched_exit_ids\" states that the amendment does not un-block design-unenumerated metrics.",
+  "BLOCKED-BUILD-ARTIFACT": "a path or digest that only exists after the Gate-2 build (serialized scenario-input files, probe kernel-variant trees, KERNEL_FILE_PATCH files, observed outputs)."
+ },
+ "open_item_applicability_source": {
+  "path": "tests/corrected_vnext/contracts/open_item_applicability.json",
+  "sha256": "b15eac592d2d70d43cddecff586eab79423ef01fe4d69ea10a947b97c4fe74fe",
+  "draft_revision": 4,
+  "status": "Placed in-repo revision 4, owner-approved. Design precondition 21.2 requires this placed file. Rows cited by this bundle are recorded per artifact in open_item_bindings.",
+  "rows_cited": [
+   "OPEN-02",
+   "OPEN-05",
+   "OPEN-06",
+   "OPEN-09",
+   "OPEN-10"
+  ],
+  "unresolved_conflict": "OPEN-02 answers STOP_FIRST as the mandatory same-bar policy, while Design section 12, \"low=85, close=95`; only the stop\" declares TARGET_FIRST as an explicit input of RULE2-06-RED and RULE2-06-EQUAL-PRICE-RED and Design section 12, \"low=85, close=95`; only the stop\" forbids OPEN-06 closure from silently rewriting that pair. This bundle seals the design's TARGET_FIRST and referred the conflict to the owner. RESOLVED by owner addendum 18 (C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md:329-334, owner verbatim 'RECOMMENDED: keep the two test cases as designed'): D-12 is closed as option (a), the two synthetic RULE2-06 test cases keep their design-declared TARGET_FIRST input, and STOP_FIRST remains mandatory for acceptance-bearing production runs only. No sealed value changed."
+ },
+ "owner_addendum_20_source": {
+  "path": "C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md",
+  "lines": "337-348",
+  "addendum": 20,
+  "item": 49,
+  "owner_verbatim": "1a 2a 3a 4a 5a",
+  "status": "Owner-approved decision text read this session. It closes the five design v1.5 [OPEN-EMBED] refusals at Design v1.5 section 22.1, \"is superseded. For RULE2-08-RED, `cost_schedule_id\". These are test-only values under design section 5's synthetic-vector rule; production records remain governed by addenda 15-17 evidence packages.",
+  "rows_cited": [
+   "OPEN-EMBED-01",
+   "OPEN-EMBED-02",
+   "OPEN-EMBED-03",
+   "OPEN-EMBED-04",
+   "OPEN-EMBED-05"
+  ],
+  "effect": "1a binds omitted initial equity 1000 for RULE2-03/04/05/06; 2a binds RULE2-04 entry basis and fill 100 via the design 22.5 candidate entry/BE path; 3a rules the RULE2-06-EQUAL-PRICE target book corrected-machinery-only and records that row as not runnable on legacy for that book; 4a binds the RULE2-08-RED pre-event entry basis and fill 100; 5a builds the RULE2-08-GREEN closed lifecycle from ordinary pre-window bars. Cells filled per row are listed in each artifact's v15_filled_cells array and derived in DERIVATIONS.md section 'v1.5 revision'."
+ },
+ "revision_history": [
+  {
+   "revision": "W156 design-v1.5 revision, 2026-08-31",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W156_TABLES_REVISION_V15.md",
+   "report": "C:\\tmp\\LANE_PROMPTS_20260828\\W156_TABLES_REVISION_REPORT.md",
+   "files_revised": [
+    "DERIVATIONS.md",
+    "scenario_catalog.json",
+    "all 17 files under golden/corrected_vnext/"
+   ],
+   "manifest_fields_updated_by_this_lane": [
+    "files[].sha256 and files[].bytes for every revised file",
+    "design.version, design.total_lines, design.line_span_used and design.line_spans_by_section (v1.5 spans added; the three stale v1.4 spans for section 16, section 19 and the v1.4 change log corrected by the uniform +28 shift that section 15.6's insertion produced, each re-verified against the v1.5 headings)",
+    "byte_discipline (re-verification statement)",
+    "blocked_cell_markers.BLOCKED-ON-OPEN-nn, .BLOCKED-MISSING-SCENARIO-INPUT and .BLOCKED-MISSING-RECORD-BYTES descriptions",
+    "open_item_applicability_source.unresolved_conflict (D-12 recorded as owner-resolved by addendum 18)",
+    "owner_addendum_20_source (new)",
+    "section_16_review.statement and claim_limits (stale v1.4 line citations corrected to their verified v1.5 lines)",
+    "revision_history (new)"
+   ],
+   "not_touched_by_this_lane": [
+    "seal_state (still carries the pre-revision EXPECTED_SEAL_SHA)",
+    "seal (still carries the pre-revision EXPECTED_SEAL_SHA)",
+    "IMPLEMENTATION_ANCHOR_DRAFT.json",
+    "every catalog input.path and input.digest field",
+    "any repository path, the driver, or W152's directories"
+   ],
+   "seal_notice": "STALE SEAL. seal_state.EXPECTED_SEAL_SHA and seal.EXPECTED_SEAL_SHA still name the pre-revision content and were deliberately left untouched for the Lead to re-seal and re-accept. Do not treat them as covering the revised bytes recorded in files[] above."
+  },
+  {
+   "revision": "W167 design-v1.8 revision, 2026-09-01",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W167_TABLES_V18.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W167_TABLES_V18_REPORT.md",
+   "authority": "Design P012_FRESH_DESIGN_V1.md v1.8, section 23.5 TABLES REVISION SCOPE items 1-7 (Design section 23.6, \"fixed shape; tables and kernel\"). Owner addendum 22 authorised the single micro-fold closing G79-F01/DS35-F01 and DS35-F02..F04 (Design section 23.6, \"fixed shape; tables and kernel\"); owner addenda 19, 20 and 21 apply unchanged. Design v1.8 is DUAL-ZERO cleared.",
+   "files_revised": [
+    "DERIVATIONS.md",
+    "all 17 files under golden/corrected_vnext/"
+   ],
+   "files_NOT_touched": [
+    "scenario_catalog.json (byte-identical; digest re-verified against this manifest before and after)",
+    "IMPLEMENTATION_ANCHOR_DRAFT.json",
+    "every catalog row, input path and input digest"
+   ],
+   "manifest_fields_updated_by_this_lane": [
+    "files[].sha256 and files[].bytes for the 18 files this lane actually revised, and ONLY those; scenario_catalog.json's recorded digest was re-verified as still correct and left unchanged",
+    "design.version, design.total_lines, design.line_span_used and the eight new section-23 entries in design.line_spans_by_section",
+    "blocked_cell_markers.BLOCKED-MISSING-SCENARIO-INPUT and blocked_cell_markers.BLOCKED-DESIGN-UNENUMERATED marker descriptions",
+    "this revision_history entry"
+   ],
+   "manifest_fields_NOT_touched": [
+    "seal",
+    "seal_state",
+    "reseal_history",
+    "catalog_conservation",
+    "expected_value_provenance",
+    "author_identity",
+    "owner_ruling",
+    "byte_discipline",
+    "open_item_applicability_source",
+    "owner_addendum_20_source",
+    "section_16_review",
+    "claim_limits"
+   ],
+   "seal_consequence": "The recorded EXPECTED_SEAL_SHA no longer covers these bytes. Re-sealing is the Lead's act under Design section 23.4, \"exited quantity is recoverable from\" and was deliberately not performed here. Recorded as DERIVATIONS.md discrepancy W167-D06.",
+   "value_impact": "ZERO economic values changed. No fee, funding delta, gross or net PnL, equity token, fill price, quantity, rate, record identity or refusal value moved. The five equity_curve pairs named by item 3 were re-derived under design 23.2 and reproduce their sealed tokens exactly. The changes are member-set, spelling and node-kind repairs, plus two newly required guard members that could not be derived and are marked."
+  },
+  {
+   "revision": "W172 Reading Y revision, 2026-09-01",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W172_TABLES_READING_Y.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W172_READING_Y_REPORT.md",
+   "authority": "Owner addendum 26 answered W167-D04 with READING Y: a decision_events row is required for every closed reason whose named decision is actually evaluated on that scenario, even where the prior tables artifact never carried it. The independent family (G83) had ruled the two readings GENUINELY AMBIGUOUS and returned NOT SAFE TO SEAL rather than choosing.",
+   "effect": "Ten decision rows added across eight of seventeen scenarios; one row (RULE2-05-RED SIZING_COMPUTED) deliberately withheld with its record because its payload is not derivable (W167-D05); zero economic values moved; all six G83 findings folded, including two corrections to G83's own evidence tables.",
+   "independent_verdict": "C:\\tmp\\LANE_PROMPTS_20260828\\DETECT_G85_READING_Y.md - SAFE TO SEAL, no second fork found."
+  },
+  {
+   "revision": "W186 RULE2-05-RED re-derivation under owner addendum 28 decision 68, 2026-09-01",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W186_RULE205RED_REDERIVE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W186_RULE205RED_REPORT.md",
+   "authority": "Owner addendum 28 decision 68, 2026-09-01, verbatim at C:\\tmp\\LANE_PROMPTS_20260828\\N_TIMES.txt:571 - 'RULE2-05-RED: SECTION 7 GOVERNS, quantity ZERO - the sealed golden currently carries the section-11 outcome and must be re-derived by the tables family under this word, the only authority that may change a sealed golden.' This resolves discrepancy W167-D05, on which Design section 7, \"identity; corrected quantity and all\" (floored quantity 0) and Design section 11, \"101`; legacy fill is `100\" with Design section 22.5, \"and owner fee decision; equity\" (declared quantity 1) disagreed.",
+   "files_revised": [
+    "golden/corrected_vnext/RULE2-05-RED.json",
+    "DERIVATIONS.md"
+   ],
+   "files_NOT_touched": [
+    "the other 16 files under golden/corrected_vnext/ (re-checked by written arithmetic, none affected; see DERIVATIONS.md section Z-7)",
+    "scenario_catalog.json",
+    "IMPLEMENTATION_ANCHOR_DRAFT.json",
+    "every catalog row, input path and input digest",
+    "tests/corrected_vnext/contracts/inputs/** (not opened as a derivation authority)"
+   ],
+   "manifest_fields_updated_by_this_lane": [
+    "files[].sha256 and files[].bytes for the two files this lane actually revised, and ONLY those",
+    "this revision_history entry"
+   ],
+   "manifest_fields_NOT_touched": [
+    "seal",
+    "seal_state",
+    "reseal_history",
+    "catalog_conservation",
+    "expected_value_provenance",
+    "author_identity",
+    "owner_ruling",
+    "byte_discipline",
+    "design",
+    "blocked_cell_markers",
+    "open_item_applicability_source",
+    "owner_addendum_20_source",
+    "section_16_review",
+    "claim_limits"
+   ],
+   "seal_consequence": "The recorded EXPECTED_SEAL_SHA no longer covers these bytes. Re-sealing is the Lead's act under Design section 23.4, \"order_notional` | DEF-P012-01, DEF-P012-02, or DEF-P012-05\" and was deliberately not performed here; W167-D06 stands.",
+   "catalog_consequence": "STALE CATALOG DIGEST. scenario_catalog.json pins expected_artifacts['2.0.0'].digest for RULE2-05-RED at a5962ccfed7b893d41ea2b2d43c1b2532328a9fb1eaea07b11f605a82c6cd7f9, the pre-revision bytes. The lane spec keeps the catalog untouched, so this lane did not edit it; the Lead must refresh that one field to 88197710a9a767a130d794dbbebe56a81fe9ef990081d3c15171b574e25dbc9a at re-seal. Recorded as DERIVATIONS.md discrepancy W186-D04.",
+   "value_impact": "FOUR ECONOMIC VALUES MOVED on RULE2-05-RED, unlike the W167 and W172 revisions which moved none. /EVENT_SURFACE/fill_events/0/quantity and /RESULT_SURFACE/final_position/quantity 1 -> 0; /RESULT_SURFACE/order_notional 101 -> 0; fee_notional 101 -> 0 with fee_amount 0.04545 -> 0 and both joined deltas -0.04545 -> 0; /RESULT_SURFACE/equity_curve/last 999.95455 -> 1000. The withheld /EVENT_SURFACE/decision_events SIZING_COMPUTED row IS now derivable and was authored (selector FALLBACK, contract_multiplier 1, order_notional 0). No other scenario moved by any value.",
+   "effect": "One golden re-derived, one worksheet section added. W167-D05 closed. Five new discrepancies recorded and NOT resolved: W186-D01 (the design fixes no rule for whether a zero-quantity entry still emits a fill, fee, cash row and position; container shape kept as sealed, alternative recorded), W186-D02 (signed-zero serialization of fee_cash_delta), W186-D03 (the FALLBACK selector token is design-named only inside section 22.7), W186-D04 (stale catalog digest above), W186-D05 (the lane spec understated the reach: the artifact sealed the section-11 outcome throughout rather than withholding only one row)."
+  },
+  {
+   "revision": "W186 RULE2-05-RED re-derivation, 2026-09-01",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W186_RULE205RED_REDERIVE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W186_RULE205RED_REPORT.md",
+   "authority": "Owner addendum 28 decision 68 resolved the section 7 versus section 11 quantity contradiction in favour of section 7: the flooring rule governs, quantity zero. W167-D05 had withheld the affected row rather than choose.",
+   "effect": "FOUR ECONOMIC VALUES MOVED - the first revision in this sequence to move any. The previously withheld SIZING_COMPUTED row became derivable under the ruling and was filled. No other scenario was touched.",
+   "independent_verdict": "C:\\tmp\\LANE_PROMPTS_20260828\\DETECT_G94_ECONOMIC.md - SAFE TO SEAL: YES. All four figures independently re-derived; each entailed by the ruling rather than by a further unstated choice; the withheld row genuinely derivable; no ripple detected."
+  },
+  {
+   "revision": "W200 v1.9 GOLDEN-OVER repair of the three design-directed rows, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W200_GOLDEN_OVER_REPAIR.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W200_GOLDEN_OVER_REPORT.md",
+   "authority": "Design v1.9 itself, not a new owner word. Section 23.5 tables-revision item 9 at Design v1.9 section 23.4, \"AMENDMENT-CHOICE (W347, owner decision Q-E (a), 2026-09-03) - closed `run_manifest\" directs the tables family to change the inconsistent guard-basis values to section 23.4's hyphenated GROSS-MINUS-FEES (Design v1.9 section 23.4, \"W347, owner decision Q-E (a), 2026-09-03) - closed `run_manifest\") and to remove the RULE2-08-RED guards object unless a separate owner-approved scenario-input amendment binds its threshold. No such amendment exists. Owner addendum 28 decision 67 approved v1.9 as drafted (C:\\tmp\\LANE_PROMPTS_20260828\\N_TIMES.txt:571).",
+   "files_revised": [
+    "golden/corrected_vnext/RULE2-07-RED.json",
+    "golden/corrected_vnext/RULE2-07-GREEN.json",
+    "golden/corrected_vnext/RULE2-08-RED.json",
+    "DERIVATIONS.md"
+   ],
+   "files_NOT_touched": [
+    "the other 14 files under golden/corrected_vnext/, digest-verified byte-identical to the sealed bytes before and after",
+    "the three DESIGN-GAP rows RULE2-04-RED, RULE2-06-RED and RULE2-06-EQUAL-PRICE-RED specifically - not opened for writing; the design does not settle them and they are going to the owner",
+    "scenario_catalog.json",
+    "IMPLEMENTATION_ANCHOR_DRAFT.json",
+    "every catalog row, input path and input digest",
+    "tests/corrected_vnext/contracts/inputs/** (not opened as a derivation authority)",
+    "the W167, W172 and W186 reports (dated records of prior lanes, left as written)"
+   ],
+   "manifest_fields_updated_by_this_lane": [
+    "files[].sha256 and files[].bytes for the four files this lane actually revised, and ONLY those",
+    "blocked_cell_markers.BLOCKED-MISSING-SCENARIO-INPUT - the count THREE became ONE because this lane's own directed removal deleted the two RULE2-08-RED guard cells the sentence named; leaving it would have been a live false census",
+    "this revision_history entry"
+   ],
+   "not_touched_by_this_lane": [
+    "seal_state (still carries the pre-repair EXPECTED_SEAL_SHA)",
+    "seal (still carries the pre-repair EXPECTED_SEAL_SHA)",
+    "reseal_history",
+    "design.version, design.total_lines and design.line_spans_by_section (still describe v1.8 and 1273 lines while the design read is v1.9 with 1317 lines - recorded as W200-D05, a bundle-wide act for the Lead)",
+    "section_16_review, claim_limits, catalog_conservation, byte_discipline"
+   ],
+   "value_impact": "ZERO economic values moved. No fee, funding delta, gross or net PnL, equity token, fill price, quantity, rate, notional, record identity or refusal value changed on any row. Two guard basis TOKENS were re-spelled from GROSS_MINUS_FEES to the design's own GROSS-MINUS-FEES, and one RULE2-08-RED guards object - one token, one derived integer 0 and two already-blocked cells, no money figure - was removed. Contrast the W186 entry above, which did move four economic values.",
+   "cascade_statement": "The directed removal did not cascade into any value. It had four bookkeeping consequences inside RULE2-08-RED alone, each a record ABOUT the removed object rather than a value on either comparison surface, and each reported rather than absorbed: blocked_cells lost its two /guards rows (8 to 6); authored_value_tokens lost its /guards/guard_pnl_basis row (4 to 3); open_item_bindings[0].effect_on_this_scenario was rewritten because it asserted that guard_pnl_basis stays GROSS_MINUS_FEES, a live fact about a deleted node, exactly as lane W172 rewrote the same sentence under G83-F04; and the unchanged_sealed_values clause 'and every guard node are byte-identical' was struck because no guard node remains. See W200_GOLDEN_OVER_REPORT.md and DERIVATIONS.md section W-4.",
+   "seal_consequence": "STALE SEAL. seal_state.EXPECTED_SEAL_SHA and seal.EXPECTED_SEAL_SHA still name 1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47, the pre-repair content, and were deliberately left untouched for the Lead to re-seal. They do not cover the revised bytes recorded in files[] above.",
+   "catalog_consequence": "STALE CATALOG DIGESTS, three of them. scenario_catalog.json pins expected_artifacts['2.0.0'].digest for RULE2-07-RED at 88b446ad3a5d7974616ba1253c345f7a8f321fc60b5a5a55f70c57ebf74bf4ef, RULE2-07-GREEN at a7e6a59a4040d6eee8be42c24d28f46a5c9f4af2bd131c19bf6e768f9819ee48 and RULE2-08-RED at 926a3318123e1b5380b152cb08dd2b07bebbf18894b15771b20126cc916a8809 - all three now the pre-repair bytes. The lane spec keeps the catalog untouched; re-pinning is the Lead's act at re-seal, as at re-seals #2, #3 and #4. The other 14 pins were verified against disk and still match.",
+   "effect": "Three goldens repaired under the design's own direction, one worksheet section added. Five discrepancies recorded and NOT resolved: W200-D01 (Design section 14, \"taker rate 0.001: fee =\" calls DEF-P012-08 guard outcomes explicit comparison nodes while item 9 directs removing this row's guards object - the one place a reader could reach the opposite conclusion), W200-D02 (item 9 says three guard-basis values but the removal deletes the third rather than re-spelling it, so only two were changed), W200-D03 (v1.8 versus v1.9 line drift in every artifact citation and in provenance.design_version), W200-D04 (W167-D01 is relocated into the absent object, not closed), W200-D05 (the manifest still describes v1.8)."
+  },
+  {
+   "revision": "W200 GOLDEN-OVER repair of RULE2-07-RED, RULE2-07-GREEN, RULE2-08-RED, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W200_GOLDEN_OVER_REPAIR.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W200_GOLDEN_OVER_REPORT.md",
+   "authority": "Design v1.9 itself, under owner addendum 28 decision 67. The item at Design v1.9 section 23.4, \"AMENDMENT-CHOICE (W347, owner decision Q-E (a), 2026-09-03) - closed `run_manifest\" requires the hyphenated GROSS-MINUS-FEES; item 9 at Design v1.9 section 23.4, \"AMENDMENT-CHOICE (W347, owner decision Q-E (a), 2026-09-03) - closed `run_manifest\" directs removal of the RULE2-08-RED guards object absent a threshold amendment, and no such amendment exists.",
+   "effect": "Three goldens revised. NO ECONOMIC VALUE MOVED - verified by a non-authoring family on both comparison surfaces. The three DESIGN-GAP rows were not touched; they carry two genuine open questions for the owner and editing one would corrupt the gate.",
+   "independent_verdict": "C:\\tmp\\LANE_PROMPTS_20260828\\DETECT_G103_W200_GOLDEN.md - SAFE TO SEAL: YES. Two findings, neither HIGH: G103-F01 MEDIUM dangling DERIVATIONS pointers to the removed guards object; G103-F02 LOW stale underscore token at DERIVATIONS.md:748. It also resolved W200-D01 on the design's own terms: item 9 is the later row-specific owner-approved instruction, and Design section 14, \"record at taker 0.001 on\" is unamended family-level text that still collides with it - wording residue that belongs with the owner questions."
+  },
+  {
+   "revision": "W205 superseded-marker pass over the two DERIVATIONS residues, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W205_DERIVATIONS_RESIDUE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W205_DERIVATIONS_RESIDUE_REPORT.md",
+   "authority": "G103-F01 and G103-F02, the two findings named in the re-seal #5 record as deliberately sealed over and scheduled for repair.",
+   "effect": "DERIVATIONS.md only, +16,104 bytes. No golden, catalog, anchor or input changed - measured by this act, not taken from the report. NO ECONOMIC VALUE MOVED. History was marked, not rewritten: the worksheet is append-only and the original text at each site stays readable.",
+   "lane_reported_diff": "insertion-only: 208 added, 0 changed, 0 deleted (see limitation below)",
+   "limitation_of_this_seal": "The '0 deleted' half of that claim is UNVERIFIED. The pre-W205 bytes of DERIVATIONS.md were not preserved, so an equal-length substitution would be indistinguishable to the digest and size checks this act performed. Recorded rather than implied.",
+   "also_found_by_the_lane": "W205-D02: G103's site list for F02 was incomplete; the lane marked the sites the verifier missed. A verifier's enumeration is not itself a census."
+  },
+  {
+   "revision": "W205 superseded-marker pass over the two DERIVATIONS residues, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W205_DERIVATIONS_RESIDUE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W205_DERIVATIONS_RESIDUE_REPORT.md",
+   "authority": "G103-F01 and G103-F02, the two findings named in the re-seal #5 record as deliberately sealed over and scheduled for repair.",
+   "effect": "DERIVATIONS.md only, +16,104 bytes. No golden, catalog, anchor or input changed - measured by this act, not taken from the report. NO ECONOMIC VALUE MOVED. History was marked, not rewritten: the worksheet is append-only and the original text at each site stays readable.",
+   "lane_reported_diff": "insertion-only: 208 added, 0 changed, 0 deleted (see limitation below)",
+   "limitation_of_this_seal": "The '0 deleted' half of that claim is UNVERIFIED. The pre-W205 bytes of DERIVATIONS.md were not preserved, so an equal-length substitution would be indistinguishable to the digest and size checks this act performed. Recorded rather than implied.",
+   "also_found_by_the_lane": "W205-D02: G103's site list for F02 was incomplete; the lane marked the sites the verifier missed. A verifier's enumeration is not itself a census."
+  },
+  {
+   "revision": "W244 four-golden re-derivation under owner addendum 29 decisions 71-72, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W244_GOLDEN_SHAPE_REDERIVE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W244_GOLDEN_SHAPE_REPORT.md",
+   "design_amendment": {
+    "lane": "W243",
+    "report": "C:\\tmp\\LANE_PROMPTS_20260828\\W243_V110_APPLY_REPORT.md",
+    "design_version": "v1.10"
+   },
+   "authority": "Owner addendum 29, decisions 71, 72, 73 - C:\\WLDOCS\\MTC_COMMAND_CENTER\\11_TRIAGE\\OWNER_DECISIONS_2026-08-29_EVENING.md",
+   "effect": {
+    "golden/corrected_vnext/RULE2-04-RED.json": [
+     {
+      "pointer": "/RESULT_SURFACE/trades/0/exit_fill_price",
+      "before": 90,
+      "after": "<absent>"
+     },
+     {
+      "pointer": "/RESULT_SURFACE/trades/0/exit_ids/0",
+      "before": "<absent>",
+      "after": "STOP"
+     }
+    ],
+    "golden/corrected_vnext/RULE2-07-RED.json": [
+     {
+      "pointer": "/RESULT_SURFACE/trades/0/exit_fill_price",
+      "before": 100,
+      "after": "<absent>"
+     },
+     {
+      "pointer": "/RESULT_SURFACE/trades/0/exit_ids/0",
+      "before": "<absent>",
+      "after": "TIME_STOP"
+     }
+    ],
+    "golden/corrected_vnext/RULE2-06-RED.json": [
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/0",
+      "before": "TARGET-NEAR",
+      "after": "STOP"
+     },
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/1",
+      "before": "TARGET-FAR",
+      "after": "TARGET-NEAR"
+     },
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/2",
+      "before": "STOP",
+      "after": "TARGET-FAR"
+     }
+    ],
+    "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json": [
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/0",
+      "before": "TARGET-NEAR",
+      "after": "STOP"
+     },
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/1",
+      "before": "TARGET-FAR",
+      "after": "TARGET-NEAR"
+     },
+     {
+      "pointer": "/EVENT_SURFACE/decision_events/2/touched_exit_ids/2",
+      "before": "STOP",
+      "after": "TARGET-FAR"
+     }
+    ]
+   },
+   "derivations_delta_bytes": 11678,
+   "derivations_prior_bytes_preserved_as_prefix": false,
+   "economic_values_moved": "none - measured leaf-by-leaf against the 10:09 snapshot by this act",
+   "independently_verified": "GM75 (Gemini, third family, read-only packet) - C:/tmp/LANE_PROMPTS_20260828/DETECT_GM75_ADDENDUM29.md - 'Verdict A (design): CLEAN / Verdict B (goldens): CLEAN'; measured 1 differing line per golden, 0 numeric leaves changed value on those lines, 0 deleted lines in DERIVATIONS diff, 2 changed + 37 added lines in the design diff; it did NOT measure the full-tree leaf count - this act does."
+  },
+  {
+   "revision": "W262 PROBE rows under v1.11 + Lead probe digest pins, 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W262_PROBE_ROWS_REDERIVE.md",
+   "report": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\W262_PROBE_ROWS_REPORT.md",
+   "design_amendment": {
+    "lane": "W261",
+    "version": "v1.11"
+   },
+   "probe_digest_pins": {
+    "PROBE-P012-01-A": {
+     "modified_copy_digest": "0f956819c8b5d2a3a9c1776420f117b050b662fb1ff0aa1f63d819a382b84aca",
+     "modification_manifest_digest": "50fc3ce1da1ca51feafc44dcd3c537e31d5547eec8c6f854f7260f80f8b8c4c8",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-01-B": {
+     "modified_copy_digest": "e5fc81ec6bac4b93e490ffc538586a253423003f2cd3930331b67e61a5d82f08",
+     "modification_manifest_digest": "8686e9c8f5a8af557f9ecae1b0cf6ba81e6b0af9ee50af303f5ea48c4efef07a",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-02-A": {
+     "modified_copy_digest": "34e963a8b75209f7a8ab77aeb3d3834251f1bc6847cc2875ec6ba36275e3df25",
+     "modification_manifest_digest": "80a66bec7ea77b64897820c4a429e687a2c20e2b90c4860c34ac01ad98de5d5e",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-03-A": {
+     "modified_copy_digest": "35193efcfc568ec582e430b0acdc35fa4bcc3e7866313ad9f4798fd2e4e0d304",
+     "modification_manifest_digest": "d2ec9000ed503947e4b86893b2a9b0cc258c765cecfb5b638a99840cb9dd1ebe",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-04-A": {
+     "modified_copy_digest": "d6082460482da78706d50b3c52176f0bba8fadbc1492456b721178daa84196f8",
+     "modification_manifest_digest": "e2c09190b4e32c0f9605d5cc54ad26957b5292e9e8cef49d097070e85892b5dc",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-05-A": {
+     "modified_copy_digest": "1336f129f33de9ea1c4866fce91077e8a55e03e30266e56e9ca20dc5b178ed54",
+     "modification_manifest_digest": "7862007188811445a3a7df11063e36dd5048f924c1af9259e246afd0256ae494",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-05-B": {
+     "modified_copy_digest": "b06895e2543d4f768563d618fe99669f788a1fbaddf317d81d5553c84f71900b",
+     "modification_manifest_digest": "4bd13c499516a61c12313da4fdaba2c122b37782911893f0a81fcb0ee794d67e",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-06-A": {
+     "modified_copy_digest": "ad1ec938b0654ba58bc8bc90e9fad1a9781a2070b7f3951794181deb7fb6450c",
+     "modification_manifest_digest": "427b29ce60b21ce0a261f35c468392b050d38366b3c986c676adeea43f8e13d7",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-07-A": {
+     "modified_copy_digest": "dbef7fad26afb8c40beb049770bf867f4a492cb10025a629341eb3fef1b1b1bb",
+     "modification_manifest_digest": "f9897b826a9657e3937bcb794a0d59df0c6021a4e729edad3e3608f6f7c34914",
+     "method": "recomputed == W256"
+    },
+    "PROBE-P012-08-A": {
+     "modified_copy_digest": "f97ce0655b57fee069a161b6584534e299d19253eac4c56aa5da0197f03a62c6",
+     "modification_manifest_digest": "e466e79458bcc5368b2f9c2ecb0b314bc0825f71638d39327a1842031f446a9f",
+     "method": "recomputed == W256"
+    }
+   },
+   "independently_verified": "design v1.11: DS93 (OpenCode) CLEAN, ENGINEERING classification CONFIRMED, rule strictly superset on the node dimension - C:/tmp/LANE_PROMPTS_20260828/DETECT_DS93_V111.md; W262 probe rows: GM77 (Gemini) CLEAN, 31 changed pointers all inside the ten PROBE rows, RED/GREEN rows byte-identical, DERIVATIONS insertion-only - C:/tmp/LANE_PROMPTS_20260828/DETECT_GM77_W262.md; probe digests: Lead recomputation from worktree bytes == W256 table == committed modified_tree_manifest.json, 10/10"
+  },
+  {
+   "revision": "design v1.12 trade-row quantity amendment-choice (W266), 2026-09-02",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W266_TRADE_QUANTITY_RULE.md",
+   "report": "C:\\tmp\\LANE_PROMPTS_20260828\\W266_TRADE_QUANTITY_REPORT.md",
+   "effect": "design pin only; no golden, catalog, input or derivation byte moved; no economic value moved",
+   "independently_verified": "DS95 (OpenCode, different family): Verdict CLEAN (0 findings), Classification ENGINEERING CONFIRMED - C:/tmp/LANE_PROMPTS_20260828/DETECT_DS95_V112.md"
+  },
+  {
+   "revision": "re-seal #12: nine KERNEL PROBE rows re-derived over the repaired core tree (W299)",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W299_PROBE_REPIN.md",
+   "report": "C:\\WP012BUILD\\W299_PROBE_REPIN_REPORT.md",
+   "effect": "probe digest rows only; no golden, input, RED/GREEN row, or economic value moved",
+   "independently_verified": "V299 (DeepSeek V4 Pro via OpenRouter, different family): CLEAN, 9/9 probes base oid ok / patch unchanged / expectations unchanged / digests consistent / one probe-level change; D-1 diffstat framing, D-2 extract offset - C:/tmp/LANE_PROMPTS_20260828/_packets_V299/V299_REPORT.md; Lead two-party recomputation from committed bytes 9/9 = catalog (LEAD_REPIN12_DIGESTS.json)"
+  },
+  {
+   "revision": "re-seal #13: nine KERNEL PROBE rows re-derived over the repaired core tree (W299C, after W299B stopped on stale hunk line numbers)",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W299C_PROBE_VARIANT_REBUILD_OFFSET.md",
+   "report": "C:\\WP012BUILD\\W299C_VARIANT_REBUILD_REPORT.md",
+   "effect": "probe digest rows only; no golden, input, RED/GREEN row, or economic value moved",
+   "independently_verified": "W299C (Codex free) rebuilt nine variants from a fresh copy of the final core, offset-applied unchanged patches, artifact checks 9/9 valid (C:/WP012BUILD/W299C_VARIANT_REBUILD_REPORT.md, commits 1c2b710c f8e9754a); Lead measurement 2026-09-03 01:39 (repin_catalog13.py): per probe, git ls-tree of variant vs core at HEAD differs in exactly the one patched file, base oid = core oid, manifest-internal digests consistent, both digests recomputed from committed bytes and equal to the lane table (two-party pin); prior different-family packet verify of the same manifests/patch shape: V299 CLEAN (DeepSeek V4 Pro)"
+  },
+  {
+   "revision": "re-seal #14: owner decisions 135-144 (W311, W312, W313, W317, W319, W320, W321; M5 base re-pin)",
+   "lane_spec": "C:\\tmp\\LANE_PROMPTS_20260828\\LANE_W311_SEALED_INPUTS_M1_M7.md; LANE_W312_TABLES_M6_M4.md; LANE_W313_DESIGN_M8.md; LANE_W317_DESIGN_M6_MEMBERS.md; LANE_W319_TABLES_M7B.md; LANE_W320_DESIGN_M1B.md; LANE_W321_TABLES_M1_RULE2_08.md",
+   "report": "W311_SEALED_INPUTS_REPORT.md; W312_TABLES_M6_M4_REPORT.md; W313_DESIGN_M8_REPORT.md; W317_DESIGN_M6_REPORT.md; W319_TABLES_M7B_REPORT.md; W320_DESIGN_M1B_REPORT.md; W321_TABLES_M1_REPORT.md",
+   "effect": "sealed inputs (3), catalog rows RULE2-01-RED, RULE2-01-GREEN, RULE2-02-RED, RULE2-02-GREEN, RULE2-03-RED, RULE2-03-GREEN, RULE2-04-RED, RULE2-04-GREEN, RULE2-05-RED, RULE2-05-GREEN, RULE2-06-RED, RULE2-06-EQUAL-PRICE-RED, RULE2-06-GREEN, RULE2-07-RED, RULE2-07-GREEN, RULE2-08-RED, RULE2-08-GREEN, PROBE-P012-01-A, PROBE-P012-01-B, PROBE-P012-02-A, PROBE-P012-04-A, PROBE-P012-05-A, PROBE-P012-05-B, PROBE-P012-06-A, PROBE-P012-07-A, PROBE-P012-08-A, goldens RULE2-06-RED (one node) + RULE2-08-RED/GREEN (design-derived chain / BLOCKED markers), DERIVATIONS insertion-only, design pin v1.15, base re-pin",
+   "independently_verified": "V311 ACCEPT x3 (_packets_V311/V311_REPORT.md); V312 ACCEPT (_packets_V312/V312_REPORT.md); V313 ACCEPT (_packets_V313/V313_REPORT.md); V306+V306B ACCEPT x3 kernel (_packets_V306/V306_REPORT.md, V306B_REPORT.md); V314 2-5 ACCEPT + W314B revert (_packets_V314/V314_REPORT.md); V317 ACCEPT (_packets_V317/V317_REPORT.md); V318 ACCEPT (_packets_V318/V318_REPORT.md); V319 ACCEPT (_packets_V319/V319_REPORT.md); V320C round 2 ACCEPT on design v1.15 substantive checks 1-5 (_packets_V320/V320_REPORT.md = round 2, round 1 archived as V320_REPORT_round1.md; author report line-map REQUEST_CHANGES recorded as discrepancy); V321C round 6 ACCEPT after rounds 1-5 (_packets_V321/V321_REPORT.md = round 6; rounds 1-5 archived alongside; F-04 manifest = this re-seal); V315 ACCEPT 6/6 on W315 af97ec8c (_packets_V315/V315_REPORT.md; variant bytes NOT VERIFIED by packet, Lead one-file measurement 9/9 in PER_PROBE_ONE_FILE_CHECK.txt; W315 D3 pre-existing 03-A/07-A manifest-vs-catalog expected_first_changed_node differences RECORDED, outside M4 scope); Lead: repin_base14 (M5) 09:2x, design v1.15 EOL normalization 09:5x"
+  },
+  {
+   "revision": "re-seal #15: fresh-audit repairs inside decision 144 (W341 RULE2-08 goldens; V341)",
+   "lane_spec": "LANE_W341_RULE2_08_GOLDENS_REDERIVE.md (C:/tmp/LANE_PROMPTS_20260828)",
+   "report": "W341_RULE2_08_GOLDENS_REPORT.md; _packets_V341/V341_REPORT.md; W279C_REPORT.md F01-F04/F08; W276C_REPORT.md F01-F02; DETECT_GM83C_BRANCH.md F02/F04",
+   "effect": "goldens RULE2-08-RED/GREEN re-derived (window membership, fee row shape, equity first/last, cost_schedule_digest, record digests), catalog rows RULE2-08-RED, RULE2-08-GREEN, PROBE-P012-08-A, DERIVATIONS insertion-only; design pin v1.15 unchanged; base unchanged",
+   "independently_verified": "V341 = Gemini 3.8 packet verify (_packets_V341/V341_GEMINI_REPORT.md): checks 1-5 and 7 ACCEPT, check 6 REQUEST_CHANGES resolved by W341B's measurement (the corrected side is a selector, no stored cardinality; GMV341B ACCEPT); V341B = Gemini 3.8 (_packets_V341/V341B_GEMINI_REPORT.md) ACCEPT 3/3 on W341B (08-A comparator pointer re-pinned; fee_events pair honest STOP) on W341 (Claude Pro: RULE2-08 goldens re-derived under decision 144 after fresh-audit rows M1/M7 = W276C F01-F02, W279C F01-F04/F08, GM83C F02/F04); the seal #14/#14b VERIFIED_BY list is carried in revision_history[-2]"
+  },
+  {
+   "revision": "re-seal #16: owner decisions 149/151 (W345, W348) and design v1.16 (W347, decisions 147/151)",
+   "lane_spec": "LANE_W345_RECORD_DIGESTS_15_GOLDENS.md; LANE_W348_TABLES_ADMITTED_MEMBERS.md; LANE_W347_DESIGN_CLOSE_KERNEL_MEMBERS.md (C:/tmp/LANE_PROMPTS_20260828)",
+   "report": "W345_RECORD_DIGESTS_REPORT.md; W348_TABLES_REPORT.md; W347_DESIGN_V116_REPORT.md; V345/V348/V347 Gemini reports",
+   "effect": "goldens: record digests (149) + admitted members (151); catalog rows RULE2-01-RED, RULE2-01-GREEN, RULE2-02-RED, RULE2-02-GREEN, RULE2-03-RED, RULE2-03-GREEN, RULE2-04-RED, RULE2-04-GREEN, RULE2-05-RED, RULE2-05-GREEN, RULE2-06-RED, RULE2-06-EQUAL-PRICE-RED, RULE2-06-GREEN, RULE2-07-RED, RULE2-07-GREEN, RULE2-08-RED, RULE2-08-GREEN, DERIVATIONS insertion-only; design pin v1.16; base unchanged (re-anchor follows)",
+   "independently_verified": "V345 = Gemini V345B ACCEPT 4/4 (V345B_GEMINI_REPORT.md; the first GMV345 BLOCK rested on the Lead brief rule, corrected) on W345; V348 = Gemini ACCEPT 3/3 (V348_GEMINI_REPORT.md) on W348; design v1.16 verified by Gemini V347 (V347_GEMINI_REPORT.md) and v1.17 by Gemini V347B ACCEPT 4/4 (V347B_GEMINI_REPORT.md); seal #15 VERIFIED_BY carried in revision_history"
+  },
+  {
+   "revision": "re-seal #17: owner decisions 153 (+ 2026-09-04 extension), 154 and 155",
+   "lane_spec": "LANE_W357_CITATION_RESTYLE.md; LANE_W354_MANIFEST_STATEMENT.md; LANE_W359_DERIVATIONS_STATEMENT.md; LANE_W355_DESIGN_V118_L14.md (C:/tmp/LANE_PROMPTS_20260828)",
+   "report": "W357_REPORT.md; W354_REPORT.md; W359_REPORT.md; W355_REPORT.md",
+   "effect": "design citations restyled (625 citation leaves across goldens and the catalog); the independence statement corrected in the manifest and in DERIVATIONS.md; design pin v1.18",
+   "independently_verified": "pending at seal time - the verify lanes run after the copies commit and are recorded in the next revision entry"
+  }
+ ],
+ "seal_state": {
+  "EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+  "IMPLEMENTATION_BASE_SHA": "94a0a568f5257f04940de28fc984ac893af3753a",
+  "reason": "Re-seal #29 candidate: the D8 import moved core/runner.py and the capture-interval repair moved the HYPERLIQUID cost record, so the core tree left 68127b2d2111e4869d23c7b71a0695c6cea816ba and the nine KERNEL probe modified copies no longer derived from it. Each of the nine copies was re-derived by applying its own recorded modification.patch to a fresh copy of the current core tree 13e1f7788318f51df7e319f601b3f66eb703b816; the recorded before_hunk and after_hunk were re-measured against the derived bytes and no recorded modification was rewritten. scenario_catalog.json alone changed among the 19 sealed members, carrying the eighteen re-measured probe digest pins. No golden, observed artifact, economic value, production fact, design, threshold, or Item-4 disposition changed. Base C29 is provisional; NONACCEPTED until forward repin F29."
+ },
+ "section_16_review": {
+  "status": "PENDING",
+  "statement": "The mandatory SEMANTIC_COVERAGE_REVIEW required by Design section 16, \"semantic_coverage_review.json`. The reviewer must\" has NOT been performed and is REQUIRED BEFORE BUILD ACCEPTANCE. It is owner-held human review. This lane neither claims nor performs it, and the claude family is excluded from the section-16 reviewer role because it authored these tables (owner ruling Q3a). BCEG-1 refuses acceptance without a separately authored semantic_coverage_review.json (Design section 16, \"semantic_coverage_review.json`. The reviewer must\").",
+  "reviewer_independence_constraint": "The reviewer must be independent from the kernel implementer (Codex family) AND from the CONTRACT_TABLES author (claude family)."
+ },
+ "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
+ "seal": {
+  "EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+  "IMPLEMENTATION_BASE_SHA": "94a0a568f5257f04940de28fc984ac893af3753a",
+  "set_by": "R29 re-seal #29 candidate, 2026-09-08T11:34:12+03:00"
+ },
+ "reseal_history": [
+  {
+   "at": "2026-08-31T21:09:30+03:00",
+   "actor": "Lead (claude-fable-5)",
+   "old_EXPECTED_SEAL_SHA": "dd4a0401b46c5663ab4a9d0297fe0e1679b0ccfeb72f803234a2cebd123d3115",
+   "new_EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+   "old_catalog_sha256": "2514d9de0acd24a9e1144c75a3abb11702f7a62edb933b34689254427c5462f1",
+   "new_catalog_sha256": "32ae4f71e918fa4b3d78f5e9e4b1a33e062967542221db7ed7a1d99725d7e817",
+   "catalog_changes": [
+    "17x input.digest pinned (two-party agreement with W152B inventory)",
+    "17x surface_schema_id: CORRECTED_V2 -> version-shaped map per design 15.3",
+    "whole-file canonical re-serialization (content preservation parse-verified)"
+   ],
+   "disk_deltas_absorbed": [
+    {
+     "path": "scenario_catalog.json",
+     "old_sha12": "2514d9de0acd",
+     "new_sha12": "32ae4f71e918"
+    }
+   ],
+   "golden_files_changed_measured": 0,
+   "inputs_pinned": 17
+  },
+  {
+   "at": "2026-09-01T19:48:00+03:00",
+   "actor": "Lead (claude-opus-5)",
+   "trigger": "G85 SAFE TO SEAL verdict on the W172 Reading Y revision",
+   "old_EXPECTED_SEAL_SHA": "02b47a8e5c4a1a9ab9a671f5a14a3dc89f13fb80584dfd8648784d69515a0858",
+   "new_EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
+   "old_catalog_sha256": "32ae4f71e918fa4b3d78f5e9e4b1a33e062967542221db7ed7a1d99725d7e817",
+   "new_catalog_sha256": "36c38286ef7dcc483939b24f387f773b33650b3b5d59a3d6eaa9893cb74a366e",
+   "catalog_changes": [
+    "17x expected_artifacts['2.0.0'].digest re-pinned from the revised goldens",
+    "0x already matched disk and were left untouched",
+    "20x PROBE digests deliberately left BLOCKED-BUILD-ARTIFACT (variant trees not built yet; pinning them would invent a value)"
+   ],
+   "disk_deltas_absorbed": [
+    {
+     "path": "scenario_catalog.json",
+     "old_sha12": "32ae4f71e918",
+     "new_sha12": "36c38286ef7d"
+    }
+   ],
+   "input_digests_touched": "none - the 17 input pins from re-seal #2 stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066, the commit the kernel branch is cut from"
+  },
+  {
+   "at": "2026-09-01T23:11:48+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #4",
+   "trigger": "G94 SAFE TO SEAL verdict on the W186 economic re-derivation",
+   "old_EXPECTED_SEAL_SHA": "c9fef155ef86004313c2602048884f9d0f49faea085377d7e9bf9c06753454d0",
+   "new_EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
+   "old_catalog_sha256": "36c38286ef7dcc483939b24f387f773b33650b3b5d59a3d6eaa9893cb74a366e",
+   "new_catalog_sha256": "795891500bb93763fe91dde7cfcc11687e414b9118d301b3f422789f02eb9da2",
+   "catalog_changes": [
+    "1x expected_artifacts['2.0.0'].digest re-pinned from disk",
+    "16x already matched disk and were left untouched",
+    "20x PROBE digests deliberately left BLOCKED-BUILD-ARTIFACT"
+   ],
+   "disk_deltas_absorbed": [
+    {
+     "path": "scenario_catalog.json",
+     "old_sha12": "36c38286ef7d",
+     "new_sha12": "795891500bb9"
+    }
+   ],
+   "economic_values_moved": "four, in RULE2-05-RED only, under owner addendum 28 decision 68",
+   "input_digests_touched": "none - the 17 input pins stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066, the commit the kernel branch is cut from"
+  },
+  {
+   "at": "2026-09-02T01:03:08+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #5",
+   "trigger": "G103 SAFE TO SEAL verdict on the W200 GOLDEN-OVER repair",
+   "old_EXPECTED_SEAL_SHA": "1beaca483f0c79201f950c711ee7407cf6bac9e4f149b50039155b84d854fe47",
+   "new_EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
+   "old_catalog_sha256": "795891500bb93763fe91dde7cfcc11687e414b9118d301b3f422789f02eb9da2",
+   "new_catalog_sha256": "5e8f1ce4c1e9a148b21ed3a5f76bb0a076947013feeb182a684fe0971e461570",
+   "design_gap_rows_reverified_byte_identical": [
+    {
+     "path": "golden/corrected_vnext/RULE2-04-RED.json",
+     "sha12": "9f7a541c08bb"
+    },
+    {
+     "path": "golden/corrected_vnext/RULE2-06-RED.json",
+     "sha12": "25c747ac5311"
+    },
+    {
+     "path": "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+     "sha12": "102aa04e93df"
+    }
+   ],
+   "catalog_changes": [
+    "3x expected_artifacts['2.0.0'].digest re-pinned from disk",
+    "14x already matched disk and were left untouched",
+    "20x PROBE digests deliberately left BLOCKED-BUILD-ARTIFACT"
+   ],
+   "disk_deltas_absorbed": [
+    {
+     "path": "scenario_catalog.json",
+     "old_sha12": "795891500bb9",
+     "new_sha12": "5e8f1ce4c1e9"
+    }
+   ],
+   "economic_values_moved": "none - independently verified on both comparison surfaces by G103",
+   "open_findings_sealed_over": [
+    "G103-F01 MEDIUM - DERIVATIONS.md:846-849, :1877-1885, :1978 still name the removed RULE2-08-RED guards object as a derived expected 2.0.0 node, with no superseded marker at the site. Documentation residue; no value moves. Scheduled for re-seal #6.",
+    "G103-F02 LOW - DERIVATIONS.md:748 still lists GROSS_MINUS_FEES as the 2.0.0 expected value for RULE2-07. Same append-only residue. Scheduled for re-seal #6."
+   ],
+   "why_sealed_anyway": "The gate reads goldens and the catalog, not worksheet prose. Holding the seal for a prose repair would delay the kernel measurement and buy nothing.",
+   "input_digests_touched": "none - the 17 input pins stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066, the commit the kernel branch is cut from"
+  },
+  {
+   "at": "2026-09-02T01:30:14+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #6",
+   "trigger": "W205 closed the two documentation findings re-seal #5 named as outstanding",
+   "old_EXPECTED_SEAL_SHA": "d642252ed2e16b6a8a2f336e21cb9acb63890008864062c8706fce4672eab438",
+   "new_EXPECTED_SEAL_SHA": "df561e7993df37e473c39b1fe174289d244d0b9b16cea9ab6aed72c11b91a964",
+   "catalog_sha256": "5e8f1ce4c1e9a148b21ed3a5f76bb0a076947013feeb182a684fe0971e461570",
+   "catalog_touched": "no - byte-identical to seal #5",
+   "only_file_changed": {
+    "path": "DERIVATIONS.md",
+    "old_sha12": "b0fa1e4136ed",
+    "new_sha12": "669567296f86",
+    "old_bytes": 199980,
+    "new_bytes": 216084,
+    "delta_bytes": 16104
+   },
+   "everything_else_verified_byte_identical": true,
+   "design_gap_goldens_verified_unchanged": [
+    "RULE2-04-RED",
+    "RULE2-06-RED",
+    "RULE2-06-EQUAL-PRICE-RED"
+   ],
+   "economic_values_moved": "none - no golden or catalog byte changed in this act",
+   "findings_closed": [
+    "G103-F01 MEDIUM - superseded markers appended at the dangling guards-object sites",
+    "G103-F02 LOW - superseded marker appended at the stale underscore-token site, plus the sites G103's own list had missed"
+   ],
+   "unverified_claim_carried_forward": "W205's 'insertion-only, 0 deleted'. Digest and size are consistent with it; neither proves it. Bundle snapshots now exist so the next act of this kind is checkable.",
+   "input_digests_touched": "none - the 17 input pins stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066"
+  },
+  {
+   "at": "2026-09-02T04:36:31+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #7",
+   "trigger": "W205 closed the two documentation findings re-seal #5 named as outstanding",
+   "old_EXPECTED_SEAL_SHA": "df561e7993df37e473c39b1fe174289d244d0b9b16cea9ab6aed72c11b91a964",
+   "new_EXPECTED_SEAL_SHA": "1d0623e44c060a7ea59d4df1a3789d76ec07d8f996fa1f6e85554439f9191008",
+   "catalog_sha256": "5e8f1ce4c1e9a148b21ed3a5f76bb0a076947013feeb182a684fe0971e461570",
+   "catalog_touched": "no - byte-identical to seal #5",
+   "only_file_changed": {
+    "path": "DERIVATIONS.md",
+    "old_sha12": "669567296f86",
+    "new_sha12": "64d1fad1c229",
+    "old_bytes": 216084,
+    "new_bytes": 249105,
+    "delta_bytes": 33021
+   },
+   "everything_else_verified_byte_identical": true,
+   "design_gap_goldens_verified_unchanged": [
+    "RULE2-04-RED",
+    "RULE2-06-RED",
+    "RULE2-06-EQUAL-PRICE-RED"
+   ],
+   "economic_values_moved": "none - no golden or catalog byte changed in this act",
+   "findings_closed": [
+    "G103-F01 MEDIUM - superseded markers appended at the dangling guards-object sites",
+    "G103-F02 LOW - superseded marker appended at the stale underscore-token site, plus the sites G103's own list had missed"
+   ],
+   "independently_verified": "GM67 held the pre-marking bytes from the 01:29 bundle snapshot and returned CLEAN MARKING PASS: insertion-only, every named site marked in place, ZERO values moved, and the three forbidden findings untouched with no silent closures. Unlike re-seal #6, this seal carries no unverified insertion-only claim.",
+   "input_digests_touched": "none - the 17 input pins stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066"
+  },
+  {
+   "at": "2026-09-02T10:44:21+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #8",
+   "trigger": "owner addendum 29 closed the two DESIGN-GAP questions; W244 applied, W243 amended the design",
+   "old_EXPECTED_SEAL_SHA": "1d0623e44c060a7ea59d4df1a3789d76ec07d8f996fa1f6e85554439f9191008",
+   "new_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "old_catalog_sha256": "5e8f1ce4c1e9a148b21ed3a5f76bb0a076947013feeb182a684fe0971e461570",
+   "new_catalog_sha256": "f8e788d808f26c427eaefdd3f521998b0fdcea57a469792792abab260efea603",
+   "catalog_touched": "yes - exactly the four ruled 2.0.0 expected-artifact digests re-pinned from disk (re-seal #5 recipe); no other catalog byte",
+   "catalog_repins": [
+    {
+     "scenario_id": "RULE2-04-RED",
+     "old_sha12": "9f7a541c08bb",
+     "new_sha12": "50a990c2005a"
+    },
+    {
+     "scenario_id": "RULE2-06-RED",
+     "old_sha12": "25c747ac5311",
+     "new_sha12": "9d9d3a974857"
+    },
+    {
+     "scenario_id": "RULE2-06-EQUAL-PRICE-RED",
+     "old_sha12": "102aa04e93df",
+     "new_sha12": "c05a51eb1e03"
+    },
+    {
+     "scenario_id": "RULE2-07-RED",
+     "old_sha12": "0634a43fa242",
+     "new_sha12": "e4d966eee858"
+    }
+   ],
+   "probe_markers_left_blocked": 20,
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-04-RED.json",
+    "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+    "golden/corrected_vnext/RULE2-06-RED.json",
+    "golden/corrected_vnext/RULE2-07-RED.json",
+    "scenario_catalog.json"
+   ],
+   "everything_else_verified_byte_identical": true,
+   "design_pin": "re-measured at v1.10; stale v1.8 pin kept under superseded key",
+   "input_digests_touched": "none - the 17 input pins stand unchanged",
+   "implementation_base_sha_touched": "no - stays 108ea066",
+   "baseline_refusal": "BASELINE_SEAL_IDENTITY_MISMATCH still expected - owner Q3, not cleared"
+  },
+  {
+   "at": "2026-09-02T12:37:46+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #9",
+   "trigger": "canonical gate reached the package-blocker stage; the design-mandated seal-time legacy_event_order_map pin had never been written",
+   "old_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "new_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "files_changed": [],
+   "manifest_member_added": "legacy_event_order_map_pin",
+   "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+   "everything_else_verified_byte_identical": true
+  },
+  {
+   "at": "2026-09-02T14:13:22+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #10",
+   "old_EXPECTED_SEAL_SHA": "4ebcdfc5ad42e5f209f6cda6f3c5ef5b39dde510bf8b0ffaf3555d692ae23461",
+   "new_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "scenario_catalog.json"
+   ],
+   "probe_rows_pinned": [
+    "PROBE-P012-01-A",
+    "PROBE-P012-01-B",
+    "PROBE-P012-02-A",
+    "PROBE-P012-03-A",
+    "PROBE-P012-04-A",
+    "PROBE-P012-05-A",
+    "PROBE-P012-05-B",
+    "PROBE-P012-06-A",
+    "PROBE-P012-07-A",
+    "PROBE-P012-08-A"
+   ],
+   "design_pin": "v1.11",
+   "everything_else_verified_byte_identical": true
+  },
+  {
+   "at": "2026-09-02T14:43:01+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #11",
+   "old_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "new_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "files_changed": [],
+   "design_pin": "v1.12",
+   "everything_else_verified_byte_identical": true
+  },
+  {
+   "at": "2026-09-02T23:40:31+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #12",
+   "old_EXPECTED_SEAL_SHA": "d763f62f9a423d2c3ca0887224d91e520c5bb1849aaa1958df1e3bb1d46dae29",
+   "new_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "scenario_catalog.json"
+   ],
+   "probe_rows_repinned": [
+    "PROBE-P012-01-A",
+    "PROBE-P012-01-B",
+    "PROBE-P012-02-A",
+    "PROBE-P012-04-A",
+    "PROBE-P012-05-A",
+    "PROBE-P012-05-B",
+    "PROBE-P012-06-A",
+    "PROBE-P012-07-A",
+    "PROBE-P012-08-A"
+   ]
+  },
+  {
+   "at": "2026-09-03T00:17:06+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #12b (metadata only)",
+   "old_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
+   "new_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
+   "files_changed": [],
+   "note": "files[].bytes corrected for DERIVATIONS.md, scenario_catalog.json; seal_state.reason text updated; no member byte moved (W303 findings F-01, F-02, F-04)"
+  },
+  {
+   "at": "2026-09-03T01:40:17+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #13",
+   "old_EXPECTED_SEAL_SHA": "83bbe48c51d0acf78b47c7f5891d78a8b6e1a5dabb98c92673dda224a4597fb2",
+   "new_EXPECTED_SEAL_SHA": "e4ffde6a420202d2c9f3872f99c5527c1af7e7b83341764ec874d774f8aaa531",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "scenario_catalog.json"
+   ],
+   "probe_rows_repinned": [
+    "PROBE-P012-01-A",
+    "PROBE-P012-01-B",
+    "PROBE-P012-02-A",
+    "PROBE-P012-04-A",
+    "PROBE-P012-05-A",
+    "PROBE-P012-05-B",
+    "PROBE-P012-06-A",
+    "PROBE-P012-07-A",
+    "PROBE-P012-08-A"
+   ]
+  },
+  {
+   "at": "2026-09-03T14:20:14+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #14",
+   "old_EXPECTED_SEAL_SHA": "e4ffde6a420202d2c9f3872f99c5527c1af7e7b83341764ec874d774f8aaa531",
+   "new_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-08-GREEN.json",
+    "golden/corrected_vnext/RULE2-08-RED.json",
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.15"
+  },
+  {
+   "at": "2026-09-03T14:58:44+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #14b (base member only; seal value unchanged)",
+   "old_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+   "new_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+   "files_changed": [],
+   "design_pin": "v1.15",
+   "note": "M5 (owner decision 135) completion: the manifest seal/seal_state IMPLEMENTATION_BASE_SHA members moved 108ea066 -> 5e8e5794 to equal the anchor (repin_base14.py had re-pinned the anchor only; the gate refused IMPLEMENTATION_BASE_ANCESTRY_MISMATCH at W316B). EXPECTED_SEAL_SHA is computed over files[] path:sha only and is unchanged."
+  },
+  {
+   "at": "2026-09-03T17:49:59+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #15",
+   "old_EXPECTED_SEAL_SHA": "a58b6dea753976a778413dca3e2cc13d47d2dee9b241bdc7d7cff9a04e3b5eba",
+   "new_EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-08-GREEN.json",
+    "golden/corrected_vnext/RULE2-08-RED.json",
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.15"
+  },
+  {
+   "at": "2026-09-03T20:54:18+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #16",
+   "old_EXPECTED_SEAL_SHA": "27bf72e826432c7f278b35b2d58dd9f071e56c969a244a42d0e30833a20348fe",
+   "new_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-01-GREEN.json",
+    "golden/corrected_vnext/RULE2-01-RED.json",
+    "golden/corrected_vnext/RULE2-02-GREEN.json",
+    "golden/corrected_vnext/RULE2-02-RED.json",
+    "golden/corrected_vnext/RULE2-03-GREEN.json",
+    "golden/corrected_vnext/RULE2-03-RED.json",
+    "golden/corrected_vnext/RULE2-04-GREEN.json",
+    "golden/corrected_vnext/RULE2-04-RED.json",
+    "golden/corrected_vnext/RULE2-05-GREEN.json",
+    "golden/corrected_vnext/RULE2-05-RED.json",
+    "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+    "golden/corrected_vnext/RULE2-06-GREEN.json",
+    "golden/corrected_vnext/RULE2-06-RED.json",
+    "golden/corrected_vnext/RULE2-07-GREEN.json",
+    "golden/corrected_vnext/RULE2-07-RED.json",
+    "golden/corrected_vnext/RULE2-08-GREEN.json",
+    "golden/corrected_vnext/RULE2-08-RED.json",
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.17"
+  },
+  {
+   "at": "2026-09-03T21:14:29+03:00",
+   "actor": "Lead (claude-fable-5-1), base re-anchor (decision 147); seal value unchanged",
+   "old_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
+   "new_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
+   "files_changed": [],
+   "note": "IMPLEMENTATION_BASE_SHA 5e8e5794 -> 63cfe2dd in seal/seal_state; anchor moved in the same act."
+  },
+  {
+   "at": "2026-09-04T12:46:33+03:00",
+   "actor": "Lead (claude-fable-5-1), re-seal #17",
+   "old_EXPECTED_SEAL_SHA": "40aaf7da2a67753b74922576111cf1aede911c9de1815f6d34a04d22f8666fab",
+   "new_EXPECTED_SEAL_SHA": "bbab640c070393314d2c19e6bd77ee6a80d1b16d08c0d0dd998b5d903fdba677",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-01-GREEN.json",
+    "golden/corrected_vnext/RULE2-01-RED.json",
+    "golden/corrected_vnext/RULE2-02-GREEN.json",
+    "golden/corrected_vnext/RULE2-02-RED.json",
+    "golden/corrected_vnext/RULE2-03-GREEN.json",
+    "golden/corrected_vnext/RULE2-03-RED.json",
+    "golden/corrected_vnext/RULE2-04-GREEN.json",
+    "golden/corrected_vnext/RULE2-04-RED.json",
+    "golden/corrected_vnext/RULE2-05-GREEN.json",
+    "golden/corrected_vnext/RULE2-05-RED.json",
+    "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+    "golden/corrected_vnext/RULE2-06-GREEN.json",
+    "golden/corrected_vnext/RULE2-06-RED.json",
+    "golden/corrected_vnext/RULE2-07-GREEN.json",
+    "golden/corrected_vnext/RULE2-07-RED.json",
+    "golden/corrected_vnext/RULE2-08-GREEN.json",
+    "golden/corrected_vnext/RULE2-08-RED.json",
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.18"
+  },
+  {
+   "at": "2026-09-04T14:01:35+03:00",
+   "actor": "Lead (claude-opus-5, owner-facing session), re-seal #18",
+   "old_EXPECTED_SEAL_SHA": "bbab640c070393314d2c19e6bd77ee6a80d1b16d08c0d0dd998b5d903fdba677",
+   "new_EXPECTED_SEAL_SHA": "12fc3d4a5b0ed199ef9173f03c78cf35dea9e621f6b9d3384f6530625b4d2be4",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-08-GREEN.json",
+    "golden/corrected_vnext/RULE2-08-RED.json"
+   ],
+   "design_pin": "v1.18",
+   "reason": "Lane W363 repaired the citation defects found AFTER re-seal #17 by two independent read-only lanes: V357A (9 sites citing a numbered section for a phrase inside an unnumbered change-log block, 2 of them in golden provenance; and stale bare :NNN design locators in DERIVATIONS.md prose) and V359D (2 live `design :NNNN` locators that lane W359 introduced while removing an older one). Owner decision 154 (Q-G).",
+   "independently_verified": "pending - W363's repair is verified by a family that did not write it after this seal"
+  },
+  {
+   "at": "2026-09-04T14:44:42+03:00",
+   "actor": "Lead (claude-opus-5, owner-facing session), re-seal #19",
+   "old_EXPECTED_SEAL_SHA": "12fc3d4a5b0ed199ef9173f03c78cf35dea9e621f6b9d3384f6530625b4d2be4",
+   "new_EXPECTED_SEAL_SHA": "555075146636af3442424035e2544e73e07961dd14661de9c019e203f6720024",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.18",
+   "reason": "Re-seal #19: the canonical gate refused EXPECTED_DIGEST_MISMATCH on RULE2-01-RED. Measured: all 17 catalog expected-artifact digests still equalled the pre-W357 golden hashes. The citation restyle (owner decision 154) changed every golden's bytes and no lane updated the catalog pins that reference them. Re-pinned to the live golden bytes; only digest members moved.",
+   "independently_verified": "pending - the third audit pass runs on this seal"
+  },
+  {
+   "at": "2026-09-04T15:11:30+03:00",
+   "actor": "Lead (claude-opus-5, owner-facing session), re-seal #20",
+   "old_EXPECTED_SEAL_SHA": "555075146636af3442424035e2544e73e07961dd14661de9c019e203f6720024",
+   "new_EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.18",
+   "reason": "Re-seal #20: the canonical gate refused PROBE_CATALOG_DIGEST_MISMATCH on PROBE-P012-03-A and PROBE-P012-07-A. Lane W356 corrected expected_first_changed_node inside those two probe modification manifests on 2026-09-04 and the catalog's modification_manifest_digest pins were not updated with them. Eight of the ten probe pins already matched; exactly these two did not. Re-pinned to the live manifest bytes; only those two digest leaves moved.",
+   "independently_verified": "pending - the third audit pass runs on this seal"
+  },
+  {
+   "at": "2026-09-04T19:57:17+03:00",
+   "actor": "Lead (claude-opus-5, owner-facing session), re-seal #21",
+   "old_EXPECTED_SEAL_SHA": "9ef73ef6b8d081a3ea3c945a43e69f603db85fe871f5742f360d27a63bb562a0",
+   "new_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "files_changed": [
+    "DERIVATIONS.md",
+    "golden/corrected_vnext/RULE2-08-RED.json",
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.19",
+   "reason": "Re-seal #21: the SINGLE re-seal for fold tier 3 (owner decision 159's bundling rule). Lane W387 converted 79 live bare design locators in DERIVATIONS.md to section + quoted phrase out of 349 syntactic candidates, re-cited 7 value-bearing nodes from the sentence that states the value, and added a check refusing identical sibling citations in one projection. Owner decision 175 added one sentence to honest limit L14 and bumped the design to v1.19, so the design pin is re-pinned here too.",
+   "independently_verified": "pending - a fresh three-family audit round runs on this seal"
+  },
+  {
+   "at": "2026-09-05T10:47:28+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #22 (metadata only)",
+   "old_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "new_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "files_changed": [],
+   "design_pin": "v1.19",
+   "reason": "Re-seal #22 (metadata only): reconciled the semantic coverage receipt sheets with the live gate-derived re-seal chain and refreshed the manifest's applicability and baseline-manifest references from the measured files. No sealed member bytes moved; the computed EXPECTED_SEAL_SHA remains unchanged.",
+   "independently_verified": "pending - Gate 4 self-QA and the fresh T0 three-family Gate 5 audit run after this implementer change"
+  },
+  {
+   "at": "2026-09-05T17:35:47+03:00",
+   "actor": "OpenCode gpt-5.6-luna implementer, re-seal #23 (metadata only)",
+   "old_EXPECTED_SEAL_SHA": "d7c5973da414847f2bfa5d9192cf9863ada9e93c857f9a33e18e629591ea7a6f",
+   "new_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.20",
+   "reason": "P0-12 approved re-seal metadata preparation: Items 2/5/6 repair; catalog and design pins measured; goldens and observed unchanged. No claim that all economic behavior is unchanged.",
+   "independently_verified": "pending Lead"
+  },
+  {
+   "at": "2026-09-05T21:09:50+03:00",
+   "actor": "OpenCode gpt-5.6-luna implementer, re-seal #24 candidate",
+   "old_EXPECTED_SEAL_SHA": "9efe57efe4f91dde8624fb001f372fd7243888f7a5e3a8dc27db87b1b8aea337",
+   "new_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.21",
+   "reason": "Duplicate exit-fee closure candidate; catalog/design pins measured; no values or golden bytes changed.",
+   "independently_verified": "pending independent audits"
+  },
+  {
+   "at": "2026-09-05T23:19:36+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #25 candidate",
+   "old_EXPECTED_SEAL_SHA": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+   "new_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.22",
+   "reason": "Window-local serialized fill identity repair; catalog digest measured from committed e5d70cd6 bytes and design v1.22 measured from the external live file. No economic values, goldens, observed artifacts, or production facts changed; Item 4 remains NONE_KEEP_REFUSED.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T02:14:17+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #26 candidate",
+   "old_EXPECTED_SEAL_SHA": "425573d9239607f8814d6277f46d61a885d15674b652d9dda543b7a446a714c0",
+   "new_EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+   "files_changed": [
+    "golden/corrected_vnext/RULE2-04-RED.json",
+    "golden/corrected_vnext/RULE2-06-EQUAL-PRICE-RED.json",
+    "golden/corrected_vnext/RULE2-06-GREEN.json",
+    "golden/corrected_vnext/RULE2-06-RED.json",
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.23",
+   "reason": "Re-seal #26 candidate: owner-approved R26 identity and Item-2 closure; five measured manifest members changed (catalog plus four corrected identity-only goldens). No economic values, production facts, or Item-4 disposition changed. Base C is provisional and this intermediate commit is NONACCEPTED until the decision-147 forward repin to M.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T02:38:01+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #27 candidate",
+   "old_EXPECTED_SEAL_SHA": "b87cdee1f6c80fb949e47db3950205b51638034996f4239bc53b50c0e591394e",
+   "new_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.23",
+   "reason": "Re-seal #27 candidate under OD20260906-1 delegated same-package repair authority: scenario_catalog.json alone now names the four already-approved current golden digests. No golden, observed artifact, economic value, source, probe, design, production fact, or Item-4 disposition changed. Base C27 is provisional; NONACCEPTED until forward repin F27.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-06T13:38:41+03:00",
+   "actor": "Codex gpt-5.6-sol implementer, re-seal #28 candidate",
+   "old_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "new_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "files_changed": [
+    "P012_FRESH_DESIGN_V1.md"
+   ],
+   "design_pin": "v1.24",
+   "reason": "Re-seal #28 candidate under OD-20260906-2: design v1.24 adds the SYNTHETIC_ONLY non-production milestone scope and its Section-16 Item-4 disposition rule. Design only; no sealed manifest member, core, golden, observed artifact, probe, economic value, production fact, threshold, or behavior changed. The existing seal recipe was recomputed and is unchanged. Base C28 is provisional; NONACCEPTED until forward repin F28.",
+   "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-08T11:34:12+03:00",
+   "actor": "Lead (claude-opus-5), re-seal #29 candidate",
+   "old_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
+   "new_EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.24",
+   "reason": "Re-seal #29 candidate: the D8 import moved core/runner.py and the capture-interval repair moved the HYPERLIQUID cost record, so the core tree left 68127b2d2111e4869d23c7b71a0695c6cea816ba and the nine KERNEL probe modified copies no longer derived from it. Each of the nine copies was re-derived by applying its own recorded modification.patch to a fresh copy of the current core tree 13e1f7788318f51df7e319f601b3f66eb703b816; the recorded before_hunk and after_hunk were re-measured against the derived bytes and no recorded modification was rewritten. scenario_catalog.json alone changed among the 19 sealed members, carrying the eighteen re-measured probe digest pins. No golden, observed artifact, economic value, production fact, design, threshold, or Item-4 disposition changed. Base C29 is provisional; NONACCEPTED until forward repin F29.",
+   "independently_verified": "pending Lead and required audits"
+  }
+ ],
+ "legacy_event_order_map_pin": {
+  "schema": "P012_LEGACY_EVENT_ORDER_MAP_PIN_V1",
+  "surface_schema_id": "LEGACY_P011_EXACT_V1",
+  "design_authority": "Design section 15.3, \"an integer `sequence` equal to\" (LEGACY_EVENT_SHAPE_CHECK at expected-bundle seal time)",
+  "baseline_manifest": {
+   "path": "C:\\tmp\\P012_BASELINE_RUN\\BASELINE_BYTES_MANIFEST.json",
+     "sha256": "c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242",
+     "authorization": "ONE run completed under P012_ONE_EXTRA_COORDINATED_REPAIR=YES, overnight 2050 packet approved 2026-09-05 20:48, re-seal24; 17/17 complete, 0 blocked, all 34 surfaces identical.",
+     "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa"
+  },
+  "legacy_event_order_map": {
+   "RULE2-01-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-01-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-01-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-01-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-01-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-01-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-02-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-03-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-03-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-03-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-03-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-GREEN/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-RED/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-04-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-05-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-EQUAL-PRICE-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-EQUAL-PRICE-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-EQUAL-PRICE-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-EQUAL-PRICE-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-06-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-07-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-GREEN/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-GREEN/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-GREEN/event_surface/3/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-GREEN/result_surface/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-RED/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-RED/event_surface/1/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-RED/event_surface/2/events": "LEGACY_EVENT_ORDINAL_V1",
+   "RULE2-08-RED/result_surface/events": "LEGACY_EVENT_ORDINAL_V1"
+  },
+  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
+  "digest_method": "sha256 over json.dumps(map, ensure_ascii=False, sort_keys=True, separators=(',',':')) + LF, exactly verify_bceg.compute_legacy_event_order_map",
+  "independently_computed_by": [
+   "W255 canonical gate run (codex), computed_legacy_event_order_map_digest in the receipt",
+   "Lead re-run of compute_legacy_event_order_map() from the worktree module against the same baseline, 2026-09-02"
+  ],
+  "pinned_at": "2026-09-02T12:37:46+03:00",
+  "pinned_by": "Lead re-seal act #9 (claude-fable-5-1)",
+  "harness_consumer": "NOT YET - verify_bceg.py:1370 still inserts LEGACY_EVENT_ORDER_MAP_PIN_MISSING unconditionally; lane W258 makes it conditional on this member. Until then the refusal stands honestly."
+ }
+}
