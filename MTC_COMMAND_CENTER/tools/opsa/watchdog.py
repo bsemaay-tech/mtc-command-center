@@ -196,9 +196,33 @@ def _notify_outcome(report: dict[str, Any], notifier, state_file: Path | None,
                                          "error": report.get("error", "no events delivered")}}
     for beat_id, detail in sorted(to_notify.items()):
         state = detail["state"]
-        if beat_id != WATCHDOG_CHECK_ID and state not in (ALERT_STATES | CHECK_FAILED_STATES):
+        notifiable = beat_id == WATCHDOG_CHECK_ID or state in (ALERT_STATES | CHECK_FAILED_STATES)
+        previous = prev_seen.get(beat_id)
+        # A recovery is a transition, not a state to stay silent about. Previously an `ok`
+        # was skipped before the ledger was written, so `prev_seen` kept the stale alert
+        # state and the sequence silent -> ok -> silent suppressed the SECOND real incident.
+        # The ledger now records every observed state, including `ok`, and an alert-to-ok
+        # transition emits exactly one recovery event.
+        recovered = (
+            beat_id != WATCHDOG_CHECK_ID
+            and not notifiable
+            and previous is not None
+            and previous in (ALERT_STATES | CHECK_FAILED_STATES)
+        )
+        if recovered:
+            notifier.notify({
+                "schema": WATCHDOG_EVENT_SCHEMA, "id": beat_id, "state": "recovered",
+                "recovered_from": previous,
+                "silence_bound_seconds": silence_seconds,
+                "checked_at": checked_at.isoformat(timespec="seconds").replace("+00:00", "Z"),
+                **{k: v for k, v in detail.items() if k not in ("state", "expected")},
+            })
+        if not notifiable:
+            # Record the non-alerting state so the next alert is seen as a new transition.
+            if state_file is not None:
+                prev_seen[beat_id] = state
             continue
-        if state_file is not None and prev_seen.get(beat_id) == state:
+        if state_file is not None and previous == state:
             continue  # already notified for this (id, state); still reported on stdout
         notifier.notify({
             "schema": WATCHDOG_EVENT_SCHEMA, "id": beat_id, "state": state,
@@ -214,8 +238,12 @@ def _notify_outcome(report: dict[str, Any], notifier, state_file: Path | None,
 def run_check(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="OPS-A dead-man watchdog checker (one-shot)")
     parser.add_argument("--state-dir", required=True, help="directory holding *.hb.json heartbeats")
-    parser.add_argument("--silence-seconds", type=float, default=900.0,
-                        help="silence bound in seconds (default 900 = 15 min per plan #39)")
+    # No default. The former 900.0 carried a provenance claim citing a plan item that does not
+    # ratify any such value; an unratified number must not be shipped as a contract. The bound
+    # is now a required explicit input, and an absent bound is an error rather than a silent
+    # assumption.
+    parser.add_argument("--silence-seconds", type=float, required=True,
+                        help="silence bound in seconds (required; no default value is ratified)")
     parser.add_argument("--expect", default="",
                         help="comma-separated ids that MUST have a heartbeat (missing => alert)")
     parser.add_argument("--notifier", default="local_log", choices=sorted(NOTIFIERS),
@@ -249,7 +277,12 @@ def run_check(argv: list[str]) -> int:
     report = check(state_dir, args.silence_seconds, expect, now=now)
     _print_report(report)
 
-    if notifier is not None and report["overall"] in ("alert", "check_failed"):
+    # An `ok` outcome must still be processed when a transition ledger is in use: that is where
+    # a recovery is detected and where the ledger learns the id is healthy again. Skipping `ok`
+    # was the defect that let silent -> ok -> silent suppress the second real incident.
+    if notifier is not None and (
+        report["overall"] in ("alert", "check_failed") or state_file is not None
+    ):
         _notify_outcome(report, notifier, state_file, now, args.silence_seconds)
 
     if report["overall"] == "alert":
