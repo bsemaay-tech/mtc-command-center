@@ -1,0 +1,317 @@
+{
+  "schema": "P012_DECLARED_FIELD_REGISTRY_V1",
+  "entries": [
+    {
+      "path": "manifest.schema",
+      "note": "Contract-manifest schema discriminator.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:2949"
+    },
+    {
+      "path": "manifest.bundle_id",
+      "note": "Human-facing bundle identifier.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "No independent bundle-id authority exists; the sealed member identities are enforced instead."
+    },
+    {
+      "path": "manifest.producer_id",
+      "note": "Human-facing expected-table producer identifier.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "The gate does not consume this manifest field; producer identities in generated evidence are separate values."
+    },
+    {
+      "path": "manifest.producer_role_authority",
+      "note": "Narrative authority for the expected-table producer role.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "This is a human-review claim with no independent machine-readable authority."
+    },
+    {
+      "path": "manifest.author_identity",
+      "note": "Narrative identity of the expected-table author.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "Authorship independence is a human-review claim and is not derivable from repository bytes."
+    },
+    {
+      "path": "manifest.owner_ruling",
+      "note": "Narrative owner ruling supporting authorship independence.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "The source ruling is not installed as a machine-verifiable repository artifact."
+    },
+    {
+      "path": "manifest.expected_value_provenance",
+      "note": "Expected-value provenance declaration consumed by the gate.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:2782"
+    },
+    {
+      "path": "manifest.design",
+      "note": "Pinned design metadata consumed by the gate.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:2914"
+    },
+    {
+      "path": "manifest.repository_evidence_identity",
+      "note": "Dated repository identity captured by an earlier authoring lane.",
+      "disposition": "HISTORICAL",
+      "rule": "A stale repository identity must be explicitly labelled captured-at or historical and must not claim present-session currency."
+    },
+    {
+      "path": "manifest.catalog_conservation",
+      "note": "Narrative count-and-authority summary for the catalog.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "The gate measures the live catalog independently but does not compare this summary object."
+    },
+    {
+      "path": "manifest.files",
+      "note": "Closed list of sealed expected members.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:2953"
+    },
+    {
+      "path": "manifest.byte_discipline",
+      "note": "Narrative byte-format claim.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "The gate checks relevant member bytes through parsing and digests but does not prove every narrative assertion in this field."
+    },
+    {
+      "path": "manifest.blocked_cell_markers",
+      "note": "Narrative meanings assigned to blocked-cell markers.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "The gate consumes marker tokens elsewhere but does not compare this explanatory object to an independent authority."
+    },
+    {
+      "path": "manifest.open_item_applicability_source",
+      "note": "Narrative pin and summary for the applicability source.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "The field is not consumed by the gate and its external authority is not independently installed here."
+    },
+    {
+      "path": "manifest.owner_addendum_20_source",
+      "note": "Narrative owner-addendum source record.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "The cited external source is not a machine-verifiable repository authority."
+    },
+    {
+      "path": "manifest.revision_history",
+      "note": "Append-only dated manifest revision journal.",
+      "disposition": "HISTORICAL",
+      "rule": "Existing dated entries are immutable; later revisions may only append a new entry."
+    },
+    {
+      "path": "manifest.seal_state",
+      "note": "Duplicate live seal state maintained beside the canonical seal object.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Its seal and implementation-base identities must equal the canonical seal and anchor identities."
+    },
+    {
+      "path": "manifest.section_16_review",
+      "note": "Declared state of the mandatory semantic-coverage review.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "It must not claim the review is unperformed when a validating semantic-coverage receipt is installed."
+    },
+    {
+      "path": "manifest.claim_limits",
+      "note": "Narrative limit on claims made by the bundle.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "This safety statement is for human interpretation and has no independent structured authority."
+    },
+    {
+      "path": "manifest.seal",
+      "note": "Canonical expected seal consumed by the gate.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:2966"
+    },
+    {
+      "path": "manifest.reseal_history",
+      "note": "Seal transition history partly consumed for owner-ratification ordering.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:388"
+    },
+    {
+      "path": "manifest.legacy_event_order_map_pin",
+      "note": "Legacy event-order pin consumed by the comparison pipeline.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:4480"
+    },
+    {
+      "path": "anchor.schema",
+      "note": "Implementation-anchor schema discriminator.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "The gate authenticates whole anchor bytes through the sidecar but does not interpret this schema field."
+    },
+    {
+      "path": "anchor.note",
+      "note": "Narrative note describing the original anchor workflow.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "The text is not consumed and has no structured source of truth."
+    },
+    {
+      "path": "anchor.EXPECTED_SEAL_SHA",
+      "note": "Anchor copy of the expected bundle seal.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:2971"
+    },
+    {
+      "path": "anchor.IMPLEMENTATION_BASE_SHA",
+      "note": "Anchor implementation-base identity.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:2794"
+    },
+    {
+      "path": "anchor.core_tree_oid_at_base",
+      "note": "Live end of the base-repin core-tree chain.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "It must equal the final new core-tree identity in base_repin_history."
+    },
+    {
+      "path": "anchor.expected_bundle_manifest",
+      "note": "Original external authoring path for the expected bundle manifest.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "This is legacy workflow provenance; the repository-local manifest is the live input."
+    },
+    {
+      "path": "anchor.authorized_kernel_paths",
+      "note": "Declared kernel write-path scope.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "Authorization scope is owner- and Lead-governed; this standalone validator does not grant or re-evaluate it."
+    },
+    {
+      "path": "anchor.evidence_paths_rows_14_18",
+      "note": "Declared evidence paths for design rows 14 through 18.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "The gate has independent evidence-path checks but does not consume this anchor list."
+    },
+    {
+      "path": "anchor.lead_acceptance",
+      "note": "Narrative Lead acceptance record.",
+      "disposition": "DECLARED_ONLY",
+      "reason": "Acceptance is a human governance act and cannot be inferred by this checker."
+    },
+    {
+      "path": "anchor.reseal_history",
+      "note": "Anchor copy of the seal transition chain.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every adjacent old/new seal transition must be continuous and the final value must equal the live anchor seal."
+    },
+    {
+      "path": "anchor.legacy_event_order_map_sha256",
+      "note": "Anchor copy of the legacy event-order-map digest.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:4523"
+    },
+    {
+      "path": "anchor.base_repin_history",
+      "note": "Implementation-base and core-tree transition chains.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Both old/new identity chains must be continuous and end at the live anchor identities."
+    },
+    {
+      "path": "manifest.expected_value_provenance.statement",
+      "note": "Narrative provenance statement containing a measured tracked-path count.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every asserted integer count of tracked paths under tests/corrected_vnext must equal git ls-files."
+    },
+    {
+      "path": "manifest.design.file",
+      "note": "Path of the pinned design bytes used by design cross-checks.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "The file must be readable so its title version, change log, and heading positions can be measured."
+    },
+    {
+      "path": "manifest.design.version",
+      "note": "Declared design version.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "It must equal the version parsed from line 1 of the pinned design with the gate regex."
+    },
+    {
+      "path": "manifest.design.heading_line_map_measured_at_reseal17",
+      "note": "Line-number map for headings measured at re-seal 17.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every declared heading must occur exactly once at its declared current line."
+    },
+    {
+      "path": "manifest.seal_state.EXPECTED_SEAL_SHA",
+      "note": "Duplicate seal identity in seal_state.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "It must equal manifest.seal.EXPECTED_SEAL_SHA."
+    },
+    {
+      "path": "manifest.seal.EXPECTED_SEAL_SHA",
+      "note": "Canonical manifest seal identity.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:2966"
+    },
+    {
+      "path": "manifest.seal_state.IMPLEMENTATION_BASE_SHA",
+      "note": "Duplicate implementation-base identity in seal_state.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "It must equal the canonical manifest seal base and the anchor base."
+    },
+    {
+      "path": "manifest.seal.IMPLEMENTATION_BASE_SHA",
+      "note": "Canonical manifest implementation-base identity.",
+      "disposition": "ENFORCED",
+      "enforced_at": "tests/corrected_vnext/verify_bceg.py:2793"
+    },
+    {
+      "path": "manifest.reseal_history.old_EXPECTED_SEAL_SHA",
+      "note": "Predecessor seal identity in each manifest re-seal transition.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every non-genesis predecessor must be produced by the chain and each adjacent transition must agree."
+    },
+    {
+      "path": "manifest.reseal_history.new_EXPECTED_SEAL_SHA",
+      "note": "Successor seal identity in each manifest re-seal transition.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every successor must feed the next transition and the final successor must equal the live seal."
+    },
+    {
+      "path": "anchor.reseal_history.old_EXPECTED_SEAL_SHA",
+      "note": "Predecessor seal identity in each anchor re-seal transition.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every non-genesis predecessor must be produced by the chain and each adjacent transition must agree."
+    },
+    {
+      "path": "anchor.reseal_history.new_EXPECTED_SEAL_SHA",
+      "note": "Successor seal identity in each anchor re-seal transition.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every successor must feed the next transition and the final successor must equal the live anchor seal."
+    },
+    {
+      "path": "anchor.base_repin_history.old_IMPLEMENTATION_BASE_SHA",
+      "note": "Predecessor commit in each base-repin transition.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every non-genesis predecessor must be produced by the base chain and adjacent transitions must agree."
+    },
+    {
+      "path": "anchor.base_repin_history.new_IMPLEMENTATION_BASE_SHA",
+      "note": "Successor commit in each base-repin transition.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every successor must feed the next transition and the final successor must equal the live anchor base."
+    },
+    {
+      "path": "anchor.base_repin_history.old_core_tree_oid_at_base",
+      "note": "Predecessor core-tree identity in base-repin transitions.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every non-genesis transition must declare the prior core-tree identity and adjacent transitions must agree."
+    },
+    {
+      "path": "anchor.base_repin_history.new_core_tree_oid_at_base",
+      "note": "Successor core-tree identity in base-repin transitions.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Every successor must feed the next transition and the final successor must equal core_tree_oid_at_base."
+    },
+    {
+      "path": "manifest.section_16_review.status",
+      "note": "Structured status of the Section-16 review.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "It must not be pending or unperformed when a validating semantic-coverage receipt is installed."
+    },
+    {
+      "path": "manifest.legacy_event_order_map_pin.baseline_manifest",
+      "note": "Pinned identity of the baseline manifest used for the legacy event-order map.",
+      "disposition": "CROSS_CHECKED",
+      "rule": "Its digest must match the live file at its stated path or the object must explicitly label itself historical."
+    }
+  ]
+}
