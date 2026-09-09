@@ -153,6 +153,15 @@
       "created_by": "Codex",
       "summary": "Added read-only LiveOps dry-run status normalization, safety gate checks, paper-trade plan indexing, CLI output, tests, and dashboard panel.",
       "report_path": "04_REPORTS/ai_handoffs/MCC_BOOT_017_COMPLETION_REPORT.md"
+    },
+    {
+      "event_id": "HIST-2026-0018",
+      "task_id": "WP-P012-R30-REPAIR4",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-09T18:50:00+03:00",
+      "created_by": "owner (Baris), recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
+      "summary": "Owner authorised a fourth WP-P0-12 re-seal #30 repair round beyond the cap of 3, after T0 round 3 returned BLOCK from both flagship auditors. Scope as put to him and approved: (a) correct CONTRACT_TABLES_MANIFEST.json seal_state.IMPLEMENTATION_BASE_SHA, which records re-seal #29 commit 94a0a568 while seal and the anchor record #30 commit 0c01b350; and (b) add a Lead-attributed additive restatement of the Item-4 field inventory in semantic_coverage_review.json, which names mark_price and mark_price_source in the present tense although the certified commit d06aa741 already read oracle_price and oracle_price_source. Owner free text, verbatim and unedited: \"yes and dont ask this again\". The owner separately delegated to the Lead the ruling on whether the policy category Canonical feature contracts covers mtc_v2/tests/corrected_vnext/contracts/; the Lead ruled that it does. The cap was raised by the owner, not reset by the Lead. The three earlier re-seal #30 commits are deliberately NOT retro-stamped with this trailer.",
+      "report_path": "04_REPORTS/ai_handoffs/WP_P012_R30_REPAIR4_PATCH_PLAN.md"
     }
   ]
 }
