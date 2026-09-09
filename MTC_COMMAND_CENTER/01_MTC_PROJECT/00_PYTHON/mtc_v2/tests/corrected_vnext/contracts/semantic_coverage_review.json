@@ -1,7 +1,7 @@
 {
  "schema": "P012_SEMANTIC_COVERAGE_REVIEW_V2",
  "reviewer": {
-  "identity": "Gemini 3.8 Flash High (gemini-3.8-flash-high), R29 delta review of f508125141ba86d08a2c41ce23b3bdef88e34889..ca1a44576aa46907ba4b39c417bced4bfabe94de, 2026-09-08; the #28 item dispositions it carried forward were authored by the same family in lanes REV16H_1A..6 under OD-20260906-3; parts assembled mechanically by the Lead (Claude Opus 5) who decided nothing",
+  "identity": "Gemini 3.8 Flash High (gemini-3.8-flash-high), R30 delta review of ca1a44576aa46907ba4b39c417bced4bfabe94de..d06aa741c32a3b57a7bfe299aefa67c86cab453e, 2026-09-08; the #29 item dispositions it carried forward were authored by the same family in the R29 delta review, and before that in lanes REV16H_1A..6 under OD-20260906-3; parts assembled mechanically by the Lead (Claude Opus 5) who decided nothing",
   "family": "Gemini",
   "independent_of": [
    {
@@ -15,15 +15,15 @@
   ]
  },
  "reviewed_identities": {
-  "worktree_head_commit": "ca1a44576aa46907ba4b39c417bced4bfabe94de",
-  "core_tree_oid": "13e1f7788318f51df7e319f601b3f66eb703b816",
-  "expected_seal_sha": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
-  "implementation_anchor_sha256": "1e963e751607810cf54a6994864f53c48a5d893f8d794224bd2a4153e31af829",
-  "baseline_manifest_sha256": "8fc9311529449d6008c6945fb3a5c05fada6192d580edd53d426da66f184847e",
-  "design_file_sha256": "d071a13f7b122c52ea022e1f6cfd825d9b4916c1729155b12d5e5a68f0e57dea",
+  "worktree_head_commit": "d06aa741c32a3b57a7bfe299aefa67c86cab453e",
+  "core_tree_oid": "9a3283ae5e2bd7e527d5e6dfb8e3033473711a41",
+  "expected_seal_sha": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
+  "implementation_anchor_sha256": "2816b6184be181c7f2d05dcd75ea02e3f9aa78124618fa9ac016ce7703dc6247",
+  "baseline_manifest_sha256": "256c3593db27df5643d114beaafccb1709d32fe2e89ca147416495bff443e772",
+  "design_file_sha256": "c4bb6f67d9dd736725ee0731659b8fc1939f21ac907e4b8a7d6c94ca7dcdec9b",
   "design_version": "v1.24",
-  "harness_sha256": "80223d31013ca0cd4a424563ee1e13d42ec1536a916f3031b46c1a5f00693650",
-  "catalog_sha256": "6e5eb01be81db74d53b7c48b39789cc979dad32290aa7099993ab34984cd8734"
+  "harness_sha256": "53b4ff48973bdf6dda8485f4c34de43d320fdb07da43fc523eaa17366e2817cf",
+  "catalog_sha256": "b53f6e24433d2230c37b1cbd0a778f157f9bd8305f75aab18724b91d20ce4657"
  },
  "items": {
   "1": {
@@ -85,7 +85,7 @@
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.json",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.md"
    ],
-   "notes": "[1A ACCEPTED_WITH_RESIDUAL_RISK] PARTIAL verdict covering only formulas of DEF-P012-01..04 (design sections 7-10) re-derived and compared with code and expected tables. All 19 formulas and rules of DEF-P012-01..04 have been completely hand-re-derived, compared with core code and sealed golden tables, and confirmed EQUAL without arithmetic deviation. Other parts of Item 1 (ancestry of IMPLEMENTATION_ANCHOR, base repin history, and full authoring import graph inspection) sit outside this sub-lane's partial scope and are assembled by the Lead. Named residuals: (1) Finite-corpus bounded verification: synthetic test scenarios prove numerical agreement at declared vector points only, not whole-domain equivalence (design limit 1); (2) Legacy-side comparison values were reconciled via static code inspection of LegacyEconomicsAdapter in core/economics.py rather than executing frozen P0-11 baseline binaries (design limit 10); (3) DEF-P012-01 and DEF-P012-02 formulas are grounded on self-evident algebraic correctness and legacy comparison inversion rather than explicit external venue specifications.\n[1B ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for formulas of DEF-P012-05..08 (design sections 11-14) re-derived and compared with code and expected tables only. All 40 formulas and rules across design sections 11-14 were successfully re-derived against kernel code and sealed golden tables with zero arithmetic discrepancies; the residual risk consists of two unclosed blocked markers in the sealed tables (RULE2-08-RED source_event_digest retained as a blocked marker while record bytes are populated, and RULE2-08-GREEN equity retained as BLOCKED-OPEN-EMBED-05 due to unenumerated pre-window setup numbers), the harness MIME-type rejection on the two markdown authority documents (mitigated by direct inspection of the canonical JSON economic records), and the lane delegation boundary leaving sections 7-10, authoring graph, and implementation anchor ancestry to sibling reviewer lanes.\n[1C ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this part only (the CONTRACT_TABLES authoring path and import graph, the IMPLEMENTATION_ANCHOR ancestry, and author independence from the kernel implementer). ACCEPTED_WITH_RESIDUAL_RISK on measured grounds: (1) Author independence is confirmed: CONTRACT_TABLES was authored by Claude-family lane W127b and the kernel was implemented by the Codex family (manifest lines 5-7), with zero Python files among the 19 sealed artifacts and selftests residing strictly outside the seal. (2) Ratification chain derivation is fully reconciled: verify_bceg.py lines 385-458 derives a 26-member chain (#5 through #28) from reseal_history, which matches semantic_coverage_review.schema.json lines 117-150 and schema.md lines 63-66. (3) Named residual risk ÔÇö Anchor ancestry: IMPLEMENTATION_BASE_SHA was re-anchored forward 14 times under decision 147 and subsequent rulings to f6790517e9bdc4e8bfcc401cae6606d7837b4e29, so git diff base..HEAD -- core is 0 bytes and does not capture the 54-commit kernel implementation delta. As ratified in design section 15.4 (lines 722-730), honest limit L14 (lines 836-865), and section 23.16 (lines 1827-1845), the pre-implementation property is carried by the measured git history (bundle placed at 5e8e5794 with kernel absent, first kernel commit 784175dd) rather than by the anchor base diff, satisfying the L14 restatement while leaving the original section 21 precondition 3 (:937) delta-expression unsatisfied across base..HEAD. (4) Named residual risk ÔÇö Baseline manifest pin: legacy_event_order_map_pin.baseline_manifest.sha256 in the manifest pins c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242 from re-seal #24 candidate pursuant to design section 15.3 (line 591), which binds seal-time bytes as a historical identity rather than tracking the current frozen baseline (130848719b25f834f903027184240db03eb55beeda5dc32a22f203118fa3e52a in IDENTITIES_MEASURED.json). [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. DEF-P012-01..04 formulas, derivations, DERIVATIONS.md, and verify_bceg.py remain byte-identical between heads; all goldens, inputs, and instrument records are untouched. The update to implementation_anchor.json and its SHA sidecar is routine re-seal bookkeeping reflecting the head commit update without impacting anchor ancestry."
+   "notes": "[1A ACCEPTED_WITH_RESIDUAL_RISK] PARTIAL verdict covering only formulas of DEF-P012-01..04 (design sections 7-10) re-derived and compared with code and expected tables. All 19 formulas and rules of DEF-P012-01..04 have been completely hand-re-derived, compared with core code and sealed golden tables, and confirmed EQUAL without arithmetic deviation. Other parts of Item 1 (ancestry of IMPLEMENTATION_ANCHOR, base repin history, and full authoring import graph inspection) sit outside this sub-lane's partial scope and are assembled by the Lead. Named residuals: (1) Finite-corpus bounded verification: synthetic test scenarios prove numerical agreement at declared vector points only, not whole-domain equivalence (design limit 1); (2) Legacy-side comparison values were reconciled via static code inspection of LegacyEconomicsAdapter in core/economics.py rather than executing frozen P0-11 baseline binaries (design limit 10); (3) DEF-P012-01 and DEF-P012-02 formulas are grounded on self-evident algebraic correctness and legacy comparison inversion rather than explicit external venue specifications.\n[1B ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for formulas of DEF-P012-05..08 (design sections 11-14) re-derived and compared with code and expected tables only. All 40 formulas and rules across design sections 11-14 were successfully re-derived against kernel code and sealed golden tables with zero arithmetic discrepancies; the residual risk consists of two unclosed blocked markers in the sealed tables (RULE2-08-RED source_event_digest retained as a blocked marker while record bytes are populated, and RULE2-08-GREEN equity retained as BLOCKED-OPEN-EMBED-05 due to unenumerated pre-window setup numbers), the harness MIME-type rejection on the two markdown authority documents (mitigated by direct inspection of the canonical JSON economic records), and the lane delegation boundary leaving sections 7-10, authoring graph, and implementation anchor ancestry to sibling reviewer lanes.\n[1C ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this part only (the CONTRACT_TABLES authoring path and import graph, the IMPLEMENTATION_ANCHOR ancestry, and author independence from the kernel implementer). ACCEPTED_WITH_RESIDUAL_RISK on measured grounds: (1) Author independence is confirmed: CONTRACT_TABLES was authored by Claude-family lane W127b and the kernel was implemented by the Codex family (manifest lines 5-7), with zero Python files among the 19 sealed artifacts and selftests residing strictly outside the seal. (2) Ratification chain derivation is fully reconciled: verify_bceg.py lines 385-458 derives a 26-member chain (#5 through #28) from reseal_history, which matches semantic_coverage_review.schema.json lines 117-150 and schema.md lines 63-66. (3) Named residual risk ÔÇö Anchor ancestry: IMPLEMENTATION_BASE_SHA was re-anchored forward 14 times under decision 147 and subsequent rulings to f6790517e9bdc4e8bfcc401cae6606d7837b4e29, so git diff base..HEAD -- core is 0 bytes and does not capture the 54-commit kernel implementation delta. As ratified in design section 15.4 (lines 722-730), honest limit L14 (lines 836-865), and section 23.16 (lines 1827-1845), the pre-implementation property is carried by the measured git history (bundle placed at 5e8e5794 with kernel absent, first kernel commit 784175dd) rather than by the anchor base diff, satisfying the L14 restatement while leaving the original section 21 precondition 3 (:937) delta-expression unsatisfied across base..HEAD. (4) Named residual risk ÔÇö Baseline manifest pin: legacy_event_order_map_pin.baseline_manifest.sha256 in the manifest pins c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242 from re-seal #24 candidate pursuant to design section 15.3 (line 591), which binds seal-time bytes as a historical identity rather than tracking the current frozen baseline (130848719b25f834f903027184240db03eb55beeda5dc32a22f203118fa3e52a in IDENTITIES_MEASURED.json). [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. DEF-P012-01..04 formulas, derivations, DERIVATIONS.md, and verify_bceg.py remain byte-identical between heads; all goldens, inputs, and instrument records are untouched. The update to implementation_anchor.json and its SHA sidecar is routine re-seal bookkeeping reflecting the head commit update without impacting anchor ancestry. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. DEF-P012-01..08 derivations and formulas remain algebraically identical. The mechanical rename of mark_price to oracle_price in DERIVATIONS.md, RULE2-08 goldens, and inputs conforms to Design v1.25 §23.22 without arithmetic alteration. Strongest case for CHANGED: sealed contract artifacts and goldens were modified in place, altering sealed hash identities. This does not survive because all 17 scenario derivations and numerical outcomes remain exact matches, and implementation_anchor updates are routine re-seal bookkeeping."
   },
   "2": {
    "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
@@ -114,13 +114,13 @@
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json.sha256"
    ],
-   "notes": "[2A ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this lane (REV16H-2A: code hunks for config.py, economics.py, exits.py, instrument.py, position_sizer.py, and semantics.py from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889). All 21 assigned hunks map cleanly to ratified Section 18 rows (S18-08, S18-02, S18-05, S18-04, S18-03, S18-01) with valid served DEF sets, exact raw byte SHA-256 matches, and zero undocumented economic modifications. Named residual risks: (1) Remaining 146 of 167 total core hunks reside in files outside this lane (position_manager.py, results.py, runner.py, types.py, and economic_records/**) and require separate Lead assembly; (2) economics.py is introduced as a single monolithic 1226-line diff hunk (global index 110), housing both the ExecutionEconomics seam ABC and internal implementations for DEFs 01, 02, 04, 05, 06, 07, 08; (3) Static shape census cannot inspect dynamic calls, aliases, or callers outside core (Design Section 18 blind spots, Section 17 limit 4); (4) Production collision policy in resolve_corrected_price_exits is structurally fixed to STOP_FIRST while Design Section 19 owner adjudication remains open.\n[2B ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for Part B only, covering kernel diff hunks in position_manager.py, results.py, runner.py, and types.py from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889. All 44 hunks across these four assigned files were inspected against Section 18 of P012_FRESH_DESIGN_V1.md and confirmed as SECTION18_SHARED with exact single-row Section-18 ownership, matching served DEF sets, and zero undocumented hunks. Named residual risk: this partial review covers 44 of 167 total kernel diff hunks (the remaining 123 hunks across config.py, economics.py, exits.py, instrument.py, position_sizer.py, semantics.py, and 102 economic records data files must be assembled by the Lead), and static diff/census inspection cannot evaluate external dynamic callers outside core.\n[2C ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this part only, covering all core/economic_records/** data-file and detached-sidecar hunks (102 hunks) from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889. All 102 assigned hunks were verified against the design Section 5 immutable record specification and Section 18 shape census, cleanly confirming SECTION18_SHARED under unique rows S18-11 and S18-04 with exact served DEF sets and zero undocumented hunks. Named residual risk: this partial review covers only 102 of the 167 total kernel diff hunks (the remaining 65 hunks across core Python modules config.py, economics.py, exits.py, instrument.py, position_manager.py, position_sizer.py, results.py, runner.py, semantics.py, and types.py must be assembled by the Lead); static shape census and record review cannot evaluate external dynamic consumers outside core. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Based on the corrected facts, core/runner.py is within Item 2's ratified hunk_coverage scope (112 paths, previously 167 hunks including 34 in runner.py under S18-07). Regenerating coverage at ca1a4457 yields 168 hunks with zero hunks classified UNDOCUMENTED, as the new hunk deterministically binds to S18-07 under canonical path rules. The modification is strictly an import of EXECUTION_PROFILE_RAW_CLOSE_ONLY for debug_mode metadata, supported by tests/test_runner_debug_metadata.py, while all six sub-lane files remain byte-identical since #28. Because the change introduces no behavioral regressions, semantic shifts, or unmitigated risks to DEF-P012-03/05/07, the ACCEPTED_WITH_RESIDUAL_RISK disposition carries forward intact. RESIDUAL NAMED BY THE REVIEWER: The strongest case for CHANGED is that core/runner.py is inside ratified scope, making hunk 168 an in-scope functional accretion rather than an out-of-scope artifact. S18-07 specifically serves DEF-P012-03, DEF-P012-05, and DEF-P012-07, none of which govern debug_mode metadata; absorbing a new feature hunk into an existing defect row without an explicit ticket could constitute scope drift and alter the residual risk profile of the module. This case does not survive because the gate's diff parser and Section-18 census report zero undocumented hunks, the path binding is mechanical and uniform, and the change is a benign, isolated metadata import with dedicated unit tests that does not compromise execution semantics or invalidate prior risk mitigations.",
+   "notes": "[2A ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this lane (REV16H-2A: code hunks for config.py, economics.py, exits.py, instrument.py, position_sizer.py, and semantics.py from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889). All 21 assigned hunks map cleanly to ratified Section 18 rows (S18-08, S18-02, S18-05, S18-04, S18-03, S18-01) with valid served DEF sets, exact raw byte SHA-256 matches, and zero undocumented economic modifications. Named residual risks: (1) Remaining 146 of 167 total core hunks reside in files outside this lane (position_manager.py, results.py, runner.py, types.py, and economic_records/**) and require separate Lead assembly; (2) economics.py is introduced as a single monolithic 1226-line diff hunk (global index 110), housing both the ExecutionEconomics seam ABC and internal implementations for DEFs 01, 02, 04, 05, 06, 07, 08; (3) Static shape census cannot inspect dynamic calls, aliases, or callers outside core (Design Section 18 blind spots, Section 17 limit 4); (4) Production collision policy in resolve_corrected_price_exits is structurally fixed to STOP_FIRST while Design Section 19 owner adjudication remains open.\n[2B ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for Part B only, covering kernel diff hunks in position_manager.py, results.py, runner.py, and types.py from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889. All 44 hunks across these four assigned files were inspected against Section 18 of P012_FRESH_DESIGN_V1.md and confirmed as SECTION18_SHARED with exact single-row Section-18 ownership, matching served DEF sets, and zero undocumented hunks. Named residual risk: this partial review covers 44 of 167 total kernel diff hunks (the remaining 123 hunks across config.py, economics.py, exits.py, instrument.py, position_sizer.py, semantics.py, and 102 economic records data files must be assembled by the Lead), and static diff/census inspection cannot evaluate external dynamic callers outside core.\n[2C ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this part only, covering all core/economic_records/** data-file and detached-sidecar hunks (102 hunks) from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889. All 102 assigned hunks were verified against the design Section 5 immutable record specification and Section 18 shape census, cleanly confirming SECTION18_SHARED under unique rows S18-11 and S18-04 with exact served DEF sets and zero undocumented hunks. Named residual risk: this partial review covers only 102 of the 167 total kernel diff hunks (the remaining 65 hunks across core Python modules config.py, economics.py, exits.py, instrument.py, position_manager.py, position_sizer.py, results.py, runner.py, semantics.py, and types.py must be assembled by the Lead); static shape census and record review cannot evaluate external dynamic consumers outside core. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Based on the corrected facts, core/runner.py is within Item 2's ratified hunk_coverage scope (112 paths, previously 167 hunks including 34 in runner.py under S18-07). Regenerating coverage at ca1a4457 yields 168 hunks with zero hunks classified UNDOCUMENTED, as the new hunk deterministically binds to S18-07 under canonical path rules. The modification is strictly an import of EXECUTION_PROFILE_RAW_CLOSE_ONLY for debug_mode metadata, supported by tests/test_runner_debug_metadata.py, while all six sub-lane files remain byte-identical since #28. Because the change introduces no behavioral regressions, semantic shifts, or unmitigated risks to DEF-P012-03/05/07, the ACCEPTED_WITH_RESIDUAL_RISK disposition carries forward intact. RESIDUAL NAMED BY THE REVIEWER: The strongest case for CHANGED is that core/runner.py is inside ratified scope, making hunk 168 an in-scope functional accretion rather than an out-of-scope artifact. S18-07 specifically serves DEF-P012-03, DEF-P012-05, and DEF-P012-07, none of which govern debug_mode metadata; absorbing a new feature hunk into an existing defect row without an explicit ticket could constitute scope drift and alter the residual risk profile of the module. This case does not survive because the gate's diff parser and Section-18 census report zero undocumented hunks, the path binding is mechanical and uniform, and the change is a benign, isolated metadata import with dedicated unit tests that does not compromise execution semantics or invalidate prior risk mitigations. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. All new diff hunks in core/types.py, core/economics.py, core/results.py, and economic records bind deterministically to ratified Section-18 rows S18-09, S18-02, S18-10, and S18-11 as recorded in KERNEL_BOOKKEEPING/semantic_coverage_review.json. Strongest case for CHANGED: kernel modifications touch three core files and could represent undocumented scope drift. This does not survive because the Section-18 census and gate parser verify zero undocumented hunks, and the rename strictly implements approved valuation rules.",
    "hunk_coverage": {
     "schema": "P012_KERNEL_HUNK_COVERAGE_V2",
     "base_commit": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
-    "reviewed_head": "ca1a44576aa46907ba4b39c417bced4bfabe94de",
-    "diff_command": "git diff --relative --unified=0 --no-ext-diff --no-textconv --no-renames --diff-algorithm=myers --no-indent-heuristic 5e8e579410ee55008bfd2d2d85054fd1d782f32c..ca1a44576aa46907ba4b39c417bced4bfabe94de -- core",
-    "diff_sha256": "36661881a96df8f61ed1eda7d57d8264c754220c60c9d0eb98e835338a40e3dd",
+    "reviewed_head": "d06aa741c32a3b57a7bfe299aefa67c86cab453e",
+    "diff_command": "git diff --relative --unified=0 --no-ext-diff --no-textconv --no-renames --diff-algorithm=myers --no-indent-heuristic 5e8e579410ee55008bfd2d2d85054fd1d782f32c..d06aa741c32a3b57a7bfe299aefa67c86cab453e -- core",
+    "diff_sha256": "7b634e5b013744828cb502d439f456243c940b43ddf70eb98cf2c40c499ee446",
     "total_changed_paths": 112,
     "total_changed_files": 112,
     "changed_paths": [
@@ -475,7 +475,7 @@
        40
       ],
       "hunk_sha256s": [
-       "81095cd7677c5d5d91d45ce19ec92f01c58c1895363ef44d47e0a6418b5a4a08"
+       "b7d1f6a2c8c9806965880e9999c29e526cae85aa022b7a14fb9b035ee55ba660"
       ]
      },
      {
@@ -485,7 +485,7 @@
        41
       ],
       "hunk_sha256s": [
-       "24776fffc749bbd8045c2b714bdabf2c0585c465dc7bcfc3185f01abe91bb32d"
+       "e3715bdb93f0f71afb44538680587820461f3dc53381438cb1c617c2019709bf"
       ]
      },
      {
@@ -795,7 +795,7 @@
        72
       ],
       "hunk_sha256s": [
-       "37487143768fec52833e7c53b3e1464871f021c57ce0b7a0812ae727bd889548"
+       "1e694acc1ced3ba78e0b66044f9fbbb820882bcbe7adeda2d659d67cc629eb6c"
       ]
      },
      {
@@ -805,7 +805,7 @@
        73
       ],
       "hunk_sha256s": [
-       "5bf0f90c8f51ab89410c85d72b9a19a4eb07fb3ce6ef9a87f89169ce9d736f89"
+       "06e670066fe8a954b0d280beabf792f7f9cc10e5d8c989365b58d80403c7c95e"
       ]
      },
      {
@@ -1175,7 +1175,7 @@
        110
       ],
       "hunk_sha256s": [
-       "9d5ac70382768e24b093d27905fc19849999cd8faf860097ff3607dcc458d06c"
+       "e6e75efe05b15435d717cad21a1fa750d9f7508af4dd2209d2eb53644689ec35"
       ]
      },
      {
@@ -1249,7 +1249,7 @@
        "050a550b2079ea2a9ea8b5cc5397216a363d901c6c7cc5a1337d5d96416d2fc1",
        "dd3112703ee6a85ebed61f75ec8d3b39c84175ef902bfbc65aeba3aea1b723d3",
        "1900d9434ed56da3bd8637a2624079769faeb863387266cc8b8d5a7df1951629",
-       "7d512c7a50219f33ad518195af82c8a725cd7407bdf6894e3ebd96996e67d3a7"
+       "87d2b26bc67460395fef23f927c90b1c662d3db71f1fddbfc4a5a81e9e1bb877"
       ]
      },
      {
@@ -1351,7 +1351,7 @@
       ],
       "hunk_sha256s": [
        "f1ee192be24aac2973838b25659669b6310675c8580c6dfe3aa9ac79b1471f63",
-       "fea8ae1e1ddbb9e3f5ad2d462ac32adabb8ff291ab2f1fb6c33c6a665803b56d",
+       "986e328a84af52c085ae1bc7150d39742cb604798f851fdbadf893daf1669bdd",
        "7838149f91ca5492cb6d46bbb5f98315295111ca48ee0ecbd9735a5d6b2cd55a",
        "a89fedf09e3c857d8150b0147afa77a01be980b272924e6c5a12002885d02e0d"
       ]
@@ -2226,7 +2226,7 @@
       "old_count": 0,
       "new_start": 1,
       "new_count": 55,
-      "hunk_sha256": "81095cd7677c5d5d91d45ce19ec92f01c58c1895363ef44d47e0a6418b5a4a08",
+      "hunk_sha256": "b7d1f6a2c8c9806965880e9999c29e526cae85aa022b7a14fb9b035ee55ba660",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-11",
       "served_def_ids": [
@@ -2240,7 +2240,7 @@
       "old_count": 0,
       "new_start": 1,
       "new_count": 1,
-      "hunk_sha256": "24776fffc749bbd8045c2b714bdabf2c0585c465dc7bcfc3185f01abe91bb32d",
+      "hunk_sha256": "e3715bdb93f0f71afb44538680587820461f3dc53381438cb1c617c2019709bf",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-11",
       "served_def_ids": [
@@ -2674,7 +2674,7 @@
       "old_count": 0,
       "new_start": 1,
       "new_count": 1,
-      "hunk_sha256": "37487143768fec52833e7c53b3e1464871f021c57ce0b7a0812ae727bd889548",
+      "hunk_sha256": "1e694acc1ced3ba78e0b66044f9fbbb820882bcbe7adeda2d659d67cc629eb6c",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-11",
       "served_def_ids": [
@@ -2688,7 +2688,7 @@
       "old_count": 0,
       "new_start": 1,
       "new_count": 1,
-      "hunk_sha256": "5bf0f90c8f51ab89410c85d72b9a19a4eb07fb3ce6ef9a87f89169ce9d736f89",
+      "hunk_sha256": "06e670066fe8a954b0d280beabf792f7f9cc10e5d8c989365b58d80403c7c95e",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-11",
       "served_def_ids": [
@@ -3170,7 +3170,7 @@
       "old_count": 0,
       "new_start": 1,
       "new_count": 1226,
-      "hunk_sha256": "9d5ac70382768e24b093d27905fc19849999cd8faf860097ff3607dcc458d06c",
+      "hunk_sha256": "e6e75efe05b15435d717cad21a1fa750d9f7508af4dd2209d2eb53644689ec35",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-02",
       "served_def_ids": [
@@ -3409,7 +3409,7 @@
       "old_count": 0,
       "new_start": 298,
       "new_count": 774,
-      "hunk_sha256": "7d512c7a50219f33ad518195af82c8a725cd7407bdf6894e3ebd96996e67d3a7",
+      "hunk_sha256": "87d2b26bc67460395fef23f927c90b1c662d3db71f1fddbfc4a5a81e9e1bb877",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-10",
       "served_def_ids": [
@@ -3980,7 +3980,7 @@
       "old_count": 0,
       "new_start": 14,
       "new_count": 353,
-      "hunk_sha256": "fea8ae1e1ddbb9e3f5ad2d462ac32adabb8ff291ab2f1fb6c33c6a665803b56d",
+      "hunk_sha256": "986e328a84af52c085ae1bc7150d39742cb604798f851fdbadf893daf1669bdd",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-09",
       "served_def_ids": [
@@ -4052,7 +4052,7 @@
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-07-A\\modification_manifest.json",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-08-A\\modification_manifest.json"
    ],
-   "notes": "[3 ACCEPTED_WITH_RESIDUAL_RISK] Supplemental review of Item 3 reveals complete structural fidelity between the 27-row scenario catalog and Section 15.2 design specifications. All 8 corrections DEF-P012-01 through DEF-P012-08 possess active probes and dedicated test rows. Residual risk is formally accepted regarding compound higher-order interactions and unexercised parameter permutations outside the finite catalog, which are disambiguated deterministically by Section 3 pipeline ordering but remain empirically unexecuted in test runs per Honest Limit L1. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. The 27-row scenario catalog retains full structural fidelity to Design 15.2, and all 8 corrections retain active probes. The updates to scenario_catalog.json (18 probe digest pins) and the 45 files in tests/corrected_vnext/probes/ are mechanical re-seal bookkeeping mirroring base updates, with kernel/economics.py confirmed byte-identical across all nine kernel probes."
+   "notes": "[3 ACCEPTED_WITH_RESIDUAL_RISK] Supplemental review of Item 3 reveals complete structural fidelity between the 27-row scenario catalog and Section 15.2 design specifications. All 8 corrections DEF-P012-01 through DEF-P012-08 possess active probes and dedicated test rows. Residual risk is formally accepted regarding compound higher-order interactions and unexercised parameter permutations outside the finite catalog, which are disambiguated deterministically by Section 3 pipeline ordering but remain empirically unexecuted in test runs per Honest Limit L1. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. The 27-row scenario catalog retains full structural fidelity to Design 15.2, and all 8 corrections retain active probes. The updates to scenario_catalog.json (18 probe digest pins) and the 45 files in tests/corrected_vnext/probes/ are mechanical re-seal bookkeeping mirroring base updates, with kernel/economics.py confirmed byte-identical across all nine kernel probes. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. Scenario catalog retains complete structural fidelity to Design 15.2 with 27 bound rows and active probes across all 8 corrections. Strongest case for CHANGED: 81 probe files and catalog probe pins were modified across all 9 kernel probes. This does not survive because probe modifications are purely mechanical syncs with the core rename (kernel/types.py, economics.py, results.py), introducing zero behavioral divergence in probe assertions."
   },
   "4": {
    "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
@@ -4096,7 +4096,7 @@
     "C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT_rev4.json",
     "C:\\LAB\\Tradingview_LAB_CLEAN\\_gemini_packets_20260830\\N_COMMON_CLAUSES.md"
    ],
-   "notes": "[4 ACCEPTED_WITH_RESIDUAL_RISK] ACCEPTED_WITH_RESIDUAL_RISK under P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 (OD-20260906-2, design v1.24 Section 23.21). Every numeric value consumed by the 51 synthetic scenario bindings across all 17 sealed scenarios has complete lineage traced to committed synthetic records and DERIVATIONS.md arithmetic; exactly 0 scenarios consume production records. Production economics remain fail-closed and unadmitted. Residual production risks are retained for 27 items: I rows 1-5 (/status, /price_tick, /minimum_quantity, /provenance/human_reviewer, absent aggregate /provenance/source_sha256); C rows 6-12 (absent /effective_interval, /fee_rounding_rule, /fixed_component, /minimum_fee, /tier_account_selection_evidence, /liquidity_roles/MARGIN_CALL_LIQUIDATION, /provenance/human_reviewer); F rows 13-23 (/effective_interval, /events, and unsourced event members /events/0/{event_timestamp, funding_event_id, raw_rate, positive_rate_payer, mark_price, mark_price_source, provenance, source_event_digest}, /provenance/human_reviewer); and run-manifest requirements 24-27 (cost/funding source digests and effective intervals for which no canonical production pointer exists). All ten Section-19 rows remain OPEN for production. This disposition is bounded non-production mechanical evidence and grants no live, deployment, host, credential, or trading authority. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Exactly 0 scenarios consume production records, fully maintaining P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 (OD-20260906-2, design v1.24 s23.21). The modified production cost record HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json retains admission_status REFUSED_INCOMPLETE_COST_SCHEDULE in compliance with the owner ruling, and all 51 synthetic scenario bindings remain bound exclusively to synthetic records. RESIDUAL NAMED BY THE REVIEWER: Strongest case for CHANGED: A production cost record (core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json) was modified by adding an effective_interval and removing that field from refused_missing_fields. Since Item 4 certifies that exactly 0 scenarios consume production records under milestone P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1, modifying production records in the tree could be interpreted as preparing or enabling production records for consumption, calling into question whether the synthetic-only boundary was breached. Whether the case survives: The case DOES NOT SURVIVE. The record's admission_status remains explicitly REFUSED_INCOMPLETE_COST_SCHEDULE, preventing any scenario execution from consuming it. The modification conforms to an active owner ruling (production COST records may keep their interval while missing required fee fields), and all 51 synthetic scenario bindings continue to bind exclusively to synthetic records with zero production record consumption. The synthetic-only invariant holds without exception, so the disposition remains ACCEPTED_WITH_RESIDUAL_RISK."
+   "notes": "[4 ACCEPTED_WITH_RESIDUAL_RISK] ACCEPTED_WITH_RESIDUAL_RISK under P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 (OD-20260906-2, design v1.24 Section 23.21). Every numeric value consumed by the 51 synthetic scenario bindings across all 17 sealed scenarios has complete lineage traced to committed synthetic records and DERIVATIONS.md arithmetic; exactly 0 scenarios consume production records. Production economics remain fail-closed and unadmitted. Residual production risks are retained for 27 items: I rows 1-5 (/status, /price_tick, /minimum_quantity, /provenance/human_reviewer, absent aggregate /provenance/source_sha256); C rows 6-12 (absent /effective_interval, /fee_rounding_rule, /fixed_component, /minimum_fee, /tier_account_selection_evidence, /liquidity_roles/MARGIN_CALL_LIQUIDATION, /provenance/human_reviewer); F rows 13-23 (/effective_interval, /events, and unsourced event members /events/0/{event_timestamp, funding_event_id, raw_rate, positive_rate_payer, mark_price, mark_price_source, provenance, source_event_digest}, /provenance/human_reviewer); and run-manifest requirements 24-27 (cost/funding source digests and effective intervals for which no canonical production pointer exists). All ten Section-19 rows remain OPEN for production. This disposition is bounded non-production mechanical evidence and grants no live, deployment, host, credential, or trading authority. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Exactly 0 scenarios consume production records, fully maintaining P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 (OD-20260906-2, design v1.24 s23.21). The modified production cost record HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json retains admission_status REFUSED_INCOMPLETE_COST_SCHEDULE in compliance with the owner ruling, and all 51 synthetic scenario bindings remain bound exclusively to synthetic records. RESIDUAL NAMED BY THE REVIEWER: Strongest case for CHANGED: A production cost record (core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json) was modified by adding an effective_interval and removing that field from refused_missing_fields. Since Item 4 certifies that exactly 0 scenarios consume production records under milestone P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1, modifying production records in the tree could be interpreted as preparing or enabling production records for consumption, calling into question whether the synthetic-only boundary was breached. Whether the case survives: The case DOES NOT SURVIVE. The record's admission_status remains explicitly REFUSED_INCOMPLETE_COST_SCHEDULE, preventing any scenario execution from consuming it. The modification conforms to an active owner ruling (production COST records may keep their interval while missing required fee fields), and all 51 synthetic scenario bindings continue to bind exclusively to synthetic records with zero production record consumption. The synthetic-only invariant holds without exception, so the disposition remains ACCEPTED_WITH_RESIDUAL_RISK. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json remains strictly fail-closed with admission_status REFUSED_MISSING_PRODUCTION_FUNDING_EVENTS and events null. Exactly 0 scenarios consume production records. Strongest case for CHANGED: editing event_schema and refused_missing_fields in a production record could be construed as breaching P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1. This does not survive because renaming a refused field does not admit it (Design §23.22 item 5), and synthetic isolation remains absolute. [LEAD RESTATEMENT, 2026-09-09, claude-opus-5 Lead session tradingview-lab-clean-c1, task WP-P012-R30-REPAIR4 - written by the Lead and attributed to no reviewer]: the residual inventory recorded above for F rows 13-23 names the unsourced event members as mark_price and mark_price_source. Those members do not exist in the production funding record at the commit this receipt certifies, d06aa741c32a3b57a7bfe299aefa67c86cab453e, nor at any later commit on this branch. The event_schema of core/economic_records/funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json reads event_timestamp, funding_event_id, raw_rate, positive_rate_payer, oracle_price, oracle_price_source, provenance, source_event_digest. Read oracle_price and oracle_price_source wherever the inventory above says mark_price and mark_price_source. The count of retained residual production risks is unchanged at 27; the rename adds and removes no risk. admission_status remains REFUSED_MISSING_PRODUCTION_FUNDING_EVENTS, events remains null, and exactly 0 scenarios consume production records. This restatement is required by ORACLE_SEMANTICS_CORRECTION_SCOPE.md item 4, which states that because the signed receipt references the old name in its Item-4 residual text the successor receipt must restate it. It corrects no reviewer disposition and changes no verdict: the disposition remains ACCEPTED_WITH_RESIDUAL_RISK."
   },
   "5": {
    "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
@@ -4173,7 +4173,7 @@
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\12_PARITY_PINETS\\generate_tw_export_case_suite_v2.py",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\12_PARITY_PINETS\\validate_export_parity.py"
    ],
-   "notes": "[5 ACCEPTED_WITH_RESIDUAL_RISK] Economic state across core modules is mediated by ExecutionEconomics and atomic EconomicTransition with zero arithmetic performed outside economics.py on the corrected 2.0.0 path; residual risk is accepted for external consumers (runner_metrics_adapter, validate_export_parity, parity_compare, p011_gate) reading legacy or gross fields and uninspected monorepo boundaries per design section 17 limits L4 and L5. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. economics.py is byte-identical since #28. All economic state continues to be mediated strictly by ExecutionEconomics and atomic EconomicTransition, with zero arithmetic outside economics.py on the corrected 2.0.0 path (the runner.py delta is strictly an import of an existing config constant for debug metadata)."
+   "notes": "[5 ACCEPTED_WITH_RESIDUAL_RISK] Economic state across core modules is mediated by ExecutionEconomics and atomic EconomicTransition with zero arithmetic performed outside economics.py on the corrected 2.0.0 path; residual risk is accepted for external consumers (runner_metrics_adapter, validate_export_parity, parity_compare, p011_gate) reading legacy or gross fields and uninspected monorepo boundaries per design section 17 limits L4 and L5. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. economics.py is byte-identical since #28. All economic state continues to be mediated strictly by ExecutionEconomics and atomic EconomicTransition, with zero arithmetic outside economics.py on the corrected 2.0.0 path (the runner.py delta is strictly an import of an existing config constant for debug metadata). [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. Economic state transitions remain strictly mediated by ExecutionEconomics and atomic EconomicTransition with zero arithmetic outside economics.py on the 2.0.0 path. Strongest case for CHANGED: the #29 assertion that economics.py was byte-identical is now factually false following the oracle_price rename. This does not survive because the underlying economics mediation architecture is unchanged, formulas are preserved, and monorepo consumer census confirms zero external consumers read funding fields by name."
   },
   "6": {
    "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
@@ -4198,7 +4198,7 @@
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\06_SCHEMAS\\backtest_profile_result.schema.json",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\06_SCHEMAS\\evaluation_artifact_v1.schema.json"
    ],
-   "notes": "[6 ACCEPTED_WITH_RESIDUAL_RISK] Item 6 is accepted with residual risk. All emitted event and result surfaces (decision_events, fill_events, exit_events, funding_events, fee ledger, RESULT_SURFACE, guards, and refusal objects) strictly conform to the closed shapes specified in Design sections 13, 14, 23.1, 23.3, and 23.4. Duplicate identity is rejected deterministically via strict cash/funding event sequence and lifecycle checking. Two residual risks are identified and accepted under the P0-12 defect contract: (1) Per OPEN-07, 16 of 18 funding_events fields lack a direct source in the current upstream Bridge schema, with source_event_digest explicitly recorded as a blocked cell (BLOCKED-MISSING-RECORD-BYTES) in RULE2-08-RED pending upstream record byte materialization; (2) In core/types.py line 67, unrounded_fill_price is carried on the FillDecision dataclass but is intentionally suppressed during serialization per Design section 23.3 explicit prohibition from the wire surface. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Emitted event and result surfaces are untouched by the delta and strictly conform to the closed shapes specified in Design 13, 14, 23.1, 23.3, and 23.4."
+   "notes": "[6 ACCEPTED_WITH_RESIDUAL_RISK] Item 6 is accepted with residual risk. All emitted event and result surfaces (decision_events, fill_events, exit_events, funding_events, fee ledger, RESULT_SURFACE, guards, and refusal objects) strictly conform to the closed shapes specified in Design sections 13, 14, 23.1, 23.3, and 23.4. Duplicate identity is rejected deterministically via strict cash/funding event sequence and lifecycle checking. Two residual risks are identified and accepted under the P0-12 defect contract: (1) Per OPEN-07, 16 of 18 funding_events fields lack a direct source in the current upstream Bridge schema, with source_event_digest explicitly recorded as a blocked cell (BLOCKED-MISSING-RECORD-BYTES) in RULE2-08-RED pending upstream record byte materialization; (2) In core/types.py line 67, unrounded_fill_price is carried on the FillDecision dataclass but is intentionally suppressed during serialization per Design section 23.3 explicit prohibition from the wire surface. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Emitted event and result surfaces are untouched by the delta and strictly conform to the closed shapes specified in Design 13, 14, 23.1, 23.3, and 23.4. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. The rename of mark_price to oracle_price in core/results.py is a conforming closed-set rename authorized by Design v1.25 §23.22 item 1, matched synchronously in verify_bceg.py line 1532. Strongest case for CHANGED: mutating an emitted RESULT_SURFACE and EVENT_SURFACE member modifies the wire contract and makes the #29 untouched-surface note stale. This does not survive because closed-set validation is preserved and direct census confirms all candidate consumer paths contain zero references to funding surface fields."
   }
  },
  "unresolved_items": [],
@@ -4230,9 +4230,10 @@
    "#26",
    "#27",
    "#28",
-   "#29"
+   "#29",
+   "#30"
   ],
   "ratified": true
  },
- "signed_at": "2026-09-08T13:32:32+03:00"
+ "signed_at": "2026-09-08T21:25:22+03:00"
 }

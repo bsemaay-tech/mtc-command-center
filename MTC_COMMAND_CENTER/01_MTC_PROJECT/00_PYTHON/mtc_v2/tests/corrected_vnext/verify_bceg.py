@@ -1532,7 +1532,7 @@ def validate_corrected_closed_sets(
         "position_side",
         "open_qty",
         "contract_multiplier",
-        "mark_price",
+        "oracle_price",
         "raw_rate",
         "positive_rate_payer",
         "long_cashflow_rate",

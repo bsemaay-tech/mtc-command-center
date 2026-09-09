@@ -51,7 +51,7 @@
       "cost_schedule_id": "SYNTH-COST-RULE2-07-GREEN-V1",
       "cost_schedule_digest": "040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe",
       "funding_schedule_id": "SYNTH-FUNDING-RULE2-08-V1",
-      "funding_schedule_digest": "aa4eaa939a83af1faa768eed82a2cd0216c26fccfb335240d05c5b1f7069d26d"
+      "funding_schedule_digest": "218aa518fec19ca53430891c8b445b6fba27d58c57aeaa0e5c819ec4e9ab9e73"
     }
   },
   "observation_window": {
@@ -80,7 +80,7 @@
   "w341_rederived_nodes": [
     {"pointer": "/RESULT_SURFACE/run_manifest/instrument_record_digest", "before": "BLOCKED-MISSING-RECORD-BYTES", "after": "20adf2749d255efd3fe281ec3ead2e07df0a36a5ad59718a54d0a1a7c0712b17", "authority": "Design section 5.1, \"final LF. Its detached `<file>.sha256\",Design section 11, \"fill is `100`, corrected fill\"; recomputed from the committed record bytes and matched the detached sidecar."},
     {"pointer": "/RESULT_SURFACE/run_manifest/instrument_source_document_digest", "before": "BLOCKED-MISSING-RECORD-BYTES", "after": "0ab0accb2711da0661a97b437ccf2d15cc64b123ec3c28d93e6944ec0640e6fc", "authority": "Design section 5.1, \"final LF. Its detached `<file>.sha256\"; copied from the committed InstrumentRecord provenance.source_sha256 member."},
-    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest", "before": "BLOCKED-MISSING-RECORD-BYTES", "after": "aa4eaa939a83af1faa768eed82a2cd0216c26fccfb335240d05c5b1f7069d26d", "authority": "Design section 5.1, \"final LF. Its detached `<file>.sha256\",Design section 5.1, \"required final LF. Its detached\",Design section 22.1, \"superseded. For RULE2-08-RED, `cost_schedule_id` is\"; recomputed from the committed schedule bytes and matched the detached sidecar."}
+    {"pointer": "/RESULT_SURFACE/run_manifest/funding_schedule_digest", "before": "BLOCKED-MISSING-RECORD-BYTES", "after": "218aa518fec19ca53430891c8b445b6fba27d58c57aeaa0e5c819ec4e9ab9e73", "authority": "Design section 5.1, \"final LF. Its detached `<file>.sha256\",Design section 5.1, \"required final LF. Its detached\",Design section 22.1, \"superseded. For RULE2-08-RED, `cost_schedule_id` is\"; recomputed from the committed schedule bytes and matched the detached sidecar."}
   ],
   "w348_admitted_members": [
     {"pointer": "/RESULT_SURFACE/run_manifest/cost_schedule_digest", "value": "040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe", "authority": "Design section 23.4, \"144's by-reference id-and-sha binding\"; lower-case SHA-256 recomputed from the committed SYNTH-COST-RULE2-07-GREEN-V1 record bytes and matched to its detached sidecar and the sealed input."}

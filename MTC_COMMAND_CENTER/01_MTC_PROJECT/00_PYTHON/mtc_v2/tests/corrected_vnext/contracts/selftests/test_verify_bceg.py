@@ -2258,10 +2258,10 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
         # (decision 154) moved every expected path. This assertion's job is to pin whatever the
         # CURRENT re-anchored declaration says. G2 moved it from the 04067aa1 production-fix
         # commit to e5d70cd6, which also carries the full probe/catalog cascade; the owner's
-        # decision-134 authorization is untouched. The R29 forward repin moved it again, from the
-        # re-seal #28 commit f6790517 to the re-seal #29 commit 94a0a568, which carries the nine
-        # re-derived kernel probe copies and the catalog pins that came with them.
-        "94a0a568f5257f04940de28fc984ac893af3753a"
+        # decision-134 authorization is untouched. The R30 forward repin moved it again, from the
+        # re-seal #29 commit 94a0a568 to the re-seal #30 commit 0c01b350, which carries the nine
+        # re-derived kernel probe copies and the catalog pins that came with the oracle_price rename.
+        "0c01b350dc72c953fdac07214ecc15208e0a2536"
     )
     assert record["exceptions"][0]["owner_decision"] == 134
     assert record["exceptions"][0]["lane_ids"] == [
