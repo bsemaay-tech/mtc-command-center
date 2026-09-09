@@ -173,10 +173,38 @@ python check_review_report.py --packet <packet dir> <report.md>
 | attempt 7 — the report that reached PASS while reading the wrong tree | **REJECTED**, exit 1: *"never cites CAND/, PRIOR/ or KERNEL_BOOKKEEPING/"* and *"10 citation(s) point at the live (stale) checkout"* |
 | attempt 9 — the review actually accepted into receipt #30 | **ACCEPTED**, exit 0, 14 packet-tree citations |
 
-It discriminates on **behaviour** — whether the report cites the mirrored trees the bytes live in —
-not on any literal string, so rewording a report cannot satisfy it. Attempt 7's *line numbers were
-correct*, because they came from the diff's hunk headers rather than from reading any file; "the
-numbers are right" therefore proves nothing, and the checker deliberately does not rely on it.
+### What this checker does NOT establish — read this before relying on it
+
+An earlier draft of this section claimed the checker *"discriminates on behaviour … so rewording a
+report cannot satisfy it."* **That claim is false and is withdrawn.**
+
+It was tested by an independent auditor on 2026-09-09. Attempt 7's report was taken and **one
+mechanical substitution applied to citation format only** — `file:///C:/LAB/…/` rewritten to `CAND/`,
+two lines changed, every claim, verdict, line number and word of prose byte-identical. The checker
+**accepted it, exit 0.**
+
+The reason is structural, not a tuning problem:
+
+- the packet-tree check is `re.findall(r"\b(?:CAND|PRIOR|KERNEL_BOOKKEEPING)/", text)` — **a single
+  occurrence of `CAND/` anywhere in the prose satisfies it**;
+- the stale-checkout check is a regex on `file:///C:/LAB/…`, which disappears when the URLs are
+  rewritten;
+- **the path-resolution check cannot detect a stale read by construction** — a stale tree has the
+  *same paths* as a fresh one, which is what staleness is;
+- the `path:line` check compares against the **packet** copy, not the tree the reviewer read, so
+  attempt 7's `results.py:629-644` passes against the 1071-line packet copy even though the 185-line
+  tree it actually read makes that citation impossible.
+
+**So the checker detects the citation *pattern* attempt 7 used. It does not establish that a reviewer
+read the packet.** Treat a pass as "no disqualifying citation pattern found", never as evidence of a
+real read. R6 is **assisted**, not mechanised, and the human check it describes still has to happen.
+
+What it does catch, and is worth keeping for: the `file:///` stale-checkout habit, unparseable verdict
+blocks, `CHANGED` items, and genuinely **invented** paths that resolve nowhere in the packet.
+
+Note also that attempt 7's *line numbers were correct*, because they came from the diff's hunk headers
+rather than from reading any file. "The numbers are right" proves nothing — and this checker's
+`path:line` check should not be read as proving it either.
 
 ---
 
