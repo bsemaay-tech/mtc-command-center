@@ -1154,7 +1154,7 @@
    "at": "2026-09-08T11:34:12+03:00",
    "actor": "Lead (claude-opus-5), re-seal #29 candidate",
    "old_EXPECTED_SEAL_SHA": "a68868b662fc1a82fe1b4b18d48b757a41e6a17ff31b2a2c5ed66c8d05c73405",
-   "new_EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
+   "new_EXPECTED_SEAL_SHA": "e37d1c9db138bdb4d35bd30c30ee8e1376247374f0dd8269bff24df038514edd",
    "files_changed": [
     "scenario_catalog.json"
    ],
