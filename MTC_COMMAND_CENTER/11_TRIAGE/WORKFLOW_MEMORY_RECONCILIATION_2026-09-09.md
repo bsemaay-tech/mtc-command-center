@@ -1,6 +1,6 @@
 # Workflow and memory reconciliation — 2026-09-09
 
-Status: implementation candidate; independent governance acceptance and integration pending.
+Status: upstream integration in progress; refreshed exact T0 review required; not accepted or merged.
 
 ## Authorized scope
 
@@ -44,6 +44,21 @@ The requested cheap harness returned HTTP 402 before writing. Other cheap routes
 quota/cap errors in this session. Bounded fallback workers have disjoint file ownership; no new
 credit purchase, provider switch or credential change is authorized by this task.
 
+## Review and integration authorization
+
+The owner said “Go” for this task only: Codex may launch the required Claude review despite the
+normal Codex-to-Claude child prohibition, and may merge PR #167 only after every existing exact T0,
+Gemini, Lead-reproduction, conflict-integration, current-head check, and protected-CI condition
+passes. This is no audit waiver or substitution.
+
+R1 on original `fbee121a` returned Claude PASS-WITH-NITS. Sol failed required Python execution and
+timed out at 900 seconds without an accepting verdict. Gemini's guard rejected concurrent foreign
+`FETCH_HEAD` activity. All R1 processes stopped; the corrected integrated head needs fresh T0 review.
+Upstream `89fa1de0` from PR #168 changed the shared `SESSION_LOCK.md`; its P012 release and both
+ownership notices are preserved byte-exact during integration. PR #168 also merges re-seal #30;
+`MTC_COMMAND_CENTER/04_REPORTS/ai_handoffs/WP_P012_R30_LEAD_ACCEPTANCE.md` clears only R1–R4 and
+leaves R5–R7 as the untouched package-acceptance body. Whole WP-P0-12 is not accepted.
+
 ## Verification contract
 
 Inspect the exact diff; measure old/new startup bytes; verify all tracked memory paths have a
@@ -83,14 +98,17 @@ candidate's existing T0 review and protected integration have actually completed
 
 Raw checks and the rerunnable advisory checker are in the local task evidence directory:
 `C:/Users/BarışSemaay/Documents/Codex/2026-09-08/me/work/workflow-memory-20260909/`.
-Run `python verify-workflow.py --root C:/WF_MEMORY_20260909 --out WORKFLOW_CHECKS_FINAL.json`
-from that directory. The reproduced local run used Python 3.14.2, Git 2.52.0.windows.1 and
+Run `python verify-workflow-integration.py --root C:/WF_MEMORY_20260909 --out INTEGRATION_CHECKS.json`
+from that directory. It preserves original `e69c7d7` evidence while attributing this PR's scope
+against upstream `89fa1de0`; the original checker and its results remain as R1 history. Its
+additional negative controls detect a changed upstream archive or unresolved ownership row.
+The reproduced local runs used Python 3.14.2, Git 2.52.0.windows.1 and
 PowerShell 7.6.5, checked directly on 2026-09-09; its exit code was 0.
 
 This local recipe does not replace the required current-head Python 3.12 Bridge CI check.
 
-NEXT ACTION: required independent T0 review of this frozen candidate, then authorized protected
-integration with current-head Bridge CI. This record is not an accepting verdict.
-WAITING FOR OWNER: No implementation decision is outstanding. If a Codex-led Claude child review
-is desired, it needs an explicit scoped exception to the governance stage's existing prohibition;
-otherwise a Claude-led task can perform that required review. Merge authority remains separate.
+NEXT ACTION: parent stages the five owned integration paths, finalizes the integrated candidate,
+runs current-head checks, and obtains refreshed exact T0 review. Merge PR #167 only after every
+existing review, Lead-reproduction, conflict-integration, and protected-CI condition passes.
+WAITING FOR OWNER: Nothing. Review and conditional merge are task-authorized; the candidate remains
+unaccepted and unmerged.

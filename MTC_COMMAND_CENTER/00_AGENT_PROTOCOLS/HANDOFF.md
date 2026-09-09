@@ -1,45 +1,50 @@
 # Governance stage handoff
 
-## [Codex implementation candidate] 2026-09-09 — compact workflow and current-state correction
+## [Codex integration candidate] 2026-09-09 — workflow and memory reconciliation
 
-Branch `feature/workflow-memory-20260909`, worktree `C:\WF_MEMORY_20260909`, base
-`e69c7d7e7462ab89f8b13521c0eafd297df67fcb`. Documentation/policy candidate only; no product,
-runtime, host, credential, backtest, schema, trading, or frozen-package changes. The parent Lead
-owns integration and independent verification. This T0 governance edit has no accepting verdict
-or waiver; local self-checks cannot accept it.
+Branch `feature/workflow-memory-20260909`; worktree `C:\WF_MEMORY_20260909`; original base
+`e69c7d7e7462ab89f8b13521c0eafd297df67fcb`; original review target
+`fbee121a53aa6fed53fddf2788ed14bd3cc7ea38`. Upstream
+`89fa1de0315bdfc9199233b10ced2a707223b4e7` from PR #168 is being integrated.
+Documentation/policy only: no product, runtime, host, credential, backtest, schema, trading,
+or frozen-package change belongs to this lane.
 
-Startup now uses root essentials, the map and one stage AGENTS, with task-triggered reads.
-`REVIEW_POLICY.md` holds classification/review rules. Seven gates may share one brief; factual
-G7 progress is allowed before acceptance. Exact protected audits, evidence and CI remain required.
-Original edited files are byte-exact under `../_AI_MEMORY/history/workflow-20260909/policy__*`.
+The candidate reduces mandatory startup context, centralizes review classification, preserves
+all 80 original memory paths, and keeps byte-exact archives of materially shortened records.
+Local routing, archive, link, negative-fixture, deterministic index, CLI handoff-helper, and
+repository-guard checks passed. Full evidence and limits are in
+`../11_TRIAGE/WORKFLOW_MEMORY_RECONCILIATION_2026-09-09.md`.
 
-Lead verification completed locally: all 80 original memory paths accounted for; 13 existing
-history files unchanged; archive content, four older unresolved ownership rows, all eight routing
-budgets and current local pointers checked. The existing CLI handoff helper and negative document
-fixtures passed. Repository guard passed; no product code or planned package changed. Full coverage
-and limitations: `../11_TRIAGE/WORKFLOW_MEMORY_RECONCILIATION_2026-09-09.md`.
+### Review and integration status
 
-### P012/P020 boundary — checked source presence, not package acceptance
+The owner said “Go”, authorizing only this task's Codex-led launch of the required Claude review
+and conditional merge of PR #167. R1 on original `fbee121a` returned Claude PASS-WITH-NITS; Sol
+failed required Python execution and timed out at 900 seconds without an accepting verdict;
+Gemini's guard rejected concurrent foreign `FETCH_HEAD` activity. All R1 processes stopped.
+The corrected integrated head needs fresh exact T0 review.
 
-- PR #164 merge `ef29f7e1` is in this base's history. Its imported P012 source and
-  `01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/` contracts are present; core `config.py`
-  contains `CORRECTED_VNEXT_CONFIG_KEYS`. The earlier "source absent; import Windows packet"
-  explanation below the old handoff is superseded. Recheck actual refs/tree before resuming.
-- Import and owner-ratified re-seal #29 do not accept all WP-P0-12. Per `OD-20260908-1`, production
-  Item 4 remains `NONE_KEEP_REFUSED`, all ten Section-19 rows remain OPEN/APPLICABLE, and the
-  `P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1` boundary remains. No operational authority.
-- P020 definition artifacts exist. Source presence does not complete allocator/kernel wiring,
-  REQUIRED-tier qualification, before/after comparison, throughput, dependent disposition, or
-  exact audits. Whole P020 is not accepted. Existing reports are dated evidence, not current PASS.
-- At this base, root `check_p020_acceptance.py` still contains the obsolete source-absence
-  explanation in `probe_kernel_present`. Its predicate checks the canonical simulator's import;
-  an absent import is not absent repository source. Runtime repair is outside this docs lane.
+The owner's exception waives or substitutes no T0 reviewer, mandatory Gemini corroboration,
+independent Lead reproduction, or protected current-head CI. PR #167 is not accepted or merged.
 
-NEXT ACTION: obtain required exact T0 review before accepting this verified documentation candidate,
-then complete authorized protected integration with current-head Bridge CI. For P020,
-inspect actual integration/qualification gaps under its own approved scope, not another import.
-WAITING FOR OWNER: implementation is complete. A Codex-led Claude child review needs an explicit
-exception to the existing governance prohibition, or a Claude-led task can perform that required
-review. Merge authority remains separate. No audit slot has been waived or silently substituted.
+Upstream and this branch shared one changed path: `_AI_MEMORY/SESSION_LOCK.md`. Resolution preserves
+upstream's owner release of P012 re-seal #22, original claim, and both ownership notices byte-exact
+at `../_AI_MEMORY/history/workflow-20260909/SESSION_LOCK_UPSTREAM_89fa1de.md`; retains the original
+`e69c7d7` archive; and keeps the three unresolved RP7/SEC102/Audit-2 claims verbatim. No current
+liveness or successor-lane release is inferred from the dated upstream record.
 
-Earlier governance handoff: `../_AI_MEMORY/history/workflow-20260909/policy__MTC_COMMAND_CENTER__00_AGENT_PROTOCOLS__HANDOFF.md`.
+### P012/P020 boundary
+
+PR #164 imported corrected-vNext source, but source presence and re-seal #29 do not accept all
+WP-P0-12. Upstream PR #168 merges re-seal #30; its
+`../04_REPORTS/ai_handoffs/WP_P012_R30_LEAD_ACCEPTANCE.md` clears R1–R4 only, while R5–R7 remain
+the untouched WP-P0-12 acceptance body. Whole P012 is not accepted. Production Item 4 remains
+`NONE_KEEP_REFUSED`, all ten Section-19 rows remain OPEN/APPLICABLE, and the synthetic
+non-production boundary remains. P020 artifacts exist, but allocator/kernel wiring, REQUIRED-tier
+qualification, comparisons, throughput, dependent disposition, and exact audits remain incomplete;
+whole P020 is not accepted.
+
+NEXT ACTION: parent stages the five owned integration paths, finalizes the integration candidate,
+runs current-head checks, and obtains refreshed exact T0 review. Merge PR #167 only after every
+existing review, Lead-reproduction, conflict-integration, and protected-CI condition passes.
+WAITING FOR OWNER: Nothing. Review and conditional merge are task-authorized; acceptance, audit
+substitution, product/runtime authority, and live operations are not.

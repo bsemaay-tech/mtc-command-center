@@ -951,11 +951,11 @@ intent, so §3's fill-only slippage sequence is not entered and no `CostSchedule
 
 Sealed `funding_events[0]` fields, all from the vector and the §14 field list at `Design section 14, "sequence, funding_event_id, event_timestamp, lifecycle_id, position_side,"`:
 `sequence 0`, `funding_event_id "TEST-FUND-1"`, `event_timestamp "2000-01-01T00:00:00Z"`,
-`lifecycle_id 1`, `position_side "LONG"`, `open_qty 1`, `contract_multiplier 1`, `mark_price 100`,
+`lifecycle_id 1`, `position_side "LONG"`, `open_qty 1`, `contract_multiplier 1`, `oracle_price 100`,
 `raw_rate 0.001`, `positive_rate_payer "LONG"`, `long_cashflow_rate -0.001`, `notional 100`,
 `funding_cash_delta -0.1`, `cumulative_funding -0.1`, `cash_event_id "CE-FUND-0"`. Float nodes:
 `raw_rate`, `long_cashflow_rate`, `funding_cash_delta`, `cumulative_funding`, equity. Integer nodes:
-`sequence`, `lifecycle_id`, `open_qty`, `contract_multiplier`, `mark_price`, `notional`.
+`sequence`, `lifecycle_id`, `open_qty`, `contract_multiplier`, `oracle_price`, `notional`.
 `schedule_id`, `schedule_digest` and `source_event_digest` are `BLOCKED-MISSING-RECORD-BYTES`.
 
 Guard outcome (design `Design section 14, "outcomes follow the sourced OPEN-10"` "Guard outcomes follow the sourced OPEN-10 decision and are explicit
@@ -1722,7 +1722,7 @@ The funding arithmetic is unchanged and re-verified: `notional = abs(100 * 1 * 1
 `long_cashflow_rate = -0.001`, `funding_cash_delta = 100 * (-0.001) * (+1) = -0.1`,
 `equity 1000 + (-0.1) = 999.9` (§0.6 already proved both tokens exact).
 
-`mark_price_source = "SPOT_ORACLE"` is a member of the schedule's event object (`Design section 22.3, "and LONG-pays-positive convention, and contains"`), not of
+`oracle_price_source = "SPOT_ORACLE"` is a member of the schedule's event object (`Design section 22.3, "and LONG-pays-positive convention, and contains"`), not of
 the design `Design section 14, "are read from the frozen"` `funding_events[]` row field list, so it is **not** added as a surface node.
 
 Filled: `decision_events/1/position_snapshot_rule`, `funding_events/0/schedule_id`,
@@ -3266,7 +3266,7 @@ final_position, trades, equity_curve, cumulative_funding, metrics, warnings, ref
 (`consecutive_loss_count 0`) plus two cells that were already `BLOCKED-MISSING-SCENARIO-INPUT`; no
 money figure, rate, quantity, price or equity token was inside it, and nothing outside it was derived
 from it. Byte-identical after the removal: `notional 100`, `raw_rate 0.001`,
-`long_cashflow_rate -0.001`, `funding_cash_delta -0.1`, `cumulative_funding -0.1`, `mark_price 100`,
+`long_cashflow_rate -0.001`, `funding_cash_delta -0.1`, `cumulative_funding -0.1`, `oracle_price 100`,
 `final_position` `LONG` / `1` / `100`, and `equity_curve` `1000` / `999.9`.
 
 ### W-4 The cascade, stated in full rather than absorbed
@@ -5067,7 +5067,7 @@ clean). Every recomputed record hash matched its one-line sidecar.
 |---|---|---|
 | instruments/SYNTH-INSTRUMENT-RULE2-08-RED-V1.json | 1316ce06307a6fbf01fa7c007146df2bf7525bed385fbbf0045d29129d9f7a71 | RED instrument_record_digest; marker replaced |
 | instruments/SYNTH-INSTRUMENT-RULE2-08-GREEN-V1.json | 20adf2749d255efd3fe281ec3ead2e07df0a36a5ad59718a54d0a1a7c0712b17 | GREEN instrument_record_digest; marker replaced |
-| funding/SYNTH-FUNDING-RULE2-08-V1.json | aa4eaa939a83af1faa768eed82a2cd0216c26fccfb335240d05c5b1f7069d26d | RED funding row schedule_digest and both manifest funding_schedule_digest nodes; markers replaced |
+| funding/SYNTH-FUNDING-RULE2-08-V1.json | 218aa518fec19ca53430891c8b445b6fba27d58c57aeaa0e5c819ec4e9ab9e73 | RED funding row schedule_digest and both manifest funding_schedule_digest nodes; markers replaced |
 | costs/SYNTH-COST-RULE2-07-RED-V1.json | 806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b | Confirms RED decision-144 cost binding at Design section 14, "sha256 `040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe`), bound BY REFERENCE to the existing sealed RULE2-07 cost records under" and Design section 22.1, "members are JSON `null` only for RULE2-08, where section"; proposed run-manifest child stopped below |
 | costs/SYNTH-COST-RULE2-07-GREEN-V1.json | 040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe | Confirms GREEN decision-144 cost binding at Design section 14, "sha256 `040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe`), bound BY REFERENCE to the existing sealed RULE2-07 cost records under" and Design section 22.1, "members are JSON `null` only for RULE2-08, where section"; proposed run-manifest child stopped below |
 

@@ -6,8 +6,8 @@
     "funding_event_id",
     "raw_rate",
     "positive_rate_payer",
-    "mark_price",
-    "mark_price_source",
+    "oracle_price",
+    "oracle_price_source",
     "provenance",
     "source_event_digest"
   ],
@@ -43,7 +43,7 @@
     "effective_interval",
     "events[].event_timestamp",
     "events[].funding_event_id",
-    "events[].mark_price",
+    "events[].oracle_price",
     "events[].provenance",
     "events[].raw_rate",
     "events[].source_event_digest"

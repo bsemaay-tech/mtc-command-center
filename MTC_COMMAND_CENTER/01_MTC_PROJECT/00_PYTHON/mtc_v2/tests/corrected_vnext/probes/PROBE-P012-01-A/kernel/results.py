@@ -629,7 +629,7 @@ def _funding_surface(
     numeric = {
         "open_qty",
         "contract_multiplier",
-        "mark_price",
+        "oracle_price",
         "raw_rate",
         "long_cashflow_rate",
         "notional",
@@ -642,7 +642,7 @@ def _funding_surface(
         "position_side",
         "open_qty",
         "contract_multiplier",
-        "mark_price",
+        "oracle_price",
         "raw_rate",
         "positive_rate_payer",
         "long_cashflow_rate",
