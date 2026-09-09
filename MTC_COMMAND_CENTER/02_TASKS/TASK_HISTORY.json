@@ -162,6 +162,15 @@
       "created_by": "owner (Baris), recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
       "summary": "Owner authorised a fourth WP-P0-12 re-seal #30 repair round beyond the cap of 3, after T0 round 3 returned BLOCK from both flagship auditors. Scope as put to him and approved: (a) correct CONTRACT_TABLES_MANIFEST.json seal_state.IMPLEMENTATION_BASE_SHA, which records re-seal #29 commit 94a0a568 while seal and the anchor record #30 commit 0c01b350; and (b) add a Lead-attributed additive restatement of the Item-4 field inventory in semantic_coverage_review.json, which names mark_price and mark_price_source in the present tense although the certified commit d06aa741 already read oracle_price and oracle_price_source. Owner free text, verbatim and unedited: \"yes and dont ask this again\". The owner separately delegated to the Lead the ruling on whether the policy category Canonical feature contracts covers mtc_v2/tests/corrected_vnext/contracts/; the Lead ruled that it does. The cap was raised by the owner, not reset by the Lead. The three earlier re-seal #30 commits are deliberately NOT retro-stamped with this trailer.",
       "report_path": "04_REPORTS/ai_handoffs/WP_P012_R30_REPAIR4_PATCH_PLAN.md"
+    },
+    {
+      "event_id": "HIST-2026-0019",
+      "task_id": "WP-P012-R30-REPAIR4",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-09T20:05:00+03:00",
+      "created_by": "owner (Baris) confirmation, recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
+      "summary": "Owner confirmation of the WP-P012-R30-REPAIR4 approval scope, requested because both flagship T0 auditors independently graded the provenance unverifiable: the only owner-attributable text in event HIST-2026-0018 was seven quoted words, and the scope, the policy delegation and the non-retro-stamp decision were Lead-authored narrative in the same event that benefits from the approval. The question put to the owner, verbatim: \"Is the approval record accurate? It says you authorized a 4th repair round covering exactly two fixes (the seal_state field, and the receipt restatement), and separately delegated the protected-paths interpretation to me.\" The owner selected the offered option labelled \"Yes, that is accurate\" from three options; he typed no free text, and no quotation is attributed to him. The other two options offered were \"Accurate, but I did not delegate policy\" and \"I want to see exactly what I was asked\", so the confirmation was made against a real alternative that would have withdrawn the policy delegation. This event records the primary context the auditors said was missing. It does not close audit findings about the three earlier commits, which remain unstamped and outside this approval.",
+      "report_path": "04_REPORTS/ai_handoffs/WP_P012_R30_REPAIR4_PATCH_PLAN.md"
     }
   ]
 }
