@@ -174,3 +174,48 @@ Later the same day (11:00-11:55): P030 rounds 3-5 - Claude Pro Opus xhigh x3 (ex
 | Gemini 3.7 | P021 v2.1 corroboration probe | 429 (shared quota) | Same pool as 3.8 |
 
 Lessons carried to memory `route-lessons-2026-09-06-afternoon`: watcher covers `.git`; never git-write in any canonical worktree during a Gemini wave; probe pins hash git's on-disk CRLF form; Codex-lane launcher `git status`es every declared read root; a monitor-only turn can idle for hours (17:00-19:00 lost).
+## 2026-09-09 (Lead: Claude Opus 5, session `tradingview-lab-clean-c1`, 10:50-18:20) - route assessments
+
+Covers **this session only**. The 2026-09-07 and 2026-09-08 rows are still missing; those sessions'
+measurements live in `C:\tmp\P012_GEMINI_ROUTE_DEFECT_20260908.md` and the memory notes
+`route-lessons-2026-09-07-evening` / `route-lessons-2026-09-08`. They are deliberately not
+reconstructed here - a route assessment written from someone else's summary is not a measurement.
+
+| Route / model | Used for | Measured | Assessment |
+|---|---|---|---|
+| Claude Max `claude-opus-5` (`Invoke-ClaudeMax.ps1`, `-p` + `--output-format json`) | WP-P0-12 re-seal #30 T0 rounds 2 and 3 | Round 2: REQUEST_CHANGES in 12.5 min, 83 turns, $5.33, 4.60M cache-read tokens. Ran the gate itself, recomputed the seal from disk, found F6. **3 permission denials**, one of them `git log`/`git show` on the very commits under audit | Strongest auditor available; it corrected the Lead twice in two rounds. Default permissions degrade it - grant tools and bracket the run with a clone integrity check instead. Output is a JSON envelope **with a UTF-8 BOM**: read `encoding='utf-8-sig'` and pull `result` |
+| Codex `free` (.codex_OLD) `gpt-5.6-sol` xhigh, `--sandbox workspace-write` | same, T0 rounds 2 and 3 | Round 2: REQUEST_CHANGES in ~46 min, 2.27 MB log, 548k tokens; produced its own gate receipt, which its round-1 sandbox had denied | Workhorse and the only Sol+exec account. Round-1 BLOCK was **environmental only**: cwd `C:\tmp`, `TEMP`/`TMP` -> `C:\tmp\P012_SOL_TEMP`, and `--skip-git-repo-check` (required outside a git repo) fixed it |
+| Codex `free` auth | probe | `login status` -> "Logged in using ChatGPT", exit 0. Successful runs still log `401 token_expired` against `/backend-api/codex/models` and the responses websocket | **Those 401s are not a failure signal.** They appear at the head of completed runs; do not abort a lane on them |
+| Gemini 3.7 / 3.8 | not run this session | - | The mandatory 3.7 T0 corroboration for re-seal #30 has still never run |
+
+### Route defect found and fixed today: `*>` + `$ErrorActionPreference = 'Stop'` kills a Codex lane
+
+`SOL_LANE.ps1` runs `& $helper -Account $Account @codexArgs *> $out` in a script that sets
+`$ErrorActionPreference = 'Stop'`. PowerShell 5.1 wraps a native command's stderr into an ErrorRecord
+(`NativeCommandError`), and Codex's **normal** startup line `Reading additional input from stdin...`
+is stderr. Under `Stop` that first line becomes a terminating error, so the lane dies in ~4 s having
+written only 474 bytes and no Codex banner - before the model is contacted at all.
+
+Two traps inside the trap:
+
+1. That stderr line **looks like** the failure and is not. It is present at the top of the
+   *successful* round-2 run too.
+2. The natural suspect - a newly added flag, here `--skip-git-repo-check` - was innocent. The
+   identical argument array run **inline** returns exit 0 with the prompt correctly bound.
+
+This explains the historical record: `SOL_LANE.ps1` failed on 3 of its 4 round-1 attempts (471-514
+byte outputs), and no round-2 launcher script exists on disk because that round was run inline.
+**Fix: run the helper inline with `$ErrorActionPreference = 'Continue'`, or do not use `*>`.**
+
+### Other measured route facts
+
+- **This build has no `SendMessage` tool.** `ListAgents` lists peers but they cannot be contacted.
+  Two Lead sessions worked WP-P0-12 in parallel today and independently produced the same repair;
+  the collision was resolved by asking the owner, which is the only channel available.
+- **`C:\P012BATCH` and `C:\WLDOCS` are worktrees of the canonical repo** (`.git` is a `gitdir:`
+  pointer). Any git write in either reaches canonical's object store, so both are unsafe while a
+  Gemini lane is running. A real clone such as `C:\tmp\P012_FRESH30` is not.
+- **Reproducibility technique.** To prove a gate result is genuinely reproducible rather than quoted:
+  run it in a second, independent clone, then normalise the clone path out of both receipts and
+  compare bytes. The Lead receipt and the Opus auditor's receipt both hashed to `b83161e9...`.
+- The Bash tool mangles Windows-path backslashes inside `python -c`; put such checks in a script file.
