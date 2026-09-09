@@ -117,3 +117,29 @@ Results go in `WP_P012_R30_REPAIR5_VERIFICATION_REPORT.md`, written **in the sam
 - The **absent fail-closed schema validator** over all declared manifest fields, which all three
   reviewers identify as the actual fix for this whole defect family. Harness change, protected scope,
   needs the owner.
+
+---
+
+## 7. CORRECTION, added 2026-09-09 22:00 by the Lead
+
+**Section 2's claim that the predicate "tests the contradiction rather than any replacement wording,
+so it cannot be satisfied by phrasing" is FALSE, and is withdrawn.**
+
+Both flagship auditors measured it independently in round 5. `still_pending` is a single literal
+substring test for `'NONACCEPTED until forward repin F30'`. Rewording the *unrepaired* text — Opus
+used `until` → `pending`, Sol used *"NONACCEPTED pending completion of forward repin F30"* — flips the
+predicate GREEN with the contradiction fully intact. Both graded it a NIT because the replacement
+actually applied is independently true, but the claim about the predicate was wrong.
+
+A correct predicate would compare the two fields semantically, or assert the absence of any
+pending-condition phrasing, rather than matching one literal string.
+
+The RED→GREEN result in §2 still stands: the predicate did fail on the real unrepaired state and pass
+on the repaired one. What it does not have is the immunity to rewording that was claimed for it.
+
+**A second false statement from this session is corrected in `TASK_HISTORY` event HIST-2026-0022:**
+the claim that the gate never reads the design version string. It does —
+`verify_bceg.py:503` extracts it from line 1, `:66-74` lists `design_version` as a content identity
+key, and `:650-654` refuses when it differs from the receipt. That false statement is what the owner's
+deferral in HIST-2026-0021 was granted on; it has since been superseded by the overrule in
+HIST-2026-0023.
