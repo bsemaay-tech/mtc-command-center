@@ -1,50 +1,53 @@
 # Governance stage handoff
 
-## [Codex integration candidate] 2026-09-09 — workflow and memory reconciliation
+## [DOCUMENTATION REVIEW ACCEPTED; PROTECTED INTEGRATION CONDITIONAL] 2026-09-09
 
-Branch `feature/workflow-memory-20260909`; worktree `C:\WF_MEMORY_20260909`; original base
-`e69c7d7e7462ab89f8b13521c0eafd297df67fcb`; original review target
-`fbee121a53aa6fed53fddf2788ed14bd3cc7ea38`. Upstream
-`89fa1de0315bdfc9199233b10ced2a707223b4e7` from PR #168 is being integrated.
-Documentation/policy only: no product, runtime, host, credential, backtest, schema, trading,
-or frozen-package change belongs to this lane.
+Branch `feature/workflow-memory-20260909`; worktree `C:\WF_MEMORY_20260909`; reviewed head
+`37e22db0cf7a01a047d153d0604f34f4451f72d1`; base
+`89fa1de0315bdfc9199233b10ced2a707223b4e7`. At `2026-09-09T20:33:50Z`, the Lead accepted
+the independent documentation/governance review only. Protected integration is tracked by PR #167;
+activation requires the merged PR and protected CI on its final head. Verify current integration
+status there. Product, runtime, package, host, credential, backtest, schema, trading, deployment
+and economic status are unchanged.
 
-The candidate reduces mandatory startup context, centralizes review classification, preserves
-all 80 original memory paths, and keeps byte-exact archives of materially shortened records.
-Local routing, archive, link, negative-fixture, deterministic index, CLI handoff-helper, and
-repository-guard checks passed. Full evidence and limits are in
-`../11_TRIAGE/WORKFLOW_MEMORY_RECONCILIATION_2026-09-09.md`.
+The candidate shortens mandatory startup context, centralizes review classification and accounts
+for all 80 original memory paths. Preserved Git content identity is verified. Raw-before-copy
+digests are unavailable for two disclosed records, so raw byte identity is not retrospectively
+claimed for them; other pinned archives retain their recorded byte evidence. Upstream PR #168 was
+integrated without changing its 117 product blobs. The shared `SESSION_LOCK.md` resolution keeps
+the exact upstream archive and the three unresolved RP7/SEC102/Audit-2 rows verbatim.
 
-### Review and integration status
+### Review and evidence
 
-The owner said “Go”, authorizing only this task's Codex-led launch of the required Claude review
-and conditional merge of PR #167. R1 on original `fbee121a` returned Claude PASS-WITH-NITS; Sol
-failed required Python execution and timed out at 900 seconds without an accepting verdict;
-Gemini's guard rejected concurrent foreign `FETCH_HEAD` activity. All R1 processes stopped.
-The corrected integrated head needs fresh exact T0 review.
+All reviewers received external `REVIEW_PACKET_R4.md` at SHA-256
+`6398e9d96282c98f8cac48827a668addff93237448df894cd9bf35f9f2692b63` for source `37e22db0`.
+Exact `claude-opus-5` xhigh returned PASS-WITH-NITS in 178.4 seconds; both nits were optional and
+already disclosed. Exact `gpt-5.6-sol` xhigh returned PASS with no findings in 574.1 seconds.
+Mandatory `gemini-3.7-flash-high` returned guarded SUCCESS and PASS in 183.6 seconds with its
+required `SUPPLEMENTAL_UNEXECUTED` status. Canonical-checkout URLs in that report are presentation,
+not current-source evidence; the literal frozen packet was reviewed. The Lead independently
+returned `ACCEPTED_DOCUMENTATION_REVIEW_ONLY` after matching 92/92 source hashes and reproducing
+the actual portable checker with all eight controls, index check, repository guard and diff checks.
 
-The owner's exception waives or substitutes no T0 reviewer, mandatory Gemini corroboration,
-independent Lead reproduction, or protected current-head CI. PR #167 is not accepted or merged.
+Evidence is in the external task root named by the reconciliation report:
+`CLAUDE_REVIEW_R4.md`, `SOL_REVIEW_R4.md`, `GEMINI_REVIEW_R4.md`, and `LEAD_REVIEW_R4.json`.
+Earlier attempts remain dated evidence: R1 Claude PASS-WITH-NITS while Sol timed out without a
+verdict and Gemini's guard rejected foreign activity; R2 was cancelled for a stale index row; R3
+Sol was blocked by elevated-sandbox error 1326. R4 used the unelevated external workspace and a
+UUID scratch directory; the scratch-only portability diff and prior checker remain external.
 
-Upstream and this branch shared one changed path: `_AI_MEMORY/SESSION_LOCK.md`. Resolution preserves
-upstream's owner release of P012 re-seal #22, original claim, and both ownership notices byte-exact
-at `../_AI_MEMORY/history/workflow-20260909/SESSION_LOCK_UPSTREAM_89fa1de.md`; retains the original
-`e69c7d7` archive; and keeps the three unresolved RP7/SEC102/Audit-2 claims verbatim. No current
-liveness or successor-lane release is inferred from the dated upstream record.
+Bridge, Research and Pine CI were green on reviewed head `37e22db0`. This factual G7 closeout changes
+only this handoff, the reconciliation report, the current workflow introduction/row in
+`SESSION_LOCK.md`, and deterministic `11_TRIAGE/INDEX.md`. Reviewed normative hashes remain
+unchanged. Protected CI is required again on the final closeout head before activation or merge.
 
-### P012/P020 boundary
+### Package boundary
 
-PR #164 imported corrected-vNext source, but source presence and re-seal #29 do not accept all
-WP-P0-12. Upstream PR #168 merges re-seal #30; its
-`../04_REPORTS/ai_handoffs/WP_P012_R30_LEAD_ACCEPTANCE.md` clears R1–R4 only, while R5–R7 remain
-the untouched WP-P0-12 acceptance body. Whole P012 is not accepted. Production Item 4 remains
-`NONE_KEEP_REFUSED`, all ten Section-19 rows remain OPEN/APPLICABLE, and the synthetic
-non-production boundary remains. P020 artifacts exist, but allocator/kernel wiring, REQUIRED-tier
-qualification, comparisons, throughput, dependent disposition, and exact audits remain incomplete;
-whole P020 is not accepted.
+PR #168 re-seal #30 clears P012 R1–R4 only. R5–R7 and whole WP-P0-12 remain unaccepted. P020
+remains unaccepted pending its existing wiring, qualification, evidence and audit work. PR #167
+review or integration does not change those product statuses or grant operational authority.
 
-NEXT ACTION: parent stages the five owned integration paths, finalizes the integration candidate,
-runs current-head checks, and obtains refreshed exact T0 review. Merge PR #167 only after every
-existing review, Lead-reproduction, conflict-integration, and protected-CI condition passes.
-WAITING FOR OWNER: Nothing. Review and conditional merge are task-authorized; acceptance, audit
-substitution, product/runtime authority, and live operations are not.
+NEXT ACTION: complete and verify PR #167's protected merge and final-head CI, then resume the
+existing P012 scope and contract.
+WAITING FOR OWNER: Nothing. Conditional merge is authorized; its protected integration conditions
+remain binding.

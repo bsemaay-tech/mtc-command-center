@@ -1,6 +1,8 @@
 # Workflow and memory reconciliation — 2026-09-09
 
-Status: upstream integration in progress; refreshed exact T0 review required; not accepted or merged.
+Status: independent documentation review accepted at `2026-09-09T20:33:50Z`; protected integration
+is tracked by PR #167. Activation requires the merged PR and protected CI on its final head; verify
+current integration status there.
 
 ## Authorized scope
 
@@ -46,18 +48,28 @@ credit purchase, provider switch or credential change is authorized by this task
 
 ## Review and integration authorization
 
-The owner said “Go” for this task only: Codex may launch the required Claude review despite the
-normal Codex-to-Claude child prohibition, and may merge PR #167 only after every existing exact T0,
-Gemini, Lead-reproduction, conflict-integration, current-head check, and protected-CI condition
-passes. This is no audit waiver or substitution.
+The owner's task-only “Go” authorized Codex to launch the required Claude review and permits PR #167
+merge only after every exact T0, Gemini, Lead-reproduction, current-head and protected-CI condition
+passes. It waives or substitutes no audit.
 
-R1 on original `fbee121a` returned Claude PASS-WITH-NITS. Sol failed required Python execution and
-timed out at 900 seconds without an accepting verdict. Gemini's guard rejected concurrent foreign
-`FETCH_HEAD` activity. All R1 processes stopped; the corrected integrated head needs fresh T0 review.
+R4 reviewed clean head `37e22db0` from external packet SHA-256
+`6398e9d96282c98f8cac48827a668addff93237448df894cd9bf35f9f2692b63`.
+Claude Opus 5 xhigh returned PASS-WITH-NITS in 178.4 seconds; both nits were optional and disclosed.
+Sol 5.6 xhigh returned PASS with no findings in 574.1 seconds after executing the actual checker
+with `ok: true` and all eight controls. Gemini 3.7 Flash High returned guarded SUCCESS and PASS in
+183.6 seconds with `SUPPLEMENTAL_UNEXECUTED` status. Its canonical-checkout URLs are presentation,
+not current-source evidence. Lead `LEAD_REVIEW_R4.json` matched 92/92 source hashes, reproduced the
+required checks, and recorded `ACCEPTED_DOCUMENTATION_REVIEW_ONLY` at `2026-09-09T20:33:50Z`.
+
+Earlier attempts remain dated evidence: R1 Claude passed with optional nits while Sol timed out
+without a verdict and Gemini rejected foreign activity; R2 was cancelled for a stale index row;
+R3 Sol was blocked by elevated-sandbox error 1326. R4 used the documented unelevated external
+workspace and UUID scratch allocation. Two raw-before-copy digests remain unavailable; baseline Git
+content equality is proven, but retrospective raw-byte identity is not claimed for those two records.
+
 Upstream `89fa1de0` from PR #168 changed the shared `SESSION_LOCK.md`; its P012 release and both
-ownership notices are preserved byte-exact during integration. PR #168 also merges re-seal #30;
-`MTC_COMMAND_CENTER/04_REPORTS/ai_handoffs/WP_P012_R30_LEAD_ACCEPTANCE.md` clears only R1–R4 and
-leaves R5–R7 as the untouched package-acceptance body. Whole WP-P0-12 is not accepted.
+ownership notices remain preserved byte-exact. Re-seal #30 clears R1–R4 only; R5–R7 remain the
+untouched WP-P0-12 acceptance body. Whole WP-P0-12 is not accepted.
 
 ## Verification contract
 
@@ -107,8 +119,7 @@ PowerShell 7.6.5, checked directly on 2026-09-09; its exit code was 0.
 
 This local recipe does not replace the required current-head Python 3.12 Bridge CI check.
 
-NEXT ACTION: parent stages the five owned integration paths, finalizes the integrated candidate,
-runs current-head checks, and obtains refreshed exact T0 review. Merge PR #167 only after every
-existing review, Lead-reproduction, conflict-integration, and protected-CI condition passes.
-WAITING FOR OWNER: Nothing. Review and conditional merge are task-authorized; the candidate remains
-unaccepted and unmerged.
+NEXT ACTION: complete and verify PR #167's protected merge and final-head CI, then resume the existing
+P012 scope and contract. Whole WP-P0-12 and P020 remain
+unaccepted; other product statuses are unchanged.
+WAITING FOR OWNER: Nothing. Conditional merge is authorized; its protected integration conditions remain.
