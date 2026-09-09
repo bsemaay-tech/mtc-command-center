@@ -458,6 +458,61 @@ class WatchdogTests(unittest.TestCase):
         self.assertEqual(events[0]["id"], "feed")
         self.assertEqual(events[0]["state"], "silent")
 
+    def test_silence_bound_is_required_and_has_no_ratified_default(self):
+        """The 900-second default claimed '#39' provenance that was never ratified.
+
+        RED on the pre-fix code: argparse supplied 900.0 and the run proceeded, so no
+        SystemExit was raised. GREEN now: the bound is required and its absence errors.
+        """
+        now = utc_now()
+        self._beat("feed", now - timedelta(seconds=5000))
+        with contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit) as caught:
+                self._run_watchdog_cli([
+                    "--state-dir", str(self.state_dir),
+                    "--notifier-log", str(self.root / "alerts.jsonl"),
+                ])
+        self.assertEqual(caught.exception.code, 2)
+        source = Path("watchdog.py").read_text(encoding="utf-8")
+        self.assertNotIn("default=900.0", source)
+        self.assertNotIn("plan #39", source)
+
+    def test_alert_recovery_alert_emits_all_three_transitions_once_each(self):
+        """A recovery is a transition, not a state to stay silent about.
+
+        RED on the pre-fix code: `ok` was skipped before the ledger was written, so
+        prev_seen kept 'silent' and the SECOND alert was deduplicated away — two events,
+        no recovery. GREEN now: three events, each exactly once.
+        """
+        state_file = self.root / "dedupe.json"
+        log = self.root / "alerts.jsonl"
+        argv = ["--state-dir", str(self.state_dir), "--silence-seconds", "900",
+                "--notifier-log", str(log), "--state-file", str(state_file)]
+
+        now = utc_now()
+        self._beat("feed", now - timedelta(seconds=5000))   # silent -> alert
+        self._run_watchdog_cli(argv)
+        self._beat("feed", utc_now())                        # fresh -> recovery
+        self._run_watchdog_cli(argv)
+        self._beat("feed", utc_now() - timedelta(seconds=5000))  # silent again -> alert
+        self._run_watchdog_cli(argv)
+
+        states = [(event["id"], event["state"]) for event in self._events()]
+        self.assertEqual(states, [("feed", "silent"), ("feed", "recovered"), ("feed", "silent")])
+
+    def test_corrupt_dedupe_state_fails_safe_by_re_alerting(self):
+        """Unreadable ledger must re-alert rather than crash or silently pass."""
+        state_file = self.root / "dedupe.json"
+        log = self.root / "alerts.jsonl"
+        state_file.write_text("{ not json", encoding="utf-8")
+        self._beat("feed", utc_now() - timedelta(seconds=5000))
+        rc, _ = self._run_watchdog_cli([
+            "--state-dir", str(self.state_dir), "--silence-seconds", "900",
+            "--notifier-log", str(log), "--state-file", str(state_file),
+        ])
+        self.assertEqual(rc, 2)
+        self.assertEqual([event["state"] for event in self._events()], ["silent"])
+
 
 class NoDeleteGuaranteeTests(unittest.TestCase):
     """The no-delete guarantee is enforced by source inspection, not intent.
