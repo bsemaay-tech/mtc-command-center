@@ -1,55 +1,45 @@
 # Governance stage handoff
 
-## [Claude Lead] 2026-09-07 — P0-20 definition artifacts built; one blocker left
+## [Codex implementation candidate] 2026-09-09 — compact workflow and current-state correction
 
-- **Owner decisions recorded** (`c2cd955`): `OD-20260907-1` lifts the WP-P0-11 / WP-P0-12
-  STOP; `OD-20260907-2` records the unattended overnight authorization with its stated
-  reading — repository work, not irreversible outward acts.
-- **Lifting the stop moved no code.** `WP-P0-12` `CORRECTED_VNEXT` is still absent from this
-  repository and its Item-2 packet is still on the Windows host. Every blocked acceptance
-  row below is blocked on that absence, not on a decision.
-- **Built this run**, all on `claude/oauth-token-expired-bocby8`, full evidence in
-  `11_TRIAGE/WP_P0_20_ALLOCATOR_STAGES_2026-09-07/LANE_REPORT.md`:
-  `4af33bd` control-parity checklist v1 · `b12e7fa` statistical-battery definition v1 —
-  WP-P0-20's two named definition artifacts, which existed only as prose until now ·
-  `46890cc` the versioned research-side cost-model registry · `e201a82` evidence class,
-  derived from a run's facts rather than a label it carries · `5e5e4e2` an acceptance
-  harness that probes the gate instead of reading it · `28a3258` all eight dependent tools
-  located and class-verified against source.
-- **Verification:** eight checkers, every one exit 0; **84 mutation controls, all
-  DETECTED**; `generate_index.py --check` GREEN. Two controls carry more weight than the
-  rest: `check_gate_agreement` proves the checklist and the manifest never disagree about
-  one run, and `check_signature_has_no_conversion` is structural — it fails if a `stamp`,
-  `override` or `force` parameter ever appears on the evidence gate, because "there is no
-  manifest stamp that converts it" is a claim about the shape of the code.
-- **Acceptance state, probed** (`python3 check_p020_acceptance.py`, exits 1 at **6/13**):
-  MET — `checklist_v1_exists`, `battery_v1_exists`, `promotion_block_d026`,
-  `computed_manifest`, `cost_model_provenance`, `standin_prohibition`. BLOCKED —
-  `import_identity`, `kernel_present`, `required_tier_implemented`, `before_after`,
-  `throughput`. UNMET — `dependent_disposition` (proposed, not performed), `audits`.
-- **Self-review found two real defects, both fixed** (`bf682f3`, `18d73c0`): the cap stage
-  compared one number, `notional / account_size`, against both the leverage and the exposure
-  cap — correct on a flat account and silently wrong the moment a second position exists, so
-  exposure is now gross and `existing_gross_notional` is a required argument; and the
-  harness's kernel probe was a substring search a comment could satisfy, so it now walks the
-  AST for a real import.
-- **CI now runs the research gates** (`11bddf3`, `.github/workflows/research-gates.yml`).
-  It is **not** a required check — ruleset 21444962 still requires exactly `Bridge suite
-  (Python 3.12)` — and `WP-P0-27` is still the carrier for progressive CI activation.
-- **Nothing is accepted, and nothing here claims to be.** No exact audit ran; the container
-  cannot reach the audit models.
-- **NEXT ACTION:** bring the Windows-host `P012` packet into this repository — **not** a
-  fresh kernel start here. `11_TRIAGE/WP_P0_12_SCOPE_ASSESSMENT_2026-09-07.md` measures why:
-  the `mtc_v2/core` seed is present, but four of P0-12's eight outputs are absent from it —
-  fees, funding, in-path slippage and gap-aware stop fills — and those four are **exactly**
-  the checklist's REQUIRED tier, five for five with the allocator. Writing them here would
-  collide with whatever that packet holds, in the scope where silent divergence costs most.
-  Then run `check_p020_acceptance.py` and work whatever it still reports.
-- **WAITING FOR OWNER:** the WP-P0-12 import from the Windows host. Nothing else.
+Branch `feature/workflow-memory-20260909`, worktree `C:\WF_MEMORY_20260909`, base
+`e69c7d7e7462ab89f8b13521c0eafd297df67fcb`. Documentation/policy candidate only; no product,
+runtime, host, credential, backtest, schema, trading, or frozen-package changes. The parent Lead
+owns integration and independent verification. This T0 governance edit has no accepting verdict
+or waiver; local self-checks cannot accept it.
 
-## History
+Startup now uses root essentials, the map and one stage AGENTS, with task-triggered reads.
+`REVIEW_POLICY.md` holds classification/review rules. Seven gates may share one brief; factual
+G7 progress is allowed before acceptance. Exact protected audits, evidence and CI remain required.
+Original edited files are byte-exact under `../_AI_MEMORY/history/workflow-20260909/policy__*`.
 
-The superseded 2026-09-07 section is in
-`_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF_20260907_2339.md`; the three before it in
-`..._20260907_2251.md`, and earlier narrative in `..._20260906_2257.md` and
-`..._20260905_2202.md`.
+Lead verification completed locally: all 80 original memory paths accounted for; 13 existing
+history files unchanged; archive content, four older unresolved ownership rows, all eight routing
+budgets and current local pointers checked. The existing CLI handoff helper and negative document
+fixtures passed. Repository guard passed; no product code or planned package changed. Full coverage
+and limitations: `../11_TRIAGE/WORKFLOW_MEMORY_RECONCILIATION_2026-09-09.md`.
+
+### P012/P020 boundary — checked source presence, not package acceptance
+
+- PR #164 merge `ef29f7e1` is in this base's history. Its imported P012 source and
+  `01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/` contracts are present; core `config.py`
+  contains `CORRECTED_VNEXT_CONFIG_KEYS`. The earlier "source absent; import Windows packet"
+  explanation below the old handoff is superseded. Recheck actual refs/tree before resuming.
+- Import and owner-ratified re-seal #29 do not accept all WP-P0-12. Per `OD-20260908-1`, production
+  Item 4 remains `NONE_KEEP_REFUSED`, all ten Section-19 rows remain OPEN/APPLICABLE, and the
+  `P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1` boundary remains. No operational authority.
+- P020 definition artifacts exist. Source presence does not complete allocator/kernel wiring,
+  REQUIRED-tier qualification, before/after comparison, throughput, dependent disposition, or
+  exact audits. Whole P020 is not accepted. Existing reports are dated evidence, not current PASS.
+- At this base, root `check_p020_acceptance.py` still contains the obsolete source-absence
+  explanation in `probe_kernel_present`. Its predicate checks the canonical simulator's import;
+  an absent import is not absent repository source. Runtime repair is outside this docs lane.
+
+NEXT ACTION: obtain required exact T0 review before accepting this verified documentation candidate,
+then complete authorized protected integration with current-head Bridge CI. For P020,
+inspect actual integration/qualification gaps under its own approved scope, not another import.
+WAITING FOR OWNER: implementation is complete. A Codex-led Claude child review needs an explicit
+exception to the existing governance prohibition, or a Claude-led task can perform that required
+review. Merge authority remains separate. No audit slot has been waived or silently substituted.
+
+Earlier governance handoff: `../_AI_MEMORY/history/workflow-20260909/policy__MTC_COMMAND_CENTER__00_AGENT_PROTOCOLS__HANDOFF.md`.
