@@ -1,55 +1,53 @@
 # Governance stage handoff
 
-## [Claude Lead] 2026-09-07 — P0-20 definition artifacts built; one blocker left
+## [DOCUMENTATION REVIEW ACCEPTED; PROTECTED INTEGRATION CONDITIONAL] 2026-09-09
 
-- **Owner decisions recorded** (`c2cd955`): `OD-20260907-1` lifts the WP-P0-11 / WP-P0-12
-  STOP; `OD-20260907-2` records the unattended overnight authorization with its stated
-  reading — repository work, not irreversible outward acts.
-- **Lifting the stop moved no code.** `WP-P0-12` `CORRECTED_VNEXT` is still absent from this
-  repository and its Item-2 packet is still on the Windows host. Every blocked acceptance
-  row below is blocked on that absence, not on a decision.
-- **Built this run**, all on `claude/oauth-token-expired-bocby8`, full evidence in
-  `11_TRIAGE/WP_P0_20_ALLOCATOR_STAGES_2026-09-07/LANE_REPORT.md`:
-  `4af33bd` control-parity checklist v1 · `b12e7fa` statistical-battery definition v1 —
-  WP-P0-20's two named definition artifacts, which existed only as prose until now ·
-  `46890cc` the versioned research-side cost-model registry · `e201a82` evidence class,
-  derived from a run's facts rather than a label it carries · `5e5e4e2` an acceptance
-  harness that probes the gate instead of reading it · `28a3258` all eight dependent tools
-  located and class-verified against source.
-- **Verification:** eight checkers, every one exit 0; **84 mutation controls, all
-  DETECTED**; `generate_index.py --check` GREEN. Two controls carry more weight than the
-  rest: `check_gate_agreement` proves the checklist and the manifest never disagree about
-  one run, and `check_signature_has_no_conversion` is structural — it fails if a `stamp`,
-  `override` or `force` parameter ever appears on the evidence gate, because "there is no
-  manifest stamp that converts it" is a claim about the shape of the code.
-- **Acceptance state, probed** (`python3 check_p020_acceptance.py`, exits 1 at **6/13**):
-  MET — `checklist_v1_exists`, `battery_v1_exists`, `promotion_block_d026`,
-  `computed_manifest`, `cost_model_provenance`, `standin_prohibition`. BLOCKED —
-  `import_identity`, `kernel_present`, `required_tier_implemented`, `before_after`,
-  `throughput`. UNMET — `dependent_disposition` (proposed, not performed), `audits`.
-- **Self-review found two real defects, both fixed** (`bf682f3`, `18d73c0`): the cap stage
-  compared one number, `notional / account_size`, against both the leverage and the exposure
-  cap — correct on a flat account and silently wrong the moment a second position exists, so
-  exposure is now gross and `existing_gross_notional` is a required argument; and the
-  harness's kernel probe was a substring search a comment could satisfy, so it now walks the
-  AST for a real import.
-- **CI now runs the research gates** (`11bddf3`, `.github/workflows/research-gates.yml`).
-  It is **not** a required check — ruleset 21444962 still requires exactly `Bridge suite
-  (Python 3.12)` — and `WP-P0-27` is still the carrier for progressive CI activation.
-- **Nothing is accepted, and nothing here claims to be.** No exact audit ran; the container
-  cannot reach the audit models.
-- **NEXT ACTION:** bring the Windows-host `P012` packet into this repository — **not** a
-  fresh kernel start here. `11_TRIAGE/WP_P0_12_SCOPE_ASSESSMENT_2026-09-07.md` measures why:
-  the `mtc_v2/core` seed is present, but four of P0-12's eight outputs are absent from it —
-  fees, funding, in-path slippage and gap-aware stop fills — and those four are **exactly**
-  the checklist's REQUIRED tier, five for five with the allocator. Writing them here would
-  collide with whatever that packet holds, in the scope where silent divergence costs most.
-  Then run `check_p020_acceptance.py` and work whatever it still reports.
-- **WAITING FOR OWNER:** the WP-P0-12 import from the Windows host. Nothing else.
+Branch `feature/workflow-memory-20260909`; worktree `C:\WF_MEMORY_20260909`; reviewed head
+`37e22db0cf7a01a047d153d0604f34f4451f72d1`; base
+`89fa1de0315bdfc9199233b10ced2a707223b4e7`. At `2026-09-09T20:33:50Z`, the Lead accepted
+the independent documentation/governance review only. Protected integration is tracked by PR #167;
+activation requires the merged PR and protected CI on its final head. Verify current integration
+status there. Product, runtime, package, host, credential, backtest, schema, trading, deployment
+and economic status are unchanged.
 
-## History
+The candidate shortens mandatory startup context, centralizes review classification and accounts
+for all 80 original memory paths. Preserved Git content identity is verified. Raw-before-copy
+digests are unavailable for two disclosed records, so raw byte identity is not retrospectively
+claimed for them; other pinned archives retain their recorded byte evidence. Upstream PR #168 was
+integrated without changing its 117 product blobs. The shared `SESSION_LOCK.md` resolution keeps
+the exact upstream archive and the three unresolved RP7/SEC102/Audit-2 rows verbatim.
 
-The superseded 2026-09-07 section is in
-`_AI_MEMORY/history/00_AGENT_PROTOCOLS_HANDOFF_20260907_2339.md`; the three before it in
-`..._20260907_2251.md`, and earlier narrative in `..._20260906_2257.md` and
-`..._20260905_2202.md`.
+### Review and evidence
+
+All reviewers received external `REVIEW_PACKET_R4.md` at SHA-256
+`6398e9d96282c98f8cac48827a668addff93237448df894cd9bf35f9f2692b63` for source `37e22db0`.
+Exact `claude-opus-5` xhigh returned PASS-WITH-NITS in 178.4 seconds; both nits were optional and
+already disclosed. Exact `gpt-5.6-sol` xhigh returned PASS with no findings in 574.1 seconds.
+Mandatory `gemini-3.7-flash-high` returned guarded SUCCESS and PASS in 183.6 seconds with its
+required `SUPPLEMENTAL_UNEXECUTED` status. Canonical-checkout URLs in that report are presentation,
+not current-source evidence; the literal frozen packet was reviewed. The Lead independently
+returned `ACCEPTED_DOCUMENTATION_REVIEW_ONLY` after matching 92/92 source hashes and reproducing
+the actual portable checker with all eight controls, index check, repository guard and diff checks.
+
+Evidence is in the external task root named by the reconciliation report:
+`CLAUDE_REVIEW_R4.md`, `SOL_REVIEW_R4.md`, `GEMINI_REVIEW_R4.md`, and `LEAD_REVIEW_R4.json`.
+Earlier attempts remain dated evidence: R1 Claude PASS-WITH-NITS while Sol timed out without a
+verdict and Gemini's guard rejected foreign activity; R2 was cancelled for a stale index row; R3
+Sol was blocked by elevated-sandbox error 1326. R4 used the unelevated external workspace and a
+UUID scratch directory; the scratch-only portability diff and prior checker remain external.
+
+Bridge, Research and Pine CI were green on reviewed head `37e22db0`. This factual G7 closeout changes
+only this handoff, the reconciliation report, the current workflow introduction/row in
+`SESSION_LOCK.md`, and deterministic `11_TRIAGE/INDEX.md`. Reviewed normative hashes remain
+unchanged. Protected CI is required again on the final closeout head before activation or merge.
+
+### Package boundary
+
+PR #168 re-seal #30 clears P012 R1–R4 only. R5–R7 and whole WP-P0-12 remain unaccepted. P020
+remains unaccepted pending its existing wiring, qualification, evidence and audit work. PR #167
+review or integration does not change those product statuses or grant operational authority.
+
+NEXT ACTION: complete and verify PR #167's protected merge and final-head CI, then resume the
+existing P012 scope and contract.
+WAITING FOR OWNER: Nothing. Conditional merge is authorized; its protected integration conditions
+remain binding.

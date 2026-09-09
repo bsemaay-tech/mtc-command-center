@@ -1,5 +1,12 @@
 # LESSONS — durable, capped, paid-for
 
+Search by the current task's failure class; this is not mandatory startup reading. The accepted
+workflow's completion example, repeatable check, working-path demonstration and owner-facing result
+live in [the scope/QA prompt](../04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md).
+Review counts and activation follow the canonical governance policy; lessons add no auditor.
+The pre-reconciliation wording is preserved in
+[history/workflow-20260909/LESSONS.md](history/workflow-20260909/LESSONS.md).
+
 > **Contract (Lesson Ladder Stage 1, created 2026-08-15).** Hard cap: **40 entries**.
 > Adding entry #41 requires merging or retiring an existing one — no unbounded growth.
 > Format per entry: **Trigger / Rule / Why**, one line each, plus `scope` and `status`.
@@ -27,7 +34,7 @@
 
 ## L-003 · Grep a changed value repo-wide
 - **Trigger:** correcting any value, hash, count, or claim in any doc.
-- **Rule:** after the edit, grep the OLD value across the whole repo and fix every hit; a correction touching only one file is presumed incomplete.
+- **Rule:** after the edit, search the OLD value across the repo; correct current consumers and explicitly disposition remaining hits. Preserve dated/accepted history verbatim and identify its current successor instead of rewriting past evidence. A correction that ignores current sibling claims is incomplete.
 - **Why:** 2026-08-12 claim-audit — the Lead's own corrections were incomplete five separate times; 38 prose-vs-transcript defects traced to this.
 - scope: global · status: ACTIVE
 
