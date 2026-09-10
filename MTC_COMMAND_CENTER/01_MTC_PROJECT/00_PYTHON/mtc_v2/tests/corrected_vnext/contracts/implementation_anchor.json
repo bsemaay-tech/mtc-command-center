@@ -2,7 +2,7 @@
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
  "EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
- "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
+ "IMPLEMENTATION_BASE_SHA": "b4e44964f38391518d0c5c5d04f2b41fb4d08237",
  "core_tree_oid_at_base": "ead33b9704f11e6235b19e0f24a846b2f217b4aa",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
@@ -401,6 +401,15 @@
    "old_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
    "new_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
    "reason": "Six F32 identity files only; completed baseline32 evidence; sole owner 134 declaration unchanged; exact schema chain extended through #31 and #32; NONACCEPTED pending actual reviews and production evidence."
+  },
+  {
+   "at": "2026-09-10T22:05:44.574197+00:00",
+   "actor": "Astra Lead coordinated; OpenCode Go DeepSeek V4 Pro mechanical builder, F33 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
+   "new_IMPLEMENTATION_BASE_SHA": "b4e44964f38391518d0c5c5d04f2b41fb4d08237",
+   "old_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
+   "new_core_tree_oid_at_base": "ead33b9704f11e6235b19e0f24a846b2f217b4aa",
+   "reason": "F33 Decision147 forward repin: re-pinned from the F32 base 3eebdf542bb70b23525cea13efc05a4a8eb29a8f (core tree ad8b7d787ab8b087d6fd192b413b2592a8bea4c0) to the actual sealed-member commit C33 b4e44964f38391518d0c5c5d04f2b41fb4d08237, whose approved HYPERLIQUID price-policy kernel moved the core tree to ead33b9704f11e6235b19e0f24a846b2f217b4aa; that current core_tree_oid_at_base was already recorded provisionally by R33 and is kept. The approved price kernel is unchanged and no behavior changed. Uses actual baseline33 (sha256 93e002753b764f0634e186903f64703ad4e0f7442d8cb32bc37baf1d6b44016a). NONACCEPTED pending fresh Section 16 evidence, owner ratification, and exact required reviews."
   }
  ]
 }
