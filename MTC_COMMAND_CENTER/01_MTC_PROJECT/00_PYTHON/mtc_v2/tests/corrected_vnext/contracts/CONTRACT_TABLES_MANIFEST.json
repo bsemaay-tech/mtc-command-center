@@ -11,10 +11,10 @@
   "statement": "Every expected value in this bundle was derived without executing the corrected kernel: by explicit written arithmetic from the design's stated contract semantics, or, for the record-digest and record-bound members admitted at re-seal #16 under owner decisions 149 and 151, by the design's written digest recipe over committed inputs; both are shown per value in DERIVATIONS.md. No kernel was executed. No observed/ path was read: no derivation in DERIVATIONS.md cites an observed/ path as a source, and none of the 34 committed observed/ file digests appears in this manifest, the catalog, the goldens or DERIVATIONS.md. The source of the record-derived members is the committed economic record bytes below mtc_v2/core/economic_records/ and their detached .sha256 sidecars, which the design makes authoritative at Design section 5.1, \"exact file bytes. The digest\"; all 51 committed records agree with their sidecars. The first-seal sentence asserting that no corrected-kernel implementation was read or exists is withdrawn as untrue at this seal: the repository now tracks the tests/corrected_vnext/ test tree and the mtc_v2/core/ modules, including economics.py and semantics.py, and record bytes below that tree were read for the members named above. The property that these tables were sealed before that kernel existed is not carried by this statement; it is carried by the design's honest limit L14 and the decision-147 re-anchor rule (Design section 15.4, \"anchor's `base_repin_history` records every move\", Design section 17, \"The pre-implementation seal property is carried by the measured history\" and Design section 17, \"The owner-directed re-seal chain that\"), to be asserted and human-reviewed under section 16 and not machine-checked."
  },
  "design": {
-  "file": "C:/tmp/P012_ASTRA_DESIGN_20260910/P012_FRESH_DESIGN_V1.md",
-  "version": "v1.25",
-  "sha256": "8fd346f805aa30cbd0e00fc32296f8de913bfa616b2b1588ff54902d4f3ab675",
-  "total_lines": 2072,
+  "file": "C:/tmp/P012_PRICE_DESIGN_20260910/P012_PRICE_DESIGN_V1.md",
+  "version": "v1.26",
+  "sha256": "7753f48468d72e8f7eaa034d4c05118c97364b4e414d16f631ac2bdb8dfdaff1",
+  "total_lines": 2111,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
@@ -35,26 +35,26 @@
    "15. Bounded Correction Evidence Gate (`BCEG-1`)": 510,
    "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 798,
    "17. Honest limits": 811,
-   "18. Build-lane work breakdown and shape census": 868,
-   "19. Single consolidated `[OPEN — owner-gated]` ledger": 891,
-   "20. Defect-class prevention table": 908,
-   "21. Required build preconditions and non-goals": 928,
-   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 940,
-   "22. v1.5 input-embedding addendum": 948,
-   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 1210,
-   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1249
+   "18. Build-lane work breakdown and shape census": 869,
+   "19. Single consolidated `[OPEN — owner-gated]` ledger": 895,
+   "20. Defect-class prevention table": 912,
+   "21. Required build preconditions and non-goals": 932,
+   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 944,
+   "22. v1.5 input-embedding addendum": 952,
+   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 1214,
+   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1253
   },
   "heading_line_map_addition_measured_at_reseal25": {
-   "23.19 v1.22 change log - window-local serialized fill identity": 1864
+   "23.19 v1.22 change log - window-local serialized fill identity": 1865
   },
   "heading_line_map_addition_measured_at_reseal26": {
-   "23.20 v1.23 change log - R26 identity and Item-2 closure": 1882
+   "23.20 v1.23 change log - R26 identity and Item-2 closure": 1883
   },
   "heading_line_map_addition_measured_at_reseal28": {
-   "23.21 v1.24 change log - SYNTHETIC_ONLY milestone scope and Item-4 disposition": 1897
+   "23.21 v1.24 change log - SYNTHETIC_ONLY milestone scope and Item-4 disposition": 1898
   },
   "heading_line_map_addition_measured_at_reseal30": {
-   "23.22 v1.25 change log - funding valuation member renamed to `oracle_price`": 2027
+   "23.22 v1.25 change log - funding valuation member renamed to `oracle_price`": 2028
   }
  },
  "repository_evidence_identity": {
@@ -589,9 +589,9 @@
   "reason": "F32 six-file identity repair using completed R32 baseline evidence; NONACCEPTED pending actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused."
  },
  "section_16_review": {
-  "status": "PERFORMED_OWNER_RATIFIED",
-  "status_measured_at": "2026-09-10, re-seal #30 (HIST-2026-0024)",
-  "statement": "The mandatory SEMANTIC_COVERAGE_REVIEW required by Design section 16 HAS been performed and is installed at contracts/semantic_coverage_review.json, signed 2026-09-08T21:25:22+03:00 by Gemini 3.8 Flash High (gemini-3.8-flash-high), carrying 6 items with unresolved_items empty and owner ratification recorded through #30. Before 2026-09-10 this field read PENDING and stated the review had NOT been performed; that statement had become false and is corrected here under HIST-2026-0024. The reviewer-independence constraint below still binds: the claude family is excluded from the section-16 reviewer role because it authored these tables (owner ruling Q3a), and BCEG-1 still refuses acceptance without a separately authored semantic_coverage_review.json. NOT ENFORCED: the gate reads the receipt itself - its presence, its closed disposition domain and its content identities - and does not read this summary. Treat this field as descriptive only.",
+  "status": "PENDING",
+  "status_measured_at": "2026-09-10T19:57:56Z",
+  "statement": "The mandatory SEMANTIC_COVERAGE_REVIEW required by Design section 16 HAS been performed and is installed at contracts/semantic_coverage_review.json, signed 2026-09-08T21:25:22+03:00 by Gemini 3.8 Flash High (gemini-3.8-flash-high), carrying 6 items with unresolved_items empty and owner ratification recorded through #30. Before 2026-09-10 this field read PENDING and stated the review had NOT been performed; that statement had become false and is corrected here under HIST-2026-0024. The reviewer-independence constraint below still binds: the claude family is excluded from the section-16 reviewer role because it authored these tables (owner ruling Q3a), and BCEG-1 still refuses acceptance without a separately authored semantic_coverage_review.json. NOT ENFORCED: the gate reads the receipt itself - its presence, its closed disposition domain and its content identities - and does not read this summary. Treat this field as descriptive only. SUCCESSOR-PENDING (design v1.26, owner task WP-P012-PRICE-POLICY-20260910 / HIST0040): the current price-alignment design is NOT yet reviewed. This field is set PENDING pending a fresh, actual Gemini 3.8 review plus owner ratification of the price successor. The receipt above continues only as historical R32 evidence, not acceptance of the current price scope.",
   "reviewer_independence_constraint": "The reviewer must be independent from the kernel implementer (Codex family) AND from the CONTRACT_TABLES author (claude family)."
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
