@@ -585,8 +585,8 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
-  "IMPLEMENTATION_BASE_SHA": "7e334d81ea429448c80bcd269cd77d5832a1d6ab",
-  "reason": "R32/re-seal32: refreshed the tenth INPUT probe's dependency identity after the first nine kernel probes were regenerated; current source and mutation behavior, economics, goldens, admission/refusals are all unchanged. Only the existing scenario_catalog.json member changes among the 19 sealed members. The malformed current R31 actor labels were repaired only by appending literal re-seal #31, preserving raw C31 Git history. NONACCEPTED pending C32/F32, baseline32, actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused/open."
+  "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
+  "reason": "F32 six-file identity repair using completed R32 baseline evidence; NONACCEPTED pending actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused."
  },
  "section_16_review": {
   "status": "PERFORMED_OWNER_RATIFIED",
@@ -597,8 +597,8 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
-  "IMPLEMENTATION_BASE_SHA": "7e334d81ea429448c80bcd269cd77d5832a1d6ab",
-  "set_by": "R32/re-seal32, 2026-09-10T11:45:06.156965+00:00"
+  "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
+  "set_by": "F32 six-file identity repair at 2026-09-10T12:06:08Z; actual C32 3eebdf542bb70b23525cea13efc05a4a8eb29a8f; R32 baseline evidence; HIST-2026-0035 and HIST-2026-0036."
  },
  "reseal_history": [
   {
@@ -1216,12 +1216,12 @@
    "authorization": "ONE run completed under P012_ONE_EXTRA_COORDINATED_REPAIR=YES, overnight 2050 packet approved 2026-09-05 20:48, re-seal24; 17/17 complete, 0 blocked, all 34 surfaces identical.",
    "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
    "current_run": {
-    "sha256": "1c6e38e8adf7c586df1f29a4955961345b65222a7bb2eb159974de0e52719729",
-    "EXPECTED_SEAL_SHA_consumed": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
-    "created_at": "2026-09-10T11:03:42Z",
-    "authorization": "Owner approved I-5 protected provenance field, necessary identity updates, identity correction and strict accepting reviews on 2026-09-10. Actual new run has 34 semantic outputs identical to preserved reseal30. This packet is NONACCEPTED pending exact reviews and production Item4 evidence. EXPECTED_SEAL_SHA_consumed is a legacy field name storing Lead-verified expected seal only; unchanged child driver has no seal argument and did not read seal. No new production data, captures, economics, or human ratification are claimed. Measured R31: 17/17 complete, 0 blocked; 34 semantic outputs byte-identical to prior R30. The legacy seal field is Lead attestation, not driver consumption; packet created_at is not test execution time.",
+    "sha256": "d9f3127e4a2980bac19546517a38679605a2475b5b7a47f5c79265bcea6b316b",
+    "EXPECTED_SEAL_SHA_consumed": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+    "created_at": "2026-09-10T11:54:52Z",
+    "authorization": "Owner-authorized same-scope repair of the 10th INPUT probe base catalog pin and R31 actor ID metadata, with necessary strict reviews on 2026-09-10, as a truthful re-seal32 packet. Actual new run has 34 semantic outputs identical to preserved reseal31. This packet is NONACCEPTED pending exact reviews and production Item4 evidence. EXPECTED_SEAL_SHA_consumed is a legacy field name storing Lead-verified expected seal only; unchanged child driver has no seal argument and did not read seal. No new production data, captures, economics, or human ratification are claimed.",
     "catalog_expected_artifacts_2_0_0": "17/17 VALID",
-    "measured_at": "2026-09-10T11:20:06.149192+00:00; R31 authority HIST-2026-0035 and HIST-2026-0036",
+    "measured_at": "2026-09-10T12:06:08Z; R32 measurement; HIST-2026-0035 and HIST-2026-0036",
     "enforced_by": "verify_bceg.py:2980 re-reads the file and refuses if EXPECTED_SEAL_SHA_consumed does not equal the seal; verify_bceg.py:66-74 lists baseline_manifest_sha256 as a Section-16 content identity key and :650-654 refuses on mismatch. Both act on the FILE and on the RECEIPT, never on this block, which is descriptive only."
    }
   },

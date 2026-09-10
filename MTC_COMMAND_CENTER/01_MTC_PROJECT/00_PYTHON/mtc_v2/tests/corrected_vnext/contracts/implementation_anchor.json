@@ -2,7 +2,7 @@
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
  "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
- "IMPLEMENTATION_BASE_SHA": "7e334d81ea429448c80bcd269cd77d5832a1d6ab",
+ "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
  "core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
@@ -383,6 +383,15 @@
    "old_core_tree_oid_at_base": "9a3283ae5e2bd7e527d5e6dfb8e3033473711a41",
    "new_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
    "reason": "F31 candidate changes active-base metadata, descriptive baseline current_run metadata, and the anchor sidecar; 19 sealed files, seal, design, catalog, and economics are unchanged. Baseline evidence was regenerated: 17/17 complete and 34 semantic outputs byte-identical to prior R30. NONACCEPTED pending required Section 16, exact T0 accepting reviews, and production Item 4."
+  },
+  {
+   "at": "2026-09-10T12:06:08Z",
+   "actor": "Astra Lead coordinated; Sol High mechanical builder, R32 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "7e334d81ea429448c80bcd269cd77d5832a1d6ab",
+   "new_IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
+   "old_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
+   "new_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
+   "reason": "Six F32 identity files only; completed baseline32 evidence; sole owner 134 declaration unchanged; exact schema chain extended through #31 and #32; NONACCEPTED pending actual reviews and production evidence."
   }
  ]
 }
