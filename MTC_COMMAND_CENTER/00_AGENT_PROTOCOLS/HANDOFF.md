@@ -51,3 +51,8 @@ NEXT ACTION: complete and verify PR #167's protected merge and final-head CI, th
 existing P012 scope and contract.
 WAITING FOR OWNER: Nothing. Conditional merge is authorized; its protected integration conditions
 remain binding.
+
+## 2026-09-10 — Scheduling continuation
+Lead accepted bounded governance at 87bf895e after Opus/Sol/Gemini R2 reviews. See ../_AI_MEMORY/AUTONOMOUS_SCHEDULING_20260910.md. Canonical scheduling rule and proposed global pointer retain all authority limits. Protected integration and pointer installation remain pending.
+NEXT ACTION: final-head Bridge CI, merge, verified pointer install.
+WAITING FOR OWNER: Nothing.
