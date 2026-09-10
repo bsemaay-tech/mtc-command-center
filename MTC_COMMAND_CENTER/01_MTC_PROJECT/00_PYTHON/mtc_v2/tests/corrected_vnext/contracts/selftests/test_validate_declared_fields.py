@@ -415,6 +415,51 @@ class DeclaredFieldValidatorTests(unittest.TestCase):
             self.codes(manifest=bare, baseline_digest=self.baseline_digest),
         )
 
+    def test_a_hung_git_is_reported_not_raised(self) -> None:
+        """Every git call in the validator is bounded, and a timeout must REPORT.
+
+        Found by the Section-16 reviewer of the report-only gate wiring
+        (gemini-3.8-flash-high, 2026-09-10, PASS-WITH-NITS): three subprocess.check_output
+        calls had no timeout, so once the validator ran inside the gate a hung git
+        invocation would block the BUILD indefinitely. A report-only check that can hang
+        the build is not report-only.
+
+        Two things are asserted, because bounding the call is only half the fix:
+        subprocess.TimeoutExpired is a SubprocessError but NOT a CalledProcessError, so the
+        original handlers would have let it escape as an exception instead of reporting it.
+        """
+        self.assertTrue(
+            issubclass(subprocess.TimeoutExpired, subprocess.SubprocessError),
+            "premise of this test",
+        )
+        self.assertFalse(
+            issubclass(subprocess.TimeoutExpired, subprocess.CalledProcessError),
+            "if this ever becomes true the handler widening is redundant, not wrong",
+        )
+
+        # Every git call this module makes must carry a timeout.
+        source = (CONTRACTS / "validate_declared_fields.py").read_text(encoding="utf-8")
+        for index, chunk in enumerate(source.split("subprocess.check_output(")[1:], 1):
+            self.assertIn(
+                "timeout=",
+                chunk[:400],
+                f"check_output call {index} is not bounded",
+            )
+
+        def hang(*_args: object, **_kwargs: object) -> str:
+            raise subprocess.TimeoutExpired(cmd=["git", "deliberately-hung"], timeout=120)
+
+        original = subprocess.check_output
+        subprocess.check_output = hang  # type: ignore[assignment]
+        try:
+            codes = self.codes()
+        finally:
+            subprocess.check_output = original  # type: ignore[assignment]
+
+        # It reported rather than raised, and it said which checks it could not complete.
+        self.assertIn("PATH_COUNT_ACCURATE", codes)
+        self.assertIn("HISTORICAL_LABELLED", codes)
+
     def test_invented_top_level_field_is_unregistered(self) -> None:
         mutated = deepcopy(self.manifest)
         mutated["invented_validator_field_83"] = "different from every historical defect"

@@ -4921,17 +4921,30 @@ def run_declared_field_validation(root: Path) -> dict[str, Any]:
             module.load_json_exact(contracts / "declared_field_registry.json"),
             repo_root=module._repo_root(),
         )
-    except Exception as exc:  # report-only: never propagate
+        # Shaping the rows is INSIDE the try. The Section-16 reviewer of this change
+        # (gemini-3.8-flash-high, 2026-09-10, PASS-WITH-NITS) found this comprehension sitting
+        # outside it, which made the "every failure path is wrapped" claim false: a
+        # validate_documents that returned objects without .code/.path/.detail would raise
+        # AttributeError straight through the gate. Low likelihood today, since Refusal is a
+        # frozen dataclass in that same module - but the wrap exists for the day the module
+        # changes, and a wrap with a hole in it is worth less than no wrap, because it is
+        # believed.
+        rows = [
+            {"code": r.code, "path": r.path, "detail": r.detail}
+            for r in refusals
+        ]
+        counts: dict[str, int] = {}
+        for row in rows:
+            counts[row["code"]] = counts.get(row["code"], 0) + 1
+    except BaseException as exc:  # report-only: nothing here may reach the gate
+        # BaseException, not Exception, for the same reason. KeyboardInterrupt and SystemExit
+        # are re-raised explicitly below so Ctrl-C and sys.exit still work; everything else,
+        # including MemoryError and RecursionError, is reported rather than propagated.
+        if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+            raise
         report.update(ran=False, detail=f"{type(exc).__name__}: {exc}")
         return report
 
-    rows = [
-        {"code": r.code, "path": r.path, "detail": r.detail}
-        for r in refusals
-    ]
-    counts: dict[str, int] = {}
-    for row in rows:
-        counts[row["code"]] = counts.get(row["code"], 0) + 1
     report.update(
         ran=True,
         refusal_count=len(rows),

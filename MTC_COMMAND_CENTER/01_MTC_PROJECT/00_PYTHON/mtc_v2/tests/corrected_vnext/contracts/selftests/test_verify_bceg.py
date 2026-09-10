@@ -4047,3 +4047,28 @@ def test_declared_field_validation_actually_reads_the_real_record() -> None:
     assert report["enforced"] is False
     assert isinstance(report["refusal_count"], int)
     assert report["refusal_count"] == len(report["refusals"])
+
+    # The assertions above are not enough, and the Section-16 reviewer of this change said so:
+    # refusal_count == len(refusals) is satisfied by 0 == 0, so a harness path that silently
+    # reported nothing would pass. Cross-check against invoking the validator DIRECTLY and
+    # compare the code multisets. If the harness path degraded to reporting nothing while the
+    # validator still finds things, these disagree. If the record is ever genuinely clean both
+    # are empty and they still agree, so the test does not rot when the findings are fixed.
+    from collections import Counter
+
+    from mtc_v2.tests.corrected_vnext.contracts import validate_declared_fields as direct
+
+    contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
+    expected = direct.validate_documents(
+        direct.load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json"),
+        direct.load_json_exact(contracts / "implementation_anchor.json"),
+        direct.load_json_exact(contracts / "declared_field_registry.json"),
+        repo_root=direct._repo_root(),
+    )
+    assert Counter(row["code"] for row in report["refusals"]) == Counter(
+        refusal.code for refusal in expected
+    )
+    assert report["refusal_counts_by_code"] == dict(
+        sorted(Counter(refusal.code for refusal in expected).items())
+    )
+    assert sum(report["refusal_counts_by_code"].values()) == report["refusal_count"]
