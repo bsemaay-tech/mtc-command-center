@@ -1,0 +1,53 @@
+{
+  "reviews": [
+    {
+      "bytes": 8444,
+      "name": "GEMINI_ORIGINAL.md",
+      "sha256": "9d9950ce5dcfdfdc405731e80fdd54afb97ccc90e206fcf6fe9fa72ca6dd943e",
+      "source_copy": "inputs/reviews/GEMINI_ORIGINAL.md"
+    },
+    {
+      "bytes": 7620,
+      "name": "GEMINI_PORTABILITY.md",
+      "sha256": "c68f620f55d541822ba160d7655a86fd54130b4110085721219c4bb8cb310c23",
+      "source_copy": "inputs/reviews/GEMINI_PORTABILITY.md"
+    },
+    {
+      "bytes": 4260,
+      "name": "GEMINI_SUCCESSOR.md",
+      "sha256": "e434e5e77938dfdd8194d562408a0d8cc8c4cc45b3e370a1780786f949040eeb",
+      "source_copy": "inputs/reviews/GEMINI_SUCCESSOR.md"
+    },
+    {
+      "bytes": 4834,
+      "name": "OPUS_PORTABILITY.md",
+      "sha256": "4572c40f81662bb8b8d166575577a8dc2a8377b8bacde97d5a92ba95eabb0ec0",
+      "source_copy": "inputs/reviews/OPUS_PORTABILITY.md"
+    },
+    {
+      "bytes": 4273,
+      "name": "OPUS_SUCCESSOR.md",
+      "sha256": "e0916b645880b2286e736f6bd67d7578f95f14be457ed6c3050c79c25f6c4e80",
+      "source_copy": "inputs/reviews/OPUS_SUCCESSOR.md"
+    },
+    {
+      "bytes": 8372,
+      "name": "OPUS_WHOLE.md",
+      "sha256": "6aab8ddeb21c28700040193949272b3bcbc3f1bffcfb54edd488f7e0114ac7a1",
+      "source_copy": "inputs/reviews/OPUS_WHOLE.md"
+    },
+    {
+      "bytes": 5362,
+      "name": "SOL_S3_REQUEST_CHANGES.md",
+      "sha256": "21e3c2877d20fd9df6d7b14b3b91700365f006327ed46120274e57ef6faa5979",
+      "source_copy": "inputs/reviews/SOL_S3_REQUEST_CHANGES.md"
+    },
+    {
+      "bytes": 3809,
+      "name": "SOL_S5_ACCEPTING.md",
+      "sha256": "05b3263350c9de6f33a881afd39010bef386079a06b080b5edf38e2e932ffb58",
+      "source_copy": "inputs/reviews/SOL_S5_ACCEPTING.md"
+    }
+  ],
+  "source": "inputs/reviews"
+}

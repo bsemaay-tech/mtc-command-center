@@ -132,3 +132,31 @@ Resume exact Sol xhigh only on a verified compatible approved included execution
 ## WAITING FOR OWNER
 
 Owner can help by supplying an existing approved compatible Sol environment if available — no new spend, login, or credentials needed. Otherwise nothing.
+# APPEND-ONLY CHECKPOINT - 2026-09-10 17:19 UTC - bounded R32 acceptance closeout
+
+This section appends to the existing P012 state; all earlier history remains byte-preserved. Preparation source was the accepted local closeout packet. No repository write, Git mutation, CI run, push, PR, merge, account access, or production acceptance occurred while preparing it.
+
+## Current identity and disposition
+
+- Continuation repository: `C:/tmp/P012_ASTRA_20260910`, branch `feature/p012-astra-continuation-20260910`, preparation HEAD `0508ce5775767f64fe9dbd6e5ad53a5b6463a339`, tracked clean.
+- Accepted correction source: `ddfb30e2d605cec3b8154527270d019ac04333ed` in `C:/tmp/P0R32V`; packet `C:/tmp/P0R32W` plus T/U evidence.
+- Astra Lead accepted the bounded correction at 16:56 UTC. This is not full P012 acceptance and not production acceptance.
+
+## R1-R7 closeout
+
+- R1: Lead personally reproduced GREEN exit 0, intentional RED exit 1, and full gate exit 0, 495 passed / 0 failed, with current-source provenance.
+- R2-R3: Sol S5 returned PASS-WITH-NITS accepting the whole bounded correction. Opus O3 successor PASS-WITH-NITS accepted within its recorded limits. Gemini 3.7 successor returned a guarded PASS after a successful successor guard. Sol S4 timed out before a verdict. S5's invalid-cache first receipt and its later corrected receipt (full gate 495 passed / 0 failed) both remain preserved.
+- The Windows blocker was resolved through the existing stronger elevated sandbox, a 15-byte temporary-directory repair, and forward cache; no guard weakening or bypass occurred.
+- R4: protected exact-current-head CI and normal PR integration remain pending under existing authority.
+- R5-R7: the ten Section 19 closure-evidence items passed bounded review. The 27 production risks, five integration obligations, HIST0029 final receipt redo, deferred capture, refusals, and real human review remain. Full production remains unaccepted.
+- Policy commit `87bf895` has completed required review and remains separate and not installed. Scheduling policy has Lead acceptance after Opus/Sol/Gemini R2 accepting reviews; protected integration and global pointer installation remain pending.
+
+A local production checklist was prepared for later work. It is not designated for public-repository publication and contributes no account facts, quotas, private financial metadata, C10 observations, or new production claims.
+
+## NEXT ACTION
+
+Run exact-current-head protected CI, then complete the already-authorized PR integration without bypass.
+
+## WAITING FOR OWNER
+
+Nothing.
