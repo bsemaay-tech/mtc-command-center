@@ -343,6 +343,15 @@
     "created_by": "owner: Baris (exact ratification recorded by Astra Lead task 01a08aa2-5fe9-70e3-9f93-9f1ec82196e7)",
     "summary": "I ratify the Section16 R32 review as prepared for candidate:\n12a2d49544523e0a8cc643421870ecb30b9bb30c\n\nThis approval covers only the described R30→R31→R32 continuation from:\n44288622851536eb1f300a4a525baeb1a00e6634\n\n1. Approve carrying forward all six UNCHANGED assessments, retaining their existing ACCEPTED_WITH_RESIDUAL_RISK dispositions and all stated limits.\n\n2. Authorize recording ratified=true for this actual review, installing the prepared receipt, and reproducing the gate after confirming the reviewed identities still match.\n\n3. Preserve the original Gemini report, its NOT VERIFIED section and the disclosed Item1 citation imprecision.\n\n4. Retain the required fresh accepting Opus5/Sol xhigh execution audits and separate Gemini3.7 corroboration. This Gemini3.8 review does not replace them. No waiver or bypass of Sol’s Windows execution boundary is authorized.\n\n5. Preserve all production refusals, 27 residual production risks and five residual integration obligations. Keep the accepted Section19 closure-evidence items distinct from those obligations. Retain the receipt29 semantic redo required under HIST0029 before final production acceptance.\n\nThis ratification does not accept P012, retroactively validate the old overrule, certify production facts, or authorize capture, account access, trading or paid usage.\n\nContinue already-authorized work as dependencies permit. Report the reproduced gate result, remaining blockers, NEXT ACTION and WAITING FOR OWNER.",
     "report_path": "MTC_COMMAND_CENTER/_AI_MEMORY/P012_R32_OWNER_RATIFICATION_20260910.md"
+  },
+  {
+    "event_id": "HIST-2026-0039",
+    "task_id": "WP-P012-SANDBOX-PORTABILITY-20260910",
+    "event_type": "APPROVED",
+    "created_at": "2026-09-10T16:26:06.1122231Z",
+    "created_by": "Astra Lead under existing owner Package repair authority; not a new owner ratification",
+    "summary": "Exact one-line repair: remove only `, dir=r\"C:\\tmp\"` from `TemporaryDirectory(prefix=\"w385-provenance-\", dir=r\"C:\\tmp\")`. Diagnosis: Python 3.14 TemporaryDirectory with hardcoded C:\\tmp is denied and hangs; bounded diagnosis was a 90s RED, while existing proof at 7f22 is 495 passed/0 failed. All assertions and semantics remain unchanged; this is source-only tmpdir environment portability. Sol S3 found the missing trailer. No waiver is granted, and the future compliant successor commit must carry `APPROVED-PATCH-PLAN: WP-P012-SANDBOX-PORTABILITY-20260910`.",
+    "report_path": null
   }
   ]
 }

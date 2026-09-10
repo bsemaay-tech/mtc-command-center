@@ -2052,7 +2052,7 @@ def test_expected_source_provenance_refuses_non_ancestor_base() -> None:
 
 
 def test_expected_source_provenance_refuses_expected_path_changed_after_base() -> None:
-    with tempfile.TemporaryDirectory(prefix="w385-provenance-", dir=r"C:\tmp") as temporary:
+    with tempfile.TemporaryDirectory(prefix="w385-provenance-") as temporary:
         root = Path(temporary) / "mtc_v2"
         expected_relative = "tests/corrected_vnext/contracts/expected.json"
         implementation_base, _head = two_commit_repository(root, expected_relative)
