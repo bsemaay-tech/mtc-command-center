@@ -80,7 +80,7 @@
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "3a9313c01f420edafd52e34b6e2602a181280ae8af024243fa162db67550dd05",
+   "sha256": "3733773d82985738bea85f3e3a99a87577912aa85fa64247fe2570c122716d7b",
    "bytes": 101675
   },
   {
@@ -584,9 +584,9 @@
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
-  "IMPLEMENTATION_BASE_SHA": "0c01b350dc72c953fdac07214ecc15208e0a2536",
-  "reason": "R31/re-seal31: approved fee-proof/I5 metadata moved core, and the nine existing modifications were re-derived from their original patches with their modification semantics unchanged. scenario_catalog.json carries the 18 updated catalog pins and is the only changed member among the 19 sealed files. This is a title-only successor; there are no economic, golden, observed, or behavioral changes. NONACCEPTED pending the C31 commit, forward repin, baseline reviews, and fresh Section 16/T0 reviews."
+  "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+  "IMPLEMENTATION_BASE_SHA": "7e334d81ea429448c80bcd269cd77d5832a1d6ab",
+  "reason": "R32/re-seal32: refreshed the tenth INPUT probe's dependency identity after the first nine kernel probes were regenerated; current source and mutation behavior, economics, goldens, admission/refusals are all unchanged. Only the existing scenario_catalog.json member changes among the 19 sealed members. The malformed current R31 actor labels were repaired only by appending literal re-seal #31, preserving raw C31 Git history. NONACCEPTED pending C32/F32, baseline32, actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused/open."
  },
  "section_16_review": {
   "status": "PERFORMED_OWNER_RATIFIED",
@@ -596,9 +596,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
-  "IMPLEMENTATION_BASE_SHA": "0c01b350dc72c953fdac07214ecc15208e0a2536",
-  "set_by": "R31/re-seal31, 2026-09-10T10:42:36.751382+00:00"
+  "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+  "IMPLEMENTATION_BASE_SHA": "7e334d81ea429448c80bcd269cd77d5832a1d6ab",
+  "set_by": "R32/re-seal32, 2026-09-10T11:45:06.156965+00:00"
  },
  "reseal_history": [
   {
@@ -1181,7 +1181,7 @@
   },
   {
    "at": "2026-09-10T10:42:36.751382+00:00",
-   "actor": "Astra Lead coordinated; Sol High mechanical builder",
+   "actor": "Astra Lead coordinated; Sol High mechanical builder re-seal #31",
    "old_EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
    "new_EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
    "files_changed": [
@@ -1189,6 +1189,18 @@
    ],
    "design_pin": "v1.25",
    "reason": "R31/re-seal31: approved fee-proof/I5 metadata moved core, and the nine existing modifications were re-derived from their original patches with their modification semantics unchanged. scenario_catalog.json carries the 18 updated catalog pins and is the only changed member among the 19 sealed files. This is a title-only successor; there are no economic, golden, observed, or behavioral changes. NONACCEPTED pending the C31 commit, forward repin, baseline reviews, and fresh Section 16/T0 reviews.",
+   "independently_verified": "pending Lead and required reviews"
+  },
+  {
+   "at": "2026-09-10T11:45:06.156965+00:00",
+   "actor": "Astra Lead coordinated; Sol High mechanical builder re-seal #32",
+   "old_EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
+   "new_EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.25",
+   "reason": "R32/re-seal32: refreshed the tenth INPUT probe's dependency identity after the first nine kernel probes were regenerated; current source and mutation behavior, economics, goldens, admission/refusals are all unchanged. Only the existing scenario_catalog.json member changes among the 19 sealed members. The malformed current R31 actor labels were repaired only by appending literal re-seal #31, preserving raw C31 Git history. NONACCEPTED pending C32/F32, baseline32, actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused/open.",
    "independently_verified": "pending Lead and required reviews"
   }
  ],
@@ -1204,12 +1216,12 @@
    "authorization": "ONE run completed under P012_ONE_EXTRA_COORDINATED_REPAIR=YES, overnight 2050 packet approved 2026-09-05 20:48, re-seal24; 17/17 complete, 0 blocked, all 34 surfaces identical.",
    "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
    "current_run": {
-    "sha256": "256c3593db27df5643d114beaafccb1709d32fe2e89ca147416495bff443e772",
-    "EXPECTED_SEAL_SHA_consumed": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
-    "created_at": "2026-09-08T19:56:34.134141+03:00",
-    "authorization": "One full baseline execution for the re-seal #30 candidate. The unchanged child driver was re-run because the funding valuation member was renamed mark_price -> oracle_price, which moved the two RULE2-08 scenario inputs and therefore their catalog digest pins. Measured outcome: the driver consumed the renamed inputs (RULE2-08-RED 4bc3cc74 -> 2afadceb, RULE2-08-GREEN 6c349e8b -> 3a193160, each equal to its new catalog pin) and all 34 scenario artifacts are byte-identical to the re-seal #29 baseline; only run_status.json (its catalog path, catalog digest, kernel root and kernel bindings) and SHA256SUMS differ. No legacy observation moved and no economic value moved. NONACCEPTED Item4 refused.",
+    "sha256": "1c6e38e8adf7c586df1f29a4955961345b65222a7bb2eb159974de0e52719729",
+    "EXPECTED_SEAL_SHA_consumed": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
+    "created_at": "2026-09-10T11:03:42Z",
+    "authorization": "Owner approved I-5 protected provenance field, necessary identity updates, identity correction and strict accepting reviews on 2026-09-10. Actual new run has 34 semantic outputs identical to preserved reseal30. This packet is NONACCEPTED pending exact reviews and production Item4 evidence. EXPECTED_SEAL_SHA_consumed is a legacy field name storing Lead-verified expected seal only; unchanged child driver has no seal argument and did not read seal. No new production data, captures, economics, or human ratification are claimed. Measured R31: 17/17 complete, 0 blocked; 34 semantic outputs byte-identical to prior R30. The legacy seal field is Lead attestation, not driver consumption; packet created_at is not test execution time.",
     "catalog_expected_artifacts_2_0_0": "17/17 VALID",
-    "measured_at": "2026-09-10, re-seal #30 (HIST-2026-0024)",
+    "measured_at": "2026-09-10T11:20:06.149192+00:00; R31 authority HIST-2026-0035 and HIST-2026-0036",
     "enforced_by": "verify_bceg.py:2980 re-reads the file and refuses if EXPECTED_SEAL_SHA_consumed does not equal the seal; verify_bceg.py:66-74 lists baseline_manifest_sha256 as a Section-16 content identity key and :650-654 refuses on mismatch. Both act on the FILE and on the RECEIPT, never on this block, which is descriptive only."
    }
   },

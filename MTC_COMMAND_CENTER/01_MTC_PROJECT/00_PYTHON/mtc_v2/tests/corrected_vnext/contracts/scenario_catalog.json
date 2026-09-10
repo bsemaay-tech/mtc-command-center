@@ -2266,7 +2266,7 @@
   "modified_copy_path": "tests/corrected_vnext/probes/PROBE-P012-03-A/record/",
   "modified_copy_digest": "35193efcfc568ec582e430b0acdc35fa4bcc3e7866313ad9f4798fd2e4e0d304",
   "modification_manifest_path": "tests/corrected_vnext/probes/PROBE-P012-03-A/modification_manifest.json",
-  "modification_manifest_digest": "a496c97b16db3d219e3b2a7ff0222c70e9ce00fb38f057082a2706fbfc64e578",
+  "modification_manifest_digest": "e815d03530c42a4a86830f0dbff337a1bd52df073c544383d600f5ace49825e5",
   "expected_failed_check": "RECORD_IDENTITY_PREFLIGHT",
   "expected_first_changed_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
   "comparator_first_differing_node": "core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
