@@ -128,27 +128,60 @@ class DeclaredFieldValidatorTests(unittest.TestCase):
             self.codes(design_text=mutated_design),
         )
 
-    def test_heading_map_accurate_red_green(self) -> None:
-        clean = deepcopy(self.manifest)
+    def test_heading_map_historical_consistent_red_green(self) -> None:
+        """The map is a dated reseal-17 snapshot, so positive drift is EXPECTED.
+
+        An earlier version of this check compared the snapshot against current line
+        numbers and produced 8 false refusals on the real manifest. Correcting those
+        entries would have falsified a dated historical record. The sound invariants are
+        that every declared heading still exists, and that drift is never negative --
+        a heading moving earlier means content was deleted above an append-only design.
+        """
         actual: dict[str, int] = {}
         for line_number, line in enumerate(self.design_text.splitlines(), 1):
             match = re.match(r"^#{1,6}\s+(.+?)\s*$", line)
             if match is not None:
-                actual[match.group(1)] = line_number
-        heading_map = clean["design"]["heading_line_map_measured_at_reseal17"]
-        for heading in heading_map:
-            heading_map[heading] = actual[heading]
+                actual.setdefault(match.group(1), line_number)
+
+        # GREEN: the real manifest, untouched. Its 8 drifted entries are +1/+3, i.e.
+        # positive, and must NOT refuse.
         self.assertNotIn(
-            "HEADING_MAP_ACCURATE",
-            self.codes(manifest=clean, design_text=self.design_text),
+            "HEADING_MAP_HISTORICAL_CONSISTENT",
+            self.codes(manifest=self.manifest, design_text=self.design_text),
         )
 
-        mutated = deepcopy(clean)
+        heading_map = self.manifest["design"]["heading_line_map_measured_at_reseal17"]
         first_heading = next(iter(heading_map))
-        mutated["design"]["heading_line_map_measured_at_reseal17"][first_heading] += 37
+
+        # RED 1: negative drift -- declared later than where the heading actually sits.
+        earlier = deepcopy(self.manifest)
+        earlier["design"]["heading_line_map_measured_at_reseal17"][first_heading] = (
+            actual[first_heading] + 50
+        )
         self.assertIn(
-            "HEADING_MAP_ACCURATE",
-            self.codes(manifest=mutated, design_text=self.design_text),
+            "HEADING_MAP_HISTORICAL_CONSISTENT",
+            self.codes(manifest=earlier, design_text=self.design_text),
+        )
+
+        # RED 2: a declared heading that no longer exists in the design at all.
+        vanished = deepcopy(self.manifest)
+        vanished_map = vanished["design"]["heading_line_map_measured_at_reseal17"]
+        vanished_map["A heading that was never in this design"] = vanished_map.pop(
+            first_heading
+        )
+        self.assertIn(
+            "HEADING_MAP_HISTORICAL_CONSISTENT",
+            self.codes(manifest=vanished, design_text=self.design_text),
+        )
+
+        # And positive drift specifically must stay GREEN.
+        drifted = deepcopy(self.manifest)
+        drifted["design"]["heading_line_map_measured_at_reseal17"][first_heading] = max(
+            1, actual[first_heading] - 37
+        )
+        self.assertNotIn(
+            "HEADING_MAP_HISTORICAL_CONSISTENT",
+            self.codes(manifest=drifted, design_text=self.design_text),
         )
 
     def test_path_count_accurate_red_green(self) -> None:

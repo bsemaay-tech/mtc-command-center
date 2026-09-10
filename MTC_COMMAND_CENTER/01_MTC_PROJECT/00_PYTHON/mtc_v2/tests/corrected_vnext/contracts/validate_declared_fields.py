@@ -216,7 +216,7 @@ def _validate_design(
             for code in (
                 "DESIGN_VERSION_MATCHES_BYTES",
                 "DESIGN_CHANGELOG_ADOPTED",
-                "HEADING_MAP_ACCURATE",
+                "HEADING_MAP_HISTORICAL_CONSISTENT",
             )
         ]
     if design_text is None:
@@ -227,7 +227,7 @@ def _validate_design(
                 for code in (
                     "DESIGN_VERSION_MATCHES_BYTES",
                     "DESIGN_CHANGELOG_ADOPTED",
-                    "HEADING_MAP_ACCURATE",
+                    "HEADING_MAP_HISTORICAL_CONSISTENT",
                 )
             ]
 
@@ -264,7 +264,7 @@ def _validate_design(
     if type(heading_map) is not dict:
         refusals.append(
             Refusal(
-                "HEADING_MAP_ACCURATE",
+                "HEADING_MAP_HISTORICAL_CONSISTENT",
                 "manifest.design.heading_line_map_measured_at_reseal17",
                 "heading map is not an object",
             )
@@ -275,16 +275,63 @@ def _validate_design(
             match = re.match(r"^#{1,6}\s+(.+?)\s*$", line)
             if match is not None:
                 actual_headings.setdefault(match.group(1), []).append(number)
+        # This map is a DATED SNAPSHOT: its name is `..._measured_at_reseal17`, and the
+        # design block records later additions in sibling
+        # `heading_line_map_addition_measured_at_reseal{25,26,28,30}` keys rather than
+        # rewriting this one. So the design is append-only and these line numbers are
+        # expected to drift as content is inserted above them.
+        #
+        # Comparing a reseal-17 snapshot against CURRENT line numbers is therefore a
+        # category error. An earlier version of this check did exactly that and produced
+        # 8 false refusals; correcting the entries to current lines would have falsified a
+        # dated historical record — the same defect repaired in commit 2f1008ab.
+        #
+        # What IS soundly checkable about a historical snapshot:
+        #   * every declared heading still exists in the design (a vanished heading is real);
+        #   * drift is non-negative — a heading moving EARLIER means content was deleted
+        #     above it, which an append-only design should never do.
+        drifts: list[tuple[str, int, int]] = []
         for heading, declared_line in heading_map.items():
-            actual_lines = actual_headings.get(heading, []) if type(heading) is str else []
-            if type(declared_line) is not int or type(declared_line) is bool or actual_lines != [declared_line]:
+            if type(heading) is not str:
                 refusals.append(
                     Refusal(
-                        "HEADING_MAP_ACCURATE",
-                        f"manifest.design.heading_line_map_measured_at_reseal17.{heading}",
-                        f"declared={declared_line!r} actual={actual_lines}",
+                        "HEADING_MAP_HISTORICAL_CONSISTENT",
+                        "manifest.design.heading_line_map_measured_at_reseal17",
+                        f"non-string heading key {heading!r}",
                     )
                 )
+                continue
+            if type(declared_line) is not int or type(declared_line) is bool:
+                refusals.append(
+                    Refusal(
+                        "HEADING_MAP_HISTORICAL_CONSISTENT",
+                        f"manifest.design.heading_line_map_measured_at_reseal17.{heading}",
+                        f"declared line is not an int: {declared_line!r}",
+                    )
+                )
+                continue
+            actual_lines = actual_headings.get(heading, [])
+            if not actual_lines:
+                refusals.append(
+                    Refusal(
+                        "HEADING_MAP_HISTORICAL_CONSISTENT",
+                        f"manifest.design.heading_line_map_measured_at_reseal17.{heading}",
+                        f"declared={declared_line} but the heading no longer exists in the design",
+                    )
+                )
+                continue
+            drift = actual_lines[0] - declared_line
+            if drift < 0:
+                refusals.append(
+                    Refusal(
+                        "HEADING_MAP_HISTORICAL_CONSISTENT",
+                        f"manifest.design.heading_line_map_measured_at_reseal17.{heading}",
+                        f"declared={declared_line} actual={actual_lines[0]} drift={drift} "
+                        "(negative drift means content was deleted above an append-only design)",
+                    )
+                )
+                continue
+            drifts.append((heading, declared_line, drift))
     return refusals
 
 
@@ -303,7 +350,25 @@ def _chain_refusals(
         following = history[index + 1]
         current_new = current.get(new_field) if type(current) is dict else None
         following_old = following.get(old_field) if type(following) is dict else None
-        if current_new != following_old:
+        # A transition whose predecessor field is ABSENT is not a contradiction -- it is
+        # unexaminable. Early entries of an append-only history can predate a field's
+        # introduction (base_repin_history entries 1-4 carry no old_core_tree_oid_at_base;
+        # the field starts at entry 5). Reporting those as a chain "break" would claim a
+        # contradiction that has not been shown.
+        #
+        # The distinction is the whole point: the Lead's own chain walk SKIPPED these and
+        # then reported "zero breaks", which conflated *nothing contradicts* with
+        # *verified*. Both are worth reporting, under different codes.
+        if type(following) is dict and old_field not in following:
+            refusals.append(
+                Refusal(
+                    "CHAIN_UNVERIFIABLE",
+                    f"{path}.{index}->{index + 1}",
+                    f"{new_field}={current_new!r} but {old_field} is absent from entry "
+                    f"{index + 1}, so this transition cannot be checked in either direction",
+                )
+            )
+        elif current_new != following_old:
             refusals.append(
                 Refusal(
                     "RESEAL_CHAIN_CONTINUOUS",
