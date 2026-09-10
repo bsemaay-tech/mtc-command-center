@@ -230,6 +230,95 @@ manifest is load-bearing in a way I failed to find, and every conclusion in §1 
 
 ---
 
+## 5a. APPLIED 2026-09-10 — and the falsification test above was too narrow
+
+Applied under `HIST-2026-0024` (owner: **apply all three**). **The three repairs worked**: the
+validator's `SECTION16_STATUS_CONSISTENT`, `BASELINE_PIN_CURRENT_OR_LABELLED` and
+`HISTORICAL_LABELLED` refusals are all discharged, 9 refusals down to 6. The seal did **not** move,
+exactly as §1 predicted.
+
+**And the gate refused anyway.**
+
+```
+claim_label: BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_REFUSED
+refusals:    CONTRACT_SELFTEST_RED - 2 contract self-tests failed
+```
+
+§1 claimed these repairs change **no verdict**. That claim was **false**, and the test I wrote to
+catch myself would not have caught it. I checked the wrong two things — the seal and
+`acceptance_blockers` — and the verdict moved through a third: **the validator's own self-tests are
+members of the gate's contract self-test suite.** Merging PR #170 put them there. The repairs changed
+the record those tests assert against, two RED cases stopped firing, and the gate refused on
+`CONTRACT_SELFTEST_RED` with `acceptance_blockers` still at 0 and the seal still at `b6ac5a46`.
+
+**The corrected falsification test** — what §5 should have said:
+
+1. `claim_label` must still read `BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_ACCEPTED`. **This is the
+   binding one.**
+2. `acceptance_blockers` must not grow.
+3. `refusals` must be empty.
+4. `EXPECTED_SEAL_SHA` must still read `b6ac5a46…`.
+
+A seal check alone tests one route into the verdict. **The claim label is the verdict.**
+
+### The two failures were not stale tests — one was a real loophole
+
+The obvious reading is "the tests encoded the old state, update them". That was true of one. The other
+was a hole in the checker, and applying the repair is what exposed it.
+
+`_has_historical_marker` searched **recursively**. Repair B adds a nested `current_run.measured_at`,
+which dates the *current* run — and a recursive search let it discharge the staleness of the
+*historical* `sha256` sitting beside it. **Any block could have been made to look dated by burying a
+date in any child.** Replaced by `_dates_this_field`, non-recursive, which requires a marker that
+either names the field (`sha256_measured_at`) or dates the whole block. A new RED case pins the
+loophole shut.
+
+### Two more defects, same shape as each other
+
+Both checks fired on the repaired record **because the repair text quotes the wording it corrected** —
+`"Before 2026-09-10 this field read PENDING and stated the review had NOT been performed"` and
+`'Until 2026-09-10 this field ended with the words "run this session"'`.
+
+**A checker that cannot tell an assertion from a quotation of a former assertion punishes the
+additive-correction practice this package requires everywhere else.** Fixed by taking the verdict from
+the **structured** field and demoting the prose scan to a fallback for when that field is missing or
+empty.
+
+### And a gap the repair round exposed by accident
+
+The section-16 check only ever caught the record calling the review **undone** while a valid receipt
+existed — the self-deprecating direction, and the harmless one. **It never caught the reverse:** the
+record claiming the acceptance-blocking review was **done** with nothing backing it. That is the
+direction that could wave a package through. Now checked, with its own RED cases.
+
+**16 of 16 self-tests pass.** Gate re-run after the fix — result in §5b below.
+
+## 5b. Gate result after the fix — measured against the corrected test
+
+| criterion | required | measured |
+|---|---|---|
+| `claim_label` | `..._ACCEPTED` | **`BOUNDED_NON_BLOCKED_CORRECTION_EVIDENCE_ACCEPTED`** |
+| `acceptance_blockers` | not grown | **0** |
+| `refusals` | empty | **none** |
+| `EXPECTED_SEAL_SHA` | `b6ac5a46…` | **`b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda`** |
+| `contract_selftest_suite` | all pass | **491 passed, 0 failed** |
+| `expected_source_provenance` | `MATCH` on this commit | **`MATCH`, `observed_build_sha 41d4f6f1`** |
+
+**All four criteria of the corrected falsification test pass.** The suite count is the evidence for the
+mechanism described above: it was 475 before this branch and is 491 now — the validator's 16 tests are
+inside the gate's contract suite, which is exactly why they could move the verdict.
+
+**So the honest final statement of cost is narrower than §1 claimed.** The repairs do not touch the
+seal, the baseline, the receipt or any acceptance blocker — that part held. But they are *not*
+verdict-neutral in the way §1 implied, because the record they edit is an input to tests the gate runs.
+**Editing a record that self-tests assert against is a code change wearing a metadata change's
+clothes.** Worth remembering before the next round is called free.
+
+
+
+
+---
+
 ## 6. Governance
 
 - **Protected path.** `contracts/` was ruled a canonical feature contract by this Lead on 2026-09-09,
