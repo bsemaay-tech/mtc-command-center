@@ -1,7 +1,7 @@
 {
  "schema": "P012_SEMANTIC_COVERAGE_REVIEW_V2",
  "reviewer": {
-  "identity": "Gemini 3.8 Flash High (gemini-3.8-flash-high), R30 delta review of ca1a44576aa46907ba4b39c417bced4bfabe94de..d06aa741c32a3b57a7bfe299aefa67c86cab453e, 2026-09-08; the #29 item dispositions it carried forward were authored by the same family in the R29 delta review, and before that in lanes REV16H_1A..6 under OD-20260906-3; parts assembled mechanically by the Lead (Claude Opus 5) who decided nothing",
+  "identity": "Gemini 3.8 Flash High (gemini-3.8-flash-high), R30 delta review of ca1a44576aa46907ba4b39c417bced4bfabe94de..d06aa741c32a3b57a7bfe299aefa67c86cab453e, 2026-09-08; the #29 item dispositions it carried forward were authored by the same family in the R29 delta review, and before that in lanes REV16H_1A..6 under OD-20260906-3; parts assembled mechanically by the Lead (Claude Opus 5) who decided nothing HARNESS RE-CERTIFIED 2026-09-10 under HIST-2026-0034: reviewed_identities.harness_sha256 moved from 53b4ff48 to c78ee467 because verify_bceg.py gained the report-only declared-field validation block, and that delta was reviewed independently by the same family (gemini-3.8-flash-high) in two rounds against packet _gemini_packets_20260830/P012_HARNESS_WIRING_R2_20260910 - round 1 returned PASS-WITH-NITS and found three real defects (a rows comprehension outside the try, three unbounded git calls that could have hung the gate, and one vacuous test assertion), all repaired, and round 2 returned PASS on the repaired bytes; the Lead re-verified every substantive citation in that report against the packet bytes and found two wrong line pointers for HIST-2026-0030, whose value was correct in every location, so the measured locations rather than the reviewer's are used here; no item disposition, hunk coverage or ratification entry is changed by this re-certification, because the hunk diff scope is core and the wiring touched only tests",
   "family": "Gemini",
   "independent_of": [
    {
@@ -22,7 +22,7 @@
   "baseline_manifest_sha256": "256c3593db27df5643d114beaafccb1709d32fe2e89ca147416495bff443e772",
   "design_file_sha256": "c4bb6f67d9dd736725ee0731659b8fc1939f21ac907e4b8a7d6c94ca7dcdec9b",
   "design_version": "v1.24",
-  "harness_sha256": "53b4ff48973bdf6dda8485f4c34de43d320fdb07da43fc523eaa17366e2817cf",
+  "harness_sha256": "c78ee46776cab1b5fdee56de93d3637085b3942a759b3db5a8d69b9bf2ffc570",
   "catalog_sha256": "b53f6e24433d2230c37b1cbd0a778f157f9bd8305f75aab18724b91d20ce4657"
  },
  "items": {
