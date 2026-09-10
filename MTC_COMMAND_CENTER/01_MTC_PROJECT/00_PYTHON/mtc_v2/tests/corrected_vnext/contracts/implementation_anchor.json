@@ -1,9 +1,9 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+ "EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
  "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
- "core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
+ "core_tree_oid_at_base": "ead33b9704f11e6235b19e0f24a846b2f217b4aa",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
@@ -232,6 +232,14 @@
    "old_EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
    "new_EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
    "reason": "R32/re-seal32: refreshed the tenth INPUT probe's dependency identity after the first nine kernel probes were regenerated; current source and mutation behavior, economics, goldens, admission/refusals are all unchanged. Only the existing scenario_catalog.json member changes among the 19 sealed members. The malformed current R31 actor labels were repaired only by appending literal re-seal #31, preserving raw C31 Git history. NONACCEPTED pending C32/F32, baseline32, actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused/open.",
+   "independently_verified": "pending Lead and required reviews"
+  },
+  {
+   "at": "2026-09-10T21:29:02.503127+00:00",
+   "actor": "Astra Lead coordinated; OpenCode Go DeepSeek V4 Pro mechanical builder re-seal #33",
+   "old_EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+   "new_EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
+   "reason": "R33/re-seal33: approved HYPERLIQUID price-policy kernel changed; original recorded probe mutations regenerated against current core; dependency identity maintained; only catalog member changes; no golden/DERIVATIONS or economic production-facts changes; NONACCEPTED C33 pending baseline/F33 and actual Section 16/owner ratification/exact T0. Independent verification remains pending.",
    "independently_verified": "pending Lead and required reviews"
   }
  ],

@@ -7,6 +7,14 @@
   "settlement_currency": "USDC",
   "point_value": 1,
   "price_tick": null,
+  "price_alignment_policy": {
+    "id": "HYPERLIQUID_PX_V1",
+    "significant_figures": 5,
+    "perp_max_decimals": 6,
+    "size_decimals": 5,
+    "integer_exception": true,
+    "positive_price_required": true
+  },
   "quantity_step": 0.00001,
   "minimum_quantity": null,
   "minimum_notional": 10,
