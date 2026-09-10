@@ -29,10 +29,33 @@ PATH_COUNT_RE = re.compile(
     re.IGNORECASE,
 )
 PRESENT_TENSE_RE = re.compile(r"\b(?:now tracks|run this session)\b", re.IGNORECASE)
-HISTORICAL_MARKER_RE = re.compile(r"\b(?:historical|captured[-_ ]at|as[-_ ]of)\b", re.IGNORECASE)
-HISTORICAL_MARKER_KEYS = frozenset(
-    {"historical", "historical_label", "captured_at", "captured_at_utc", "as_of", "as_of_utc"}
+HISTORICAL_MARKER_RE = re.compile(
+    r"\b(?:historical|captured[-_ ]at|as[-_ ]of|measured[-_ ]at)\b", re.IGNORECASE
 )
+HISTORICAL_MARKER_KEYS = frozenset(
+    {
+        "historical",
+        "historical_label",
+        "captured_at",
+        "captured_at_utc",
+        "as_of",
+        "as_of_utc",
+        "measured_at",
+        "measured_at_utc",
+    }
+)
+# The record already has a convention for dating a snapshot, and it puts the date in the
+# KEY NAME: design.heading_line_map_measured_at_reseal17 plus four
+# heading_line_map_addition_measured_at_reseal{25,26,28,30} siblings. Five uses, and it is
+# the reason that map was eventually recognised as a snapshot at all -- its own name said so.
+#
+# The first version of this file did not accept that convention. It recognised "historical",
+# "captured_at" and "as_of" -- three spellings this record has never used -- and omitted the
+# one it does use. So the check would have demanded a NEW way of saying "true on a date"
+# while a working one sat five keys away. That is the same error as the original
+# HEADING_MAP_ACCURATE: a checker asserting how the record ought to look instead of reading
+# what the record means.
+HISTORICAL_MARKER_KEY_RE = re.compile(r"measured[-_ ]at|_at_reseal\d+", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -446,6 +469,13 @@ def _semantic_review_is_validating(review: Any) -> bool:
 def _has_historical_marker(value: Any) -> bool:
     if type(value) is dict:
         if any(key.casefold() in HISTORICAL_MARKER_KEYS and bool(member) for key, member in value.items()):
+            return True
+        # A date carried in the key name discharges it too -- that is this record's own
+        # convention, used five times in the design block.
+        if any(
+            HISTORICAL_MARKER_KEY_RE.search(key) is not None and bool(member)
+            for key, member in value.items()
+        ):
             return True
         return any(_has_historical_marker(member) for member in value.values())
     if type(value) is list:

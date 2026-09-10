@@ -253,6 +253,49 @@ class DeclaredFieldValidatorTests(unittest.TestCase):
         )
         self.assertIn("HISTORICAL_LABELLED", self.codes(manifest=mutated))
 
+    def test_record_own_dating_convention_discharges_the_label(self) -> None:
+        """This record dates a snapshot in the KEY NAME, and that must be accepted.
+
+        `design.heading_line_map_measured_at_reseal17` plus four
+        `heading_line_map_addition_measured_at_reseal{25,26,28,30}` siblings -- five uses. The
+        first version of this validator recognised "historical", "captured_at" and "as_of",
+        three spellings this record has never used, and omitted the one it does. It would have
+        demanded a new convention while a working one sat five keys away.
+        """
+        # (a) a dated inner field, no boolean
+        inner = deepcopy(self.manifest)
+        baseline = inner["legacy_event_order_map_pin"]["baseline_manifest"]
+        baseline["sha256_measured_at"] = "re-seal #24, 2026-09-05"
+        self.assertNotIn(
+            "BASELINE_PIN_CURRENT_OR_LABELLED",
+            self.codes(manifest=inner, baseline_digest=self.baseline_digest),
+        )
+
+        # (b) the date carried in the key name, exactly as the design block does it
+        keyed = deepcopy(self.manifest)
+        pin = keyed["legacy_event_order_map_pin"]
+        pin["baseline_manifest_measured_at_reseal24"] = pin.pop("baseline_manifest")
+        pin["baseline_manifest"] = deepcopy(
+            pin["baseline_manifest_measured_at_reseal24"]
+        )
+        pin["baseline_manifest"]["measured_at"] = "re-seal #24, 2026-09-05"
+        self.assertNotIn(
+            "BASELINE_PIN_CURRENT_OR_LABELLED",
+            self.codes(manifest=keyed, baseline_digest=self.baseline_digest),
+        )
+
+        # (c) RED is unchanged: a wrong digest with NO dating of any kind still refuses.
+        bare = deepcopy(self.manifest)
+        bare_pin = bare["legacy_event_order_map_pin"]["baseline_manifest"]
+        bare_pin["sha256"] = "7" * 64
+        for key in list(bare_pin):
+            if "measured_at" in key or key in {"historical", "as_of", "captured_at"}:
+                del bare_pin[key]
+        self.assertIn(
+            "BASELINE_PIN_CURRENT_OR_LABELLED",
+            self.codes(manifest=bare, baseline_digest=self.baseline_digest),
+        )
+
     def test_invented_top_level_field_is_unregistered(self) -> None:
         mutated = deepcopy(self.manifest)
         mutated["invented_validator_field_83"] = "different from every historical defect"
