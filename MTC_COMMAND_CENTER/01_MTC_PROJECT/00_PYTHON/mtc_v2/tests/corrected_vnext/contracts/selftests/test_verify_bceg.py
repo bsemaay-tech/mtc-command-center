@@ -31,7 +31,7 @@ from mtc_v2.tests.corrected_vnext.verify_bceg import (
 
 FIXTURES = Path(__file__).parent
 MTC_V2_ROOT = FIXTURES.parents[3]
-BASELINE_ROOT = Path(r"C:\tmp\P012_BASELINE_RUN")
+BASELINE_ROOT = Path(r"C:\tmp\P012_PRICE_BASELINE33_DESIGNFIX_20260910\CURRENT")
 EMPTY_DOCUMENT_BYTES = b"{}" + bytes([10])
 PATCH_BYTES = b"--- a" + bytes([10])
 MEMBER_BYTES = b"x = 1" + bytes([10])
