@@ -202,6 +202,39 @@ real read. R6 is **assisted**, not mechanised, and the human check it describes 
 What it does catch, and is worth keeping for: the `file:///` stale-checkout habit, unparseable verdict
 blocks, `CHANGED` items, and genuinely **invented** paths that resolve nowhere in the packet.
 
+### Two ways to mechanise this were tested and both failed — do not retry them
+
+Measured 2026-09-09 against the real reports, so the next session does not spend the time again.
+
+**Candidate 1 — require verbatim quotes that resolve inside the packet.** Extract every fenced-block
+line and inline-backtick span of ≥12 chars, and check it appears somewhere in the packet's 254 files.
+
+| report | spans | resolve in packet | rate |
+|---|---|---|---|
+| attempt 7 (**read the wrong tree**) | 47 | 28 | **60%** |
+| attempt 9 (genuine review) | 58 | 29 | 50% |
+
+**The bad review scores higher.** Both reports' resolving spans are overwhelmingly verdict-template
+boilerplate (`"reviewed_head"`, `"prior_head"`, `"new_unresolved_items": []`) copied from
+`VERDICT_TEMPLATE.json` **inside the packet**. Quote resolution measures copying the template, not
+reading the subject.
+
+**Candidate 2 — require every `path:line` citation to carry a quote verified *at that line*.**
+
+| report | citations | resolvable | carrying a verified positional quote |
+|---|---|---|---|
+| attempt 7 | 12 | 12 | **0** |
+| attempt 9 | 2 | 2 | **0** |
+
+**Neither report quotes positionally at all**, so this rule rejects the genuine review too. Unusable
+as a gate.
+
+**Why no report-only check can work here.** The failure mode is a reviewer reading a **stale copy of
+the same paths**. A stale tree is path-identical to a fresh one — that is what staleness *is* — so
+nothing about the *shape* of a citation distinguishes them. Detection has to come from the packet
+side: R1 (the bytes are in the packet) and R2 (outside reads forbidden) are what actually prevent
+this. **The checker is a backstop for sloppiness, not a detector for staleness.** Rely on R1 and R2.
+
 Note also that attempt 7's *line numbers were correct*, because they came from the diff's hunk headers
 rather than from reading any file. "The numbers are right" proves nothing — and this checker's
 `path:line` check should not be read as proving it either.
