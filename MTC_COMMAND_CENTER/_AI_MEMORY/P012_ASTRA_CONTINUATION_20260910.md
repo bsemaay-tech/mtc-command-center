@@ -160,3 +160,26 @@ Run exact-current-head protected CI, then complete the already-authorized PR int
 ## WAITING FOR OWNER
 
 Nothing.
+
+# APPEND-ONLY CHECKPOINT - 2026-09-10 19:23 UTC - P012 price policy prebuild (integration closed)
+
+Append-only entry; all earlier history byte-preserved. Writer: native OpenCodeGo deepseek-v4-pro (bounded output-only prebuild). No repository writes, Git mutation, network, credentials, agents, providers, or installs; local file writes and byte/word checks only.
+
+## Integration closed
+
+- PR175 merged 2026-09-10 19:23:23 UTC into 3e86faec; current-head protected gate 495 passed / 0 failed, provenance MATCH.
+- Protected Bridge CI passed on current head.
+- Separate approved price worktree C:/tmp/P012_PRICE_20260910, branch feature/p012-price-policy-20260910, base 3e86faec.
+- No production acceptance; no full P012 acceptance.
+
+## Pending
+
+- New Section 16 review and genuine owner ratification remain required later.
+
+## NEXT ACTION
+
+Continue the approved price-policy prebuild; the separate Section 16 review and owner ratification are required before acceptance.
+
+## WAITING FOR OWNER
+
+Nothing for the approved prebuild; later Section 16 ratification only.
