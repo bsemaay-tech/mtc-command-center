@@ -123,7 +123,6 @@ wrong.**
   "path": "C:\\tmp\\P012_BASELINE_RUN\\BASELINE_BYTES_MANIFEST.json",
   "sha256": "c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242",
   "sha256_measured_at": "re-seal #24, 2026-09-05",
-  "superseded": true,
   "authorization": "<unchanged>",
   "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
   "current_run": {
@@ -165,8 +164,7 @@ into a content-addressed store, which is a design change, not a repair. **Flagge
 
 ```json
 "repository_evidence_identity": {
-  "measured_at": "2026-08-30, worktree C:\\WFMERGE54",
-  "historical": true,
+  "measured_at": "2026-08-31, worktree C:\\WFMERGE54 (block introduced in 5e8e5794)",
   "worktree": "C:\\WFMERGE54",
   "head_commit": "108ea066a710ff7ef5c09246903fe3d523da1d56",
   "mtc_v2_core_tree_oid": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
