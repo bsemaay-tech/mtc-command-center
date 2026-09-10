@@ -1,6 +1,6 @@
 # Autonomy Authorization
 
-Owner decisions OD-20260905-4, OD-20260905-5, and OD-20260906-1. Single source for
+Owner decisions OD-20260905-4, OD-20260905-5, and OD-20260906-1; and the owner's 2026-09-10 approval of the canonical proactive scheduling rule below. Single source for
 ask-vs-autonomous routing. Entries state existing permission or retained approval gate; none
 creates operation or acceptance authority.
 
@@ -22,17 +22,29 @@ creates operation or acceptance authority.
 - No authorization for live trading, deployment, credentials, authenticated host/exchange contact,
   TESTNET/mainnet, ARM, orders, wallet/transfers, new spend, or history rewrite.
 
-## Maximum useful throughput
+## Proactive scheduling
 
-- Target 4–6 actually `RUNNING` independent workers; Lead, CI, queued/completed work, and failed
-  subscriptions do not count. Refill on completion or quiet-window end without owner prompting.
-  Use 8–10 only when distinct authorized tasks and resources exist.
-- Every lane records its output, exact read/write paths, dependency, provider/model, deadline, and
-  stop condition. Use the cheapest capable included route and prioritize the critical path.
-- During Gemini quiet windows, pause watched-repository/Git writers; use already-frozen read-only
-  packets elsewhere. Preserve path isolation.
-- Throughput never creates duplicate audits, busywork, path collisions, or waivers of tests,
-  evidence, acceptance, permissions, safety, or audit requirements.
-- Report shortfalls/provider idleness precisely: dependency, overlap, missing frozen packet,
-  provider failure, runtime capacity, or no useful work. The current native worker limit of three is
-  session capacity, not permanent repository policy.
+Canonical rule; owner-approved 2026-09-10.
+
+For substantial project work proactively identify and dispatch independent authorized subtasks
+without owner prompting. Count actually running subscription-backed workers only — not the Lead,
+CI, planned jobs, or completed/failed workers. Target 4–6 useful running workers when scope,
+capacity and review workload support them; use fewer with a concrete reason; optimize completion
+time/cost, not count. Each lane records exact read/write paths, provider/model, deadline,
+dependency, and stop condition. At startup, on each worker completion/block, and before ending
+the session blocked: reconcile existing workers and completed evidence; identify ready work and
+dependencies; dispatch useful unassigned tasks on approved routes; each writer gets exclusive
+paths and a completion condition; continue independent preparation during reviews/external
+dependencies; verify completed outputs promptly and refill ready work. Preserve reviewed
+candidates, spending, protected scope, and reviewer independence. Preserve the Gemini
+quiet-window pause of watched-repo Git writers; use externally prepared frozen inputs for
+scheduling work. No duplicate work or unnecessary audits. Maintain a compact
+running/ready/completed/blocked table. Every ready unassigned task needs a specific reason; before
+ending blocked, every remaining authorized task must be running or hold a named dependency.
+Decisive check: is any authorized useful task ready while suitable capacity is idle?
+
+Historical optional implementer sub-delegation does not exempt substantial Lead orchestration
+from this scheduling duty; protected role limits and audit child non-recursion remain.
+
+The Gemini quiet-window pathguard and the exact account/model/role limits above stay binding.
+This proactive Lead duty does NOT make audit children recurse; protected counterpart roles stand.

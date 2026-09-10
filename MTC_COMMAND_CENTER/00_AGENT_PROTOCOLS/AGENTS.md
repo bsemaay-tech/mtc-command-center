@@ -47,3 +47,4 @@ not merely the implementation's chosen output. Consult `TESTS.md` for defect-clo
 - Follow `AUTONOMY_AUTHORIZATION.md` for repair checkpoints, ordinary local commits, safe-lane
   continuation and material owner gates. Handoff of shared write paths must preserve ownership;
   no silent transfer of another writer's dirty files.
+- Lead substantial work: see the canonical scheduling rule in `AUTONOMY_AUTHORIZATION.md#proactive-scheduling`.

@@ -17,11 +17,10 @@ Respond in English; be brief and practical.
 
 Use targeted `rg`, then relevant lines/symbols. History is search-on-demand; for triage history,
 search `MTC_COMMAND_CENTER/11_TRIAGE/INDEX.md` first.
-For memory/status reconciliation consult `MTC_COMMAND_CENTER/_AI_MEMORY/MEMORY_INDEX.md`;
-historical journals, dated worker prompts/results and nested Phase-1 templates are reference only.
-Maintenance targets in UTF-8 bytes: root AGENTS <=4500, each stage AGENTS <=4000, and root AGENTS
-+ map + largest stage AGENTS <=11000 before triggered references. These limit startup length,
-not tokens or correctness; read task-triggered detail to the depth needed.
+Memory/status: consult `MTC_COMMAND_CENTER/_AI_MEMORY/MEMORY_INDEX.md`;
+historical journals, dated worker prompts/results and nested templates are reference only.
+Maintenance targets (UTF-8 bytes): root AGENTS <=4500, each stage <=4000, root + map + largest
+stage <=11000. These limit startup length, not tokens or correctness.
 
 ## Authority and safety
 
@@ -59,3 +58,4 @@ owner questions. Never blindly repeat a failed attempt. Preserve mandatory audit
 independent Lead acceptance. Continue authorized independent work; batch only material owner
 decisions. Current stage handoffs state actual outcome, evidence, limits, `NEXT ACTION` and
 `WAITING FOR OWNER` (`Nothing` when applicable); factual progress never implies acceptance.
+- Before planning substantial work, read [Proactive scheduling](MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AUTONOMY_AUTHORIZATION.md#proactive-scheduling).
