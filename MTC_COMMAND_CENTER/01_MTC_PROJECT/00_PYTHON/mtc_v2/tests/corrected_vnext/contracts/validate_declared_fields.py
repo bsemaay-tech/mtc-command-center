@@ -57,6 +57,14 @@ HISTORICAL_MARKER_KEYS = frozenset(
 # what the record means.
 HISTORICAL_MARKER_KEY_RE = re.compile(r"measured[-_ ]at|_at_reseal\d+", re.IGNORECASE)
 
+# Every git call in this module is bounded. Found by the Section-16 reviewer of the report-only
+# gate wiring (gemini-3.8-flash-high, 2026-09-10, PASS-WITH-NITS): three subprocess.check_output
+# calls had no timeout, so a hung git invocation would block the GATE indefinitely once the
+# validator ran inside it. The harness already bounds its own child work at 600s
+# (verify_bceg.py run_contract_selftest_suite), and this module did not honour that convention.
+# A report-only check that can hang the build is not report-only.
+GIT_TIMEOUT_SECONDS = 120
+
 
 @dataclass(frozen=True)
 class Refusal:
@@ -444,6 +452,7 @@ def _tracked_path_count(repo_root: Path) -> int:
         ["git", "-C", str(repo_root), "ls-files", "--", relative],
         text=True,
         stderr=subprocess.STDOUT,
+        timeout=GIT_TIMEOUT_SECONDS,
     )
     return len(output.splitlines())
 
@@ -539,6 +548,7 @@ def _live_identity(repo_root: Path) -> dict[str, str]:
         ["git", "-C", str(repo_root), "rev-parse", "HEAD"],
         text=True,
         stderr=subprocess.STDOUT,
+        timeout=GIT_TIMEOUT_SECONDS,
     ).strip()
     core = subprocess.check_output(
         [
@@ -550,6 +560,7 @@ def _live_identity(repo_root: Path) -> dict[str, str]:
         ],
         text=True,
         stderr=subprocess.STDOUT,
+        timeout=GIT_TIMEOUT_SECONDS,
     ).strip()
     return {"worktree": str(repo_root.resolve()), "head_commit": head, "mtc_v2_core_tree_oid": core}
 
@@ -561,7 +572,7 @@ def _historical_label_refusals(
 ) -> list[Refusal]:
     try:
         live = _live_identity(repo_root)
-    except (OSError, subprocess.CalledProcessError) as exc:
+    except (OSError, subprocess.SubprocessError) as exc:
         return [Refusal("HISTORICAL_LABELLED", "repository", f"live identity unavailable: {exc}")]
     refusals: list[Refusal] = []
     for entry in entries:
@@ -712,7 +723,7 @@ def _validate_cross_checks(
                             f"declared={declared_count} measured={measured_count}",
                         )
                     )
-        except (OSError, ValueError, subprocess.CalledProcessError) as exc:
+        except (OSError, ValueError, subprocess.SubprocessError) as exc:
             refusals.append(
                 Refusal(
                     "PATH_COUNT_ACCURATE",

@@ -3958,3 +3958,117 @@ def test_all_declared_corrected_scenarios_execute_or_refuse_missing_input() -> N
     ]
     assert all(member["semantics_version"] == "2.0.0" for member in observed)
     assert refused == []
+
+
+def test_declared_field_validation_is_report_only_and_cannot_refuse(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Owner ruling HIST-2026-0030 wired the declared-field validator in REPORT-ONLY.
+
+    The property under test is the one that makes the ruling true: refusals must reach the receipt
+    and must NOT reach acceptance_blockers or claim_label. Without this test the report-only
+    guarantee is itself an unproven declaration, which is the defect family the validator exists to
+    close.
+    """
+    root = tmp_path / "root"
+    reviewed_commit, head_commit = two_commit_repository(root)
+    receipt = semantic_review_fixture(root, reviewed_head=reviewed_commit)
+    measured = dict(SYNTHETIC_REVIEW_IDENTITIES)
+    measured["worktree_head_commit"] = head_commit
+    review = root / "tests/corrected_vnext/contracts/semantic_coverage_review.json"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    review.write_bytes(verify_bceg.canonical_json_bytes(receipt))
+
+    loud = {
+        "mode": "REPORT_ONLY",
+        "enforced": False,
+        "authorized_by": "HIST-2026-0030",
+        "ran": True,
+        "refusal_count": 3,
+        "refusal_counts_by_code": {"DELIBERATELY_SYNTHETIC_CODE": 3},
+        "refusals": [
+            {
+                "code": "DELIBERATELY_SYNTHETIC_CODE",
+                "path": f"manifest.synthetic_field_{index}",
+                "detail": "a refusal that must not refuse the build",
+            }
+            for index in range(3)
+        ],
+    }
+    monkeypatch.setattr(verify_bceg, "run_declared_field_validation", lambda _root: loud)
+
+    assert run_synthetic_full_gate(
+        root, tmp_path / "baseline", monkeypatch, measured, use_real_git=True
+    ) == 0
+    gate_receipt = json.loads(capsys.readouterr().out)
+
+    # The verdict is untouched by three refusals.
+    assert gate_receipt["claim_label"] == verify_bceg.ACCEPTING_LABEL
+    assert gate_receipt["acceptance_blockers"] == []
+    assert "refusals" not in gate_receipt
+
+    # And the refusals are nonetheless recorded, or report-only would mean invisible.
+    block = gate_receipt["declared_field_validation"]
+    assert block["mode"] == "REPORT_ONLY"
+    assert block["enforced"] is False
+    assert block["refusal_count"] == 3
+    assert [row["code"] for row in block["refusals"]] == ["DELIBERATELY_SYNTHETIC_CODE"] * 3
+
+    # No declared-field code leaks into the blocker channel under any key.
+    assert "DELIBERATELY_SYNTHETIC_CODE" not in json.dumps(
+        gate_receipt.get("acceptance_blockers", [])
+    )
+
+
+def test_declared_field_validation_survives_a_broken_validator(tmp_path: Path) -> None:
+    """A report-only feature that can break the gate is not report-only.
+
+    Pointed at a root with no validator module, it must record the failure and return, never raise.
+    """
+    report = verify_bceg.run_declared_field_validation(tmp_path / "no-such-root")
+    assert report["mode"] == "REPORT_ONLY"
+    assert report["enforced"] is False
+    assert report["ran"] is False
+    assert report["detail"]
+    assert "refusals" not in report
+
+
+def test_declared_field_validation_actually_reads_the_real_record() -> None:
+    """Against the real tree it must RUN, not silently report nothing.
+
+    A check that reports zero because it never executed is indistinguishable in a receipt from a
+    clean record, which is the failure this whole cycle keeps finding.
+    """
+    # The gate's own --root convention: Path(verify_bceg.__file__).parents[2], i.e. mtc_v2.
+    report = verify_bceg.run_declared_field_validation(MTC_V2_ROOT)
+    assert report["ran"] is True, report.get("detail")
+    assert report["enforced"] is False
+    assert isinstance(report["refusal_count"], int)
+    assert report["refusal_count"] == len(report["refusals"])
+
+    # The assertions above are not enough, and the Section-16 reviewer of this change said so:
+    # refusal_count == len(refusals) is satisfied by 0 == 0, so a harness path that silently
+    # reported nothing would pass. Cross-check against invoking the validator DIRECTLY and
+    # compare the code multisets. If the harness path degraded to reporting nothing while the
+    # validator still finds things, these disagree. If the record is ever genuinely clean both
+    # are empty and they still agree, so the test does not rot when the findings are fixed.
+    from collections import Counter
+
+    from mtc_v2.tests.corrected_vnext.contracts import validate_declared_fields as direct
+
+    contracts = MTC_V2_ROOT / "tests/corrected_vnext/contracts"
+    expected = direct.validate_documents(
+        direct.load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json"),
+        direct.load_json_exact(contracts / "implementation_anchor.json"),
+        direct.load_json_exact(contracts / "declared_field_registry.json"),
+        repo_root=direct._repo_root(),
+    )
+    assert Counter(row["code"] for row in report["refusals"]) == Counter(
+        refusal.code for refusal in expected
+    )
+    assert report["refusal_counts_by_code"] == dict(
+        sorted(Counter(refusal.code for refusal in expected).items())
+    )
+    assert sum(report["refusal_counts_by_code"].values()) == report["refusal_count"]

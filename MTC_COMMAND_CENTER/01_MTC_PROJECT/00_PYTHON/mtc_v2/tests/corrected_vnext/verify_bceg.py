@@ -4877,6 +4877,83 @@ def run_contract_selftest_suite(root: Path) -> dict[str, Any]:
     }
 
 
+def run_declared_field_validation(root: Path) -> dict[str, Any]:
+    """Run the fail-closed declared-field validator and REPORT, never refuse.
+
+    Authorized by owner ruling HIST-2026-0030 (task WP-P012-VALIDATOR-REPORT-ONLY): the gate runs
+    the validator against the record and records every refusal in the receipt, but must NOT refuse
+    the build on them. Fail-closed enforcement is a separate owner decision, deliberately not taken
+    because the record still carries refusals the owner has already ruled nits.
+
+    Everything here is wrapped. A report-only feature that can break the gate is not report-only,
+    so any failure of the validator itself is recorded as `ran: false` with the reason and the gate
+    proceeds unaffected.
+    """
+    report: dict[str, Any] = {
+        "mode": "REPORT_ONLY",
+        "enforced": False,
+        "authorized_by": "HIST-2026-0030",
+        "note": (
+            "Report-only by owner ruling. These refusals do NOT contribute to acceptance_blockers "
+            "and do NOT change claim_label. A non-empty refusal list is a finding to act on, not a "
+            "failed build."
+        ),
+    }
+    try:
+        contracts = root / "tests/corrected_vnext/contracts"
+        spec = importlib.util.spec_from_file_location(
+            "_p012_declared_field_validator", contracts / "validate_declared_fields.py"
+        )
+        if spec is None or spec.loader is None:
+            report.update(ran=False, detail="validator module could not be located")
+            return report
+        module = importlib.util.module_from_spec(spec)
+        # Register BEFORE exec_module. The validator declares an @dataclass, and
+        # dataclasses._is_type resolves sys.modules.get(cls.__module__).__dict__ while the
+        # decorator runs; an unregistered module makes that None and the import dies with
+        # "'NoneType' object has no attribute '__dict__'". The entry is left in place because
+        # the dataclass keeps referring to it by name.
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        refusals = module.validate_documents(
+            module.load_json_exact(contracts / "CONTRACT_TABLES_MANIFEST.json"),
+            module.load_json_exact(contracts / "implementation_anchor.json"),
+            module.load_json_exact(contracts / "declared_field_registry.json"),
+            repo_root=module._repo_root(),
+        )
+        # Shaping the rows is INSIDE the try. The Section-16 reviewer of this change
+        # (gemini-3.8-flash-high, 2026-09-10, PASS-WITH-NITS) found this comprehension sitting
+        # outside it, which made the "every failure path is wrapped" claim false: a
+        # validate_documents that returned objects without .code/.path/.detail would raise
+        # AttributeError straight through the gate. Low likelihood today, since Refusal is a
+        # frozen dataclass in that same module - but the wrap exists for the day the module
+        # changes, and a wrap with a hole in it is worth less than no wrap, because it is
+        # believed.
+        rows = [
+            {"code": r.code, "path": r.path, "detail": r.detail}
+            for r in refusals
+        ]
+        counts: dict[str, int] = {}
+        for row in rows:
+            counts[row["code"]] = counts.get(row["code"], 0) + 1
+    except BaseException as exc:  # report-only: nothing here may reach the gate
+        # BaseException, not Exception, for the same reason. KeyboardInterrupt and SystemExit
+        # are re-raised explicitly below so Ctrl-C and sys.exit still work; everything else,
+        # including MemoryError and RecursionError, is reported rather than propagated.
+        if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+            raise
+        report.update(ran=False, detail=f"{type(exc).__name__}: {exc}")
+        return report
+
+    report.update(
+        ran=True,
+        refusal_count=len(rows),
+        refusal_counts_by_code=dict(sorted(counts.items())),
+        refusals=rows,
+    )
+    return report
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -4971,12 +5048,18 @@ def main(argv: list[str] | None = None) -> int:
                             "failing_test_ids": failing_test_ids,
                         }
                     )
+                declared_fields = (
+                    run_declared_field_validation(args.root)
+                    if args.mode == "full-gate"
+                    else None
+                )
                 if blockers:
                     receipt = {
                         "mode": "full-gate",
                         "claim_label": REFUSAL_LABEL,
                         "acceptance_reachable": True,
                         "contract_selftest_suite": contract_selftests,
+                        "declared_field_validation": declared_fields,
                         "refusals": blockers,
                         **pipeline,
                     }
@@ -4985,6 +5068,7 @@ def main(argv: list[str] | None = None) -> int:
                         "mode": "full-gate",
                         "claim_label": ACCEPTING_LABEL,
                         "contract_selftest_suite": contract_selftests,
+                        "declared_field_validation": declared_fields,
                         **pipeline,
                     }
         encoded = json.dumps(receipt, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
