@@ -12,7 +12,9 @@ and read-only feeds. It must not imply backtest, broker, paper, ARM, order, or l
 - Follow the accepted dark command-center visual contract: dark canvas, compact navigation, dense
   cards/tables, status accents, workflow cards, and read-only missing-artifact states. Do not regress
   to a light admin skeleton.
-- UI/chart changes require visual verification at desktop and phone widths. Security/network/write
-  surfaces escalate the audit tier; cosmetic/read-only UI is normally T1.
+- UI/chart changes require visual verification at desktop and phone widths. Use the governance
+  `REVIEW_POLICY.md`: presentation-only changes can use T2 after policy activation; functional
+  read-only UI is T1. Safety status, acceptance, security, network or write consequences may require
+  T0. A cosmetic label is not permission to weaken a warning or misreport readiness.
 - OPEN-01 (vanilla JS versus bounded build step) remains unresolved until WP-V2B-05 measures it;
   do not choose a framework preemptively.

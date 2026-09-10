@@ -4,6 +4,13 @@ Run before marking any strategy/variant `code_safety_status: PASS`. Covers Pytho
 backtest code and Pine⇄Python conversions. Record PASS/FAIL + notes in the
 variant log and final report.
 
+This is a task-triggered technical checklist, not an audit-tier or acceptance
+policy. Follow the root router and selected stage first. Reviewer count,
+identity, independence, and acceptance are controlled by
+`MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/REVIEW_POLICY.md`. Critical economic,
+order, sizing, recovery, parity, credential/security, and acceptance logic
+cannot be downgraded by describing a change as documentation or generated state.
+
 ## Repaint / lookahead / leakage
 - [ ] **Repaint**: signals computed on the **closed** bar; no use of the forming bar.
 - [ ] **Lookahead**: rolling windows shifted (`[1]`) so the level excludes the

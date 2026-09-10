@@ -7,6 +7,10 @@ Counts below are a snapshot — regenerate with
 the **Strategy Research Lab** dashboard tab.
 
 ## Inventory snapshot
+
+The counts below are a dated early-June 2026 snapshot. Regenerate the registries
+before using counts or coverage as current facts; code or registry presence does
+not establish qualification, wiring, audit, or acceptance.
 - **46 strategies** in `03_QUANTLENS/strategies/STGxxx/` (each its own folder).
   Category: day_trading 16, swing_trading 4, **review_needed 26** (mostly 1d
   strategies awaiting confirmation).
