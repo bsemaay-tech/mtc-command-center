@@ -2052,7 +2052,7 @@ def test_expected_source_provenance_refuses_non_ancestor_base() -> None:
 
 
 def test_expected_source_provenance_refuses_expected_path_changed_after_base() -> None:
-    with tempfile.TemporaryDirectory(prefix="w385-provenance-", dir=r"C:\tmp") as temporary:
+    with tempfile.TemporaryDirectory(prefix="w385-provenance-") as temporary:
         root = Path(temporary) / "mtc_v2"
         expected_relative = "tests/corrected_vnext/contracts/expected.json"
         implementation_base, _head = two_commit_repository(root, expected_relative)
@@ -2261,7 +2261,7 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
         # decision-134 authorization is untouched. The R30 forward repin moved it again, from the
         # re-seal #29 commit 94a0a568 to the re-seal #30 commit 0c01b350, which carries the nine
         # re-derived kernel probe copies and the catalog pins that came with the oracle_price rename.
-        "0c01b350dc72c953fdac07214ecc15208e0a2536"
+        "3eebdf542bb70b23525cea13efc05a4a8eb29a8f"
     )
     assert record["exceptions"][0]["owner_decision"] == 134
     assert record["exceptions"][0]["lane_ids"] == [

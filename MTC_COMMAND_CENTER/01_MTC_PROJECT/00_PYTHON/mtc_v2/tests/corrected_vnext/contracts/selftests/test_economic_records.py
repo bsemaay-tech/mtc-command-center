@@ -48,7 +48,21 @@ def test_catalog_pinned_synthetic_instrument_loads_for_evaluation() -> None:
 def test_production_candidate_bytes_are_copied_exactly_but_remain_incomplete() -> None:
     path = RECORD_ROOT / "instruments" / "HYPERLIQUID-BTC-PERP-V1.3.json"
     verified = load_verified_json_record(path)
-    assert verified.digest == "66e13161cd3bb11105a65a7b77e824171937308efc692f51c472cc1fe9db7593"
+    assert verified.digest == "b26f9e755ae75ac4bc81506167cdb5da896a69322e616a9450f1fc65a142e26c"
+    provenance = verified.data["provenance"]
+    assert {
+        Path(source["frozen_file"]).name: source["sha256"]
+        for source in provenance["sources"]
+    } == {
+        "api-info-meta.json": "2bbe9a105808b910a62813b1c3f30ca3149241ab4625a01a825d0165455039c9",
+        "contract-specifications.html": "3be3f419b268e9aeac2d85c0a9611eddfd486c510e59b62f44e5547aa5253737",
+        "error-responses.html": "a320fd41ad7d9e3ee88a9ae501ba5126dadcd7c63b410629c87a2a874bb43727",
+        "order-types.html": "8c65a45d63a554ae54568378ba7e29e505aee6a3f9758b0cdcd298ab95992640",
+        "tick-and-lot-size-api.html": "81a865c35bcb77338cb94bf0a09e6294bb772a4d7ddd24af28636c273655d3e4",
+    }
+    assert provenance["source_sha256"] == (
+        "da2bf1fef41adbb4d3429e5abaff070a8fc81814730bf0ee7715b9eb79f097ed"
+    )
     assert verified.data["price_tick"] is None
     assert verified.data["minimum_quantity"] is None
     assert verified.data["provenance"]["human_reviewer"] is None
@@ -141,6 +155,33 @@ def test_production_cost_record_preserves_residual_refusals() -> None:
     assert record["refused_event_classes"]["MARGIN_CALL_LIQUIDATION"].startswith(
         "CANNOT_MAP"
     )
+    absence = record["provenance"]["frozen_source_absence"]
+    assert absence["fields"] == (
+        "fee_rounding_rule",
+        "fixed_component",
+        "minimum_fee",
+    )
+    assert absence["source_locator"] == (
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees"
+    )
+    assert absence["source_sha256"] == (
+        "3c49f9030a427df06f70943f53517204e4bd804bb205dcd05b2d27a75f51ce8b"
+    )
+    assert absence["owner_decision_ref"] == (
+        "HIST-2026-0033 / WP-P012-DECISION1-SOURCED-ABSENCE"
+    )
+    assert absence["disposition"] == "KEEP_REFUSED"
+    assert absence["limitation"] == (
+        "Not stated in this frozen source; no zero or rule inferred; not "
+        "universal current absence or liquidation evidence."
+    )
+    assert record["refused_missing_fields"] == (
+        "fee_rounding_rule",
+        "fixed_component",
+        "minimum_fee",
+        "tier_account_selection_evidence",
+    )
+    assert record["admission_status"] == "REFUSED_INCOMPLETE_COST_SCHEDULE"
 
 
 def test_production_funding_rules_do_not_invent_event_rows() -> None:

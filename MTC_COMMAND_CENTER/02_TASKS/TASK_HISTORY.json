@@ -307,5 +307,51 @@
       "summary": "Owner ruling: COMMISSION THE SECTION-16 DELTA REVIEW so the report-only validator wiring authorised by HIST-2026-0030 can land. Rejected alternatives: keeping the validator standalone, which the owner had already rejected once and which returns the defect class to depending on someone remembering to run it; and landing it on an owner overrule of the harness-digest mismatch, which the Lead advised against because whether acceptance recorded on an overrule satisfies the strict clause requiring 'required independent reviews and Lead acceptance complete' is ALREADY an open question under HIST-2026-0026, and a second instance would compound it. WHY A REVIEW IS NEEDED AT ALL, AND A LEAD FALSE STATEMENT. Presenting report-only as the safe option the Lead wrote that it carried 'no risk of blocking work'. That was FALSE and the owner chose on it. The wiring behaves exactly as specified - declared_field_validation appears in the receipt with enforced false, zero validator refusals reach acceptance_blockers or claim_label, and 494 contract self-tests pass - but making the gate run the validator means editing verify_bceg.py, and the Section-16 receipt certifies the harness by digest as one of its eight content identity keys (verify_bceg.py:66-74, refusal at :650-654). Measured: the receipt certifies harness_sha256 53b4ff48973bdf6dda8485f4c34de43d320fdb07da43fc523eaa17366e2817cf while the wired harness measures d3c01ace1abe2f37cd3d96a5d53a307d38cf3d60732c6fce64ee56e98c3e34d4, so the gate refuses SEMANTIC_COVERAGE_REVIEW_INVALID with acceptance_blockers at 0. MEASURED COST. 71 insertions, 0 deletions, one file. The harness is NOT one of the 19 sealed members, so the seal is unchanged at b6ac5a46 and NO re-seal #31 is required; what is required is a Section-16 delta review re-certifying the harness digest. Eligible reviewer: not the claude family, which authored the contract tables, and not the codex family; the standing route is gemini-3.8-flash-high under OD-20260906-3, which has had quota and wrapper failures before. The packet must comply with SECTION16_PACKET_STANDARD.md rules R1 through R10, which this Lead adopted and extended. This task id authorises the harness change and the review dispatch.",
       "report_path": "MTC_COMMAND_CENTER/04_REPORTS/ai_handoffs/WP_P012_VALIDATOR_WIRING_BLOCKED_BY_RECEIPT.md"
     }
+,
+  {
+    "event_id": "HIST-2026-0035",
+    "task_id": "WP-P012-I5-ASTRA-20260910",
+    "event_type": "APPROVED",
+    "created_at": "2026-09-10T10:07:46Z",
+    "created_by": "owner: Baris (ruling recorded by Astra Lead task 01a08aa2-5fe9-70e3-9f93-9f1ec82196e7)",
+    "summary": "Owner approved the I-5 field. Authorization is limited to the five-source aggregate field, recorded as provenance.source_sha256 in mtc_v2/core/economic_records/instruments/HYPERLIQUID-BTC-PERP-V1.3.json and its sidecar (source aggregate da2bf1fef41adbb4d3429e5abaff070a8fc81814730bf0ee7715b9eb79f097ed), plus its required tests, the necessary test and probe identity updates, a coordinated reseal, the baseline, and Section 16. No economics and no admission authority is granted by this approval.",
+    "report_path": null
+  },
+  {
+    "event_id": "HIST-2026-0036",
+    "task_id": "WP-P012-IDENTITY-ASTRA-20260910",
+    "event_type": "APPROVED",
+    "created_at": "2026-09-10T10:07:46Z",
+    "created_by": "owner: Baris (ruling recorded by Astra Lead task 01a08aa2-5fe9-70e3-9f93-9f1ec82196e7)",
+    "summary": "Owner approved the identity correction: design title v1.24 -> v1.25 correcting the existing amendment and the necessary dependent references, with fresh all-required accepting reviews. No audit waiver is granted and historic dissent/overrule records are preserved.",
+    "report_path": null
+  },
+  {
+    "event_id": "HIST-2026-0037",
+    "task_id": "WP-P012-CAPTURE-DEFER-20260910",
+    "event_type": "DECISION",
+    "created_at": "2026-09-10T10:07:46Z",
+    "created_by": "owner: Baris (ruling recorded by Astra Lead task 01a08aa2-5fe9-70e3-9f93-9f1ec82196e7)",
+    "summary": "Owner decision to defer the repeated-capture pilot until it can resolve production evidence. No API requests are made under this decision.",
+    "report_path": null
+  },
+  {
+    "event_id": "HIST-2026-0038",
+    "task_id": "WP-P012-R32-SECTION16-RATIFICATION-20260910",
+    "event_type": "APPROVED",
+    "created_at": "2026-09-10T13:57:09.8302331Z",
+    "created_by": "owner: Baris (exact ratification recorded by Astra Lead task 01a08aa2-5fe9-70e3-9f93-9f1ec82196e7)",
+    "summary": "I ratify the Section16 R32 review as prepared for candidate:\n12a2d49544523e0a8cc643421870ecb30b9bb30c\n\nThis approval covers only the described R30→R31→R32 continuation from:\n44288622851536eb1f300a4a525baeb1a00e6634\n\n1. Approve carrying forward all six UNCHANGED assessments, retaining their existing ACCEPTED_WITH_RESIDUAL_RISK dispositions and all stated limits.\n\n2. Authorize recording ratified=true for this actual review, installing the prepared receipt, and reproducing the gate after confirming the reviewed identities still match.\n\n3. Preserve the original Gemini report, its NOT VERIFIED section and the disclosed Item1 citation imprecision.\n\n4. Retain the required fresh accepting Opus5/Sol xhigh execution audits and separate Gemini3.7 corroboration. This Gemini3.8 review does not replace them. No waiver or bypass of Sol’s Windows execution boundary is authorized.\n\n5. Preserve all production refusals, 27 residual production risks and five residual integration obligations. Keep the accepted Section19 closure-evidence items distinct from those obligations. Retain the receipt29 semantic redo required under HIST0029 before final production acceptance.\n\nThis ratification does not accept P012, retroactively validate the old overrule, certify production facts, or authorize capture, account access, trading or paid usage.\n\nContinue already-authorized work as dependencies permit. Report the reproduced gate result, remaining blockers, NEXT ACTION and WAITING FOR OWNER.",
+    "report_path": "MTC_COMMAND_CENTER/_AI_MEMORY/P012_R32_OWNER_RATIFICATION_20260910.md"
+  },
+  {
+    "event_id": "HIST-2026-0039",
+    "task_id": "WP-P012-SANDBOX-PORTABILITY-20260910",
+    "event_type": "APPROVED",
+    "created_at": "2026-09-10T16:26:06.1122231Z",
+    "created_by": "Astra Lead under existing owner Package repair authority; not a new owner ratification",
+    "summary": "Exact one-line repair: remove only `, dir=r\"C:\\tmp\"` from `TemporaryDirectory(prefix=\"w385-provenance-\", dir=r\"C:\\tmp\")`. Diagnosis: Python 3.14 TemporaryDirectory with hardcoded C:\\tmp is denied and hangs; bounded diagnosis was a 90s RED, while existing proof at 7f22 is 495 passed/0 failed. All assertions and semantics remain unchanged; this is source-only tmpdir environment portability. Sol S3 found the missing trailer. No waiver is granted, and the future compliant successor commit must carry `APPROVED-PATCH-PLAN: WP-P012-SANDBOX-PORTABILITY-20260910`.",
+    "report_path": null
+  }
   ]
 }

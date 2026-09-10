@@ -11,9 +11,9 @@
   "statement": "Every expected value in this bundle was derived without executing the corrected kernel: by explicit written arithmetic from the design's stated contract semantics, or, for the record-digest and record-bound members admitted at re-seal #16 under owner decisions 149 and 151, by the design's written digest recipe over committed inputs; both are shown per value in DERIVATIONS.md. No kernel was executed. No observed/ path was read: no derivation in DERIVATIONS.md cites an observed/ path as a source, and none of the 34 committed observed/ file digests appears in this manifest, the catalog, the goldens or DERIVATIONS.md. The source of the record-derived members is the committed economic record bytes below mtc_v2/core/economic_records/ and their detached .sha256 sidecars, which the design makes authoritative at Design section 5.1, \"exact file bytes. The digest\"; all 51 committed records agree with their sidecars. The first-seal sentence asserting that no corrected-kernel implementation was read or exists is withdrawn as untrue at this seal: the repository now tracks the tests/corrected_vnext/ test tree and the mtc_v2/core/ modules, including economics.py and semantics.py, and record bytes below that tree were read for the members named above. The property that these tables were sealed before that kernel existed is not carried by this statement; it is carried by the design's honest limit L14 and the decision-147 re-anchor rule (Design section 15.4, \"anchor's `base_repin_history` records every move\", Design section 17, \"The pre-implementation seal property is carried by the measured history\" and Design section 17, \"The owner-directed re-seal chain that\"), to be asserted and human-reviewed under section 16 and not machine-checked."
  },
  "design": {
-  "file": "C:\\tmp\\LANE_PROMPTS_20260828\\P012_FRESH_DESIGN_V1.md",
-  "version": "v1.24",
-  "sha256": "c4bb6f67d9dd736725ee0731659b8fc1939f21ac907e4b8a7d6c94ca7dcdec9b",
+  "file": "C:/tmp/P012_ASTRA_DESIGN_20260910/P012_FRESH_DESIGN_V1.md",
+  "version": "v1.25",
+  "sha256": "8fd346f805aa30cbd0e00fc32296f8de913bfa616b2b1588ff54902d4f3ab675",
   "total_lines": 2072,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
@@ -80,7 +80,7 @@
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "b53f6e24433d2230c37b1cbd0a778f157f9bd8305f75aab18724b91d20ce4657",
+   "sha256": "3733773d82985738bea85f3e3a99a87577912aa85fa64247fe2570c122716d7b",
    "bytes": 101675
   },
   {
@@ -584,9 +584,9 @@
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
-  "IMPLEMENTATION_BASE_SHA": "0c01b350dc72c953fdac07214ecc15208e0a2536",
-  "reason": "Re-seal #30 candidate: owner-approved rename of the funding valuation member from mark_price to oracle_price. The venue documents that funding notional uses the spot oracle price and explicitly NOT the mark price, while the record's own rule already declared valuation_price_source SPOT_ORACLE; the member name contradicted both. The margin-call/liquidation use of mark price in core/runner.py is CORRECT and is deliberately untouched. Four sealed members moved: DERIVATIONS.md, scenario_catalog.json, and the RULE2-08 RED/GREEN goldens. No economic value changed; this is a rename plus the digest cascade it forces. Base C30 was provisional at candidate time; the forward repin F30 has since completed at d06aa741c32a3b57a7bfe299aefa67c86cab453e, and seal.IMPLEMENTATION_BASE_SHA, seal_state.IMPLEMENTATION_BASE_SHA and implementation_anchor.json all record C30 0c01b350dc72c953fdac07214ecc15208e0a2536. That precondition is therefore met. This field records seal state only and asserts nothing about package acceptance, which remains open."
+  "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+  "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
+  "reason": "F32 six-file identity repair using completed R32 baseline evidence; NONACCEPTED pending actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused."
  },
  "section_16_review": {
   "status": "PERFORMED_OWNER_RATIFIED",
@@ -596,9 +596,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
-  "IMPLEMENTATION_BASE_SHA": "0c01b350dc72c953fdac07214ecc15208e0a2536",
-  "set_by": "R30 re-seal #30, forward repin F30, 2026-09-08T19:59:27+03:00"
+  "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+  "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
+  "set_by": "F32 six-file identity repair at 2026-09-10T12:06:08Z; actual C32 3eebdf542bb70b23525cea13efc05a4a8eb29a8f; R32 baseline evidence; HIST-2026-0035 and HIST-2026-0036."
  },
  "reseal_history": [
   {
@@ -1178,6 +1178,30 @@
    "design_pin": "v1.24",
    "reason": "Re-seal #30 candidate: owner-approved rename of the funding valuation member from mark_price to oracle_price. The venue documents that funding notional uses the spot oracle price and explicitly NOT the mark price, while the record's own rule already declared valuation_price_source SPOT_ORACLE; the member name contradicted both. The margin-call/liquidation use of mark price in core/runner.py is CORRECT and is deliberately untouched. Four sealed members moved: DERIVATIONS.md, scenario_catalog.json, and the RULE2-08 RED/GREEN goldens. No economic value changed; this is a rename plus the digest cascade it forces. Base C30 is provisional; NONACCEPTED until forward repin F30.",
    "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-10T10:42:36.751382+00:00",
+   "actor": "Astra Lead coordinated; Sol High mechanical builder re-seal #31",
+   "old_EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
+   "new_EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.25",
+   "reason": "R31/re-seal31: approved fee-proof/I5 metadata moved core, and the nine existing modifications were re-derived from their original patches with their modification semantics unchanged. scenario_catalog.json carries the 18 updated catalog pins and is the only changed member among the 19 sealed files. This is a title-only successor; there are no economic, golden, observed, or behavioral changes. NONACCEPTED pending the C31 commit, forward repin, baseline reviews, and fresh Section 16/T0 reviews.",
+   "independently_verified": "pending Lead and required reviews"
+  },
+  {
+   "at": "2026-09-10T11:45:06.156965+00:00",
+   "actor": "Astra Lead coordinated; Sol High mechanical builder re-seal #32",
+   "old_EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
+   "new_EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.25",
+   "reason": "R32/re-seal32: refreshed the tenth INPUT probe's dependency identity after the first nine kernel probes were regenerated; current source and mutation behavior, economics, goldens, admission/refusals are all unchanged. Only the existing scenario_catalog.json member changes among the 19 sealed members. The malformed current R31 actor labels were repaired only by appending literal re-seal #31, preserving raw C31 Git history. NONACCEPTED pending C32/F32, baseline32, actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused/open.",
+   "independently_verified": "pending Lead and required reviews"
   }
  ],
  "legacy_event_order_map_pin": {
@@ -1192,12 +1216,12 @@
    "authorization": "ONE run completed under P012_ONE_EXTRA_COORDINATED_REPAIR=YES, overnight 2050 packet approved 2026-09-05 20:48, re-seal24; 17/17 complete, 0 blocked, all 34 surfaces identical.",
    "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
    "current_run": {
-    "sha256": "256c3593db27df5643d114beaafccb1709d32fe2e89ca147416495bff443e772",
-    "EXPECTED_SEAL_SHA_consumed": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
-    "created_at": "2026-09-08T19:56:34.134141+03:00",
-    "authorization": "One full baseline execution for the re-seal #30 candidate. The unchanged child driver was re-run because the funding valuation member was renamed mark_price -> oracle_price, which moved the two RULE2-08 scenario inputs and therefore their catalog digest pins. Measured outcome: the driver consumed the renamed inputs (RULE2-08-RED 4bc3cc74 -> 2afadceb, RULE2-08-GREEN 6c349e8b -> 3a193160, each equal to its new catalog pin) and all 34 scenario artifacts are byte-identical to the re-seal #29 baseline; only run_status.json (its catalog path, catalog digest, kernel root and kernel bindings) and SHA256SUMS differ. No legacy observation moved and no economic value moved. NONACCEPTED Item4 refused.",
+    "sha256": "d9f3127e4a2980bac19546517a38679605a2475b5b7a47f5c79265bcea6b316b",
+    "EXPECTED_SEAL_SHA_consumed": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+    "created_at": "2026-09-10T11:54:52Z",
+    "authorization": "Owner-authorized same-scope repair of the 10th INPUT probe base catalog pin and R31 actor ID metadata, with necessary strict reviews on 2026-09-10, as a truthful re-seal32 packet. Actual new run has 34 semantic outputs identical to preserved reseal31. This packet is NONACCEPTED pending exact reviews and production Item4 evidence. EXPECTED_SEAL_SHA_consumed is a legacy field name storing Lead-verified expected seal only; unchanged child driver has no seal argument and did not read seal. No new production data, captures, economics, or human ratification are claimed.",
     "catalog_expected_artifacts_2_0_0": "17/17 VALID",
-    "measured_at": "2026-09-10, re-seal #30 (HIST-2026-0024)",
+    "measured_at": "2026-09-10T12:06:08Z; R32 measurement; HIST-2026-0035 and HIST-2026-0036",
     "enforced_by": "verify_bceg.py:2980 re-reads the file and refuses if EXPECTED_SEAL_SHA_consumed does not equal the seal; verify_bceg.py:66-74 lists baseline_manifest_sha256 as a Section-16 content identity key and :650-654 refuses on mismatch. Both act on the FILE and on the RECEIPT, never on this block, which is descriptive only."
    }
   },

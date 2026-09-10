@@ -1,9 +1,9 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
- "IMPLEMENTATION_BASE_SHA": "0c01b350dc72c953fdac07214ecc15208e0a2536",
- "core_tree_oid_at_base": "9a3283ae5e2bd7e527d5e6dfb8e3033473711a41",
+ "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+ "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
+ "core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
@@ -216,6 +216,22 @@
    "new_EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
    "reason": "Re-seal #30 candidate: owner-approved rename of the funding valuation member from mark_price to oracle_price. The venue documents that funding notional uses the spot oracle price and explicitly NOT the mark price, while the record's own rule already declared valuation_price_source SPOT_ORACLE; the member name contradicted both. The margin-call/liquidation use of mark price in core/runner.py is CORRECT and is deliberately untouched. Four sealed members moved: DERIVATIONS.md, scenario_catalog.json, and the RULE2-08 RED/GREEN goldens. No economic value changed; this is a rename plus the digest cascade it forces. Base C30 is provisional; NONACCEPTED until forward repin F30.",
    "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-10T10:42:36.751382+00:00",
+   "actor": "Astra Lead coordinated; Sol High mechanical builder re-seal #31",
+   "old_EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
+   "new_EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
+   "reason": "R31/re-seal31: approved fee-proof/I5 metadata moved core, and the nine existing modifications were re-derived from their original patches with their modification semantics unchanged. scenario_catalog.json carries the 18 updated catalog pins and is the only changed member among the 19 sealed files. This is a title-only successor; there are no economic, golden, observed, or behavioral changes. NONACCEPTED pending the C31 commit, forward repin, baseline reviews, and fresh Section 16/T0 reviews.",
+   "independently_verified": "pending Lead and required reviews"
+  },
+  {
+   "at": "2026-09-10T11:45:06.156965+00:00",
+   "actor": "Astra Lead coordinated; Sol High mechanical builder re-seal #32",
+   "old_EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
+   "new_EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+   "reason": "R32/re-seal32: refreshed the tenth INPUT probe's dependency identity after the first nine kernel probes were regenerated; current source and mutation behavior, economics, goldens, admission/refusals are all unchanged. Only the existing scenario_catalog.json member changes among the 19 sealed members. The malformed current R31 actor labels were repaired only by appending literal re-seal #31, preserving raw C31 Git history. NONACCEPTED pending C32/F32, baseline32, actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused/open.",
+   "independently_verified": "pending Lead and required reviews"
   }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
@@ -358,6 +374,24 @@
    "old_core_tree_oid_at_base": "13e1f7788318f51df7e319f601b3f66eb703b816",
    "new_core_tree_oid_at_base": "9a3283ae5e2bd7e527d5e6dfb8e3033473711a41",
    "reason": "Decision 147: C30 (0c01b350) is the commit carrying re-seal #30 in-repo; it is the last commit that touches any of the 19 expected paths. F30 changes only active-base metadata and its sidecar. Files, seal, design pin, catalog, schema and economics are unchanged by F30."
+  },
+  {
+   "at": "2026-09-10T11:04:37.068954+00:00",
+   "actor": "Astra Lead coordinated; Sol High mechanical builder, R31 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "0c01b350dc72c953fdac07214ecc15208e0a2536",
+   "new_IMPLEMENTATION_BASE_SHA": "7e334d81ea429448c80bcd269cd77d5832a1d6ab",
+   "old_core_tree_oid_at_base": "9a3283ae5e2bd7e527d5e6dfb8e3033473711a41",
+   "new_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
+   "reason": "F31 candidate changes active-base metadata, descriptive baseline current_run metadata, and the anchor sidecar; 19 sealed files, seal, design, catalog, and economics are unchanged. Baseline evidence was regenerated: 17/17 complete and 34 semantic outputs byte-identical to prior R30. NONACCEPTED pending required Section 16, exact T0 accepting reviews, and production Item 4."
+  },
+  {
+   "at": "2026-09-10T12:06:08Z",
+   "actor": "Astra Lead coordinated; Sol High mechanical builder, R32 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "7e334d81ea429448c80bcd269cd77d5832a1d6ab",
+   "new_IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
+   "old_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
+   "new_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
+   "reason": "Six F32 identity files only; completed baseline32 evidence; sole owner 134 declaration unchanged; exact schema chain extended through #31 and #32; NONACCEPTED pending actual reviews and production evidence."
   }
  ]
 }
