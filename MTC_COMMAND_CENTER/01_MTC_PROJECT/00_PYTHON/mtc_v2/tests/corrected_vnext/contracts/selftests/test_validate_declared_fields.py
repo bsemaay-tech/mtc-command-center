@@ -185,27 +185,45 @@ class DeclaredFieldValidatorTests(unittest.TestCase):
         )
 
     def test_path_count_accurate_red_green(self) -> None:
-        clean = deepcopy(self.manifest)
-        statement = clean["expected_value_provenance"]["statement"]
-        clean["expected_value_provenance"]["statement"] = re.sub(
-            r"\b1194 paths under tests/corrected_vnext/",
-            f"{self.path_count} paths under tests/corrected_vnext/",
-            statement,
+        """Repair 7 (HIST-2026-0031) DELETED the count from the record, so the cases invert.
+
+        The old version of this test rewrote an existing '1194 paths under
+        tests/corrected_vnext/' clause. That clause is gone: the owner ruled the count be
+        removed rather than re-pinned, because it drifted twice in one night from ordinary
+        commits. So the RED case must now INJECT a count, which is the honest statement of
+        what the check is for - it validates any count that is PRESENT, and there is
+        nothing to validate when none is.
+        """
+        statement = self.manifest["expected_value_provenance"]["statement"]
+
+        # The record itself: no count, therefore nothing to contradict.
+        self.assertNotIn("1194 paths", statement)
+        self.assertNotIn(
+            "PATH_COUNT_ACCURATE",
+            self.codes(tracked_path_count=self.path_count),
+        )
+
+        # GREEN: a count that is present and correct.
+        correct = deepcopy(self.manifest)
+        correct["expected_value_provenance"]["statement"] = (
+            f"{statement} Injected for this test: the repository tracks "
+            f"{self.path_count} paths under tests/corrected_vnext/."
         )
         self.assertNotIn(
             "PATH_COUNT_ACCURATE",
-            self.codes(manifest=clean, tracked_path_count=self.path_count),
+            self.codes(manifest=correct, tracked_path_count=self.path_count),
         )
 
-        mutated = deepcopy(clean)
-        mutated["expected_value_provenance"]["statement"] = re.sub(
-            rf"\b{self.path_count} paths under tests/corrected_vnext/",
-            f"{self.path_count + 23} paths under tests/corrected_vnext/",
-            mutated["expected_value_provenance"]["statement"],
+        # RED: a count that is present and wrong. This is what must never pass silently,
+        # and it is the case that will fire if anyone re-introduces a hardcoded count.
+        wrong = deepcopy(self.manifest)
+        wrong["expected_value_provenance"]["statement"] = (
+            f"{statement} Injected for this test: the repository tracks "
+            f"{self.path_count + 23} paths under tests/corrected_vnext/."
         )
         self.assertIn(
             "PATH_COUNT_ACCURATE",
-            self.codes(manifest=mutated, tracked_path_count=self.path_count),
+            self.codes(manifest=wrong, tracked_path_count=self.path_count),
         )
 
     def test_section16_status_consistent_red_green(self) -> None:
