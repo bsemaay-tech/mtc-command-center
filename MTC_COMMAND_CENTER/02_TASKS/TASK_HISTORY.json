@@ -225,6 +225,78 @@
       "created_by": "owner (Baris) ruling, recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
       "summary": "Owner granted STANDING authorization for the Lead to merge pull requests to master without asking, in his words: 'merge both and dont ask me to merge anymore. you have autorization'. This supersedes the overnight restriction under which master merges were owner-only. Immediate effect: PR #169 (Section-16 packet standard, governance documents only) and PR #170 (fail-closed declared-field validator, four new files, no existing file modified, validator NOT wired into the gate so no behaviour changes) are to be merged. Scope note recorded by the Lead: this authorization covers merging PRs. It does NOT extend to the actions the owner has separately reserved to himself - deploy, runtime, broker or TESTNET actions, and force-push - nor does it waive the protected-path APPROVED-PATCH-PLAN requirement, which still needs a task id per patch round.",
       "report_path": "MTC_COMMAND_CENTER/04_REPORTS/ai_handoffs/WP_P012_R30_REPAIR6_PATCH_PLAN.md"
+    },
+    {
+      "event_id": "HIST-2026-0026",
+      "task_id": "WP-P012-DECISION3-CLOSURE-READING",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-10T09:15:00+03:00",
+      "created_by": "owner (Baris) ruling, recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
+      "summary": "Owner ruling on Decision 3, the Section-19 vs 23.21 conflict: ADOPT THE FIRST READING - an item is finished when its closure evidence is recorded, and leftovers are tracked obligations rather than unfinished items. Under this reading the package CAN close. Measured evidence put to the owner before the ruling: all ten items carry closure evidence; the contract file itself names that field as the closure column; leftovers are stored in a separate field while the strict clause speaks of items; the owner's earlier ruling called those leftovers 'recorded integration obligations'; and the blocking leftover names no work package at all, so under the strict reading the package would be held behind an unnameable dependency and could never be shown satisfied. LEAD CAVEAT RESTATED, NOT RESOLVED BY THIS RULING: the same strict clause also requires 'required independent reviews and Lead acceptance complete'. All five audit rounds returned non-accepting verdicts and acceptance was recorded on the owner's overrule (HIST-2026-0023). Whether an overrule satisfies that condition is a SEPARATE open question, unaffected by this ruling. It does not affect the merge, which is done; it affects final acceptance only.",
+      "report_path": "MTC_COMMAND_CENTER/04_REPORTS/ai_handoffs/WP_P012_R30_LEAD_ACCEPTANCE.md"
+    },
+    {
+      "event_id": "HIST-2026-0027",
+      "task_id": "WP-P012-DECISION1-SOURCED-ABSENCE",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-10T09:15:00+03:00",
+      "created_by": "owner (Baris) ruling, recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
+      "summary": "Owner ruling on Decision 1, genuine sourced silence: CLOSE THE THREE FEE FIELDS WITH PROOF OF ABSENCE ATTACHED. The three are the fee rounding rule, the fee fixed component, and the minimum fee. Scope correction that preceded the ruling: the Lead first told the owner SIX items turned on this question; an audit the Lead commissioned cut it to THREE. Two oracle-price items are 'not found in the pages we checked' with a forward capture already available under a standing decision; the minimum-order-size item is a units mismatch, not silence, because the exchange publishes a $10 minimum VALUE three times in the frozen documents while the missing field is a minimum QUANTITY; the liquidation-fee item is refused for INADEQUACY of published material, not for silence. THE LEAD DELIBERATELY OFFERED NO RECOMMENDATION on this decision, because its first recommendation rested on the wrong set. Three options were put: keep permanently refused; close with proof of absence; or close with an empty value plus a machine-readable note explaining the emptiness. The owner selected proof of absence. Lead note recorded without re-litigating: the third option was described to him as the one that keeps the absence visible to the build, and proof-of-absence closes the items instead. Before applying, the Lead must verify that no standing owner ruling on these three specific fields is reversed by this.",
+      "report_path": "C:\\tmp\\P012_VALIDATOR_LANE_20260909\\SOURCED_ABSENCE_ONE_RULING_20260909.md"
+    },
+    {
+      "event_id": "HIST-2026-0028",
+      "task_id": "WP-P012-I5-AGGREGATION",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-10T09:15:00+03:00",
+      "created_by": "owner (Baris) ruling, recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
+      "summary": "Owner ruling on item I-5, which source set the digest field aggregates: ONLY THE FIVE SOURCES THE INSTRUMENT RECORD ACTUALLY CITES. Rejected alternative: the seven-file frozen document set, which adds the fees page and the funding page belonging to the cost and funding records, and which produces a different digest. Reason put to the owner: the field sits directly beside the record's five-entry source list, so the five-source reading is the natural one for any later reader, and an aggregate quietly covering two documents the record does not cite is the class of problem five audit rounds kept finding. THREE LEAD CORRECTIONS PRECEDED THIS RULING. The Lead had told the owner I-5 was ready and needed one word. It was not. (1) The field DOES NOT EXIST on the record and must be ADDED - a schema change on a protected surface, not filling a blank. (2) The approved seven-file value covers files the record does not use. (3) The Lead could find NO owner approval for the seven-file basis; four documents dated 2026-09-08 split two-and-two on whether it was approved or pending, and the Lead had stated it as settled without checking. What was genuinely complete was the computation formula, which no document had recorded.",
+      "report_path": "C:\\tmp\\P012_VALIDATOR_LANE_20260909\\I5_AGGREGATION_RULE_DERIVED.md"
+    },
+    {
+      "event_id": "HIST-2026-0029",
+      "task_id": "WP-P012-RECEIPT29-REDO",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-10T09:15:00+03:00",
+      "created_by": "owner (Baris) ruling, recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
+      "summary": "Owner ruling on Decision 2, receipt #29: REDO IT, SCHEDULED WITH THE FINAL ACCEPTANCE WORK rather than ahead of further merges. Receipt #29 was produced by a reviewer explicitly instructed not to open any files, so one link in the sign-off chain was never read. Cost measured before the ruling: the raw range contains 16,729 added lines, but that is misleading - most is unrelated repository traffic and 98 percent of the remainder is the receipt file's own creation. The genuinely unchecked change is about 73 lines across 9 files: one kernel line, one sealed member, ZERO golden files - smaller than the change reviewed successfully on attempt 9. NOT A MERGE BLOCKER. The Lead recommended redoing it, on the ground that it touches a sealed member and a production cost record and that leaving it means the chain permanently contains one unread link; the owner accepted and chose the deferred schedule.",
+      "report_path": "C:\\tmp\\P012_VALIDATOR_LANE_20260909\\RECEIPT29_REVERIFICATION_COST_20260909.md"
+    },
+    {
+      "event_id": "HIST-2026-0030",
+      "task_id": "WP-P012-VALIDATOR-REPORT-ONLY",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-10T09:15:00+03:00",
+      "created_by": "owner (Baris) ruling, recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
+      "summary": "Owner ruling: wire the fail-closed declared-field validator into the gate as REPORT-ONLY FIRST. The gate is to run it against the record and record every refusal in the receipt, but must NOT refuse the build on them. Rejected alternatives: fail-closed now, which would refuse master today because the record still carries 6 refusals including two the owner has already ruled nits; and leaving it standalone, which returns the defect class to depending on someone remembering to run it. State at the time of ruling: the gate already runs the validator's SELF-TESTS as members of contract_selftest_suite - 491 tests, which is how repair 6 was caught - but does not run the validator against the record. The 6 standing refusals are 4 CHAIN_UNVERIFIABLE gaps, DESIGN_CHANGELOG_ADOPTED (owner-overruled nit, HIST-2026-0023) and PATH_COUNT_ACCURATE (addressed by HIST-2026-0031). This task id authorises the harness change to verify_bceg.py.",
+      "report_path": "MTC_COMMAND_CENTER/04_REPORTS/ai_handoffs/WP_P012_R30_REPAIR6_PATCH_PLAN.md"
+    },
+    {
+      "event_id": "HIST-2026-0031",
+      "task_id": "WP-P012-R30-REPAIR7",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-10T09:15:00+03:00",
+      "created_by": "owner (Baris) ruling, recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
+      "summary": "Owner ruling: DELETE the hardcoded path count from manifest.expected_value_provenance.statement, which reads '1194 paths under tests/corrected_vnext/' while the tree holds 1198. Rejected alternative: updating it to 1198. Reason accepted: the count drifted TWICE in one night from ordinary commits - 1195 then 1198 - because adding any file under that folder moves it, so a number in prose cannot be kept true and re-pinning it by hand is a treadmill. This task id is the APPROVED-PATCH-PLAN token for the protected-path commit. Lead constraints carried from repair 6: the replacement sentence must not merely restate the count in words, and the falsification test for the round is claim_label plus refusals plus acceptance_blockers plus the seal, NOT the seal alone, because the record feeds self-tests inside the gate suite.",
+      "report_path": "MTC_COMMAND_CENTER/04_REPORTS/ai_handoffs/WP_P012_R30_REPAIR6_PATCH_PLAN.md"
+    },
+    {
+      "event_id": "HIST-2026-0032",
+      "task_id": "WP-P012-POLICY-WORDING",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-10T09:15:00+03:00",
+      "created_by": "owner (Baris) ruling, recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
+      "summary": "Owner ruling on the protected-paths hook: CORRECT THE POLICY WORDING, and leave enforcement as a separate decision. PROTECTED_PATHS_POLICY.md line 24 states that 09_DOCS/hooks/protected_paths_hook.py 'is the mechanical guard for commits'. Measured 2026-09-10: the shared common gitdir holds only .sample hooks, core.hooksPath is unset in both the canonical repo and the P012BATCH worktree, no CI workflow references the hook, and every other mention of it in the repository is documentation. It is installed nowhere and invoked by nothing, so the APPROVED-PATCH-PLAN requirement has never been mechanically enforced - including on commit 62202907 earlier the same morning, whose trailer the Lead validated BY HAND. This also explains the earlier finding that three commits (d3a3fb88, fa7b92a3, 2f1008ab) modified canonical feature contracts with no trailer and drew no objection: nothing was watching. Rejected alternatives: wiring it into CI, and additionally installing it locally via core.hooksPath. The policy is to be reworded to state that the trailer is a required practice validated by hand, not a mechanical guard. This task id authorises the documentation change.",
+      "report_path": "MTC_COMMAND_CENTER/09_DOCS/PROTECTED_PATHS_POLICY.md"
+    },
+    {
+      "event_id": "HIST-2026-0033",
+      "task_id": "WP-P012-DECISION1-SOURCED-ABSENCE",
+      "event_type": "APPROVED",
+      "created_at": "2026-09-10T09:30:00+03:00",
+      "created_by": "owner (Baris) ruling, recorded by Claude Opus 5 Lead session tradingview-lab-clean-c1",
+      "summary": "Owner CONFIRMATION refining HIST-2026-0027, taken after the Lead put back a fact it had already written down and failed to state when first asking: KEEP THE REFUSAL MARKERS AND ATTACH THE PROOF. The three fee fields - fee_rounding_rule, fixed_component, minimum_fee - REMAIN in refused_missing_fields on the production cost record HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json, and proof-of-absence evidence is attached beside them. WHAT THE LEAD FAILED TO DISCLOSE WHEN ASKING. The checklist records a standing owner ruling on these exact three fields: KEEP_REFUSED, reason 'no zero or rule is admitted', with the measured note 'the fees page is silent on all three' and 'No zero and no rounding rule is inferred from silence'. The Lead's own SOURCED_ABSENCE_ONE_RULING_20260909.md had already warned, in writing, that a closing option 'would have reversed the owner's own prior decisions, and nothing on the face of the option said so' - and the Lead then presented exactly such an option without saying so. This is the same failure shape as HIST-2026-0021, a decision taken on facts the Lead had not stated. AND A MEASUREMENT THAT CHANGED THE QUESTION. The production cost record already carries all three under refused_missing_fields, which IS the KEEP_REFUSED ruling in machine-readable form. So the literal 'close with proof of absence' meant DELETING those entries, removing the only mechanism that makes the venue's silence visible to the build - the exact class of invisible state that produced this package's entire defect history. The owner was shown this and selected keeping the marker with the proof attached, which satisfies the closure intent and the standing 'no zero or rule is admitted' at the same time, and deletes nothing. SCOPE: this supersedes the applied form of HIST-2026-0027 while leaving its scope correction (six items reduced to three) standing. No zero and no rounding rule is written. Target is a production economic record under mtc_v2/core, a protected surface; this task id is the APPROVED-PATCH-PLAN token for that commit.",
+      "report_path": "C:\\tmp\\P012_VALIDATOR_LANE_20260909\\SOURCED_ABSENCE_ONE_RULING_20260909.md"
     }
   ]
 }
