@@ -44,3 +44,91 @@ Owner ratification of Section16 R32 -> reassemble the same actual A5 verdicts wi
 ## WAITING FOR OWNER
 
 Actual Section16 R32 ratification only (packet `outputs/SECTION16_R32_RATIFICATION.md`, unratified receipt ready); no answer or approval inferred, no routine implementation permissions. Authoritative production evidence for full acceptance separately. No forecast, no implementation-pending claim, no running/unattended claim — worker state is not recorded in this static checkpoint.
+
+
+# APPEND-ONLY CHECKPOINT — 2026-09-10 14:28 UTC — Go R32 closeout writeback
+
+Append-only entry for global_AI_MEMORY; prior history preserved; Lead integrates later. Writer: native OpenCodeGo glm-5.3-flash (default), state-only writeback worker. No repository writes, Git mutations, audits, authentication or provider dispatch; local file writes and byte/word checks only. Valid current audits remain bound to HEAD 3e9f8038f2765ad8e89977fd60470974d88f65ed; this state-only writeback does not claim a new audit HEAD.
+
+These exact facts supersede the old pending-ratification checkpoint (13:24 UTC).
+
+## Anchor facts
+
+- Owner ratification committed HIST0038 at 3e9f8038f2765ad8e89977fd60470974d88f65ed; candidate reviewed F32 12a2d49544523e0a8cc643421870ecb30b9bb30c; prior master 44288622851536eb1f300a4a525baeb1a00e6634.
+- Branch feature/p012-astra-continuation-20260910; worktree C:/tmp/P012_ASTRA_20260910. Before writeback: tracked clean.
+- Remote/master and C:/P012BATCH at master442 verified 14:17 UTC; foreign canonical 108ea066a710ff7ef5c09246903fe3d523da1d56 preserved. No push/PR/merge. Fresh required Sol audit missing; integration policy requires all gates first.
+
+## R1 — Lead ratified gate
+
+- Lead actual ratified full gate exit 0: 495 pass, 0 fail; bounded claim ACCEPTED only.
+- Exact source identities: all 8 matched actual review before installation. Installed true receipt SHA 5632a45e1b39430574c75a751be576576c5202302880c9ca09b0bd2c4826363b.
+- Original Gemini 3.8 A5 report SHA 8fba565033c623cc4d987fc3627e6dd86654a5cbee1fc574c13633f4ada90f51 unchanged: NOT VERIFIED / Item 1 citation imprecision / six UNCHANGED / ACCEPTED_WITH_RESIDUAL_RISK.
+- Owner explicitly ratified only the actual R30-R32 review; no retroactive old overrule, no P012 acceptance, no production acceptance.
+
+## R2 — Sol boundary (corrected history)
+
+- Corrected history: Sol R3 was really 475 pass / 1 skip / 1 warning; Sol R5 full gate 475 pass / 0, exit 0 in 24.2s @ 7cc095415f7e83be8d26a86c32c16aea1324d46a but BLOCK design identity.
+- Current Sol: Windows Python 3.14 scratch PermissionError 13, cleanup WinError 5; no accepting audit, no current-compatible boundary.
+- No bypass, no setup/install/security changes, no identical retry. Fourth and secondary resolve to the same Plus account; third Free exhausted; second distinct Plus not verified.
+
+## R3 — Accepting reviews (Opus + Gemini corroboration)
+
+- Strict accepting-review interpretation resolved by HIST0036 title one-byte correction v1.24 -> v1.25, with EXACT accepting reviews retained; old overrule and dissent history not waived.
+- Fresh Opus 5 xhigh first-party Pro completed 14:25 UTC PASS-WITH-NITS after actual GREEN exit 0 / RED exit 1 and full gate 495/0 exit 0.
+- Source guards: HEAD 3e9 tracked clean before and after; original raw report C:/tmp/P0R32O/REVIEWER_REPORT.md, STATUS.json, RAW.jsonl.
+- Two denied overbroad read-only requests preserved; narrowed authorized tools used; no bypass.
+- Three OPTIONAL nits deferred deliberately to avoid unnecessary new reseal: test recompute aggregate; wording economic -> economic-value; assert traceback detail. No required source findings.
+- Do NOT claim full T0 acceptance because Sol is missing.
+- Gemini 3.7 corroboration A1: strict guard SUCCESS / exit 0 / PASS / SUPPLEMENTAL_UNEXECUTED at same packet 3e9. Citation defects found by Lead: wrong anchors and impossible test 371-384 (actual 196), owner 1-20 (actual 19); actual values and source claims verified separately; original report preserved with Lead errata.
+- One targeted A2 citation correction FAILED filesystem guard on 10 mirror directory events; no valid correction report. Manual post check: 2817 members all unchanged, 2818 actual files, manifest unchanged; cause not attributed, no ACL snapshot; no guard weaken, no retry.
+- Original A1 corroboration and A2 failure are distinct. No new Gemini semantic review needed or claimed.
+- Output files include OPUS_R32_EXECUTION_REVIEW.md, GEMINI37_R32_CORROBORATION.md, T0_REVIEW_RECONCILIATION.md.
+
+## R4 — CI / integration
+
+- PR167 workflow merged and active; PR168/173 previous work preserved; current-head protected Bridge suite (Python 3.12) CI + authorized integration pending exact reviews.
+- Standing merge authority HIST0025 still held; not a new permission ask.
+
+## R5 — Section 19 / residuals
+
+- All 10 Section 19 closure-evidence items accepted HIST0026; separate from 5 residual integration obligations OPEN01 x2 / OPEN03 x2 / OPEN07 x1, 27 production risks; authoritative Item 4 production admission still refused.
+
+## R6 — Fee proof and I5
+
+- HIST0033 fee proof KEEP_REFUSED; HIST0035 I5 source aggregate implemented + tests + identity cascade + R32 baseline.
+- 12 economic record tests; original 2+7 mutants rejected, 2 fixed controls pass, real valid sidecars. Lead and Opus published QA: 9 expected semantic fail, 2 control pass; I5 old hardcoded digest neutralized ONLY in memory after real byte check, not end-to-end mutant acceptance; full gate unmodified 495 tests.
+- Core ad8b7d787ab8b087d6fd192b413b2592a8bea4c0; seal32 SHA a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7; baseline32 SHA d9f3127e4a2980bac19546517a38679605a2475b5b7a47f5c79265bcea6b316b; anchor 25084f222e2885fca3df31da785d4f0c7a13685ff42f41d2ba177e1155550e0f.
+- 34 baseline outputs byte identical; truthful C31 capture HEAD not rewritten. Completed repairs reused; no extra reseal.
+
+## R7 — Receipt 29 / production acceptance
+
+- Receipt 29 semantic redo required before FINAL production acceptance (HIST0029), not bounded merge gate; Sept 8 capture and 4 validation failures preserved; repeated pilot DEFERRED HIST0037; no new capture/account/trading/production facts, paid usage, or audit waiver.
+
+## Packet and QA
+
+- Packet C:/tmp/P0R32T mirrors canonical_gemini_packets_20260830/P032T: 2817 members / 2686 git objects, Lead verified. TASK SHA 3657cf245bfd6fae3a2bb49afedd472d7920674c0f5d2ad9ee0e4f9ab67b1d72; manifest SHA 627e3e564ce6ff4b976ba8857061bfc6f28eecf335e8d71230967aca380243a4.
+- QA_COMMANDS.md holds exact repeatable commands; outputs C:/tmp/P0R32O and project work/qa_r32_lead; original gate work/evidence/lead_r32_ratified_gate.json.
+
+## Worker metadata
+
+- Lead CURRENT actual turn metadata: gpt6astra HIGH now verified (older xhigh history retained); Standard configured but runtime Fast OFF unverified.
+- Pro live 14:10 UTC: 23% weekly USED / 77% remaining ACCOUNT WIDE (not task cost); no credits/reset/topup used. Direct Plus/Go/Claude Pro/Gemini paid CLI included subscriptions; no new native Pro agents; Max/Grok were not duplicated merely to fill lanes.
+- At draft time audits finished; only this Go writeback worker live; final worker check after completion required. No unattended claim.
+
+## Step plan
+
+1. DONE — implement / ratify / reproduce.
+2. DONE — Opus execution audit and Gemini corroboration (with disclosed limits).
+3. BLOCKED — resume exact Sol xhigh only when a compatible approved environment, including execution boundary, is actually available.
+4. PENDING — all required accepting reviews + Lead review, then protected CI / standing authorized integration.
+5. RESERVED — production acceptance only after authoritative evidence, 27 risks / 5 obligations disposition, and receipt 29 semantic redo required scope.
+
+No owner waiver asked. Optional nits are not blockers. No new owner decision required now. No completion date or percentage promised.
+
+## NEXT ACTION
+
+Resume exact Sol xhigh only on a verified compatible approved included execution boundary; then complete review, protected CI and authorized integration. Production evidence remains separate.
+
+## WAITING FOR OWNER
+
+Owner can help by supplying an existing approved compatible Sol environment if available — no new spend, login, or credentials needed. Otherwise nothing.
