@@ -1,61 +1,16 @@
-# REVIEW_CHECKLIST
+# Review checklist — use at the task boundary
 
-Run before committing, before opening a PR, and before declaring any
-task "done". Tick mentally; if any box fails, fix or escalate.
+Canonical review count/effort: `../00_AGENT_PROTOCOLS/REVIEW_POLICY.md`, read for classification
+or audit. Follow selected TESTS and OUTPUTS; this checklist adds no auditors or repeated gate.
 
-> For trading-strategy / backtest code specifically, also run
-> `STRATEGY_CODE_REVIEW_CHECKLIST.md` (repaint, lookahead, leakage, execution,
-> Pine⇄Python conversion).
-
-## Scope
-
-- [ ] Change matches the scope approved in Gate 1.
-- [ ] No unrelated edits in the diff.
-- [ ] No speculative features, no premature abstractions.
-- [ ] No new dependencies added without explicit approval.
-
-## Safety
-
-- [ ] No file in `DO_NOT_TOUCH.md` was modified.
-- [ ] No Pine logic / MTC strategy behavior changed (or change was
-      explicitly approved by Barış).
-- [ ] No parity-suite regression risk introduced (or risk noted and
-      acknowledged).
-- [ ] No secrets, tokens, or credentials added.
-- [ ] No destructive git operation queued.
-
-## Code Quality
-
-- [ ] Minimal diff.
-- [ ] No dead code, no commented-out blocks left behind.
-- [ ] Comments explain WHY, never WHAT, and only when non-obvious.
-- [ ] Error handling only at real boundaries (no defensive stubs for
-      impossible paths).
-
-## Tests / Verification
-
-- [ ] Tests run and pass (if a suite exists).
-- [ ] Lint / typecheck clean (if configured).
-- [ ] Manual verification done if UI / chart / Pine output changed.
-- [ ] Parity smoke test run if backtest or strategy code touched.
-
-## Adversarial Review
-
-- [ ] A different AI model reviewed the diff (Gate 5).
-- [ ] Reviewer findings addressed or explicitly deferred.
-
-## Memory Write-Back (Gate 7)
-
-- [ ] `GLOBAL_HANDOFF.md` updated.
-- [ ] `NEXT_STEPS.md` updated.
-- [ ] `SESSION_LOG.md` got a one-line entry.
-- [ ] `DECISIONS.md` updated if a sticky decision was made.
-- [ ] `ACTIVE_FILES.md` updated if working set changed.
-- [ ] `PROJECT_MEMORY.md` updated if a stable repo fact changed.
-
-## Commit Hygiene
-
-- [ ] Commit message follows existing repo style (see `git log`).
-- [ ] No `--no-verify`, no `--no-gpg-sign`, no `--force` unless
-      explicitly approved.
-- [ ] Branch / PR target is correct.
+- Actual diff matches approved paths/behavior; protected scope is authorized; foreign edits safe.
+- Completion example observed; exact command/cwd/environment and independently expected result
+  recorded. Failed commands are visible. Required defect RED/GREEN and carried fences preserved.
+- Only the applicable tier/explicit package reviews ran; required findings independently resolved.
+  Self-check, supplemental report and executed acceptance are clearly distinguished.
+- Relevant manual/visual/integration behavior checked; actual outcome and limitations stated.
+- Current stage HANDOFF updated truthfully, including pending/blocked state. DECISIONS and other
+  trackers only if facts changed; retired session journals remain retired.
+- Before an authorized commit: exact staged paths, scoped checks, normal guard/hooks, feature
+  branch. Ordinary local commits may precede acceptance; push/merge and protected CI stay separate.
+- NEXT ACTION and WAITING FOR OWNER/Nothing are explicit; no unnecessary owner re-ask.
