@@ -1,1 +1,3 @@
-Read root `AGENTS.md`, root `DECISIONS.md`, and root `CONTEXT_MAP.md`; select exactly one stage and follow its five-file contract. Do not load `_AI_MEMORY/history/` by default. Claude-led dispatch must use the launcher route named by the governance stage; never run bare `codex`.
+Read root `AGENTS.md`, root `CONTEXT_MAP.md`, and exactly one selected stage's `AGENTS.md`.
+Follow the router's conditional reads. For Claude-led Codex dispatch, read the governance-stage
+delegation rule and account routing; use its named launcher, never bare `codex`.

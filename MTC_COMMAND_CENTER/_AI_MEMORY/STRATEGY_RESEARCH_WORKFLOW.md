@@ -9,11 +9,17 @@ existing matured strategies/indicators into new robust candidates. This does
 > - `11_TRIAGE/BACKTEST_OPTIMIZATION_RUNBOOK.md`
 
 ## Read first (limited-context order)
-1. `_AI_MEMORY/STRATEGY_COMPONENT_LIBRARY.md` — what exists, what combines.
-2. `05_REGISTRY/STRATEGY_RESEARCH_REGISTRY.json` — strategy taxonomy index.
-3. `05_REGISTRY/INDICATOR_REGISTRY.json` + `COMPONENT_REGISTRY.json` + `TAG_DICTIONARY.json`.
-4. The two backtest-rules files above.
-5. `_AI_MEMORY/STRATEGY_CODE_REVIEW_CHECKLIST.md`.
+1. Follow repository-root `AGENTS.md` and its conditional reading contract; select
+   `MTC_COMMAND_CENTER/03_QUANTLENS/`. This reference adds no second startup sequence.
+2. Before a research run, obtain the exact required task authority and satisfy that stage's
+   inputs/tests and backtest gates; a research procedure is not permission to execute it.
+3. For a research-design task, read `_AI_MEMORY/STRATEGY_COMPONENT_LIBRARY.md`
+   and the task-triggered registries:
+   `05_REGISTRY/STRATEGY_RESEARCH_REGISTRY.json`,
+   `INDICATOR_REGISTRY.json`, `COMPONENT_REGISTRY.json`, and
+   `TAG_DICTIONARY.json`.
+4. Read the two canonical backtest-rule files above and
+   `_AI_MEMORY/STRATEGY_CODE_REVIEW_CHECKLIST.md`.
 
 ## Process
 1. Read the AI memory + registries (above). Do not re-derive the inventory.

@@ -1,135 +1,49 @@
-# Governance and agent-operations stage rules
+# Governance and agent-operations stage
 
-This stage owns workflow, audit, planning, triage, Git/handoff, repository migration, shared
-governance, and supporting paths not assigned to a product stage by root `CONTEXT_MAP.md`.
+Owns workflow, audit, planning, triage, Git/handoff, migration, and supporting paths routed here.
+Before writes/execution read `INPUTS.md` and `TESTS.md`; resume from relevant `HANDOFF.md`; read
+`OUTPUTS.md` before delivery. For classification/audit/governance, read `REVIEW_POLICY.md`.
 
-## Seven gates and actors
+## Seven logical gates
 
-1. **G1 Scope — Lead:** value, smallest safe change, allow/deny paths, protected surfaces,
-   success criteria, and recorded T0/T1/T2/T3. If the counterpart flagship is unavailable, BLOCK.
-2. **G2 Plan — Implementer:** flow, modules, edge cases, rollback, Pine/parity/MTC impact. The Lead
-   accepts it before implementation; skip only trivial docs/typos/single-line work.
-3. **G3 Implement — Implementer:** minimal scoped diff; no unrelated or speculative change.
-4. **G4 QA — Implementer:** real tests/lint/typecheck and explicit parity/UI risk; provide evidence,
-   never a self-issued acceptance verdict.
-5. **G5 Audit — Lead:** inspect real files/diff and reproduce evidence independently. Use the tier
-   contract below. Required reproduced findings bind; unreproduced findings remain recorded.
-6. **G6 Security — independent:** security/auth/secret/network/host/deploy defaults T0. Pure docs,
-   Pine plotting, and cosmetic changes skip only when no security surface exists.
-7. **G7 Write-back — Lead after acceptance:** update the selected stage `HANDOFF.md`, root
-   `DECISIONS.md` for a sticky owner decision, and durable tracker/claim state as applicable.
+One small task may use one brief for G1/G2/G4, not seven documents or meetings. Depth follows
+consequence. Reuse settled decisions and existing task records; clarify only unresolved choices.
 
-Prompt templates live in `MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/`.
+1. **G1 Scope — Lead:** user outcome, one smallest complete slice, exact allow/deny paths,
+   authority, protected impact, dependencies, completion example, and review tier.
+2. **G2 Plan — builder, Lead checks:** affected interfaces, meaningful failure cases, rollback,
+   and verification. Add depth for consequential architecture; a trivial task needs no separate plan.
+3. **G3 Implement — builder:** minimal scoped change, preserving existing architecture/work.
+4. **G4 QA — builder:** actual commands with cwd/environment, expected and observed results,
+   and a working path visible at the relevant boundary. Self-QA is not independent acceptance.
+5. **G5 Review — Lead:** real diff and independent evidence reproduction under `REVIEW_POLICY.md`.
+6. **G6 Security — independent when relevant:** apply the same policy and frozen packet;
+   reuse valid evidence without redundant identical runs. No required auditor is waived.
+7. **G7 Write-back:** record factual progress/blockers even before acceptance; only the Lead
+   records ACCEPTED after its evidence/roster obligations. Keep stage `HANDOFF.md` <=4096 bytes.
 
-## Audit contract
+Templates: `../04_SHARED/prompts/05_ai_workflow/00_index.md`. Completion includes the actual
+owner outcome, limitations and exact next action. Tests and review must assess the agreed behavior,
+not merely the implementation's chosen output. Consult `TESTS.md` for defect-closure evidence.
 
-| Tier | Surface | Required review | Effort / default repair checkpoint |
-|---|---|---|---|
-| T0 | Economic, host, deploy, secret, broker/exchange, teardown, security | `claude-opus-5` + `gpt-5.6-sol`, plus mandatory Gemini parallel corroboration | xhigh / 3 |
-| T1 | Non-economic product code/scripts | one alternating flagship; GLM-5.2 only after findings or diff >~300 lines; plus mandatory Gemini parallel corroboration | high / 2 |
-| T2 | Docs/evidence | GLM-5.2 preferred, DeepSeek acceptable, otherwise one flagship; plus mandatory Gemini parallel corroboration | medium / 1 |
-| T3 | Index/status/process artifacts | implementer self-verification only | — / 0 |
+## Delegation and economical context
 
-Highest overlap wins. T2 deployed-identity findings alone escalate to one T1 flagship check.
-Repair counts are internal Lead checkpoints governed by
-[`AUTONOMY_AUTHORIZATION.md`](AUTONOMY_AUTHORIZATION.md), not owner-facing stop gates. Preserve
-actual round accounting and avoid identical blind retries.
-For a reproduced defect inside an already-approved package behavior, the Lead also owns the exact
-necessary corrective path/test/verifier/identity-reference scope decision. Record the evidence
-contract before dispatch; ask the owner only at the retained gates in `AUTONOMY_AUTHORIZATION.md`.
-Invoked Claude is exact `claude-opus-5`; invoked Codex exact `gpt-5.6-sol`; no alias/fallback.
-Unavailable exact model/effort is BLOCK unless owner-waived. Each audit is fresh, receives only
-scope, plan, diff/files, evidence, and repo rules, and is never resumed/continued. Codex audits are
-ephemeral and read-only.
-
-**OD-20260905-1 — campaign-only Gemini model override (2026-09-05 window).** For the bounded
-autonomous campaign from 2026-09-05T12:33:44+03:00 through 2026-09-05T23:33:44+03:00, the mandatory
-Gemini parallel corroboration below dispatches exactly `gemini-3.8-flash-high`; do not retry or
-substitute `gemini-3.7-flash-high` during that window. Every other OD-20260829-1 boundary stays in
-force: same scope/evidence package, Lead comparison and reproduction, `SUPPLEMENTAL_UNEXECUTED`
-labelling, no replacement of exact flagship slots or acceptance authority. Outside the bounded
-window the rule below remains the unchanged default unless a later owner action changes it.
-
-**OD-20260829-1 — mandatory Gemini parallel corroboration.** Every T0, T1, or T2 Gate 5/Gate 6
-audit that dispatches one or more model auditors must also dispatch a fresh
-`gemini-3.7-flash-high` review through
-`C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-GeminiProReadOnly.ps1`. Gemini receives the same
-scope, allowed/forbidden paths, actual diff/files, test evidence, and repository rules as every
-other auditor. The Lead records a comparison: common findings, Gemini-only findings,
-contradictions, and the independently reproduced disposition of every required finding. Gemini is
-a required parallel dispatch; an unavailable Gemini route blocks audit completion unless Barış
-waives it. It does not replace an exact flagship slot, Lead/counterpart role, acceptance authority,
-protected implementation boundary, or the existing tier/audit rules. Gemini's isolated
-read-only route cannot execute the mandated suite; label that report `SUPPLEMENTAL_UNEXECUTED`.
-That non-execution alone is not a BLOCK, but no Gemini finding binds until the Lead reproduces it.
-The launcher reads only the canonical checkout: when the audited SHA is in another worktree, give
-Gemini the exact SHA plus literal, safety-redacted diff and relevant file slices in its review
-package; never let it substitute canonical-checkout contents for the audited source.
-T3 remains self-verification-only unless a later owner task explicitly requests a model audit.
-
-**OD-20260829-2 — supplemental-route defaults.** Keep every acceptance slot, tier checkpoint, and
-protected-scope boundary above unchanged. For bounded unprotected work, use
-`opencode-go/glm-5.3-flash` as the routine worker; escalate to `opencode-go/kimi-k3` only for a
-genuinely difficult architecture/long-context question or a stalled first attempt. Use
-`opencode-go/deepseek-v4-pro` as the supplemental deep-adversarial reviewer for evidence-backed
-architecture review, difficult bug analysis, requirements-versus-implementation checks, and
-failure-mode discovery; prefer that included allowance before paid OpenRouter V4 Pro unless Go
-quota or provider diversity specifically requires the PAYG route. Use paid OpenRouter
-`deepseek/deepseek-v4-flash` for economical high-volume mechanical drafts or analysis; use paid
-`tencent/hy3` only as a deliberate different-family counter-review or tie-breaker, never the
-deprecated free alias. These are
-supplemental routes, never silent acceptance-auditor substitutions. Record provider/model, why the
-first route was suitable, why a cheaper route was not used when escalating, fallback, and live
-quota preflight. Treat all OpenRouter prices and revisions as dated snapshots, never fixed policy.
-The research record is
-`MTC_COMMAND_CENTER/11_TRIAGE/AI_PROVIDER_ROUTING_RECOMMENDATION_2026-08-29.md`.
-Verdicts: PASS; PASS-WITH-NITS (optional only); REQUEST_CHANGES; BLOCK.
-After a non-accepting verdict, Lead sends the same implementer a focused repair under the standing
-authority and checkpoint rules in `AUTONOMY_AUTHORIZATION.md`.
-
-An acceptance auditor unable to run the mandated suite returns BLOCK; a source-only view is
-supplemental. The owner-mandated Gemini parallel route is the explicit exception: it is dispatched
-and compared on every T0–T2 model audit, but its known suite non-execution is
-`SUPPLEMENTAL_UNEXECUTED`, not a standalone BLOCK.
-In an explicitly owner-designated four-auditor review, both flagships must accept and no reproduced
-required finding from DeepSeek V4 Flash or GLM-5.2 may remain. Secondary auditors gain no protected
-implementation authority.
-D025 secondary identities are `cline-pass/deepseek-v4-flash` via ClinePass and GLM-5.2 via Z.AI
-Coding Plan. Both audit in a dedicated worktree at the frozen SHA; afterwards require empty
-`git status --porcelain` as proof they edited nothing.
-
-## Delegation and context discipline
-
-- Send compact evidence pointers/excerpts, never whole sessions or evidence trees. Pre-extract
-  large samples. Rules must describe the failure class, not one lane.
-- Implementer sub-delegation is optional: Cline first, `_deepseek_driver` fallback; use the cheapest
-  capable route. Never send Pine, parity, MTC, trading, Bridge-protected, or schema work to a cheap
-  model without explicit approval. The Lead still audits real results.
-- Prefer subscription routes over external-credit routes while preserving exact-model, cost, and
-  independence requirements.
-- GLM routing: discovery/mechanics = 4.5-Air only if verified, else 4.7; ordinary code = 4.7;
-  GLM-5.1 only if active entitlement confirms it; difficult/protected/exact request = 5.2. Record
-  classification, protected reason, provider/model, why not cheaper, exact paths, context budget,
-  fallback, and external-credit use. Re-verify time-sensitive entitlement/quota.
-  These repository tiers override provider-default model mappings.
-- Targeted `rg` first; line/symbol reads before full files over 400–500 lines; batch independent
-  checks; stop broad exploration when evidence exists; start fresh if context is excessive. Resume
-  or continue only with explicit owner authorization. Record measured token/context consumption
-  after unexpectedly large runs.
-- Probe a changed CLI/model route cheaply before spending a dispatch. Codex lanes must not spawn
-  Claude children; verify the guard. Commit completed agent work before another agent receives the
-  same files; if commit is not authorized, pause instead of handing off dirty shared files.
-- GLM execution-sensitive reviews run unattended without approval loops and remain source-level
-  until the Lead executes the real harness. Security-flavoured Codex audits use narrow bands,
-  symbolic fixtures, and file-offloaded verbose output so transport filtering cannot erase verdicts.
-- When Claude is Lead, launch Codex only through
-  `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1` (default `-Account secondary`);
-  never run bare `codex` or route to the desktop `.codex` home. Read the account-routing file only
-  when choosing/checking an account, quota, or credential source.
-- Propose AI Boardroom only for a high-stakes ambiguous decision. A real run needs owner approval
-  because it spends external tokens and transmits redacted slices. Dry-run is allowed; the tool is
-  read-only and never trading approval.
-- Board provider failures are recorded and the remaining read-only run may continue; failure never
-  upgrades coverage or authority.
-- After an accepted safe work unit, continue only into the next already-authorized safe unit. At a
-  hard gate, keep preparing safe evidence and record the exact authorization still required.
+- Separate scope/acceptance from implementation. Ordinary low-risk builders need not be a pair
+  of flagships; use the cheapest capable authorized route. Exact review slots and explicitly
+  designated protected Lead/counterpart contracts remain binding.
+- Bounded mechanical repo work routes to the approved cheap harness; read `_deepseek_driver/README.md`
+  from root first. If routes fail, record actual errors and use only an authorized fallback.
+  Never delegate Pine/parity/MTC/trading/Bridge-protected/schema work to cheap routes without
+  explicit approval. Every lane has exact ownership, provider/model, budget, dependency and stop.
+- For account/model/quota choices read `../_AI_MEMORY/AI_ACCOUNT_AND_MODEL_ROUTING.md` and only
+  relevant dated records; verify current availability. Included subscriptions first; new PAYG
+  needs owner authority. Supplemental routes never silently replace acceptance auditors.
+- Claude Lead launches Codex through
+  `C:\Users\BarışSemaay\AI_CLI_HELPERS\Invoke-CodexForClaude.ps1` (default secondary account),
+  never bare Codex or the desktop home. Codex lanes must not spawn Claude children. Keep routing
+  process-scoped; never globally switch active accounts or expose credentials.
+- Offload long outputs per `../_AI_MEMORY/TOOL_OUTPUT_OFFLOAD_PROTOCOL.md`. Send compact contracts,
+  exact refs/diffs and evidence pointers; no full sessions. Peer findings still need reproduction.
+- Follow `AUTONOMY_AUTHORIZATION.md` for repair checkpoints, ordinary local commits, safe-lane
+  continuation and material owner gates. Handoff of shared write paths must preserve ownership;
+  no silent transfer of another writer's dirty files.

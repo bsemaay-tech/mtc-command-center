@@ -1,5 +1,10 @@
 # STRATEGY_REGISTRY
 
+Historical import-provenance table, not the current strategy queue or operating instructions.
+Legacy paths below identify original sources; do not open or operate the frozen legacy checkout.
+For current registry inputs and status, use [this stage's INPUTS](../INPUTS.md) and
+[HANDOFF](../HANDOFF.md). The original rows are retained unchanged.
+
 | STG ID | Short name | Source | Bucket | Status file |
 |---|---|---|---|---|
 | STG001_ql_alpha_ada_two_candle_sr_1h | ql_alpha_ada_two_candle_sr_1h | `C:\LAB\tradingview-lab\01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY\QL_ALPHA_ADA_TWO_CANDLE_SR_1H` | `01_MASTER TEMPLATE_V2\06_QUANTLENS_LAB\06_PROMOTED_TO_PARITY` | `strategies\STG001_ql_alpha_ada_two_candle_sr_1h\STATUS.md` |
