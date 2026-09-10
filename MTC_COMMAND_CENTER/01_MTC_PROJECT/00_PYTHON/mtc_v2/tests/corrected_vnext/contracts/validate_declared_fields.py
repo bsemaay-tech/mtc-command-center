@@ -483,6 +483,49 @@ def _has_historical_marker(value: Any) -> bool:
     return type(value) is str and HISTORICAL_MARKER_RE.search(value) is not None
 
 
+def _dates_this_field(container: Any, field: str) -> bool:
+    """Is there a dating marker that covers `container[field]` specifically?
+
+    Deliberately NOT recursive, unlike _has_historical_marker. Applying repair 6 exposed
+    why: the repaired baseline block gained a nested current_run.measured_at, which dates
+    the CURRENT run, and a recursive search let it discharge the staleness of the
+    HISTORICAL sha256 sitting beside it. A marker buried in a child structure says nothing
+    about the field being questioned.
+
+    Accepted: a sibling key naming the field (sha256_measured_at, sha256_as_of), or a
+    marker dating the whole block (historical, measured_at, as_of, captured_at).
+    """
+    if type(container) is not dict:
+        return False
+    for key, member in container.items():
+        if not member:
+            continue
+        folded = key.casefold()
+        if folded in HISTORICAL_MARKER_KEYS:
+            return True
+        if folded.startswith(f"{field.casefold()}_") and (
+            HISTORICAL_MARKER_KEY_RE.search(folded) is not None
+            or HISTORICAL_MARKER_RE.search(folded) is not None
+        ):
+            return True
+    return False
+
+
+def _has_historical_marker_shallow(container: Any) -> bool:
+    """A dating marker among a block's OWN keys. Non-recursive, for the same reason
+    _dates_this_field is non-recursive: a marker inside a child dates the child."""
+    if type(container) is not dict:
+        return False
+    return any(
+        bool(member)
+        and (
+            key.casefold() in HISTORICAL_MARKER_KEYS
+            or HISTORICAL_MARKER_KEY_RE.search(key) is not None
+        )
+        for key, member in container.items()
+    )
+
+
 def _contains_present_tense(value: Any) -> bool:
     if type(value) is dict:
         return any(_contains_present_tense(member) for member in value.values())
@@ -541,12 +584,31 @@ def _historical_label_refusals(
                     differs = recorded != live_value
                 if differs:
                     mismatches.append(field)
-            if mismatches and (not _has_historical_marker(value) or _contains_present_tense(value)):
+            # An explicit dating marker settles it. The present-tense scan is a FALLBACK
+            # for an undated block, not an additional hurdle for a dated one.
+            #
+            # Applying repair 6 showed why this had to change. The repaired block carries
+            # measured_at plus prose explaining the correction -- 'Until 2026-09-10 this
+            # field ended with the words "run this session"' -- and the old condition
+            # ORed present_tense in, so quoting the phrase being corrected re-triggered
+            # the refusal. Same defect as the section-16 prose scan: a checker that cannot
+            # tell an assertion from a quotation of a former assertion.
+            dated = _dates_this_field(value, "identity") or _has_historical_marker_shallow(value)
+            if mismatches and not dated and _contains_present_tense(value):
                 refusals.append(
                     Refusal(
                         "HISTORICAL_LABELLED",
                         entry["path"],
-                        f"stale identities={','.join(mismatches)} marker={_has_historical_marker(value)} present_tense={_contains_present_tense(value)}",
+                        f"stale identities={','.join(mismatches)} is written in the present "
+                        "tense and carries no dating marker",
+                    )
+                )
+            elif mismatches and not dated:
+                refusals.append(
+                    Refusal(
+                        "HISTORICAL_LABELLED",
+                        entry["path"],
+                        f"stale identities={','.join(mismatches)} and no dating marker",
                     )
                 )
     return refusals
@@ -667,20 +729,50 @@ def _validate_cross_checks(
     section = manifest.get("section_16_review")
     status = section.get("status") if type(section) is dict else None
     section_statement = section.get("statement") if type(section) is dict else None
-    says_unperformed = (
-        type(status) is str
-        and re.search(r"PENDING|UNPERFORMED|NOT[^A-Z0-9]*PERFORMED", status, re.IGNORECASE) is not None
-    ) or (
-        type(section_statement) is str
-        and re.search(r"\b(?:has\s+)?NOT\s+(?:been\s+)?performed\b", section_statement, re.IGNORECASE)
-        is not None
-    )
-    if _semantic_review_is_validating(semantic_review) and says_unperformed:
+    # The verdict is taken from the STRUCTURED status, not from the prose beside it.
+    #
+    # Applying repair 6 showed why. The repaired statement explains the correction it
+    # carries -- "Before 2026-09-10 this field read PENDING and stated the review had NOT
+    # been performed" -- and the old prose scan matched that sentence, so a field that had
+    # just been corrected was refused for describing what it used to say. A checker that
+    # cannot tell an assertion from a quotation of a former assertion will always punish
+    # the additive-correction practice this package requires everywhere else.
+    #
+    # The prose scan is kept only as a FALLBACK for when there is no usable status, so a
+    # record cannot escape the check by dropping the field.
+    status_is_usable = type(status) is str and status.strip() != ""
+    if status_is_usable:
+        says_unperformed = (
+            re.search(r"PENDING|UNPERFORMED|NOT[^A-Z0-9]*PERFORMED", status, re.IGNORECASE)
+            is not None
+        )
+    else:
+        says_unperformed = (
+            type(section_statement) is str
+            and re.search(
+                r"\b(?:has\s+)?NOT\s+(?:been\s+)?performed\b", section_statement, re.IGNORECASE
+            )
+            is not None
+        )
+    review_validates = _semantic_review_is_validating(semantic_review)
+    if review_validates and says_unperformed:
         refusals.append(
             Refusal(
                 "SECTION16_STATUS_CONSISTENT",
                 "manifest.section_16_review.status",
                 f"declared={status!r} while a validating semantic_coverage_review.json is installed",
+            )
+        )
+    # The dangerous direction, which was not checked at all until now: the record asserting
+    # that the acceptance-blocking review HAS been done when no valid receipt backs it. The
+    # first version only caught the self-deprecating direction, which is the harmless one.
+    elif not review_validates and status_is_usable and not says_unperformed:
+        refusals.append(
+            Refusal(
+                "SECTION16_STATUS_CONSISTENT",
+                "manifest.section_16_review.status",
+                f"declared={status!r} claims the review is done, but no validating "
+                "semantic_coverage_review.json is installed",
             )
         )
 
@@ -704,7 +796,7 @@ def _validate_cross_checks(
                 actual_digest = baseline_digest
         except (OSError, TypeError) as exc:
             actual_digest = f"unavailable:{exc}"
-        if recorded_digest != actual_digest and not _has_historical_marker(baseline):
+        if recorded_digest != actual_digest and not _dates_this_field(baseline, "sha256"):
             refusals.append(
                 Refusal(
                     "BASELINE_PIN_CURRENT_OR_LABELLED",

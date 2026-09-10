@@ -223,6 +223,72 @@ class DeclaredFieldValidatorTests(unittest.TestCase):
         )
         self.assertIn("SECTION16_STATUS_CONSISTENT", self.codes(manifest=mutated))
 
+    @staticmethod
+    def _strip_dating(block: dict) -> None:
+        """Remove every dating marker from a block's OWN keys.
+
+        Needed because repair 6 (HIST-2026-0024) dated these blocks in the record, so a
+        RED case has to say explicitly that it is testing an UNDATED stale field. Nested
+        children are left alone deliberately: a marker inside a child dates the child, and
+        the checker no longer accepts one as covering the parent.
+        """
+        for key in list(block):
+            folded = key.casefold()
+            if "measured_at" in folded or folded in {
+                "historical",
+                "historical_label",
+                "as_of",
+                "as_of_utc",
+                "captured_at",
+                "captured_at_utc",
+            }:
+                del block[key]
+
+    def test_section16_claiming_done_without_a_receipt_is_refused(self) -> None:
+        """The dangerous direction, unchecked until repair 6.
+
+        The first version only caught the record calling the review UNDONE while a valid
+        receipt existed -- the self-deprecating direction, and the harmless one. It never
+        caught the record claiming the acceptance-blocking review was DONE with nothing
+        backing it, which is the direction that could wave a package through.
+        """
+        done = deepcopy(self.manifest)
+        done["section_16_review"]["status"] = "PERFORMED_OWNER_RATIFIED"
+
+        # GREEN: a validating receipt is installed, so the claim is backed.
+        self.assertNotIn("SECTION16_STATUS_CONSISTENT", self.codes(manifest=done))
+
+        # RED: the same claim with an empty receipt.
+        # Note on the API: semantic_review=None means "not supplied, read it from disk",
+        # so None cannot express absence here. A receipt that fails to validate is the
+        # in-memory equivalent, and the genuinely-missing-file path is asserted directly
+        # below instead of being faked through this parameter.
+        self.assertIn(
+            "SECTION16_STATUS_CONSISTENT",
+            self.codes(manifest=done, semantic_review={}),
+        )
+
+        # RED: and with a receipt carrying the wrong schema.
+        self.assertIn(
+            "SECTION16_STATUS_CONSISTENT",
+            self.codes(
+                manifest=done,
+                semantic_review={"schema": "DELIBERATELY_NOT_THE_REVIEW_SCHEMA"},
+            ),
+        )
+
+        # A missing receipt file leaves semantic_review as None after the load fails, so
+        # the predicate that decides this must reject None outright.
+        self.assertFalse(validator._semantic_review_is_validating(None))
+
+        # GREEN: with no valid receipt, a record that still says PENDING is honest.
+        pending = deepcopy(self.manifest)
+        pending["section_16_review"]["status"] = "PENDING"
+        self.assertNotIn(
+            "SECTION16_STATUS_CONSISTENT",
+            self.codes(manifest=pending, semantic_review={}),
+        )
+
     def test_baseline_pin_current_or_labelled_red_green(self) -> None:
         clean = deepcopy(self.manifest)
         clean["legacy_event_order_map_pin"]["baseline_manifest"]["historical"] = True
@@ -231,13 +297,33 @@ class DeclaredFieldValidatorTests(unittest.TestCase):
             self.codes(manifest=clean, baseline_digest=self.baseline_digest),
         )
 
+        # GREEN: the record as repaired -- a stale sha256 dated by a sibling that NAMES it.
+        self.assertNotIn(
+            "BASELINE_PIN_CURRENT_OR_LABELLED",
+            self.codes(baseline_digest=self.baseline_digest),
+        )
+
+        # RED: a wrong digest with every dating marker stripped from the block itself.
         mutated = deepcopy(clean)
         baseline = mutated["legacy_event_order_map_pin"]["baseline_manifest"]
-        del baseline["historical"]
+        self._strip_dating(baseline)
         baseline["sha256"] = "7" * 64
         self.assertIn(
             "BASELINE_PIN_CURRENT_OR_LABELLED",
             self.codes(manifest=mutated, baseline_digest=self.baseline_digest),
+        )
+
+        # RED: a marker nested in a CHILD must not discharge the parent's stale field.
+        # This is the loophole repair 6 exposed -- current_run.measured_at dates the
+        # current run, not the historical sha256 beside it.
+        nested_only = deepcopy(mutated)
+        nested_only["legacy_event_order_map_pin"]["baseline_manifest"]["current_run"] = {
+            "measured_at": "2026-09-10",
+            "sha256": "9" * 64,
+        }
+        self.assertIn(
+            "BASELINE_PIN_CURRENT_OR_LABELLED",
+            self.codes(manifest=nested_only, baseline_digest=self.baseline_digest),
         )
 
     def test_historical_labelled_red_green(self) -> None:
@@ -246,12 +332,27 @@ class DeclaredFieldValidatorTests(unittest.TestCase):
         clean["repository_evidence_identity"].update(live)
         self.assertNotIn("HISTORICAL_LABELLED", self.codes(manifest=clean))
 
+        # GREEN: the record as repaired -- values still stale, but the block is dated.
+        # It also QUOTES the present-tense phrase it corrected, which the first version of
+        # this check punished. Quoting a former assertion is not making it.
+        self.assertNotIn("HISTORICAL_LABELLED", self.codes())
+
+        # RED: stale AND undated AND written in the present tense.
         mutated = deepcopy(clean)
-        mutated["repository_evidence_identity"]["head_commit"] = "e" * 40
-        mutated["repository_evidence_identity"]["verification"] = (
+        block = mutated["repository_evidence_identity"]
+        self._strip_dating(block)
+        block["head_commit"] = "e" * 40
+        block["verification"] = (
             "This deliberately different identity now tracks a mutation; run this session."
         )
         self.assertIn("HISTORICAL_LABELLED", self.codes(manifest=mutated))
+
+        # RED: stale and undated is enough on its own -- no present-tense wording needed.
+        quiet = deepcopy(mutated)
+        quiet["repository_evidence_identity"]["verification"] = (
+            "A deliberately different neutral sentence carrying no tense cue at all."
+        )
+        self.assertIn("HISTORICAL_LABELLED", self.codes(manifest=quiet))
 
     def test_record_own_dating_convention_discharges_the_label(self) -> None:
         """This record dates a snapshot in the KEY NAME, and that must be accepted.

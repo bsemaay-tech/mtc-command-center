@@ -58,10 +58,11 @@
   }
  },
  "repository_evidence_identity": {
+  "measured_at": "2026-08-31, worktree C:\\WFMERGE54 (block introduced in 5e8e5794)",
   "worktree": "C:\\WFMERGE54",
   "head_commit": "108ea066a710ff7ef5c09246903fe3d523da1d56",
   "mtc_v2_core_tree_oid": "c7f4aa1b46792c67c171237cea62c06497aa35ea",
-  "verification": "read-only git rev-parse HEAD and git rev-parse HEAD:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core, run this session; both match the design premise at Design section 1, \"The current `mtc_v2/core` behavior is the `LEGACY_COMPATIBLE` baseline\". No git mutation was performed."
+  "verification": "read-only git rev-parse HEAD and git rev-parse HEAD:MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core, measured in the session dated above and NOT re-measured since; both matched the design premise at Design section 1, \"The current `mtc_v2/core` behavior is the `LEGACY_COMPATIBLE` baseline\", as of that measurement. No git mutation was performed. Until 2026-09-10 this field ended with the words \"run this session\", which read as a live measurement; the values were correct when taken and are NOT changed here, only dated (HIST-2026-0024). The live identity for any given re-seal is carried by semantic_coverage_review.json.reviewed_identities, which the gate enforces. NOT ENFORCED: no gate code reads this block."
  },
  "catalog_conservation": {
   "red_scenarios": 9,
@@ -588,8 +589,9 @@
   "reason": "Re-seal #30 candidate: owner-approved rename of the funding valuation member from mark_price to oracle_price. The venue documents that funding notional uses the spot oracle price and explicitly NOT the mark price, while the record's own rule already declared valuation_price_source SPOT_ORACLE; the member name contradicted both. The margin-call/liquidation use of mark price in core/runner.py is CORRECT and is deliberately untouched. Four sealed members moved: DERIVATIONS.md, scenario_catalog.json, and the RULE2-08 RED/GREEN goldens. No economic value changed; this is a rename plus the digest cascade it forces. Base C30 was provisional at candidate time; the forward repin F30 has since completed at d06aa741c32a3b57a7bfe299aefa67c86cab453e, and seal.IMPLEMENTATION_BASE_SHA, seal_state.IMPLEMENTATION_BASE_SHA and implementation_anchor.json all record C30 0c01b350dc72c953fdac07214ecc15208e0a2536. That precondition is therefore met. This field records seal state only and asserts nothing about package acceptance, which remains open."
  },
  "section_16_review": {
-  "status": "PENDING",
-  "statement": "The mandatory SEMANTIC_COVERAGE_REVIEW required by Design section 16, \"semantic_coverage_review.json`. The reviewer must\" has NOT been performed and is REQUIRED BEFORE BUILD ACCEPTANCE. It is owner-held human review. This lane neither claims nor performs it, and the claude family is excluded from the section-16 reviewer role because it authored these tables (owner ruling Q3a). BCEG-1 refuses acceptance without a separately authored semantic_coverage_review.json (Design section 16, \"semantic_coverage_review.json`. The reviewer must\").",
+  "status": "PERFORMED_OWNER_RATIFIED",
+  "status_measured_at": "2026-09-10, re-seal #30 (HIST-2026-0024)",
+  "statement": "The mandatory SEMANTIC_COVERAGE_REVIEW required by Design section 16 HAS been performed and is installed at contracts/semantic_coverage_review.json, signed 2026-09-08T21:25:22+03:00 by Gemini 3.8 Flash High (gemini-3.8-flash-high), carrying 6 items with unresolved_items empty and owner ratification recorded through #30. Before 2026-09-10 this field read PENDING and stated the review had NOT been performed; that statement had become false and is corrected here under HIST-2026-0024. The reviewer-independence constraint below still binds: the claude family is excluded from the section-16 reviewer role because it authored these tables (owner ruling Q3a), and BCEG-1 still refuses acceptance without a separately authored semantic_coverage_review.json. NOT ENFORCED: the gate reads the receipt itself - its presence, its closed disposition domain and its content identities - and does not read this summary. Treat this field as descriptive only.",
   "reviewer_independence_constraint": "The reviewer must be independent from the kernel implementer (Codex family) AND from the CONTRACT_TABLES author (claude family)."
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
@@ -1184,9 +1186,20 @@
   "design_authority": "Design section 15.3, \"an integer `sequence` equal to\" (LEGACY_EVENT_SHAPE_CHECK at expected-bundle seal time)",
   "baseline_manifest": {
    "path": "C:\\tmp\\P012_BASELINE_RUN\\BASELINE_BYTES_MANIFEST.json",
+   "path_note": "OPEN DESIGN ITEM, not a repair: this is a mutable machine-local directory outside version control and it is overwritten in place by each baseline run. That is why this pin went stale silently, why no reviewer on another machine can verify it, and why current_run below will go stale again on the next run. The Lead recommended holding this repair until the storage question was settled; the owner overruled and directed APPLY ALL THREE with the concern recorded (HIST-2026-0024).",
    "sha256": "c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242",
+   "sha256_measured_at": "re-seal #24, 2026-09-05",
    "authorization": "ONE run completed under P012_ONE_EXTRA_COORDINATED_REPAIR=YES, overnight 2050 packet approved 2026-09-05 20:48, re-seal24; 17/17 complete, 0 blocked, all 34 surfaces identical.",
-   "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa"
+   "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
+   "current_run": {
+    "sha256": "256c3593db27df5643d114beaafccb1709d32fe2e89ca147416495bff443e772",
+    "EXPECTED_SEAL_SHA_consumed": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
+    "created_at": "2026-09-08T19:56:34.134141+03:00",
+    "authorization": "One full baseline execution for the re-seal #30 candidate. The unchanged child driver was re-run because the funding valuation member was renamed mark_price -> oracle_price, which moved the two RULE2-08 scenario inputs and therefore their catalog digest pins. Measured outcome: the driver consumed the renamed inputs (RULE2-08-RED 4bc3cc74 -> 2afadceb, RULE2-08-GREEN 6c349e8b -> 3a193160, each equal to its new catalog pin) and all 34 scenario artifacts are byte-identical to the re-seal #29 baseline; only run_status.json (its catalog path, catalog digest, kernel root and kernel bindings) and SHA256SUMS differ. No legacy observation moved and no economic value moved. NONACCEPTED Item4 refused.",
+    "catalog_expected_artifacts_2_0_0": "17/17 VALID",
+    "measured_at": "2026-09-10, re-seal #30 (HIST-2026-0024)",
+    "enforced_by": "verify_bceg.py:2980 re-reads the file and refuses if EXPECTED_SEAL_SHA_consumed does not equal the seal; verify_bceg.py:66-74 lists baseline_manifest_sha256 as a Section-16 content identity key and :650-654 refuses on mismatch. Both act on the FILE and on the RECEIPT, never on this block, which is descriptive only."
+   }
   },
   "legacy_event_order_map": {
    "RULE2-01-GREEN/event_surface/0/events": "LEGACY_EVENT_ORDINAL_V1",
