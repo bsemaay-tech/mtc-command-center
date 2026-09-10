@@ -19,6 +19,18 @@
   "provenance": {
     "captured_at_utc": "2026-08-31T07:00:53Z",
     "extraction_method": "OWNER_APPROVED_PACKAGE_TRANSCRIPTION_V1",
+    "frozen_source_absence": {
+      "fields": [
+        "fee_rounding_rule",
+        "fixed_component",
+        "minimum_fee"
+      ],
+      "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees",
+      "source_sha256": "3c49f9030a427df06f70943f53517204e4bd804bb205dcd05b2d27a75f51ce8b",
+      "owner_decision_ref": "HIST-2026-0033 / WP-P012-DECISION1-SOURCED-ABSENCE",
+      "disposition": "KEEP_REFUSED",
+      "limitation": "Not stated in this frozen source; no zero or rule inferred; not universal current absence or liquidation evidence."
+    },
     "owner_decision_ref": "OWNER_DECISIONS_2026-08-29_EVENING.md addendum 16: fees option (a), base tier-0 schedule, adopted class mapping",
     "sources": [
       {

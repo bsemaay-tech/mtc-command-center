@@ -95,6 +95,7 @@
     "extraction_method": "Manual exact-text extraction from locally frozen bytes; SHA-256 remeasured with Get-FileHash; no network access. v1.1 added tick-and-lot-size-api.html; v1.2 added order-types.html; v1.3 adds error-responses.html. quantity_step and point_value are DERIVED from quoted frozen rules/definitions. minimum_notional = 10 is the quoted MinTradeNtl reject threshold from the API error-response catalogue (not a contract-spec table). minimum_quantity stays null: a notional minimum is not a quantity minimum and no frozen source literally states a quantity minimum.",
     "human_reviewer": null,
     "owner_decision_reference": "Owner 2026-08-31, addendum 15 row 36: HYPERLIQUID PERPETUAL BTC; effective from the fetched document set onward.",
+    "source_sha256": "da2bf1fef41adbb4d3429e5abaff070a8fc81814730bf0ee7715b9eb79f097ed",
     "sources": [
       {
         "source_locator": "POST https://api.hyperliquid.xyz/info {\"type\":\"meta\"}",

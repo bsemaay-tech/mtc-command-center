@@ -1,9 +1,9 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
+ "EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
  "IMPLEMENTATION_BASE_SHA": "0c01b350dc72c953fdac07214ecc15208e0a2536",
- "core_tree_oid_at_base": "9a3283ae5e2bd7e527d5e6dfb8e3033473711a41",
+ "core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
@@ -216,6 +216,14 @@
    "new_EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
    "reason": "Re-seal #30 candidate: owner-approved rename of the funding valuation member from mark_price to oracle_price. The venue documents that funding notional uses the spot oracle price and explicitly NOT the mark price, while the record's own rule already declared valuation_price_source SPOT_ORACLE; the member name contradicted both. The margin-call/liquidation use of mark price in core/runner.py is CORRECT and is deliberately untouched. Four sealed members moved: DERIVATIONS.md, scenario_catalog.json, and the RULE2-08 RED/GREEN goldens. No economic value changed; this is a rename plus the digest cascade it forces. Base C30 is provisional; NONACCEPTED until forward repin F30.",
    "independently_verified": "pending Lead and required audits"
+  },
+  {
+   "at": "2026-09-10T10:42:36.751382+00:00",
+   "actor": "Astra Lead coordinated; Sol High mechanical builder",
+   "old_EXPECTED_SEAL_SHA": "b6ac5a4616c15c416b3bac2f102e62b0f051287e767e5e8b1e6656ea19ab3eda",
+   "new_EXPECTED_SEAL_SHA": "b957ad4c01229275626394c31c80a02e46b924f9dc6a9251c3a0751b5214f7d7",
+   "reason": "R31/re-seal31: approved fee-proof/I5 metadata moved core, and the nine existing modifications were re-derived from their original patches with their modification semantics unchanged. scenario_catalog.json carries the 18 updated catalog pins and is the only changed member among the 19 sealed files. This is a title-only successor; there are no economic, golden, observed, or behavioral changes. NONACCEPTED pending the C31 commit, forward repin, baseline reviews, and fresh Section 16/T0 reviews.",
+   "independently_verified": "pending Lead and required reviews"
   }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
