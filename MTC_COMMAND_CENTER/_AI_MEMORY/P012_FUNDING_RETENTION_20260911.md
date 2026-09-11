@@ -121,3 +121,11 @@ from these local results. R34/R35 and the entire existing MTC tree are preserved
 NEXT ACTION: freeze the tested candidate, reconcile the required independent
 reviews and current-head protected CI, then the already-authorized normal merge.
 WAITING FOR OWNER: Nothing for this approved unit.
+
+## Final local T0 reconciliation — supersedes pending-review checkpoint
+
+Source8fe2ede61ca8bf6cd6c564063680542e6101b276: Lead, fresh exact Opus5 xhigh and fresh exact Sol xhigh each personally passed1467full/275focused tests. Both flagships returned PASS. Required Gemini3.7 corroboration completed SUPPLEMENTAL_UNEXECUTED; wrong foreignlinks/timing wording is explicitly qualified. No required finding remains. Public evidence and optional dispositions are under ../04_REPORTS/ai_handoffs/P012_FUNDING_RETENTION_REVIEW_20260911/README.md.
+
+OpusPro ran tests but exhausted its subscription before a verdict. Existing isolated ClaudeMax supplied the fresh completed exactOpus review; an initial launcher binding failure was corrected before that successful session. No failed attempt was counted as accepting. The earlier native repair author was separate from the accepting Sol reviewer. All reviewers and writers have released the source. Final code/test/contract identity remains the accepted candidate; only declared factual closeout and stagehandoff follow. Protected current-head CI and normal PR integration are mandatory and will be recorded separately; local acceptance grants no operational authority.
+
+NEXT ACTION: verify protected integration, then the next separately scoped funding-export proposal and source-evidence incorporation. WAITING FOR OWNER: Nothing for this approved package.

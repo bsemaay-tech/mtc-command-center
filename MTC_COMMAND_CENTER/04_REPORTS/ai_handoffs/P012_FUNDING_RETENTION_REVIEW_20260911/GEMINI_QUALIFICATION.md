@@ -1,0 +1,7 @@
+# Lead qualification of Gemini corroboration
+
+Original report SHA256 b4cf76fc789fc91b49b3a195a9637d39138f9494b8efafd95b464890b31e15be is preserved. The helper returned statusSUCCESS, conversation a8d36d29-1539-4b08-8353-06d95e30bf49, one turn,32.47seconds. PowerShell LASTEXITCODE was null, not an independently observed native zero. This is required SUPPLEMENTAL_UNEXECUTED corroboration, never executing acceptance.
+
+Gemini recommended PASS and identified no required code finding from the literal frozen candidate excerpts. Its file:///C:/LAB/Tradingview_LAB_CLEAN links and several line offsets are wrong for this candidate; that checkout is foreign. They are not evidence locations and must not be used as verified citations. The reviewed candidate is8fe2ede61ca8bf6cd6c564063680542e6101b276 in C:/tmp/P012_FUNDING_RETENTION_20260911, packet manifest16f14641b51ecc30a953605072f18784e665038c62fc3208a22d67850217c4a1. Its statements about independent hash/fixture verification are source-review observations only: Gemini ran no hashes or tests. Lead and the two executing flagships supply those checks.
+
+The report reverses the timing in its optional author-count remark:1462 is before the native Sol repair;1467 is after it. Its AGENTS-inspection wording is not additional proof of a candidate-checkout read. The actual source guards, literal prompt and result remain preserved separately. These reporting qualifications do not change any schema/economic/source fact and require no duplicate model dispatch. No Gemini-only required finding needs a code repair.
