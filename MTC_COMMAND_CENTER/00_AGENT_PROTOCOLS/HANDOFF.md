@@ -21,3 +21,5 @@ Exact D1 proposal prepares synthetic-only offline exporter behavior for approval
 Earlier handoff and readiness are preserved byte-for-byte under ../_AI_MEMORY/history/p012-package-continue-20260911/. No reset, stash, overwrite of foreign work, global account change or new spending.
 
 NEXT ACTION: present D1/D2 as one decision packet. WAITING FOR OWNER: D1/D2 and source-backed venue evidence when available.
+
+Owner approval in this task, 2026-09-11: "all are approved" approves DECISION_PACKET D1 (synthetic-only offline materializer) and D2 (push/PR of the reviewed manifest correction plus factual handoff). D2 may now publish; merge and production/operational actions remain excluded. D1 proceeds separately in feature/p012-synthetic-funding-materializer-20260911 at C:/tmp/P012_MATERIALIZER_20260911, so new implementation cannot enter this correction PR. Required review/CI conditions are unchanged.
