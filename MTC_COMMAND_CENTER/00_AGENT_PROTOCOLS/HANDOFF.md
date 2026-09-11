@@ -1,58 +1,25 @@
-# Governance stage handoff
+# P012 governance handoff — 2026-09-11
 
-## [DOCUMENTATION REVIEW ACCEPTED; PROTECTED INTEGRATION CONDITIONAL] 2026-09-09
+Full P012 remains NONACCEPTED: 10 production OPEN rows, 27 signed risks, five residual integration obligations. No venue reply received. Independent engineering/preparation has advanced beyond the earlier proposals.
 
-Branch `feature/workflow-memory-20260909`; worktree `C:\WF_MEMORY_20260909`; reviewed head
-`37e22db0cf7a01a047d153d0604f34f4451f72d1`; base
-`89fa1de0315bdfc9199233b10ced2a707223b4e7`. At `2026-09-09T20:33:50Z`, the Lead accepted
-the independent documentation/governance review only. Protected integration is tracked by PR #167;
-activation requires the merged PR and protected CI on its final head. Verify current integration
-status there. Product, runtime, package, host, credential, backtest, schema, trading, deployment
-and economic status are unchanged.
+- Owned branch/worktree: feature/p012-independent-readiness-20260911 at C:/tmp/P012_INDEPENDENT_20260911. No live/scheduled dependency. Foreign checkout preserved.
+- Master rechecked: 4ce213184fe35313cafde45da8f59543db306086.
+- Local reviewed corrective commit: ec6347d5277267937a416356df57355a69ad4b2c. Only three manifest declaration fields reconcile stale PENDING with ratified R35. No publish/merge/deploy/admission.
+- Deliverables: C:/Users/BarışSemaay/Documents/Codex/2026-09-11/11-2/outputs/WP_P0_12_CONTROL/CONTROL_TABLE.md and DECISION_PACKET.md.
+- Detailed current note: ../_AI_MEMORY/P012_INDEPENDENT_READINESS_20260911.md.
 
-The candidate shortens mandatory startup context, centralizes review classification and accounts
-for all 80 original memory paths. Preserved Git content identity is verified. Raw-before-copy
-digests are unavailable for two disclosed records, so raw byte identity is not retrospectively
-claimed for them; other pinned archives retain their recorded byte evidence. Upstream PR #168 was
-integrated without changing its 117 product blobs. The shared `SESSION_LOCK.md` resolution keeps
-the exact upstream archive and the three unresolved RP7/SEC102/Audit-2 rows verbatim.
+Completed: 13 fee checks, nine Runner checks, three Bridge/MTC API groups with seven negative controls; R29 PACKET_V4 exact-byte preparation; combined cross-check PASS. Full bar-driven signal run not rerun. R29 semantic review remains at its already-approved final acceptance boundary.
 
-### Review and evidence
+Manifest correction: Lead and fresh Opus5/Sol xhigh reviews reproduce old/fix/reverted-status and 17 tests; both PASS. Gemini3.7 supplemental unexecuted corroboration retained. One false diagnostic removed; four historical diagnostics, all 19 sealed members and production records remain. Accepted R34/R35/PR178 work reused, not re-audited.
 
-All reviewers received external `REVIEW_PACKET_R4.md` at SHA-256
-`6398e9d96282c98f8cac48827a668addff93237448df894cd9bf35f9f2692b63` for source `37e22db0`.
-Exact `claude-opus-5` xhigh returned PASS-WITH-NITS in 178.4 seconds; both nits were optional and
-already disclosed. Exact `gpt-5.6-sol` xhigh returned PASS with no findings in 574.1 seconds.
-Mandatory `gemini-3.7-flash-high` returned guarded SUCCESS and PASS in 183.6 seconds with its
-required `SUPPLEMENTAL_UNEXECUTED` status. Canonical-checkout URLs in that report are presentation,
-not current-source evidence; the literal frozen packet was reviewed. The Lead independently
-returned `ACCEPTED_DOCUMENTATION_REVIEW_ONLY` after matching 92/92 source hashes and reproducing
-the actual portable checker with all eight controls, index check, repository guard and diff checks.
+E updated: current official frontend explicitly maps perp taker/maker and referral branches; Lead reproduced six source hashes/import chain/five synthetic cases. Chunk SHA256 215c171cba31045c930ed5718d24464ea5660257819481ff449f8b664024dcb5. Historical applicability, actual billing and rounding remain open. Public funding sample has no payments: reuse its prepared targeted request, no repeated investigation.
 
-Evidence is in the external task root named by the reconciliation report:
-`CLAUDE_REVIEW_R4.md`, `SOL_REVIEW_R4.md`, `GEMINI_REVIEW_R4.md`, and `LEAD_REVIEW_R4.json`.
-Earlier attempts remain dated evidence: R1 Claude PASS-WITH-NITS while Sol timed out without a
-verdict and Gemini's guard rejected foreign activity; R2 was cancelled for a stale index row; R3
-Sol was blocked by elevated-sandbox error 1326. R4 used the unelevated external workspace and a
-UUID scratch directory; the scratch-only portability diff and prior checker remain external.
+All settled choices retained: STOP_FIRST, explicit zero slippage, retained profiles, no additional bounds, additive schema, GROSS-MINUS-FEES guards, LONG payer, same-timestamp inclusion. No new venue assumptions.
 
-Bridge, Research and Pine CI were green on reviewed head `37e22db0`. This factual G7 closeout changes
-only this handoff, the reconciliation report, the current workflow introduction/row in
-`SESSION_LOCK.md`, and deterministic `11_TRIAGE/INDEX.md`. Reviewed normative hashes remain
-unchanged. Protected CI is required again on the final closeout head before activation or merge.
+Exact D1 proposal prepares synthetic-only offline exporter behavior for approval. D2 proposes push/PR of the already-reviewed local correction; no merge grant. Other final derivations/reviews depend on real final records/candidate. E and delivery lanes complete; actual running subscription workers: 0. Lead verified the 532-member work bundle and separate E archive. Packaging checks and factual persistence are complete.
 
-### Package boundary
+Earlier handoff and readiness are preserved byte-for-byte under ../_AI_MEMORY/history/p012-package-continue-20260911/. No reset, stash, overwrite of foreign work, global account change or new spending.
 
-PR #168 re-seal #30 clears P012 R1–R4 only. R5–R7 and whole WP-P0-12 remain unaccepted. P020
-remains unaccepted pending its existing wiring, qualification, evidence and audit work. PR #167
-review or integration does not change those product statuses or grant operational authority.
+NEXT ACTION: present D1/D2 as one decision packet. WAITING FOR OWNER: D1/D2 and source-backed venue evidence when available.
 
-NEXT ACTION: complete and verify PR #167's protected merge and final-head CI, then resume the
-existing P012 scope and contract.
-WAITING FOR OWNER: Nothing. Conditional merge is authorized; its protected integration conditions
-remain binding.
-
-## 2026-09-10 — Scheduling continuation
-Lead accepted bounded governance at 87bf895e after Opus/Sol/Gemini R2 reviews. See ../_AI_MEMORY/AUTONOMOUS_SCHEDULING_20260910.md. Canonical scheduling rule and proposed global pointer retain all authority limits. Protected integration and pointer installation remain pending.
-NEXT ACTION: final-head Bridge CI, merge, verified pointer install.
-WAITING FOR OWNER: Nothing.
+Owner approval in this task, 2026-09-11: "all are approved" approves DECISION_PACKET D1 (synthetic-only offline materializer) and D2 (push/PR of the reviewed manifest correction plus factual handoff). D2 may now publish; merge and production/operational actions remain excluded. D1 proceeds separately in feature/p012-synthetic-funding-materializer-20260911 at C:/tmp/P012_MATERIALIZER_20260911, so new implementation cannot enter this correction PR. Required review/CI conditions are unchanged.
