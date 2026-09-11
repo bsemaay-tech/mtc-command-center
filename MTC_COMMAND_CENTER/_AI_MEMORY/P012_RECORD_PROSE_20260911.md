@@ -47,3 +47,25 @@ The original Sol preparation timed out after PowerShell localized JSON timestamp
 Technical QA: intended old-digest assertion RED, exact replacement GREEN;113 focused tests pass. Current canonical191 hunks include189 byte-identical R34 hunks and only2 changed instrument record/sidecar hunks, with no undocumented row. New Section16 review/ratification remains pending; current work NONACCEPTED.
 NEXT ACTION: commit F35, verify current candidate, freeze the actual independent-review packet and obtain current Section16 judgment.
 WAITING FOR OWNER: Nothing for current preparation; no new ratification has been inferred.
+
+## R35 owner-ratified review record — 2026-09-11
+
+- Owner exact words: "Approved, continue".
+- Context: the owner ratified the finished R35 wording corrections and evidence refresh and authorized required final reviews and checks, then push/merge only if they pass. This is not acceptance before those checks.
+- Original unratified receipt SHA256: `3672ed30b9b56173104918b13d39829243508d2961a21ea05232b6df6a92815e`.
+- Exact mechanically ratified successor SHA256: `ed4f4f2fd74bb3c4677be95af75ff952ad2437897dccee9c02d373274bb790eb`. It differs from the original JSON only at `owner_ratification.ratified` (`false` to `true`) and `signed_at` (`2026-09-11T13:13:56+03:00` to `2026-09-11T13:54:18+03:00`). No substantive receipt content was assembled or changed here.
+- Ratified chain, exactly as recorded: `#5, #6, #7, #8, #9, #10, #11, #12, #12b, #13, #14, #14b, #15, #16, #17, #18, #19, #20, #21, #22, #23, #24, #25, #26, #27, #28, #29, #30, #31, #32, #33, #34, #35`.
+- Reviewed candidate is `95dbee5183f4256bf9cf4c5bbd893d7172bd56a9`; prior accepted integration/R34 merged PR176 is `e42fa192507d77e2d1765702a4a9f54e56ad793f`; core tree is `ad06d9723484d7fa7e220096a1ec9247197f7f29`; seal is `6f44d5beb9e2ed20fae65508bb01a01d1840258dfceb5109c9be20ab615dadd8`.
+- Review originals and Lead envelope `b1277a31b5d2071f4866fbe7487ba62dd8c44dfe5bcfaef728943569b87a2103`: A1 report `78bf6798991875d4faedb9570ede715a94b3b745eb7ca8514b9fc53ba75d8435`; A2 report `07c1d770ae13daa6fdad40e4c89a56e1511c107e348a08a6d7f716449d918fc2` (A2 corrected nits in prose). The malformed replacement JSON is retained as evidence and was not used. Assembler input is the original first verdicts plus the same-author completion. A2 scope deviations (five compaction-history reads outside the packet; four returned) are disclosed in the envelope. No acceptance claim.
+- 27 production risks, 10 OPEN rows, production refusals, and deferred R29 semantic redo remain. Six dispositions remain `ACCEPTED_WITH_RESIDUAL_RISK`.
+- No runtime, production, PAYG, unattended, trading, or new-spend grant.
+- Existing `HIST-2026-0041` is already `APPROVED` for `WP-P012-RECORD-PROSE-20260911`; `TASK_HISTORY.json` is deliberately not changed.
+- This payload is output-only. Lead owns Git and writeback. Source is not written here.
+
+## NEXT ACTION
+
+Exact fresh Opus5/Sol xhigh + Gemini 3.7 / Lead QA / CI; conditional integration (push/PR/merge only if those exact checks pass). Do not weaken test expectations.
+
+## WAITING FOR OWNER
+
+Nothing.
