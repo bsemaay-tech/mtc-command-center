@@ -1,0 +1,17 @@
+[
+  {
+    "git_blob": "f12570e704821fdae26d2461e4b0ab6f2c6ca854",
+    "worktree_sha256": "d0686e8a00eabadddd9d55fd55ed5e1400635a1384250bee22c7ea590a1659a5",
+    "path": "IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py"
+  },
+  {
+    "git_blob": "c9e6c31d5529b639fddc352963d3932e9f6e961b",
+    "worktree_sha256": "e8b9c1f48868fcc6528d57c887429e662fd89ed8200e2d9488e183f2e1a84927",
+    "path": "IBKR_PAPER_BRIDGE/tests/test_mtc_funding_export.py"
+  },
+  {
+    "git_blob": "759e7a82d369f27fb18031bcfc0902912706a16b",
+    "worktree_sha256": "5940075ff5217a6ea23015f93c1d90616fbef52299dfbf7e04ef9d0b35c5efe1",
+    "path": "IBKR_PAPER_BRIDGE/docs/26_FULL_RECONCILIATION_CONTRACT.md"
+  }
+]

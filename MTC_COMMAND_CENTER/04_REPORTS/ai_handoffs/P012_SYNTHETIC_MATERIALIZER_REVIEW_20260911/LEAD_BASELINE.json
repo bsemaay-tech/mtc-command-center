@@ -1,0 +1,17 @@
+{
+  "source_sha256": "d0686e8a00eabadddd9d55fd55ed5e1400635a1384250bee22c7ea590a1659a5",
+  "source_unchanged": true,
+  "independent_expectations": {
+    "two_event_order_time_decimals_LONG": true,
+    "deterministic_exact_bytes_and_sha": true,
+    "source_witness_bytes_and_digest_separation": true,
+    "missing_source_bytes_refused": "CANDIDATE_COVERAGE_INVALID",
+    "tampered_source_bytes_refused": "CANDIDATE_BINDING_INVALID",
+    "unbound_old_clock_unavailable_row_refused": "CANDIDATE_INVENTORY_MISMATCH",
+    "partial_write_no_published_or_scratch_artifacts": "CANDIDATE_STAGING_FAILED: staging failed before publication and private scratch was removed: OSError",
+    "actual_production_consumer_refusal": true
+  },
+  "limitations": [
+    "Synthetic fixtures only; no venue completeness or billing claim"
+  ]
+}
