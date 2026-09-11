@@ -609,3 +609,163 @@ CREATE TABLE funding_event_payloads (
 Test evidence: `tests/test_funding_payload_retention.py` (offline, synthetic),
 plus the v10 capability/migration extension in `tests/test_store.py` and the
 end-to-end restart/conflict cases in `tests/test_reconciliation.py`.
+
+## 13. Offline synthetic funding materialization (P0-12 D1, synthetic-only)
+
+`tools/export_mtc_funding.py` is an **offline** CLI plus one pure function that
+stages a *synthetic* MTC funding candidate from an owner-supplied offline
+snapshot plus a separately source-verified binding packet. It is scaffolding for
+a contract that is still blocked on venue evidence, not a production path.
+
+Approved by D1 of the P0-12 decision packet. D1 grants bounded synthetic
+implementation only. It approves no source-event digest domain, no real venue
+capture, no Bridge schema10 activation, no account contact and no promotion of
+an economic record.
+
+### Surfaces
+
+    build_funding_candidate(retained_rows, approved_event_bindings, coverage,
+                            schedule_id, start_inclusive, end_exclusive)
+        -> CandidateResult
+
+    export_mtc_funding.py --snapshot OFFLINE_SCHEMA10_COPY \
+        --bindings VERIFIED_LOCAL_PACKET --symbol BTC --start UTC --end UTC \
+        --schedule-id ID --staging NEW_NONEXISTENT_DIRECTORY
+
+`CandidateResult` carries either candidate bytes plus their SHA-256 and a
+non-admission report, or a refusal report and no record bytes.
+
+### Snapshot boundary: read-only, quiescent, never initialized
+
+- The snapshot is named by the operator. The tool never captures, copies or
+  discovers a live database.
+- A snapshot with a `-wal`, `-shm` or `-journal` companion is refused
+  (`CANDIDATE_SNAPSHOT_NOT_QUIESCENT`). Its bytes are hashed before and after
+  the read; any change refuses with `CANDIDATE_SNAPSHOT_DRIFTED`.
+- It is opened `mode=ro&immutable=1`. `Store.__init__` and `Store.conn` are
+  bypassed deliberately, because that property creates the file and issues
+  `PRAGMA journal_mode=WAL` and `PRAGMA foreign_keys=ON`, which are writes.
+  `_ReadOnlySnapshot` instead binds the *actual* Store retrieval methods to the
+  read-only connection, so `get_funding_event_payload()` keeps its verification
+  and its reason codes rather than having them re-implemented.
+- `initialize()`, migration, checkpoint and backfill are never called. A v4
+  snapshot refuses with the Store's own `FUNDING_PAYLOAD_SCHEMA_INACTIVE` and
+  is left byte-identical and still at v4.
+
+### Completion evidence: a coverage flag is not evidence
+
+`coverage` is a closed witness: `evidence_kind`, `complete`,
+`interval_start_inclusive`, `interval_end_exclusive`, `symbol`,
+`account_scope`, `witness_identity`, `expected_event_ids` and
+`unattributed_event_ids`, plus a `source_witnesses` map from each inventoried
+event ID to the lower-case hex encoding of its exact canonical synthetic event
+bytes. `complete: true` alone is insufficient. The explicit
+whole-interval inventory, the intended account scope and the witness identity
+are all required, and the retained-row, binding, inventory and source-witness
+identity sets must reconcile exactly. No row is excluded using the Bridge's
+local ledger clock:
+
+| Situation | Refusal |
+| --- | --- |
+| binding references an event with no retained ledger row | `CANDIDATE_BINDING_UNKNOWN_EVENT` |
+| any retained row is absent from the inventory | `CANDIDATE_INVENTORY_MISMATCH` |
+| inventoried event carries no binding | `CANDIDATE_EVENT_UNBOUND` |
+| binding settles outside `[start, end)` | `CANDIDATE_BINDING_OUT_OF_INTERVAL` |
+| non-`ATTRIBUTED` event not acknowledged by the witness | `CANDIDATE_ATTRIBUTION_SCOPE_MISMATCH` |
+
+`UNATTRIBUTED` is not treated as unauthentic: its status is retained verbatim
+and it is admitted only under an explicit acknowledgement in the witness.
+Every supplied retained row must be inventoried and bound; there is no silent
+out-of-scope bucket. An empty interval can succeed only when all four supplied
+identity sets are exactly empty.
+
+### Binding contract
+
+Each binding carries exactly the eight current MTC input fields, keyed by the
+existing `event_id`: `event_timestamp`, `funding_event_id`, `raw_rate`,
+`positive_rate_payer`, `oracle_price`, `oracle_price_source`, `provenance`,
+`source_event_digest`. Keys and types are closed; identities and provenance must
+be non-empty; referenced byte digests must be lower-case SHA-256;
+`oracle_price` must be positive; `positive_rate_payer` must be the approved
+`LONG` convention; timestamps must be aware.
+
+For this synthetic-only schema, each `coverage.source_witnesses` value must be
+the exact canonical UTF-8 JSON bytes for the binding's six explicit event
+fields (the eight-field binding excluding `provenance` and
+`source_event_digest`). The exporter decodes those bytes, requires their closed
+field set and exact values to describe that binding, and recomputes both
+`provenance.source_sha256` and `source_event_digest` over the bytes. Missing,
+tampered, swapped, non-canonical or detached witnesses refuse. This auxiliary
+map does not define a production source-byte domain.
+
+The retained payload is re-proved *independently* by the pure function against
+the same checks and codes as `Store._decode_funding_payload`
+(`FUNDING_PAYLOAD_DOMAIN_MISMATCH`, `FUNDING_PAYLOAD_DIGEST_MISMATCH`,
+`FUNDING_PAYLOAD_IDENTITY_MISMATCH`), so a caller cannot launder a tampered
+payload past the exporter by pre-approving it. An unavailable payload stays
+unavailable (`CANDIDATE_PAYLOAD_UNAVAILABLE`) and is never zeroed,
+reconstructed or omitted.
+
+### Precision and evidence separation
+
+- Timestamps are parsed exactly, with arbitrary subsecond digits preserved and
+  `+00:00` respelled `Z` without moving the instant. Ordering is by whole
+  seconds and an exact decimal fraction, then by UTF-8 event-id bytes, so `.1`
+  and `.10` are one instant and never order lexicographically.
+- Binding numerics must be exact decimal literals. A binary `float` is refused
+  (`CANDIDATE_PRECISION_UNREPRESENTABLE`) rather than re-rounded: this tool has
+  no authority to choose a billing or rounding rule.
+- `payload_digest` stays the normalized Bridge integrity digest. It is never
+  renamed to `source_event_digest`, and a binding that reuses it refuses with
+  `CANDIDATE_DIGEST_DOMAIN_CONFLATION`. `SYNTHETIC_SOURCE_EVENT_DIGEST_V1` is a
+  synthetic schema only; it is not a production digest domain.
+- A retained payload's `effective_ts` and `funding_rate` are Bridge
+  observations carried as labelled evidence beside, never merged into, the
+  explicit synthetic binding. `binding_notes` records whether the two agree; it
+  never equates them. The exporter generates no lifecycle, position, sequence,
+  cashflow or cumulative field; MTC computes its own 18-field result.
+
+### Staged output
+
+Three deterministic artifacts under a new, non-existing external directory:
+`funding_candidate_synthetic.json` (UTF-8, sorted keys, compact separators, no
+NaN/Infinity, final LF), its detached `.sha256` sidecar (lower-case hex plus
+LF), and `materialization_report.json`. No clock value reaches any artifact, so
+identical input bytes produce identical output bytes. The target must be
+outside the Bridge repository, must not overlap the snapshot or binding packet,
+and must have no symlink/reparse-point ancestry. Any existing target, including
+an empty directory, is refused (`CANDIDATE_STAGING_NOT_EMPTY`). Artifacts are
+written into a private sibling scratch directory and the whole directory is
+published atomically without clobbering a raced target. A refusal publishes the
+report only, never a candidate or sidecar. A write, close or publication failure
+publishes nothing; cleanup failures report the exact residual unpublished
+scratch path and entries instead of claiming they were removed.
+
+### Non-admission is physical
+
+A successful candidate is labelled `SYNTHETIC_ONLY` and its root carries no
+`schedule_id`, no `events` and no `settlement_currency`. Current MTC record
+selection therefore cannot consume it: `EconomicRecords.funding_schedule_id`
+raises and `ExecutionEconomics._resolve_funding` refuses with its own
+`REFUSED_MISSING_FUNDING_EVENT`. This is a structural shape, not a fake signed
+receipt and not a promotion gate.
+
+Production mode is unavailable and stays
+`UNAVAILABLE_PENDING_SOURCE_EVENT_DIGEST_DOMAIN`. The only accepted
+completion-evidence kind is `SYNTHETIC_FIXTURE`. There is no mode switch,
+boolean approval flag, permissive callback or magic literal that unlocks
+production; the missing binding-packet schema and `source_event_digest` byte
+domain must be approved and implemented before any production path exists.
+
+### What it deliberately does not do
+
+Every caller fact in a synthetic run is a fixture. A successful candidate
+proves nothing about real-world interval completeness, a real account, a real
+payment, authoritative settlement time or rate, or venue authenticity. It is
+not an accepted economic record, and no oracle is associated from nearby
+context or reverse-calculated from a payment amount.
+
+Test evidence: `tests/test_mtc_funding_export.py` (offline, synthetic), which
+asserts exact candidate bytes and order, actual snapshot/sidecar state after
+each run, the caller-visible command line, and the current production loader's
+inability to admit the candidate.

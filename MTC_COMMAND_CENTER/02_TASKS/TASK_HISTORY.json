@@ -380,6 +380,15 @@
     "created_by": "Owner approval recorded by the bounded flagship builder (claude-opus-5) under Astra Lead dispatch; Lead owns Git and verifies this append",
     "summary": "Owner exact words `ı approve` approve the concrete Bridge funding-evidence retention proposal: an additive opt-in schema v10 that retains the already-normalized FundingEventRecord.authoritative() payload beside the existing immutable funding ledger, its synthetic offline tests, the named independent reviews, ordinary local commits and conditional push/PR/normal merge only after those exact checks pass. Default schema target stays v4 and v4-v9 behavior is unchanged. No raw HTTP capture, no venue-fact acceptance, no runtime activation, no production database or host access, no new spend, and no acceptance: the candidate stays NONACCEPTED until required reviews, QA and current-head protected CI.",
     "report_path": "MTC_COMMAND_CENTER/_AI_MEMORY/P012_FUNDING_RETENTION_20260911.md"
+  },
+  {
+    "event_id": "HIST-2026-0043",
+    "task_id": "WP-P012-SYNTHETIC-MATERIALIZER-20260911",
+    "event_type": "APPROVED",
+    "created_at": "2026-09-11T17:45:40.0899132Z",
+    "created_by": "Owner approval recorded by Codex Lead task 01a0911b-41e7-79b0-aae3-28e3328bdb99",
+    "summary": "Owner exact words `all are approved` approve the presented D1/D2 decision packet. D1 authorizes only the bounded synthetic-only offline funding materializer in IBKR_PAPER_BRIDGE/tools/export_mtc_funding.py, tests/test_mtc_funding_export.py and additive docs/26_FULL_RECONCILIATION_CONTRACT.md, with synthetic tests, independent Lead reproduction and fresh exact Opus5/Sol xhigh plus Gemini3.7. D2 authorizes push/PR of already-reviewed manifest correction ec6347d5 plus factual handoff, now PR179. No production mode or production record/schema/runtime changes, venue facts/capture, accounts/host/trading/deploy, new spend, reviewer substitution, merge or whole-package acceptance. Original settled policies and all venue-evidence refusals remain.",
+    "report_path": "MTC_COMMAND_CENTER/_AI_MEMORY/P012_MATERIALIZER_20260911.md"
   }
   ]
 }
