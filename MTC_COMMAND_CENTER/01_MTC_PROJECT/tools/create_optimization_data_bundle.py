@@ -48,7 +48,7 @@ TIMEFRAME_ALIASES = {
     "1d": "1D",
     "1440": "1D",
 }
-TIMEFRAME_SECONDS = {"15m": 900, "1h": 3600, "2h": 7200, "4h": 14400, "1D": 86400}
+TIMEFRAME_SECONDS = {"5m": 300, "15m": 900, "1h": 3600, "2h": 7200, "4h": 14400, "1D": 86400}
 METHOD_VERSION = "rule_based_market_regime_v1"
 
 
@@ -278,6 +278,10 @@ def dataset_id_for(source: SourceFile, used_ids: set[str]) -> str:
 
 
 def validate_quality(dataset_id: str, rows: list[dict[str, Any]], timeframe: str, bundle_root: Path) -> dict[str, Any]:
+    try:
+        expected_step = TIMEFRAME_SECONDS[timeframe]
+    except KeyError:
+        raise ValueError(f"unsupported timeframe: {timeframe}") from None
     times: list[datetime] = []
     invalid_rows: list[dict[str, Any]] = []
     duplicates: list[dict[str, Any]] = []
@@ -311,8 +315,7 @@ def validate_quality(dataset_id: str, rows: list[dict[str, Any]], timeframe: str
         except (TypeError, ValueError):
             invalid_rows.append({"row": index, "timestamp_utc": key, "reason": "ohlc_parse_failed"})
     times = sorted(times)
-    expected_step = TIMEFRAME_SECONDS.get(timeframe)
-    if expected_step and len(times) > 1:
+    if len(times) > 1:
         for prev, current in zip(times, times[1:]):
             delta = int((current - prev).total_seconds())
             if delta > expected_step * 1.5:
@@ -321,7 +324,7 @@ def validate_quality(dataset_id: str, rows: list[dict[str, Any]], timeframe: str
                         "prev_timestamp_utc": prev.isoformat(),
                         "next_timestamp_utc": current.isoformat(),
                         "delta_seconds": delta,
-                        "missing_bars_estimate": int(delta / expected_step) - 1,
+                        "missing_bars_estimate": max(0, round(delta / expected_step) - 1),
                     }
                 )
     gap_path = bundle_root / "quality" / "gap_reports" / f"{dataset_id}_gaps.csv"
@@ -350,7 +353,7 @@ def validate_quality(dataset_id: str, rows: list[dict[str, Any]], timeframe: str
         encoding="utf-8",
     )
     expected_bars = None
-    if expected_step and len(times) > 1:
+    if len(times) > 1:
         expected_bars = int((times[-1] - times[0]).total_seconds() / expected_step) + 1
     return {
         "has_gaps": bool(gaps),
