@@ -1,0 +1,22 @@
+{
+  "status": "EXECUTED_EXISTING_CATALOGUE_ONLY",
+  "runtime": "3.12.12",
+  "cases": {
+    "T01": {
+      "error": "open-number refusal wiring changed; missing=['gap_ratio_max']; extra=[]"
+    },
+    "T02": {
+      "error": "closed-number catalogue changed; missing=['swing_forward_period']; extra=[]"
+    },
+    "T03_short": {
+      "error": "the designed seven-check catalogue is incomplete"
+    },
+    "T03_duplicate": {
+      "error": "duplicate check id"
+    },
+    "T04_extra_closed": {
+      "error": "closed-number catalogue changed; missing=[]; extra=['gap_ratio_max']"
+    }
+  },
+  "limit": "No new helper or evaluator execution; T04 stops at closed-number set validation before overlap branch."
+}

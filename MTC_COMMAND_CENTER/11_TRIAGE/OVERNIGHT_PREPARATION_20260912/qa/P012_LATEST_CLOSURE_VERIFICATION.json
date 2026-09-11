@@ -1,0 +1,247 @@
+{
+  "verified_at": "2026-09-11T22:54:05.363742+00:00",
+  "original_root": "C:\\Users\\Bar\u0131\u015fSemaay\\Documents\\Codex\\2026-09-11\\11-2\\outputs\\WP_P0_12_ACQUISITION",
+  "closure_sha256": "62347dff777e1d9463779a8aa4699641f8b250ed03a5a52bac86183336601e81",
+  "manifest_entries_verified": 44,
+  "files": [
+    {
+      "path": "API_CONTACT_SOURCE.md",
+      "sha256": "46cc94dd68af6eb8a397caea30d45b0c1e0838f4186ff2a879bc16da91c501ca",
+      "match": true
+    },
+    {
+      "path": "CLOSURE_PACKET.md",
+      "sha256": "62347dff777e1d9463779a8aa4699641f8b250ed03a5a52bac86183336601e81",
+      "match": true
+    },
+    {
+      "path": "CLOSURE_SPEC.md",
+      "sha256": "76d675c8b6379e8a58172b1dc3e91c9198b25da77b1a3e0428e49722ff5ed3c9",
+      "match": true
+    },
+    {
+      "path": "fees/FEES_FINDINGS.md",
+      "sha256": "1b5d5ca3f5c99f34a780062a4c069b2aa4796cc15567f5db0f2c31497192da39",
+      "match": true
+    },
+    {
+      "path": "fees/lead_sources/extract_full_12min_adl.py",
+      "sha256": "364691725b09f38bb49e6c52ad2fa3a9a21ecd354046f0ba04c14438e0b71bf9",
+      "match": true
+    },
+    {
+      "path": "fees/lead_sources/LICENSE",
+      "sha256": "b4fe78ed2be45c06bb5b29f772182b5abffc8b828bca131ae8480b6df64ff962",
+      "match": true
+    },
+    {
+      "path": "fees/lead_sources/LIQUIDATION_CSV_CHECK.json",
+      "sha256": "1f23c7db4566215ddad3e4b2a7375dbaf50df4f64a3dd90229452b5645e3b29b",
+      "match": true
+    },
+    {
+      "path": "fees/lead_sources/liquidations.headers.txt",
+      "sha256": "dc1264489c2ae45e633080411215a681baafa281e26c326decab8b6a69c6080d",
+      "match": true
+    },
+    {
+      "path": "fees/lead_sources/liquidations_full_12min.csv",
+      "sha256": "1afd4c09494665d82fadf3ad65fb210b6b3a2213ab66ed2bc179aa23b2b55684",
+      "match": true
+    },
+    {
+      "path": "fees/lead_sources/README.md",
+      "sha256": "7309fefc6a28ad5115be50ff12559a0ef8f8ee69d7310b6feb2465e9f7801265",
+      "match": true
+    },
+    {
+      "path": "fees/lead_sources/replay_real_time_accounts.py",
+      "sha256": "a666ca8c4bc9f48a1908181ba08540b3915d3ac8d0a5a3612d6aa12e636684f3",
+      "match": true
+    },
+    {
+      "path": "fees/lead_sources/REPLAY_WORKFLOW.md",
+      "sha256": "3ca8f188681786fe1f604184bb2d7843ca518b9926b9836a9011e4b3f04e8ff1",
+      "match": true
+    },
+    {
+      "path": "fees/source_captures/builder-codes_20260911T221317Z.md",
+      "sha256": "73d5c09529da38162643ed6234f958cbdd7e1583df979967995470f96df4c05a",
+      "match": true
+    },
+    {
+      "path": "fees/source_captures/fees_20260911T221314Z.md",
+      "sha256": "75e55504b1b887a89e1668a9544d09b013242747bcc29f8648a5410142a71258",
+      "match": true
+    },
+    {
+      "path": "fees/source_captures/hip3_20260911T221316Z.md",
+      "sha256": "31358d37ccd0ace67ab941f70215b4a0e648973dc519666a51928cd1a915eb79",
+      "match": true
+    },
+    {
+      "path": "fees/source_captures/info-endpoint_20260911T221318Z.md",
+      "sha256": "f4228fc7734af5dbf420e5bdf2b25c248a5b5287035ab2d8a645dc14ce64f0bd",
+      "match": true
+    },
+    {
+      "path": "fees/source_captures/info-perpetuals_20260911T221318Z.md",
+      "sha256": "1b9d14665c030b68d257a29f365489be3074bb3a0e57a83069966174cbe790ae",
+      "match": true
+    },
+    {
+      "path": "fees/source_captures/liquidations_20260911T221315Z.md",
+      "sha256": "162afe17f94665546d4e4169591368921a06a94d3f7f48c8fbec6b1ee9394a57",
+      "match": true
+    },
+    {
+      "path": "fees/SOURCE_MANIFEST.json",
+      "sha256": "9a3ab613ba1e1d2511bb0ab574e0fc5840322416a9946aa4b609f03ed78e5b57",
+      "match": true
+    },
+    {
+      "path": "funding/FUNDING_FINDINGS.md",
+      "sha256": "6f8ded7bdc701b1d3aba2382950fb7c375cac174444f9d5043f203f9dbd306ba",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/asset_ctx.csv.lz4",
+      "sha256": "cfe117c1ca753fcd1cc66ee02a8a5ad1af9ec8354343eff906e2c6b2469efb53",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/asset_ctx.headers.txt",
+      "sha256": "e5c39044e3e742e2eb3ab1270cf137884e077e7ea645a88226adb9ea5ae3fad7",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/asset_ctx_lead_check.json",
+      "sha256": "95dc319fd4d8c96234836dd4751bfdef7b69c5472eac1634a5a39de37f1fb5fd",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/btc_asset_ctx_rows.json",
+      "sha256": "ed847fac1639ab61af8957b2126023acb62779fd97c56ce60c80ff3cc4269f5c",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/extract_full_12min_adl.py",
+      "sha256": "364691725b09f38bb49e6c52ad2fa3a9a21ecd354046f0ba04c14438e0b71bf9",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/LICENSE",
+      "sha256": "b4fe78ed2be45c06bb5b29f772182b5abffc8b828bca131ae8480b6df64ff962",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/oracle_order_gap.json",
+      "sha256": "bf4b738557981d6976f11272a942f94c86d2556d1ea347ddcfc4b037732060e4",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/pinned_tree.json",
+      "sha256": "6b45127e453cbf001b9de12b1c157131ebd2dd47a20251f154c9acfd4661900d",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/README.md",
+      "sha256": "7309fefc6a28ad5115be50ff12559a0ef8f8ee69d7310b6feb2465e9f7801265",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/replay_real_time_accounts.py",
+      "sha256": "a666ca8c4bc9f48a1908181ba08540b3915d3ac8d0a5a3612d6aa12e636684f3",
+      "match": true
+    },
+    {
+      "path": "funding/lead_sources/REPLAY_WORKFLOW.md",
+      "sha256": "3ca8f188681786fe1f604184bb2d7843ca518b9926b9836a9011e4b3f04e8ff1",
+      "match": true
+    },
+    {
+      "path": "funding/SOURCE_MANIFEST.json",
+      "sha256": "fb995d1df83070ac82101f9043e7e118994f0de41cb79e9054618eb4dd36f4e1",
+      "match": true
+    },
+    {
+      "path": "instrument/INSTRUMENT_FINDINGS.md",
+      "sha256": "dc52c3c4c1ce62310599468f6981134c6497343bc026d6a7dcfd00cf7c7cca4e",
+      "match": true
+    },
+    {
+      "path": "instrument/source_captures/error-responses.md",
+      "sha256": "f094b0d8eb40cee3c0ef8d22fbb60032e82382bd7d641bd2d144186af6d92595",
+      "match": true
+    },
+    {
+      "path": "instrument/source_captures/meta_live.json",
+      "sha256": "fed6dceb59e29a1dac94a18c8b5063cbb20385f714f190138dac24b80f388890",
+      "match": true
+    },
+    {
+      "path": "instrument/source_captures/order-types.md",
+      "sha256": "d5873371283dc9ed3c3ff731bbd660014b71708b46913301a625acd0277f6a63",
+      "match": true
+    },
+    {
+      "path": "instrument/source_captures/perpDexs_live.json",
+      "sha256": "180455abf56c3390fb7cdbc208fdcfe003449f6f3d5361e77d3897eb40444462",
+      "match": true
+    },
+    {
+      "path": "instrument/source_captures/tick-and-lot-size.md",
+      "sha256": "1114a12bc134c7d0e004002e67a3103bb7835f13ec34329d5409c1f895830a10",
+      "match": true
+    },
+    {
+      "path": "instrument/SOURCE_MANIFEST.json",
+      "sha256": "4f7d4754aa7b386b31e28a24713db89c22fb182b56dd89bb8a2882ef8a42e864",
+      "match": true
+    },
+    {
+      "path": "LEAD_VERIFICATION.json",
+      "sha256": "7292d8b9ef9078d9d43e67c8a58275cc566c2dec7c660600fae025f08f4a64fa",
+      "match": true
+    },
+    {
+      "path": "RUN_STATE.json",
+      "sha256": "9e9da51dfc3a9a2aa8266c8a8b6362799656b3d1ec6352c4c5798a10a799a6c2",
+      "match": true
+    },
+    {
+      "path": "SHARED_PRIMARY_SOURCE_CHECKS.json",
+      "sha256": "5e7282ac808e2f7e4f2795edd1e99f8dff60de2239cef59b155dac4bcf4f856a",
+      "match": true
+    },
+    {
+      "path": "UNSENT_REQUESTS.md",
+      "sha256": "cbcc8ebfbb1b6854d14ac209001faf9d7d10543de1ed66a8594aed92f3e9f04f",
+      "match": true
+    },
+    {
+      "path": "README.md",
+      "sha256": "ab0ff34c8d770908a8bff40b98dae3b65ec6afc82c563e52a3f14f0a66eef5d2",
+      "match": true
+    }
+  ],
+  "production_record_checks": [
+    {
+      "path": "C:\\tmp\\P012_MATERIALIZER_20260911\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json",
+      "sha256": "5abb99abbdb9735e95ad1084c706a3c5326fb6bb134e48a79e9bb0992b68316a",
+      "match": true
+    },
+    {
+      "path": "C:\\tmp\\P012_MATERIALIZER_20260911\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\funding\\HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json",
+      "sha256": "8c6e8a1265686ad115f7cd2dc8a807f8a4ecea39b3d1a0664a2a968e329b09cd",
+      "match": true
+    },
+    {
+      "path": "C:\\tmp\\P012_MATERIALIZER_20260911\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\costs\\HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json",
+      "sha256": "6ee6a34f0f1230973148e7392abdc11ec8409f06811d79fa6b65bcac104e3db5",
+      "match": true
+    }
+  ],
+  "material_admitted_interface_change": "NONE",
+  "limitations": "File hashes and unchanged production records verified here; new public-source interpretations remain the P012 Lead conclusions, not new independent venue research or production admission."
+}

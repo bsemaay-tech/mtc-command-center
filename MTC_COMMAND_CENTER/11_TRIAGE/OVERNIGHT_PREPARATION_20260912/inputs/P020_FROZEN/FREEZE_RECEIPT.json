@@ -1,0 +1,28 @@
+{
+  "frozen_at_utc": "2026-09-11T22:31:28.882225+00:00",
+  "status": "FROZEN_FOR_NONACCEPTING_CANDIDATE_IMPLEMENTATION",
+  "files": [
+    {
+      "path": "INTERFACE_FREEZE.md",
+      "sha256": "44cd2081b9d69e9784f4765e5ef74207a2bfa9f94a27388b5d57f8685926bb3a"
+    },
+    {
+      "path": "ECONOMIC_API.md",
+      "sha256": "1e2fa76aa428499fe8d0b242465ea1a9fb90428875468b3d5e7f0b5b23933518"
+    },
+    {
+      "path": "FROZEN_EXPECTATIONS.json",
+      "sha256": "ba4a235efaa00777bdc0c4babc9c5c8a90f7ff8142f74a65ab1d5822bba9af8d"
+    }
+  ],
+  "owner_scope": "OD1-OD6 current approval; oldsemantics/schemas/admission preserved; no heavyworkload or push/PR/merge",
+  "baseline": "608passed1Windowssymlinkskip",
+  "approved_cases": {
+    "sizing": 23,
+    "portfolio": 24,
+    "identity": 9,
+    "consumer": 12,
+    "measurement": 7
+  },
+  "limitations": "Partial fixture coverage, not acceptance; old worker identity C07-C11 are explicitly excluded; add meaningful new tests under the same reviewed independent contract."
+}

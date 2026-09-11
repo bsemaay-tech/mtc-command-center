@@ -1,0 +1,14 @@
+{
+  "status": "EXECUTED_EXISTING_IDENTITY_HELPER_ONLY",
+  "runtime": "3.14.2",
+  "independent_expected_method": "stdlib canonical JSON and SHA256 from six explicitly authored fields; did not call production canonical_json for expected value",
+  "literal_preimage_utf8": "{\"cost_model_json\":{\"fee_bps\":\"2.00\"},\"dataset_manifest_sha\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"evaluation_config_json\":{\"exit_mode\":\"fixture\",\"seed\":7},\"package_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"simulator_class\":\"SYNTHETIC_FIXTURE_ONLY\",\"simulator_version\":\"2.1.0\"}",
+  "expected_sha256": "921a1b14b691049424ed5fd38a4159b33245c0b291c9de7d094b0d02830cbb3d",
+  "observed_sha256": "921a1b14b691049424ed5fd38a4159b33245c0b291c9de7d094b0d02830cbb3d",
+  "field_reorder_equal": true,
+  "environment_lineage_excluded": true,
+  "cost_mutation_expected_sha256": "7484a855b97241ec8206d778517fe316183d70f1507629be95aab91b5e643f6b",
+  "cost_mutation_detected": true,
+  "TrialRecord_model_fields_including_inherited_contract_version": 48,
+  "limits": "No new P013 contract, writer, package acceptance or production evidence."
+}

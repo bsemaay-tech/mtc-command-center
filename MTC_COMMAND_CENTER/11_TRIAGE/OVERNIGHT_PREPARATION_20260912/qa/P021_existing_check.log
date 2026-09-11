@@ -1,0 +1,6 @@
+SELF-CHECK PASS: 7 checks all refuse readiness
+CLOSED NUMBERS: 12 (profile balanced, provisional)
+OPEN NUMBERS: 4
+MODIFIED COPY DETECTED: gap_ratio_max refusal wiring removed
+MODIFIED COPY DETECTED: swing_forward_period closure removed
+READY=False

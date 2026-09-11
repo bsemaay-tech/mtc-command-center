@@ -1,0 +1,3235 @@
+{
+  "pin": "42f99571e6abb5222744d9345e1c8a9e19c23c15",
+  "files": 538,
+  "raw_blob_mismatches": [],
+  "records": [
+    {
+      "path": "AGENTS.md",
+      "blob": "9e3aa1d8f779597b5dcb2c4470cd15d8c84fefb2",
+      "sha256": "fe0162e7764179d7872e997a647a4ca7132b968fd87b372e38d9582a7818bb29",
+      "bytes": 4484
+    },
+    {
+      "path": "check_market_data_collector.py",
+      "blob": "8fb902807c7f507221f8c4000a895a1318479098",
+      "sha256": "d600de55c30d9c26698c20f80566cc38c6ecd9a19d0ed049dd350bd32b02178f",
+      "bytes": 45084
+    },
+    {
+      "path": "DECISIONS.md",
+      "blob": "4d5c3dfcaef7c0a3a547e5a6eca9a73d2033b0c8",
+      "sha256": "ca61d659b771379632642076aad6258986f70050cbd023bd0985878b0558b486",
+      "bytes": 26429
+    },
+    {
+      "path": "evidence_class.py",
+      "blob": "ff779b78db1bfbf495583218bbf2c7de13ce370f",
+      "sha256": "a507696762a574979b7edacb2a34edc7ca793e9384c4e0daa7ac054fb0837ca0",
+      "bytes": 5274
+    },
+    {
+      "path": "market_data_collector.py",
+      "blob": "9b0aea4dd25cfb4d613640e52c595347a8eb3cef",
+      "sha256": "e826f42423d229f307e139b48f7a0bd3e5967bdbbb2fb51e74ead7062eb1dc87",
+      "bytes": 18162
+    },
+    {
+      "path": "shared_risk_calculator.py",
+      "blob": "76abe13eb424138e59d5b372484f8549881b9064",
+      "sha256": "16dcf12c86ed5d68a3e88309b9add333c39bfe33850ed93b0bb501bfb6c90af2",
+      "bytes": 16016
+    },
+    {
+      "path": "unsimulated_controls.py",
+      "blob": "027fee6c2d113cbbc45c907160a1b50129a40bfe",
+      "sha256": "832b25cc9e67f9fec1c792ea6f04874260ffdb7cc5815d6c351e286208c0ae94",
+      "bytes": 5847
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AGENTS.md",
+      "blob": "99c96452fd9a53675f44df4cac80a20310524d94",
+      "sha256": "1b03dbb6b8bf23fb7ceb51e9c7b055a06a943c28af859f89e80a0552b6677b1b",
+      "bytes": 3792
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AGENT_HANDOFF_BUNDLE_PROTOCOL.md",
+      "blob": "7814499523d3ef1cb022a0c9a9eea002b9aa7809",
+      "sha256": "187e71359ada13a5603315d9104141561e19c04e0247fe05eb0ff66e59926e33",
+      "bytes": 1350
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/AUTONOMY_AUTHORIZATION.md",
+      "blob": "a8ace66f8ee8a0d76c42dca9c14a99db810009b5",
+      "sha256": "d80db6d364bbef4dbabf9e8a199b3f5101914f2decdb536c4ca288ea15c3ea66",
+      "bytes": 6543
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/CHATGPT_WEB_MENTOR_WORKFLOW.md",
+      "blob": "2f70354afdb38806e3b181a31ee024beb73433f6",
+      "sha256": "1edc5bf64ab244b0fe4eaf23cb771ef2e0fff98135f1f5e53a9b8514b2b5f48f",
+      "bytes": 1768
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/check_review_report.py",
+      "blob": "25e9c300ab4612e16f534baa3fd65e700ba11caf",
+      "sha256": "11ca7f568383db5a3ccf66ffc81fef16e0be093d4aa73757de5d20f75da6e5d5",
+      "bytes": 6108
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/CLEAN_WORKTREE_AND_PUSH_PROTOCOL.md",
+      "blob": "f204f49672a1b973aced3001a5f2e7c9d323bac4",
+      "sha256": "85e1cf2bd667719d88d659de5f810239e0c3412a56d9095590e11a4c52f81412",
+      "bytes": 1393
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/EXECUTION_ARCHITECTURE_DECISION.md",
+      "blob": "5560c119c807888ac704d7656122aaef7d00fd7d",
+      "sha256": "09a2babe5cd17ab9ae6a6810a2339a9e41e59b0f000995303771106aa2fd3cba",
+      "bytes": 3701
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/FAZ3B_EXIT_SWEEP_SCOPE.md",
+      "blob": "a7cb522acd6f28318c8f2e6694607773e23b9276",
+      "sha256": "ec9d111cbfb0314bc5eaac6d7e5ddf163faf0fddebc1e2c4fa8557971d8e3b06",
+      "bytes": 3680
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/FAZ3B_STAGE1_SWEEP_PREREG_2026-07-05.md",
+      "blob": "5e3be87ec2e4089bca0beb0038e4f4f55f8f4cbd",
+      "sha256": "f39f62e0c73bb1a6b0e2dd7676c41cee7df97ee7a994c4c979aa8bde38764500",
+      "bytes": 10222
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/FAZ3B_STAGE2_CONFIRM_PREREG_2026-07-13.md",
+      "blob": "a7a0539ca5c8bc669db4222742df3acb4a1a4486",
+      "sha256": "c6cdf5d6c2dcd53ddb6913a2ebc768f300c1ef990d5699ef6498b402cd60bcac",
+      "bytes": 19932
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/FAZ3B_STAGE2_FORWARD_CONFIRM_PREREG_2026-07-13.md",
+      "blob": "74ca78c146f55d224f7ffb6a8ea0b92f6a229481",
+      "sha256": "ae0407d8dbf17407a6cf7db83e97aa2624c216dec5d4ac60ee33b66f92e47e39",
+      "bytes": 14470
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/HANDOFF.md",
+      "blob": "51a4f10f27ec3a20848e74493d21bd5665538c59",
+      "sha256": "3d9bb0ac1c1d20eeb1259e2d275460c254b1f94976a52ba086670151499ece41",
+      "bytes": 3401
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/INPUTS.md",
+      "blob": "be7a7377b9de9d62ab1c0d1dbd5c6f73af854d08",
+      "sha256": "e57474f4dce511f31ff5f9a7ebb7cc4cf32a36166018d6ba733023f37133cb30",
+      "bytes": 2201
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/MCC_PRODUCT_CONTEXT.md",
+      "blob": "7e7245ed3f4634790200b2225b3152bea068594b",
+      "sha256": "149a86ebbe8f6ea8765b310f982845caffc5581f4a8cdc61d0c6dd3a5e593eeb",
+      "bytes": 3567
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/MTC_REPO_GUARD_PROTOCOL.md",
+      "blob": "04a719d73ec0adf71f34f9eb01593a12f9c33a0a",
+      "sha256": "a381d05374395f775e54858230b0a7dbddd54b64abfebdd58c3e400bd6728d29",
+      "bytes": 2613
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/MTC_REPO_GUARD_USAGE.md",
+      "blob": "dd8bde547c4d205447829b51a028d813ae033a3b",
+      "sha256": "8d9d38fbe69f48d5bd2b13b08a702b52fa5c8d405ceb209620238b4bf214cb3f",
+      "bytes": 1546
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/NO_PROMOTION_SAFETY_RULES.md",
+      "blob": "bc6b2aeee9ba1a105299685121ef35cab4a55013",
+      "sha256": "e1c514b81624e7907714f86daea796724a5b29a58ace1eaae77a8f94de12cb46",
+      "bytes": 815
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/OUTPUTS.md",
+      "blob": "3d815e267545009f64a0e49050765dac661e58d1",
+      "sha256": "324e315c572581bee56f843472bdab2e4c74a63338527e05e8886e62712e695c",
+      "bytes": 1558
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/PAPER_RECONCILIATION_PROTOCOL.md",
+      "blob": "7f4a02105a7fde1c46b7e18b3286bcd075f2cb34",
+      "sha256": "181d090d7da47f61792295a45ed9e8030b8e1f0feef4cfc64f34d98348ca1239",
+      "bytes": 7052
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/REVIEW_POLICY.md",
+      "blob": "34d3f531741fe2cecdbd54a92df8e2fe4cf22d88",
+      "sha256": "f2407df0d234e2b1c0d9d17dd50a4288f4c6cd0d999ea4449f9124b8c8f64661",
+      "bytes": 6276
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/SCREENSHOT_AND_UI_REVIEW_PROTOCOL.md",
+      "blob": "f4a950c028b7496a40fd7918c8859545efb7f372",
+      "sha256": "bd69385ff777ae45f45818c91578d964359756a1f0962e375e9bf6a57cd7350d",
+      "bytes": 1000
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/SECTION16_PACKET_STANDARD.md",
+      "blob": "93338317fb343b8d1c0a0eb6eae4da49273067b1",
+      "sha256": "5da231bc934b883b79335a6a61b2109e91b9bafd35ad9af0b9292292bc370ee4",
+      "bytes": 14372
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/SYSTEM_TEST_VERTICAL_SLICE_IMPLEMENTATION_PLAN.md",
+      "blob": "abaa0fb0f2e26d07360f965cffd33caef7f64a83",
+      "sha256": "da564034de29eec5b24fde961c38890939242340a13913ec53c1c6d03621fbcc",
+      "bytes": 24685
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/TESTS.md",
+      "blob": "79cfa9c4afd2381b42c15998640d004d7741c5d3",
+      "sha256": "15b91b9e29fdacb6b61b18f8c2af310d855a6b432b49f635610f38c42841f42c",
+      "bytes": 2644
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/00_AGENT_PROTOCOLS/VERTICAL_SLICE_SCOPE.md",
+      "blob": "76e6b0e2d7f9161163927b3fe3bb6190a1d64fb1",
+      "sha256": "05c59f2c7786e41d61470501ff13005d563db47e9880bbb93e09dacff221dab2",
+      "bytes": 6934
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/05_REGISTRY/STRATEGY_RESEARCH_REGISTRY.json",
+      "blob": "e01ce84df3ce3826108e92be9e08b90a82da1b2c",
+      "sha256": "04a9bbaf37ff29ab8eac6ec8a6c2dc110e88ad47c95a4fa9e7c7d7ae2da01f5c",
+      "bytes": 129503
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/05_REGISTRY/TAG_DICTIONARY.json",
+      "blob": "07841f89b00efab6b4f25f9f30b2781e8309b545",
+      "sha256": "d9b469ed4abef57e986a79879890c2e2aef042d6e04a59c0328dce10e28a6276",
+      "bytes": 4413
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/11_TRIAGE/DESIGN_DEFECT_PATTERNS_2026-08-10.md",
+      "blob": "68c7097b9f2e5bf6d63afe108c8b73d070564ad0",
+      "sha256": "01352df587e8b533c9c0e609840a263e0d7222ecb6f181529f5e86c615fcd4c8",
+      "bytes": 55164
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/11_TRIAGE/MASTER_ARCHITECTURE_AND_IMPLEMENTATION_BRIEF_2026-08-21.md",
+      "blob": "4c3937561f89f7bf0e642cf3e35820c17a8fdac5",
+      "sha256": "ad771e3748b4c90015d1e1a4ee5750ddc34f5b006177eb08d93c60bf36b4ae70",
+      "bytes": 573740
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/11_TRIAGE/MASTER_WORK_PACKAGE_AND_PARALLEL_DELIVERY_PLAN_2026-08-22.md",
+      "blob": "5570e55475d9175b8a2307c483b771af4ccc8b18",
+      "sha256": "7ce003fdb3b5a049fa20c146216393c6a413a921b3cbf6322b5aec8eef00346a",
+      "bytes": 334695
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/.gitignore",
+      "blob": "ad382e7c9b0eca6256199051852fec6129521ed3",
+      "sha256": "e8e6024d246e7f36462f635a289902e9840b49e376df4529ee370605f066bc43",
+      "bytes": 81
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/CHANGELOG.md",
+      "blob": "c783e713d477709925578f4d6a4442902948bbae",
+      "sha256": "219f2dfe862002bdcf4b1247bbbf02c89b61f73d1b28ba78c664498991d2a8e4",
+      "bytes": 1346
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/constraints.txt",
+      "blob": "cbaf29b6414f4ac8bb64dc6783d0f60bbe8a8da9",
+      "sha256": "04531e17faa7b2060c66f72a4a756f9b5432b3fa8de1de1017b0fdc8c44daa28",
+      "bytes": 392
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/MANIFEST.in",
+      "blob": "2ccecbb505efa64712ac3f62a9eea8c1debc7617",
+      "sha256": "5d6a82d623123c863412933790cc66d7107783f46e4f20835160341ff4b41bbb",
+      "bytes": 45
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/pyproject.toml",
+      "blob": "22819ce437e362d7dea4e37534f7f50fc93d4865",
+      "sha256": "7c9e3fa5f59ebd0da909d6c71ed94898e9ff703dd5445aec571f408652f63245",
+      "bytes": 668
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/README.md",
+      "blob": "3cd5fb65b35732d5c44d69c397200c44979cc4a6",
+      "sha256": "990aa85bbdb2cfc30f03b4dee8806c3fccda1f723f1838a36a52a26b416201c5",
+      "bytes": 4331
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/tools/opsa/backup.py",
+      "blob": "e0eaea869b046cb7aadfee064d81ad0173569a40",
+      "sha256": "bff460aee7a71b87d1575ea41e58bb0ad3a2e7d9ae7fda789ee04807a931d9d0",
+      "bytes": 9706
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/tools/opsa/config.example.json",
+      "blob": "0e5dce6ce3012379a89bccffadefaa075a025341",
+      "sha256": "91761ae6d96fa73e9f8377f315dff1ce38d559168c51f81328cd97386fc4b232",
+      "bytes": 358
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/tools/opsa/heartbeat.py",
+      "blob": "20bc8f71813dc13b4e0ce2015a6c722258626cbf",
+      "sha256": "3970bde53eed012fa146f809d1ee775a2a6c2972d1d5b8c42d11fe74759f1ea0",
+      "bytes": 4331
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/tools/opsa/opsa_common.py",
+      "blob": "faef1ad173501a5a220559feda9b5c6f538e5358",
+      "sha256": "399a4a1aff387b9e8a6875b7da48845645cee1f68ae69a3ffaed060f8f0625c3",
+      "bytes": 10391
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/tools/opsa/README.md",
+      "blob": "2d3f8b7e2d93569efefa61732d0e0cf5684f5b1a",
+      "sha256": "6aade409cc063b0fbd6f4ba44539fde29b68d9635ebd4576523f0e7238590ff8",
+      "bytes": 6140
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/tools/opsa/restore.py",
+      "blob": "97e9051319c95772c4b104ac9a4f4e9522259405",
+      "sha256": "bef557647cc3754bcae78852d6fe94435081bdb170d2a8fb10f3b152a8723717",
+      "bytes": 11649
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/tools/opsa/test_opsa.py",
+      "blob": "7f0cfdb22c1280025be5262c2084f44674c01cd3",
+      "sha256": "15eaac20460faf92a3ab4c1699166c7cf06aaff74ea3e4d15f09c13cfcbbb5ec",
+      "bytes": 27583
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/tools/opsa/watchdog.py",
+      "blob": "701df00a468bfd21d9ad8a63e3afcb5278926c32",
+      "sha256": "0b5130c967a6ad9a5a31bd5bc186ff1c1888fbc3d63439930c2e5245a6defb68",
+      "bytes": 14404
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/admission.py",
+      "blob": "94315d90c3957bb0e9b38589efffade004aca44d",
+      "sha256": "ebebdf1698a515b40fdb01362ec3eaff03dd28366e4206f7764a18a9e9ede4d9",
+      "bytes": 4331
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/base.py",
+      "blob": "e991f7469a68f1575867a4dc5b9b18a638db03f6",
+      "sha256": "c67cf85311b4a86750f0a32a370b6146a7b025f5b441e88808edd5e70beca918",
+      "bytes": 2953
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/execution.py",
+      "blob": "08b7d9c8efcaf5d3bf62cdfc07d522f9b22b54f3",
+      "sha256": "0f1f2a025adad6f4c5a51e02ae6decf56330320b2d53b1d0bde5ee00fa4e35bb",
+      "bytes": 5382
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/identity.py",
+      "blob": "75289fa6a83bab87ed6420732624656778da0163",
+      "sha256": "581008e10116cc2f62865a933406599289155b4ca739ef8d5a49cb2bb04b8539",
+      "bytes": 4854
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/lineage.py",
+      "blob": "e9fbc661a5d047db5837e16304779de494432133",
+      "sha256": "dae1d44f1c412a71c89ab8532ac8310a4dd83de7100d4a2ca3ee7da9331342dc",
+      "bytes": 1059
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/orders.py",
+      "blob": "0d9fa58e84f372a6e0d326136e37becded32e865",
+      "sha256": "feeb3323951317958739546bbee1b66c6043ddcca6f330e225765bd4d1f03b8d",
+      "bytes": 4142
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/package.py",
+      "blob": "e24a5aa6442b01369bed9cd3d7f2e114fa3b4309",
+      "sha256": "1fa18a847dfcf55f1c6890afe3940eff1a57b0aaff1f63230f5998163f336ac0",
+      "bytes": 2035
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/protocol.py",
+      "blob": "b6323de11555fecb73ce903d4bf31fbf54f69473",
+      "sha256": "6ffa43ad45bf6291b59d12d230f20c03b8515dbd1baa380f283efba3a618d733",
+      "bytes": 2422
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/risk.py",
+      "blob": "54185b84ec5e24022cd4d0d7bfea58bb98e1d747",
+      "sha256": "50f9aca5a81f303ecfaa00fc73e404fa0e5d26a037625bcf4ac7b266707d3566",
+      "bytes": 3757
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/sizing.py",
+      "blob": "3957ac2fcda7f1bde93a3d2b9dd3fe9839257a3c",
+      "sha256": "e136d3468486cdadda7676df1d0322e52ed101790f32373fa7cc9a230a7c5fee",
+      "bytes": 4594
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/trials.py",
+      "blob": "a6a5758e125505d6a93d24d2fecddb517b1c0710",
+      "sha256": "7894649698f54da42c7d5a38535acbd9d291e8a3e367285422214ae8ff5a1d6d",
+      "bytes": 2797
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/mtc_contracts/__init__.py",
+      "blob": "c63c826c681c4523dd703823598154469851fdc5",
+      "sha256": "fb4fffa06a5bff7984171342a2f6c18ef0723172ad35cb0bb9fc6e11c865da33",
+      "bytes": 3110
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/tests/test_compat.py",
+      "blob": "c7c9baa0739247971fef10a74b7678395ff5645a",
+      "sha256": "9ac82095adf3fac0a5f6193d7e8eb99f185fa4da06273ca8ec2d8595b1ca8528",
+      "bytes": 3418
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/tests/test_consumers.py",
+      "blob": "5a7e1c8fc63bd330bd954f41494b4a763cd35b65",
+      "sha256": "ebaf4295938da148d680f9121a5102ee5243447e278810af6c482d15ab00ae3b",
+      "bytes": 1623
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/tests/test_deep_immutability.py",
+      "blob": "8b642eb597e5a92d4b6cc0c3ceea4c6eec73da71",
+      "sha256": "cb45f71fe0ac4e32d3f25aef829f360a880ebf20883d6e74020d0927810796b7",
+      "bytes": 4545
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/tests/test_identity.py",
+      "blob": "a6edb6251695eaad34c9e81db9f3c930969bbdd4",
+      "sha256": "daa04d69787631f24802772a43bb4a7412042838a217c7614678b2d2f794c559",
+      "bytes": 3852
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/tests/test_orders_and_package.py",
+      "blob": "c902dd7724d8851bab2b6afb7a643309e77432c5",
+      "sha256": "62efa799fc34bad7ebb6b26c5dc21d2fa9b4219628bcfde7442328d9d0c06f20",
+      "bytes": 4397
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/tests/test_risk_admission_execution.py",
+      "blob": "3718ef5252a8b15df51e9bc8bb7d426c1dbacff7",
+      "sha256": "1e04f8ae005936e49dd6eee5a523d244a822ad75f8b820db8f4c4740547637d7",
+      "bytes": 9066
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/tests/test_sizing.py",
+      "blob": "5a348df9b4bfa24abb787d35abd52feac8c1033e",
+      "sha256": "46ebade70fca18e49848c6b79fe1513e70fb80be83dc5cea351873236e8490c2",
+      "bytes": 4329
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/contracts/tests/test_trials_and_eligibility.py",
+      "blob": "e6aa8c15db8f4b313ef2961e2bbb07e53e19f6b1",
+      "sha256": "f51e28b2dae7ed3ab7f5e4c1a32a21a05fe9eeb18a12c3072a19210ac391ea0d",
+      "bytes": 3232
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/LANE_REPORT.md",
+      "blob": "240a35999d69e915fdf169f8f458d1923fc848dc",
+      "sha256": "e70d7a06b67454331dda9250eaa222e9d7baa329d9a54a8b4b6dc8933132be19",
+      "bytes": 18759
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/NOTIFIER_PROPOSAL.md",
+      "blob": "6a0cfce0178d72318628e9c336d3ac03731e3079",
+      "sha256": "4881b9c9b248e09903e50096c936fc2221f5e060a519055e9485490cc0192cb4",
+      "bytes": 7139
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/11_TRIAGE/WP_P0_26_OPSA_2026-08-25/RESTORE_DRILL_EVIDENCE.md",
+      "blob": "85eb699767af55488bdf0700d2dc087346cf9ad8",
+      "sha256": "dea80181c5cf727227986e180ef3d22cfedae1ab83a713a3e1d639a086a2d879",
+      "bytes": 45123
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/modules/#00 README_Pine_Module_Pack_v2.md",
+      "blob": "28414b11add0ed0360910060c7fea346939f8158",
+      "sha256": "e9719fcdb8c2766f5f469415a9315c68359cc14b8c3d69579399dc978b1d0e2c",
+      "bytes": 32706
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/modules/#01 Pine_Module_Pack_v2.md",
+      "blob": "6908f299808fbd37b8c686837d48277cbd8f4fb8",
+      "sha256": "e3ac63fc0d688390bf19e4dd416ddd018d5a2613a62214f62e66bd1f4af57b1c",
+      "bytes": 42387
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/modules/LIB_ConfirmationLayer.pine",
+      "blob": "cc2b8bbd9aedd21b2cd2dc64d59ecf43729cdf15",
+      "sha256": "d5da393cfc3a5fefe177fabf936108ab1440210b0a1c24b93e73f02fce1ccacf",
+      "bytes": 14420
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/modules/LIB_MATH_HELPERS.pine",
+      "blob": "7fd10251afbce1fafc7899e31f4714229e25366d",
+      "sha256": "41ebe7eac7c8d82305636b93f27a78062fbc578644efa7516d7667f4f7028639",
+      "bytes": 3247
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/modules/LIB_Signal_RangeFilter.pine",
+      "blob": "0ef12731f1e3d8be80abb651b8f7e2769c8c9573",
+      "sha256": "a8b361cdce95ec32bd36db5b19a63b35b5e4526c3390a0a88b83082d9cee2cef",
+      "bytes": 3157
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/modules/LIB_Signal_Supertrend.pine",
+      "blob": "4e0c2554f2be2fb113f8f4444b72b8247f6460ea",
+      "sha256": "4efa66221560b8aae490654ecea99c1f9521fbac0ccb07600e5bdb5a10dbfc3f",
+      "bytes": 3259
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/modules/LIB_SLTP_HELPERS.pine",
+      "blob": "c87e55634f1a70fb25e16274eef9dc02b493725a",
+      "sha256": "bf7dcb4506f1620dbf8a6a77c341e04db4245e791980f2b21e1a0e7dadb2b52d",
+      "bytes": 4848
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/modules/LIB_WUNDERTRADING_HELPERS.pine",
+      "blob": "b4f5a4019a87579d96ca7da934831847ca1e179a",
+      "sha256": "df18da6a27ec75820ccd2a2c89913692bbe2fc10cfb3fb6c5a7658777d1d8715",
+      "bytes": 3221
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/30_prompts_readme.md",
+      "blob": "70b717dc515ec99c15c0abd3ccb5e7fc759946a4",
+      "sha256": "e271661de5e3e87c1035e174179cdae00edd04958a2a7035221033a9a2a36695",
+      "bytes": 111
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/01_master_template_audit/01_audit_the_master_template_core_strategy_template.md",
+      "blob": "3923e33343308ba050f6483e54b9b3e3dd26c91d",
+      "sha256": "54be42dda22ff01055d8072175863de9c0dbfbf0e24e2db3b400fc82807e6808",
+      "bytes": 7499
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/01_master_template_audit/02_master_template_core_strategy_template_audit_birle_tirme.md",
+      "blob": "e8ea616c2036d7ff2506881af6eb7144c3f18ce5",
+      "sha256": "27ad929e27349dfb5de886cf502bbd55f96aaadb60239bf699598cd7b9fde32a",
+      "bytes": 5350
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/01_master_template_audit/03_master_template_core_refactort.md",
+      "blob": "190ca908c03fbd6541532f619f6b96e3ff03ff49",
+      "sha256": "8e3d94c1896bbd56d75bfbf642e462233fc83e537b09aea1365a912f9ec0cbae",
+      "bytes": 76
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/01_master_template_audit/04_double_check_behavior_aftrer_refactor_prompt.md",
+      "blob": "918b85b9fee7e517040e00a36398b0ec0f68a5e7",
+      "sha256": "88a114818ab9f35f1a16e293ee3d3e0ed7dfb62d84a2b16d529139df4b462c05",
+      "bytes": 104
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/01_master_template_audit/05_strategy_code_audit_generic.md",
+      "blob": "d02986d80048279a3b96dde43680bb21af8b874f",
+      "sha256": "fc63fb29318a412220c5c643d607c2fcfb874aad890891c292ce58ad4a46dd86",
+      "bytes": 5527
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/02_youtube_strategy/00_cheat_sheet_feature_development_prompts_master_template_core.md",
+      "blob": "afcf0db0f23b2612556f404d04f334895e0ea932",
+      "sha256": "6b0e002c559ec9d94185ab467cec5e7a4ab0890d3e32261e753ce73d8bab38d1",
+      "bytes": 6274
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/02_youtube_strategy/01_master_dev_prompt_1a_youtube_strategy_filter_report.md",
+      "blob": "dc5c39bd5f26389b88a60f3498d4ebe414087797",
+      "sha256": "08f42e9e2b768afffca53ecdefb90d7f3fe993b748bb4c36e9d291ec37bbec84",
+      "bytes": 5180
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/02_youtube_strategy/02_master_dev_prompt_1b_youtube_strategy_main_signal_module.md",
+      "blob": "1eb6d8a5a4e5f6d37fa7165bad8ee5803b2312ba",
+      "sha256": "ec62f0713a4c8c55a774dfa3f112fc0b3019a2b1c798173b44daf25afbc395fd",
+      "bytes": 10353
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/02_youtube_strategy/03_master_dev_prompt_1b_tp_risk_module.md",
+      "blob": "6ae3d95348d02fe51f5306145c3755e6906247b5",
+      "sha256": "5668777525928e3641a6f7ae496afd741e5596fe294dd74baf75aed5b3cc9845",
+      "bytes": 4284
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/02_youtube_strategy/04_development_prompt_2_feature_module_design_for_master_template_core.md",
+      "blob": "2d81dbc00ff8b25ed8cb6aa8aae92aeff4a82014",
+      "sha256": "632cf26e046a4cc93fab741c35afab7fe43c836d998d9ab5f8d8ac056fd5db4d",
+      "bytes": 6696
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/02_youtube_strategy/05_development_prompt_3_consolidated_feature_design_for_master_template_core.md",
+      "blob": "6fc7e457ca00d200d2e2634d4c9c534b2eba256c",
+      "sha256": "dd4cf8ce2d8f640ec47590fbc0b94c3599426da8e2629fb9fd221e6794a1370e",
+      "bytes": 5323
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/02_youtube_strategy/06_development_prompt_4_apply_feature_changes_to_master_template_core_vs_code.md",
+      "blob": "c07ed61e3ee57b2e7e753a7bccc2555579f345ea",
+      "sha256": "325606e68301a9fadbc365e376d056dcb70d66137c9cc5223cde0b4432d7adce",
+      "bytes": 4253
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/02_youtube_strategy/07_development_prompt_5_double_check_behavior_after_feature_integration_vs_code.md",
+      "blob": "767d8e5402777f75d850c8b72fe9726896ca950d",
+      "sha256": "75420820408039b589a76c0561ee737297e24ea98e16f78240cc39f9794e6179",
+      "bytes": 3908
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/04_performance_audit/00_cheat_sheet_performance_prompts_master_template_core.md",
+      "blob": "e4df87e8992a3cb6faa92b1e5c00d6ae4cca9b05",
+      "sha256": "3bf743cd951170526f4f35019f78023cda5af71dbab719f6d6819e14a60ec8a3",
+      "bytes": 5317
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/04_performance_audit/01_performance_audit_heavy_script_script_is_too_slow.md",
+      "blob": "5ddca6fff4f642f3eab824e52e53d839cd24fa73",
+      "sha256": "1f2a0bb2649829c317e166bef12f85f27c70b9b2f43eb5b2d5618e878d30376b",
+      "bytes": 5061
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/04_performance_audit/02_performance_audit_birle_tirme_prompt.md",
+      "blob": "3a7456aa8a8c4ad9b5e5c9a5040b3bb39bd00bfd",
+      "sha256": "11b76c1a2005ce12350fb64fe07ba1dcc0b615af5bc2111ad08e54d6710794a3",
+      "bytes": 3536
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/04_performance_audit/03_performans_refactor_prompt.md",
+      "blob": "dd652920be033e75acb394f8e727b9dbf4469969",
+      "sha256": "4208e42e8f26d2e7b3f83b28e132f8e4fd0d4c8d107ea8a1557c8d46fb290352",
+      "bytes": 3395
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/04_performance_audit/04_double_check_behavior_prompt.md",
+      "blob": "9c9843cbe19415021a94edbf5e18c513541edadc",
+      "sha256": "dd9d7c3f0164a57d9ba83497b3b5779196b31a9c18a5965f4a31b65e08107144",
+      "bytes": 3528
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/00_index.md",
+      "blob": "29bebba0b93c642fae022d9d1d37ff5b8e078fb7",
+      "sha256": "151d3f5e58357adb3ff00fbd3a2e0f4bbaa2663c10f0805d24a6159b1e30fa16",
+      "bytes": 1489
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/01_office_hours_scope_review.md",
+      "blob": "3bb6701885aed53247709788ab80bfbd66eccf80",
+      "sha256": "8d1f73802cdb1ea3c012d97b972929287eafdf9ce1a10b3ab24bc0215d3e1f16",
+      "bytes": 1856
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/02_engineering_plan_review.md",
+      "blob": "de0ace843468708319db4255b87b3fadbbae520d",
+      "sha256": "0e11d488f9d362e3273309fb9359a7a359d4cc28787c37e6ebbe56fefb4f3e9f",
+      "bytes": 961
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/03_implementation_task.md",
+      "blob": "df536dbd079785a70901ab5781d5ba1e64f99cd0",
+      "sha256": "946e9d68a2302ec66b6d950a85f22da902226061376e8c33d9701b1ca4af566a",
+      "bytes": 1506
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/04_adversarial_code_review.md",
+      "blob": "53970f8bd84969105d39a488ba15469342549ef5",
+      "sha256": "ad5802f4f77182f3812d07c21e55e742958d07af586c833d714ef22603ec7010",
+      "bytes": 1906
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/05_qa_test_review.md",
+      "blob": "446c832c7da29116d9aee45ee3fc9590e14f873c",
+      "sha256": "089964cefe6e60554d76326c80f6ee4c0b3e0666138335e3250c6adf88609a83",
+      "bytes": 1439
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/06_security_review.md",
+      "blob": "ad370489100ce3d04e94eccd2c4774ae49b4e127",
+      "sha256": "9b858d72fc2a4c29a7f60a44b5252ee3170b91d2f43be182179f5b62d9727f68",
+      "bytes": 1540
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/07_handoff_update.md",
+      "blob": "f414d35742b209fb25c70d61f79fad5c1f90534a",
+      "sha256": "a775d2fc5041e0e418f177772162941b53f85a9a9b71ea08e4416e6393434b97",
+      "bytes": 1598
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/05_ai_workflow/08_backtest_launch.md",
+      "blob": "6bc0d96b6155201143d1244cb97cdb448d1a0dfe",
+      "sha256": "3a9b9f8f60db2fb16b42ddd812092477367bcc1f94aca777b80eb5172cedbb73",
+      "bytes": 7284
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/02_youtube_strategy/alternative_prompts_youtube_strategy/001a_gemini_youtube_to_strategy_master_prompt.md",
+      "blob": "cb7b6b116f5e452bf871a4659deb033540d311f3",
+      "sha256": "4b36a251d2ddd783cc2c00f1e1556c78c8470f415af99209a2822a0af273b733",
+      "bytes": 8996
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/04_SHARED/prompts/02_youtube_strategy/alternative_prompts_youtube_strategy/002a_gemini_spec_copilot_implemenatation_ptrompt.md",
+      "blob": "75cedf8053709ccd1e5b5ce0972b97e04855f84c",
+      "sha256": "179f39c6af0e5a3447b731f482142277d2f04f3ec6066609c4f92d2a45f22139",
+      "bytes": 3198
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/aggregate_overnight_iters.py",
+      "blob": "17a02e3e5a6be12ef93e90ad48483c8c143c6ec7",
+      "sha256": "bbddf34de9b2906db4a70dda334e7774a4243704da1df816e7037347d1fb1e80",
+      "bytes": 10102
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/alpaca_download_dataset.py",
+      "blob": "e5a25d072214a5693ccf98c25e9a2b2eedbb7257",
+      "sha256": "661f35d39529fdf24d87711e9755a4188191d26c07cb31c0fc0539cf97aa2bdd",
+      "bytes": 10972
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/alpaca_download_us_equities_10m.py",
+      "blob": "5e3ba0f54eafc2de3c5a5a574c1480fd01a0d10f",
+      "sha256": "f1405cf3b97cd45d6ea44cc8bb9cb7283f1c010f57db9f5506ab44e04bfb6087",
+      "bytes": 8256
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/alpha_vs_buyhold.py",
+      "blob": "03f1b71be9731257fa937c91deb25dfd961d003c",
+      "sha256": "72d8d1160e40b58070c3c767cbcd4d6dc220d37c180e2c5eadc3cadab4e89983",
+      "bytes": 4913
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/audit_hardcoded_paths.py",
+      "blob": "c193869369ef7cdc8fb9275e61ca1ff3992f2d53",
+      "sha256": "e878c478fdcac1a8a7adc5be2e1f3f1ad5cbc1ed7d85b9115ac80b21a2e5b2fd",
+      "bytes": 4292
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/batch_candidate_processor.py",
+      "blob": "8c359550aea60ed254a13f8de63fc344cb6a626c",
+      "sha256": "a74cc898fd63aa3dc9b5d37903e430b19c9d3c009e5f2d42d13037f7b2110f24",
+      "bytes": 18215
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_all_gate_evidence.py",
+      "blob": "93ddbb99292adcd46e1f8d8f2dab06fcb15dca58",
+      "sha256": "aa12ee6f08c4e773338287786fabecafa4900c4b29c83fdc7f0b9623da81ed0d",
+      "bytes": 26424
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_evaluation_artifact.py",
+      "blob": "eb884a8997e3247426e16a3411f55203970692b3",
+      "sha256": "1b0a9f4658dd52670af1e0dd49d3b7de2771bc4daa908106e1b9408ef58eb475",
+      "bytes": 26513
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_forward_paper_queue.py",
+      "blob": "79b77431349930bb884ea052c2ba84d84508769b",
+      "sha256": "2ff4ce3689cbfcba44624a85321717064d84af79cf54a2fe68926be4883aa79b",
+      "bytes": 5350
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_needs_backtest_selector.py",
+      "blob": "bbaaca763782f6b62d8a7e851f9696f37ac65975",
+      "sha256": "cbff85d02cf84aeca24f6338baa3b35d8e3dcd565c7273c921da80773e3ab967",
+      "bytes": 6057
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_profile_result_artifact.py",
+      "blob": "f2ca33e03e6cb7eef7b6b3b1e68702c1b961e59e",
+      "sha256": "ddc357b65defe94e5d2955e250f91ed6f90a14a0c80e2bfc3f639c5cc4319cbb",
+      "bytes": 14116
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_run_plan.py",
+      "blob": "536ac0d6f3212d959c9645ebd5b96d1b773c978f",
+      "sha256": "b6944eef12aac1e440d3eab35675561d8d1ca7f6f495e8b969813bd36769b96a",
+      "bytes": 18760
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_strategy_param_specs.py",
+      "blob": "60409cea3a02ebf572dd3a89165f8cb7844d6579",
+      "sha256": "c1f8691e7071668ea9c2b20ed2cf39e9ed003cb4ee020df036ef621c36380f05",
+      "bytes": 9936
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_strategy_research_registry.py",
+      "blob": "d4009d53fbac5a751c42b6a48026483ec1bac551",
+      "sha256": "7c22ae27cd6c43438d246a7539c8b80c7d5e825c9a81860e9b064ca3ab023196",
+      "bytes": 29807
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_triage_registry.py",
+      "blob": "cc28843ce3a01cee0304f98fab66e78f4a354de6",
+      "sha256": "7b0d960b29fd9cd7156fa146e82c14fb3c48beb1a954ccb3a71d76f4ad8e1338",
+      "bytes": 5691
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/buy_hold_baseline.py",
+      "blob": "670b297cf7dc1dbd6e51424c54ce7d19208b24b1",
+      "sha256": "ddff8fbe9850c6f15f01becbbe0add8423c6e8129ffb6a40a503820657c436bc",
+      "bytes": 9760
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/close_watcher_2026-07-01.ps1",
+      "blob": "1f9ffba4b5f9e7d27e7995c30a623b19053a5f7b",
+      "sha256": "52e1e3ed959f9ce1ef6d5e9ffece4bd7866439b7a589725465a0ffe3558e7497",
+      "bytes": 1742
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/confirmation_runner_2026-06-04.py",
+      "blob": "bdbea83577b3f49eb108cabc463e22378d7bdc05",
+      "sha256": "f0e3c4631d8aa9b9684e98ffbdae7091e0c928b7726fe3de337b1c6b0c1a8521",
+      "bytes": 4566
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/confirm_morning_watchdog_2026-06-04.ps1",
+      "blob": "5c9e9307222ab3c9192da9321cf6b9ffbe632522",
+      "sha256": "54466d5a2601912393f7c90c604101c39974938c37fa86981522440dee8bb8e5",
+      "bytes": 2785
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/cpcv_archetypes_wrapper_20260703.py",
+      "blob": "aa8e92aeba6d770dd8129f1449ebc35932b25089",
+      "sha256": "cd1f4ad39aee733b8c518a36bff8b7e63070e688a21d0aaf83ee8353a1c50fce",
+      "bytes": 796
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/cpcv_turtle_wrapper_20260701.py",
+      "blob": "4a56ba84bdc0c3fa611a10416875e1714e21e3be",
+      "sha256": "f5d858fa6de0c204f74c44ee7ac6f239aa6d9ff34b8b12680940c0a0ba889a04",
+      "bytes": 755
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/cpcv_validator.py",
+      "blob": "1701b27e1f20293824dbff61d5bb563ab5820dca",
+      "sha256": "37e356279b391c00df901c96ee70302b7e6ed7edde728b2c802702b8d77e71cb",
+      "bytes": 8274
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/data_check.py",
+      "blob": "04980628fec32aa763047915d9c23d98071c6c75",
+      "sha256": "10fde67d149309ead37437f1bb774f5445aee696dceaac1908b34761f6346eed",
+      "bytes": 3040
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/derive_current_status.py",
+      "blob": "be99623224d61c73a77721ac38e48cc64da1164a",
+      "sha256": "7e4965795a0ec7670fc16036e09c7a9b38662ddc1d106e23764510788472596c",
+      "bytes": 5540
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/design_extract.ps1",
+      "blob": "a4da697321ca98768cf5d45226e373e95cf6384c",
+      "sha256": "3a29978677cf6e8d8077767b01d881c3e35b413c54f631acf7bb45880ab036e7",
+      "bytes": 2694
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/enrich_gate3_evidence.py",
+      "blob": "d79a85363f2c437927c12708d6b6625873e08286",
+      "sha256": "3f9c022f834b53990d041af81f941ff90f49dd7babfc0a2743f109960caf7725",
+      "bytes": 5282
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/extract_strategy_metadata.py",
+      "blob": "e78209fc2985d7d20049a5bda9d8472f2d232936",
+      "sha256": "bdd5d89c24a8a5cd7282d5b39055c114f87d7582eff7ffc41ae55951f5619a9d",
+      "bytes": 18090
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/faz3b_self_parity.py",
+      "blob": "a54b913f97d943e4841410467c00cef53df3d83f",
+      "sha256": "e1ff41cf9a0670273cc24e40a1766728b400c340419957745b191a6c0a8aaefa",
+      "bytes": 7983
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/finalize_bootstrap_bh.py",
+      "blob": "775f19518e430302fc12ab208f0b284797f44560",
+      "sha256": "786f5590c8a8e9ca802188f04ab14f65f766e13ce9fd3424573dc7444d3a1144",
+      "bytes": 5140
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/focused_dsr_relaxed.py",
+      "blob": "d7774665bc9b17addc43903483ec5cc6f9005060",
+      "sha256": "5e95824218c45785765f8c9150894ba2e9a916b1b60fea90c3e55a8e12811092",
+      "bytes": 839
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/focused_validation.py",
+      "blob": "fa1e62e0ce9c0426fc7318ca88b9af7d203d11ad",
+      "sha256": "7c4e3dca9a6d55c23cbe876da2dbc321800771ee354908924121c76d630f203e",
+      "bytes": 5480
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/full_sweep_2026-06-07.sh",
+      "blob": "c18f224ba6370cd1cddbc5cd8e60a101bd55e8e2",
+      "sha256": "a6cc26b906d00e7b6fcab3cf5db841428878c8dffcd816664ec72eb474e5e79c",
+      "bytes": 5597
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/generate_morning_report.py",
+      "blob": "48b979ae56c0199f142d9eace3b4147b1f4bdd6f",
+      "sha256": "4c5ef9921f88fa57d82b6a7b663d8fe1427731f6f31737a241ac36ca354dbf6d",
+      "bytes": 16329
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/generate_producer_specs.py",
+      "blob": "65787cea8c2b7ef14737997e8fd6cf9e0f809c22",
+      "sha256": "8a1e950e152954b24784d5ed8e626bb997ed808196b2fbbc1932940dd4f38029",
+      "bytes": 24007
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/gen_retriage_worklist.py",
+      "blob": "5685d7d42b212a36850e0c6693a43af66c27717d",
+      "sha256": "e4eac0ef9d7fa0fbefd34de0e9cbfa1547d6c529ca2e9fc1da88904ecae4ca18",
+      "bytes": 2830
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/graphify_impact.py",
+      "blob": "290296f657d1f72bcde1a9153ae103f7d0328a37",
+      "sha256": "d159833ae3021b72c7f273be35a9da3aa448ca40f7b7ff630825ba067aa07321",
+      "bytes": 5241
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/heavy_night_2026-06-05.sh",
+      "blob": "a4c5b38a71fce5c10ae31f6e7275824719651323",
+      "sha256": "4805f82b431cef1f2a4dfdfe3815fb63b6b348d451afbec38e60c0aa449445ec",
+      "bytes": 5608
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/heavy_night_report.py",
+      "blob": "f39e271a1990aef1683e0713a844201d94d464d5",
+      "sha256": "a8d11ad55bb8e65ab2daa550c761259cb4c275031e9311dcba68330187c5b1ff",
+      "bytes": 9976
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/markitdown_ingest.py",
+      "blob": "4fa10ee8ffb67ad4ed33401e6b3711df51fb688f",
+      "sha256": "9794207075b8edc2cd3d5e7d05203c72e0fdc3bc9569f7b4652fb404e951c369",
+      "bytes": 6140
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/mcc_night_tail.sh",
+      "blob": "44d27dcd062cd498fd1c758d1a3a5584cc7a6464",
+      "sha256": "da1da943fe2b825cc8666ca7eaecc874e5ca485f6aeb314e4f029d5e1e0d790e",
+      "bytes": 5130
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/mega_walk_forward.py",
+      "blob": "2f16fffd08a1ca4891060205a456282665f252f3",
+      "sha256": "d1a6a3b430282b30e9cc9411e76724dc319273269da7f71327888b7cbf53e098",
+      "bytes": 83403
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/monitor_overnight.ps1",
+      "blob": "f45f8e31d3b0f1b81f8fa2223b8a65238782b1c2",
+      "sha256": "34e3c5db41e460229318711b1520d2ba733daae9eeae346adee974ae68c22951",
+      "bytes": 2510
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/morning_close_archetypes_20260703.py",
+      "blob": "7fc99de3f51785a5b6e1e2104e2774411451ef56",
+      "sha256": "1459f85ebb14d5710f240dc158de0c835677b0ff8f10a75ab9c9b81da1d2fad0",
+      "bytes": 4353
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/morning_close_full_20260702.py",
+      "blob": "92030502eca5891cf01202c64da1e4310c9e309d",
+      "sha256": "1dba618d1ea816b98cb6404067b26ec80b4827fdddaa7b6474a0554c59377cad",
+      "bytes": 4666
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/morning_close_resilient_20260702.py",
+      "blob": "105ab5b639d6e02208d7fe3c8735c935bda5df36",
+      "sha256": "65f6fbe8c411a2c9c1e844d096e90d3bcf7b6f1a31f90d0f2c62d426c7719b82",
+      "bytes": 3807
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/morning_close_turtle_20260701.py",
+      "blob": "e644806e0cd50c8251069785672433fd048f419e",
+      "sha256": "984256d8674cb0d5b40b889c3fb7e24d5cf7a1b66334531eaeb1722eebaba953",
+      "bytes": 6350
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/multiwindow_oos.py",
+      "blob": "242fee83d36b9b7e971c1a6c4025d27072b48624",
+      "sha256": "91eb3b04d0e2f6c7d9fec22e14b28660d44ea0f354f7c39642d768a9a06b244d",
+      "bytes": 8385
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runner.sh",
+      "blob": "018b3a37131bcb54b9de53b7cf687f8df7bf99e5",
+      "sha256": "4021df60389a7f13c09f8c6052e131e684b786e2b267303d218e14188f6fad93",
+      "bytes": 3780
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/OVERNIGHT_AGGREGATED_REPORT.md",
+      "blob": "42168bf1047647420592035f9a093191f0b71d35",
+      "sha256": "2a3550064dfdf029243f6b582cbd7731cd394e3a76b9af83fe336ee53358e24a",
+      "bytes": 46893
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_archetypes_20260703.py",
+      "blob": "d613c9680607ec5b61a6b7d9f487982bd175882d",
+      "sha256": "7dfd459c59c381ec098eda79cd484d775b561c2d4893603752efd84e729b5d37",
+      "bytes": 1846
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_archetypes_resilient_2026-07-03.ps1",
+      "blob": "3ae8b83449e024354c93bee3f8598545083a0a8f",
+      "sha256": "03bff332e5dea5149713ead5e887eb93f0e40e878605657d856f5cf5f52d1d99",
+      "bytes": 5396
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_batch_023_034_2026-06-07.sh",
+      "blob": "d4f86433e65f13c2ad775ed95572fffed4afb407",
+      "sha256": "b34ff243d069f116999347f92317a1f1d34cfd4f7f068f8b3d4f12eda8cfa7fd",
+      "bytes": 7850
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_extended_run.py",
+      "blob": "8b4c50a55401faef399701aa3db1604b2ac508cf",
+      "sha256": "a7fb28c1b3a781020bd2f38a0309efe7f65db4ecfa860cca0348eb2f0bd1fda6",
+      "bytes": 1766
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_full_2026-07-02.ps1",
+      "blob": "dd967500a25acdaf0918a8e89099690fd572520d",
+      "sha256": "0db394b8415653ff8b1a48a74b03665818fab0b4e34a09dd5815efe7438a1676",
+      "bytes": 7198
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_keepawake_2026-06-29.ps1",
+      "blob": "b3bba2474ea6da5c344c24dc0e71fc54966a584b",
+      "sha256": "f8d7a2e98e9780bd45c6631708962d004043353225b8d83de43132509e356913",
+      "bytes": 663
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_loop.sh",
+      "blob": "e4f78d631a4502a386d6511f8412185dc1d20eea",
+      "sha256": "b756d7a03c78220b23fe5e0d9aa66d442ce1ed0c912436f4964374b1be8d5051",
+      "bytes": 2151
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_loop_2026-05-31.sh",
+      "blob": "830eafb497d64cd47ba89b7d6f6c7d1b089fd11f",
+      "sha256": "625a4b90941304a180993be21bbb35491b75c19b7b7f7c8f45ccb071a96bf3a1",
+      "bytes": 3017
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_loop_2026-06-01_night.ps1",
+      "blob": "6dc8e77feb4ef3daf4168ff2177f64847eea458b",
+      "sha256": "c786a0260addeb350639e357840f68d5afdf9d74c4ed5837cbbab4d169c440ec",
+      "bytes": 3114
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_loop_2026-06-01_sprint.sh",
+      "blob": "cd018fd9b88b691d2da376586ff7f31ae96ebdf6",
+      "sha256": "1441fffa7e4b43e330ba5cd9173b263a49650f6c75fe11ccd7eb3faa6535fe68",
+      "bytes": 2509
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_loop_2026-06-02_night.sh",
+      "blob": "055595c25328ff0ab04be44d6733b818d2fd357b",
+      "sha256": "bcbf77734af5208e00d79614fcf0316bed5b8d660c4ebc8f11a2cd0e6a5801cf",
+      "bytes": 3042
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_loop_2026-06-03_night.sh",
+      "blob": "3e4bd59a84b435de3e0114c46200332a7be913f3",
+      "sha256": "0b1d8675c59de4e3ae2a773ff747f152ffd5a3758a67efd77089c7d33572a54b",
+      "bytes": 3942
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_loop_2026-06-29.ps1",
+      "blob": "12d7b8121fdb55b4a72e96bbf7f1bdee6fb07548",
+      "sha256": "4e1a41174ed6b0783dc588bed53aa61035d85fe19f92e653bbbcd8ae6c05036e",
+      "bytes": 3064
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_remaining_2026-06-07.sh",
+      "blob": "2033bf98a5b924d95acf26747e4424e92bfd69aa",
+      "sha256": "18bc34de32391a6823d88f7338fc904e7a1a8ae19f7b0b36b37c223631eb551b",
+      "bytes": 6006
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_resilient_2026-07-02_2100.ps1",
+      "blob": "7dde036e4942b486904a5d6a0f5ef908b229da50",
+      "sha256": "44be236cb42df838c09c8ca05a6cd7e7f34aa5f74d2ef94f7854ae48f8fa295c",
+      "bytes": 7514
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_turtle_heavy_2026-07-01.ps1",
+      "blob": "93194ace63d9037541db9052177fc05eb90ae0cf",
+      "sha256": "3992bce36c69693fa78fe15287826b98d1aa802ba68262844757e66e9ca9a9df",
+      "bytes": 7636
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_turtle_sweep_20260701.py",
+      "blob": "d61e66df5113544ea099a247c7b3cb3aead4fafe",
+      "sha256": "a5d2646d6ed44b895ab1af629b47885265cb96779fcef4a5caa60b2bcc8fb5ee",
+      "bytes": 3072
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_v2_multiasset_20260702.py",
+      "blob": "94d9c5a7ae4e2a8fb19f02822fd408c8594ec315",
+      "sha256": "933fcbedbe4989853b0ac0d507ee186676f3c4a88d70deaaafcac0e7fa08dd5c",
+      "bytes": 2439
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_v2_runner.py",
+      "blob": "3bf36508ddaf75526f76d592ca63e8dd90a0db2c",
+      "sha256": "1212e491030688250216674cb142e09bf8d5d3cb8085f088b8aa02ae420ccbf0",
+      "bytes": 31071
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_variants_multiasset_20260702.py",
+      "blob": "8d7c7b4b089b9e0627704d438352ec4c6de6af17",
+      "sha256": "4bd7046008f5388f3f7e1a0f1d45bbd17a685f27b8a8199720e5d79738411ef6",
+      "bytes": 2008
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/p021_readiness_rules.py",
+      "blob": "809a83468bb610d93cc619e46d296f9f1ae41d0b",
+      "sha256": "27a7e6eda300287754552da877121e73c58bd2807acb216405222a45e7101a6c",
+      "bytes": 17298
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/probabilistic_pbo.py",
+      "blob": "d9aba7347b9c564c949ac766588dc56ba2059727",
+      "sha256": "ee378672c865c4fe1b4c287f0ddb757b434437829748379ecf2b8d49a21d79ff",
+      "bytes": 6312
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/progress_emitter.py",
+      "blob": "e820b49e85d70f192da93ed2b5a3011c4e9f1b37",
+      "sha256": "cd25f0ac7ffc702b066671919f7efef1de695d06736f282bde607d1a3b1d6a9f",
+      "bytes": 10221
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/promotion_gates_report.py",
+      "blob": "a305921817b9291d1169b05193049a89ef5a4d36",
+      "sha256": "d5d1ea7448c87b04a903769938930f6821ad01fe57b3c6df5dfb5a550f774591",
+      "bytes": 18948
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/reference_producer.py",
+      "blob": "8b37e43518e0096463e268258b7a6cccae5db4be",
+      "sha256": "ffd0adc8928e93edfb4091a7c466ab7940ddcea80435db078c17a54b7815dcab",
+      "bytes": 6777
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/register_overnight_monitor.ps1",
+      "blob": "ed903e11659f7ae69e67178271394eec3500f359",
+      "sha256": "9de72473ca8f8c21d8f82f30aa08a5daa5544ec63f60ccdb6a060a33b4ff3a27",
+      "bytes": 1663
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/research_archetypes_20260703.py",
+      "blob": "1692740714d10743a7c8ba7a65c9b419575b49d5",
+      "sha256": "da2e4404c82948d60e7e98faeddb021c90f380c0e27a2284961e960a91c08e77",
+      "bytes": 14133
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/retriage_helper.py",
+      "blob": "2bff6488cd3121800af4566927d326c56bf69d97",
+      "sha256": "b40ff793b1e174a0ef28a908b2a0ff9a64ebbd1bb381c5532f09b44848b21640",
+      "bytes": 3644
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/rigorous_walk_forward.py",
+      "blob": "ff127a3f0d223c29afc3cbb8d6c167c80107c47e",
+      "sha256": "3a76608f02dff65fed7f369a87ed082b2711fc1a72c347f646f5af1aebbdb38f",
+      "bytes": 26243
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/rigorous_walk_forward_parallel.py",
+      "blob": "13d3740c9f73a8493442de4d7d71e069ea209d58",
+      "sha256": "a7765cfdc4a1027f2c904856821659ed440f9c3c5b53ac31b05fdb885b9d3487",
+      "bytes": 24784
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/route_user_intake.py",
+      "blob": "4275edc2b0c7b89900548f6b752a66d9d3e0eaf6",
+      "sha256": "d181057020afc698039e44340ed9c52de9837f44550a91971dc3707ed36eb4ef",
+      "bytes": 5265
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/run_clean_env.py",
+      "blob": "a5689d9f816a67cd99a81d21d43149283c0f7dcc",
+      "sha256": "77a01806bfe7e9f99450fc4eb54523a1901d2a01fffe8c71a1ed76d549731845",
+      "bytes": 2892
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/run_confirmation_2026-06-04.sh",
+      "blob": "478a29bd6068be772c80544dc9eba2b6ece756c3",
+      "sha256": "bde28fbb2f389fd140f725072b548dc3002196ae430022f2de7c6b3abafb2d64",
+      "bytes": 3537
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/run_confirmation_validation_tail_2026-06-04.ps1",
+      "blob": "c1de2ac822a40336783548b3170eeb1b49a2b206",
+      "sha256": "0ad0ad34a13f79ee8dc4aa3903ee0bc65fb6b388a20d158d397450bd9418ac12",
+      "bytes": 4009
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/run_emitter_supervisor.py",
+      "blob": "df2d460783b9022ae9bcea8a2274d9dab77234fd",
+      "sha256": "bf8934bc43d8f71dec76f23b27ade39173d226e5c3ac9f416df073db7774b68d",
+      "bytes": 6560
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/run_python_clean.py",
+      "blob": "13117386456e9bac8ba302f88c56e481a5c43d32",
+      "sha256": "c80e35b5aeb985426b18971dfbfcec8282c13f2e61a67400880d19adbf8525ca",
+      "bytes": 2265
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/run_quantlens_overnight_research.py",
+      "blob": "438e1719e5c3ca7e8265574bb0bd6c8d284e2a04",
+      "sha256": "36067ad5b2f30cdfb665756a701ecf2a75a3cca5cf2f9945dc481b46413b9c22",
+      "bytes": 34650
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/run_watchdog.py",
+      "blob": "90f985120b461d1e145cd5ee6ab8c93eb2624727",
+      "sha256": "e4296a31cd11d38a45f3c63d6c03a95759b0270a938e56c597dfd2f44563f850",
+      "bytes": 5124
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/score_all_gates.py",
+      "blob": "6d9d8a62cef9138c26c37dd647eb894a43ea7ebb",
+      "sha256": "0d27fa8078f5db4e5ffba843a66a8f5054048c8ff6daf5ac72938e7ed1ca2f2d",
+      "bytes": 6390
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/score_gate1.py",
+      "blob": "4f7e811483655e410f42ae2a72142bdcf74bb136",
+      "sha256": "59dba0fc0b3c3dcbb23e6c83743b42438a75a87dc500c5125c0a102f416009ad",
+      "bytes": 20164
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/score_gate1b.py",
+      "blob": "82a5e8a636c66c9e21e434993c6244c70dc5f593",
+      "sha256": "7b1a2063e9d9e0e53f9ed18b9776133448ed96c3d59a2266a69a23d51cbcb5d6",
+      "bytes": 12318
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/score_gate2.py",
+      "blob": "8c3988fae139bd2c89321222337c6879597d8634",
+      "sha256": "728a5fa105a0eb086025d7cc0ee91b230d3067eb0f75ef254604ad4be5639ea7",
+      "bytes": 23040
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/score_gate3.py",
+      "blob": "d57c914bbe15e68352458ea42080fe702cca237c",
+      "sha256": "d9f12b1e6c3fba969914ecd883035c70ff77f162cd7c3bdd90c89a130d464767",
+      "bytes": 20446
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/single_strategy_backtest.py",
+      "blob": "7972c12cf4e279f002c24033745e2351db407aa1",
+      "sha256": "82ee26e79f498ec670b40a7514648d8ab085c0f7f0468eab3a010a3c813f59ce",
+      "bytes": 4321
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/start_confirmation_2026-06-04_keepawake.ps1",
+      "blob": "2e6462dd88d690f1f200df66cdeebc2248630ddf",
+      "sha256": "7a943a7586738017efd71c0558e8148271dd0d86cb9f2295c3d77fe67978a6e7",
+      "bytes": 1806
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/start_overnight_2026-06-03_keepawake.ps1",
+      "blob": "d4c5117c60f53fc955da6b6671379a56d1a695f6",
+      "sha256": "19ac1e7dd5107a4d2616f83ec9aeece6fe71fa8b28a27f6d2380997ef08b785f",
+      "bytes": 1556
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/strat_batch_remaining.py",
+      "blob": "9a11341508d27af28324ac49eb6f31f216e5b79f",
+      "sha256": "d8107af0ac6f712370366fc2342278d893d821cc80b836a2b6a18be4afae2d98",
+      "bytes": 11899
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/strat_extra_batch_023_034.py",
+      "blob": "569a6b37b17f43f61b3b963c7151ed888cccf61d",
+      "sha256": "d4c9e2a2a7054f4f68efe8fe8d9358ff1f9f462faf042d2fc414a6cb19fbe426",
+      "bytes": 13987
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/strat_extra_runner.py",
+      "blob": "512d738fb7337fab0e4beb1b7ecb703a34de4620",
+      "sha256": "ea2db3bdbe239ffb0c49eb81b70639858ee8af8b69006eccb6948504c50c7f8b",
+      "bytes": 10029
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/sweep_new_only_2026-06-07.sh",
+      "blob": "cc99e0e4114ce5e59269707b546666c4b7a28b5c",
+      "sha256": "c5ab7ee77bad4423ea0f07dffa2513a5bdfd1da85e5d5638319e6c4a59da12f3",
+      "bytes": 2038
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/test_heavy_night_report_summary.py",
+      "blob": "ab13c7bc9f05ebc741fab91372b3637c3c063aff",
+      "sha256": "d9db1d5d65c2f8ded5a40514e979b55e18999783f0b18a35beb0100387f60eee",
+      "bytes": 3140
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/validate_research_registries.py",
+      "blob": "a24c5fa2d25301d590ee3b04fc820a73e90de767",
+      "sha256": "f90dcdeeac7db044429395f8b827712d8acfee9501428954f4bf03ecd60b8c91",
+      "bytes": 5285
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/variant_missing_knobs.py",
+      "blob": "bd1ce73b99b1aabd3c62abfd84059ce18a180444",
+      "sha256": "7d5418d974c9ad658c14d66754cf304f0ee63b90d0e1499ed0f9fc3dd6739fe2",
+      "bytes": 11210
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/vbt_enrichment.py",
+      "blob": "eda42d57d74c3452b8f88fbd2b4ba7296ac9a485",
+      "sha256": "f04268fad8b354436662db1a3943b5ebbf2ec41190f42b70baa17437048a4897",
+      "bytes": 12268
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/walk_forward_processor.py",
+      "blob": "63239fd6d47d77b2bf12f39603f99d6b63857149",
+      "sha256": "a3f1053bf17a66f3c2f9e92044e008811641c725d3ef928a9684816e3477fd45",
+      "bytes": 18198
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/watchdog_archetypes.ps1",
+      "blob": "3c4fff61906ca9f0a9bf7c949edbe3bc8d198c05",
+      "sha256": "25f79dbda8b11d58d2a11ac4f0e1be86a06cffad840634552065ddc27e678237",
+      "bytes": 1409
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/watchdog_resilient_2100.ps1",
+      "blob": "01561234ad772e71ef1d98dcc88a7ef03522f434",
+      "sha256": "dc43223f2bc36f5a15385de9c44c006cd8cb1ca5e43866f56b661c6d22c19fc4",
+      "bytes": 1730
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/write_overnight_morning_report.py",
+      "blob": "7882396f2552ef8053418bbb014a512ff5bc9fbf",
+      "sha256": "787b374528029168b7422375805ad189dad8b647daef6ce1ada022b9d07048a5",
+      "bytes": 11648
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/_scipy_shim.py",
+      "blob": "b2353a1e948f17e05869b67db28d1564ebd56c0c",
+      "sha256": "47bfc39ed1ab7322a9090903b0782f8f35fe8a2a05b04d56d3fdea36e9951d49",
+      "bytes": 3752
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/n8n/mtc_backtest_watchdog.workflow.json",
+      "blob": "b1d5d1cf20c4b8a6069304d7446eba317ec37066",
+      "sha256": "693c7db99024461a2158a89f3107b8d2408aa0d9e261ede87d4cf1b5acf97f6d",
+      "bytes": 2171
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/AGGREGATE_night_2026-06-02.md",
+      "blob": "11e306c9f312183a3869ff01135554532d808fc0",
+      "sha256": "8aa9bd4a734979f3ea15725d5bbd41420a91091188c4ba47b5753a041e0b354a",
+      "bytes": 40534
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_10_20260603_011018.md",
+      "blob": "a610f2da85b7cd7bb0b81e4b25d9779bc15de2d0",
+      "sha256": "a7adbb21de63593d97e4f15ebe39b40d743a825d3f0efc5f1a4811be38794787",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_11_20260603_014102.md",
+      "blob": "52e9c454534ef0291e2e3879a1f33a556ad77c96",
+      "sha256": "35e6a38c26a6f60847d98c18084f6124454a31ebd7bc9c8fb86ad21f5feaa67f",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_12_20260603_021135.md",
+      "blob": "d2f5e05f172ca19cd16a1e6ad9a1b90418e6a920",
+      "sha256": "b70ce0934e391e26d097f317027159e17b49be8c3f830e5b29c49ac7b245b30a",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_13_20260603_024226.md",
+      "blob": "7aac33d05825d021cf856300d16552084636f3b3",
+      "sha256": "5a40c14ce5469c82f1846187fbc479f03bb2e5c33a204078174c9be9f5c0e75a",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_14_20260603_031317.md",
+      "blob": "51f70471a9012afda68d8caf9499107763b9ba09",
+      "sha256": "aaf4a280e1509178c8113e597e99edfdbae4c6f0d3ac5f1d1b32cde5dd2202bd",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_15_20260603_034354.md",
+      "blob": "6c33c0bae3ec71e15e9f4aac777ac74ae4de8e79",
+      "sha256": "6553d535f4a241579c8835b47a62d2d8d368e09ce52010d587eda850b8a3a289",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_16_20260603_041437.md",
+      "blob": "f47a2f44f965e2c4dcf269c7e4be73c06194e3c8",
+      "sha256": "d8fd2bf9f1099f20446674d926195ad738156a44dbcbcd4123ba26ef3b09dd46",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_17_20260603_044533.md",
+      "blob": "554eacba6d579bab4f2798d25dbef64e0c6ebf16",
+      "sha256": "c7dbe276bef5acef40f7299fda35e49290a5a4694b0b37cd03469d9400004761",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_18_20260603_051619.md",
+      "blob": "3b9ffdb7fc5a7d48b542476821e2673e8a2715bd",
+      "sha256": "2fa68d607fd78b1c54e0840079080309c033f7754e43964978f3fb04715f6d5f",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_19_20260603_054701.md",
+      "blob": "5385ecb23b167e0a9be2252b36182e1acc0369cf",
+      "sha256": "9f23aebfbcc51349435c03f72eafdbe3acc7cff81a100fb8a51bb7228292efa5",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_1_20260602_201203.md",
+      "blob": "6d9e37ee85ffba4516096a08e4d784f7b76c7a1c",
+      "sha256": "f4b1fb2b543820612d057929bdc3bbab084205d04dff4b93921aec083f259541",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_20_20260603_061749.md",
+      "blob": "168d814420b038ee8a0ad180d3242cf1d60c4504",
+      "sha256": "f40a0af25eccc41c88ae048858640f5c78e692550f46145edf45d02bcf61d37b",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_21_20260603_064825.md",
+      "blob": "ec60d0bf51f0f718131e96bf36cef69af1f1112e",
+      "sha256": "a4ea80fa0c43dceaa7c3a4a890afcbf46cee12280f6a4523a6a5c20d10d8397e",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_2_20260602_204840.md",
+      "blob": "d6214f8b7fcc69fe540b799b9edc08e9e3f1a685",
+      "sha256": "0b41a6f7a8ce4cef7db1f8bfe54552bc06b8f114670b6c1a610905a8cd2d5510",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_3_20260602_212338.md",
+      "blob": "b930c1c008b9d63b8d4b00f5c6d68110e9785f04",
+      "sha256": "de1f9eb8f8c0d739475f9f4bcafd529c8210c7dba4f4415daba6453f4cfcb5e3",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_4_20260602_215842.md",
+      "blob": "914de8e8c1d6b201e14bbe378e647f7f1e95d059",
+      "sha256": "44bb859adb2624f859dff2643e8da4974be8f590cd8989511ca604321eab22d8",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_5_20260602_223357.md",
+      "blob": "06d173f6bc25450336ea79cabc442dfb05d67490",
+      "sha256": "7366ad1160a73eafb0eee8830be3f4b28197462aab89faea274c7445c4e9ce58",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_6_20260602_230711.md",
+      "blob": "ef705ae80c6adc2186c5f65cdfe82d98409cd4e4",
+      "sha256": "6acd10b51513fbdcded4496d95f1b5af5a09867f840aec834238e6638eab76fe",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_7_20260602_233811.md",
+      "blob": "4972265b87abcce08c79eeda750a3414b5901683",
+      "sha256": "a1ba0b649f8421ba77eb18dde688e497db0d65519a871c3d3142f8cdd830cff0",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_8_20260603_000856.md",
+      "blob": "951fc1bba730def2c8995b10f63b5454d6e5a7ab",
+      "sha256": "4b0da1118ff6dc8821f92b7b4b869440da4197ab6eb10f1d7b8c734a8674fe54",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_report_iter_9_20260603_003943.md",
+      "blob": "db3891383c2f40796792a613ff59811ec6b0b485",
+      "sha256": "9569efdbaf6825c54a84bf85861ad5bf530d6591c8a2e955c8fb4792003ad1f9",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_10_20260603_011018.json",
+      "blob": "1b17c30b337d70dcf94049afa005005b4cab80a6",
+      "sha256": "04cca757ca9abf9e73e4793090c20f343c862e09a77dfb8066515158d04f12cb",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_11_20260603_014102.json",
+      "blob": "4af5066172aa978cf6051a38b61738af1762a70d",
+      "sha256": "a2a130392183a09c78f52ad196e40ac01dd15092e34deb8436980a43e934347f",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_12_20260603_021135.json",
+      "blob": "d00683f39b941b0ad688f97864bc4e484a52169f",
+      "sha256": "fbb413d9b4eb329de89d6a1d079a2aac9ada14f00207ff3ee4382a0d731ec1eb",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_13_20260603_024226.json",
+      "blob": "fe2903e8456d9a9c9a231562431eb5bd49988170",
+      "sha256": "30eb6c25bedf8d84659b647f7fa55b941d11790ad258649d746ff6c4740073b9",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_14_20260603_031317.json",
+      "blob": "79213f656830da6fc1a3963aa24180b2071244b3",
+      "sha256": "12aeb1c23d96a9548e587690222b0014faa924e6999006e98e87aec679745651",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_15_20260603_034354.json",
+      "blob": "e75e8e4cbbb741495224ca48aab502c10034195d",
+      "sha256": "d62a04900071ddf3c43d13f245899a8b8d59fc85b4023cf6141a813dd433cd4d",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_16_20260603_041437.json",
+      "blob": "8e3f36cfa8339784622381093a2e14917f083edd",
+      "sha256": "550d8cb1c48b37de37954b555d6103efa8fd69d9f4a53718f1fa5ca731bee671",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_17_20260603_044533.json",
+      "blob": "9026128740327736b430189260366c4b6cbb279d",
+      "sha256": "8253e075a6d162b6e1e729f40e248f03f8328045a442dc5c3648df3939d1be9a",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_18_20260603_051619.json",
+      "blob": "df94f3181aeea4f2cce3259e747f82918bc7408f",
+      "sha256": "ce15613ea3fd8a5b89ce7bf031f0384a1694329fbed8f4d8ed620c9d9d8340a4",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_19_20260603_054701.json",
+      "blob": "56bcbcddd317aff9a26d928bbb3b36737c690bf5",
+      "sha256": "58f25f000b361444ba0ab0ecfecc4639a5e041237a6cf61e9af04562314d4ae5",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_1_20260602_201203.json",
+      "blob": "fab0c50bac7dbe9d3f4c21f110b2dca6441facbc",
+      "sha256": "5d47d24900263941dc4d514bdaef9afa25c6aa0871d4fb5926bad1a085515666",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_20_20260603_061749.json",
+      "blob": "c150d1d8f435815b4dd999c91dd60c3e07ed91db",
+      "sha256": "22a2b3093daa7a22829a1ec0f863416abe20d9e058a05b93eeb318994de4db25",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_21_20260603_064825.json",
+      "blob": "b9d7fb21dbe07752458a8bb06b1238264e295d82",
+      "sha256": "022c9a33aafe8d77a1e92aef6552daab058790417a5849a52b06ff6f41473553",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_2_20260602_204840.json",
+      "blob": "c0080d0e0b79f313a73ee6829074ba32f44a71fe",
+      "sha256": "0c96d3f0a16cb2b300a1f25a4c68f736132956421b5b3f484a4265e076772a20",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_3_20260602_212338.json",
+      "blob": "beab8c6b9a7b170014e37e258e041023c7b0cb31",
+      "sha256": "b49a1851b2a529b344930a2da7dcc38bfdcbe7ed331dd20edd646abe87cc4505",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_4_20260602_215842.json",
+      "blob": "557ddf48bf549f208a1f04aea2840788392ca72d",
+      "sha256": "25ca1e33d3df1fafcb1a21fc3dfbc5318d4aebd9920a2ffecb6356364fbe4578",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_5_20260602_223357.json",
+      "blob": "65745f8d114aa086d475d76ded7012fbd91d4ea8",
+      "sha256": "26577f80e0a765d6c36fb8dd2241d064178e053465844969c946c152dffd17d8",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_6_20260602_230711.json",
+      "blob": "5eb6cc820596dcb717f58ed0b05727f8fe244023",
+      "sha256": "774c5e642c69874a58f67117c8685b7ecb8ebf6b2ac39344ac0ca7574d199961",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_7_20260602_233811.json",
+      "blob": "0ec9242d4fcc7ce567d2d2881d55e39147002f17",
+      "sha256": "94efbf1ca8b24033e350891c9e5a2a738d9ee1b1097bd0dd03db552d28c16a57",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_8_20260603_000856.json",
+      "blob": "ac4034796b68029f0739a625b91de3a40f3bd00c",
+      "sha256": "42955127fe071a12f94203c6bb05a490c16534275689870231d1667937934172",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/MEGA_results_iter_9_20260603_003943.json",
+      "blob": "2d53b39104f57dd2996ea2f1173daf035fea2a2c",
+      "sha256": "eb9f4abe3a9f8418823576326f72d7cfe63600fa5f1b907fa07bc5158f366264",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_10_20260603_011018.log",
+      "blob": "e75f8e56582516b6fef4152df2a176905324e1a2",
+      "sha256": "c524b9b7aa0d357705aa91bd2520ef7298c324046df7eab50eb643f11b373221",
+      "bytes": 3486962
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_11_20260603_014102.log",
+      "blob": "8daee05fbce3f1036c47c743b80895c057485eec",
+      "sha256": "2e2acc77638469581989d452bae45213d85aee665c19d736c9cdb90e9adc092a",
+      "bytes": 3486962
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_12_20260603_021135.log",
+      "blob": "a03741fd7c673071e4650140b6cd895f3137bfa4",
+      "sha256": "d91cf85c51f1591da4cc7caa9ea9a4af67a02e1ceeb2e3e3fb68ee0da66d2ab2",
+      "bytes": 3486960
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_13_20260603_024226.log",
+      "blob": "ff35073c9915db476cdcf4957851768f7e7b11a3",
+      "sha256": "0d04cc41bd81facb4f3861f5bac38dface70e1f1e751704541208995d98b9fbd",
+      "bytes": 3486960
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_14_20260603_031317.log",
+      "blob": "126b0f9ca1b6a0cb9d9b51ebfcd7c77e5184e897",
+      "sha256": "b339ba7d8f1b243774f1894d819a64aaad24e77ac307a02c2350d811f7502ab6",
+      "bytes": 3486961
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_15_20260603_034354.log",
+      "blob": "605e7948821779caf056ceb681ce2c6b1bac8bad",
+      "sha256": "20427e611e5caa0f45b869b22af22266821d9c59934c8ae52ebfa31afc5e3718",
+      "bytes": 3486962
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_16_20260603_041437.log",
+      "blob": "aa3c337041c3dfa95de11ff585b926e9a5d9cb64",
+      "sha256": "56b039b10e53a34a73b53875390990956a8887abe5f54d3de27e0f938196f65e",
+      "bytes": 3486960
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_17_20260603_044533.log",
+      "blob": "ede7d6ab3a3e3b3c2766736115d6c325313857bc",
+      "sha256": "2e92eef7a8774a73cf809bc455b40c7ff0e8138ec794c46967368cee20fbcdcf",
+      "bytes": 3486960
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_18_20260603_051619.log",
+      "blob": "6998ca5b794896c2249bfeb6f2d475292fa3fd60",
+      "sha256": "c2af4341b2532d5cd70a0c2bb8e52aa85f0693ca1386f866a2128348871770d3",
+      "bytes": 3486962
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_19_20260603_054701.log",
+      "blob": "0a11693eb8676dbb276fefb76184a86d75b75b17",
+      "sha256": "0586157521ac40d168e6c2aac1800e92755707ed369cb7bdc66a167f440820fa",
+      "bytes": 3486960
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_1_20260602_201203.log",
+      "blob": "649d7776421084492c44bd94bd6010b14b9d8957",
+      "sha256": "30b62c5e58139e9c727642a536ae545b0ddc6e37a162364519c1ffbb02dc3da2",
+      "bytes": 3487758
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_1_20260603_193358.log",
+      "blob": "71c056f3350067e902bc133a42c14ce91cb3d9e9",
+      "sha256": "a1eadd7363efc5d4e7038a217e9e4d0b12382d721634ab2f01c6a13b6af6e39d",
+      "bytes": 9729
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_20_20260603_061749.log",
+      "blob": "57251cc497fe9eb2a783a9f41d2b485dfae501fa",
+      "sha256": "fa8920b0fcf05dd4d5345d67a017a4a1e5f32f200578675857bafc6a493a1fb7",
+      "bytes": 3486960
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_21_20260603_064825.log",
+      "blob": "1fc1daaf9d368d3a6cdd50bd0198b85ca19b0f5f",
+      "sha256": "2a6957ec28acf8586c07b623a31ac13aedf8972a98caaba78f6b9bcb3a0fe27d",
+      "bytes": 3486960
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_2_20260602_204840.log",
+      "blob": "44fa25c6dfec8f27f490a2d341f95a175c70395d",
+      "sha256": "97128053ad14c7c8bd33f637c26d97a33aeccc53889e8285d8fb17ce21bf7b0e",
+      "bytes": 3487490
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_3_20260602_212338.log",
+      "blob": "8c1945276f502c0780cd4ed5529f8af888a763de",
+      "sha256": "5c6921bf6972f097a2c90d87873f0321a5fa722285e3de9209f015ab1520fac7",
+      "bytes": 3487504
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_4_20260602_215842.log",
+      "blob": "066d23822d51cf2da644bb106caba30d9f8e4c92",
+      "sha256": "29d094e6a66347051aacc40557c5ba96c1215a3924bc50e8753179e4afd38a9e",
+      "bytes": 3487637
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_5_20260602_223357.log",
+      "blob": "f78ed8d8c624fa308462d2fd8456bb003d9d75dd",
+      "sha256": "2c59e75d69ed72ac88aca1bab1f402908b39803f50bb545b23394d2e66ac1e06",
+      "bytes": 3487193
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_6_20260602_230711.log",
+      "blob": "2d7a97b11533a039c62d413e5ecced35d6a0760b",
+      "sha256": "0440bcef624bce536213f1bbbf23ad2f46f4439be0ec7dbc9a20e64e9f5b1cb0",
+      "bytes": 3486960
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_7_20260602_233811.log",
+      "blob": "3a76ff37908fbc29cd619885aabae1f6a7a358e8",
+      "sha256": "5411a129a17d7f5ca616203226f55a43047c5007eeaeeb0a4d8971effcb20396",
+      "bytes": 3486962
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_8_20260603_000856.log",
+      "blob": "60c784eb852071f0a5cd1360078a71776204a0b5",
+      "sha256": "ba5882079517c62a4f748d4f7f3c621a9e1f70b05819f9e203a1473c96284112",
+      "bytes": 3486959
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/v2_iter_9_20260603_003943.log",
+      "blob": "8dd48a1950e356238e3ec89e1bd6afe5b12f030a",
+      "sha256": "50e200d2c2bc17db2029e39444f95e2aacebeae678ade61beb0d147dfd955ff2",
+      "bytes": 3486962
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_10_20260531_034109.md",
+      "blob": "5b4170c88550efeabfa4fa7755fe09a69a2539cf",
+      "sha256": "f878e58faa8af5663464d544eecf8cc5aa1937c75bdafb34e110967e01e9f23e",
+      "bytes": 40258
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_11_20260531_035917.md",
+      "blob": "e7a23936e5d5be82517a318ae1df69823ebdc88c",
+      "sha256": "3fd6e9e55cd07fdaaafba8c4a68299e53f271702627dd1bd9583a71f14dc7734",
+      "bytes": 40271
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_12_20260531_041738.md",
+      "blob": "f60d57a59782ec2fe247b6307bcbb12f1a918c21",
+      "sha256": "6a27d1214296ef4257d6eb88e6ef4a7f0a660e2996562209dcc3f23b61468c2c",
+      "bytes": 40255
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_13_20260531_043556.md",
+      "blob": "82ddd467d129f44b3d304a2fb2fa4b1852f8f567",
+      "sha256": "e01e5e5f47f85edf74f5c0ea373df40c1445f8a0c5987213febebdd14616162f",
+      "bytes": 40261
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_14_20260531_045426.md",
+      "blob": "8c46e8d90897941b5245718caefe30a92f6e40f1",
+      "sha256": "408618dceff8db5484626149ee40778f517aa7eab14e6b6d5222c85dbdd851b5",
+      "bytes": 40266
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_15_20260531_051238.md",
+      "blob": "cc763dfcce6e17798915841c999398663240043a",
+      "sha256": "d701bef5de16039e4b9c448aab6027a4b0b590b8fb9222f798ae7a1fa8444017",
+      "bytes": 40359
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_16_20260531_053109.md",
+      "blob": "d96cec8d590eb8b8e76c0ff0ded240e70f71dcc4",
+      "sha256": "00c6e58d8de1781a7df43c7e4bd394c2a6603272af0972799ecbcc8d4503a32c",
+      "bytes": 40274
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_17_20260531_054930.md",
+      "blob": "6b18669569a054270a8b6dce2d5d94e604a2702c",
+      "sha256": "3496fe9beb9d218d2eeb74f2cd0bc4dfe51bbd5ff74bdcc2c14543f05ad461a2",
+      "bytes": 40249
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_18_20260531_060748.md",
+      "blob": "28678b1c72e74885f61c7fe639d65d9ef8836fce",
+      "sha256": "51f1ed24032cb46b7bcae9d2ed8baeb9d1905172fb65c1f483cf7f173c79fa29",
+      "bytes": 40256
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_19_20260531_062631.md",
+      "blob": "77f8a6a584b14422e9e673de3178fdf3bbb3e385",
+      "sha256": "8e7ee902d96ab7220ba032e05e40713af21551104019d8d376d44bce4fca306b",
+      "bytes": 40345
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_1_20260531_005604.md",
+      "blob": "d842596c293d849acecfe821a896a75634963b8e",
+      "sha256": "cf6a160d8f9c7faf8c27ffdafa8e209e78e51ba48c5a2353bb2cb67cf37a5b49",
+      "bytes": 40361
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_22_20260531_070703.md",
+      "blob": "9bc9e85ba5c0d87476f825517d2d0585181e0ff4",
+      "sha256": "022676fc8b96c75c1fb6e93ca7fc800ae1a580a33c4aff5c85ee338c0c8ed305",
+      "bytes": 40255
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_23_20260531_072639.md",
+      "blob": "82432e5183601a475026f8b0ea1a1cbbc70bd874",
+      "sha256": "7e06c6050f6e29afa0513c3c1792d4c47d2b7b08cd33c3301ba46baf8a73bf8e",
+      "bytes": 40357
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_2_20260531_011502.md",
+      "blob": "1bc175fbbcf1adcabc9fa5b12d43c6455ea7b259",
+      "sha256": "a7c0ca4df8ba55e84f5c1457e0991a8d5714581b7c75db851dad1cffa021648c",
+      "bytes": 40259
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_3_20260531_013318.md",
+      "blob": "d5566d6dc645bc5a73b980cb76eaf52ce8b6fb9f",
+      "sha256": "fa8955874f150f192150d08a45296fe87147d1bf79ef683e8a03f68eb350ca99",
+      "bytes": 40179
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_4_20260531_015136.md",
+      "blob": "80d9db6fb516fd597024293f3e7365529d23bf02",
+      "sha256": "686b02f57974124c29381081998678a71bb1f6c35f802a1513848686e98494b0",
+      "bytes": 40159
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_5_20260531_020944.md",
+      "blob": "c04efadc42a98d27d77dca15426f325650993089",
+      "sha256": "8d4ddb3d2f99a526145aa55b8bced0f17933097d624b2d5a47b75869cdaf8f53",
+      "bytes": 40359
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_6_20260531_022816.md",
+      "blob": "d7e554d7583b2431cda71d6db8fa55892cf1b10e",
+      "sha256": "d16fa5511d45ff390a57a966f3d35dd45a00e57cb7626336346a466e28d0a459",
+      "bytes": 40359
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_7_20260531_024617.md",
+      "blob": "9575bd6833f6c896f4588edf041578732f8bc5f2",
+      "sha256": "690e41836ad6b4b77c73a2aa74663b4f99ef53c0bb09572cb7af49570459bf13",
+      "bytes": 40348
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_8_20260531_030428.md",
+      "blob": "0803f2ca38eb7163d54aa15c7599ece3e778fd4f",
+      "sha256": "c22af4c54a90e02fa0766b2539262c87373f3d32499087cb7eac0f0273743a87",
+      "bytes": 40356
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_report_iter_9_20260531_032301.md",
+      "blob": "fc8311d9f5fc9ab51610af4cfe41f3f7af1fc115",
+      "sha256": "ceb0cd0075c0497eea0ae3075987a0292b2a8c827eadcb17f1a894da3eaf9d6e",
+      "bytes": 40263
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_10_20260531_034109.json",
+      "blob": "b072604576134bf5c8611050ad3b80797c6cc639",
+      "sha256": "414fbcec6f8ee62f3dddd6dc5574b32ae1dca6843735c71170940014c3d9eda8",
+      "bytes": 4454161
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_11_20260531_035917.json",
+      "blob": "1c081ef3553b7b7322c93f4816cfc3dbd36ab6d1",
+      "sha256": "2aafa8dee36b44c57a9201678a577e7a445c6ca5a7a79132284b51a0e64e8747",
+      "bytes": 4454221
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_12_20260531_041738.json",
+      "blob": "1949f4ee79e9d24c10472ab9b96ad4df0944c12a",
+      "sha256": "e7c611557dfd164ca75136ce399d447f760e79f965768caed4dd6de7467a2b2e",
+      "bytes": 4454215
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_13_20260531_043556.json",
+      "blob": "0f820bbfb9fe271a7e0f5333de31e1111a2b19e2",
+      "sha256": "026969dcd0ba4f4241cef80ee78d7b318859c8a5a87db712510296dfde8db7d4",
+      "bytes": 4454183
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_14_20260531_045426.json",
+      "blob": "7a16e5b3c38d8220b1d0789bbecdfd02fbec9346",
+      "sha256": "569028b34c8ec232f4483169bb103e6ffe0554d938196740e25db39680b63055",
+      "bytes": 4454170
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_15_20260531_051238.json",
+      "blob": "cb8aabfd391b8605b3dd51d0a8e67a4c73b9e27c",
+      "sha256": "bd2314ba7f7b45efb815e8a711ad6aa3678c4f4b1289418f01b0c7f77389544f",
+      "bytes": 4454116
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_16_20260531_053109.json",
+      "blob": "6da49106285ac65fecce6fb49c12fd5c94881b3b",
+      "sha256": "deb1c3f7f7218b2e5bedb8b243efa3499f8ba1c80ba901a2a4dca036904322d0",
+      "bytes": 4454221
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_17_20260531_054930.json",
+      "blob": "68d674acab526f8234bf500d5fe4937c7086b076",
+      "sha256": "72a5d1a53aafefdc13ad13a6662c7e67b1ddf3825e3b5d48d5f6b87ec8e8a334",
+      "bytes": 4454190
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_18_20260531_060748.json",
+      "blob": "4f47c2c44b963a13dfbed678cd49bb5f9eb85eab",
+      "sha256": "6e4830828897e936dceb89dc8959b699fe305b8b6d9de0a18532d194955d4633",
+      "bytes": 4454174
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_19_20260531_062631.json",
+      "blob": "d4c7c358eb97d1a89a3177f37ea2a01e34230528",
+      "sha256": "70a16b2184a7dc92c58222df6ab28bfc9f456cb1bd55d1d913faba81ee01bb9c",
+      "bytes": 4454176
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_1_20260531_005604.json",
+      "blob": "aaed66212738fb81c46f40652d20c3f50a2a841d",
+      "sha256": "1ad60f2e226dbb86c042afd02fe2c4f4600342284a2b3d4444acab7175ab830d",
+      "bytes": 4454199
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_22_20260531_070703.json",
+      "blob": "8abc1fb8543ef044e1b11895f5e107f3894cc0ae",
+      "sha256": "9838057feabed7f4647aa695b8da9dae6d3d1205c7f9f85ab9841c39143ff874",
+      "bytes": 4454170
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_23_20260531_072639.json",
+      "blob": "e9d193cdc47fdb2805c178e1dab353b1d42a24a4",
+      "sha256": "816b0351e592e2fdbb6040bd71add21a0bdd06108dd8f3066abe544ab9c6080b",
+      "bytes": 4454174
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_2_20260531_011502.json",
+      "blob": "248eab94f791bc573da5697b310cf8c590d088e3",
+      "sha256": "e75af7bb64b59d1dec3ac8dd0fbfc917ad141f5806618d391caf11b638139eee",
+      "bytes": 4454168
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_3_20260531_013318.json",
+      "blob": "618acfdb068035515ad7d13d7d292eef3a2617e6",
+      "sha256": "57d6195562824a8e762d601e2d0aa0527aeb13f7c21f0ac2e476d7ed1b5886c1",
+      "bytes": 4454194
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_4_20260531_015136.json",
+      "blob": "b8bb1b8a8ac38406dd89d34f27f46cfe6929d571",
+      "sha256": "b2be4af074dbd8ffe1063831eda4cfd9b3ed85d844e39d5d8461629822387d80",
+      "bytes": 4454204
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_5_20260531_020944.json",
+      "blob": "c315eab58cf20831f09cf62739e4ed6a941685f8",
+      "sha256": "4f3bed136ea19220d800d9991c8592392cecf390d1d5eb6690dd4338be9104b1",
+      "bytes": 4454187
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_6_20260531_022816.json",
+      "blob": "fe09fd0b1d032c491e279f3c1881159e21a268cd",
+      "sha256": "37351287663320281dc5e4c6578b7e9e8abafa55582928449d7ec77c90ecf417",
+      "bytes": 4454202
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_7_20260531_024617.json",
+      "blob": "e56ac2434504dda0c270aea0a1f3a09df5522514",
+      "sha256": "1956121ea2deea514e4510bac1b23986056d4398e7110c10749f4996cc81d444",
+      "bytes": 4454169
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_8_20260531_030428.json",
+      "blob": "0338341daef39135406d05e4f5bb9d2ee0b8c852",
+      "sha256": "4adeb855914561145dcab278048352549d9af7ea3b9766798335122c6458f32d",
+      "bytes": 4454215
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/overnight_runs/MEGA_results_iter_9_20260531_032301.json",
+      "blob": "5765959ea450274b75180e1bedd514274f36fe26",
+      "sha256": "dd4537e73a05d64816308b85b988c4cbcc73a52deb491376a45b7f038f3d42be",
+      "bytes": 4454169
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/sprint_runs/BH_BASELINE.md",
+      "blob": "d55f68c8210a05f524b116ee2a62dfa15f4c91bd",
+      "sha256": "6c92906ee65bd23e4b13e6d7028f5bc881ddf8f07fbfea5a7485e834e1873221",
+      "bytes": 28325
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/sprint_runs/cpcv_input_top_alpha.json",
+      "blob": "556cade0703f7aee51a63d38cea30a4963eed040",
+      "sha256": "68215abd6fda9cbb1433dedcb954d2bf3e675768ac8c7c4cbffc15fb9aad71ab",
+      "bytes": 18354
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/sprint_runs/PROMOTION_ASSESSMENT_2026-06-01.md",
+      "blob": "58a0b705970a6e91508f23f13fe330b8ac9eed74",
+      "sha256": "f2f1b37aa3a324cb6cba10274698d7ecb5dfb78cbcfc103135440a9a867602c1",
+      "bytes": 6678
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_faz3b_exit_modes.py",
+      "blob": "94e5dc4820c3561921112294ce19a5f41785716a",
+      "sha256": "98805e7e2ba1c7ed5a0e3d8df7657b86c525624f62ca889e7679ae0fc2e56f62",
+      "bytes": 14255
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_generate_producer_specs_promotion.py",
+      "blob": "47733746766663085f394b4dff29fb7742e08b1d",
+      "sha256": "b7e34480f5b7337554581688262466ea7f5b4058e17a292bd92f53933c60d765",
+      "bytes": 1647
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_progress_emitter.py",
+      "blob": "3044b6081fcd3dead0ded6469d3c6de5ec466c27",
+      "sha256": "58964fb4275a53fc5f2f233da4b0688f734c5e95dc2f146c4284b89b6acce527",
+      "bytes": 4290
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_promotion_gates_report.py",
+      "blob": "87117b80ff097f081cd9d1a625bdc873247d1e5b",
+      "sha256": "040af27bc0d9af283b1fc6b887bc3a20a1ba8c997e8a95b6e3952736c30410bd",
+      "bytes": 15273
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_registry_promotion_guard.py",
+      "blob": "9f38405c6f7378460affe4af99927a2e901a9e6a",
+      "sha256": "96b9613edf9142990b60f87b7d7ed906becf3b587a3d382a9723ea21d2a2c78e",
+      "bytes": 6687
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_run_emitter_supervisor.py",
+      "blob": "d4627cc4123e7f743d430c23de5e4b0b02a65364",
+      "sha256": "c82769170cfc01b200d6a9ba376c3259589fdfd4f5866a0d5c04a5b1287b9d43",
+      "bytes": 4399
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_run_watchdog.py",
+      "blob": "432896c49ffcc42e5356867cea812061c8137117",
+      "sha256": "92ee940bbad4a27bd0b5579adb45b84d93be0ac5a0d701c768d35cd830d98998",
+      "bytes": 2874
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_scorecard_honesty.py",
+      "blob": "36f7d67d13b63fc51992228a539bd64a86cc649b",
+      "sha256": "c3c7c85985024fbf7fdd7ba0df47ff8862c214e6e377a2225a1017815527cfe4",
+      "bytes": 18218
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_vertical_slice_contracts.py",
+      "blob": "ca6dfc6cc450b226207e664557ed6b64191054dc",
+      "sha256": "f9bde78b3bb66de553b125fa5b8649ed4452b675383b8c82170393a79af68b73",
+      "bytes": 7110
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_vertical_slice_receiver.py",
+      "blob": "8b62e028ccea4562d5fb9947c28026895acb03bf",
+      "sha256": "53ce14d4d407170a9cd3e08e7f56736304757a06c8c10bdf68281e342c0b06c4",
+      "bytes": 7859
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_vertical_slice_reconciler.py",
+      "blob": "cb6d12ff5cf367ccfb33807debc9c6baafb9974b",
+      "sha256": "ca30655e2c264fd7c69a06527bce52b65dd1358501a05efbb2d5baf3935d221b",
+      "bytes": 9487
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/test_vertical_slice_replay.py",
+      "blob": "bcf30a61b3d6bcaea5a7e77bfdc503146efe7b74",
+      "sha256": "7e7e258589b02df285b803dbdba82107ca56b23d2c4c9b4cf5848055b05bca2d",
+      "bytes": 10052
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/vertical_slice/constants.py",
+      "blob": "a03c16b11b4caad48da48251d80317fc36b8d606",
+      "sha256": "c1a8016e17f58ed3cb6054ca407e99281b33b45fe1a71f5b6b5bf0ce331d658f",
+      "bytes": 1129
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/vertical_slice/contracts.py",
+      "blob": "42ad0ee9609398cd89f67f204e88e98ac5fae146",
+      "sha256": "c0b38f8741f4327773a057921e46873fd4e25711ee880c7f4a633ff596f6dfc3",
+      "bytes": 6866
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/vertical_slice/local_receiver.py",
+      "blob": "d8242d73e08549af712d60318e3aa337b6ccbc4d",
+      "sha256": "6cee0fc07f103ceb45546d704111c04efe04091132efcf6373338d026b64937a",
+      "bytes": 4367
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/vertical_slice/reconciler.py",
+      "blob": "b6b5aede7e719cf0648079dd7f7f14a9f91ecaf7",
+      "sha256": "b5c0bc73164e99d728e3605c7efc167cc8584a0a27d007b2fd3013bbdbc7fdf3",
+      "bytes": 3771
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/vertical_slice/stg002_replay_emitter.py",
+      "blob": "22b5c1b7fbc559dd458a9c10b8861c57b8bc4085",
+      "sha256": "e1598714c713c8aac1d4217e516fa7adbe2291711ea4c37d11bb2b0b9b7f35fe",
+      "bytes": 7162
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/vertical_slice/__init__.py",
+      "blob": "f9642f7e6e61721c6c9ed9b2caa0f21a83050d1d",
+      "sha256": "61feb63962b77013d740218800c5cfc49b595606dbdc746fc8a9fb041ff0882e",
+      "bytes": 108
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/tests/goldens/faz3b/golden_cells.json",
+      "blob": "5bc727934c8f6ecb58b84ec30739e9426354c727",
+      "sha256": "f012f9e2ae06d55c26a570022b10c203a0b9c4b686fb4c98f8aa76809d3a8183",
+      "bytes": 98138
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/smoke_runs/smoke_20260603_overnight/MEGA_walk_forward_checkpoint.pkl",
+      "blob": "9396cc9f6f426d185bf0b5d57b736eeaf872f06d",
+      "sha256": "0f53c0c85739c4616005bd9702621f95f71f3df93383ce454d5705f7637004c6",
+      "bytes": 1109
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/smoke_runs/smoke_20260603_overnight/MEGA_walk_forward_partial.json",
+      "blob": "6f4599d44871f00a3196418370b573cdd0ffbc66",
+      "sha256": "f486040d959b135626634c9a11f1c360321aa3bed68dbb16e1fb21e749358999",
+      "bytes": 1510
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/smoke_runs/smoke_20260603_overnight/MEGA_walk_forward_report.md",
+      "blob": "32b655debf9c6125fcb5b3260b0a73433cdcfaf7",
+      "sha256": "93ce9afcda371ea1a977d7e7fef62e1a819bf137f37b38768c04a42b2c4a906f",
+      "bytes": 2043
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/smoke_runs/smoke_20260603_overnight/MEGA_walk_forward_results.json",
+      "blob": "9cb3b8c6ec0fb98301048a10aaebcd7785518b00",
+      "sha256": "def4f90ee932df5433173e09e0495e6c8e9e9def4f0ade1168464912d6ebbe8e",
+      "bytes": 2506
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/confirm_2026-06-04/AGGREGATE_night_confirm_2026-06-04.md",
+      "blob": "843176478fef365d1f13645669446e5cc7348b56",
+      "sha256": "4c70f11c4acc13ba30e9baccaa1e7b155706e30bd8577fe944a1ccd93a855dae",
+      "bytes": 5553
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/confirm_2026-06-04/confirm_run_attempt1_20260604_233125.log",
+      "blob": "7572c98de8f1cf17650218fa2f7d824fbe9e7ce7",
+      "sha256": "913680103025f91bc52d6af8669b5a5619aa92a2663a4e782e00b331fb9e73cf",
+      "bytes": 1545
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/confirm_2026-06-04/MEGA_results_iter_1_20260604_233125.json",
+      "blob": "4d2490c60686342933864e9fe1122c9471656d39",
+      "sha256": "77724c60ab3ba3e02f3f8d9f93c39e825de03003c2eaf77072f13e068a80aff7",
+      "bytes": 415169
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/AGGREGATE_night_2026-06-03.md",
+      "blob": "34b983d6c75e7c24ac81e1a4ed05aba8455d7799",
+      "sha256": "8f4fbc68dcb22af8de0b5ae5b623319595053632392b27a5010e886900f69b73",
+      "bytes": 40534
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_10_20260604_005032.md",
+      "blob": "2577d22de6a09d0a2249066d8e0d59fca484c9bf",
+      "sha256": "4bd3ee53adbbe7a15fafc08b23a6f8ce0246c85d52ef6c54a7cc4624c819b79a",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_11_20260604_012445.md",
+      "blob": "c1908c01d7bcba1dbe331225916403d27a3693c6",
+      "sha256": "b9194193b2fa827df7c42a6c682586d1d779f448c7466b87bbe1bcd2b0100b9e",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_12_20260604_015904.md",
+      "blob": "4c048da35b612a9cf1137cfdd8bea4a8da7972b4",
+      "sha256": "c204f5e3efa1a4f1b0b57d6ee20d50dfc883850d397e17aa85a265d4230a0cdc",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_13_20260604_023327.md",
+      "blob": "14455061900712f41ebdd68d5cbe52eb398a6ada",
+      "sha256": "198dd54acd91780b8b74b3e33bdbf97998279f874778a10743b370126465020f",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_14_20260604_030736.md",
+      "blob": "d5336b2bbccdc7d9aa0c01590cbf7caa1b185b8e",
+      "sha256": "c14e719f294bb84cafe3d87e132b48a156040808a9e4d1a727eeb17698110248",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_15_20260604_034151.md",
+      "blob": "b989e2ec4bec87f20533f2f30a1c22f3d85a8bbc",
+      "sha256": "caf35cd278ec6847e4539870bf574d2a5c3a5397eeb3d411b3636a780077b1ce",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_16_20260604_041612.md",
+      "blob": "8154fd5cebd45325bb6915b1275a3840fc183516",
+      "sha256": "8a79f4726c4fe4705e56e361fb6ee30fd4ddcdfc1900f26368cca538d7e1ece1",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_17_20260604_045034.md",
+      "blob": "0880c97078d1341d14ee1676a5d9d1da83769c5c",
+      "sha256": "f2ac88e66b28e24bb0125115e1e47ca8a5aeba952e7d797848ccf7bb97a96005",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_18_20260604_052448.md",
+      "blob": "9ce4f96a67e4094db8767abdf92943e78c111261",
+      "sha256": "6ed3c8545669c281260ce6ca170cb6b6566c56edafa877c31f8d60f68a079b08",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_19_20260604_055904.md",
+      "blob": "024455d900afd080bdf0e3de8392f861014d14aa",
+      "sha256": "20306e2fe9d7c62ba209b4d5d0049631f9b8c8092bc6c244fd4d15bcfa046504",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_1_20260603_193753.md",
+      "blob": "8d6c1497085eb0a9f8441f25b915a799310cebe2",
+      "sha256": "d37a2c56f55a109961a872a3fd14b717bf372a90bd2ddf8c79270ba50069dde2",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_20_20260604_063318.md",
+      "blob": "e4892d439829b8837ebfb46fce7ea8bbf14713ae",
+      "sha256": "7bd44df5b89b853fa0e5ecdc7a99f9ddfcf4e743eba9efcb5335ddb962589eff",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_2_20260603_201410.md",
+      "blob": "3a1c3df6fbe944477f62a5cadb5234016361017e",
+      "sha256": "f848930d0df8bf72722386938abd86b04f1b69aa7ba933690987a384e1f29053",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_3_20260603_204906.md",
+      "blob": "7f0db9bbff1d85db52e0995b4fba4b1d0fc41b53",
+      "sha256": "1801a00fb796aab6d9107bfa36cd3e3b1ae09a24d37a87e9e9bf7a0cda99b681",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_4_20260603_212343.md",
+      "blob": "2bf9d71f4f87cae97a9d96384905fdd0822c055e",
+      "sha256": "d08c6858b14e577a17c98fa926de9dcf9c791f6b1c3d838e3c9165e3babcc340",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_5_20260603_215810.md",
+      "blob": "a2378c525aec0a7cd8452899e2d7e5b568428a6b",
+      "sha256": "1b09634e8ccc75250e1a424bdf7ef666db59135e15f96e125bf4fbd8d6db6486",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_6_20260603_223244.md",
+      "blob": "3d4a96a6a552fba3adcc13478be642af6239fd82",
+      "sha256": "31a4147cdcade0a7e792ca920ece935176e75c0607c50785a5fd893f5a943cb1",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_7_20260603_230730.md",
+      "blob": "61b092ad1162f7b3e0785774ed9d7f8549f5b061",
+      "sha256": "18dcdb4f01763fccb69660b961bd9067f624ea7ce2ba97fa37e0d5ae6bd9d537",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_8_20260603_234157.md",
+      "blob": "58be50340c8502547ccf36371adbeae1adf9ca16",
+      "sha256": "f497f81c1eda43834b37238d23965e7fd9d45ec2db698f71eb27ec46ae22bdd9",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_report_iter_9_20260604_001619.md",
+      "blob": "a03cc50e26ead1be30cb0c0a17a55205af7e976d",
+      "sha256": "067a67a637d6e219eed5de1fd923f8c2dfc6f1b5fbebb20de2c3819f9d7b4418",
+      "bytes": 35434
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_10_20260604_005032.json",
+      "blob": "eba82f19800cbc3e40ef2cf0bf1c016cf6b97f47",
+      "sha256": "df0a2d7f5b825e81958b00f282a49a03aa575f7e00579135b66fb4eed4ca9304",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_11_20260604_012445.json",
+      "blob": "eedbd3c031e2989b4cf1e0db49f7b959552369ac",
+      "sha256": "805cf9d34a30255c45c0b989549a54582ccec72c8639ad4a99c429689b58c7b2",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_12_20260604_015904.json",
+      "blob": "44206a0162f31255bf93116a1ac8bfca5282ec02",
+      "sha256": "425e5d708565d8b90ecae1f94e3fdfb7b13f0fd2f7f0de52efd640e99050b313",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_13_20260604_023327.json",
+      "blob": "54515d4e297d14b94a6815cac5309b6fef130f83",
+      "sha256": "46e37c3d7df7d9c9907a8dca8319c5836fffdbba861d04b92354279a37834cce",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_14_20260604_030736.json",
+      "blob": "edc117367ba0d0266bacce6feeffdcf8cd0ae59c",
+      "sha256": "49ed45ff4c600a23b66191efdd284b52bc9c815dd854a8116421b785abfb7579",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_15_20260604_034151.json",
+      "blob": "81421dd40c46e5fa6f0f1589ed2d96318e41121e",
+      "sha256": "0ee5846430eb25f929365a34f1d7f3889925ae544f3b74e406d0fe2194672fd1",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_16_20260604_041612.json",
+      "blob": "2dfa80f1324caf322306ba6697a1e985ae11e5f5",
+      "sha256": "31eb7c5a800b560e33e14a2f1c100215014897a07f5b533970ed9b42d9339508",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_17_20260604_045034.json",
+      "blob": "6a202e8d7255ea60709cfd7415cc02ecf41ae3b9",
+      "sha256": "0abc5640c7b00fa1b00e4f4ae03657a64922e1950964f8939d9c6e503ee132fb",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_18_20260604_052448.json",
+      "blob": "c7d4ec6a3bbd4955fbaebf1475dcd136d8b2e961",
+      "sha256": "83218db2158123aed19ef2318369485b184bd8d6a1abacb15904b960cb7adb80",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_19_20260604_055904.json",
+      "blob": "1f88654622214750fc73c6df7ca92e6f0c9f7f1e",
+      "sha256": "49e02d1b5573f4939bdbe3215cc98eb14b19cccc05125cee6059217fbb4291bc",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_1_20260603_193753.json",
+      "blob": "aabfd60df6b1c434c84f714af2be9b7f789b1c84",
+      "sha256": "7bc388ea585c71b15d6bdb57cddccd329d1dfc8f5522ea3e88aa73e5b0b543d0",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_20_20260604_063318.json",
+      "blob": "ec2945cd66a41ad84328612811f1f381de33af34",
+      "sha256": "8742c7ede4dab7d398be553aff9939365d8f7dd7f8ac27d34a559bc14bd04d9d",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_2_20260603_201410.json",
+      "blob": "6d72bc90a6e3288d1da7a85e45ec76c065230ce7",
+      "sha256": "abc33855d04679653f05f9b450b61850b289985b9cca8b656695046dca46ccbc",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_3_20260603_204906.json",
+      "blob": "41ef006fbb7d809f08ff0af95da3c51c782299f3",
+      "sha256": "9fc0e3575165edab37d287c60222ae526271a6f34f10644c4683d9a72f0e645c",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_4_20260603_212343.json",
+      "blob": "4b5cf8a52992d11757ab504660023ba58eb29c40",
+      "sha256": "ca5295f12bf3349aa23bc2a437375ee96c8f9c2b67a1ce9ddcee827ed2fcff2e",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_5_20260603_215810.json",
+      "blob": "8dfa5c25689ec46b2f0c4aecd7c4d68af0f6a434",
+      "sha256": "2d752db8b20e9912ea7904f6ff146c4fdc0b664cc69de90fc7efd24ac5dbc3d2",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_6_20260603_223244.json",
+      "blob": "2e614f16518e188eb6a815c98403a86400c1a4a7",
+      "sha256": "719278508b8d6e70fa50174024fc35756afda6297cabb64d6311b60d7c4ed9ff",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_7_20260603_230730.json",
+      "blob": "a3f4207d48f89358ca1d395acb61472af4cd77fc",
+      "sha256": "eb5aed5004572ea72099b398bd676d5f73ddad2c62ee7145ec9a12fbac982b5b",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_8_20260603_234157.json",
+      "blob": "183b5229428a02fe2f70fb9f8a2ab927b268ea7d",
+      "sha256": "186b1145c60901d3b9744db635e293ddc611f83917333465ac7e954db8de9b31",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/MEGA_results_iter_9_20260604_001619.json",
+      "blob": "9e93911943254a9f8cd22ab4bcaa8172f1ed710d",
+      "sha256": "db58fd03cc40d0795faf3abb408dd387f55d4e90818c1a53bb50df8302212c0b",
+      "bytes": 4950549
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_10_20260604_005032.log",
+      "blob": "6ef95188a5f85a073d7f144c4604eceda3b5df61",
+      "sha256": "19fea9674f20d7ad2789e03784e11b100a47fcf5b78ec50b97a0405db750b86d",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_11_20260604_012445.log",
+      "blob": "764583e62c07becd90fbca6ed3ae7d7a7b436791",
+      "sha256": "0e00d1f0d2899846fa49a840102934fcc899c56cf69f148f030813c4c6a4da6d",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_12_20260604_015904.log",
+      "blob": "5a66b6e7e7cc19c3b0c4c1bd15a69e8b60e781d1",
+      "sha256": "aaa6761c1286f299984c8d026f8525affc08b4ce88e41a5504248c4abd1f80d6",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_13_20260604_023327.log",
+      "blob": "865a191fdfded37f18d2a551fca0bfc8c18a7049",
+      "sha256": "ea7991f7718f59217c47c1069f822b080cbc716e3843ee2f434bc117433b09a9",
+      "bytes": 3487381
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_14_20260604_030736.log",
+      "blob": "1f3bea1567ba1d67093d5033591d2907e6576d0c",
+      "sha256": "f7572edf839ae6e4e80bf9d7f2222248e0fc23de6ea75dbad104ba397197a009",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_15_20260604_034151.log",
+      "blob": "88e43be71f0f3c665aa9032993db69ed56c5c0fa",
+      "sha256": "0d3f98ae493e321caf7c59d6a8401b4ef7fcc9f3b93466556a07cb2c696698de",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_16_20260604_041612.log",
+      "blob": "a80b486cfd7495651b78295a800c7cd492ef680b",
+      "sha256": "23af5ab893275a19c03be7b65f5860944f056aa458a248ea261dea4311e8a9c2",
+      "bytes": 3487529
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_17_20260604_045034.log",
+      "blob": "c535f0990a9679da5e89fad6295ba7b33acf32b1",
+      "sha256": "0557f70f9cbf49f1af5634b52a1d3c58c4fa64e4027c06ff45161665b5e3e8ce",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_18_20260604_052448.log",
+      "blob": "6d268016f46e017242f6c05ca77bba7fe5bd47ea",
+      "sha256": "dd727617764538ffa94c10e13a56a10b06258c9d72dd60110d0d87f8fc67d4d0",
+      "bytes": 3487381
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_19_20260604_055904.log",
+      "blob": "ff3563d68c154aae8e86c3462d3e2b6afad9ccd5",
+      "sha256": "2ba371de727f0d6e1b9b57682d3bad56db10b05786c79e9987fac5546a47921c",
+      "bytes": 3487380
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_1_20260603_193753.log",
+      "blob": "4bed831522631e84b81f0d9035f2a2741c1993a7",
+      "sha256": "fdc69a7e59349794a0f4f341103f5f2d8842d67d54882efd5eb904fc36b07c9c",
+      "bytes": 3487655
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_20_20260604_063318.log",
+      "blob": "c230b87f00544103a9a738d014f5792dbea92055",
+      "sha256": "a5ca948aaa6af52c9a9bd14d3949d8716b9979693931c159a771b132bd80cd46",
+      "bytes": 3487529
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_2_20260603_201410.log",
+      "blob": "dd8284221c9a8bba4535cdd4945b5cb47bde2f94",
+      "sha256": "1e95f60233a9be03c232240a87ad6cb30ff0f89aa7c0d6af30afe6d9a21fdf90",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_3_20260603_204906.log",
+      "blob": "240a218675e9d41cfed047f2a0ed53343e23214b",
+      "sha256": "72c59d5bbb2d2c72d4441072d22d3fbbe229587454e716146bdd45e2fdb014c1",
+      "bytes": 3487381
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_4_20260603_212343.log",
+      "blob": "ab9ad968ef65eaaa05724e06e366787eb6f3b381",
+      "sha256": "610b46c36c3793a8be55c1e04fcf4a20d268b7800207762854bc7f75a6b4a9db",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_5_20260603_215810.log",
+      "blob": "6c841316592b7d9550d30c26389dcb04ecc89c27",
+      "sha256": "f49506b6992b3544dcb5aaeb1440587407782d714b1e2aed23946f358f2375c6",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_6_20260603_223244.log",
+      "blob": "09c0a7f8bb141ffc1dfd224a7082c499640eeca2",
+      "sha256": "f7fe02b45bb6721588a8f75654bce69b2e839b9bcb6e242892d5f2a3bf4b747a",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_7_20260603_230730.log",
+      "blob": "ee2bec1c729ae8d28c673e56bd9491b9d14023d3",
+      "sha256": "ae30597541d0cd8d9a777cd0e2701ac069073aeb186dd2d1c573ac4c6d308042",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_8_20260603_234157.log",
+      "blob": "b29547e45dcbb1b2894d2a0c4a335a3a838c36ff",
+      "sha256": "a96a749099a00a9a731877378c19f2c3bc5bbb04521bcbeabc76fa047649efa5",
+      "bytes": 3487530
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/night_runs/night_2026-06-03/v2_iter_9_20260604_001619.log",
+      "blob": "bd67101bcb8344933c8c6b5dbe243f568776ddd9",
+      "sha256": "6f015d391f1034e8a957032487ff7d78710f64031e634f1fcaca41bda877873b",
+      "bytes": 3487381
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/tools/create_optimization_data_bundle.py",
+      "blob": "daa877a56cb0ec87ae871c3189fa43085eaa2985",
+      "sha256": "5e5507fd784294c6b9ab8e502ced681dea26da0d3486963bf02addd99d247577",
+      "bytes": 36359
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/config.py",
+      "blob": "bbfa47f8acb3221902355b10fdbcec9d4d17d20c",
+      "sha256": "f80c69cf0f9f1b5cfdb771f5483a6a5692f164e7296a5f2d75fe28bb0fd7b5cf",
+      "bytes": 32236
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/confirmation.py",
+      "blob": "506aa06a0ebc021d78af82b32bf3d4e80dce07da",
+      "sha256": "585db0cedc4e045fea7dee1dde5daa2f90e4083968edac1b72611302b456a936",
+      "bytes": 3996
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economics.py",
+      "blob": "d7b8762de92ae8d69814d7d44f6d8699f1419194",
+      "sha256": "5353f27282e732655032747118d5174ccec473da61919a432498e6177a8503e5",
+      "bytes": 48539
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/exits.py",
+      "blob": "33a211413d979fadf3ee81802a7272692edf221f",
+      "sha256": "bd7c31c43576f16e29e8cb85149f57d5c67b237c8998b843201fc30c3d20d296",
+      "bytes": 26968
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/gates.py",
+      "blob": "7eace896a885dd8367fcce20de7c18785ca904e4",
+      "sha256": "8d48186a947de099a27f43aadafb5fbb14b0c9ce616553b46d9f2c369e58840d",
+      "bytes": 19843
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/htf.py",
+      "blob": "9999af1e5b34eb9d7e122069d0b526128121a214",
+      "sha256": "90144d4cc495532cb33c10a66dfed6b28e16a1116ee326db4e5ef1ef6d757eae",
+      "bytes": 7396
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/indicators.py",
+      "blob": "f82070abf0a94f7150b50814135e0b410416847e",
+      "sha256": "5379422f45be7c769e22ef41025267ebfae77ae1757667cd603d4e52fee1bb21",
+      "bytes": 1081
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/instrument.py",
+      "blob": "faa8dcc92a5c341137a6e321cfb6b0057805415d",
+      "sha256": "35a3924632dde008b4b3ce93ffa9abb8db6059191e4c3205df81ff86fac5124a",
+      "bytes": 15812
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/ma.py",
+      "blob": "64d85024f287b0d90cee32c3f3c723813e71f9c3",
+      "sha256": "19b03c2b9e668c941fd6a5cc116275c846f298d8cfe6f57a579b67e05f511a52",
+      "bytes": 15169
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_manager.py",
+      "blob": "4a5dd942b83ffbeac740c74202d917c8887647d0",
+      "sha256": "f3b8287e205554b9bcd0b555cc7674e4d6c46e8f631d8fd8f25bfa117bc2c3d8",
+      "bytes": 33567
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/position_sizer.py",
+      "blob": "9939f6ae9bbcfe84f088de1c32a2afc39699683b",
+      "sha256": "37e6c7426da13db06690d71e47d2f45c25a90a6272a9800d5537fed9c8be6f94",
+      "bytes": 3306
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/results.py",
+      "blob": "b418f5858720ffda58682d41f2a451e9315bd662",
+      "sha256": "d34b8e16ed22fa7111543c3d2da6f132be8f2353227ae932d493dbe8d2b0ef8a",
+      "bytes": 38231
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/rounding.py",
+      "blob": "74da73b65a231639422a23248da6168cf7f72466",
+      "sha256": "1e54abf6c93c382143cffd383b3d91cd99d6bc1a9f0bfe0f1ba62d3c432d2e43",
+      "bytes": 5777
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/runner.py",
+      "blob": "b88837e5a8f27cdc9a89ad425a1f2c88db94e73a",
+      "sha256": "f824818fe53120c8bfa92d1d01b20f202e64b979565d2e2b756019bd615d53fd",
+      "bytes": 110556
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
+      "blob": "7c478004271b221399962c0b74e2590c9d3824a3",
+      "sha256": "e6890faa10227da2b808d504a66d5f111b94186dd687e686d07c33a5885e9e3c",
+      "bytes": 1752
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/types.py",
+      "blob": "6a01e036a351af152a256bec217f6a8bb30e92e6",
+      "sha256": "bbb0b7b219baa2493aa1699a3e10dddecbb28d4d6bf4543cdfd6edc5038d7cec",
+      "bytes": 18387
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/__init__.py",
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json",
+      "blob": "efcb5c178e716ed4e673289671aca75f45654c00",
+      "sha256": "6ee6a34f0f1230973148e7392abdc11ec8409f06811d79fa6b65bcac104e3db5",
+      "bytes": 2800
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json.sha256",
+      "blob": "2f71fa3b6999c87ee2f8652ef7254fb175b9d407",
+      "sha256": "1b82b3a012c32f151abb3d201f2547be6703f80d01cb4427a36a307e5c1f4729",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-01-GREEN-V1.json",
+      "blob": "0582f3f47db444c90da49df58dfccbf098eb6435",
+      "sha256": "a18832f5574b75c4ffd2284e929b0c465f7b390a1724159f8d369dbc41ec4633",
+      "bytes": 1081
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-01-GREEN-V1.json.sha256",
+      "blob": "695627f7b479adc49002b6ee40895912d6ffd4be",
+      "sha256": "1bbf15d7e122636fa6d3c61f3b2b6de6acbf863075b7a1dda89ea2bd47a249eb",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-01-RED-V1.json",
+      "blob": "93e3d1b6d25bddc49bc9fb3264e0f3735d893ca4",
+      "sha256": "39e569711f4059329430402adc50543c392c4d358bd6ec8e78489718b185a3ce",
+      "bytes": 1075
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-01-RED-V1.json.sha256",
+      "blob": "d2ec0f637e932f6098c8c824ea0bcf0a7168dc35",
+      "sha256": "3d640620708d8cdea98edbafdea7a742fe9e81be009accc0bd3765dc30d403a3",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-02-GREEN-V1.json",
+      "blob": "f05d3c3a759af48b45879dc21ad3592e085b8e6f",
+      "sha256": "5d2fbe4f65f64e7b8b7ebf4cbb27c2b1daa43d7306655d883ae20822c3c44783",
+      "bytes": 1081
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-02-GREEN-V1.json.sha256",
+      "blob": "f3a70455821cf35832ca2c76dd335cf6ea83deca",
+      "sha256": "199b0557354773ae4496095f7d2425326bf33f24b663e51f2a016137552f16e2",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-02-RED-V1.json",
+      "blob": "be789616f9b054b525e684d5133653e6dbe091c6",
+      "sha256": "2ebdfd2a4080cc779951d05e14dfd76517a2f08faf567fb9900b533f3ad74ce7",
+      "bytes": 1075
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-02-RED-V1.json.sha256",
+      "blob": "cdfe182954be3bcf0f5931e9b34260f2183beefb",
+      "sha256": "e65038bbc604af1a4d83ac5e3c294f7b44cf62a0dfd0523049d5a8f9791b535a",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-03-GREEN-V1.json",
+      "blob": "f07d54880aadab56c98467934284ff9e449c84a9",
+      "sha256": "05ca006ccbba614eb0f8177181ac24d2e0b166d12db7826e00df79df279339c0",
+      "bytes": 1081
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-03-GREEN-V1.json.sha256",
+      "blob": "d7cf3ea2f337b2ef27d12ab51db9424050b462d9",
+      "sha256": "14be4d254d1b80cc6e1e49c5e7a7bdb1a022e445c4c88bded26cdd646270847b",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-03-RED-V1.json",
+      "blob": "1698735f84216ae961393bffa2b6b7dff3b7103a",
+      "sha256": "9f391fcb1d19d9d7ad23f18c079631d976a895e09e8de135eed315d04642f4bb",
+      "bytes": 1075
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-03-RED-V1.json.sha256",
+      "blob": "61f4ca4e6affe5673b23382e6dad09b566f0cb36",
+      "sha256": "a0eae8cfa4cd0c183e541b51d1ada289015d4255bbc95357712ada100b89de5e",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-04-GREEN-V1.json",
+      "blob": "eba6b0e2efa5c1d4a389cd7e3f7ab291614bcc24",
+      "sha256": "95ea0075173c08bd7f8c1ae3ea49b41432823e325abdf29f4fced10affac6272",
+      "bytes": 1081
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-04-GREEN-V1.json.sha256",
+      "blob": "f565f998574413fbbdc15db27f08fe7a728edc46",
+      "sha256": "ac3c9c8a195e01bbfdfbef5799ebe859aca245f40e0cf6b8cb1623b6635d4837",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-04-RED-V1.json",
+      "blob": "0cdc6beca7f2c4c58d701a4a64f0c4627ed7b3f6",
+      "sha256": "3376e72230dc21797202a0dab1a16173c0909846ed767eea38047aa7d0775e16",
+      "bytes": 1075
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-04-RED-V1.json.sha256",
+      "blob": "32e5e185b51dad39c2cbfcd70a96ae991d66c935",
+      "sha256": "2b666212e3db17ef81209404fa1166986aa0325b32dc5e3f90b5bc3cebd38f85",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-05-GREEN-V1.json",
+      "blob": "d6a1133834dbf03594078b1491a62b7a6375d133",
+      "sha256": "931974624690314deb43969bfe7721a81fd03380e2db36370791b403c5bf517d",
+      "bytes": 1081
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-05-GREEN-V1.json.sha256",
+      "blob": "601fcf0613472e9c6d26ea9f56965dd43fcd995b",
+      "sha256": "f08b5b98498de52ec6688e0d2732b4fdd70cca6431a916718514cf1100f26b0e",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-05-RED-V1.json",
+      "blob": "ee9afff745e8b94f9fb83c112630ef9b41a96413",
+      "sha256": "5e133f8b0ceec2069fedc53d8995b3e5ae66873344cbbe9500b139de6dd7c681",
+      "bytes": 1077
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-05-RED-V1.json.sha256",
+      "blob": "19a87770394f61020be1e0fd98fee4d1240cccd4",
+      "sha256": "c7a655eaafb8fb87de78d54d6874caab6420bc1f0ba758e98ce216494901474b",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-06-EQUAL-PRICE-RED-V1.json",
+      "blob": "c7756d642b7e34d723e9701dd3cf4fa5d9208317",
+      "sha256": "d0b3d31fac5e9cae42bcae54d63370f81b2a0a304f4e81a73fcbdf015c92223e",
+      "bytes": 1115
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-06-EQUAL-PRICE-RED-V1.json.sha256",
+      "blob": "4f35caada99e3bea17b771ba7087b5f62b4e98b4",
+      "sha256": "18317628aa7c92fbb8e2d5519fa757a6da4b7f60cd0bd259165396db117538f9",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-06-GREEN-V1.json",
+      "blob": "065ca0a67c0c4be42146b6da6bf127068361a5f0",
+      "sha256": "7d8510ce6ee3101754fb6d7ffb55fa09109c3d3dda07b7b4d01c0d99a7913abf",
+      "bytes": 1081
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-06-GREEN-V1.json.sha256",
+      "blob": "44d3fa27b450b45cc36150c538d8bf1b36f773cd",
+      "sha256": "6654c4b1cf20f469577021556f5dd0e74e523996e81321b82dac51595b792b41",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-06-RED-V1.json",
+      "blob": "ee72dcda6a95ac57144d3d7e062791f45bccdb60",
+      "sha256": "eac27b27e42a843404e09a3778a5cd960afdde269469b854358c44bb048dc9ee",
+      "bytes": 1075
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-06-RED-V1.json.sha256",
+      "blob": "2f10a90139ac7ed01f15f1358bfe37e7e23c3663",
+      "sha256": "2ad74c88f0fa7fddb3289ed2ff5317866841fbf66f8c7acb39600480d191e258",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-07-GREEN-V1.json",
+      "blob": "38295028bb51fa69d3151f8d6c7a86a77e3b94ec",
+      "sha256": "040c8366a3f5fa23876dea6165f170efd3b1f5f02e2a4774d2175db5586a41fe",
+      "bytes": 1079
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-07-GREEN-V1.json.sha256",
+      "blob": "fb0629c6a46f5e628bff8eeb3eb221b999ecc41f",
+      "sha256": "ad5d1c5f7f4f81b9ec9867ef478ca1165c8d8580461d63a5b4233f17ef56954d",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-07-RED-V1.json",
+      "blob": "50c02a5450a040a5fa36e09d9d974e7c23f89e01",
+      "sha256": "806e98512a3eb336538c8b68a52cef3ed80897cd2a87d9f270900c7ba094f29b",
+      "bytes": 1073
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/SYNTH-COST-RULE2-07-RED-V1.json.sha256",
+      "blob": "f790da29aab168a9daa26b2ff6da38de718f36c2",
+      "sha256": "a510ffcf4183e341e488246bf48442b3f57d0950ac95f33959a46f83de3f7ffd",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json",
+      "blob": "1a19a73b203410bfd3534d1191d12507c0de7f53",
+      "sha256": "8c6e8a1265686ad115f7cd2dc8a807f8a4ecea39b3d1a0664a2a968e329b09cd",
+      "bytes": 1988
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json.sha256",
+      "blob": "41f5eed226673d6ffc3c28a5fefcd12798394e07",
+      "sha256": "a42fd1a3f74106c29d7cc668d53717eb2ac56ff845deb476e2fe295528ffd940",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-01-GREEN-V1.json",
+      "blob": "ef7dedd4bde669df3c6e195399bcf41008db7456",
+      "sha256": "baeddddba25249877943f20fa72cebb348b0d37130ea4c1468ef98f04121eb68",
+      "bytes": 909
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-01-GREEN-V1.json.sha256",
+      "blob": "bed50ea09242fc5bf771b12506cef36e81aa6107",
+      "sha256": "4a8537395cec6892cf39e58d10e5fee4f59b687ae0df007bef09990b4acccad4",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-01-RED-V1.json",
+      "blob": "ba4e5c5c7784241866d707509f9a827b2c1c8f3c",
+      "sha256": "742910b2fc30c9d8c4f6ba447661230fad1ef7f71470c9f8aea846b0d06200c1",
+      "bytes": 903
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-01-RED-V1.json.sha256",
+      "blob": "a8731bb1cd6f92d7c3dbb487671e01e325387c64",
+      "sha256": "33f31a522cc010b17eeedce9e71c7ffcadf9d6494aee7c20f5c65f68f718bff5",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-02-GREEN-V1.json",
+      "blob": "5cbc9e59e6ec9b994549a8bd2933b15b2578c5c0",
+      "sha256": "ba87c50c8fb4ee594526eb45c0ba47e77ebd9d65270e8d9ee27d250394771957",
+      "bytes": 909
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-02-GREEN-V1.json.sha256",
+      "blob": "c1b6651109d652d819d91866986d06fa8192efd5",
+      "sha256": "1909257633991898fb75e5907d33c69d69fcb57c5b4b3cbd0335d2dca7aa109a",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-02-RED-V1.json",
+      "blob": "1d826c5b515d554df54bc8e552c4f91b2e6d4d58",
+      "sha256": "d73c96ed5cb8f8f3915f1ac4e69bbad85ceeaba7d56bd7c48644698d93d96968",
+      "bytes": 903
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-02-RED-V1.json.sha256",
+      "blob": "fa5b3c886bb96f1b87c25dfdfb66b673243e4427",
+      "sha256": "18c32fa207948864a7c26a2ead86cc03187c027ec22d8a4a3084963d602779fd",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-03-GREEN-V1.json",
+      "blob": "35e968e65ccbd27ae09d99d746883f172d8bfde5",
+      "sha256": "3e2e121e537ad234802ed82e2ce6a39a75ea3f51bdf1fd072febbede6717cbf0",
+      "bytes": 909
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-03-GREEN-V1.json.sha256",
+      "blob": "3c048dc59ef010f87baf81ada1d92bda4c64b7a4",
+      "sha256": "8bde8ef0ac67e9a1042a5ba8df4a46d1705cf28dfada15b3cd4957dad6e133c3",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-03-RED-V1.json",
+      "blob": "8259f672fc1f823ed640a123673414fd1f464d87",
+      "sha256": "38d3b55db92dc6f5c4864dd19a39492bd3306b01a10bc8767f08a1819c2eaf5f",
+      "bytes": 903
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-03-RED-V1.json.sha256",
+      "blob": "bd09cb95a1c0b44dd5df4cd55d86add6f40b165a",
+      "sha256": "4310a32db83bcfbc319828f52ffbba7eb452f6ddf1b60d859aabec3d2360adc7",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-04-GREEN-V1.json",
+      "blob": "914d2d81226dc9abf2cd6af7ee5b3144a29a8a77",
+      "sha256": "ba470d56e9468015f8b77a41bb0afa35dda930cb27e535bbb620e3a8abc10397",
+      "bytes": 909
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-04-GREEN-V1.json.sha256",
+      "blob": "06c174430316d07ec66b7c5a870155336aa73d4b",
+      "sha256": "342a64ae4586deca2ece152ece4fd7c44b7161d08c57d9cf3f50384241566349",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-04-RED-V1.json",
+      "blob": "a092cb3a27fd30022777ef211e6af4887b1c98b8",
+      "sha256": "963c1e3407b711dc8ad460958b952cefed81d0b4da4b638cbdca865481b90a36",
+      "bytes": 903
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-04-RED-V1.json.sha256",
+      "blob": "7ed6608a3fb50d2705f45c6cb7c6395263e1d4d7",
+      "sha256": "f1eb5fae08fbe9b4963ad2ba6864bc2aa8459f5bc5dfa8662c13d0638be19275",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-05-GREEN-V1.json",
+      "blob": "77f738cf5de4e39e0a067e10033217c7dcc1f018",
+      "sha256": "bd15cbfba5325a7496b0cbb91f16e6791e7455dc01a3e8d62eac025b79f00608",
+      "bytes": 909
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-05-GREEN-V1.json.sha256",
+      "blob": "bef8777cbe0c1f6ef34e8b70ec70472f3a10d841",
+      "sha256": "dcf519b9052dbd07862081e4389465a8b8d20b5675c701dfcf57b06a3b75f352",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-05-RED-V1.json",
+      "blob": "c513a205456bd9800cff56d79a2d5367723f0d98",
+      "sha256": "119ac0d21ed81d084bb4ca80d2b627dcf48e391f0a70173e402c9ff97382d0f6",
+      "bytes": 903
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-05-RED-V1.json.sha256",
+      "blob": "1a203211c2f7ec2da0a77543785b3b4352317cf9",
+      "sha256": "a7bbaddb6f6b1dfdbbde1c06e4262d640657fc0ea25d57ffcfdd0c9bcb4d16bb",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-06-EQUAL-PRICE-RED-V1.json",
+      "blob": "5252b6c34580a8f2e8afd04c07291227b53e3bd2",
+      "sha256": "93288e17b686ae9179aec7a38aca6d3f8dbbd37e23c85a09ba201dffcc0a8c6b",
+      "bytes": 943
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-06-EQUAL-PRICE-RED-V1.json.sha256",
+      "blob": "8f841561eb3836639bc6d21308d43e5d026da82b",
+      "sha256": "d332a6a03a8f8b0b52ba1e94f3fa44bf0ec12856701428268ce53be87bbeab55",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-06-GREEN-V1.json",
+      "blob": "1ffca7e6044fda95778e33ddaef47ac0c8b6c932",
+      "sha256": "f3df84929ce109d51f6b4ea82924ee0850404d3f4c1abc6885642fa5eeb1b313",
+      "bytes": 909
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-06-GREEN-V1.json.sha256",
+      "blob": "5022f78475a63eb6cd21104b590d084eed66fa68",
+      "sha256": "ca015b79df5edbdbe2f40a752d3488a15d4cd16b0a70a3387c51b78e83a397b6",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-06-RED-V1.json",
+      "blob": "ef42a61f97e8d6cd558497da209b8446867bad77",
+      "sha256": "48a51d3129b433131c79d841c5065a54b169c1d7bc6f95e54125767ff070277a",
+      "bytes": 903
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-06-RED-V1.json.sha256",
+      "blob": "09f7377484e62d474b9e07c0e9111c2379f6828e",
+      "sha256": "e319267142d2f37c78609e61d37a76c317c9cdb5158fe18bf9be8c9029a58462",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-07-GREEN-V1.json",
+      "blob": "6fe15340430996454f6587dfa2534ebbdafe2d96",
+      "sha256": "9e732a45d61e44c3d377200ef26a26a55d20eebb4213d300d03be109d10641ce",
+      "bytes": 909
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-07-GREEN-V1.json.sha256",
+      "blob": "ac8bf47aae61de7986af1fc43112640105702ba6",
+      "sha256": "e530e411037faa1e331c59f8f9f6c5c9b5dc821268be2a13e511287710967497",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-07-RED-V1.json",
+      "blob": "65e0a8e53090569fb8299ff6ab3903b4e19e6538",
+      "sha256": "c7c6001c331a518b31e05f5d9bcbabac2977dabf438aff4d58f10dce2bee4a19",
+      "bytes": 903
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-07-RED-V1.json.sha256",
+      "blob": "33b2b722d388ba0a88ecd2268092768dca8aeff2",
+      "sha256": "fcd00ce4b7afd991f82d36f15380e08f2ef273a8726bcfcafe3d566a7a85431d",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-08-V1.json",
+      "blob": "088c4475a1f0cc13411d1a6602a9bdad9d6bf628",
+      "sha256": "218aa518fec19ca53430891c8b445b6fba27d58c57aeaa0e5c819ec4e9ab9e73",
+      "bytes": 1172
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/SYNTH-FUNDING-RULE2-08-V1.json.sha256",
+      "blob": "14de3a4cf9663c6b9c126c19a1b3e38674883422",
+      "sha256": "0d3af31863138939f8065f8f557166036452e3ad907775f521349390904c01f7",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/HYPERLIQUID-BTC-PERP-V1.3.json",
+      "blob": "fd8a0c10881f70211c173a929777954752a7fd9c",
+      "sha256": "5abb99abbdb9735e95ad1084c706a3c5326fb6bb134e48a79e9bb0992b68316a",
+      "bytes": 18098
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/HYPERLIQUID-BTC-PERP-V1.3.json.sha256",
+      "blob": "4765e2907b99a59ab41e34f8799a95e2f38f756f",
+      "sha256": "f758fe63e5e072fce4bb069a5ddb2279a087a5edc797e326ce6bd42d4096cbf1",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-GREEN-V1.json",
+      "blob": "7fbdad6b5aeadde1905133de1145919753b4382a",
+      "sha256": "2d8a75cb156c2d2709d5a505a6d1b267e6608cfef5a577f61f2a506382dbe3dd",
+      "bytes": 870
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-GREEN-V1.json.sha256",
+      "blob": "3fa68b63380ab4ef6abb71afe45ee77ce55478ca",
+      "sha256": "6514a2d195e1edfdb5183ea9207bd59d55bbd1a03de9853f5806f8258311d200",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-RED-V1.json",
+      "blob": "9dfa6612b9ec84379c136ff164d13c4c1bae397d",
+      "sha256": "e3612111ca302bc86dfac316efb80d08aac12a8312287e7117b0115f289e1e5d",
+      "bytes": 864
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-01-RED-V1.json.sha256",
+      "blob": "25018c8fa89e0ae8254476898db6d829485b09cd",
+      "sha256": "ff4da23c0074b8c01a91306ae531b7607f7ac6b20ec9e5c7f678cd97b632710e",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-GREEN-V1.json",
+      "blob": "7d98be513a71ec0fd84bca7f125e53e5f77aa3dc",
+      "sha256": "b3d480a84a2eb716bab12dca46483cb0372a64eb2cdbb85072521a103982c817",
+      "bytes": 872
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-GREEN-V1.json.sha256",
+      "blob": "b938d9ce10a3c3c9d4e72bd0c248b95af2aee254",
+      "sha256": "07ed8dbe08ced813c946d6001837f8636cefd8a5027a13b59fd0885c8b1077f7",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-RED-V1.json",
+      "blob": "8bed3bc9b69404eb20ae7e23040684f4cb9f83bb",
+      "sha256": "527ae2deeb8360548c32d98cc7d3b0907288acb8549f6aace331852e18411946",
+      "bytes": 866
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-02-RED-V1.json.sha256",
+      "blob": "ad30c0595e65e344968170ccde14ed9a194c7773",
+      "sha256": "654ca10f7753004d453a87ce1a9e883ba0495b35aa1637b81a5003858d6c741e",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-GREEN-V1.json",
+      "blob": "d530e60be401c901065b25e9b7525652effbfce8",
+      "sha256": "dbc58337b036055593aaa88be054e405375204450e72a50612b0dd68179d9585",
+      "bytes": 872
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-GREEN-V1.json.sha256",
+      "blob": "e4dbca433a263054b011b412fd7aca53ebf432ff",
+      "sha256": "b816effe155c6d8194be54664fcdd057bb066dc8c41f1ca10416156324984124",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json",
+      "blob": "41146a874cd582a0e171abac4e54465754931980",
+      "sha256": "498ae36ea28a7f40df519724b1fb80d98a68c7261cda8fc7c0c3d6893c909a9a",
+      "bytes": 866
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-03-RED-V1.json.sha256",
+      "blob": "e082075319709e0344157dc7b802eb0f17bbb0ca",
+      "sha256": "f214fd41d45d797abd927479f84021478acd06bbdd6b59b39fbdf5565261dd77",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-GREEN-V1.json",
+      "blob": "981d782eecc85d62e16f0fdc97f9063f23619aaa",
+      "sha256": "f71d1ab990f1da3d9c55e1960f79af91330908e0927c2b2e54f2020a9f596a11",
+      "bytes": 870
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-GREEN-V1.json.sha256",
+      "blob": "9ccefdcab149b7a0837bbea39f4d1d298b3b8624",
+      "sha256": "47fb7d6e6c0f68952038082d643417c770edd8a14eae4a7a1ad76493229f7339",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-RED-V1.json",
+      "blob": "3501356ecf2733d092c58c9758e3ef694492b39c",
+      "sha256": "6b707ef71df5e4b6565d2a5ee07a7c5cecc8805ed6b1a8ac9c8f0e4b613850ab",
+      "bytes": 864
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-04-RED-V1.json.sha256",
+      "blob": "54952789c1a1aa0c0ecb2b6cb4c664fecb05a31a",
+      "sha256": "a9687844fa580286a0ef9e27cbdb7c57d7cac1eac03eaf6ed7f1a2f0d18901ef",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-GREEN-V1.json",
+      "blob": "a3f530270ac6654f0f18d7af96f572d2a2c128ba",
+      "sha256": "5a101048abd939ecb89470a4125b209b322944764aee924b18a6dbea2540391a",
+      "bytes": 873
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-GREEN-V1.json.sha256",
+      "blob": "fbbbacf4c4d31a0108bf60f5129f3a3371d1b886",
+      "sha256": "fab419f245afb77dfd53a9d5bf3c3523cc40cacdbf5fb768f8a320c1c4e2cb4d",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-RED-V1.json",
+      "blob": "6fa3b0e8974d4d52319b65801d9e84e936558602",
+      "sha256": "fcffb9aee0b759f30f8822d2360f6a3a7fdb747389c055e691ebdb0879dd7e51",
+      "bytes": 867
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-05-RED-V1.json.sha256",
+      "blob": "23744f90d3e1927d12c8c54b85b967eb667127b8",
+      "sha256": "083be644b649a021764f8cacf4f4113f106bdc359426ffae05a27bae4d31cdae",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-EQUAL-PRICE-RED-V1.json",
+      "blob": "de2668a8fa7aeacb43bfb1258a82c392d99163c9",
+      "sha256": "61b54a3761e99a2669506f1a4c785dc3d70e6abdbb9d993755935e0c93069a63",
+      "bytes": 904
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-EQUAL-PRICE-RED-V1.json.sha256",
+      "blob": "6c21ac93df5cd72766e608d430fe292fa27e2c22",
+      "sha256": "7083dda1029eb115eddd0e8ac4a32b1179aef098230866302b56224c0a98ac74",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-GREEN-V1.json",
+      "blob": "6610a6a221efa6bfe16f4232e6f6513351281e61",
+      "sha256": "3039159a5b35c7bbae8f481abbe99b9a6bb6d376b86bd0e71129edddde249d64",
+      "bytes": 870
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-GREEN-V1.json.sha256",
+      "blob": "31b1d042d7c1fca7f9a14077c5d916ba7b29d755",
+      "sha256": "7e68da2693b8617b4419bda7d91dcb98fffd240edde8c0fd1befa87c5b6066c4",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-RED-V1.json",
+      "blob": "54b65b7af831786375fd4f1e5b36548f324118ee",
+      "sha256": "da5428f48b4b8141af15cf81bb25653ef8838f2694c00ec32083de1459f318d4",
+      "bytes": 864
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-06-RED-V1.json.sha256",
+      "blob": "b44ec5b0ad699e544558cdf389c455f95035dda1",
+      "sha256": "87009ab2b3ea3a7a3213751aa9f3eb94a3ed4accdfbb0553f24aa6b105ac71be",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-GREEN-V1.json",
+      "blob": "5bd8ef0e17518dfa1feea833431bdcfabee58068",
+      "sha256": "ae208b1e578362f005f11ebe48addc4b405950fc63c0f57cf9853c3eedc1e614",
+      "bytes": 870
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-GREEN-V1.json.sha256",
+      "blob": "9fb87d03c0bebc54d96cab6c90772ce87dbaa846",
+      "sha256": "7b49178fa6bd1311a0ae9cf35bb8c2c74477da22b7110bad1faa5ac10c67596c",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-RED-V1.json",
+      "blob": "82511197cd5c461416a7a51fd663f935d1285f53",
+      "sha256": "f25b99e512c1efe24eebd10326cd39c7c370723d39c9c3ca5ec3c29851268df4",
+      "bytes": 864
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-07-RED-V1.json.sha256",
+      "blob": "aafcbe23387fc1bb4cab26ad77c6623f5a267b00",
+      "sha256": "421d114f6b583dedee936f67f12f23bb30b95369d2ce8237c57e08a7d6867575",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-GREEN-V1.json",
+      "blob": "ce3c62e21d3d934582421704d0a2ac2d50b37f00",
+      "sha256": "20adf2749d255efd3fe281ec3ead2e07df0a36a5ad59718a54d0a1a7c0712b17",
+      "bytes": 873
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-GREEN-V1.json.sha256",
+      "blob": "696057762a8943ea85e74d5895dafc821767df34",
+      "sha256": "6699ba8dbebda92471f36ec3aa315a4655d8d180b75e6d4dfdc7f50b576b294f",
+      "bytes": 65
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-RED-V1.json",
+      "blob": "8d313737f91b8cb5d907fd1b2b6096c0fbcd96a2",
+      "sha256": "1316ce06307a6fbf01fa7c007146df2bf7525bed385fbbf0045d29129d9f7a71",
+      "bytes": 867
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/instruments/SYNTH-INSTRUMENT-RULE2-08-RED-V1.json.sha256",
+      "blob": "b700995f57a64f7b7d0717d4526b0e2948bd14f7",
+      "sha256": "3a9bf077e654e9c8ae600b0c6b16bc2aca11bd1fe7a43b2508cf606ff12728b8",
+      "bytes": 65
+    }
+  ]
+}

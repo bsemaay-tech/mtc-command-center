@@ -1,0 +1,26 @@
+{
+  "python": "3.12.12",
+  "expected_archive_replay": "IDENTICAL_REPLAY_NOOP",
+  "observed_archive_replay": "IDENTICAL_REPLAY_NOOP",
+  "observed_identical_ingest": "REFUSED: bar sequence is non-increasing or off interval",
+  "expected_persisted_rows": 1,
+  "observed_persisted_rows": 1,
+  "gap_input": [
+    0,
+    2700000
+  ],
+  "gap_observed": {
+    "symbol": "BTC",
+    "interval": "15m",
+    "window_start": 900000,
+    "window_end": 2700000,
+    "missing_bars": 2
+  },
+  "gap_independent_expected": {
+    "symbol": "BTC",
+    "interval": "15m",
+    "window_start": 900000,
+    "window_end": 2700000,
+    "missing_bars": 2
+  }
+}

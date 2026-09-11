@@ -1,0 +1,29 @@
+{
+  "status": "EXPECTED_VALUES_DERIVED_STDLIB_ONLY; TARGET_FIXTURES_NOT_EXECUTED",
+  "package_preimage": "{\"exact_params_json\":{\"n\":1},\"instrument_metadata_json\":{\"symbol\":\"BTC\"},\"kernel_code_sha\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"modules_enabled_json\":[\"mod\"],\"spec_json\":{\"k\":\"v\"},\"substitute_catalogue_versions_json\":{\"cat\":\"1\"}}",
+  "package_hash": "9c7adc2a9f34aaaf46b264d13b2f9dbf47c869f67ab8842c448c16526f26d4dc",
+  "evaluation_preimage": "{\"cost_model_json\":{},\"dataset_manifest_sha\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"evaluation_config_json\":{},\"package_hash\":\"9c7adc2a9f34aaaf46b264d13b2f9dbf47c869f67ab8842c448c16526f26d4dc\",\"simulator_class\":\"CANONICAL\",\"simulator_version\":\"1\"}",
+  "evaluation_hash": "a06ff5247611889ede3aa8eae67a9d8f32a37cc18f17708d154cbb949c7b1662",
+  "family_preimage": "{\"parameter_neighbourhood\":{\"approved_search_space\":\"FB022-SPACE-1\"},\"producer\":\"FB022-PROD\",\"source_provenance\":{\"src\":\"FB022\",\"strategy\":\"FB-STG-A\"}}",
+  "family_id": "FAM-e1b5a524cd606fad",
+  "backup_literal_utf8": "{\"row\":1}\n",
+  "backup_sha256": "c805f1e47450a7698e2e0b9f59b08d1f8945598a99ef24b5f25dbe046567307f",
+  "feb1_utc_ms": 1769904000000,
+  "gap_mutant": {
+    "timestamps": [
+      0,
+      900,
+      3600
+    ],
+    "m": 3,
+    "deltas": [
+      900,
+      2700
+    ],
+    "missing": 2,
+    "expected": 5,
+    "M1_at_1_5_step": "1/2",
+    "M2": "2/5",
+    "M3": "1/2"
+  }
+}

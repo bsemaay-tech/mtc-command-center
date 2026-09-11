@@ -1,0 +1,61 @@
+FAIL  ledger_store/ledger.jsonl: sha256 mismatch: manifest=d720a54e5d3aeff8� actual=d121be3103007b41�
+error: ledger_store/ledger.jsonl: sha256 mismatch: manifest=d720a54e5d3aeff8� actual=d121be3103007b41�
+ERROR store 'ghost': source path does not exist: C:\tmp\P0_OVERNIGHT_CONTROL_20260912\qa\tmp\opsa_test_nxm6hipc\nope
+FAIL  ledger_store/sub/blob.bin: sha256 mismatch: manifest=785b0751fc2c53dc� actual=82327d431835e86d�
+error: ledger_store/sub/blob.bin: sha256 mismatch: manifest=785b0751fc2c53dc� actual=82327d431835e86d�
+error: no heartbeat files found and no --expect ids given (watching nothing cannot be OK)
+error: invalid --now value: Invalid isoformat string: 'not-a-timestamp'
+error: state dir does not exist: C:\tmp\P0_OVERNIGHT_CONTROL_20260912\qa\tmp\opsa_wd_t_9chzv3\gone
+----------------------------------------------------------------------
+Ran 33 tests in 0.877s
+
+OK
+{"mode": "backup", "run_id": "opsa-20260911T220714.697Z", "backup_root": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_f2imbnb8\\backups", "stores": ["ledger_store"], "started_at": "2026-09-11T22:07:14Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8� readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc� readback=match
+{"run_id": "opsa-20260911T220714.697Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "finished_at": "2026-09-11T22:07:14Z"}
+{"mode": "dry-run", "run_id": "opsa-20260911T220714.771Z", "backup_root": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_dk5kqjv0\\backups", "stores": ["ledger_store"], "started_at": "2026-09-11T22:07:14Z"}
+PLAN  ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8�
+PLAN  ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc�
+{"run_id": "opsa-20260911T220714.771Z", "status": "ok", "files": 0, "bytes": 0, "errors": 0, "finished_at": "2026-09-11T22:07:14Z"}
+{"mode": "backup", "run_id": "opsa-20260911T220714.787Z", "backup_root": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_xux58b8h\\backups", "stores": ["ledger_store"], "started_at": "2026-09-11T22:07:14Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8� readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc� readback=match
+{"run_id": "opsa-20260911T220714.787Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "finished_at": "2026-09-11T22:07:14Z"}
+{"mode": "backup", "run_id": "opsa-20260911T220714.814Z", "backup_root": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_xux58b8h\\backups", "stores": ["ledger_store"], "started_at": "2026-09-11T22:07:14Z"}
+OK    ledger_store/ledger.jsonl size=28 sha256=ca5f3b5695556696� readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc� readback=match
+{"run_id": "opsa-20260911T220714.814Z", "status": "ok", "files": 2, "bytes": 1052, "errors": 0, "finished_at": "2026-09-11T22:07:14Z"}
+{"mode": "restore", "run_id": "opsa-20260911T220714.814Z", "manifest": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_xux58b8h\\backups\\manifest.jsonl", "target": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_xux58b8h\\restored", "records_selected": 3, "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=ca5f3b5695556696�
+RESTORED ledger_store/sub/blob.bin sha256=785b0751fc2c53dc�
+{"mode": "restore", "run_id": "opsa-20260911T220714.814Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 1, "errors": 0, "finished_at": "2026-09-11T22:07:14Z"}
+{"mode": "backup", "run_id": "opsa-20260911T220714.870Z", "backup_root": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_mjsxldjd\\backups", "stores": ["ledger_store"], "started_at": "2026-09-11T22:07:14Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8� readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc� readback=match
+{"run_id": "opsa-20260911T220714.870Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "finished_at": "2026-09-11T22:07:14Z"}
+{"mode": "backup", "run_id": "opsa-20260911T220714.898Z", "backup_root": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_mjsxldjd\\backups", "stores": ["ledger_store"], "started_at": "2026-09-11T22:07:14Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8� readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc� readback=match
+{"run_id": "opsa-20260911T220714.898Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "finished_at": "2026-09-11T22:07:14Z"}
+{"mode": "backup", "run_id": "opsa-20260911T220714.933Z", "backup_root": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_nxm6hipc\\backups", "stores": ["ghost"], "started_at": "2026-09-11T22:07:14Z"}
+{"run_id": "opsa-20260911T220714.933Z", "status": "partial", "files": 0, "bytes": 0, "errors": 1, "finished_at": "2026-09-11T22:07:14Z"}
+{"mode": "backup", "run_id": "opsa-20260911T220714.953Z", "backup_root": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_h094dw4y\\backups", "stores": ["ledger_store"], "started_at": "2026-09-11T22:07:14Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8� readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc� readback=match
+{"run_id": "opsa-20260911T220714.953Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "finished_at": "2026-09-11T22:07:14Z"}
+{"mode": "backup", "run_id": "opsa-20260911T220715.240Z", "backup_root": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_afh482g8\\backups", "stores": ["ledger_store"], "started_at": "2026-09-11T22:07:15Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8� readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc� readback=match
+{"run_id": "opsa-20260911T220715.240Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "finished_at": "2026-09-11T22:07:15Z"}
+{"mode": "restore", "run_id": "opsa-20260911T220715.240Z", "manifest": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_afh482g8\\backups\\manifest.jsonl", "target": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_afh482g8\\restored", "records_selected": 3, "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=d720a54e5d3aeff8�
+{"mode": "restore", "run_id": "opsa-20260911T220715.240Z", "status": "failed", "verified_against_manifest": 1, "restored": 1, "overwritten": 0, "dirs_recreated": 1, "errors": 1, "finished_at": "2026-09-11T22:07:15Z"}
+{"mode": "backup", "run_id": "opsa-20260911T220715.322Z", "backup_root": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_uuy09o2r\\backups", "stores": ["ledger_store"], "started_at": "2026-09-11T22:07:15Z"}
+OK    ledger_store/ledger.jsonl size=51 sha256=d720a54e5d3aeff8� readback=match
+OK    ledger_store/sub/blob.bin size=1024 sha256=785b0751fc2c53dc� readback=match
+{"run_id": "opsa-20260911T220715.322Z", "status": "ok", "files": 2, "bytes": 1075, "errors": 0, "finished_at": "2026-09-11T22:07:15Z"}
+{"mode": "restore", "run_id": "opsa-20260911T220715.322Z", "manifest": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_uuy09o2r\\backups\\manifest.jsonl", "target": "C:\\tmp\\P0_OVERNIGHT_CONTROL_20260912\\qa\\tmp\\opsa_test_uuy09o2r\\restored", "records_selected": 3, "manifest_malformed_lines": 0}
+RESTORED ledger_store/ledger.jsonl sha256=d720a54e5d3aeff8�
+RESTORED ledger_store/sub/blob.bin sha256=785b0751fc2c53dc�
+{"mode": "restore", "run_id": "opsa-20260911T220715.322Z", "status": "ok", "verified_against_manifest": 2, "restored": 2, "overwritten": 0, "dirs_recreated": 1, "errors": 0, "finished_at": "2026-09-11T22:07:15Z"}

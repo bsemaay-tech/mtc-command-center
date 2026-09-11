@@ -1,0 +1,12 @@
+{
+  "merge": "2e8a649a9052429b60b236dbab8b8376d8d5b065",
+  "baseline": "42f99571e6abb5222744d9345e1c8a9e19c23c15",
+  "is_ancestor": true,
+  "message": "Merge pull request #140 from bsemaay-tech/feature/registry-promotion-guard-20260829\n\nfeat(registry): promotion guard - refuse labels the checks never granted (owner: freeze)",
+  "source": "MTC_COMMAND_CENTER/03_QUANTLENS/tools/build_strategy_research_registry.py",
+  "symbols": {
+    "_promotion_maturity": 571,
+    "build_strategy_entry_guard": 625
+  },
+  "finding": "PR140 promotion-label guard is merged and present. It is not an immutable P013 package freeze/enumeration store. No new registration-freeze retrieval blocker."
+}

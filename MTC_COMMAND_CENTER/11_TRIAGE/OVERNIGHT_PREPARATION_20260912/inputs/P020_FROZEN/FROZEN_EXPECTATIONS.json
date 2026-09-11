@@ -1,0 +1,1839 @@
+{
+  "frozen_at_utc": "2026-09-11T22:31:28.882225+00:00",
+  "source": "42f99571e6abb5222744d9345e1c8a9e19c23c15",
+  "sizing": {
+    "purpose": "Independent literal sizing expectations for the P020 four-method allocator successor. Synthetic constants only; no owner policy value. Decimal numbers serialized as strings.",
+    "snapshot_pin": "42f99571e6abb5222744d9345e1c8a9e19c23c15",
+    "cases": [
+      {
+        "case_id": "sizing_001_risk_at_stop_baseline",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.01",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "proposed_qty": "2",
+          "notional": "200",
+          "money_at_risk": "10"
+        },
+        "derivation": "money_at_risk = 1000 * 0.01 = 10; per_unit_risk = 5 * 1 = 5; position_size = 10 / 5 = 2; floor to qty_step 1 = 2; notional = 2 * 100 * 1 = 200; realised risk fraction = 10 / 1000 = 0.01 <= 0.10; leverage = 200 / 1000 = 0.2 <= 1.0; exposure = 0.2 <= 1.0; no cap binds.",
+        "source": "inputs/source/shared_risk_calculator.py:52-111 calculate_position_size, :169-198 quantise_position_size, :262-300 resolve_proposed_qty",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_002_risk_at_stop_round_down",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "3",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.01",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "pre_quantise_position_size": "3.333333333333333333333333333",
+          "proposed_qty": "3",
+          "notional": "300",
+          "realised_money_at_risk": "9"
+        },
+        "derivation": "money_at_risk = 10; per_unit_risk = 3; position_size = 10 / 3 = 3.333... (PREC 28, ROUND_DOWN); floor to qty_step 1 = 3; notional = 3 * 100 = 300; realised risk = 3 * 3 = 9 (fraction 0.009). Rounding DOWN never proposes more risk than requested.",
+        "source": "inputs/source/shared_risk_calculator.py:97 position_size division, :186-187 ROUND_DOWN quantise",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_003_min_qty_refusal",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.001",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "0.1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "min_qty"
+        },
+        "derivation": "money_at_risk = 1000 * 0.001 = 1; per_unit_risk = 5; position_size = 0.2; quantise to qty_step 0.1 = 0.2; 0.2 < min_qty 1 -> refuse min_qty. No smaller-than-minimum trade is proposed.",
+        "source": "inputs/source/shared_risk_calculator.py:196-197 min_qty refusal",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_004_min_notional_refusal",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.01",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "500"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "min_notional"
+        },
+        "derivation": "position_size = 2; quantised qty = 2; notional = 2 * 100 * 1 = 200; 200 < min_notional 500 -> refuse min_notional. Minima are rejections, never a qty bump to satisfy the floor.",
+        "source": "inputs/source/shared_risk_calculator.py:289-290 min_notional refusal",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_005_fixed_qty_baseline",
+        "inputs": {
+          "sizing_method": "FIXED_QTY",
+          "requested_fixed_qty": "3",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "stop_price": "95",
+          "contract_multiplier": "1",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "proposed_qty": "3",
+          "notional": "300"
+        },
+        "derivation": "Declared quantity 3; same quantise (floor to step 1 = 3), minima (3 >= min_qty 1), notional = 3 * 100 = 300 >= min_notional 100; leverage = 300 / 1000 = 0.3 <= 1.0 (account_size 1000 explicit). No cap binds. Proposed method: FIXED_QTY is enum-only in sizing.py:17-21, not executable in the corrected kernel 2.0.0.",
+        "source": "inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/sizing.py:17-21 SizingMethod, :47-63 requested_fixed_qty; inputs/IMPLEMENTATION_HANDOFF.md:58 FIXED_QTY",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_006_fixed_qty_leverage_cap_full_reject",
+        "inputs": {
+          "sizing_method": "FIXED_QTY",
+          "requested_fixed_qty": "20",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "stop_price": "95",
+          "contract_multiplier": "1",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "cap_leverage"
+        },
+        "derivation": "qty = 20; notional = 20 * 100 = 2000; leverage = 2000 / 1000 = 2.0 > max_leverage 1.0 (account_size 1000 explicit) -> cap_leverage. Full rejection, never a trimmed qty of 10 (the kernel's min() clamp). Contrast with sizing_012.",
+        "source": "inputs/source/shared_risk_calculator.py:256-257 cap_leverage rejection",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_007_fixed_notional_baseline",
+        "inputs": {
+          "sizing_method": "FIXED_NOTIONAL",
+          "requested_fixed_notional": "300",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "stop_price": "95",
+          "contract_multiplier": "1",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "proposed_qty": "3",
+          "notional": "300"
+        },
+        "derivation": "qty = requested_fixed_notional / (entry_reference_price * contract_multiplier) = 300 / (100 * 1) = 3; floor to step 1 = 3; notional = 300; leverage = 300 / 1000 = 0.3 <= 1.0 (account_size 1000 explicit). Proposed method: FIXED_NOTIONAL is enum-only, not executable in kernel 2.0.0.",
+        "source": "inputs/IMPLEMENTATION_HANDOFF.md:59 FIXED_NOTIONAL; inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/sizing.py:50 requested_fixed_notional",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_008_fixed_notional_round_down",
+        "inputs": {
+          "sizing_method": "FIXED_NOTIONAL",
+          "requested_fixed_notional": "250",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "stop_price": "95",
+          "contract_multiplier": "1",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "proposed_qty": "2",
+          "realised_notional": "200"
+        },
+        "derivation": "qty = 250 / 100 = 2.5; floor to qty_step 1 = 2; realised notional = 2 * 100 = 200; leverage = 200 / 1000 = 0.2 <= 1.0 (account_size 1000 explicit). Quantisation precedes cap/minima checks and rounds DOWN, so realised notional never exceeds declared notional.",
+        "source": "inputs/IMPLEMENTATION_HANDOFF.md:59, :54-60 proposed successor OPEN sequence",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_009_volatility_target_baseline",
+        "inputs": {
+          "sizing_method": "VOLATILITY_TARGET",
+          "target_volatility": "0.1",
+          "observed_volatility": "0.2",
+          "estimator_id": "SYNTH-OBS-SAME-INTERVAL",
+          "observed_estimator_id": "SYNTH-OBS-SAME-INTERVAL",
+          "volatility_convention": "target and observation measured over the same interval",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "contract_multiplier": "1",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "proposed_qty": "5",
+          "notional": "500"
+        },
+        "derivation": "notional_budget = account_size * (target_volatility / observed_volatility) = 1000 * (0.1 / 0.2) = 500; qty = 500 / (100 * 1) = 5; notional = 500; stop_distance 5 and stop_price 95 explicit; realised money_at_risk = 5 * 5 * 1 = 25, fraction 0.025 <= max_risk_at_stop_fraction 0.10. estimator_id = observed_estimator_id = SYNTH-OBS-SAME-INTERVAL: target and observation share the same interval convention. PROPOSED method only: VOLATILITY_TARGET is enum-only in sizing.py:21; no kernel/RA branch exists; no estimator or annualization is implemented. Derived from the design formula in IMPLEMENTATION_HANDOFF.md:60.",
+        "source": "inputs/IMPLEMENTATION_HANDOFF.md:60 VOLATILITY_TARGET; inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/sizing.py:21",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_010_volatility_target_estimator_refusal",
+        "inputs": {
+          "sizing_method": "VOLATILITY_TARGET",
+          "target_volatility": "0.1",
+          "observed_volatility": null,
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "contract_multiplier": "1",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "VOLATILITY_TARGET_REFUSED"
+        },
+        "derivation": "Missing estimator output -> refuse. Missing, nonpositive, nonfinite or insufficient-history estimator output refuses; no implicit estimator or target. PROPOSED refusal token; not shipped. No default volatility is substituted.",
+        "source": "inputs/IMPLEMENTATION_HANDOFF.md:60 no implicit estimator or target",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_011_risk_at_stop_cap_full_reject_not_clamp",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.05",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.02",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "cap_risk_at_stop"
+        },
+        "derivation": "money_at_risk = 50; qty = 10; realised risk fraction = (10 * 5) / 1000 = 0.05 > max_risk_at_stop_fraction 0.02 -> cap_risk_at_stop. Full rejection; the RA never returns a smaller qty (a clamp would return qty 4). This is the OQ-1 clamp-vs-reject drift.",
+        "source": "inputs/source/shared_risk_calculator.py:254-255 cap_risk_at_stop rejection; inputs/A_INTERFACE_AND_DECISIONS.md:109-135",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_012_leverage_cap_full_reject_not_clamp",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.10",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "cap_leverage"
+        },
+        "derivation": "money_at_risk = 100; qty = 20; notional = 2000; leverage = 2000 / 1000 = 2.0 > max_leverage 1.0 -> cap_leverage. The corrected kernel _size_quantity would instead clamp raw = min(raw, leverage_cap) = 10 (a scale-down); the RA rejects in full. Core OQ-1 divergence.",
+        "source": "inputs/source/shared_risk_calculator.py:256-257 cap_leverage; inputs/source/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economics.py:250-251 clamp",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_013_exposure_cap_full_reject_existing_book",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.06",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "2.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "500"
+        },
+        "expected": {
+          "refusal": "cap_exposure"
+        },
+        "derivation": "money_at_risk = 60; qty = 12; notional = 1200; leverage = 1.2 <= max_leverage 2.0 (not binding); exposure = (500 + 1200) / 1000 = 1.7 > max_exposure_fraction 1.0 -> cap_exposure. Exposure is gross notional once this proposal is added; existing_gross_notional is required, never assumed empty.",
+        "source": "inputs/source/shared_risk_calculator.py:247, :258-259 cap_exposure",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_014_contract_multiplier_money_risk_conserved",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "contract_multiplier": "10",
+          "requested_risk_fraction": "0.05",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "proposed_qty": "1",
+          "notional": "1000",
+          "money_at_risk": "50"
+        },
+        "derivation": "money_at_risk = 50; per_unit_risk = 5 * 10 = 50; qty = 50 / 50 = 1; notional = 1 * 100 * 10 = 1000; leverage = 1.0 <= 1.0. Multiplier sits in the denominator so money-at-risk is conserved (qty 1 at cm 10 vs qty 10 at cm 1 both risk 50).",
+        "source": "inputs/source/shared_risk_calculator.py:93 per_unit_risk = stop_distance * contract_multiplier",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_015_provenance_source_defined_valid",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "sizing_source_class": "SOURCE_DEFINED",
+          "source_rule_id": "SYNTH-RULE-1",
+          "source_rule_provenance": "SYNTH-PROV-1",
+          "requested_risk_fraction": "0.01",
+          "stop_price": "95",
+          "entry_reference_price": "100",
+          "direction": "LONG",
+          "instrument_metadata_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kernel_version": "2.1.0",
+          "package_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "decision_bar_ts": "2026-01-01T00:00:00Z"
+        },
+        "expected": {
+          "provenance_valid": true
+        },
+        "derivation": "SOURCE_DEFINED provenance requires source_rule_id and source_rule_provenance; both present -> validation passes. Beyond Pydantic model validation, the runtime must be quantity-invariant: an otherwise-equal request differing only in sizing_source_class (NATIVE_DECLARED vs SOURCE_DEFINED, same risk fraction, stop, price, multiplier, metadata, caps) must yield the identical proposed_qty. Consumers must never branch on sizing_source_class (freeze-time provenance only). Synthetic-ness is labelled separately by status=SYNTHETIC_EXPECTATION, not by mutating kernel_version.",
+        "source": "inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/sizing.py:89-93",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_016_provenance_native_carrying_source_rule_refused",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "sizing_source_class": "NATIVE_DECLARED",
+          "source_rule_provenance": "SYNTH-PROV-1",
+          "requested_risk_fraction": "0.01",
+          "stop_price": "95",
+          "entry_reference_price": "100",
+          "direction": "LONG",
+          "instrument_metadata_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "kernel_version": "2.1.0",
+          "package_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "decision_bar_ts": "2026-01-01T00:00:00Z"
+        },
+        "expected": {
+          "refusal": "ValueError(native sizing cannot carry source-rule provenance)"
+        },
+        "derivation": "NATIVE_DECLARED must not carry source_rule_id or source_rule_provenance; carrying provenance is a model-validation ValueError, not a qty result.",
+        "source": "inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/sizing.py:94-95",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_017_zero_stop_distance_refusal",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "0",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.01",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "stop_distance"
+        },
+        "derivation": "stop_distance <= 0 -> refuse stop_distance (per_unit_risk would be 0; the kernel _size_quantity returns 0.0 for distance <= 0). No division-by-zero-sized order is proposed.",
+        "source": "inputs/source/shared_risk_calculator.py:80-82 positive-value refusal; inputs/A_INTERFACE_AND_DECISIONS.md:108-109, :131",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_018_allocation_policy_version_mismatch_refusal",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.01",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "allocation_policy_version": "SYNTHETIC-POLICY-2",
+            "max_risk_at_stop_fraction": "0.10",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "allocation_policy_version_mismatch"
+        },
+        "derivation": "caps.allocation_policy_version (SYNTHETIC-POLICY-2) != settings.allocation_policy_version (SYNTHETIC-POLICY-1) -> refuse. A quantity can never be capped under a policy it was not bound to.",
+        "source": "inputs/source/shared_risk_calculator.py:227-228",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_019_fixed_qty_with_required_stop_risk_ceiling",
+        "inputs": {
+          "sizing_method": "FIXED_QTY",
+          "requested_fixed_qty": "3",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "contract_multiplier": "1",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.01",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "cap_risk_at_stop"
+        },
+        "derivation": "Declared qty 3; notional = 300; realised money_at_risk = 3 * 5 * 1 = 15; realised risk fraction = 15 / 1000 = 0.015 > max_risk_at_stop_fraction 0.01 -> cap_risk_at_stop. FIXED_QTY with a stop must still be checked against the risk-at-stop ceiling; a qty the risk budget cannot support is fully rejected, never trimmed to the max supportable qty (2).",
+        "source": "inputs/source/shared_risk_calculator.py:254-255 cap_risk_at_stop rejection; inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/sizing.py:17-21 SizingMethod",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_020_fixed_qty_missing_stop_refusal",
+        "inputs": {
+          "sizing_method": "FIXED_QTY",
+          "requested_fixed_qty": "3",
+          "entry_reference_price": "100",
+          "stop_distance": null,
+          "contract_multiplier": "1",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.01",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "missing_stop"
+        },
+        "derivation": "FIXED_QTY with a risk-at-stop ceiling configured requires a stop to compute realised money-at-risk = qty * stop_distance * contract_multiplier; stop_distance missing -> refuse missing_stop. The RA refuses rather than inventing 0 (a fabricated zero distance would silently report zero risk and pass the ceiling).",
+        "source": "inputs/source/shared_risk_calculator.py:80-82 positive-value refusal (analogous missing-value refusal); inputs/A_INTERFACE_AND_DECISIONS.md:108-109",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_021_fixed_qty_observed_vol_zero_or_nonfinite_refusal",
+        "inputs": {
+          "sizing_method": "FIXED_QTY",
+          "requested_fixed_qty": "3",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "contract_multiplier": "1",
+          "observed_volatility": "0",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.01",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "refusal": "VOLATILITY_TARGET_REFUSED"
+        },
+        "derivation": "Estimator-adjacent input observed_volatility = 0 (equally: nonpositive, nonfinite, insufficient-history) -> refuse with the estimator-output refusal token, never treated as a usable 0. No zero or nonfinite volatility is normalised into a position.",
+        "source": "inputs/IMPLEMENTATION_HANDOFF.md:60 no implicit estimator or target; sizing_010 refusal token",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_022_risk_at_stop_cap_exact_equality_allowed",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "1",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.01",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.01",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0"
+        },
+        "expected": {
+          "proposed_qty": "10",
+          "notional": "1000",
+          "money_at_risk": "10"
+        },
+        "derivation": "money_at_risk = 10; per_unit_risk = 1 * 1 = 1; qty = 10; notional = 1000; realised risk fraction = 10 / 1000 = 0.01 == max_risk_at_stop_fraction 0.01. Caps are inclusive upper bounds (<= passes), so exact equality is allowed, not refused. Leverage = 1000 / 1000 = 1.0 <= 1.0 and exposure = 1.0 <= 1.0 also sit exactly at their caps and pass. The corrected kernel's strict-less-than comparison would refuse; the RA allows equality.",
+        "source": "inputs/source/shared_risk_calculator.py:254-255 cap comparison semantics; inputs/source/MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economics.py:250-251 kernel clamp contrast",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "sizing_023_risk_mirror_baseline",
+        "inputs": {
+          "sizing_method": "RISK_AT_STOP",
+          "account_size": "1000",
+          "entry_reference_price": "100",
+          "stop_distance": "5",
+          "stop_price": "105",
+          "contract_multiplier": "1",
+          "requested_risk_fraction": "0.01",
+          "allocation_policy_version": "SYNTHETIC-POLICY-1",
+          "metadata": {
+            "qty_step": "1",
+            "min_qty": "1",
+            "min_notional": "100"
+          },
+          "caps": {
+            "max_risk_at_stop_fraction": "0.1",
+            "max_leverage": "1.0",
+            "max_exposure_fraction": "1.0"
+          },
+          "existing_gross_notional": "0",
+          "direction": "SHORT"
+        },
+        "expected": {
+          "proposed_qty": "2",
+          "notional": "200",
+          "money_at_risk": "10"
+        },
+        "derivation": "Explicit SHORT mirror: entry100, stop105, positive distance5, equity1000*risk0.01=10; quantity10/(5*1)=2, notional200, risk10. Lead corrects draft direction omission before fixture freeze.",
+        "source": "mirror of sizing_001; inputs/source/shared_risk_calculator.py:52-111, :169-198, :262-300",
+        "status": "SYNTHETIC_EXPECTATION"
+      }
+    ]
+  },
+  "portfolio": [
+    {
+      "case_id": "PF-001",
+      "inputs": {
+        "start_equity": "1000.00",
+        "qty": "2",
+        "entry": "100",
+        "exit": "110",
+        "fee_bps_per_leg": "2"
+      },
+      "expected": {
+        "entry_notional": "200.00",
+        "exit_notional": "220.00",
+        "entry_fee": "0.04",
+        "exit_fee": "0.044",
+        "gross_pnl": "20.00",
+        "net_pnl": "19.916",
+        "final_equity": "1019.916"
+      },
+      "derivation": "entry_fee=2*100*2/10000=0.04; exit_fee=2*110*2/10000=0.044; gross=2*(110-100)=20.00; net=20.00-0.04-0.044=19.916; equity=1000.00+19.916=1019.916",
+      "source": "economics.py _fee_rows:283; fee=notional*fee_bps/10000; owner anchor example",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-002",
+      "inputs": {
+        "day_open_equity": "10000.00",
+        "realized_equity": "9900.00",
+        "max_daily_loss_pct": "2.0",
+        "use_daily_loss_limit": true
+      },
+      "expected": {
+        "daily_loss_pct": "1.0",
+        "daily_loss_ok": true,
+        "blocks_next_entry": false
+      },
+      "derivation": "loss=(10000-9900)/10000*100=1.0; 1.0<2.0 true -> daily_loss_ok=true -> not blocked",
+      "source": "runner.py:1287-1293; C_VERIFICATION_MATRIX.md S-5a",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-003",
+      "inputs": {
+        "day_open_equity": "10000.00",
+        "realized_equity": "9800.00",
+        "max_daily_loss_pct": "2.0",
+        "use_daily_loss_limit": true
+      },
+      "expected": {
+        "daily_loss_pct": "2.0",
+        "daily_loss_ok": false,
+        "blocks_next_entry": true
+      },
+      "derivation": "loss=(10000-9800)/10000*100=2.0; strict '<' so 2.0<2.0 false -> daily_loss_ok=false -> equality blocks",
+      "source": "runner.py:1287-1293; C_VERIFICATION_MATRIX.md S-5a (equality blocks)",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-004",
+      "inputs": {
+        "trades_today": 5,
+        "max_trades_per_day": 5,
+        "use_max_trades_per_day": true
+      },
+      "expected": {
+        "max_trades_ok": false,
+        "blocks_next_entry": true
+      },
+      "derivation": "5<5 false -> max_trades_ok=false -> at cap blocks",
+      "source": "runner.py:1294-1297; C_VERIFICATION_MATRIX.md S-5b",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-005",
+      "inputs": {
+        "trades_today": 4,
+        "max_trades_per_day": 5,
+        "use_max_trades_per_day": true
+      },
+      "expected": {
+        "max_trades_ok": true,
+        "blocks_next_entry": false
+      },
+      "derivation": "4<5 true -> max_trades_ok=true -> below cap admits",
+      "source": "runner.py:1294-1297; C_VERIFICATION_MATRIX.md S-5b",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-006",
+      "inputs": {
+        "equity_peak": "10000.00",
+        "realized_equity": "9000.00",
+        "max_drawdown_pct": "10.0",
+        "use_max_drawdown_guard": true
+      },
+      "expected": {
+        "drawdown_pct": "10.0",
+        "max_dd_ok": false,
+        "blocks_next_entry": true
+      },
+      "derivation": "dd=(10000-9000)/10000*100=10.0; strict '<' so 10.0<10.0 false -> blocked (equality blocks)",
+      "source": "runner.py:1298-1303; C_VERIFICATION_MATRIX.md S-5c",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-007",
+      "inputs": {
+        "consec_loss_count": 3,
+        "max_consecutive_losses": 3,
+        "use_consecutive_loss_halt": true
+      },
+      "expected": {
+        "consec_loss_ok": false,
+        "blocks_next_entry": true
+      },
+      "derivation": "3<3 false -> consec_loss_ok=false -> streak at cap blocks",
+      "source": "runner.py:1304-1307; C_VERIFICATION_MATRIX.md S-5d",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-008",
+      "inputs": {
+        "realized_equity": "9900.00",
+        "equity_sma": "10000.00",
+        "use_equity_curve_filter": true
+      },
+      "expected": {
+        "ec_ok": false,
+        "blocks_next_entry": true
+      },
+      "derivation": "9900>=10000 false -> ec_ok=false -> below SMA blocks after SMA available",
+      "source": "runner.py:1308-1312; C_VERIFICATION_MATRIX.md S-5e",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-009",
+      "inputs": {
+        "mae_last_pct": "5.00",
+        "max_mae_pct": "5.00",
+        "use_mae_guard": true
+      },
+      "expected": {
+        "mae_ok": true,
+        "blocks_next_entry": false
+      },
+      "derivation": "comparator '<=' so 5.00<=5.00 true -> mae_ok=true -> equality does NOT block (MAE equal allowed)",
+      "source": "runner.py:1313-1316; C_VERIFICATION_MATRIX.md S-5f",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-010",
+      "inputs": {
+        "mae_last_pct": "5.01",
+        "max_mae_pct": "5.00",
+        "use_mae_guard": true
+      },
+      "expected": {
+        "mae_ok": false,
+        "blocks_next_entry": true
+      },
+      "derivation": "5.01<=5.00 false -> mae_ok=false -> strictly above cap blocks",
+      "source": "runner.py:1313-1316; C_VERIFICATION_MATRIX.md S-5f",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-011",
+      "inputs": {
+        "prev_day": "2026-09-11",
+        "trades_today_prev_day": 3,
+        "max_trades_per_day": 5,
+        "new_day": "2026-09-12",
+        "realized_equity_at_rollover": "9950.00"
+      },
+      "expected": {
+        "trades_today_after_rollover": 0,
+        "day_open_equity_after_rollover": "9950.00",
+        "max_trades_ok_after_rollover": true
+      },
+      "derivation": "day_str change -> trades_today=0, day_open_equity=realized_equity=9950.00; 0<5 true -> no block despite prior 3 trades",
+      "source": "runner.py:1264-1268",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-012",
+      "inputs": {
+        "position_qty": "10",
+        "partial_exit_qty": "4",
+        "partial_realized_pnl": "-30.00",
+        "consec_loss_count_before": 0,
+        "trades_today_before": 2
+      },
+      "expected": {
+        "was_partial": true,
+        "position_remaining_qty": "6",
+        "consec_loss_count_after": 0,
+        "trades_today_after": 3
+      },
+      "derivation": "partial close leaves position open (next_position not None); SAP-06 consec-loss only on full close so count stays 0; trades_today increments on ANY close -> 3",
+      "source": "runner.py:1258-1262,1270-1271; position_manager.py:572",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-013",
+      "inputs": {
+        "position_qty": "10",
+        "full_exit_qty": "10",
+        "last_realized_pnl": "-50.00",
+        "consec_loss_count_before": 0,
+        "trades_today_before": 2
+      },
+      "expected": {
+        "was_partial": false,
+        "consec_loss_count_after": 1,
+        "trades_today_after": 3
+      },
+      "derivation": "full close (position None) with last_realized_pnl<0 -> consec_loss_count+=1; trades_today+=1",
+      "source": "runner.py:1258-1262,1270-1271",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-014",
+      "inputs": {
+        "position_qty": "10",
+        "full_exit_qty": "10",
+        "last_realized_pnl": "20.00",
+        "consec_loss_count_before": 3
+      },
+      "expected": {
+        "was_partial": false,
+        "consec_loss_count_after": 0
+      },
+      "derivation": "full close with last_realized_pnl>=0 -> consec_loss_count reset to 0",
+      "source": "runner.py:1258-1262",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-015",
+      "inputs": {
+        "transition_semantics_id": "2.1.0",
+        "historical_baseline_semantics_id": "2.0.0",
+        "start_equity": "1000.00",
+        "transition_net_cash_delta": "19.916",
+        "apply_twice": true
+      },
+      "expected": {
+        "equity_after_first_commit": "1019.916",
+        "second_apply_outcome": "REFUSED_INVALID_CASH_LEDGER_JOIN",
+        "equity_after_second_attempt": "1019.916",
+        "semantics_status": "PROPOSED_NOT_IMPLEMENTED"
+      },
+      "derivation": "proposed 2.1.0 transition semantics (one atomic EconomicTransition committed once by PortfolioSimulator; no quantity recalculation): first commit equity=1000.00+19.916=1019.916; second apply same transition_key -> refusal, equity unchanged (one cash commit). 2.1.0 label unregistered/unapproved; 2.0.0 bytes/semantics preserved untouched as historical baseline only; refusal token proposed where not implemented",
+      "source": "A_INTERFACE_AND_DECISIONS.md:151,286-290; IMPLEMENTATION_HANDOFF.md section 2; position_manager.py:348-352 (2.0.0 historical anchor)",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-016",
+      "inputs": {
+        "account_id": "ACCT-1",
+        "bucket_id": "BKT-1",
+        "package_hash": "PKG-HASH-1",
+        "instrument_metadata_hash": "INSTR-HASH-1",
+        "decision_bar_ts": "2026-09-12T00:00:00+00:00",
+        "decision_slot": "SLOT-A",
+        "step1_open_refusal": {
+          "cap_guard_inputs": {
+            "day_open_equity": "10000.00",
+            "realized_equity": "9800.00",
+            "max_daily_loss_pct": "2.0",
+            "use_daily_loss_limit": true
+          },
+          "intent_id": "INTENT-1",
+          "snapshot_id": "SNAP-1",
+          "expected_outcome": "REFUSED_SAME_BAR_RETRY",
+          "fill": "none",
+          "cash_state": "unchanged"
+        },
+        "step2_same_bar_retry": {
+          "corrected_cap_guard_inputs": {
+            "day_open_equity": "10000.00",
+            "realized_equity": "9950.00",
+            "max_daily_loss_pct": "2.0",
+            "use_daily_loss_limit": true
+          },
+          "regenerated_intent_id": "INTENT-2",
+          "regenerated_snapshot_id": "SNAP-2",
+          "same_decision_bar_ts": "2026-09-12T00:00:00+00:00",
+          "same_decision_slot": "SLOT-A",
+          "expected_outcome": "REFUSED_SAME_BAR_RETRY",
+          "fill": "none",
+          "cash_state": "unchanged",
+          "rejection_key": "(account_id, bucket_id, package_hash, instrument_metadata_hash, decision_bar_ts, decision_slot)"
+        },
+        "step3_next_bar": {
+          "decision_bar_ts": "2026-09-12T00:05:00+00:00",
+          "decision_slot": "SLOT-A",
+          "corrected_cap_guard_inputs_freshly_valid": {
+            "day_open_equity": "10000.00",
+            "realized_equity": "9950.00",
+            "max_daily_loss_pct": "2.0",
+            "use_daily_loss_limit": true
+          },
+          "expected_outcome": "PERMITTED",
+          "fill": "sizing permitted",
+          "cash_state": "commit proceeds"
+        },
+        "latch_key_must_not_include": [
+          "intent_id",
+          "snapshot_id"
+        ]
+      },
+      "expected": {
+        "step1_first_open": {
+          "outcome": "REFUSED_SAME_BAR_RETRY",
+          "fill": "none",
+          "cash": "unchanged",
+          "reason": "daily loss at cap 2.0 with strict '<' blocks"
+        },
+        "step2_corrected_inputs_same_bar_new_ids": {
+          "outcome": "REFUSED_SAME_BAR_RETRY",
+          "fill": "none",
+          "cash": "unchanged",
+          "reason": "same-bar rejection key (account,bucket,package,instrument,bar,slot) unchanged; regenerated intent_id/snapshot_id must not bypass latch"
+        },
+        "step3_next_bar_all_inputs_freshly_valid": {
+          "outcome": "PERMITTED",
+          "fill": "normal sizing",
+          "cash": "commit proceeds",
+          "reason": "bar advance creates legitimate distinct decision slot; latch does not key on new IDs and expires with bar"
+        },
+        "rejection_latch_stable_across_ids": true
+      },
+      "derivation": "independent 3-step same-bar case; does NOT claim constant-guard-across-candidate-IDs proves rejection latch. Step1: loss=(10000-9800)/10000*100=2.0, strict '<' -> REFUSED_SAME_BAR_RETRY, no fill, cash unchanged. Step2: same bar, same slot, corrected inputs (loss=0.5<2.0 would pass guard alone) plus regenerated intent_id/snapshot_id -> still REFUSED_SAME_BAR_RETRY because stable rejection key (account_id,bucket_id,package_hash,instrument_metadata_hash,decision_bar_ts,decision_slot) excludes replaceable intent/lifecycle ids (OQ-17). Step3: bar advances 00:00->00:05, all inputs freshly valid -> PERMITTED. Latch must not key on new IDs; distinct slots only from frozen preregistered policy, never caller-chosen",
+      "source": "A_INTERFACE_AND_DECISIONS.md:255-268 (OQ-17 rejection key + SAME_BAR_REJECTED_RETRY proposed); IMPLEMENTATION_HANDOFF.md section 1 (same-bar rejection key stable across regenerated intent/snapshot IDs); C_VERIFICATION_MATRIX.md section 3 (same-bar re-form refusal OQ-17)",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-017",
+      "inputs": {
+        "transition_has_entry_fill": true,
+        "transition_has_exit_fill": true
+      },
+      "expected": {
+        "outcome": "REFUSED_INVALID_CASH_LEDGER_JOIN",
+        "reason_detail": "mixed entry and exit transition"
+      },
+      "derivation": "entry_fills and exit_fills both present -> atomic commit refuses mixed transition",
+      "source": "position_manager.py:381-384",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-018",
+      "inputs": {
+        "transition_has_exit_fill": true,
+        "position_is_none": true
+      },
+      "expected": {
+        "outcome": "REFUSED_INVALID_CASH_LEDGER_JOIN",
+        "reason_detail": "exit without position"
+      },
+      "derivation": "exit_fills present but state.position None -> refusal",
+      "source": "position_manager.py:423-427",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-019",
+      "inputs": {
+        "bucket_id": "BKT-1",
+        "allocation_policy_version": "AP-v1",
+        "capital_allocation": null,
+        "max_daily_loss": null,
+        "max_concurrent": null
+      },
+      "expected": {
+        "threshold_choice": "none",
+        "fail_closed": true,
+        "blocks_entry": true
+      },
+      "derivation": "RiskBucket numeric thresholds [OPEN]/None; unset is fail-closed per risk.py docstring -> consumer refuses rather than defaulting",
+      "source": "contracts/mtc_contracts/risk.py:36-58",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-020",
+      "inputs": {
+        "snapshot_id": "0000000000000000000000000000000000000000000000000000000000000000",
+        "account_id": "ACCT-1",
+        "equity": "-1.00",
+        "taken_at": "2026-09-12T00:00:00+00:00"
+      },
+      "expected": {
+        "validation_outcome": "REJECTED",
+        "reason_detail": "equity must be >= 0 (NonNegativeDecimal)"
+      },
+      "derivation": "AccountSnapshot.equity is NonNegativeDecimal (ge=0); negative equity rejected at construction",
+      "source": "contracts/mtc_contracts/package.py:48-64",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-021",
+      "inputs": {
+        "bound_snapshot_id": "SNAP-VALID-1",
+        "snapshot_id": "SHA256(cropped:64-hex-char-digest-of-tampered-snapshot)",
+        "account_id": "ACCT-1",
+        "equity": "10000.00",
+        "taken_at": "2026-09-12T00:00:00+00:00",
+        "sizing_intent_snapshot_id": "SNAP-VALID-1",
+        "tamper": "snapshot_id replaced after binding; snapshot body mutated so recomputed id differs"
+      },
+      "expected": {
+        "validation_outcome": "REJECTED",
+        "refusal_token": "proposed SNAPSHOT_MISMATCH",
+        "fill": "none",
+        "cash": "unchanged"
+      },
+      "derivation": "snapshot_id is SHA256(UTF8 canonical_json(AccountSnapshot without snapshot_id), sorted keys, no newline) (IMPLEMENTATION_HANDOFF section 1); body tamper -> recomputed id != bound id -> identity mismatch refused, no order",
+      "source": "C_VERIFICATION_MATRIX.md section 3 Freshness/snapshot refusals (SNAPSHOT_MISMATCH named, wiring pending); IMPLEMENTATION_HANDOFF.md section 1 snapshot_id recipe; package.py:51 Sha256",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-022",
+      "inputs": {
+        "snapshot_id": "SNAP-OLD-1",
+        "account_id": "ACCT-1",
+        "equity": "10000.00",
+        "taken_at": "2026-09-11T23:00:00+00:00",
+        "decision_bar_ts": "2026-09-12T00:00:00+00:00",
+        "snapshot_deadline_ms": 30000,
+        "age_ms": 3600000,
+        "staleness": "taken_at older than decision bar minus snapshot_deadline_ms"
+      },
+      "expected": {
+        "validation_outcome": "REJECTED",
+        "refusal_token": "proposed SNAPSHOT_STALE",
+        "fill": "none",
+        "cash": "unchanged",
+        "fail_closed_when_deadline_unset": true
+      },
+      "derivation": "age=3600000ms > deadline=30000ms -> stale -> refused, no order; concrete refusal wiring pending (deadline values owner-deferred, addendum 32); unset snapshot_deadline_ms stays fail-closed",
+      "source": "C_VERIFICATION_MATRIX.md section 3 Freshness/snapshot refusals (SNAPSHOT_STALE named, deadline values pending); A_INTERFACE_AND_DECISIONS.md:213,326-327 (per-strategy snapshot_deadline_ms owner-open)",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-023",
+      "inputs": {
+        "snapshot_id": "SNAP-FUTURE-1",
+        "account_id": "ACCT-1",
+        "equity": "10000.00",
+        "taken_at": "2026-09-12T00:10:00+00:00",
+        "decision_bar_ts": "2026-09-12T00:00:00+00:00",
+        "anomaly": "taken_at after decision bar (clock-ahead snapshot)"
+      },
+      "expected": {
+        "validation_outcome": "REJECTED",
+        "refusal_token": "proposed SNAPSHOT_MISMATCH",
+        "fill": "none",
+        "cash": "unchanged"
+      },
+      "derivation": "snapshot taken_at ahead of decision bar -> cannot be the snapshot bound to this decision slot -> identity/freshness mismatch refused, no order; AccountSnapshot immutable truth bound by snapshot_id, never kernel input",
+      "source": "package.py:48-64 (immutable truth bound by snapshot_id, require_utc taken_at); C_VERIFICATION_MATRIX.md section 3 Freshness/snapshot refusals",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "PF-024",
+      "inputs": {
+        "snapshot_id": null,
+        "account_id": "ACCT-1",
+        "equity": "10000.00",
+        "taken_at": "2026-09-12T00:00:00+00:00",
+        "sizing_intent_snapshot_id": "SNAP-VALID-1",
+        "anomaly": "no snapshot bound at sizing time; deadline for availability exceeded"
+      },
+      "expected": {
+        "validation_outcome": "REJECTED",
+        "refusal_token": "proposed SNAPSHOT_UNAVAILABLE",
+        "fill": "none",
+        "cash": "unchanged",
+        "fail_closed": true
+      },
+      "derivation": "missing/absent snapshot at sizing -> refused, no order; snapshot binding/refusal required for sizing per control vocabulary (snapshot_staleness informational for execution-staleness model but binding refusal stays required); unset/absent never defaults to proceeding",
+      "source": "IMPLEMENTATION_HANDOFF.md section 1 control vocabulary (snapshot binding/refusal remains required for sizing); C_VERIFICATION_MATRIX.md section 3 Freshness/snapshot refusals (mismatched/stale/absent refused, no order)",
+      "status": "SYNTHETIC_EXPECTATION"
+    }
+  ],
+  "identity": [
+    {
+      "case_id": "C01_SNAPSHOT_ID_PREIMAGE_FULL",
+      "inputs": {
+        "account_snapshot_fields_excluding_snapshot_id": {
+          "account_id": "ACCT-SYNTH-001",
+          "available_margin": "95000.00",
+          "bucket_capital": {
+            "alpha": "60000.00",
+            "beta": "40000.00"
+          },
+          "contract_version": "0.1.0",
+          "equity": "100000.00",
+          "margin_used": "5000.00",
+          "open_exposure": "20000.00",
+          "positions": {
+            "BTC-PERP": "0.500"
+          },
+          "taken_at": "2026-09-12T00:00:00+00:00"
+        },
+        "snapshot_id_field_value_constructibility_only": "abababababababababababababababababababababababababababababababab"
+      },
+      "expected": {
+        "preimage": "{\"account_id\":\"ACCT-SYNTH-001\",\"available_margin\":\"95000.00\",\"bucket_capital\":{\"alpha\":\"60000.00\",\"beta\":\"40000.00\"},\"contract_version\":\"0.1.0\",\"equity\":\"100000.00\",\"margin_used\":\"5000.00\",\"open_exposure\":\"20000.00\",\"positions\":{\"BTC-PERP\":\"0.500\"},\"taken_at\":\"2026-09-12T00:00:00+00:00\"}",
+        "snapshot_id": "fc482f4f389a9a387d20a4052fbe35754dff9a9b1d1b640601011972ae3b9515"
+      },
+      "derivation": "OQ-11 recipe: preimage = canonical_json(AccountSnapshot excluding snapshot_id). Base ContractModel adds contract_version='0.1.0' (base.py:69) so it IS a preimage member. taken_at UTC -> isoformat '+00:00'; Decimals -> format(value,'f') preserving scale spelling; snapshot_id value excluded so any 64-hex token yields the same digest.",
+      "source": "inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/identity.py:11-44; package.py:48-63; base.py:59-78; inputs/A_INTERFACE_AND_DECISIONS.md section 7 (OQ-11)",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "C02_SNAPSHOT_ID_REORDER_STABLE",
+      "inputs": {
+        "account_snapshot_fields_excluding_snapshot_id": {
+          "positions": {
+            "BTC-PERP": "0.500"
+          },
+          "margin_used": "5000.00",
+          "open_exposure": "20000.00",
+          "bucket_capital": {
+            "beta": "40000.00",
+            "alpha": "60000.00"
+          },
+          "available_margin": "95000.00",
+          "equity": "100000.00",
+          "account_id": "ACCT-SYNTH-001",
+          "taken_at": "2026-09-12T00:00:00+00:00",
+          "contract_version": "0.1.0"
+        }
+      },
+      "expected": {
+        "preimage": "{\"account_id\":\"ACCT-SYNTH-001\",\"available_margin\":\"95000.00\",\"bucket_capital\":{\"alpha\":\"60000.00\",\"beta\":\"40000.00\"},\"contract_version\":\"0.1.0\",\"equity\":\"100000.00\",\"margin_used\":\"5000.00\",\"open_exposure\":\"20000.00\",\"positions\":{\"BTC-PERP\":\"0.500\"},\"taken_at\":\"2026-09-12T00:00:00+00:00\"}",
+        "snapshot_id": "fc482f4f389a9a387d20a4052fbe35754dff9a9b1d1b640601011972ae3b9515"
+      },
+      "derivation": "sort_keys=True at every dict level (top-level, bucket_capital, positions): declaration/insertion order must not change preimage or digest. Expected identical to C01 byte-for-byte.",
+      "source": "inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/identity.py:31-40",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "C03_SNAPSHOT_ID_FIELD_CHANGE_DIFFERENT",
+      "inputs": {
+        "account_snapshot_fields_excluding_snapshot_id": "same as C01 except equity=100000.01"
+      },
+      "expected": {
+        "preimage": "{\"account_id\":\"ACCT-SYNTH-001\",\"available_margin\":\"95000.00\",\"bucket_capital\":{\"alpha\":\"60000.00\",\"beta\":\"40000.00\"},\"contract_version\":\"0.1.0\",\"equity\":\"100000.01\",\"margin_used\":\"5000.00\",\"open_exposure\":\"20000.00\",\"positions\":{\"BTC-PERP\":\"0.500\"},\"taken_at\":\"2026-09-12T00:00:00+00:00\"}",
+        "snapshot_id": "6408705dcae4ba6f8e51327005cfcd6dcf898b0e43aea581b1b90aa4ff61a055"
+      },
+      "derivation": "Any member-field change must change the digest; equity 100000.00 -> 100000.01 changes exactly the equity spelling in the preimage.",
+      "source": "inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/identity.py:31-44",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "C04_SNAPSHOT_ID_DECIMAL_SPELLING_NOT_NORMALIZED",
+      "inputs": {
+        "account_snapshot_fields_excluding_snapshot_id": "same as C01 except equity=100000.0 (one decimal place)"
+      },
+      "expected": {
+        "preimage": "{\"account_id\":\"ACCT-SYNTH-001\",\"available_margin\":\"95000.00\",\"bucket_capital\":{\"alpha\":\"60000.00\",\"beta\":\"40000.00\"},\"contract_version\":\"0.1.0\",\"equity\":\"100000.0\",\"margin_used\":\"5000.00\",\"open_exposure\":\"20000.00\",\"positions\":{\"BTC-PERP\":\"0.500\"},\"taken_at\":\"2026-09-12T00:00:00+00:00\"}",
+        "snapshot_id": "9aa8fd87d3ecf0f174edaf88084feb56e0bfc7279e542b1daded75df9fd9e53d"
+      },
+      "derivation": "format(Decimal('100000.0'),'f') = '100000.0' != '100000.00': equivalent Decimal value, different canonical spelling, therefore different snapshot_id. Handoff: 'Equivalent Decimal spelling is not silently normalized beyond the existing serializer.' Numeric-equal spellings must NOT collapse.",
+      "source": "inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/identity.py:20-21,31-40; inputs/IMPLEMENTATION_HANDOFF.md build-sequence snapshot_id bullet",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "C05_SNAPSHOT_ID_CONTRACT_VERSION_MEMBER",
+      "inputs": {
+        "account_snapshot_fields_excluding_snapshot_id_and_contract_version": "C01 fields with contract_version key omitted (implementer bug variant)"
+      },
+      "expected": {
+        "preimage": "{\"account_id\":\"ACCT-SYNTH-001\",\"available_margin\":\"95000.00\",\"bucket_capital\":{\"alpha\":\"60000.00\",\"beta\":\"40000.00\"},\"equity\":\"100000.00\",\"margin_used\":\"5000.00\",\"open_exposure\":\"20000.00\",\"positions\":{\"BTC-PERP\":\"0.500\"},\"taken_at\":\"2026-09-12T00:00:00+00:00\"}",
+        "digest_MUST_NOT_match": "d5271a8d7065b499e9c05af262f9427d7e14e7c8c418dadf583944fc957bbc31",
+        "correct_snapshot_id_remains": "fc482f4f389a9a387d20a4052fbe35754dff9a9b1d1b640601011972ae3b9515"
+      },
+      "derivation": "Guard against dropping inherited base fields: a preimage without contract_version digests to the MUST_NOT value. model_dump() of AccountSnapshot includes contract_version, so the correct preimage keeps it (C01 digest).",
+      "source": "inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/base.py:59-78; package.py:48-63",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "C12_UNSIMULATED_CONTROLS_HASH_SORTED_RECORDS",
+      "inputs": {
+        "entries_unsorted": [
+          {
+            "control_id": "reconciliation_idempotence",
+            "classification": "INFORMATIONAL",
+            "reason": "INFORMATIONAL_BY_DESIGN"
+          },
+          {
+            "control_id": "fees",
+            "classification": "REQUIRED",
+            "reason": "NO_KERNEL_MODEL"
+          }
+        ],
+        "shared_record_shape": "UnsimulatedControl(control_id, required_for_promotion=(classification==REQUIRED), reason); ContractModel adds contract_version=0.1.0"
+      },
+      "expected": {
+        "preimage": "[{\"contract_version\":\"0.1.0\",\"control_id\":\"fees\",\"reason\":\"NO_KERNEL_MODEL\",\"required_for_promotion\":true},{\"contract_version\":\"0.1.0\",\"control_id\":\"reconciliation_idempotence\",\"reason\":\"INFORMATIONAL_BY_DESIGN\",\"required_for_promotion\":false}]",
+        "unsimulated_controls_hash": "34f93920a89bad9d5d96e856fa890973e4bd92d05aa186f37f44e09bea43fec9"
+      },
+      "derivation": "Handoff control-vocabulary recipe: validate unique IDs, map classification REQUIRED/INFORMATIONAL to required_for_promotion true/false, sort records by control_id, hash canonical JSON of the sorted record list (each record a full UnsimulatedControl model dump, so contract_version present), UTF-8, no newline. Reason tokens restricted to closed set NO_KERNEL_MODEL | MODEL_PRESENT_NOT_REACHED | INFORMATIONAL_BY_DESIGN | DEPLOYED_IDENTITY_UNVERIFIED.",
+      "source": "inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/identity.py:31-44; lineage.py:24-27; base.py:59-78; inputs/IMPLEMENTATION_HANDOFF.md manifest-adapter bullets; inputs/C_VERIFICATION_MATRIX.md section 4 items 1-3",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "C13_UNSIMULATED_CONTROLS_DUPLICATE_ID_REFUSE",
+      "inputs": {
+        "entries": [
+          {
+            "control_id": "fees",
+            "classification": "REQUIRED",
+            "reason": "NO_KERNEL_MODEL"
+          },
+          {
+            "control_id": "fees",
+            "classification": "INFORMATIONAL",
+            "reason": "INFORMATIONAL_BY_DESIGN"
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "REFUSED",
+        "proposed_reason_token": "DUPLICATE_CONTROL_ID",
+        "unsimulated_controls_hash": null
+      },
+      "derivation": "Handoff: 'validate unique IDs first' - hashing happens only after uniqueness holds. Duplicate control_id must refuse before any digest is produced; no hash emitted. Token proposed, not shipped.",
+      "source": "inputs/IMPLEMENTATION_HANDOFF.md manifest-adapter bullets; inputs/C_VERIFICATION_MATRIX.md section 4 item 2",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "C14_SNAPSHOT_NONFINITE_REFUSE",
+      "inputs": {
+        "account_snapshot_fields_excluding_snapshot_id": "C01 fields but equity = Decimal('NaN') (also valid: Decimal('Infinity') in any NonNegativeDecimal/PositiveDecimal member)"
+      },
+      "expected": {
+        "outcome": "REFUSED",
+        "proposed_reason_token": "NONFINITE_DECIMAL",
+        "snapshot_id": null
+      },
+      "derivation": "New helper validates finite typed Decimal explicitly. Old serializer converts DecimalNaN to a string; allow_nan=False alone does not catch it.",
+      "source": "inputs/source/MTC_COMMAND_CENTER/contracts/mtc_contracts/package.py:14-15,48-63; identity.py:31-40",
+      "status": "SYNTHETIC_EXPECTATION"
+    },
+    {
+      "case_id": "LEAD_C06_DATASET",
+      "inputs": {
+        "raw_manifest_utf8": "{\"dataset_id\":\"DSN-001\",\"manifest_version\":\"1\",\"rows\":3}\n",
+        "csv_utf8": "ts,price,volume\n2026-09-11T00:00:00+00:00,50000,1\n2026-09-11T01:00:00+00:00,50100,2\n2026-09-11T02:00:00+00:00,50200,3\n",
+        "selected_manifest": {
+          "original_manifest_raw_sha256": "8fdeaaab1063d5f15e621cd45cb9ce158f06e9686f04fb21ed9665c382c688cc",
+          "entries": [
+            {
+              "dataset_id": "DSN-001",
+              "normalized_relative_path": "data/btc_1h.csv",
+              "raw_csv_sha256": "0a1eeb418fdfa9d3d471d9579a5d1fe5a36a281dacc2b5554e35be27d1cbc6bd",
+              "symbol": "BTC-PERP",
+              "timeframe": "1h",
+              "row_count": 3,
+              "interval": "2026-09-11T00:00:00+00:00/2026-09-11T02:00:00+00:00"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "raw_manifest_sha256": "8fdeaaab1063d5f15e621cd45cb9ce158f06e9686f04fb21ed9665c382c688cc",
+        "selected_preimage": "{\"entries\":[{\"dataset_id\":\"DSN-001\",\"interval\":\"2026-09-11T00:00:00+00:00/2026-09-11T02:00:00+00:00\",\"normalized_relative_path\":\"data/btc_1h.csv\",\"raw_csv_sha256\":\"0a1eeb418fdfa9d3d471d9579a5d1fe5a36a281dacc2b5554e35be27d1cbc6bd\",\"row_count\":3,\"symbol\":\"BTC-PERP\",\"timeframe\":\"1h\"}],\"original_manifest_raw_sha256\":\"8fdeaaab1063d5f15e621cd45cb9ce158f06e9686f04fb21ed9665c382c688cc\"}",
+        "selected_hash": "8d78bb0e94d494c085cc48832a8667fc4d442f6b3ee6a6295a04727a641d1fc2"
+      },
+      "status": "SYNTHETIC_EXPECTATION",
+      "derivation": "Lead chosen exact frozen carrier and independently SHA256 over literal bytes before implementation; raw and selected tokens distinct."
+    }
+  ],
+  "consumers": {
+    "meta": {
+      "purpose": "Independent synthetic fixture expectations for P020 dependent-tool consumer migration (Lane B preparation). No tool was executed; all expected values derived by reading pinned source 42f9957 inputs/source plus lane inputs A/B/C.",
+      "status": "SYNTHETIC_EXPECTATION",
+      "eight_exact_tool_names": [
+        "multiwindow_oos.py",
+        "cpcv_validator.py",
+        "finalize_bootstrap_bh.py",
+        "reference_producer.py",
+        "rigorous_walk_forward.py",
+        "rigorous_walk_forward_parallel.py",
+        "variant_missing_knobs.py",
+        "enrich_gate3_evidence.py"
+      ],
+      "companion_tools_not_counted_as_8": [
+        "probabilistic_pbo.py"
+      ],
+      "rules": [
+        "Decimal numbers serialized as strings",
+        "Refusal expectations carry proposed typed tokens (design proposals, not fixed API)",
+        "NEVER an old-vs-new economics equality claim; Arm A fixtures compare OLD omission vs OLD explicit parameter only",
+        "Arm B fixtures compare corrected-ledger projection against independently authored literal corrected fills/cash",
+        "SIMULATED_ECONOMICS constants: COST_BPS=8.0 (mega_walk_forward.py:64), SLIPPAGE_BPS_PER_SIDE=2.0 post-hoc (:65), HOLDING_BAR_LIMIT=96 (:74), ENGINE_VERSION=faz3b-exit-mode-v1 (:79), VALID_EXIT_MODES=(fixed_2R,fixed_3R,trail_ema8,opposite_channel) (:81), DEFAULT_EXIT_MODE=fixed_2R (:82)"
+      ],
+      "shared_synthetic_input_window_for_engine_fixtures": {
+        "description": "One synthetic bar window used by engine-expectation fixtures. Long direction. s_idx=0, e_idx=101 (window 101 >= 100 guard simulate_slice:651). All bars 0..79 flat, signal sg[i]=False except sg[80]=True. Entry bar i+1=81. ema_8 column per-bar: bars 81-82 ema_8=100.0 (cl >= em, no trail trigger), bar 83 ema_8=105.0 (cl[83]=104 < 105 -> first trail trigger, trail_next_open, xp=op[84]=102).",
+        "bars": {
+          "81": {
+            "open": "100",
+            "high": "101",
+            "low": "95",
+            "close": "100"
+          },
+          "82": {
+            "open": "101",
+            "high": "102",
+            "low": "95",
+            "close": "101"
+          },
+          "83": {
+            "open": "102",
+            "high": "105",
+            "low": "95",
+            "close": "104"
+          },
+          "84": {
+            "open": "102",
+            "high": "103",
+            "low": "95",
+            "close": "103"
+          },
+          "85": {
+            "open": "103",
+            "high": "120",
+            "low": "95",
+            "close": "110"
+          },
+          "86..90": {
+            "open": "110",
+            "high": "110",
+            "low": "95",
+            "close": "110"
+          }
+        },
+        "signal_stop": {
+          "stop_price_at_i=80": "90"
+        },
+        "derived_risk": "entry=op[81]=100; risk=100-90=10; fixed_2R target=100+2*10=120 (simulate_slice:737)",
+        "bars_supplied_over_full_window": true
+      }
+    },
+    "fixtures": [
+      {
+        "case_id": "P020-CONS-F01",
+        "mode": "mode_omission_vs_old_explicit_fixed_2R_parity",
+        "tool": "multiwindow_oos.py",
+        "inputs": "Synthetic window from meta.shared_synthetic_input_window_for_engine_fixtures; OLD snapshot engine (pre-migration), call site multiwindow_oos.py:59 score_window, strategy non-native trail, one candidate, fixed_2R",
+        "expected": {
+          "arm": "A",
+          "claim": "OLD engine without exit_mode argument == OLD engine with explicit exit_mode='fixed_2R'",
+          "common": {
+            "trades": 1,
+            "trade_1": {
+              "entry_price": "100",
+              "exit_price": "120",
+              "exit_reason_bar": "85",
+              "raw": "0.2",
+              "cost": "0.0008",
+              "net": "0.1992",
+              "net_pct": "19.92",
+              "trade_pct_list": [
+                "19.92"
+              ],
+              "R": "2.0",
+              "wins": 1,
+              "win_rate": "1.0",
+              "slippage_round_trip": "0.0004",
+              "net_after_slippage_pct": "19.88"
+            }
+          },
+          "assertion": "per-trade pct lists and derived SliceStats byte-equal across the two OLD invocations; threading defect isolated"
+        },
+        "derivation": "simulate_slice defaults exit_mode=fixed_2R (:648,:82); long path: entry op[81]=100, risk=100-90=10, r_mult=2.0 (fixed_2R, :665), target=100+2*10=120 (:737); idx85 hi=120>=120 -> exit at px 120 (:741); raw=120/100-1=0.2; net=0.2-8bps=0.1992 (:655,:748); R=(120-100)/10=2.0 (:751); slippage_round_trip=2*2bps=0.0004 (:758-759); net_after_slippage_pct=(0.1992-0.0004)*100=19.88 rounded 3dp (:760)",
+        "source": "inputs/source/MTC_COMMAND_CENTER/03_QUANTLENS/tools/mega_walk_forward.py:64-65,74,81-82,648-760; inputs/B_CONSUMER_MIGRATION.md Â§3.1 Arm A",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F02",
+        "mode": "mode_omission_vs_old_explicit_fixed_2R_parity",
+        "tool": "multiwindow_oos.py",
+        "inputs": "Same synthetic window; OLD engine; neighborhood stability re-scoring call site multiwindow_oos.py:137; fixed_2R row",
+        "expected": {
+          "arm": "A",
+          "claim": "OLD omission == OLD explicit exit_mode='fixed_2R' at neighborhood re-score site",
+          "common": {
+            "trades": 1,
+            "trade_1_net_pct": "19.92",
+            "trade_1_R": "2.0"
+          },
+          "assertion": "identical SliceStats both invocations; neighborhood branch (:131-147) inherits same defect as score_window"
+        },
+        "derivation": "call at :137 has same signature as :59 without exit_mode; engine default fixed_2R byte-identical to pre-Faz3b engine (:80 comment)",
+        "source": "inputs/source/.../multiwindow_oos.py:59,131-147,137; inputs/B_CONSUMER_MIGRATION.md Â§2, Â§3.1",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F03",
+        "mode": "mode_omission_refusal_token_missing",
+        "tool": "multiwindow_oos.py",
+        "inputs": "Consumed result row WITHOUT exit_mode field (pre-Faz3b historical artifact); proposed B-FIX-1 threading applied",
+        "expected": {
+          "tool_exits": "nonzero with typed refusal MODE_TOKEN_MISSING (proposed token)",
+          "no_output_written": true,
+          "no_defaulting": "no fallback to fixed_2R; refusal, not fallback, keeps old evidence from being re-scored"
+        },
+        "derivation": "B-FIX-1 (B_CONSUMER_MIGRATION.md Â§2/Â§3.1): rows stamped every run by _worker (:1246) post-Faz3b; row without token is pre-Faz3b history; refusing prevents silently re-scoring frozen evidence under wrong exit semantics",
+        "source": "inputs/B_CONSUMER_MIGRATION.md Â§2, Â§3.1 negative fixture; mega_walk_forward.py:1240-1247",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F04",
+        "mode": "discriminating_trail_path",
+        "tool": "cpcv_validator.py",
+        "inputs": "Two-call comparison inside OLD cpcv evaluate_split (:46) over the synthetic window, candidate row stamped exit_mode=trail_ema8 inside run row; non-native trail strategy; ema_8=105 present",
+        "expected": {
+          "call_without_threading": {
+            "effective_mode": "fixed_2R",
+            "exit": {
+              "bar": "85",
+              "price": "120",
+              "reason": "target"
+            },
+            "net_pct": "19.92",
+            "R": "2.0",
+            "note": "bug reproduction: trail candidate scored under wrong exit semantics"
+          },
+          "call_with_threading": {
+            "effective_mode": "trail_ema8",
+            "use_trail": true,
+            "exit": {
+              "bar": "83",
+              "price": "102",
+              "reason": "trail_next_open"
+            },
+            "net_pct": "1.92",
+            "R": "0.2"
+          },
+          "assertion": "Different trade economics; pass-rate difference not asserted without an approved threshold."
+        },
+        "derivation": "unthreaded: default fixed_2R -> r_mult=2.0 (:665) -> target 120 hit at hi[85] -> raw 0.2, net 0.1992, R=2.0. threaded: use_trail=(exit_mode=='trail_ema8') (:663); bar83 hi=105 preserves close 104 (high=close here is valid when intrabar high equals close; only the invalid OHLC combination high<close is excluded); cl[83]=104 < ema_8[83]=105 -> exit_idx=83, xp=op[84]=102 (:743-746); raw=102/100-1=0.02; net=0.02-0.0008=0.0192; R=(102-100)/10=0.2",
+        "source": "inputs/source/.../cpcv_validator.py:46; mega_walk_forward.py:663,737-746; inputs/B_CONSUMER_MIGRATION.md Â§2 negative fixture, Â§2/Handoff(5).4 known-divergence #8",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F05",
+        "mode": "mode_omission_vs_old_explicit_fixed_2R_parity",
+        "tool": "cpcv_validator.py",
+        "inputs": "Same synthetic window; OLD engine; cpcv call site :46; fixed_2R row; two OLD invocations with and without explicit exit_mode",
+        "expected": {
+          "arm": "A",
+          "claim": "OLD omission == OLD explicit exit_mode='fixed_2R'",
+          "common": {
+            "trades": 1,
+            "net_pct": "19.92",
+            "R": "2.0"
+          },
+          "assertion": "identical SliceStats; isolates threading defect; no old/new economics equality asserted"
+        },
+        "derivation": "identical mechanism to F01 at the cpcv evaluate_split site; direction arg threaded independently (:46 passes direction)",
+        "source": "inputs/source/.../cpcv_validator.py:46; inputs/B_CONSUMER_MIGRATION.md Â§3.2 Arm A",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F06",
+        "mode": "writer_input_digest_preservation",
+        "tool": "finalize_bootstrap_bh.py",
+        "inputs": "Byte-stable MEGA_walk_forward_results.json consumed twice under B-WRITER-1 writer contract (new file MEGA_walk_forward_results.finalized_<run_id>.json + sidecar .sha256)",
+        "expected": {
+          "positive": "Semantic results equal under identical inputs; different run IDs/timestamps can change whole artifact bytes and digests.",
+          "original_preserved": "MEGA_walk_forward_results.json bytes unchanged (no src.write_text in-place rewrite at :118); consumed_input_sha256 recorded on both artifacts and equal",
+          "collision_refusal": "handoff to fixture P020-CONS-F08 for the destination-collision arm"
+        },
+        "derivation": "B-WRITER-1: :118 src.write_text overwrites own input (:64 read) â€” replaced by new-file + sidecar; determinism follows from byte-stable input and pure recomputation of BH-FDR survivors",
+        "source": "inputs/B_CONSUMER_MIGRATION.md Â§3.3 B-WRITER-1 + positive fixture; inputs/IMPLEMENTATION_HANDOFF.md Â§4",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F07",
+        "mode": "writer_tampered_input_digest_refusal",
+        "tool": "finalize_bootstrap_bh.py",
+        "inputs": "Tampered bytes of MEGA_walk_forward_results.json (one row mutated) + previously recorded consumed_input_sha256",
+        "expected": {
+          "tool_refuses": "CANDIDATE_BINDING_INVALID (proposed typed refusal)",
+          "no_write": true,
+          "original_bytes_still_unchanged": true
+        },
+        "derivation": "digest binding fails recomputation; pattern mirrors P012 receipt refusals; verdict binding requires evaluation_run_hash + battery version (identity.py:76-95 six members; RISK_ALLOCATOR_VERSION is NOT a member, DS63-F01 â€” no seventh invented)",
+        "source": "inputs/B_CONSUMER_MIGRATION.md Â§3.3 negative fixture + verdict binding note",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F08",
+        "mode": "writer_destination_collision_refusal",
+        "tool": "finalize_bootstrap_bh.py",
+        "inputs": "Second run whose run_id maps to an ALREADY-EXISTING finalized target path (and, generalized, reference_producer rerun onto same candidate {cid}_trades.csv candidate folder, multiwindow fixed-path writer collision per Â§7 writer inventory)",
+        "expected": {
+          "tool_refuses": "RUN_ID_PATH_COLLISION (proposed typed refusal)",
+          "never_overwrite": "no overwrite of existing module artifact; new runs write only under new run_id namespace (05_BACKTEST_RESULTS/<run_id>/); old files frozen",
+          "also_refused": "same-run collision of two initialized run identities or two existing artifacts with same content label; no silence, no partial write"
+        },
+        "derivation": "Â§7 writer inventory: all fixed destination paths can collide/overwrite on rerun; writer contract demands collision refusal or new run namespaces with atomic publication (IMPLEMENTATION_HANDOFF Â§4)",
+        "source": "inputs/B_CONSUMER_MIGRATION.md Â§7 writer inventory; inputs/IMPLEMENTATION_HANDOFF.md Â§4",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F09",
+        "mode": "manual_reference_csv_shadow_economics",
+        "tool": "reference_producer.py",
+        "inputs": "Synthetic window; full-history manual replay loop :77-106 generating {cid}_trades.csv, candidate NON-native trail strategy with row stamped exit_mode=trail_ema8 (shadow economics demonstration); second artifact: mutated/appended {cid}_trades.csv fed ONLY to the legacy lockbox aggregate check :112",
+        "expected": {
+          "manual_csv_line_literal": {
+            "entry_time_key_idx": "81",
+            "exit_time_key_idx": "85",
+            "entry": "100",
+            "stop": "90",
+            "exit": "120",
+            "reason": "target",
+            "ret_net_pct": "19.92",
+            "R": "2.0"
+          },
+          "canonical_under_swept_row": {
+            "effective_mode": "trail_ema8",
+            "exit": {
+              "idx": "83",
+              "price": "102",
+              "reason": "trail"
+            },
+            "net_pct": "1.92",
+            "R": "0.2"
+          },
+          "divergence_assertion": "manual trades.csv (19.92) and canonical sweat (trail_ema8 threaded, 1.92) DISAGREE for the same candidate: CSV covers full history under manual fixed-2R-only economics (tgt=ep+2*risk hijack :88), parity table verifies only lockbox aggregate under canonical: the two halves are never reconciled",
+          "mutated_ledger_accepted_by_old_check": {
+            "legacy_parity_check_ignores_trades_csv": true,
+            "source_finding": "source reading (:112-137) shows the aggregate-only check never reads the {cid}_trades.csv file; therefore a mutated/appended ledger would not change its outcome. This is a source-reading finding, NOT an executed-proof claim: no tool was run and no VERIFIED token was observed. Any concrete aggregate result (e.g. a VERIFIED token) remains unverified until execution.",
+            "new_contract_refusal": "ledger digest bound in identity block consumed_input_sha256 set refuses mutated ledger"
+          },
+          "retirement_of_loop": "decoupled; shadow economics not carried forward; replacement = shared ExecutionEconomics.resolve transition-ledger projection (Â§3.4); old replay CSVs never regenerated under original identities"
+        },
+        "derivation": "manual loop: ep=op[81]=100; risk=10; tgt=120 (fixed 2.0 regardless of swept mode :88); lo always >= 90 so no stop; hi[85]=120>=120 -> xp=120 reason target (:93-94); ret=(120/100-1)-0.0008=0.1992 -> ret_net_pct 19.92 rounded 4dp (:104); R=(120-100)/10=2.0 (:105). Manual loop has no channel/exit_mode handling and scores only strategy-name is_trail (:44). Canonical threaded trail_ema8: net_pct 1.92 per F04. Aggregate check reads only spec metrics vs simulate_slice aggregate (matched constant passing whatever ledger file contains); its ledger-file blindness is a source-reading finding, not an executed result",
+        "source": "inputs/source/.../reference_producer.py:6-44,77-108,112-137; inputs/B_CONSUMER_MIGRATION.md Â§3.4 both structural negatives",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F10",
+        "mode": "corrected_ledger_csv_armB_no_old_vs_new_equality",
+        "tool": "reference_producer.py",
+        "inputs": "Corrected economics per C_VERIFICATION_MATRIX R-2/R-4 synthetic literals (NOT mega legacy constants): reference 100 BUY / 110 SELL, slippage BPS_OF_REFERENCE_V1 10bps per side, tick 0.01, taker fee 4.5bps each leg, fixed qty 10, one complete round trip; funding excluded (separate fixture)",
+        "expected": {
+          "arm": "B",
+          "ledger_csv_expectation": {
+            "qty": "10",
+            "entry_reference": "100",
+            "entry_fill": "100.10",
+            "entry_slippage_bps": "10",
+            "exit_reference": "110",
+            "exit_fill": "109.89",
+            "exit_slippage_bps": "10",
+            "gross_pnl_quote": "97.90",
+            "entry_notional_quote": "1001.0",
+            "exit_notional_quote": "1098.9",
+            "fee_entry_quote": "0.45045",
+            "fee_exit_quote": "0.494505",
+            "net_pnl_quote": "96.955045"
+          },
+          "assertion": "corrected-ledger projected CSV agrees with these independently authored literal expected fills/cash",
+          "forbidden_claim": "NO old-vs-new engine equality; old simulator legacy path net (long 100->110: raw=0.1, net=0.0992) is recorded only as a divergence, never as an equality target"
+        },
+        "derivation": "BUY fill ceil: 100*(1+0.001)=100.10; SELL floor: 110*(1-0.001)=109.89 (economics.py _fill_price:262 BPS_OF_REFERENCE_V1, ceil BUY / floor SELL); gross=(109.89-100.10)*10=97.90; taker fees 4.5bps of notional 1001 and 1098.9 -> 0.45045 and 0.494505; net 97.90-0.45045-0.494505=96.955045; single quantity authority = shared ExecutionEconomics.resolve transition; no tool computes own fills",
+        "source": "inputs/C_VERIFICATION_MATRIX.md R-2, R-4 (synthetic literal); inputs/B_CONSUMER_MIGRATION.md Â§3.4 Arm B + Â§5 quantity authority; IMPLEMENTATION_HANDOFF.md Â§2",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F11",
+        "mode": "retired_stamped_legacy_evidence_refusal",
+        "tool": "rigorous_walk_forward.py and rigorous_walk_forward_parallel.py",
+        "inputs": "(a) legacy artifact WITH result_class SIGNAL_SCREEN_ONLY stamp offered for ACCEPTANCE; (b) same artifact with stamp stripped; (c) stamped artifact routed to screening-write gate",
+        "expected": {
+          "stamped_screening": "screening write permitted; NOT promotion",
+          "stamp_stripped_promotion_block": "refused with EVIDENCE_CLASS_UNSTAMPED (proposed token)",
+          "stamped_legacy_acceptance_refusal": "refused with LEGACY_EVIDENCE_NONPROMOTABLE (proposed token); NO legacy stamp upgrade exists â€” a stamped legacy artifact does not become acceptance-eligible",
+          "scope": "no exit_mode threading fixtures on these retirees"
+        },
+        "derivation": "B-STAMP-1: snapshot has no SIGNAL_SCREEN_ONLY enforcement; both retirement writers emit plain JSON/MD (RIGOROUS_walk_forward_results.json @:550/551 and :516/517, report md @:603/:586) with no class stamp/gate; design v1.9 demands promotion blocks + typed reason codes; both unstamped and stamped legacy candidates refused at acceptance",
+        "source": "inputs/B_CONSUMER_MIGRATION.md Â§3.5 fixtures; IMPLEMENTATION_HANDOFF.md Â§4",
+        "status": "SYNTHETIC_EXPECTATION"
+      },
+      {
+        "case_id": "P020-CONS-F12",
+        "mode": "patcher_refused_before_mutation",
+        "tool": "variant_missing_knobs.py",
+        "inputs": "Migrated corrected-path mega_walk_forward module; call variant_missing_knobs.apply() (:233) which otherwise mutates mw.GRIDS (:238) and mw.build_signals (:239); import mw is top-level (:43) so module already loaded at call",
+        "expected": {
+          "typed_guard_raises": "BEFORE any mutation",
+          "post_call_state_invariants": {
+            "mw_GRIDS_unchanged": true,
+            "mw_build_signals_is_original_object": true,
+            "invariant_note": "mw.build_signals remaining the original function object and GRIDS contents unchanged are valid pre/post checks (direct is-comparison of the object reference, not id()-singleton comparison); no byte-identical pre/post parity claim beyond these two object-level invariants"
+          },
+          "retention": "legacy screening patch frozen on legacy path only; approved variants migrate as explicit config entries in the migrated engine, never a runtime monkey-patch"
+        },
+        "derivation": "B-PATCH-1: patcher risking silent patch of stale pre-migration module or re-injection of pre-knob behavior inside migrated code; refusal must fire before :238/:239 touched; verified by comparing mw.build_signals object identity and mw.GRIDS contents before and after a refused call",
+        "source": "inputs/B_CONSUMER_MIGRATION.md Â§3.6 B-PATCH-1; IMPLEMENTATION_HANDOFF.md Â§4",
+        "status": "SYNTHETIC_EXPECTATION"
+      }
+    ],
+    "summaries": {
+      "fixture_count": 12,
+      "mode_coverage": [
+        "mode_omission_vs_old_explicit_fixed_2R_parity: F01 F02 F05 (Arm A only, never old/new economics equality)",
+        "discriminating_trail_path: F04",
+        "manual_reference_csv_shadow_economics: F09 (literal manual CSV row + mutated-ledger acceptance reproduction)",
+        "writer_input_digest_preservation_and_collision_refusal: F06 F07 F08",
+        "retired_stamped_legacy_refusal: F11",
+        "patcher_before_mutation: F12",
+        "corrected_ledger_csv_armB: F10 (literal corrected fills/cash; no old/new equality)"
+      ],
+      "gaps_recorded_once": [
+        "CPCV/PBO and sweep-ceiling owner thresholds [OPEN] â€” fixtures compute from engine constants, do not choose limits (B_CONSUMER_MIGRATION.md Â§7)",
+        "Exit-mode threading at cpcv :46 differences are converted to evidence by F04 only if migrate threading is implemented as proposed; all fixtures are pre-implementation synthetic expectations",
+        "enrich_gate3_evidence.py and probabilistic_pbo.py have no numeric fixture among the 12; covered by B-DESC-1 / B-PBO-1 prose dispositions only"
+      ]
+    }
+  },
+  "benchmark": {
+    "status": "SYNTHETIC_EXPECTATION",
+    "author": "Lead, independently specified before implementation",
+    "cases": [
+      {
+        "case_id": "B1",
+        "inputs": {
+          "trial_ids": [
+            "a",
+            "b",
+            "c"
+          ],
+          "latencies_seconds": [
+            2,
+            4,
+            6
+          ],
+          "aggregate_elapsed_seconds": 12
+        },
+        "expected": {
+          "count": 3,
+          "median_seconds": 4,
+          "p90_nearest_rank_seconds": 6,
+          "aggregate_trials_per_second": 0.25,
+          "acceptance_verdict": "NOT_EVALUATED"
+        }
+      },
+      {
+        "case_id": "B2",
+        "inputs": {
+          "committed_ids": [
+            "a",
+            "b"
+          ],
+          "requested_ids": [
+            "a",
+            "b",
+            "c"
+          ]
+        },
+        "expected": {
+          "calls_on_resume": [
+            "c"
+          ],
+          "final_ids": [
+            "a",
+            "b",
+            "c"
+          ],
+          "duplicates": 0
+        }
+      },
+      {
+        "case_id": "B3",
+        "inputs": {
+          "requested_ids": [
+            "a",
+            "a"
+          ]
+        },
+        "expected": {
+          "refusal": "DUPLICATE_TRIAL_ID",
+          "calls": 0
+        }
+      },
+      {
+        "case_id": "B4",
+        "inputs": {
+          "resume_identity_changed": true
+        },
+        "expected": {
+          "refusal": "IDENTITY_MISMATCH",
+          "calls": 0
+        }
+      },
+      {
+        "case_id": "B5",
+        "inputs": {
+          "committed_result_bytes_tampered": true
+        },
+        "expected": {
+          "refusal": "LEDGER_HASH_MISMATCH",
+          "calls": 0
+        }
+      },
+      {
+        "case_id": "B6",
+        "inputs": {
+          "final_line_is_torn": true
+        },
+        "expected": {
+          "refusal": "TORN_LEDGER",
+          "calls": 0,
+          "original_bytes_unchanged": true
+        }
+      },
+      {
+        "case_id": "B7",
+        "inputs": {
+          "no_explicit_expensive_run_authority": true
+        },
+        "expected": {
+          "automatic_market_workload": false,
+          "automatic_import_from_ledger": false,
+          "feasibility_verdict": "NOT_EVALUATED"
+        }
+      }
+    ]
+  },
+  "qa": {
+    "sizing_arithmetic_pass": [
+      "sizing_001_risk_at_stop_baseline",
+      "sizing_002_risk_at_stop_round_down",
+      "sizing_005_fixed_qty_baseline",
+      "sizing_007_fixed_notional_baseline",
+      "sizing_008_fixed_notional_round_down",
+      "sizing_009_volatility_target_baseline",
+      "sizing_014_contract_multiplier_money_risk_conserved",
+      "sizing_022_risk_at_stop_cap_exact_equality_allowed",
+      "sizing_023_risk_mirror_baseline"
+    ],
+    "identity_scope": "Validated snapshot/manifest fixtures only; original formula preservation uses608-test baseline and source AST fences. Earlier C07-C11 proposed worker cases NOT approved oracles; Grok correction separately pending.",
+    "portfolio": "PF001 exact net19.916 and6guardboundaries independently verified in LEAD_EXPECTATIONS_QA.json",
+    "synthetic_only": true
+  }
+}

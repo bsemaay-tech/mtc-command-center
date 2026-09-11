@@ -1,0 +1,23 @@
+{
+  "verified_at": "2026-09-11T22:39:58.600562+00:00",
+  "receipt_sha256": "a0a94105dea818f152453eadfcd05be5b91a3bfde70f64192de947ce2e95b6c5",
+  "status": "FROZEN_FOR_NONACCEPTING_CANDIDATE_IMPLEMENTATION",
+  "files": [
+    {
+      "path": "INTERFACE_FREEZE.md",
+      "sha256": "44cd2081b9d69e9784f4765e5ef74207a2bfa9f94a27388b5d57f8685926bb3a",
+      "match": true
+    },
+    {
+      "path": "ECONOMIC_API.md",
+      "sha256": "1e2fa76aa428499fe8d0b242465ea1a9fb90428875468b3d5e7f0b5b23933518",
+      "match": true
+    },
+    {
+      "path": "FROZEN_EXPECTATIONS.json",
+      "sha256": "ba4a235efaa00777bdc0c4babc9c5c8a90f7ff8142f74a65ab1d5822bba9af8d",
+      "match": true
+    }
+  ],
+  "acceptance": false
+}
