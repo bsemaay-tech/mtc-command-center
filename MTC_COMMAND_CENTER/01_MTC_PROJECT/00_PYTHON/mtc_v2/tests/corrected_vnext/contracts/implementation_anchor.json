@@ -1,9 +1,9 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
- "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
- "core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
+ "EXPECTED_SEAL_SHA": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
+ "IMPLEMENTATION_BASE_SHA": "1aab804d3383b87871811560c5fa58b41608a402",
+ "core_tree_oid_at_base": "ca57ca5e0487f92e05fa68d8217fdde486877a2c",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
@@ -18,7 +18,8 @@
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/types.py",
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/results.py",
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/costs/**",
-  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/**"
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/economic_records/funding/**",
+  "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/rounding.py"
  ],
  "evidence_paths_rows_14_18": [
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/**",
@@ -30,7 +31,7 @@
  "lead_acceptance": {
   "accepted_by": "Lead (claude-fable-5), 2026-08-31 ~15:55 local",
   "basis": "Gate-2 plan v2 (A7-cleared) owner-approved addendum 16; tables bundle W127b sealed, all 19 file digests re-verified by W150; owner rulings addenda 14-17 complete; design v1.4 terminal dual-zero",
-  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #10 seal d763f62f9a42... on 2026-09-02T14:13:22+03:00; design v1.11; probe digests pinned; goldens and inputs unchanged since seal #8. Re-seal #11 2026-09-02T14:43:01+03:00: design v1.12 pinned; seal digest unchanged. Re-seal #14 2026-09-03T14:20:14+03:00: design v1.15 pinned; base re-pinned (M5); seal a58b6dea7539. Re-seal #15 2026-09-03T17:49:59+03:00: RULE2-08 goldens re-derived (W341/V341); seal 27bf72e82643. Re-seal #16 2026-09-03T20:54:18+03:00: decisions 149/151 executed; design v1.16 pinned; seal 40aaf7da2a67. Re-seal #17 2026-09-04T12:46:33+03:00: decisions 153/154/155 executed; design v1.18 pinned; seal bbab640c0703."
+  "statement": "Exact-digest IMPLEMENTATION_ANCHOR re-accepted at re-seal #10 seal d763f62f9a42... on 2026-09-02T14:13:22+03:00; design v1.11; probe digests pinned; goldens and inputs unchanged since seal #8. Re-seal #11 2026-09-02T14:43:01+03:00: design v1.12 pinned; seal digest unchanged. Re-seal #14 2026-09-03T14:20:14+03:00: design v1.15 pinned; base re-pinned (M5); seal a58b6dea7539. Re-seal #15 2026-09-03T17:49:59+03:00: RULE2-08 goldens re-derived (W341/V341); seal 27bf72e82643. Re-seal #16 2026-09-03T20:54:18+03:00: decisions 149/151 executed; design v1.16 pinned; seal 40aaf7da2a67. Re-seal #17 2026-09-04T12:46:33+03:00: decisions 153/154/155 executed; design v1.18 pinned; seal bbab640c0703. Price-only preimplementation scope extension, owner task WP-P012-PRICE-POLICY-20260910 (HIST0040), reviewed by Astra Lead before kernel edits: add core/rounding.py under design v1.26 section24. Existing seal32 and historical base carry unchanged. This accepts only the prebuild scope record, not the price implementation, Section16 successor or production. Post-kernel corrective design mapping under HIST0040: Lead reproduced that S18-PRICE-ROUNDING was ignored by the existing twelve-row parser. Design v1.27 binds already-approved core/rounding.py to S18-04 without changing its served DEF set or any price behavior. This is a mapping repair after implementation, not a claim of valid preimplementation census or Section16 acceptance."
  },
  "reseal_history": [
   {
@@ -232,6 +233,22 @@
    "new_EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
    "reason": "R32/re-seal32: refreshed the tenth INPUT probe's dependency identity after the first nine kernel probes were regenerated; current source and mutation behavior, economics, goldens, admission/refusals are all unchanged. Only the existing scenario_catalog.json member changes among the 19 sealed members. The malformed current R31 actor labels were repaired only by appending literal re-seal #31, preserving raw C31 Git history. NONACCEPTED pending C32/F32, baseline32, actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused/open.",
    "independently_verified": "pending Lead and required reviews"
+  },
+  {
+   "at": "2026-09-10T21:29:02.503127+00:00",
+   "actor": "Astra Lead coordinated; OpenCode Go DeepSeek V4 Pro mechanical builder re-seal #33",
+   "old_EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+   "new_EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
+   "reason": "R33/re-seal33: approved HYPERLIQUID price-policy kernel changed; original recorded probe mutations regenerated against current core; dependency identity maintained; only catalog member changes; no golden/DERIVATIONS or economic production-facts changes; NONACCEPTED C33 pending baseline/F33 and actual Section 16/owner ratification/exact T0. Independent verification remains pending.",
+   "independently_verified": "pending Lead and required reviews"
+  },
+  {
+   "at": "2026-09-11T01:02:31.461970+00:00",
+   "actor": "Astra Lead coordinated; ChatGPT Sol5.6High/default mechanical builder re-seal #34",
+   "old_EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
+   "new_EXPECTED_SEAL_SHA": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
+   "reason": "R34/re-seal34: approved positive integer prices are exact; old float cast caused precision loss/overflow; original recorded probe mutations were regenerated against current core; catalog identity only; INPUT03 instrument subtree is unchanged and its mutation is not redone; no golden/DERIVATIONS or economic production-facts changes; NONACCEPTED C34 pending baseline/F34, new actual Section 16, owner ratification, and exact T0. Independent verification remains pending.",
+   "independently_verified": "pending Lead and required reviews"
   }
  ],
  "legacy_event_order_map_sha256": "0c8a04ddd671b1c9c5585b93369a1341d93bd50f01a4fa14dd8d74beab179862",
@@ -392,6 +409,24 @@
    "old_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
    "new_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
    "reason": "Six F32 identity files only; completed baseline32 evidence; sole owner 134 declaration unchanged; exact schema chain extended through #31 and #32; NONACCEPTED pending actual reviews and production evidence."
+  },
+  {
+   "at": "2026-09-10T22:05:44.574197+00:00",
+   "actor": "Astra Lead coordinated; OpenCode Go DeepSeek V4 Pro mechanical builder, F33 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
+   "new_IMPLEMENTATION_BASE_SHA": "b4e44964f38391518d0c5c5d04f2b41fb4d08237",
+   "old_core_tree_oid_at_base": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
+   "new_core_tree_oid_at_base": "ead33b9704f11e6235b19e0f24a846b2f217b4aa",
+   "reason": "F33 Decision147 forward repin: re-pinned from the F32 base 3eebdf542bb70b23525cea13efc05a4a8eb29a8f (core tree ad8b7d787ab8b087d6fd192b413b2592a8bea4c0) to the actual sealed-member commit C33 b4e44964f38391518d0c5c5d04f2b41fb4d08237, whose approved HYPERLIQUID price-policy kernel moved the core tree to ead33b9704f11e6235b19e0f24a846b2f217b4aa; that current core_tree_oid_at_base was already recorded provisionally by R33 and is kept. The approved price kernel is unchanged and no behavior changed. Uses actual baseline33 (sha256 93e002753b764f0634e186903f64703ad4e0f7442d8cb32bc37baf1d6b44016a). NONACCEPTED pending fresh Section 16 evidence, owner ratification, and exact required reviews."
+  },
+  {
+   "at": "2026-09-11T01:26:23.376547+00:00",
+   "actor": "Astra Lead coordinated; included ChatGPT gpt-5.6-sol mechanical builder, F34 forward repin",
+   "old_IMPLEMENTATION_BASE_SHA": "b4e44964f38391518d0c5c5d04f2b41fb4d08237",
+   "new_IMPLEMENTATION_BASE_SHA": "1aab804d3383b87871811560c5fa58b41608a402",
+   "old_core_tree_oid_at_base": "ead33b9704f11e6235b19e0f24a846b2f217b4aa",
+   "new_core_tree_oid_at_base": "ca57ca5e0487f92e05fa68d8217fdde486877a2c",
+   "reason": "F34 forward repin for the owner-approved same-package integer-precision repair (WP-P012-PRICE-POLICY-20260910; HIST-2026-0040): re-pinned from actual old implementation base C33 b4e44964f38391518d0c5c5d04f2b41fb4d08237, whose actual core tree was ead33b9704f11e6235b19e0f24a846b2f217b4aa, to clean current C34 1aab804d3383b87871811560c5fa58b41608a402, whose core tree is ca57ca5e0487f92e05fa68d8217fdde486877a2c. R34 had already recorded ca57ca5e0487f92e05fa68d8217fdde486877a2c provisionally in core_tree_oid_at_base; that provisional current-core pin is preserved and is distinct from the actual old-base core recorded in this history entry. The approved integer-precision repair adds no new policy or economic production facts. Uses actual baseline34 (sha256 15bab1607e5fc5c1af73a15fd86061f7186aea4f3c51d0a0f369d52b74517678). NONACCEPTED pending current Section 16 evidence, owner ratification, and exact required gates and reviews."
   }
  ]
 }

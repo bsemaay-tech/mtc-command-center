@@ -597,6 +597,7 @@ class Runner:
             entry_price=fill.final_fill_price,
             is_long=is_long,
             price_tick=self.instrument.price_tick,
+            price_alignment_policy=self.instrument.price_alignment_policy,
             atr_value=self.tp_atr_tracker.atr,
             initial_risk_per_unit=initial_risk,
             book_version=next_book_version,
@@ -1010,6 +1011,7 @@ class Runner:
                     bar=bar,
                     prev_bar=self._prev_bar,
                     price_tick=self.instrument.price_tick,
+                    price_alignment_policy=self.instrument.price_alignment_policy,
                     trail_atr=self.trail_atr_tracker.atr,
                 )
                 sync_working_exit_stops(self.state.position)
@@ -1563,6 +1565,7 @@ class Runner:
                             entry_price=bar.close,
                             is_long=is_long,
                             price_tick=self.instrument.price_tick,
+                            price_alignment_policy=self.instrument.price_alignment_policy,
                             atr_value=self.tp_atr_tracker.atr,
                             initial_risk_per_unit=initial_risk,
                             book_version=next_book_version,
@@ -1809,6 +1812,7 @@ class Runner:
             entry_price=entry_price,
             is_long=is_long,
             price_tick=self.instrument.price_tick,
+            price_alignment_policy=self.instrument.price_alignment_policy,
             atr_value=self.stop_atr_tracker.atr,
             swing_reference=swing_reference,
             swing_atr_value=self.swing_sl_atr_tracker.atr,
@@ -1937,6 +1941,7 @@ class Runner:
             entry_price=entry_price,
             is_long=is_long,
             price_tick=self.instrument.price_tick,
+            price_alignment_policy=self.instrument.price_alignment_policy,
             atr_value=self.tp_atr_tracker.atr,
             initial_risk_per_unit=initial_risk,
             book_version=1,
@@ -2270,7 +2275,6 @@ class Runner:
         if value is None or not math.isfinite(value):
             return "na"
         return f"{value:.4f}"
-
 
 
 

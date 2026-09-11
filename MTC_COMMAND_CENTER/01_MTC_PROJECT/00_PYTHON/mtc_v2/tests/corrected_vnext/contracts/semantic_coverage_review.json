@@ -1,29 +1,29 @@
 {
  "schema": "P012_SEMANTIC_COVERAGE_REVIEW_V2",
  "reviewer": {
-  "identity": "Gemini 3.8 Flash High (gemini-3.8-flash-high), R32 delta review of 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c; the prior item dispositions it carried forward were authored by the same family in the R30 delta review, and before that in the R29 delta review and lanes REV16H_1A..6 under OD-20260906-3; assembled mechanically by the Lead (Astra) who decided nothing",
-  "family": "Gemini",
+  "identity": "Grok 4.6 (grok-4.6, included SuperGrok), session 01a08dd4-0ce5-7d80-862d-80209260d62f, R34 price current delta review of 3e86faec032407c1af9a75f8b8852222d732f316..b7975ae6c935c461c479768c5f252f930fbc1800; the prior item dispositions it carried forward were authored by Gemini in the R32 delta review, then the R30 delta review, then the R29 delta review and lanes REV16H_1A..6 under OD-20260906-3; review-report source attribution sha256 caf247cced8838b65e280af758bccc0925f68f0372b7df89d80d6743fc397d99; assembled mechanically by the Lead (Astra) who decided nothing",
+  "family": "Grok",
   "independent_of": [
    {
     "role": "KERNEL_IMPLEMENTER",
-    "basis": "kernel implemented by the Codex family (CONTRACT_TABLES_MANIFEST.json owner_ruling Q3a, reseal_history actors); reviewer is the Gemini family"
+    "basis": "Historical R32 basis: kernel implemented by the Codex family (CONTRACT_TABLES_MANIFEST.json owner_ruling Q3a, reseal_history actors); reviewer is the Gemini family Current R34 reviewer: Grok 4.6 (grok-4.6, included SuperGrok), session 01a08dd4-0ce5-7d80-862d-80209260d62f, independent of the Codex kernel implementer and Claude CONTRACT_TABLES author under the owner-approved substitution."
    },
    {
     "role": "CONTRACT_TABLES_AUTHOR",
-    "basis": "CONTRACT_TABLES authored by the Claude family (manifest author_identity, lane W127b on Claude MAX Opus); reviewer is the Gemini family"
+    "basis": "Historical R32 basis: CONTRACT_TABLES authored by the Claude family (manifest author_identity, lane W127b on Claude MAX Opus); reviewer is the Gemini family Current R34 reviewer: Grok 4.6 (grok-4.6, included SuperGrok), session 01a08dd4-0ce5-7d80-862d-80209260d62f, independent of the Codex kernel implementer and Claude CONTRACT_TABLES author under the owner-approved substitution."
    }
   ]
  },
  "reviewed_identities": {
-  "worktree_head_commit": "12a2d49544523e0a8cc643421870ecb30b9bb30c",
-  "core_tree_oid": "ad8b7d787ab8b087d6fd192b413b2592a8bea4c0",
-  "expected_seal_sha": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
-  "implementation_anchor_sha256": "25084f222e2885fca3df31da785d4f0c7a13685ff42f41d2ba177e1155550e0f",
-  "baseline_manifest_sha256": "d9f3127e4a2980bac19546517a38679605a2475b5b7a47f5c79265bcea6b316b",
-  "design_file_sha256": "8fd346f805aa30cbd0e00fc32296f8de913bfa616b2b1588ff54902d4f3ab675",
-  "design_version": "v1.25",
+  "worktree_head_commit": "b7975ae6c935c461c479768c5f252f930fbc1800",
+  "core_tree_oid": "ca57ca5e0487f92e05fa68d8217fdde486877a2c",
+  "expected_seal_sha": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
+  "implementation_anchor_sha256": "9b58661ec4bd476eb584b41f9f6e2691e430da5d2374de83ec33fd3a389a22f9",
+  "baseline_manifest_sha256": "15bab1607e5fc5c1af73a15fd86061f7186aea4f3c51d0a0f369d52b74517678",
+  "design_file_sha256": "12943ca7ba1e276188ff332cea8eb87b7ca46e3ab60579437311d951e9b8a195",
+  "design_version": "v1.27",
   "harness_sha256": "c78ee46776cab1b5fdee56de93d3637085b3942a759b3db5a8d69b9bf2ffc570",
-  "catalog_sha256": "3733773d82985738bea85f3e3a99a87577912aa85fa64247fe2570c122716d7b"
+  "catalog_sha256": "d8b37780a3e3c25f69b5e58bc5a0a88b59f59f0cc292becad0a7ba3abcd95e02"
  },
  "items": {
   "1": {
@@ -83,9 +83,10 @@
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\expected_provenance_exceptions.json",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\selftests\\test_corrected_config.py",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.json",
-    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.md"
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.md",
+    "C:\\tmp\\P012_GROK_S16_R34\\LEAD_EXTRACTED_A3_REPORT.md"
    ],
-   "notes": "[1A ACCEPTED_WITH_RESIDUAL_RISK] PARTIAL verdict covering only formulas of DEF-P012-01..04 (design sections 7-10) re-derived and compared with code and expected tables. All 19 formulas and rules of DEF-P012-01..04 have been completely hand-re-derived, compared with core code and sealed golden tables, and confirmed EQUAL without arithmetic deviation. Other parts of Item 1 (ancestry of IMPLEMENTATION_ANCHOR, base repin history, and full authoring import graph inspection) sit outside this sub-lane's partial scope and are assembled by the Lead. Named residuals: (1) Finite-corpus bounded verification: synthetic test scenarios prove numerical agreement at declared vector points only, not whole-domain equivalence (design limit 1); (2) Legacy-side comparison values were reconciled via static code inspection of LegacyEconomicsAdapter in core/economics.py rather than executing frozen P0-11 baseline binaries (design limit 10); (3) DEF-P012-01 and DEF-P012-02 formulas are grounded on self-evident algebraic correctness and legacy comparison inversion rather than explicit external venue specifications.\n[1B ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for formulas of DEF-P012-05..08 (design sections 11-14) re-derived and compared with code and expected tables only. All 40 formulas and rules across design sections 11-14 were successfully re-derived against kernel code and sealed golden tables with zero arithmetic discrepancies; the residual risk consists of two unclosed blocked markers in the sealed tables (RULE2-08-RED source_event_digest retained as a blocked marker while record bytes are populated, and RULE2-08-GREEN equity retained as BLOCKED-OPEN-EMBED-05 due to unenumerated pre-window setup numbers), the harness MIME-type rejection on the two markdown authority documents (mitigated by direct inspection of the canonical JSON economic records), and the lane delegation boundary leaving sections 7-10, authoring graph, and implementation anchor ancestry to sibling reviewer lanes.\n[1C ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this part only (the CONTRACT_TABLES authoring path and import graph, the IMPLEMENTATION_ANCHOR ancestry, and author independence from the kernel implementer). ACCEPTED_WITH_RESIDUAL_RISK on measured grounds: (1) Author independence is confirmed: CONTRACT_TABLES was authored by Claude-family lane W127b and the kernel was implemented by the Codex family (manifest lines 5-7), with zero Python files among the 19 sealed artifacts and selftests residing strictly outside the seal. (2) Ratification chain derivation is fully reconciled: verify_bceg.py lines 385-458 derives a 26-member chain (#5 through #28) from reseal_history, which matches semantic_coverage_review.schema.json lines 117-150 and schema.md lines 63-66. (3) Named residual risk ÔÇö Anchor ancestry: IMPLEMENTATION_BASE_SHA was re-anchored forward 14 times under decision 147 and subsequent rulings to f6790517e9bdc4e8bfcc401cae6606d7837b4e29, so git diff base..HEAD -- core is 0 bytes and does not capture the 54-commit kernel implementation delta. As ratified in design section 15.4 (lines 722-730), honest limit L14 (lines 836-865), and section 23.16 (lines 1827-1845), the pre-implementation property is carried by the measured git history (bundle placed at 5e8e5794 with kernel absent, first kernel commit 784175dd) rather than by the anchor base diff, satisfying the L14 restatement while leaving the original section 21 precondition 3 (:937) delta-expression unsatisfied across base..HEAD. (4) Named residual risk ÔÇö Baseline manifest pin: legacy_event_order_map_pin.baseline_manifest.sha256 in the manifest pins c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242 from re-seal #24 candidate pursuant to design section 15.3 (line 591), which binds seal-time bytes as a historical identity rather than tracking the current frozen baseline (130848719b25f834f903027184240db03eb55beeda5dc32a22f203118fa3e52a in IDENTITIES_MEASURED.json). [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. DEF-P012-01..04 formulas, derivations, DERIVATIONS.md, and verify_bceg.py remain byte-identical between heads; all goldens, inputs, and instrument records are untouched. The update to implementation_anchor.json and its SHA sidecar is routine re-seal bookkeeping reflecting the head commit update without impacting anchor ancestry. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. DEF-P012-01..08 derivations and formulas remain algebraically identical. The mechanical rename of mark_price to oracle_price in DERIVATIONS.md, RULE2-08 goldens, and inputs conforms to Design v1.25 §23.22 without arithmetic alteration. Strongest case for CHANGED: sealed contract artifacts and goldens were modified in place, altering sealed hash identities. This does not survive because all 17 scenario derivations and numerical outcomes remain exact matches, and implementation_anchor updates are routine re-seal bookkeeping. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. DERIVATIONS.md, all 17 scenario inputs, and all 17 golden outputs are byte-identical to PRIOR. CONTRACT_TABLES_MANIFEST and implementation_anchor updates reflect authorized reseal bookkeeping advancing the design reference pin to v1.25 without arithmetic modification."
+   "notes": "[1A ACCEPTED_WITH_RESIDUAL_RISK] PARTIAL verdict covering only formulas of DEF-P012-01..04 (design sections 7-10) re-derived and compared with code and expected tables. All 19 formulas and rules of DEF-P012-01..04 have been completely hand-re-derived, compared with core code and sealed golden tables, and confirmed EQUAL without arithmetic deviation. Other parts of Item 1 (ancestry of IMPLEMENTATION_ANCHOR, base repin history, and full authoring import graph inspection) sit outside this sub-lane's partial scope and are assembled by the Lead. Named residuals: (1) Finite-corpus bounded verification: synthetic test scenarios prove numerical agreement at declared vector points only, not whole-domain equivalence (design limit 1); (2) Legacy-side comparison values were reconciled via static code inspection of LegacyEconomicsAdapter in core/economics.py rather than executing frozen P0-11 baseline binaries (design limit 10); (3) DEF-P012-01 and DEF-P012-02 formulas are grounded on self-evident algebraic correctness and legacy comparison inversion rather than explicit external venue specifications.\n[1B ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for formulas of DEF-P012-05..08 (design sections 11-14) re-derived and compared with code and expected tables only. All 40 formulas and rules across design sections 11-14 were successfully re-derived against kernel code and sealed golden tables with zero arithmetic discrepancies; the residual risk consists of two unclosed blocked markers in the sealed tables (RULE2-08-RED source_event_digest retained as a blocked marker while record bytes are populated, and RULE2-08-GREEN equity retained as BLOCKED-OPEN-EMBED-05 due to unenumerated pre-window setup numbers), the harness MIME-type rejection on the two markdown authority documents (mitigated by direct inspection of the canonical JSON economic records), and the lane delegation boundary leaving sections 7-10, authoring graph, and implementation anchor ancestry to sibling reviewer lanes.\n[1C ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this part only (the CONTRACT_TABLES authoring path and import graph, the IMPLEMENTATION_ANCHOR ancestry, and author independence from the kernel implementer). ACCEPTED_WITH_RESIDUAL_RISK on measured grounds: (1) Author independence is confirmed: CONTRACT_TABLES was authored by Claude-family lane W127b and the kernel was implemented by the Codex family (manifest lines 5-7), with zero Python files among the 19 sealed artifacts and selftests residing strictly outside the seal. (2) Ratification chain derivation is fully reconciled: verify_bceg.py lines 385-458 derives a 26-member chain (#5 through #28) from reseal_history, which matches semantic_coverage_review.schema.json lines 117-150 and schema.md lines 63-66. (3) Named residual risk ÔÇö Anchor ancestry: IMPLEMENTATION_BASE_SHA was re-anchored forward 14 times under decision 147 and subsequent rulings to f6790517e9bdc4e8bfcc401cae6606d7837b4e29, so git diff base..HEAD -- core is 0 bytes and does not capture the 54-commit kernel implementation delta. As ratified in design section 15.4 (lines 722-730), honest limit L14 (lines 836-865), and section 23.16 (lines 1827-1845), the pre-implementation property is carried by the measured git history (bundle placed at 5e8e5794 with kernel absent, first kernel commit 784175dd) rather than by the anchor base diff, satisfying the L14 restatement while leaving the original section 21 precondition 3 (:937) delta-expression unsatisfied across base..HEAD. (4) Named residual risk ÔÇö Baseline manifest pin: legacy_event_order_map_pin.baseline_manifest.sha256 in the manifest pins c5d7d91d06b26ab6b6ffee5f3a3f5e4ff00fefb5b6d236d7b2e8014e38a33242 from re-seal #24 candidate pursuant to design section 15.3 (line 591), which binds seal-time bytes as a historical identity rather than tracking the current frozen baseline (130848719b25f834f903027184240db03eb55beeda5dc32a22f203118fa3e52a in IDENTITIES_MEASURED.json). [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. DEF-P012-01..04 formulas, derivations, DERIVATIONS.md, and verify_bceg.py remain byte-identical between heads; all goldens, inputs, and instrument records are untouched. The update to implementation_anchor.json and its SHA sidecar is routine re-seal bookkeeping reflecting the head commit update without impacting anchor ancestry. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. DEF-P012-01..08 derivations and formulas remain algebraically identical. The mechanical rename of mark_price to oracle_price in DERIVATIONS.md, RULE2-08 goldens, and inputs conforms to Design v1.25 §23.22 without arithmetic alteration. Strongest case for CHANGED: sealed contract artifacts and goldens were modified in place, altering sealed hash identities. This does not survive because all 17 scenario derivations and numerical outcomes remain exact matches, and implementation_anchor updates are routine re-seal bookkeeping. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. DERIVATIONS.md, all 17 scenario inputs, and all 17 golden outputs are byte-identical to PRIOR. CONTRACT_TABLES_MANIFEST and implementation_anchor updates reflect authorized reseal bookkeeping advancing the design reference pin to v1.25 without arithmetic modification. [R34 price successor review, Grok, 3e86faec032407c1af9a75f8b8852222d732f316..b7975ae6c935c461c479768c5f252f930fbc1800]: disposition carried forward UNCHANGED. Prior accepted Item 1 (PRIOR semantic_coverage_review.json:30,88) remains supported: DEF-P012-01..08 EQUAL vs goldens, Claude/Codex independence, L14 ancestry residual, finite-corpus L1. Integer exactness repair implements design §24.2 without altering those formulas or goldens. Strongest CHANGED (new §24 lattice absent from prior notes) does not survive: authorized price representation does not invalidate the accepted DEF EQUAL claims; L1 already named the finite bound."
   },
   "2": {
    "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
@@ -112,17 +113,18 @@
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\funding\\HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\funding\\HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json.sha256",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json",
-    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json.sha256"
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\core\\economic_records\\instruments\\HYPERLIQUID-BTC-PERP-V1.3.json.sha256",
+    "C:\\tmp\\P012_GROK_S16_R34\\LEAD_EXTRACTED_A3_REPORT.md"
    ],
-   "notes": "[2A ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this lane (REV16H-2A: code hunks for config.py, economics.py, exits.py, instrument.py, position_sizer.py, and semantics.py from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889). All 21 assigned hunks map cleanly to ratified Section 18 rows (S18-08, S18-02, S18-05, S18-04, S18-03, S18-01) with valid served DEF sets, exact raw byte SHA-256 matches, and zero undocumented economic modifications. Named residual risks: (1) Remaining 146 of 167 total core hunks reside in files outside this lane (position_manager.py, results.py, runner.py, types.py, and economic_records/**) and require separate Lead assembly; (2) economics.py is introduced as a single monolithic 1226-line diff hunk (global index 110), housing both the ExecutionEconomics seam ABC and internal implementations for DEFs 01, 02, 04, 05, 06, 07, 08; (3) Static shape census cannot inspect dynamic calls, aliases, or callers outside core (Design Section 18 blind spots, Section 17 limit 4); (4) Production collision policy in resolve_corrected_price_exits is structurally fixed to STOP_FIRST while Design Section 19 owner adjudication remains open.\n[2B ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for Part B only, covering kernel diff hunks in position_manager.py, results.py, runner.py, and types.py from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889. All 44 hunks across these four assigned files were inspected against Section 18 of P012_FRESH_DESIGN_V1.md and confirmed as SECTION18_SHARED with exact single-row Section-18 ownership, matching served DEF sets, and zero undocumented hunks. Named residual risk: this partial review covers 44 of 167 total kernel diff hunks (the remaining 123 hunks across config.py, economics.py, exits.py, instrument.py, position_sizer.py, semantics.py, and 102 economic records data files must be assembled by the Lead), and static diff/census inspection cannot evaluate external dynamic callers outside core.\n[2C ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this part only, covering all core/economic_records/** data-file and detached-sidecar hunks (102 hunks) from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889. All 102 assigned hunks were verified against the design Section 5 immutable record specification and Section 18 shape census, cleanly confirming SECTION18_SHARED under unique rows S18-11 and S18-04 with exact served DEF sets and zero undocumented hunks. Named residual risk: this partial review covers only 102 of the 167 total kernel diff hunks (the remaining 65 hunks across core Python modules config.py, economics.py, exits.py, instrument.py, position_manager.py, position_sizer.py, results.py, runner.py, semantics.py, and types.py must be assembled by the Lead); static shape census and record review cannot evaluate external dynamic consumers outside core. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Based on the corrected facts, core/runner.py is within Item 2's ratified hunk_coverage scope (112 paths, previously 167 hunks including 34 in runner.py under S18-07). Regenerating coverage at ca1a4457 yields 168 hunks with zero hunks classified UNDOCUMENTED, as the new hunk deterministically binds to S18-07 under canonical path rules. The modification is strictly an import of EXECUTION_PROFILE_RAW_CLOSE_ONLY for debug_mode metadata, supported by tests/test_runner_debug_metadata.py, while all six sub-lane files remain byte-identical since #28. Because the change introduces no behavioral regressions, semantic shifts, or unmitigated risks to DEF-P012-03/05/07, the ACCEPTED_WITH_RESIDUAL_RISK disposition carries forward intact. RESIDUAL NAMED BY THE REVIEWER: The strongest case for CHANGED is that core/runner.py is inside ratified scope, making hunk 168 an in-scope functional accretion rather than an out-of-scope artifact. S18-07 specifically serves DEF-P012-03, DEF-P012-05, and DEF-P012-07, none of which govern debug_mode metadata; absorbing a new feature hunk into an existing defect row without an explicit ticket could constitute scope drift and alter the residual risk profile of the module. This case does not survive because the gate's diff parser and Section-18 census report zero undocumented hunks, the path binding is mechanical and uniform, and the change is a benign, isolated metadata import with dedicated unit tests that does not compromise execution semantics or invalidate prior risk mitigations. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. All new diff hunks in core/types.py, core/economics.py, core/results.py, and economic records bind deterministically to ratified Section-18 rows S18-09, S18-02, S18-10, and S18-11 as recorded in KERNEL_BOOKKEEPING/semantic_coverage_review.json. Strongest case for CHANGED: kernel modifications touch three core files and could represent undocumented scope drift. This does not survive because the Section-18 census and gate parser verify zero undocumented hunks, and the rename strictly implements approved valuation rules. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. All 16 non-__init__ core Python modules and core/__init__.py (17 modules total) are byte-identical to PRIOR. Core changes are strictly limited to two economic data records and sidecars: HYPERLIQUID-BTC-PERP-V1.3.json adding source_sha256 bound to S18-04 per candidate design line 880, and HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json adding frozen_source_absence bound to S18-11 per line 887, with zero undocumented hunks.",
+   "notes": "[2A ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this lane (REV16H-2A: code hunks for config.py, economics.py, exits.py, instrument.py, position_sizer.py, and semantics.py from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889). All 21 assigned hunks map cleanly to ratified Section 18 rows (S18-08, S18-02, S18-05, S18-04, S18-03, S18-01) with valid served DEF sets, exact raw byte SHA-256 matches, and zero undocumented economic modifications. Named residual risks: (1) Remaining 146 of 167 total core hunks reside in files outside this lane (position_manager.py, results.py, runner.py, types.py, and economic_records/**) and require separate Lead assembly; (2) economics.py is introduced as a single monolithic 1226-line diff hunk (global index 110), housing both the ExecutionEconomics seam ABC and internal implementations for DEFs 01, 02, 04, 05, 06, 07, 08; (3) Static shape census cannot inspect dynamic calls, aliases, or callers outside core (Design Section 18 blind spots, Section 17 limit 4); (4) Production collision policy in resolve_corrected_price_exits is structurally fixed to STOP_FIRST while Design Section 19 owner adjudication remains open.\n[2B ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for Part B only, covering kernel diff hunks in position_manager.py, results.py, runner.py, and types.py from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889. All 44 hunks across these four assigned files were inspected against Section 18 of P012_FRESH_DESIGN_V1.md and confirmed as SECTION18_SHARED with exact single-row Section-18 ownership, matching served DEF sets, and zero undocumented hunks. Named residual risk: this partial review covers 44 of 167 total kernel diff hunks (the remaining 123 hunks across config.py, economics.py, exits.py, instrument.py, position_sizer.py, semantics.py, and 102 economic records data files must be assembled by the Lead), and static diff/census inspection cannot evaluate external dynamic callers outside core.\n[2C ACCEPTED_WITH_RESIDUAL_RISK] This verdict is PARTIAL for this part only, covering all core/economic_records/** data-file and detached-sidecar hunks (102 hunks) from canonical base 5e8e579410ee55008bfd2d2d85054fd1d782f32c through reviewed HEAD f508125141ba86d08a2c41ce23b3bdef88e34889. All 102 assigned hunks were verified against the design Section 5 immutable record specification and Section 18 shape census, cleanly confirming SECTION18_SHARED under unique rows S18-11 and S18-04 with exact served DEF sets and zero undocumented hunks. Named residual risk: this partial review covers only 102 of the 167 total kernel diff hunks (the remaining 65 hunks across core Python modules config.py, economics.py, exits.py, instrument.py, position_manager.py, position_sizer.py, results.py, runner.py, semantics.py, and types.py must be assembled by the Lead); static shape census and record review cannot evaluate external dynamic consumers outside core. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Based on the corrected facts, core/runner.py is within Item 2's ratified hunk_coverage scope (112 paths, previously 167 hunks including 34 in runner.py under S18-07). Regenerating coverage at ca1a4457 yields 168 hunks with zero hunks classified UNDOCUMENTED, as the new hunk deterministically binds to S18-07 under canonical path rules. The modification is strictly an import of EXECUTION_PROFILE_RAW_CLOSE_ONLY for debug_mode metadata, supported by tests/test_runner_debug_metadata.py, while all six sub-lane files remain byte-identical since #28. Because the change introduces no behavioral regressions, semantic shifts, or unmitigated risks to DEF-P012-03/05/07, the ACCEPTED_WITH_RESIDUAL_RISK disposition carries forward intact. RESIDUAL NAMED BY THE REVIEWER: The strongest case for CHANGED is that core/runner.py is inside ratified scope, making hunk 168 an in-scope functional accretion rather than an out-of-scope artifact. S18-07 specifically serves DEF-P012-03, DEF-P012-05, and DEF-P012-07, none of which govern debug_mode metadata; absorbing a new feature hunk into an existing defect row without an explicit ticket could constitute scope drift and alter the residual risk profile of the module. This case does not survive because the gate's diff parser and Section-18 census report zero undocumented hunks, the path binding is mechanical and uniform, and the change is a benign, isolated metadata import with dedicated unit tests that does not compromise execution semantics or invalidate prior risk mitigations. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. All new diff hunks in core/types.py, core/economics.py, core/results.py, and economic records bind deterministically to ratified Section-18 rows S18-09, S18-02, S18-10, and S18-11 as recorded in KERNEL_BOOKKEEPING/semantic_coverage_review.json. Strongest case for CHANGED: kernel modifications touch three core files and could represent undocumented scope drift. This does not survive because the Section-18 census and gate parser verify zero undocumented hunks, and the rename strictly implements approved valuation rules. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. All 16 non-__init__ core Python modules and core/__init__.py (17 modules total) are byte-identical to PRIOR. Core changes are strictly limited to two economic data records and sidecars: HYPERLIQUID-BTC-PERP-V1.3.json adding source_sha256 bound to S18-04 per candidate design line 880, and HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json adding frozen_source_absence bound to S18-11 per line 887, with zero undocumented hunks. [R34 price successor review, Grok, 3e86faec032407c1af9a75f8b8852222d732f316..b7975ae6c935c461c479768c5f252f930fbc1800]: disposition carried forward UNCHANGED. Prior accepted Item 2 (:91,117) remains supported: hunks bind to stated S18 rows, zero UNDOCUMENTED, static-census residual. S18-04 owns rounding.py (design:880; ITEM2:3625-3636); 12 rows; S18-12 empty. Strongest CHANGED (191 vs 167; fresh hunk 146 SHA) does not survive: same mechanical in-scope binding pattern the prior receipt used at R29 for an extra runner hunk.",
    "hunk_coverage": {
     "schema": "P012_KERNEL_HUNK_COVERAGE_V2",
     "base_commit": "5e8e579410ee55008bfd2d2d85054fd1d782f32c",
-    "reviewed_head": "12a2d49544523e0a8cc643421870ecb30b9bb30c",
-    "diff_command": "git diff --relative --unified=0 --no-ext-diff --no-textconv --no-renames --diff-algorithm=myers --no-indent-heuristic 5e8e579410ee55008bfd2d2d85054fd1d782f32c..12a2d49544523e0a8cc643421870ecb30b9bb30c -- core",
-    "diff_sha256": "0f4d013dc65ff1e98136fc3951e5cd7c593fee7d3bbb41190e13638e9c2f56dd",
-    "total_changed_paths": 112,
-    "total_changed_files": 112,
+    "reviewed_head": "b7975ae6c935c461c479768c5f252f930fbc1800",
+    "diff_command": "git diff --relative --unified=0 --no-ext-diff --no-textconv --no-renames --diff-algorithm=myers --no-indent-heuristic 5e8e579410ee55008bfd2d2d85054fd1d782f32c..b7975ae6c935c461c479768c5f252f930fbc1800 -- core",
+    "diff_sha256": "bdb40147fe917554f8ff67480ab795feec2c963d57e87552849df9c12df802c1",
+    "total_changed_paths": 113,
+    "total_changed_files": 113,
     "changed_paths": [
      {
       "path": "core/config.py",
@@ -815,7 +817,7 @@
        74
       ],
       "hunk_sha256s": [
-       "a12df1208c5a61af2e7f98b546971d2f62aff7fe04a083a098f8c46ab89cd8c6"
+       "0a44481191160382402e34212c0d92b52bcc1cd29f50a53be54ea3b7423c5088"
       ]
      },
      {
@@ -825,7 +827,7 @@
        75
       ],
       "hunk_sha256s": [
-       "1c9f8be42a5aed4e102a80f1147e8232e09cd36674918ad7ba33d34898483c0e"
+       "a963d41a7e33da506c45f3acf8e7d1e3801243868798d788f23a6d5cf84449d8"
       ]
      },
      {
@@ -1180,40 +1182,74 @@
      },
      {
       "path": "core/exits.py",
-      "hunk_count": 4,
+      "hunk_count": 16,
       "hunk_indices": [
        111,
        112,
        113,
-       114
+       114,
+       115,
+       116,
+       117,
+       118,
+       119,
+       120,
+       121,
+       122,
+       123,
+       124,
+       125,
+       126
       ],
       "hunk_sha256s": [
        "b0bb8fbcf15cb0c94a2a9c2a3bf80b32d5c54d2030a0dbbed687339c4be50734",
-       "bf639f0518992e1c05428452b0adf6248b93fa5f3c9c302405fef8268798261f",
-       "4998f332fce20dcf9f63769299aa848ae530bb29691f009c75a7e17206a1ece6",
-       "c619422146b83772e2349edcf132c3d90e9675e9e302682706772611ccd172cb"
+       "4360981952ea81c0e3ac09ba74b1587fea4b7806b04a0f570bd434ea3f076636",
+       "a87ec91059ad22dafb0baa3ed080e975577a513599b2fe71b7f54bc87caf1615",
+       "1cb2207f06e88b2fd7cd32f76c127137c58bd318fa520c925dd24cf49c61c194",
+       "3f7da92eacf3c04ad798521030ce0c7e28eb8351597c06ba06a3e087cf2d6cf6",
+       "4e749c9f333592c5ad0df51dfc5ae9ea7bf5599a5142da28f4b360fd25334de9",
+       "de5f3b0dcc545b3f314ff962275730e9826cbe6a577f920399506920ffca589d",
+       "ea010e52f314a0ef9fb2c2a1c87ee903393088bbee64bba46d92b758f1f63d09",
+       "8768a4dc9f9f1bb3757ab21e79f9fc823e7f3fb9b6dda37e99bb182f3dc8085a",
+       "0e9ff6a09507fe3d6fdff2fb8c44502e64003fa5126723f2e90c40f36770cd63",
+       "e95224ae99a4ffdaf6230f682c19e75e8c1a752418bebbc07139d3cc813a8046",
+       "a052685cb25620b250aa3e5ba0e00ca617fcb529486f769bf61fd570af6f0ea4",
+       "4bb1837acc5b523b295c6aeb11b089942a3911925e8ba9b902cec59504a8ea68",
+       "b8058a833c5504f882bf71f03749919edb665c5ddd9c36b26856ffc9563f0462",
+       "b86ff030fe7da8b6f7f7631f9b43947fc4e1e38013c70397ca01962f0c8217fd",
+       "0ea83961b4f246abf8dd46c63f24dbc6694d6cc3dca5ea0be6c1c582cb2fe586"
       ]
      },
      {
       "path": "core/instrument.py",
-      "hunk_count": 3,
+      "hunk_count": 8,
       "hunk_indices": [
-       115,
-       116,
-       117
+       127,
+       128,
+       129,
+       130,
+       131,
+       132,
+       133,
+       134
       ],
       "hunk_sha256s": [
        "22e07801f076229c8391c1c4fa8d2c9e4f9046b349eb21363a9d7d1020bbe561",
        "8283a6a8a38b05eea80ca4e4c9cd9deee2db5d7bebfccee78824213ecf99b6e0",
-       "1192dbdc9e82d98a923787b5f4dde4132630d05395aa69f7e894a905d148f6c5"
+       "4725cc6d9c7aaed8428b601c5438de8cee4f15654c02520beae4a18097ee3114",
+       "250eea39eb58f60150b4dc052d8de8acf0011080b95ee95358adac35e9553a9b",
+       "2aacbf08eee82f53ea09e7ec0198d780370f29bd45006fc9657f5fe537c137c8",
+       "e990f225984863cc95f6b7f0681e298f4dbfdffb066de889f130e0bc948bc9d6",
+       "1f2f27ee75125c8995211ba64f30e11efd5c149d91242f1fbc046f74ecd6a432",
+       "188d56d3c6059c1d726120e0bf6a91e5cbc1b01b2ff4ec582bee6000c79f41a8"
       ]
      },
      {
       "path": "core/position_manager.py",
       "hunk_count": 2,
       "hunk_indices": [
-       118,
-       119
+       135,
+       136
       ],
       "hunk_sha256s": [
        "36edfdee5c7483dd5af0b890834f36b438db537dd3d18c2a579854486d3c2164",
@@ -1224,10 +1260,10 @@
       "path": "core/position_sizer.py",
       "hunk_count": 4,
       "hunk_indices": [
-       120,
-       121,
-       122,
-       123
+       137,
+       138,
+       139,
+       140
       ],
       "hunk_sha256s": [
        "377b7084c8ca989b8d5fcfaa1a32131db8813fe637118b56e31dfb04e6d72e38",
@@ -1240,10 +1276,10 @@
       "path": "core/results.py",
       "hunk_count": 4,
       "hunk_indices": [
-       124,
-       125,
-       126,
-       127
+       141,
+       142,
+       143,
+       144
       ],
       "hunk_sha256s": [
        "050a550b2079ea2a9ea8b5cc5397216a363d901c6c7cc5a1337d5d96416d2fc1",
@@ -1253,28 +1289,21 @@
       ]
      },
      {
-      "path": "core/runner.py",
-      "hunk_count": 35,
+      "path": "core/rounding.py",
+      "hunk_count": 2,
       "hunk_indices": [
-       128,
-       129,
-       130,
-       131,
-       132,
-       133,
-       134,
-       135,
-       136,
-       137,
-       138,
-       139,
-       140,
-       141,
-       142,
-       143,
-       144,
        145,
-       146,
+       146
+      ],
+      "hunk_sha256s": [
+       "7f32a743e7c4a67a4fdb0a5951a89ebf36b1ac860bed29f6d04969314dd04fb5",
+       "db49177032590c857d3dcb6e3667f37c3a27faac2a01654e4dbfc4c99d1a5c01"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "hunk_count": 39,
+      "hunk_indices": [
        147,
        148,
        149,
@@ -1290,7 +1319,30 @@
        159,
        160,
        161,
-       162
+       162,
+       163,
+       164,
+       165,
+       166,
+       167,
+       168,
+       169,
+       170,
+       171,
+       172,
+       173,
+       174,
+       175,
+       176,
+       177,
+       178,
+       179,
+       180,
+       181,
+       182,
+       183,
+       184,
+       185
       ],
       "hunk_sha256s": [
        "c32aedd4bc6a8e80814c7d140adb1c07b04fb3b1c83a3ee0f1b3d8fc86e62789",
@@ -1305,36 +1357,40 @@
        "2fb2426d49750ad2af7886a1f5df1db66290a3d4165a5a78a474a04f24f9dc64",
        "be7f40cf9de0d01332c541b84ea2c1cbb83d3a2bd7f21b8afcecaf0f2ca1c92e",
        "9b6807f0b4f3416c516701f9e7108dd2e8d090f60f744bee35a17a8007e388ae",
-       "3bb418ed071ae7fedf8a7ce7f0541e607340a41d8113d8dd7592d1740efafd29",
-       "f2a74f662c1a5eb6ba927ed01907f462fcd2d22cf6396c0ea628d4f1e860b194",
-       "7e2100065ec9db4fdc6ee36ab595796b13002f8b9fe55ffd89d89682520c809b",
-       "c681694a884f4d4a62d2446e1c52f124300f78576bf218415e5e5a7db2a8557b",
-       "b0bf36b8b9bfd2b913079db0b80c279b7f5312e189c1a639789ac9c1bf82c65d",
-       "3cbdf1dbc82b548570271bfa2fa364f5e2aa95ef8b88c5a3cf5eda420d58537d",
-       "0aac251d5c44000498b80c6dba42d323294321bad1a3fdaadc6de3c9a8208eea",
-       "75f57f2e3632456c942adeeb58e912cf14c88a8cac6d59f7ec3d69643e11d425",
-       "1599993fbc44e886cca840530e21e576c529caaef6544959c45a0640e2e51768",
-       "238f961ee743a0447b86b12199de00e4a39d51e11d5a0b1b5b9d8e0cbb363efa",
-       "cfa04c00ac51eff98f4a85315d1807a6f6709e8d65ecdb6159735dc40ef2bc50",
-       "8154f840fad8a55d0029f4d86c358e1ed23cb4cfc6f71239db75ac1de9e0a11e",
-       "004570a4a4a2786bad2e9ad3bad52027d7954c0484b6bb0050a9ec4dea949c03",
-       "d6726152bb0753406682b2379dc0c06c40729af95bcd8a7aae79a23c04b5de22",
-       "6bcf1445377a550241308bf40966f8d57aeecec3aa6bfe75cfe0ee429c9396bc",
-       "34799551ce8eea4fbb5b5ca890b72f260a1489ce707ed47f45b4cb62e2a32b80",
-       "8a4cb9c96190a59446e9af01b3a8b2945187dd65532df9a1721bdecf35e2f580",
-       "774cec034fbabf9c3ab93190a2e0f9524cc0fd0a5d89a217353d8e59788384a2",
-       "6d81f61a229c0948ff2a45e13494f10cdf53f204f9c30012efda9f8cadba3c76",
-       "4e62b855327f64092096275a2b6b1041f3de77436716c7d1dbea561ab3257c5d",
-       "a323d8aa77e166d3e75a7109a27c9b809c4205bf7763fcdf095d59d158ce571a",
-       "7ef3a8138dc01522345b226b175aba91bd77b6df4b8750b44f51849947897d50",
-       "1ea4e68794613ef614675f2e065d13c8ffcd6d5bf71fe1abc3747eee22501876"
+       "3fb3ff442314c0e24078e0804378fca96d0eb5681bf8dbb33d12252ac24697e0",
+       "bb4035bf65875f4da4a0a7ba70426670ba008d9c43c6581e8c8ee276fdce9fe1",
+       "02144dea0a9069cca3467c2371f419cdda9b51ad1c532ea26561cb09c8af7ac3",
+       "7abf71ff5cfa1d8f7bd3f7335cacce889965fa6b5cdc34fef98a4a7f5be9173a",
+       "8b3d79fb23057d5afedf5aed83cfe1bf19eb98a2354b9501493dfd0dbe54a2d8",
+       "1fb870d723f57d4050a25935feb7a93c31631834a58a7715adb137b37aba590f",
+       "cf17971ba4c97e5561bcaced06f3a62ab95ba27aece86770fc35d8e84f5633c2",
+       "85c8c175e8aa71047007fa80d91c5744b7830c7aee5f8b8231c0f2bc56cbf9b2",
+       "a34aef9a2ff6e435dce184bee8ba33c7d7cbcdc8aae1a3f7fdd452bbd0ffee21",
+       "5aed4b11a377d1985d0161f76d8c13cea6eaebe196a393e21cf7b60fbf23a6d1",
+       "70050d9d8100d678b06f27d5bb02763fea41383d5a8453be82b931fa95544cd9",
+       "358ce9ba775c0ff3d41b4434bd69c977af23d43e4deb746bfdf8a3b702c3a620",
+       "1cbc98a9636deb23e4c1ebb418dbd680e9a29040c3a49961c4490fdb01657c6d",
+       "5d694a6b264b551dd8342ec68e5026da47d88f8752b0600ffb2dde7dfda73743",
+       "245cca341079060094a74fedae04a3b2f293d55420865667f9b9177d92a157d8",
+       "cb75851260961adb036a407c968b1045889fd36aaf26a645b8b6bfd1e314d6cf",
+       "26be30646c6904b97c62ad0bc1e89da63ebdeda948c724386624cf92a68e8089",
+       "24ec55da0f7def8f0a78f185fb179e88f8e6eace368a79d96e28d2d0ab95f3cf",
+       "c0d48fb2cc3a984b60b0b52e0a8d96f497b078ca83f19aaf9423981caadde159",
+       "0708b1131d174ad76c3ecf1682ab8d08ad9f44734e50513ca6fbad82411c682b",
+       "cadd92a24f99048804644ef5ae06a45dfba4a106ba2c7218555ad887e6ac095a",
+       "94b6816074ec40a0225cbdd6045d7829f1328959cd12faf2d2c499f548ec50a4",
+       "bb918eaad509bb3391cc7e6dafbd64bf2e666bbd19be8248e8efd93ed93ad6ad",
+       "a42ceb7ab7b8d6c0ddee6391024b57973cdf1868549b22b130f9d953c08d12b6",
+       "db2880b172678ff8e2453addbbb4edd407a2ca8670ff5f64f2bcf0fdc3e5daff",
+       "660be1f700268c50bfdf3f2b1035e1f7f406c2d469a6fa4939610d98053a363d",
+       "6ca3583c2c37d98551df69e94deef2af2202689a0411596bc418398798dc9f2c"
       ]
      },
      {
       "path": "core/semantics.py",
       "hunk_count": 1,
       "hunk_indices": [
-       163
+       186
       ],
       "hunk_sha256s": [
        "2bae096428a5b61505b44ea9184e2cc4032fcb5e5a3da3d2e0b7104606c5e35b"
@@ -1344,10 +1400,10 @@
       "path": "core/types.py",
       "hunk_count": 4,
       "hunk_indices": [
-       164,
-       165,
-       166,
-       167
+       187,
+       188,
+       189,
+       190
       ],
       "hunk_sha256s": [
        "f1ee192be24aac2973838b25659669b6310675c8580c6dfe3aa9ac79b1471f63",
@@ -1371,7 +1427,7 @@
        "DEF-P012-08"
       ],
       "hunk_indices": [
-       163
+       186
       ]
      },
      {
@@ -1396,10 +1452,10 @@
        "DEF-P012-02"
       ],
       "hunk_indices": [
-       120,
-       121,
-       122,
-       123
+       137,
+       138,
+       139,
+       140
       ]
      },
      {
@@ -1444,9 +1500,16 @@
        107,
        108,
        109,
-       115,
-       116,
-       117
+       127,
+       128,
+       129,
+       130,
+       131,
+       132,
+       133,
+       134,
+       145,
+       146
       ]
      },
      {
@@ -1459,7 +1522,19 @@
        111,
        112,
        113,
-       114
+       114,
+       115,
+       116,
+       117,
+       118,
+       119,
+       120,
+       121,
+       122,
+       123,
+       124,
+       125,
+       126
       ]
      },
      {
@@ -1470,8 +1545,8 @@
        "DEF-P012-08"
       ],
       "hunk_indices": [
-       118,
-       119
+       135,
+       136
       ]
      },
      {
@@ -1482,25 +1557,6 @@
        "DEF-P012-07"
       ],
       "hunk_indices": [
-       128,
-       129,
-       130,
-       131,
-       132,
-       133,
-       134,
-       135,
-       136,
-       137,
-       138,
-       139,
-       140,
-       141,
-       142,
-       143,
-       144,
-       145,
-       146,
        147,
        148,
        149,
@@ -1516,7 +1572,30 @@
        159,
        160,
        161,
-       162
+       162,
+       163,
+       164,
+       165,
+       166,
+       167,
+       168,
+       169,
+       170,
+       171,
+       172,
+       173,
+       174,
+       175,
+       176,
+       177,
+       178,
+       179,
+       180,
+       181,
+       182,
+       183,
+       184,
+       185
       ]
      },
      {
@@ -1544,10 +1623,10 @@
        "DEF-P012-08"
       ],
       "hunk_indices": [
-       164,
-       165,
-       166,
-       167
+       187,
+       188,
+       189,
+       190
       ]
      },
      {
@@ -1556,10 +1635,10 @@
        "DEF-P012-07"
       ],
       "hunk_indices": [
-       124,
-       125,
-       126,
-       127
+       141,
+       142,
+       143,
+       144
       ]
      },
      {
@@ -2701,8 +2780,8 @@
       "old_start": 0,
       "old_count": 0,
       "new_start": 1,
-      "new_count": 239,
-      "hunk_sha256": "a12df1208c5a61af2e7f98b546971d2f62aff7fe04a083a098f8c46ab89cd8c6",
+      "new_count": 247,
+      "hunk_sha256": "0a44481191160382402e34212c0d92b52bcc1cd29f50a53be54ea3b7423c5088",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-04",
       "served_def_ids": [
@@ -2715,7 +2794,7 @@
       "old_count": 0,
       "new_start": 1,
       "new_count": 1,
-      "hunk_sha256": "1c9f8be42a5aed4e102a80f1147e8232e09cd36674918ad7ba33d34898483c0e",
+      "hunk_sha256": "a963d41a7e33da506c45f3acf8e7d1e3801243868798d788f23a6d5cf84449d8",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-04",
       "served_def_ids": [
@@ -3199,11 +3278,11 @@
      },
      {
       "path": "core/exits.py",
-      "old_start": 16,
-      "old_count": 0,
+      "old_start": 17,
+      "old_count": 2,
       "new_start": 17,
-      "new_count": 11,
-      "hunk_sha256": "bf639f0518992e1c05428452b0adf6248b93fa5f3c9c302405fef8268798261f",
+      "new_count": 20,
+      "hunk_sha256": "4360981952ea81c0e3ac09ba74b1587fea4b7806b04a0f570bd434ea3f076636",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-05",
       "served_def_ids": [
@@ -3213,11 +3292,179 @@
      },
      {
       "path": "core/exits.py",
-      "old_start": 18,
+      "old_start": 167,
+      "old_count": 2,
+      "new_start": 185,
+      "new_count": 14,
+      "hunk_sha256": "a87ec91059ad22dafb0baa3ed080e975577a513599b2fe71b7f54bc87caf1615",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 170,
       "old_count": 1,
-      "new_start": 29,
+      "new_start": 200,
       "new_count": 1,
-      "hunk_sha256": "4998f332fce20dcf9f63769299aa848ae530bb29691f009c75a7e17206a1ece6",
+      "hunk_sha256": "1cb2207f06e88b2fd7cd32f76c127137c58bd318fa520c925dd24cf49c61c194",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 172,
+      "old_count": 1,
+      "new_start": 202,
+      "new_count": 22,
+      "hunk_sha256": "3f7da92eacf3c04ad798521030ce0c7e28eb8351597c06ba06a3e087cf2d6cf6",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 181,
+      "old_count": 1,
+      "new_start": 232,
+      "new_count": 2,
+      "hunk_sha256": "4e749c9f333592c5ad0df51dfc5ae9ea7bf5599a5142da28f4b360fd25334de9",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 196,
+      "old_count": 1,
+      "new_start": 248,
+      "new_count": 6,
+      "hunk_sha256": "de5f3b0dcc545b3f314ff962275730e9826cbe6a577f920399506920ffca589d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 201,
+      "old_count": 1,
+      "new_start": 258,
+      "new_count": 6,
+      "hunk_sha256": "ea010e52f314a0ef9fb2c2a1c87ee903393088bbee64bba46d92b758f1f63d09",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 208,
+      "old_count": 1,
+      "new_start": 270,
+      "new_count": 6,
+      "hunk_sha256": "8768a4dc9f9f1bb3757ab21e79f9fc823e7f3fb9b6dda37e99bb182f3dc8085a",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 218,
+      "old_count": 1,
+      "new_start": 285,
+      "new_count": 2,
+      "hunk_sha256": "0e9ff6a09507fe3d6fdff2fb8c44502e64003fa5126723f2e90c40f36770cd63",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 230,
+      "old_count": 1,
+      "new_start": 298,
+      "new_count": 6,
+      "hunk_sha256": "e95224ae99a4ffdaf6230f682c19e75e8c1a752418bebbc07139d3cc813a8046",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 244,
+      "old_count": 1,
+      "new_start": 317,
+      "new_count": 6,
+      "hunk_sha256": "a052685cb25620b250aa3e5ba0e00ca617fcb529486f769bf61fd570af6f0ea4",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 284,
+      "old_count": 1,
+      "new_start": 362,
+      "new_count": 2,
+      "hunk_sha256": "4bb1837acc5b523b295c6aeb11b089942a3911925e8ba9b902cec59504a8ea68",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 324,
+      "old_count": 1,
+      "new_start": 403,
+      "new_count": 6,
+      "hunk_sha256": "b8058a833c5504f882bf71f03749919edb665c5ddd9c36b26856ffc9563f0462",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-05",
+      "served_def_ids": [
+       "DEF-P012-04",
+       "DEF-P012-06"
+      ]
+     },
+     {
+      "path": "core/exits.py",
+      "old_start": 344,
+      "old_count": 1,
+      "new_start": 428,
+      "new_count": 6,
+      "hunk_sha256": "b86ff030fe7da8b6f7f7631f9b43947fc4e1e38013c70397ca01962f0c8217fd",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-05",
       "served_def_ids": [
@@ -3229,9 +3476,9 @@
       "path": "core/exits.py",
       "old_start": 381,
       "old_count": 0,
-      "new_start": 393,
+      "new_start": 471,
       "new_count": 111,
-      "hunk_sha256": "c619422146b83772e2349edcf132c3d90e9675e9e302682706772611ccd172cb",
+      "hunk_sha256": "0ea83961b4f246abf8dd46c63f24dbc6694d6cc3dca5ea0be6c1c582cb2fe586",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-05",
       "served_def_ids": [
@@ -3267,11 +3514,76 @@
      },
      {
       "path": "core/instrument.py",
-      "old_start": 7,
+      "old_start": 5,
+      "old_count": 1,
+      "new_start": 14,
+      "new_count": 347,
+      "hunk_sha256": "4725cc6d9c7aaed8428b601c5438de8cee4f15654c02520beae4a18097ee3114",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/instrument.py",
+      "old_start": 12,
+      "old_count": 1,
+      "new_start": 367,
+      "new_count": 1,
+      "hunk_sha256": "250eea39eb58f60150b4dc052d8de8acf0011080b95ee95358adac35e9553a9b",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/instrument.py",
+      "old_start": 16,
       "old_count": 0,
-      "new_start": 17,
-      "new_count": 312,
-      "hunk_sha256": "1192dbdc9e82d98a923787b5f4dde4132630d05395aa69f7e894a905d148f6c5",
+      "new_start": 372,
+      "new_count": 12,
+      "hunk_sha256": "2aacbf08eee82f53ea09e7ec0198d780370f29bd45006fc9657f5fe537c137c8",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/instrument.py",
+      "old_start": 30,
+      "old_count": 0,
+      "new_start": 398,
+      "new_count": 3,
+      "hunk_sha256": "e990f225984863cc95f6b7f0681e298f4dbfdffb066de889f130e0bc948bc9d6",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/instrument.py",
+      "old_start": 33,
+      "old_count": 0,
+      "new_start": 404,
+      "new_count": 3,
+      "hunk_sha256": "1f2f27ee75125c8995211ba64f30e11efd5c149d91242f1fbc046f74ecd6a432",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/instrument.py",
+      "old_start": 36,
+      "old_count": 0,
+      "new_start": 410,
+      "new_count": 3,
+      "hunk_sha256": "188d56d3c6059c1d726120e0bf6a91e5cbc1b01b2ff4ec582bee6000c79f41a8",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-04",
       "served_def_ids": [
@@ -3414,6 +3726,32 @@
       "section18_row": "S18-10",
       "served_def_ids": [
        "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/rounding.py",
+      "old_start": 2,
+      "old_count": 0,
+      "new_start": 3,
+      "new_count": 2,
+      "hunk_sha256": "7f32a743e7c4a67a4fdb0a5951a89ebf36b1ac860bed29f6d04969314dd04fb5",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
+      ]
+     },
+     {
+      "path": "core/rounding.py",
+      "old_start": 3,
+      "old_count": 0,
+      "new_start": 6,
+      "new_count": 110,
+      "hunk_sha256": "db49177032590c857d3dcb6e3667f37c3a27faac2a01654e4dbfc4c99d1a5c01",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-04",
+      "served_def_ids": [
+       "DEF-P012-03"
       ]
      },
      {
@@ -3601,8 +3939,8 @@
       "old_start": 313,
       "old_count": 0,
       "new_start": 369,
-      "new_count": 396,
-      "hunk_sha256": "3bb418ed071ae7fedf8a7ce7f0541e607340a41d8113d8dd7592d1740efafd29",
+      "new_count": 397,
+      "hunk_sha256": "3fb3ff442314c0e24078e0804378fca96d0eb5681bf8dbb33d12252ac24697e0",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3615,9 +3953,24 @@
       "path": "core/runner.py",
       "old_start": 338,
       "old_count": 0,
-      "new_start": 790,
+      "new_start": 791,
       "new_count": 5,
-      "hunk_sha256": "f2a74f662c1a5eb6ba927ed01907f462fcd2d22cf6396c0ea628d4f1e860b194",
+      "hunk_sha256": "bb4035bf65875f4da4a0a7ba70426670ba008d9c43c6581e8c8ee276fdce9fe1",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 556,
+      "old_count": 0,
+      "new_start": 1014,
+      "new_count": 1,
+      "hunk_sha256": "02144dea0a9069cca3467c2371f419cdda9b51ad1c532ea26561cb09c8af7ac3",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3630,9 +3983,9 @@
       "path": "core/runner.py",
       "old_start": 562,
       "old_count": 1,
-      "new_start": 1017,
+      "new_start": 1019,
       "new_count": 0,
-      "hunk_sha256": "7e2100065ec9db4fdc6ee36ab595796b13002f8b9fe55ffd89d89682520c809b",
+      "hunk_sha256": "7abf71ff5cfa1d8f7bd3f7335cacce889965fa6b5cdc34fef98a4a7f5be9173a",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3645,9 +3998,9 @@
       "path": "core/runner.py",
       "old_start": 565,
       "old_count": 5,
-      "new_start": 1020,
+      "new_start": 1022,
       "new_count": 18,
-      "hunk_sha256": "c681694a884f4d4a62d2446e1c52f124300f78576bf218415e5e5a7db2a8557b",
+      "hunk_sha256": "8b3d79fb23057d5afedf5aed83cfe1bf19eb98a2354b9501493dfd0dbe54a2d8",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3660,9 +4013,9 @@
       "path": "core/runner.py",
       "old_start": 571,
       "old_count": 2,
-      "new_start": 1038,
+      "new_start": 1040,
       "new_count": 0,
-      "hunk_sha256": "b0bf36b8b9bfd2b913079db0b80c279b7f5312e189c1a639789ac9c1bf82c65d",
+      "hunk_sha256": "1fb870d723f57d4050a25935feb7a93c31631834a58a7715adb137b37aba590f",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3675,9 +4028,9 @@
       "path": "core/runner.py",
       "old_start": 574,
       "old_count": 3,
-      "new_start": 1040,
+      "new_start": 1042,
       "new_count": 17,
-      "hunk_sha256": "3cbdf1dbc82b548570271bfa2fa364f5e2aa95ef8b88c5a3cf5eda420d58537d",
+      "hunk_sha256": "cf17971ba4c97e5561bcaced06f3a62ab95ba27aece86770fc35d8e84f5633c2",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3690,9 +4043,9 @@
       "path": "core/runner.py",
       "old_start": 578,
       "old_count": 8,
-      "new_start": 1057,
+      "new_start": 1059,
       "new_count": 0,
-      "hunk_sha256": "0aac251d5c44000498b80c6dba42d323294321bad1a3fdaadc6de3c9a8208eea",
+      "hunk_sha256": "85c8c175e8aa71047007fa80d91c5744b7830c7aee5f8b8231c0f2bc56cbf9b2",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3705,9 +4058,9 @@
       "path": "core/runner.py",
       "old_start": 588,
       "old_count": 3,
-      "new_start": 1060,
+      "new_start": 1062,
       "new_count": 28,
-      "hunk_sha256": "75f57f2e3632456c942adeeb58e912cf14c88a8cac6d59f7ec3d69643e11d425",
+      "hunk_sha256": "a34aef9a2ff6e435dce184bee8ba33c7d7cbcdc8aae1a3f7fdd452bbd0ffee21",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3720,9 +4073,9 @@
       "path": "core/runner.py",
       "old_start": 598,
       "old_count": 6,
-      "new_start": 1095,
+      "new_start": 1097,
       "new_count": 13,
-      "hunk_sha256": "1599993fbc44e886cca840530e21e576c529caaef6544959c45a0640e2e51768",
+      "hunk_sha256": "5aed4b11a377d1985d0161f76d8c13cea6eaebe196a393e21cf7b60fbf23a6d1",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3735,9 +4088,9 @@
       "path": "core/runner.py",
       "old_start": 658,
       "old_count": 6,
-      "new_start": 1162,
+      "new_start": 1164,
       "new_count": 13,
-      "hunk_sha256": "238f961ee743a0447b86b12199de00e4a39d51e11d5a0b1b5b9d8e0cbb363efa",
+      "hunk_sha256": "70050d9d8100d678b06f27d5bb02763fea41383d5a8453be82b931fa95544cd9",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3750,9 +4103,9 @@
       "path": "core/runner.py",
       "old_start": 697,
       "old_count": 6,
-      "new_start": 1208,
+      "new_start": 1210,
       "new_count": 13,
-      "hunk_sha256": "cfa04c00ac51eff98f4a85315d1807a6f6709e8d65ecdb6159735dc40ef2bc50",
+      "hunk_sha256": "358ce9ba775c0ff3d41b4434bd69c977af23d43e4deb746bfdf8a3b702c3a620",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3765,9 +4118,9 @@
       "path": "core/runner.py",
       "old_start": 710,
       "old_count": 1,
-      "new_start": 1228,
+      "new_start": 1230,
       "new_count": 5,
-      "hunk_sha256": "8154f840fad8a55d0029f4d86c358e1ed23cb4cfc6f71239db75ac1de9e0a11e",
+      "hunk_sha256": "1cbc98a9636deb23e4c1ebb418dbd680e9a29040c3a49961c4490fdb01657c6d",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3780,9 +4133,9 @@
       "path": "core/runner.py",
       "old_start": 794,
       "old_count": 0,
-      "new_start": 1317,
+      "new_start": 1319,
       "new_count": 11,
-      "hunk_sha256": "004570a4a4a2786bad2e9ad3bad52027d7954c0484b6bb0050a9ec4dea949c03",
+      "hunk_sha256": "5d694a6b264b551dd8342ec68e5026da47d88f8752b0600ffb2dde7dfda73743",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3795,9 +4148,9 @@
       "path": "core/runner.py",
       "old_start": 950,
       "old_count": 1,
-      "new_start": 1483,
+      "new_start": 1485,
       "new_count": 5,
-      "hunk_sha256": "d6726152bb0753406682b2379dc0c06c40729af95bcd8a7aae79a23c04b5de22",
+      "hunk_sha256": "245cca341079060094a74fedae04a3b2f293d55420865667f9b9177d92a157d8",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3810,9 +4163,9 @@
       "path": "core/runner.py",
       "old_start": 988,
       "old_count": 34,
-      "new_start": 1525,
+      "new_start": 1527,
       "new_count": 2,
-      "hunk_sha256": "6bcf1445377a550241308bf40966f8d57aeecec3aa6bfe75cfe0ee429c9396bc",
+      "hunk_sha256": "cb75851260961adb036a407c968b1045889fd36aaf26a645b8b6bfd1e314d6cf",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3825,9 +4178,9 @@
       "path": "core/runner.py",
       "old_start": 1022,
       "old_count": 0,
-      "new_start": 1528,
+      "new_start": 1530,
       "new_count": 1,
-      "hunk_sha256": "34799551ce8eea4fbb5b5ca890b72f260a1489ce707ed47f45b4cb62e2a32b80",
+      "hunk_sha256": "26be30646c6904b97c62ad0bc1e89da63ebdeda948c724386624cf92a68e8089",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3840,9 +4193,9 @@
       "path": "core/runner.py",
       "old_start": 1024,
       "old_count": 2,
-      "new_start": 1529,
+      "new_start": 1531,
       "new_count": 0,
-      "hunk_sha256": "8a4cb9c96190a59446e9af01b3a8b2945187dd65532df9a1721bdecf35e2f580",
+      "hunk_sha256": "24ec55da0f7def8f0a78f185fb179e88f8e6eace368a79d96e28d2d0ab95f3cf",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3855,9 +4208,9 @@
       "path": "core/runner.py",
       "old_start": 1027,
       "old_count": 3,
-      "new_start": 1531,
+      "new_start": 1533,
       "new_count": 1,
-      "hunk_sha256": "774cec034fbabf9c3ab93190a2e0f9524cc0fd0a5d89a217353d8e59788384a2",
+      "hunk_sha256": "c0d48fb2cc3a984b60b0b52e0a8d96f497b078ca83f19aaf9423981caadde159",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3870,9 +4223,9 @@
       "path": "core/runner.py",
       "old_start": 1031,
       "old_count": 1,
-      "new_start": 1533,
+      "new_start": 1535,
       "new_count": 2,
-      "hunk_sha256": "6d81f61a229c0948ff2a45e13494f10cdf53f204f9c30012efda9f8cadba3c76",
+      "hunk_sha256": "0708b1131d174ad76c3ecf1682ab8d08ad9f44734e50513ca6fbad82411c682b",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3885,9 +4238,9 @@
       "path": "core/runner.py",
       "old_start": 1033,
       "old_count": 0,
-      "new_start": 1537,
-      "new_count": 47,
-      "hunk_sha256": "4e62b855327f64092096275a2b6b1041f3de77436716c7d1dbea561ab3257c5d",
+      "new_start": 1539,
+      "new_count": 48,
+      "hunk_sha256": "cadd92a24f99048804644ef5ae06a45dfba4a106ba2c7218555ad887e6ac095a",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3900,9 +4253,24 @@
       "path": "core/runner.py",
       "old_start": 1048,
       "old_count": 0,
-      "new_start": 1599,
+      "new_start": 1602,
       "new_count": 5,
-      "hunk_sha256": "a323d8aa77e166d3e75a7109a27c9b809c4205bf7763fcdf095d59d158ce571a",
+      "hunk_sha256": "94b6816074ec40a0225cbdd6045d7829f1328959cd12faf2d2c499f548ec50a4",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1256,
+      "old_count": 0,
+      "new_start": 1815,
+      "new_count": 1,
+      "hunk_sha256": "bb918eaad509bb3391cc7e6dafbd64bf2e666bbd19be8248e8efd93ed93ad6ad",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3915,9 +4283,24 @@
       "path": "core/runner.py",
       "old_start": 1350,
       "old_count": 0,
-      "new_start": 1906,
+      "new_start": 1910,
       "new_count": 9,
-      "hunk_sha256": "7ef3a8138dc01522345b226b175aba91bd77b6df4b8750b44f51849947897d50",
+      "hunk_sha256": "a42ceb7ab7b8d6c0ddee6391024b57973cdf1868549b22b130f9d953c08d12b6",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1375,
+      "old_count": 0,
+      "new_start": 1944,
+      "new_count": 1,
+      "hunk_sha256": "db2880b172678ff8e2453addbbb4edd407a2ca8670ff5f64f2bcf0fdc3e5daff",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -3930,9 +4313,24 @@
       "path": "core/runner.py",
       "old_start": 1421,
       "old_count": 8,
-      "new_start": 1985,
+      "new_start": 1990,
       "new_count": 23,
-      "hunk_sha256": "1ea4e68794613ef614675f2e065d13c8ffcd6d5bf71fe1abc3747eee22501876",
+      "hunk_sha256": "660be1f700268c50bfdf3f2b1035e1f7f406c2d469a6fa4939610d98053a363d",
+      "terminal_class": "SECTION18_SHARED",
+      "section18_row": "S18-07",
+      "served_def_ids": [
+       "DEF-P012-03",
+       "DEF-P012-05",
+       "DEF-P012-07"
+      ]
+     },
+     {
+      "path": "core/runner.py",
+      "old_start": 1698,
+      "old_count": 1,
+      "new_start": 2281,
+      "new_count": 0,
+      "hunk_sha256": "6ca3583c2c37d98551df69e94deef2af2202689a0411596bc418398798dc9f2c",
       "terminal_class": "SECTION18_SHARED",
       "section18_row": "S18-07",
       "served_def_ids": [
@@ -4050,9 +4448,10 @@
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-05-B\\modification_manifest.json",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-06-A\\modification_manifest.json",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-07-A\\modification_manifest.json",
-    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-08-A\\modification_manifest.json"
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\probes\\PROBE-P012-08-A\\modification_manifest.json",
+    "C:\\tmp\\P012_GROK_S16_R34\\LEAD_EXTRACTED_A3_REPORT.md"
    ],
-   "notes": "[3 ACCEPTED_WITH_RESIDUAL_RISK] Supplemental review of Item 3 reveals complete structural fidelity between the 27-row scenario catalog and Section 15.2 design specifications. All 8 corrections DEF-P012-01 through DEF-P012-08 possess active probes and dedicated test rows. Residual risk is formally accepted regarding compound higher-order interactions and unexercised parameter permutations outside the finite catalog, which are disambiguated deterministically by Section 3 pipeline ordering but remain empirically unexecuted in test runs per Honest Limit L1. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. The 27-row scenario catalog retains full structural fidelity to Design 15.2, and all 8 corrections retain active probes. The updates to scenario_catalog.json (18 probe digest pins) and the 45 files in tests/corrected_vnext/probes/ are mechanical re-seal bookkeeping mirroring base updates, with kernel/economics.py confirmed byte-identical across all nine kernel probes. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. Scenario catalog retains complete structural fidelity to Design 15.2 with 27 bound rows and active probes across all 8 corrections. Strongest case for CHANGED: 81 probe files and catalog probe pins were modified across all 9 kernel probes. This does not survive because probe modifications are purely mechanical syncs with the core rename (kernel/types.py, economics.py, results.py), introducing zero behavioral divergence in probe assertions. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. Scenario catalog retains 27 bound rows and active probe coverage across all 8 defects. Probe mutation patches, targets, and negative assertion checks are byte-identical. Updates to probe manifests and catalog pins mechanically align base tree OIDs without altering defect detection semantics."
+   "notes": "[3 ACCEPTED_WITH_RESIDUAL_RISK] Supplemental review of Item 3 reveals complete structural fidelity between the 27-row scenario catalog and Section 15.2 design specifications. All 8 corrections DEF-P012-01 through DEF-P012-08 possess active probes and dedicated test rows. Residual risk is formally accepted regarding compound higher-order interactions and unexercised parameter permutations outside the finite catalog, which are disambiguated deterministically by Section 3 pipeline ordering but remain empirically unexecuted in test runs per Honest Limit L1. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. The 27-row scenario catalog retains full structural fidelity to Design 15.2, and all 8 corrections retain active probes. The updates to scenario_catalog.json (18 probe digest pins) and the 45 files in tests/corrected_vnext/probes/ are mechanical re-seal bookkeeping mirroring base updates, with kernel/economics.py confirmed byte-identical across all nine kernel probes. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. Scenario catalog retains complete structural fidelity to Design 15.2 with 27 bound rows and active probes across all 8 corrections. Strongest case for CHANGED: 81 probe files and catalog probe pins were modified across all 9 kernel probes. This does not survive because probe modifications are purely mechanical syncs with the core rename (kernel/types.py, economics.py, results.py), introducing zero behavioral divergence in probe assertions. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. Scenario catalog retains 27 bound rows and active probe coverage across all 8 defects. Probe mutation patches, targets, and negative assertion checks are byte-identical. Updates to probe manifests and catalog pins mechanically align base tree OIDs without altering defect detection semantics. [R34 price successor review, Grok, 3e86faec032407c1af9a75f8b8852222d732f316..b7975ae6c935c461c479768c5f252f930fbc1800]: disposition carried forward UNCHANGED. Prior accepted Item 3 (:4020,4055) remains supported: 27 rows, eight DEF probes, L1 higher-order residual. REPAIR_DELTA:510-990 shows probe mutations/patches unchanged; only tree OID and rounding.py member SHA. Strongest CHANGED (catalog SHA / 18 pins / new integer tests) does not survive: prior R29/R30/R32 already carried this item across mechanical probe-pin rebinds."
   },
   "4": {
    "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
@@ -4094,9 +4493,10 @@
     "C:\\tmp\\LANE_PROMPTS_20260828\\P012_OPEN_ITEMS_OWNER_ONEPAGER_2026-08-31.md",
     "C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT.json",
     "C:\\tmp\\LANE_PROMPTS_20260828\\open_item_applicability_DRAFT_rev4.json",
-    "C:\\LAB\\Tradingview_LAB_CLEAN\\_gemini_packets_20260830\\N_COMMON_CLAUSES.md"
+    "C:\\LAB\\Tradingview_LAB_CLEAN\\_gemini_packets_20260830\\N_COMMON_CLAUSES.md",
+    "C:\\tmp\\P012_GROK_S16_R34\\LEAD_EXTRACTED_A3_REPORT.md"
    ],
-   "notes": "[4 ACCEPTED_WITH_RESIDUAL_RISK] ACCEPTED_WITH_RESIDUAL_RISK under P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 (OD-20260906-2, design v1.24 Section 23.21). Every numeric value consumed by the 51 synthetic scenario bindings across all 17 sealed scenarios has complete lineage traced to committed synthetic records and DERIVATIONS.md arithmetic; exactly 0 scenarios consume production records. Production economics remain fail-closed and unadmitted. Residual production risks are retained for 27 items: I rows 1-5 (/status, /price_tick, /minimum_quantity, /provenance/human_reviewer, absent aggregate /provenance/source_sha256); C rows 6-12 (absent /effective_interval, /fee_rounding_rule, /fixed_component, /minimum_fee, /tier_account_selection_evidence, /liquidity_roles/MARGIN_CALL_LIQUIDATION, /provenance/human_reviewer); F rows 13-23 (/effective_interval, /events, and unsourced event members /events/0/{event_timestamp, funding_event_id, raw_rate, positive_rate_payer, mark_price, mark_price_source, provenance, source_event_digest}, /provenance/human_reviewer); and run-manifest requirements 24-27 (cost/funding source digests and effective intervals for which no canonical production pointer exists). All ten Section-19 rows remain OPEN for production. This disposition is bounded non-production mechanical evidence and grants no live, deployment, host, credential, or trading authority. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Exactly 0 scenarios consume production records, fully maintaining P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 (OD-20260906-2, design v1.24 s23.21). The modified production cost record HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json retains admission_status REFUSED_INCOMPLETE_COST_SCHEDULE in compliance with the owner ruling, and all 51 synthetic scenario bindings remain bound exclusively to synthetic records. RESIDUAL NAMED BY THE REVIEWER: Strongest case for CHANGED: A production cost record (core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json) was modified by adding an effective_interval and removing that field from refused_missing_fields. Since Item 4 certifies that exactly 0 scenarios consume production records under milestone P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1, modifying production records in the tree could be interpreted as preparing or enabling production records for consumption, calling into question whether the synthetic-only boundary was breached. Whether the case survives: The case DOES NOT SURVIVE. The record's admission_status remains explicitly REFUSED_INCOMPLETE_COST_SCHEDULE, preventing any scenario execution from consuming it. The modification conforms to an active owner ruling (production COST records may keep their interval while missing required fee fields), and all 51 synthetic scenario bindings continue to bind exclusively to synthetic records with zero production record consumption. The synthetic-only invariant holds without exception, so the disposition remains ACCEPTED_WITH_RESIDUAL_RISK. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json remains strictly fail-closed with admission_status REFUSED_MISSING_PRODUCTION_FUNDING_EVENTS and events null. Exactly 0 scenarios consume production records. Strongest case for CHANGED: editing event_schema and refused_missing_fields in a production record could be construed as breaching P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1. This does not survive because renaming a refused field does not admit it (Design §23.22 item 5), and synthetic isolation remains absolute. [LEAD RESTATEMENT, 2026-09-09, claude-opus-5 Lead session tradingview-lab-clean-c1, task WP-P012-R30-REPAIR4 - written by the Lead and attributed to no reviewer]: the residual inventory recorded above for F rows 13-23 names the unsourced event members as mark_price and mark_price_source. Those members do not exist in the production funding record at the commit this receipt certifies, d06aa741c32a3b57a7bfe299aefa67c86cab453e, nor at any later commit on this branch. The event_schema of core/economic_records/funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json reads event_timestamp, funding_event_id, raw_rate, positive_rate_payer, oracle_price, oracle_price_source, provenance, source_event_digest. Read oracle_price and oracle_price_source wherever the inventory above says mark_price and mark_price_source. The count of retained residual production risks is unchanged at 27; the rename adds and removes no risk. admission_status remains REFUSED_MISSING_PRODUCTION_FUNDING_EVENTS, events remains null, and exactly 0 scenarios consume production records. This restatement is required by ORACLE_SEMANTICS_CORRECTION_SCOPE.md item 4, which states that because the signed receipt references the old name in its Item-4 residual text the successor receipt must restate it. It corrects no reviewer disposition and changes no verdict: the disposition remains ACCEPTED_WITH_RESIDUAL_RISK. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. Synthetic-only isolation under milestone P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 remains absolute with exactly 0 scenarios consuming production records. Production cost, funding, and instrument records remain fail-closed with admission_status refused, price_tick/minimum_quantity/human_reviewer null, all 27 residual risks open, and five Section-19 residual integration obligations preserved."
+   "notes": "[4 ACCEPTED_WITH_RESIDUAL_RISK] ACCEPTED_WITH_RESIDUAL_RISK under P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 (OD-20260906-2, design v1.24 Section 23.21). Every numeric value consumed by the 51 synthetic scenario bindings across all 17 sealed scenarios has complete lineage traced to committed synthetic records and DERIVATIONS.md arithmetic; exactly 0 scenarios consume production records. Production economics remain fail-closed and unadmitted. Residual production risks are retained for 27 items: I rows 1-5 (/status, /price_tick, /minimum_quantity, /provenance/human_reviewer, absent aggregate /provenance/source_sha256); C rows 6-12 (absent /effective_interval, /fee_rounding_rule, /fixed_component, /minimum_fee, /tier_account_selection_evidence, /liquidity_roles/MARGIN_CALL_LIQUIDATION, /provenance/human_reviewer); F rows 13-23 (/effective_interval, /events, and unsourced event members /events/0/{event_timestamp, funding_event_id, raw_rate, positive_rate_payer, mark_price, mark_price_source, provenance, source_event_digest}, /provenance/human_reviewer); and run-manifest requirements 24-27 (cost/funding source digests and effective intervals for which no canonical production pointer exists). All ten Section-19 rows remain OPEN for production. This disposition is bounded non-production mechanical evidence and grants no live, deployment, host, credential, or trading authority. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Exactly 0 scenarios consume production records, fully maintaining P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 (OD-20260906-2, design v1.24 s23.21). The modified production cost record HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json retains admission_status REFUSED_INCOMPLETE_COST_SCHEDULE in compliance with the owner ruling, and all 51 synthetic scenario bindings remain bound exclusively to synthetic records. RESIDUAL NAMED BY THE REVIEWER: Strongest case for CHANGED: A production cost record (core/economic_records/costs/HYPERLIQUID-BTC-PERP-BASE-TIER0-V1.json) was modified by adding an effective_interval and removing that field from refused_missing_fields. Since Item 4 certifies that exactly 0 scenarios consume production records under milestone P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1, modifying production records in the tree could be interpreted as preparing or enabling production records for consumption, calling into question whether the synthetic-only boundary was breached. Whether the case survives: The case DOES NOT SURVIVE. The record's admission_status remains explicitly REFUSED_INCOMPLETE_COST_SCHEDULE, preventing any scenario execution from consuming it. The modification conforms to an active owner ruling (production COST records may keep their interval while missing required fee fields), and all 51 synthetic scenario bindings continue to bind exclusively to synthetic records with zero production record consumption. The synthetic-only invariant holds without exception, so the disposition remains ACCEPTED_WITH_RESIDUAL_RISK. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json remains strictly fail-closed with admission_status REFUSED_MISSING_PRODUCTION_FUNDING_EVENTS and events null. Exactly 0 scenarios consume production records. Strongest case for CHANGED: editing event_schema and refused_missing_fields in a production record could be construed as breaching P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1. This does not survive because renaming a refused field does not admit it (Design §23.22 item 5), and synthetic isolation remains absolute. [LEAD RESTATEMENT, 2026-09-09, claude-opus-5 Lead session tradingview-lab-clean-c1, task WP-P012-R30-REPAIR4 - written by the Lead and attributed to no reviewer]: the residual inventory recorded above for F rows 13-23 names the unsourced event members as mark_price and mark_price_source. Those members do not exist in the production funding record at the commit this receipt certifies, d06aa741c32a3b57a7bfe299aefa67c86cab453e, nor at any later commit on this branch. The event_schema of core/economic_records/funding/HYPERLIQUID-BTC-PERP-FUNDING-RULES-V1.json reads event_timestamp, funding_event_id, raw_rate, positive_rate_payer, oracle_price, oracle_price_source, provenance, source_event_digest. Read oracle_price and oracle_price_source wherever the inventory above says mark_price and mark_price_source. The count of retained residual production risks is unchanged at 27; the rename adds and removes no risk. admission_status remains REFUSED_MISSING_PRODUCTION_FUNDING_EVENTS, events remains null, and exactly 0 scenarios consume production records. This restatement is required by ORACLE_SEMANTICS_CORRECTION_SCOPE.md item 4, which states that because the signed receipt references the old name in its Item-4 residual text the successor receipt must restate it. It corrects no reviewer disposition and changes no verdict: the disposition remains ACCEPTED_WITH_RESIDUAL_RISK. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. Synthetic-only isolation under milestone P012_SYNTHETIC_ONLY_NON_PRODUCTION_MILESTONE_V1 remains absolute with exactly 0 scenarios consuming production records. Production cost, funding, and instrument records remain fail-closed with admission_status refused, price_tick/minimum_quantity/human_reviewer null, all 27 residual risks open, and five Section-19 residual integration obligations preserved. [R34 price successor review, Grok, 3e86faec032407c1af9a75f8b8852222d732f316..b7975ae6c935c461c479768c5f252f930fbc1800]: disposition carried forward UNCHANGED. Prior accepted Item 4 (:4058,4099) remains supported: synthetic-only, 0 production consumption, 27 production residuals, I/C/F fail-closed. I-record still minimum_quantity null, human_reviewer null, minimum_notional 10. Strongest CHANGED (policy object on production I-record) does not survive: §24.1 representation-only; those refused fields stay refused."
   },
   "5": {
    "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
@@ -4171,9 +4571,10 @@
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\test_scenario_binding.py",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\11_TRIAGE\\WP_P0_11_GATE_2026-08-28\\test_stage3_oracles.py",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\12_PARITY_PINETS\\generate_tw_export_case_suite_v2.py",
-    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\12_PARITY_PINETS\\validate_export_parity.py"
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\12_PARITY_PINETS\\validate_export_parity.py",
+    "C:\\tmp\\P012_GROK_S16_R34\\LEAD_EXTRACTED_A3_REPORT.md"
    ],
-   "notes": "[5 ACCEPTED_WITH_RESIDUAL_RISK] Economic state across core modules is mediated by ExecutionEconomics and atomic EconomicTransition with zero arithmetic performed outside economics.py on the corrected 2.0.0 path; residual risk is accepted for external consumers (runner_metrics_adapter, validate_export_parity, parity_compare, p011_gate) reading legacy or gross fields and uninspected monorepo boundaries per design section 17 limits L4 and L5. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. economics.py is byte-identical since #28. All economic state continues to be mediated strictly by ExecutionEconomics and atomic EconomicTransition, with zero arithmetic outside economics.py on the corrected 2.0.0 path (the runner.py delta is strictly an import of an existing config constant for debug metadata). [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. Economic state transitions remain strictly mediated by ExecutionEconomics and atomic EconomicTransition with zero arithmetic outside economics.py on the 2.0.0 path. Strongest case for CHANGED: the #29 assertion that economics.py was byte-identical is now factually false following the oracle_price rename. This does not survive because the underlying economics mediation architecture is unchanged, formulas are preserved, and monorepo consumer census confirms zero external consumers read funding fields by name. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. core/economics.py and all core modules are byte-identical to PRIOR. All economic transitions remain strictly mediated by ExecutionEconomics and atomic EconomicTransition with zero arithmetic outside economics.py on the 2.0.0 path. All 6 consumer scripts in CONSUMERS/ are byte-identical."
+   "notes": "[5 ACCEPTED_WITH_RESIDUAL_RISK] Economic state across core modules is mediated by ExecutionEconomics and atomic EconomicTransition with zero arithmetic performed outside economics.py on the corrected 2.0.0 path; residual risk is accepted for external consumers (runner_metrics_adapter, validate_export_parity, parity_compare, p011_gate) reading legacy or gross fields and uninspected monorepo boundaries per design section 17 limits L4 and L5. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. economics.py is byte-identical since #28. All economic state continues to be mediated strictly by ExecutionEconomics and atomic EconomicTransition, with zero arithmetic outside economics.py on the corrected 2.0.0 path (the runner.py delta is strictly an import of an existing config constant for debug metadata). [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. Economic state transitions remain strictly mediated by ExecutionEconomics and atomic EconomicTransition with zero arithmetic outside economics.py on the 2.0.0 path. Strongest case for CHANGED: the #29 assertion that economics.py was byte-identical is now factually false following the oracle_price rename. This does not survive because the underlying economics mediation architecture is unchanged, formulas are preserved, and monorepo consumer census confirms zero external consumers read funding fields by name. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. core/economics.py and all core modules are byte-identical to PRIOR. All economic transitions remain strictly mediated by ExecutionEconomics and atomic EconomicTransition with zero arithmetic outside economics.py on the 2.0.0 path. All 6 consumer scripts in CONSUMERS/ are byte-identical. [R34 price successor review, Grok, 3e86faec032407c1af9a75f8b8852222d732f316..b7975ae6c935c461c479768c5f252f930fbc1800]: disposition carried forward UNCHANGED. Prior accepted Item 5 (:4102,4176) remains supported: 2.0.0 mediation through existing seams; consumers L4/L5. CONSUMERS 01/06 still Runner+PRICE_TOL=0.11; CAND blobs equal PRIOR. Strongest CHANGED (align returns int|float) does not survive: consumer files and economics mediation unchanged; Lead-quoted 34 surfaces identical."
   },
   "6": {
    "disposition": "ACCEPTED_WITH_RESIDUAL_RISK",
@@ -4196,9 +4597,10 @@
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\contracts\\semantic_coverage_review.schema.json",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\01_MTC_PROJECT\\00_PYTHON\\mtc_v2\\tests\\corrected_vnext\\verify_bceg.py",
     "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\06_SCHEMAS\\backtest_profile_result.schema.json",
-    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\06_SCHEMAS\\evaluation_artifact_v1.schema.json"
+    "C:\\WP012BUILD\\MTC_COMMAND_CENTER\\06_SCHEMAS\\evaluation_artifact_v1.schema.json",
+    "C:\\tmp\\P012_GROK_S16_R34\\LEAD_EXTRACTED_A3_REPORT.md"
    ],
-   "notes": "[6 ACCEPTED_WITH_RESIDUAL_RISK] Item 6 is accepted with residual risk. All emitted event and result surfaces (decision_events, fill_events, exit_events, funding_events, fee ledger, RESULT_SURFACE, guards, and refusal objects) strictly conform to the closed shapes specified in Design sections 13, 14, 23.1, 23.3, and 23.4. Duplicate identity is rejected deterministically via strict cash/funding event sequence and lifecycle checking. Two residual risks are identified and accepted under the P0-12 defect contract: (1) Per OPEN-07, 16 of 18 funding_events fields lack a direct source in the current upstream Bridge schema, with source_event_digest explicitly recorded as a blocked cell (BLOCKED-MISSING-RECORD-BYTES) in RULE2-08-RED pending upstream record byte materialization; (2) In core/types.py line 67, unrounded_fill_price is carried on the FillDecision dataclass but is intentionally suppressed during serialization per Design section 23.3 explicit prohibition from the wire surface. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Emitted event and result surfaces are untouched by the delta and strictly conform to the closed shapes specified in Design 13, 14, 23.1, 23.3, and 23.4. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. The rename of mark_price to oracle_price in core/results.py is a conforming closed-set rename authorized by Design v1.25 §23.22 item 1, matched synchronously in verify_bceg.py line 1532. Strongest case for CHANGED: mutating an emitted RESULT_SURFACE and EVENT_SURFACE member modifies the wire contract and makes the #29 untouched-surface note stale. This does not survive because closed-set validation is preserved and direct census confirms all candidate consumer paths contain zero references to funding surface fields. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. Event and result surface definitions in core/types.py and core/results.py are byte-identical to PRIOR. All 34 baseline semantic event and result surfaces in BASELINE_CURRENT/ match BASELINE_PRIOR/ byte-for-byte. Baseline manifest digest advance reflects non-semantic run_status.json and SHA256SUMS metadata updates alongside catalog and seal tracking."
+   "notes": "[6 ACCEPTED_WITH_RESIDUAL_RISK] Item 6 is accepted with residual risk. All emitted event and result surfaces (decision_events, fill_events, exit_events, funding_events, fee ledger, RESULT_SURFACE, guards, and refusal objects) strictly conform to the closed shapes specified in Design sections 13, 14, 23.1, 23.3, and 23.4. Duplicate identity is rejected deterministically via strict cash/funding event sequence and lifecycle checking. Two residual risks are identified and accepted under the P0-12 defect contract: (1) Per OPEN-07, 16 of 18 funding_events fields lack a direct source in the current upstream Bridge schema, with source_event_digest explicitly recorded as a blocked cell (BLOCKED-MISSING-RECORD-BYTES) in RULE2-08-RED pending upstream record byte materialization; (2) In core/types.py line 67, unrounded_fill_price is carried on the FillDecision dataclass but is intentionally suppressed during serialization per Design section 23.3 explicit prohibition from the wire surface. [R29 delta review, Gemini, ca1a44576aa46907ba4b39c417bced4bfabe94de]: disposition carried forward UNCHANGED. Emitted event and result surfaces are untouched by the delta and strictly conform to the closed shapes specified in Design 13, 14, 23.1, 23.3, and 23.4. [R30 delta review, Gemini, d06aa741c32a3b57a7bfe299aefa67c86cab453e]: disposition carried forward UNCHANGED. The rename of mark_price to oracle_price in core/results.py is a conforming closed-set rename authorized by Design v1.25 §23.22 item 1, matched synchronously in verify_bceg.py line 1532. Strongest case for CHANGED: mutating an emitted RESULT_SURFACE and EVENT_SURFACE member modifies the wire contract and makes the #29 untouched-surface note stale. This does not survive because closed-set validation is preserved and direct census confirms all candidate consumer paths contain zero references to funding surface fields. [R32 delta review, Gemini, 44288622851536eb1f300a4a525baeb1a00e6634..12a2d49544523e0a8cc643421870ecb30b9bb30c]: disposition carried forward UNCHANGED. Event and result surface definitions in core/types.py and core/results.py are byte-identical to PRIOR. All 34 baseline semantic event and result surfaces in BASELINE_CURRENT/ match BASELINE_PRIOR/ byte-for-byte. Baseline manifest digest advance reflects non-semantic run_status.json and SHA256SUMS metadata updates alongside catalog and seal tracking. [R34 price successor review, Grok, 3e86faec032407c1af9a75f8b8852222d732f316..b7975ae6c935c461c479768c5f252f930fbc1800]: disposition carried forward UNCHANGED. Prior accepted Item 6 (:4179,4201) remains supported: closed event/result shapes, OPEN-07, suppressed unrounded_fill_price. Strongest CHANGED (schema chain #34; probe rounding copies) does not survive: neither adds a wire member; #34 is chain bookkeeping; probe copies are kernel-tree identity only."
   }
  },
  "unresolved_items": [],
@@ -4233,9 +4635,11 @@
    "#29",
    "#30",
    "#31",
-   "#32"
+   "#32",
+   "#33",
+   "#34"
   ],
   "ratified": true
  },
- "signed_at": "2026-09-10T16:55:32+03:00"
+ "signed_at": "2026-09-11T09:41:16+03:00"
 }

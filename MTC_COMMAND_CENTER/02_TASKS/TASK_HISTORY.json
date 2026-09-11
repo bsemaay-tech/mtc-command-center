@@ -353,5 +353,15 @@
     "summary": "Exact one-line repair: remove only `, dir=r\"C:\\tmp\"` from `TemporaryDirectory(prefix=\"w385-provenance-\", dir=r\"C:\\tmp\")`. Diagnosis: Python 3.14 TemporaryDirectory with hardcoded C:\\tmp is denied and hangs; bounded diagnosis was a 90s RED, while existing proof at 7f22 is 495 passed/0 failed. All assertions and semantics remain unchanged; this is source-only tmpdir environment portability. Sol S3 found the missing trailer. No waiver is granted, and the future compliant successor commit must carry `APPROVED-PATCH-PLAN: WP-P012-SANDBOX-PORTABILITY-20260910`.",
     "report_path": null
   }
+,
+  {
+    "event_id": "HIST-2026-0040",
+    "task_id": "WP-P012-PRICE-POLICY-20260910",
+    "event_type": "APPROVED",
+    "created_at": "2026-09-10T19:26:06.5583417Z",
+    "created_by": "Owner Baris approval recorded by Astra Lead",
+    "summary": "Owner explicitly approved the complete OWNER_PRICE_SCOPE.md proposal on 2026-09-10 approximately17:22 UTC and explicitly resumed autonomous WP-P0-12 work for up to10hours on this task at approximately19:13 UTC. Implement typed price_alignment_policy HYPERLIQUID_PX_V1 with source-based5 significant figures, perp maxdecimals6, sizedecimals5, integer exception, positive finite prices and nearest valid CEIL/FLOOR/HALF_UP on corrected fills/stops/targets. Preserve legacy scalar behavior, alignment labels, unknown minimum_quantity refusal, empty human review, $10 notional, five-source provenance and production refusals. Maximum core scope instrument.py,rounding.py,exits.py,runner.py and economics.py/config.py only if necessary. Also approved named instrument record/sidecar, focused new test_price_alignment_policy.py, necessary test_economic_records.py/test_results_corrected.py/test_w285_kernel_remaining.py cases, required design/probe/test identities, coordinated reseal/baseline and actual Section16 recertification. Separately owned successor required. Protected kernel/CONTRACT_TABLES/reviewer roles and exact accepting T0 audits remain; no new fee/funding/minqty/risk, account/capture/trading/Bridge/paid usage scope. Later actual Section16 review still requires owner ratification. This records existing approval; no new approval inferred from artifact.",
+    "report_path": "MTC_COMMAND_CENTER/04_REPORTS/ai_handoffs/P012_PRICE_POLICY_PLAN.md"
+  }
   ]
 }

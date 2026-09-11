@@ -25,7 +25,14 @@ from mtc_v2.core.economics import (
     MarketEvent,
     REFUSED_UNSUPPORTED_COLLISION_POLICY,
 )
-from mtc_v2.core.rounding import ceil_to_grid, floor_to_grid, round_half_up_to_grid
+from mtc_v2.core.rounding import (
+    PriceAlignmentDirection,
+    PriceAlignmentPolicy,
+    align_price_to_policy,
+    ceil_to_grid,
+    floor_to_grid,
+    round_half_up_to_grid,
+)
 from mtc_v2.core.types import Bar, EconomicTransition, Position, WorkingExit
 
 
@@ -175,12 +182,45 @@ def find_swing_reference(
     return min(values) if is_long else max(values)
 
 
-def align_stop_price(price: float, *, side: str, price_tick: float) -> float:
-    if side == POSITION_SIDE_LONG:
+def _align_price(
+    price: float,
+    *,
+    price_tick: float | None,
+    price_alignment_policy: PriceAlignmentPolicy | None,
+    direction: PriceAlignmentDirection,
+) -> float:
+    if price_alignment_policy is not None:
+        if price_tick is not None:
+            raise ValueError("price_tick conflicts with price_alignment_policy")
+        return align_price_to_policy(price, price_alignment_policy, direction)
+    if price_tick is None:
+        raise ValueError("price alignment is absent")
+    if direction == "FLOOR":
         return floor_to_grid(price, price_tick)
-    if side == POSITION_SIDE_SHORT:
+    if direction == "CEIL":
         return ceil_to_grid(price, price_tick)
-    raise ValueError(f"Unsupported side: {side}")
+    return round_half_up_to_grid(price, price_tick)
+
+
+def align_stop_price(
+    price: float,
+    *,
+    side: str,
+    price_tick: float | None,
+    price_alignment_policy: PriceAlignmentPolicy | None = None,
+) -> float:
+    if side == POSITION_SIDE_LONG:
+        direction: PriceAlignmentDirection = "FLOOR"
+    elif side == POSITION_SIDE_SHORT:
+        direction = "CEIL"
+    else:
+        raise ValueError(f"Unsupported side: {side}")
+    return _align_price(
+        price,
+        price_tick=price_tick,
+        price_alignment_policy=price_alignment_policy,
+        direction=direction,
+    )
 
 
 def calc_sl(
@@ -189,7 +229,8 @@ def calc_sl(
     bar: Bar,
     entry_price: float,
     is_long: bool,
-    price_tick: float,
+    price_tick: float | None,
+    price_alignment_policy: PriceAlignmentPolicy | None = None,
     atr_value: float | None = None,
     swing_reference: float | None = None,
     swing_atr_value: float | None = None,
@@ -204,19 +245,34 @@ def calc_sl(
             return None
         distance = float(config["sl_atr_mult"]) * float(atr_value)
         raw = entry_price - distance if is_long else entry_price + distance
-        return align_stop_price(raw, side=side, price_tick=price_tick)
+        return align_stop_price(
+            raw,
+            side=side,
+            price_tick=price_tick,
+            price_alignment_policy=price_alignment_policy,
+        )
 
     if bool(config["use_sl_percent"]):
         distance_ratio = float(config["sl_percent"]) / 100.0
         raw = entry_price * (1.0 - distance_ratio) if is_long else entry_price * (1.0 + distance_ratio)
-        return align_stop_price(raw, side=side, price_tick=price_tick)
+        return align_stop_price(
+            raw,
+            side=side,
+            price_tick=price_tick,
+            price_alignment_policy=price_alignment_policy,
+        )
 
     if bool(config["use_sl_swing_atr"]):
         if swing_reference is None or swing_atr_value is None:
             return None
         distance = float(config["sl_swing_atr_mult"]) * float(swing_atr_value)
         raw = swing_reference - distance if is_long else swing_reference + distance
-        return align_stop_price(raw, side=side, price_tick=price_tick)
+        return align_stop_price(
+            raw,
+            side=side,
+            price_tick=price_tick,
+            price_alignment_policy=price_alignment_policy,
+        )
 
     return None
 
@@ -226,7 +282,8 @@ def build_working_exit_book(
     *,
     entry_price: float,
     is_long: bool,
-    price_tick: float,
+    price_tick: float | None,
+    price_alignment_policy: PriceAlignmentPolicy | None = None,
     atr_value: float | None = None,
     initial_risk_per_unit: float | None = None,
     book_version: int,
@@ -238,7 +295,12 @@ def build_working_exit_book(
 
     def _tp_price(distance: float) -> float:
         raw = entry_price + (direction * float(distance))
-        return round_half_up_to_grid(raw, price_tick)
+        return _align_price(
+            raw,
+            price_tick=price_tick,
+            price_alignment_policy=price_alignment_policy,
+            direction="HALF_UP",
+        )
 
     if tp_mode == "None":
         return None, []
@@ -252,7 +314,12 @@ def build_working_exit_book(
     if tp_mode == TP_MODE_PERCENT:
         ratio = float(config["tp_percent"]) / 100.0
         raw = entry_price * (1.0 + ratio) if is_long else entry_price * (1.0 - ratio)
-        target = round_half_up_to_grid(raw, price_tick)
+        target = _align_price(
+            raw,
+            price_tick=price_tick,
+            price_alignment_policy=price_alignment_policy,
+            direction="HALF_UP",
+        )
         return target, [WorkingExit("TP", "TP", target, None, 1.0, book_version=book_version)]
 
     if tp_mode == TP_MODE_R:
@@ -292,7 +359,8 @@ def update_protective_stop_owner(
     position: Position,
     bar: Bar,
     prev_bar: Bar | None = None,
-    price_tick: float,
+    price_tick: float | None,
+    price_alignment_policy: PriceAlignmentPolicy | None = None,
     trail_atr: float | None = None,
 ) -> None:
     if position.active_stop_price is None or position.initial_risk_per_unit is None:
@@ -332,7 +400,12 @@ def update_protective_stop_owner(
                 position.trail_price = max(position.trail_price, anchor) if is_long else min(position.trail_price, anchor)
             distance = float(config["trail_distance_atr_mult"]) * float(trail_atr)
             candidate_stop = position.trail_price - distance if is_long else position.trail_price + distance
-            aligned_stop = align_stop_price(candidate_stop, side=position.side, price_tick=price_tick)
+            aligned_stop = align_stop_price(
+                candidate_stop,
+                side=position.side,
+                price_tick=price_tick,
+                price_alignment_policy=price_alignment_policy,
+            )
             if is_long:
                 position.active_stop_price = max(position.active_stop_price, aligned_stop)
             else:
@@ -352,7 +425,12 @@ def update_protective_stop_owner(
             position.be_active = True
             position.active_stop_owner = STOP_OWNER_BE
             target_stop = position.entry_price + (initial_risk * float(config["be_buffer_r"])) * (1.0 if is_long else -1.0)
-            aligned_stop = align_stop_price(target_stop, side=position.side, price_tick=price_tick)
+            aligned_stop = align_stop_price(
+                target_stop,
+                side=position.side,
+                price_tick=price_tick,
+                price_alignment_policy=price_alignment_policy,
+            )
             if is_long:
                 position.active_stop_price = max(position.active_stop_price, aligned_stop)
             else:

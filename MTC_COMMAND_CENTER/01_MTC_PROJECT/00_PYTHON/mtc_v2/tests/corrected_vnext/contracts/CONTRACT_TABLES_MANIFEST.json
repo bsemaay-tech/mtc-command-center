@@ -11,10 +11,10 @@
   "statement": "Every expected value in this bundle was derived without executing the corrected kernel: by explicit written arithmetic from the design's stated contract semantics, or, for the record-digest and record-bound members admitted at re-seal #16 under owner decisions 149 and 151, by the design's written digest recipe over committed inputs; both are shown per value in DERIVATIONS.md. No kernel was executed. No observed/ path was read: no derivation in DERIVATIONS.md cites an observed/ path as a source, and none of the 34 committed observed/ file digests appears in this manifest, the catalog, the goldens or DERIVATIONS.md. The source of the record-derived members is the committed economic record bytes below mtc_v2/core/economic_records/ and their detached .sha256 sidecars, which the design makes authoritative at Design section 5.1, \"exact file bytes. The digest\"; all 51 committed records agree with their sidecars. The first-seal sentence asserting that no corrected-kernel implementation was read or exists is withdrawn as untrue at this seal: the repository now tracks the tests/corrected_vnext/ test tree and the mtc_v2/core/ modules, including economics.py and semantics.py, and record bytes below that tree were read for the members named above. The property that these tables were sealed before that kernel existed is not carried by this statement; it is carried by the design's honest limit L14 and the decision-147 re-anchor rule (Design section 15.4, \"anchor's `base_repin_history` records every move\", Design section 17, \"The pre-implementation seal property is carried by the measured history\" and Design section 17, \"The owner-directed re-seal chain that\"), to be asserted and human-reviewed under section 16 and not machine-checked."
  },
  "design": {
-  "file": "C:/tmp/P012_ASTRA_DESIGN_20260910/P012_FRESH_DESIGN_V1.md",
-  "version": "v1.25",
-  "sha256": "8fd346f805aa30cbd0e00fc32296f8de913bfa616b2b1588ff54902d4f3ab675",
-  "total_lines": 2072,
+  "file": "C:/tmp/P012_PRICE_DESIGN_20260910/P012_PRICE_DESIGN_V1_27.md",
+  "version": "v1.27",
+  "sha256": "12943ca7ba1e276188ff332cea8eb87b7ca46e3ab60579437311d951e9b8a195",
+  "total_lines": 2110,
   "line_span_used": "whole file",
   "heading_line_map_measured_at_reseal17": {
    "v1.3 change log — DS15 fold + owner rulings 2026-08-31": 7,
@@ -35,14 +35,14 @@
    "15. Bounded Correction Evidence Gate (`BCEG-1`)": 510,
    "16. Mandatory `SEMANTIC_COVERAGE_REVIEW`": 798,
    "17. Honest limits": 811,
-   "18. Build-lane work breakdown and shape census": 868,
-   "19. Single consolidated `[OPEN — owner-gated]` ledger": 891,
-   "20. Defect-class prevention table": 908,
-   "21. Required build preconditions and non-goals": 928,
-   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 940,
-   "22. v1.5 input-embedding addendum": 948,
-   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 1210,
-   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1249
+   "18. Build-lane work breakdown and shape census": 869,
+   "19. Single consolidated `[OPEN — owner-gated]` ledger": 894,
+   "20. Defect-class prevention table": 911,
+   "21. Required build preconditions and non-goals": 931,
+   "v1.4 change log — micro-fold (owner 2026-08-31 \"design a\")": 943,
+   "22. v1.5 input-embedding addendum": 951,
+   "v1.5 change log — input-embedding addendum (owner 2026-08-31 `1a`)": 1213,
+   "23. v1.8 terminal micro-fold — v1.7 detector-union repair": 1252
   },
   "heading_line_map_addition_measured_at_reseal25": {
    "23.19 v1.22 change log - window-local serialized fill identity": 1864
@@ -80,7 +80,7 @@
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "3733773d82985738bea85f3e3a99a87577912aa85fa64247fe2570c122716d7b",
+   "sha256": "d8b37780a3e3c25f69b5e58bc5a0a88b59f59f0cc292becad0a7ba3abcd95e02",
    "bytes": 101675
   },
   {
@@ -584,21 +584,21 @@
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
-  "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
-  "reason": "F32 six-file identity repair using completed R32 baseline evidence; NONACCEPTED pending actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused."
+  "EXPECTED_SEAL_SHA": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
+  "IMPLEMENTATION_BASE_SHA": "1aab804d3383b87871811560c5fa58b41608a402",
+  "reason": "F34 forward repin after the owner-approved same-package integer-precision repair (WP-P012-PRICE-POLICY-20260910; HIST-2026-0040), binding the implementation base to actual clean C34 1aab804d3383b87871811560c5fa58b41608a402. Uses actual baseline34 (sha256 15bab1607e5fc5c1af73a15fd86061f7186aea4f3c51d0a0f369d52b74517678); no new policy or economic production facts are introduced. NONACCEPTED pending current Section 16 evidence, owner ratification, and exact required gates and reviews."
  },
  "section_16_review": {
-  "status": "PERFORMED_OWNER_RATIFIED",
-  "status_measured_at": "2026-09-10, re-seal #30 (HIST-2026-0024)",
-  "statement": "The mandatory SEMANTIC_COVERAGE_REVIEW required by Design section 16 HAS been performed and is installed at contracts/semantic_coverage_review.json, signed 2026-09-08T21:25:22+03:00 by Gemini 3.8 Flash High (gemini-3.8-flash-high), carrying 6 items with unresolved_items empty and owner ratification recorded through #30. Before 2026-09-10 this field read PENDING and stated the review had NOT been performed; that statement had become false and is corrected here under HIST-2026-0024. The reviewer-independence constraint below still binds: the claude family is excluded from the section-16 reviewer role because it authored these tables (owner ruling Q3a), and BCEG-1 still refuses acceptance without a separately authored semantic_coverage_review.json. NOT ENFORCED: the gate reads the receipt itself - its presence, its closed disposition domain and its content identities - and does not read this summary. Treat this field as descriptive only.",
+  "status": "PENDING",
+  "status_measured_at": "2026-09-10T19:57:56Z",
+  "statement": "The mandatory SEMANTIC_COVERAGE_REVIEW required by Design section 16 HAS been performed and is installed at contracts/semantic_coverage_review.json, signed 2026-09-08T21:25:22+03:00 by Gemini 3.8 Flash High (gemini-3.8-flash-high), carrying 6 items with unresolved_items empty and owner ratification recorded through #30. Before 2026-09-10 this field read PENDING and stated the review had NOT been performed; that statement had become false and is corrected here under HIST-2026-0024. The reviewer-independence constraint below still binds: the claude family is excluded from the section-16 reviewer role because it authored these tables (owner ruling Q3a), and BCEG-1 still refuses acceptance without a separately authored semantic_coverage_review.json. NOT ENFORCED: the gate reads the receipt itself - its presence, its closed disposition domain and its content identities - and does not read this summary. Treat this field as descriptive only. SUCCESSOR-PENDING (design v1.26, owner task WP-P012-PRICE-POLICY-20260910 / HIST0040): the current price-alignment design is NOT yet reviewed. This field is set PENDING pending a fresh, actual Gemini 3.8 review plus owner ratification of the price successor. The receipt above continues only as historical R32 evidence, not acceptance of the current price scope. Post-kernel mapping correction (design v1.27, HIST0040): the S18-04 binding repair (adding core/rounding.py, removing the ignored S18-PRICE-ROUNDING row) is itself pending a fresh actual Section 16 review and owner ratification.",
   "reviewer_independence_constraint": "The reviewer must be independent from the kernel implementer (Codex family) AND from the CONTRACT_TABLES author (claude family)."
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
-  "IMPLEMENTATION_BASE_SHA": "3eebdf542bb70b23525cea13efc05a4a8eb29a8f",
-  "set_by": "F32 six-file identity repair at 2026-09-10T12:06:08Z; actual C32 3eebdf542bb70b23525cea13efc05a4a8eb29a8f; R32 baseline evidence; HIST-2026-0035 and HIST-2026-0036."
+  "EXPECTED_SEAL_SHA": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
+  "IMPLEMENTATION_BASE_SHA": "1aab804d3383b87871811560c5fa58b41608a402",
+  "set_by": "F34 forward repin, 2026-09-11T01:26:23.376547+00:00"
  },
  "reseal_history": [
   {
@@ -1202,6 +1202,30 @@
    "design_pin": "v1.25",
    "reason": "R32/re-seal32: refreshed the tenth INPUT probe's dependency identity after the first nine kernel probes were regenerated; current source and mutation behavior, economics, goldens, admission/refusals are all unchanged. Only the existing scenario_catalog.json member changes among the 19 sealed members. The malformed current R31 actor labels were repaired only by appending literal re-seal #31, preserving raw C31 Git history. NONACCEPTED pending C32/F32, baseline32, actual Section 16 and exact T0 accepting reviews; production Item 4 remains refused/open.",
    "independently_verified": "pending Lead and required reviews"
+  },
+  {
+   "at": "2026-09-10T21:29:02.503127+00:00",
+   "actor": "Astra Lead coordinated; OpenCode Go DeepSeek V4 Pro mechanical builder re-seal #33",
+   "old_EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
+   "new_EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.26",
+   "reason": "R33/re-seal33: approved HYPERLIQUID price-policy kernel changed; original recorded probe mutations regenerated against current core; dependency identity maintained; only catalog member changes; no golden/DERIVATIONS or economic production-facts changes; NONACCEPTED C33 pending baseline/F33 and actual Section 16/owner ratification/exact T0. Independent verification remains pending.",
+   "independently_verified": "pending Lead and required reviews"
+  },
+  {
+   "at": "2026-09-11T01:02:31.461970+00:00",
+   "actor": "Astra Lead coordinated; ChatGPT Sol5.6High/default mechanical builder re-seal #34",
+   "old_EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
+   "new_EXPECTED_SEAL_SHA": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.27",
+   "reason": "R34/re-seal34: approved positive integer prices are exact; old float cast caused precision loss/overflow; original recorded probe mutations were regenerated against current core; catalog identity only; INPUT03 instrument subtree is unchanged and its mutation is not redone; no golden/DERIVATIONS or economic production-facts changes; NONACCEPTED C34 pending baseline/F34, new actual Section 16, owner ratification, and exact T0. Independent verification remains pending.",
+   "independently_verified": "pending Lead and required reviews"
   }
  ],
  "legacy_event_order_map_pin": {
@@ -1216,12 +1240,13 @@
    "authorization": "ONE run completed under P012_ONE_EXTRA_COORDINATED_REPAIR=YES, overnight 2050 packet approved 2026-09-05 20:48, re-seal24; 17/17 complete, 0 blocked, all 34 surfaces identical.",
    "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
    "current_run": {
-    "sha256": "d9f3127e4a2980bac19546517a38679605a2475b5b7a47f5c79265bcea6b316b",
-    "EXPECTED_SEAL_SHA_consumed": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
-    "created_at": "2026-09-10T11:54:52Z",
-    "authorization": "Owner-authorized same-scope repair of the 10th INPUT probe base catalog pin and R31 actor ID metadata, with necessary strict reviews on 2026-09-10, as a truthful re-seal32 packet. Actual new run has 34 semantic outputs identical to preserved reseal31. This packet is NONACCEPTED pending exact reviews and production Item4 evidence. EXPECTED_SEAL_SHA_consumed is a legacy field name storing Lead-verified expected seal only; unchanged child driver has no seal argument and did not read seal. No new production data, captures, economics, or human ratification are claimed.",
-    "catalog_expected_artifacts_2_0_0": "17/17 VALID",
-    "measured_at": "2026-09-10T12:06:08Z; R32 measurement; HIST-2026-0035 and HIST-2026-0036",
+    "path": "C:/tmp/P012_PRICE_BASELINE34_20260911/CURRENT/BASELINE_BYTES_MANIFEST.json",
+    "sha256": "15bab1607e5fc5c1af73a15fd86061f7186aea4f3c51d0a0f369d52b74517678",
+    "EXPECTED_SEAL_SHA_consumed": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
+    "created_at": "2026-09-11T01:19:59Z",
+    "authorization": "Owner-authorized same-package integer-precision repair packet. The current driver is a separate byte-preserving copy of the original baseline driver, differing only in the DEFAULT_OUT assignment to the new fixed output directory C:/tmp/P012_PRICE_BASELINE_RUN34/out; the original driver and prior baseline are retained unchanged. Case/Runner behavior is unchanged, and the child driver has no seal argument and did not read or consume a seal. This actual C34 run packet is NONACCEPTED pending F34, new actual Section16 evidence, owner ratification, and exact required reviews. No new production facts, captures, accounts, trading claims, or human ratification are claimed. EXPECTED_SEAL_SHA_consumed is a legacy field name storing the Lead-verified expected seal only.",
+    "catalog_expected_artifacts_2_0_0": "PENDING fresh post-F34 verification",
+    "measured_at": "2026-09-11T01:26:23.376547+00:00",
     "enforced_by": "verify_bceg.py:2980 re-reads the file and refuses if EXPECTED_SEAL_SHA_consumed does not equal the seal; verify_bceg.py:66-74 lists baseline_manifest_sha256 as a Section-16 content identity key and :650-654 refuses on mismatch. Both act on the FILE and on the RECEIPT, never on this block, which is descriptive only."
    }
   },

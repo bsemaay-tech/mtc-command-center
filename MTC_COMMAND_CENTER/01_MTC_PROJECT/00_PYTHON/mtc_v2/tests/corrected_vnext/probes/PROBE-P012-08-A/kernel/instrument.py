@@ -11,7 +11,14 @@ import re
 from types import MappingProxyType
 from typing import Any
 
-from mtc_v2.core.rounding import ceil_to_grid, floor_qty_to_step, floor_to_grid, round_half_up_to_grid
+from mtc_v2.core.rounding import (
+    PriceAlignmentPolicy,
+    align_price_to_policy,
+    ceil_to_grid,
+    floor_qty_to_step,
+    floor_to_grid,
+    round_half_up_to_grid,
+)
 
 
 REFUSED_INVALID_RECORD_BYTES = "REFUSED_INVALID_RECORD_BYTES"
@@ -178,6 +185,7 @@ class InstrumentRecord:
     settlement_currency: str | None
     point_value: int | float | None
     price_tick: int | float | None
+    price_alignment_policy: PriceAlignmentPolicy | None
     quantity_step: int | float | None
     minimum_quantity: int | float | None
     minimum_notional: int | float | None
@@ -208,9 +216,19 @@ class InstrumentRecord:
                 f"missing text fields: {', '.join(missing_text)}",
             )
 
+        if (self.price_tick is None) == (self.price_alignment_policy is None):
+            raise InstrumentRecordRefusal(
+                REFUSED_INCOMPLETE_INSTRUMENT_RECORD,
+                "exactly one of price_tick and price_alignment_policy is required",
+            )
+        price_tick = (
+            None
+            if self.price_tick is None
+            else _required_number(self.price_tick, "price_tick", positive=True)
+        )
         numbers = {
             "point_value": _required_number(self.point_value, "point_value", positive=True),
-            "price_tick": _required_number(self.price_tick, "price_tick", positive=True),
+            "price_tick": price_tick,
             "quantity_step": _required_number(
                 self.quantity_step, "quantity_step", positive=True
             ),
@@ -295,6 +313,7 @@ class InstrumentRecord:
             symbol=self.symbol,
             point_value=numbers["point_value"],
             price_tick=numbers["price_tick"],
+            price_alignment_policy=self.price_alignment_policy,
             qty_step=numbers["quantity_step"],
             min_qty=numbers["minimum_quantity"],
             min_notional=numbers["minimum_notional"],
@@ -307,6 +326,20 @@ def load_verified_instrument_record(path: str | Path) -> InstrumentRecord:
     data = verified.data
     effective = data.get("effective_interval")
     provenance = data.get("provenance")
+    raw_policy = data.get("price_alignment_policy")
+    try:
+        policy = (
+            None
+            if raw_policy is None
+            else PriceAlignmentPolicy.from_mapping(raw_policy)
+        )
+        if data.get("price_tick") is not None and policy is not None:
+            raise ValueError("price_tick conflicts with price_alignment_policy")
+    except ValueError as exc:
+        raise InstrumentRecordRefusal(
+            REFUSED_INCOMPLETE_INSTRUMENT_RECORD,
+            str(exc),
+        ) from exc
     return InstrumentRecord(
         record_id=str(data.get("record_id", verified.path.stem)),
         digest=verified.digest,
@@ -316,6 +349,7 @@ def load_verified_instrument_record(path: str | Path) -> InstrumentRecord:
         settlement_currency=data.get("settlement_currency"),
         point_value=data.get("point_value"),
         price_tick=data.get("price_tick"),
+        price_alignment_policy=policy,
         quantity_step=data.get("quantity_step"),
         minimum_quantity=data.get("minimum_quantity"),
         minimum_notional=data.get("minimum_notional"),
@@ -330,11 +364,23 @@ def load_verified_instrument_record(path: str | Path) -> InstrumentRecord:
 class InstrumentMetadata:
     symbol: str = "UNKNOWN"
     point_value: float = 1.0
-    price_tick: float = 0.01
+    price_tick: float | None = 0.01
     qty_step: float = 1.0
     min_qty: float = 0.0
     min_notional: float = 0.0
     contract_multiplier: float = 1.0
+    price_alignment_policy: PriceAlignmentPolicy | None = None
+
+    def __post_init__(self) -> None:
+        if (self.price_tick is None) == (self.price_alignment_policy is None):
+            raise ValueError(
+                "exactly one of price_tick and price_alignment_policy is required"
+            )
+        if (
+            self.price_alignment_policy is not None
+            and not isinstance(self.price_alignment_policy, PriceAlignmentPolicy)
+        ):
+            raise ValueError("price_alignment_policy must be typed")
 
     @classmethod
     def from_config(cls, config: dict[str, object]) -> "InstrumentMetadata":
@@ -349,12 +395,21 @@ class InstrumentMetadata:
         )
 
     def round_price(self, value: float) -> float:
+        if self.price_alignment_policy is not None:
+            return align_price_to_policy(value, self.price_alignment_policy, "HALF_UP")
+        assert self.price_tick is not None
         return round_half_up_to_grid(value, self.price_tick)
 
     def floor_price(self, value: float) -> float:
+        if self.price_alignment_policy is not None:
+            return align_price_to_policy(value, self.price_alignment_policy, "FLOOR")
+        assert self.price_tick is not None
         return floor_to_grid(value, self.price_tick)
 
     def ceil_price(self, value: float) -> float:
+        if self.price_alignment_policy is not None:
+            return align_price_to_policy(value, self.price_alignment_policy, "CEIL")
+        assert self.price_tick is not None
         return ceil_to_grid(value, self.price_tick)
 
     def floor_qty(self, value: float) -> float:

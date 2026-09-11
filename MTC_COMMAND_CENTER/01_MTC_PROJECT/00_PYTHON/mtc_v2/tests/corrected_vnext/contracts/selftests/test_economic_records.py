@@ -48,7 +48,7 @@ def test_catalog_pinned_synthetic_instrument_loads_for_evaluation() -> None:
 def test_production_candidate_bytes_are_copied_exactly_but_remain_incomplete() -> None:
     path = RECORD_ROOT / "instruments" / "HYPERLIQUID-BTC-PERP-V1.3.json"
     verified = load_verified_json_record(path)
-    assert verified.digest == "b26f9e755ae75ac4bc81506167cdb5da896a69322e616a9450f1fc65a142e26c"
+    assert verified.digest == "8620f499d7903f5ea801d99f6654f01546ad6638f7c85dad81d441209ff73fb8"
     provenance = verified.data["provenance"]
     assert {
         Path(source["frozen_file"]).name: source["sha256"]
@@ -64,6 +64,14 @@ def test_production_candidate_bytes_are_copied_exactly_but_remain_incomplete() -
         "da2bf1fef41adbb4d3429e5abaff070a8fc81814730bf0ee7715b9eb79f097ed"
     )
     assert verified.data["price_tick"] is None
+    assert dict(verified.data["price_alignment_policy"]) == {
+        "id": "HYPERLIQUID_PX_V1",
+        "significant_figures": 5,
+        "perp_max_decimals": 6,
+        "size_decimals": 5,
+        "integer_exception": True,
+        "positive_price_required": True,
+    }
     assert verified.data["minimum_quantity"] is None
     assert verified.data["provenance"]["human_reviewer"] is None
 

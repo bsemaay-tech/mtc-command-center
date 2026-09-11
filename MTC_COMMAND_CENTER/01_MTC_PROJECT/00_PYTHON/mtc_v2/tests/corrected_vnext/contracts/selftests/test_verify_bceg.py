@@ -31,7 +31,7 @@ from mtc_v2.tests.corrected_vnext.verify_bceg import (
 
 FIXTURES = Path(__file__).parent
 MTC_V2_ROOT = FIXTURES.parents[3]
-BASELINE_ROOT = Path(r"C:\tmp\P012_BASELINE_RUN")
+BASELINE_ROOT = Path(r"C:\tmp\P012_PRICE_BASELINE34_20260911\CURRENT")
 EMPTY_DOCUMENT_BYTES = b"{}" + bytes([10])
 PATCH_BYTES = b"--- a" + bytes([10])
 MEMBER_BYTES = b"x = 1" + bytes([10])
@@ -2261,7 +2261,7 @@ def test_w305_item3_committed_record_states_it_is_not_evidence() -> None:
         # decision-134 authorization is untouched. The R30 forward repin moved it again, from the
         # re-seal #29 commit 94a0a568 to the re-seal #30 commit 0c01b350, which carries the nine
         # re-derived kernel probe copies and the catalog pins that came with the oracle_price rename.
-        "3eebdf542bb70b23525cea13efc05a4a8eb29a8f"
+        "1aab804d3383b87871811560c5fa58b41608a402"
     )
     assert record["exceptions"][0]["owner_decision"] == 134
     assert record["exceptions"][0]["lane_ids"] == [
