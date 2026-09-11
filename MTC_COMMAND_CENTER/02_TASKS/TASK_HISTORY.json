@@ -371,6 +371,15 @@
     "created_by": "Astra Lead under standing owner Package repair authority; not a new owner ratification",
     "summary": "Two explanatory strings correct the previously recorded OPEN01 addendum 16 row 42 selection and the already approved v1.27 integer rule; dependent evidence/identity repairs only; all production/economic/behavior/refusal values are untouched; original history is preserved; fresh required checks/reviews and ratification remain separate.",
     "report_path": "MTC_COMMAND_CENTER/_AI_MEMORY/P012_RECORD_PROSE_20260911.md"
+  },
+  {
+    "event_id": "HIST-2026-0042",
+    "task_id": "WP-P012-FUNDING-RETENTION-20260911",
+    "event_type": "APPROVED",
+    "created_at": "2026-09-11T12:10:36.0222800Z",
+    "created_by": "Owner approval recorded by the bounded flagship builder (claude-opus-5) under Astra Lead dispatch; Lead owns Git and verifies this append",
+    "summary": "Owner exact words `ı approve` approve the concrete Bridge funding-evidence retention proposal: an additive opt-in schema v10 that retains the already-normalized FundingEventRecord.authoritative() payload beside the existing immutable funding ledger, its synthetic offline tests, the named independent reviews, ordinary local commits and conditional push/PR/normal merge only after those exact checks pass. Default schema target stays v4 and v4-v9 behavior is unchanged. No raw HTTP capture, no venue-fact acceptance, no runtime activation, no production database or host access, no new spend, and no acceptance: the candidate stays NONACCEPTED until required reviews, QA and current-head protected CI.",
+    "report_path": "MTC_COMMAND_CENTER/_AI_MEMORY/P012_FUNDING_RETENTION_20260911.md"
   }
   ]
 }

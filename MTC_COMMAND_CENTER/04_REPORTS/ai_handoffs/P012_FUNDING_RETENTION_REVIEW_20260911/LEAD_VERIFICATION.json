@@ -1,0 +1,99 @@
+{
+  "task": "WP-P012-FUNDING-RETENTION-20260911",
+  "verified_at": "2026-09-11T13:09:58.575285Z",
+  "local_acceptance": "PASS",
+  "integration_rule": "Up-to-date protected checks and normal PR merge required; no bypass",
+  "base": "d1485eee5b2cc02f85d81610d89b7ec7bbf46a6a",
+  "reviewed_head": "8fe2ede61ca8bf6cd6c564063680542e6101b276",
+  "code_tree": "c0ad3706d460377a44fe13ce32dff37b668d9274",
+  "tests_tree": "fcb4788d7e1e26323a2acdd703e448b7d9eeea7a",
+  "unchanged_mtc_v2_tree": "e648a48534270a1ed98799734fc9f587aea7d09e",
+  "packet_manifest_original_sha256": "16f14641b51ecc30a953605072f18784e665038c62fc3208a22d67850217c4a1",
+  "packet_members_verified": 61,
+  "source_blobs_verified": 20,
+  "lead": {
+    "mutant_restart_failures": 1,
+    "checkpoint_failure_events": [
+      "0xfund2"
+    ],
+    "all_pass": true,
+    "restart_green_exit": 0,
+    "baseline_tests": 1423,
+    "mutant_exit": 1,
+    "focused_tests": 275,
+    "focused_junit_sha256": "78e1be6eeed958c7e10fb284def95145db3bcbeeb6f74f817738b39e9899aba9",
+    "full_junit_sha256": "0874b7c1c6b08c142197054f91de6c571ef29e2c1945d3c958935bfcc017a94b",
+    "gap_red_exit": 1,
+    "full_tests": 1467
+  },
+  "sol": {
+    "focused_junit_sha256": "4a3e5b19a0923fae810337adcfbb4d957585d5c07d3048da38b242fa68e92dbe",
+    "route": "fresh native accepting reviewer",
+    "report_original_sha256": "899b1abf5eb063d746f685993b1045aed69904d9f3f65cef3c7d0ed86b0f36dc",
+    "model": "gpt-5.6-sol",
+    "full_exit": 0,
+    "verdict": "PASS",
+    "focused_tests": 275,
+    "effort": "xhigh",
+    "full_junit_sha256": "4ece5db368299bdc00e7e3c584fd93f0727b47ae4433fe782dc3e961cc21d205",
+    "full_tests": 1467,
+    "focused_exit": 0
+  },
+  "opus": {
+    "auxiliary_usage": "Haiku telemetry entry present, not acceptance author",
+    "report_original_sha256": "cc72974d3a0231be0888543869c489dc2477a9eb6b19581eb22e191ddffc88a6",
+    "wrapper_exit": 0,
+    "effort": "xhigh",
+    "focused_junit_sha256": "0ecff24a2215a8f806ec6397dbbb4306d696753c23e9b2a2b6c9374ada967c5e",
+    "focused_tests": 275,
+    "route": "isolated firstParty ClaudeMax",
+    "own_probe_checks": 24,
+    "verdict": "PASS",
+    "model_confirmed": true,
+    "own_probe_failed": 0,
+    "full_tests": 1467,
+    "assistant_messages": 92,
+    "agent_calls": 0,
+    "model": "claude-opus-5",
+    "full_junit_sha256": "210d6def9159170a9c267c4f819ef397e8caa98edb7f75a77daf25643feb2d8b",
+    "full_exit": 0,
+    "focused_exit": 0,
+    "session": "7b186a1d-dac1-4cea-b199-d87c11a7e729",
+    "assistant_models": [
+      "claude-opus-5"
+    ],
+    "source_guard": "PASS"
+  },
+  "gemini": {
+    "native_exit_field": null,
+    "mode": "SUPPLEMENTAL_UNEXECUTED",
+    "original_report_sha256": "b4cf76fc789fc91b49b3a195a9637d39138f9494b8efafd95b464890b31e15be",
+    "status": "SUCCESS",
+    "verdict_recommendation": "PASS",
+    "qualification": "GEMINI_QUALIFICATION.md",
+    "model": "gemini-3.7-flash-high",
+    "conversation": "a8d36d29-1539-4b08-8353-06d95e30bf49"
+  },
+  "required_findings_remaining": 0,
+  "environment": {
+    "windows_derivation": "uvloop stanza only omitted;55other pins/hashes retained",
+    "repository_lock_changed": false,
+    "python": "3.12.12"
+  },
+  "authority_limits": [
+    "No runtime activation",
+    "No host or real database",
+    "No broker/API/capture/deploy/trading",
+    "No new spend or reset",
+    "No venue-fact acceptance",
+    "No R34/R35 reseal"
+  ],
+  "old_history_events_preserved": 41,
+  "decision_prefix_preserved": true,
+  "closeout_dashboard_check": {
+    "exit": 0,
+    "tests": 48,
+    "junit_sha256": "3daff9aec1ffa87d8a734f36bcd6a166f147221c4035561243d05f91d822e709",
+    "scope": "HANDOFF guard marker preserved; reviewed code/tests/contract unchanged"
+  }
+}

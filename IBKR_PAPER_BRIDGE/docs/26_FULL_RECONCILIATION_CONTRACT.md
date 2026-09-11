@@ -532,3 +532,80 @@ run B's own start (the run-A interval, and the funding event inside it, gone).
   timestamp as evidence, while readiness ordering uses append-only SQLite row
   order. A rollback can therefore never make a later interrupted attempt sort
   before an earlier accepted checkpoint.
+
+
+## 12. Retained funding payload — schema v10 (P0-12, opt-in)
+
+`funding_events` (§8) stores the identity digest of an event but not the
+normalized values hashed into it. `FundingEventRecord.funding_rate`,
+`position_szi` and `n_samples` are therefore observed, hashed, and then lost at
+the next restart, because a SHA-256 digest cannot be inverted. Schema v10 is the
+smallest additive fix: one append-only table that retains the canonical JSON of
+the **existing** `FundingEventRecord.authoritative()` domain beside its ledger
+row.
+
+```sql
+CREATE TABLE funding_event_payloads (
+  event_id       TEXT PRIMARY KEY REFERENCES funding_events(event_id),
+  payload_json   TEXT NOT NULL,   -- canonical_reconcile_json(authoritative())
+  payload_digest TEXT NOT NULL,   -- repeats funding_events.payload_digest
+  recorded_ts    TEXT NOT NULL
+)
+```
+
+### What it guarantees
+
+- **Opt-in only.** The default target stays v4. v10 is reached exclusively via
+  `initialize(target_schema_version=10)` through the proven v4→…→v9 chain. No
+  existing caller or database is upgraded by being opened, and reopening a v10
+  store at a lower target never downgrades it.
+- **Additive.** The migration creates one empty table in one `BEGIN IMMEDIATE`
+  transaction, proves every predecessor table's row count is unchanged, and
+  bumps `meta.schema_version` with a `rowcount == 1` check. A failure rolls back
+  to a reopenable v9 and records a secret-safe
+  `funding_payload_migration_failure` marker.
+- **One transaction.** A retained payload is written in the same transaction as
+  the ledger row it belongs to, so it can never become visible without its
+  event, or the other way round.
+- **Only newly inserted events.** An exact replay of an already-recorded event
+  returns early exactly as before: one event, one payload. An event recorded
+  before the upgrade stays without a payload — see below.
+- **The ledger stays the authority.** The read path returns retained bytes only
+  if they parse, carry exactly the authoritative domain, re-serialize to the
+  same canonical bytes, and re-hash to the ledger's immutable digest. Damaged or
+  edited bytes are refused (`FUNDING_PAYLOAD_DIGEST_MISMATCH`,
+  `FUNDING_PAYLOAD_MALFORMED`, `FUNDING_PAYLOAD_DOMAIN_MISMATCH`), never
+  returned, and a damaged store also fails closed on reopen.
+- **Append-only.** `UPDATE`/`DELETE` on the table abort with
+  `FUNDING_PAYLOAD_APPEND_ONLY`, mirroring the ledger's own triggers.
+- **Nulls stay null.** An unreported optional value is retained as `None` and is
+  never substituted with `0`.
+
+### What it deliberately does not do
+
+- **Historical events are explicitly unavailable.** The migration fabricates no
+  payload for anything already recorded, and an ordinary replay does not
+  backfill one. `get_funding_event_payload()` returns `None` for such an event —
+  that `None` means *not retained*, never *zero* and never *reconstructed*.
+  Recovering those values would require a fresh authoritative capture, which is
+  outside this capability.
+- **Normalized, not raw.** What is retained is the payload the Bridge already
+  computed from the `userFunding` record, not the original HTTP bytes and not
+  the original decimal strings. This capability therefore proves nothing about
+  venue authenticity, history completeness, settlement-oracle association, or
+  the sign/meaning of a funding rate. It removes one storage obstacle; it
+  decides no venue fact.
+- **No new identity and no new interpretation.** The exchange-provided `hash`
+  remains the sole event identity, the digest domain is unchanged, and no
+  risk/order/KILL behavior is touched. Funding still does not reach risk here.
+
+### Surfaces
+
+- `Store.funding_payload_retention_enabled()` — true only on v10.
+- `Store.get_funding_event_payload(event_id)` — the verified payload, `None`
+  when explicitly unavailable, `FUNDING_PAYLOAD_EVENT_UNKNOWN` when the ledger
+  has no such event, and `FUNDING_PAYLOAD_SCHEMA_INACTIVE` below v10.
+
+Test evidence: `tests/test_funding_payload_retention.py` (offline, synthetic),
+plus the v10 capability/migration extension in `tests/test_store.py` and the
+end-to-end restart/conflict cases in `tests/test_reconciliation.py`.
