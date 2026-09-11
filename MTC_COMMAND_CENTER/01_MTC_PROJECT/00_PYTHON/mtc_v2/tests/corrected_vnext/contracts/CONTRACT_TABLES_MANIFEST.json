@@ -80,7 +80,7 @@
   },
   {
    "path": "scenario_catalog.json",
-   "sha256": "74b3b61482c8d47a2bb286a9c6b41a00099ccf2ecfdb7446d5c4625ff966bb37",
+   "sha256": "d8b37780a3e3c25f69b5e58bc5a0a88b59f59f0cc292becad0a7ba3abcd95e02",
    "bytes": 101675
   },
   {
@@ -584,9 +584,9 @@
   }
  ],
  "seal_state": {
-  "EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
+  "EXPECTED_SEAL_SHA": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
   "IMPLEMENTATION_BASE_SHA": "b4e44964f38391518d0c5c5d04f2b41fb4d08237",
-  "reason": "F33/Decision147 forward repin: owner-approved price successor (HIST0040) identity-only rebind to the actual sealed-member base C33 b4e44964f38391518d0c5c5d04f2b41fb4d08237. The approved HYPERLIQUID price-policy kernel is unchanged and no behavior changed. Uses actual baseline33 (sha256 93e002753b764f0634e186903f64703ad4e0f7442d8cb32bc37baf1d6b44016a) with fresh post-F33 verification pending. NONACCEPTED pending fresh Section 16 evidence, owner ratification, and exact required reviews."
+  "reason": "R34/re-seal34: approved positive integer prices are exact; old float cast caused precision loss/overflow; original recorded probe mutations were regenerated against current core; catalog identity only; INPUT03 instrument subtree is unchanged and its mutation is not redone; no golden/DERIVATIONS or economic production-facts changes; NONACCEPTED C34 pending baseline/F34, new actual Section 16, owner ratification, and exact T0. Independent verification remains pending."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -596,9 +596,9 @@
  },
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
-  "EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
+  "EXPECTED_SEAL_SHA": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
   "IMPLEMENTATION_BASE_SHA": "b4e44964f38391518d0c5c5d04f2b41fb4d08237",
-  "set_by": "F33/Decision147 forward repin, 2026-09-10T22:05:44.574197+00:00"
+  "set_by": "R34/re-seal34, 2026-09-11T01:02:31.461970+00:00"
  },
  "reseal_history": [
   {
@@ -1213,6 +1213,18 @@
    ],
    "design_pin": "v1.26",
    "reason": "R33/re-seal33: approved HYPERLIQUID price-policy kernel changed; original recorded probe mutations regenerated against current core; dependency identity maintained; only catalog member changes; no golden/DERIVATIONS or economic production-facts changes; NONACCEPTED C33 pending baseline/F33 and actual Section 16/owner ratification/exact T0. Independent verification remains pending.",
+   "independently_verified": "pending Lead and required reviews"
+  },
+  {
+   "at": "2026-09-11T01:02:31.461970+00:00",
+   "actor": "Astra Lead coordinated; ChatGPT Sol5.6High/default mechanical builder re-seal #34",
+   "old_EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
+   "new_EXPECTED_SEAL_SHA": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
+   "files_changed": [
+    "scenario_catalog.json"
+   ],
+   "design_pin": "v1.27",
+   "reason": "R34/re-seal34: approved positive integer prices are exact; old float cast caused precision loss/overflow; original recorded probe mutations were regenerated against current core; catalog identity only; INPUT03 instrument subtree is unchanged and its mutation is not redone; no golden/DERIVATIONS or economic production-facts changes; NONACCEPTED C34 pending baseline/F34, new actual Section 16, owner ratification, and exact T0. Independent verification remains pending.",
    "independently_verified": "pending Lead and required reviews"
   }
  ],

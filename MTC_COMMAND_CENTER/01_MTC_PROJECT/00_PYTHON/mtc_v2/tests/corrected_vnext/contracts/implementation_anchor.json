@@ -1,9 +1,9 @@
 {
  "schema": "P012_IMPLEMENTATION_ANCHOR_DRAFT_V1",
  "note": "Lead anchor-acceptance act (design precondition 3 + section 15.1): staged in C:\\tmp; the build lane commits the bundle + this anchor at the repo paths under the Gate-2 grant, at which point the git seal commit is recorded additionally. The EXPECTED_SEAL_SHA here is the deterministic bundle-seal digest: SHA-256 over the LF-joined, lexicographically sorted \"path:sha256\" lines of the manifest files array.",
- "EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
+ "EXPECTED_SEAL_SHA": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
  "IMPLEMENTATION_BASE_SHA": "b4e44964f38391518d0c5c5d04f2b41fb4d08237",
- "core_tree_oid_at_base": "ead33b9704f11e6235b19e0f24a846b2f217b4aa",
+ "core_tree_oid_at_base": "ca57ca5e0487f92e05fa68d8217fdde486877a2c",
  "expected_bundle_manifest": "C:\\tmp\\P012_CONTRACT_TABLES_W127\\CONTRACT_TABLES_MANIFEST.json",
  "authorized_kernel_paths": [
   "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/core/semantics.py",
@@ -240,6 +240,14 @@
    "old_EXPECTED_SEAL_SHA": "a3db31d4d9ec112878562899843b7f2c6b70518dc59140b6bbe6ecafb1b2e9f7",
    "new_EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
    "reason": "R33/re-seal33: approved HYPERLIQUID price-policy kernel changed; original recorded probe mutations regenerated against current core; dependency identity maintained; only catalog member changes; no golden/DERIVATIONS or economic production-facts changes; NONACCEPTED C33 pending baseline/F33 and actual Section 16/owner ratification/exact T0. Independent verification remains pending.",
+   "independently_verified": "pending Lead and required reviews"
+  },
+  {
+   "at": "2026-09-11T01:02:31.461970+00:00",
+   "actor": "Astra Lead coordinated; ChatGPT Sol5.6High/default mechanical builder re-seal #34",
+   "old_EXPECTED_SEAL_SHA": "b9b302137a4d82ac613bb3c1b3a90c9417d8d1354dcf366d9737dea703a3340d",
+   "new_EXPECTED_SEAL_SHA": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
+   "reason": "R34/re-seal34: approved positive integer prices are exact; old float cast caused precision loss/overflow; original recorded probe mutations were regenerated against current core; catalog identity only; INPUT03 instrument subtree is unchanged and its mutation is not redone; no golden/DERIVATIONS or economic production-facts changes; NONACCEPTED C34 pending baseline/F34, new actual Section 16, owner ratification, and exact T0. Independent verification remains pending.",
    "independently_verified": "pending Lead and required reviews"
   }
  ],

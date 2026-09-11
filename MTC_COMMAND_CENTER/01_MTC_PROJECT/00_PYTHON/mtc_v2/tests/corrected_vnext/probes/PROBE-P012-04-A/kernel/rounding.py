@@ -54,7 +54,7 @@ class PriceAlignmentPolicy:
         )
 
 
-def _policy_decimal(value: float) -> Decimal:
+def _policy_decimal(value: int | float) -> Decimal:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError("price must be numeric and not boolean")
     decimal_value = Decimal(str(value))
@@ -63,9 +63,11 @@ def _policy_decimal(value: float) -> Decimal:
     return decimal_value
 
 
-def is_valid_price(value: float, policy: PriceAlignmentPolicy) -> bool:
+def is_valid_price(value: int | float, policy: PriceAlignmentPolicy) -> bool:
     if not isinstance(policy, PriceAlignmentPolicy):
         return False
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value > 0
     try:
         decimal_value = _policy_decimal(value)
     except (ValueError, ArithmeticError):
@@ -79,14 +81,18 @@ def is_valid_price(value: float, policy: PriceAlignmentPolicy) -> bool:
 
 
 def align_price_to_policy(
-    value: float,
+    value: int | float,
     policy: PriceAlignmentPolicy,
     direction: PriceAlignmentDirection,
-) -> float:
+) -> int | float:
     if not isinstance(policy, PriceAlignmentPolicy):
         raise ValueError("unsupported price alignment policy")
     if direction not in {"FLOOR", "CEIL", "HALF_UP"}:
         raise ValueError(f"unsupported price alignment direction {direction!r}")
+    if isinstance(value, int) and not isinstance(value, bool):
+        if value <= 0:
+            raise ValueError("price must be finite and > 0")
+        return value
     decimal_value = _policy_decimal(value)
     if decimal_value < Decimal("10000"):
         scaled = decimal_value * 10
