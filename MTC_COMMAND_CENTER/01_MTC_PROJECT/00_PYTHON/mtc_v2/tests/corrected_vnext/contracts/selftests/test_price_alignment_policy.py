@@ -20,6 +20,7 @@ from mtc_v2.core.exits import (
     update_protective_stop_owner,
 )
 from mtc_v2.core.rounding import (
+    PriceAlignmentDirection,
     PriceAlignmentPolicy,
     align_price_to_policy,
     is_valid_price,
@@ -56,6 +57,71 @@ POLICY = PriceAlignmentPolicy(
 )
 def test_hyperliquid_policy_membership(value: float, expected: bool) -> None:
     assert is_valid_price(value, POLICY) is expected
+
+
+@pytest.mark.parametrize(
+    "case_id",
+    ["i53", "i400", "i5000"],
+    ids=["i53", "i400", "i5000"],
+)
+@pytest.mark.parametrize(
+    "direction",
+    ["FLOOR", "CEIL", "HALF_UP"],
+    ids=["floor", "ceil", "half-up"],
+)
+def test_positive_integer_is_preserved_exactly(
+    case_id: str,
+    direction: PriceAlignmentDirection,
+) -> None:
+    values = {
+        "i53": 2**53 + 1,
+        "i400": 10**400,
+        "i5000": 10**5000,
+    }
+    value = values[case_id]
+    if is_valid_price(value, POLICY) is not True:
+        pytest.fail(f"{case_id}: positive integer was not valid")
+    result = align_price_to_policy(value, POLICY, direction)
+    if type(result) is not int or result != value:
+        pytest.fail(f"{case_id}/{direction}: exact integer was not preserved")
+
+
+class PriceInt(int):
+    pass
+
+
+@pytest.mark.parametrize(
+    ("case_id", "value"),
+    [
+        ("s53", PriceInt(2**53 + 1)),
+        ("s400", PriceInt(10**400)),
+    ],
+    ids=["s53", "s400"],
+)
+@pytest.mark.parametrize(
+    "direction",
+    ["FLOOR", "CEIL", "HALF_UP"],
+    ids=["floor", "ceil", "half-up"],
+)
+def test_positive_integer_subclass_is_preserved_exactly(
+    case_id: str,
+    value: PriceInt,
+    direction: PriceAlignmentDirection,
+) -> None:
+    if is_valid_price(value, POLICY) is not True:
+        pytest.fail(f"{case_id}: positive integer subclass was not valid")
+    result = align_price_to_policy(value, POLICY, direction)
+    if not isinstance(result, int) or result != value:
+        pytest.fail(f"{case_id}/{direction}: exact integer value was not preserved")
+
+
+def test_positive_integer_does_not_bypass_policy_or_direction_validation() -> None:
+    value = 2**53 + 1
+    assert is_valid_price(value, object()) is False  # type: ignore[arg-type]
+    with pytest.raises(ValueError):
+        align_price_to_policy(value, object(), "FLOOR")  # type: ignore[arg-type]
+    with pytest.raises(ValueError):
+        align_price_to_policy(value, POLICY, "UNKNOWN")  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
