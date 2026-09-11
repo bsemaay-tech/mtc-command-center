@@ -226,6 +226,175 @@ def archive_check(gap_detector=None, module: types.ModuleType = subject) -> None
         ]
 
 
+def replay_and_gap_atomicity_check(module: types.ModuleType = subject) -> None:
+    """Fixture-only ingest replay and failed-gap state transition checks."""
+    clock = [JANUARY_LAST_BAR + 10 * STEP]
+    with tempfile.TemporaryDirectory() as temporary:
+        archive = module.MonthlyArchive(Path(temporary))
+        source = FakePublicSource([])
+        collector = module.MarketDataCollector(
+            source=source,
+            archive=archive,
+            identities=identities_for(module),
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: clock[0],
+        )
+        first = collector.ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE")
+        assert first is not None
+        stored_path = archive.bar_path(first)
+        stored_before = stored_path.read_bytes()
+        clock[0] += STEP
+        replay = collector.ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE")
+        assert replay is not None and replay.ingest_time == clock[0]
+        assert stored_path.read_bytes() == stored_before
+        assert [int(bar["bar_open_time"]) for bar in archive.bars("BTC", "15m")] == [
+            JANUARY_LAST_BAR
+        ]
+
+        conflict = raw_bar(JANUARY_LAST_BAR)
+        conflict["c"] = str(int(conflict["c"]) + 1)
+        try:
+            collector.ingest(conflict, "WS_LIVE")
+        except module.CollectionRefused as error:
+            assert str(error) == (
+                "differing same-producer bar requires an approved correction contract"
+            )
+        else:
+            raise AssertionError("conflicting ingest replay was accepted")
+
+        collector.ingest(raw_bar(JANUARY_LAST_BAR + STEP), "WS_LIVE")
+        older_replay = collector.ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE")
+        assert older_replay is not None and older_replay.observation_id == first.observation_id
+        collector.ingest(raw_bar(JANUARY_LAST_BAR + 2 * STEP), "WS_LIVE")
+        assert source.snapshot_calls == [], ("older_replay_rewound_cursor", source.snapshot_calls)
+
+    with tempfile.TemporaryDirectory() as temporary:
+        archive = module.MonthlyArchive(Path(temporary))
+        source = FakePublicSource([])
+        collector = module.MarketDataCollector(
+            source=source,
+            archive=archive,
+            identities=identities_for(module),
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: clock[0],
+        )
+        collector.ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE")
+        try:
+            collector.ingest(raw_bar(JANUARY_LAST_BAR + 3 * STEP), "WS_LIVE")
+        except module.CollectionRefused as error:
+            assert str(error) == f"snapshot did not fill gap starting at {JANUARY_LAST_BAR + STEP}"
+        else:
+            raise AssertionError("empty gap snapshot was accepted")
+        failed_rows = [
+            int(bar["bar_open_time"]) for bar in archive.bars("BTC", "15m")
+        ]
+        assert failed_rows == [JANUARY_LAST_BAR], ("failed_gap_rows", failed_rows)
+
+        collector.ingest(raw_bar(JANUARY_LAST_BAR + STEP), "WS_LIVE")
+        assert [int(bar["bar_open_time"]) for bar in archive.bars("BTC", "15m")] == [
+            JANUARY_LAST_BAR,
+            JANUARY_LAST_BAR + STEP,
+        ]
+    print("INGEST REPLAY/GAP ATOMICITY (fixture transport): PASS")
+
+
+def synthetic_same_id_conflict_check(module: types.ModuleType = subject) -> None:
+    """A fixture-only observation contract forces changed producer bytes onto one ID."""
+    identities = module.IdentityPolicy(
+        payload=module.HashContract(
+            ("t", "s", "i", "o", "h", "l", "c", "v"),
+            "sha256",
+            "utf-8",
+            "json-array-compact",
+        ),
+        observation=module.HashContract(
+            ("t", "s", "i", "venue", "track", "source_producer"),
+            "sha256",
+            "utf-8",
+            "json-array-compact",
+        ),
+    )
+    now = JANUARY_LAST_BAR + 10 * STEP
+    changed = raw_bar(JANUARY_LAST_BAR)
+    changed["c"] = str(int(changed["c"]) + 1)
+    first_bar = module.normalize_bar(
+        raw_bar(JANUARY_LAST_BAR),
+        source_producer="WS_LIVE",
+        ingest_time=now,
+        env_lineage_id="fixture-lineage",
+        identities=identities,
+    )
+    changed_bar = module.normalize_bar(
+        changed,
+        source_producer="WS_LIVE",
+        ingest_time=now,
+        env_lineage_id="fixture-lineage",
+        identities=identities,
+    )
+    assert first_bar is not None and changed_bar is not None
+    assert first_bar.observation_id == changed_bar.observation_id
+    assert first_bar.producer_payload_hash != changed_bar.producer_payload_hash
+
+    with tempfile.TemporaryDirectory() as temporary:
+        archive = module.MonthlyArchive(Path(temporary))
+        collector = module.MarketDataCollector(
+            source=FakePublicSource([]),
+            archive=archive,
+            identities=identities,
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: now,
+        )
+        collector.ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE")
+        try:
+            collector.ingest(changed, "WS_LIVE")
+        except module.CollectionRefused as error:
+            assert str(error) == "same observation_id has different producer bytes"
+        else:
+            raise AssertionError("same-id changed producer bytes were accepted")
+        assert len(archive.bars("BTC", "15m")) == 1
+    print("SYNTHETIC SAME-ID CONFLICT THROUGH INGEST: PASS")
+
+
+def append_failure_cursor_check(module: types.ModuleType = subject) -> None:
+    """A failed first-seen append must leave the live cursor at the prior stored bar."""
+    now = JANUARY_LAST_BAR + 10 * STEP
+    with tempfile.TemporaryDirectory() as temporary:
+        archive = module.MonthlyArchive(Path(temporary))
+        source = FakePublicSource([])
+        collector = module.MarketDataCollector(
+            source=source,
+            archive=archive,
+            identities=identities_for(module),
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: now,
+        )
+        collector.ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE")
+        with patch.object(
+            archive,
+            "append_bar",
+            side_effect=module.CollectionRefused("fixture append failure"),
+        ):
+            try:
+                collector.ingest(raw_bar(JANUARY_LAST_BAR + STEP), "WS_LIVE")
+            except module.CollectionRefused as error:
+                assert str(error) == "fixture append failure"
+            else:
+                raise AssertionError("injected append failure was accepted")
+        collector.ingest(raw_bar(JANUARY_LAST_BAR + STEP), "WS_LIVE")
+        collector.ingest(raw_bar(JANUARY_LAST_BAR + 2 * STEP), "WS_LIVE")
+        assert source.snapshot_calls == [], ("append_failure_advanced_cursor", source.snapshot_calls)
+        assert [int(bar["bar_open_time"]) for bar in archive.bars("BTC", "15m")] == [
+            JANUARY_LAST_BAR,
+            JANUARY_LAST_BAR + STEP,
+            JANUARY_LAST_BAR + 2 * STEP,
+        ]
+    print("APPEND FAILURE LEAVES LIVE CURSOR RETRYABLE: PASS")
+
+
 def persisted_record_check() -> None:
     """Expected values come from fixture inputs/constants, never the stored record."""
     now = FEBRUARY_START + 10 * STEP
@@ -821,6 +990,14 @@ def mutant_text(label: str) -> str:
                        "        if bar is None:\n"
                        "            self.archive._append(self.archive.root / \"bars\" / \"FORMING.jsonl\", dict(raw))  # mutant\n"
                        "            return None\n")
+    if label == "append before gap":
+        return _splice(
+            fixed,
+            '        if source_producer == "WS_LIVE":\n            key = (bar.symbol, bar.interval)\n',
+            '        if source_producer == "WS_LIVE":\n'
+            '            self.archive.append_bar(bar)  # mutant: incoming bar persisted before gap validation\n'
+            '            key = (bar.symbol, bar.interval)\n',
+        )
     if label in TOKEN_MUTANTS:
         # Text-only mutants for the speculative guard rules (no such token exists at aa602e9c);
         # they are scanned, never executed.
@@ -948,6 +1125,9 @@ def mutation_checks(socket_attempts: list[object]) -> None:
          ("boundary_violations", ["import:hyperliquid", "attribute:HyperliquidPublicSource"])),
         ("forming bar written", True, lambda module, _text: archive_check(module=module),
          "durable_files_changed"),
+        ("append before gap", True,
+         lambda module, _text: replay_and_gap_atomicity_check(module=module),
+         ("failed_gap_rows", [JANUARY_LAST_BAR, JANUARY_LAST_BAR + 3 * STEP])),
         ("eth_account import", False,
          lambda _module, text: static_boundary_check(module=subject, source_text=text),
          ("boundary_violations", ["import:eth_account"])),
@@ -996,6 +1176,9 @@ def main() -> None:
         stack.enter_context(patch.object(socket.socket, "connect", blocked_network))
         stack.enter_context(patch.object(socket, "create_connection", blocked_network))
         archive_check()
+        replay_and_gap_atomicity_check()
+        synthetic_same_id_conflict_check()
+        append_failure_cursor_check()
         persisted_record_check()
         persisted_record_mutant_check()
         interval_matrix_check()

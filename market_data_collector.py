@@ -305,7 +305,7 @@ class MonthlyArchive:
         finally:
             os.close(descriptor)
 
-    def append_bar(self, bar: MarketBar) -> str:
+    def classify_bar(self, bar: MarketBar) -> str | None:
         path = self.bar_path(bar)
         for existing in self._records(path):
             if existing.get("observation_id") == bar.observation_id:
@@ -320,6 +320,13 @@ class MonthlyArchive:
                 raise CollectionRefused(
                     "differing same-producer bar requires an approved correction contract"
                 )
+        return None
+
+    def append_bar(self, bar: MarketBar) -> str:
+        replay_status = self.classify_bar(bar)
+        if replay_status is not None:
+            return replay_status
+        path = self.bar_path(bar)
         self._append(path, asdict(bar))
         return "APPENDED"
 
@@ -362,6 +369,8 @@ class MarketDataCollector:
         )
         if bar is None:
             return None
+        if self.archive.classify_bar(bar) == "IDENTICAL_REPLAY_NOOP":
+            return bar
         if source_producer == "WS_LIVE":
             key = (bar.symbol, bar.interval)
             previous = self._last_live_open.get(key)
@@ -369,8 +378,9 @@ class MarketDataCollector:
                 gap = self.gap_detector(previous, bar.bar_open_time, bar.symbol, bar.interval)
                 if gap is not None:
                     self._fill_gap(gap)
-            self._last_live_open[key] = bar.bar_open_time
         self.archive.append_bar(bar)
+        if source_producer == "WS_LIVE":
+            self._last_live_open[key] = bar.bar_open_time
         return bar
 
     def _fill_gap(self, gap: Gap) -> None:
