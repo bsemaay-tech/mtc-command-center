@@ -639,6 +639,9 @@ non-admission report, or a refusal report and no record bytes.
 
 - The snapshot is named by the operator. The tool never captures, copies or
   discovers a live database.
+- The supplied synthetic snapshot must contain exactly the selected symbol's
+  explicitly bound interval inventory; the tool never filters away ledger rows
+  by local time.
 - A snapshot with a `-wal`, `-shm` or `-journal` companion is refused
   (`CANDIDATE_SNAPSHOT_NOT_QUIESCENT`). Its bytes are hashed before and after
   the read; any change refuses with `CANDIDATE_SNAPSHOT_DRIFTED`.

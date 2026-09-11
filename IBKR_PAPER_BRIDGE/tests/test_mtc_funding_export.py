@@ -608,6 +608,72 @@ def test_non_zero_offset_is_converted_exactly_not_dropped():
     assert result.candidate_bytes == build().candidate_bytes
 
 
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        "2026-09-15T16:39:00.031527+99:99",
+        "2026-09-07T07:21:00.031527-99:99",
+        "2026-09-12T12:00:00.031527+24:00",
+        "2026-09-10T12:00:00.031527-24:00",
+        "2026-09-11T13:00:00.031527+00:60",
+        "2026-09-11T11:00:00.031527-00:60",
+    ],
+)
+def test_invalid_rfc3339_offset_ranges_refuse(timestamp):
+    result = build(approved_event_bindings=[
+        binding(funding_event_id=ID_A, event_timestamp=timestamp),
+        binding(funding_event_id=ID_B, event_timestamp=TS_B),
+    ])
+
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_TIMESTAMP_INVALID
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        "2026-09-12T11:59:00.031527+23:59",
+        "2026-09-10T12:01:00.031527-23:59",
+    ],
+)
+def test_legal_rfc3339_offset_edges_are_converted_exactly(timestamp):
+    result = build(approved_event_bindings=[
+        binding(funding_event_id=ID_A, event_timestamp=timestamp),
+        binding(funding_event_id=ID_B, event_timestamp=TS_B),
+    ])
+
+    assert result.candidate_bytes == build().candidate_bytes
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        "0001-01-01T00:00:00+23:59",
+        "9999-12-31T23:59:59-23:59",
+    ],
+)
+def test_rfc3339_offset_calendar_overflow_refuses(timestamp):
+    first = binding(funding_event_id=ID_A, event_timestamp=TS_A)
+    first["event_timestamp"] = timestamp
+    escaped = None
+    try:
+        result = build(
+            approved_event_bindings=[
+                first,
+                binding(funding_event_id=ID_B, event_timestamp=TS_B),
+            ],
+            source_witnesses=coverage()["source_witnesses"],
+        )
+    except OverflowError as exc:
+        escaped = exc
+        result = None
+
+    assert escaped is None
+    assert result is not None
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_TIMESTAMP_INVALID
+
+
 def test_repeat_of_identical_input_is_byte_identical():
     first = build()
     second = build()
@@ -800,6 +866,28 @@ def test_nonfinite_payload_value_is_refused(bad):
         ]
     )
 
+    assert result.accepted is False
+    assert result.reason_code == exporter.CANDIDATE_NONFINITE_VALUE
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf")])
+def test_duplicate_retained_identity_with_nonfinite_payload_refuses(bad):
+    nonfinite = dict(EVENT_A.authoritative())
+    nonfinite["amount_usdc"] = bad
+
+    escaped = None
+    try:
+        result = build(retained_rows=[
+            retained_row(EVENT_A),
+            retained_row(EVENT_A, payload=nonfinite),
+            retained_row(EVENT_B),
+        ])
+    except ValueError as exc:
+        escaped = exc
+        result = None
+
+    assert escaped is None
+    assert result is not None
     assert result.accepted is False
     assert result.reason_code == exporter.CANDIDATE_NONFINITE_VALUE
 
@@ -1564,6 +1652,84 @@ def test_cli_refuses_a_malformed_binding_packet(tmp_path, snapshot, packet):
     assert report["reason_code"] == exporter.CANDIDATE_PACKET_INVALID
 
 
+@pytest.mark.parametrize(
+    ("old", "new"),
+    [
+        (
+            b'{"bindings":',
+            b'{"packet_version":"OTHER","bindings":',
+        ),
+        (
+            b'"complete": true',
+            b'"complete": false, "complete": true',
+        ),
+        (
+            b'"raw_rate": "0.0000125"',
+            b'"raw_rate": "invalid", "raw_rate": "0.0000125"',
+        ),
+        (
+            b'"source_title": "SYNTHETIC-D1-FIXTURE"',
+            b'"source_title": "OTHER", "source_title": "SYNTHETIC-D1-FIXTURE"',
+        ),
+    ],
+    ids=["packet", "coverage", "binding", "provenance"],
+)
+def test_cli_rejects_duplicate_json_members_at_every_object_depth(
+    tmp_path, snapshot, old, new
+):
+    packet = packet_bytes()
+    duplicate_packet = packet.replace(old, new, 1)
+    assert duplicate_packet != packet
+    staging = tmp_path / "staging"
+
+    code = run_cli(
+        tmp_path, snapshot=snapshot, staging=staging, packet=duplicate_packet
+    )
+
+    assert code != 0
+    report = json.loads((staging / exporter.REPORT_FILENAME).read_bytes())
+    assert report["reason_code"] == exporter.CANDIDATE_PACKET_INVALID
+    assert not (staging / exporter.CANDIDATE_FILENAME).exists()
+
+
+@pytest.mark.parametrize("constant", [b"NaN", b"Infinity", b"-Infinity"])
+def test_cli_rejects_nonfinite_source_witness_json_with_a_report(
+    tmp_path, snapshot, constant
+):
+    bindings = [
+        binding(funding_event_id=ID_A, event_timestamp=TS_A),
+        binding(funding_event_id=ID_B, event_timestamp=TS_B),
+    ]
+    source = synthetic_source_bytes(bindings[0]).replace(
+        b'"raw_rate":"0.0000125"', b'"raw_rate":' + constant
+    )
+    digest = hashlib.sha256(source).hexdigest()
+    bindings[0]["provenance"]["source_sha256"] = digest
+    bindings[0]["source_event_digest"] = digest
+    cover = coverage()
+    cover["source_witnesses"] = source_witnesses(bindings)
+    cover["source_witnesses"][ID_A] = source.hex()
+    packet = json.dumps({
+        "bindings": bindings,
+        "coverage": cover,
+        "packet_version": exporter.PACKET_VERSION,
+    }).encode("utf-8")
+    staging = tmp_path / "staging"
+
+    code = None
+    escaped = None
+    try:
+        code = run_cli(tmp_path, snapshot=snapshot, staging=staging, packet=packet)
+    except (TypeError, ValueError) as exc:
+        escaped = exc
+
+    assert escaped is None
+    assert code != 0
+    report = json.loads((staging / exporter.REPORT_FILENAME).read_bytes())
+    assert report["reason_code"] == exporter.CANDIDATE_BINDING_INVALID
+    assert not (staging / exporter.CANDIDATE_FILENAME).exists()
+
+
 def test_cli_leaves_no_partial_artifact_when_a_write_fails(tmp_path, snapshot):
     staging = tmp_path / "staging"
     real_write = exporter._write_new_file
@@ -1804,12 +1970,69 @@ def test_staging_inside_repository_is_refused_before_writes(
     repository = tmp_path / "repository"
     bridge = repository / "IBKR_PAPER_BRIDGE"
     bridge.mkdir(parents=True)
-    staging = bridge / "staging"
+    (repository / ".git").write_text("gitdir: synthetic-worktree\n")
+    mtc = repository / "MTC_COMMAND_CENTER"
+    mtc.mkdir()
+    staging = mtc / "staging"
     monkeypatch.setattr(exporter, "ROOT", bridge)
 
     assert run_cli(tmp_path, snapshot=snapshot, staging=staging) != 0
     assert not staging.exists()
     assert "CANDIDATE_STAGING_UNSAFE" in capsys.readouterr().err
+
+
+def test_prepare_staging_refuses_the_current_owned_mtc_production_parent():
+    repository = Path(__file__).resolve().parents[2]
+    funding = (
+        repository
+        / "MTC_COMMAND_CENTER"
+        / "01_MTC_PROJECT"
+        / "00_PYTHON"
+        / "mtc_v2"
+        / "core"
+        / "economic_records"
+        / "funding"
+    )
+    target = funding / "__P012_PREFLIGHT_ONLY_NEVER_CREATE"
+    assert funding.is_dir()
+    assert not target.exists()
+
+    with pytest.raises(exporter._Refusal) as refused:
+        exporter._prepare_staging(target, Path(__file__), Path(exporter.__file__))
+
+    assert refused.value.code == exporter.CANDIDATE_STAGING_UNSAFE
+    assert not target.exists()
+
+
+@pytest.mark.parametrize("ancestor_kind", ["git-directory", "git-file", "mtc-tree"])
+def test_staging_under_foreign_repository_or_mtc_tree_is_refused(
+    tmp_path, snapshot, capsys, ancestor_kind
+):
+    if ancestor_kind == "mtc-tree":
+        foreign = tmp_path / "outside" / "MTC_COMMAND_CENTER"
+    else:
+        foreign = tmp_path / ancestor_kind
+    foreign.mkdir(parents=True)
+    if ancestor_kind == "git-directory":
+        (foreign / ".git").mkdir()
+    elif ancestor_kind == "git-file":
+        (foreign / ".git").write_text("gitdir: synthetic-worktree\n")
+    parent = foreign / "nested"
+    parent.mkdir()
+    staging = parent / "staging"
+
+    assert run_cli(tmp_path, snapshot=snapshot, staging=staging) != 0
+    assert not staging.exists()
+    assert exporter.CANDIDATE_STAGING_UNSAFE in capsys.readouterr().err
+
+
+def test_external_non_repository_staging_remains_allowed(tmp_path, snapshot):
+    parent = tmp_path / "ordinary-external-parent"
+    parent.mkdir()
+    staging = parent / "staging"
+
+    assert run_cli(tmp_path, snapshot=snapshot, staging=staging) == 0
+    assert (staging / exporter.CANDIDATE_FILENAME).is_file()
 
 
 def test_staging_symlink_ancestry_is_resolved_before_scope_check(

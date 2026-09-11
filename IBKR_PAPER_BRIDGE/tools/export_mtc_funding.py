@@ -300,9 +300,22 @@ def _parse_instant(value: Any, field: str) -> _Instant:
     offset = parts["offset"]
     if offset != "Z":
         sign = -1 if offset[0] == "-" else 1
-        stamp -= timedelta(
-            minutes=sign * (int(offset[1:3]) * 60 + int(offset[4:6]))
-        )
+        offset_hours = int(offset[1:3])
+        offset_minutes = int(offset[4:6])
+        if offset_hours > 23 or offset_minutes > 59:
+            raise _Refusal(
+                CANDIDATE_TIMESTAMP_INVALID,
+                f"{field} has an invalid RFC 3339 offset {offset!r}",
+            )
+        try:
+            stamp -= timedelta(
+                minutes=sign * (offset_hours * 60 + offset_minutes)
+            )
+        except OverflowError as exc:
+            raise _Refusal(
+                CANDIDATE_TIMESTAMP_INVALID,
+                f"{field} offset moves the timestamp outside the calendar range",
+            ) from exc
     fraction_digits = parts["fraction"]
     spelled = stamp.strftime("%Y-%m-%dT%H:%M:%S")
     if fraction_digits is not None:
@@ -419,6 +432,27 @@ def _assert_finite(value: Any, field: str) -> None:
         raise _Refusal(CANDIDATE_NONFINITE_VALUE, f"{field} is not a finite number")
 
 
+def _reject_json_constant(value: str) -> None:
+    raise ValueError(f"non-standard JSON numeric constant {value!r}")
+
+
+def _reject_duplicate_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON member {key!r}")
+        result[key] = value
+    return result
+
+
+def _strict_json_loads(raw: bytes) -> Any:
+    return json.loads(
+        raw.decode("utf-8"),
+        object_pairs_hook=_reject_duplicate_object,
+        parse_constant=_reject_json_constant,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Input validation — the pure function trusts no caller
 # ---------------------------------------------------------------------------
@@ -513,6 +547,9 @@ def _validate_retained_row(raw: Any) -> dict[str, Any]:
             CANDIDATE_INPUT_INVALID,
             f"retained row {event_id} carries a payload under reason {reason}",
         )
+    if payload is not None:
+        for field, value in payload.items():
+            _assert_finite(value, f"retained payload {event_id}.{field}")
     return {
         "attribution": attribution,
         "event_id": event_id,
@@ -626,8 +663,8 @@ def _verify_source_witness(binding: Mapping[str, Any], source_hex: str) -> None:
             f"binding {event_id} source_event_digest does not hash its explicit source bytes",
         )
     try:
-        decoded = json.loads(source.decode("utf-8"))
-    except (UnicodeDecodeError, ValueError) as exc:
+        decoded = _strict_json_loads(source)
+    except (UnicodeDecodeError, TypeError, ValueError) as exc:
         raise _Refusal(
             CANDIDATE_BINDING_INVALID,
             f"binding {event_id} source bytes are not canonical UTF-8 JSON: {exc}",
@@ -639,7 +676,14 @@ def _verify_source_witness(binding: Mapping[str, Any], source_hex: str) -> None:
             CANDIDATE_BINDING_INVALID,
             f"binding {event_id} source witness does not describe this binding's explicit fields",
         )
-    if canonical_reconcile_json(decoded).encode("utf-8") != source:
+    try:
+        canonical_source = canonical_reconcile_json(decoded).encode("utf-8")
+    except (TypeError, ValueError) as exc:
+        raise _Refusal(
+            CANDIDATE_BINDING_INVALID,
+            f"binding {event_id} source bytes cannot be canonicalized: {exc}",
+        ) from exc
+    if canonical_source != source:
         raise _Refusal(
             CANDIDATE_BINDING_INVALID,
             f"binding {event_id} source bytes are not the exact canonical encoding",
@@ -1120,8 +1164,8 @@ def _load_packet(path: Path) -> tuple[list[Any], Any]:
             CANDIDATE_PACKET_INVALID, f"cannot read the binding packet: {type(exc).__name__}"
         ) from exc
     try:
-        parsed = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, ValueError) as exc:
+        parsed = _strict_json_loads(raw)
+    except (UnicodeDecodeError, TypeError, ValueError) as exc:
         raise _Refusal(
             CANDIDATE_PACKET_INVALID, f"the binding packet is not valid JSON: {exc}"
         ) from exc
@@ -1165,6 +1209,30 @@ def _has_reparse_ancestor(path: Path) -> bool:
     return False
 
 
+def _git_ancestor(path: Path) -> Path | None:
+    absolute = Path(os.path.abspath(path))
+    for candidate in (absolute, *absolute.parents):
+        try:
+            mode = (candidate / ".git").lstat().st_mode
+        except FileNotFoundError:
+            continue
+        except OSError as exc:
+            raise _Refusal(
+                CANDIDATE_STAGING_UNSAFE,
+                f"cannot inspect repository ancestry: {type(exc).__name__}",
+            ) from exc
+        if stat.S_ISDIR(mode) or stat.S_ISREG(mode):
+            return candidate
+    return None
+
+
+def _is_under_mtc_tree(path: Path) -> bool:
+    return any(
+        candidate.name.casefold() == "mtc_command_center"
+        for candidate in (path, *path.parents)
+    )
+
+
 def _prepare_staging(staging: Path, snapshot: Path, bindings: Path) -> None:
     if _has_reparse_ancestor(staging):
         raise _Refusal(
@@ -1181,10 +1249,21 @@ def _prepare_staging(staging: Path, snapshot: Path, bindings: Path) -> None:
             CANDIDATE_STAGING_UNSAFE,
             f"cannot resolve the staging boundary: {type(exc).__name__}",
         ) from exc
-    if _contains_path(resolved_root, resolved_staging):
+    repository_root = _git_ancestor(resolved_root) or resolved_root
+    if _contains_path(repository_root, resolved_staging):
         raise _Refusal(
             CANDIDATE_STAGING_UNSAFE,
             "the staging directory must be external to the Bridge repository",
+        )
+    if _git_ancestor(resolved_staging) is not None:
+        raise _Refusal(
+            CANDIDATE_STAGING_UNSAFE,
+            "the staging directory must not be inside another Git checkout or worktree",
+        )
+    if _is_under_mtc_tree(resolved_staging):
+        raise _Refusal(
+            CANDIDATE_STAGING_UNSAFE,
+            "the staging directory must not be under an MTC_COMMAND_CENTER tree",
         )
     for label, input_path in (
         ("snapshot", resolved_snapshot),
