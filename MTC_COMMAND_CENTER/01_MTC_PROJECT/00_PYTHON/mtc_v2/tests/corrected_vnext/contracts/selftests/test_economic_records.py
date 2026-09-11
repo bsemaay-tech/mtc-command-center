@@ -48,7 +48,7 @@ def test_catalog_pinned_synthetic_instrument_loads_for_evaluation() -> None:
 def test_production_candidate_bytes_are_copied_exactly_but_remain_incomplete() -> None:
     path = RECORD_ROOT / "instruments" / "HYPERLIQUID-BTC-PERP-V1.3.json"
     verified = load_verified_json_record(path)
-    assert verified.digest == "8620f499d7903f5ea801d99f6654f01546ad6638f7c85dad81d441209ff73fb8"
+    assert verified.digest == "5abb99abbdb9735e95ad1084c706a3c5326fb6bb134e48a79e9bb0992b68316a"
     provenance = verified.data["provenance"]
     assert {
         Path(source["frozen_file"]).name: source["sha256"]

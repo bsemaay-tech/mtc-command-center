@@ -585,8 +585,8 @@
  ],
  "seal_state": {
   "EXPECTED_SEAL_SHA": "6f44d5beb9e2ed20fae65508bb01a01d1840258dfceb5109c9be20ab615dadd8",
-  "IMPLEMENTATION_BASE_SHA": "1aab804d3383b87871811560c5fa58b41608a402",
-  "reason": "R35/re-seal35: authorized two-string instrument prose correction fixes the stale /status approval citation and misleading 10-unit price-rule prose; nine kernel copies inherit the corrected production record and sidecar with their original faults preserved; INPUT03 record/tree/mutant/patch bytes are unchanged, with only base_tree_oid metadata and the catalog manifest pin updated; all 10 probe metadata identities change; the catalog carries 19 probe pins total (18 kernel plus 1 input); only scenario_catalog changes among the 19 sealed members; the 17 goldens and DERIVATIONS are unchanged; production values, nulls, refusals, code, economics, and production facts are unchanged; NONACCEPTED C35 pending baseline/F35 actual Section 16, owner ratification, and exact T0. Independent verification remains pending."
+  "IMPLEMENTATION_BASE_SHA": "e98e13a561d82af4c3dda0830af7d5c1a9637c0d",
+  "reason": "F35 forward re-pin to actual C35 after the authorized two-string instrument prose correction; no executable, economic, numeric, or refusal changes. NONACCEPTED pending fresh actual Section 16 review, owner ratification, and exact T0."
  },
  "section_16_review": {
   "status": "PENDING",
@@ -597,8 +597,8 @@
  "claim_limits": "This bundle is bounded evidence, not semantic proof. It supplies expected values for a finite declared catalog only (design limits L1 and L8 at Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"-Design section 17, \"as a theorem. | `SEMANTIC_COVERAGE_REVIEW` plus\"). It grants no build, kernel-write, execution, venue, deployment or trading authority.",
  "seal": {
   "EXPECTED_SEAL_SHA": "6f44d5beb9e2ed20fae65508bb01a01d1840258dfceb5109c9be20ab615dadd8",
-  "IMPLEMENTATION_BASE_SHA": "1aab804d3383b87871811560c5fa58b41608a402",
-  "set_by": "R35/re-seal35, 2026-09-11T09:07:33.322191+00:00"
+  "IMPLEMENTATION_BASE_SHA": "e98e13a561d82af4c3dda0830af7d5c1a9637c0d",
+  "set_by": "F35 forward re-pin, 2026-09-11T09:31:24.069333Z"
  },
  "reseal_history": [
   {
@@ -1252,13 +1252,13 @@
    "authorization": "ONE run completed under P012_ONE_EXTRA_COORDINATED_REPAIR=YES, overnight 2050 packet approved 2026-09-05 20:48, re-seal24; 17/17 complete, 0 blocked, all 34 surfaces identical.",
    "EXPECTED_SEAL_SHA_consumed": "320b432efeb9c585fbdd7b09fc4c49e6e696a01e6008ab32af24c758486edaaa",
    "current_run": {
-    "path": "C:/tmp/P012_PRICE_BASELINE34_20260911/CURRENT/BASELINE_BYTES_MANIFEST.json",
-    "sha256": "15bab1607e5fc5c1af73a15fd86061f7186aea4f3c51d0a0f369d52b74517678",
-    "EXPECTED_SEAL_SHA_consumed": "54f41e7268442e1167946b587a5920a5ffe4baf99e4aa8964ef69e766bedebad",
-    "created_at": "2026-09-11T01:19:59Z",
-    "authorization": "Owner-authorized same-package integer-precision repair packet. The current driver is a separate byte-preserving copy of the original baseline driver, differing only in the DEFAULT_OUT assignment to the new fixed output directory C:/tmp/P012_PRICE_BASELINE_RUN34/out; the original driver and prior baseline are retained unchanged. Case/Runner behavior is unchanged, and the child driver has no seal argument and did not read or consume a seal. This actual C34 run packet is NONACCEPTED pending F34, new actual Section16 evidence, owner ratification, and exact required reviews. No new production facts, captures, accounts, trading claims, or human ratification are claimed. EXPECTED_SEAL_SHA_consumed is a legacy field name storing the Lead-verified expected seal only.",
-    "catalog_expected_artifacts_2_0_0": "PENDING fresh post-F34 verification",
-    "measured_at": "2026-09-11T01:26:23.376547+00:00",
+    "path": "C:/tmp/P012_PROSE_BASELINE35_20260911/CURRENT/BASELINE_BYTES_MANIFEST.json",
+    "sha256": "3573282558fd8b0ffd5a403b2eb71e3fee0a51b25367b78622ceb15ced857f78",
+    "EXPECTED_SEAL_SHA_consumed": "6f44d5beb9e2ed20fae65508bb01a01d1840258dfceb5109c9be20ab615dadd8",
+    "created_at": "2026-09-11T09:09:46Z",
+    "authorization": "Owner-authorized same-package two-string instrument prose correction packet. The current driver is a separate byte-preserving copy of the original baseline driver, differing only in the DEFAULT_OUT assignment to the new fixed output directory C:/tmp/P012_PROSE_BASELINE_RUN35/out; the original driver and prior baseline are retained unchanged. Case/Runner behavior is unchanged, and the child driver has no seal argument and did not read or consume a seal. This actual C35 run packet is NONACCEPTED pending identity-forward fixes, new actual Section16 evidence, owner ratification, exact T0, and required reviews. No new behavior, economics, production facts, production values, nulls, refusals, code, captures, accounts, trading claims, or human ratification are claimed. EXPECTED_SEAL_SHA_consumed is a legacy field name storing the Lead-verified expected seal only.",
+    "catalog_expected_artifacts_2_0_0": "PENDING fresh post-F35 verification",
+    "measured_at": "2026-09-11T09:31:24.069333Z",
     "enforced_by": "verify_bceg.py:2980 re-reads the file and refuses if EXPECTED_SEAL_SHA_consumed does not equal the seal; verify_bceg.py:66-74 lists baseline_manifest_sha256 as a Section-16 content identity key and :650-654 refuses on mismatch. Both act on the FILE and on the RECEIPT, never on this block, which is descriptive only."
    }
   },
