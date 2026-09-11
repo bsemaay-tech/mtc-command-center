@@ -17,11 +17,11 @@
   "reports_sha256": {
     "OPUS.md": "42702ce0b686e2651883ba331510bbebf8d53b793c2f694f4cd9b587266d808a",
     "SOL.md": "f08a7d3ca41736608ea1d1d292f4635ce8f7e2f860e8706150499313bc8e1597",
-    "GEMINI.md": "bea850735ca6ec0bde7eca8cffb335a8e9fd62679827da73943b19903ef07f2d",
+    "GEMINI.md": "9f018524b8153c842becd3c32125a4ec1bb69940242f02f1a0749986a1cdbde3",
     "GEMINI_SCOPE_NOTE.md": "7b873c02cb063d10b751320bd8aac4c72b2408bc53c10863ba8d53a1cddfacf0",
     "LEAD_ACCEPTANCE.md": "19d7f9c59e5c1fa96db1126d95cfeddbc49136c599345347ba55271d07acc53c",
     "LEAD_FULL_GATE.json": "d10b0135cd20901f4732b289f0fc0e60e00856f4ef2b3a153a7f1587c0d659d6",
-    "LEAD_SOURCE_PROOF.json": "6f78468c0914819d48a63bb4a7f3eceddc476e6018d6c3806e6553a2a019a806"
+    "LEAD_SOURCE_PROOF.json": "25871fe6a5759a485b1002ae9f5fc8162fe8bb9847daff9da4413d8680e1693d"
   },
   "reviews": [
     {
@@ -82,5 +82,15 @@
     "production_open_rows": 10,
     "ci": "PENDING",
     "r29_semantic_redo": "DEFERRED"
-  }
+  },
+  "original_local_reports_sha256": {
+    "OPUS.md": "42702ce0b686e2651883ba331510bbebf8d53b793c2f694f4cd9b587266d808a",
+    "SOL.md": "f08a7d3ca41736608ea1d1d292f4635ce8f7e2f860e8706150499313bc8e1597",
+    "GEMINI.md": "bea850735ca6ec0bde7eca8cffb335a8e9fd62679827da73943b19903ef07f2d",
+    "GEMINI_SCOPE_NOTE.md": "7b873c02cb063d10b751320bd8aac4c72b2408bc53c10863ba8d53a1cddfacf0",
+    "LEAD_ACCEPTANCE.md": "19d7f9c59e5c1fa96db1126d95cfeddbc49136c599345347ba55271d07acc53c",
+    "LEAD_FULL_GATE.json": "d10b0135cd20901f4732b289f0fc0e60e00856f4ef2b3a153a7f1587c0d659d6",
+    "LEAD_SOURCE_PROOF.json": "6f78468c0914819d48a63bb4a7f3eceddc476e6018d6c3806e6553a2a019a806"
+  },
+  "report_byte_qualification": "reports_sha256 addresses canonical committed Git bytes. original_local_reports_sha256 addresses the preserved original local report bytes. Git text normalization converts CRLF to LF in GEMINI.md; normalized content is exactly equal, including original Markdown hard breaks. No reviewer prose was edited."
 }
