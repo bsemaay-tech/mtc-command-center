@@ -1,0 +1,74 @@
+{
+  "reviewed_head": "a593b29dca30c45bb8c183db04429e29d9b86e27",
+  "mtc_v2_tree": "e648a48534270a1ed98799734fc9f587aea7d09e",
+  "core_tree": "ad06d9723484d7fa7e220096a1ec9247197f7f29",
+  "packet_checks": {
+    "head": "a593b29dca30c45bb8c183db04429e29d9b86e27",
+    "manifest_sha256": "3c6b66d4a6412e55cd21820a3ddd285aad3255bd39651851dc6454dbf3071bc6",
+    "manifest_members_independently_hashed": 7033,
+    "git_blob_identities_independently_recomputed": 1362,
+    "mtc_blobs": 1354,
+    "receipt_exact": true,
+    "limitation": "Governance copied as canonical Git bytes; worktree CRLF differences were explicitly checked. Raw model logs remain excluded; original review evidence retained."
+  },
+  "receipt_install_checks": [
+    {
+      "path": "DECISIONS.md",
+      "git_before": "157fe715736f7aa83ccd218c88b2c456fe5d14546ccc94210c8b822a6a3ec797",
+      "worktree_before": "945204ac1be9e33950e44a57f9be4021880135984f4a66cc4d474012bf0f92d5",
+      "installed": "c9426f27ca5407d6e8f46a6c0bcc6e57d23087fbd7324dfdb83ef355e801ea45",
+      "agent_payload": "f366e599dea79fcfb6ffd708db29f86034d0c7b0ae5ff3363d083888d3ccf01b",
+      "canonical_payload_equal": true,
+      "existing_prose_worktree_prefix_preserved": true
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/01_MTC_PROJECT/00_PYTHON/mtc_v2/tests/corrected_vnext/contracts/semantic_coverage_review.json",
+      "git_before": "cf82b102ba866fa08a86d8a6cb52ed43c2e2f2b71e35b081304e09e5aa368f11",
+      "worktree_before": "cf82b102ba866fa08a86d8a6cb52ed43c2e2f2b71e35b081304e09e5aa368f11",
+      "installed": "ed4f4f2fd74bb3c4677be95af75ff952ad2437897dccee9c02d373274bb790eb",
+      "agent_payload": "ed4f4f2fd74bb3c4677be95af75ff952ad2437897dccee9c02d373274bb790eb",
+      "canonical_payload_equal": true,
+      "existing_prose_worktree_prefix_preserved": false
+    },
+    {
+      "path": "MTC_COMMAND_CENTER/_AI_MEMORY/P012_RECORD_PROSE_20260911.md",
+      "git_before": "d555837f005cf8135e957427537412805a3c9d053a34c16d8aa3eccc1b1b9348",
+      "worktree_before": "0a918882310766c52fb13c2f94f670de928ceaecdfc5ac31d32d1eb6a05de7ee",
+      "installed": "5a8e2ef634c063d241fb2b77df57f4d8b92161c6fb250af559a5c893d3217b04",
+      "agent_payload": "4adac1abc3b9d6bc28f4a2154fff3104f05ebcb04df2ee5f05cd3e6a087b7236",
+      "canonical_payload_equal": true,
+      "existing_prose_worktree_prefix_preserved": true
+    }
+  ],
+  "section16": {
+    "combined_returned_delta_lines_matched": 735,
+    "total_delta_lines": 735,
+    "successful_packet_segments": 83,
+    "outside_attempts": [
+      {
+        "tool_use_id": "call-6eb6cce7-6d79-45e6-bd6f-2fafe96ea567-11",
+        "returned_successfully": false
+      },
+      {
+        "tool_use_id": "call-d2fd15d4-1542-4766-a3f6-01e53b709383-12",
+        "returned_successfully": true
+      },
+      {
+        "tool_use_id": "call-c1b7ba1a-b676-4c83-94f2-bae83a6834c2-13",
+        "returned_successfully": true
+      },
+      {
+        "tool_use_id": "call-460ebc4b-4e70-4ccd-b8bf-ce25304ccf33-14",
+        "returned_successfully": true
+      },
+      {
+        "tool_use_id": "call-5e5ab379-5fa1-473f-af03-4bcbb686f177-15",
+        "returned_successfully": true
+      }
+    ],
+    "outside_reads_excluded_from_packet_evidence": true,
+    "raw_a1_sha256": "ded52addf6b96b2683a19d7841ae50636acb02404df2cdf04ade118a2eed8ada",
+    "raw_a2_sha256": "ac0367264c48fd88957ff55aafe0290c0eb16d717a0e059b96307215e375d355",
+    "qualification": "Lead clarification of preserved original proof; neither a scope-compliance nor a comprehension claim. Raw transcripts remain local and excluded from public closeout."
+  }
+}

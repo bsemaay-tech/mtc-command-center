@@ -362,6 +362,15 @@
     "created_by": "Owner Baris approval recorded by Astra Lead",
     "summary": "Owner explicitly approved the complete OWNER_PRICE_SCOPE.md proposal on 2026-09-10 approximately17:22 UTC and explicitly resumed autonomous WP-P0-12 work for up to10hours on this task at approximately19:13 UTC. Implement typed price_alignment_policy HYPERLIQUID_PX_V1 with source-based5 significant figures, perp maxdecimals6, sizedecimals5, integer exception, positive finite prices and nearest valid CEIL/FLOOR/HALF_UP on corrected fills/stops/targets. Preserve legacy scalar behavior, alignment labels, unknown minimum_quantity refusal, empty human review, $10 notional, five-source provenance and production refusals. Maximum core scope instrument.py,rounding.py,exits.py,runner.py and economics.py/config.py only if necessary. Also approved named instrument record/sidecar, focused new test_price_alignment_policy.py, necessary test_economic_records.py/test_results_corrected.py/test_w285_kernel_remaining.py cases, required design/probe/test identities, coordinated reseal/baseline and actual Section16 recertification. Separately owned successor required. Protected kernel/CONTRACT_TABLES/reviewer roles and exact accepting T0 audits remain; no new fee/funding/minqty/risk, account/capture/trading/Bridge/paid usage scope. Later actual Section16 review still requires owner ratification. This records existing approval; no new approval inferred from artifact.",
     "report_path": "MTC_COMMAND_CENTER/04_REPORTS/ai_handoffs/P012_PRICE_POLICY_PLAN.md"
+  },
+  {
+    "event_id": "HIST-2026-0041",
+    "task_id": "WP-P012-RECORD-PROSE-20260911",
+    "event_type": "APPROVED",
+    "created_at": "2026-09-11T08:43:27.8022841Z",
+    "created_by": "Astra Lead under standing owner Package repair authority; not a new owner ratification",
+    "summary": "Two explanatory strings correct the previously recorded OPEN01 addendum 16 row 42 selection and the already approved v1.27 integer rule; dependent evidence/identity repairs only; all production/economic/behavior/refusal values are untouched; original history is preserved; fresh required checks/reviews and ratification remain separate.",
+    "report_path": "MTC_COMMAND_CENTER/_AI_MEMORY/P012_RECORD_PROSE_20260911.md"
   }
   ]
 }
