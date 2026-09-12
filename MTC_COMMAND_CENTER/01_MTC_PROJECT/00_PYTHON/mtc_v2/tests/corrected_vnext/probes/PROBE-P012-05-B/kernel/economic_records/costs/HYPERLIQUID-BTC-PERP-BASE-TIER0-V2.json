@@ -1,0 +1,95 @@
+{
+  "admission_status": "ADMITTED_HL_FEE_REPORTED_PER_FILL_V1",
+  "admitted_cost_basis": "The admitted cash amount is the venue's own reported per-fill fee on an authenticated own-account fill. It is read, never computed. The schedule rates below are kept only as a guarded pre-trade estimator and never override, correct or replace a reported amount.",
+  "admitted_cost_source": "HL_FEE_REPORTED_PER_FILL_V1",
+  "admitted_interval_start": null,
+  "admitted_interval_start_basis": "UNSPECIFIED \u2014 the first authenticated own-account fill (owner choice B3=B of OD-20260912-P012-PATHD-1 (owner signature 2026-09-12; packet PATH_D_DECISION_PACKET.md sha256 23e80c8e72741fb7803fbe0507a962383d1a88137427890173caab68052e2774)). No authenticated fill exists yet, so the start is null and every admitted-cost computation under this record refuses. The v1 start 2026-09-06T14:00:30Z is NOT backdated onto the admitted path.",
+  "effective_interval": {
+    "end_exclusive": null,
+    "start_inclusive": "2026-09-06T14:00:30Z"
+  },
+  "estimator": {
+    "on_breach": "Emit FEE_ESTIMATOR_SUSPENDED and the signed-risk marker; suspend the estimator for pre-trade sizing only. The reported amount is never overridden.",
+    "owner_choice": "B2=C (5% relative)",
+    "schedule_id": "HL_FEE_SCHEDULE_ESTIMATOR_GUARDED_V1",
+    "signed_risk_id": "PATHD-RISK-FEE-ESTIMATOR-DEVIATION-V1",
+    "tolerance_form": "RELATIVE_FRACTION_OF_ESTIMATE_V1",
+    "tolerance_relative": 0.05
+  },
+  "estimator_schedule_id": "HL_FEE_SCHEDULE_ESTIMATOR_GUARDED_V1",
+  "liquidity_roles": {
+    "MARKET_ENTRY": "TAKER",
+    "MARKET_EXIT_FILTER_BLOCK": "TAKER",
+    "MARKET_EXIT_OPPOSITE_SIGNAL": "TAKER",
+    "MARKET_EXIT_TIME_STOP": "TAKER",
+    "PROTECTIVE_STOP_GAP_OPEN": "TAKER",
+    "PROTECTIVE_STOP_LEVEL": "TAKER",
+    "STOP_MARKET_ENTRY": "TAKER",
+    "TARGET_EXIT": "TAKER"
+  },
+  "maker_rate": 0.00015,
+  "not_an_acceptance": "This record version is prepared under OD-20260912-P012-PATHD-1. It is not an acceptance: T0 review, R29 semantic redo, Section-16 record review, owner human ratification, current-head protected CI and protected merge all remain required.",
+  "product_type_scope": "LINEAR_PERPETUAL",
+  "provenance": {
+    "captured_at_utc": "2026-08-31T07:00:53Z",
+    "extraction_method": "OWNER_APPROVED_PACKAGE_TRANSCRIPTION_V1",
+    "frozen_source_absence": {
+      "disposition": "SUPERSEDED_FOR_ADMITTED_COST_PATH_ONLY",
+      "fields": [
+        "fee_rounding_rule",
+        "fixed_component",
+        "minimum_fee"
+      ],
+      "limitation": "Not stated in this frozen source; no zero or rule inferred; not universal current absence or liquidation evidence.",
+      "owner_decision_ref": "HIST-2026-0033 / WP-P012-DECISION1-SOURCED-ABSENCE",
+      "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees",
+      "source_sha256": "3c49f9030a427df06f70943f53517204e4bd804bb205dcd05b2d27a75f51ce8b",
+      "superseded_disposition": "KEEP_REFUSED",
+      "supersession_decision_ref": "OD-20260912-P012-PATHD-1 (owner signature 2026-09-12; packet PATH_D_DECISION_PACKET.md sha256 23e80c8e72741fb7803fbe0507a962383d1a88137427890173caab68052e2774)",
+      "supersession_scope": "The KEEP_REFUSED disposition is superseded only for the HL_FEE_REPORTED_PER_FILL_V1 admitted-cost path of this record version. KEEP_REFUSED stays in force for HYPERLIQUID-BTC-PERP-BASE-TIER0-V1, whose bytes are unchanged, and for every schedule-computed cost. This supersession requires the explicit governance row named in PATH_D_DECISION_PACKET.md section 2.2."
+    },
+    "owner_decision_ref": "OWNER_DECISIONS_2026-08-29_EVENING.md addendum 16: fees option (a), base tier-0 schedule, adopted class mapping; OD-20260912-P012-PATHD-1 (owner signature 2026-09-12; packet PATH_D_DECISION_PACKET.md sha256 23e80c8e72741fb7803fbe0507a962383d1a88137427890173caab68052e2774)",
+    "sources": [
+      {
+        "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees",
+        "source_sha256": "3c49f9030a427df06f70943f53517204e4bd804bb205dcd05b2d27a75f51ce8b",
+        "source_title": "Fees | Hyperliquid Docs"
+      },
+      {
+        "source_locator": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/order-types",
+        "source_sha256": "8c65a45d63a554ae54568378ba7e29e505aee6a3f9758b0cdcd298ab95992640",
+        "source_title": "Order types | Hyperliquid Docs"
+      }
+    ]
+  },
+  "refused_event_classes": {
+    "MARGIN_CALL_LIQUIDATION": "CANNOT_MAP_NO_FROZEN_LIQUIDATION_FEE_SEMANTICS"
+  },
+  "refused_missing_fields": [
+    "fee_rounding_rule",
+    "fixed_component",
+    "minimum_fee",
+    "tier_account_selection_evidence"
+  ],
+  "refused_missing_fields_disposition": "RETAINED. fee_rounding_rule, fixed_component, minimum_fee and tier_account_selection_evidence are NOT filled in, NOT defaulted and NOT evidenced. Under HL_FEE_REPORTED_PER_FILL_V1 they are NOT REQUIRED FOR THE ADMITTED COST, which is a different statement from being resolved. They remain required for any schedule-computed cost, and C7/C8/C9/OPEN03 stay open.",
+  "residual_risks": [
+    "PATHD-RISK-FEE-NO-INDEPENDENT-REVALUATION-V1: the admitted cost is the venue's own arithmetic. A venue-side or capture-side error in a reported fee is undetectable by design beyond the guarded estimator.",
+    "PATHD-RISK-FEE-ESTIMATOR-DEVIATION-V1: the pinned schedule is undiscounted while a 4% activeReferralDiscount was observed on 2026-09-08; a deviation beyond 5% of the estimate suspends the estimator and raises this risk."
+  ],
+  "schedule_id": "HYPERLIQUID-BTC-PERP-BASE-TIER0-V2",
+  "settlement_currency": "USDC",
+  "slippage_model_id": "BPS_OF_REFERENCE_V1",
+  "slippage_parameters": {
+    "slippage_bps": 0
+  },
+  "slippage_provenance": {
+    "class": "OWNER-DECLARED EXPLICIT ZERO ASSUMPTION",
+    "measurement_claimed": false,
+    "owner_decision_ref": "OWNER_DECISIONS_2026-08-29_EVENING.md addendum 15 row 38",
+    "venue_source_claimed": false
+  },
+  "symbol_scope": "BTC",
+  "taker_rate": 0.00045,
+  "tier_selection_basis": "OWNER_APPROVED_BASE_TIER_0_WITH_ACCOUNT_EVIDENCE_RESIDUAL",
+  "venue_scope": "HYPERLIQUID"
+}

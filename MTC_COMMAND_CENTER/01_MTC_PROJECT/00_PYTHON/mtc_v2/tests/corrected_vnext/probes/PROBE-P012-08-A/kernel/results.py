@@ -584,9 +584,27 @@ def _cash_surface(
     return result
 
 
+# One fee row's fixed component can be *absent* rather than zero: the
+# ``HL_FEE_REPORTED_PER_FILL_V1`` admitted path applies no fixed component and
+# its evidence is unresolved, so ``economics._admitted_fee_rows`` emits
+# ``None``.  Serializing that as ``0`` would publish an invented fact, so the
+# member carries this explicit typed marker instead of a number.
+#
+# The marker replaces the value *in place*.  It is deliberately not a new
+# member: the fee row's member set is pinned as a closed set by the protected
+# gate (``verify_bceg._require_closed_member_set``), which this lane may not
+# edit, and a value a consumer cannot mistake for zero is what the requirement
+# asks for.  The same disposition also travels under its own name,
+# ``fixed_component_status``, in the ADMITTED_COST_APPLIED decision details.
+FIXED_COMPONENT_UNRESOLVED = "UNRESOLVED_NOT_APPLIED"
+
+
 def _fee_surface(
     rows: list[object], *, kernel_semantics_version: str
 ) -> list[dict[str, Any]]:
+    # ``rate``/``fee_notional`` are the guarded estimator's inputs;
+    # ``fee_amount``/``fee_cash_delta`` are the venue's own reported number on
+    # the admitted path.  They are never interchangeable.
     numeric = {
         "rate",
         "fixed_component",
@@ -618,6 +636,9 @@ def _fee_surface(
         }
         for name in fields:
             value = getattr(row, name)
+            if name == "fixed_component" and value is None:
+                item[name] = FIXED_COMPONENT_UNRESOLVED
+                continue
             item[name] = _json_number(value) if name in numeric else value
         result.append(item)
     return result

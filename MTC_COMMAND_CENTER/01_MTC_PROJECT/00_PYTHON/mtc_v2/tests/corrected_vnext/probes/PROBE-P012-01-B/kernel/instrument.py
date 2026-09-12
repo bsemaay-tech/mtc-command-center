@@ -27,6 +27,23 @@ REFUSED_INSTRUMENT_RECORD_OUT_OF_RANGE = "REFUSED_INSTRUMENT_RECORD_OUT_OF_RANGE
 REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION = (
     "REFUSED_INSTRUMENT_OVERRIDE_ON_EVALUATION"
 )
+REFUSED_UNMARKED_MINIMUM_QUANTITY = "REFUSED_UNMARKED_MINIMUM_QUANTITY"
+REFUSED_MINIMUM_QUANTITY_NOT_A_VENUE_FACT = (
+    "REFUSED_MINIMUM_QUANTITY_NOT_A_VENUE_FACT"
+)
+
+# OD-20260912-P012-PATHD-1 choice C1=A: a positive ``minimum_quantity`` is an
+# owner-declared execution guard, never evidence that the venue publishes such a
+# floor. It is admitted only when the record names it with this exact class.
+MINIMUM_QUANTITY_OWNER_GUARD_V1 = "HL_QTY_OWNER_GUARD_NOT_VENUE_FACT_V1"
+ADMITTED_MINIMUM_QUANTITY_PROVENANCE: tuple[str, ...] = (
+    MINIMUM_QUANTITY_OWNER_GUARD_V1,
+)
+# No venue-sourced minimum-quantity class exists: I3/OPEN01 is unanswered, so
+# this tuple is deliberately empty and every "venue minimum quantity" request
+# refuses.  Adding a class here would be an acceptance of a venue fact and needs
+# its own owner decision.
+VENUE_SOURCED_MINIMUM_QUANTITY_PROVENANCE: tuple[str, ...] = ()
 
 _LOWER_SHA256 = re.compile(r"[0-9a-f]{64}")
 
@@ -175,6 +192,34 @@ def _required_number(
     return number
 
 
+def _required_minimum_quantity(value: Any, provenance_class: Any) -> float:
+    """Admit a minimum quantity only under an explicit provenance class.
+
+    ``null`` stays refused exactly as before.  ``0`` — the value every existing
+    record carries, meaning "no quantity floor is applied" — also stays exactly
+    as before.  A *positive* floor is an economic claim, so it is admitted only
+    when the record marks it with one of
+    :data:`ADMITTED_MINIMUM_QUANTITY_PROVENANCE`; an unmarked or differently
+    marked positive value is refused rather than silently read as a venue fact.
+    """
+    number = _required_number(value, "minimum_quantity", positive=False)
+    if number <= 0.0:
+        return number
+    if provenance_class is None:
+        raise InstrumentRecordRefusal(
+            REFUSED_UNMARKED_MINIMUM_QUANTITY,
+            "a positive minimum_quantity requires minimum_quantity_provenance; "
+            f"expected one of {list(ADMITTED_MINIMUM_QUANTITY_PROVENANCE)}, got none",
+        )
+    if provenance_class not in ADMITTED_MINIMUM_QUANTITY_PROVENANCE:
+        raise InstrumentRecordRefusal(
+            REFUSED_UNMARKED_MINIMUM_QUANTITY,
+            "minimum_quantity_provenance must be one of "
+            f"{list(ADMITTED_MINIMUM_QUANTITY_PROVENANCE)}, got {provenance_class!r}",
+        )
+    return number
+
+
 @dataclass(slots=True, frozen=True)
 class InstrumentRecord:
     record_id: str
@@ -193,6 +238,7 @@ class InstrumentRecord:
     effective_interval: Mapping[str, Any] | None
     provenance: Mapping[str, Any] | None
     source_path: Path
+    minimum_quantity_provenance: str | None = None
 
     def for_evaluation(
         self,
@@ -232,8 +278,8 @@ class InstrumentRecord:
             "quantity_step": _required_number(
                 self.quantity_step, "quantity_step", positive=True
             ),
-            "minimum_quantity": _required_number(
-                self.minimum_quantity, "minimum_quantity", positive=False
+            "minimum_quantity": _required_minimum_quantity(
+                self.minimum_quantity, self.minimum_quantity_provenance
             ),
             "minimum_notional": _required_number(
                 self.minimum_notional, "minimum_notional", positive=False
@@ -318,6 +364,7 @@ class InstrumentRecord:
             min_qty=numbers["minimum_quantity"],
             min_notional=numbers["minimum_notional"],
             contract_multiplier=numbers["contract_multiplier"],
+            min_qty_provenance=self.minimum_quantity_provenance,
         )
 
 
@@ -327,6 +374,14 @@ def load_verified_instrument_record(path: str | Path) -> InstrumentRecord:
     effective = data.get("effective_interval")
     provenance = data.get("provenance")
     raw_policy = data.get("price_alignment_policy")
+    raw_minimum_quantity_provenance = data.get("minimum_quantity_provenance")
+    if raw_minimum_quantity_provenance is not None and not isinstance(
+        raw_minimum_quantity_provenance, str
+    ):
+        raise InstrumentRecordRefusal(
+            REFUSED_UNMARKED_MINIMUM_QUANTITY,
+            "minimum_quantity_provenance must be a string class name",
+        )
     try:
         policy = (
             None
@@ -357,6 +412,7 @@ def load_verified_instrument_record(path: str | Path) -> InstrumentRecord:
         effective_interval=effective if isinstance(effective, Mapping) else None,
         provenance=provenance if isinstance(provenance, Mapping) else None,
         source_path=verified.path,
+        minimum_quantity_provenance=raw_minimum_quantity_provenance,
     )
 
 
@@ -370,6 +426,7 @@ class InstrumentMetadata:
     min_notional: float = 0.0
     contract_multiplier: float = 1.0
     price_alignment_policy: PriceAlignmentPolicy | None = None
+    min_qty_provenance: str | None = None
 
     def __post_init__(self) -> None:
         if (self.price_tick is None) == (self.price_alignment_policy is None):
@@ -414,3 +471,27 @@ class InstrumentMetadata:
 
     def floor_qty(self, value: float) -> float:
         return floor_qty_to_step(value, self.qty_step)
+
+    @property
+    def min_qty_is_owner_guard(self) -> bool:
+        """True when ``min_qty`` is an owner guard rather than venue evidence."""
+        return self.min_qty_provenance in ADMITTED_MINIMUM_QUANTITY_PROVENANCE
+
+    def venue_minimum_quantity(self) -> float:
+        """The venue's own minimum order quantity — or a refusal.
+
+        Negative control for OD-20260912-P012-PATHD-1 choice C1=A: this is the
+        only accessor that reports a *venue* minimum quantity, and it refuses
+        unless the record carries a venue-sourced provenance class.  No such
+        class exists (I3/OPEN01 is unanswered), so an owner guard can never be
+        surfaced as a venue fact through this seam, and neither can the legacy
+        unmarked ``0``.
+        """
+        if self.min_qty_provenance not in VENUE_SOURCED_MINIMUM_QUANTITY_PROVENANCE:
+            raise InstrumentRecordRefusal(
+                REFUSED_MINIMUM_QUANTITY_NOT_A_VENUE_FACT,
+                "minimum_quantity carries "
+                f"{self.min_qty_provenance!r}, which is not venue-sourced "
+                "evidence of a minimum order quantity; OPEN01 stays open",
+            )
+        return self.min_qty
