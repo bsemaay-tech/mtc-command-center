@@ -70,6 +70,18 @@ class EvilProducer(str):
         return type(other) is str and other == "WS_LIVE"
 
 
+class SpoofedObservationId(str):
+    """Match any exact string while retaining distinct malicious hash bytes."""
+
+    def __eq__(self, other: object) -> bool:
+        return type(other) is str
+
+    def __ne__(self, other: object) -> bool:
+        return type(other) is not str
+
+    __hash__ = str.__hash__
+
+
 class StatefulEventMapping(Mapping):
     def __init__(self, record: dict[str, Any]):
         self.record = record
@@ -436,6 +448,48 @@ def prove_provenance_list_guard_load_bearing(subject: Any, dataset_hash: str) ->
     )
 
 
+def prove_dataset_observation_id_guard_load_bearing(
+    subject: Any, payload_record: dict[str, Any], observation: dict[str, Any],
+) -> str:
+    """Remove only exact ID validation and prove spoofing plus duplicate evasion."""
+    rows = [
+        dataset_row(observation, SpoofedObservationId("MALICIOUS_ID_A"), payload_record),
+        dataset_row(observation, SpoofedObservationId("MALICIOUS_ID_B"), payload_record),
+    ]
+    expect_refused(
+        lambda: subject.dataset_content_hash(descriptor(), rows),
+        "dataset_observation_id_exact_str", subject.ContractRefused,
+    )
+
+    source = inspect.getsource(subject._validate_dataset_row)
+    guard = (
+        '    _hash(row["observation_id"], "dataset row.observation_id", '
+        'prefix="p030obs-v1")\n'
+    )
+    assert source.count(guard) == 1
+    namespace: dict[str, Any] = {}
+    exec(
+        compile(source.replace(guard, "", 1),
+                "<dataset-observation-id-guard-removed>", "exec"),
+        dict(vars(subject)), namespace,
+    )
+    original = subject._validate_dataset_row
+    subject._validate_dataset_row = namespace["_validate_dataset_row"]
+    try:
+        mutant_hash = subject.dataset_content_hash(descriptor(), rows)
+    finally:
+        subject._validate_dataset_row = original
+
+    ordered_rows = sorted(rows, key=lambda row: (
+        row["venue"], row["track"], row["source_producer"], row["symbol"],
+        row["interval"], row["bar_open_time"], row["observation_id"],
+    ))
+    values = [descriptor()[field] for field in DATASET_DESCRIPTOR_FIELDS]
+    values.append([[row[field] for field in DATASET_ROW_FIELDS] for row in ordered_rows])
+    assert mutant_hash == oracle_id("p030ds-v1", "p030-dataset-v1", values)
+    return mutant_hash
+
+
 def meaningful_correction_red() -> None:
     """Pre-implementation deviant: correction identity ignores its predecessor link."""
     payload_hash = oracle_record_id("p030payload-v1", "p030-payload-v1", payload(), PAYLOAD_FIELDS)
@@ -616,6 +670,19 @@ def meaningful_provenance_list_red() -> None:
     raise AssertionError(("truthy_empty_provenance_partitions_accepted", observed))
 
 
+def meaningful_dataset_observation_id_red() -> None:
+    """Equivalent deviant accepts spoofed IDs and hashes their malicious bytes."""
+    import p030_market_data_contracts as subject
+
+    payload_record = payload()
+    payload_hash = subject.producer_payload_hash(payload_record)
+    observation = initial_observation(payload_hash)
+    observed = prove_dataset_observation_id_guard_load_bearing(
+        subject, payload_record, observation,
+    )
+    raise AssertionError(("spoofed_dataset_observation_ids_accepted", observed))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -624,6 +691,7 @@ def main() -> None:
             "correction-link", "dataset-row-integrity", "provenance-path", "event-detail",
             "producer-track", "iterable-mutation", "event-producer",
             "scalar-carrier", "observation-list", "provenance-list",
+            "dataset-observation-id",
         ),
     )
     args = parser.parse_args()
@@ -656,6 +724,9 @@ def main() -> None:
         return
     if args.red == "provenance-list":
         meaningful_provenance_list_red()
+        return
+    if args.red == "dataset-observation-id":
+        meaningful_dataset_observation_id_red()
         return
 
     import p030_market_data_contracts as subject
@@ -866,6 +937,10 @@ def main() -> None:
         print("NINE EVENT FAMILY GOLDENS: PASS")
 
         row = dataset_row(initial, initial_id, payload_record)
+        prove_dataset_observation_id_guard_load_bearing(
+            subject, payload_record, initial,
+        )
+        print("DATASET OBSERVATION ID EXACT-TYPE GUARD: LOAD-BEARING")
         second_observation = dict(initial)
         second_observation["bar_open_time"] += 900000
         second_payload = dict(
