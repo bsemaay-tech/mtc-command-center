@@ -90,6 +90,23 @@ class StatefulEventMapping(Mapping):
     def __contains__(self, key: object) -> bool:
         return key in self.record
 
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.record[key] = value
+
+
+class FlipList(list):
+    """Expose valid ids twice, then leave invalid bytes for identity hashing."""
+
+    def __init__(self, valid_observation_id: str):
+        super().__init__([valid_observation_id])
+        self.iterations = 0
+
+    def __iter__(self):
+        self.iterations += 1
+        yield from list.__iter__(self)
+        if self.iterations == 2:
+            self[0] = "NOT_AN_OBSERVATION_ID"
+
 # Frozen output of this checker's independent oracle; never computed by the subject.
 GOLDEN_PAYLOAD = "p030payload-v1:8653c7ea1416f6cc2a7f170966c9be31da58780d3db30d6c679fdbd106868c28"
 GOLDEN_INITIAL = "p030obs-v1:ba4ee258065990a144aabdcebb416cabcde617d57dc7bc7f793449f344cbe115"
@@ -339,6 +356,42 @@ def prove_scalar_and_carrier_guards_load_bearing(
     assert mutant_stateful_id == expected_stateful_id
 
 
+def prove_observation_list_guard_load_bearing(subject: Any, valid_id: str) -> None:
+    """Restore the permissive multi-read list seam and prove identity drift."""
+    source = inspect.getsource(subject.event_id)
+    guard = (
+        '    raw_ids = record["observation_ids"]\n'
+        "    if type(raw_ids) is not list:\n"
+        '        raise ContractRefused("event.observation_ids must be a non-empty unique list")\n'
+        "    ids = list(raw_ids)\n"
+        '    record["observation_ids"] = ids\n'
+        "    if not ids:\n"
+        '        raise ContractRefused("event.observation_ids must be a non-empty unique list")\n'
+    )
+    permissive = (
+        '    ids = record["observation_ids"]\n'
+        "    if not isinstance(ids, list) or not ids:\n"
+        '        raise ContractRefused("event.observation_ids must be a non-empty unique list")\n'
+    )
+    assert source.count(guard) == 1
+    namespace: dict[str, Any] = {}
+    exec(
+        compile(source.replace(guard, permissive, 1),
+                "<observation-list-guard-restored>", "exec"),
+        dict(vars(subject)), namespace,
+    )
+    flipping_record = event("GAP", [valid_id])
+    flipping_ids = FlipList(valid_id)
+    flipping_record["observation_ids"] = flipping_ids
+    mutant_id = namespace["event_id"](flipping_record)
+    expected_record = event("GAP", ["NOT_AN_OBSERVATION_ID"])
+    expected_id = oracle_record_id(
+        "p030evt-v1", "p030-event-v1", expected_record, EVENT_FIELDS,
+    )
+    assert list.__getitem__(flipping_ids, 0) == "NOT_AN_OBSERVATION_ID"
+    assert mutant_id == expected_id
+
+
 def meaningful_correction_red() -> None:
     """Pre-implementation deviant: correction identity ignores its predecessor link."""
     payload_hash = oracle_record_id("p030payload-v1", "p030-payload-v1", payload(), PAYLOAD_FIELDS)
@@ -513,6 +566,24 @@ def meaningful_scalar_carrier_red() -> None:
     ))
 
 
+def meaningful_observation_list_red() -> None:
+    """Equivalent deviant validates ids twice, then hashes different list bytes."""
+    valid_id = "p030obs-v1:" + "a" * 64
+    record = event("GAP", [valid_id])
+    flipping_ids = FlipList(valid_id)
+    record["observation_ids"] = flipping_ids
+    validated = list(flipping_ids)
+    unique = set(flipping_ids)
+    observed = oracle_record_id(
+        "p030evt-v1", "p030-event-v1", record, EVENT_FIELDS,
+    )
+    assert validated == [valid_id] and unique == {valid_id}
+    raise AssertionError((
+        "stateful_observation_list_accepted",
+        (list.__getitem__(flipping_ids, 0), observed),
+    ))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -520,7 +591,7 @@ def main() -> None:
         choices=(
             "correction-link", "dataset-row-integrity", "provenance-path", "event-detail",
             "producer-track", "iterable-mutation", "event-producer",
-            "scalar-carrier",
+            "scalar-carrier", "observation-list",
         ),
     )
     args = parser.parse_args()
@@ -547,6 +618,9 @@ def main() -> None:
         return
     if args.red == "scalar-carrier":
         meaningful_scalar_carrier_red()
+        return
+    if args.red == "observation-list":
+        meaningful_observation_list_red()
         return
 
     import p030_market_data_contracts as subject
@@ -714,6 +788,14 @@ def main() -> None:
             StatefulEventMapping(event("GAP", ["p030obs-v1:" + "a" * 64])),
         )
         print("EXACT SCALAR/CARRIER GUARD MUTANTS: DETECTED")
+        flipping_event = event("GAP", [initial_id])
+        flipping_event["observation_ids"] = FlipList(initial_id)
+        expect_refused(
+            lambda: subject.event_id(flipping_event),
+            "stateful_observation_list", subject.ContractRefused,
+        )
+        prove_observation_list_guard_load_bearing(subject, initial_id)
+        print("EXACT OBSERVATION LIST SNAPSHOT MUTANT: DETECTED")
         unhashable_id = event("GAP", [initial_id])
         unhashable_id["observation_ids"] = [[initial_id]]
         expect_refused(

@@ -234,8 +234,12 @@ def event_id(record: Mapping[str, Any]) -> str:
     _source_producer(record["producer"], "event.producer")
     for field in ("symbol", "interval", "slot_id", "env_lineage_id"):
         _string(record[field], f"event.{field}")
-    ids = record["observation_ids"]
-    if not isinstance(ids, list) or not ids:
+    raw_ids = record["observation_ids"]
+    if type(raw_ids) is not list:
+        raise ContractRefused("event.observation_ids must be a non-empty unique list")
+    ids = list(raw_ids)
+    record["observation_ids"] = ids
+    if not ids:
         raise ContractRefused("event.observation_ids must be a non-empty unique list")
     for value in ids:
         _hash(value, "event.observation_ids[]", prefix="p030obs-v1")
