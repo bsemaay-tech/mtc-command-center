@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from collections import UserString, namedtuple
 from dataclasses import replace
 from datetime import datetime, timezone
 from unittest.mock import patch
@@ -105,6 +106,30 @@ class ReadinessFenceTests(P021ContractTestCase):
 
 
 class DsV1CompatibilityTests(P021ContractTestCase):
+    def test_refuses_non_builtin_string_envelope_keys(self) -> None:
+        class AliasKey:
+            def __init__(self, value: str) -> None:
+                self.value = value
+
+            def __eq__(self, other: object) -> bool:
+                return self.value == other
+
+            def __hash__(self) -> int:
+                return hash(self.value)
+
+        digest = "a" * 64
+        for key_type in (UserString, AliasKey):
+            envelope = {
+                key_type("contract"): "ds-v1",
+                key_type("digest"): digest,
+            }
+            with self.subTest(key_type=key_type.__name__):
+                self.assert_refused_reason(
+                    "DS_V1_INVALID_ENVELOPE",
+                    require_ds_v1_digest,
+                    envelope,
+                )
+
     def test_refusal_exposes_stable_reason_id(self) -> None:
         with self.assertRaises(EvidenceContractRefused) as caught:
             require_ds_v1_digest({"contract": "ds-v2", "digest": "a" * 64})
@@ -273,6 +298,29 @@ class ControlIdentityTests(P021ContractTestCase):
 
 
 class ControlAllowanceTests(P021ContractTestCase):
+    def test_refuses_executed_control_id_tuple_subclasses(self) -> None:
+        class TupleSubclass(tuple):
+            pass
+
+        NamedTupleCarrier = namedtuple("NamedTupleCarrier", ("control_id",))
+        inventory = (ControlInventoryItem("fee", True),)
+        common = {
+            "target_state": EligibilityState.SHADOW_ELIGIBLE,
+            "inventory": inventory,
+            "manifest": (),
+            "expected_control_inventory_hash": control_inventory_sha256(inventory),
+            "expected_unsimulated_controls_hash": unsimulated_controls_sha256(()),
+        }
+
+        for carrier in (NamedTupleCarrier("fee"), TupleSubclass(("fee",))):
+            with self.subTest(carrier_type=type(carrier).__name__):
+                self.assert_refused_reason(
+                    "CONTROL_INVALID_EXECUTED_IDS_CARRIER",
+                    evaluate_control_evidence,
+                    executed_control_ids=carrier,
+                    **common,
+                )
+
     def test_refuses_malformed_executed_control_id_carriers(self) -> None:
         inventory = (ControlInventoryItem("fee", True),)
         manifest = (

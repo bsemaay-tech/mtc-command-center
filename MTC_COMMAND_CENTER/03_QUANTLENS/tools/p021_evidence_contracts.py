@@ -202,7 +202,7 @@ def evaluate_control_evidence(
 
     if not isinstance(target_state, EligibilityState):
         raise EvidenceContractRefused("CONTROL_INVALID_TARGET_STATE")
-    if not isinstance(executed_control_ids, tuple):
+    if type(executed_control_ids) is not tuple:
         raise EvidenceContractRefused("CONTROL_INVALID_EXECUTED_IDS_CARRIER")
     ordered_inventory = _unique_inventory(inventory)
     ordered_manifest = _unique_manifest(manifest)
@@ -467,7 +467,13 @@ def _require_sha256(value: object, field_name: str) -> str:
 def require_ds_v1_digest(envelope: Mapping[str, object]) -> str:
     """Return the bare digest from an exact external ``ds-v1`` envelope."""
 
-    if not isinstance(envelope, Mapping) or set(envelope) != {"contract", "digest"}:
+    if not isinstance(envelope, Mapping):
+        raise EvidenceContractRefused("DS_V1_INVALID_ENVELOPE")
+    keys = tuple(envelope)
+    if any(type(key) is not str for key in keys) or set(keys) != {
+        "contract",
+        "digest",
+    }:
         raise EvidenceContractRefused("DS_V1_INVALID_ENVELOPE")
     if envelope["contract"] != "ds-v1":
         raise EvidenceContractRefused("DS_V1_UNSUPPORTED_CONTRACT")
