@@ -16,6 +16,7 @@ from pathlib import Path
 import re
 import sqlite3
 import sys
+import unicodedata
 from typing import Any, Callable
 
 
@@ -29,7 +30,17 @@ class TrackerError(ValueError):
 
 
 def _text(value: Any, name: str) -> str:
-    if not isinstance(value, str) or not value or not value.strip() or "\x00" in value:
+    if (
+        not isinstance(value, str)
+        or not value
+        or not value.strip()
+        or any(
+            ord(character) < 32
+            or ord(character) == 127
+            or unicodedata.category(character).startswith("C")
+            for character in value
+        )
+    ):
         raise TrackerError(f"{name} must be a non-empty string")
     return value
 
@@ -64,14 +75,57 @@ def _now_utc() -> str:
     )
 
 
+def _safe_path(
+    value: str | os.PathLike[str], name: str, *, require_absolute: bool
+) -> Path:
+    try:
+        raw = os.fspath(value)
+    except TypeError as exc:
+        raise TrackerError(f"{name} must be a path string") from exc
+    raw = _text(raw, name)
+    normalized = raw.replace("/", "\\").lower()
+    if raw.startswith(("\\\\", "//")) or normalized.startswith(
+        (
+            "\\\\",
+            "\\\\?",
+            "\\\\.",
+            "\\??",
+            "\\device",
+            "\\dosdevices",
+            "\\globalroot",
+            "\\global??",
+            "\\pipe",
+        )
+    ):
+        raise TrackerError(f"{name} must be a local non-device path")
+    path = Path(raw)
+    if require_absolute and not path.is_absolute():
+        raise TrackerError(f"{name} must be absolute")
+    return path
+
+
 def _db_path(value: str | os.PathLike[str]) -> Path:
-    path = Path(value)
+    path = _safe_path(value, "db path", require_absolute=False)
     if not path.is_absolute():
         path = Path.cwd() / path
     return path
 
 
+def _md(value: Any, name: str = "markdown value") -> str:
+    """Render dynamic values as inert, single-line Markdown text."""
+    if value is None:
+        text = "unknown"
+    elif isinstance(value, (dict, list, tuple)):
+        text = _canonical(value)
+    else:
+        text = str(value)
+    _text(text, name)
+    escaped = text.replace("&", "&amp;").replace("`", "&#96;")
+    return f"`{escaped}`"
+
+
 def _hash_file(path: Path) -> str:
+    path = _safe_path(path, "referenced file path", require_absolute=True)
     try:
         with path.open("rb") as handle:
             return hashlib.sha256(handle.read()).hexdigest()
@@ -119,10 +173,9 @@ def _validate_spec(raw: Any) -> dict[str, Any]:
         role = _text(reference["role"], f"references[{index}].role")
         if role not in ROLES:
             raise TrackerError(f"unsupported reference role: {role}")
-        path_value = _text(reference["path"], f"references[{index}].path")
-        path = Path(path_value)
-        if not path.is_absolute():
-            raise TrackerError(f"references[{index}].path must be absolute")
+        path = _safe_path(
+            reference["path"], f"references[{index}].path", require_absolute=True
+        )
         digest = _sha(reference["sha256"], f"references[{index}].sha256")
         clean_references.append(
             {"reference_id": reference_id, "role": role, "path": str(path), "sha256": digest}
@@ -194,6 +247,7 @@ CREATE TABLE IF NOT EXISTS disclosure_attempts (
 
 
 def _connect(path: Path, *, read_only: bool = False) -> sqlite3.Connection:
+    path = _safe_path(path, "db path", require_absolute=False)
     if read_only:
         if not path.exists():
             raise TrackerError(f"database does not exist: {path}")
@@ -211,7 +265,8 @@ def _ensure_schema(connection: sqlite3.Connection) -> None:
 
 def register(db_path: str | os.PathLike[str], spec_path: str | os.PathLike[str]) -> dict[str, Any]:
     """Validate and register a manifest, returning its local revision summary."""
-    spec_file = Path(spec_path)
+    database = _db_path(db_path)
+    spec_file = _safe_path(spec_path, "spec path", require_absolute=False)
     try:
         with spec_file.open("r", encoding="utf-8") as handle:
             raw = json.load(handle)
@@ -227,7 +282,6 @@ def register(db_path: str | os.PathLike[str], spec_path: str | os.PathLike[str])
         if actual != reference["sha256"]:
             raise TrackerError(f"sha256 mismatch for reference: {reference['reference_id']}")
 
-    database = _db_path(db_path)
     connection: sqlite3.Connection | None = None
     try:
         connection = _connect(database)
@@ -301,6 +355,7 @@ def disclose_report(
     emit_bytes: Callable[[bytes], Any],
 ) -> dict[str, Any]:
     """Record one valid report disclosure, then emit its exact bytes once."""
+    database = _db_path(db_path)
     experiment_id = _text(experiment_id, "experiment_id")
     report_id = _text(report_id, "report_id")
     if type(revision) is not int or revision < 1:
@@ -309,7 +364,7 @@ def disclose_report(
         raise TrackerError("emit_bytes must be callable")
     connection: sqlite3.Connection | None = None
     try:
-        connection = _connect(_db_path(db_path), read_only=True)
+        connection = _connect(database, read_only=True)
         row = connection.execute(
             "SELECT r.id, r.path, r.sha256, e.period_start_utc, e.period_end_utc "
         "FROM \"references\" r JOIN experiment_revisions e ON e.id=r.revision_id "
@@ -325,8 +380,12 @@ def disclose_report(
         raise TrackerError("registered report reference not found")
     reference_row_id, path_value, expected_sha, period_start, period_end = row
     del reference_row_id
-    report_path = Path(path_value)
-    if not report_path.is_absolute() or not SHA256_RE.fullmatch(expected_sha):
+    try:
+        report_path = _safe_path(path_value, "stored report path", require_absolute=True)
+    except TrackerError:
+        connection.close()
+        raise
+    if not SHA256_RE.fullmatch(expected_sha):
         connection.close()
         raise TrackerError("stored report reference is invalid")
     try:
@@ -343,7 +402,7 @@ def disclose_report(
 
     try:
         connection.close()
-        connection = _connect(_db_path(db_path))
+        connection = _connect(database)
         _ensure_schema(connection)
         connection.execute("BEGIN IMMEDIATE")
         revision_row = connection.execute(
@@ -398,13 +457,25 @@ def _load_rows(connection: sqlite3.Connection) -> list[dict[str, Any]]:
     ).fetchall()
     for row in rows:
         revision_id, experiment_id, revision, manifest_json, manifest_sha, start, end, family, parents, related, created = row
+        experiment_id = _text(experiment_id, "stored experiment id")
+        manifest_json = _text(manifest_json, "stored manifest")
+        manifest_sha = _sha(manifest_sha, "stored manifest sha256")
+        start = _utc(start, "stored period_start_utc")
+        end = _utc(end, "stored period_end_utc")
+        if start >= end:
+            raise TrackerError("stored period_start_utc must be earlier than period_end_utc")
+        if family is not None:
+            family = _text(family, "stored family_reference")
         references: list[dict[str, Any]] = []
         for ref in connection.execute(
             "SELECT reference_id, role, path, sha256 FROM \"references\" WHERE revision_id=? ORDER BY id",
             (revision_id,),
         ):
             reference_id, role, path_value, expected_sha = ref
-            path = Path(path_value)
+            reference_id = _text(reference_id, "stored reference id")
+            role = _text(role, "stored reference role")
+            expected_sha = _sha(expected_sha, "stored reference sha256")
+            path = _safe_path(path_value, "stored reference path", require_absolute=False)
             if not path.is_absolute() or not path.exists() or not path.is_file():
                 state = "MISSING"
             else:
@@ -425,12 +496,12 @@ def _load_rows(connection: sqlite3.Connection) -> list[dict[str, Any]]:
         disclosures = [
             {
                 "attempt_id": attempt[0],
-                "report_id": attempt[1],
-                "attempted_at_utc": attempt[2],
-                "report_sha256": attempt[3],
+                "report_id": _text(attempt[1], "stored report id"),
+                "attempted_at_utc": _utc(attempt[2], "stored attempted_at_utc"),
+                "report_sha256": _sha(attempt[3], "stored report sha256"),
                 "report_bytes": attempt[4],
-                "period_start_utc": attempt[5],
-                "period_end_utc": attempt[6],
+                "period_start_utc": _utc(attempt[5], "stored disclosure period_start_utc"),
+                "period_end_utc": _utc(attempt[6], "stored disclosure period_end_utc"),
             }
             for attempt in connection.execute(
                 "SELECT id, report_id, attempted_at_utc, report_sha256, report_bytes, "
@@ -459,9 +530,10 @@ def _load_rows(connection: sqlite3.Connection) -> list[dict[str, Any]]:
 
 
 def _status_payload(db_path: str | os.PathLike[str]) -> dict[str, Any]:
+    database = _db_path(db_path)
     connection: sqlite3.Connection | None = None
     try:
-        connection = _connect(_db_path(db_path), read_only=True)
+        connection = _connect(database, read_only=True)
         revisions = _load_rows(connection)
     except (sqlite3.Error, OSError) as exc:
         raise TrackerError(f"status failed: {exc}") from exc
@@ -596,54 +668,57 @@ def status(db_path: str | os.PathLike[str], output_format: str = "json") -> str:
     lines = [
         "# P0-22 Local Research Tracker",
         "",
-        f"- Classification: `{payload['classification']}`",
-        f"- Access completeness: `{payload['access_completeness']}`",
-        f"- Revisions: {len(payload['revisions'])}",
-        f"- Disclosure attempts: {len(payload['disclosure_attempts'])}",
-        f"- Overlapping declared periods: {len(payload['overlapping_declared_periods'])}",
+        f"- Classification: {_md(payload['classification'])}",
+        f"- Access completeness: {_md(payload['access_completeness'])}",
+        f"- Revisions: {_md(len(payload['revisions']))}",
+        f"- Disclosure attempts: {_md(len(payload['disclosure_attempts']))}",
+        f"- Overlapping declared periods: {_md(len(payload['overlapping_declared_periods']))}",
         "",
         "## Revisions",
         "",
     ]
     for revision in payload["revisions"]:
         lines.append(
-            f"- `{revision['local_experiment_id']}` revision {revision['revision']}: "
-            f"{revision['period_start_utc']} to {revision['period_end_utc']}; "
-            f"whole-period local exposure = `{revision['whole_period_local_exposure']}`"
+            f"- {_md(revision['local_experiment_id'])} revision {_md(revision['revision'])}: "
+            f"{_md(revision['period_start_utc'])} to {_md(revision['period_end_utc'])}; "
+            f"whole-period local exposure = {_md(revision['whole_period_local_exposure'])}"
         )
         for reference in revision["references"]:
-            lines.append(f"  - `{reference['reference_id']}` ({reference['role']}): `{reference['state']}`")
+            lines.append(
+                f"  - {_md(reference['reference_id'])} ({_md(reference['role'])}): "
+                f"{_md(reference['state'])}"
+            )
     lines.extend(["", "## Warnings and limitations", ""])
     for warning in payload["unresolved_lineage_warnings"] + payload["unresolved_access_history_warnings"] + payload["limitations"]:
-        lines.append(f"- {warning}")
+        lines.append(f"- {_md(warning)}")
     lines.extend(["", "## Disclosure attempts", ""])
     for attempt in payload["disclosure_attempts"]:
         lines.append(
-            f"- attempt {attempt['attempt_id']}: `{attempt['local_experiment_id']}` revision "
-            f"{attempt['revision']}, report `{attempt['report_id']}`, "
-            f"period {attempt['period_start_utc']} to {attempt['period_end_utc']}"
+            f"- attempt {_md(attempt['attempt_id'])}: {_md(attempt['local_experiment_id'])} revision "
+            f"{_md(attempt['revision'])}, report {_md(attempt['report_id'])}, "
+            f"period {_md(attempt['period_start_utc'])} to {_md(attempt['period_end_utc'])}"
         )
     lines.extend(["", "## Declared period overlaps", ""])
     for overlap in payload["overlapping_declared_periods"]:
         left = overlap["left"]
         right = overlap["right"]
         lines.append(
-            f"- `{left['local_experiment_id']}` revision {left['revision']} overlaps "
-            f"`{right['local_experiment_id']}` revision {right['revision']} "
-            f"from {overlap['overlap_start_utc']} to {overlap['overlap_end_utc']}"
+            f"- {_md(left['local_experiment_id'])} revision {_md(left['revision'])} overlaps "
+            f"{_md(right['local_experiment_id'])} revision {_md(right['revision'])} "
+            f"from {_md(overlap['overlap_start_utc'])} to {_md(overlap['overlap_end_utc'])}"
         )
     lines.extend(["", "## Known lineage links", ""])
     for link in payload["known_lineage_links"]:
         lines.append(
-            f"- `{link['local_experiment_id']}` revision {link['revision']}: "
-            f"family={link['family_reference']!r}, parents={link['parent_experiment_ids']!r}, "
-            f"related={link['related_experiment_ids']!r}"
+            f"- {_md(link['local_experiment_id'])} revision {_md(link['revision'])}: "
+            f"family={_md(link['family_reference'])}, parents={_md(link['parent_experiment_ids'])}, "
+            f"related={_md(link['related_experiment_ids'])}"
         )
     lines.extend(["", "## Lineage conflicts", ""])
     for conflict in payload["lineage_conflicts_across_revisions"]:
         lines.append(
-            f"- `{conflict['local_experiment_id']}` field `{conflict['field']}` "
-            f"differs across revisions {conflict['revisions']}: {conflict['values']!r}"
+            f"- {_md(conflict['local_experiment_id'])} field {_md(conflict['field'])} "
+            f"differs across revisions {_md(conflict['revisions'])}: {_md(conflict['values'])}"
         )
     return "\n".join(lines) + "\n"
 

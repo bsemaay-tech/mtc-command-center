@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -149,6 +150,26 @@ class P022TrackerContractTests(unittest.TestCase):
             "--report-id",
             report_id,
         )
+
+    @staticmethod
+    def _non_local_paths(leaf="subject"):
+        return (
+            "\\\\server\\share\\" + leaf,
+            "//server/share/" + leaf,
+            "\\\\?\\C:\\" + leaf,
+            "\\\\.\\PIPE\\" + leaf,
+        )
+
+    @staticmethod
+    def _assert_markdown_inert(test_case, markdown):
+        test_case.assertNotRegex(markdown, r"(?m)^#\s*LIVE_CANDIDATE\b")
+        test_case.assertNotRegex(markdown, r"(?m)^[-*+]\s*clean-window\s+PASS\b")
+        # A link-looking value is acceptable only inside the renderer's
+        # escaped inline-code payload, never as an active list item.
+        test_case.assertNotRegex(
+            markdown, r"(?m)^-\s+(?!`)[^\n]*\[spoof\]\("
+        )
+        test_case.assertNotIn("```", markdown)
 
     def test_registration_is_idempotent_then_changed_config_is_revision_and_persists(self):
         first = self._spec()
@@ -380,6 +401,168 @@ class P022TrackerContractTests(unittest.TestCase):
         self.assertNotIn("live_candidate", lower)
         self.assertNotIn("clean-window certificate", lower)
         self.assertNotIn("clean window certificate", lower)
+
+    def test_control_characters_are_rejected_in_all_stored_text_fields(self):
+        attack = "field\n# LIVE_CANDIDATE\r\n- clean-window PASS\x1b"
+        cases = [
+            ("local_experiment_id", lambda spec: spec.update(local_experiment_id=attack)),
+            ("reference_id", lambda spec: spec["references"][0].update(reference_id=attack)),
+            ("family_reference", lambda spec: spec.update(family_reference=attack)),
+            ("parent_experiment_ids", lambda spec: spec.update(parent_experiment_ids=[attack])),
+            ("related_experiment_ids", lambda spec: spec.update(related_experiment_ids=[attack])),
+            (
+                "reference_path",
+                lambda spec: spec["references"][0].update(
+                    path=spec["references"][0]["path"] + attack
+                ),
+            ),
+        ]
+        for index, (field, mutate) in enumerate(cases):
+            with self.subTest(field=field):
+                db = self.root / f"control-{index}.sqlite3"
+                spec = self._spec(prefix=f"control-{index}")
+                mutate(spec)
+                spec_path = self._write_spec(spec, f"control-{index}.json")
+                result = self._run("register", "--db", db, "--spec", spec_path)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, b"")
+                self.assertTrue(result.stderr)
+                self._assert_no_history(db)
+
+    def test_markdown_delimiters_cannot_create_links_or_claims(self):
+        attack = "family-safe` [spoof](https://example.invalid) # LIVE_CANDIDATE"
+        spec = self._spec(family_reference=attack, prefix="markdown")
+        spec_path = self._write_spec(spec, "markdown.json")
+        result = self._run("register", "--db", self.db, "--spec", spec_path)
+        if result.returncode != 0:
+            self.assertEqual(result.stdout, b"")
+            self.assertTrue(result.stderr)
+            return
+        self._assert_markdown_inert(self, self._status("markdown"))
+
+    def test_tampered_text_fields_are_refused_or_rendered_as_inert_markdown(self):
+        self._register(self._spec())
+        attack = "tampered\n# LIVE_CANDIDATE\r\n- clean-window PASS\n[spoof](https://example.invalid)\n```"
+        with closing(sqlite3.connect(self.db)) as connection:
+            connection.execute(
+                "UPDATE experiment_revisions SET local_experiment_id=?, family_reference=? WHERE id=1",
+                (attack, attack),
+            )
+            connection.execute(
+                'UPDATE "references" SET reference_id=? WHERE revision_id=1 AND role="report"',
+                (attack,),
+            )
+            connection.commit()
+        tracker = _load_tracker()
+        try:
+            markdown = tracker.status(self.db, "markdown")
+        except tracker.TrackerError:
+            return
+        self._assert_markdown_inert(self, markdown)
+
+    def test_non_local_spec_paths_are_rejected_before_open(self):
+        tracker = _load_tracker()
+        for path in self._non_local_paths("spec.json"):
+            with self.subTest(path=path):
+                with mock.patch.object(
+                    tracker.Path,
+                    "open",
+                    autospec=True,
+                    side_effect=AssertionError("spec path was opened"),
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.register(self.db, path)
+
+    def test_non_local_db_paths_are_rejected_before_any_input_io(self):
+        tracker = _load_tracker()
+        spec = self._spec(prefix="db-path")
+        spec_path = self._write_spec(spec, "db-path.json")
+        for path in self._non_local_paths("tracker.sqlite3"):
+            with self.subTest(path=path):
+                with mock.patch.object(
+                    tracker.Path,
+                    "open",
+                    autospec=True,
+                    side_effect=AssertionError("input path was opened"),
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.register(path, spec_path)
+
+    def test_non_local_registered_reference_paths_are_rejected_before_hashing(self):
+        tracker = _load_tracker()
+        for path in self._non_local_paths("strategy.pine"):
+            with self.subTest(path=path):
+                spec = self._spec(prefix="registered-path")
+                spec["references"][0]["path"] = path
+                spec_path = self._write_spec(spec, "registered-path.json")
+                with mock.patch.object(
+                    tracker,
+                    "_hash_file",
+                    side_effect=AssertionError("registered path was read"),
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.register(self.db, spec_path)
+
+    def test_non_local_db_paths_are_rejected_before_status_or_disclosure_io(self):
+        tracker = _load_tracker()
+        for path in self._non_local_paths("tracker.sqlite3"):
+            with self.subTest(path=path):
+                with mock.patch.object(
+                    tracker, "_connect", side_effect=AssertionError("database was opened")
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.status(path, "json")
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.disclose_report(path, "exp-a", 1, "report-ref", lambda _: None)
+
+    def test_tampered_non_local_reference_paths_are_rejected_before_status_io(self):
+        self._register(self._spec())
+        tracker = _load_tracker()
+        for path in self._non_local_paths("tampered-report.bin"):
+            with self.subTest(path=path):
+                with closing(sqlite3.connect(self.db)) as connection:
+                    connection.execute(
+                        'UPDATE "references" SET path=? WHERE revision_id=1 AND role="report"',
+                        (path,),
+                    )
+                    connection.commit()
+                original_exists = tracker.Path.exists
+
+                def guarded_exists(candidate):
+                    if os.fspath(candidate) == path:
+                        raise AssertionError("tampered path was probed")
+                    return original_exists(candidate)
+
+                with mock.patch.object(
+                    tracker.Path, "exists", autospec=True, side_effect=guarded_exists
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.status(self.db, "json")
+
+    def test_tampered_non_local_report_path_is_rejected_before_disclosure_read(self):
+        self._register(self._spec())
+        tracker = _load_tracker()
+        path = self._non_local_paths("tampered-report.bin")[0]
+        with closing(sqlite3.connect(self.db)) as connection:
+            connection.execute(
+                'UPDATE "references" SET path=? WHERE revision_id=1 AND role="report"',
+                (path,),
+            )
+            connection.commit()
+        original_open = tracker.Path.open
+
+        def guarded_open(candidate, *args, **kwargs):
+            if os.fspath(candidate) == path:
+                raise AssertionError("tampered report path was opened")
+            return original_open(candidate, *args, **kwargs)
+
+        with mock.patch.object(
+            tracker.Path, "open", autospec=True, side_effect=guarded_open
+        ):
+            with self.assertRaises(tracker.TrackerError):
+                tracker.disclose_report(
+                    self.db, "exp-a", 1, "report-ref", lambda _: None
+                )
 
 
 if __name__ == "__main__":
