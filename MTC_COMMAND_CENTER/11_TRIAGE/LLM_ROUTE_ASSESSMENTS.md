@@ -219,3 +219,15 @@ byte outputs), and no round-2 launcher script exists on disk because that round 
   run it in a second, independent clone, then normalise the clone path out of both receipts and
   compare bytes. The Lead receipt and the Opus auditor's receipt both hashed to `b83161e9...`.
 - The Bash tool mangles Windows-path backslashes inside `python -c`; put such checks in a script file.
+
+## 2026-09-12 — Claude Fable Lead P0 continuation run (06:35Z–08:10Z)
+
+| Route | Job | Result | Assessment |
+|---|---|---|---|
+| Claude Pro, `claude-opus-5` xhigh, `claude --print` | P020 trail-NA builder (bounded, 2 files) | exit 0 in 4 min; correct minimal fix; honest about a wrong count in the brief | Good bounded builder. Session bucket moved 55%→62%. |
+| Claude Pro, same | P020 delta review attempt 1 | died at turn 43: `API Error: Connection lost mid-response` (transport, not quota) | Retry elsewhere; do not treat as verdict. |
+| Claude Max via `Invoke-ClaudeMax.ps1`, `claude-opus-5` xhigh | 3-packet T0 review (P030-R1, P021-H1, P021-B1), 71 turns | REQUEST_CHANGES / PWN / PWN; the P030 required finding was real (Lead reproduced base-vs-head) | Excellent: found a silent regression the packet's own checks could not see. |
+| Claude Max, same | P020 delta review (65 turns), P030 repair builder (6 min), P030 delta review (42 turns) | PWN / clean fix / PWN; each with RED/GREEN on pure pre-fix exports | Reliable exact-audit fallback; Max session 8%→42%. |
+| Codex `free`, `gpt-5.3-codex-spark`, low | P030 interface reconciliation; P012 outbound packet | both exit 0 in <1 min; 34/34 citations resolved; 1 of 33 quoted lines not verbatim (fixed by Lead) | Good for mechanical/doc work; still verify quotes. Multi-line prompt arg is word-split → one-line prompt. |
+| Codex `free`, `gpt-5.6-sol` xhigh | probe `ROUTE_OK` 17.9k tokens; P030 delta review dispatched | pending | Weekly bucket read 98% at 05:0xZ; not re-read via API this run. |
+| Gemini 3.7 via `Invoke-GeminiProReadOnly.ps1` | two delta corroborations (literal diff in prompt) | SUCCESS, PASS both, ~75 s / ~30 s | Needs cwd = canonical root and `-ExpectedBranch root/current-20260829`. |
