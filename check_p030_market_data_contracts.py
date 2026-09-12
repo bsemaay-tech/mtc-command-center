@@ -107,6 +107,13 @@ class FlipList(list):
         if self.iterations == 2:
             self[0] = "NOT_AN_OBSERVATION_ID"
 
+
+class TruthyEmptyPartitions(list):
+    """Report truthy while yielding no partitions."""
+
+    def __bool__(self) -> bool:
+        return True
+
 # Frozen output of this checker's independent oracle; never computed by the subject.
 GOLDEN_PAYLOAD = "p030payload-v1:8653c7ea1416f6cc2a7f170966c9be31da58780d3db30d6c679fdbd106868c28"
 GOLDEN_INITIAL = "p030obs-v1:ba4ee258065990a144aabdcebb416cabcde617d57dc7bc7f793449f344cbe115"
@@ -392,6 +399,43 @@ def prove_observation_list_guard_load_bearing(subject: Any, valid_id: str) -> No
     assert mutant_id == expected_id
 
 
+def prove_provenance_list_guard_load_bearing(subject: Any, dataset_hash: str) -> None:
+    """Restore the permissive partitions seam and prove empty content is accepted."""
+    source = inspect.getsource(subject.venue_provenance_manifest_hash)
+    guard = (
+        '    raw_partitions = manifest["partitions"]\n'
+        "    if type(raw_partitions) is not list:\n"
+        '        raise ContractRefused("provenance.partitions must be a non-empty list")\n'
+        "    partition_candidates = list(raw_partitions)\n"
+        '    manifest["partitions"] = partition_candidates\n'
+        "    if not partition_candidates:\n"
+        '        raise ContractRefused("provenance.partitions must be a non-empty list")\n'
+    )
+    permissive = (
+        '    raw_partitions = manifest["partitions"]\n'
+        "    if not isinstance(raw_partitions, list) or not raw_partitions:\n"
+        '        raise ContractRefused("provenance.partitions must be a non-empty list")\n'
+    )
+    assert source.count(guard) == 1
+    assert source.count("    for candidate in partition_candidates:\n") == 1
+    mutant_source = source.replace(guard, permissive, 1).replace(
+        "    for candidate in partition_candidates:\n",
+        "    for candidate in raw_partitions:\n", 1,
+    )
+    namespace: dict[str, Any] = {}
+    exec(
+        compile(mutant_source, "<provenance-list-guard-restored>", "exec"),
+        dict(vars(subject)), namespace,
+    )
+    record = manifest(dataset_hash)
+    record["partitions"] = TruthyEmptyPartitions()
+    mutant_id = namespace["venue_provenance_manifest_hash"](record)
+    assert mutant_id == (
+        "p030prov-v1:716c2de2c33d7a4149443f58b916e86"
+        "af057e70d254a2b5a21b2cf95d0099fae"
+    )
+
+
 def meaningful_correction_red() -> None:
     """Pre-implementation deviant: correction identity ignores its predecessor link."""
     payload_hash = oracle_record_id("p030payload-v1", "p030-payload-v1", payload(), PAYLOAD_FIELDS)
@@ -477,65 +521,43 @@ def meaningful_producer_track_red() -> None:
 
 
 def meaningful_iterable_mutation_red() -> None:
-    """Equivalent mutants remove only the one-time iterable materialization."""
+    """Remove only correction iterable materialization and expose identity drift."""
     import p030_market_data_contracts as subject
 
     payload_record = payload()
     payload_hash = subject.producer_payload_hash(payload_record)
     initial = initial_observation(payload_hash)
     initial_id = subject.observation_id(initial)
-    first_row = dataset_row(initial, initial_id, payload_record)
-    second_payload = dict(
-        payload_record, bar_open_time=1769904000000, bar_close_time=1769904900000
-    )
-    second_observation = dict(
-        initial, bar_open_time=1769904000000,
-        producer_payload_hash=subject.producer_payload_hash(second_payload),
-    )
-    second_id = subject.observation_id(second_observation)
-    second_row = dataset_row(second_observation, second_id, second_payload)
-
-    def mutating_rows():
-        yield first_row
-        first_row["close"] = "999"
-        yield second_row
-
-    dataset_source = inspect.getsource(subject.dataset_content_hash)
-    materialization = "    observations = list(observations)\n"
-    assert dataset_source.count(materialization) == 1
-    namespace: dict[str, Any] = {}
-    exec(
-        compile(dataset_source.replace(materialization, "", 1),
-                "<dataset-materialization-removed>", "exec"),
-        dict(vars(subject)), namespace,
-    )
-    dataset_id = namespace["dataset_content_hash"](descriptor(), mutating_rows())
-
-    first_chain_record = dict(initial, observation_id=initial_id)
-    candle_payload = dict(payload_record, source_producer="CANDLE_SNAPSHOT", close="101")
-    candle_hash = subject.producer_payload_hash(candle_payload)
-    candle_correction = dict(
-        correction_observation(candle_hash, initial_id),
-        source_producer="CANDLE_SNAPSHOT",
-    )
-    candle_id = subject.observation_id(candle_correction)
+    correction_payload = dict(payload_record, close="101")
+    correction_hash = subject.producer_payload_hash(correction_payload)
+    correction = correction_observation(correction_hash, initial_id)
+    correction_id = subject.observation_id(correction)
 
     def mutating_chain():
+        first_chain_record = dict(initial, observation_id=initial_id)
         yield first_chain_record
-        first_chain_record["source_producer"] = "CANDLE_SNAPSHOT"
-        yield dict(candle_correction, observation_id=candle_id)
+        first_chain_record["producer_payload_hash"] = correction_hash
+        yield dict(correction, observation_id=correction_id)
+
+    expect_refused(
+        lambda: subject.validate_correction_chain(mutating_chain()),
+        "materialized_correction_iterable_mutation", subject.ContractRefused,
+    )
 
     chain_source = inspect.getsource(subject.validate_correction_chain)
     materialization = "    records = list(records)\n"
     assert chain_source.count(materialization) == 1
-    namespace = {}
+    namespace: dict[str, Any] = {}
     exec(
         compile(chain_source.replace(materialization, "", 1),
                 "<chain-materialization-removed>", "exec"),
         dict(vars(subject)), namespace,
     )
     namespace["validate_correction_chain"](mutating_chain())
-    raise AssertionError(("iterable_mutation_after_validation_accepted", dataset_id))
+    raise AssertionError((
+        "correction_iterable_mutation_accepted",
+        (initial_id, correction_id, correction_hash),
+    ))
 
 
 def meaningful_event_producer_red() -> None:
@@ -584,6 +606,16 @@ def meaningful_observation_list_red() -> None:
     ))
 
 
+def meaningful_provenance_list_red() -> None:
+    """Equivalent deviant hashes a truthy carrier that yields no partitions."""
+    record = manifest("p030ds-v1:" + "c" * 64)
+    record["partitions"] = TruthyEmptyPartitions()
+    values = [record[field] for field in MANIFEST_FIELDS[:-1]]
+    values.append([])
+    observed = oracle_id("p030prov-v1", "p030-provenance-v1", values)
+    raise AssertionError(("truthy_empty_provenance_partitions_accepted", observed))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -591,7 +623,7 @@ def main() -> None:
         choices=(
             "correction-link", "dataset-row-integrity", "provenance-path", "event-detail",
             "producer-track", "iterable-mutation", "event-producer",
-            "scalar-carrier", "observation-list",
+            "scalar-carrier", "observation-list", "provenance-list",
         ),
     )
     args = parser.parse_args()
@@ -621,6 +653,9 @@ def main() -> None:
         return
     if args.red == "observation-list":
         meaningful_observation_list_red()
+        return
+    if args.red == "provenance-list":
+        meaningful_provenance_list_red()
         return
 
     import p030_market_data_contracts as subject
@@ -730,18 +765,11 @@ def main() -> None:
         )
         print("SECOND INITIAL GUARD MUTATION: DETECTED")
         mutated_initial = copy.deepcopy(chain[0])
-        candle_correction_payload = dict(candle_payload, close="101")
-        candle_correction_hash = subject.producer_payload_hash(candle_correction_payload)
-        candle_correction = dict(
-            correction_observation(candle_correction_hash, initial_id),
-            source_producer="CANDLE_SNAPSHOT",
-        )
-        candle_correction_id = subject.observation_id(candle_correction)
 
         def mutating_chain():
             yield mutated_initial
-            mutated_initial["source_producer"] = "CANDLE_SNAPSHOT"
-            yield dict(candle_correction, observation_id=candle_correction_id)
+            mutated_initial["producer_payload_hash"] = correction_hash
+            yield dict(correction, observation_id=correction_id)
 
         expect_refused(
             lambda: subject.validate_correction_chain(mutating_chain()),
@@ -1005,6 +1033,15 @@ def main() -> None:
         provenance["partitions"][0]["last_observation_id"] = second_id
         manifest_hash = subject.venue_provenance_manifest_hash(provenance)
         assert manifest_hash == GOLDEN_MANIFEST
+        truthy_empty_provenance = dict(
+            provenance, partitions=TruthyEmptyPartitions(),
+        )
+        expect_refused(
+            lambda: subject.venue_provenance_manifest_hash(truthy_empty_provenance),
+            "truthy_empty_provenance_partitions", subject.ContractRefused,
+        )
+        prove_provenance_list_guard_load_bearing(subject, "p030ds-v1:" + "c" * 64)
+        print("EXACT PROVENANCE PARTITIONS SNAPSHOT MUTANT: DETECTED")
         manifest_oracle_values = [provenance[field] for field in MANIFEST_FIELDS[:-1]]
         manifest_oracle_values.append([
             [part[field] for field in PARTITION_FIELDS]

@@ -417,11 +417,15 @@ def venue_provenance_manifest_hash(manifest: Mapping[str, Any]) -> str:
         raise ContractRefused("provenance canonicalization_version is unknown")
 
     raw_partitions = manifest["partitions"]
-    if not isinstance(raw_partitions, list) or not raw_partitions:
+    if type(raw_partitions) is not list:
+        raise ContractRefused("provenance.partitions must be a non-empty list")
+    partition_candidates = list(raw_partitions)
+    manifest["partitions"] = partition_candidates
+    if not partition_candidates:
         raise ContractRefused("provenance.partitions must be a non-empty list")
     partitions = []
     paths: set[str] = set()
-    for candidate in raw_partitions:
+    for candidate in partition_candidates:
         part = _mapping(candidate, "provenance partition")
         _exact(part, PARTITION_FIELDS, "provenance partition")
         path = _string(part["path"], "provenance partition.path")
