@@ -109,7 +109,7 @@ def _canonical_sha256(value: object) -> str:
 
 def _require_utc(value: object, field_name: str) -> datetime:
     if (
-        not isinstance(value, datetime)
+        type(value) is not datetime
         or value.tzinfo is None
         or value.utcoffset() != timedelta(0)
     ):
@@ -133,6 +133,20 @@ def _materialize_once(value: object, reason_id: str) -> tuple[object, ...]:
         return tuple(value)  # type: ignore[arg-type]
     except Exception:
         raise EvidenceContractRefused(reason_id) from None
+
+
+def _mapping_items_once(
+    value: object, reason_id: str
+) -> tuple[tuple[object, object], ...]:
+    if not isinstance(value, Mapping):
+        raise EvidenceContractRefused(reason_id)
+    try:
+        items = tuple(value.items())
+    except Exception:
+        raise EvidenceContractRefused(reason_id) from None
+    if any(type(item) is not tuple or len(item) != 2 for item in items):
+        raise EvidenceContractRefused(reason_id)
+    return items
 
 
 def _unique_inventory(items: object) -> tuple[ControlInventoryItem, ...]:
@@ -342,11 +356,16 @@ def _validated_decision_key(key: object) -> DecisionKey:
 def _validated_intents(
     intents: Mapping[DecisionKey, IntentEvidence], field_name: str
 ) -> dict[DecisionKey, tuple[IntentEvidence, str]]:
-    if not isinstance(intents, Mapping):
-        raise EvidenceContractRefused(f"LOOKAHEAD_INVALID_MAPPING:{field_name}")
+    items = _mapping_items_once(
+        intents, f"LOOKAHEAD_INVALID_MAPPING:{field_name}"
+    )
     validated: dict[DecisionKey, tuple[IntentEvidence, str]] = {}
-    for key, intent in intents.items():
+    for key, intent in items:
         decision_key = _validated_decision_key(key)
+        if decision_key in validated:
+            raise EvidenceContractRefused(
+                f"LOOKAHEAD_DUPLICATE_INTENT_KEY:{field_name}"
+            )
         if type(intent) is not IntentEvidence:
             raise EvidenceContractRefused("INTENT_INVALID_EVIDENCE")
         if (
@@ -491,14 +510,19 @@ def _require_sha256(value: object, field_name: str) -> str:
 def require_ds_v1_digest(envelope: Mapping[str, object]) -> str:
     """Return the bare digest from an exact external ``ds-v1`` envelope."""
 
-    if not isinstance(envelope, Mapping):
+    items = _mapping_items_once(envelope, "DS_V1_INVALID_ENVELOPE")
+    keys = tuple(key for key, _ in items)
+    if (
+        any(type(key) is not str for key in keys)
+        or len(set(keys)) != len(keys)
+        or set(keys) != {
+            "contract",
+            "digest",
+        }
+    ):
         raise EvidenceContractRefused("DS_V1_INVALID_ENVELOPE")
-    keys = tuple(envelope)
-    if any(type(key) is not str for key in keys) or set(keys) != {
-        "contract",
-        "digest",
-    }:
-        raise EvidenceContractRefused("DS_V1_INVALID_ENVELOPE")
-    if type(envelope["contract"]) is not str or envelope["contract"] != "ds-v1":
+    snapshot = dict(items)
+    contract = snapshot["contract"]
+    if type(contract) is not str or contract != "ds-v1":
         raise EvidenceContractRefused("DS_V1_UNSUPPORTED_CONTRACT")
-    return _require_sha256(envelope["digest"], "dataset.digest")
+    return _require_sha256(snapshot["digest"], "dataset.digest")

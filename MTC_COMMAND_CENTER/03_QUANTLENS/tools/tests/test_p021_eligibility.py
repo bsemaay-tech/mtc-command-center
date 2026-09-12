@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import unittest
 from collections import UserString, namedtuple
+from collections.abc import Mapping
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
@@ -175,6 +176,61 @@ class DsV1CompatibilityTests(P021ContractTestCase):
             with self.subTest(envelope=envelope):
                 with self.assertRaises(EvidenceContractRefused):
                     require_ds_v1_digest(envelope)
+
+        class StatefulEnvelope(Mapping):
+            def __init__(self) -> None:
+                self.iterations = 0
+                self.contract_reads = 0
+                self.digest_reads = 0
+
+            def __iter__(self):
+                self.iterations += 1
+                return iter(("contract", "digest"))
+
+            def __len__(self) -> int:
+                return 2
+
+            def __getitem__(self, key: object) -> object:
+                if key == "contract":
+                    self.contract_reads += 1
+                    if self.contract_reads == 1:
+                        return "ds-v1"
+                    return StringAlias("ds-v2", "ds-v1")
+                if key == "digest":
+                    self.digest_reads += 1
+                    return digest
+                raise KeyError(key)
+
+        stateful = StatefulEnvelope()
+        self.assertEqual(require_ds_v1_digest(stateful), digest)
+        self.assertEqual(
+            (stateful.iterations, stateful.contract_reads, stateful.digest_reads),
+            (1, 1, 1),
+        )
+
+        class BrokenItemsEnvelope(StatefulEnvelope):
+            def items(self):
+                raise RuntimeError("hostile items view")
+
+        self.assert_refused_reason(
+            "DS_V1_INVALID_ENVELOPE",
+            require_ds_v1_digest,
+            BrokenItemsEnvelope(),
+        )
+
+        class DuplicateItemsEnvelope(StatefulEnvelope):
+            def items(self):
+                return (
+                    ("contract", "ds-v1"),
+                    ("contract", "ds-v2"),
+                    ("digest", digest),
+                )
+
+        self.assert_refused_reason(
+            "DS_V1_INVALID_ENVELOPE",
+            require_ds_v1_digest,
+            DuplicateItemsEnvelope(),
+        )
 
     def test_refuses_string_subclasses_for_contract_and_digest_values(self) -> None:
         digest = "a" * 64
@@ -766,6 +822,28 @@ class LookaheadDomainTests(P021ContractTestCase):
             prefix_intents={key: causal},
         )
 
+        class EqualDatetime(datetime):
+            def __eq__(self, other: object) -> bool:
+                return True
+
+            def __hash__(self) -> int:
+                return 0
+
+        full_time = EqualDatetime(2026, 1, 1, tzinfo=timezone.utc)
+        prefix_time = EqualDatetime(2026, 1, 1, minute=1, tzinfo=timezone.utc)
+        hostile_key = DecisionKey("BINANCE:BTCUSDT", full_time)
+        self.assert_refused_reason(
+            "INVALID_UTC_DATETIME:decision_key.decision_bar_timestamp_utc",
+            compare_lookahead,
+            closed_decision_keys=(hostile_key,),
+            full_intents={hostile_key: self._intent(full_time, "intent")},
+            prefix_intents={
+                DecisionKey("BINANCE:BTCUSDT", prefix_time): self._intent(
+                    prefix_time, "intent"
+                )
+            },
+        )
+
     def test_digest_collision_cannot_hide_structural_intent_difference(self) -> None:
         timestamp = datetime(2026, 1, 1, tzinfo=timezone.utc)
         key = DecisionKey("BINANCE:BTCUSDT", timestamp)
@@ -839,6 +917,71 @@ class LookaheadDomainTests(P021ContractTestCase):
                     prefix_intents={key: intent},
                 )
 
+        class ItemsMapping(Mapping):
+            def __init__(self, entries: object) -> None:
+                self.entries = entries
+
+            def __iter__(self):
+                return iter(())
+
+            def __len__(self) -> int:
+                return 0
+
+            def __getitem__(self, key: object) -> object:
+                raise KeyError(key)
+
+            def items(self):
+                return self.entries
+
+        duplicate = ItemsMapping(
+            (
+                (key, intent),
+                (key, self._intent(timestamp, "evolved-intent")),
+            )
+        )
+        self.assert_refused_reason(
+            "LOOKAHEAD_DUPLICATE_INTENT_KEY:full_intents",
+            compare_lookahead,
+            closed_decision_keys=(key,),
+            full_intents=duplicate,
+            prefix_intents={key: intent},
+        )
+
+        PairSubclass = namedtuple("PairSubclass", ("key", "intent"))
+        for hostile_entries in (
+            BrokenIterable(),
+            ((key,),),
+            (PairSubclass(key, intent),),
+        ):
+            with self.subTest(hostile_entries=hostile_entries):
+                self.assert_refused_reason(
+                    "LOOKAHEAD_INVALID_MAPPING:full_intents",
+                    compare_lookahead,
+                    closed_decision_keys=(key,),
+                    full_intents=ItemsMapping(hostile_entries),
+                    prefix_intents={key: intent},
+                )
+
+        class SingleViewMapping(ItemsMapping):
+            def __init__(self) -> None:
+                super().__init__(((key, intent),))
+                self.items_calls = 0
+
+            def items(self):
+                self.items_calls += 1
+                if self.items_calls > 1:
+                    raise RuntimeError("items view requested twice")
+                return super().items()
+
+        single_view = SingleViewMapping()
+        evidence = compare_lookahead(
+            closed_decision_keys=(key,),
+            full_intents=single_view,
+            prefix_intents={key: intent},
+        )
+        self.assertEqual(evidence.intent_mismatch_count, 0)
+        self.assertEqual(single_view.items_calls, 1)
+
 
 class ClosedBarReceiptTests(P021ContractTestCase):
     @staticmethod
@@ -910,6 +1053,30 @@ class ClosedBarReceiptTests(P021ContractTestCase):
         receipt = self._receipt()
         validated = self._validate(receipt)
         self.assertIs(validated, receipt)
+
+        class ReversingDatetime(datetime):
+            def __lt__(self, other: object) -> bool:
+                return True
+
+            def __le__(self, other: object) -> bool:
+                return True
+
+        self.assert_refused_reason(
+            "INVALID_UTC_DATETIME:bar_open_timestamp_utc",
+            self._validate,
+            replace(
+                receipt,
+                bar_open_timestamp_utc=ReversingDatetime(
+                    2026, 1, 1, minute=10, tzinfo=timezone.utc
+                ),
+                bar_close_timestamp_utc=ReversingDatetime(
+                    2026, 1, 1, minute=5, tzinfo=timezone.utc
+                ),
+                decision_timestamp_utc=ReversingDatetime(
+                    2026, 1, 1, minute=4, tzinfo=timezone.utc
+                ),
+            ),
+        )
 
         self.assert_refused_reason(
             "CLOSED_BAR_INVALID_RUNTIME_SOURCE",
