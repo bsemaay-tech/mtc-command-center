@@ -137,7 +137,7 @@ def _materialize_once(value: object, reason_id: str) -> tuple[object, ...]:
 
 def _unique_inventory(items: object) -> tuple[ControlInventoryItem, ...]:
     materialized = _materialize_once(items, "CONTROL_INVENTORY_INVALID_CARRIER")
-    if any(not isinstance(item, ControlInventoryItem) for item in materialized):
+    if any(type(item) is not ControlInventoryItem for item in materialized):
         raise EvidenceContractRefused("CONTROL_INVENTORY_INVALID_ITEM")
     typed_items = tuple(materialized)
     if any(not isinstance(item.required_for_promotion, bool) for item in typed_items):
@@ -153,7 +153,7 @@ def _unique_manifest(items: object) -> tuple[UnsimulatedControl, ...]:
     materialized = _materialize_once(
         items, "UNSIMULATED_CONTROLS_INVALID_CARRIER"
     )
-    if any(not isinstance(item, UnsimulatedControl) for item in materialized):
+    if any(type(item) is not UnsimulatedControl for item in materialized):
         raise EvidenceContractRefused("UNSIMULATED_CONTROLS_INVALID_ITEM")
     typed_items = tuple(materialized)
     if any(not isinstance(item.required_for_promotion, bool) for item in typed_items):
@@ -423,7 +423,7 @@ def validate_closed_bar_runtime_receipt(
 ) -> ClosedBarRuntimeReceipt:
     """Validate an immutable receipt emitted by the runtime decision loop."""
 
-    if not isinstance(receipt, ClosedBarRuntimeReceipt):
+    if type(receipt) is not ClosedBarRuntimeReceipt:
         raise EvidenceContractRefused("CLOSED_BAR_INVALID_RECEIPT")
     if type(receipt.source) is not str or receipt.source != "RUNTIME_DECISION_LOOP":
         raise EvidenceContractRefused("CLOSED_BAR_INVALID_RUNTIME_SOURCE")

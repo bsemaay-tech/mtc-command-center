@@ -365,6 +365,32 @@ class ControlIdentityTests(P021ContractTestCase):
                 reason=" ",
             )
 
+    def test_refuses_inventory_record_subclasses(self) -> None:
+        class InventorySubclass(ControlInventoryItem):
+            pass
+
+        self.assert_refused_reason(
+            "CONTROL_INVENTORY_INVALID_ITEM",
+            control_inventory_sha256,
+            (InventorySubclass("fee", True),),
+        )
+
+    def test_refuses_manifest_record_subclasses(self) -> None:
+        class ManifestSubclass(UnsimulatedControl):
+            pass
+
+        self.assert_refused_reason(
+            "UNSIMULATED_CONTROLS_INVALID_ITEM",
+            unsimulated_controls_sha256,
+            (
+                ManifestSubclass(
+                    control_id="fee",
+                    required_for_promotion=True,
+                    reason="not simulated",
+                ),
+            ),
+        )
+
 
 class ControlAllowanceTests(P021ContractTestCase):
     def test_refuses_executed_control_id_tuple_subclasses(self) -> None:
@@ -848,6 +874,36 @@ class ClosedBarReceiptTests(P021ContractTestCase):
             expected_dataset_identity=DatasetIdentity("ds-v1", "c" * 64),
             expected_intent_sha256="d" * 64,
             expected_runtime_code_sha256="e" * 64,
+        )
+
+    def test_refuses_receipt_subclasses_and_mutable_attribute_views(self) -> None:
+        class ReceiptSubclass(ClosedBarRuntimeReceipt):
+            pass
+
+        class MutableViewReceipt(ClosedBarRuntimeReceipt):
+            def __getattribute__(self, name: str) -> object:
+                if name == "candidate_id":
+                    reads = object.__getattribute__(self, "_candidate_reads")
+                    object.__setattr__(self, "_candidate_reads", reads + 1)
+                    if reads >= 2:
+                        return "other-candidate"
+                return super().__getattribute__(name)
+
+        base = self._receipt()
+        ordinary_subclass = ReceiptSubclass(**base.__dict__)
+        mutable_view = MutableViewReceipt(**base.__dict__)
+        object.__setattr__(mutable_view, "_candidate_reads", 0)
+
+        for receipt in (ordinary_subclass, mutable_view):
+            with self.subTest(receipt_type=type(receipt).__name__):
+                self.assert_refused_reason(
+                    "CLOSED_BAR_INVALID_RECEIPT",
+                    self._validate,
+                    receipt,
+                )
+        self.assertEqual(
+            object.__getattribute__(mutable_view, "_candidate_reads"),
+            0,
         )
 
     def test_requires_runtime_source_and_closed_bar_chronology(self) -> None:
