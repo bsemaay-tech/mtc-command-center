@@ -232,24 +232,36 @@ def yaml_scalar(value: Any) -> str:
 
 
 def write_simple_yaml(path: Path, payload: dict[str, Any]) -> None:
-    lines: list[str] = []
-    for key, value in payload.items():
-        if isinstance(value, list):
-            lines.append(f"{key}:")
-            for item in value:
-                if isinstance(item, dict):
-                    lines.append("  -")
-                    for item_key, item_value in item.items():
-                        if isinstance(item_value, list):
-                            lines.append(f"    {item_key}:")
-                            for sub in item_value:
-                                lines.append(f"      - {yaml_scalar(sub)}")
-                        else:
-                            lines.append(f"    {item_key}: {yaml_scalar(item_value)}")
+    def render(value: Any, indent: int) -> list[str]:
+        prefix = " " * indent
+        if isinstance(value, Mapping):
+            lines: list[str] = []
+            for key, item in value.items():
+                if isinstance(item, Mapping):
+                    if item:
+                        lines.append(f"{prefix}{key}:")
+                        lines.extend(render(item, indent + 2))
+                    else:
+                        lines.append(f"{prefix}{key}: {{}}")
+                elif isinstance(item, list):
+                    if item:
+                        lines.append(f"{prefix}{key}:")
+                        lines.extend(render(item, indent + 2))
+                    else:
+                        lines.append(f"{prefix}{key}: []")
                 else:
-                    lines.append(f"  - {yaml_scalar(item)}")
-        else:
-            lines.append(f"{key}: {yaml_scalar(value)}")
+                    lines.append(f"{prefix}{key}: {yaml_scalar(item)}")
+            return lines
+        lines = []
+        for item in value:
+            if isinstance(item, (Mapping, list)):
+                lines.append(f"{prefix}-")
+                lines.extend(render(item, indent + 2))
+            else:
+                lines.append(f"{prefix}- {yaml_scalar(item)}")
+        return lines
+
+    lines = render(payload, 0)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -273,7 +285,6 @@ def normalize_rows(rows: list[dict[str, str]], columns: list[str]) -> tuple[list
         if volume_column:
             item["volume"] = row.get(volume_column, "")
         result.append(item)
-    result.sort(key=lambda item: str(item["timestamp_utc"]))
     notes = {"volume": "present" if volume_column else "missing_in_source"}
     return result, notes
 
@@ -432,14 +443,17 @@ def prepare_dataset_evidence(
 
 def validate_quality(
     dataset_id: str,
-    rows: list[dict[str, Any]],
     timeframe: str,
     bundle_root: Path,
     *,
-    quality: Mapping[str, Any],
+    evidence: Mapping[str, Any],
 ) -> dict[str, Any]:
     if timeframe not in TIMEFRAME_SECONDS:
         raise ValueError(f"unsupported timeframe: {timeframe}")
+    rows = evidence.get("closed_rows")
+    quality = evidence.get("quality")
+    if not isinstance(rows, list) or not isinstance(quality, Mapping):
+        raise ValueError("evidence must contain closed rows and quality")
     gap_measurement = quality.get("gap_measurement")
     if not isinstance(gap_measurement, dict):
         raise ValueError("quality must contain the H1 gap measurement")
@@ -499,11 +513,11 @@ def validate_quality(
         "has_gaps": gap_measurement["gap_event_count"] > 0,
         "gap_count": gap_measurement["gap_event_count"],
         "gap_report_path": str(gap_path.relative_to(bundle_root)),
-        "duplicate_timestamp_count": gap_measurement["duplicate_timestamp_count"],
+        "duplicate_timestamp_count": len(duplicates),
         "duplicate_report_path": str(duplicate_path.relative_to(bundle_root)),
         "ohlcv_validation_status": status,
         "ohlcv_report_path": str(ohlcv_path.relative_to(bundle_root)),
-        "invalid_ohlcv_count": quality["invalid_ohlcv_count"],
+        "invalid_ohlcv_count": len(invalid_rows),
         "invalid_ohlcv_reasons": invalid_rows,
         "expected_bars": gap_measurement["expected_bars"],
     }
@@ -606,7 +620,17 @@ def explicit_evidence_inputs(args: argparse.Namespace) -> tuple[datetime, Mappin
     cutoff_value = getattr(args, "closed_candle_cutoff_utc", None)
     if cutoff_value is None or cutoff_value == "":
         raise ValueError("closed_candle_cutoff_utc is required")
-    cutoff = cutoff_value if isinstance(cutoff_value, datetime) else parse_time(str(cutoff_value))
+    if isinstance(cutoff_value, datetime):
+        cutoff = cutoff_value
+    else:
+        cutoff_text = str(cutoff_value).strip()
+        cutoff = parse_time(cutoff_text)
+        if cutoff is not None and not cutoff_text.isdigit():
+            parsed_text = datetime.fromisoformat(cutoff_text.replace("Z", "+00:00"))
+            if parsed_text.tzinfo is None:
+                raise ValueError(
+                    "closed_candle_cutoff_utc must be a timezone-aware timestamp"
+                )
     if cutoff is None or cutoff.tzinfo is None:
         raise ValueError("closed_candle_cutoff_utc must be a timezone-aware timestamp")
     cutoff = cutoff.astimezone(timezone.utc)
@@ -704,6 +728,8 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
             closed_candle_cutoff_utc=closed_candle_cutoff_utc,
             gap_policy=gap_policy,
         )
+        if evidence["dataset_hash"] is None:
+            raise ValueError("semantically invalid closed OHLCV refuses bundle emission")
         normalized_rows = evidence["closed_rows"]
         safe_copy(source.source_path, raw_dst)
         normalized_dst = bundle_root / "normalized" / "binance_futures" / source.symbol / source.timeframe / f"{dataset_id}.csv"
@@ -711,10 +737,9 @@ def build_bundle(args: argparse.Namespace) -> dict[str, Any]:
         write_csv(normalized_dst, normalized_rows, normalized_fields)
         quality = validate_quality(
             dataset_id,
-            normalized_rows,
             source.timeframe,
             bundle_root,
-            quality=evidence["quality"],
+            evidence=evidence,
         )
         regime_rel = Path("regimes") / "per_dataset" / f"{dataset_id}_regimes.csv"
         regime = classify_regimes(dataset_id, source.symbol, source.timeframe, normalized_rows, bundle_root / regime_rel)

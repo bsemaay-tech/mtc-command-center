@@ -83,7 +83,201 @@ def rows_at(*offsets: int) -> list[dict[str, object]]:
     ]
 
 
+def write_source_csv(path: Path, rows: list[dict[str, object]]) -> None:
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=["time", "open", "high", "low", "close", "volume"]
+        )
+        writer.writeheader()
+        writer.writerows(
+            [
+                {
+                    "time": row["timestamp_utc"],
+                    **{
+                        key: row[key]
+                        for key in ("open", "high", "low", "close", "volume")
+                    },
+                }
+                for row in rows
+            ]
+        )
+
+
 class QualityTimeframeTests(unittest.TestCase):
+    def test_build_preserves_source_order_for_h1_and_sorts_emitted_rows(self) -> None:
+        class StopAfterQualityProjection(Exception):
+            pass
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "archive"
+            archive.mkdir()
+            source_path = archive / "BINANCE_BTCUSDT,5m_fixture.csv"
+            write_source_csv(source_path, rows_at(0, 600, 300, 900))
+            args = argparse.Namespace(
+                repo_root=root / "repo",
+                bundle_parent=root / "bundle-parent",
+                archive_root=archive,
+                datasets_root=root / "absent",
+                date_token="fixture",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=1200),
+                gap_policy=gap_policy_fixture(),
+            )
+
+            with mock.patch.object(
+                subject, "measure_data_gaps", wraps=subject.measure_data_gaps
+            ) as h1_measure, mock.patch.object(
+                subject, "prepare_dataset_evidence", wraps=subject.prepare_dataset_evidence
+            ) as prepare, mock.patch.object(
+                subject,
+                "validate_quality",
+                side_effect=StopAfterQualityProjection,
+            ) as validate:
+                with self.assertRaises(StopAfterQualityProjection):
+                    subject.build_bundle(args)
+
+            self.assertEqual(h1_measure.call_count, 1)
+            source_offsets = [
+                datetime.fromisoformat(row["timestamp_utc"]).timestamp()
+                - BASE_TIME.timestamp()
+                for row in prepare.call_args.args[0]
+            ]
+            self.assertEqual(source_offsets, [0.0, 600.0, 300.0, 900.0])
+            evidence = validate.call_args.kwargs["evidence"]
+            self.assertEqual(
+                evidence["gap_measurement"]["out_of_order_interval_count"], 1
+            )
+            normalized_path = next(
+                (root / "bundle-parent").rglob("normalized/**/*.csv")
+            )
+            with normalized_path.open("r", encoding="utf-8", newline="") as handle:
+                emitted = list(csv.DictReader(handle))
+            self.assertEqual(
+                [row["timestamp_utc"] for row in emitted],
+                [
+                    "2026-01-01T00:00:00Z",
+                    "2026-01-01T00:05:00Z",
+                    "2026-01-01T00:10:00Z",
+                    "2026-01-01T00:15:00Z",
+                ],
+            )
+
+    def test_yaml_serializes_dataset_identity_as_nested_mapping(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "manifest.yml"
+            subject.write_simple_yaml(
+                path,
+                {
+                    "datasets": [
+                        {
+                            "dataset_id": "SYNTHETIC",
+                            "dataset_hash": {
+                                "contract": "ds-v1",
+                                "digest": "f" * 64,
+                            },
+                        }
+                    ]
+                },
+            )
+            lines = path.read_text(encoding="utf-8").splitlines()
+
+        self.assertIn("    dataset_hash:", lines)
+        self.assertIn('      contract: "ds-v1"', lines)
+        self.assertIn(f'      digest: "{"f" * 64}"', lines)
+        self.assertFalse(any("{'contract':" in line for line in lines))
+
+    def test_build_refuses_invalid_closed_ohlcv_before_dataset_emission(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "archive"
+            archive.mkdir()
+            source_path = archive / "BINANCE_BTCUSDT,5m_fixture.csv"
+            invalid_rows = rows_at(0, 300)
+            invalid_rows[0]["volume"] = -1
+            write_source_csv(source_path, invalid_rows)
+            args = argparse.Namespace(
+                repo_root=root / "repo",
+                bundle_parent=root / "bundle-parent",
+                archive_root=archive,
+                datasets_root=root / "absent",
+                date_token="fixture",
+                closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=600),
+                gap_policy=gap_policy_fixture(),
+            )
+
+            with mock.patch.object(
+                subject,
+                "validate_quality",
+                side_effect=AssertionError("invalid evidence reached quality emission"),
+            ):
+                with self.assertRaisesRegex(
+                    ValueError, "^semantically invalid closed OHLCV refuses bundle emission$"
+                ):
+                    subject.build_bundle(args)
+
+            bundle_parent = root / "bundle-parent"
+            self.assertEqual(list(bundle_parent.rglob("normalized/**/*.csv")), [])
+            self.assertEqual(
+                [
+                    path
+                    for path in bundle_parent.rglob("*")
+                    if path.is_file() and "manifest" in path.name.lower()
+                ],
+                [],
+            )
+
+    def test_explicit_evidence_inputs_refuses_timezone_naive_string_cutoff(self) -> None:
+        args = argparse.Namespace(
+            closed_candle_cutoff_utc="2026-01-01T00:10:00",
+            gap_policy=gap_policy_fixture(),
+        )
+        with self.assertRaisesRegex(
+            ValueError,
+            "^closed_candle_cutoff_utc must be a timezone-aware timestamp$",
+        ):
+            subject.explicit_evidence_inputs(args)
+
+    def test_validate_quality_consumes_one_bound_evidence_record(self) -> None:
+        rows = rows_at(0, 300, 300)
+        rows[-1].update({"high": 8, "low": 9})
+        evidence = subject.prepare_dataset_evidence(
+            rows,
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+            gap_policy=gap_policy_fixture(),
+        )
+        foreign = subject.prepare_dataset_evidence(
+            rows_at(0, 300, 600),
+            instrument_id="BINANCE:BTCUSDT",
+            timeframe="5m",
+            closed_candle_cutoff_utc=BASE_TIME + timedelta(seconds=900),
+            gap_policy=gap_policy_fixture(),
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            result = subject.validate_quality(
+                "SYNTHETIC", "5m", root, evidence=evidence
+            )
+            with (root / result["duplicate_report_path"]).open(
+                "r", encoding="utf-8", newline=""
+            ) as handle:
+                duplicate_detail = list(csv.DictReader(handle))
+
+            self.assertEqual(result["duplicate_timestamp_count"], len(duplicate_detail))
+            self.assertEqual(
+                result["invalid_ohlcv_count"],
+                len(evidence["quality"]["invalid_ohlcv_reasons"]),
+            )
+            with self.assertRaises(TypeError):
+                subject.validate_quality(
+                    "MIXED",
+                    evidence["closed_rows"],
+                    "5m",
+                    root,
+                    quality=foreign["quality"],
+                )
+
     def test_public_evidence_seam_returns_exact_h1_m2_shape(self) -> None:
         evidence = subject.prepare_dataset_evidence(
             rows_at(0, 900, 2700, 3600),
@@ -366,10 +560,9 @@ class QualityTimeframeTests(unittest.TestCase):
         )
         result = subject.validate_quality(
             "SYNTHETIC",
-            evidence["closed_rows"],
             timeframe,
             root,
-            quality=evidence["quality"],
+            evidence=evidence,
         )
         gap_path = root / result["gap_report_path"]
         with gap_path.open("r", encoding="utf-8", newline="") as handle:
@@ -429,7 +622,12 @@ class QualityTimeframeTests(unittest.TestCase):
             with self.subTest(row_count=len(rows)), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary) / "synthetic_bundle"
                 with self.assertRaisesRegex(ValueError, "^unsupported timeframe: bogus$"):
-                    subject.validate_quality("SYNTHETIC", rows, "bogus", root, quality={})
+                    subject.validate_quality(
+                        "SYNTHETIC",
+                        "bogus",
+                        root,
+                        evidence={"closed_rows": rows, "quality": {}},
+                    )
                 self.assertFalse(root.exists())
 
     def test_gap_threshold_remains_strictly_above_one_point_five_steps(self) -> None:
@@ -473,10 +671,9 @@ class QualityTimeframeTests(unittest.TestCase):
             )
             result = subject.validate_quality(
                 "SYNTHETIC",
-                evidence["closed_rows"],
                 "5m",
                 root,
-                quality=evidence["quality"],
+                evidence=evidence,
             )
         self.assertFalse(result["has_gaps"])
         self.assertEqual(result["duplicate_timestamp_count"], 1)
@@ -496,10 +693,9 @@ class QualityTimeframeTests(unittest.TestCase):
         ):
             result = subject.validate_quality(
                 "SYNTHETIC",
-                evidence["closed_rows"],
                 "5m",
                 Path(temporary),
-                quality=evidence["quality"],
+                evidence=evidence,
             )
         self.assertIs(result["gap_measurement"], evidence["quality"]["gap_measurement"])
         self.assertEqual(result["has_gaps"], True)
@@ -583,7 +779,7 @@ class QualityTimeframeTests(unittest.TestCase):
             self.assertEqual(prepare.call_args.kwargs["instrument_id"], "BINANCE:BTCUSDT")
             normalized_write = next(rows for path, rows in writes if "normalized" in path.parts)
             self.assertIs(normalized_write, prepared["closed_rows"])
-            self.assertIs(validate.call_args.kwargs["quality"], prepared["quality"])
+            self.assertIs(validate.call_args.kwargs["evidence"], prepared)
 
     def test_build_projects_evidence_into_manifest_and_quality_records(self) -> None:
         class StopAfterQualityRecord(Exception):
