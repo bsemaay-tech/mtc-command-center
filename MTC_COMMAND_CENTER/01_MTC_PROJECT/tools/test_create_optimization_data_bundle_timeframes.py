@@ -9,7 +9,7 @@ import json
 import sys
 import tempfile
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 from pathlib import Path
 from unittest import mock
 
@@ -21,6 +21,11 @@ from strategy_type_policy_set import compute_policy_version
 
 
 BASE_TIME = datetime(2026, 1, 1, tzinfo=timezone.utc)
+
+
+class SemanticNaiveTimezone(tzinfo):
+    def utcoffset(self, value):
+        return None
 
 
 def gap_policy_fixture() -> dict:
@@ -276,6 +281,38 @@ class QualityTimeframeTests(unittest.TestCase):
         ):
             subject.explicit_evidence_inputs(args)
 
+    def test_prepare_dataset_evidence_refuses_semantically_naive_cutoff(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "^closed_candle_cutoff_utc must be timezone-aware$",
+        ):
+            subject.prepare_dataset_evidence(
+                rows_at(-86400, -86100),
+                instrument_id="BINANCE:BTCUSDT",
+                timeframe="5m",
+                closed_candle_cutoff_utc=datetime(
+                    2026, 1, 1, 0, 10, tzinfo=SemanticNaiveTimezone()
+                ),
+                gap_policy=gap_policy_fixture(),
+            )
+
+    def test_explicit_evidence_inputs_stabilizes_hostile_timezone_refusal(self) -> None:
+        class HostileTimezone(tzinfo):
+            def utcoffset(self, value):
+                raise RuntimeError("hostile timezone")
+
+        args = argparse.Namespace(
+            closed_candle_cutoff_utc=datetime(
+                2026, 1, 1, 0, 10, tzinfo=HostileTimezone()
+            ),
+            gap_policy=gap_policy_fixture(),
+        )
+        with self.assertRaisesRegex(
+            ValueError,
+            "^closed_candle_cutoff_utc must be a timezone-aware timestamp$",
+        ):
+            subject.explicit_evidence_inputs(args)
+
     def test_build_refuses_timezone_naive_datetime_before_any_write(self) -> None:
         args = argparse.Namespace(
             repo_root="unused",
@@ -302,6 +339,34 @@ class QualityTimeframeTests(unittest.TestCase):
             ):
                 subject.build_bundle(args)
         mkdir.assert_not_called()
+        write_csv.assert_not_called()
+
+    def test_build_refuses_semantically_naive_datetime_before_any_write(self) -> None:
+        args = argparse.Namespace(
+            repo_root="unused",
+            bundle_parent="unused",
+            archive_root="unused",
+            datasets_root="unused",
+            date_token="fixture",
+            closed_candle_cutoff_utc=datetime(
+                2026, 1, 1, 0, 10, tzinfo=SemanticNaiveTimezone()
+            ),
+            gap_policy=gap_policy_fixture(),
+        )
+        with mock.patch.object(
+            subject.Path,
+            "mkdir",
+            side_effect=AssertionError("write boundary reached"),
+        ) as mkdir, mock.patch.object(subject.Path, "rename") as rename, mock.patch.object(
+            subject, "write_csv"
+        ) as write_csv:
+            with self.assertRaisesRegex(
+                ValueError,
+                "^closed_candle_cutoff_utc must be a timezone-aware timestamp$",
+            ):
+                subject.build_bundle(args)
+        mkdir.assert_not_called()
+        rename.assert_not_called()
         write_csv.assert_not_called()
 
     def test_validate_quality_consumes_one_bound_evidence_record(self) -> None:

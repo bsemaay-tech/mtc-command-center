@@ -106,6 +106,15 @@ def parse_time(value: str) -> datetime | None:
         return None
 
 
+def _normalize_cutoff_utc(value: datetime, message: str) -> datetime:
+    try:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError(message)
+        return value.astimezone(timezone.utc)
+    except Exception as exc:
+        raise ValueError(message) from exc
+
+
 def iso(dt: datetime | None) -> str | None:
     return dt.astimezone(timezone.utc).isoformat() if dt else None
 
@@ -337,9 +346,10 @@ def prepare_dataset_evidence(
         step = TIMEFRAME_SECONDS[timeframe]
     except KeyError:
         raise ValueError(f"unsupported timeframe: {timeframe}") from None
-    if closed_candle_cutoff_utc.tzinfo is None:
-        raise ValueError("closed_candle_cutoff_utc must be timezone-aware")
-    cutoff = closed_candle_cutoff_utc.astimezone(timezone.utc)
+    cutoff = _normalize_cutoff_utc(
+        closed_candle_cutoff_utc,
+        "closed_candle_cutoff_utc must be timezone-aware",
+    )
     if cutoff.microsecond:
         raise ValueError("closed_candle_cutoff_utc must use whole seconds")
     closed_rows: list[dict[str, Any]] = []
@@ -658,9 +668,12 @@ def explicit_evidence_inputs(args: argparse.Namespace) -> tuple[datetime, Mappin
                 raise ValueError(
                     "closed_candle_cutoff_utc must be a timezone-aware timestamp"
                 )
-    if cutoff is None or cutoff.tzinfo is None:
+    if cutoff is None:
         raise ValueError("closed_candle_cutoff_utc must be a timezone-aware timestamp")
-    cutoff = cutoff.astimezone(timezone.utc)
+    cutoff = _normalize_cutoff_utc(
+        cutoff,
+        "closed_candle_cutoff_utc must be a timezone-aware timestamp",
+    )
     if cutoff.microsecond:
         raise ValueError("closed_candle_cutoff_utc must use whole seconds")
 
