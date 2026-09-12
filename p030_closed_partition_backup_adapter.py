@@ -151,16 +151,16 @@ def _canonical_relative_posix(value: object, field: str) -> str:
 
 
 def _refuse_source_links(source_root: Path, source_rel: str) -> None:
-    current = Path(source_root).absolute()
-    candidates = [current]
-    for part in PurePosixPath(source_rel).parts:
-        current = current / part
-        candidates.append(current)
-    for candidate in candidates:
-        if candidate.is_symlink() or candidate.is_junction():
+    current = Path(source_root).absolute().joinpath(*PurePosixPath(source_rel).parts)
+    while True:
+        if current.is_symlink() or current.is_junction():
             raise ValueError(
                 "source JSONL must not be a symlink or junction component"
             )
+        parent = current.parent
+        if parent == current:
+            break
+        current = parent
 
 
 def _prefix_facts(data: bytes) -> tuple[int, str]:
