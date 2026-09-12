@@ -95,7 +95,7 @@ class FeeEvent:
     schedule_id: str
     schedule_digest: str
     rate: float
-    fixed_component: float
+    fixed_component: float | None
     fee_notional: float
     fee_amount: float
     fee_cash_delta: float

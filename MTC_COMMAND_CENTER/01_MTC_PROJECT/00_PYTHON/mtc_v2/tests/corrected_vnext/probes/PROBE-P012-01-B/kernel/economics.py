@@ -9,9 +9,13 @@ position facts.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import base64
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
+from decimal import Decimal, InvalidOperation
 from enum import Enum
+import hashlib
+import json
 import math
 from pathlib import Path
 import re
@@ -54,6 +58,9 @@ REFUSED_UNSPECIFIED_ADMITTED_ACCOUNT_PRODUCT = (
     "REFUSED_UNSPECIFIED_ADMITTED_ACCOUNT_PRODUCT"
 )
 REFUSED_UNAUTHENTICATED_REPORTED_FEE = "REFUSED_UNAUTHENTICATED_REPORTED_FEE"
+REFUSED_UNSUPPORTED_REPORTED_FEE_REPRESENTATION = (
+    "REFUSED_UNSUPPORTED_REPORTED_FEE_REPRESENTATION"
+)
 
 # --- OD-20260912-P012-PATHD-1 decision B (fees) ---------------------------
 # B1=C: the venue's own reported per-fill fee is the admitted cash amount; the
@@ -112,52 +119,78 @@ class ExitCandidate:
 
 @dataclass(frozen=True, slots=True)
 class ReportedFillFee:
-    """One venue-reported fee on one authenticated own-account fill.
+    """One claimed venue-reported fee with local consistency evidence.
 
     This is the *only* admitted cost input under
-    :data:`ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1`.  ``reported_amount`` is
-    the venue's own charged number in ``fee_token``: it is read, never
-    recomputed, never rounded and never replaced by an estimate.  There is no
-    default: a fill with no reported fee is refused, never treated as zero.
+    :data:`ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1`.  On admission,
+    ``reported_amount`` is the exact captured fee string in ``fee_token``.  It
+    is read, never recomputed, never rounded and never replaced by an estimate.
+    There is no default: a fill with no reported fee is refused, never treated
+    as zero.
 
-    ``closed_pnl`` is carried beside the fee exactly as the venue reports it and
-    is never merged into the fee amount.
+    ``closed_pnl`` is an optional exact-string assertion.  A captured value is
+    carried beside the fee and never merged into the fee amount; an absent
+    captured value remains explicitly unknown and is never defaulted to zero.
 
-    The last four fields are the *authentication binding*, and every one of
-    them is required for admission:
+    The remaining fields are required local consistency inputs for admission.
+    They are rechecked on every admitted runtime path; there is no
+    caller-forgeable verified shortcut:
 
     ``source_class``
         must be exactly :data:`ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1`.  A
         number carrying any other class, or none, is not an admitted cost.
     ``account_scope`` / ``product``
-        the declared own account and product this fill belongs to.  They must
-        equal the cost record's own ``admitted_account``/``admitted_product``
-        declarations, so a number from some other account or product can never
-        be booked against this one.
+        caller-declared account and product associations.  They must equal the
+        cost record's declarations; neither is claimed to be a native capture
+        field or proof of account ownership.
     ``capture_sha256``
-        lower-case SHA-256 over the exact bytes of the authenticated fill
-        capture the amount was read from.  It is the evidence pointer that
-        makes the number attributable.
+        lower-case SHA-256 over ``capture_bytes`` exactly as supplied.
+    ``capture_bytes``
+        immutable original bytes for one JSON fill object.  The bounded local
+        parser interprets only already-known fields and retains every byte;
+        extra native members are not rejected or silently reconstructed.
+    ``native_fill_id`` / ``native_instrument``
+        caller-declared associations checked against identity and coin derived
+        from the capture.  ``fill_id`` remains the separate internal MTC fill
+        association.
 
     They all default to ``None`` on purpose: a bare object still constructs, so
     the refusal a caller gets is the typed
     :data:`REFUSED_UNAUTHENTICATED_REPORTED_FEE`, not a ``TypeError``.
 
-    Limitation, stated rather than hidden: this kernel receives the digest, not
-    the capture bytes, so it verifies that the digest is present and
-    well-formed and records it; it cannot re-hash bytes it never sees.  Proving
-    the digest against the capture is the exporter/evidence layer's job.
+    Limitation, stated rather than hidden: byte/content consistency does not
+    authenticate venue origin, account ownership, completeness, or production
+    permission.  A caller can forge an internally consistent object.  The
+    independent external authentication and admission gate remains required.
     """
 
     fill_id: str
-    reported_amount: float
+    reported_amount: str
     fee_token: str
     fee_class: str = REPORTED_FEE_CHARGE
-    closed_pnl: float | None = None
+    closed_pnl: str | None = None
     source_class: str | None = None
     account_scope: str | None = None
     product: str | None = None
     capture_sha256: str | None = None
+    capture_bytes: bytes | None = None
+    native_fill_id: str | None = None
+    native_instrument: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _CapturedReportedFee:
+    amount: float
+    amount_raw: str
+    closed_pnl: float | None
+    closed_pnl_raw: str | None
+    native_fill_id: str
+    native_instrument: str
+    native_time_ms: int
+    native_hash: str | None
+    native_oid: int | None
+    native_tid: int | None
+    capture_bytes_base64: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -442,51 +475,338 @@ def _declared_account_and_product(cost: Mapping[str, Any]) -> tuple[str, str]:
     return declared[0], declared[1]
 
 
-def _require_fee_authentication(
+def _fee_evidence_refusal(
+    event_class: str,
+    fill_id: str,
+    detail: str,
+) -> EconomicsRefusal:
+    return EconomicsRefusal(
+        REFUSED_UNAUTHENTICATED_REPORTED_FEE,
+        f"{event_class}: reported fee for fill {fill_id} {detail}",
+    )
+
+
+def _reject_duplicate_json_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key {key!r}")
+        result[key] = value
+    return result
+
+
+def _reject_nonfinite_json_constant(value: str) -> None:
+    raise ValueError(f"non-finite JSON constant {value!r}")
+
+
+def _captured_decimal_float(
+    raw: object,
+    *,
+    label: str,
+    event_class: str,
+    fill_id: str,
+) -> tuple[Decimal, float]:
+    if not isinstance(raw, str) or not raw:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"has captured {label} that is not a non-empty raw string",
+        )
+    try:
+        value = Decimal(raw)
+    except InvalidOperation as exc:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"has captured {label} {raw!r} that is not a decimal",
+        ) from exc
+    if not value.is_finite():
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"has captured {label} {raw!r} that is not finite",
+        )
+    projected = float(value)
+    if not math.isfinite(projected) or Decimal(str(projected)) != value:
+        raise EconomicsRefusal(
+            REFUSED_UNSUPPORTED_REPORTED_FEE_REPRESENTATION,
+            f"{event_class}: captured {label} raw value {raw!r} for fill "
+            f"{fill_id} does not survive the existing float's canonical "
+            "decimal round-trip; the raw value is retained and no rounded "
+            "value or estimator substitute is admitted",
+        )
+    return value, projected
+
+
+def _require_fee_evidence_consistency(
     *,
     reported: ReportedFillFee,
     fill_id: str,
     event_class: str,
     declared_account: str,
     declared_product: str,
-) -> None:
-    """Refuse any reported fee that is not a bound own-account fill fee.
+    settlement_currency: str,
+    event_timestamp: datetime,
+) -> _CapturedReportedFee:
+    """Recheck exact local capture consistency on every admitted fee path.
 
-    A bare number is not evidence.  Admission needs the source class, the
-    declared account and product this fill belongs to, and the capture digest
-    the amount was read from; anything missing, differently spelled or
-    differently scoped refuses.
+    The bytes are one original JSON fill object.  This bounded local
+    interpretation is not a claim about a complete venue envelope and does not
+    authenticate origin: an internally consistent object can still be forged.
     """
     if reported.source_class != ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1:
-        raise EconomicsRefusal(
-            REFUSED_UNAUTHENTICATED_REPORTED_FEE,
-            f"{event_class}: reported fee for fill {fill_id} carries "
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            "carries "
             f"source_class {reported.source_class!r}, not the admitted "
             f"{ADMITTED_COST_SOURCE_REPORTED_PER_FILL_V1!r}; an unclassed "
-            "number is not an authenticated own-account fill fee",
+            "number is not supported local fill evidence",
         )
     if reported.account_scope != declared_account:
-        raise EconomicsRefusal(
-            REFUSED_UNAUTHENTICATED_REPORTED_FEE,
-            f"{event_class}: reported fee for fill {fill_id} is scoped to "
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            "is scoped by the caller to "
             f"account {reported.account_scope!r}, not the declared "
             f"{declared_account!r}",
         )
     if reported.product != declared_product:
-        raise EconomicsRefusal(
-            REFUSED_UNAUTHENTICATED_REPORTED_FEE,
-            f"{event_class}: reported fee for fill {fill_id} is scoped to "
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            "is scoped by the caller to "
             f"product {reported.product!r}, not the declared "
             f"{declared_product!r}",
         )
+
+    capture = reported.capture_bytes
+    if not isinstance(capture, bytes):
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"has no immutable capture bytes (got {type(capture).__name__})",
+        )
     digest = reported.capture_sha256
     if not isinstance(digest, str) or _LOWER_SHA256_HEX.fullmatch(digest) is None:
-        raise EconomicsRefusal(
-            REFUSED_UNAUTHENTICATED_REPORTED_FEE,
-            f"{event_class}: reported fee for fill {fill_id} carries "
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            "carries "
             f"capture_sha256 {digest!r}; a lower-case SHA-256 hex digest of "
-            "the authenticated fill capture bytes is required",
+            "the exact capture bytes is required",
         )
+    actual_digest = hashlib.sha256(capture).hexdigest()
+    if actual_digest != digest:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"capture bytes do not hash to capture_sha256 {digest!r}",
+        )
+
+    try:
+        capture_text = capture.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        raise _fee_evidence_refusal(
+            event_class, fill_id, "capture bytes are not strict UTF-8"
+        ) from exc
+    try:
+        native = json.loads(
+            capture_text,
+            object_pairs_hook=_reject_duplicate_json_keys,
+            parse_constant=_reject_nonfinite_json_constant,
+        )
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"capture bytes are not unambiguous JSON: {exc}",
+        ) from exc
+    if not isinstance(native, dict):
+        raise _fee_evidence_refusal(
+            event_class, fill_id, "capture JSON is not one single-fill object"
+        )
+
+    raw_time = native.get("time")
+    if isinstance(raw_time, bool) or not isinstance(raw_time, int) or raw_time <= 0:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"capture time {raw_time!r} is not a positive integer millisecond value",
+        )
+    coin = native.get("coin")
+    if not isinstance(coin, str) or not coin.strip():
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"capture native instrument coin {coin!r} is not a non-empty string",
+        )
+
+    raw_tid = native.get("tid")
+    native_hash: str | None = None
+    native_oid: int | None = None
+    native_tid: int | None = None
+    if "tid" in native:
+        if isinstance(raw_tid, bool) or not isinstance(raw_tid, int):
+            raise _fee_evidence_refusal(
+                event_class,
+                fill_id,
+                f"capture tid {raw_tid!r} is not a non-boolean integer identity",
+            )
+        native_tid = raw_tid
+        derived_native_fill_id = str(raw_tid)
+    else:
+        raw_hash = native.get("hash")
+        raw_oid = native.get("oid")
+        if (
+            not isinstance(raw_hash, str)
+            or not raw_hash.strip()
+            or isinstance(raw_oid, bool)
+            or not isinstance(raw_oid, int)
+        ):
+            raise _fee_evidence_refusal(
+                event_class,
+                fill_id,
+                "capture has no usable native fill identity; require an integer "
+                "tid or non-empty hash plus integer oid and time",
+            )
+        native_hash = raw_hash
+        native_oid = raw_oid
+        derived_native_fill_id = f"{raw_hash}:{raw_oid}:{raw_time}"
+
+    if reported.native_fill_id != derived_native_fill_id:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"declares native fill {reported.native_fill_id!r}, not captured "
+            f"native fill {derived_native_fill_id!r}",
+        )
+    if reported.native_instrument != coin:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"declares native instrument {reported.native_instrument!r}, not "
+            f"captured coin {coin!r}; no symbol alias is inferred",
+        )
+
+    if event_timestamp.tzinfo is None:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            "cannot bind capture time to a timezone-naive runtime event",
+        )
+    utc_event = event_timestamp.astimezone(timezone.utc)
+    if utc_event.microsecond % 1000:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            "runtime event time has sub-millisecond precision and cannot equal "
+            "the captured integer millisecond time without rounding",
+        )
+    epoch_delta = utc_event - datetime(1970, 1, 1, tzinfo=timezone.utc)
+    event_time_ms = (
+        (epoch_delta.days * 86400 + epoch_delta.seconds) * 1000
+        + epoch_delta.microseconds // 1000
+    )
+    if raw_time != event_time_ms:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"capture time {raw_time} does not equal runtime event time "
+            f"{event_time_ms} milliseconds",
+        )
+
+    raw_fee = native.get("fee")
+    amount_decimal, amount = _captured_decimal_float(
+        raw_fee,
+        label="fee",
+        event_class=event_class,
+        fill_id=fill_id,
+    )
+    if not isinstance(reported.reported_amount, str):
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            "has a reported_amount assertion that is not the exact source string",
+        )
+    if reported.reported_amount != raw_fee:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"asserts fee source text {reported.reported_amount!r}, which does "
+            f"not match captured fee source text {raw_fee!r}",
+        )
+    captured_token = native.get("feeToken")
+    if not isinstance(captured_token, str) or not captured_token:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"has captured feeToken {captured_token!r}, not a non-empty string",
+        )
+    if captured_token != reported.fee_token or captured_token != settlement_currency:
+        raise _fee_evidence_refusal(
+            event_class,
+            fill_id,
+            f"has captured feeToken {captured_token!r}, caller token "
+            f"{reported.fee_token!r}, and settlement currency "
+            f"{settlement_currency!r}; all must match exactly",
+        )
+
+    if reported.fee_class == REPORTED_FEE_CHARGE and amount_decimal < 0:
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} is negative but is "
+            "not declared a rebate",
+        )
+    if reported.fee_class == REPORTED_FEE_REBATE and amount_decimal > 0:
+        raise EconomicsRefusal(
+            REFUSED_MISSING_ADMITTED_FEE,
+            f"{event_class}: reported fee for fill {fill_id} is declared a "
+            "rebate but is positive",
+        )
+
+    if "closedPnl" not in native:
+        raw_closed_pnl = None
+        if reported.closed_pnl is not None:
+            raise _fee_evidence_refusal(
+                event_class,
+                fill_id,
+                f"asserts closedPnl {reported.closed_pnl!r}, but the capture "
+                "does not contain closedPnl",
+            )
+        closed_pnl = None
+    else:
+        raw_closed_pnl = native["closedPnl"]
+        if reported.closed_pnl is not None and (
+            not isinstance(reported.closed_pnl, str)
+            or reported.closed_pnl != raw_closed_pnl
+        ):
+            raise _fee_evidence_refusal(
+                event_class,
+                fill_id,
+                f"asserts closedPnl source text {reported.closed_pnl!r}, which "
+                f"does not match captured source text {raw_closed_pnl!r}",
+            )
+        _, closed_pnl = _captured_decimal_float(
+            raw_closed_pnl,
+            label="closedPnl",
+            event_class=event_class,
+            fill_id=fill_id,
+        )
+
+    return _CapturedReportedFee(
+        amount=amount,
+        amount_raw=raw_fee,
+        closed_pnl=closed_pnl,
+        closed_pnl_raw=raw_closed_pnl,
+        native_fill_id=derived_native_fill_id,
+        native_instrument=coin,
+        native_time_ms=raw_time,
+        native_hash=native_hash,
+        native_oid=native_oid,
+        native_tid=native_tid,
+        capture_bytes_base64=base64.b64encode(capture).decode("ascii"),
+    )
 
 
 def _admitted_reported_fee(
@@ -496,17 +816,16 @@ def _admitted_reported_fee(
     event_class: str,
     reported_fees: tuple[ReportedFillFee, ...],
 ) -> ReportedFillFee:
-    """Select and validate the one venue-reported fee for ``fill_id``.
+    """Select one typed row while retaining legacy refusal ordering.
 
     Missing, ``None``, non-finite, wrong-token, duplicated or sign-inconsistent
     inputs all refuse.  Nothing here ever falls back to zero, to the schedule or
     to another fill's number.
 
-    This answers "is there exactly one usable number for this fill?".  Whether
-    that number is *attributable* to a declared own account, product and
-    authenticated capture is the separate question
-    :func:`_require_fee_authentication` answers, and the caller asks it second
-    so that "there is no fee at all" keeps its own, more specific refusal.
+    Exact source-text and capture checks happen in
+    :func:`_require_fee_evidence_consistency`.  Finite legacy numeric objects
+    still reach that check, where absent proof gets a typed refusal rather than
+    a constructor ``TypeError``.
     """
     matching = [row for row in reported_fees if row is not None and row.fill_id == fill_id]
     if not matching:
@@ -527,12 +846,14 @@ def _admitted_reported_fee(
             f"{event_class}: reported fee for fill {fill_id} is not a typed ReportedFillFee",
         )
     amount = reported.reported_amount
-    if amount is None or isinstance(amount, bool) or not isinstance(amount, (int, float)):
+    if amount is None or isinstance(amount, bool) or not isinstance(
+        amount, (str, int, float)
+    ):
         raise EconomicsRefusal(
             REFUSED_MISSING_ADMITTED_FEE,
             f"{event_class}: reported fee for fill {fill_id} is not a number",
         )
-    if not math.isfinite(float(amount)):
+    if isinstance(amount, (int, float)) and not math.isfinite(float(amount)):
         raise EconomicsRefusal(
             REFUSED_MISSING_ADMITTED_FEE,
             f"{event_class}: reported fee for fill {fill_id} is not finite",
@@ -551,23 +872,39 @@ def _admitted_reported_fee(
             f"{event_class}: reported fee for fill {fill_id} carries unknown "
             f"fee_class {reported.fee_class!r}",
         )
-    if reported.fee_class == REPORTED_FEE_CHARGE and float(amount) < 0.0:
+    if (
+        isinstance(amount, (int, float))
+        and reported.fee_class == REPORTED_FEE_CHARGE
+        and float(amount) < 0.0
+    ):
         raise EconomicsRefusal(
             REFUSED_MISSING_ADMITTED_FEE,
             f"{event_class}: reported fee for fill {fill_id} is negative but is "
             "not declared a rebate",
         )
-    if reported.fee_class == REPORTED_FEE_REBATE and float(amount) > 0.0:
+    if (
+        isinstance(amount, (int, float))
+        and reported.fee_class == REPORTED_FEE_REBATE
+        and float(amount) > 0.0
+    ):
         raise EconomicsRefusal(
             REFUSED_MISSING_ADMITTED_FEE,
             f"{event_class}: reported fee for fill {fill_id} is declared a "
             "rebate but is positive",
         )
-    if reported.closed_pnl is not None and not math.isfinite(float(reported.closed_pnl)):
-        raise EconomicsRefusal(
-            REFUSED_MISSING_ADMITTED_FEE,
-            f"{event_class}: closed_pnl for fill {fill_id} is not finite",
-        )
+    if reported.closed_pnl is not None and not isinstance(reported.closed_pnl, str):
+        if isinstance(reported.closed_pnl, bool) or not isinstance(
+            reported.closed_pnl, (int, float)
+        ):
+            raise EconomicsRefusal(
+                REFUSED_MISSING_ADMITTED_FEE,
+                f"{event_class}: closed_pnl for fill {fill_id} is not a number",
+            )
+        if not math.isfinite(float(reported.closed_pnl)):
+            raise EconomicsRefusal(
+                REFUSED_MISSING_ADMITTED_FEE,
+                f"{event_class}: closed_pnl for fill {fill_id} is not finite",
+            )
     return reported
 
 
@@ -626,11 +963,11 @@ def _admitted_fee_rows(
 ) -> tuple[CashEvent, FeeEvent, tuple[_PendingDecision, ...]]:
     """The ``HL_FEE_REPORTED_PER_FILL_V1`` admitted-cost path.
 
-    The admitted cash amount is the venue's reported number, and it is
-    admitted only when the reported fee is *attributable*: the record must
-    declare the own account and product, and the fee object must carry the
-    source class, that same account and product, and the capture digest of the
-    authenticated fill it was read from.
+    The admitted cash amount is the captured fee source string projected into
+    the existing float bookkeeping only after a lossless canonical-decimal
+    round-trip guard.  Exact bytes, digest, selected native fields and caller
+    declarations are rechecked here.  This proves local consistency only, not
+    venue origin, account ownership or production permission.
 
     The schedule is evaluated *alongside* it purely as a guarded estimator: a
     deviation beyond the owner-signed tolerance suspends the estimator for
@@ -683,18 +1020,20 @@ def _admitted_fee_rows(
         event_class=event_class,
         reported_fees=reported_fees,
     )
-    # There is exactly one usable number for this fill.  It is admitted only if
-    # it is also attributable: the record must declare the own account and
-    # product, and the fee object must be bound to them and to its capture.
+    # There is exactly one typed row for this internal fill.  Every use then
+    # re-hashes and re-parses its supplied proof; there is no trusted flag.
     declared_account, declared_product = _declared_account_and_product(cost)
-    _require_fee_authentication(
+    settlement_currency = str(cost["settlement_currency"])
+    evidence = _require_fee_evidence_consistency(
         reported=reported,
         fill_id=fill_id,
         event_class=event_class,
         declared_account=declared_account,
         declared_product=declared_product,
+        settlement_currency=settlement_currency,
+        event_timestamp=event_timestamp,
     )
-    amount = float(reported.reported_amount)
+    amount = evidence.amount
     notional = abs(fill_price * quantity * contract_multiplier)
     estimate = notional * rate
     deviation = abs(amount - estimate)
@@ -703,7 +1042,7 @@ def _admitted_fee_rows(
     # The admitted amount is the venue's charge; the estimator never overrides it.
     signed = 0.0 if amount == 0.0 else -amount
     # Two arms, never one.  Everything prefixed ``reported_``/``fee_`` is the
-    # venue's own charged number and its authentication binding; everything
+    # captured charged number and its local evidence binding; everything
     # prefixed ``estimator_``/``tolerance_`` is the pinned schedule's guarded
     # pre-trade estimate.  The admitted cash is the first arm only: the second
     # never produced, corrected or replaced it.
@@ -714,13 +1053,33 @@ def _admitted_fee_rows(
         "fill_id": fill_id,
         "liquidity_role": role,
         "reported_amount": amount,
+        "reported_amount_raw": evidence.amount_raw,
         "fee_token": reported.fee_token,
         "fee_class": reported.fee_class,
-        "closed_pnl": reported.closed_pnl,
+        "closed_pnl": evidence.closed_pnl,
+        "closed_pnl_raw": evidence.closed_pnl_raw,
+        "closed_pnl_status": (
+            "CAPTURED_RAW_STRING"
+            if evidence.closed_pnl_raw is not None
+            else "NOT_PRESENT_UNKNOWN"
+        ),
         "fee_source_class": reported.source_class,
         "fee_account_scope": reported.account_scope,
         "fee_product": reported.product,
         "fee_capture_sha256": reported.capture_sha256,
+        "fee_capture_bytes_base64": evidence.capture_bytes_base64,
+        "fee_native_fill_id": evidence.native_fill_id,
+        "fee_native_fill_id_declared": reported.native_fill_id,
+        "fee_native_instrument": evidence.native_instrument,
+        "fee_native_instrument_declared": reported.native_instrument,
+        "fee_native_time_ms": evidence.native_time_ms,
+        "fee_native_hash": evidence.native_hash,
+        "fee_native_oid": evidence.native_oid,
+        "fee_native_tid": evidence.native_tid,
+        "fee_declared_context_class": "CALLER_DECLARED_NOT_NATIVE_FIELDS",
+        "fee_evidence_limit": (
+            "INTERNALLY_CONSISTENT_CAPTURE_MAY_BE_FORGED_ORIGIN_NOT_ESTABLISHED"
+        ),
         "fixed_component_status": FIXED_COMPONENT_UNRESOLVED,
         "estimator_rate": rate,
         "estimator_notional": notional,
@@ -763,7 +1122,7 @@ def _admitted_fee_rows(
         lifecycle_id=lifecycle_id,
         kind=CashEventKind.FEE,
         signed_delta=signed,
-        settlement_currency=str(cost["settlement_currency"]),
+        settlement_currency=settlement_currency,
         fill_id=fill_id,
     )
     fee = FeeEvent(
@@ -785,10 +1144,10 @@ def _admitted_fee_rows(
         # ``fixed_component_status`` in the decision details above.
         fixed_component=None,
         fee_notional=notional,
-        # Venue-reported arm: read from the authenticated own-account fill.
+        # Captured-reported arm: locally consistent, not origin-authenticated.
         fee_amount=amount,
         fee_cash_delta=signed,
-        settlement_currency=str(cost["settlement_currency"]),
+        settlement_currency=settlement_currency,
         cash_event_id=cash_event_id,
     )
     return cash, fee, tuple(pending)
