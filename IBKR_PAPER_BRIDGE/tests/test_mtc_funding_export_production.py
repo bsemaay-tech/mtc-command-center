@@ -68,7 +68,7 @@ from tools import export_mtc_funding as exporter
 SYMBOL = "BTC"
 SCHEDULE_ID = "SYNTH-P012-PATHD-PRODUCTION-TARGET-V1"
 # A1 = A forward-only: the declared interval opens after the owner signature
-# instant 2026-09-12T11:00:00Z, so this fixture is admissible by date.  The
+# instant 2026-09-12T11:00:00Z, so this fixture passes the date guard.  The
 # round-1 fixture opened on 2026-09-11 and is kept below as a RED control.
 START = "2026-09-12T12:00:00Z"
 END = "2026-09-12T13:00:00Z"
@@ -168,7 +168,7 @@ def retained_row(event: FundingEventRecord, **overrides) -> dict:
 def provenance(digest: str) -> dict:
     return {
         "evidence_kind": exporter.PRODUCTION_EVIDENCE_KIND,
-        "extraction_method": "OWN_ACCOUNT_AUTHENTICATED_CAPTURE_V1",
+        "extraction_method": "CALLER_SUPPLIED_CAPTURE_V1",
         "source_locator": "synthetic://p012-path-d/own-account-capture",
         "source_sha256": digest,
         "source_title": "SYNTHETIC-PATH-D-CAPTURE",
@@ -381,7 +381,7 @@ def test_a_binding_outside_the_declared_account_refuses() -> None:
 
 
 # ---------------------------------------------------------------------------
-# A1 = A forward-only: nothing before the owner signature is ever admitted
+# A1 = A forward-only: nothing before the owner signature can be built
 # ---------------------------------------------------------------------------
 
 
@@ -425,7 +425,7 @@ def test_a_declared_interval_before_the_owner_signature_refuses() -> None:
     assert "2026-09-12T11:00:00Z" in result.report["reason_detail"]
 
 
-def test_an_interval_opening_exactly_on_the_signature_instant_is_admissible() -> None:
+def test_an_interval_opening_exactly_on_the_signature_instant_builds() -> None:
     """The bound is inclusive: the signature instant itself is forward-only."""
     boundary = FundingEventRecord(
         event_id=ID_A,
@@ -456,16 +456,17 @@ def test_an_interval_opening_exactly_on_the_signature_instant_is_admissible() ->
         declarations=declarations(interval=f"{start}/{end}"),
     )
 
-    assert result.accepted is True, result.report
+    assert result.candidate_built is True, result.report
+    assert result.accepted is False
 
 
-def test_an_authenticated_capture_time_outside_the_interval_refuses() -> None:
+def test_a_caller_supplied_capture_time_outside_the_interval_refuses() -> None:
     """The capture's own settlement time must fall inside the declared interval.
 
     Everything the round-1 candidate checked agrees here: the ledger row's
     ``effective_ts`` and the binding both say 12:00:00.031, inside the declared
     interval, and the capture bytes hash to the declared digest and name this
-    settlement.  But the *authenticated* settlement time — the one the retained
+    settlement.  But the caller-supplied settlement time — the one the retained
     payload and the capture both carry — is an hour earlier, outside the
     interval.  A ledger timestamp moved into the interval cannot drag the
     settlement in with it.
@@ -516,11 +517,11 @@ def test_an_authenticated_capture_time_outside_the_interval_refuses() -> None:
 
 
 # ---------------------------------------------------------------------------
-# The capture bytes must bind the admitted values, not only an identity
+# The capture bytes must bind the candidate values, not only an identity
 # ---------------------------------------------------------------------------
 
 
-def test_an_adversarial_capture_does_not_bind_the_admitted_settlement() -> None:
+def test_an_adversarial_capture_does_not_bind_the_candidate_settlement() -> None:
     """RED on ``81c3287d``: this capture was accepted beside BTC ``-1.25``.
 
     The bytes hash correctly and ``/hash`` names this settlement, so the
@@ -562,6 +563,7 @@ def test_an_adversarial_capture_does_not_bind_the_admitted_settlement() -> None:
     )
 
     assert result.accepted is False
+    assert result.candidate_built is False
     assert result.candidate_bytes is None
     assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
     assert "999999" in result.report["reason_detail"]
@@ -663,7 +665,7 @@ def test_a_capture_time_truncated_below_the_retained_precision_refuses() -> None
     assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
 
 
-def test_the_admitted_values_are_exactly_the_capture_and_the_retained_payload() -> None:
+def test_the_candidate_values_are_exactly_the_capture_and_the_retained_payload() -> None:
     candidate = json.loads(build().candidate_bytes)
     events = {
         row["binding"]["funding_event_id"]: row
@@ -727,27 +729,29 @@ def test_a_retained_sample_count_that_is_not_a_whole_number_refuses(retained) ->
     assert result.reason_code == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
 
 
-def test_a_matching_sample_count_is_admitted() -> None:
+def test_a_matching_sample_count_builds() -> None:
     """The positive control for the same binding: agreement still builds."""
     result = build_one(EVENT_A, capture(EVENT_A))
 
-    assert result.accepted is True, result.report
+    assert result.candidate_built is True, result.report
+    assert result.accepted is False
     payload = json.loads(result.candidate_bytes)["production_candidate"][
         "settlement_events"
     ][0]["bridge_evidence"]["payload"]
     assert payload["n_samples"] == 1
 
 
-def test_a_silent_capture_beside_a_null_retained_sample_count_is_admitted() -> None:
+def test_a_silent_capture_beside_a_null_retained_sample_count_builds() -> None:
     """The producer's own normalization, not a "must be present" rule.
 
     A venue row without ``nSamples`` retains ``n_samples = None``, and that pair
-    agrees.  Refusing it would refuse authentic own-account settlements.
+    agrees. Refusing it would reject a matching producer-normalized pair.
     """
     unsampled = replace(EVENT_A, n_samples=None)
     result = build_one(unsampled, capture(unsampled))
 
-    assert result.accepted is True, result.report
+    assert result.candidate_built is True, result.report
+    assert result.accepted is False
 
 
 def test_a_retained_source_outside_the_production_normalization_refuses() -> None:
@@ -787,7 +791,7 @@ def test_a_retained_payload_outside_the_witnessed_instrument_refuses() -> None:
     assert result.reason_code == exporter.CANDIDATE_SYMBOL_MISMATCH
 
 
-def test_a_same_instrument_candidate_is_admitted_end_to_end() -> None:
+def test_a_same_instrument_candidate_is_built_end_to_end() -> None:
     """The positive control: the refusal above is disagreement, not a coin.
 
     Nothing in the tool prefers BTC; an ETH settlement whose capture, payload,
@@ -802,21 +806,23 @@ def test_a_same_instrument_candidate_is_admitted_end_to_end() -> None:
         declarations=declarations(product=product),
     )
 
-    assert result.accepted is True, result.report
+    assert result.candidate_built is True, result.report
+    assert result.accepted is False
     candidate = json.loads(result.candidate_bytes)
     assert candidate["production_candidate"]["symbol_scope"] == "ETH"
     assert candidate["declarations"]["product"] == product
 
 
 # ---------------------------------------------------------------------------
-# GREEN: a real digest domain replaces UNAVAILABLE_PENDING_...
+# GREEN: a capture-byte digest domain replaces UNAVAILABLE_PENDING_...
 # ---------------------------------------------------------------------------
 
 
-def test_production_candidate_uses_a_real_capture_byte_digest_domain() -> None:
+def test_production_candidate_uses_a_caller_supplied_capture_byte_digest_domain() -> None:
     result = build()
 
-    assert result.accepted is True, result.report
+    assert result.candidate_built is True, result.report
+    assert result.accepted is False
     candidate = json.loads(result.candidate_bytes)
     assert candidate["source_event_digest_domain"] == (
         "HL_FUNDING_OWN_ACCOUNT_CAPTURE_BYTES_SHA256_V1"
@@ -825,8 +831,10 @@ def test_production_candidate_uses_a_real_capture_byte_digest_domain() -> None:
         candidate["source_event_digest_domain"]
         != exporter.PRODUCTION_MODE_UNAVAILABLE
     )
-    assert candidate["source_class"] == "HL_FUNDING_VENUE_REPORTED_CASH_V1"
-    assert candidate["synthetic_only"] is False
+    assert candidate["requested_source_class"] == "HL_FUNDING_VENUE_REPORTED_CASH_V1"
+    assert candidate["origin_authentication_status"] == (
+        "NOT_ESTABLISHED_CALLER_SUPPLIED"
+    )
     assert candidate["declarations"] == declarations()
     assert result.report["production_mode"] == (
         "HL_FUNDING_OWN_ACCOUNT_CAPTURE_BYTES_SHA256_V1"
@@ -847,8 +855,30 @@ def test_production_candidate_uses_a_real_capture_byte_digest_domain() -> None:
     assert digests[ID_B] != EVENT_B.digest
 
 
-def test_production_candidate_is_still_not_an_accepted_record() -> None:
-    candidate = json.loads(build().candidate_bytes)
+def test_production_candidate_build_success_is_not_acceptance_or_authentication() -> None:
+    """D026: these first assertions are behavioural RED on exact G3."""
+    result = build()
+
+    assert (result.accepted, result.report["accepted"]) == (False, False)
+    assert result.candidate_built is True
+    assert result.report["candidate_built"] is True
+    candidate = json.loads(result.candidate_bytes)
+    assert candidate["accepted"] is False
+    assert candidate["candidate_built"] is True
+    assert "source_class" not in candidate
+    assert "source_class" not in result.report
+    assert candidate["requested_source_class"] == exporter.PRODUCTION_SOURCE_CLASS
+    assert result.report["requested_source_class"] == exporter.PRODUCTION_SOURCE_CLASS
+    assert candidate["origin_authentication_status"] == (
+        exporter.PRODUCTION_ORIGIN_AUTHENTICATION_STATUS
+    )
+    assert result.report["origin_authentication_status"] == (
+        exporter.PRODUCTION_ORIGIN_AUTHENTICATION_STATUS
+    )
+    serialized = json.dumps([candidate, result.report], sort_keys=True).upper()
+    assert '\"SOURCE_CLASS\":' not in serialized
+    assert '\"STATE\": \"ACCEPTED\"' not in serialized
+    assert "OWN_ACCOUNT_AUTHENTICATED_CAPTURE_V1" not in serialized
 
     assert candidate["admission_status"] == (
         "REFUSED_PENDING_T0_REVIEW_AND_OWNER_RATIFICATION"
@@ -858,13 +888,44 @@ def test_production_candidate_is_still_not_an_accepted_record() -> None:
     # consumer needs are absent at the root.
     for key in ("events", "schedule_id", "settlement_currency"):
         assert key not in candidate
+    for event in candidate["production_candidate"]["settlement_events"]:
+        notes = event["binding_notes"]
+        assert "provenance" not in event["binding"]
+        assert event["binding"]["claimed_provenance"]["evidence_kind"] == (
+            exporter.PRODUCTION_SOURCE_CLASS
+        )
+        assert notes["origin_authentication_status"] == (
+            exporter.PRODUCTION_ORIGIN_AUTHENTICATION_STATUS
+        )
+        assert "settlement_rate_source" not in notes
+        assert "settlement_time_source" not in notes
+        assert notes["settlement_rate_consistency"] == (
+            exporter.PRODUCTION_CAPTURE_RETENTION_CONSISTENCY
+        )
+        assert notes["settlement_time_consistency"] == (
+            exporter.PRODUCTION_CAPTURE_RETENTION_CONSISTENCY
+        )
+    markers = {
+        row["signed_risk_id"]: row for row in candidate["signed_risk_markers"]
+    }
+    owner_risk = markers[exporter.NO_INDEPENDENT_REVALUATION_SIGNED_RISK_ID]
+    assert owner_risk["state"] == "OWNER_ACCEPTED_RISK_ONLY"
+    assert owner_risk["risk_disposition"] == "OWNER_ACCEPTED"
+    assert "if venue origin is externally authenticated" in owner_risk[
+        "statement"
+    ].lower()
+    assert "neither venue origin nor current booking" in owner_risk[
+        "statement"
+    ].lower()
 
 
 def test_no_oracle_value_and_no_substitute_rate_reach_the_candidate() -> None:
     candidate = json.loads(build().candidate_bytes)
 
     for row in candidate["production_candidate"]["settlement_events"]:
-        assert sorted(row["binding"]) == sorted(exporter.PRODUCTION_BINDING_KEYS)
+        assert set(row["binding"]) == (
+            set(exporter.PRODUCTION_BINDING_KEYS) - {"provenance"}
+        ) | {"claimed_provenance"}
         assert row["binding_notes"]["oracle_value_admitted"] is False
         assert row["binding_notes"]["oracle_value_back_calculated"] is False
         # The only rate anywhere is the venue's own retained per-event field.
@@ -1036,7 +1097,7 @@ def test_a_settled_sign_that_contradicts_the_payer_convention_refuses() -> None:
     assert result.reason_code == exporter.CANDIDATE_PAYER_SIGN_CONFLICT
 
 
-def test_a_short_position_credit_is_admitted_under_the_same_convention() -> None:
+def test_a_short_position_credit_builds_under_the_same_convention() -> None:
     short = FundingEventRecord(
         event_id=ID_A,
         symbol=SYMBOL,
@@ -1062,7 +1123,8 @@ def test_a_short_position_credit_is_admitted_under_the_same_convention() -> None
         ),
     )
 
-    assert result.accepted is True, result.report
+    assert result.candidate_built is True, result.report
+    assert result.accepted is False
 
 
 def test_capture_bytes_that_do_not_hash_to_the_declared_digest_refuse() -> None:
@@ -1161,7 +1223,8 @@ def test_the_magnitude_guard_logs_a_signed_risk_and_never_refuses() -> None:
         ),
     )
 
-    assert result.accepted is True, result.report
+    assert result.candidate_built is True, result.report
+    assert result.accepted is False
     markers = {row["signed_risk_id"]: row for row in result.report["signed_risk_markers"]}
     magnitude = markers["PATHD-RISK-FUNDING-MAGNITUDE-M-PENDING-V1"]
     assert magnitude["state"] == "M_PENDING"
@@ -1316,6 +1379,8 @@ def test_cli_production_without_declarations_refuses_and_stages_only_a_report(
     ]
     report = json.loads((staging / exporter.REPORT_FILENAME).read_bytes())
     assert report["reason_code"] == "CANDIDATE_DECLARATION_UNSPECIFIED"
+    assert report["accepted"] is False
+    assert report["candidate_built"] is False
     assert report["mode"] == "PRODUCTION"
     assert report["production_mode"] == (
         "HL_FUNDING_OWN_ACCOUNT_CAPTURE_BYTES_SHA256_V1"
@@ -1340,6 +1405,10 @@ def test_cli_production_with_declarations_stages_a_candidate(tmp_path, snapshot)
     sidecar = (staging / exporter.SIDECAR_FILENAME).read_bytes()
     assert sidecar == hashlib.sha256(candidate).hexdigest().encode("ascii") + b"\n"
     assert json.loads(candidate)["declarations"] == declarations()
+    assert json.loads(candidate)["accepted"] is False
+    report = json.loads((staging / exporter.REPORT_FILENAME).read_bytes())
+    assert report["candidate_built"] is True
+    assert report["accepted"] is False
 
     # The snapshot is untouched and no companion appeared beside it.
     assert hashlib.sha256(snapshot.read_bytes()).hexdigest() == before
@@ -1373,6 +1442,7 @@ def test_cli_production_refuses_a_snapshot_the_capture_contradicts(tmp_path):
     report = json.loads((staging / exporter.REPORT_FILENAME).read_bytes())
     assert report["reason_code"] == exporter.CANDIDATE_CAPTURE_VALUE_MISMATCH
     assert report["accepted"] is False
+    assert report["candidate_built"] is False
 
 
 def test_cli_production_refuses_a_snapshot_source_the_producer_never_writes(tmp_path):

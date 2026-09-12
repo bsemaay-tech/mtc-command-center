@@ -141,13 +141,13 @@ EXPORT_MODES = (MODE_SYNTHETIC, MODE_PRODUCTION)
 
 PRODUCTION_SOURCE_CLASS = "HL_FUNDING_VENUE_REPORTED_CASH_V1"
 PRODUCTION_EVIDENCE_KIND = PRODUCTION_SOURCE_CLASS
-PRODUCTION_ACCEPTED_EVIDENCE_KINDS = (PRODUCTION_EVIDENCE_KIND,)
+PRODUCTION_REQUESTED_EVIDENCE_KINDS = (PRODUCTION_EVIDENCE_KIND,)
 PRODUCTION_PACKET_VERSION = "HL_FUNDING_VENUE_REPORTED_CASH_BINDING_PACKET_V1"
 PRODUCTION_ARTIFACT_KIND = "HL_FUNDING_VENUE_REPORTED_CASH_CANDIDATE_V1"
 PRODUCTION_REPORT_KIND = "HL_FUNDING_VENUE_REPORTED_CASH_CANDIDATE_REPORT_V1"
-# The real byte domain that replaces UNAVAILABLE_PENDING_SOURCE_EVENT_DIGEST_DOMAIN:
-# lower-case hex SHA-256 over the exact, unmodified bytes of one authenticated
-# own-account funding-history capture.  It is deliberately distinct from
+# The capture-byte domain that replaces UNAVAILABLE_PENDING_SOURCE_EVENT_DIGEST_DOMAIN:
+# lower-case hex SHA-256 over the exact, unmodified bytes of one caller-supplied
+# funding-history capture.  It is deliberately distinct from
 # BRIDGE_PAYLOAD_DIGEST_DOMAIN, which hashes the Bridge's *normalized* payload.
 PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN = (
     "HL_FUNDING_OWN_ACCOUNT_CAPTURE_BYTES_SHA256_V1"
@@ -188,7 +188,10 @@ PRODUCTION_CAPTURE_VALUE_POINTERS = {
 # (``hyperliquid.py:2145``).  It is a constant of that path, never read out of
 # the capture: the capture carries no source member at all.
 PRODUCTION_RETAINED_SOURCE = "HL_USER_FUNDING"
-PRODUCTION_SETTLEMENT_SOURCE = "HL_VENUE_REPORTED_OWN_ACCOUNT_SETTLEMENT"
+PRODUCTION_ORIGIN_AUTHENTICATION_STATUS = "NOT_ESTABLISHED_CALLER_SUPPLIED"
+PRODUCTION_CAPTURE_RETENTION_CONSISTENCY = (
+    "LOCAL_CALLER_CAPTURE_TO_RETAINED_PAYLOAD_CONSISTENCY_ONLY"
+)
 NOT_AN_ACCEPTED_RECORD = (
     "Prepared under OD-20260912-P012-PATHD-1. This is not an accepted economic "
     "record: T0 review, R29 semantic redo, Section-16 record review, owner "
@@ -206,6 +209,7 @@ NO_INDEPENDENT_REVALUATION_SIGNED_RISK_ID = (
 
 # --- outcome and refusal codes --------------------------------------------
 SYNTHETIC_CANDIDATE_BUILT = "SYNTHETIC_CANDIDATE_BUILT"
+PRODUCTION_CANDIDATE_BUILT = "PRODUCTION_CANDIDATE_BUILT"
 PAYLOAD_RETAINED = "FUNDING_PAYLOAD_RETAINED"
 
 CANDIDATE_INPUT_INVALID = "CANDIDATE_INPUT_INVALID"
@@ -304,7 +308,7 @@ PACKET_KEYS = ("bindings", "coverage", "packet_version")
 
 # --- production-mode closed domains ---------------------------------------
 # No oracle value and no substitute rate may enter a production binding: the
-# admitted inputs are exactly the eight authoritative FundingEventRecord fields
+# candidate inputs are exactly the eight retained FundingEventRecord fields
 # already retained by schema v10, read back from the Bridge ledger.
 PRODUCTION_BINDING_KEYS = (
     "account_scope",
@@ -338,10 +342,10 @@ PRODUCTION_COVERAGE_KEYS = COVERAGE_KEYS + (
 DECLARATION_KEYS = ("account", "interval", "product")
 
 PRODUCTION_EVIDENCE_LIMITATIONS = (
-    "Source class HL_FUNDING_VENUE_REPORTED_CASH_V1: the venue's own reported "
-    "funding cash is booked as read. The Bridge never recomputes it from "
-    "price x size and performs no independent revaluation, so a venue-side or "
-    "capture-side error in an amount is undetectable by design.",
+    "Requested source class HL_FUNDING_VENUE_REPORTED_CASH_V1: if venue origin "
+    "is authenticated and the record is admitted in the future, the owner "
+    "accepts booking its reported funding cash without independent revaluation. "
+    "These caller-supplied bytes establish neither venue origin nor current booking.",
     "F-19/F-20 stay OPEN: no oracle value is admitted, derived or "
     "back-calculated, and the minute asset-context funding rate never "
     "substitutes for a payment rate. OPEN05 and OPEN07 stay OPEN.",
@@ -354,9 +358,9 @@ PRODUCTION_EVIDENCE_LIMITATIONS = (
     "A1 = A is enforced forward-only from the owner signature instant "
     + PATH_D_SIGNATURE_INSTANT
     + ": a declared interval opening earlier is refused whole, never clipped, "
-    "and every admitted settlement's authenticated capture time must fall "
+    "and every candidate settlement's caller-supplied capture time must fall "
     "inside the declared interval.",
-    "The capture bytes must state the admitted values: the coin, settlement "
+    "The capture bytes must state the candidate values: the coin, settlement "
     "time, payment rate, position size, sample count and settled cash read out "
     "of the capture must equal the Bridge's retained eight-field payload for "
     "the same settlement under the own-account producer's own normalization, "
@@ -429,9 +433,9 @@ class _Instant:
 
 @dataclass(frozen=True)
 class CandidateResult:
-    """Either synthetic candidate bytes plus a non-admission report, or a
-    refusal report and no record bytes."""
+    """Candidate construction outcome, distinct from record acceptance."""
 
+    candidate_built: bool
     accepted: bool
     reason_code: str
     report: dict[str, Any]
@@ -652,13 +656,13 @@ def _validate_declarations(mode: str, declarations: Any, start: _Instant, end: _
     """The DECLARED account/product/interval, or a typed refusal.
 
     OD-20260912-P012-PATHD-1 leaves account/product/interval UNSPECIFIED until
-    authenticated evidence exists, so production mode refuses until a caller
-    supplies all three explicitly.  Nothing is defaulted or inferred.
+    externally authenticated evidence exists, so production mode refuses until
+    a caller supplies all three explicitly.  Nothing is defaulted or inferred.
 
     A1 = A is forward-only, so the declared interval must also open at or after
     :data:`PATH_D_SIGNATURE_INSTANT`.  An interval reaching back before the
     owner's signature is refused outright; it is never clipped, shifted or
-    partially admitted.
+    partially included.
     """
     if mode != MODE_PRODUCTION:
         if declarations:
@@ -699,8 +703,9 @@ def _validate_declarations(mode: str, declarations: Any, start: _Instant, end: _
         raise _Refusal(
             CANDIDATE_FORWARD_ONLY_VIOLATION,
             f"the declared interval opens at {start.text}, before the Path D "
-            f"signature instant {PATH_D_SIGNATURE_INSTANT}; A1 = A admits own "
-            "account funding forward-only from the owner's signature, and a "
+            f"signature instant {PATH_D_SIGNATURE_INSTANT}; A1 = A permits own "
+            "account funding consideration forward-only from the owner's "
+            "signature, and a "
             "pre-signature interval is refused whole rather than clipped",
         )
     return declared
@@ -716,18 +721,27 @@ def _validate_coverage(
 ) -> dict[str, Any]:
     production = mode == MODE_PRODUCTION
     keys = PRODUCTION_COVERAGE_KEYS if production else COVERAGE_KEYS
-    accepted_kinds = (
-        PRODUCTION_ACCEPTED_EVIDENCE_KINDS if production else ACCEPTED_EVIDENCE_KINDS
+    allowed_kinds = (
+        PRODUCTION_REQUESTED_EVIDENCE_KINDS if production else ACCEPTED_EVIDENCE_KINDS
     )
     witness = _require_closed_mapping(
         coverage, keys, "coverage", CANDIDATE_COVERAGE_INVALID
     )
     kind = witness["evidence_kind"]
-    if kind not in accepted_kinds:
+    if kind not in allowed_kinds:
+        if production:
+            detail = (
+                "production candidate construction permits only requested "
+                f"evidence_kind values {list(allowed_kinds)}, got {kind!r}"
+            )
+        else:
+            detail = (
+                "the production completion-evidence contract is not approved or "
+                f"implemented; only {list(allowed_kinds)} is accepted, got {kind!r}"
+            )
         raise _Refusal(
             CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE,
-            "the production completion-evidence contract is not approved or "
-            f"implemented; only {list(accepted_kinds)} is accepted, got {kind!r}",
+            detail,
         )
     if witness["complete"] is not True:
         raise _Refusal(
@@ -870,16 +884,25 @@ def _validate_provenance(
         raw, PROVENANCE_KEYS, f"binding {event_id} provenance", CANDIDATE_BINDING_INVALID
     )
     kind = provenance["evidence_kind"]
-    accepted_kinds = (
-        PRODUCTION_ACCEPTED_EVIDENCE_KINDS
+    allowed_kinds = (
+        PRODUCTION_REQUESTED_EVIDENCE_KINDS
         if mode == MODE_PRODUCTION
         else ACCEPTED_EVIDENCE_KINDS
     )
-    if kind not in accepted_kinds:
+    if kind not in allowed_kinds:
+        if mode == MODE_PRODUCTION:
+            detail = (
+                f"binding {event_id} provenance.evidence_kind {kind!r} is not "
+                "permitted requested metadata for production candidate construction"
+            )
+        else:
+            detail = (
+                f"binding {event_id} provenance.evidence_kind {kind!r} is not an "
+                "approved production evidence kind"
+            )
         raise _Refusal(
             CANDIDATE_PRODUCTION_EVIDENCE_UNAVAILABLE,
-            f"binding {event_id} provenance.evidence_kind {kind!r} is not an "
-            "approved production evidence kind",
+            detail,
         )
     return {
         "evidence_kind": kind,
@@ -907,10 +930,10 @@ def _validate_provenance(
 
 
 def _validate_production_binding(raw: Any, declared: Mapping[str, str]) -> dict[str, Any]:
-    """One production binding: identity, settlement time, payer, capture digest.
+    """One production-candidate binding: identity, time, payer, capture digest.
 
     A production binding carries *no* price and *no* rate.  The payment rate and
-    the settled amount are the venue's own retained ``userFunding`` fields; the
+    settled amount are caller-supplied retained ``userFunding`` fields; the
     consumed oracle value (F-19/F-20) is not admitted, not derived and not
     back-calculated, and the minute asset-context funding rate can never enter
     here because the key is refused outright.
@@ -928,8 +951,8 @@ def _validate_production_binding(raw: Any, declared: Mapping[str, str]) -> dict[
             raise _Refusal(
                 CANDIDATE_CONTEXT_RATE_SUBSTITUTION_REFUSED,
                 f"production binding carries rate fields {rate_keys}; a context "
-                "or caller-supplied rate never substitutes for the venue's own "
-                "retained payment rate",
+                "or caller-supplied rate never substitutes for the retained "
+                "payment rate",
             )
     fields = _require_closed_mapping(
         raw, PRODUCTION_BINDING_KEYS, "production binding", CANDIDATE_BINDING_INVALID
@@ -1059,11 +1082,12 @@ def _verify_capture_values(
     end: _Instant,
     scope_symbol: str,
 ) -> Decimal:
-    """Prove the capture states the values this settlement was admitted on.
+    """Prove the capture states the values used to construct this candidate.
 
     A digest proves the bytes were not edited and the identity pointer proves
     they name this settlement; neither says the bytes *agree* with what is
-    being booked.  Here the capture's own coin, settlement time, payment rate,
+    used for the candidate. Here the capture's coin, settlement time, payment
+    rate,
     position size, sample count and settled cash must equal the retained
     eight-field payload for the same event, the retained ``source`` must be the
     one class the own-account producer stamps, the bound coin must be the
@@ -1179,7 +1203,7 @@ def _verify_capture_values(
     ):
         raise _Refusal(
             CANDIDATE_CAPTURE_TIME_OUT_OF_INTERVAL,
-            f"binding {event_id} authenticated capture settles at {settlement.text}, "
+            f"binding {event_id} caller-supplied capture settles at {settlement.text}, "
             f"outside the declared interval [{start.text}, {end.text})",
         )
     return captured_ms
@@ -1193,7 +1217,7 @@ def _verify_production_capture(
     end: _Instant,
     scope_symbol: str,
 ) -> int:
-    """Bind one authenticated capture's exact bytes to this event.
+    """Check one caller-supplied capture's exact bytes against this event.
 
     ``PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN`` is SHA-256 over these bytes as
     received.  The bytes are not normalized, not re-encoded and not
@@ -1202,7 +1226,7 @@ def _verify_production_capture(
 
     Three separate questions are answered, and all three must hold: are these
     the bytes the binding declares (digest), do they name this settlement
-    (identity pointer), and do they *state the admitted values* (value
+    (identity pointer), and do they *state the candidate values* (value
     binding)?
     """
     event_id = binding["event_id"]
@@ -1507,9 +1531,11 @@ def build_funding_candidate(
     except _Refusal as refusal:
         facts.update(refusal.facts)
         return CandidateResult(
+            candidate_built=False,
             accepted=False,
             reason_code=refusal.code,
             report=_report(
+                candidate_built=False,
                 accepted=False,
                 reason_code=refusal.code,
                 reason_detail=refusal.detail,
@@ -1665,7 +1691,7 @@ def _build(
                 raise _Refusal(
                     CANDIDATE_SETTLEMENT_TIME_CONFLICT,
                     f"binding {event_id} settles at {binding['instant'].text} "
-                    f"but the venue's own retained row is {ledger_instant.text}",
+                    f"but the caller-supplied retained row is {ledger_instant.text}",
                 )
             _verify_production_capture(
                 binding,
@@ -1685,9 +1711,10 @@ def _build(
                 "capture_value_pointers": dict(PRODUCTION_CAPTURE_VALUE_POINTERS),
                 "capture_time_pointer": PRODUCTION_CAPTURE_TIME_POINTER,
                 "capture_time_unit": PRODUCTION_CAPTURE_TIME_UNIT,
-                "retained_source_class": PRODUCTION_RETAINED_SOURCE,
-                "settlement_rate_source": PRODUCTION_SETTLEMENT_SOURCE,
-                "settlement_time_source": PRODUCTION_SETTLEMENT_SOURCE,
+                "origin_authentication_status": PRODUCTION_ORIGIN_AUTHENTICATION_STATUS,
+                "retained_source_value": PRODUCTION_RETAINED_SOURCE,
+                "settlement_rate_consistency": PRODUCTION_CAPTURE_RETENTION_CONSISTENCY,
+                "settlement_time_consistency": PRODUCTION_CAPTURE_RETENTION_CONSISTENCY,
                 "oracle_value_admitted": False,
                 "oracle_value_back_calculated": False,
                 "source_event_digest_domain": PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN,
@@ -1701,10 +1728,14 @@ def _build(
                 "settlement_rate_source": SETTLEMENT_SOURCE,
                 "settlement_time_source": SETTLEMENT_SOURCE,
             }
+        output_binding = binding["body"]
+        if production:
+            output_binding = dict(output_binding)
+            output_binding["claimed_provenance"] = output_binding.pop("provenance")
         events.append({
             "sort_key": (binding["instant"].sort_key, event_id.encode("utf-8")),
             "body": {
-                "binding": binding["body"],
+                "binding": output_binding,
                 "binding_notes": notes,
                 "bridge_evidence": {
                     "attribution": row["attribution"],
@@ -1778,34 +1809,39 @@ def _build(
             },
             {
                 "signed_risk_id": NO_INDEPENDENT_REVALUATION_SIGNED_RISK_ID,
-                "state": "ACCEPTED",
+                "risk_disposition": "OWNER_ACCEPTED",
+                "state": "OWNER_ACCEPTED_RISK_ONLY",
                 "statement": (
-                    "The venue's own reported funding cash is booked without "
-                    "independent revaluation."
+                    "If venue origin is externally authenticated and the record "
+                    "is admitted in the future, the owner accepts booking the "
+                    "reported funding cash without independent revaluation; this "
+                    "candidate establishes neither venue origin nor current booking."
                 ),
             },
         ]
         candidate = {
+            "accepted": False,
             "admission_status": PRODUCTION_ADMISSION_STATUS,
             "artifact_kind": PRODUCTION_ARTIFACT_KIND,
             "bridge_payload_digest_domain": BRIDGE_PAYLOAD_DIGEST_DOMAIN,
+            "candidate_built": True,
             "declarations": dict(declared),
             "not_an_accepted_record": NOT_AN_ACCEPTED_RECORD,
             "numeric_representation": NUMERIC_REPRESENTATION,
+            "origin_authentication_status": PRODUCTION_ORIGIN_AUTHENTICATION_STATUS,
             "production_candidate": {
                 **inner,
                 "settlement_events": [event["body"] for event in events],
                 "target_schedule_id": schedule,
             },
+            "requested_source_class": PRODUCTION_SOURCE_CLASS,
             "signed_risk_markers": facts["signed_risk_markers"],
-            "source_class": PRODUCTION_SOURCE_CLASS,
             "source_event_digest_domain": PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN,
-            "synthetic_only": False,
         }
         outcome_detail = (
             "production candidate built for the declared account/product/"
-            "interval under " + PRODUCTION_SOURCE_CLASS + "; it is not an "
-            "accepted economic record"
+            "interval requesting " + PRODUCTION_SOURCE_CLASS + "; origin is "
+            "not established and it is not an accepted economic record"
         )
     else:
         candidate = {
@@ -1830,12 +1866,18 @@ def _build(
     digest = hashlib.sha256(body).hexdigest()
     facts["event_count"] = len(events)
     facts["candidate_sha256"] = digest
+    accepted = not production
+    reason_code = (
+        PRODUCTION_CANDIDATE_BUILT if production else SYNTHETIC_CANDIDATE_BUILT
+    )
     return CandidateResult(
-        accepted=True,
-        reason_code=SYNTHETIC_CANDIDATE_BUILT,
+        candidate_built=True,
+        accepted=accepted,
+        reason_code=reason_code,
         report=_report(
-            accepted=True,
-            reason_code=SYNTHETIC_CANDIDATE_BUILT,
+            candidate_built=True,
+            accepted=accepted,
+            reason_code=reason_code,
             reason_detail=outcome_detail,
             facts=facts,
             mode=mode,
@@ -1847,6 +1889,7 @@ def _build(
 
 def _report(
     *,
+    candidate_built: bool,
     accepted: bool,
     reason_code: str,
     reason_detail: str,
@@ -1856,7 +1899,8 @@ def _report(
     """One fully labelled, fully deterministic report. No clock is read."""
     if mode == MODE_PRODUCTION:
         return {
-            "accepted": accepted,
+            "accepted": False,
+            "candidate_built": candidate_built,
             "candidate_sha256": facts.get("candidate_sha256"),
             "declarations": facts.get("declarations"),
             "event_count": facts.get("event_count"),
@@ -1882,16 +1926,16 @@ def _report(
                 ],
                 "statement": NOT_AN_ACCEPTED_RECORD,
             },
+            "origin_authentication_status": PRODUCTION_ORIGIN_AUTHENTICATION_STATUS,
             "out_of_interval_bindings": facts.get("out_of_interval_bindings", []),
             "out_of_scope_event_ids": facts.get("out_of_scope_event_ids", []),
             "production_mode": PRODUCTION_SOURCE_EVENT_DIGEST_DOMAIN,
             "reason_code": reason_code,
             "reason_detail": reason_detail,
             "report_kind": PRODUCTION_REPORT_KIND,
+            "requested_source_class": PRODUCTION_SOURCE_CLASS,
             "signed_risk_markers": facts.get("signed_risk_markers", []),
-            "source_class": PRODUCTION_SOURCE_CLASS,
             "store_reason_codes": facts.get("store_reason_codes", {}),
-            "synthetic_only": False,
             "unbound_events": facts.get("unbound_events", []),
             "uninventoried_event_ids": facts.get("uninventoried_event_ids", []),
             "unknown_binding_event_ids": facts.get("unknown_binding_event_ids", []),
@@ -2217,7 +2261,7 @@ def _stage(staging: Path, result: CandidateResult) -> None:
             f"cannot create private staging scratch: {type(exc).__name__}",
         ) from exc
     try:
-        if result.accepted:
+        if result.candidate_built:
             assert result.candidate_bytes is not None
             assert result.candidate_sha256 is not None
             candidate = scratch / CANDIDATE_FILENAME
@@ -2320,9 +2364,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         _assert_quiescent(snapshot)
     except _Refusal as refusal:
         result = CandidateResult(
+            candidate_built=False,
             accepted=False,
             reason_code=refusal.code,
             report=_report(
+                candidate_built=False,
                 accepted=False,
                 reason_code=refusal.code,
                 reason_detail=refusal.detail,
@@ -2355,7 +2401,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except _Refusal as refusal:
         print(f"{TOOL_NAME}: {refusal}", file=sys.stderr)
         return 1
-    if not result.accepted:
+    if not result.candidate_built:
         print(f"{TOOL_NAME}: refused ({result.reason_code})", file=sys.stderr)
         return 1
     label = MODE_PRODUCTION if mode == MODE_PRODUCTION else "SYNTHETIC_ONLY"

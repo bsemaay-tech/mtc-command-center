@@ -391,6 +391,26 @@ def test_a_fill_without_a_reported_fee_is_refused_never_defaulted() -> None:
 
 
 @pytest.mark.parametrize(
+    "malformed_row",
+    [object(), {"fill_id": "F0"}, 7],
+    ids=["object", "dict", "int"],
+)
+def test_malformed_non_none_reported_fee_row_refuses_typed_without_fallback(
+    malformed_row: object,
+) -> None:
+    valid = _authenticated_fee("199.99")
+    positive = _resolve((None, valid))  # type: ignore[arg-type]
+    assert positive.fee_events[0].fee_amount == 199.99
+    assert positive.cash_events[0].signed_delta == -199.99
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((malformed_row, valid))  # type: ignore[arg-type]
+
+    assert exc_info.value.refusal_code == REFUSED_MISSING_ADMITTED_FEE
+    assert "not a typed ReportedFillFee" in exc_info.value.detail
+
+
+@pytest.mark.parametrize(
     ("fee", "reason"),
     [
         (ReportedFillFee("F0", float("nan"), "TEST-USD"), "not finite"),
