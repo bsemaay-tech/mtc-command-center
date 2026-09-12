@@ -229,7 +229,8 @@ def event_id(record: Mapping[str, Any]) -> str:
         raise ContractRefused("event schema_version is unknown")
     if record["record_type"] not in EVENT_FAMILIES:
         raise ContractRefused("event record_type is unknown")
-    for field in ("producer", "symbol", "interval", "slot_id", "env_lineage_id"):
+    _source_producer(record["producer"], "event.producer")
+    for field in ("symbol", "interval", "slot_id", "env_lineage_id"):
         _string(record[field], f"event.{field}")
     ids = record["observation_ids"]
     if not isinstance(ids, list) or not ids:
