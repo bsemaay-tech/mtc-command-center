@@ -161,6 +161,48 @@ class P022TrackerContractTests(unittest.TestCase):
         )
 
     @staticmethod
+    def _reserved_device_paths():
+        aliases = (
+            "CON",
+            "PRN",
+            "AUX",
+            "NUL",
+            "CLOCK$",
+            "CONIN$",
+            "CONOUT$",
+            "COM1",
+            "COM2",
+            "COM3",
+            "COM4",
+            "COM5",
+            "COM6",
+            "COM7",
+            "COM8",
+            "COM9",
+            "LPT1",
+            "LPT2",
+            "LPT3",
+            "LPT4",
+            "LPT5",
+            "LPT6",
+            "LPT7",
+            "LPT8",
+            "LPT9",
+            "CON.txt",
+            "COM1.log",
+            "LPT9.dat",
+            "NUL.",
+            "CON.txt ",
+            "NUL:stream",
+            "COM1:alt",
+        )
+        return tuple(
+            path
+            for alias in aliases
+            for path in (alias, f"tmp\\{alias}", f"C:\\tmp\\{alias}")
+        )
+
+    @staticmethod
     def _assert_markdown_inert(test_case, markdown):
         test_case.assertNotRegex(markdown, r"(?m)^#\s*LIVE_CANDIDATE\b")
         test_case.assertNotRegex(markdown, r"(?m)^[-*+]\s*clean-window\s+PASS\b")
@@ -563,6 +605,111 @@ class P022TrackerContractTests(unittest.TestCase):
                 tracker.disclose_report(
                     self.db, "exp-a", 1, "report-ref", lambda _: None
                 )
+
+    def test_reserved_device_spec_paths_are_rejected_before_open(self):
+        tracker = _load_tracker()
+        for path in self._reserved_device_paths():
+            with self.subTest(path=path):
+                with mock.patch.object(
+                    tracker.Path,
+                    "open",
+                    autospec=True,
+                    side_effect=AssertionError("reserved spec path was opened"),
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.register(self.db, path)
+
+    def test_reserved_device_db_paths_are_rejected_before_any_input_io(self):
+        tracker = _load_tracker()
+        spec = self._spec(prefix="reserved-db")
+        spec_path = self._write_spec(spec, "reserved-db.json")
+        for path in self._reserved_device_paths():
+            with self.subTest(path=path):
+                with mock.patch.object(
+                    tracker.Path,
+                    "open",
+                    autospec=True,
+                    side_effect=AssertionError("reserved db path allowed input I/O"),
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.register(path, spec_path)
+
+    def test_reserved_device_registered_reference_paths_are_rejected_before_hashing(self):
+        tracker = _load_tracker()
+        for index, path in enumerate(self._reserved_device_paths()):
+            with self.subTest(path=path):
+                spec = self._spec(prefix=f"reserved-ref-{index}")
+                spec["references"][0]["path"] = path
+                spec_path = self._write_spec(spec, f"reserved-ref-{index}.json")
+                with mock.patch.object(
+                    tracker,
+                    "_hash_file",
+                    side_effect=AssertionError("reserved reference path was read"),
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.register(self.db, spec_path)
+
+    def test_reserved_device_db_paths_are_rejected_before_status_or_disclosure_io(self):
+        tracker = _load_tracker()
+        for path in self._reserved_device_paths():
+            with self.subTest(path=path):
+                with mock.patch.object(
+                    tracker, "_connect", side_effect=AssertionError("reserved db was opened")
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.status(path, "json")
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.disclose_report(path, "exp-a", 1, "report-ref", lambda _: None)
+
+    def test_tampered_reserved_reference_paths_are_rejected_before_status_io(self):
+        self._register(self._spec())
+        tracker = _load_tracker()
+        for path in self._reserved_device_paths():
+            with self.subTest(path=path):
+                with closing(sqlite3.connect(self.db)) as connection:
+                    connection.execute(
+                        'UPDATE "references" SET path=? WHERE revision_id=1 AND role="report"',
+                        (path,),
+                    )
+                    connection.commit()
+                original_exists = tracker.Path.exists
+
+                def guarded_exists(candidate):
+                    if os.fspath(candidate) == path:
+                        raise AssertionError("tampered reserved path was probed")
+                    return original_exists(candidate)
+
+                with mock.patch.object(
+                    tracker.Path, "exists", autospec=True, side_effect=guarded_exists
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.status(self.db, "json")
+
+    def test_tampered_reserved_report_paths_are_rejected_before_disclosure_read(self):
+        self._register(self._spec())
+        tracker = _load_tracker()
+        for path in self._reserved_device_paths():
+            with self.subTest(path=path):
+                with closing(sqlite3.connect(self.db)) as connection:
+                    connection.execute(
+                        'UPDATE "references" SET path=? WHERE revision_id=1 AND role="report"',
+                        (path,),
+                    )
+                    connection.commit()
+                original_open = tracker.Path.open
+
+                def guarded_open(candidate, *args, **kwargs):
+                    if os.fspath(candidate) == path:
+                        raise AssertionError("tampered reserved report path was opened")
+                    return original_open(candidate, *args, **kwargs)
+
+                with mock.patch.object(
+                    tracker.Path, "open", autospec=True, side_effect=guarded_open
+                ):
+                    with self.assertRaises(tracker.TrackerError):
+                        tracker.disclose_report(
+                            self.db, "exp-a", 1, "report-ref", lambda _: None
+                        )
 
 
 if __name__ == "__main__":

@@ -23,6 +23,8 @@ from typing import Any, Callable
 ROLES = frozenset({"strategy", "configuration", "dataset", "report"})
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 UTC_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+DOS_DEVICE_NAMES = frozenset({"CON", "PRN", "AUX", "NUL", "CLOCK$", "CONIN$", "CONOUT$"})
+DOS_PORT_RE = re.compile(r"^(?:COM|LPT)[1-9]$")
 
 
 class TrackerError(ValueError):
@@ -98,6 +100,12 @@ def _safe_path(
         )
     ):
         raise TrackerError(f"{name} must be a local non-device path")
+    for component in normalized.split("\\"):
+        for candidate in component.split(":"):
+            candidate = candidate.rstrip(" .")
+            stem = candidate.split(".", 1)[0].rstrip(" .").upper()
+            if stem in DOS_DEVICE_NAMES or DOS_PORT_RE.fullmatch(stem):
+                raise TrackerError(f"{name} must not use a reserved DOS device alias")
     path = Path(raw)
     if require_absolute and not path.is_absolute():
         raise TrackerError(f"{name} must be absolute")
