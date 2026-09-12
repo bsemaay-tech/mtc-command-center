@@ -81,7 +81,8 @@ MARKET = MarketEvent(
 
 def _open(equity: float) -> tuple[EconomicState, EconomicIntent]:
     fee_capture_bytes = (
-        b'{"fill":"F0","fee":"270.0","synthetic":true,"coin":"BTC",'
+        b'{"fill":"F0","fee":"270.0","synthetic":true,'
+        b'"coin":"SYNTH-INSTRUMENT-QTYGUARD-01-GREEN-V1",'
         b'"time":1789174800000,"tid":7001,"feeToken":"TEST-USD"}'
     )
     return (
@@ -109,7 +110,7 @@ def _open(equity: float) -> tuple[EconomicState, EconomicIntent]:
                     capture_sha256=hashlib.sha256(fee_capture_bytes).hexdigest(),
                     capture_bytes=fee_capture_bytes,
                     native_fill_id="7001",
-                    native_instrument="BTC",
+                    native_instrument="SYNTH-INSTRUMENT-QTYGUARD-01-GREEN-V1",
                 ),
             ),
         ),

@@ -59,6 +59,7 @@ from mtc_v2.core.economics import (
     EconomicRecords,
     EconomicState,
     EconomicsRefusal,
+    ExitCandidate,
     IntentKind,
     MarketEvent,
     ReportedFillFee,
@@ -82,6 +83,9 @@ UNBOUND_COST = "SYNTH-COST-ADMITTED-01-GREEN-V1"
 NULL_ACCOUNT_COST = "SYNTH-COST-ADMITTED-06-NULLACCOUNT-RED-V1"
 DECLARED_ACCOUNT = "SYNTHETIC-DECLARED-ACCOUNT-0001"
 DECLARED_PRODUCT = "SYNTHETIC-DECLARED-BTC-PERP"
+RUNTIME_SYMBOL = "SYNTH-INSTRUMENT-QTYGUARD-01-GREEN-V1"
+RUNTIME_VENUE = "SYNTHETIC"
+RUNTIME_PRODUCT_TYPE = "LINEAR_TEST_CONTRACT"
 # Historical e2fd counterexample.  This small synthetic object is not the
 # supported local capture profile and is not evidence of a venue format.
 FILL_CAPTURE_BYTES = b'{"fill":"F0","fee":"199.99","synthetic":true}'
@@ -93,14 +97,15 @@ CAPTURE_SHA256 = "f902c99d6b37dd73b322e360d3998169c6a31707f30fb10bb99aedc70588f2
 # preserve every original byte.  This is synthetic local evidence, not proof
 # of venue origin or a claim about a complete native API envelope.
 MATCHED_CAPTURE_BYTES = (
-    b'{"coin":"BTC","px":"60000.0","sz":"10","side":"B",'
+    b'{"coin":"SYNTH-INSTRUMENT-QTYGUARD-01-GREEN-V1","px":"60000.0",'
+    b'"sz":"10","side":"B",'
     b'"time":1789174800000,"startPosition":"0","dir":"Open Long",'
     b'"closedPnl":"-12.3400","hash":"0xfee19999","oid":7001,'
     b'"crossed":true,"fee":"199.99","feeToken":"TEST-USD",'
     b'"extraNative":{"retained":true}}'
 )
 MATCHED_CAPTURE_SHA256 = (
-    "f4065b514625300ebc09a776bbdc9e2def153c716ab90c6534fb90efe57acb9f"
+    "df3a174d340ba26436d8eeeaece36731a93472c993aecc52edbd289de93d8cc1"
 )
 MATCHED_NATIVE_FILL_ID = "0xfee19999:7001:1789174800000"
 _REPORTED_FEE_FIELDS = {field.name for field in fields(ReportedFillFee)}
@@ -113,7 +118,7 @@ def _capture(
     fee_token: str = "TEST-USD",
     closed_pnl: str | None = "0",
     time_ms: int = 1789174800000,
-    coin: str = "BTC",
+    coin: str = RUNTIME_SYMBOL,
     hash_value: str = "0xsynthetic",
     oid: int = 7001,
     tid: int | None = None,
@@ -256,13 +261,18 @@ BEFORE_START = MarketEvent(
 
 def _records(
     cost_id: str,
-    instrument_id: str = "SYNTH-INSTRUMENT-QTYGUARD-01-GREEN-V1",
+    instrument_id: str = RUNTIME_SYMBOL,
+    cost_overrides: dict[str, object] | None = None,
 ) -> EconomicRecords:
-    return EconomicRecords.from_record_paths(
+    records = EconomicRecords.from_record_paths(
         instrument_path=INSTRUMENTS / f"{instrument_id}.json",
         cost_path=COSTS / f"{cost_id}.json",
         funding_path=RECORD_ROOT / "funding" / "SYNTH-FUNDING-PATHD-01-EMPTY-V1.json",
     )
+    if cost_overrides is None:
+        return records
+    assert records.cost is not None
+    return replace(records, cost={**records.cost, **cost_overrides})
 
 
 def _intent(
@@ -290,12 +300,49 @@ def _resolve(
     cost_id: str = BOUND_COST,
     event_class: str = "ENTRY",
     market: MarketEvent = MARKET,
+    cost_overrides: dict[str, object] | None = None,
 ):
     return CorrectedEconomicsAdapter().resolve(
         EconomicState(sizing_equity=1_000_000.0),
         _intent(fees, event_class=event_class),
         market,
-        _records(cost_id),
+        _records(cost_id, cost_overrides=cost_overrides),
+    )
+
+
+def _resolve_fee_path(path: str, fee: ReportedFillFee):
+    if path == "OPEN":
+        return _resolve((fee,))
+    state = EconomicState(
+        lifecycle_id=1,
+        position_side="LONG",
+        quantity=10.0,
+        entry_fill_price=60000.0,
+        sizing_equity=1_000_000.0,
+    )
+    if path == "MARKET_EXIT":
+        intent = EconomicIntent(
+            kind=IntentKind.MARKET_EXIT,
+            event_class=path,
+            exit_id="D026-MARKET",
+            reported_fill_fees=(fee,),
+        )
+    else:
+        kind = (
+            IntentKind.PROTECTIVE_STOP
+            if path == "PROTECTIVE_STOP_EXIT"
+            else IntentKind.TARGET
+        )
+        intent = EconomicIntent(
+            kind=kind,
+            exit_candidates=(ExitCandidate(f"D026-{path}", kind, 60000.0),),
+            reported_fill_fees=(fee,),
+        )
+    return CorrectedEconomicsAdapter().resolve(
+        state,
+        intent,
+        MARKET,
+        _records(BOUND_COST),
     )
 
 
@@ -308,6 +355,81 @@ def _decision(transition, name: str):
 # --------------------------------------------------------------------------
 # GREEN: the admitted amount is the venue's own number
 # --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["OPEN", "PROTECTIVE_STOP_EXIT", "TARGET_EXIT", "MARKET_EXIT"],
+)
+def test_d026_cross_coin_capture_refuses_every_fee_path(path: str) -> None:
+    capture = _capture("199.99", coin="ETH")
+    fee = _authenticated_fee(
+        "199.99",
+        capture_bytes=capture,
+        native_instrument="ETH",
+    )
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve_fee_path(path, fee)
+
+    assert exc_info.value.refusal_code == REFUSED_UNAUTHENTICATED_REPORTED_FEE
+    assert "ETH" in exc_info.value.detail
+    assert RUNTIME_SYMBOL in exc_info.value.detail
+
+
+@pytest.mark.parametrize(
+    ("path", "event_class"),
+    [
+        ("OPEN", "ENTRY"),
+        ("PROTECTIVE_STOP_EXIT", "PROTECTIVE_STOP_EXIT"),
+        ("TARGET_EXIT", "TARGET_EXIT"),
+        ("MARKET_EXIT", "MARKET_EXIT"),
+    ],
+)
+def test_d026_literal_runtime_symbol_keeps_reported_fee_on_every_path(
+    path: str, event_class: str
+) -> None:
+    transition = _resolve_fee_path(path, _authenticated_fee("199.99"))
+
+    assert transition.fill_decisions[0].event_class == event_class
+    assert transition.fee_events[0].fee_amount == 199.99
+    assert transition.fee_events[0].fee_cash_delta == -199.99
+    assert transition.cash_events[0].signed_delta == -199.99
+
+
+MATCHING_COST_SCOPES = {
+    "symbol_scope": RUNTIME_SYMBOL,
+    "venue_scope": RUNTIME_VENUE,
+    "product_type_scope": RUNTIME_PRODUCT_TYPE,
+}
+
+
+def test_present_cost_scopes_match_the_verified_runtime_instrument() -> None:
+    transition = _resolve(
+        (_authenticated_fee("199.99"),),
+        cost_overrides=MATCHING_COST_SCOPES,
+    )
+
+    assert transition.fee_events[0].fee_amount == 199.99
+    assert transition.cash_events[0].signed_delta == -199.99
+
+
+@pytest.mark.parametrize("scope_key", tuple(MATCHING_COST_SCOPES))
+@pytest.mark.parametrize(
+    "invalid_scope",
+    ["OTHER", None, 7],
+    ids=["mismatch", "null", "malformed"],
+)
+def test_present_cost_scope_mismatch_null_or_malformed_refuses(
+    scope_key: str, invalid_scope: object
+) -> None:
+    scopes = {**MATCHING_COST_SCOPES, scope_key: invalid_scope}
+
+    with pytest.raises(EconomicsRefusal) as exc_info:
+        _resolve((_authenticated_fee("199.99"),), cost_overrides=scopes)
+
+    assert exc_info.value.refusal_code == REFUSED_UNAUTHENTICATED_REPORTED_FEE
+    assert scope_key in exc_info.value.detail
 
 
 def test_admitted_cost_is_the_reported_amount_not_the_schedule_estimate() -> None:
@@ -584,7 +706,7 @@ def test_matching_capture_is_admitted_and_retained_losslessly() -> None:
     assert applied["closed_pnl"] == -12.34
     assert applied["closed_pnl_status"] == "CAPTURED_RAW_STRING"
     assert applied["fee_native_fill_id"] == MATCHED_NATIVE_FILL_ID
-    assert applied["fee_native_instrument"] == "BTC"
+    assert applied["fee_native_instrument"] == RUNTIME_SYMBOL
     assert applied["fee_native_time_ms"] == 1789174800000
     assert applied["fee_evidence_limit"] == (
         "INTERNALLY_CONSISTENT_CAPTURE_MAY_BE_FORGED_ORIGIN_NOT_ESTABLISHED"
