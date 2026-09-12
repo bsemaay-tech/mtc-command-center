@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -249,6 +250,56 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                     )
             self.assertFalse(stable.exists())
 
+    def test_capture_and_prebackup_refuse_real_junction_ancestor(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            physical = root / "physical"
+            physical_source_root = physical / "source-root"
+            physical_source = physical_source_root / "feeds" / "live.jsonl"
+            physical_source.parent.mkdir(parents=True)
+            prefix = self._line(self.OBS_1, 10)
+            physical_source.write_bytes(prefix)
+            junction = root / "junction-ancestor"
+            created = subprocess.run(
+                ["cmd", "/c", "mklink", "/J", str(junction), str(physical)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(created.returncode, 0, created.stderr or created.stdout)
+            self.assertTrue(junction.is_junction())
+
+            stable = root / "stable"
+            with self.assertRaisesRegex(ValueError, "symlink or junction"):
+                subject.capture_stable_prefix(
+                    junction / "source-root" / "feeds" / "live.jsonl",
+                    stable,
+                    source_root=junction / "source-root",
+                    high_water_bytes=len(prefix),
+                    captured_at_utc=self.CAPTURED_AT,
+                    dataset_content_hash=self.DATASET_CONTENT_HASH,
+                )
+            self.assertFalse(stable.exists())
+
+            receipt = subject.capture_stable_prefix(
+                physical_source,
+                stable,
+                source_root=physical_source_root,
+                high_water_bytes=len(prefix),
+                captured_at_utc=self.CAPTURED_AT,
+                dataset_content_hash=self.DATASET_CONTENT_HASH,
+            )
+            config_path = self._runnable_config(root, stable)
+            with mock.patch.object(subject.backup, "run_backup") as run_backup:
+                with self.assertRaisesRegex(ValueError, "symlink or junction"):
+                    subject.backup_stable_prefix(
+                        config_path,
+                        stable_receipt=receipt,
+                        store_id=self.STORE_ID,
+                        source_root=junction / "source-root",
+                    )
+            run_backup.assert_not_called()
+
     def test_capture_refuses_intermediate_symlink_or_junction_component(self) -> None:
         for link_kind in ("is_symlink", "is_junction"):
             with self.subTest(link_kind=link_kind), tempfile.TemporaryDirectory() as temporary:
@@ -281,7 +332,7 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
             root = Path(temporary)
             _, stable, receipt, _ = self._capture(root)
             config_path = self._runnable_config(root, stable)
-            intermediate = root / "source-root" / "feeds"
+            ancestor_above_source_root = root
             unchanged_backup = subject.backup.run_backup
             unchanged_is_symlink = subject.Path.is_symlink
             replaced = False
@@ -293,9 +344,9 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                 return result
 
             def fixture_is_symlink(path, *args, **kwargs):
-                return (replaced and path == intermediate) or unchanged_is_symlink(
-                    path, *args, **kwargs
-                )
+                return (
+                    replaced and path == ancestor_above_source_root
+                ) or unchanged_is_symlink(path, *args, **kwargs)
 
             with mock.patch.object(
                 subject.backup, "run_backup", side_effect=replace_after_backup
