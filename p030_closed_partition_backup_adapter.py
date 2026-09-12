@@ -17,11 +17,11 @@ import backup  # noqa: E402
 import restore  # noqa: E402
 from opsa_common import (  # noqa: E402
     RC_OK,
+    MANIFEST_SCHEMA,
     atomic_write_bytes,
     atomic_write_json,
     load_backup_config,
     parse_utc_iso,
-    read_jsonl,
     require_non_empty_string,
     resolve_confined_path,
 )
@@ -73,6 +73,29 @@ def _read_json_object(path: Path, description: str) -> dict:
     return payload
 
 
+def _read_strict_jsonl(path: Path, description: str) -> list[dict]:
+    try:
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        raise ValueError(f"invalid {description}") from exc
+    records = []
+    for line_number, line in enumerate(lines, start=1):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(
+                line,
+                parse_constant=_reject_nonfinite_json,
+                object_pairs_hook=_reject_duplicate_json_keys,
+            )
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"invalid {description} line {line_number}") from exc
+        if not isinstance(record, dict):
+            raise ValueError(f"invalid {description} line {line_number}")
+        records.append(record)
+    return records
+
+
 def _utc_z(value: str, field: str) -> None:
     if not isinstance(value, str) or not value.endswith("Z"):
         raise ValueError(f"{field} must be a caller-supplied UTC Z timestamp")
@@ -107,6 +130,19 @@ def _canonical_relative_posix(value: object, field: str) -> str:
         ):
             raise ValueError(f"{field} must be a canonical relative POSIX path")
     return value
+
+
+def _refuse_source_links(source_root: Path, source_rel: str) -> None:
+    current = Path(source_root).absolute()
+    candidates = [current]
+    for part in PurePosixPath(source_rel).parts:
+        current = current / part
+        candidates.append(current)
+    for candidate in candidates:
+        if candidate.is_symlink() or candidate.is_junction():
+            raise ValueError(
+                "source JSONL must not be a symlink or junction component"
+            )
 
 
 def _prefix_facts(data: bytes) -> tuple[int, str]:
@@ -158,11 +194,16 @@ def capture_stable_prefix(
 ) -> Path:
     """Capture a caller-bounded canonical JSONL prefix without inferring closure."""
 
-    caller_source = Path(source_jsonl)
-    if caller_source.is_symlink():
-        raise ValueError("source JSONL must not be a symlink")
-    source_root = Path(source_root).resolve()
-    source_jsonl = caller_source.resolve()
+    source_root_literal = Path(source_root).absolute()
+    source_literal = Path(source_jsonl).absolute()
+    try:
+        source_rel = source_literal.relative_to(source_root_literal).as_posix()
+    except ValueError as exc:
+        raise ValueError("source JSONL must be confined to source_root") from exc
+    source_rel = _canonical_relative_posix(source_rel, "source_path")
+    _refuse_source_links(source_root_literal, source_rel)
+    source_root = source_root_literal.resolve()
+    source_jsonl = source_literal.resolve()
     stable_prefix = Path(stable_prefix).resolve()
     if isinstance(high_water_bytes, bool) or not isinstance(high_water_bytes, int) or high_water_bytes <= 0:
         raise ValueError("high_water_bytes must be a positive integer")
@@ -173,7 +214,7 @@ def capture_stable_prefix(
     if not _DATASET_ID.fullmatch(dataset_content_hash):
         raise ValueError("dataset_content_hash must match p030ds-v1 identity")
     try:
-        source_rel = source_jsonl.relative_to(source_root).as_posix()
+        source_jsonl.relative_to(source_root)
     except ValueError as exc:
         raise ValueError("source JSONL must be confined to source_root") from exc
     if not source_jsonl.is_file():
@@ -270,7 +311,9 @@ def _verify_stable_receipt(
     if verify_source:
         if source_root is None:
             raise ValueError("source_root is required to verify source prefix")
-        source = resolve_confined_path(Path(source_root), source_rel)
+        source_root = Path(source_root).absolute()
+        _refuse_source_links(source_root, source_rel)
+        source = resolve_confined_path(source_root, source_rel)
         try:
             with source.open("rb") as handle:
                 source_prefix = handle.read(high_water)
@@ -286,18 +329,95 @@ def _verify_stable_receipt(
 def load_runnable_config(
     config_path: Path, *, stable_prefix: Path, store_id: str
 ) -> dict:
+    return _load_strict_config(
+        config_path, stable_prefix=stable_prefix, store_id=store_id
+    )
+
+
+def _load_strict_config(
+    config_path: Path,
+    *,
+    stable_prefix: Path | None = None,
+    store_id: str | None = None,
+) -> dict:
+    _read_json_object(Path(config_path), "backup config")
     try:
         config = load_backup_config(Path(config_path))
     except (OSError, TypeError, ValueError) as exc:
         raise ValueError("backup config is not runnable") from exc
-    matches = [store for store in config["stores"] if store["id"] == store_id]
-    if len(matches) != 1:
-        raise ValueError("backup config must contain the explicit P030 store id")
-    store = matches[0]
-    if store["class"] != "protected":
-        raise ValueError("P030 backup store class must be protected")
-    if Path(store["path"]).resolve() != Path(stable_prefix).resolve():
-        raise ValueError("P030 backup store path must equal the stable prefix")
+    if store_id is not None:
+        matches = [store for store in config["stores"] if store["id"] == store_id]
+        if len(matches) != 1:
+            raise ValueError("backup config must contain the explicit P030 store id")
+        store = matches[0]
+        if store["class"] != "protected":
+            raise ValueError("P030 backup store class must be protected")
+        if stable_prefix is not None and Path(store["path"]).resolve() != Path(
+            stable_prefix
+        ).resolve():
+            raise ValueError("P030 backup store path must equal the stable prefix")
+    return config
+
+
+def _complete_p026_run(
+    config: dict, records: list[dict], *, run_id: str, store_id: str
+) -> dict:
+    starts = [
+        record
+        for record in records
+        if record.get("record") == "run_start" and record.get("run_id") == run_id
+    ]
+    ends = [
+        record
+        for record in records
+        if record.get("record") == "run_end" and record.get("run_id") == run_id
+    ]
+    failure = "restore requires one complete successful P026 run"
+    if len(starts) != 1 or len(ends) != 1:
+        raise ValueError(failure)
+    if starts[0].get("schema") != MANIFEST_SCHEMA or starts[0].get("dry_run") is not False:
+        raise ValueError(failure)
+    end = ends[0]
+    if end.get("status") != "ok" or end.get("errors") != []:
+        raise ValueError(failure)
+    run_records = [record for record in records if record.get("run_id") == run_id]
+    if any(
+        record.get("record") not in {"run_start", "file", "run_end"}
+        for record in run_records
+    ):
+        raise ValueError(failure)
+    files = [record for record in run_records if record.get("record") == "file"]
+    if (
+        isinstance(end.get("files"), bool)
+        or not isinstance(end.get("files"), int)
+        or end["files"] != len(files)
+        or any(record.get("store_id") != store_id for record in files)
+        or any(record.get("readback") != "match" for record in files)
+    ):
+        raise ValueError(failure)
+    backup_root = Path(config["backup_root"])
+    archived_prefix = resolve_confined_path(backup_root, "runs", run_id, store_id)
+    stable = _verify_stable_receipt(
+        archived_prefix,
+        archived_prefix / STABLE_RECEIPT_NAME,
+        verify_source=False,
+    )
+    expected = {STABLE_RECEIPT_NAME, stable["snapshot_rel"]}
+    actual = [record.get("rel") for record in files]
+    if (
+        any(not isinstance(rel, str) for rel in actual)
+        or len(actual) != len(expected)
+        or set(actual) != expected
+    ):
+        raise ValueError(failure)
+    return stable
+
+
+def _restore_preflight(config_path: Path, *, run_id: str, store_id: str) -> dict:
+    config = _load_strict_config(config_path, store_id=store_id)
+    manifest_path = Path(config["backup_root"]) / "manifest.jsonl"
+    records = _read_strict_jsonl(manifest_path, "P026 manifest")
+    _complete_p026_run(config, records, run_id=run_id, store_id=store_id)
     return config
 
 
@@ -315,7 +435,14 @@ def backup_stable_prefix(
         source_root=source_root,
     )
     manifest_path = Path(config["backup_root"]) / "manifest.jsonl"
-    before_count = len(read_jsonl(manifest_path)) if manifest_path.exists() else 0
+    before_count = (
+        len(_read_strict_jsonl(manifest_path, "P026 manifest"))
+        if manifest_path.exists()
+        else 0
+    )
+    _load_strict_config(
+        Path(config_path), stable_prefix=stable_prefix, store_id=store_id
+    )
     result = backup.run_backup(Path(config_path), dry_run=False, store_filter={store_id})
     if result != RC_OK:
         raise ValueError("P026 backup failed")
@@ -325,7 +452,7 @@ def backup_stable_prefix(
         verify_source=True,
         source_root=source_root,
     )
-    records = read_jsonl(manifest_path)
+    records = _read_strict_jsonl(manifest_path, "P026 manifest")
     starts = [
         record
         for record in records[before_count:]
@@ -333,16 +460,15 @@ def backup_stable_prefix(
     ]
     if len(starts) != 1:
         raise ValueError("P026 backup did not produce one identifiable run")
-    return starts[0]["run_id"]
+    run_id = starts[0]["run_id"]
+    _complete_p026_run(config, records, run_id=run_id, store_id=store_id)
+    return run_id
 
 
 def restore_verified_prefix(
     config_path: Path, *, run_id: str, store_id: str, target: Path
 ) -> Path:
-    config = load_backup_config(Path(config_path))
-    matches = [store for store in config["stores"] if store["id"] == store_id]
-    if len(matches) != 1 or matches[0]["class"] != "protected":
-        raise ValueError("backup config must contain one protected P030 store")
+    _restore_preflight(Path(config_path), run_id=run_id, store_id=store_id)
     target = Path(target).resolve()
     if not target.is_dir() or any(target.iterdir()):
         raise ValueError("restore target must be empty")
@@ -350,6 +476,7 @@ def restore_verified_prefix(
         Path(config_path), run_id, None, check_only=True, store_filter={store_id}
     ) != RC_OK:
         raise ValueError("P026 check-only failed; restore withheld")
+    _restore_preflight(Path(config_path), run_id=run_id, store_id=store_id)
     if restore.run_restore(
         Path(config_path), run_id, target, check_only=False, store_filter={store_id}
     ) != RC_OK:

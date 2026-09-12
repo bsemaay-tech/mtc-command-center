@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -19,6 +20,9 @@ from opsa_common import (  # noqa: E402
     require_non_empty_string,
     resolve_confined_path,
 )
+
+
+_EMITTER_UTC_Z = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 
 def _reject_nonfinite_json(value: str) -> None:
@@ -59,10 +63,14 @@ def emit_process_heartbeat(
     return heartbeat.emit(state_dir, heartbeat_id, seq=seq, note=note)
 
 
-def verify_process_heartbeat(path: Path, *, expected_id: str) -> dict:
+def verify_process_heartbeat(state_dir: Path, heartbeat_id: str) -> dict:
     """Verify the exact P026 process-alive payload without applying a health policy."""
 
-    expected_id = require_non_empty_string(expected_id, "id", "P026 heartbeat verifier")
+    state_dir = _state_directory(state_dir)
+    heartbeat_id = require_non_empty_string(
+        heartbeat_id, "id", "P026 heartbeat verifier"
+    )
+    path = resolve_confined_path(state_dir, f"{heartbeat_id}.hb.json")
     try:
         payload = json.loads(
             Path(path).read_text(encoding="utf-8"),
@@ -75,7 +83,7 @@ def verify_process_heartbeat(path: Path, *, expected_id: str) -> dict:
     allowed = required | {"note"}
     if not isinstance(payload, dict) or not required <= set(payload) or not set(payload) <= allowed:
         raise ValueError("heartbeat fields do not match P026")
-    if payload["schema"] != HEARTBEAT_SCHEMA or payload["id"] != expected_id:
+    if payload["schema"] != HEARTBEAT_SCHEMA or payload["id"] != heartbeat_id:
         raise ValueError("heartbeat identity does not match P026")
     if (
         isinstance(payload["seq"], bool)
@@ -84,10 +92,15 @@ def verify_process_heartbeat(path: Path, *, expected_id: str) -> dict:
         or not isinstance(payload["pid"], int)
     ):
         raise ValueError("heartbeat numeric fields do not match P026")
-    if "note" in payload and not isinstance(payload["note"], str):
+    if "note" in payload and (
+        not isinstance(payload["note"], str) or not payload["note"]
+    ):
         raise ValueError("heartbeat note does not match P026")
+    emitted_at = payload["emitted_at"]
+    if not isinstance(emitted_at, str) or not _EMITTER_UTC_Z.fullmatch(emitted_at):
+        raise ValueError("heartbeat emitted_at must use exact emitter UTC-Z grammar")
     try:
-        parse_utc_iso(payload["emitted_at"])
+        parse_utc_iso(emitted_at)
     except (KeyError, TypeError, ValueError) as exc:
         raise ValueError("heartbeat emitted_at does not match P026") from exc
     return payload

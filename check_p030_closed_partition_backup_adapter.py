@@ -72,6 +72,30 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
         self.assertIsNone(config["stores"][0]["id"])
         self.assertIsNone(config["stores"][0]["path"])
         self.assertEqual(config["stores"][0]["class"], "protected")
+        with tempfile.TemporaryDirectory() as temporary, mock.patch.object(
+            subject.backup, "run_backup"
+        ) as run_backup, mock.patch.object(
+            subject.restore, "run_restore"
+        ) as run_restore:
+            root = Path(temporary)
+            with self.assertRaisesRegex(ValueError, "backup config is not runnable"):
+                subject.backup_stable_prefix(
+                    config_path,
+                    stable_receipt=root / "synthetic-receipt.json",
+                    store_id=self.STORE_ID,
+                    source_root=root / "synthetic-source",
+                )
+            target = root / "synthetic-empty-target"
+            target.mkdir()
+            with self.assertRaisesRegex(ValueError, "backup config is not runnable"):
+                subject.restore_verified_prefix(
+                    config_path,
+                    run_id="opsa-synthetic",
+                    store_id=self.STORE_ID,
+                    target=target,
+                )
+        run_backup.assert_not_called()
+        run_restore.assert_not_called()
 
     def test_capture_binds_exact_canonical_complete_prefix_and_allows_later_append(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -223,6 +247,68 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                         dataset_content_hash=self.DATASET_CONTENT_HASH,
                     )
             self.assertFalse(stable.exists())
+
+    def test_capture_refuses_intermediate_symlink_or_junction_component(self) -> None:
+        for link_kind in ("is_symlink", "is_junction"):
+            with self.subTest(link_kind=link_kind), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                source_root = root / "source-root"
+                intermediate = source_root / "feeds"
+                source = intermediate / "live.jsonl"
+                intermediate.mkdir(parents=True)
+                source.write_bytes(self._line(self.OBS_1, 10))
+                original = getattr(subject.Path, link_kind)
+
+                def fixture_link(path, *args, **kwargs):
+                    return path == intermediate or original(path, *args, **kwargs)
+
+                with mock.patch.object(
+                    subject.Path, link_kind, autospec=True, side_effect=fixture_link
+                ):
+                    with self.assertRaisesRegex(ValueError, "symlink or junction"):
+                        subject.capture_stable_prefix(
+                            source,
+                            root / "stable",
+                            source_root=source_root,
+                            high_water_bytes=source.stat().st_size,
+                            captured_at_utc=self.CAPTURED_AT,
+                            dataset_content_hash=self.DATASET_CONTENT_HASH,
+                        )
+
+    def test_post_backup_verification_refuses_replaced_intermediate_component(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            intermediate = root / "source-root" / "feeds"
+            unchanged_backup = subject.backup.run_backup
+            unchanged_is_symlink = subject.Path.is_symlink
+            replaced = False
+
+            def replace_after_backup(*args, **kwargs):
+                nonlocal replaced
+                result = unchanged_backup(*args, **kwargs)
+                replaced = True
+                return result
+
+            def fixture_is_symlink(path, *args, **kwargs):
+                return (replaced and path == intermediate) or unchanged_is_symlink(
+                    path, *args, **kwargs
+                )
+
+            with mock.patch.object(
+                subject.backup, "run_backup", side_effect=replace_after_backup
+            ), mock.patch.object(
+                subject.Path, "is_symlink", autospec=True, side_effect=fixture_is_symlink
+            ):
+                with self.assertRaisesRegex(ValueError, "symlink or junction"):
+                    subject.backup_stable_prefix(
+                        config_path,
+                        stable_receipt=receipt,
+                        store_id=self.STORE_ID,
+                        source_root=root / "source-root",
+                    )
+
     def test_backup_refuses_prefix_mutation_or_truncation_before_p026(self) -> None:
         for condition in ("mutation", "truncation"):
             with self.subTest(condition=condition), tempfile.TemporaryDirectory() as temporary:
@@ -235,6 +321,34 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                     source.write_bytes(self._line(self.OBS_1, 10))
                 with mock.patch.object(subject.backup, "run_backup") as run_backup:
                     with self.assertRaisesRegex(ValueError, "source prefix"):
+                        subject.backup_stable_prefix(
+                            config_path,
+                            stable_receipt=receipt,
+                            store_id=self.STORE_ID,
+                            source_root=root / "source-root",
+                        )
+                run_backup.assert_not_called()
+
+    def test_config_refuses_duplicate_keys_and_nonfinite_json_before_p026(self) -> None:
+        for kind in ("duplicate", "nonfinite"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                _, stable, receipt, _ = self._capture(root)
+                config_path = self._runnable_config(root, stable)
+                raw = config_path.read_text(encoding="utf-8")
+                if kind == "duplicate":
+                    raw = raw.replace(
+                        '"schema": "mtc.opsa_backup_config/v1"',
+                        '"schema": "mtc.opsa_backup_config/v1", '
+                        '"schema": "mtc.opsa_backup_config/v1"',
+                    )
+                    expected = "duplicate JSON key"
+                else:
+                    raw = raw[:-1] + ', "synthetic_probe": NaN}'
+                    expected = "non-finite JSON constant"
+                config_path.write_text(raw, encoding="utf-8")
+                with mock.patch.object(subject.backup, "run_backup") as run_backup:
+                    with self.assertRaisesRegex(ValueError, expected):
                         subject.backup_stable_prefix(
                             config_path,
                             stable_receipt=receipt,
@@ -273,6 +387,182 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
             receipt = json.loads(verified.read_text(encoding="utf-8"))
             self.assertEqual(receipt["schema"], "p030.verified_restore/v1")
             self.assertEqual(receipt["state"], "verified_restore")
+
+    def test_manifest_refuses_duplicate_keys_and_nonfinite_json_before_p026(self) -> None:
+        for kind in ("duplicate", "nonfinite"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                _, stable, receipt, _ = self._capture(root)
+                config_path = self._runnable_config(root, stable)
+                run_id = subject.backup_stable_prefix(
+                    config_path,
+                    stable_receipt=receipt,
+                    store_id=self.STORE_ID,
+                    source_root=root / "source-root",
+                )
+                manifest = root / "backups" / "manifest.jsonl"
+                lines = manifest.read_text(encoding="utf-8").splitlines()
+                if kind == "duplicate":
+                    lines[0] = lines[0][:-1] + ', "record": "run_start"}'
+                    expected = "duplicate JSON key"
+                else:
+                    lines[0] = lines[0][:-1] + ', "synthetic_probe": NaN}'
+                    expected = "non-finite JSON constant"
+                manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                target = root / "restore-target"
+                target.mkdir()
+                with mock.patch.object(subject.restore, "run_restore") as run_restore:
+                    with self.assertRaisesRegex(ValueError, expected):
+                        subject.restore_verified_prefix(
+                            config_path,
+                            run_id=run_id,
+                            store_id=self.STORE_ID,
+                            target=target,
+                        )
+                run_restore.assert_not_called()
+
+    def test_manifest_is_rechecked_between_check_only_and_restore(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            manifest = root / "backups" / "manifest.jsonl"
+            target = root / "restore-target"
+            target.mkdir()
+            unchanged_restore = subject.restore.run_restore
+            calls: list[bool] = []
+
+            def corrupt_after_check(*args, **kwargs):
+                calls.append(kwargs["check_only"])
+                result = unchanged_restore(*args, **kwargs)
+                if kwargs["check_only"]:
+                    lines = manifest.read_text(encoding="utf-8").splitlines()
+                    lines[0] = lines[0][:-1] + ', "record": "run_start"}'
+                    manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                return result
+
+            with mock.patch.object(
+                subject.restore, "run_restore", side_effect=corrupt_after_check
+            ):
+                with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
+                    subject.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            self.assertEqual(calls, [True])
+            self.assertEqual(list(target.iterdir()), [])
+
+    def test_partial_run_that_p026_check_only_accepts_never_reaches_restore(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, _ = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            manifest = root / "backups" / "manifest.jsonl"
+            records = [json.loads(line) for line in manifest.read_text(encoding="utf-8").splitlines()]
+            run_end = next(
+                record
+                for record in records
+                if record.get("record") == "run_end" and record.get("run_id") == run_id
+            )
+            run_end["status"] = "partial"
+            run_end["errors"] = ["synthetic partial fixture"]
+            manifest.write_text(
+                "".join(json.dumps(record, sort_keys=True) + "\n" for record in records),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                subject.restore.run_restore(
+                    config_path,
+                    run_id,
+                    None,
+                    check_only=True,
+                    store_filter={self.STORE_ID},
+                ),
+                subject.RC_OK,
+            )
+            target = root / "restore-target"
+            target.mkdir()
+            with mock.patch.object(subject.restore, "run_restore") as run_restore:
+                with self.assertRaisesRegex(ValueError, "complete successful P026 run"):
+                    subject.restore_verified_prefix(
+                        config_path,
+                        run_id=run_id,
+                        store_id=self.STORE_ID,
+                        target=target,
+                    )
+            run_restore.assert_not_called()
+
+    def test_restore_requires_exact_run_envelope_store_and_members(self) -> None:
+        for defect in ("duplicate_start", "missing_snapshot", "wrong_store"):
+            with self.subTest(defect=defect), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                _, stable, receipt, _ = self._capture(root)
+                config_path = self._runnable_config(root, stable)
+                run_id = subject.backup_stable_prefix(
+                    config_path,
+                    stable_receipt=receipt,
+                    store_id=self.STORE_ID,
+                    source_root=root / "source-root",
+                )
+                manifest = root / "backups" / "manifest.jsonl"
+                records = [
+                    json.loads(line)
+                    for line in manifest.read_text(encoding="utf-8").splitlines()
+                ]
+                if defect == "duplicate_start":
+                    records.append(
+                        next(record.copy() for record in records if record["record"] == "run_start")
+                    )
+                elif defect == "missing_snapshot":
+                    records = [
+                        record
+                        for record in records
+                        if not (
+                            record.get("record") == "file"
+                            and record.get("rel") == "live.jsonl"
+                        )
+                    ]
+                    next(
+                        record for record in records if record.get("record") == "run_end"
+                    )["files"] = 1
+                else:
+                    next(
+                        record
+                        for record in records
+                        if record.get("record") == "file"
+                        and record.get("rel") == "live.jsonl"
+                    )["store_id"] = "fixture-other-store"
+                manifest.write_text(
+                    "".join(
+                        json.dumps(record, sort_keys=True) + "\n" for record in records
+                    ),
+                    encoding="utf-8",
+                )
+                target = root / "restore-target"
+                target.mkdir()
+                with mock.patch.object(subject.restore, "run_restore") as run_restore:
+                    with self.assertRaisesRegex(ValueError, "complete successful P026 run"):
+                        subject.restore_verified_prefix(
+                            config_path,
+                            run_id=run_id,
+                            store_id=self.STORE_ID,
+                            target=target,
+                        )
+                run_restore.assert_not_called()
 
     def test_speculative_replay_opening_api_is_absent(self) -> None:
         self.assertFalse(hasattr(subject, "open_verified_replay_prefix"))
@@ -402,7 +692,7 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                     )
             run_restore.assert_not_called()
 
-    def test_failed_check_only_never_replays_or_restores(self) -> None:
+    def test_tampered_backup_never_reaches_p026_restore(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             _, stable, receipt, _ = self._capture(root)
@@ -425,11 +715,11 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                 return unchanged_restore(*args, **kwargs)
 
             with mock.patch.object(subject.restore, "run_restore", side_effect=record_restore):
-                with self.assertRaisesRegex(ValueError, "P026 check-only failed"):
+                with self.assertRaisesRegex(ValueError, "snapshot prefix"):
                     subject.restore_verified_prefix(
                         config_path, run_id=run_id, store_id=self.STORE_ID, target=target
                     )
-            self.assertEqual(calls, [True])
+            self.assertEqual(calls, [])
             self.assertEqual(list(target.iterdir()), [])
 
 
