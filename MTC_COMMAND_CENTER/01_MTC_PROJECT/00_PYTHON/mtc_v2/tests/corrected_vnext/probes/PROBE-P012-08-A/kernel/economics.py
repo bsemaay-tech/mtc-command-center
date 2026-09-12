@@ -827,6 +827,12 @@ def _admitted_reported_fee(
     still reach that check, where absent proof gets a typed refusal rather than
     a constructor ``TypeError``.
     """
+    for row in reported_fees:
+        if row is not None and not isinstance(row, ReportedFillFee):
+            raise EconomicsRefusal(
+                REFUSED_MISSING_ADMITTED_FEE,
+                f"{event_class}: reported fee row is not a typed ReportedFillFee",
+            )
     matching = [row for row in reported_fees if row is not None and row.fill_id == fill_id]
     if not matching:
         raise EconomicsRefusal(
@@ -840,11 +846,6 @@ def _admitted_reported_fee(
             f"{event_class}: {len(matching)} venue-reported fees for fill {fill_id}",
         )
     reported = matching[0]
-    if not isinstance(reported, ReportedFillFee):
-        raise EconomicsRefusal(
-            REFUSED_MISSING_ADMITTED_FEE,
-            f"{event_class}: reported fee for fill {fill_id} is not a typed ReportedFillFee",
-        )
     amount = reported.reported_amount
     if amount is None or isinstance(amount, bool) or not isinstance(
         amount, (str, int, float)
