@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import tempfile
 import unittest
@@ -537,6 +538,99 @@ class StablePrefixBackupAdapterTests(unittest.TestCase):
                     )
             self.assertFalse(
                 (target / subject.VERIFIED_RESTORE_RECEIPT_NAME).exists()
+            )
+
+    def test_restore_consumes_isolated_validated_archive_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _, stable, receipt, original_prefix = self._capture(root)
+            config_path = self._runnable_config(root, stable)
+            run_id = subject.backup_stable_prefix(
+                config_path,
+                stable_receipt=receipt,
+                store_id=self.STORE_ID,
+                source_root=root / "source-root",
+            )
+            backup_root = root / "backups"
+            manifest = backup_root / "manifest.jsonl"
+            archived = backup_root / "runs" / run_id / self.STORE_ID
+            archived_receipt = archived / subject.STABLE_RECEIPT_NAME
+            archived_snapshot = archived / "live.jsonl"
+            original_manifest = manifest.read_bytes()
+            original_receipt = archived_receipt.read_bytes()
+            original_snapshot = archived_snapshot.read_bytes()
+
+            alternate_snapshot = self._line(self.OBS_3, 99)
+            alternate_receipt_object = json.loads(original_receipt)
+            alternate_receipt_object.update(
+                {
+                    "high_water_bytes": len(alternate_snapshot),
+                    "record_count": 1,
+                    "last_observation_id": self.OBS_3,
+                    "prefix_sha256": hashlib.sha256(alternate_snapshot).hexdigest(),
+                    "dataset_content_hash": "p030ds-v1:" + "b" * 64,
+                }
+            )
+            alternate_receipt = (
+                json.dumps(
+                    alternate_receipt_object,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    indent=2,
+                )
+                + "\n"
+            ).encode("utf-8")
+            alternate_records = [
+                json.loads(line) for line in original_manifest.splitlines()
+            ]
+            alternate_members = {
+                subject.STABLE_RECEIPT_NAME: alternate_receipt,
+                "live.jsonl": alternate_snapshot,
+            }
+            for record in alternate_records:
+                member = alternate_members.get(record.get("rel"))
+                if record.get("run_id") == run_id and member is not None:
+                    record["size"] = len(member)
+                    record["sha256"] = hashlib.sha256(member).hexdigest()
+                if record.get("run_id") == run_id and record.get("record") == "run_end":
+                    record["bytes"] = sum(map(len, alternate_members.values()))
+            alternate_manifest = b"".join(
+                (json.dumps(record, sort_keys=True) + "\n").encode("utf-8")
+                for record in alternate_records
+            )
+
+            target = root / "restore-target"
+            target.mkdir()
+            unchanged_restore = subject.restore.run_restore
+
+            def aba_swap_during_restore(*args, **kwargs):
+                if kwargs["check_only"]:
+                    return unchanged_restore(*args, **kwargs)
+                manifest.write_bytes(alternate_manifest)
+                archived_receipt.write_bytes(alternate_receipt)
+                archived_snapshot.write_bytes(alternate_snapshot)
+                try:
+                    return unchanged_restore(*args, **kwargs)
+                finally:
+                    manifest.write_bytes(original_manifest)
+                    archived_receipt.write_bytes(original_receipt)
+                    archived_snapshot.write_bytes(original_snapshot)
+
+            with mock.patch.object(
+                subject.restore, "run_restore", side_effect=aba_swap_during_restore
+            ):
+                verified = subject.restore_verified_prefix(
+                    config_path,
+                    run_id=run_id,
+                    store_id=self.STORE_ID,
+                    target=target,
+                )
+            self.assertEqual(
+                (target / self.STORE_ID / "live.jsonl").read_bytes(), original_prefix
+            )
+            verified_receipt = json.loads(verified.read_text(encoding="utf-8"))
+            self.assertEqual(
+                verified_receipt["dataset_content_hash"], self.DATASET_CONTENT_HASH
             )
 
     def test_intruder_after_check_only_blocks_actual_restore(self) -> None:
