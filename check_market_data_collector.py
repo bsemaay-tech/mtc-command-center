@@ -300,6 +300,63 @@ def replay_and_gap_atomicity_check(module: types.ModuleType = subject) -> None:
     print("INGEST REPLAY/GAP ATOMICITY (fixture transport): PASS")
 
 
+def restart_replay_seeds_live_cursor_check(module: types.ModuleType = subject) -> None:
+    """A restart whose first live frame is an identical replay must still hold the live cursor."""
+    now = JANUARY_LAST_BAR + 10 * STEP
+
+    def build(archive, source):
+        return module.MarketDataCollector(
+            source=source,
+            archive=archive,
+            identities=identities_for(module),
+            env_lineage_id="fixture-lineage",
+            backfill=module.BackfillPolicy(batch_size=2, inter_request_seconds=0),
+            clock_ms=lambda: now,
+        )
+
+    with tempfile.TemporaryDirectory() as temporary:
+        archive = module.MonthlyArchive(Path(temporary))
+        source = FakePublicSource([])
+        assert build(archive, source).ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE") is not None
+        # Fresh collector over the same archive: its first live frame replays the stored last bar,
+        # so the two-bar hole before the next live bar must still be detected and refused.
+        restarted = build(archive, source)
+        replay = restarted.ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE")
+        assert replay is not None and replay.bar_open_time == JANUARY_LAST_BAR
+        try:
+            restarted.ingest(raw_bar(JANUARY_LAST_BAR + 3 * STEP), "WS_LIVE")
+            refusal = None
+        except module.CollectionRefused as error:
+            refusal = str(error)
+        stored = [int(bar["bar_open_time"]) for bar in archive.bars("BTC", "15m")]
+        observed = (refusal, stored, len(source.snapshot_calls))
+        assert observed == (
+            f"snapshot did not fill gap starting at {JANUARY_LAST_BAR + STEP}",
+            [JANUARY_LAST_BAR],
+            1,
+        ), ("restart_replay_cursor", observed)
+
+    # Seeding must never rewind: an older identical replay after newer live bars leaves the cursor
+    # at the newest bar, so the next contiguous live bar still needs no snapshot.
+    with tempfile.TemporaryDirectory() as temporary:
+        archive = module.MonthlyArchive(Path(temporary))
+        source = FakePublicSource([])
+        collector = build(archive, source)
+        collector.ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE")
+        collector.ingest(raw_bar(JANUARY_LAST_BAR + STEP), "WS_LIVE")
+        collector.ingest(raw_bar(JANUARY_LAST_BAR), "WS_LIVE")
+        collector.ingest(raw_bar(JANUARY_LAST_BAR + 2 * STEP), "WS_LIVE")
+        assert source.snapshot_calls == [], (
+            "older_replay_rewound_seeded_cursor", source.snapshot_calls
+        )
+        assert [int(bar["bar_open_time"]) for bar in archive.bars("BTC", "15m")] == [
+            JANUARY_LAST_BAR,
+            JANUARY_LAST_BAR + STEP,
+            JANUARY_LAST_BAR + 2 * STEP,
+        ]
+    print("RESTART REPLAY SEEDS LIVE CURSOR: PASS")
+
+
 def synthetic_same_id_conflict_check(module: types.ModuleType = subject) -> None:
     """A fixture-only observation contract forces changed producer bytes onto one ID."""
     identities = module.IdentityPolicy(
@@ -998,6 +1055,24 @@ def mutant_text(label: str) -> str:
             '            self.archive.append_bar(bar)  # mutant: incoming bar persisted before gap validation\n'
             '            key = (bar.symbol, bar.interval)\n',
         )
+    if label == "replay does not seed cursor":
+        # Deviant: restores the pre-fix early return, so a restart's first identical replay
+        # leaves the live cursor unset and the next live bar is admitted with no gap check.
+        return _splice(
+            fixed,
+            '        if self.archive.classify_bar(bar) == "IDENTICAL_REPLAY_NOOP":\n'
+            '            if source_producer == "WS_LIVE":\n'
+            '                # A restarted collector can meet an identical replay of the stored last bar as its\n'
+            '                # first live frame; seed the cursor here, and never rewind it on an older replay.\n'
+            '                key = (bar.symbol, bar.interval)\n'
+            '                previous = self._last_live_open.get(key)\n'
+            '                self._last_live_open[key] = (\n'
+            '                    bar.bar_open_time if previous is None else max(previous, bar.bar_open_time)\n'
+            '                )\n'
+            '            return bar\n',
+            '        if self.archive.classify_bar(bar) == "IDENTICAL_REPLAY_NOOP":\n'
+            '            return bar  # mutant: identical replay never seeds the live cursor\n',
+        )
     if label in TOKEN_MUTANTS:
         # Text-only mutants for the speculative guard rules (no such token exists at aa602e9c);
         # they are scanned, never executed.
@@ -1128,6 +1203,9 @@ def mutation_checks(socket_attempts: list[object]) -> None:
         ("append before gap", True,
          lambda module, _text: replay_and_gap_atomicity_check(module=module),
          ("failed_gap_rows", [JANUARY_LAST_BAR, JANUARY_LAST_BAR + 3 * STEP])),
+        ("replay does not seed cursor", True,
+         lambda module, _text: restart_replay_seeds_live_cursor_check(module=module),
+         ("restart_replay_cursor", (None, [JANUARY_LAST_BAR, JANUARY_LAST_BAR + 3 * STEP], 0))),
         ("eth_account import", False,
          lambda _module, text: static_boundary_check(module=subject, source_text=text),
          ("boundary_violations", ["import:eth_account"])),
@@ -1177,6 +1255,7 @@ def main() -> None:
         stack.enter_context(patch.object(socket, "create_connection", blocked_network))
         archive_check()
         replay_and_gap_atomicity_check()
+        restart_replay_seeds_live_cursor_check()
         synthetic_same_id_conflict_check()
         append_failure_cursor_check()
         persisted_record_check()
