@@ -370,6 +370,14 @@ class MarketDataCollector:
         if bar is None:
             return None
         if self.archive.classify_bar(bar) == "IDENTICAL_REPLAY_NOOP":
+            if source_producer == "WS_LIVE":
+                # A restarted collector can meet an identical replay of the stored last bar as its
+                # first live frame; seed the cursor here, and never rewind it on an older replay.
+                key = (bar.symbol, bar.interval)
+                previous = self._last_live_open.get(key)
+                self._last_live_open[key] = (
+                    bar.bar_open_time if previous is None else max(previous, bar.bar_open_time)
+                )
             return bar
         if source_producer == "WS_LIVE":
             key = (bar.symbol, bar.interval)
