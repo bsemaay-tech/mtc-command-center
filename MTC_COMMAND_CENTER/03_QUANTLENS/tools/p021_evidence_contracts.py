@@ -303,14 +303,13 @@ def evaluate_control_evidence(
     )
 
 
-def intent_evidence_sha256(intent: IntentEvidence) -> str:
-    """Hash the exact P021 binding to accepted P012 semantic intent fields."""
-
+def _validated_intent_evidence(intent: object) -> IntentEvidence:
     if type(intent) is not IntentEvidence:
         raise EvidenceContractRefused("INTENT_INVALID_EVIDENCE")
     dataset = _validated_dataset_identity(intent.dataset_identity)
-    for field_name in ("candidate_id", "instrument_id", "intent_id"):
-        _require_nonempty(getattr(intent, field_name), field_name)
+    candidate_id = _require_nonempty(intent.candidate_id, "candidate_id")
+    instrument_id = _require_nonempty(intent.instrument_id, "instrument_id")
+    intent_id = _require_nonempty(intent.intent_id, "intent_id")
     if (
         type(intent.p012_intent_contract) is not str
         or intent.p012_intent_contract != "p012.intent-stream/v1"
@@ -326,21 +325,40 @@ def intent_evidence_sha256(intent: IntentEvidence) -> str:
     semantic_hash = _require_sha256(
         intent.p012_semantic_payload_sha256, "p012_semantic_payload_sha256"
     )
+    return IntentEvidence(
+        candidate_id=candidate_id,
+        package_hash=package_hash,
+        deployment_identity_hash=deployment_hash,
+        dataset_identity=dataset,
+        instrument_id=instrument_id,
+        decision_bar_timestamp_utc=decision_time,
+        intent_id=intent_id,
+        p012_intent_contract="p012.intent-stream/v1",
+        p012_semantic_payload_sha256=semantic_hash,
+    )
+
+
+def intent_evidence_sha256(intent: IntentEvidence) -> str:
+    """Hash the exact P021 binding to accepted P012 semantic intent fields."""
+
+    validated = _validated_intent_evidence(intent)
     return _canonical_sha256(
         {
             "schema": "p021.intent-evidence/v1",
-            "candidate_id": intent.candidate_id,
-            "package_hash": package_hash,
-            "deployment_identity_hash": deployment_hash,
+            "candidate_id": validated.candidate_id,
+            "package_hash": validated.package_hash,
+            "deployment_identity_hash": validated.deployment_identity_hash,
             "dataset_identity": {
-                "contract": dataset.contract,
-                "digest": dataset.digest,
+                "contract": validated.dataset_identity.contract,
+                "digest": validated.dataset_identity.digest,
             },
-            "instrument_id": intent.instrument_id,
-            "decision_bar_timestamp_utc": decision_time,
-            "intent_id": intent.intent_id,
-            "p012_intent_contract": intent.p012_intent_contract,
-            "p012_semantic_payload_sha256": semantic_hash,
+            "instrument_id": validated.instrument_id,
+            "decision_bar_timestamp_utc": validated.decision_bar_timestamp_utc,
+            "intent_id": validated.intent_id,
+            "p012_intent_contract": validated.p012_intent_contract,
+            "p012_semantic_payload_sha256": (
+                validated.p012_semantic_payload_sha256
+            ),
         }
     )
 
@@ -348,12 +366,14 @@ def intent_evidence_sha256(intent: IntentEvidence) -> str:
 def _validated_decision_key(key: object) -> DecisionKey:
     if type(key) is not DecisionKey:
         raise EvidenceContractRefused("LOOKAHEAD_INVALID_DECISION_KEY")
-    _require_nonempty(key.instrument_id, "decision_key.instrument_id")
-    _require_utc(
+    instrument_id = _require_nonempty(
+        key.instrument_id, "decision_key.instrument_id"
+    )
+    decision_time = _require_utc(
         key.decision_bar_timestamp_utc,
         "decision_key.decision_bar_timestamp_utc",
     )
-    return key
+    return DecisionKey(instrument_id, decision_time)
 
 
 def _validated_intents(
@@ -369,15 +389,17 @@ def _validated_intents(
             raise EvidenceContractRefused(
                 f"LOOKAHEAD_DUPLICATE_INTENT_KEY:{field_name}"
             )
-        if type(intent) is not IntentEvidence:
-            raise EvidenceContractRefused("INTENT_INVALID_EVIDENCE")
+        intent_snapshot = _validated_intent_evidence(intent)
         if (
-            intent.instrument_id != decision_key.instrument_id
-            or intent.decision_bar_timestamp_utc
+            intent_snapshot.instrument_id != decision_key.instrument_id
+            or intent_snapshot.decision_bar_timestamp_utc
             != decision_key.decision_bar_timestamp_utc
         ):
             raise EvidenceContractRefused(f"LOOKAHEAD_KEY_INTENT_MISMATCH:{field_name}")
-        validated[decision_key] = (intent, intent_evidence_sha256(intent))
+        validated[decision_key] = (
+            intent_snapshot,
+            intent_evidence_sha256(intent_snapshot),
+        )
     return validated
 
 

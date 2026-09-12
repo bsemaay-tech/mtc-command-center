@@ -964,6 +964,107 @@ class LookaheadDomainTests(P021ContractTestCase):
             prefix_intents={key: prefix},
         )
 
+    def test_refuses_hostile_intent_fields_before_equality(self) -> None:
+        class HostileString(str):
+            def __eq__(self, other: object) -> bool:
+                raise RuntimeError("hostile string equality")
+
+            def __ne__(self, other: object) -> bool:
+                raise RuntimeError("hostile string equality")
+
+            __hash__ = str.__hash__
+
+        class HostileDatetime(datetime):
+            def __eq__(self, other: object) -> bool:
+                raise RuntimeError("hostile datetime equality")
+
+            def __ne__(self, other: object) -> bool:
+                raise RuntimeError("hostile datetime equality")
+
+            __hash__ = datetime.__hash__
+
+        timestamp = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        key = DecisionKey("BINANCE:BTCUSDT", timestamp)
+        valid = self._intent(timestamp, "intent")
+        mutations = (
+            (
+                replace(valid, instrument_id=HostileString("BINANCE:BTCUSDT")),
+                "INVALID_TEXT:instrument_id",
+            ),
+            (
+                replace(
+                    valid,
+                    decision_bar_timestamp_utc=HostileDatetime(
+                        2026, 1, 1, tzinfo=timezone.utc
+                    ),
+                ),
+                "INVALID_UTC_DATETIME:decision_bar_timestamp_utc",
+            ),
+        )
+        for hostile, reason_id in mutations:
+            with self.subTest(reason_id=reason_id):
+                self.assert_refused_reason(
+                    reason_id,
+                    compare_lookahead,
+                    closed_decision_keys=(key,),
+                    full_intents={key: hostile},
+                    prefix_intents={key: valid},
+                )
+
+    def test_snapshots_full_records_before_prefix_mapping_mutation(self) -> None:
+        timestamp = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        full_key = DecisionKey("BINANCE:BTCUSDT", timestamp)
+        prefix_key = DecisionKey("BINANCE:BTCUSDT", timestamp)
+        full_intent = self._intent(timestamp, "intent", "e" * 64)
+        prefix_intent = self._intent(timestamp, "intent", "d" * 64)
+        full_digest = intent_evidence_sha256(full_intent)
+        prefix_digest = intent_evidence_sha256(prefix_intent)
+        self.assertNotEqual(full_digest, prefix_digest)
+
+        class MutatingPrefixMapping(Mapping):
+            def __init__(self) -> None:
+                self.items_calls = 0
+
+            def __iter__(self):
+                return iter((prefix_key,))
+
+            def __len__(self) -> int:
+                return 1
+
+            def __getitem__(self, key: object) -> IntentEvidence:
+                if key == prefix_key:
+                    return prefix_intent
+                raise KeyError(key)
+
+            def items(self):
+                self.items_calls += 1
+                if self.items_calls > 1:
+                    raise RuntimeError("items view requested twice")
+                object.__setattr__(
+                    full_key,
+                    "decision_bar_timestamp_utc",
+                    datetime(2026, 1, 1, tzinfo=timezone.utc),
+                )
+                object.__setattr__(
+                    full_intent,
+                    "p012_semantic_payload_sha256",
+                    "d" * 64,
+                )
+                return ((prefix_key, prefix_intent),)
+
+        prefix_mapping = MutatingPrefixMapping()
+        evidence = compare_lookahead(
+            closed_decision_keys=(full_key,),
+            full_intents={full_key: full_intent},
+            prefix_intents=prefix_mapping,
+        )
+
+        self.assertEqual(prefix_mapping.items_calls, 1)
+        self.assertEqual(evidence.intent_mismatch_count, 1)
+        self.assertIsNot(evidence.first_mismatch_key, full_key)
+        self.assertEqual(evidence.first_full_intent_sha256, full_digest)
+        self.assertEqual(evidence.first_prefix_intent_sha256, prefix_digest)
+
     def test_refuses_decision_key_subclasses(self) -> None:
         class DecisionKeySubclass(DecisionKey):
             pass
