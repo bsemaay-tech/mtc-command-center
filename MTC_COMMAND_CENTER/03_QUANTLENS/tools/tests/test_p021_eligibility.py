@@ -447,8 +447,90 @@ class ControlIdentityTests(P021ContractTestCase):
             ),
         )
 
+    def test_refuses_boolean_type_spoofs(self) -> None:
+        class BoolSpoof(int):
+            @property
+            def __class__(self):
+                return bool
+
+        flag = BoolSpoof(1)
+        self.assertIsInstance(flag, bool)
+        self.assert_refused_reason(
+            "CONTROL_INVENTORY_INVALID_REQUIRED_FLAG",
+            control_inventory_sha256,
+            (ControlInventoryItem("fee", flag),),
+        )
+        manifest_item = UnsimulatedControl(
+            control_id="fee",
+            required_for_promotion=True,
+            reason="not simulated",
+        ).model_copy(update={"required_for_promotion": flag})
+        self.assert_refused_reason(
+            "UNSIMULATED_CONTROLS_INVALID_REQUIRED_FLAG",
+            unsimulated_controls_sha256,
+            (manifest_item,),
+        )
+
+    def test_refuses_manifest_string_subclasses(self) -> None:
+        manifest_item = UnsimulatedControl(
+            control_id="fee",
+            required_for_promotion=True,
+            reason="not simulated",
+        )
+        mutations = (
+            (
+                manifest_item.model_copy(
+                    update={"control_id": StringAlias("fee", "fee")}
+                ),
+                "UNSIMULATED_CONTROLS_INVALID_CONTROL_ID",
+            ),
+            (
+                manifest_item.model_copy(
+                    update={"reason": StringAlias("not simulated", "not simulated")}
+                ),
+                "UNSIMULATED_CONTROLS_INVALID_REASON",
+            ),
+            (
+                manifest_item.model_copy(
+                    update={
+                        "contract_version": StringAlias(
+                            manifest_item.contract_version,
+                            manifest_item.contract_version,
+                        )
+                    }
+                ),
+                "UNSIMULATED_CONTROLS_INVALID_CONTRACT_VERSION",
+            ),
+        )
+        for mutation, reason_id in mutations:
+            with self.subTest(reason_id=reason_id):
+                self.assert_refused_reason(
+                    reason_id,
+                    unsimulated_controls_sha256,
+                    (mutation,),
+                )
+
 
 class ControlAllowanceTests(P021ContractTestCase):
+    def test_refuses_target_state_class_spoof(self) -> None:
+        class TargetStateSpoof:
+            @property
+            def __class__(self):
+                return EligibilityState
+
+        target_state = TargetStateSpoof()
+        self.assertIsInstance(target_state, EligibilityState)
+        self.assert_refused_reason(
+            "CONTROL_INVALID_TARGET_STATE",
+            evaluate_control_evidence,
+            target_state=target_state,
+            inventory=(),
+            executed_control_ids=(),
+            manifest=(),
+            expected_control_inventory_hash=control_inventory_sha256(()),
+            expected_unsimulated_controls_hash=unsimulated_controls_sha256(()),
+        )
+
     def test_refuses_executed_control_id_tuple_subclasses(self) -> None:
         class TupleSubclass(tuple):
             pass
@@ -802,6 +884,25 @@ class IntentIdentityTests(P021ContractTestCase):
                     intent,
                 )
 
+    def test_refuses_naive_builtin_datetime(self) -> None:
+        intent = IntentEvidence(
+            candidate_id="cand-1",
+            package_hash="a" * 64,
+            deployment_identity_hash="b" * 64,
+            dataset_identity=DatasetIdentity("ds-v1", "c" * 64),
+            instrument_id="BINANCE:BTCUSDT",
+            decision_bar_timestamp_utc=datetime(2026, 1, 1),
+            intent_id="intent-1",
+            p012_intent_contract="p012.intent-stream/v1",
+            p012_semantic_payload_sha256="d" * 64,
+        )
+
+        self.assert_refused_reason(
+            "INVALID_UTC_DATETIME:decision_bar_timestamp_utc",
+            intent_evidence_sha256,
+            intent,
+        )
+
 
 class LookaheadDomainTests(P021ContractTestCase):
     @staticmethod
@@ -1062,6 +1163,56 @@ class LookaheadDomainTests(P021ContractTestCase):
         self.assertEqual(prefix_mapping.items_calls, 1)
         self.assertEqual(evidence.intent_mismatch_count, 1)
         self.assertIsNot(evidence.first_mismatch_key, full_key)
+        self.assertEqual(evidence.first_full_intent_sha256, full_digest)
+        self.assertEqual(evidence.first_prefix_intent_sha256, prefix_digest)
+
+    def test_snapshots_nested_dataset_before_mapping_mutation(self) -> None:
+        timestamp = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        key = DecisionKey("BINANCE:BTCUSDT", timestamp)
+        full_dataset = DatasetIdentity("ds-v1", "e" * 64)
+        full_intent = replace(
+            self._intent(timestamp, "intent"),
+            dataset_identity=full_dataset,
+        )
+        prefix_intent = replace(
+            self._intent(timestamp, "intent"),
+            dataset_identity=DatasetIdentity("ds-v1", "d" * 64),
+        )
+        full_digest = intent_evidence_sha256(full_intent)
+        prefix_digest = intent_evidence_sha256(prefix_intent)
+        self.assertNotEqual(full_digest, prefix_digest)
+
+        class MutatingPrefixMapping(Mapping):
+            def __init__(self) -> None:
+                self.items_calls = 0
+
+            def __iter__(self):
+                return iter((key,))
+
+            def __len__(self) -> int:
+                return 1
+
+            def __getitem__(self, item: object) -> IntentEvidence:
+                if item == key:
+                    return prefix_intent
+                raise KeyError(item)
+
+            def items(self):
+                self.items_calls += 1
+                if self.items_calls > 1:
+                    raise RuntimeError("items view requested twice")
+                object.__setattr__(full_dataset, "digest", "d" * 64)
+                return ((key, prefix_intent),)
+
+        prefix_mapping = MutatingPrefixMapping()
+        evidence = compare_lookahead(
+            closed_decision_keys=(key,),
+            full_intents={key: full_intent},
+            prefix_intents=prefix_mapping,
+        )
+
+        self.assertEqual(prefix_mapping.items_calls, 1)
+        self.assertEqual(evidence.intent_mismatch_count, 1)
         self.assertEqual(evidence.first_full_intent_sha256, full_digest)
         self.assertEqual(evidence.first_prefix_intent_sha256, prefix_digest)
 

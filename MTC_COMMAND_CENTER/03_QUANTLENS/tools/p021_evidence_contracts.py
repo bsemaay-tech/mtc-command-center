@@ -157,7 +157,7 @@ def _unique_inventory(items: object) -> tuple[ControlInventoryItem, ...]:
     if any(type(item) is not ControlInventoryItem for item in materialized):
         raise EvidenceContractRefused("CONTROL_INVENTORY_INVALID_ITEM")
     typed_items = tuple(materialized)
-    if any(not isinstance(item.required_for_promotion, bool) for item in typed_items):
+    if any(type(item.required_for_promotion) is not bool for item in typed_items):
         raise EvidenceContractRefused("CONTROL_INVENTORY_INVALID_REQUIRED_FLAG")
     for item in typed_items:
         _require_nonempty(item.control_id, "control_id")
@@ -173,7 +173,7 @@ def _unique_manifest(items: object) -> tuple[UnsimulatedControl, ...]:
     if any(type(item) is not UnsimulatedControl for item in materialized):
         raise EvidenceContractRefused("UNSIMULATED_CONTROLS_INVALID_ITEM")
     typed_items = tuple(materialized)
-    if any(not isinstance(item.required_for_promotion, bool) for item in typed_items):
+    if any(type(item.required_for_promotion) is not bool for item in typed_items):
         raise EvidenceContractRefused("UNSIMULATED_CONTROLS_INVALID_REQUIRED_FLAG")
     if any(type(item.control_id) is not str or not item.control_id.strip() for item in typed_items):
         raise EvidenceContractRefused("UNSIMULATED_CONTROLS_INVALID_CONTROL_ID")
@@ -234,7 +234,7 @@ def evaluate_control_evidence(
 ) -> ControlEvidence:
     """Validate and classify control evidence without producing a verdict."""
 
-    if not isinstance(target_state, EligibilityState):
+    if type(target_state) is not EligibilityState:
         raise EvidenceContractRefused("CONTROL_INVALID_TARGET_STATE")
     if type(executed_control_ids) is not tuple:
         raise EvidenceContractRefused("CONTROL_INVALID_EXECUTED_IDS_CARRIER")
